@@ -245,6 +245,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void ScrollTo(float x, float y) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void SlideScroll(float vx, float vy) override;
+  void SetForceEnableZoom(bool forceEnableZoom) override;
+  bool GetForceEnableZoom() override;
   /* ohos webview end */
 #endif
 

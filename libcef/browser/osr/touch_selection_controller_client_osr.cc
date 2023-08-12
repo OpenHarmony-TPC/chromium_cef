@@ -526,6 +526,9 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
         can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
             ui::ClipboardFormatType::BitmapType(),
             ui::ClipboardBuffer::kCopyPaste, &data_dst);
+        can_paste |= ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
+            ui::ClipboardFormatType::HtmlType(),
+            ui::ClipboardBuffer::kCopyPaste, &data_dst);
       }
       can_paste = can_paste ? can_paste : !result.empty();
       return editable && can_paste;

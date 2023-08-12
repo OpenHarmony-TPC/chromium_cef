@@ -26,6 +26,12 @@
 #include "chrome/install_static/initialize_from_primary_module.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "cef/libcef/browser/net_service/net_helpers.h"
+#include "content/public/browser/network_service_instance.h"
+#include "services/network/public/mojom/network_service.mojom.h"
+#endif
+
 namespace {
 
 CefContext* g_context = nullptr;
@@ -302,6 +308,33 @@ void CefSetOSModalLoop(bool osModalLoop) {
   base::CurrentThread::Get()->set_os_modal_loop(osModalLoop);
 #endif  // BUILDFLAG(IS_WIN)
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefApplyHttpDns() {
+  if (!net_service::NetHelpers::HasValidDnsOverHttpConfig()) {
+    LOG(WARNING) << __func__ << " User input mal mode:"
+                 << net_service::NetHelpers::doh_mode;
+    return;
+  }
+
+  network::mojom::NetworkService* network_service =
+      content::GetNetworkService();
+  if (network_service) {
+    auto config = net::DnsOverHttpsServerConfig::FromString(
+        net_service::NetHelpers::DnsOverHttpServerConfig());
+    if (config.has_value()) {
+      network_service->ConfigureStubHostResolver(
+          true, net_service::NetHelpers::DnsOverHttpMode(),
+          {{std::move(*config)}}, true);
+    } else {
+      LOG(INFO) << __func__ << "server config is invalid";
+    }
+  } else {
+    LOG(INFO) << __func__
+              << "will apply doh config after network service created";
+  }
+}
+#endif
 
 // CefContext
 

@@ -5,6 +5,11 @@
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 
+#include <string>
+
+#include "build/build_config.h"
+#include "net/dns/public/secure_dns_mode.h"
+
 class GURL;
 
 namespace net_service {
@@ -24,12 +29,23 @@ class NETHELPERS_EXPORT NetHelpers {
   static bool IsAllowAcceptCookies();
   static bool IsThirdPartyCookieAllowed();
 
+#if BUILDFLAG(IS_OHOS)
+  static net::SecureDnsMode DnsOverHttpMode();
+  static std::string DnsOverHttpServerConfig();
+  static bool HasValidDnsOverHttpConfig();
+#endif
+
   static bool allow_content_access;
   static bool allow_file_access;
   static bool is_network_blocked;
   static bool accept_cookies;
   static bool third_party_cookies;
   static int cache_mode;
+
+#if BUILDFLAG(IS_OHOS)
+  static int doh_mode;
+  static std::string doh_config;
+#endif
 };
 
 bool IsSpecialFileUrl(const GURL& url);

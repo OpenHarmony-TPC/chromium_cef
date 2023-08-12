@@ -137,6 +137,14 @@ void CefSetOSModalLoop(bool osModalLoop);
 /*--cef(capi_name=cef_enable_highdpi_support)--*/
 void CefEnableHighDPISupport();
 
+/* ---------- ohos nweb add begin --------- */
+///
+// This function should be called on the main application thread.
+///
+/*--cef()--*/
+void CefApplyHttpDns();
+/* ---------- ohos nweb add end --------- */
+
 ///
 // Implement this interface to provide handler implementations. Methods will be
 // called by the process and/or thread indicated.

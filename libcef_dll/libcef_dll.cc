@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b4f718eaa15556b762af4f0e6dbc1b55c8e2d83f$
+// $hash=787cf2fc4d59195e39c7517fbec56c20e4415e6d$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -157,6 +157,13 @@ CEF_EXPORT void cef_enable_highdpi_support() {
 
   // Execute
   CefEnableHighDPISupport();
+}
+
+CEF_EXPORT void cef_apply_http_dns() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  CefApplyHttpDns();
 }
 
 CEF_EXPORT int cef_crash_reporting_enabled() {

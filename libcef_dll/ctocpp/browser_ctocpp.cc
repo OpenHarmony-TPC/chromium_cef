@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ab991c66f7028ebb53acbd5cf350c89a880f4383$
+// $hash=4f049ec48856670279424f11d8e1d8ed178d0a1b$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -513,6 +513,36 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowLoadingUI() {
 
   // Execute
   int _retval = _struct->should_show_loading_ui(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SetForceEnableZoom(bool forceEnableZoom) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_force_enable_zoom))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_force_enable_zoom(_struct, forceEnableZoom);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetForceEnableZoom() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_force_enable_zoom))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_force_enable_zoom(_struct);
 
   // Return type: bool
   return _retval ? true : false;

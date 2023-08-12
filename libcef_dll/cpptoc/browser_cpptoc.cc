@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=de6d56ff06c32a54e999d9309218c6a546eaa146$
+// $hash=ef780dfecd072718fe9380c9436dc7b0c2ae7a74$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -519,6 +519,37 @@ int CEF_CALLBACK browser_should_show_loading_ui(struct _cef_browser_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK browser_set_force_enable_zoom(struct _cef_browser_t* self,
+                                                int forceEnableZoom) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetForceEnableZoom(forceEnableZoom ? true
+                                                                  : false);
+}
+
+int CEF_CALLBACK browser_get_force_enable_zoom(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->GetForceEnableZoom();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -556,6 +587,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->get_geolocation_permissions =
       browser_get_geolocation_permissions;
   GetStruct()->should_show_loading_ui = browser_should_show_loading_ui;
+  GetStruct()->set_force_enable_zoom = browser_set_force_enable_zoom;
+  GetStruct()->get_force_enable_zoom = browser_get_force_enable_zoom;
 }
 
 // DESTRUCTOR - Do not edit by hand.

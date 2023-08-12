@@ -34,6 +34,11 @@ bool NetHelpers::accept_cookies = true;
 bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
 
+#if BUILDFLAG(IS_OHOS)
+int NetHelpers::doh_mode = -1;
+std::string NetHelpers::doh_config = "";
+#endif
+
 bool NetHelpers::ShouldBlockContentUrls() {
   return !allow_content_access;
 }
@@ -49,6 +54,45 @@ bool NetHelpers::IsAllowAcceptCookies() {
 bool NetHelpers::IsThirdPartyCookieAllowed() {
   return third_party_cookies;
 }
+
+#if BUILDFLAG(IS_OHOS)
+net::SecureDnsMode NetHelpers::DnsOverHttpMode() {
+  net::SecureDnsMode enum_sec_dns_mode = net::SecureDnsMode::kAutomatic;
+  switch (doh_mode) {
+    case 2:
+      enum_sec_dns_mode = net::SecureDnsMode::kSecure;
+      break;
+    case 1:
+      enum_sec_dns_mode = net::SecureDnsMode::kAutomatic;
+      break;
+    case 0:
+      enum_sec_dns_mode = net::SecureDnsMode::kOff;
+      break;
+    default:
+      LOG(WARNING) << __func__ << " User input mal mode:" << doh_mode;
+      break;
+  }
+
+  return enum_sec_dns_mode;
+}
+
+std::string NetHelpers::DnsOverHttpServerConfig() {
+  return doh_config;
+}
+
+bool NetHelpers::HasValidDnsOverHttpConfig() {
+  if (doh_config.empty()) {
+    return false;
+  }
+
+  if (doh_mode > static_cast<int>(net::SecureDnsMode::kSecure) ||
+      doh_mode < static_cast<int>(net::SecureDnsMode::kOff)) {
+    return false;
+  }
+
+  return true;
+}
+#endif
 
 bool IsSpecialFileUrl(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path())

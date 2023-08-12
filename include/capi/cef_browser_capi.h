@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=097fc69d7b712dde294d45394bc0eff518a34689$
+// $hash=3014ea8199d065830c7940c5d032f721d2003d1f$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -244,6 +244,17 @@ typedef struct _cef_browser_t {
   // Is loading to different document.
   ///
   int(CEF_CALLBACK* should_show_loading_ui)(struct _cef_browser_t* self);
+
+  ///
+  // Set force enable zoom.
+  ///
+  void(CEF_CALLBACK* set_force_enable_zoom)(struct _cef_browser_t* self,
+                                            int forceEnableZoom);
+
+  ///
+  // Whether force enable zoom had been enabled.
+  ///
+  int(CEF_CALLBACK* get_force_enable_zoom)(struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///

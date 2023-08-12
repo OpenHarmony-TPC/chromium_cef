@@ -177,6 +177,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
                            const GURL& absolute_image_url,
                            bool is_editable,
                            cef::mojom::HitDataParamsPtr& data);
+  bool is_update_ = false;
 #endif  // BUILDFLAG(IS_OHOS)
 
   CefBrowserImpl* browser_;

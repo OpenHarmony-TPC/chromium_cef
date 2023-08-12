@@ -253,6 +253,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool ShouldShowLoadingUI() = 0;
+
+  ///
+  // Set force enable zoom.
+  ///
+  /*--cef()--*/
+  virtual void SetForceEnableZoom(bool forceEnableZoom) = 0;
+
+  ///
+  // Whether force enable zoom had been enabled.
+  ///
+  /*--cef()--*/
+  virtual bool GetForceEnableZoom() = 0;
   /* ---------- ohos_nweb_ex add end --------- */
 };
 

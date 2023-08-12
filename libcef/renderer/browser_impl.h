@@ -105,6 +105,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 
 #if BUILDFLAG(IS_OHOS)
   bool ShouldShowLoadingUI() override;
+  void SetForceEnableZoom(bool forceEnableZoom) override {};
+  bool GetForceEnableZoom() override {
+    return false;
+  }
 #endif
 
  private:

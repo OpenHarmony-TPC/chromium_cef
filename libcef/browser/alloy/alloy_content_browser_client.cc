@@ -171,11 +171,13 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/values.h"
 #include "printing/buildflags/buildflags.h"
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/services/printing/printing_service.h"
 #include "libcef/browser/printing/print_view_manager.h"
 #endif
+#include "services/network/public/mojom/network_service.mojom.h"
 #endif
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
@@ -1281,6 +1283,10 @@ void AlloyContentBrowserClient::OverrideWebkitPrefs(
   SkColor base_background_color;
   renderer_prefs::PopulateWebPreferences(rvh, *prefs, base_background_color);
 
+#if BUILDFLAG(IS_OHOS) && defined (OHOS_NWEB_EX)
+  prefs->force_enable_zoom = web_contents->GetForceEnableZoom();
+#endif
+
   web_contents->SetPageBaseBackgroundColor(base_background_color);
 }
 
@@ -1604,11 +1610,22 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
   DCHECK(g_browser_process);
   PrefService* local_state = g_browser_process->local_state();
   DCHECK(local_state);
-
   // Need to set up global NetworkService state before anything else uses it.
   DCHECK(SystemNetworkContextManager::GetInstance());
   SystemNetworkContextManager::GetInstance()->OnNetworkServiceCreated(
       network_service);
+
+  if (net_service::NetHelpers::HasValidDnsOverHttpConfig()) {
+    auto config = net::DnsOverHttpsServerConfig::FromString(
+        net_service::NetHelpers::DnsOverHttpServerConfig());
+    if (config.has_value()) {
+      network_service->ConfigureStubHostResolver(
+          true, net_service::NetHelpers::DnsOverHttpMode(),
+          {{std::move(*config)}}, true);
+    } else {
+      LOG(INFO) << "doh server invalid";
+    }
+  }
 }
 
 bool AlloyContentBrowserClient::ConfigureNetworkContextParams(

@@ -750,11 +750,12 @@ void CefFrameImpl::LoadHeaderUrl(const CefString& url,
 }
 
 void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
-  if (element.IsNull()) {
-    LOG(INFO) << "FocusedHitDataChange element is NULL";
+  if (element.IsNull() || is_update_) {
+    LOG(INFO) << "FocusedHitDataChange element is NULL or no need to report.";
+    is_update_ = false;
     return;
   }
-  LOG(INFO) << "FocusedHitDataChangeBegin";
+
   cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
   data->href = element.GetAttribute("href").Utf16();
   data->anchor_text = element.TextContent().Utf16();
@@ -804,6 +805,7 @@ void CefFrameImpl::SendTouchEvent(cef::mojom::TouchEventParamsPtr params) {
             browser_frame->OnUpdateHitData(std::move(hit_test_data));
           },
           std::move(data)));
+  is_update_ = true;
 }
 
 void CefFrameImpl::RemoveCache() {

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=45e769535f300e227783606b108546a49d9aa953$
+// $hash=91c7f364ad0c5a79cace6aa81d16c10933d1937b$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -150,6 +150,13 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefEnableHighDPISupport() {
 
   // Execute
   cef_enable_highdpi_support();
+}
+
+NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefApplyHttpDns() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_apply_http_dns();
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCrashReportingEnabled() {

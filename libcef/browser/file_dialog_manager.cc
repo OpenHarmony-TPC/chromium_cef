@@ -7,6 +7,7 @@
 
 #include <utility>
 
+#include "build/build_config.h"
 #include "include/cef_dialog_handler.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "libcef/browser/thread_util.h"
@@ -14,6 +15,10 @@
 #include "content/public/browser/file_select_listener.h"
 #include "content/public/browser/render_frame_host.h"
 #include "net/base/directory_lister.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "base/datashare_uri_utils.h"
+#endif
 
 namespace {
 
@@ -357,8 +362,14 @@ void CefFileDialogManager::OnRunFileChooserDelegateCallback(
 
     // Convert FilePath list to SelectedFileInfo list.
     for (size_t i = 0; i < file_paths.size(); ++i) {
+      std::u16string display_name = std::u16string();
+#if BUILDFLAG(IS_OHOS)
+      if (file_paths[i].IsDataShareUri()) {
+        display_name = base::GetFileDisplayName(file_paths[i]);
+      }
+#endif
       auto info = blink::mojom::FileChooserFileInfo::NewNativeFile(
-          blink::mojom::NativeFileInfo::New(file_paths[i], std::u16string()));
+          blink::mojom::NativeFileInfo::New(file_paths[i], display_name));
       selected_files.push_back(std::move(info));
     }
   }

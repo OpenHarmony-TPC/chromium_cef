@@ -867,9 +867,9 @@ display::ScreenInfos CefRenderWidgetHostViewOSR::GetNewScreenInfosForUpdate() {
           screen_info.available_rect.height == 0) {
         screen_info.available_rect = screenRect;
       }
-      LOG(INFO) << "CefRenderWidgetHostViewOSR::GetScreenInfo orientation:"
+      LOG(DEBUG) << "CefRenderWidgetHostViewOSR::GetScreenInfo orientation:"
                 << screen_info.orientation;
-      LOG(INFO) << "CefRenderWidgetHostViewOSR::GetScreenInfo angel:"
+      LOG(DEBUG) << "CefRenderWidgetHostViewOSR::GetScreenInfo angel:"
                 << screen_info.angle;
     }
 
@@ -1620,6 +1620,23 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     content::RenderWidgetHostViewBase* updated_view,
     bool did_update_state) {
   const auto state = text_input_manager->GetTextInputState();
+#if BUILDFLAG(IS_OHOS)
+  if (!state || !state->show_ime_if_needed) {
+    return;
+  }
+
+  CefRefPtr<CefRenderHandler> handler = browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+
+  if (state->type != ui::TEXT_INPUT_TYPE_NONE && state->mode != ui::TEXT_INPUT_MODE_NONE) {
+    if (state->type == ui::TEXT_INPUT_TYPE_NUMBER) {
+      handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), CEF_TEXT_INPUT_MODE_NUMERIC, true);
+    } else {
+      handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
+        static_cast<CefRenderHandler::TextInputMode>(ui::TEXT_INPUT_MODE_DEFAULT), true);
+    }
+  }
+#else
   if (state && !state->show_ime_if_needed) {
     return;
   }
@@ -1641,6 +1658,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
 
   handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                       show_keyboard);
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::FocusedNodeChanged(bool is_editable_node,
@@ -1985,8 +2003,10 @@ void CefRenderWidgetHostViewOSR::OnScrollOffsetChanged() {
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
   #if BUILDFLAG(IS_OHOS)
-    handler->OnScrollOffsetChanged(browser_impl_.get(), std::round(last_scroll_offset_.x()),
-                                   std::round(last_scroll_offset_.y()));
+    float x = last_scroll_offset_.x();
+    float y = last_scroll_offset_.y();
+    handler->OnScrollOffsetChanged(browser_impl_.get(), std::round(x),
+                                   std::round(y));
   #else
     handler->OnScrollOffsetChanged(browser_impl_.get(), last_scroll_offset_.x(),
                                    last_scroll_offset_.y());

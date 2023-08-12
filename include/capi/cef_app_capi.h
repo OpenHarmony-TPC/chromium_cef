@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7713ef16c0c137b67ad926fafe2dfae35d187b48$
+// $hash=c743a09408ec26e3af7b55f9b1040dd8fae208ae$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
@@ -193,6 +193,11 @@ CEF_EXPORT void cef_set_osmodal_loop(int osModalLoop);
 // support DirectWrite and GDI fonts are kerned very badly.
 ///
 CEF_EXPORT void cef_enable_highdpi_support();
+
+///
+// This function should be called on the main application thread.
+///
+CEF_EXPORT void cef_apply_http_dns();
 
 #ifdef __cplusplus
 }

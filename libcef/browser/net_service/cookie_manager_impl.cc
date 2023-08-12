@@ -80,6 +80,18 @@ void ExecuteVisitor(CefRefPtr<CefCookieVisitor> visitor,
   std::string cookie_line = net::CanonicalCookie::BuildCookieLine(cookies);
   visitor->SetCookieLine(CefString(cookie_line));
 }
+
+bool FixInvalidGurl(const CefString& url, GURL &gurl) {
+  if (!gurl.is_valid()) {
+    GURL fixedGurl = GURL("https://" + url.ToString());
+    if (fixedGurl.is_valid() && fixedGurl.host() == url.ToString()) {
+      gurl = fixedGurl;
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
 }  // namespace
 
 CefCookieManagerImpl::CefCookieManagerImpl() : cookie_thread{"CookieThread"} {
@@ -170,8 +182,15 @@ bool CefCookieManagerImpl::VisitUrlCookies(
     return false;
 
   GURL gurl = GURL(url.ToString());
-  if (!gurl.is_valid())
+#if BUILDFLAG(IS_OHOS)
+  if(!FixInvalidGurl(url, gurl)) {
     return false;
+  }
+#else
+  if (!gurl.is_valid()) {
+    return false;
+  }
+#endif
 
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
@@ -187,9 +206,15 @@ bool CefCookieManagerImpl::SetCookie(const CefString& url,
                                      const CefCookie& cookie,
                                      CefRefPtr<CefSetCookieCallback> callback) {
   GURL gurl = GURL(url.ToString());
+#if BUILDFLAG(IS_OHOS)
+  if(!FixInvalidGurl(url, gurl)) {
+    return false;
+  }
+#else
   if (!gurl.is_valid()) {
     return false;
   }
+#endif
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImpl::SetCookieInternal), this,
@@ -291,11 +316,15 @@ bool CefCookieManagerImpl::VisitUrlCookiesInternal(
   DCHECK(visitor);
   DCHECK(url.is_valid());
 
+#if BUILDFLAG(IS_OHOS)
+  net::CookieOptions options = net::CookieOptions::MakeAllInclusive();
+#else
   net::CookieOptions options;
   if (includeHttpOnly)
     options.set_include_httponly();
   options.set_same_site_cookie_context(
       net::CookieOptions::SameSiteCookieContext::MakeInclusive());
+#endif
 
   auto browser_context = GetBrowserContext(browser_context_getter_);
   if (!browser_context)

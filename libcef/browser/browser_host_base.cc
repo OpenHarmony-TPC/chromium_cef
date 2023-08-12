@@ -55,6 +55,10 @@
 #include "ui/base/resource/resource_bundle.h"
 #endif
 
+#if defined(OHOS_NWEB_EX)
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace {
 
 // Associates a CefBrowserHostBase instance with a WebContents. This object will
@@ -542,8 +546,20 @@ void CefBrowserHostBase::PutUserAgent(const CefString& ua) {
     return;
   }
 
+#if defined(OHOS_NWEB_EX)
+  std::string user_agent = ua;
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (command_line.HasSwitch(switches::kForBrowser) &&
+      (ua.empty() || ua.length() == 0)) {
+    user_agent = DefaultUserAgent();
+  }
+  GetWebContents()->SetUserAgentOverride(
+      blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+#else
   GetWebContents()->SetUserAgentOverride(
       blink::UserAgentOverride::UserAgentOnly(ua), true);
+#endif
 
   content::NavigationController& controller = GetWebContents()->GetController();
   for (int i = 0; i < controller.GetEntryCount(); ++i) {
@@ -578,7 +594,6 @@ void CefBrowserHostBase::UnregisterArkJSfunction(
   }
   javascriptInjector->RemoveInterface(object_name.ToString(), method_vector);
 }
-
 #endif
 
 void CefBrowserHostBase::ReplaceMisspelling(const CefString& word) {
@@ -1989,5 +2004,25 @@ bool CefBrowserHostBase::ShouldShowLoadingUI() {
     return wc->ShouldShowLoadingUI();
   }
   return false;
+}
+
+void CefBrowserHostBase::SetForceEnableZoom(bool forceEnableZoom) {
+#if defined (OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->SetForceEnableZoom(forceEnableZoom);
+#endif
+}
+
+bool CefBrowserHostBase::GetForceEnableZoom() {
+#if defined (OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->GetForceEnableZoom();
+#else
+  return false;
+#endif
 }
 #endif

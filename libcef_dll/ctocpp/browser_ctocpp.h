@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=66aac50bedd02f309bb3715b0d4cafb0cd824c4d$
+// $hash=3f75fba8637bea0df47821a3fb445b07107fdf61$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -66,6 +66,8 @@ class CefBrowserCToCpp
       override;
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
   bool ShouldShowLoadingUI() override;
+  void SetForceEnableZoom(bool forceEnableZoom) override;
+  bool GetForceEnableZoom() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
