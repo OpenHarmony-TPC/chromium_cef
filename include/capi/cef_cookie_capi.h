@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=d9790a35d74621e985b917935a4fca74ba7db1e0$
+// $hash=76bce0d14b3cfcc4afb47d59936e4f2e0932566b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -60,6 +60,49 @@ typedef struct _cef_cookie_manager_t {
   // Base structure.
   ///
   cef_base_ref_counted_t base;
+
+  ///
+  // Get whether this cookie manager can accpet and send cookies. Returns false
+  // (0) if can't.
+  ///
+  int(CEF_CALLBACK* is_accept_cookie_allowed)(
+      struct _cef_cookie_manager_t* self);
+
+  ///
+  // Set whether this cookie manager can accpet and send cookies.
+  ///
+  void(CEF_CALLBACK* put_accept_cookie_enabled)(
+      struct _cef_cookie_manager_t* self,
+      int accept);
+
+  ///
+  // Gets whether cookies of third parties are allowed to be set. Returns false
+  // (0) if can't.
+  ///
+  int(CEF_CALLBACK* is_third_party_cookie_allowed)(
+      struct _cef_cookie_manager_t* self);
+
+  ///
+  // Set whether cookies of third parties are allowed to be set.
+  ///
+  void(CEF_CALLBACK* put_accept_third_party_cookie_enabled)(
+      struct _cef_cookie_manager_t* self,
+      int accept);
+
+  ///
+  // Get whether this cookie manager can accpet and send cookies for file scheme
+  // URL. Returns false (0) if can't.
+  ///
+  int(CEF_CALLBACK* is_file_urlscheme_cookies_allowed)(
+      struct _cef_cookie_manager_t* self);
+
+  ///
+  // Set whether this cookie manager can accpet and send cookies for file scheme
+  // URL.
+  ///
+  void(CEF_CALLBACK* put_accept_file_urlscheme_cookies_enabled)(
+      struct _cef_cookie_manager_t* self,
+      int allow);
 
   ///
   // Visit all cookies on the UI thread. The returned cookies are ordered by
@@ -110,6 +153,7 @@ typedef struct _cef_cookie_manager_t {
       struct _cef_cookie_manager_t* self,
       const cef_string_t* url,
       const cef_string_t* cookie_name,
+      int is_session,
       struct _cef_delete_cookies_callback_t* callback);
 
   ///
@@ -133,6 +177,15 @@ CEF_EXPORT cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
     struct _cef_completion_callback_t* callback);
 
 ///
+// Convert string cookie to CefCookie. The function will return true (1) when
+// excuted success, otherwise return false (0).
+///
+CEF_EXPORT int cef_cookie_manager_create_cef_cookie(
+    const cef_string_t* url,
+    const cef_string_t* value,
+    struct _cef_cookie_t* cef_cookie);
+
+///
 // Structure to implement for visiting cookie values. The functions of this
 // structure will always be called on the UI thread.
 ///
@@ -154,6 +207,14 @@ typedef struct _cef_cookie_visitor_t {
                            int count,
                            int total,
                            int* deleteCookie);
+
+  ///
+  // Method that will be called when all cookies have been visited, contenate
+  // them into one string line. The string cookie line will be passed into this
+  // function.
+  ///
+  void(CEF_CALLBACK* set_cookie_line)(struct _cef_cookie_visitor_t* self,
+                                      const cef_string_t* cookieLine);
 } cef_cookie_visitor_t;
 
 ///

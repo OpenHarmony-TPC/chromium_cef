@@ -44,6 +44,7 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   extensions::ExtensionHost* GetExtensionHost() const override;
   void BrowserDestroyed(CefBrowserHostBase* browser) override;
   void SendCaptureLostEvent() override;
+  void SendTouchEventToRender(const CefTouchEvent& event);
 #if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
   void NotifyMoveOrResizeStarted() override;
 #endif
@@ -62,7 +63,8 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext) override;
+            bool findNext,
+            bool newSession) override;
   void StopFinding(bool clearSelection) override;
 
   // Called from AlloyBrowserHostImpl::FindReply().

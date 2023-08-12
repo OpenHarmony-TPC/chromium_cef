@@ -36,17 +36,24 @@
 #include "content/renderer/render_frame_impl.h"
 #include "third_party/blink/public/mojom/frame/frame.mojom-blink.h"
 #include "third_party/blink/public/platform/web_back_forward_cache_loader_helper.h"
+#include "third_party/blink/public/platform/web_cache.h"
 #include "third_party/blink/public/platform/web_data.h"
+#include "third_party/blink/public/platform/web_network_state_notifier.h"
 #include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/platform/web_url.h"
 #include "third_party/blink/public/web/blink.h"
 #include "third_party/blink/public/web/web_document.h"
 #include "third_party/blink/public/web/web_document_loader.h"
+#include "third_party/blink/public/web/web_element_collection.h"
 #include "third_party/blink/public/web/web_frame_content_dumper.h"
+#include "third_party/blink/public/web/web_frame_widget.h"
+#include "third_party/blink/public/web/web_hit_test_result.h"
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_navigation_control.h"
 #include "third_party/blink/public/web/web_script_source.h"
 #include "third_party/blink/public/web/web_view.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+#include "ui/base/resource/resource_bundle.h"
 
 namespace {
 
@@ -58,6 +65,23 @@ constexpr auto kConnectionRetryDelay = base::Seconds(1);
 
 // Length of time to wait for the browser connection ACK before timing out.
 constexpr auto kConnectionTimeout = base::Seconds(4);
+
+#if BUILDFLAG(IS_OHOS)
+const std::string kAddressPrefix = "geo:0,0?q=";
+const std::string kEmailPrefix = "mailto:";
+const std::string kPhoneNumberPrefix = "tel:";
+
+enum HitTestDataType {
+  kUnknown = 0,
+  kPhone = 2,
+  kGeo = 3,
+  kEmail = 4,
+  kImage = 5,
+  kSrcLink = 7,
+  kSrcImageLink = 8,
+  kEditText = 9,
+};
+#endif  // BUILDFLAG(IS_OHOS)
 
 }  // namespace
 
@@ -104,6 +128,10 @@ void CefFrameImpl::SelectAll() {
 
 void CefFrameImpl::ViewSource() {
   NOTREACHED() << "ViewSource cannot be called from the renderer process";
+}
+
+void CefFrameImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
+  NOTREACHED() << "GetImages cannot be called from the renderer process";
 }
 
 void CefFrameImpl::GetSource(CefRefPtr<CefStringVisitor> visitor) {
@@ -683,6 +711,280 @@ void CefFrameImpl::MoveOrResizeStarted() {
       web_view->CancelPagePopup();
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefFrameImpl::LoadHeaderUrl(const CefString& url,
+                                 const CefString& additionalHttpHeaders) {
+  CEF_REQUIRE_RT_RETURN_VOID();
+
+  if (!frame_)
+    return;
+
+  auto params = cef::mojom::RequestParams::New();
+  params->url = GURL(url.ToString());
+  params->method = "GET";
+  params->headers = additionalHttpHeaders;
+  LoadRequest(std::move(params));
+}
+
+void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
+  if (element.IsNull()) {
+    LOG(INFO) << "FocusedHitDataChange element is NULL";
+    return;
+  }
+  LOG(INFO) << "FocusedHitDataChangeBegin";
+  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
+  data->href = element.GetAttribute("href").Utf16();
+  data->anchor_text = element.TextContent().Utf16();
+  GURL absolute_link_url;
+  if (element.IsLink())
+    absolute_link_url = GetAbsoluteUrl(element, data->href);
+  GURL absolute_image_url = GetChildImageUrlFromElement(element);
+  PopulateHitTestData(absolute_link_url, absolute_image_url,
+                      element.IsEditable(), data);
+  LOG(INFO) << "FocusedHitDataChangeEnd";
+  SendToBrowserFrame(__FUNCTION__,
+                     base::BindOnce(
+                         [](cef::mojom::HitDataParamsPtr data,
+                            const BrowserFrameType& browser_frame) {
+                           browser_frame->OnUpdateHitData(std::move(data));
+                         },
+                         std::move(data)));
+}
+
+void CefFrameImpl::SendTouchEvent(cef::mojom::TouchEventParamsPtr params) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SendTouchEvent webview is NULL";
+    return;
+  }
+  const blink::WebHitTestResult result =
+      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
+                                   gfx::Size(params->width, params->height));
+  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
+  GURL absolute_image_url = result.AbsoluteImageURL();
+  if (!result.UrlElement().IsNull()) {
+    data->anchor_text = result.UrlElement().TextContent().Utf16();
+    data->href = result.UrlElement().GetAttribute("href").Utf16();
+    if (absolute_image_url.is_empty())
+      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
+  }
+
+  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
+                      result.IsContentEditable(), data);
+  SendToBrowserFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](cef::mojom::HitDataParamsPtr hit_test_data,
+             const BrowserFrameType& browser_frame) {
+            browser_frame->OnUpdateHitData(std::move(hit_test_data));
+          },
+          std::move(data)));
+}
+
+void CefFrameImpl::RemoveCache() {
+  blink::WebCache::Clear();
+}
+
+void CefFrameImpl::SetInitialScale(float initialScale) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SetInitialScale webview is NULL";
+    return;
+  }
+  webview->SetInitialPageScaleOverride(initialScale);
+}
+
+void CefFrameImpl::SetJsOnlineProperty(bool network_up) {
+  LOG(INFO) << "SetJsOnlineProperty:" << network_up;
+  blink::WebNetworkStateNotifier::SetOnLine(network_up);
+}
+
+void CefFrameImpl::PutZoomingForTextFactor(float factor) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+ 
+  if (!webview)
+    return;
+  // Hide selection and autofill popups.
+  webview->CancelPagePopup();
+ 
+  render_frame->GetWebFrame()->FrameWidget()->SetTextZoomFactor(factor);
+}
+ 
+void CefFrameImpl::GetImageForContextNode() {
+  if (!frame_) {
+    LOG(ERROR) << "GetImageForContextNode frame is nullptr";
+    return;
+  }
+  cef::mojom::GetImageForContextNodeParamsPtr params =
+    cef::mojom::GetImageForContextNodeParams::New();
+  blink::WebNode context_node = frame_->ContextMenuImageNode();
+  std::vector<uint8_t> image_data;
+  gfx::Size original_size;
+  std::string image_extension;
+
+  if (context_node.IsNull() || !context_node.IsElementNode()) {
+    SendToBrowserFrame(
+        __FUNCTION__,
+        base::BindOnce(
+            [](cef::mojom::GetImageForContextNodeParamsPtr data,
+               const BrowserFrameType& browser_frame) {
+              browser_frame->OnGetImageForContextNodeNull();
+            },
+            std::move(params)));
+    return;
+  }
+  
+  blink::WebElement web_element = context_node.To<blink::WebElement>();
+  original_size = web_element.GetImageSize();
+
+  SkBitmap image = web_element.ImageContents();
+  image_extension = "." + web_element.ImageExtension();
+  params->width = original_size.width();
+  params->height = original_size.height();
+  params->image = image;
+  params->image_extension = image_extension;
+  SendToBrowserFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](cef::mojom::GetImageForContextNodeParamsPtr data,
+             const BrowserFrameType& browser_frame) {
+            browser_frame->OnGetImageForContextNode(std::move(data));
+          },
+          std::move(params)));
+}
+
+GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
+                                  const std::u16string& url_fragment) {
+  return GURL(node.GetDocument().CompleteURL(
+      blink::WebString::FromUTF16(url_fragment)));
+}
+
+GURL CefFrameImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
+  if (element.IsNull())
+    return GURL();
+  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
+}
+
+blink::WebElement CefFrameImpl::GetImgChild(const blink::WebNode& node) {
+  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
+  DCHECK(!collection.IsNull());
+  return collection.FirstItem();
+}
+
+GURL CefFrameImpl::GetChildImageUrlFromElement(
+    const blink::WebElement& element) {
+  const blink::WebElement child_img = GetImgChild(element);
+  if (child_img.IsNull())
+    return GURL();
+  return GetAbsoluteSrcUrl(child_img);
+}
+
+bool CefFrameImpl::RemovePrefixAndAssignIfMatches(const std::string prefix,
+                                                  const GURL& url,
+                                                  std::string* dest) {
+  const base::StringPiece spec(url.possibly_invalid_spec());
+
+  if (base::StartsWith(spec, prefix)) {
+    url::RawCanonOutputW<1024> output;
+    url::DecodeURLEscapeSequences(
+        spec.data() + prefix.length(), spec.length() - prefix.length(),
+        url::DecodeURLMode::kUTF8OrIsomorphic, &output);
+    *dest =
+        base::UTF16ToUTF8(base::StringPiece16(output.data(), output.length()));
+    return true;
+  }
+  return false;
+}
+
+void CefFrameImpl::DistinguishAndAssignSrcLinkType(
+    const GURL& url,
+    cef::mojom::HitDataParamsPtr& data) {
+  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
+                                     &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kGeo;
+  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kPhone;
+  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kEmail;
+  } else {
+    data->type = HitTestDataType::kSrcLink;
+    data->extra_data_for_type = url.possibly_invalid_spec();
+    if (!data->extra_data_for_type.empty())
+      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
+  }
+}
+
+void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
+                                       const GURL& absolute_image_url,
+                                       bool is_editable,
+                                       cef::mojom::HitDataParamsPtr& data) {
+  if (!absolute_image_url.is_empty())
+    data->img_src = absolute_image_url;
+
+  const bool is_javascript_scheme =
+      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
+  const bool has_link_url = !absolute_link_url.is_empty();
+  const bool has_image_url = !absolute_image_url.is_empty();
+  if (has_link_url && !has_image_url && !is_javascript_scheme) {
+    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
+  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
+    data->type = HitTestDataType::kSrcImageLink;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+    if (absolute_link_url.is_valid())
+      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
+  } else if (!has_link_url && has_image_url) {
+    data->type = HitTestDataType::kImage;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+  } else if (is_editable) {
+    data->type = HitTestDataType::kEditText;
+    DCHECK_EQ(0u, data->extra_data_for_type.length());
+  }
+}
+
+void CefFrameImpl::UpdateLocale(const std::string& locale) {
+  if (!ui::ResourceBundle::HasSharedInstance() ||
+      !ui::ResourceBundle::LocaleDataPakExists(locale)) {
+    LOG(ERROR) << "CefFrameImpl update locale failed";
+    return;
+  }
+  std::string origin_locale =
+      ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
+  if (origin_locale == locale) {
+    LOG(ERROR) << "CefFrameImpl UpdateLocale no need to update locale";
+    return;
+  }
+  std::string result =
+      ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
+          locale);
+  if (result.empty()) {
+    LOG(ERROR) << "CefFrameImpl update locale failed";
+  }
+}
+
+void CefFrameImpl::GetImagesWithResponse(
+    cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) {
+  ExecuteOnLocalFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](cef::mojom::RenderFrame::GetImagesWithResponseCallback callback,
+             blink::WebLocalFrame* frame) {
+            blink::WebElementCollection collection = frame->GetDocument().GetElementsByHTMLTagName("img");
+            DCHECK(!collection.IsNull());
+            bool response = !(collection.FirstItem()).IsNull();
+            std::move(callback).Run(response);
+          },
+          std::move(callback)));
+}
+#endif  // BUILDFLAG(IS_OHOS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)

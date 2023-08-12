@@ -3,6 +3,7 @@
 // can be found in the LICENSE file.
 
 #include "libcef/browser/request_context_impl.h"
+#include "libcef/browser/alloy/alloy_client_cert_lookup_table.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/thread_util.h"
@@ -20,6 +21,7 @@
 #include "content/public/common/child_process_host.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
+#include "net/cert/cert_database.h"
 #include "net/dns/host_resolver.h"
 #include "services/network/public/cpp/resolve_host_client_base.h"
 #include "services/network/public/mojom/network_context.mojom.h"
@@ -54,6 +56,10 @@ const char* GetTypeString(base::Value::Type type) {
   return "UNKNOWN";
 }
 
+void NotifyClientCertificatesChanged() {
+  LOG(INFO) << "CefRequestContextImpl::NotifyClientCertificatesChanged";
+  net::CertDatabase::GetInstance()->NotifyObserversCertDBChanged();
+}
 class ResolveHostHelper : public network::ResolveHostClientBase {
  public:
   explicit ResolveHostHelper(CefRefPtr<CefResolveCallback> callback)
@@ -340,6 +346,18 @@ CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
   return cookie_manager.get();
 }
 
+CefRefPtr<CefDataBase> CefRequestContextImpl::GetDataBase() {
+  CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
+  return data_base.get();
+}
+
+CefRefPtr<CefWebStorage> CefRequestContextImpl::GetWebStorage(
+    CefRefPtr<CefCompletionCallback> callback) {
+  CefRefPtr<CefWebStorageImpl> web_storage = new CefWebStorageImpl();
+  InitializeWebStorageInternal(web_storage, callback);
+  return web_storage.get();
+}
+
 bool CefRequestContextImpl::RegisterSchemeHandlerFactory(
     const CefString& scheme_name,
     const CefString& domain_name,
@@ -476,6 +494,16 @@ void CefRequestContextImpl::ClearCertificateExceptions(
       content::GetUIThreadTaskRunner({}),
       base::BindOnce(&CefRequestContextImpl::ClearCertificateExceptionsInternal,
                      this, callback));
+}
+
+void CefRequestContextImpl::ClearClientAuthenticationCache(
+    CefRefPtr<CefCompletionCallback> callback) {
+  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCache";
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(
+          &CefRequestContextImpl::ClearClientAuthenticationCacheInternal, this,
+          callback));
 }
 
 void CefRequestContextImpl::ClearHttpAuthCredentials(
@@ -690,6 +718,29 @@ void CefRequestContextImpl::ClearCertificateExceptionsInternal(
   }
 }
 
+void CefRequestContextImpl::ClearClientAuthenticationCacheInternal(
+    CefRefPtr<CefCompletionCallback> callback,
+    CefBrowserContext::Getter browser_context_getter) {
+  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCacheInternal";
+  auto browser_context = browser_context_getter.Run();
+  if (!browser_context)
+    return;
+
+  AlloyClientCertLookupTable::Clear();
+
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::IO)) {
+    NotifyClientCertificatesChanged();
+  } else {
+    content::GetIOThreadTaskRunner({})->PostTask(
+        FROM_HERE, base::BindOnce(&NotifyClientCertificatesChanged));
+  }
+
+  if (callback) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefCompletionCallback::OnComplete, callback));
+  }
+}
+
 void CefRequestContextImpl::ClearHttpAuthCredentialsInternal(
     CefRefPtr<CefCompletionCallback> callback,
     CefBrowserContext::Getter browser_context_getter) {
@@ -738,6 +789,20 @@ void CefRequestContextImpl::InitializeCookieManagerInternal(
                                                      callback);
                         },
                         cookie_manager, callback));
+}
+
+void CefRequestContextImpl::InitializeWebStorageInternal(
+    CefRefPtr<CefWebStorageImpl> web_storage,
+    CefRefPtr<CefCompletionCallback> callback) {
+  GetBrowserContext(content::GetUIThreadTaskRunner({}),
+                    base::BindOnce(
+                        [](CefRefPtr<CefWebStorageImpl> web_storage,
+                           CefRefPtr<CefCompletionCallback> callback,
+                           CefBrowserContext::Getter browser_context_getter) {
+                          web_storage->Initialize(browser_context_getter,
+                                                  callback);
+                        },
+                        web_storage, callback));
 }
 
 void CefRequestContextImpl::InitializeMediaRouterInternal(

@@ -1,19 +1,27 @@
-// Copyright 2020 The Chromium Embedded Framework Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_
 #define CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_
 #pragma once
+#include <map>
+#include <set>
+#include <unordered_map>
 
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
+#include "include/cef_image.h"
+#include "include/cef_permission_request.h"
+#include "include/cef_task.h"
 #include "include/views/cef_browser_view.h"
 #include "libcef/browser/browser_contents_delegate.h"
 #include "libcef/browser/browser_info.h"
 #include "libcef/browser/browser_platform_delegate.h"
 #include "libcef/browser/devtools/devtools_manager.h"
 #include "libcef/browser/frame_host_impl.h"
+#include "libcef/browser/permission/alloy_permission_request_handler.h"
 #include "libcef/browser/request_context_impl.h"
 
 #include "base/observer_list.h"
@@ -23,6 +31,8 @@
 namespace extensions {
 class Extension;
 }
+
+class AlloyPermissionRequestHandler;
 
 // Parameters that are passed to the runtime-specific Create methods.
 struct CefBrowserCreateParams {
@@ -39,7 +49,7 @@ struct CefBrowserCreateParams {
     settings = that.settings;
     request_context = that.request_context;
     extra_info = that.extra_info;
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
     browser_view = that.browser_view;
 #endif
     return *this;
@@ -49,7 +59,7 @@ struct CefBrowserCreateParams {
   // views-hosted browser. Currently used with the alloy runtime only.
   std::unique_ptr<CefWindowInfo> window_info;
 
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
   // The BrowserView that will own a Views-hosted browser. Will be nullptr for
   // popup browsers.
   CefRefPtr<CefBrowserView> browser_view;
@@ -90,12 +100,32 @@ struct CefBrowserCreateParams {
       extensions::mojom::ViewType::kInvalid;
 };
 
+class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
+ public:
+  WebMessageReceiverImpl() = default;
+  ~WebMessageReceiverImpl();
+
+  // WebMessagePort::MessageReceiver implementation:
+  bool OnMessage(blink::WebMessagePort::Message message) override;
+
+  void SetOnMessageCallback(CefRefPtr<CefJavaScriptResultCallback> callback);
+
+ private:
+  CefRefPtr<CefJavaScriptResultCallback> callback_;
+};
+
+struct CefHitData {
+  int type;
+  CefString extra_data;
+};
+
 // Base class for CefBrowserHost implementations. Includes functionality that is
 // shared by the alloy and chrome runtimes. All methods are thread-safe unless
 // otherwise indicated.
 class CefBrowserHostBase : public CefBrowserHost,
                            public CefBrowser,
-                           public CefBrowserContentsDelegate::Observer {
+                           public CefBrowserContentsDelegate::Observer,
+                           public CefBrowserPermissionRequestDelegate {
  public:
   // Interface to implement for observers that wish to be informed of changes
   // to the CefBrowserHostBase. All methods will be called on the UI thread.
@@ -149,6 +179,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   // was not properly shut down.
   virtual void DestroyBrowser();
 
+  void PostTaskToUIThread(CefRefPtr<CefTask> task) override;
+
   // CefBrowserHost methods:
   CefRefPtr<CefBrowser> GetBrowser() override;
   CefRefPtr<CefClient> GetClient() override;
@@ -181,6 +213,35 @@ class CefBrowserHostBase : public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
 
+#if BUILDFLAG(IS_OHOS)
+  /* ohos webview begin */
+  void SetWebPreferences(const CefBrowserSettings& browser_settings) override;
+  void PutUserAgent(const CefString& ua) override;
+  CefString DefaultUserAgent() override;
+  void UpdateBrowserSettings(const CefBrowserSettings& browser_settings);
+  void RegisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) override;
+  void UnregisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) override;
+  void OnWebPreferencesChanged();
+  void ReloadOriginalUrl() override;
+  void StoreWebArchive(
+      const CefString& base_name,
+      bool auto_name,
+      CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
+  void GetImageForContextNode() override;
+  void GetImageFromCache(const CefString& url) override;
+  void SetBrowserUserAgentString(const CefString& user_agent) override;
+  void ExitFullScreen() override;
+  void UpdateLocale(const CefString& locale) override;
+  CefString GetOriginalUrl() override;
+  void PutNetworkAvailable(bool available) override;
+  void RemoveCache(bool include_disk_files) override;
+  /* ohos webview end */
+#endif
+
   // CefBrowser methods:
   bool IsValid() override;
   CefRefPtr<CefBrowserHost> GetHost() override;
@@ -188,6 +249,9 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GoBack() override;
   bool CanGoForward() override;
   void GoForward() override;
+  bool CanGoBackOrForward(int num_steps) override;
+  void GoBackOrForward(int num_steps) override;
+  void DeleteHistory() override;
   bool IsLoading() override;
   void Reload() override;
   void ReloadIgnoreCache() override;
@@ -203,10 +267,70 @@ class CefBrowserHostBase : public CefBrowserHost,
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
+  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
+      override;
+  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
+#if BUILDFLAG(IS_OHOS)
+  void CreateWebMessagePorts(std::vector<CefString>& ports) override;
+  void PostWebMessage(CefString& message,
+                      std::vector<CefString>& ports,
+                      CefString& targetUri) override;
+  void ClosePort(CefString& port_handle) override;
+  void PostPortMessage(CefString& port_handle, CefString& data) override;
+  void SetPortMessageCallback(
+      CefString& port_handle,
+      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+  void DestroyAllWebMessagePorts() override;
+#endif
+  CefString Title() override;
+  void GetHitData(int& type, CefString& extra_data) override;
+  void SetInitialScale(float scale) override;
+  void SetVirtualPixelRatio(float ratio) override;
+  float GetVirtualPixelRatio() const;
+  int PageLoadProgress() override;
+  float Scale() override;
+  void LoadWithDataAndBaseUrl(const CefString& baseUrl,
+                              const CefString& data,
+                              const CefString& mimeType,
+                              const CefString& encoding,
+                              const CefString& historyUrl) override;
+
+  void LoadWithData(const CefString& data,
+                    const CefString& mimeType,
+                    const CefString& encoding) override;
+
+  void ExecuteJavaScript(
+      const CefString& code,
+      CefRefPtr<CefJavaScriptResultCallback> callback) override;
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
   void OnWebContentsDestroyed(content::WebContents* web_contents) override;
+
+  AlloyPermissionRequestHandler* GetPermissionRequestHandler() {
+    return permission_request_handler_.get();
+  }
+
+  // CefBrowserPermissionRequestDelegate methods:
+  void AskGeolocationPermission(const CefString& origin,
+                                cef_permission_callback_t callback) override;
+  void AbortAskGeolocationPermission(const CefString& origin) override;
+  void NotifyGeolocationPermission(bool value,
+                                   const CefString& origin) override;
+  void AskProtectedMediaIdentifierPermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
+  void AbortAskProtectedMediaIdentifierPermission(
+      const CefString& origin) override;
+  void AskMIDISysexPermission(const CefString& origin,
+                              cef_permission_callback_t callback) override;
+  void AbortAskMIDISysexPermission(const CefString& origin) override;
+
+  // Geolocation API support
+  void PopupGeolocationPrompt(std::string origin,
+                              cef_permission_callback_t callback);
+  void RemoveGeolocationPrompt(std::string origin);
+  void OnGeolocationShow(std::string origin);
 
   // Returns the frame associated with the specified RenderFrameHost.
   CefRefPtr<CefFrame> GetFrameForHost(const content::RenderFrameHost* host);
@@ -228,6 +352,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void OnDidFinishLoad(CefRefPtr<CefFrameHostImpl> frame,
                        const GURL& validated_url,
                        int http_status_code);
+  void OnUpdateHitData(const int type, const CefString extra_data);
   virtual void OnSetFocus(cef_focus_source_t source) = 0;
   void ViewText(const std::string& text);
 
@@ -240,6 +365,9 @@ class CefBrowserHostBase : public CefBrowserHost,
   void OnAfterCreated();
   void OnBeforeClose();
   void OnBrowserDestroyed();
+
+  bool IsBase64Encoded(std::string encoding);
+  std::string GetDataURI(const std::string& data);
 
   // Thread-safe accessors.
   const CefBrowserSettings& settings() const { return settings_; }
@@ -265,7 +393,7 @@ class CefBrowserHostBase : public CefBrowserHost,
     return contents_delegate_.get();
   }
 
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
   // Returns the Widget owner for the browser window. Only used with windowed
   // rendering.
   views::Widget* GetWindowWidget() const;
@@ -273,6 +401,16 @@ class CefBrowserHostBase : public CefBrowserHost,
   // Returns the BrowserView associated with this browser. Only used with Views-
   // based browsers.
   CefRefPtr<CefBrowserView> GetBrowserView() const;
+#endif
+
+  void SetNativeWindow(cef_native_window_t window) override;
+  cef_accelerated_widget_t GetAcceleratedWidget();
+
+  void SetWebDebuggingAccess(bool isEnableDebug) override;
+  bool GetWebDebuggingAccess() override;
+
+#if BUILDFLAG(IS_OHOS)
+  bool ShouldShowLoadingUI() override;
 #endif
 
  protected:
@@ -302,8 +440,6 @@ class CefBrowserHostBase : public CefBrowserHost,
   // by |state_lock_|.
   base::Lock state_lock_;
   bool is_loading_ = false;
-  bool can_go_back_ = false;
-  bool can_go_forward_ = false;
   bool has_document_ = false;
   bool is_fullscreen_ = false;
   CefRefPtr<CefFrameHostImpl> focused_frame_;
@@ -312,7 +448,42 @@ class CefBrowserHostBase : public CefBrowserHost,
   std::unique_ptr<CefDevToolsManager> devtools_manager_;
 
  private:
+#if BUILDFLAG(IS_OHOS)
+  void StoreWebArchiveInternal(
+      CefRefPtr<CefStoreWebArchiveResultCallback> callback,
+      const CefString& path);
+#endif  // IS_OHOS
+  bool UseLegacyGeolocationPermissionAPI();
+  // GURL is supplied by the content layer as requesting frame.
+  // Callback is supplied by the content layer, and is invoked with the result
+  // from the permission prompt.
+  typedef std::pair<std::string, cef_permission_callback_t> OriginCallback;
+  // The first element in the list is always the currently pending request.
+  std::list<OriginCallback> unhandled_geolocation_prompts_;
+
+#if BUILDFLAG(IS_OHOS)
+  using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
+  using PortHandle = std::pair<uint64_t, uint64_t>;
+  std::map<PortHandle, MessagePipe> portMap_;
+  std::set<std::string> postedPorts_;
+  std::unordered_map<std::string, scoped_refptr<base::SequencedTaskRunner>>
+      runnerMap_;
+  std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
+      receiverMap_;
+#endif
+
+  CefHitData cef_hit_data_;
+  CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
+  std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
+
+  cef_accelerated_widget_t widget_;
+  bool is_web_debugging_access_ = false;
+  float virtual_pixel_ratio_ = 2.0;
+
+#if BUILDFLAG(IS_OHOS)
+  base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;
+#endif  // IS_OHOS
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_

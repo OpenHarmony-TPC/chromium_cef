@@ -13,6 +13,7 @@
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/logging.h"
 #include "base/notreached.h"
 #include "base/path_service.h"
 #include "chrome/common/chrome_constants.h"
@@ -26,7 +27,7 @@
 #include "libcef/common/util_mac.h"
 #endif
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "base/environment.h"
 #include "base/nix/xdg_util.h"
 #endif
@@ -75,6 +76,16 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
   return true;
 }
 
+#elif BUILDFLAG(IS_OHOS)
+
+bool GetDefaultUserDataDirectory(base::FilePath* result) {
+  if (!base::PathService::Get(base::DIR_OHOS_APP_DATA, result))
+    return false;
+  *result = result->Append(FILE_PATH_LITERAL("cef"));
+  *result = result->Append(FILE_PATH_LITERAL("cef_user_data"));
+  return true;
+}
+
 #endif
 
 base::FilePath GetUserDataPath(CefSettings* settings,
@@ -116,6 +127,7 @@ base::FilePath GetUserDataPath(CefSettings* settings,
 // to the desktop on any platform.
 // From chrome/browser/download/download_prefs.cc.
 bool DownloadPathIsDangerous(const base::FilePath& download_path) {
+#if !BUILDFLAG(IS_OHOS)
 #if BUILDFLAG(IS_LINUX)
   base::FilePath home_dir = base::GetHomeDir();
   if (download_path == home_dir) {
@@ -129,6 +141,11 @@ bool DownloadPathIsDangerous(const base::FilePath& download_path) {
     return false;
   }
   return (download_path == desktop_dir);
+#else
+  // chrome/browser/download/download_prefs.cc: DownloadPathIsDangerous, have no
+  // destop dir
+  return false;
+#endif
 }
 
 bool GetDefaultDownloadDirectory(base::FilePath* result) {
@@ -182,7 +199,11 @@ base::FilePath GetResourcesDir() {
 // Use a "debug.log" file in the running executable's directory.
 base::FilePath GetDefaultLogFilePath() {
   base::FilePath log_path;
+#if BUILDFLAG(IS_OHOS)
+  base::PathService::Get(base::DIR_OHOS_APP_DATA, &log_path);
+#else
   base::PathService::Get(base::DIR_EXE, &log_path);
+#endif
   return log_path.Append(FILE_PATH_LITERAL("debug.log"));
 }
 
@@ -205,6 +226,11 @@ void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line) {
   const base::FilePath& user_data_path =
       GetUserDataPath(settings, command_line);
+
+#if BUILDFLAG(IS_OHOS)
+  base::PathService::Override(base::DIR_CACHE, user_data_path.Append("cache/web"));
+  base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
+#else
   base::PathService::Override(chrome::DIR_USER_DATA, user_data_path);
 
   // Path used for crash dumps.
@@ -216,15 +242,17 @@ void OverrideUserDataDir(CefSettings* settings,
       user_data_path.Append(FILE_PATH_LITERAL("Dictionaries")),
       false,  // May not be an absolute path.
       true);  // Create if necessary.
+#endif
 }
 
-// Same as ui::ResourceBundle::IsScaleFactorSupported.
-bool IsScaleFactorSupported(ui::ResourceScaleFactor scale_factor) {
-  const auto& supported_scale_factors = ui::GetSupportedResourceScaleFactors();
-  return std::find(supported_scale_factors.begin(),
-                   supported_scale_factors.end(),
-                   scale_factor) != supported_scale_factors.end();
-}
+  // Same as ui::ResourceBundle::IsScaleFactorSupported.
+  bool IsScaleFactorSupported(ui::ResourceScaleFactor scale_factor) {
+    const auto& supported_scale_factors =
+        ui::GetSupportedResourceScaleFactors();
+    return std::find(supported_scale_factors.begin(),
+                     supported_scale_factors.end(),
+                     scale_factor) != supported_scale_factors.end();
+  }
 
 #if BUILDFLAG(IS_LINUX)
 void OverrideAssetPath() {

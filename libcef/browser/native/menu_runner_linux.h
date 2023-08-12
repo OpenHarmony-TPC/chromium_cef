@@ -22,7 +22,9 @@ class CefMenuRunnerLinux : public CefMenuRunner {
   bool FormatLabel(std::u16string& label) override;
 
  private:
+#if !BUILDFLAG(IS_OHOS)  // will implement for ohos later
   std::unique_ptr<views::MenuRunner> menu_;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NATIVE_MENU_RUNNER_LINUX_H_

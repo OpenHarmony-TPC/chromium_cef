@@ -77,6 +77,18 @@ class AlloyContentRendererClient
   // single-process mode. Blocks until cleanup is complete.
   void RunSingleProcessCleanup();
 
+#if defined(OHOS_NWEB_EX)
+  void PrepareErrorPage(content::RenderFrame* render_frame,
+                        const blink::WebURLError& error,
+                        const std::string& http_method,
+                        std::string* error_html) override;
+  void PrepareErrorPageForHttpStatusError(content::RenderFrame* render_frame,
+                                          const blink::WebURLError& error,
+                                          const std::string& http_method,
+                                          int http_status,
+                                          std::string* error_html) override;
+#endif  // defined(OHOS_NWEB_EX)
+
   // ContentRendererClient implementation.
   void PostIOThreadCreated(
       base::SingleThreadTaskRunner* io_thread_task_runner) override;

@@ -41,6 +41,8 @@ class CefX509CertificateImpl : public CefX509Certificate {
       base::OnceCallback<void(scoped_refptr<net::SSLPrivateKey>)>
           private_key_callback);
 
+  void setClientCert(scoped_refptr<net::X509Certificate> cert) { cert_ = cert; }
+
  private:
   void GetEncodedIssuerChain(IssuerChainBinaryList& chain, bool der);
 

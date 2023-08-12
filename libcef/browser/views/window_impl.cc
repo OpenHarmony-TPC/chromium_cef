@@ -53,6 +53,7 @@ void InitializeUITesting() {
   if (!initialized) {
     ui_controls::EnableUIControls();
 
+#if !BUILDFLAG(IS_OHOS)
 #if defined(USE_AURA)
 #if BUILDFLAG(IS_WIN)
     ui_controls::InstallUIControlsAura(
@@ -60,6 +61,7 @@ void InitializeUITesting() {
 #elif defined(USE_OZONE)
     ui_controls::InstallUIControlsAura(
         views::test::CreateUIControlsDesktopAuraOzone());
+#endif
 #endif
 #endif  // defined(USE_AURA)
 

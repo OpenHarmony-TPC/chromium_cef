@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=374e065650a2c8fb36590542723d8e171f5de9ad$
+// $hash=1c8c2d9b0eff1833a030f2e75515f7d7c60cada4$
 //
 
 #include "libcef_dll/ctocpp/life_span_handler_ctocpp.h"
@@ -97,6 +97,40 @@ bool CefLifeSpanHandlerCToCpp::OnBeforePopup(
   // Restore param:no_javascript_access; type: bool_byaddr
   if (no_javascript_access)
     *no_javascript_access = no_javascript_accessInt ? true : false;
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefLifeSpanHandlerCToCpp::OnPreBeforePopup(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    const CefString& target_url,
+    WindowOpenDisposition target_disposition,
+    bool user_gesture) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_life_span_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_pre_before_popup))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return false;
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame.get());
+  if (!frame.get())
+    return false;
+  // Unverified params: target_url
+
+  // Execute
+  int _retval = _struct->on_pre_before_popup(
+      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
+      target_url.GetStruct(), target_disposition, user_gesture);
 
   // Return type: bool
   return _retval ? true : false;

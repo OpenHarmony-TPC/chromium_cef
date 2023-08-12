@@ -218,7 +218,8 @@ void ChromeBrowserHostImpl::PrintToPDF(
 void ChromeBrowserHostImpl::Find(const CefString& searchText,
                                  bool forward,
                                  bool matchCase,
-                                 bool findNext) {
+                                 bool findNext,
+                                 bool newSession) {
   NOTIMPLEMENTED();
 }
 
@@ -582,3 +583,5 @@ int ChromeBrowserHostImpl::GetCurrentTabIndex() const {
   }
   return TabStripModel::kNoTab;
 }
+
+void ChromeBrowserHostImpl::SetBackgroundColor(int color) {}

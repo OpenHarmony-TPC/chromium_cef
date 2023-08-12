@@ -1,6 +1,7 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_
@@ -145,6 +146,8 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
   std::unique_ptr<content::ResourceContext> resource_context_;
 
   scoped_refptr<MediaDeviceIDSalt> media_device_id_salt_;
+
+  std::unique_ptr<content::PermissionControllerDelegate> permission_manager_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_

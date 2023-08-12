@@ -9,7 +9,9 @@
 #include "include/cef_request_context.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/media_router/media_router_impl.h"
+#include "libcef/browser/net_database/cef_data_base_impl.h"
 #include "libcef/browser/net_service/cookie_manager_impl.h"
+#include "libcef/browser/storage/web_storage_impl.h"
 #include "libcef/browser/thread_util.h"
 
 namespace content {
@@ -66,6 +68,9 @@ class CefRequestContextImpl : public CefRequestContext {
   CefString GetCachePath() override;
   CefRefPtr<CefCookieManager> GetCookieManager(
       CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefDataBase> GetDataBase() override;
+  CefRefPtr<CefWebStorage> GetWebStorage(
+      CefRefPtr<CefCompletionCallback> callback) override;
   bool RegisterSchemeHandlerFactory(
       const CefString& scheme_name,
       const CefString& domain_name,
@@ -80,6 +85,8 @@ class CefRequestContextImpl : public CefRequestContext {
                      CefRefPtr<CefValue> value,
                      CefString& error) override;
   void ClearCertificateExceptions(
+      CefRefPtr<CefCompletionCallback> callback) override;
+  void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) override;
   void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) override;
@@ -149,6 +156,9 @@ class CefRequestContextImpl : public CefRequestContext {
   void ClearCertificateExceptionsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
+  void ClearClientAuthenticationCacheInternal(
+      CefRefPtr<CefCompletionCallback> callback,
+      CefBrowserContext::Getter browser_context_getter);
   void ClearHttpAuthCredentialsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
@@ -162,6 +172,8 @@ class CefRequestContextImpl : public CefRequestContext {
   void InitializeCookieManagerInternal(
       CefRefPtr<CefCookieManagerImpl> cookie_manager,
       CefRefPtr<CefCompletionCallback> callback);
+  void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
+                                    CefRefPtr<CefCompletionCallback> callback);
   void InitializeMediaRouterInternal(CefRefPtr<CefMediaRouterImpl> media_router,
                                      CefRefPtr<CefCompletionCallback> callback);
 

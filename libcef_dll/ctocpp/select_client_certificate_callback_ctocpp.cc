@@ -9,18 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=97852992a8406868d2b0dedf08a538a78b1cde9c$
+// $hash=f77cbb1874239eff164c3654befdc0f4fe81fed9$
 //
 
 #include "libcef_dll/ctocpp/select_client_certificate_callback_ctocpp.h"
-#include "libcef_dll/ctocpp/x509certificate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
 void CefSelectClientCertificateCallbackCToCpp::Select(
-    CefRefPtr<CefX509Certificate> cert) {
+    const CefString& private_key_file,
+    const CefString& cert_chain_file) {
   shutdown_checker::AssertNotShutdown();
 
   cef_select_client_certificate_callback_t* _struct = GetStruct();
@@ -29,10 +29,46 @@ void CefSelectClientCertificateCallbackCToCpp::Select(
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Unverified params: cert
+  // Verify param: private_key_file; type: string_byref_const
+  DCHECK(!private_key_file.empty());
+  if (private_key_file.empty())
+    return;
+  // Verify param: cert_chain_file; type: string_byref_const
+  DCHECK(!cert_chain_file.empty());
+  if (cert_chain_file.empty())
+    return;
 
   // Execute
-  _struct->select(_struct, CefX509CertificateCToCpp::Unwrap(cert));
+  _struct->select(_struct, private_key_file.GetStruct(),
+                  cert_chain_file.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefSelectClientCertificateCallbackCToCpp::Cancel() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_select_client_certificate_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, cancel))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->cancel(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefSelectClientCertificateCallbackCToCpp::Ignore() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_select_client_certificate_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ignore))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->ignore(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

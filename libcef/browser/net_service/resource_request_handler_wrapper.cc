@@ -1,6 +1,7 @@
-// Copyright (c) 2019 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include "libcef/browser/net_service/resource_request_handler_wrapper.h"
 
@@ -32,6 +33,7 @@
 #include "content/public/browser/web_contents.h"
 #include "net/base/load_flags.h"
 #include "net/http/http_status_code.h"
+#include "net_helpers.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
 #include "ui/base/page_transition_types.h"
 #include "url/origin.h"
@@ -567,9 +569,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                         network::ResourceRequest* request,
                         base::OnceClosure callback) {
     CEF_REQUIRE_IOT();
-
     if (!cookie_helper::IsCookieableScheme(request->url,
-                                           init_state_->cookieable_schemes_)) {
+                                           init_state_->cookieable_schemes_) ||
+        !net_service::NetHelpers::IsThirdPartyCookieAllowed()) {
       // The scheme does not support cookies.
       std::move(callback).Run();
       return;
@@ -702,6 +704,80 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
   }
 
+#if BUILDFLAG(IS_OHOS)
+  void GetOhosResourceHandlerResult(
+      int32_t request_id,
+      network::ResourceRequest* request,
+      CefRefPtr<CefResourceHandler> resource_handler,
+      ShouldInterceptRequestResultCallback callback) {
+    CEF_REQUIRE_IOT();
+    RequestState* state = GetState(request_id);
+    if (!state) {
+      std::move(callback).Run(nullptr);
+      return;
+    }
+
+    if (!resource_handler && state->scheme_factory_) {
+      // Does the scheme factory want to handle the request?
+      resource_handler = state->scheme_factory_->Create(
+          init_state_->browser_, init_state_->frame_, request->url.scheme(),
+          state->pending_request_.get());
+    }
+
+    std::unique_ptr<ResourceResponse> resource_response;
+    if (resource_handler) {
+      resource_response = CreateResourceResponse(request_id, resource_handler);
+      DCHECK(resource_response);
+      state->was_custom_handled_ = true;
+    } else {
+      // The request will be handled by the NetworkService. Remove the
+      // "Accept-Language" header here so that it can be re-added in
+      // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
+    }
+
+    // Continue the request.
+    std::move(callback).Run(std::move(resource_response));
+  }
+
+  void GetOhosResourceHandlerInUiTask(
+      int32_t request_id,
+      network::ResourceRequest* request,
+      ShouldInterceptRequestResultCallback callback) {
+    CEF_REQUIRE_UIT();
+    RequestState* state = GetState(request_id);
+    if (!state) {
+      std::move(callback).Run(nullptr);
+      return;
+    }
+    CefRefPtr<CefResourceHandler> resource_handler;
+
+    if (state->handler_) {
+      // Does the client want to handle the request?
+      resource_handler = state->handler_->GetResourceHandler(
+          init_state_->browser_, init_state_->frame_,
+          state->pending_request_.get());
+    }
+
+    CEF_POST_TASK(
+        CEF_IOT,
+        base::BindOnce(
+            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResult,
+            weak_ptr_factory_.GetWeakPtr(), request_id, request,
+            resource_handler, std::move(callback)));
+  }
+
+  void GetOhosResourceHandler(int32_t request_id,
+                              network::ResourceRequest* request,
+                              ShouldInterceptRequestResultCallback callback) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(
+            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerInUiTask,
+            weak_ptr_factory_.GetWeakPtr(), request_id, request,
+            std::move(callback)));
+  }
+#endif
+
   void ContinueShouldInterceptRequest(
       int32_t request_id,
       network::ResourceRequest* request,
@@ -750,6 +826,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         return;
       }
     }
+#if BUILDFLAG(IS_OHOS)
+    GetOhosResourceHandler(request_id, request, std::move(callback));
+#else
 
     CefRefPtr<CefResourceHandler> resource_handler;
 
@@ -775,11 +854,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in
       // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
-      request->headers.RemoveHeader(net::HttpRequestHeaders::kAcceptLanguage);
     }
 
     // Continue the request.
     std::move(callback).Run(std::move(resource_response));
+#endif
   }
 
   void ProcessResponseHeaders(int32_t request_id,
@@ -948,7 +1027,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
     if (!cookie_helper::IsCookieableScheme(request->url,
-                                           init_state_->cookieable_schemes_)) {
+                                           init_state_->cookieable_schemes_) ||
+        !net_service::NetHelpers::IsThirdPartyCookieAllowed()) {
       // The scheme does not support cookies.
       std::move(callback).Run();
       return;
@@ -1097,6 +1177,27 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
     RemoveState(request_id);
+  }
+
+  void OnHttpError(int32_t request_id,
+                   CefRefPtr<CefRequest> request,
+                   bool is_main_frame,
+                   bool has_user_gesture,
+                   CefRefPtr<CefResponse> error_response) override {
+    CEF_REQUIRE_UIT();
+    if (!init_state_->browser_) {
+      return;
+    }
+    CefRefPtr<CefClient> client = init_state_->browser_->GetHost()->GetClient();
+    if (!client) {
+      return;
+    }
+    CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+    if (!load_handler) {
+      return;
+    }
+    load_handler->OnHttpError(request, is_main_frame, has_user_gesture,
+                              error_response);
   }
 
  private:

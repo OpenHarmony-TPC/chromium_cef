@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=69f1920b81a34d3d65bd1e1a6b41c37c0b6f28d6$
+// $hash=5bfee30715aa6f371b446b195cba6e5e05f7793f$
 //
 
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/cpptoc/domvisitor_cpptoc.h"
+#include "libcef_dll/cpptoc/get_images_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/string_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/urlrequest_client_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -396,6 +397,24 @@ void CefFrameCToCpp::VisitDOM(CefRefPtr<CefDOMVisitor> visitor) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefFrameCToCpp::LoadHeaderUrl(const CefString& url,
+                                   const CefString& additionalHttpHeaders) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_frame_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, load_header_url))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: url, additionalHttpHeaders
+
+  // Execute
+  _struct->load_header_url(_struct, url.GetStruct(),
+                           additionalHttpHeaders.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
 CefRefPtr<CefURLRequest> CefFrameCToCpp::CreateURLRequest(
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefURLRequestClient> client) {
@@ -444,6 +463,25 @@ void CefFrameCToCpp::SendProcessMessage(CefProcessId target_process,
   // Execute
   _struct->send_process_message(_struct, target_process,
                                 CefProcessMessageCToCpp::Unwrap(message));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefFrameCToCpp::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_frame_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_images))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get())
+    return;
+
+  // Execute
+  _struct->get_images(_struct, CefGetImagesCallbackCppToC::Wrap(callback));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

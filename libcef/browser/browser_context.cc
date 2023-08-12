@@ -19,6 +19,7 @@
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/no_destructor.h"
+#include "base/path_service.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "chrome/browser/profiles/profile.h"
@@ -183,7 +184,7 @@ CefBrowserContext::~CefBrowserContext() {
 }
 
 void CefBrowserContext::Initialize() {
-  cache_path_ = base::FilePath(CefString(&settings_.cache_path));
+  base::PathService::Get(base::DIR_CACHE, &cache_path_);
 
   if (!cache_path_.empty())
     g_manager.Get().SetImplPath(this, cache_path_);

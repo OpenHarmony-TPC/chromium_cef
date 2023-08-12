@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fa45e2603966fc7a6c93c930dd4c03692cf10fd2$
+// $hash=162a493c73858bd96eb41016a031932bb23d4a70$
 //
 
 #include "libcef_dll/cpptoc/request_handler_cpptoc.h"
@@ -23,6 +23,7 @@
 #include "libcef_dll/ctocpp/sslinfo_ctocpp.h"
 #include "libcef_dll/ctocpp/x509certificate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+#include "libcef_dll/transfer_util.h"
 
 namespace {
 
@@ -282,6 +283,8 @@ int CEF_CALLBACK request_handler_on_select_client_certificate(
     int isProxy,
     const cef_string_t* host,
     int port,
+    cef_string_list_t key_types,
+    cef_string_list_t principals,
     size_t certificatesCount,
     struct _cef_x509certificate_t* const* certificates,
     cef_select_client_certificate_callback_t* callback) {
@@ -300,6 +303,14 @@ int CEF_CALLBACK request_handler_on_select_client_certificate(
   DCHECK(host);
   if (!host)
     return 0;
+  // Verify param: key_types; type: string_vec_byref_const
+  DCHECK(key_types);
+  if (!key_types)
+    return 0;
+  // Verify param: principals; type: string_vec_byref_const
+  DCHECK(principals);
+  if (!principals)
+    return 0;
   // Verify param: certificates; type: refptr_vec_diff_byref_const
   DCHECK(certificatesCount == 0 || certificates);
   if (certificatesCount > 0 && !certificates)
@@ -309,6 +320,12 @@ int CEF_CALLBACK request_handler_on_select_client_certificate(
   if (!callback)
     return 0;
 
+  // Translate param: key_types; type: string_vec_byref_const
+  std::vector<CefString> key_typesList;
+  transfer_string_list_contents(key_types, key_typesList);
+  // Translate param: principals; type: string_vec_byref_const
+  std::vector<CefString> principalsList;
+  transfer_string_list_contents(principals, principalsList);
   // Translate param: certificates; type: refptr_vec_diff_byref_const
   std::vector<CefRefPtr<CefX509Certificate>> certificatesList;
   if (certificatesCount > 0) {
@@ -322,7 +339,7 @@ int CEF_CALLBACK request_handler_on_select_client_certificate(
   // Execute
   bool _retval = CefRequestHandlerCppToC::Get(self)->OnSelectClientCertificate(
       CefBrowserCToCpp::Wrap(browser), isProxy ? true : false, CefString(host),
-      port, certificatesList,
+      port, key_typesList, principalsList, certificatesList,
       CefSelectClientCertificateCallbackCToCpp::Wrap(callback));
 
   // Return type: bool

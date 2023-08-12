@@ -7,6 +7,7 @@
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 
 #include "base/compiler_specific.h"
+#include "base/logging.h"
 #include "base/strings/string_util.h"
 #include "ui/gfx/geometry/point.h"
 
@@ -16,6 +17,7 @@ bool CefMenuRunnerLinux::RunContextMenu(
     AlloyBrowserHostImpl* browser,
     CefMenuModelImpl* model,
     const content::ContextMenuParams& params) {
+#if !BUILDFLAG(IS_OHOS)  // will implement for ohos later
   menu_.reset(
       new views::MenuRunner(model->model(), views::MenuRunner::CONTEXT_MENU));
 
@@ -28,13 +30,18 @@ bool CefMenuRunnerLinux::RunContextMenu(
 
   menu_->RunMenuAt(parent_widget, nullptr, gfx::Rect(screen_point, gfx::Size()),
                    views::MenuAnchorPosition::kTopRight, ui::MENU_SOURCE_NONE);
+#else
+  LOG(INFO) << "context menu not implement for ohos yet!";
+#endif
 
   return true;
 }
 
 void CefMenuRunnerLinux::CancelContextMenu() {
+#if !BUILDFLAG(IS_OHOS)  // will implement for ohos later
   if (menu_)
     menu_->Cancel();
+#endif
 }
 
 bool CefMenuRunnerLinux::FormatLabel(std::u16string& label) {

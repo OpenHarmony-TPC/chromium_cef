@@ -19,6 +19,10 @@
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "third_party/blink/public/web/web_element.h"
+#endif  // BUILDFLAG(IS_OHOS)
+
 namespace base {
 class ListValue;
 }
@@ -79,6 +83,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
       CefRefPtr<CefURLRequestClient> client) override;
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
+  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
 
   // Used by CefRenderURLRequest.
   std::unique_ptr<blink::WebURLLoader> CreateURLLoader();
@@ -94,6 +99,12 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void OnDetached();
 
   blink::WebLocalFrame* web_frame() const { return frame_; }
+
+#if BUILDFLAG(IS_OHOS)
+  void LoadHeaderUrl(const CefString& url,
+                     const CefString& additionalHttpHeaders) override;
+  void OnFocusedNodeChanged(const blink::WebElement& element);
+#endif  // BUILDFLAG(IS_OHOS)
 
  private:
   // Execute an action on the associated WebLocalFrame. This will queue the
@@ -138,6 +149,32 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void LoadRequest(cef::mojom::RequestParamsPtr params) override;
   void DidStopLoading() override;
   void MoveOrResizeStarted() override;
+#if BUILDFLAG(IS_OHOS)
+  void SendTouchEvent(cef::mojom::TouchEventParamsPtr params) override;
+  void SetInitialScale(float initialScale) override;
+  void SetJsOnlineProperty(bool network_up) override;
+  void PutZoomingForTextFactor(float factor) override;
+  void GetImageForContextNode() override;
+  void UpdateLocale(const std::string& locale) override;
+  void GetImagesWithResponse(
+    cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) override;
+  void RemoveCache() override;
+  
+  GURL GetAbsoluteUrl(const blink::WebNode& node,
+                      const std::u16string& url_fragment);
+  GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
+  blink::WebElement GetImgChild(const blink::WebNode& node);
+  GURL GetChildImageUrlFromElement(const blink::WebElement& element);
+  bool RemovePrefixAndAssignIfMatches(const std::string prefix,
+                                      const GURL& url,
+                                      std::string* dest);
+  void DistinguishAndAssignSrcLinkType(const GURL& url,
+                                       cef::mojom::HitDataParamsPtr& data);
+  void PopulateHitTestData(const GURL& absolute_link_url,
+                           const GURL& absolute_image_url,
+                           bool is_editable,
+                           cef::mojom::HitDataParamsPtr& data);
+#endif  // BUILDFLAG(IS_OHOS)
 
   CefBrowserImpl* browser_;
   blink::WebLocalFrame* frame_;

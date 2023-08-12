@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cf0a0d91c37feb03b7526f21494d84d661cef6e4$
+// $hash=c1dca55691f6d564ad2a69b38acd141982368895$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_VISITOR_CTOCPP_H_
@@ -39,6 +39,7 @@ class CefCookieVisitorCToCpp
              int count,
              int total,
              bool& deleteCookie) override;
+  void SetCookieLine(const CefString& cookieLine) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_VISITOR_CTOCPP_H_

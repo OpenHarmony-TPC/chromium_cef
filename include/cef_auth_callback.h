@@ -59,6 +59,12 @@ class CefAuthCallback : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void Cancel() = 0;
+
+  ///
+  // IsHttpAuthInfoSaved the authentication request.
+  ///
+  /*--cef()--*/
+  virtual bool IsHttpAuthInfoSaved() = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_AUTH_CALLBACK_H_

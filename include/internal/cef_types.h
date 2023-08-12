@@ -31,7 +31,10 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_H_
 #pragma once
 
+#include "build/build_config.h"
+
 #include "include/base/cef_basictypes.h"
+#include "include/base/cef_callback.h"
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_string_list.h"
 #include "include/internal/cef_time.h"
@@ -42,9 +45,18 @@
 #include "include/internal/cef_types_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_types_mac.h"
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "include/internal/cef_types_linux.h"
 #endif
+
+// Permission request callback.
+typedef base::RepeatingCallback<void(bool)> cef_permission_callback_t;
+
+// cef accelerated widget type
+typedef uint32_t cef_accelerated_widget_t;
+
+// cef native window type
+typedef void* cef_native_window_t;
 
 // 32-bit ARGB color value, not premultiplied. The color components are always
 // in a known order. Equivalent to the SkColor type.
@@ -646,6 +658,26 @@ typedef struct _cef_browser_settings_t {
   // empty then "en-US,en" will be used.
   ///
   cef_string_t accept_language_list;
+
+  /* ohos webview begin */
+  ///
+  // Force the background color to be dark
+  ///
+  cef_state_t force_dark_mode_enabled;
+  cef_state_t loads_images_automatically;
+  bool javascript_can_open_windows_automatically;
+  int text_size_percent;
+  cef_state_t allow_running_insecure_content;
+  cef_state_t strict_mixed_content_checking;
+  cef_state_t allow_mixed_content_upgrades;
+  bool geolocation_enabled;
+  bool supports_double_tap_zoom;
+  bool supports_multi_touch_zoom;
+  cef_state_t initialize_at_minimum_page_scale;
+  bool viewport_meta_enabled;
+  bool user_gesture_required;
+  bool pinch_smooth_mode;
+  /* ohos webview end */
 } cef_browser_settings_t;
 
 ///
@@ -1526,6 +1558,17 @@ typedef enum {
 } cef_jsdialog_type_t;
 
 ///
+// Screen orientation types.
+///
+typedef enum {
+  UNDEFINED,
+  PORTRAIT_PRIMARY,
+  PORTRAIT_SECONDARY,
+  LANDSCAPE_PRIMARY,
+  LANDSCAPE_SECONDARY
+} cef_screen_orientation_type_t;
+
+///
 // Screen information used when window rendering is disabled. This structure is
 // passed as a parameter to CefRenderHandler::GetScreenInfo and should be filled
 // in by the client.
@@ -1579,6 +1622,16 @@ typedef struct _cef_screen_info_t {
   // available surface for rendering popup views.
   ///
   cef_rect_t available_rect;
+
+  ///
+  // This is screen orientation angle.
+  ///
+  int16_t angle;
+
+  ///
+  // This is screen orientation type.
+  ///
+  cef_screen_orientation_type_t orientation;
 } cef_screen_info_t;
 
 ///
@@ -1619,6 +1672,7 @@ typedef enum {
 
   // Custom menu items originating from the renderer process.
   MENU_ID_CUSTOM_FIRST = 220,
+  MENU_ID_IMAGE_COPY = 221,
   MENU_ID_CUSTOM_LAST = 250,
 
   // All user-defined menu IDs should come between MENU_ID_USER_FIRST and
@@ -1635,6 +1689,10 @@ typedef enum {
   MBT_LEFT = 0,
   MBT_MIDDLE,
   MBT_RIGHT,
+#if BUILDFLAG(IS_OHOS)
+  MBT_BACK,
+  MBT_FORWARD,
+#endif
 } cef_mouse_button_type_t;
 
 ///
@@ -1770,6 +1828,10 @@ typedef enum {
   EVENTFLAG_IS_RIGHT = 1 << 11,
   EVENTFLAG_ALTGR_DOWN = 1 << 12,
   EVENTFLAG_IS_REPEAT = 1 << 13,
+#if BUILDFLAG(IS_OHOS)
+  EVENTFLAG_BACK_MOUSE_BUTTON = 1 << 14,
+  EVENTFLAG_FORWARD_MOUSE_BUTTON = 1 << 15,
+#endif
 } cef_event_flags_t;
 
 ///
@@ -1892,6 +1954,18 @@ typedef enum {
   CM_EDITFLAG_CAN_TRANSLATE = 1 << 7,
   CM_EDITFLAG_CAN_EDIT_RICHLY = 1 << 8,
 } cef_context_menu_edit_state_flags_t;
+
+///
+// Supported quick menu state bit flags.
+///
+typedef enum {
+  QM_EDITFLAG_NONE = 0,
+  QM_EDITFLAG_CAN_ELLIPSIS = 1 << 0,
+  QM_EDITFLAG_CAN_CUT = 1 << 1,
+  QM_EDITFLAG_CAN_COPY = 1 << 2,
+  QM_EDITFLAG_CAN_PASTE = 1 << 3,
+  QM_EDITFLAG_CAN_SELECT_ALL = 1 << 4,
+} cef_quick_menu_edit_state_flags_t;
 
 ///
 // Key event types.
@@ -2593,6 +2667,11 @@ typedef enum {
   // BGRA with 8 bits per pixel (32bits total).
   ///
   CEF_COLOR_TYPE_BGRA_8888,
+
+  ///
+  // Unknown color type.
+  ///
+  CEF_COLOR_TYPE_UNKNOWN,
 } cef_color_type_t;
 
 ///
@@ -2613,6 +2692,11 @@ typedef enum {
   // Transparency with post-multiplied alpha component.
   ///
   CEF_ALPHA_TYPE_POSTMULTIPLIED,
+
+  ///
+  // Unknown alpha type.
+  ///
+  CEF_ALPHA_TYPE_UNKNOWN,
 } cef_alpha_type_t;
 
 ///
@@ -2758,6 +2842,11 @@ typedef enum {
   // Align the text's right edge with that of its display area.
   ///
   CEF_HORIZONTAL_ALIGNMENT_RIGHT,
+
+  ///
+  // Undefined align.
+  ///
+  CEF_HORIZONTAL_ALIGNMENT_UNDEFINED,
 } cef_horizontal_alignment_t;
 
 ///
@@ -3166,6 +3255,58 @@ typedef enum {
   CEF_SHOW_STATE_MAXIMIZED,
   CEF_SHOW_STATE_FULLSCREEN,
 } cef_show_state_t;
+
+///
+// Values indicating what state of the touch handle is set.
+///
+typedef enum {
+  CEF_THS_FLAG_NONE = 0,
+  CEF_THS_FLAG_ENABLED = 1 << 0,
+  CEF_THS_FLAG_ORIENTATION = 1 << 1,
+  CEF_THS_FLAG_ORIGIN = 1 << 2,
+  CEF_THS_FLAG_ALPHA = 1 << 3,
+  CEF_THS_FLAG_EDGE_HEIGHT = 1 << 4,
+} cef_touch_handle_state_flags_t;
+
+typedef struct _cef_touch_handle_state_t {
+  ///
+  // Touch handle id. Increments for each new touch handle.
+  ///
+  int touch_handle_id;
+
+  ///
+  // Combination of cef_touch_handle_state_flags_t values indicating what state
+  // is set.
+  ///
+  uint32_t flags;
+
+  ///
+  // Enabled state. Only set if |flags| contains CEF_THS_FLAG_ENABLED.
+  ///
+  int enabled;
+
+  ///
+  // Orientation state. Only set if |flags| contains CEF_THS_FLAG_ORIENTATION.
+  ///
+  cef_horizontal_alignment_t orientation;
+  int mirror_vertical;
+  int mirror_horizontal;
+
+  ///
+  // Origin state. Only set if |flags| contains CEF_THS_FLAG_ORIGIN.
+  ///
+  cef_point_t origin;
+
+  ///
+  // Alpha state. Only set if |flags| contains CEF_THS_FLAG_ALPHA.
+  ///
+  float alpha;
+
+  ///
+  // Edge height state. Only set if |flags| contains CEF_THS_FLAG_EDGE_HEIGHT.
+  ///
+  float edge_height;
+} cef_touch_handle_state_t;
 
 #ifdef __cplusplus
 }

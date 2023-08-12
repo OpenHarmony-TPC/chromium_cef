@@ -72,6 +72,35 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                                   const std::vector<CefString>& icon_urls) {}
 
   ///
+  // onReceivedTouchIconUrl.
+  ///
+  /*--cef()--*/
+  virtual void OnReceivedTouchIconUrl(CefRefPtr<CefBrowser> browser,
+                                      const CefString& icon_url,
+                                      bool precomposed) {}
+
+  ///
+  // onReceivedIcon.
+  ///
+  /*--cef()--*/
+  virtual void OnReceivedIcon(const void* data,
+                              size_t width,
+                              size_t height,
+                              cef_color_type_t color_type,
+                              cef_alpha_type_t alpha_type) {}
+
+  ///
+  // OnReceivedIconUrl.
+  ///
+  /*--cef()--*/
+  virtual void OnReceivedIconUrl(const CefString& image_url,
+                                 const void* data,
+                                 size_t width,
+                                 size_t height,
+                                 cef_color_type_t color_type,
+                                 cef_alpha_type_t alpha_type) {}
+
+  ///
   // Called when web content in the page has toggled fullscreen mode. If
   // |fullscreen| is true the content will automatically be sized to fill the
   // browser content area. If |fullscreen| is false the content will
@@ -148,6 +177,14 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                               const CefCursorInfo& custom_cursor_info) {
     return false;
   }
+
+  ///
+  // Called when the page scale factor has changed.
+  ///
+  /*--cef()--*/
+  virtual void OnScaleChanged(CefRefPtr<CefBrowser> browser,
+                              float old_page_scale_factor,
+                              float new_page_scale_factor) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_

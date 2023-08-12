@@ -64,6 +64,7 @@ class CefAppManager {
   virtual ~CefAppManager();
 
  private:
+  std::vector<std::string> CustomSchemeCmdLineSplit(std::string str, const char split);
   // Custom schemes handled by the client.
   SchemeInfoList scheme_info_list_;
   bool scheme_info_list_locked_ = false;

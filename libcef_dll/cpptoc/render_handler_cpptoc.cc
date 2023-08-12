@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b64fcfb34da785eccf9a1232b35f485fbc838bda$
+// $hash=c83f5f49a5411a5071750e238c12e22bfa82c48a$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -324,6 +324,114 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), type, dirtyRectsList, shared_handle);
 }
 
+void CEF_CALLBACK
+render_handler_get_touch_handle_size(struct _cef_render_handler_t* self,
+                                     cef_browser_t* browser,
+                                     cef_horizontal_alignment_t orientation,
+                                     cef_size_t* size) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: size; type: simple_byref
+  DCHECK(size);
+  if (!size)
+    return;
+
+  // Translate param: size; type: simple_byref
+  CefSize sizeVal = size ? *size : CefSize();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetTouchHandleSize(
+      CefBrowserCToCpp::Wrap(browser), orientation, sizeVal);
+
+  // Restore param: size; type: simple_byref
+  if (size)
+    *size = sizeVal;
+}
+
+void CEF_CALLBACK render_handler_on_touch_handle_state_changed(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    const struct _cef_touch_handle_state_t* state) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: state; type: struct_byref_const
+  DCHECK(state);
+  if (!state)
+    return;
+
+  // Translate param: state; type: struct_byref_const
+  CefTouchHandleState stateObj;
+  if (state)
+    stateObj.Set(*state, false);
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnTouchHandleStateChanged(
+      CefBrowserCToCpp::Wrap(browser), stateObj);
+}
+
+void CEF_CALLBACK render_handler_on_touch_selection_changed(
+    struct _cef_render_handler_t* self,
+    const struct _cef_touch_handle_state_t* insert_handle,
+    const struct _cef_touch_handle_state_t* start_selection_handle,
+    const struct _cef_touch_handle_state_t* end_selection_handle,
+    int need_report) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: insert_handle; type: struct_byref_const
+  DCHECK(insert_handle);
+  if (!insert_handle)
+    return;
+  // Verify param: start_selection_handle; type: struct_byref_const
+  DCHECK(start_selection_handle);
+  if (!start_selection_handle)
+    return;
+  // Verify param: end_selection_handle; type: struct_byref_const
+  DCHECK(end_selection_handle);
+  if (!end_selection_handle)
+    return;
+
+  // Translate param: insert_handle; type: struct_byref_const
+  CefTouchHandleState insert_handleObj;
+  if (insert_handle)
+    insert_handleObj.Set(*insert_handle, false);
+  // Translate param: start_selection_handle; type: struct_byref_const
+  CefTouchHandleState start_selection_handleObj;
+  if (start_selection_handle)
+    start_selection_handleObj.Set(*start_selection_handle, false);
+  // Translate param: end_selection_handle; type: struct_byref_const
+  CefTouchHandleState end_selection_handleObj;
+  if (end_selection_handle)
+    end_selection_handleObj.Set(*end_selection_handle, false);
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnTouchSelectionChanged(
+      insert_handleObj, start_selection_handleObj, end_selection_handleObj,
+      need_report ? true : false);
+}
+
 int CEF_CALLBACK
 render_handler_start_dragging(struct _cef_render_handler_t* self,
                               cef_browser_t* browser,
@@ -399,6 +507,28 @@ render_handler_on_scroll_offset_changed(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), x, y);
 }
 
+void CEF_CALLBACK
+render_handler_on_root_layer_changed(struct _cef_render_handler_t* self,
+                                     cef_browser_t* browser,
+                                     int height,
+                                     int width) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnRootLayerChanged(
+      CefBrowserCToCpp::Wrap(browser), height, width);
+}
+
 void CEF_CALLBACK render_handler_on_ime_composition_range_changed(
     struct _cef_render_handler_t* self,
     cef_browser_t* browser,
@@ -471,7 +601,8 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
 void CEF_CALLBACK
 render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
-                                             cef_text_input_mode_t input_mode) {
+                                             cef_text_input_mode_t input_mode,
+                                             int show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -486,7 +617,8 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode);
+      CefBrowserCToCpp::Wrap(browser), input_mode,
+      show_keyboard ? true : false);
 }
 
 }  // namespace
@@ -504,10 +636,16 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_popup_size = render_handler_on_popup_size;
   GetStruct()->on_paint = render_handler_on_paint;
   GetStruct()->on_accelerated_paint = render_handler_on_accelerated_paint;
+  GetStruct()->get_touch_handle_size = render_handler_get_touch_handle_size;
+  GetStruct()->on_touch_handle_state_changed =
+      render_handler_on_touch_handle_state_changed;
+  GetStruct()->on_touch_selection_changed =
+      render_handler_on_touch_selection_changed;
   GetStruct()->start_dragging = render_handler_start_dragging;
   GetStruct()->update_drag_cursor = render_handler_update_drag_cursor;
   GetStruct()->on_scroll_offset_changed =
       render_handler_on_scroll_offset_changed;
+  GetStruct()->on_root_layer_changed = render_handler_on_root_layer_changed;
   GetStruct()->on_ime_composition_range_changed =
       render_handler_on_ime_composition_range_changed;
   GetStruct()->on_text_selection_changed =

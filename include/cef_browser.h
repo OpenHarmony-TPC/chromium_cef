@@ -45,11 +45,15 @@
 #include "include/cef_frame.h"
 #include "include/cef_image.h"
 #include "include/cef_navigation_entry.h"
+#include "include/cef_permission_request.h"
 #include "include/cef_registration.h"
 #include "include/cef_request_context.h"
+#include "include/cef_task.h"
 
 class CefBrowserHost;
 class CefClient;
+class CefJavaScriptResultCallback;
+class CefStoreWebArchiveResultCallback;
 
 ///
 // Class used to represent a browser. When used in the browser process the
@@ -99,6 +103,24 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void GoForward() = 0;
 
   ///
+  // Returns true if the browser can navigate forwards.
+  ///
+  /*--cef()--*/
+  virtual bool CanGoBackOrForward(int num_steps) = 0;
+
+  ///
+  // Navigate backwards or forwards.
+  ///
+  /*--cef()--*/
+  virtual void GoBackOrForward(int num_steps) = 0;
+
+  ///
+  // DeleteHistory
+  ///
+  /*--cef()--*/
+  virtual void DeleteHistory() = 0;
+
+  ///
   // Returns true if the browser is currently loading.
   ///
   /*--cef()--*/
@@ -115,6 +137,21 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ReloadIgnoreCache() = 0;
+
+  /* ---------- ohos nweb_ex add begin --------- */
+  ///
+  // Reload the current page with original url.
+  ///
+  /*--cef()--*/
+  virtual void ReloadOriginalUrl() = 0;
+
+  ///
+  // Set user agent for current page.
+  ///
+  /*--cef()--*/
+  virtual void SetBrowserUserAgentString(const CefString& user_agent) = 0;
+
+  /* ---------- ohos nweb_ex add end --------- */
 
   ///
   // Stop loading the page.
@@ -195,6 +232,26 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetFrameNames(std::vector<CefString>& names) = 0;
+
+  ///
+  // Returns the Permission Request Delegate object.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate() = 0;
+
+  ///
+  // Returns the Geolocation Permission handler object.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() = 0;
+
+  /* ---------- ohos_nweb_ex add begin --------- */
+  ///
+  // Is loading to different document.
+  ///
+  /*--cef()--*/
+  virtual bool ShouldShowLoadingUI() = 0;
+  /* ---------- ohos_nweb_ex add end --------- */
 };
 
 ///
@@ -328,6 +385,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefBrowser> GetBrowser() = 0;
+
+  ///
+  // Post task to ui thread.
+  ///
+  /*--cef()--*/
+  virtual void PostTaskToUIThread(CefRefPtr<CefTask> task) = 0;
 
   ///
   // Request that the browser close. The JavaScript 'onbeforeunload' event will
@@ -491,7 +554,8 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void Find(const CefString& searchText,
                     bool forward,
                     bool matchCase,
-                    bool findNext) = 0;
+                    bool findNext,
+                    bool newSession) = 0;
 
   ///
   // Cancel all searches that are currently going on.
@@ -649,6 +713,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void NotifyScreenInfoChanged() = 0;
 
   ///
+  // Set the virtual pixel ratio
+  ///
+  /*--cef()--*/
+  virtual void SetVirtualPixelRatio(float ratio) = 0;
+
+  ///
   // Invalidate the view. The browser will call CefRenderHandler::OnPaint
   // asynchronously. This method is only used when window rendering is
   // disabled.
@@ -738,26 +808,184 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetWindowlessFrameRate(int frame_rate) = 0;
 
+  /* ---------- ohos webview add begin --------- */
   ///
-  // Begins a new composition or updates the existing composition. Blink has a
-  // special node (a composition node) that allows the input method to change
-  // text without affecting other DOM nodes. |text| is the optional text that
-  // will be inserted into the composition node. |underlines| is an optional set
-  // of ranges that will be underlined in the resulting text.
-  // |replacement_range| is an optional range of the existing text that will be
-  // replaced. |selection_range| is an optional range of the resulting text that
-  // will be selected after insertion or replacement. The |replacement_range|
-  // value is only used on OS X.
+  // Recompute the WebPreferences based on the current state of the CefSettings,
+  // we will also call SetWebPreferences and send the updated WebPreferences to
+  // all RenderViews by WebContents.
+  ///
+  /*--cef()--*/
+  virtual void SetWebPreferences(
+      const CefBrowserSettings& browser_settings) = 0;
+
+  ///
+  // PutUserAgent
+  ///
+  /*--cef()--*/
+  virtual void PutUserAgent(const CefString& ua) = 0;
+
+  ///
+  // DefaultUserAgent
+  ///
+  /*--cef()--*/
+  virtual CefString DefaultUserAgent() = 0;
+
+  ///
+  // SetBackgroundColor
+  ///
+  /*--cef()--*/
+  virtual void SetBackgroundColor(int color) = 0;
+
+  ///
+  // RegisterArkJSfunction
+  ///
+  /*--cef()--*/
+  virtual void RegisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) = 0;
+
+  ///
+  // UnregisterArkJSfunction
+  ///
+  /*--cef(optional_param=method_list)--*/
+  virtual void UnregisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) = 0;
+
+  ///
+  // Saves the current view as a web archive.
+  ///
+  /*--cef()--*/
+  virtual void StoreWebArchive(
+      const CefString& base_name,
+      bool auto_name,
+      CefRefPtr<CefStoreWebArchiveResultCallback> callback) = 0;
+
+  /* ---------- ohos webview add end --------- */
+
+  ///
+  // Gets the title for the current page.
+  ///
+  /*--cef()--*/
+  virtual CefString Title() = 0;
+
+  ///
+  // Create a message channel, which include two message ports.
+  ///
+  /*--cef()--*/
+  virtual void CreateWebMessagePorts(std::vector<CefString>& ports) = 0;
+
+  ///
+  // Posts a MessageEvent to the main frame.
+  ///
+  /*--cef()--*/
+  virtual void PostWebMessage(CefString& message,
+                              std::vector<CefString>& ports,
+                              CefString& targetUri) = 0;
+
+  ///
+  // Close the web message port.
+  ///
+  /*--cef()--*/
+  virtual void ClosePort(CefString& port_handle) = 0;
+
+  ///
+  // Destroy all web message ports.
+  ///
+  /*--cef()--*/
+  virtual void DestroyAllWebMessagePorts() = 0;
+
+  ///
+  // Post a message to the port.
+  ///
+  /*--cef()--*/
+  virtual void PostPortMessage(CefString& port_handle, CefString& data) = 0;
+
+  ///
+  // Set the callback of the port.
+  ///
+  /*--cef()--*/
+  virtual void SetPortMessageCallback(
+      CefString& port_handle,
+      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+
+  ///
+  // Gets the latest hitdata
+  ///
+  /*--cef()--*/
+  virtual void GetHitData(int& type, CefString& extra_data) = 0;
+
+  ///
+  // Set the inital page scale
+  ///
+  /*--cef()--*/
+  virtual void SetInitialScale(float scale) = 0;
+
+  ///
+  // Gets the progress for the current page.
+  ///
+  /*--cef()--*/
+  virtual int PageLoadProgress() = 0;
+
+  ///
+  // Gets the progress for the current page.
+  ///
+  /*--cef()--*/
+  virtual float Scale() = 0;
+
+  ///
+  // Loads the given data into this WebView, using baseUrl as the base URL for
+  // the content. The base URL is used both to resolve relative URLs and when
+  // applying JavaScript's same origin policy. The historyUrl is used for the
+  // history entry.
+  // optional_param=baseUrl, optional_param=data, optional_param=mimeType,
+  // optional_param=encoding, optional_param=historyUrl
+  ///
+  /*--cef(optional_param=baseUrl, optional_param=data, optional_param=mimeType,
+          optional_param=encoding, optional_param=historyUrl)--*/
+  virtual void LoadWithDataAndBaseUrl(const CefString& baseUrl,
+                                      const CefString& data,
+                                      const CefString& mimeType,
+                                      const CefString& encoding,
+                                      const CefString& historyUrl) = 0;
+
+  ///
+  // Loads the given data into this WebView
+  // optional_param=data, optional_param=mimeType, optional_param=encoding,
+  ///
+  /*--cef(optional_param=data, optional_param=mimeType, optional_param=encoding,)--*/
+  virtual void LoadWithData(const CefString& data,
+                            const CefString& mimeType,
+                            const CefString& encoding) = 0;
+
+  ///
+  // add visited url.
+  ///
+  /*--cef(optional_param=urls)--*/
+  virtual void AddVisitedLinks(const std::vector<CefString>& urls) {}
+
+  ///
+  // Begins a new composition or updates the existing composition. Blink has
+  // a special node (a composition node) that allows the input method to
+  // change text without affecting other DOM nodes. |text| is the optional
+  // text that will be inserted into the composition node. |underlines| is
+  // an optional set of ranges that will be underlined in the resulting
+  // text. |replacement_range| is an optional range of the existing text
+  // that will be replaced. |selection_range| is an optional range of the
+  // resulting text that will be selected after insertion or replacement.
+  // The |replacement_range| value is only used on OS X.
   //
-  // This method may be called multiple times as the composition changes. When
-  // the client is done making changes the composition should either be canceled
-  // or completed. To cancel the composition call ImeCancelComposition. To
-  // complete the composition call either ImeCommitText or
-  // ImeFinishComposingText. Completion is usually signaled when:
-  //   A. The client receives a WM_IME_COMPOSITION message with a GCS_RESULTSTR
+  // This method may be called multiple times as the composition changes.
+  // When the client is done making changes the composition should either be
+  // canceled or completed. To cancel the composition call
+  // ImeCancelComposition. To complete the composition call either
+  // ImeCommitText or ImeFinishComposingText. Completion is usually signaled
+  // when:
+  //   A. The client receives a WM_IME_COMPOSITION message with a
+  //   GCS_RESULTSTR
   //      flag (on Windows), or;
-  //   B. The client receives a "commit" signal of GtkIMContext (on Linux), or;
-  //   C. insertText of NSTextInput is called (on Mac).
+  //   B. The client receives a "commit" signal of GtkIMContext (on Linux),
+  //   or; C. insertText of NSTextInput is called (on Mac).
   //
   // This method is only used when window rendering is disabled.
   ///
@@ -939,6 +1167,107 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsAudioMuted() = 0;
+
+  ///
+  // Execute a string of JavaScript code, return result by callback
+  ///
+  /*--cef()--*/
+  virtual void ExecuteJavaScript(
+      const CefString& code,
+      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+
+  ///
+  // Set native window from ohos rs
+  ///
+  /*--cef()--*/
+  virtual void SetNativeWindow(cef_native_window_t window) = 0;
+
+  ///
+  // Set web debugging access
+  ///
+  /*--cef()--*/
+  virtual void SetWebDebuggingAccess(bool isEnableDebug) = 0;
+
+  ///
+  // Get web debugging access
+  ///
+  /*--cef()--*/
+  virtual bool GetWebDebuggingAccess() = 0;
+
+  ///
+  // GetImageForContextNode
+  ///
+  /*--cef()--*/
+  virtual void GetImageForContextNode() = 0;
+
+  ///
+  // GetImageFromCache
+  ///
+  /*--cef()--*/
+  virtual void GetImageFromCache(const CefString& url) = 0;
+
+  ///
+  // ExitFullScreen
+  ///
+  /*--cef()--*/
+  virtual void ExitFullScreen() = 0;
+
+  ///
+  // UpdateLocale
+  ///
+  /*--cef()--*/
+  virtual void UpdateLocale(const CefString& locale) = 0;
+
+  ///
+  // Returns the original url of the request.
+  ///
+  /*--cef()--*/
+  virtual CefString GetOriginalUrl() = 0;
+
+  ///
+  // Set network status
+  ///
+  /*--cef()--*/
+  virtual void PutNetworkAvailable(bool available) = 0;
+
+  ///
+  // Remove web cache
+  ///
+  /*--cef()--*/
+  virtual void RemoveCache(bool include_disk_files) = 0;
 };
+
+///
+// Interface to implement to be notified of asynchronous completion via
+// CefBrowserHostBase::ExecuteJavaScript().
+///
+/*--cef(source=client)--*/
+class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon completion. |num_deleted| will be the
+  // number of cookies that were deleted.
+  ///
+  /*--cef()--*/
+  virtual void OnJavaScriptExeResult(const CefString& result) = 0;
+};
+
+/* ---------- ohos webview add begin --------- */
+///
+// Interface to implement to be notified of asynchronous completion via
+// CefBrowserHostBase::StoreWebArchive().
+///
+/*--cef(source=client)--*/
+class CefStoreWebArchiveResultCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon completion. |result| will either be the
+  // filename under which the file was saved, or empty if saving the file
+  // failed.
+  ///
+  /*--cef(optional_param=result)--*/
+  virtual void OnStoreWebArchiveDone(const CefString& result) = 0;
+};
+/* ---------- ohos webview add end --------- */
 
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

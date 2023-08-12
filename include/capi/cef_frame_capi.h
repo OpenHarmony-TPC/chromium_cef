@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8527ceea6b8778d6fabc1b4ef82e4faa06ba777a$
+// $hash=33259e318960845a94c06bca658b46bfb335a23f$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_
@@ -52,6 +52,7 @@ extern "C" {
 #endif
 
 struct _cef_browser_t;
+struct _cef_get_images_callback_t;
 struct _cef_urlrequest_client_t;
 struct _cef_urlrequest_t;
 struct _cef_v8context_t;
@@ -215,6 +216,18 @@ typedef struct _cef_frame_t {
                                 struct _cef_domvisitor_t* visitor);
 
   ///
+  // Loads the given URL with additional HTTP headers, specified as a map from
+  // name to value. Note that if this map contains any of the headers that are
+  // set by default by this WebView, such as those controlling caching, accept
+  // types or the User-Agent, their values may be overridden by this WebView's
+  // defaults.
+  ///
+  void(CEF_CALLBACK* load_header_url)(
+      struct _cef_frame_t* self,
+      const cef_string_t* url,
+      const cef_string_t* additionalHttpHeaders);
+
+  ///
   // Create a new URL request that will be treated as originating from this
   // frame and the associated browser. This request may be intercepted by the
   // client via cef_resource_request_handler_t or cef_scheme_handler_factory_t.
@@ -253,7 +266,31 @@ typedef struct _cef_frame_t {
       struct _cef_frame_t* self,
       cef_process_id_t target_process,
       struct _cef_process_message_t* message);
+
+  ///
+  // web has image or not
+  ///
+  void(CEF_CALLBACK* get_images)(struct _cef_frame_t* self,
+                                 struct _cef_get_images_callback_t* callback);
 } cef_frame_t;
+
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_frame_tHostImpl::GetImages.
+///
+typedef struct _cef_get_images_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion. |num_deleted| will be the
+  // number of cookies that were deleted.
+  ///
+  void(CEF_CALLBACK* get_images)(struct _cef_get_images_callback_t* self,
+                                 int response);
+} cef_get_images_callback_t;
 
 #ifdef __cplusplus
 }

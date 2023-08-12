@@ -1,7 +1,7 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors.
-// Portions copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
@@ -9,6 +9,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 #include "include/cef_base.h"
@@ -32,6 +33,7 @@
 #include "third_party/blink/public/mojom/widget/record_content_to_visible_time_request.mojom-forward.h"
 #include "ui/base/cursor/cursor.h"
 #include "ui/base/cursor/mojom/cursor_type.mojom-shared.h"
+#include "ui/base/ime/text_input_client.h"
 #include "ui/compositor/compositor.h"
 #include "ui/events/base_event_utils.h"
 #include "ui/events/gesture_detection/filtered_gesture_provider.h"
@@ -47,6 +49,10 @@
 #include "ui/gfx/win/window_impl.h"
 #endif
 
+namespace ui {
+class TouchSelectionController;
+}  // namespace ui
+
 namespace content {
 class DelegatedFrameHost;
 class DelegatedFrameHostClient;
@@ -59,6 +65,7 @@ class CursorManager;
 
 class CefCopyFrameGenerator;
 class CefSoftwareOutputDeviceOSR;
+class CefTouchSelectionControllerClientOSR;
 class CefVideoConsumerOSR;
 class CefWebContentsViewOSR;
 
@@ -118,6 +125,8 @@ class CefRenderWidgetHostViewOSR
   void Hide() override;
   bool IsShowing() override;
   void EnsureSurfaceSynchronizedForWebTest() override;
+  content::TouchSelectionControllerClientManager*
+  GetTouchSelectionControllerClientManager() override;
   gfx::Rect GetViewBounds() override;
   void SetBackgroundColor(SkColor color) override;
   absl::optional<SkColor> GetBackgroundColor() override;
@@ -130,6 +139,7 @@ class CefRenderWidgetHostViewOSR
   blink::mojom::PointerLockResult ChangeMouseLock(
       bool request_unadjusted_movement) override;
   void UnlockMouse() override;
+  bool IsMouseLocked() override;
   void TakeFallbackContentFrom(content::RenderWidgetHostView* view) override;
 
 #if BUILDFLAG(IS_MAC)
@@ -285,6 +295,30 @@ class CefRenderWidgetHostViewOSR
 
   void ReleaseCompositor();
 
+  void SetDoubleTapSupportEnabled(bool enabled);
+  void SetMultiTouchZoomSupportEnabled(bool enabled);
+
+  static void AddCompositor(gfx::AcceleratedWidget widget,
+                            ui::Compositor* compositor);
+  static ui::Compositor* GetCompositor(gfx::AcceleratedWidget widget);
+
+  ui::TouchSelectionController* selection_controller() const {
+    return selection_controller_.get();
+  }
+
+  CefTouchSelectionControllerClientOSR* selection_controller_client() const {
+    return selection_controller_client_.get();
+  }
+
+  ui::TextInputType GetTextInputType();
+
+  void OnTouchSelectionChanged(
+      const CefTouchHandleState& insert_handle,
+      const CefTouchHandleState& start_selection_handle,
+      const CefTouchHandleState& end_selection_handle,
+      bool need_report);
+  bool NeedPopupInsertTouchHandleQuickMenu();
+
   // Marks the current viz::LocalSurfaceId as invalid. AllocateLocalSurfaceId
   // must be called before submitting new CompositorFrames. May be called by
   // content::DelegatedFrameHostClient::InvalidateLocalSurfaceIdOnEviction.
@@ -302,7 +336,14 @@ class CefRenderWidgetHostViewOSR
 
   void CancelWidget();
 
+  // Helper function to create a selection controller.
+  void CreateSelectionController();
+
   void OnScrollOffsetChanged();
+
+#if BUILDFLAG(IS_OHOS)
+  void OnRootLayerChanged();
+#endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
   void RemoveGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
@@ -341,6 +382,16 @@ class CefRenderWidgetHostViewOSR
   // Applies background color without notifying the RenderWidget about
   // opaqueness changes.
   void UpdateBackgroundColorFromRenderer(SkColor color);
+
+  void OnScaleChanged(float old_page_scale_factor, float nwe_page_scale_factor);
+
+  // The last selection bounds reported to the view.
+  gfx::SelectionBound selection_start_;
+  gfx::SelectionBound selection_end_;
+
+  std::unique_ptr<CefTouchSelectionControllerClientOSR>
+      selection_controller_client_;
+  std::unique_ptr<ui::TouchSelectionController> selection_controller_;
 
   // The background color of the web content.
   SkColor background_color_;
@@ -387,6 +438,9 @@ class CefRenderWidgetHostViewOSR
   CefRenderWidgetHostViewOSR* popup_host_view_ = nullptr;
   CefRenderWidgetHostViewOSR* child_host_view_ = nullptr;
   std::set<CefRenderWidgetHostViewOSR*> guest_host_views_;
+#if BUILDFLAG(IS_OHOS)
+  gfx::SizeF root_layer_size_;
+#endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
 
@@ -420,6 +474,16 @@ class CefRenderWidgetHostViewOSR
   bool forward_touch_to_popup_ = false;
 
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
+
+  static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
+      compositor_map_;
+
+  static std::unordered_map<gfx::AcceleratedWidget, uint32_t>
+      accelerate_widget_map_;
+
+  float page_scale_factor_ = 0.f;
+
+  bool is_mouse_locked_ = false;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_

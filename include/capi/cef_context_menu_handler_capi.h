@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=fd33ce439e4379d231b6be16bdc1786f314d98e4$
+// $hash=07baaa2ecbddce012a9ef020766e4cb40ff8b9b0$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -43,6 +43,7 @@
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_frame_capi.h"
+#include "include/capi/cef_image_capi.h"
 #include "include/capi/cef_menu_model_capi.h"
 
 #ifdef __cplusplus
@@ -73,6 +74,29 @@ typedef struct _cef_run_context_menu_callback_t {
   ///
   void(CEF_CALLBACK* cancel)(struct _cef_run_context_menu_callback_t* self);
 } cef_run_context_menu_callback_t;
+
+///
+// Callback structure used for continuation of custom quick menu display.
+///
+typedef struct _cef_run_quick_menu_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Complete quick menu display by selecting the specified |command_id| and
+  // |event_flags|.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_run_quick_menu_callback_t* self,
+                           int command_id,
+                           cef_event_flags_t event_flags);
+
+  ///
+  // Cancel quick menu display.
+  ///
+  void(CEF_CALLBACK* cancel)(struct _cef_run_quick_menu_callback_t* self);
+} cef_run_quick_menu_callback_t;
 
 ///
 // Implement this structure to handle context menu events. The functions of this
@@ -139,6 +163,61 @@ typedef struct _cef_context_menu_handler_t {
       struct _cef_context_menu_handler_t* self,
       struct _cef_browser_t* browser,
       struct _cef_frame_t* frame);
+
+  ///
+  // Called to allow custom display of the quick menu for a windowless browser.
+  // |location| is the top left corner of the selected region. |size| is the
+  // size of the selected region. |edit_state_flags| is a combination of flags
+  // that represent the state of the quick menu. Return true (1) if the menu
+  // will be handled and execute |callback| either synchronously or
+  // asynchronously with the selected command ID. Return false (0) to cancel the
+  // menu.
+  ///
+  int(CEF_CALLBACK* run_quick_menu)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_point_t* location,
+      const cef_size_t* size,
+      cef_quick_menu_edit_state_flags_t edit_state_flags,
+      struct _cef_run_quick_menu_callback_t* callback);
+
+  ///
+  // Called to execute a command selected from the quick menu for a windowless
+  // browser. Return true (1) if the command was handled or false (0) for the
+  // default implementation. See cef_menu_id_t for command IDs that have default
+  // implementations.
+  ///
+  int(CEF_CALLBACK* on_quick_menu_command)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      int command_id,
+      cef_event_flags_t event_flags);
+
+  ///
+  // Called when the quick menu for a windowless browser is dismissed
+  // irregardless of whether the menu was canceled or a command was selected.
+  ///
+  void(CEF_CALLBACK* on_quick_menu_dismissed)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame);
+
+  ///
+  // Called when GetImageForContextNode function get image for context menu.
+  ///
+  void(CEF_CALLBACK* on_get_image_for_context_node)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_image_t* image);
+
+  ///
+  // Called when GetImageFromCache function to get image from memory cache.
+  ///
+  void(CEF_CALLBACK* on_get_image_from_cache)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_image_t* image);
 } cef_context_menu_handler_t;
 
 ///

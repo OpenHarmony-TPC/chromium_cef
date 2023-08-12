@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=081579d10d7dd1ad8906d54350c2b63f97930fd2$
+// $hash=1e8f06cdecbf10a9b95fd1be4e6d4a0154f4aff0$
 //
 
 #include "libcef_dll/cpptoc/navigation_entry_cpptoc.h"
@@ -192,6 +192,72 @@ navigation_entry_get_sslstatus(struct _cef_navigation_entry_t* self) {
   return CefSSLStatusCppToC::Wrap(_retval);
 }
 
+int CEF_CALLBACK
+navigation_entry_get_favicon(struct _cef_navigation_entry_t* self,
+                             void** pixel_data,
+                             int* color_type,
+                             int* alpha_type,
+                             int* pixel_width,
+                             int* pixel_height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: pixel_data; type: simple_byaddr
+  DCHECK(pixel_data);
+  if (!pixel_data)
+    return 0;
+  // Verify param: color_type; type: simple_byref
+  DCHECK(color_type);
+  if (!color_type)
+    return 0;
+  // Verify param: alpha_type; type: simple_byref
+  DCHECK(alpha_type);
+  if (!alpha_type)
+    return 0;
+  // Verify param: pixel_width; type: simple_byref
+  DCHECK(pixel_width);
+  if (!pixel_width)
+    return 0;
+  // Verify param: pixel_height; type: simple_byref
+  DCHECK(pixel_height);
+  if (!pixel_height)
+    return 0;
+
+  // Translate param: color_type; type: simple_byref
+  int color_typeVal = color_type ? *color_type : 0;
+  // Translate param: alpha_type; type: simple_byref
+  int alpha_typeVal = alpha_type ? *alpha_type : 0;
+  // Translate param: pixel_width; type: simple_byref
+  int pixel_widthVal = pixel_width ? *pixel_width : 0;
+  // Translate param: pixel_height; type: simple_byref
+  int pixel_heightVal = pixel_height ? *pixel_height : 0;
+
+  // Execute
+  bool _retval = CefNavigationEntryCppToC::Get(self)->GetFavicon(
+      pixel_data, color_typeVal, alpha_typeVal, pixel_widthVal,
+      pixel_heightVal);
+
+  // Restore param: color_type; type: simple_byref
+  if (color_type)
+    *color_type = color_typeVal;
+  // Restore param: alpha_type; type: simple_byref
+  if (alpha_type)
+    *alpha_type = alpha_typeVal;
+  // Restore param: pixel_width; type: simple_byref
+  if (pixel_width)
+    *pixel_width = pixel_widthVal;
+  // Restore param: pixel_height; type: simple_byref
+  if (pixel_height)
+    *pixel_height = pixel_heightVal;
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -207,6 +273,7 @@ CefNavigationEntryCppToC::CefNavigationEntryCppToC() {
   GetStruct()->get_completion_time = navigation_entry_get_completion_time;
   GetStruct()->get_http_status_code = navigation_entry_get_http_status_code;
   GetStruct()->get_sslstatus = navigation_entry_get_sslstatus;
+  GetStruct()->get_favicon = navigation_entry_get_favicon;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=be460a1bbdf46dd4e317b39981878b3993675884$
+// $hash=1622488c5f5a264c0672564c1862e3d64b87e8e8$
 //
 
 #include "libcef_dll/ctocpp/request_handler_ctocpp.h"
@@ -23,6 +23,7 @@
 #include "libcef_dll/cpptoc/x509certificate_cpptoc.h"
 #include "libcef_dll/ctocpp/resource_request_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+#include "libcef_dll/transfer_util.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
@@ -100,15 +101,14 @@ bool CefRequestHandlerCToCpp::OnOpenURLFromTab(
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefResourceRequestHandler>
-CefRequestHandlerCToCpp::GetResourceRequestHandler(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    bool is_navigation,
-    bool is_download,
-    const CefString& request_initiator,
-    bool& disable_default_handling) {
+CefRefPtr<CefResourceRequestHandler> CefRequestHandlerCToCpp::
+    GetResourceRequestHandler(CefRefPtr<CefBrowser> browser,
+                              CefRefPtr<CefFrame> frame,
+                              CefRefPtr<CefRequest> request,
+                              bool is_navigation,
+                              bool is_download,
+                              const CefString& request_initiator,
+                              bool& disable_default_handling) {
   shutdown_checker::AssertNotShutdown();
 
   cef_request_handler_t* _struct = GetStruct();
@@ -277,6 +277,8 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
     bool isProxy,
     const CefString& host,
     int port,
+    const std::vector<CefString>& key_types,
+    const std::vector<CefString>& principals,
     const X509CertificateList& certificates,
     CefRefPtr<CefSelectClientCertificateCallback> callback) {
   shutdown_checker::AssertNotShutdown();
@@ -300,6 +302,16 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
   if (!callback.get())
     return false;
 
+  // Translate param: key_types; type: string_vec_byref_const
+  cef_string_list_t key_typesList = cef_string_list_alloc();
+  DCHECK(key_typesList);
+  if (key_typesList)
+    transfer_string_list_contents(key_types, key_typesList);
+  // Translate param: principals; type: string_vec_byref_const
+  cef_string_list_t principalsList = cef_string_list_alloc();
+  DCHECK(principalsList);
+  if (principalsList)
+    transfer_string_list_contents(principals, principalsList);
   // Translate param: certificates; type: refptr_vec_diff_byref_const
   const size_t certificatesCount = certificates.size();
   cef_x509certificate_t** certificatesList = NULL;
@@ -316,9 +328,15 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
   // Execute
   int _retval = _struct->on_select_client_certificate(
       _struct, CefBrowserCppToC::Wrap(browser), isProxy, host.GetStruct(), port,
-      certificatesCount, certificatesList,
+      key_typesList, principalsList, certificatesCount, certificatesList,
       CefSelectClientCertificateCallbackCppToC::Wrap(callback));
 
+  // Restore param:key_types; type: string_vec_byref_const
+  if (key_typesList)
+    cef_string_list_free(key_typesList);
+  // Restore param:principals; type: string_vec_byref_const
+  if (principalsList)
+    cef_string_list_free(principalsList);
   // Restore param:certificates; type: refptr_vec_diff_byref_const
   if (certificatesList)
     delete[] certificatesList;

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b80e84c0039ab45d5c4562d64b67a84766c0dab3$
+// $hash=e13b741eb5cb983fde79d62937d9eb8a55dd6ebb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -46,8 +46,10 @@
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_image_capi.h"
 #include "include/capi/cef_navigation_entry_capi.h"
+#include "include/capi/cef_permission_request_capi.h"
 #include "include/capi/cef_registration_capi.h"
 #include "include/capi/cef_request_context_capi.h"
+#include "include/capi/cef_task_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,6 +57,8 @@ extern "C" {
 
 struct _cef_browser_host_t;
 struct _cef_client_t;
+struct _cef_java_script_result_callback_t;
+struct _cef_store_web_archive_result_callback_t;
 
 ///
 // Structure used to represent a browser. When used in the browser process the
@@ -102,6 +106,23 @@ typedef struct _cef_browser_t {
   void(CEF_CALLBACK* go_forward)(struct _cef_browser_t* self);
 
   ///
+  // Returns true (1) if the browser can navigate forwards.
+  ///
+  int(CEF_CALLBACK* can_go_back_or_forward)(struct _cef_browser_t* self,
+                                            int num_steps);
+
+  ///
+  // Navigate backwards or forwards.
+  ///
+  void(CEF_CALLBACK* go_back_or_forward)(struct _cef_browser_t* self,
+                                         int num_steps);
+
+  ///
+  // DeleteHistory
+  ///
+  void(CEF_CALLBACK* delete_history)(struct _cef_browser_t* self);
+
+  ///
   // Returns true (1) if the browser is currently loading.
   ///
   int(CEF_CALLBACK* is_loading)(struct _cef_browser_t* self);
@@ -115,6 +136,18 @@ typedef struct _cef_browser_t {
   // Reload the current page ignoring any cached data.
   ///
   void(CEF_CALLBACK* reload_ignore_cache)(struct _cef_browser_t* self);
+
+  ///
+  // Reload the current page with original url.
+  ///
+  void(CEF_CALLBACK* reload_original_url)(struct _cef_browser_t* self);
+
+  ///
+  // Set user agent for current page.
+  ///
+  void(CEF_CALLBACK* set_browser_user_agent_string)(
+      struct _cef_browser_t* self,
+      const cef_string_t* user_agent);
 
   ///
   // Stop loading the page.
@@ -192,6 +225,24 @@ typedef struct _cef_browser_t {
   ///
   void(CEF_CALLBACK* get_frame_names)(struct _cef_browser_t* self,
                                       cef_string_list_t names);
+
+  ///
+  // Returns the Permission Request Delegate object.
+  ///
+  struct _cef_browser_permission_request_delegate_t*(
+      CEF_CALLBACK* get_permission_request_delegate)(
+      struct _cef_browser_t* self);
+
+  ///
+  // Returns the Geolocation Permission handler object.
+  ///
+  struct _cef_geolocation_acess_t*(CEF_CALLBACK* get_geolocation_permissions)(
+      struct _cef_browser_t* self);
+
+  ///
+  // Is loading to different document.
+  ///
+  int(CEF_CALLBACK* should_show_loading_ui)(struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///
@@ -302,6 +353,12 @@ typedef struct _cef_browser_host_t {
   ///
   struct _cef_browser_t*(CEF_CALLBACK* get_browser)(
       struct _cef_browser_host_t* self);
+
+  ///
+  // Post task to ui thread.
+  ///
+  void(CEF_CALLBACK* post_task_to_uithread)(struct _cef_browser_host_t* self,
+                                            struct _cef_task_t* task);
 
   ///
   // Request that the browser close. The JavaScript 'onbeforeunload' event will
@@ -462,7 +519,8 @@ typedef struct _cef_browser_host_t {
                            const cef_string_t* searchText,
                            int forward,
                            int matchCase,
-                           int findNext);
+                           int findNext,
+                           int newSession);
 
   ///
   // Cancel all searches that are currently going on.
@@ -619,6 +677,12 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
+  // Set the virtual pixel ratio
+  ///
+  void(CEF_CALLBACK* set_virtual_pixel_ratio)(struct _cef_browser_host_t* self,
+                                              float ratio);
+
+  ///
   // Invalidate the view. The browser will call cef_render_handler_t::OnPaint
   // asynchronously. This function is only used when window rendering is
   // disabled.
@@ -712,6 +776,158 @@ typedef struct _cef_browser_host_t {
       int frame_rate);
 
   ///
+  // Recompute the WebPreferences based on the current state of the CefSettings,
+  // we will also call SetWebPreferences and send the updated WebPreferences to
+  // all RenderViews by WebContents.
+  ///
+  void(CEF_CALLBACK* set_web_preferences)(
+      struct _cef_browser_host_t* self,
+      const struct _cef_browser_settings_t* browser_settings);
+
+  ///
+  // PutUserAgent
+  ///
+  void(CEF_CALLBACK* put_user_agent)(struct _cef_browser_host_t* self,
+                                     const cef_string_t* ua);
+
+  ///
+  // DefaultUserAgent
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(CEF_CALLBACK* default_user_agent)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  // SetBackgroundColor
+  ///
+  void(CEF_CALLBACK* set_background_color)(struct _cef_browser_host_t* self,
+                                           int color);
+
+  ///
+  // RegisterArkJSfunction
+  ///
+  void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
+                                              const cef_string_t* object_name,
+                                              cef_string_list_t method_list);
+
+  ///
+  // UnregisterArkJSfunction
+  ///
+  void(CEF_CALLBACK* unregister_ark_jsfunction)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* object_name,
+      cef_string_list_t method_list);
+
+  ///
+  // Saves the current view as a web archive.
+  ///
+  void(CEF_CALLBACK* store_web_archive)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* base_name,
+      int auto_name,
+      struct _cef_store_web_archive_result_callback_t* callback);
+
+  ///
+  // Gets the title for the current page.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(CEF_CALLBACK* title)(struct _cef_browser_host_t* self);
+
+  ///
+  // Create a message channel, which include two message ports.
+  ///
+  void(CEF_CALLBACK* create_web_message_ports)(struct _cef_browser_host_t* self,
+                                               cef_string_list_t ports);
+
+  ///
+  // Posts a MessageEvent to the main frame.
+  ///
+  void(CEF_CALLBACK* post_web_message)(struct _cef_browser_host_t* self,
+                                       cef_string_t* message,
+                                       cef_string_list_t ports,
+                                       cef_string_t* targetUri);
+
+  ///
+  // Close the web message port.
+  ///
+  void(CEF_CALLBACK* close_port)(struct _cef_browser_host_t* self,
+                                 cef_string_t* port_handle);
+
+  ///
+  // Destroy all web message ports.
+  ///
+  void(CEF_CALLBACK* destroy_all_web_message_ports)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  // Post a message to the port.
+  ///
+  void(CEF_CALLBACK* post_port_message)(struct _cef_browser_host_t* self,
+                                        cef_string_t* port_handle,
+                                        cef_string_t* data);
+
+  ///
+  // Set the callback of the port.
+  ///
+  void(CEF_CALLBACK* set_port_message_callback)(
+      struct _cef_browser_host_t* self,
+      cef_string_t* port_handle,
+      struct _cef_java_script_result_callback_t* callback);
+
+  ///
+  // Gets the latest hitdata
+  ///
+  void(CEF_CALLBACK* get_hit_data)(struct _cef_browser_host_t* self,
+                                   int* type,
+                                   cef_string_t* extra_data);
+
+  ///
+  // Set the inital page scale
+  ///
+  void(CEF_CALLBACK* set_initial_scale)(struct _cef_browser_host_t* self,
+                                        float scale);
+
+  ///
+  // Gets the progress for the current page.
+  ///
+  int(CEF_CALLBACK* page_load_progress)(struct _cef_browser_host_t* self);
+
+  ///
+  // Gets the progress for the current page.
+  ///
+  float(CEF_CALLBACK* scale)(struct _cef_browser_host_t* self);
+
+  ///
+  // Loads the given data into this WebView, using baseUrl as the base URL for
+  // the content. The base URL is used both to resolve relative URLs and when
+  // applying JavaScript's same origin policy. The historyUrl is used for the
+  // history entry. optional_param=baseUrl, optional_param=data,
+  // optional_param=mimeType, optional_param=encoding, optional_param=historyUrl
+  ///
+  void(CEF_CALLBACK* load_with_data_and_base_url)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* baseUrl,
+      const cef_string_t* data,
+      const cef_string_t* mimeType,
+      const cef_string_t* encoding,
+      const cef_string_t* historyUrl);
+
+  ///
+  // Loads the given data into this WebView optional_param=data,
+  // optional_param=mimeType, optional_param=encoding,
+  ///
+  void(CEF_CALLBACK* load_with_data)(struct _cef_browser_host_t* self,
+                                     const cef_string_t* data,
+                                     const cef_string_t* mimeType,
+                                     const cef_string_t* encoding);
+
+  ///
+  // add visited url.
+  ///
+  void(CEF_CALLBACK* add_visited_links)(struct _cef_browser_host_t* self,
+                                        cef_string_list_t urls);
+
+  ///
   // Begins a new composition or updates the existing composition. Blink has a
   // special node (a composition node) that allows the input function to change
   // text without affecting other DOM nodes. |text| is the optional text that
@@ -727,10 +943,11 @@ typedef struct _cef_browser_host_t {
   // or completed. To cancel the composition call ImeCancelComposition. To
   // complete the composition call either ImeCommitText or
   // ImeFinishComposingText. Completion is usually signaled when:
-  //   A. The client receives a WM_IME_COMPOSITION message with a GCS_RESULTSTR
+  //   A. The client receives a WM_IME_COMPOSITION message with a
+  //   GCS_RESULTSTR
   //      flag (on Windows), or;
-  //   B. The client receives a "commit" signal of GtkIMContext (on Linux), or;
-  //   C. insertText of NSTextInput is called (on Mac).
+  //   B. The client receives a "commit" signal of GtkIMContext (on Linux),
+  //   or; C. insertText of NSTextInput is called (on Mac).
   //
   // This function is only used when window rendering is disabled.
   ///
@@ -911,6 +1128,73 @@ typedef struct _cef_browser_host_t {
   // be called on the UI thread.
   ///
   int(CEF_CALLBACK* is_audio_muted)(struct _cef_browser_host_t* self);
+
+  ///
+  // Execute a string of JavaScript code, return result by callback
+  ///
+  void(CEF_CALLBACK* execute_java_script)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* code,
+      struct _cef_java_script_result_callback_t* callback);
+
+  ///
+  // Set native window from ohos rs
+  ///
+  void(CEF_CALLBACK* set_native_window)(struct _cef_browser_host_t* self,
+                                        cef_native_window_t window);
+
+  ///
+  // Set web debugging access
+  ///
+  void(CEF_CALLBACK* set_web_debugging_access)(struct _cef_browser_host_t* self,
+                                               int isEnableDebug);
+
+  ///
+  // Get web debugging access
+  ///
+  int(CEF_CALLBACK* get_web_debugging_access)(struct _cef_browser_host_t* self);
+
+  ///
+  // GetImageForContextNode
+  ///
+  void(CEF_CALLBACK* get_image_for_context_node)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  // GetImageFromCache
+  ///
+  void(CEF_CALLBACK* get_image_from_cache)(struct _cef_browser_host_t* self,
+                                           const cef_string_t* url);
+
+  ///
+  // ExitFullScreen
+  ///
+  void(CEF_CALLBACK* exit_full_screen)(struct _cef_browser_host_t* self);
+
+  ///
+  // UpdateLocale
+  ///
+  void(CEF_CALLBACK* update_locale)(struct _cef_browser_host_t* self,
+                                    const cef_string_t* locale);
+
+  ///
+  // Returns the original url of the request.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(CEF_CALLBACK* get_original_url)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  // Set network status
+  ///
+  void(CEF_CALLBACK* put_network_available)(struct _cef_browser_host_t* self,
+                                            int available);
+
+  ///
+  // Remove web cache
+  ///
+  void(CEF_CALLBACK* remove_cache)(struct _cef_browser_host_t* self,
+                                   int include_disk_files);
 } cef_browser_host_t;
 
 ///
@@ -946,6 +1230,44 @@ CEF_EXPORT cef_browser_t* cef_browser_host_create_browser_sync(
     const struct _cef_browser_settings_t* settings,
     struct _cef_dictionary_value_t* extra_info,
     struct _cef_request_context_t* request_context);
+
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_browser_host_tBase::execute_java_script().
+///
+typedef struct _cef_java_script_result_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion. |num_deleted| will be the
+  // number of cookies that were deleted.
+  ///
+  void(CEF_CALLBACK* on_java_script_exe_result)(
+      struct _cef_java_script_result_callback_t* self,
+      const cef_string_t* result);
+} cef_java_script_result_callback_t;
+
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_browser_host_tBase::store_web_archive().
+///
+typedef struct _cef_store_web_archive_result_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion. |result| will either be the
+  // filename under which the file was saved, or NULL if saving the file failed.
+  ///
+  void(CEF_CALLBACK* on_store_web_archive_done)(
+      struct _cef_store_web_archive_result_callback_t* self,
+      const cef_string_t* result);
+} cef_store_web_archive_result_callback_t;
 
 #ifdef __cplusplus
 }

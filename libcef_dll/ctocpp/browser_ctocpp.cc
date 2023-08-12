@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e4497fd62570371469c3b8d242005add2099e463$
+// $hash=8a99c30f78379c8bac224637139db4110d8801cb$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include <algorithm>
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
+#include "libcef_dll/ctocpp/browser_permission_request_delegate_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
+#include "libcef_dll/ctocpp/geolocation_acess_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -111,6 +113,49 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::GoForward() {
   _struct->go_forward(_struct);
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefBrowserCToCpp::CanGoBackOrForward(int num_steps) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, can_go_back_or_forward))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->can_go_back_or_forward(_struct, num_steps);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::GoBackOrForward(int num_steps) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, go_back_or_forward))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->go_back_or_forward(_struct, num_steps);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::DeleteHistory() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, delete_history))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->delete_history(_struct);
+}
+
 NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsLoading() {
   shutdown_checker::AssertNotShutdown();
 
@@ -151,6 +196,38 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::ReloadIgnoreCache() {
 
   // Execute
   _struct->reload_ignore_cache(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::ReloadOriginalUrl() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, reload_original_url))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->reload_original_url(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SetBrowserUserAgentString(const CefString& user_agent) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_browser_user_agent_string))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: user_agent; type: string_byref_const
+  DCHECK(!user_agent.empty());
+  if (user_agent.empty())
+    return;
+
+  // Execute
+  _struct->set_browser_user_agent_string(_struct, user_agent.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::StopLoad() {
@@ -386,6 +463,59 @@ void CefBrowserCToCpp::GetFrameNames(std::vector<CefString>& names) {
     transfer_string_list_contents(namesList, names);
     cef_string_list_free(namesList);
   }
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefBrowserPermissionRequestDelegate> CefBrowserCToCpp::
+    GetPermissionRequestDelegate() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_permission_request_delegate))
+    return nullptr;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_browser_permission_request_delegate_t* _retval =
+      _struct->get_permission_request_delegate(_struct);
+
+  // Return type: refptr_same
+  return CefBrowserPermissionRequestDelegateCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefGeolocationAcess> CefBrowserCToCpp::GetGeolocationPermissions() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_geolocation_permissions))
+    return nullptr;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_geolocation_acess_t* _retval =
+      _struct->get_geolocation_permissions(_struct);
+
+  // Return type: refptr_same
+  return CefGeolocationAcessCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowLoadingUI() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, should_show_loading_ui))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->should_show_loading_ui(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

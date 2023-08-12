@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fd44b20a616ead48395d44804c8e8df40f7bc384$
+// $hash=d9d33c576ca1d7bef983c275e8b115767237f69c$
 //
 
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
@@ -19,6 +19,7 @@
 #include "libcef_dll/cpptoc/urlrequest_cpptoc.h"
 #include "libcef_dll/cpptoc/v8context_cpptoc.h"
 #include "libcef_dll/ctocpp/domvisitor_ctocpp.h"
+#include "libcef_dll/ctocpp/get_images_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/string_visitor_ctocpp.h"
 #include "libcef_dll/ctocpp/urlrequest_client_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -388,6 +389,24 @@ void CEF_CALLBACK frame_visit_dom(struct _cef_frame_t* self,
   CefFrameCppToC::Get(self)->VisitDOM(CefDOMVisitorCToCpp::Wrap(visitor));
 }
 
+void CEF_CALLBACK
+frame_load_header_url(struct _cef_frame_t* self,
+                      const cef_string_t* url,
+                      const cef_string_t* additionalHttpHeaders) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Unverified params: url, additionalHttpHeaders
+
+  // Execute
+  CefFrameCppToC::Get(self)->LoadHeaderUrl(CefString(url),
+                                           CefString(additionalHttpHeaders));
+}
+
 struct _cef_urlrequest_t* CEF_CALLBACK
 frame_create_urlrequest(struct _cef_frame_t* self,
                         struct _cef_request_t* request,
@@ -439,6 +458,26 @@ frame_send_process_message(struct _cef_frame_t* self,
       target_process, CefProcessMessageCppToC::Unwrap(message));
 }
 
+void CEF_CALLBACK
+frame_get_images(struct _cef_frame_t* self,
+                 struct _cef_get_images_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback)
+    return;
+
+  // Execute
+  CefFrameCppToC::Get(self)->GetImages(
+      CefGetImagesCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -467,8 +506,10 @@ CefFrameCppToC::CefFrameCppToC() {
   GetStruct()->get_browser = frame_get_browser;
   GetStruct()->get_v8context = frame_get_v8context;
   GetStruct()->visit_dom = frame_visit_dom;
+  GetStruct()->load_header_url = frame_load_header_url;
   GetStruct()->create_urlrequest = frame_create_urlrequest;
   GetStruct()->send_process_message = frame_send_process_message;
+  GetStruct()->get_images = frame_get_images;
 }
 
 // DESTRUCTOR - Do not edit by hand.

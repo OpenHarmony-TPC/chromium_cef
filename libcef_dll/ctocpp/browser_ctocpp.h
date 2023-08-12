@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c7912e34194393590c80fdf47269afbc08a2a9be$
+// $hash=4e74199d2ef640e3276988dc06a53ff84140b3fc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -42,9 +42,14 @@ class CefBrowserCToCpp
   void GoBack() override;
   bool CanGoForward() override;
   void GoForward() override;
+  bool CanGoBackOrForward(int num_steps) override;
+  void GoBackOrForward(int num_steps) override;
+  void DeleteHistory() override;
   bool IsLoading() override;
   void Reload() override;
   void ReloadIgnoreCache() override;
+  void ReloadOriginalUrl() override;
+  void SetBrowserUserAgentString(const CefString& user_agent) override;
   void StopLoad() override;
   int GetIdentifier() override;
   bool IsSame(CefRefPtr<CefBrowser> that) override;
@@ -57,6 +62,10 @@ class CefBrowserCToCpp
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
+  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
+      override;
+  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
+  bool ShouldShowLoadingUI() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

@@ -1,7 +1,7 @@
-// Copyright (c) 2012 The Chromium Embedded Framework Authors.
-// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
@@ -23,6 +23,7 @@
 #include "libcef/browser/request_context_impl.h"
 
 #include "base/synchronization/lock.h"
+#include "base/synchronization/waitable_event.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
@@ -83,6 +84,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   CefWindowHandle GetWindowHandle() override;
   CefWindowHandle GetOpenerWindowHandle() override;
   double GetZoomLevel() override;
+  void GetZoomLevelCallback();
   void SetZoomLevel(double zoomLevel) override;
   void RunFileDialog(FileDialogMode mode,
                      const CefString& title,
@@ -97,7 +99,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext) override;
+            bool findNext,
+            bool newSession) override;
   void StopFinding(bool clearSelection) override;
   void ShowDevTools(const CefWindowInfo& windowInfo,
                     CefRefPtr<CefClient> client,
@@ -142,6 +145,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
                             const CefSize& max_size) override;
   CefRefPtr<CefExtension> GetExtension() override;
   bool IsBackgroundHost() override;
+  SkColor GetBackgroundColor() const;
 
   // Returns true if windowless rendering is enabled.
   bool IsWindowless() const override;
@@ -185,9 +189,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // after the dialog is dismissed or if another dialog is already pending.
   void RunFileChooser(const CefFileDialogRunner::FileChooserParams& params,
                       CefFileDialogRunner::RunFileChooserCallback callback);
-
+#if BUILDFLAG(IS_OHOS)
+  bool ShowContextMenu(const content::ContextMenuParams& params);
+#else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);
+#endif
 
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
@@ -196,6 +203,14 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
     DESTRUCTION_STATE_COMPLETED
   };
   DestructionState destruction_state() const { return destruction_state_; }
+
+  /* ohos webview begin */
+  void SetBackgroundColor(int color) override;
+  void SetTouchInsertHandleMenuShow(bool show) {
+    touch_insert_handle_menu_show_ = show;
+  }
+  bool GetTouchInsertHandleMenuShow() { return touch_insert_handle_menu_show_; }
+  /* ohos webview end */
 
   // content::WebContentsDelegate methods.
   content::WebContents* OpenURLFromTab(
@@ -289,6 +304,15 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ExitPictureInPicture() override;
   bool IsBackForwardCacheSupported() override;
   bool IsPrerender2Supported() override;
+  void RequestToLockMouse(content::WebContents* web_contents,
+                          bool user_gesture,
+                          bool last_unlocked_by_target) override;
+  void LostMouseLock() override;
+
+#if BUILDFLAG(IS_OHOS)
+  // Shows the repost form confirmation dialog box.
+  void ShowRepostFormWarningDialog(content::WebContents* source) override;
+#endif
 
   // content::WebContentsObserver methods.
   using content::WebContentsObserver::BeforeUnloadFired;
@@ -303,6 +327,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       const std::vector<content::AXLocationChangeNotificationDetails>& locData)
       override;
   void WebContentsDestroyed() override;
+  void AddVisitedLinks(const std::vector<CefString>& urls) override;
 
  private:
   friend class CefBrowserPlatformDelegateAlloy;
@@ -340,6 +365,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
   void SetFocusInternal(bool focus);
 
+  void UpdateBackgroundColor(int color);
+
+  void UpdateZoomSupportEnabled();
+
   CefWindowHandle opener_;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
@@ -370,6 +399,14 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // starts running when a tab stops being audible, and is canceled if it starts
   // being audible again before it fires.
   std::unique_ptr<base::OneShotTimer> recently_audible_timer_;
+
+  int base_background_color_ = 0xffffffff;
+
+  bool touch_insert_handle_menu_show_ = false;
+
+  double curFactor_ = 0.0;
+
+  std::shared_ptr<base::WaitableEvent> event_ = nullptr;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

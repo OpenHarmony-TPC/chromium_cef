@@ -7,11 +7,16 @@
 #include <algorithm>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include "include/cef_version.h"
 #include "libcef/browser/alloy/alloy_browser_context.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "libcef/browser/alloy/alloy_browser_main.h"
+#include "libcef/browser/alloy/alloy_client_cert_identity.h"
+#include "libcef/browser/alloy/alloy_client_cert_lookup_table.h"
+#include "libcef/browser/alloy/alloy_ssl_platform_key.h"
+#include "libcef/browser/alloy/alloy_web_contents_view_delegate.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/browser_frame.h"
 #include "libcef/browser/browser_info.h"
@@ -29,6 +34,7 @@
 #include "libcef/browser/net_service/login_delegate.h"
 #include "libcef/browser/net_service/proxy_url_loader_factory.h"
 #include "libcef/browser/net_service/resource_request_handler_wrapper.h"
+#include "libcef/browser/net_service/restrict_cookie_manager.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
 #include "libcef/browser/printing/print_view_manager.h"
 #include "libcef/browser/speech_recognition_manager_delegate.h"
@@ -47,7 +53,9 @@
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/json/json_reader.h"
+#include "base/logging.h"
 #include "base/path_service.h"
 #include "base/stl_util.h"
 #include "base/threading/thread_restrictions.h"
@@ -93,6 +101,7 @@
 #include "content/public/browser/browser_ppapi_host.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/client_certificate_delegate.h"
+#include "content/public/browser/file_url_loader.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/overlay_window.h"
 #include "content/public/browser/page_navigator.h"
@@ -102,6 +111,7 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#include "content/public/browser/shared_cors_origin_access_list.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_ui_url_loader_factory.h"
 #include "content/public/common/content_switches.h"
@@ -138,6 +148,7 @@
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
 #include "third_party/blink/public/mojom/prerender/prerender.mojom.h"
 #include "third_party/blink/public/web/web_window_features.h"
+#include "third_party/boringssl/src/include/openssl/evp.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/ui_base_switches.h"
@@ -170,6 +181,18 @@
 #endif
 
 namespace {
+void TransferVector(const std::vector<std::string>& source,
+                    std::vector<CefString>& target) {
+  if (!target.empty())
+    target.clear();
+
+  if (!source.empty()) {
+    std::vector<std::string>::const_iterator it = source.begin();
+    for (; it != source.end(); ++it) {
+      target.push_back(*it);
+    }
+  }
+}
 
 class CefQuotaCallbackImpl : public CefCallback {
  public:
@@ -287,8 +310,10 @@ class CefSelectClientCertificateCallbackImpl
     : public CefSelectClientCertificateCallback {
  public:
   explicit CefSelectClientCertificateCallbackImpl(
-      std::unique_ptr<content::ClientCertificateDelegate> delegate)
-      : delegate_(std::move(delegate)) {}
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      const std::string& host,
+      int port)
+      : delegate_(std::move(delegate)), host_(host), port_(port) {}
 
   CefSelectClientCertificateCallbackImpl(
       const CefSelectClientCertificateCallbackImpl&) = delete;
@@ -299,41 +324,193 @@ class CefSelectClientCertificateCallbackImpl
     // If Select has not been called, call it with NULL to continue without any
     // client certificate.
     if (delegate_)
-      DoSelect(nullptr);
+      DoCancel();
   }
 
-  void Select(CefRefPtr<CefX509Certificate> cert) override {
-    if (delegate_)
-      DoSelect(cert);
+  void Select(const CefString& private_key_file,
+              const CefString& cert_chain_file) override {
+    if (delegate_) {
+      DoSelect(private_key_file, cert_chain_file);
+    }
+  }
+
+  void Cancel() override {
+    if (delegate_) {
+      DoCancel();
+    }
+  }
+
+  void Ignore() override {
+    if (delegate_) {
+      DoIgnore();
+    }
   }
 
  private:
-  void DoSelect(CefRefPtr<CefX509Certificate> cert) {
+  void DoCancel() {
     if (CEF_CURRENTLY_ON_UIT()) {
-      RunNow(std::move(delegate_), cert);
+      RunCancelNow(std::move(delegate_), host_, port_);
     } else {
       CEF_POST_TASK(
           CEF_UIT,
-          base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunNow,
-                         std::move(delegate_), cert));
+          base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunCancelNow,
+                         std::move(delegate_), host_, port_));
     }
   }
 
-  static void RunNow(
-      std::unique_ptr<content::ClientCertificateDelegate> delegate,
-      CefRefPtr<CefX509Certificate> cert) {
-    CEF_REQUIRE_UIT();
+  void DoIgnore() {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      RunIgnoreNow(std::move(delegate_), host_, port_);
+    } else {
+      CEF_POST_TASK(
+          CEF_UIT,
+          base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunIgnoreNow,
+                         std::move(delegate_), host_, port_));
+    }
+  }
 
-    if (cert) {
-      CefX509CertificateImpl* certImpl =
-          static_cast<CefX509CertificateImpl*>(cert.get());
-      certImpl->AcquirePrivateKey(base::BindOnce(
-          &CefSelectClientCertificateCallbackImpl::RunWithPrivateKey,
-          std::move(delegate), cert));
+  void DoSelect(const std::string& private_key_file,
+                const std::string& cert_chain_file) {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      RunSelectNow(std::move(delegate_), private_key_file, cert_chain_file,
+                   host_, port_);
+    } else {
+      CEF_POST_TASK(
+          CEF_UIT,
+          base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunSelectNow,
+                         std::move(delegate_), private_key_file,
+                         cert_chain_file, host_, port_));
+    }
+  }
+
+  static void RunCancelNow(
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      const std::string& host,
+      int port) {
+    LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunCancelNow";
+    CEF_REQUIRE_UIT();
+    AlloyClientCertLookupTable::Deny(host, port);
+    delegate->ContinueWithCertificate(nullptr, nullptr);
+  }
+
+  static void RunIgnoreNow(
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      const std::string& host,
+      int port) {
+    LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunIgnoreNow";
+    CEF_REQUIRE_UIT();
+    delegate->ContinueWithCertificate(nullptr, nullptr);
+  }
+
+  static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKey(
+      bssl::UniquePtr<EVP_PKEY> key) {
+    if (!key)
+      return nullptr;
+
+    return base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
+        std::make_unique<SSLPlatformKey>(std::move(key)),
+        net::GetSSLPlatformKeyTaskRunner());
+  }
+
+  static net::ClientCertIdentityList ClientCertIdentityListFromCertificateList(
+      const net::CertificateList& certs) {
+    net::ClientCertIdentityList result;
+    for (const auto& cert : certs) {
+      result.push_back(std::make_unique<ClientCertIdentityOhos>(cert, nullptr));
+    }
+
+    return result;
+  }
+
+  static void AcquirePrivateKey(
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      CefRefPtr<CefX509Certificate> cert,
+      const std::string& private_key_file,
+      std::string& pkcs8) {
+    CBS cbs;
+    CBS_init(&cbs, reinterpret_cast<const uint8_t*>(pkcs8.data()),
+             pkcs8.size());
+    bssl::UniquePtr<EVP_PKEY> pkey(EVP_parse_private_key(&cbs));
+    if (!pkey || CBS_len(&cbs) != 0) {
+      LOG(ERROR) << "AcquirePrivateKey: EVP parse private key failed, pkey = "
+                 << pkey << ", CBS length = " << CBS_len(&cbs);
       return;
     }
 
-    delegate->ContinueWithCertificate(nullptr, nullptr);
+    scoped_refptr<net::SSLPrivateKey> ssl_private_key =
+        WrapOpenSSLPrivateKey(std::move(pkey));
+    if (!ssl_private_key) {
+      LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
+      return;
+    }
+
+    RunWithPrivateKey(std::move(delegate), cert, ssl_private_key);
+  }
+
+  static void RunSelectNow(
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      const std::string& private_key_file,
+      const std::string& cert_chain_file,
+      const std::string& host,
+      int port) {
+    LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunSelectNow";
+    CEF_REQUIRE_UIT();
+
+    // Client certificate file read
+    std::string cert_data;
+    base::FilePath src_root_cert;
+    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_cert);
+    if (!base::ReadFileToString(src_root_cert.AppendASCII(cert_chain_file),
+                                &cert_data)) {
+      LOG(ERROR) << "RunSelectNow: read cert file to string failed";
+      return;
+    }
+
+    // Convert the client certificates file to X509
+    net::CertificateList certsList =
+        net::X509Certificate::CreateCertificateListFromBytes(
+            base::as_bytes(base::make_span(cert_data)),
+            net::X509Certificate::FORMAT_AUTO);
+    if (certsList.empty()) {
+      LOG(ERROR) << "RunSelectNow: certs list is empty";
+      return;
+    }
+
+    auto client_certs = ClientCertIdentityListFromCertificateList(certsList);
+    CefRequestHandler::X509CertificateList certs;
+    for (net::ClientCertIdentityList::iterator iter = client_certs.begin();
+         iter != client_certs.end(); iter++) {
+      certs.push_back(new CefX509CertificateImpl(std::move(*iter)));
+    }
+
+    std::vector<bssl::UniquePtr<CRYPTO_BUFFER>> intermediates;
+    for (size_t i = 1; i < certsList.size(); ++i) {
+      intermediates.push_back(bssl::UpRef(certsList[i]->cert_buffer()));
+    }
+
+    scoped_refptr<net::X509Certificate> cert_X509(
+        net::X509Certificate::CreateFromBuffer(
+            bssl::UpRef(certsList[0]->cert_buffer()),
+            std::move(intermediates)));
+
+    // Save the converted X509 format certificate
+    CefX509CertificateImpl* certImpl =
+        static_cast<CefX509CertificateImpl*>(certs[0].get());
+    certImpl->setClientCert(cert_X509);
+
+    // Private key file read
+    std::string prikey_data;
+    base::FilePath src_root_prikey;
+    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_prikey);
+    if (!base::ReadFileToString(src_root_prikey.AppendASCII(private_key_file),
+                                &prikey_data)) {
+      LOG(ERROR) << "RunSelectNow: private key file to string failed";
+      return;
+    }
+
+    AcquirePrivateKey(std::move(delegate), certs[0], private_key_file,
+                      prikey_data);
+    return;
   }
 
   static void RunWithPrivateKey(
@@ -353,6 +530,8 @@ class CefSelectClientCertificateCallbackImpl
   }
 
   std::unique_ptr<content::ClientCertificateDelegate> delegate_;
+  std::string host_;
+  int port_;
 
   IMPLEMENT_REFCOUNTING(CefSelectClientCertificateCallbackImpl);
 };
@@ -408,7 +587,7 @@ class CefQuotaPermissionContext : public content::QuotaPermissionContext {
   ~CefQuotaPermissionContext() override = default;
 };
 
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_OHOS)
 breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
     const std::string& process_type) {
   base::FilePath dumps_path;
@@ -746,6 +925,16 @@ void AlloyContentBrowserClient::AppendExtraCommandLineSwitches(
 
   const std::string& process_type =
       command_line->GetSwitchValueASCII(switches::kProcessType);
+  if (process_type == switches::kZygoteProcess ||
+      (browser_cmd->HasSwitch(switches::kNoZygote) &&
+       process_type == switches::kRendererProcess)) {
+    static const char* const kSwitchNames[] = {
+        switches::kUserDataDir,
+    };
+    command_line->CopySwitchesFrom(*browser_cmd, kSwitchNames,
+                                   base::size(kSwitchNames));
+  }
+
   if (process_type == switches::kRendererProcess) {
     // Propagate the following switches to the renderer command line (along with
     // any associated values) if present in the browser command line.
@@ -759,6 +948,7 @@ void AlloyContentBrowserClient::AppendExtraCommandLineSwitches(
         switches::kEnableSpeechInput,
         switches::kUncaughtExceptionStackSize,
         network::switches::kUnsafelyTreatInsecureOriginAsSecure,
+        switches::kUserDataDir,
     };
     command_line->CopySwitchesFrom(*browser_cmd, kSwitchNames,
                                    base::size(kSwitchNames));
@@ -939,6 +1129,15 @@ base::OnceClosure AlloyContentBrowserClient::SelectClientCertificate(
     net::ClientCertIdentityList client_certs,
     std::unique_ptr<content::ClientCertificateDelegate> delegate) {
   CEF_REQUIRE_UIT();
+  LOG(INFO) << "AlloyContentBrowserClient::SelectClientCertificate";
+  std::string host = cert_request_info->host_and_port.host();
+  int port = cert_request_info->host_and_port.port();
+
+  if (AlloyClientCertLookupTable::IsDenied(host, port)) {
+    LOG(INFO) << "AlloyContentBrowserClient::SelectClientCertificate is denied";
+    delegate->ContinueWithCertificate(nullptr, nullptr);
+    return base::OnceClosure();
+  }
 
   CefRefPtr<CefRequestHandler> handler;
   CefRefPtr<AlloyBrowserHostImpl> browser =
@@ -950,6 +1149,8 @@ base::OnceClosure AlloyContentBrowserClient::SelectClientCertificate(
   }
 
   if (!handler.get()) {
+    LOG(ERROR) << "AlloyContentBrowserClient::SelectClientCertificate get "
+                  "handler failed.";
     delegate->ContinueWithCertificate(nullptr, nullptr);
     return base::OnceClosure();
   }
@@ -960,19 +1161,60 @@ base::OnceClosure AlloyContentBrowserClient::SelectClientCertificate(
     certs.push_back(new CefX509CertificateImpl(std::move(*iter)));
   }
 
+  std::vector<std::string> key_types;
+  for (size_t i = 0; i < cert_request_info->cert_key_types.size(); ++i) {
+    switch (cert_request_info->cert_key_types[i]) {
+      case net::CLIENT_CERT_RSA_SIGN:
+        key_types.push_back("RSA");
+        break;
+      case net::CLIENT_CERT_ECDSA_SIGN:
+        key_types.push_back("ECDSA");
+        break;
+      default:
+        break;
+    }
+  }
+  std::vector<CefString> key_types_cef;
+  TransferVector(key_types, key_types_cef);
+  std::vector<CefString> cert_authorities_cef;
+  TransferVector(cert_request_info->cert_authorities, cert_authorities_cef);
+
   CefRefPtr<CefSelectClientCertificateCallbackImpl> callbackImpl(
-      new CefSelectClientCertificateCallbackImpl(std::move(delegate)));
+      new CefSelectClientCertificateCallbackImpl(std::move(delegate), host,
+                                                 port));
 
   bool proceed = handler->OnSelectClientCertificate(
-      browser.get(), cert_request_info->is_proxy,
-      cert_request_info->host_and_port.host(),
-      cert_request_info->host_and_port.port(), certs, callbackImpl.get());
+      browser.get(), cert_request_info->is_proxy, host, port, key_types_cef,
+      cert_authorities_cef, certs, callbackImpl.get());
+  LOG(INFO)
+      << "AlloyContentBrowserClient::SelectClientCertificate end: prceed = "
+      << proceed;
 
-  if (!proceed && !certs.empty()) {
-    callbackImpl->Select(certs[0]);
-  }
   return base::OnceClosure();
 }
+
+#if BUILDFLAG(IS_OHOS)
+bool AlloyContentBrowserClient::CanCreateWindow(
+    content::RenderFrameHost* opener,
+    const GURL& target_url,
+    WindowOpenDisposition disposition,
+    bool user_gesture) {
+  CEF_REQUIRE_UIT();
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(opener);
+  CefRefPtr<CefBrowserHostBase> browser_host =
+      CefBrowserHostBase::GetBrowserForContents(web_contents);
+  if (!browser_host) {
+    return false;
+  }
+  if (!browser_host->settings().javascript_can_open_windows_automatically) {
+    LOG(INFO) << "javascript_can_open_windows_automatically false";
+    return false;
+  }
+  return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
+      opener, target_url, disposition, user_gesture);
+}
+#endif
 
 bool AlloyContentBrowserClient::CanCreateWindow(
     content::RenderFrameHost* opener,
@@ -990,6 +1232,16 @@ bool AlloyContentBrowserClient::CanCreateWindow(
     bool* no_javascript_access) {
   CEF_REQUIRE_UIT();
   *no_javascript_access = false;
+
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(opener);
+  CefRefPtr<CefBrowserHostBase> browser_host =
+      CefBrowserHostBase::GetBrowserForContents(web_contents);
+
+  if (!browser_host->settings().javascript_can_open_windows_automatically) {
+    LOG(INFO) << "javascript_can_open_windows_automatically false";
+    return false;
+  }
 
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
       opener, target_url, referrer, frame_name, disposition, features,
@@ -1163,6 +1415,7 @@ void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
                                                 host);
 }
 
+#if !BUILDFLAG(IS_OHOS)
 std::unique_ptr<net::ClientCertStore>
 AlloyContentBrowserClient::CreateClientCertStore(
     content::BrowserContext* browser_context) {
@@ -1175,10 +1428,14 @@ AlloyContentBrowserClient::CreateClientCertStore(
   return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreWin());
 #elif BUILDFLAG(IS_MAC)
   return std::unique_ptr<net::ClientCertStore>(new net::ClientCertStoreMac());
+#elif BUILDFLAG(IS_OHOS)
+  LOG(INFO) << "ClientCertStore UNIMPLEMENT for IS_OHOS";
+  return nullptr;
 #else
 #error Unknown platform.
 #endif
 }
+#endif
 
 std::unique_ptr<content::LoginDelegate>
 AlloyContentBrowserClient::CreateLoginDelegate(
@@ -1216,6 +1473,24 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
     int render_frame_id,
     const absl::optional<url::Origin>& request_initiator_origin,
     NonNetworkURLLoaderFactoryMap* factories) {
+  content::RenderFrameHost* frame_host =
+      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(frame_host);
+  if (!web_contents)
+    return;
+
+#if BUILDFLAG(IS_OHOS)
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    return;
+  }
+
+  factories->emplace(url::kFileScheme,
+                     content::CreateFileURLLoaderFactory(
+                         browser_context->GetPath(),
+                         browser_context->GetSharedCorsOriginAccessList()));
+#endif
   if (!extensions::ExtensionsEnabled())
     return;
 
@@ -1223,13 +1498,6 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
                                                              render_frame_id);
   if (factory)
     factories->emplace(extensions::kExtensionScheme, std::move(factory));
-
-  content::RenderFrameHost* frame_host =
-      content::RenderFrameHost::FromID(render_process_id, render_frame_id);
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(frame_host);
-  if (!web_contents)
-    return;
 
   extensions::CefExtensionWebContentsObserver* web_observer =
       extensions::CefExtensionWebContentsObserver::FromWebContents(
@@ -1309,13 +1577,30 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
         cert_verifier_creation_params) {
   // This method may be called during shutdown when using multi-threaded
   // message loop mode. In that case exit early to avoid crashes.
+  AlloyBrowserContext* cef_context = static_cast<AlloyBrowserContext*>(
+      CefBrowserContext::FromBrowserContext(context));
+
+  base::FilePath cache_path;
+  if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
+    if (cef_context->ShouldPersistSessionCookies()) {
+      network_context_params->file_paths =
+          ::network::mojom::NetworkContextFilePaths::New();
+      network_context_params->file_paths->data_path = cache_path;
+    }
+    network_context_params->file_paths->cookie_database_name =
+        base::FilePath("cookie.db");
+    network_context_params->persist_session_cookies =
+        cef_context->ShouldPersistSessionCookies();
+    network_context_params->restore_old_session_cookies =
+        cef_context->ShouldRestoreOldSessionCookies();
+    network_context_params->http_cache_enabled = true;
+    network_context_params->http_cache_path = cache_path;
+  }
   if (!SystemNetworkContextManager::GetInstance()) {
     // Cancel NetworkContext creation in
     // StoragePartitionImpl::InitNetworkContext.
     return false;
   }
-
-  auto cef_context = CefBrowserContext::FromBrowserContext(context);
 
   Profile* profile = cef_context->AsProfile();
   ProfileNetworkContextService* service =
@@ -1338,6 +1623,18 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   network_context_params->require_network_isolation_key = false;
 
   return true;
+}
+
+base::FilePath AlloyContentBrowserClient::GetShaderDiskCacheDirectory() {
+  base::FilePath cache_path;
+  base::PathService::Get(base::DIR_CACHE, &cache_path);
+  return cache_path.Append(FILE_PATH_LITERAL("ShaderCache"));
+}
+
+base::FilePath AlloyContentBrowserClient::GetGrShaderDiskCacheDirectory() {
+  base::FilePath cache_path;
+  base::PathService::Get(base::DIR_CACHE, &cache_path);
+  return cache_path.Append(FILE_PATH_LITERAL("GrShaderCache"));
 }
 
 // The sandbox may block read/write access from the NetworkService to
@@ -1409,7 +1706,11 @@ AlloyContentBrowserClient::CreateWindowForPictureInPicture(
   // dependency constraints that disallow directly calling
   // chrome/browser/ui/views code either from here or from other code in
   // chrome/browser.
+#if !BUILDFLAG(IS_OHOS)
   return content::OverlayWindow::Create(controller);
+#else
+  return nullptr;
+#endif
 }
 
 void AlloyContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
@@ -1463,6 +1764,12 @@ std::string AlloyContentBrowserClient::GetReducedUserAgent() {
   return embedder_support::GetReducedUserAgent();
 }
 
+content::WebContentsViewDelegate*
+AlloyContentBrowserClient::GetWebContentsViewDelegate(
+    content::WebContents* web_contents) {
+  return new AlloyWebContentsViewDelegate(web_contents);
+}
+
 blink::UserAgentMetadata AlloyContentBrowserClient::GetUserAgentMetadata() {
   blink::UserAgentMetadata metadata;
 
@@ -1510,6 +1817,69 @@ bool AlloyContentBrowserClient::ShouldAllowPluginCreation(
 
   return true;
 }
+
+#if BUILDFLAG(IS_OHOS)
+bool AlloyContentBrowserClient::ShouldTryToUseExistingProcessHost(
+    content::BrowserContext* browser_context,
+    const GURL& url) {
+  const base::CommandLine* command_line =
+      base::CommandLine::ForCurrentProcess();
+  if (!command_line)
+    return false;
+  return command_line->HasSwitch(switches::kEnableMultiRendererProcess) ? false
+                                                                        : true;
+}
+
+bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
+    content::SiteIsolationMode site_isolation_mode) {
+  return true;
+}
+
+bool AlloyContentBrowserClient::ShouldLockProcessToSite(
+    content::BrowserContext* browser_context,
+    const GURL& effective_url) {
+  return false;
+}
+
+uint32_t AlloyContentBrowserClient::GetWebSocketOptions(
+    content::RenderFrameHost* frame) {
+  uint32_t options = network::mojom::kWebSocketOptionNone;
+
+  bool global_cookie_policy = net_service::NetHelpers::IsAllowAcceptCookies();
+  bool third_party_cookie_policy =
+      net_service::NetHelpers::IsThirdPartyCookieAllowed();
+  if (!global_cookie_policy) {
+    options |= network::mojom::kWebSocketOptionBlockAllCookies;
+  } else if (!third_party_cookie_policy) {
+    options |= network::mojom::kWebSocketOptionBlockThirdPartyCookies;
+  }
+  return options;
+}
+
+bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
+    network::mojom::RestrictedCookieManagerRole role,
+    content::BrowserContext* browser_context,
+    const url::Origin& origin,
+    const net::IsolationInfo& isolation_info,
+    bool is_service_worker,
+    int process_id,
+    int routing_id,
+    mojo::PendingReceiver<network::mojom::RestrictedCookieManager>* receiver) {
+  mojo::PendingReceiver<network::mojom::RestrictedCookieManager> orig_receiver =
+      std::move(*receiver);
+
+  mojo::PendingRemote<network::mojom::RestrictedCookieManager>
+      target_rcm_remote;
+  *receiver = target_rcm_remote.InitWithNewPipeAndPassReceiver();
+
+  ProxyingRestrictedCookieManager::CreateAndBind(
+      std::move(target_rcm_remote), is_service_worker, process_id, routing_id,
+      std::move(orig_receiver));
+
+  return false;  // only made a proxy, still need the actual impl to be made.
+}
+
+#endif
 
 void AlloyContentBrowserClient::OnWebContentsCreated(
     content::WebContents* web_contents) {

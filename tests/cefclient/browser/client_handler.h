@@ -260,6 +260,8 @@ class ClientHandler : public CefClient,
       bool isProxy,
       const CefString& host,
       int port,
+      const std::vector<CefString>& key_types,
+      const std::vector<CefString>& principals,
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) override;
   void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,

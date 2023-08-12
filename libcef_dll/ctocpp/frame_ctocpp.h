@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7671d54b3de24e8e66322daf68d66b8b8acba50c$
+// $hash=922843bbc541ce7c7c8e1aa93e23bc7dde770d68$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
@@ -64,11 +64,14 @@ class CefFrameCToCpp
   CefRefPtr<CefBrowser> GetBrowser() override;
   CefRefPtr<CefV8Context> GetV8Context() override;
   void VisitDOM(CefRefPtr<CefDOMVisitor> visitor) override;
+  void LoadHeaderUrl(const CefString& url,
+                     const CefString& additionalHttpHeaders) override;
   CefRefPtr<CefURLRequest> CreateURLRequest(
       CefRefPtr<CefRequest> request,
       CefRefPtr<CefURLRequestClient> client) override;
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
+  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_

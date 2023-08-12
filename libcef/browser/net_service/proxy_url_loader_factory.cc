@@ -13,6 +13,7 @@
 #include "libcef/common/cef_switches.h"
 #include "libcef/common/net/scheme_registration.h"
 #include "libcef/common/net_service/net_service_util.h"
+#include "libcef/common/request_impl.h"
 
 #include "base/barrier_closure.h"
 #include "base/command_line.h"
@@ -24,6 +25,7 @@
 #include "content/public/browser/web_contents.h"
 #include "mojo/public/cpp/base/big_buffer.h"
 #include "mojo/public/cpp/bindings/receiver.h"
+#include "net/base/load_flags.h"
 #include "net/http/http_status_code.h"
 #include "net/url_request/redirect_util.h"
 #include "net/url_request/url_request.h"
@@ -63,6 +65,29 @@ bool DisableRequestHandlingForTesting() {
         switches::kDisableRequestHandlingForTesting);
   }());
   return disabled;
+}
+
+CefRefPtr<CefResponse> ExtractHttpErrorResponse(
+    const net::HttpResponseHeaders* headers) {
+  CefRefPtr<CefResponse> response = CefResponse::Create();
+  response->SetStatus(headers->response_code());
+  response->SetStatusText(headers->GetStatusText());
+
+  size_t headers_line = 0;
+  std::string header_name, header_value;
+  CefResponse::HeaderMap map;
+  while (headers->EnumerateHeaderLines(&headers_line, &header_name,
+                                       &header_value)) {
+    map.insert({CefString(header_name), CefString(header_value)});
+  }
+  response->SetHeaderMap(map);
+  std::string mime_type;
+  std::string encoding;
+  headers->GetMimeType(&mime_type);
+  headers->GetCharset(&encoding);
+  response->SetMimeType(CefString(mime_type));
+  response->SetCharset(CefString(encoding));
+  return response;
 }
 
 }  // namespace
@@ -217,6 +242,12 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   // Called from InterceptDelegate::OnInputStreamOpenFailed.
   void InputStreamFailed(bool restart_needed);
+
+  void OnHttpErrorForUIThread(int32_t,
+                              CefRefPtr<CefRequest> request,
+                              bool is_main_frame,
+                              bool has_user_gesture,
+                              CefRefPtr<CefResponse> error_response);
 
   // mojom::TrustedHeaderClient methods:
   void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
@@ -469,6 +500,14 @@ void InterceptedRequest::Restart() {
     }
   }
 
+  if (IsURLBlocked(request_.url)) {
+    SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
+    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
+    return;
+  }
+
+  request_.load_flags = UpdateLoadFlags(request_.load_flags);
+
   const GURL original_url = request_.url;
 
   factory_->request_handler_->OnBeforeRequest(
@@ -562,6 +601,23 @@ void InterceptedRequest::OnReceiveResponse(
     mojo::ScopedDataPipeConsumerHandle body) {
   current_response_ = std::move(head);
   current_body_ = std::move(body);
+
+  if (current_response_->headers &&
+      current_response_->headers->response_code() >= 400) {
+    // The WebViewClient onReceivedHttpError callback will be invoked for any
+    // resource (such as main page, iframe, image, etc.) with status code >= 400
+    auto error_reponse =
+        ExtractHttpErrorResponse(current_response_->headers.get());
+    CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
+    request->SetURL(CefString(request_.url.spec()));
+    request->SetMethod(CefString(request_.method));
+    request->Set(request_.headers);
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE, base::BindOnce(&InterceptedRequest::OnHttpErrorForUIThread,
+                                  base::Unretained(this), id_, request,
+                                  request_.is_main_frame,
+                                  request_.has_user_gesture, error_reponse));
+  }
 
   if (current_request_uses_header_client_) {
     // Use the headers we got from OnHeadersReceived as that'll contain
@@ -1161,6 +1217,24 @@ void InterceptedRequest::OnUploadProgressACK() {
   waiting_for_upload_progress_ack_ = false;
 }
 
+void InterceptedRequest::OnHttpErrorForUIThread(
+    int32_t id,
+    CefRefPtr<CefRequest> request,
+    bool is_main_frame,
+    bool has_user_gesture,
+    CefRefPtr<CefResponse> error_response) {
+  if (!factory_) {
+    LOG(INFO) << "factory is invalid";
+    return;
+  }
+  if (!factory_->request_handler_) {
+    LOG(INFO) << "request handler is invalid";
+    return;
+  }
+  factory_->request_handler_->OnHttpError(id, request, is_main_frame,
+                                          has_user_gesture, error_response);
+}
+
 //==============================
 // InterceptedRequestHandler
 //==============================
@@ -1340,6 +1414,14 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
   if (target_factory_) {
     target_factory_->Clone(
         target_factory_clone.InitWithNewPipeAndPassReceiver());
+  }
+
+  bool allCookiePolicy = NetHelpers::IsAllowAcceptCookies();
+  bool thirdPartyCookiePolicy = NetHelpers::IsThirdPartyCookieAllowed();
+  if (!allCookiePolicy) {
+    options |= network::mojom::kURLLoadOptionBlockAllCookies;
+  } else if (!thirdPartyCookiePolicy) {
+    options |= network::mojom::kURLLoadOptionBlockThirdPartyCookies;
   }
 
   InterceptedRequest* req = new InterceptedRequest(

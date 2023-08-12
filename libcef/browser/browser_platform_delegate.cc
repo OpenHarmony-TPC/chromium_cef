@@ -113,7 +113,7 @@ CefWindowHandle CefBrowserPlatformDelegate::GetHostWindowHandle() const {
   return kNullWindowHandle;
 }
 
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
 views::Widget* CefBrowserPlatformDelegate::GetWindowWidget() const {
   NOTREACHED();
   return nullptr;
@@ -384,7 +384,8 @@ void CefBrowserPlatformDelegate::PrintToPDF(
 void CefBrowserPlatformDelegate::Find(const CefString& searchText,
                                       bool forward,
                                       bool matchCase,
-                                      bool findNext) {
+                                      bool findNext,
+                                      bool newSession) {
   NOTIMPLEMENTED();
 }
 

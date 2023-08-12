@@ -1,6 +1,7 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include "libcef/browser/alloy/alloy_browser_context.h"
 
@@ -9,6 +10,7 @@
 
 #include "libcef/browser/download_manager_delegate.h"
 #include "libcef/browser/extensions/extension_system.h"
+#include "libcef/browser/permission/alloy_permission_manager.h"
 #include "libcef/browser/prefs/browser_prefs.h"
 #include "libcef/browser/ssl_host_state_delegate.h"
 #include "libcef/browser/thread_util.h"
@@ -380,7 +382,9 @@ content::SSLHostStateDelegate* AlloyBrowserContext::GetSSLHostStateDelegate() {
 
 content::PermissionControllerDelegate*
 AlloyBrowserContext::GetPermissionControllerDelegate() {
-  return nullptr;
+  if (!permission_manager_.get())
+    permission_manager_.reset(new AlloyPermissionManager());
+  return permission_manager_.get();
 }
 
 content::BackgroundFetchDelegate*

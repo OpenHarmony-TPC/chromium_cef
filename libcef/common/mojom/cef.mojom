@@ -13,6 +13,9 @@ import "third_party/blink/public/mojom/loader/referrer.mojom";
 import "ui/gfx/geometry/mojom/geometry.mojom";
 import "url/mojom/url.mojom";
 
+[EnableIf=is_ohos]
+import "skia/public/mojom/bitmap.mojom";
+
 // Structure passed to UpdateDraggableRegions().
 struct DraggableRegionEntry {
   gfx.mojom.Rect bounds;
@@ -47,6 +50,31 @@ struct RequestParams {
   network.mojom.URLRequestBody? upload_data;
 };
 
+[EnableIf=is_ohos]
+struct TouchEventParams {
+  float x;
+  float y;
+  int32 width;
+  int32 height;
+};
+
+[EnableIf=is_ohos]
+struct GetImageForContextNodeParams {
+  int32 width;
+  int32 height;
+  string image_extension;
+  skia.mojom.BitmapN32 image;
+};
+
+[EnableIf=is_ohos]
+struct HitDataParams {
+  int32 type;
+  string extra_data_for_type;
+  mojo_base.mojom.String16 href;
+  mojo_base.mojom.String16 anchor_text;
+  url.mojom.Url img_src;
+};
+
 // Interface for communicating with a frame in the renderer process.
 interface RenderFrame {
   // Browser process has received the FrameAttached() message.
@@ -77,6 +105,31 @@ interface RenderFrame {
   // Move or resize of the renderer's containing window has started. Used on
   // Windows and Linux with the Alloy runtime.
   MoveOrResizeStarted();
+
+  [EnableIf=is_ohos]
+  UpdateLocale(string locale);
+
+  [EnableIf=is_ohos]
+  SendTouchEvent(TouchEventParams params);
+
+  [EnableIf=is_ohos]
+  SetInitialScale(float initialScale);
+
+  // Adjusts the javascript 'online' property value.
+  [EnableIf=is_ohos]
+  SetJsOnlineProperty(bool network_up);
+
+  [EnableIf=is_ohos]
+  PutZoomingForTextFactor(float factor);
+
+  [EnableIf=is_ohos]
+  GetImageForContextNode();
+
+  [EnableIf=is_ohos]
+  GetImagesWithResponse() => (bool response);
+
+  [EnableIf=is_ohos]
+  RemoveCache();
 };
 
 // Interface for communicating with a frame in the browser process.
@@ -93,6 +146,15 @@ interface BrowserFrame {
 
   // Draggable regions have updated.
   UpdateDraggableRegions(array<DraggableRegionEntry>? regions);
+
+  [EnableIf=is_ohos]
+  OnUpdateHitData(HitDataParams params);
+
+  [EnableIf=is_ohos]
+  OnGetImageForContextNode(GetImageForContextNodeParams params);
+
+  [EnableIf=is_ohos]
+  OnGetImageForContextNodeNull();
 };
 
 struct CrossOriginWhiteListEntry {

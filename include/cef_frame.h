@@ -49,6 +49,7 @@ class CefBrowser;
 class CefURLRequest;
 class CefURLRequestClient;
 class CefV8Context;
+class CefGetImagesCallback;
 
 ///
 // Class used to represent a frame in the browser window. When used in the
@@ -220,6 +221,17 @@ class CefFrame : public virtual CefBaseRefCounted {
   virtual void VisitDOM(CefRefPtr<CefDOMVisitor> visitor) = 0;
 
   ///
+  // Loads the given URL with additional HTTP headers, specified as a map
+  // from name to value. Note that if this map contains any of the headers that
+  // are set by default by this WebView, such as those controlling caching,
+  // accept types or the User-Agent, their values may be overridden by this
+  // WebView's defaults.
+  ///
+  /*--cef(optional_param=url, optional_param=additionalHttpHeaders)--*/
+  virtual void LoadHeaderUrl(const CefString& url,
+                             const CefString& additionalHttpHeaders) = 0;
+
+  ///
   // Create a new URL request that will be treated as originating from this
   // frame and the associated browser. This request may be intercepted by the
   // client via CefResourceRequestHandler or CefSchemeHandlerFactory. Use
@@ -256,6 +268,27 @@ class CefFrame : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SendProcessMessage(CefProcessId target_process,
                                   CefRefPtr<CefProcessMessage> message) = 0;
+
+  ///
+  // web has image or not
+  ///
+  /*--cef()--*/
+  virtual void GetImages(CefRefPtr<CefGetImagesCallback> callback) = 0;
+};
+
+///
+// Interface to implement to be notified of asynchronous completion via
+// CefFrameHostImpl::GetImages.
+///
+/*--cef(source=client)--*/
+class CefGetImagesCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon completion. |num_deleted| will be the
+  // number of cookies that were deleted.
+  ///
+  /*--cef()--*/
+  virtual void GetImages(bool response) = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_FRAME_H_

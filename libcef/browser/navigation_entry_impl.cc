@@ -7,8 +7,11 @@
 #include "libcef/browser/ssl_status_impl.h"
 #include "libcef/common/time_util.h"
 
+#include "content/public/browser/favicon_status.h"
 #include "content/public/browser/navigation_entry.h"
 #include "url/gurl.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+
 
 CefNavigationEntryImpl::CefNavigationEntryImpl(content::NavigationEntry* value)
     : CefValueBase<CefNavigationEntry, content::NavigationEntry>(
@@ -70,4 +73,26 @@ int CefNavigationEntryImpl::GetHttpStatusCode() {
 CefRefPtr<CefSSLStatus> CefNavigationEntryImpl::GetSSLStatus() {
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
   return new CefSSLStatusImpl(mutable_value()->GetSSL());
+}
+
+bool CefNavigationEntryImpl::GetFavicon(void** pixel_data,
+                                        int& color_type,
+                                        int& alpha_type,
+                                        int& pixel_width,
+                                        int& pixel_height) {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  auto favicon_status = mutable_value()->GetFavicon();
+  if (!favicon_status.valid) {
+    return false;
+  }
+  const SkBitmap* bitmap = favicon_status.image.ToSkBitmap();
+  if (!bitmap) {
+    return false;
+  }
+  color_type = bitmap->colorType();
+  alpha_type = bitmap->alphaType();
+  pixel_width = bitmap->width();
+  pixel_height = bitmap->height();
+  *pixel_data = bitmap->getPixels();
+  return true;
 }

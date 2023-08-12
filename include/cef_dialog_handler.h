@@ -98,6 +98,7 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
                             const CefString& default_file_path,
                             const std::vector<CefString>& accept_filters,
                             int selected_accept_filter,
+                            bool capture,
                             CefRefPtr<CefFileDialogCallback> callback) {
     return false;
   }

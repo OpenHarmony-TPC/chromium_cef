@@ -1,7 +1,7 @@
-// Copyright (c) 2012 The Chromium Embedded Framework Authors.
-// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_RENDERER_BROWSER_IMPL_H_
 #define CEF_LIBCEF_RENDERER_BROWSER_IMPL_H_
@@ -50,9 +50,16 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void GoBack() override;
   bool CanGoForward() override;
   void GoForward() override;
+  bool CanGoBackOrForward(int num_steps) override;
+  void GoBackOrForward(int num_steps) override;
+  void DeleteHistory() override;
   bool IsLoading() override;
   void Reload() override;
   void ReloadIgnoreCache() override;
+#if BUILDFLAG(IS_OHOS)
+  void ReloadOriginalUrl() override;
+  void SetBrowserUserAgentString(const CefString& user_agent) override {}
+#endif
   void StopLoad() override;
   int GetIdentifier() override;
   bool IsSame(CefRefPtr<CefBrowser> that) override;
@@ -65,6 +72,9 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
+  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
+      override;
+  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
 
   CefBrowserImpl(content::RenderView* render_view,
                  int browser_id,
@@ -92,6 +102,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void FrameDetached(int64_t frame_id);
 
   void OnLoadingStateChange(bool isLoading);
+
+#if BUILDFLAG(IS_OHOS)
+  bool ShouldShowLoadingUI() override;
+#endif
 
  private:
   // ID of the browser that this RenderView is associated with. During loading

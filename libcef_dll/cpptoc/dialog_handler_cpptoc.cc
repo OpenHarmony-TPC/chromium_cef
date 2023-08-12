@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=639576c610ca3898809cdee6d19c45253e9ea4d2$
+// $hash=2f925fbe5bb419b6adf14c4b508c7330ec8dd84a$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
@@ -30,6 +30,7 @@ dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
                               const cef_string_t* default_file_path,
                               cef_string_list_t accept_filters,
                               int selected_accept_filter,
+                              int capture,
                               cef_file_dialog_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -60,7 +61,7 @@ dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
   bool _retval = CefDialogHandlerCppToC::Get(self)->OnFileDialog(
       CefBrowserCToCpp::Wrap(browser), mode, CefString(title),
       CefString(default_file_path), accept_filtersList, selected_accept_filter,
-      CefFileDialogCallbackCToCpp::Wrap(callback));
+      capture ? true : false, CefFileDialogCallbackCToCpp::Wrap(callback));
 
   // Return type: bool
   return _retval;

@@ -57,7 +57,7 @@ class Size;
 class Vector2d;
 }  // namespace gfx
 
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
 namespace views {
 class Widget;
 }
@@ -173,7 +173,7 @@ class CefBrowserPlatformDelegate {
   // the client, which may be NULL. May be called on multiple threads.
   virtual CefWindowHandle GetHostWindowHandle() const;
 
-#if defined(TOOLKIT_VIEWS)
+#if defined(TOOLKIT_VIEWS) || BUILDFLAG(IS_OHOS)
   // Returns the Widget owner for the browser window. Only used with windowed
   // rendering.
   virtual views::Widget* GetWindowWidget() const;
@@ -356,7 +356,8 @@ class CefBrowserPlatformDelegate {
   virtual void Find(const CefString& searchText,
                     bool forward,
                     bool matchCase,
-                    bool findNext);
+                    bool findNext,
+                    bool newSession);
   virtual void StopFinding(bool clearSelection);
 
  protected:

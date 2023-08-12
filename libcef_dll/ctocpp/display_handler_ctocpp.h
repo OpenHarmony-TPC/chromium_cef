@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f6769db4bda5143d4e42a2e68788b58c68292c1d$
+// $hash=dc1b9dda1a8f57d46d2c0049cd62a57dd5f56868$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_
@@ -43,6 +43,20 @@ class CefDisplayHandlerCToCpp
                      const CefString& title) override;
   void OnFaviconURLChange(CefRefPtr<CefBrowser> browser,
                           const std::vector<CefString>& icon_urls) override;
+  void OnReceivedTouchIconUrl(CefRefPtr<CefBrowser> browser,
+                              const CefString& icon_url,
+                              bool precomposed) override;
+  void OnReceivedIcon(const void* data,
+                      size_t width,
+                      size_t height,
+                      cef_color_type_t color_type,
+                      cef_alpha_type_t alpha_type) override;
+  void OnReceivedIconUrl(const CefString& image_url,
+                         const void* data,
+                         size_t width,
+                         size_t height,
+                         cef_color_type_t color_type,
+                         cef_alpha_type_t alpha_type) override;
   void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
                               bool fullscreen) override;
   bool OnTooltip(CefRefPtr<CefBrowser> browser, CefString& text) override;
@@ -61,6 +75,9 @@ class CefDisplayHandlerCToCpp
                       CefCursorHandle cursor,
                       cef_cursor_type_t type,
                       const CefCursorInfo& custom_cursor_info) override;
+  void OnScaleChanged(CefRefPtr<CefBrowser> browser,
+                      float old_page_scale_factor,
+                      float new_page_scale_factor) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_

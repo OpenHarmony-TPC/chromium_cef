@@ -18,6 +18,8 @@
 #include "include/base/cef_cxx17_backports.h"
 #include "include/internal/cef_string_types.h"
 
+#include "build/build_config.h"
+
 namespace cef {
 namespace logging {
 
@@ -68,6 +70,7 @@ wrap_posix_strerror_r(char* (*strerror_r_ptr)(int, char*, size_t),
 // guarantee that they are handled. This is compiled on all POSIX platforms, but
 // it will only be used on Linux if the POSIX strerror_r implementation is
 // being used (see below).
+#if !BUILDFLAG(IS_OHOS)
 static void POSSIBLY_UNUSED wrap_posix_strerror_r(int (*strerror_r_ptr)(int,
                                                                         char*,
                                                                         size_t),
@@ -110,6 +113,7 @@ static void POSSIBLY_UNUSED wrap_posix_strerror_r(int (*strerror_r_ptr)(int,
   }
   errno = old_errno;
 }
+#endif
 
 void safe_strerror_r(int err, char* buf, size_t len) {
   if (buf == NULL || len <= 0) {
@@ -119,7 +123,9 @@ void safe_strerror_r(int err, char* buf, size_t len) {
   // appropriate overloaded function based on the function type of strerror_r.
   // The other one will be elided from the translation unit since both are
   // static.
+#if !BUILDFLAG(IS_OHOS)
   wrap_posix_strerror_r(&strerror_r, err, buf, len);
+#endif
 }
 
 std::string safe_strerror(int err) {

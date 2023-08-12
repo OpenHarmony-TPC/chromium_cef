@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8d30c4f8cf47bac2f9f728de876abb759b38041f$
+// $hash=4542e0e52791a8d283c997922779ab33d40ad54c$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -21,8 +21,8 @@
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefAccessibilityHandler>
-CefRenderHandlerCToCpp::GetAccessibilityHandler() {
+CefRefPtr<
+    CefAccessibilityHandler> CefRenderHandlerCToCpp::GetAccessibilityHandler() {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -266,6 +266,71 @@ void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
 }
 
 NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetTouchHandleSize(
+    CefRefPtr<CefBrowser> browser,
+    cef_horizontal_alignment_t orientation,
+    CefSize& size) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_touch_handle_size))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->get_touch_handle_size(_struct, CefBrowserCppToC::Wrap(browser),
+                                 orientation, &size);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnTouchHandleStateChanged(
+    CefRefPtr<CefBrowser> browser,
+    const CefTouchHandleState& state) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_touch_handle_state_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_touch_handle_state_changed(
+      _struct, CefBrowserCppToC::Wrap(browser), &state);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnTouchSelectionChanged(
+    const CefTouchHandleState& insert_handle,
+    const CefTouchHandleState& start_selection_handle,
+    const CefTouchHandleState& end_selection_handle,
+    bool need_report) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_touch_selection_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_touch_selection_changed(_struct, &insert_handle,
+                                      &start_selection_handle,
+                                      &end_selection_handle, need_report);
+}
+
+NO_SANITIZE("cfi-icall")
 bool CefRenderHandlerCToCpp::StartDragging(CefRefPtr<CefBrowser> browser,
                                            CefRefPtr<CefDragData> drag_data,
                                            DragOperationsMask allowed_ops,
@@ -342,6 +407,28 @@ void CefRenderHandlerCToCpp::OnScrollOffsetChanged(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
+                                                int height,
+                                                int width) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_root_layer_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_root_layer_changed(_struct, CefBrowserCppToC::Wrap(browser),
+                                 height, width);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnImeCompositionRangeChanged(
     CefRefPtr<CefBrowser> browser,
     const CefRange& selected_range,
@@ -410,7 +497,8 @@ void CefRenderHandlerCToCpp::OnTextSelectionChanged(
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
-    TextInputMode input_mode) {
+    TextInputMode input_mode,
+    bool show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -426,7 +514,7 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
 
   // Execute
   _struct->on_virtual_keyboard_requested(
-      _struct, CefBrowserCppToC::Wrap(browser), input_mode);
+      _struct, CefBrowserCppToC::Wrap(browser), input_mode, show_keyboard);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

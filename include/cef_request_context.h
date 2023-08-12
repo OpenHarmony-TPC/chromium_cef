@@ -42,10 +42,12 @@
 
 #include "include/cef_callback.h"
 #include "include/cef_cookie.h"
+#include "include/cef_data_base.h"
 #include "include/cef_extension.h"
 #include "include/cef_extension_handler.h"
 #include "include/cef_media_router.h"
 #include "include/cef_values.h"
+#include "include/cef_web_storage.h"
 
 class CefRequestContextHandler;
 class CefSchemeHandlerFactory;
@@ -154,6 +156,21 @@ class CefRequestContext : public virtual CefBaseRefCounted {
       CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///
+  // Returns the web data base for this object.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefDataBase> GetDataBase() = 0;
+
+  ///
+  // Returns the web strorage for this object. If |callback| is non-NULL it
+  // will be executed asnychronously on the UI thread after the manager's
+  // storage has been initialized.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual CefRefPtr<CefWebStorage> GetWebStorage(
+      CefRefPtr<CefCompletionCallback> callback) = 0;
+
+  ///
   // Register a scheme handler factory for the specified |scheme_name| and
   // optional |domain_name|. An empty |domain_name| value for a standard scheme
   // will cause the factory to match all domain names. The |domain_name| value
@@ -248,6 +265,16 @@ class CefRequestContext : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=callback)--*/
   virtual void ClearHttpAuthCredentials(
+      CefRefPtr<CefCompletionCallback> callback) = 0;
+
+  ///
+  // Clears the client authentication certificate Cache that were added
+  // as part of handling CefRequestHandler::OnSelectClientCertificate().
+  // If |callback| is non-NULL it will be executed on the UI thread after
+  // completion.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) = 0;
 
   ///

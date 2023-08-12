@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6f127ca09c0419845e4fc6aec71b0bf9373ff290$
+// $hash=dd86b1cd3bb9fb67f7e7dfdee204fd752e27e410$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_
@@ -45,6 +45,11 @@ class CefNavigationEntryCToCpp
   CefTime GetCompletionTime() override;
   int GetHttpStatusCode() override;
   CefRefPtr<CefSSLStatus> GetSSLStatus() override;
+  bool GetFavicon(void** pixel_data,
+                  int& color_type,
+                  int& alpha_type,
+                  int& pixel_width,
+                  int& pixel_height) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_NAVIGATION_ENTRY_CTOCPP_H_

@@ -126,6 +126,14 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiClickEvent(
     case MBT_RIGHT:
       changed_button_flags |= ui::EF_RIGHT_MOUSE_BUTTON;
       break;
+#if BUILDFLAG(IS_OHOS)
+    case MBT_BACK:
+      changed_button_flags |= ui::EF_BACK_MOUSE_BUTTON;
+      break;
+    case MBT_FORWARD:
+      changed_button_flags |= ui::EF_FORWARD_MOUSE_BUTTON;
+      break;
+#endif
     default:
       NOTREACHED();
   }
@@ -206,6 +214,10 @@ int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
     result |= ui::EF_MIDDLE_MOUSE_BUTTON;
   if (cef_modifiers & EVENTFLAG_RIGHT_MOUSE_BUTTON)
     result |= ui::EF_RIGHT_MOUSE_BUTTON;
+  if (cef_modifiers & EVENTFLAG_BACK_MOUSE_BUTTON)
+    result |= ui::EF_BACK_MOUSE_BUTTON;
+  if (cef_modifiers & EVENTFLAG_FORWARD_MOUSE_BUTTON)
+    result |= ui::EF_FORWARD_MOUSE_BUTTON;
   if (cef_modifiers & EVENTFLAG_COMMAND_DOWN)
     result |= ui::EF_COMMAND_DOWN;
   if (cef_modifiers & EVENTFLAG_NUM_LOCK_ON)

@@ -9,12 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=96bad8e6efd216ede4ec354159598f3119f44ce0$
+// $hash=1c8a4ef9964effea5d8f02abc6890794c7a22df7$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/callback_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
+#include "libcef_dll/ctocpp/request_ctocpp.h"
+#include "libcef_dll/ctocpp/response_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -131,6 +134,141 @@ void CEF_CALLBACK load_handler_on_load_error(struct _cef_load_handler_t* self,
       CefString(errorText), CefString(failedUrl));
 }
 
+void CEF_CALLBACK
+load_handler_on_load_error_with_request(struct _cef_load_handler_t* self,
+                                        struct _cef_request_t* request,
+                                        int is_main_frame,
+                                        int has_user_gesture,
+                                        int error_code,
+                                        const cef_string_t* error_text) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: request; type: refptr_diff
+  DCHECK(request);
+  if (!request)
+    return;
+  // Verify param: error_text; type: string_byref_const
+  DCHECK(error_text);
+  if (!error_text)
+    return;
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnLoadErrorWithRequest(
+      CefRequestCToCpp::Wrap(request), is_main_frame ? true : false,
+      has_user_gesture ? true : false, error_code, CefString(error_text));
+}
+
+void CEF_CALLBACK load_handler_on_http_error(struct _cef_load_handler_t* self,
+                                             struct _cef_request_t* request,
+                                             int is_main_frame,
+                                             int has_user_gesture,
+                                             struct _cef_response_t* response) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: request; type: refptr_diff
+  DCHECK(request);
+  if (!request)
+    return;
+  // Verify param: response; type: refptr_diff
+  DCHECK(response);
+  if (!response)
+    return;
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnHttpError(
+      CefRequestCToCpp::Wrap(request), is_main_frame ? true : false,
+      has_user_gesture ? true : false, CefResponseCToCpp::Wrap(response));
+}
+
+void CEF_CALLBACK
+load_handler_on_refresh_accessed_history(struct _cef_load_handler_t* self,
+                                         cef_browser_t* browser,
+                                         cef_frame_t* frame,
+                                         const cef_string_t* url,
+                                         int isReload) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame);
+  if (!frame)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnRefreshAccessedHistory(
+      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
+      CefString(url), isReload ? true : false);
+}
+
+void CEF_CALLBACK load_handler_on_page_visible(struct _cef_load_handler_t* self,
+                                               cef_browser_t* browser,
+                                               const cef_string_t* url,
+                                               int success) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Unverified params: url
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnPageVisible(
+      CefBrowserCToCpp::Wrap(browser), CefString(url), success ? true : false);
+}
+
+void CEF_CALLBACK
+load_handler_on_data_resubmission(struct _cef_load_handler_t* self,
+                                  cef_browser_t* browser,
+                                  cef_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback)
+    return;
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnDataResubmission(
+      CefBrowserCToCpp::Wrap(browser), CefCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -140,6 +278,13 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
   GetStruct()->on_load_start = load_handler_on_load_start;
   GetStruct()->on_load_end = load_handler_on_load_end;
   GetStruct()->on_load_error = load_handler_on_load_error;
+  GetStruct()->on_load_error_with_request =
+      load_handler_on_load_error_with_request;
+  GetStruct()->on_http_error = load_handler_on_http_error;
+  GetStruct()->on_refresh_accessed_history =
+      load_handler_on_refresh_accessed_history;
+  GetStruct()->on_page_visible = load_handler_on_page_visible;
+  GetStruct()->on_data_resubmission = load_handler_on_data_resubmission;
 }
 
 // DESTRUCTOR - Do not edit by hand.

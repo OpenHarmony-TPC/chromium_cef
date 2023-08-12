@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=693f5845874072abc324f643981531ed08d17b37$
+// $hash=caa6b1e4b3ff4716bb47e181b96c9483342b28de$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_
@@ -47,6 +47,9 @@ class CefRequestContextCToCpp
   CefString GetCachePath() override;
   CefRefPtr<CefCookieManager> GetCookieManager(
       CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefDataBase> GetDataBase() override;
+  CefRefPtr<CefWebStorage> GetWebStorage(
+      CefRefPtr<CefCompletionCallback> callback) override;
   bool RegisterSchemeHandlerFactory(
       const CefString& scheme_name,
       const CefString& domain_name,
@@ -63,6 +66,8 @@ class CefRequestContextCToCpp
   void ClearCertificateExceptions(
       CefRefPtr<CefCompletionCallback> callback) override;
   void ClearHttpAuthCredentials(
+      CefRefPtr<CefCompletionCallback> callback) override;
+  void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) override;
   void CloseAllConnections(CefRefPtr<CefCompletionCallback> callback) override;
   void ResolveHost(const CefString& origin,

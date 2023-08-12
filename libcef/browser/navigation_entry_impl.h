@@ -33,6 +33,11 @@ class CefNavigationEntryImpl
   CefTime GetCompletionTime() override;
   int GetHttpStatusCode() override;
   CefRefPtr<CefSSLStatus> GetSSLStatus() override;
+  bool GetFavicon(void** pixel_data,
+                  int& color_type,
+                  int& alpha_type,
+                  int& pixel_width,
+                  int& pixel_height) override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NAVIGATION_ENTRY_IMPL_H_

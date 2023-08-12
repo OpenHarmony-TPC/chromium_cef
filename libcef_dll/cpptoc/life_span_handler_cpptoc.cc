@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f9e1fa4fa79e3b66d9d147fd0cdb14da459de85b$
+// $hash=46fab68760ab49b9a282aafb0e55d81de9cca943$
 //
 
 #include "libcef_dll/cpptoc/life_span_handler_cpptoc.h"
@@ -145,6 +145,39 @@ int CEF_CALLBACK life_span_handler_on_before_popup(
   return _retval;
 }
 
+int CEF_CALLBACK life_span_handler_on_pre_before_popup(
+    struct _cef_life_span_handler_t* self,
+    cef_browser_t* browser,
+    cef_frame_t* frame,
+    const cef_string_t* target_url,
+    cef_window_open_disposition_t target_disposition,
+    int user_gesture) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return 0;
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame);
+  if (!frame)
+    return 0;
+  // Unverified params: target_url
+
+  // Execute
+  bool _retval = CefLifeSpanHandlerCppToC::Get(self)->OnPreBeforePopup(
+      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
+      CefString(target_url), target_disposition, user_gesture ? true : false);
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK
 life_span_handler_on_after_created(struct _cef_life_span_handler_t* self,
                                    cef_browser_t* browser) {
@@ -214,6 +247,7 @@ life_span_handler_on_before_close(struct _cef_life_span_handler_t* self,
 
 CefLifeSpanHandlerCppToC::CefLifeSpanHandlerCppToC() {
   GetStruct()->on_before_popup = life_span_handler_on_before_popup;
+  GetStruct()->on_pre_before_popup = life_span_handler_on_pre_before_popup;
   GetStruct()->on_after_created = life_span_handler_on_after_created;
   GetStruct()->do_close = life_span_handler_do_close;
   GetStruct()->on_before_close = life_span_handler_on_before_close;

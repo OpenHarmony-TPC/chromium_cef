@@ -40,7 +40,9 @@
 
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
+#include "include/cef_callback.h"
 #include "include/cef_frame.h"
+#include "include/cef_response.h"
 
 ///
 // Implement this interface to handle events related to browser load status. The
@@ -111,6 +113,50 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
                            ErrorCode errorCode,
                            const CefString& errorText,
                            const CefString& failedUrl) {}
+
+  ///
+  // OnLoadErrorWithRequest
+  ///
+  /*--cef()--*/
+  virtual void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
+                                      bool is_main_frame,
+                                      bool has_user_gesture,
+                                      int error_code,
+                                      const CefString& error_text) {}
+
+  ///
+  // OnHttpError
+  ///
+  /*--cef()--*/
+  virtual void OnHttpError(CefRefPtr<CefRequest> request,
+                           bool is_main_frame,
+                           bool has_user_gesture,
+                           CefRefPtr<CefResponse> response) {}
+
+  ///
+  // OnRefreshAccessedHistory
+  ///
+  /*--cef()--*/
+  virtual void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
+                                        CefRefPtr<CefFrame> frame,
+                                        const CefString& url,
+                                        bool isReload) {}
+
+  ///
+  // Notify the body that is loading the Http response to make it visible,
+  // old pages are no longer rendered.
+  ///
+  /*--cef(optional_param=url)--*/
+  virtual void OnPageVisible(CefRefPtr<CefBrowser> browser,
+                             const CefString& url,
+                             bool success) {}
+
+  ///
+  // OnDataResubmission.
+  ///
+  /*--cef(optional_param=url)--*/
+  virtual void OnDataResubmission(CefRefPtr<CefBrowser> browser,
+                                  CefRefPtr<CefCallback> callback) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_LOAD_HANDLER_H_

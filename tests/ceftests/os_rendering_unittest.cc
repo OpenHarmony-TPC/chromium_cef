@@ -1271,7 +1271,8 @@ class OSRTestHandler : public RoutingTestHandler,
   }
 
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                  TextInputMode input_mode) override {
+                                  TextInputMode input_mode,
+                                  bool show_keyboard) override {
     if (test_type_ == OSR_TEST_VIRTUAL_KEYBOARD && started()) {
       if (!got_virtual_keyboard_event_.isSet()) {
         got_virtual_keyboard_event_.yes();

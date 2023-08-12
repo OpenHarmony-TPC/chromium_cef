@@ -102,8 +102,16 @@ void CefDevToolsManagerDelegate::StartHttpHandler(
       CreateSocketFactory();
   if (!socket_factory)
     return;
-  content::DevToolsAgentHost::StartRemoteDebuggingServer(
-      std::move(socket_factory), browser_context->GetPath(), base::FilePath());
+
+  LOG(INFO) << "start remote debugging server";
+  if (browser_context == nullptr) {
+    content::DevToolsAgentHost::StartRemoteDebuggingServer(
+        std::move(socket_factory), base::FilePath(), base::FilePath());
+  } else {
+    content::DevToolsAgentHost::StartRemoteDebuggingServer(
+        std::move(socket_factory), browser_context->GetPath(),
+        base::FilePath());
+  }
 
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
@@ -116,6 +124,7 @@ void CefDevToolsManagerDelegate::StartHttpHandler(
 // static
 void CefDevToolsManagerDelegate::StopHttpHandler() {
   // This is a no-op if the server was never started.
+  LOG(INFO) << "stop remote debugging server";
   content::DevToolsAgentHost::StopRemoteDebuggingServer();
 }
 

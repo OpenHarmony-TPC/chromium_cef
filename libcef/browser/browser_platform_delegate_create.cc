@@ -22,7 +22,7 @@
 #elif BUILDFLAG(IS_MAC)
 #include "libcef/browser/native/browser_platform_delegate_native_mac.h"
 #include "libcef/browser/osr/browser_platform_delegate_osr_mac.h"
-#elif BUILDFLAG(IS_LINUX)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "libcef/browser/native/browser_platform_delegate_native_linux.h"
 #include "libcef/browser/osr/browser_platform_delegate_osr_linux.h"
 #else
@@ -45,7 +45,7 @@ std::unique_ptr<CefBrowserPlatformDelegateNative> CreateNativeDelegate(
 #elif BUILDFLAG(IS_MAC)
   return std::make_unique<CefBrowserPlatformDelegateNativeMac>(
       window_info, background_color);
-#elif BUILDFLAG(IS_LINUX)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
   return std::make_unique<CefBrowserPlatformDelegateNativeLinux>(
       window_info, background_color);
 #endif
@@ -61,7 +61,7 @@ std::unique_ptr<CefBrowserPlatformDelegateOsr> CreateOSRDelegate(
 #elif BUILDFLAG(IS_MAC)
   return std::make_unique<CefBrowserPlatformDelegateOsrMac>(
       std::move(native_delegate));
-#elif BUILDFLAG(IS_LINUX)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
   return std::make_unique<CefBrowserPlatformDelegateOsrLinux>(
       std::move(native_delegate), use_external_begin_frame);
 #endif

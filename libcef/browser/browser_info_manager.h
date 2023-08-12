@@ -80,6 +80,12 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
                        bool user_gesture,
                        bool opener_suppressed,
                        bool* no_javascript_access);
+#if BUILDFLAG(IS_OHOS)
+  bool CanCreateWindow(content::RenderFrameHost* opener,
+                       const GURL& target_url,
+                       WindowOpenDisposition disposition,
+                       bool user_gesture);
+#endif
 
   // Called from WebContentsDelegate::GetCustomWebContentsView (alloy runtime
   // only). See comments on PendingPopup for more information.

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3a7dd4a6a1b5e0d9191be6c4dd2f0135f43de643$
+// $hash=bdaa64de1cef6de3abdcff88b64b32afc718b238$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_NAVIGATION_ENTRY_CAPI_H_
@@ -123,6 +123,16 @@ typedef struct _cef_navigation_entry_t {
   ///
   struct _cef_sslstatus_t*(CEF_CALLBACK* get_sslstatus)(
       struct _cef_navigation_entry_t* self);
+
+  ///
+  // Return favicon for this navigation entry.
+  ///
+  int(CEF_CALLBACK* get_favicon)(struct _cef_navigation_entry_t* self,
+                                 void** pixel_data,
+                                 int* color_type,
+                                 int* alpha_type,
+                                 int* pixel_width,
+                                 int* pixel_height);
 } cef_navigation_entry_t;
 
 #ifdef __cplusplus

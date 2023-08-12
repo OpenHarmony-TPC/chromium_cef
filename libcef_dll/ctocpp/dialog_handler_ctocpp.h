@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4c07a40d3bd171adf3ae3cc4aa935bc7eca4aa5e$
+// $hash=fb268437c35b6a412dc6305ae83798d4d1db56d6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
@@ -42,6 +42,7 @@ class CefDialogHandlerCToCpp
                     const CefString& default_file_path,
                     const std::vector<CefString>& accept_filters,
                     int selected_accept_filter,
+                    bool capture,
                     CefRefPtr<CefFileDialogCallback> callback) override;
 };
 

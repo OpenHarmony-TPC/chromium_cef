@@ -52,6 +52,7 @@
 #include "include/cef_keyboard_handler.h"
 #include "include/cef_life_span_handler.h"
 #include "include/cef_load_handler.h"
+#include "include/cef_permission_request.h"
 #include "include/cef_print_handler.h"
 #include "include/cef_process_message.h"
 #include "include/cef_render_handler.h"
@@ -169,6 +170,12 @@ class CefClient : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() { return nullptr; }
 
   ///
+  // Return the handler for browser geolocation permission request events.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefPermissionRequest> GetPermissionRequest() { return nullptr; }
+
+  ///
   // Called when a new message is received from a different process. Return true
   // if the message was handled or false otherwise.  It is safe to keep a
   // reference to |message| outside of this callback.
@@ -180,6 +187,17 @@ class CefClient : public virtual CefBaseRefCounted {
                                         CefRefPtr<CefProcessMessage> message) {
     return false;
   }
+
+  ///
+  // Returns the list of arguments NotifyJavaScriptResult.
+  ///
+  /*--cef()--*/
+  virtual int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
+                                     const CefString& method,
+                                     const CefString& object_name,
+                                     CefRefPtr<CefListValue> result) {
+    return 0;
+  };
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

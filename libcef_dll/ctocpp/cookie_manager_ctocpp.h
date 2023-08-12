@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2e127461190840c11239b8b08aa3f88f5dc4013f$
+// $hash=f92d6bb66153459fd6906db5e1fe32781dfafa2d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -35,6 +35,12 @@ class CefCookieManagerCToCpp
   virtual ~CefCookieManagerCToCpp();
 
   // CefCookieManager methods.
+  bool IsAcceptCookieAllowed() override;
+  void PutAcceptCookieEnabled(bool accept) override;
+  bool IsThirdPartyCookieAllowed() override;
+  void PutAcceptThirdPartyCookieEnabled(bool accept) override;
+  bool IsFileURLSchemeCookiesAllowed() override;
+  void PutAcceptFileURLSchemeCookiesEnabled(bool allow) override;
   bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) override;
   bool VisitUrlCookies(const CefString& url,
                        bool includeHttpOnly,
@@ -44,6 +50,7 @@ class CefCookieManagerCToCpp
                  CefRefPtr<CefSetCookieCallback> callback) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
+                     bool is_session,
                      CefRefPtr<CefDeleteCookiesCallback> callback) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
 };

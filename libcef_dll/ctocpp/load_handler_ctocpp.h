@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cb01f52ced702a16d6cce14ec3b7aacd2f5b6d34$
+// $hash=1ae727d2a86654472d0312033fe4bd5df06556fe$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -49,6 +49,24 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                    ErrorCode errorCode,
                    const CefString& errorText,
                    const CefString& failedUrl) override;
+  void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
+                              bool is_main_frame,
+                              bool has_user_gesture,
+                              int error_code,
+                              const CefString& error_text) override;
+  void OnHttpError(CefRefPtr<CefRequest> request,
+                   bool is_main_frame,
+                   bool has_user_gesture,
+                   CefRefPtr<CefResponse> response) override;
+  void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                const CefString& url,
+                                bool isReload) override;
+  void OnPageVisible(CefRefPtr<CefBrowser> browser,
+                     const CefString& url,
+                     bool success) override;
+  void OnDataResubmission(CefRefPtr<CefBrowser> browser,
+                          CefRefPtr<CefCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

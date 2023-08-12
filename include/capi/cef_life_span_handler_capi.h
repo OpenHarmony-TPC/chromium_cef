@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=34a6559587adbd0dc3143989a8c6e49e0664b43e$
+// $hash=205d56bf87a049ce7ac21b111d42a99659ad7c76$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LIFE_SPAN_HANDLER_CAPI_H_
@@ -99,6 +99,17 @@ typedef struct _cef_life_span_handler_t {
       struct _cef_browser_settings_t* settings,
       struct _cef_dictionary_value_t** extra_info,
       int* no_javascript_access);
+
+  ///
+  // Called on the UI thread before a new popup browser is created
+  ///
+  int(CEF_CALLBACK* on_pre_before_popup)(
+      struct _cef_life_span_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_string_t* target_url,
+      cef_window_open_disposition_t target_disposition,
+      int user_gesture);
 
   ///
   // Called after a new browser is created. It is now safe to begin performing

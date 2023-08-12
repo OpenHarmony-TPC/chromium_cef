@@ -1,11 +1,13 @@
-// Copyright (c) 2019 The Chromium Embedded Framework Authors. Portions
-// Copyright (c) 2018 The Chromium Authors. All rights reserved. Use of this
-// source code is governed by a BSD-style license that can be found in the
-// LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_PROXY_URL_LOADER_FACTORY_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_PROXY_URL_LOADER_FACTORY_H_
 
+#include "include/internal/cef_ptr.h"
+#include "libcef/browser/net_service/net_helpers.h"
 #include "libcef/browser/net_service/stream_reader_url_loader.h"
 
 #include "base/callback.h"
@@ -19,6 +21,9 @@
 #include "services/network/public/mojom/network_context.mojom.h"
 #include "services/network/public/mojom/url_loader_factory.mojom.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
+
+class CefRequest;
+class CefResponse;
 
 namespace content {
 class ResourceContext;
@@ -128,6 +133,13 @@ class InterceptedRequestHandler {
                               const network::ResourceRequest& request,
                               int error_code,
                               bool safebrowsing_hit) {}
+
+  // Called on received http request error.
+  virtual void OnHttpError(int32_t request_id,
+                           CefRefPtr<CefRequest> request,
+                           bool is_main_frame,
+                           bool has_user_gesture,
+                           CefRefPtr<CefResponse> error_response) {}
 };
 
 // URL Loader Factory that supports request/response interception, processing

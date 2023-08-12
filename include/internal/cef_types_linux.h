@@ -34,7 +34,7 @@
 #include "include/base/cef_build.h"
 #include "include/cef_config.h"
 
-#if defined(OS_LINUX)
+#if defined(OS_LINUX) || BUILDFLAG(IS_OHOS)
 
 #if defined(CEF_X11)
 typedef union _XEvent XEvent;

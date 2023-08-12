@@ -81,6 +81,9 @@ class AlloyMainDelegate : public content::ContentMainDelegate,
 
  private:
   void InitializeResourceBundle();
+#if BUILDFLAG(IS_OHOS)
+  void OverrideBundleDataPath(const base::CommandLine& command_line);
+#endif
 
   CefMainRunnerHandler* const runner_;
   CefSettings* const settings_;

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7497a44116b3cfc86eb309dc940c91c7cca78353$
+// $hash=1c155d75ccb34c91336d15446c10b7e476f23c44$
 //
 
 #include "libcef_dll/cpptoc/auth_callback_cpptoc.h"
@@ -49,6 +49,23 @@ void CEF_CALLBACK auth_callback_cancel(struct _cef_auth_callback_t* self) {
   CefAuthCallbackCppToC::Get(self)->Cancel();
 }
 
+int CEF_CALLBACK
+auth_callback_is_http_auth_info_saved(struct _cef_auth_callback_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefAuthCallbackCppToC::Get(self)->IsHttpAuthInfoSaved();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -56,6 +73,7 @@ void CEF_CALLBACK auth_callback_cancel(struct _cef_auth_callback_t* self) {
 CefAuthCallbackCppToC::CefAuthCallbackCppToC() {
   GetStruct()->cont = auth_callback_cont;
   GetStruct()->cancel = auth_callback_cancel;
+  GetStruct()->is_http_auth_info_saved = auth_callback_is_http_auth_info_saved;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -1,4 +1,5 @@
-// Copyright (c) 2010 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
@@ -9,6 +10,7 @@
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/extensions/browser_extensions_util.h"
+#include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/common/cef_switches.h"
 #include "libcef/common/extensions/extensions_util.h"
 #include "libcef/features/runtime_checks.h"
@@ -32,6 +34,7 @@
 #include "components/prefs/pref_store.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
+#include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/site_instance.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
@@ -225,6 +228,27 @@ bool UpdatePreferredColorScheme(blink::web_pref::WebPreferences* web_prefs,
   return old_preferred_color_scheme != web_prefs->preferred_color_scheme;
 }
 
+void SetCefSpecialPrefs(content::RenderViewHost* rvh,
+                        CefRefPtr<AlloyBrowserHostImpl> browser,
+                        blink::web_pref::WebPreferences& web) {
+  auto frame = browser->GetMainFrame();
+  if (frame && frame->IsValid() &&
+      (browser->settings().text_size_percent > 0)) {
+    web.force_enable_zoom = false;
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->PutZoomingForTextFactor(browser->settings().text_size_percent /
+                                  100.0f);
+  }
+  CefRenderWidgetHostViewOSR* view =
+      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+  if (view) {
+    view->SetDoubleTapSupportEnabled(
+        browser->settings().supports_double_tap_zoom);
+    view->SetMultiTouchZoomSupportEnabled(
+        browser->settings().supports_multi_touch_zoom);
+  }
+}
+
 }  // namespace
 
 void SetCommandLinePrefDefaults(CommandLinePrefStore* prefs) {
@@ -298,7 +322,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
     web.fantasy_font_family_map[blink::web_pref::kCommonScript] =
         CefString(&cef.fantasy_font_family);
   }
-
+  web.pinch_smooth_mode = cef.pinch_smooth_mode;
   if (cef.default_font_size > 0)
     web.default_font_size = cef.default_font_size;
   if (cef.default_fixed_font_size > 0)
@@ -318,7 +342,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
             web.javascript_can_access_clipboard);
   SET_STATE(cef.javascript_dom_paste, web.dom_paste_enabled);
   SET_STATE(cef.plugins, web.plugins_enabled);
-  SET_STATE(cef.image_loading, web.loads_images_automatically);
+  SET_STATE(cef.image_loading, web.images_enabled);
   SET_STATE(cef.image_shrink_standalone_to_fit,
             web.shrinks_standalone_images_to_fit);
   SET_STATE(cef.text_area_resize, web.text_areas_are_resizable);
@@ -332,6 +356,23 @@ void SetCefPrefs(const CefBrowserSettings& cef,
     web.webgl1_enabled = false;
     web.webgl2_enabled = false;
   }
+
+  /* ohos webview begin*/
+  SET_STATE(cef.force_dark_mode_enabled, web.force_dark_mode_enabled);
+  SET_STATE(cef.loads_images_automatically, web.loads_images_automatically);
+  SET_STATE(cef.allow_running_insecure_content,
+            web.allow_running_insecure_content);
+  SET_STATE(cef.strict_mixed_content_checking,
+            web.strict_mixed_content_checking);
+  SET_STATE(cef.allow_mixed_content_upgrades, web.allow_mixed_content_upgrades);
+  SET_STATE(cef.initialize_at_minimum_page_scale,
+            web.initialize_at_minimum_page_scale);
+  web.viewport_meta_enabled = cef.viewport_meta_enabled;
+  web.autoplay_policy =
+      cef.user_gesture_required
+          ? blink::mojom::AutoplayPolicy::kUserGestureRequired
+          : blink::mojom::AutoplayPolicy::kNoUserGestureRequired;
+  /* ohos webview end */
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,
@@ -415,6 +456,8 @@ void PopulateWebPreferences(content::RenderViewHost* rvh,
   if (browser) {
     // Set preferences based on CefBrowserSettings.
     SetCefPrefs(browser->settings(), web);
+
+    SetCefSpecialPrefs(rvh, browser, web);
 
     web.picture_in_picture_enabled = browser->IsPictureInPictureSupported();
 

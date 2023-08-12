@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=252841f4863d24030d5b42fd34179cfe23ac84c4$
+// $hash=46632d6c9d6e3c6891abc90323313bea54d7419e$
 //
 
 #include "libcef_dll/ctocpp/cookie_visitor_ctocpp.h"
@@ -42,6 +42,25 @@ bool CefCookieVisitorCToCpp::Visit(const CefCookie& cookie,
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefCookieVisitorCToCpp::SetCookieLine(const CefString& cookieLine) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_cookie_visitor_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_cookie_line))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: cookieLine; type: string_byref_const
+  DCHECK(!cookieLine.empty());
+  if (cookieLine.empty())
+    return;
+
+  // Execute
+  _struct->set_cookie_line(_struct, cookieLine.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

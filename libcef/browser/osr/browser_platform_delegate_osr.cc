@@ -82,6 +82,7 @@ void CefBrowserPlatformDelegateOsr::NotifyBrowserDestroyed() {
     CefRenderWidgetHostViewOSR* view =
         static_cast<CefRenderWidgetHostViewOSR*>(host->GetWidget()->GetView());
     if (view) {
+      LOG(INFO) << "NotifyBrowserDestroyed";
       view->ReleaseCompositor();
     }
   }
@@ -157,8 +158,13 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
 
 void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
-    view->SendTouchEvent(event);
+  if (!view)
+    return;
+  view->SendTouchEvent(event);
+
+  if (event.type == CEF_TET_PRESSED) {
+    SendTouchEventToRender(event);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {

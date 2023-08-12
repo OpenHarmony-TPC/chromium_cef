@@ -9,15 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0be94c1d5a7a266610c3848f1732452cb33dd7a8$
+// $hash=f895effb80d27ea9ae57687c81df2f8871e2ea53$
 //
 
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
+#include "libcef_dll/cpptoc/data_base_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/extension_cpptoc.h"
 #include "libcef_dll/cpptoc/media_router_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
+#include "libcef_dll/cpptoc/web_storage_cpptoc.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/extension_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
@@ -189,6 +191,41 @@ request_context_get_cookie_manager(struct _cef_request_context_t* self,
 
   // Return type: refptr_same
   return CefCookieManagerCppToC::Wrap(_retval);
+}
+
+cef_data_base_t* CEF_CALLBACK
+request_context_get_data_base(struct _cef_request_context_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefDataBase> _retval =
+      CefRequestContextCppToC::Get(self)->GetDataBase();
+
+  // Return type: refptr_same
+  return CefDataBaseCppToC::Wrap(_retval);
+}
+
+struct _cef_web_storage_t* CEF_CALLBACK
+request_context_get_web_storage(struct _cef_request_context_t* self,
+                                cef_completion_callback_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+  // Unverified params: callback
+
+  // Execute
+  CefRefPtr<CefWebStorage> _retval =
+      CefRequestContextCppToC::Get(self)->GetWebStorage(
+          CefCompletionCallbackCToCpp::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefWebStorageCppToC::Wrap(_retval);
 }
 
 int CEF_CALLBACK request_context_register_scheme_handler_factory(
@@ -375,6 +412,21 @@ void CEF_CALLBACK request_context_clear_http_auth_credentials(
       CefCompletionCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK request_context_clear_client_authentication_cache(
+    struct _cef_request_context_t* self,
+    cef_completion_callback_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Unverified params: callback
+
+  // Execute
+  CefRequestContextCppToC::Get(self)->ClearClientAuthenticationCache(
+      CefCompletionCallbackCToCpp::Wrap(callback));
+}
+
 void CEF_CALLBACK
 request_context_close_all_connections(struct _cef_request_context_t* self,
                                       cef_completion_callback_t* callback) {
@@ -557,6 +609,8 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
   GetStruct()->get_handler = request_context_get_handler;
   GetStruct()->get_cache_path = request_context_get_cache_path;
   GetStruct()->get_cookie_manager = request_context_get_cookie_manager;
+  GetStruct()->get_data_base = request_context_get_data_base;
+  GetStruct()->get_web_storage = request_context_get_web_storage;
   GetStruct()->register_scheme_handler_factory =
       request_context_register_scheme_handler_factory;
   GetStruct()->clear_scheme_handler_factories =
@@ -570,6 +624,8 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
       request_context_clear_certificate_exceptions;
   GetStruct()->clear_http_auth_credentials =
       request_context_clear_http_auth_credentials;
+  GetStruct()->clear_client_authentication_cache =
+      request_context_clear_client_authentication_cache;
   GetStruct()->close_all_connections = request_context_close_all_connections;
   GetStruct()->resolve_host = request_context_resolve_host;
   GetStruct()->load_extension = request_context_load_extension;

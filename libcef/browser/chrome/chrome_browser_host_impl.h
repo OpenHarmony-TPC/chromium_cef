@@ -77,7 +77,8 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext) override;
+            bool findNext,
+            bool newSession) override;
   void StopFinding(bool clearSelection) override;
   void ShowDevTools(const CefWindowInfo& windowInfo,
                     CefRefPtr<CefClient> client,
@@ -123,6 +124,9 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   CefRefPtr<CefExtension> GetExtension() override;
   bool IsBackgroundHost() override;
 
+  /* ohos webview begin */
+  void SetBackgroundColor(int color) override;
+  /* ohos webview end */
  protected:
   bool Navigate(const content::OpenURLParams& params) override;
 

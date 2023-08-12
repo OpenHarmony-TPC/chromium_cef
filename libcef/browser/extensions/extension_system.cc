@@ -126,6 +126,7 @@ void LoadExtensionWithManifest(base::WeakPtr<CefExtensionSystem> context,
                           internal, loader_context, handler);
 }
 
+#if !BUILDFLAG(IS_OHOS)
 void LoadExtensionFromDisk(base::WeakPtr<CefExtensionSystem> context,
                            const base::FilePath& root_directory,
                            bool internal,
@@ -145,6 +146,7 @@ void LoadExtensionFromDisk(base::WeakPtr<CefExtensionSystem> context,
   LoadExtensionWithManifest(context, manifest_contents, root_directory,
                             internal, loader_context, handler);
 }
+#endif
 
 }  // namespace
 
@@ -275,10 +277,14 @@ void CefExtensionSystem::LoadExtension(
     bool internal,
     CefRefPtr<CefRequestContext> loader_context,
     CefRefPtr<CefExtensionHandler> handler) {
+#if !BUILDFLAG(IS_OHOS)
   CEF_REQUIRE_UIT();
   CEF_POST_USER_VISIBLE_TASK(
       base::BindOnce(LoadExtensionFromDisk, weak_ptr_factory_.GetWeakPtr(),
                      root_directory, internal, loader_context, handler));
+#else
+  LOG(INFO) << "CefExtensionSystem::LoadExtension UNIMPLEMENT for IS_OHOS";
+#endif
 }
 
 void CefExtensionSystem::LoadExtension(

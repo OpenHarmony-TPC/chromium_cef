@@ -103,6 +103,40 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::CreatePopupBrowserInfo(
   return browser_info;
 }
 
+#if BUILDFLAG(IS_OHOS)
+bool CefBrowserInfoManager::CanCreateWindow(content::RenderFrameHost* opener,
+    const GURL& target_url,
+    WindowOpenDisposition disposition,
+    bool user_gesture) {
+  CEF_REQUIRE_UIT();
+  content::Referrer referrer;
+  content::OpenURLParams params(target_url, referrer, disposition,
+                                ui::PAGE_TRANSITION_LINK,
+                                /*is_renderer_initiated=*/true);
+  params.user_gesture = user_gesture;
+ 
+  CefRefPtr<CefBrowserHostBase> browser;
+  if (!MaybeAllowNavigation(opener, params, browser) || !browser) {
+    LOG(INFO) << "not allow popup, cancel the popup";
+    return false;
+  }
+ 
+  CefRefPtr<CefClient> client = browser->GetClient();
+  bool allow = true;
+  if (client.get()) {
+    CefRefPtr<CefLifeSpanHandler> handler = client->GetLifeSpanHandler();
+    if (handler.get()) {
+      CefRefPtr<CefFrame> opener_frame = browser->GetFrameForHost(opener);
+      DCHECK(opener_frame);
+      allow = !handler->OnPreBeforePopup(
+          browser.get(), opener_frame, target_url.spec(),
+          static_cast<cef_window_open_disposition_t>(disposition), user_gesture);
+    }
+  }
+  return allow;
+}
+#endif
+
 bool CefBrowserInfoManager::CanCreateWindow(
     content::RenderFrameHost* opener,
     const GURL& target_url,
@@ -180,7 +214,9 @@ bool CefBrowserInfoManager::CanCreateWindow(
     CefBrowserCreateParams create_params;
 
     if (browser->HasView()) {
+#if defined(TOOLKIT_VIEWS)
       create_params.popup_with_views_hosted_opener = true;
+#endif
     } else {
       create_params.window_info = std::move(window_info);
     }

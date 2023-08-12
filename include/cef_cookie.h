@@ -65,6 +65,55 @@ class CefCookieManager : public virtual CefBaseRefCounted {
       CefRefPtr<CefCompletionCallback> callback);
 
   ///
+  // Convert string cookie to CefCookie. The method will return true when
+  // excuted success, otherwise return false.
+  ///
+  /*--cef()--*/
+  static bool CreateCefCookie(const CefString& url,
+                              const CefString& value,
+                              CefCookie& cef_cookie);
+
+  ///
+  // Get whether this cookie manager can accpet and send cookies. Returns false
+  // if can't.
+  ///
+  /*--cef()--*/
+  virtual bool IsAcceptCookieAllowed() = 0;
+
+  ///
+  // Set whether this cookie manager can accpet and send cookies.
+  ///
+  /*--cef()--*/
+  virtual void PutAcceptCookieEnabled(bool accept) = 0;
+
+  ///
+  // Gets whether cookies of third parties are allowed to be set. Returns false
+  // if can't.
+  ///
+  /*--cef()--*/
+  virtual bool IsThirdPartyCookieAllowed() = 0;
+
+  ///
+  // Set whether cookies of third parties are allowed to be set.
+  ///
+  /*--cef()--*/
+  virtual void PutAcceptThirdPartyCookieEnabled(bool accept) = 0;
+
+  ///
+  // Get whether this cookie manager can accpet and send cookies for file scheme
+  // URL. Returns false if can't.
+  ///
+  /*--cef()--*/
+  virtual bool IsFileURLSchemeCookiesAllowed() = 0;
+
+  ///
+  // Set whether this cookie manager can accpet and send cookies for file scheme
+  // URL.
+  ///
+  /*--cef()--*/
+  virtual void PutAcceptFileURLSchemeCookiesEnabled(bool allow) = 0;
+
+  ///
   // Visit all cookies on the UI thread. The returned cookies are ordered by
   // longest path, then by earliest creation date. Returns false if cookies
   // cannot be accessed.
@@ -113,6 +162,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
           optional_param=callback)--*/
   virtual bool DeleteCookies(const CefString& url,
                              const CefString& cookie_name,
+                             bool is_session,
                              CefRefPtr<CefDeleteCookiesCallback> callback) = 0;
 
   ///
@@ -143,6 +193,14 @@ class CefCookieVisitor : public virtual CefBaseRefCounted {
                      int count,
                      int total,
                      bool& deleteCookie) = 0;
+
+  ///
+  // Method that will be called when all cookies have been visited, contenate
+  // them into one string line. The string cookie line will be passed into this
+  // method.
+  ///
+  /*--cef()--*/
+  virtual void SetCookieLine(const CefString& cookieLine) {}
 };
 
 ///

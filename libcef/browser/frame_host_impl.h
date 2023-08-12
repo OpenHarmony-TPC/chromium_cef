@@ -12,6 +12,7 @@
 
 #include "include/cef_frame.h"
 
+#include "base/memory/read_only_shared_memory_region.h"
 #include "base/synchronization/lock.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "mojo/public/cpp/bindings/receiver_set.h"
@@ -82,6 +83,11 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SetFocused(bool focused);
   void RefreshAttributes();
 
+  void OnGetImageFromCache(std::string url,
+                           uint32_t buffer_size,
+                           base::ReadOnlySharedMemoryRegion region);
+  void UpdateLocale(const CefString& locale);
+
   // Notification that a move or resize of the renderer's containing window has
   // started. Used on Windows and Linux with the Alloy runtime.
   void NotifyMoveOrResizeStarted();
@@ -137,6 +143,34 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void UpdateDraggableRegions(
       absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
+#if BUILDFLAG(IS_OHOS)
+  void OnUpdateHitData(cef::mojom::HitDataParamsPtr params) override;
+  void OnGetImageForContextNode(
+      cef::mojom::GetImageForContextNodeParamsPtr params) override;
+  void OnGetImageForContextNodeNull() override;
+  void LoadHeaderUrl(const CefString& url,
+                     const CefString& additionalHttpHeaders) override;
+
+  // Send the touch point to the rederer to get hitdata.
+  void SendTouchEvent(const CefTouchEvent& event);
+
+  void SetInitialScale(float scale);
+  void SetJsOnlineProperty(bool network_up);
+
+  void GetImageForContextNode();
+
+  // Sets the zoom factor for text only. Used in layout modes other than
+  // Text Autosizing.
+  void PutZoomingForTextFactor(float factor);
+
+  void GetImagesCallback(CefRefPtr<CefFrameHostImpl> frame,
+                         CefRefPtr<CefGetImagesCallback> callback, bool response);
+  void GetImagesWithResponse(cef::mojom::RenderFrame::GetImagesWithResponseCallback
+                             response_callback);
+  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
+  void RemoveCache(bool include_disk_files);
+
+#endif  // BUILDFLAG(IS_OHOS)
 
   static const int64_t kMainFrameId;
   static const int64_t kFocusedFrameId;

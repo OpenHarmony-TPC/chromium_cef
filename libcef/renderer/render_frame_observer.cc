@@ -79,7 +79,7 @@ void CefRenderFrameObserver::FocusedElementChanged(
     const blink::WebElement& element) {
   if (!frame_)
     return;
-
+  frame_->OnFocusedNodeChanged(element);
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   CefRefPtr<CefBrowserImpl> browserPtr =
       CefBrowserImpl::GetBrowserForMainFrame(frame->Top());

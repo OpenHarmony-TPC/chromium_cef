@@ -1,7 +1,7 @@
-// Copyright (c) 2012 The Chromium Embedded Framework Authors.
-// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include "libcef/renderer/browser_impl.h"
 
@@ -72,7 +72,6 @@ void CefBrowserImpl::GoBack() {
 
 bool CefBrowserImpl::CanGoForward() {
   CEF_REQUIRE_RT_RETURN(false);
-
   return blink_glue::CanGoForward(GetWebView());
 }
 
@@ -80,6 +79,22 @@ void CefBrowserImpl::GoForward() {
   CEF_REQUIRE_RT_RETURN_VOID();
 
   blink_glue::GoForward(GetWebView());
+}
+
+bool CefBrowserImpl::CanGoBackOrForward(int num_steps) {
+  CEF_REQUIRE_RT_RETURN(false);
+
+  return blink_glue::CanGoBackOrForward(GetWebView(), num_steps);
+}
+
+void CefBrowserImpl::GoBackOrForward(int num_steps) {
+  CEF_REQUIRE_RT_RETURN_VOID();
+
+  blink_glue::GoBackOrForward(GetWebView(), num_steps);
+}
+
+void CefBrowserImpl::DeleteHistory() {
+  CEF_REQUIRE_RT_RETURN_VOID();
 }
 
 bool CefBrowserImpl::IsLoading() {
@@ -263,6 +278,15 @@ void CefBrowserImpl::GetFrameNames(std::vector<CefString>& names) {
   }
 }
 
+CefRefPtr<CefBrowserPermissionRequestDelegate>
+CefBrowserImpl::GetPermissionRequestDelegate() {
+  return nullptr;
+}
+
+CefRefPtr<CefGeolocationAcess> CefBrowserImpl::GetGeolocationPermissions() {
+  return nullptr;
+}
+
 // CefBrowserImpl public methods.
 // -----------------------------------------------------------------------------
 
@@ -401,3 +425,24 @@ void CefBrowserImpl::OnLoadingStateChange(bool isLoading) {
     }
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserImpl::ReloadOriginalUrl() {
+  CEF_REQUIRE_RT_RETURN_VOID();
+
+  if (GetWebView()) {
+    blink::WebFrame* main_frame = GetWebView()->MainFrame();
+    if (main_frame && main_frame->IsWebLocalFrame()) {
+      main_frame->ToWebLocalFrame()->StartReload(
+          blink::WebFrameLoadType::kReload);
+    }
+  }
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+bool CefBrowserImpl::ShouldShowLoadingUI() {
+  CEF_REQUIRE_RT_RETURN(false);
+  return false;
+}
+#endif

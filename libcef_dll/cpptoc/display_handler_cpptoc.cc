@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8963e8fd758fe86d0f35a5fd81e3f56a0b7aa3cd$
+// $hash=dcec0d8e6a9a0d393173112aa81e0f9dc70f73db$
 //
 
 #include "libcef_dll/cpptoc/display_handler_cpptoc.h"
@@ -99,6 +99,86 @@ display_handler_on_favicon_urlchange(struct _cef_display_handler_t* self,
   // Execute
   CefDisplayHandlerCppToC::Get(self)->OnFaviconURLChange(
       CefBrowserCToCpp::Wrap(browser), icon_urlsList);
+}
+
+void CEF_CALLBACK
+display_handler_on_received_touch_icon_url(struct _cef_display_handler_t* self,
+                                           cef_browser_t* browser,
+                                           const cef_string_t* icon_url,
+                                           int precomposed) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: icon_url; type: string_byref_const
+  DCHECK(icon_url);
+  if (!icon_url)
+    return;
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnReceivedTouchIconUrl(
+      CefBrowserCToCpp::Wrap(browser), CefString(icon_url),
+      precomposed ? true : false);
+}
+
+void CEF_CALLBACK
+display_handler_on_received_icon(struct _cef_display_handler_t* self,
+                                 const void* data,
+                                 size_t width,
+                                 size_t height,
+                                 cef_color_type_t color_type,
+                                 cef_alpha_type_t alpha_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: data; type: simple_byaddr
+  DCHECK(data);
+  if (!data)
+    return;
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnReceivedIcon(data, width, height,
+                                                     color_type, alpha_type);
+}
+
+void CEF_CALLBACK
+display_handler_on_received_icon_url(struct _cef_display_handler_t* self,
+                                     const cef_string_t* image_url,
+                                     const void* data,
+                                     size_t width,
+                                     size_t height,
+                                     cef_color_type_t color_type,
+                                     cef_alpha_type_t alpha_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: image_url; type: string_byref_const
+  DCHECK(image_url);
+  if (!image_url)
+    return;
+  // Verify param: data; type: simple_byaddr
+  DCHECK(data);
+  if (!data)
+    return;
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnReceivedIconUrl(
+      CefString(image_url), data, width, height, color_type, alpha_type);
 }
 
 void CEF_CALLBACK
@@ -287,6 +367,29 @@ int CEF_CALLBACK display_handler_on_cursor_change(
   return _retval;
 }
 
+void CEF_CALLBACK
+display_handler_on_scale_changed(struct _cef_display_handler_t* self,
+                                 cef_browser_t* browser,
+                                 float old_page_scale_factor,
+                                 float new_page_scale_factor) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnScaleChanged(
+      CefBrowserCToCpp::Wrap(browser), old_page_scale_factor,
+      new_page_scale_factor);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -295,6 +398,10 @@ CefDisplayHandlerCppToC::CefDisplayHandlerCppToC() {
   GetStruct()->on_address_change = display_handler_on_address_change;
   GetStruct()->on_title_change = display_handler_on_title_change;
   GetStruct()->on_favicon_urlchange = display_handler_on_favicon_urlchange;
+  GetStruct()->on_received_touch_icon_url =
+      display_handler_on_received_touch_icon_url;
+  GetStruct()->on_received_icon = display_handler_on_received_icon;
+  GetStruct()->on_received_icon_url = display_handler_on_received_icon_url;
   GetStruct()->on_fullscreen_mode_change =
       display_handler_on_fullscreen_mode_change;
   GetStruct()->on_tooltip = display_handler_on_tooltip;
@@ -304,6 +411,7 @@ CefDisplayHandlerCppToC::CefDisplayHandlerCppToC() {
   GetStruct()->on_loading_progress_change =
       display_handler_on_loading_progress_change;
   GetStruct()->on_cursor_change = display_handler_on_cursor_change;
+  GetStruct()->on_scale_changed = display_handler_on_scale_changed;
 }
 
 // DESTRUCTOR - Do not edit by hand.

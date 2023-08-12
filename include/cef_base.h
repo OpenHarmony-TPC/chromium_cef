@@ -42,7 +42,7 @@
 #include "include/internal/cef_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_mac.h"
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "include/internal/cef_linux.h"
 #endif
 

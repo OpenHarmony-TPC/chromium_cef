@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=de430ab07ee4a1ba234c17ae560813a0aeeef5da$
+// $hash=f70633e6b53acb79709008ad6aaa692c77f7d136$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -57,6 +57,16 @@ class CefRenderHandlerCToCpp
                           PaintElementType type,
                           const RectList& dirtyRects,
                           void* shared_handle) override;
+  void GetTouchHandleSize(CefRefPtr<CefBrowser> browser,
+                          cef_horizontal_alignment_t orientation,
+                          CefSize& size) override;
+  void OnTouchHandleStateChanged(CefRefPtr<CefBrowser> browser,
+                                 const CefTouchHandleState& state) override;
+  void OnTouchSelectionChanged(
+      const CefTouchHandleState& insert_handle,
+      const CefTouchHandleState& start_selection_handle,
+      const CefTouchHandleState& end_selection_handle,
+      bool need_report) override;
   bool StartDragging(CefRefPtr<CefBrowser> browser,
                      CefRefPtr<CefDragData> drag_data,
                      DragOperationsMask allowed_ops,
@@ -67,6 +77,9 @@ class CefRenderHandlerCToCpp
   void OnScrollOffsetChanged(CefRefPtr<CefBrowser> browser,
                              double x,
                              double y) override;
+  void OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
+                          int height,
+                          int width) override;
   void OnImeCompositionRangeChanged(CefRefPtr<CefBrowser> browser,
                                     const CefRange& selected_range,
                                     const RectList& character_bounds) override;
@@ -74,7 +87,8 @@ class CefRenderHandlerCToCpp
                               const CefString& selected_text,
                               const CefRange& selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                  TextInputMode input_mode) override;
+                                  TextInputMode input_mode,
+                                  bool show_keyboard) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

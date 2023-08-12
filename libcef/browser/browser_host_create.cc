@@ -82,20 +82,7 @@ bool CefBrowserHost::CreateBrowser(
 
   auto helper = std::make_unique<CreateBrowserHelper>(
       windowInfo, client, url, settings, extra_info, request_context);
-
-  auto request_context_impl =
-      static_cast<CefRequestContextImpl*>(request_context.get());
-
-  // Wait for the browser context to be initialized before creating the browser.
-  request_context_impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
-      [](std::unique_ptr<CreateBrowserHelper> helper) {
-        // Always execute asynchronously to avoid potential issues if we're
-        // being called synchronously during app initialization.
-        CEF_POST_TASK(CEF_UIT, base::BindOnce(&CreateBrowserHelper::Run,
-                                              std::move(helper)));
-      },
-      std::move(helper)));
-
+  helper->Run();
   return true;
 }
 

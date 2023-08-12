@@ -42,7 +42,8 @@
 // //styleguide/c++/c++-dos-and-donts.md for more information.
 
 // DEPRECATED: See above. Makes a class uncopyable.
-#define DISALLOW_COPY(TypeName) TypeName(const TypeName&) = delete
+// NOTE(ohos): Duplicated with OHOS NDK's macro name.
+//#define DISALLOW_COPY(TypeName) TypeName(const TypeName&) = delete
 
 // DEPRECATED: See above. Makes a class unassignable.
 #define DISALLOW_ASSIGN(TypeName) TypeName& operator=(const TypeName&) = delete

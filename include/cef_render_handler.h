@@ -162,6 +162,34 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                   void* shared_handle) {}
 
   ///
+  // Called to retrieve the size of the touch handle for the specified
+  // |orientation|.
+  ///
+  /*--cef()--*/
+  virtual void GetTouchHandleSize(CefRefPtr<CefBrowser> browser,
+                                  cef_horizontal_alignment_t orientation,
+                                  CefSize& size) {}
+
+  ///
+  // Called when touch handle state is updated. The client is responsible for
+  // rendering the touch handles.
+  ///
+  /*--cef()--*/
+  virtual void OnTouchHandleStateChanged(CefRefPtr<CefBrowser> browser,
+                                         const CefTouchHandleState& state) {}
+
+  ///
+  // Called when touch selection is updated. The client is responsible for
+  // rendering the touch handles.
+  ///
+  /*--cef()--*/
+  virtual void OnTouchSelectionChanged(
+      const CefTouchHandleState& insert_handle,
+      const CefTouchHandleState& start_selection_handle,
+      const CefTouchHandleState& end_selection_handle,
+      bool need_report) {}
+
+  ///
   // Called when the user starts dragging content in the web view. Contextual
   // information about the dragged content is supplied by |drag_data|.
   // (|x|, |y|) is the drag start location in screen coordinates.
@@ -203,6 +231,14 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                      double y) {}
 
   ///
+  // Called when the RootLayer has changed.
+  ///
+  /*--cef()--*/
+  virtual void OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
+                                  int height,
+                                  int width) {}
+
+  ///
   // Called when the IME composition range has changed. |selected_range| is the
   // range of characters that have been selected. |character_bounds| is the
   // bounds of each character in view coordinates.
@@ -226,11 +262,13 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   // Called when an on-screen keyboard should be shown or hidden for the
   // specified |browser|. |input_mode| specifies what kind of keyboard
   // should be opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any
-  // existing keyboard for this browser should be hidden.
+  // existing keyboard for this browser should be hidden. |show_keyboard|
+  // specifies whether to display the keyboard.
   ///
   /*--cef()--*/
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                          TextInputMode input_mode) {}
+                                          TextInputMode input_mode,
+                                          bool show_keyboard) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

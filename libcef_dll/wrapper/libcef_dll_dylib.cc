@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac1c94b2e83a4c806bed11fd0f456f8fe7ff1c44$
+// $hash=7185f14aad39a002663816fe05a4990f76d8ad6f$
 //
 
 #include <dlfcn.h>
@@ -21,6 +21,7 @@
 #include "include/capi/cef_command_line_capi.h"
 #include "include/capi/cef_cookie_capi.h"
 #include "include/capi/cef_crash_util_capi.h"
+#include "include/capi/cef_data_base_capi.h"
 #include "include/capi/cef_drag_data_capi.h"
 #include "include/capi/cef_file_util_capi.h"
 #include "include/capi/cef_i18n_util_capi.h"
@@ -49,6 +50,7 @@
 #include "include/capi/cef_values_capi.h"
 #include "include/capi/cef_waitable_event_capi.h"
 #include "include/capi/cef_web_plugin_capi.h"
+#include "include/capi/cef_web_storage_capi.h"
 #include "include/capi/cef_xml_reader_capi.h"
 #include "include/capi/cef_zip_reader_capi.h"
 #include "include/capi/test/cef_test_helpers_capi.h"
@@ -201,6 +203,10 @@ typedef struct _cef_command_line_t* (*cef_command_line_get_global_ptr)();
 typedef struct _cef_cookie_manager_t* (
     *cef_cookie_manager_get_global_manager_ptr)(
     struct _cef_completion_callback_t*);
+typedef int (*cef_cookie_manager_create_cef_cookie_ptr)(const cef_string_t*,
+                                                        const cef_string_t*,
+                                                        struct _cef_cookie_t*);
+typedef struct _cef_data_base_t* (*cef_data_base_get_global_ptr)();
 typedef struct _cef_drag_data_t* (*cef_drag_data_create_ptr)();
 typedef struct _cef_image_t* (*cef_image_create_ptr)();
 typedef struct _cef_media_router_t* (*cef_media_router_get_global_ptr)(
@@ -283,6 +289,8 @@ typedef struct _cef_dictionary_value_t* (*cef_dictionary_value_create_ptr)();
 typedef struct _cef_list_value_t* (*cef_list_value_create_ptr)();
 typedef struct _cef_waitable_event_t* (*cef_waitable_event_create_ptr)(int,
                                                                        int);
+typedef struct _cef_web_storage_t* (*cef_web_storage_get_global_manager_ptr)(
+    struct _cef_completion_callback_t*);
 typedef struct _cef_xml_reader_t* (*cef_xml_reader_create_ptr)(
     struct _cef_stream_reader_t*,
     cef_xml_encoding_type_t,
@@ -578,6 +586,8 @@ struct libcef_pointers {
   cef_command_line_get_global_ptr cef_command_line_get_global;
   cef_cookie_manager_get_global_manager_ptr
       cef_cookie_manager_get_global_manager;
+  cef_cookie_manager_create_cef_cookie_ptr cef_cookie_manager_create_cef_cookie;
+  cef_data_base_get_global_ptr cef_data_base_get_global;
   cef_drag_data_create_ptr cef_drag_data_create;
   cef_image_create_ptr cef_image_create;
   cef_media_router_get_global_ptr cef_media_router_get_global;
@@ -625,6 +635,7 @@ struct libcef_pointers {
   cef_dictionary_value_create_ptr cef_dictionary_value_create;
   cef_list_value_create_ptr cef_list_value_create;
   cef_waitable_event_create_ptr cef_waitable_event_create;
+  cef_web_storage_get_global_manager_ptr cef_web_storage_get_global_manager;
   cef_xml_reader_create_ptr cef_xml_reader_create;
   cef_zip_reader_create_ptr cef_zip_reader_create;
   cef_translator_test_create_ptr cef_translator_test_create;
@@ -793,6 +804,8 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_command_line_create);
   INIT_ENTRY(cef_command_line_get_global);
   INIT_ENTRY(cef_cookie_manager_get_global_manager);
+  INIT_ENTRY(cef_cookie_manager_create_cef_cookie);
+  INIT_ENTRY(cef_data_base_get_global);
   INIT_ENTRY(cef_drag_data_create);
   INIT_ENTRY(cef_image_create);
   INIT_ENTRY(cef_media_router_get_global);
@@ -838,6 +851,7 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_dictionary_value_create);
   INIT_ENTRY(cef_list_value_create);
   INIT_ENTRY(cef_waitable_event_create);
+  INIT_ENTRY(cef_web_storage_get_global_manager);
   INIT_ENTRY(cef_xml_reader_create);
   INIT_ENTRY(cef_zip_reader_create);
   INIT_ENTRY(cef_translator_test_create);
@@ -1305,6 +1319,18 @@ struct _cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
   return g_libcef_pointers.cef_cookie_manager_get_global_manager(callback);
 }
 
+NO_SANITIZE("cfi-icall")
+int cef_cookie_manager_create_cef_cookie(const cef_string_t* url,
+                                         const cef_string_t* value,
+                                         struct _cef_cookie_t* cef_cookie) {
+  return g_libcef_pointers.cef_cookie_manager_create_cef_cookie(url, value,
+                                                                cef_cookie);
+}
+
+NO_SANITIZE("cfi-icall") struct _cef_data_base_t* cef_data_base_get_global() {
+  return g_libcef_pointers.cef_data_base_get_global();
+}
+
 NO_SANITIZE("cfi-icall") struct _cef_drag_data_t* cef_drag_data_create() {
   return g_libcef_pointers.cef_drag_data_create();
 }
@@ -1557,6 +1583,12 @@ struct _cef_waitable_event_t* cef_waitable_event_create(
     int initially_signaled) {
   return g_libcef_pointers.cef_waitable_event_create(automatic_reset,
                                                      initially_signaled);
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_web_storage_t* cef_web_storage_get_global_manager(
+    struct _cef_completion_callback_t* callback) {
+  return g_libcef_pointers.cef_web_storage_get_global_manager(callback);
 }
 
 NO_SANITIZE("cfi-icall")

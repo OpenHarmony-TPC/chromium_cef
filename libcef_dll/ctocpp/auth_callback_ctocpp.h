@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4c7396d46f103b82f979838707afc9bdc47f8607$
+// $hash=74b470ef09c99a7d2ccbe7e9134e0b4d1f11be03$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_AUTH_CALLBACK_CTOCPP_H_
@@ -36,6 +36,7 @@ class CefAuthCallbackCToCpp : public CefCToCppRefCounted<CefAuthCallbackCToCpp,
   // CefAuthCallback methods.
   void Continue(const CefString& username, const CefString& password) override;
   void Cancel() override;
+  bool IsHttpAuthInfoSaved() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_AUTH_CALLBACK_CTOCPP_H_

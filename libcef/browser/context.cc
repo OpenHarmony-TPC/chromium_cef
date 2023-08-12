@@ -408,6 +408,7 @@ SkColor CefContext::GetBackgroundColor(
       !GetColor(browser_settings->background_color, is_windowless, &sk_color)) {
     GetColor(settings_.background_color, is_windowless, &sk_color);
   }
+
   return sk_color;
 }
 

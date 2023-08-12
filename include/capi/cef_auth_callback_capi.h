@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=01a33de48ac9780f78d606d8aee2429ddb0c81a2$
+// $hash=0938c1802b077b2b17708c6a8ee305984e079d64$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
@@ -67,6 +67,11 @@ typedef struct _cef_auth_callback_t {
   // Cancel the authentication request.
   ///
   void(CEF_CALLBACK* cancel)(struct _cef_auth_callback_t* self);
+
+  ///
+  // IsHttpAuthInfoSaved the authentication request.
+  ///
+  int(CEF_CALLBACK* is_http_auth_info_saved)(struct _cef_auth_callback_t* self);
 } cef_auth_callback_t;
 
 #ifdef __cplusplus

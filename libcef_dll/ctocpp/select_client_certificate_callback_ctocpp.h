@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=83b5b56f948ce72bcac08190cde41f7f20a9fbc4$
+// $hash=0de5941ff724adcd6ca8fcb5e1a5266143afa820$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_
@@ -20,8 +20,8 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include "include/capi/cef_request_handler_capi.h"
-#include "include/cef_request_handler.h"
+#include "include/capi/cef_callback_capi.h"
+#include "include/cef_callback.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -35,7 +35,10 @@ class CefSelectClientCertificateCallbackCToCpp
   virtual ~CefSelectClientCertificateCallbackCToCpp();
 
   // CefSelectClientCertificateCallback methods.
-  void Select(CefRefPtr<CefX509Certificate> cert) override;
+  void Select(const CefString& private_key_file,
+              const CefString& cert_chain_file) override;
+  void Cancel() override;
+  void Ignore() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_SELECT_CLIENT_CERTIFICATE_CALLBACK_CTOCPP_H_

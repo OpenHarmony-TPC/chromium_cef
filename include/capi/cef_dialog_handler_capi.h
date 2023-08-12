@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=0f56154217707d141912dc8a298279df8df04311$
+// $hash=abdbb4a150fc310df31ec08d1618e1e557dfe3e2$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -106,6 +106,7 @@ typedef struct _cef_dialog_handler_t {
       const cef_string_t* default_file_path,
       cef_string_list_t accept_filters,
       int selected_accept_filter,
+      int capture,
       struct _cef_file_dialog_callback_t* callback);
 } cef_dialog_handler_t;
 

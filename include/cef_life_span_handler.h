@@ -50,7 +50,7 @@ class CefClient;
 ///
 /*--cef(source=client)--*/
 class CefLifeSpanHandler : public virtual CefBaseRefCounted {
- public:
+public:
   typedef cef_window_open_disposition_t WindowOpenDisposition;
 
   ///
@@ -92,6 +92,18 @@ class CefLifeSpanHandler : public virtual CefBaseRefCounted {
                              CefRefPtr<CefDictionaryValue>& extra_info,
                              bool* no_javascript_access) {
     return false;
+  }
+
+  ///
+  // Called on the UI thread before a new popup browser is created
+  ///
+  /*--cef(optional_param=target_url)--*/
+  virtual bool OnPreBeforePopup(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefFrame> frame,
+                                const CefString& target_url,
+                                WindowOpenDisposition target_disposition,
+                                bool user_gesture) {
+    return true;
   }
 
   ///
@@ -210,4 +222,4 @@ class CefLifeSpanHandler : public virtual CefBaseRefCounted {
   virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) {}
 };
 
-#endif  // CEF_INCLUDE_CEF_LIFE_SPAN_HANDLER_H_
+#endif // CEF_INCLUDE_CEF_LIFE_SPAN_HANDLER_H_

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=79fba8a1a86cc65251dd7251e0863dd20205bb3b$
+// $hash=50df1cb9393d36c975aecddb2775ada0d8b9eeec$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -160,6 +160,36 @@ typedef struct _cef_render_handler_t {
                                            void* shared_handle);
 
   ///
+  // Called to retrieve the size of the touch handle for the specified
+  // |orientation|.
+  ///
+  void(CEF_CALLBACK* get_touch_handle_size)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_horizontal_alignment_t orientation,
+      cef_size_t* size);
+
+  ///
+  // Called when touch handle state is updated. The client is responsible for
+  // rendering the touch handles.
+  ///
+  void(CEF_CALLBACK* on_touch_handle_state_changed)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const struct _cef_touch_handle_state_t* state);
+
+  ///
+  // Called when touch selection is updated. The client is responsible for
+  // rendering the touch handles.
+  ///
+  void(CEF_CALLBACK* on_touch_selection_changed)(
+      struct _cef_render_handler_t* self,
+      const struct _cef_touch_handle_state_t* insert_handle,
+      const struct _cef_touch_handle_state_t* start_selection_handle,
+      const struct _cef_touch_handle_state_t* end_selection_handle,
+      int need_report);
+
+  ///
   // Called when the user starts dragging content in the web view. Contextual
   // information about the dragged content is supplied by |drag_data|. (|x|,
   // |y|) is the drag start location in screen coordinates. OS APIs that run a
@@ -199,6 +229,14 @@ typedef struct _cef_render_handler_t {
       double y);
 
   ///
+  // Called when the RootLayer has changed.
+  ///
+  void(CEF_CALLBACK* on_root_layer_changed)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser,
+                                            int height,
+                                            int width);
+
+  ///
   // Called when the IME composition range has changed. |selected_range| is the
   // range of characters that have been selected. |character_bounds| is the
   // bounds of each character in view coordinates.
@@ -225,12 +263,14 @@ typedef struct _cef_render_handler_t {
   // Called when an on-screen keyboard should be shown or hidden for the
   // specified |browser|. |input_mode| specifies what kind of keyboard should be
   // opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any existing keyboard
-  // for this browser should be hidden.
+  // for this browser should be hidden. |show_keyboard| specifies whether to
+  // display the keyboard.
   ///
   void(CEF_CALLBACK* on_virtual_keyboard_requested)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
-      cef_text_input_mode_t input_mode);
+      cef_text_input_mode_t input_mode,
+      int show_keyboard);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=922e883b71eb54b943f7cb4748bd2298eb296eee$
+// $hash=07483aea0b811fedba3da36f7a598f06edd22faf$
 //
 
 #include "libcef_dll/cpptoc/cookie_visitor_cpptoc.h"
@@ -59,12 +59,32 @@ int CEF_CALLBACK cookie_visitor_visit(struct _cef_cookie_visitor_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK
+cookie_visitor_set_cookie_line(struct _cef_cookie_visitor_t* self,
+                               const cef_string_t* cookieLine) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: cookieLine; type: string_byref_const
+  DCHECK(cookieLine);
+  if (!cookieLine)
+    return;
+
+  // Execute
+  CefCookieVisitorCppToC::Get(self)->SetCookieLine(CefString(cookieLine));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefCookieVisitorCppToC::CefCookieVisitorCppToC() {
   GetStruct()->visit = cookie_visitor_visit;
+  GetStruct()->set_cookie_line = cookie_visitor_set_cookie_line;
 }
 
 // DESTRUCTOR - Do not edit by hand.

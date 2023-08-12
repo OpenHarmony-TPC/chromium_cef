@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=142637539a094a03adc71d2f3f5b711ba64918b1$
+// $hash=98444bfe2f513889b45f8a8c7d047cb21b110243$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -79,6 +79,36 @@ typedef struct _cef_display_handler_t {
   void(CEF_CALLBACK* on_favicon_urlchange)(struct _cef_display_handler_t* self,
                                            struct _cef_browser_t* browser,
                                            cef_string_list_t icon_urls);
+
+  ///
+  // onReceivedTouchIconUrl.
+  ///
+  void(CEF_CALLBACK* on_received_touch_icon_url)(
+      struct _cef_display_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* icon_url,
+      int precomposed);
+
+  ///
+  // onReceivedIcon.
+  ///
+  void(CEF_CALLBACK* on_received_icon)(struct _cef_display_handler_t* self,
+                                       const void* data,
+                                       size_t width,
+                                       size_t height,
+                                       cef_color_type_t color_type,
+                                       cef_alpha_type_t alpha_type);
+
+  ///
+  // OnReceivedIconUrl.
+  ///
+  void(CEF_CALLBACK* on_received_icon_url)(struct _cef_display_handler_t* self,
+                                           const cef_string_t* image_url,
+                                           const void* data,
+                                           size_t width,
+                                           size_t height,
+                                           cef_color_type_t color_type,
+                                           cef_alpha_type_t alpha_type);
 
   ///
   // Called when web content in the page has toggled fullscreen mode. If
@@ -154,6 +184,14 @@ typedef struct _cef_display_handler_t {
       cef_cursor_handle_t cursor,
       cef_cursor_type_t type,
       const struct _cef_cursor_info_t* custom_cursor_info);
+
+  ///
+  // Called when the page scale factor has changed.
+  ///
+  void(CEF_CALLBACK* on_scale_changed)(struct _cef_display_handler_t* self,
+                                       struct _cef_browser_t* browser,
+                                       float old_page_scale_factor,
+                                       float new_page_scale_factor);
 } cef_display_handler_t;
 
 #ifdef __cplusplus

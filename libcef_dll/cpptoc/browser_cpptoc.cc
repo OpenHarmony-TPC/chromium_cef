@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=074dadfb1f84663a3efd6e8532257236b3c0634f$
+// $hash=c1509a4a06a744e423e92c8d75b17128fd0601e1$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include <algorithm>
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
+#include "libcef_dll/cpptoc/browser_permission_request_delegate_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/cpptoc/geolocation_acess_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -114,6 +116,50 @@ void CEF_CALLBACK browser_go_forward(struct _cef_browser_t* self) {
   CefBrowserCppToC::Get(self)->GoForward();
 }
 
+int CEF_CALLBACK browser_can_go_back_or_forward(struct _cef_browser_t* self,
+                                                int num_steps) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->CanGoBackOrForward(num_steps);
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK browser_go_back_or_forward(struct _cef_browser_t* self,
+                                             int num_steps) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->GoBackOrForward(num_steps);
+}
+
+void CEF_CALLBACK browser_delete_history(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->DeleteHistory();
+}
+
 int CEF_CALLBACK browser_is_loading(struct _cef_browser_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -154,6 +200,38 @@ void CEF_CALLBACK browser_reload_ignore_cache(struct _cef_browser_t* self) {
 
   // Execute
   CefBrowserCppToC::Get(self)->ReloadIgnoreCache();
+}
+
+void CEF_CALLBACK browser_reload_original_url(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->ReloadOriginalUrl();
+}
+
+void CEF_CALLBACK
+browser_set_browser_user_agent_string(struct _cef_browser_t* self,
+                                      const cef_string_t* user_agent) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: user_agent; type: string_byref_const
+  DCHECK(user_agent);
+  if (!user_agent)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetBrowserUserAgentString(CefString(user_agent));
 }
 
 void CEF_CALLBACK browser_stop_load(struct _cef_browser_t* self) {
@@ -389,6 +467,58 @@ void CEF_CALLBACK browser_get_frame_names(struct _cef_browser_t* self,
   transfer_string_list_contents(namesList, names);
 }
 
+struct _cef_browser_permission_request_delegate_t* CEF_CALLBACK
+browser_get_permission_request_delegate(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefBrowserPermissionRequestDelegate> _retval =
+      CefBrowserCppToC::Get(self)->GetPermissionRequestDelegate();
+
+  // Return type: refptr_same
+  return CefBrowserPermissionRequestDelegateCppToC::Wrap(_retval);
+}
+
+struct _cef_geolocation_acess_t* CEF_CALLBACK
+browser_get_geolocation_permissions(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefGeolocationAcess> _retval =
+      CefBrowserCppToC::Get(self)->GetGeolocationPermissions();
+
+  // Return type: refptr_same
+  return CefGeolocationAcessCppToC::Wrap(_retval);
+}
+
+int CEF_CALLBACK browser_should_show_loading_ui(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->ShouldShowLoadingUI();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -400,9 +530,15 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->go_back = browser_go_back;
   GetStruct()->can_go_forward = browser_can_go_forward;
   GetStruct()->go_forward = browser_go_forward;
+  GetStruct()->can_go_back_or_forward = browser_can_go_back_or_forward;
+  GetStruct()->go_back_or_forward = browser_go_back_or_forward;
+  GetStruct()->delete_history = browser_delete_history;
   GetStruct()->is_loading = browser_is_loading;
   GetStruct()->reload = browser_reload;
   GetStruct()->reload_ignore_cache = browser_reload_ignore_cache;
+  GetStruct()->reload_original_url = browser_reload_original_url;
+  GetStruct()->set_browser_user_agent_string =
+      browser_set_browser_user_agent_string;
   GetStruct()->stop_load = browser_stop_load;
   GetStruct()->get_identifier = browser_get_identifier;
   GetStruct()->is_same = browser_is_same;
@@ -415,6 +551,11 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->get_frame_count = browser_get_frame_count;
   GetStruct()->get_frame_identifiers = browser_get_frame_identifiers;
   GetStruct()->get_frame_names = browser_get_frame_names;
+  GetStruct()->get_permission_request_delegate =
+      browser_get_permission_request_delegate;
+  GetStruct()->get_geolocation_permissions =
+      browser_get_geolocation_permissions;
+  GetStruct()->should_show_loading_ui = browser_should_show_loading_ui;
 }
 
 // DESTRUCTOR - Do not edit by hand.

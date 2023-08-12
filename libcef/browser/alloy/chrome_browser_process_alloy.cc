@@ -318,10 +318,12 @@ StatusTray* ChromeBrowserProcessAlloy::status_tray() {
   return nullptr;
 }
 
+#if BUILDFLAG(FULL_SAFE_BROWSING)
 safe_browsing::SafeBrowsingService*
 ChromeBrowserProcessAlloy::safe_browsing_service() {
   return nullptr;
 }
+#endif
 
 subresource_filter::RulesetService*
 ChromeBrowserProcessAlloy::subresource_filter_ruleset_service() {

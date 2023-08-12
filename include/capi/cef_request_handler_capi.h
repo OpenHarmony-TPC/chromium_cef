@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4a05a0a7cd4a279ccf8455a3cb2f77de581b597a$
+// $hash=0a47add5335ff2d73e08d1e491f2561356f63fcd$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
@@ -53,24 +53,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-///
-// Callback structure used to select a client certificate for authentication.
-///
-typedef struct _cef_select_client_certificate_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  // Chooses the specified certificate for client certificate authentication.
-  // NULL value means that no client certificate should be used.
-  ///
-  void(CEF_CALLBACK* select)(
-      struct _cef_select_client_certificate_callback_t* self,
-      struct _cef_x509certificate_t* cert);
-} cef_select_client_certificate_callback_t;
 
 ///
 // Implement this structure to handle events related to browser requests. The
@@ -224,6 +206,8 @@ typedef struct _cef_request_handler_t {
       int isProxy,
       const cef_string_t* host,
       int port,
+      cef_string_list_t key_types,
+      cef_string_list_t principals,
       size_t certificatesCount,
       struct _cef_x509certificate_t* const* certificates,
       struct _cef_select_client_certificate_callback_t* callback);

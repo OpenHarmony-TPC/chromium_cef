@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3dba1df692cc69ba3aab91b989cceb9a7d363858$
+// $hash=533df2bb508d88d0828f0da6284732c2ecbbafab$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -51,6 +51,21 @@ class CefContextMenuHandlerCToCpp
                             EventFlags event_flags) override;
   void OnContextMenuDismissed(CefRefPtr<CefBrowser> browser,
                               CefRefPtr<CefFrame> frame) override;
+  bool RunQuickMenu(CefRefPtr<CefBrowser> browser,
+                    CefRefPtr<CefFrame> frame,
+                    const CefPoint& location,
+                    const CefSize& size,
+                    QuickMenuEditStateFlags edit_state_flags,
+                    CefRefPtr<CefRunQuickMenuCallback> callback) override;
+  bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,
+                          CefRefPtr<CefFrame> frame,
+                          int command_id,
+                          EventFlags event_flags) override;
+  void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
+                            CefRefPtr<CefFrame> frame) override;
+  void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
+                                CefRefPtr<CefImage> image) override;
+  void OnGetImageFromCache(CefRefPtr<CefImage> image) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_

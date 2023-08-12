@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=89e64a2db658ad560e85ea5d3e564a6505d4e914$
+// $hash=d2ccf65028b87821b92eda7e8d715ec98f8e1623$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
@@ -42,10 +42,12 @@
 
 #include "include/capi/cef_callback_capi.h"
 #include "include/capi/cef_cookie_capi.h"
+#include "include/capi/cef_data_base_capi.h"
 #include "include/capi/cef_extension_capi.h"
 #include "include/capi/cef_extension_handler_capi.h"
 #include "include/capi/cef_media_router_capi.h"
 #include "include/capi/cef_values_capi.h"
+#include "include/capi/cef_web_storage_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -136,6 +138,21 @@ typedef struct _cef_request_context_t {
   // storage has been initialized.
   ///
   struct _cef_cookie_manager_t*(CEF_CALLBACK* get_cookie_manager)(
+      struct _cef_request_context_t* self,
+      struct _cef_completion_callback_t* callback);
+
+  ///
+  // Returns the web data base for this object.
+  ///
+  struct _cef_data_base_t*(CEF_CALLBACK* get_data_base)(
+      struct _cef_request_context_t* self);
+
+  ///
+  // Returns the web strorage for this object. If |callback| is non-NULL it will
+  // be executed asnychronously on the UI thread after the manager's storage has
+  // been initialized.
+  ///
+  struct _cef_web_storage_t*(CEF_CALLBACK* get_web_storage)(
       struct _cef_request_context_t* self,
       struct _cef_completion_callback_t* callback);
 
@@ -234,6 +251,16 @@ typedef struct _cef_request_context_t {
   // on the UI thread after completion.
   ///
   void(CEF_CALLBACK* clear_http_auth_credentials)(
+      struct _cef_request_context_t* self,
+      struct _cef_completion_callback_t* callback);
+
+  ///
+  // Clears the client authentication certificate Cache that were added as part
+  // of handling cef_request_handler_t::on_select_client_certificate(). If
+  // |callback| is non-NULL it will be executed on the UI thread after
+  // completion.
+  ///
+  void(CEF_CALLBACK* clear_client_authentication_cache)(
       struct _cef_request_context_t* self,
       struct _cef_completion_callback_t* callback);
 

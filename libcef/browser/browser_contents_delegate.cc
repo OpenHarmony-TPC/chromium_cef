@@ -8,6 +8,7 @@
 #include "libcef/browser/browser_platform_delegate.h"
 #include "libcef/browser/browser_util.h"
 #include "libcef/common/frame_util.h"
+#include "libcef/common/request_impl.h"
 
 #include "content/public/browser/focused_node_details.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
@@ -22,8 +23,17 @@
 #include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/favicon/favicon_url.mojom.h"
 #include "third_party/blink/public/mojom/input/focus_type.mojom-blink.h"
+#include "ui/events/keycodes/keyboard_codes_posix.h"
 
 using content::KeyboardEventProcessingResult;
+
+namespace {
+// The amount of time to disallow repeated pointer lock calls after the user
+// successfully escapes from one lock request.
+constexpr base::TimeDelta kEffectiveUserEscapeDuration =
+    base::Milliseconds(1250);
+
+}  // namespace
 
 CefBrowserContentsDelegate::CefBrowserContentsDelegate(
     scoped_refptr<CefBrowserInfo> browser_info)
@@ -34,7 +44,7 @@ CefBrowserContentsDelegate::CefBrowserContentsDelegate(
 void CefBrowserContentsDelegate::ObserveWebContents(
     content::WebContents* new_contents) {
   WebContentsObserver::Observe(new_contents);
-
+  icon_helper_->SetWebContents(new_contents);
   if (new_contents) {
     registrar_.reset(new content::NotificationRegistrar);
 
@@ -102,14 +112,11 @@ void CefBrowserContentsDelegate::LoadingStateChanged(
 
   // This method may be called multiple times in a row with |is_loading|
   // true as a result of https://crrev.com/5e750ad0. Ignore the 2nd+ times.
-  if (is_loading_ == is_loading && can_go_back_ == can_go_back &&
-      can_go_forward_ == can_go_forward) {
+  if (is_loading_ == is_loading) {
     return;
   }
 
   is_loading_ = is_loading;
-  can_go_back_ = can_go_back;
-  can_go_forward_ = can_go_forward;
   OnStateChanged(State::kNavigation);
 
   if (auto c = client()) {
@@ -180,10 +187,74 @@ void CefBrowserContentsDelegate::ExitFullscreenModeForTab(
   OnFullscreenModeChange(/*fullscreen=*/false);
 }
 
+#if BUILDFLAG(IS_OHOS)
+class DataResubmissionCallbackImpl: public CefCallback {
+public:
+  explicit DataResubmissionCallbackImpl(content::WebContents* contents)
+      : contents_(contents) {}
+
+  ~DataResubmissionCallbackImpl() override {}
+
+  void Continue() override {
+    if (contents_) {
+      contents_->GetController().ContinuePendingReload();
+    }
+  }
+
+  void Cancel() override {
+    if (contents_) {
+      contents_->GetController().CancelPendingReload();
+    }
+  }
+private:
+  content::WebContents* contents_;
+
+  IMPLEMENT_REFCOUNTING(DataResubmissionCallbackImpl);
+};
+
+void CefBrowserContentsDelegate::ShowRepostFormWarningDialog(content::WebContents* source) {
+  LOG(INFO) << "CefBrowserContentsDelegate::ShowRepostFormWarningDialog";
+  if (!source) {
+    return;
+  }
+  CefRefPtr<DataResubmissionCallbackImpl> callbackImpl = new DataResubmissionCallbackImpl(source); 
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      handler->OnDataResubmission(browser(), callbackImpl.get());
+    }
+  }
+}
+#endif
+
+bool CefBrowserContentsDelegate::HandleUserKeyEvent(
+    const content::NativeWebKeyboardEvent& event) {
+  if (event.windows_key_code != ui::VKEY_ESCAPE) {
+    return false;
+  }
+
+  if (IsMouseLocked()) {
+    if (tab_with_exclusive_access_) {
+      UnlockMouse();
+      SetTabWithExclusiveAccess(nullptr);
+      mouse_lock_state_ = MOUSELOCK_UNLOCKED;
+    }
+    last_user_escape_time_ = base::TimeTicks::Now();
+    return true;
+  }
+
+  return false;
+}
+
 KeyboardEventProcessingResult
 CefBrowserContentsDelegate::PreHandleKeyboardEvent(
     content::WebContents* source,
     const content::NativeWebKeyboardEvent& event) {
+  // Forward keyboard events to the manager for fullscreen / mouse lock. This
+  // may consume the event (e.g., Esc exits fullscreen mode).
+  if (HandleUserKeyEvent(event))
+    return KeyboardEventProcessingResult::HANDLED;
+
   if (auto delegate = platform_delegate()) {
     if (auto c = client()) {
       if (auto handler = c->GetKeyboardHandler()) {
@@ -232,6 +303,87 @@ bool CefBrowserContentsDelegate::HandleKeyboardEvent(
   }
 
   return false;
+}
+
+bool CefBrowserContentsDelegate::IsMouseLocked() const {
+  return mouse_lock_state_ == MOUSELOCK_LOCKED ||
+         mouse_lock_state_ == MOUSELOCK_LOCKED_SILENTLY;
+}
+
+bool CefBrowserContentsDelegate::IsMouseLockedSilently() const {
+  return mouse_lock_state_ == MOUSELOCK_LOCKED_SILENTLY;
+}
+
+void CefBrowserContentsDelegate::SetTabWithExclusiveAccess(
+    content::WebContents* tab) {
+  // Tab should never be replaced with another tab, or
+  // UpdateNotificationRegistrations would need updating.
+  DCHECK(tab_with_exclusive_access_ == tab ||
+         tab_with_exclusive_access_ == nullptr || tab == nullptr);
+  tab_with_exclusive_access_ = tab;
+
+  if (tab_with_exclusive_access_ && registrar_->IsEmpty()) {
+    registrar_->Add(this, content::NOTIFICATION_NAV_ENTRY_COMMITTED,
+                    content::Source<content::NavigationController>(
+                        &tab_with_exclusive_access_->GetController()));
+  } else if (!tab_with_exclusive_access_ && !registrar_->IsEmpty()) {
+    registrar_->RemoveAll();
+  }
+}
+
+void CefBrowserContentsDelegate::RequestToLockMouse(
+    content::WebContents* web_contents,
+    bool user_gesture,
+    bool last_unlocked_by_target) {
+  DCHECK(!IsMouseLocked());
+  if (!last_unlocked_by_target && !is_fullscreen()) {
+    if (!user_gesture) {
+      web_contents->GotResponseToLockMouseRequest(
+          blink::mojom::PointerLockResult::kRequiresUserGesture);
+      return;
+    }
+    if (base::TimeTicks::Now() <
+        last_user_escape_time_ + kEffectiveUserEscapeDuration) {
+      web_contents->GotResponseToLockMouseRequest(
+          blink::mojom::PointerLockResult::kUserRejected);
+      return;
+    }
+  }
+  SetTabWithExclusiveAccess(web_contents);
+
+  // Lock mouse.
+  if (web_contents->GotResponseToLockMouseRequest(
+          blink::mojom::PointerLockResult::kSuccess)) {
+    if (last_unlocked_by_target) {
+      mouse_lock_state_ = MOUSELOCK_LOCKED_SILENTLY;
+    } else {
+      mouse_lock_state_ = MOUSELOCK_LOCKED;
+    }
+  } else {
+    SetTabWithExclusiveAccess(nullptr);
+    mouse_lock_state_ = MOUSELOCK_UNLOCKED;
+  }
+}
+
+void CefBrowserContentsDelegate::LostMouseLock() {
+  mouse_lock_state_ = MOUSELOCK_UNLOCKED;
+  SetTabWithExclusiveAccess(nullptr);
+}
+
+void CefBrowserContentsDelegate::UnlockMouse() {
+  if (!tab_with_exclusive_access_)
+    return;
+
+  content::RenderWidgetHostView* mouse_lock_view = nullptr;
+  content::RenderViewHost* rvh =
+      tab_with_exclusive_access_->GetMainFrame()->GetRenderViewHost();
+  if (rvh) {
+    mouse_lock_view = rvh->GetWidget()->GetView();
+  }
+
+  if (mouse_lock_view) {
+    mouse_lock_view->UnlockMouse();
+  }
 }
 
 void CefBrowserContentsDelegate::RenderFrameCreated(
@@ -406,19 +558,65 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     if (!navigation_handle->IsSameDocument()) {
       OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
     }
-
+  #if BUILDFLAG(IS_OHOS)
+    if (!navigation_handle->IsSameDocument()) {
+      content::RenderFrameHost* render_frame_host = navigation_handle->GetRenderFrameHost();
+      if (render_frame_host) {
+        auto invokeVisualStateCallback = base::BindOnce(
+        [](base::WeakPtr<CefBrowserContentsDelegate> self,
+          const GURL url, bool success) {
+          LOG(INFO) << "invokeVisualStateCallback success: " << success;
+          if (!self)
+            return;
+          self->OnOldPageNoLongerRendered(url, success);
+        }, weak_factory_.GetWeakPtr(), url);
+        render_frame_host->InsertVisualStateCallback(std::move(invokeVisualStateCallback));
+      }
+    }
+  #endif
     if (is_main_frame) {
       OnAddressChange(url);
     }
+
+    bool isReload =
+        PageTransitionCoreTypeIs(navigation_handle->GetPageTransition(),
+                                 ui::PageTransition::PAGE_TRANSITION_RELOAD);
+    LOG(INFO) << "load type = "
+              << PageTransitionStripQualifier(
+                     navigation_handle->GetPageTransition());
+    OnRefreshAccessedHistory(frame.get(), url, isReload);
   } else {
     // The navigation failed with an error. This may happen before commit
     // (e.g. network error) or after commit (e.g. response filter error).
     // If the error happened before commit then this call will originate from
     // RenderFrameHostImpl::OnDidFailProvisionalLoadWithError.
     // OnLoadStart/OnLoadEnd will not be called.
-    OnLoadError(frame.get(), navigation_handle->GetURL(), error_code);
+
+    CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
+    CefString cef_url(navigation_handle->GetURL().spec());
+    CefString cef_method(navigation_handle->IsPost() ? "POST" : "GET");
+    request->SetURL(cef_url);
+    request->SetMethod(cef_method);
+    request->Set(net::HttpRequestHeaders());
+    OnLoadError(request, navigation_handle->IsInMainFrame(),
+                navigation_handle->HasUserGesture(), error_code);
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserContentsDelegate::OnOldPageNoLongerRendered(const GURL& url, bool success) {
+  LOG(INFO) << "CefBrowserContentsDelegate::OldPageNoLongerRendered";
+  if (!browser_info_) {
+    return;
+  }
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      handler->OnPageVisible(browser(), url.spec(), success);
+    }
+  }
+}
+#endif
 
 void CefBrowserContentsDelegate::DidFailLoad(
     content::RenderFrameHost* render_frame_host,
@@ -467,6 +665,7 @@ void CefBrowserContentsDelegate::DidUpdateFaviconURL(
       }
     }
   }
+  icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates);
 }
 
 void CefBrowserContentsDelegate::OnWebContentsFocused(
@@ -590,6 +789,21 @@ void CefBrowserContentsDelegate::OnLoadError(CefRefPtr<CefFrame> frame,
   }
 }
 
+void CefBrowserContentsDelegate::OnLoadError(CefRefPtr<CefRequest> request,
+                                             bool is_main_frame,
+                                             bool has_user_gesture,
+                                             int error_code) {
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      // On the handler that loading has failed.
+      handler->OnLoadErrorWithRequest(request, is_main_frame, has_user_gesture,
+                                      error_code,
+                                      net::ErrorToShortString(error_code));
+    }
+  }
+}
+
 void CefBrowserContentsDelegate::OnTitleChange(const std::u16string& title) {
   if (auto c = client()) {
     if (auto handler = c->GetDisplayHandler()) {
@@ -616,4 +830,35 @@ void CefBrowserContentsDelegate::OnStateChanged(State state_changed) {
   for (auto& observer : observers_) {
     observer.OnStateChanged(state_changed);
   }
+}
+
+void CefBrowserContentsDelegate::InitIconHelper() {
+  icon_helper_ = new IconHelper();
+  icon_helper_->SetBrowser(CefBrowserContentsDelegate::browser());
+  CefRefPtr<CefClient> client = CefBrowserContentsDelegate::client();
+  if (client) {
+    CefRefPtr<CefDisplayHandler> handler = client->GetDisplayHandler();
+    if (handler) {
+      icon_helper_->SetDisplayHandler(handler);
+    }
+  }
+}
+
+void CefBrowserContentsDelegate::OnRefreshAccessedHistory(
+    CefRefPtr<CefFrame> frame,
+    const GURL& url,
+    bool isReload) {
+  CefRefPtr<CefClient> cefClient = client();
+  if (!cefClient.get()) {
+    LOG(ERROR) << "cef client is null";
+    return;
+  }
+
+  auto handler = cefClient->GetLoadHandler();
+  if (!handler.get()) {
+    LOG(ERROR) << "cef client handler is null";
+    return;
+  }
+
+  handler->OnRefreshAccessedHistory(browser(), frame, url.spec(), isReload);
 }

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f40564d59c337fede5e8c3121ed735166d5e05a3$
+// $hash=dcdaebfe8fdc44caf9f4903321577b155b2ec959$
 //
 
 #include "libcef_dll/ctocpp/display_handler_ctocpp.h"
@@ -103,6 +103,86 @@ void CefDisplayHandlerCToCpp::OnFaviconURLChange(
   // Restore param:icon_urls; type: string_vec_byref_const
   if (icon_urlsList)
     cef_string_list_free(icon_urlsList);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnReceivedTouchIconUrl(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& icon_url,
+    bool precomposed) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_received_touch_icon_url))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Verify param: icon_url; type: string_byref_const
+  DCHECK(!icon_url.empty());
+  if (icon_url.empty())
+    return;
+
+  // Execute
+  _struct->on_received_touch_icon_url(_struct, CefBrowserCppToC::Wrap(browser),
+                                      icon_url.GetStruct(), precomposed);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnReceivedIcon(const void* data,
+                                             size_t width,
+                                             size_t height,
+                                             cef_color_type_t color_type,
+                                             cef_alpha_type_t alpha_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_received_icon))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: data; type: simple_byaddr
+  DCHECK(data);
+  if (!data)
+    return;
+
+  // Execute
+  _struct->on_received_icon(_struct, data, width, height, color_type,
+                            alpha_type);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnReceivedIconUrl(const CefString& image_url,
+                                                const void* data,
+                                                size_t width,
+                                                size_t height,
+                                                cef_color_type_t color_type,
+                                                cef_alpha_type_t alpha_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_received_icon_url))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: image_url; type: string_byref_const
+  DCHECK(!image_url.empty());
+  if (image_url.empty())
+    return;
+  // Verify param: data; type: simple_byaddr
+  DCHECK(data);
+  if (!data)
+    return;
+
+  // Execute
+  _struct->on_received_icon_url(_struct, image_url.GetStruct(), data, width,
+                                height, color_type, alpha_type);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -275,6 +355,28 @@ bool CefDisplayHandlerCToCpp::OnCursorChange(
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnScaleChanged(CefRefPtr<CefBrowser> browser,
+                                             float old_page_scale_factor,
+                                             float new_page_scale_factor) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_scale_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_scale_changed(_struct, CefBrowserCppToC::Wrap(browser),
+                            old_page_scale_factor, new_page_scale_factor);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

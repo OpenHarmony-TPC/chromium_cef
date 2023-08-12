@@ -107,6 +107,12 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
                        bool user_gesture,
                        bool opener_suppressed,
                        bool* no_javascript_access) override;
+#if BUILDFLAG(IS_OHOS)
+ bool CanCreateWindow(content::RenderFrameHost* opener,
+                      const GURL& target_url,
+                      WindowOpenDisposition disposition,
+                      bool user_gesture) override;
+#endif
   void OverrideWebkitPrefs(content::WebContents* web_contents,
                            blink::web_pref::WebPreferences* prefs) override;
   bool OverrideWebPreferencesAfterNavigation(
@@ -148,8 +154,10 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       service_manager::BinderRegistry* registry,
       blink::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
+#if !BUILDFLAG(IS_OHOS)
   std::unique_ptr<net::ClientCertStore> CreateClientCertStore(
       content::BrowserContext* browser_context) override;
+#endif
   std::unique_ptr<content::LoginDelegate> CreateLoginDelegate(
       const net::AuthChallengeInfo& auth_info,
       content::WebContents* web_contents,
@@ -225,6 +233,8 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   std::string GetProduct() override;
   std::string GetChromeProduct() override;
   std::string GetUserAgent() override;
+  content::WebContentsViewDelegate* GetWebContentsViewDelegate(
+      content::WebContents* web_contents) override;
   std::string GetReducedUserAgent() override;
   blink::UserAgentMetadata GetUserAgentMetadata() override;
   base::flat_set<std::string> GetPluginMimeTypesWithExternalHandlers(
@@ -240,6 +250,29 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   void OnWebContentsCreated(content::WebContents* web_contents) override;
   bool IsFindInPageDisabledForOrigin(const url::Origin& origin) override;
 
+#if BUILDFLAG(IS_OHOS)
+  bool ShouldTryToUseExistingProcessHost(
+      content::BrowserContext* browser_context,
+      const GURL& url) override;
+  bool ShouldDisableSiteIsolation(
+      content::SiteIsolationMode site_isolation_mode) override;
+  bool ShouldLockProcessToSite(content::BrowserContext* browser_context,
+                               const GURL& effective_url) override;
+  uint32_t GetWebSocketOptions(content::RenderFrameHost* frame) override;
+  bool WillCreateRestrictedCookieManager(
+      network::mojom::RestrictedCookieManagerRole role,
+      content::BrowserContext* browser_context,
+      const url::Origin& origin,
+      const net::IsolationInfo& isolation_info,
+      bool is_service_worker,
+      int process_id,
+      int routing_id,
+      mojo::PendingReceiver<network::mojom::RestrictedCookieManager>* receiver)
+      override;
+#endif
+
+  base::FilePath GetShaderDiskCacheDirectory() override;
+  base::FilePath GetGrShaderDiskCacheDirectory() override;
   CefRefPtr<CefRequestContextImpl> request_context() const;
   CefDevToolsDelegate* devtools_delegate() const;
 

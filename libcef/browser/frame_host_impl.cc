@@ -18,9 +18,19 @@
 #include "libcef/common/task_runner_impl.h"
 
 #include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/public/browser/browsing_data_remover.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "services/service_manager/public/cpp/interface_provider.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "libcef/browser/image_impl.h"
+#endif  // BUILDFLAG(IS_OHOS)
+
+#include "third_party/blink/renderer/platform/graphics/bitmap_image.h"
+#include "third_party/skia/include/core/SkBitmap.h"
+#include "third_party/skia/include/core/SkData.h"
+#include "third_party/skia/include/core/SkImage.h"
 
 namespace {
 
@@ -281,6 +291,14 @@ void CefFrameHostImpl::RefreshAttributes() {
     parent_frame_id_ =
         frame_util::MakeFrameId(render_frame_host_->GetParent()->GetGlobalId());
   }
+}
+
+void CefFrameHostImpl::UpdateLocale(const CefString& locale) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](const std::string& locale,
+                      const RenderFrameType& render_frame) {
+                      render_frame->UpdateLocale(locale);
+                    }, locale.ToString()));
 }
 
 void CefFrameHostImpl::NotifyMoveOrResizeStarted() {
@@ -639,6 +657,210 @@ void CefFrameHostImpl::UpdateDraggableRegions(
   browser_info_->MaybeNotifyDraggableRegionsChanged(
       browser, this, std::move(draggable_regions));
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefFrameHostImpl::OnUpdateHitData(cef::mojom::HitDataParamsPtr params) {
+  auto browser = GetBrowserHostBase();
+  if (browser)
+    browser->OnUpdateHitData(params->type, params->extra_data_for_type);
+}
+
+void CefFrameHostImpl::OnGetImageForContextNode(
+    cef::mojom::GetImageForContextNodeParamsPtr params) {
+  CefImageImpl* image_impl = new (std::nothrow) CefImageImpl();
+  if (image_impl != nullptr && params->image.width() > 0 &&
+      params->image.height() > 0) {
+    image_impl->AddBitmap(1.0, params->image);
+  } else {
+    return;
+  }
+  CefRefPtr<CefImage> image(image_impl);
+  CefRefPtr<CefContextMenuHandler> handler = nullptr;
+  auto browser = GetBrowserHostBase();
+  if (!browser) {
+    return;
+  }
+  auto client = browser->GetClient();
+  if (client) {
+    handler = client->GetContextMenuHandler();
+  }
+  if (handler) {
+    handler->OnGetImageForContextNode(GetBrowser(), image);
+  }
+}
+
+void CefFrameHostImpl::OnGetImageForContextNodeNull() {
+  CefRefPtr<CefImage> image(new CefImageImpl());
+  CefRefPtr<CefContextMenuHandler> handler = nullptr;
+  auto browser = GetBrowserHostBase();
+  if (!browser) {
+    return;
+  }
+  auto client = browser->GetClient();
+  if (client) {
+    handler = client->GetContextMenuHandler();
+  }
+  if (handler) {
+    handler->OnGetImageForContextNode(GetBrowser(), image);
+  }
+}
+
+void CefFrameHostImpl::OnGetImageFromCache(
+    std::string url,
+    uint32_t buffer_size,
+    base::ReadOnlySharedMemoryRegion region) {
+  auto browser = GetBrowserHostBase();
+  if (!browser)
+    return;
+
+  CefRefPtr<CefContextMenuHandler> handler;
+  auto client = browser->GetClient();
+  if (client)
+    handler = client->GetContextMenuHandler();
+  if (!handler)
+    return;
+
+  CefImageImpl* image_impl = new (std::nothrow) CefImageImpl();
+  if (!region.IsValid()) {
+    LOG(ERROR)
+        << "OnGetImageFromCache: Read-only shared memory region is invalid";
+    handler->OnGetImageFromCache(image_impl);
+    return;
+  }
+  base::ReadOnlySharedMemoryMapping mapping = region.MapAt(0, buffer_size);
+  if (!mapping.IsValid()) {
+    LOG(ERROR)
+        << "OnGetImageFromCache: Read-only shared memory mapping is invalid";
+    handler->OnGetImageFromCache(image_impl);
+    return;
+  }
+  uint8_t* buffer = (uint8_t*)(mapping.memory());
+  sk_sp<SkData> sk_data = SkData::MakeWithoutCopy(buffer, buffer_size);
+  if (sk_data) {
+    sk_sp<SkImage> sk_image = SkImage::MakeFromEncoded(sk_data);
+    if (sk_image) {
+      SkBitmap bitmap;
+      sk_image->asLegacyBitmap(&bitmap);
+      image_impl->AddBitmap(1.0, bitmap);
+    }
+  }
+  handler->OnGetImageFromCache(image_impl);
+}
+
+void CefFrameHostImpl::LoadHeaderUrl(const CefString& url,
+                                     const CefString& additionalHttpHeaders) {
+  LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit,
+                    additionalHttpHeaders);
+}
+
+void CefFrameHostImpl::SendTouchEvent(const CefTouchEvent& event) {
+  cef::mojom::TouchEventParamsPtr touch_event =
+      cef::mojom::TouchEventParams::New();
+  touch_event->x = event.x;
+  touch_event->y = event.y;
+  touch_event->width = event.radius_x;
+  touch_event->height = event.radius_y;
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](cef::mojom::TouchEventParamsPtr touch_event,
+                           const RenderFrameType& render_frame) {
+                          render_frame->SendTouchEvent(std::move(touch_event));
+                        },
+                        std::move(touch_event)));
+}
+
+void CefFrameHostImpl::SetInitialScale(float scale) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float scale, const RenderFrameType& render_frame) {
+                          render_frame->SetInitialScale(scale);
+                        },
+                        scale));
+}
+
+void CefFrameHostImpl::SetJsOnlineProperty(bool network_up) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](bool network_up, const RenderFrameType& render_frame) {
+                          render_frame->SetJsOnlineProperty(network_up);
+                        },
+                        network_up));
+}
+
+void CefFrameHostImpl::GetImageForContextNode() {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](const RenderFrameType& render_frame) {
+                      render_frame->GetImageForContextNode();
+                    }));
+}
+
+void CefFrameHostImpl::PutZoomingForTextFactor(float factor) {
+  CEF_REQUIRE_UIT();
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float factor, const RenderFrameType& render_frame) {
+                          render_frame->PutZoomingForTextFactor(factor);
+                        },
+                        factor));
+}
+
+void CefFrameHostImpl::GetImagesCallback(CefRefPtr<CefFrameHostImpl> frame,
+                                         CefRefPtr<CefGetImagesCallback> callback, bool response) {
+  if (auto browser = frame->GetBrowser()) {
+    callback->GetImages(response);
+  }
+}
+
+void CefFrameHostImpl::GetImagesWithResponse(
+    cef::mojom::RenderFrame::GetImagesWithResponseCallback
+        response_callback) {
+  SendToRenderFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](cef::mojom::RenderFrame::GetImagesWithResponseCallback
+                 response_callback,
+             const RenderFrameType& render_frame) {
+            render_frame->GetImagesWithResponse(std::move(response_callback));
+          },
+          std::move(response_callback)));
+}
+
+void CefFrameHostImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
+  GetImagesWithResponse(
+      base::BindOnce(&CefFrameHostImpl::GetImagesCallback, base::Unretained(this),
+                     CefRefPtr<CefFrameHostImpl>(this), callback));
+}
+
+void CefFrameHostImpl::RemoveCache(bool include_disk_files) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](const RenderFrameType& render_frame) {
+                          render_frame->RemoveCache();
+                        }));
+
+  if (include_disk_files) {
+    auto browser = GetBrowserHostBase();
+    if (!browser) {
+      LOG(ERROR) << "RemoveCache: browser is null";
+      return;
+    }
+
+    auto web_contents = browser->GetWebContents();
+    if (!web_contents) {
+      LOG(ERROR) << "RemoveCache: web contents is null";
+      return;
+    }
+
+    content::BrowsingDataRemover* remover =
+        web_contents->GetBrowserContext()->GetBrowsingDataRemover();
+    remover->Remove(
+        base::Time(), base::Time::Max(),
+        content::BrowsingDataRemover::DATA_TYPE_CACHE,
+        content::BrowsingDataRemover::ORIGIN_TYPE_UNPROTECTED_WEB |
+        content::BrowsingDataRemover::ORIGIN_TYPE_PROTECTED_WEB);
+  }
+}
+#endif  // BUILDFLAG(IS_OHOS)
 
 void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
                                                  const CefString& javascript) {

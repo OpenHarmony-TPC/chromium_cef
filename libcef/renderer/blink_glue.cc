@@ -58,6 +58,21 @@ bool CanGoForward(blink::WebView* view) {
   return view->HistoryForwardListCount() > 0;
 }
 
+bool CanGoBackOrForward(blink::WebView* view, int num_steps) {
+  if (!view)
+    return false;
+  if (num_steps == 0) {
+    return true;
+  }
+  if (num_steps > 0 && view->HistoryForwardListCount() >= num_steps) {
+    return true;
+  }
+  if (num_steps < 0 && view->HistoryBackListCount() >= -num_steps) {
+    return true;
+  }
+  return false;
+}
+
 void GoBack(blink::WebView* view) {
   if (!view)
     return;
@@ -94,6 +109,27 @@ bool IsInBackForwardCache(blink::WebLocalFrame* frame) {
       ->GetPage()
       ->GetPageScheduler()
       ->IsInBackForwardCache();
+}
+
+void GoBackOrForward(blink::WebView* view, int num_steps) {
+  if (!view)
+    return;
+
+  blink::WebFrame* main_frame = view->MainFrame();
+  if (main_frame && main_frame->IsWebLocalFrame()) {
+    if (num_steps > 0 && view->HistoryForwardListCount() > 0) {
+      blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
+      blink::To<blink::LocalFrame>(core_frame)
+          ->GetLocalFrameHostRemote()
+          .GoToEntryAtOffset(num_steps, true /* has_user_gesture */);
+    }
+    if (num_steps < 0 && view->HistoryBackListCount() > 0) {
+      blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
+      blink::To<blink::LocalFrame>(core_frame)
+          ->GetLocalFrameHostRemote()
+          .GoToEntryAtOffset(num_steps, true /* has_user_gesture */);
+    }
+  }
 }
 
 blink::WebString DumpDocumentText(blink::WebLocalFrame* frame) {

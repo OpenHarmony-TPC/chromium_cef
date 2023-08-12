@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=824aed5040e7aee5f9bf2079eafdf6d612b7d2d0$
+// $hash=2356b5283bbfa5a587b5db964b281dff6fb8233d$
 //
 
 #include "libcef_dll/ctocpp/navigation_entry_ctocpp.h"
@@ -108,7 +108,7 @@ NO_SANITIZE("cfi-icall") CefString CefNavigationEntryCToCpp::GetTitle() {
 
 NO_SANITIZE("cfi-icall")
 CefNavigationEntry::TransitionType
-CefNavigationEntryCToCpp::GetTransitionType() {
+    CefNavigationEntryCToCpp::GetTransitionType() {
   shutdown_checker::AssertNotShutdown();
 
   cef_navigation_entry_t* _struct = GetStruct();
@@ -187,6 +187,33 @@ CefRefPtr<CefSSLStatus> CefNavigationEntryCToCpp::GetSSLStatus() {
 
   // Return type: refptr_same
   return CefSSLStatusCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefNavigationEntryCToCpp::GetFavicon(void** pixel_data,
+                                          int& color_type,
+                                          int& alpha_type,
+                                          int& pixel_width,
+                                          int& pixel_height) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_navigation_entry_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_favicon))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: pixel_data; type: simple_byaddr
+  DCHECK(pixel_data);
+  if (!pixel_data)
+    return false;
+
+  // Execute
+  int _retval = _struct->get_favicon(_struct, pixel_data, &color_type,
+                                     &alpha_type, &pixel_width, &pixel_height);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

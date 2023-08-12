@@ -386,6 +386,8 @@ struct CefScreenInfoTraits {
     target->is_monochrome = src->is_monochrome;
     target->rect = src->rect;
     target->available_rect = src->available_rect;
+    target->angle = src->angle;
+    target->orientation = src->orientation;
   }
 };
 
@@ -404,9 +406,11 @@ class CefScreenInfo : public CefStructBase<CefScreenInfoTraits> {
                 int depth_per_component,
                 bool is_monochrome,
                 const CefRect& rect,
-                const CefRect& available_rect) {
+                const CefRect& available_rect,
+                uint16_t angle,
+                cef_screen_orientation_type_t orientaion) {
     Set(device_scale_factor, depth, depth_per_component, is_monochrome, rect,
-        available_rect);
+        available_rect, angle, orientation);
   }
 
   void Set(float device_scale_factor_val,
@@ -414,13 +418,17 @@ class CefScreenInfo : public CefStructBase<CefScreenInfoTraits> {
            int depth_per_component_val,
            bool is_monochrome_val,
            const CefRect& rect_val,
-           const CefRect& available_rect_val) {
+           const CefRect& available_rect_val,
+           uint16_t angle_val,
+           cef_screen_orientation_type_t orientation_val) {
     device_scale_factor = device_scale_factor_val;
     depth = depth_val;
     depth_per_component = depth_per_component_val;
     is_monochrome = is_monochrome_val;
     rect = rect_val;
     available_rect = available_rect_val;
+    angle = angle_val;
+    orientation = orientation_val;
   }
 };
 
@@ -719,6 +727,26 @@ struct CefBrowserSettingsTraits {
     cef_string_set(src->accept_language_list.str,
                    src->accept_language_list.length,
                    &target->accept_language_list, copy);
+
+    /* ohos webview begin */
+    target->force_dark_mode_enabled = src->force_dark_mode_enabled;
+    target->javascript_can_open_windows_automatically =
+        src->javascript_can_open_windows_automatically;
+    target->loads_images_automatically = src->loads_images_automatically;
+    target->text_size_percent = src->text_size_percent;
+    target->allow_running_insecure_content =
+        src->allow_running_insecure_content;
+    target->strict_mixed_content_checking = src->strict_mixed_content_checking;
+    target->allow_mixed_content_upgrades = src->allow_mixed_content_upgrades;
+    target->geolocation_enabled = src->geolocation_enabled;
+    target->supports_double_tap_zoom = src->supports_double_tap_zoom;
+    target->supports_multi_touch_zoom = src->supports_multi_touch_zoom;
+    target->initialize_at_minimum_page_scale =
+        src->initialize_at_minimum_page_scale;
+    target->viewport_meta_enabled = src->viewport_meta_enabled;
+    target->user_gesture_required = src->user_gesture_required;
+    target->pinch_smooth_mode = src->pinch_smooth_mode;
+    /* ohos webview end */
   }
 };
 
@@ -823,6 +851,25 @@ class CefTime : public CefStructBase<CefTimeTraits> {
     return delta;
   }
 };
+
+struct CefTouchHandleStateTraits {
+  typedef cef_touch_handle_state_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+///
+// Class representing the state of a touch handle.
+///
+typedef CefStructBase<CefTouchHandleStateTraits> CefTouchHandleState;
 
 struct CefCookieTraits {
   typedef cef_cookie_t struct_type;

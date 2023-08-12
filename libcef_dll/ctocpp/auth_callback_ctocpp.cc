@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3ae38c17cba153dbca73496eae905202ac09bfeb$
+// $hash=e7ec4903d06110c27d271a7e946c90231b8d3f08$
 //
 
 #include "libcef_dll/ctocpp/auth_callback_ctocpp.h"
@@ -45,6 +45,22 @@ NO_SANITIZE("cfi-icall") void CefAuthCallbackCToCpp::Cancel() {
 
   // Execute
   _struct->cancel(_struct);
+}
+
+NO_SANITIZE("cfi-icall") bool CefAuthCallbackCToCpp::IsHttpAuthInfoSaved() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_auth_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_http_auth_info_saved))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_http_auth_info_saved(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

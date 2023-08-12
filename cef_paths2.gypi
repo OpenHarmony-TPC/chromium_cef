@@ -117,15 +117,15 @@
       'libcef_dll/wrapper_types.h',
     ],
     'libcef_dll_wrapper_sources_base': [
-      'libcef_dll/base/cef_atomic_flag.cc',
-      'libcef_dll/base/cef_callback_helpers.cc',
-      'libcef_dll/base/cef_callback_internal.cc',
+      #'libcef_dll/base/cef_atomic_flag.cc',
+      #'libcef_dll/base/cef_callback_helpers.cc',
+      #'libcef_dll/base/cef_callback_internal.cc',
       'libcef_dll/base/cef_lock.cc',
       'libcef_dll/base/cef_lock_impl.cc',
       'libcef_dll/base/cef_logging.cc',
       'libcef_dll/base/cef_ref_counted.cc',
       'libcef_dll/base/cef_thread_checker_impl.cc',
-      'libcef_dll/base/cef_weak_ptr.cc',
+      #'libcef_dll/base/cef_weak_ptr.cc',
     ],
     'libcef_dll_wrapper_sources_common': [
       'libcef_dll/cpptoc/base_ref_counted_cpptoc.cc',
@@ -195,6 +195,9 @@
     ],
     'shared_sources_linux': [
       'tests/shared/browser/main_message_loop_external_pump_linux.cc',
+      'tests/shared/browser/resource_util_posix.cc',
+    ],
+    'shared_sources_ohos': [
       'tests/shared/browser/resource_util_posix.cc',
     ],
     'shared_sources_mac': [

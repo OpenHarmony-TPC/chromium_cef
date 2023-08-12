@@ -51,20 +51,6 @@
 #include "include/cef_x509_certificate.h"
 
 ///
-// Callback interface used to select a client certificate for authentication.
-///
-/*--cef(source=library)--*/
-class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  // Chooses the specified certificate for client certificate authentication.
-  // NULL value means that no client certificate should be used.
-  ///
-  /*--cef(optional_param=cert)--*/
-  virtual void Select(CefRefPtr<CefX509Certificate> cert) = 0;
-};
-
-///
 // Implement this interface to handle events related to browser requests. The
 // methods of this class will be called on the thread indicated.
 ///
@@ -223,6 +209,8 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
       bool isProxy,
       const CefString& host,
       int port,
+      const std::vector<CefString>& key_types,
+      const std::vector<CefString>& principals,
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) {
     return false;

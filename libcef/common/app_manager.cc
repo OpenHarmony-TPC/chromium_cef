@@ -74,6 +74,20 @@ const CefAppManager::SchemeInfoList* CefAppManager::GetCustomSchemes() {
   return &scheme_info_list_;
 }
 
+std::vector<std::string> CefAppManager::CustomSchemeCmdLineSplit(std::string str, const char split)
+{
+  std::istringstream inStream(str);
+  std::vector<std::string> ret;
+  std::string token;
+  while (getline(inStream, token, split)) {
+    if (!token.empty()) {
+      ret.push_back(token);
+      token.clear();
+    }
+  }
+  return ret;
+}
+
 void CefAppManager::AddAdditionalSchemes(
     content::ContentClient::Schemes* schemes) {
   DCHECK(!scheme_info_list_locked_);
@@ -83,6 +97,34 @@ void CefAppManager::AddAdditionalSchemes(
     CefSchemeRegistrarImpl schemeRegistrar;
     application->OnRegisterCustomSchemes(&schemeRegistrar);
     schemeRegistrar.GetSchemes(schemes);
+  }
+
+  CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::GetGlobalCommandLine();
+  if (cmdLine->HasSwitch(switches::kProcessType)) {
+      LOG(INFO) << "render Add custom schemes";
+      if (cmdLine->HasSwitch(switches::kOhosCustomScheme)) {
+        std::string cmdlineSchemes = cmdLine->GetSwitchValue(switches::kOhosCustomScheme).ToString();
+        LOG(INFO) << "render cmdlineScheme:" << cmdlineSchemes;
+        std::vector<std::string> schemesInfo = CustomSchemeCmdLineSplit(cmdlineSchemes, ';');
+        for (auto it = schemesInfo.begin(); it != schemesInfo.end(); ++it) {
+          std::string schemeSplit = *it;
+          std::vector<std::string> scheme = CustomSchemeCmdLineSplit(schemeSplit, ',');
+          if (scheme.size() != 3) {
+            break;
+          }
+          CefSchemeInfo regScheme = {"", false, false, false, false, false, false, false};
+          regScheme.scheme_name = scheme[0];
+          if (scheme[1] == std::string("1")) {
+            regScheme.is_cors_enabled = true;
+          }
+          if (scheme[2] == std::string("1")) {
+            regScheme.is_fetch_enabled  = true;
+          }
+          LOG(INFO) << "render add custom scheme name:" << regScheme.scheme_name
+                    << " is_cors:"<< regScheme.is_cors_enabled << " is_fetch:" << regScheme.is_fetch_enabled;
+          AddCustomScheme(&regScheme);
+        }
+      }
   }
 
   scheme::AddInternalSchemes(schemes);

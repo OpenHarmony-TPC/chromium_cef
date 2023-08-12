@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e397708024c85cf066c0b7b76f1fae74b3a3e4d6$
+// $hash=3cfa40dde5fccdecbb2d598b20e1d76cc13f4c34$
 //
 
 #ifndef CEF_LIBCEF_DLL_CPPTOC_SELECT_CLIENT_CERTIFICATE_CALLBACK_CPPTOC_H_
@@ -20,8 +20,8 @@
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_request_handler_capi.h"
-#include "include/cef_request_handler.h"
+#include "include/capi/cef_callback_capi.h"
+#include "include/cef_callback.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.

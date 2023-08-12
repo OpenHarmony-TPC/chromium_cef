@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6de4205143b6855e7ccf54da14a0494db0b4aaa3$
+// $hash=7d2cea734649b808710e6c44ee7eab4f5e5b47cc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -38,6 +38,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
 
   // CefBrowserHost methods.
   CefRefPtr<CefBrowser> GetBrowser() override;
+  void PostTaskToUIThread(CefRefPtr<CefTask> task) override;
   void CloseBrowser(bool force_close) override;
   bool TryCloseBrowser() override;
   void SetFocus(bool focus) override;
@@ -67,7 +68,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext) override;
+            bool findNext,
+            bool newSession) override;
   void StopFinding(bool clearSelection) override;
   void ShowDevTools(const CefWindowInfo& windowInfo,
                     CefRefPtr<CefClient> client,
@@ -89,6 +91,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void WasResized() override;
   void WasHidden(bool hidden) override;
   void NotifyScreenInfoChanged() override;
+  void SetVirtualPixelRatio(float ratio) override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendKeyEvent(const CefKeyEvent& event) override;
@@ -105,6 +108,44 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void NotifyMoveOrResizeStarted() override;
   int GetWindowlessFrameRate() override;
   void SetWindowlessFrameRate(int frame_rate) override;
+  void SetWebPreferences(const CefBrowserSettings& browser_settings) override;
+  void PutUserAgent(const CefString& ua) override;
+  CefString DefaultUserAgent() override;
+  void SetBackgroundColor(int color) override;
+  void RegisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) override;
+  void UnregisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) override;
+  void StoreWebArchive(
+      const CefString& base_name,
+      bool auto_name,
+      CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
+  CefString Title() override;
+  void CreateWebMessagePorts(std::vector<CefString>& ports) override;
+  void PostWebMessage(CefString& message,
+                      std::vector<CefString>& ports,
+                      CefString& targetUri) override;
+  void ClosePort(CefString& port_handle) override;
+  void DestroyAllWebMessagePorts() override;
+  void PostPortMessage(CefString& port_handle, CefString& data) override;
+  void SetPortMessageCallback(
+      CefString& port_handle,
+      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+  void GetHitData(int& type, CefString& extra_data) override;
+  void SetInitialScale(float scale) override;
+  int PageLoadProgress() override;
+  float Scale() override;
+  void LoadWithDataAndBaseUrl(const CefString& baseUrl,
+                              const CefString& data,
+                              const CefString& mimeType,
+                              const CefString& encoding,
+                              const CefString& historyUrl) override;
+  void LoadWithData(const CefString& data,
+                    const CefString& mimeType,
+                    const CefString& encoding) override;
+  void AddVisitedLinks(const std::vector<CefString>& urls) override;
   void ImeSetComposition(const CefString& text,
                          const std::vector<CefCompositionUnderline>& underlines,
                          const CefRange& replacement_range,
@@ -132,6 +173,19 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool IsBackgroundHost() override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
+  void ExecuteJavaScript(
+      const CefString& code,
+      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+  void SetNativeWindow(cef_native_window_t window) override;
+  void SetWebDebuggingAccess(bool isEnableDebug) override;
+  bool GetWebDebuggingAccess() override;
+  void GetImageForContextNode() override;
+  void GetImageFromCache(const CefString& url) override;
+  void ExitFullScreen() override;
+  void UpdateLocale(const CefString& locale) override;
+  CefString GetOriginalUrl() override;
+  void PutNetworkAvailable(bool available) override;
+  void RemoveCache(bool include_disk_files) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

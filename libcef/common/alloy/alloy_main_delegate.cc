@@ -161,7 +161,7 @@ bool AlloyMainDelegate::BasicStartupComplete(int* exit_code) {
       command_line->AppendSwitchASCII(switches::kLang,
                                       CefString(&settings_->locale).ToString());
     } else if (!command_line->HasSwitch(switches::kLang)) {
-      command_line->AppendSwitchASCII(switches::kLang, "en-US");
+      command_line->AppendSwitchASCII(switches::kLang, "zh-CN");
     }
 
     base::FilePath log_file;
@@ -211,6 +211,10 @@ bool AlloyMainDelegate::BasicStartupComplete(int* exit_code) {
       command_line->AppendSwitchASCII(
           blink::switches::kJavaScriptFlags,
           CefString(&settings_->javascript_flags).ToString());
+    }
+    if (settings_->user_data_path.length > 0) {
+      command_line->AppendSwitchPath(switches::kUserDataDir,
+                                     CefString(&settings_->user_data_path));
     }
 
     if (settings_->pack_loading_disabled) {
@@ -474,6 +478,22 @@ AlloyMainDelegate::GetWebWorkerTaskRunner() {
   return nullptr;
 }
 
+#if BUILDFLAG(IS_OHOS)
+void AlloyMainDelegate::OverrideBundleDataPath(
+    const base::CommandLine& command_line) {
+  base::FilePath bundle_dir;
+  if (command_line.HasSwitch(switches::kBundleInstallationDir)) {
+    bundle_dir =
+        command_line.GetSwitchValuePath(switches::kBundleInstallationDir);
+  }
+  if (!bundle_dir.empty()) {
+    base::PathService::Override(base::DIR_OHOS_APP_INSTALLATION, bundle_dir);
+  } else {
+    LOG(ERROR) << "Bundle installation dir is empty";
+  }
+}
+#endif
+
 void AlloyMainDelegate::InitializeResourceBundle() {
   const base::CommandLine* command_line =
       base::CommandLine::ForCurrentProcess();
@@ -522,6 +542,10 @@ void AlloyMainDelegate::InitializeResourceBundle() {
   ui::SetResourcesDataDLL(module_handle);
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  OverrideBundleDataPath(*command_line);
+#endif
+
   std::string locale = command_line->GetSwitchValueASCII(switches::kLang);
   DCHECK(!locale.empty());
 
@@ -531,7 +555,6 @@ void AlloyMainDelegate::InitializeResourceBundle() {
           ui::ResourceBundle::LOAD_COMMON_RESOURCES);
   if (!loaded_locale.empty() && g_browser_process)
     g_browser_process->SetApplicationLocale(loaded_locale);
-
   ui::ResourceBundle& resource_bundle = ui::ResourceBundle::GetSharedInstance();
 
   if (!resource_bundle_delegate_.pack_loading_disabled()) {

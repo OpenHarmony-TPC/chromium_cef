@@ -77,3 +77,22 @@ CefRefPtr<CefFrameHostImpl> CefBrowserFrame::GetFrameHost(
   NOTREACHED();
   return nullptr;
 }
+
+void CefBrowserFrame::OnUpdateHitData(cef::mojom::HitDataParamsPtr params) {
+  if (auto host = GetFrameHost()) {
+    host->OnUpdateHitData(std::move(params));
+  }
+}
+
+void CefBrowserFrame::OnGetImageForContextNode(
+    cef::mojom::GetImageForContextNodeParamsPtr params) {
+  if (auto host = GetFrameHost()) {
+    host->OnGetImageForContextNode(std::move(params));
+  }
+}
+
+void CefBrowserFrame::OnGetImageForContextNodeNull() {
+  if (auto host = GetFrameHost()) {
+    host->OnGetImageForContextNodeNull();
+  }
+}

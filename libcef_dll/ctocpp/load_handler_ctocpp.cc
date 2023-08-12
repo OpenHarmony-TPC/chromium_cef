@@ -9,12 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4a9f8a50b70bb46729c6d808f825d174ccc0f15e$
+// $hash=6be01fd6f359ff9960cea2ec422a489673b72bd6$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/cpptoc/request_cpptoc.h"
+#include "libcef_dll/cpptoc/response_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
@@ -126,6 +129,144 @@ void CefLoadHandlerCToCpp::OnLoadError(CefRefPtr<CefBrowser> browser,
   _struct->on_load_error(_struct, CefBrowserCppToC::Wrap(browser),
                          CefFrameCppToC::Wrap(frame), errorCode,
                          errorText.GetStruct(), failedUrl.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
+                                                  bool is_main_frame,
+                                                  bool has_user_gesture,
+                                                  int error_code,
+                                                  const CefString& error_text) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_load_error_with_request))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: request; type: refptr_diff
+  DCHECK(request.get());
+  if (!request.get())
+    return;
+  // Verify param: error_text; type: string_byref_const
+  DCHECK(!error_text.empty());
+  if (error_text.empty())
+    return;
+
+  // Execute
+  _struct->on_load_error_with_request(_struct, CefRequestCppToC::Wrap(request),
+                                      is_main_frame, has_user_gesture,
+                                      error_code, error_text.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnHttpError(CefRefPtr<CefRequest> request,
+                                       bool is_main_frame,
+                                       bool has_user_gesture,
+                                       CefRefPtr<CefResponse> response) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_http_error))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: request; type: refptr_diff
+  DCHECK(request.get());
+  if (!request.get())
+    return;
+  // Verify param: response; type: refptr_diff
+  DCHECK(response.get());
+  if (!response.get())
+    return;
+
+  // Execute
+  _struct->on_http_error(_struct, CefRequestCppToC::Wrap(request),
+                         is_main_frame, has_user_gesture,
+                         CefResponseCppToC::Wrap(response));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnRefreshAccessedHistory(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    const CefString& url,
+    bool isReload) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_refresh_accessed_history))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame.get());
+  if (!frame.get())
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty())
+    return;
+
+  // Execute
+  _struct->on_refresh_accessed_history(_struct, CefBrowserCppToC::Wrap(browser),
+                                       CefFrameCppToC::Wrap(frame),
+                                       url.GetStruct(), isReload);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnPageVisible(CefRefPtr<CefBrowser> browser,
+                                         const CefString& url,
+                                         bool success) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_page_visible))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Unverified params: url
+
+  // Execute
+  _struct->on_page_visible(_struct, CefBrowserCppToC::Wrap(browser),
+                           url.GetStruct(), success);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnDataResubmission(CefRefPtr<CefBrowser> browser,
+                                              CefRefPtr<CefCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_data_resubmission))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get())
+    return;
+
+  // Execute
+  _struct->on_data_resubmission(_struct, CefBrowserCppToC::Wrap(browser),
+                                CefCallbackCppToC::Wrap(callback));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

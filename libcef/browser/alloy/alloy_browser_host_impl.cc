@@ -1,7 +1,7 @@
-// Copyright (c) 2012 The Chromium Embedded Framework Authors.
-// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 
@@ -20,6 +20,8 @@
 #include "libcef/browser/media_capture_devices_dispatcher.h"
 #include "libcef/browser/native/cursor_util.h"
 #include "libcef/browser/osr/osr_util.h"
+#include "libcef/browser/osr/render_widget_host_view_osr.h"
+#include "libcef/browser/prefs/renderer_prefs.h"
 #include "libcef/browser/request_context_impl.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/common/cef_switches.h"
@@ -54,6 +56,10 @@
 #include "net/base/net_errors.h"
 #include "third_party/blink/public/mojom/widget/platform_widget.mojom-test-utils.h"
 #include "ui/events/base_event_utils.h"
+
+#include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
+
+#include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 
 using content::KeyboardEventProcessingResult;
 
@@ -386,14 +392,30 @@ CefWindowHandle AlloyBrowserHostImpl::GetOpenerWindowHandle() {
 double AlloyBrowserHostImpl::GetZoomLevel() {
   // Verify that this method is being called on the UI thread.
   if (!CEF_CURRENTLY_ON_UIT()) {
-    NOTREACHED() << "called on invalid thread";
-    return 0;
+    event_ = std::make_shared<base::WaitableEvent>(
+      base::WaitableEvent::ResetPolicy::AUTOMATIC,
+      base::WaitableEvent::InitialState::NOT_SIGNALED);
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::GetZoomLevelCallback, this));
+    if (!event_->TimedWait(base::Milliseconds(10))) {
+      return 0;
+    }
+    return curFactor_;
   }
+  if (web_contents()) {
+    curFactor_ = content::HostZoomMap::GetZoomLevel(web_contents());
+  }
+  return curFactor_;
+}
 
-  if (web_contents())
-    return content::HostZoomMap::GetZoomLevel(web_contents());
-
-  return 0;
+void AlloyBrowserHostImpl::GetZoomLevelCallback() {
+  if (web_contents()) {
+    curFactor_ = content::HostZoomMap::GetZoomLevel(web_contents());
+    if (event_ != nullptr) {
+      event_->Signal();
+    }
+  } else {
+    curFactor_ = 0;
+  }
 }
 
 void AlloyBrowserHostImpl::SetZoomLevel(double zoomLevel) {
@@ -454,16 +476,18 @@ void AlloyBrowserHostImpl::PrintToPDF(const CefString& path,
 void AlloyBrowserHostImpl::Find(const CefString& searchText,
                                 bool forward,
                                 bool matchCase,
-                                bool findNext) {
+                                bool findNext,
+                                bool newSession) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&AlloyBrowserHostImpl::Find, this, searchText,
-                                 forward, matchCase, findNext));
+                                 forward, matchCase, findNext, newSession));
     return;
   }
 
   if (platform_delegate_) {
-    platform_delegate_->Find(searchText, forward, matchCase, findNext);
+    platform_delegate_->Find(searchText, forward, matchCase, findNext,
+                             newSession);
   }
 }
 
@@ -553,6 +577,10 @@ CefRefPtr<CefExtension> AlloyBrowserHostImpl::GetExtension() {
 
 bool AlloyBrowserHostImpl::IsBackgroundHost() {
   return is_background_host_;
+}
+
+SkColor AlloyBrowserHostImpl::GetBackgroundColor() const {
+  return base_background_color_;
 }
 
 bool AlloyBrowserHostImpl::IsWindowRenderingDisabled() {
@@ -1222,7 +1250,53 @@ bool AlloyBrowserHostImpl::TakeFocus(content::WebContents* source,
 bool AlloyBrowserHostImpl::HandleContextMenu(
     content::RenderFrameHost& render_frame_host,
     const content::ContextMenuParams& params) {
-  return HandleContextMenu(web_contents(), params);
+  // This bool value is only used for touch insert handle quick menu.
+  auto rvh = web_contents()->GetRenderViewHost();
+  CefRenderWidgetHostViewOSR* view =
+      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+  touch_insert_handle_menu_show_ = true;
+  if (view) {
+    CefTouchSelectionControllerClientOSR* touch_client =
+        static_cast<CefTouchSelectionControllerClientOSR*>(
+            view->selection_controller_client());
+    if (touch_client && touch_client->HandleContextMenu(params)) {
+      return true;
+    }
+  }
+
+  if (!menu_manager_.get() && platform_delegate_) {
+    menu_manager_.reset(
+        new CefMenuManager(this, platform_delegate_->CreateMenuRunner()));
+  }
+  return menu_manager_->CreateContextMenu(params);
+}
+
+void AlloyBrowserHostImpl::SetBackgroundColor(int color) {
+  if (color == base_background_color_) {
+    return;
+  }
+
+  base_background_color_ = color;
+  OnWebPreferencesChanged();
+}
+
+void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
+  auto rvh = web_contents()->GetRenderViewHost();
+
+  if (rvh->GetWidget()->GetView()) {
+    rvh->GetWidget()->GetView()->SetBackgroundColor(color);
+  }
+}
+
+void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
+  auto rvh = web_contents()->GetRenderViewHost();
+  CefRenderWidgetHostViewOSR* view =
+      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+
+  if (view) {
+    view->SetDoubleTapSupportEnabled(settings_.supports_double_tap_zoom);
+    view->SetMultiTouchZoomSupportEnabled(settings_.supports_multi_touch_zoom);
+  }
 }
 
 KeyboardEventProcessingResult AlloyBrowserHostImpl::PreHandleKeyboardEvent(
@@ -1347,8 +1421,12 @@ void AlloyBrowserHostImpl::RunFileChooser(
   file_dialog_manager_->RunFileChooser(listener, params);
 }
 
+#if !BUILDFLAG(IS_OHOS)
 bool AlloyBrowserHostImpl::HandleContextMenu(
     content::WebContents* web_contents,
+#else
+bool AlloyBrowserHostImpl::ShowContextMenu(
+#endif
     const content::ContextMenuParams& params) {
   CEF_REQUIRE_UIT();
   if (!menu_manager_.get() && platform_delegate_) {
@@ -1481,6 +1559,27 @@ bool AlloyBrowserHostImpl::IsPrerender2Supported() {
   return true;
 }
 
+void AlloyBrowserHostImpl::RequestToLockMouse(
+    content::WebContents* web_contents,
+    bool user_gesture,
+    bool last_unlocked_by_target) {
+  if (contents_delegate_)
+    contents_delegate_->RequestToLockMouse(web_contents, user_gesture,
+                                           last_unlocked_by_target);
+}
+
+void AlloyBrowserHostImpl::LostMouseLock() {
+  if (contents_delegate_)
+    contents_delegate_->LostMouseLock();
+}
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::ShowRepostFormWarningDialog(content::WebContents* source) {
+  if (contents_delegate_)
+    contents_delegate_->ShowRepostFormWarningDialog(source);
+}
+#endif
+
 // content::WebContentsObserver methods.
 // -----------------------------------------------------------------------------
 
@@ -1495,6 +1594,8 @@ void AlloyBrowserHostImpl::RenderFrameCreated(
 
 void AlloyBrowserHostImpl::RenderViewReady() {
   platform_delegate_->RenderViewReady();
+  UpdateBackgroundColor(base_background_color_);
+  UpdateZoomSupportEnabled();
 }
 
 void AlloyBrowserHostImpl::DidFinishNavigation(
@@ -1660,5 +1761,19 @@ void AlloyBrowserHostImpl::EnsureFileDialogManager() {
   if (!file_dialog_manager_.get() && platform_delegate_) {
     file_dialog_manager_.reset(new CefFileDialogManager(
         this, platform_delegate_->CreateFileDialogRunner()));
+  }
+}
+
+void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
+  std::vector<GURL> urlList = std::vector<GURL>();
+  for (auto url : urls) {
+    urlList.push_back(url_util::MakeGURL(url, /*fixup=*/false));
+  }
+  if (web_contents()) {
+    auto cef_browser_context =
+        static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
+    if (cef_browser_context) {
+      cef_browser_context->AddVisitedURLs(urlList);
+    }
   }
 }

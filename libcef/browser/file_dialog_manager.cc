@@ -205,7 +205,6 @@ void CefFileDialogManager::RunFileChooser(
     scoped_refptr<content::FileSelectListener> listener,
     const blink::mojom::FileChooserParams& params) {
   CEF_REQUIRE_UIT();
-
   CefFileDialogRunner::FileChooserParams cef_params;
   static_cast<blink::mojom::FileChooserParams&>(cef_params) = params;
 
@@ -287,7 +286,8 @@ void CefFileDialogManager::RunFileChooserInternal(
       handled = handler->OnFileDialog(
           browser_, static_cast<cef_file_dialog_mode_t>(mode), params.title,
           params.default_file_name.value(), accept_filters,
-          params.selected_accept_filter, callbackImpl.get());
+          params.selected_accept_filter, params.use_media_capture,
+          callbackImpl.get());
       if (!handled) {
         // May return nullptr if the client has already executed the callback.
         callback = callbackImpl->Disconnect();

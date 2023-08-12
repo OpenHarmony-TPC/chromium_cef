@@ -38,6 +38,8 @@ BLINK_EXPORT bool CanGoBack(blink::WebView* view);
 BLINK_EXPORT bool CanGoForward(blink::WebView* view);
 BLINK_EXPORT void GoBack(blink::WebView* view);
 BLINK_EXPORT void GoForward(blink::WebView* view);
+BLINK_EXPORT bool CanGoBackOrForward(blink::WebView* view, int num_steps);
+BLINK_EXPORT void GoBackOrForward(blink::WebView* view, int num_steps);
 
 BLINK_EXPORT bool IsInBackForwardCache(blink::WebLocalFrame* frame);
 

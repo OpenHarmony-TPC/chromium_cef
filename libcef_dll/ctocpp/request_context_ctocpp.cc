@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=34a53ca8c93eb3dd0999d9e34d3f86307995e82d$
+// $hash=30c4985c5d42f2b4409c2650ded5265209f210f4$
 //
 
 #include "libcef_dll/ctocpp/request_context_ctocpp.h"
@@ -19,10 +19,12 @@
 #include "libcef_dll/cpptoc/resolve_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h"
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
+#include "libcef_dll/ctocpp/data_base_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/extension_ctocpp.h"
 #include "libcef_dll/ctocpp/media_router_ctocpp.h"
 #include "libcef_dll/ctocpp/value_ctocpp.h"
+#include "libcef_dll/ctocpp/web_storage_ctocpp.h"
 #include "libcef_dll/transfer_util.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -182,6 +184,40 @@ CefRefPtr<CefCookieManager> CefRequestContextCToCpp::GetCookieManager(
 
   // Return type: refptr_same
   return CefCookieManagerCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefDataBase> CefRequestContextCToCpp::GetDataBase() {
+  cef_request_context_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_data_base))
+    return nullptr;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_data_base_t* _retval = _struct->get_data_base(_struct);
+
+  // Return type: refptr_same
+  return CefDataBaseCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefWebStorage> CefRequestContextCToCpp::GetWebStorage(
+    CefRefPtr<CefCompletionCallback> callback) {
+  cef_request_context_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_web_storage))
+    return nullptr;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  cef_web_storage_t* _retval = _struct->get_web_storage(
+      _struct, CefCompletionCallbackCppToC::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefWebStorageCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -357,6 +393,22 @@ void CefRequestContextCToCpp::ClearHttpAuthCredentials(
 
   // Execute
   _struct->clear_http_auth_credentials(
+      _struct, CefCompletionCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRequestContextCToCpp::ClearClientAuthenticationCache(
+    CefRefPtr<CefCompletionCallback> callback) {
+  cef_request_context_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, clear_client_authentication_cache))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  _struct->clear_client_authentication_cache(
       _struct, CefCompletionCallbackCppToC::Wrap(callback));
 }
 

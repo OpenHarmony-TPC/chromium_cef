@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cac933371fc47c864230d4537ef1da76cd7e4d8e$
+// $hash=df2505130721df8255b0d5bd511fb8ef394a7d8e$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
@@ -28,6 +28,7 @@ bool CefDialogHandlerCToCpp::OnFileDialog(
     const CefString& default_file_path,
     const std::vector<CefString>& accept_filters,
     int selected_accept_filter,
+    bool capture,
     CefRefPtr<CefFileDialogCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -61,7 +62,7 @@ bool CefDialogHandlerCToCpp::OnFileDialog(
   int _retval = _struct->on_file_dialog(
       _struct, CefBrowserCppToC::Wrap(browser), mode, title.GetStruct(),
       default_file_path.GetStruct(), accept_filtersList, selected_accept_filter,
-      CefFileDialogCallbackCppToC::Wrap(callback));
+      capture, CefFileDialogCallbackCppToC::Wrap(callback));
 
   // Restore param:accept_filters; type: string_vec_byref_const
   if (accept_filtersList)

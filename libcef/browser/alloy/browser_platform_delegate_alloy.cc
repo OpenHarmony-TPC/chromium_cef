@@ -259,6 +259,16 @@ void CefBrowserPlatformDelegateAlloy::SendCaptureLostEvent() {
     widget->LostCapture();
 }
 
+void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
+    const CefTouchEvent& event) {
+  if (!browser_)
+    return;
+  auto frame = browser_->GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->SendTouchEvent(event);
+  }
+}
+
 #if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
 void CefBrowserPlatformDelegateAlloy::NotifyMoveOrResizeStarted() {
   if (!browser_)
@@ -397,13 +407,19 @@ void CefBrowserPlatformDelegateAlloy::PrintToPDF(
 void CefBrowserPlatformDelegateAlloy::Find(const CefString& searchText,
                                            bool forward,
                                            bool matchCase,
-                                           bool findNext) {
+                                           bool findNext,
+                                           bool newSession) {
   if (!web_contents_)
     return;
 
   find_in_page::FindTabHelper::FromWebContents(web_contents_)
       ->StartFinding(searchText.ToString16(), forward, matchCase, findNext,
-                     /*run_synchronously_for_testing=*/false);
+                     /*run_synchronously_for_testing=*/false
+#if BUILDFLAG(IS_OHOS)
+					 ,
+                     newSession
+#endif
+      );
 }
 
 void CefBrowserPlatformDelegateAlloy::StopFinding(bool clearSelection) {
