@@ -1,0 +1,46 @@
+diff --git content/browser/renderer_host/render_widget_host_view_aura.cc content/browser/renderer_host/render_widget_host_view_aura.cc
+index 99f3ba03249b3..47566fd1ca43b 100644
+--- content/browser/renderer_host/render_widget_host_view_aura.cc
++++ content/browser/renderer_host/render_widget_host_view_aura.cc
+@@ -5,6 +5,7 @@
+ #include "content/browser/renderer_host/render_widget_host_view_aura.h"
+ 
+ #include <memory>
++#include <tuple>
+ #include <set>
+ #include <utility>
+ 
+@@ -678,10 +679,12 @@ gfx::Rect RenderWidgetHostViewAura::GetViewBounds() {
+ void RenderWidgetHostViewAura::UpdateBackgroundColor() {
+   DCHECK(GetBackgroundColor());
+ 
+-  SkColor color = *GetBackgroundColor();
+-  bool opaque = SkColorGetA(color) == SK_AlphaOPAQUE;
+-  window_->layer()->SetFillsBoundsOpaquely(opaque);
+-  window_->layer()->SetColor(color);
++  if (window_) {
++    SkColor color = *GetBackgroundColor();
++    bool opaque = SkColorGetA(color) == SK_AlphaOPAQUE;
++    window_->layer()->SetFillsBoundsOpaquely(opaque);
++    window_->layer()->SetColor(color);
++  }
+ }
+ 
+ absl::optional<DisplayFeature> RenderWidgetHostViewAura::GetDisplayFeature() {
+@@ -2167,6 +2170,16 @@ void RenderWidgetHostViewAura::CreateAuraWindow(aura::client::WindowType type) {
+   // This needs to happen only after |window_| has been initialized using
+   // Init(), because it needs to have the layer.
+   window_->SetEmbedFrameSinkId(frame_sink_id_);
++
++  // Do this after |window_| is created to avoid crashes on Win10.
++  // See https://crbug.com/761389.
++  auto web_contents =
++      WebContents::FromRenderViewHost(RenderViewHost::From(host_));
++  if (web_contents) {
++    // TODO(mostynb): actually use prefs.  Landing this as a separate CL
++    // first to rebaseline some unreliable layout tests.
++    std::ignore = web_contents->GetOrCreateWebPreferences();
++  }
+ }
+ 
+ void RenderWidgetHostViewAura::CreateDelegatedFrameHostClient() {
