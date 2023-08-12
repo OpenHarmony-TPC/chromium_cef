@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,12 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f925fbe5bb419b6adf14c4b508c7330ec8dd84a$
+// $hash=3c71c8ae9b8f6ae947bfccd7e018137d7f30737c$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/file_dialog_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/select_popup_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -67,12 +68,68 @@ dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK
+dialog_handler_on_select_popup_menu(struct _cef_dialog_handler_t* self,
+                                    cef_browser_t* browser,
+                                    const cef_rect_t* bounds,
+                                    int item_height,
+                                    double item_font_size,
+                                    int selected_item,
+                                    size_t menu_itemsCount,
+                                    cef_select_popup_item_t const* menu_items,
+                                    int right_aligned,
+                                    int allow_multiple_selection,
+                                    cef_select_popup_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: bounds; type: simple_byref_const
+  DCHECK(bounds);
+  if (!bounds)
+    return;
+  // Verify param: menu_items; type: simple_vec_byref_const
+  DCHECK(menu_itemsCount == 0 || menu_items);
+  if (menu_itemsCount > 0 && !menu_items)
+    return;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback)
+    return;
+
+  // Translate param: bounds; type: simple_byref_const
+  CefRect boundsVal = bounds ? *bounds : CefRect();
+  // Translate param: menu_items; type: simple_vec_byref_const
+  std::vector<CefSelectPopupItem> menu_itemsList;
+  if (menu_itemsCount > 0) {
+    for (size_t i = 0; i < menu_itemsCount; ++i) {
+      CefSelectPopupItem menu_itemsVal = menu_items[i];
+      menu_itemsList.push_back(menu_itemsVal);
+    }
+  }
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnSelectPopupMenu(
+      CefBrowserCToCpp::Wrap(browser), boundsVal, item_height, item_font_size,
+      selected_item, menu_itemsList, right_aligned ? true : false,
+      allow_multiple_selection ? true : false,
+      CefSelectPopupCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_file_dialog = dialog_handler_on_file_dialog;
+  GetStruct()->on_select_popup_menu = dialog_handler_on_select_popup_menu;
 }
 
 // DESTRUCTOR - Do not edit by hand.

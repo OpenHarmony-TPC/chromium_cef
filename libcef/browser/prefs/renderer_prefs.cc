@@ -184,6 +184,7 @@ void SetBool(CommandLinePrefStore* prefs, const std::string& key, bool value) {
                   WriteablePrefStore::DEFAULT_PREF_WRITE_FLAGS);
 }
 
+#if !BUILDFLAG(IS_OHOS)
 blink::mojom::PreferredColorScheme ToBlinkPreferredColorScheme(
     ui::NativeTheme::PreferredColorScheme native_theme_scheme) {
   switch (native_theme_scheme) {
@@ -195,6 +196,7 @@ blink::mojom::PreferredColorScheme ToBlinkPreferredColorScheme(
 
   NOTREACHED();
 }
+#endif
 
 // From chrome/browser/chrome_content_browser_client.cc
 // Returns true if preferred color scheme is modified based on at least one of
@@ -207,8 +209,10 @@ bool UpdatePreferredColorScheme(blink::web_pref::WebPreferences* web_prefs,
   auto old_preferred_color_scheme = web_prefs->preferred_color_scheme;
 
   // Update based on native theme scheme.
+#if !BUILDFLAG(IS_OHOS)
   web_prefs->preferred_color_scheme =
       ToBlinkPreferredColorScheme(native_theme->GetPreferredColorScheme());
+#endif
 
   // Force a light preferred color scheme on certain URLs if kWebUIDarkMode is
   // disabled; some of the UI is not yet correctly themed.
@@ -359,6 +363,11 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 
   /* ohos webview begin*/
   SET_STATE(cef.force_dark_mode_enabled, web.force_dark_mode_enabled);
+  if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
+    web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
+  } else {
+    web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kLight;
+  }
   SET_STATE(cef.loads_images_automatically, web.loads_images_automatically);
   SET_STATE(cef.allow_running_insecure_content,
             web.allow_running_insecure_content);
@@ -367,6 +376,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   SET_STATE(cef.allow_mixed_content_upgrades, web.allow_mixed_content_upgrades);
   SET_STATE(cef.initialize_at_minimum_page_scale,
             web.initialize_at_minimum_page_scale);
+#if BUILDFLAG(IS_OHOS)
+  SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
+  SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
+#endif
   web.viewport_meta_enabled = cef.viewport_meta_enabled;
   web.autoplay_policy =
       cef.user_gesture_required
@@ -421,6 +434,7 @@ void PopulateWebPreferences(content::RenderViewHost* rvh,
   }
 
   auto* native_theme = ui::NativeTheme::GetInstanceForWeb();
+#if !BUILDFLAG(IS_OHOS)
   switch (native_theme->GetPreferredColorScheme()) {
     case ui::NativeTheme::PreferredColorScheme::kDark:
       web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
@@ -429,6 +443,7 @@ void PopulateWebPreferences(content::RenderViewHost* rvh,
       web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kLight;
       break;
   }
+#endif
 
   switch (native_theme->GetPreferredContrast()) {
     case ui::NativeTheme::PreferredContrast::kNoPreference:

@@ -1173,10 +1173,9 @@ void CefRenderWidgetHostViewOSR::OnScaleChanged(float old_page_scale_factor,
     CefRefPtr<CefDisplayHandler> handler =
         browser_impl_->client()->GetDisplayHandler();
     CHECK(handler);
-    float ratio = browser_impl_->GetVirtualPixelRatio();
     handler->OnScaleChanged(browser_impl_.get(),
-                            std::round(old_page_scale_factor * (100 / ratio)),
-                            std::round(nwe_page_scale_factor * (100 / ratio)));
+                            std::round(old_page_scale_factor * 100),
+                            std::round(nwe_page_scale_factor * 100));
   }
 }
 
@@ -1599,6 +1598,9 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
   if (focus) {
     widget->GotFocus();
     widget->SetActive(true);
+    if (selection_controller_client_) {
+      selection_controller_client_->SetTemporarilyHidden(false);
+    }
   } else {
 #if !BUILDFLAG(IS_OHOS)
     if (browser_impl_.get())
@@ -1619,7 +1621,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     bool did_update_state) {
   const auto state = text_input_manager->GetTextInputState();
   if (state && !state->show_ime_if_needed) {
-    LOG(INFO) << "OnUpdateTextInputStateCalled no need to show ime";
+    return;
   }
 
   CefRenderHandler::TextInputMode mode = CEF_TEXT_INPUT_MODE_NONE;
@@ -1639,6 +1641,21 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
 
   handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                       show_keyboard);
+}
+
+void CefRenderWidgetHostViewOSR::FocusedNodeChanged(bool is_editable_node,
+  const gfx::Rect& node_bounds_in_screen)
+{
+  CefRefPtr<CefRenderHandler> handler =
+    browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  if (is_editable_node) {
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
+        CEF_TEXT_INPUT_MODE_DEFAULT, false);
+  } else {
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
+        CEF_TEXT_INPUT_MODE_NONE, false);
+  }
 }
 
 void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
@@ -1967,8 +1984,13 @@ void CefRenderWidgetHostViewOSR::OnScrollOffsetChanged() {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
+  #if BUILDFLAG(IS_OHOS)
+    handler->OnScrollOffsetChanged(browser_impl_.get(), std::round(last_scroll_offset_.x()),
+                                   std::round(last_scroll_offset_.y()));
+  #else
     handler->OnScrollOffsetChanged(browser_impl_.get(), last_scroll_offset_.x(),
                                    last_scroll_offset_.y());
+  #endif
   }
   is_scroll_offset_changed_pending_ = false;
 }

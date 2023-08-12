@@ -71,6 +71,17 @@ const std::string kAddressPrefix = "geo:0,0?q=";
 const std::string kEmailPrefix = "mailto:";
 const std::string kPhoneNumberPrefix = "tel:";
 
+// The amount of content to overlap between two screens when using
+// pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
+// animated scroll speed.
+static int STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC = 480;
+// Time for the longest scroll animation.
+static int MAX_SCROLL_ANIMATION_DURATION_MILLISEC = 750;
+
+static int DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC = 600;
+
+static double POSITION_RATIO = 138.9;
+
 enum HitTestDataType {
   kUnknown = 0,
   kPhone = 2,
@@ -81,6 +92,17 @@ enum HitTestDataType {
   kSrcImageLink = 8,
   kEditText = 9,
 };
+
+int computeDurationInMilliSec(int dx, int dy) {
+  int distance = std::max(std::abs(dx), std::abs(dy));
+  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
+  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
+}
+
+float computeSlidePosition(float v) {
+    return (v * POSITION_RATIO / 1000);
+}
+
 #endif  // BUILDFLAG(IS_OHOS)
 
 }  // namespace
@@ -808,39 +830,38 @@ void CefFrameImpl::PutZoomingForTextFactor(float factor) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
- 
+
   if (!webview)
     return;
   // Hide selection and autofill popups.
   webview->CancelPagePopup();
- 
+
   render_frame->GetWebFrame()->FrameWidget()->SetTextZoomFactor(factor);
 }
- 
+
 void CefFrameImpl::GetImageForContextNode() {
   if (!frame_) {
     LOG(ERROR) << "GetImageForContextNode frame is nullptr";
     return;
   }
   cef::mojom::GetImageForContextNodeParamsPtr params =
-    cef::mojom::GetImageForContextNodeParams::New();
+      cef::mojom::GetImageForContextNodeParams::New();
   blink::WebNode context_node = frame_->ContextMenuImageNode();
   std::vector<uint8_t> image_data;
   gfx::Size original_size;
   std::string image_extension;
 
   if (context_node.IsNull() || !context_node.IsElementNode()) {
-    SendToBrowserFrame(
-        __FUNCTION__,
-        base::BindOnce(
-            [](cef::mojom::GetImageForContextNodeParamsPtr data,
-               const BrowserFrameType& browser_frame) {
-              browser_frame->OnGetImageForContextNodeNull();
-            },
-            std::move(params)));
+    SendToBrowserFrame(__FUNCTION__,
+                       base::BindOnce(
+                           [](cef::mojom::GetImageForContextNodeParamsPtr data,
+                              const BrowserFrameType& browser_frame) {
+                             browser_frame->OnGetImageForContextNodeNull();
+                           },
+                           std::move(params)));
     return;
   }
-  
+
   blink::WebElement web_element = context_node.To<blink::WebElement>();
   original_size = web_element.GetImageSize();
 
@@ -963,8 +984,7 @@ void CefFrameImpl::UpdateLocale(const std::string& locale) {
     return;
   }
   std::string result =
-      ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
-          locale);
+      ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(locale);
   if (result.empty()) {
     LOG(ERROR) << "CefFrameImpl update locale failed";
   }
@@ -977,12 +997,82 @@ void CefFrameImpl::GetImagesWithResponse(
       base::BindOnce(
           [](cef::mojom::RenderFrame::GetImagesWithResponseCallback callback,
              blink::WebLocalFrame* frame) {
-            blink::WebElementCollection collection = frame->GetDocument().GetElementsByHTMLTagName("img");
+            blink::WebElementCollection collection =
+                frame->GetDocument().GetElementsByHTMLTagName("img");
             DCHECK(!collection.IsNull());
             bool response = !(collection.FirstItem()).IsNull();
             std::move(callback).Run(response);
           },
           std::move(callback)));
+}
+
+void CefFrameImpl::ScrollPageUpDown(bool is_up,
+                                    bool is_half,
+                                    float view_height) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scorll page up down get webview failed";
+    return;
+  }
+  auto scroll_offset = webview->GetScrollOffset();
+  float dy;
+  if (is_up) {
+    dy = is_half ? -view_height : -scroll_offset.y();
+  } else {
+    if (!is_half) {
+      float bottom_y = webview->GetScrollBottom();
+      if (bottom_y <= 0) {
+        LOG(ERROR) << "get scroll bottom offset failed.";
+        return;
+      }
+      dy = bottom_y - scroll_offset.y();
+    } else {
+      dy = view_height;
+    }
+  }
+  webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
+                        base::Milliseconds(computeDurationInMilliSec(0, dy)));
+}
+
+void CefFrameImpl::ScrollTo(float x, float y) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scrollto get webview failed";
+    return;
+  }
+  webview->SetScrollOffset(gfx::PointF(x, y));
+}
+
+void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scrollby get webview failed";
+    return;
+  }
+  auto scroll_offset = webview->GetScrollOffset();
+  webview->SetScrollOffset(gfx::PointF(delta_x + scroll_offset.x(),
+                           delta_y + scroll_offset.y()));
+}
+
+void CefFrameImpl::SlideScroll(float vx, float vy) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scrollby get webview failed";
+    return;
+  }
+  float dx = vx == 0 ? 0 : computeSlidePosition(vx);
+  float dy = vy == 0 ? 0 : computeSlidePosition(vy);
+  auto scroll_offset = webview->GetScrollOffset();
+  webview->SmoothScroll(dx + scroll_offset.x(), dy + scroll_offset.y(),
+                        base::Milliseconds(DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC));
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

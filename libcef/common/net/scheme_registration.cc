@@ -69,6 +69,7 @@ bool IsInternalHandledScheme(const std::string& scheme) {
       url::kJavaScriptScheme,
       url::kWsScheme,
       url::kWssScheme,
+      url::kResourcesScheme,
   };
 
   for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); ++i) {

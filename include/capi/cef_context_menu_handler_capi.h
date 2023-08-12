@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=07baaa2ecbddce012a9ef020766e4cb40ff8b9b0$
+// $hash=351828c559518eeefb3b74bb24558ae51a49f2a5$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -373,6 +373,20 @@ typedef struct _cef_context_menu_params_t {
   // items).
   ///
   int(CEF_CALLBACK* is_custom_menu)(struct _cef_context_menu_params_t* self);
+
+  ///
+  // Returns the input field type of context node that the context menu was
+  // invoked on.
+  ///
+  cef_context_menu_input_field_type_t(CEF_CALLBACK* get_input_field_type)(
+      struct _cef_context_menu_params_t* self);
+
+  ///
+  // Returns the source type of context node that the context menu was invoked
+  // on.
+  ///
+  cef_context_menu_source_type_t(CEF_CALLBACK* get_source_type)(
+      struct _cef_context_menu_params_t* self);
 } cef_context_menu_params_t;
 
 #ifdef __cplusplus

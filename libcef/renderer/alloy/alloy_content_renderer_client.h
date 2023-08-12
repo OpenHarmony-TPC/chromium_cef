@@ -25,6 +25,10 @@
 #include "mojo/public/cpp/bindings/generic_pending_receiver.h"
 #include "services/service_manager/public/cpp/local_interface_provider.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "pdf/buildflags.h"
+#endif
+
 namespace extensions {
 class CefExtensionsRendererClient;
 class Dispatcher;
@@ -152,7 +156,9 @@ class AlloyContentRendererClient
   std::unique_ptr<SpellCheck> spellcheck_;
   std::unique_ptr<visitedlink::VisitedLinkReader> visited_link_slave_;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   std::unique_ptr<ChromePDFPrintClient> pdf_print_client_;
+#endif
 
   std::unique_ptr<extensions::ExtensionsClient> extensions_client_;
   std::unique_ptr<extensions::CefExtensionsRendererClient>

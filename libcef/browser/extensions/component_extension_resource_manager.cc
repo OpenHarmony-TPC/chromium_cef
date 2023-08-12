@@ -8,23 +8,33 @@
 #include "base/logging.h"
 #include "base/path_service.h"
 #include "base/values.h"
-#include "chrome/browser/pdf/pdf_extension_util.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/grit/component_extension_resources_map.h"
-#include "chrome/grit/pdf_resources_map.h"
 #include "extensions/common/constants.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "pdf/buildflags.h"
+#if BUILDFLAG(ENABLE_PDF)
+#include "chrome/browser/pdf/pdf_extension_util.h"
+#include "chrome/grit/pdf_resources_map.h"
+#endif
+#endif
 
 namespace extensions {
 
 CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
   AddComponentResourceEntries(kComponentExtensionResources,
                               kComponentExtensionResourcesSize);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   AddComponentResourceEntries(kPdfResources, kPdfResourcesSize);
+#endif
 
   base::Value dict(base::Value::Type::DICTIONARY);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   pdf_extension_util::AddStrings(
       pdf_extension_util::PdfViewerContext::kPdfViewer, &dict);
   pdf_extension_util::AddAdditionalData(/*enable_annotations=*/true, &dict);
+#endif
 
   ui::TemplateReplacements pdf_viewer_replacements;
   ui::TemplateReplacementsFromDictionaryValue(

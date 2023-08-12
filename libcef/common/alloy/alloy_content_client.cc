@@ -32,7 +32,6 @@
 #include "content/public/common/cdm_info.h"
 #include "content/public/common/content_constants.h"
 #include "content/public/common/content_switches.h"
-#include "content/public/common/pepper_plugin_info.h"
 #include "ppapi/shared_impl/ppapi_permissions.h"
 #include "third_party/widevine/cdm/buildflags.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -42,8 +41,13 @@
 #include "chrome/common/media/cdm_host_file_path.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "content/public/common/pepper_plugin_info.h"
+#endif
+
 namespace {
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
 // The following plugin-related methods are from
 // chrome/common/chrome_content_client.cc
 
@@ -80,16 +84,19 @@ void ComputeBuiltInPlugins(std::vector<content::PepperPluginInfo>* plugins) {
     plugins->push_back(pdf_info);
   }
 }
+#endif
 
 }  // namespace
 
 AlloyContentClient::AlloyContentClient() = default;
 AlloyContentClient::~AlloyContentClient() = default;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
 void AlloyContentClient::AddPepperPlugins(
     std::vector<content::PepperPluginInfo>* plugins) {
   ComputeBuiltInPlugins(plugins);
 }
+#endif
 
 void AlloyContentClient::AddContentDecryptionModules(
     std::vector<content::CdmInfo>* cdms,
@@ -158,6 +165,7 @@ gfx::Image& AlloyContentClient::GetNativeImageNamed(int resource_id) {
   return value;
 }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
 // static
 void AlloyContentClient::SetPDFEntryFunctions(
     content::PepperPluginInfo::GetInterfaceFunc get_interface,
@@ -167,3 +175,4 @@ void AlloyContentClient::SetPDFEntryFunctions(
   g_pdf_initialize_module = initialize_module;
   g_pdf_shutdown_module = shutdown_module;
 }
+#endif

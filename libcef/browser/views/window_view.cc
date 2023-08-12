@@ -4,7 +4,6 @@
 
 #include "libcef/browser/views/window_view.h"
 
-#include "libcef/browser/chrome/views/chrome_browser_frame.h"
 #include "libcef/browser/image_impl.h"
 #include "libcef/browser/views/window_impl.h"
 #include "libcef/features/runtime.h"
@@ -28,6 +27,10 @@
 #if defined(USE_AURA)
 #include "ui/aura/window.h"
 #endif
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/chrome/views/chrome_browser_frame.h"
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
 namespace {
 
@@ -259,8 +262,12 @@ void CefWindowView::CreateWidget() {
 
   // |widget| is owned by the NativeWidget and will be destroyed in response to
   // a native destruction message.
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   views::Widget* widget = cef::IsChromeRuntimeEnabled() ? new ChromeBrowserFrame
                                                         : new views::Widget;
+#else
+  views::Widget* widget = new views::Widget;
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   views::Widget::InitParams params;
   params.delegate = this;

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=abdbb4a150fc310df31ec08d1618e1e557dfe3e2$
+// $hash=999efab317d9de20cf31c967a7facaed253ced56$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -74,6 +74,30 @@ typedef struct _cef_file_dialog_callback_t {
 } cef_file_dialog_callback_t;
 
 ///
+// Callback structure for asynchronous continuation of <select> selection.
+///
+typedef struct _cef_select_popup_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Continue the <select> selection. |indices| should be the 0-based array
+  // index of the value selected from the <select> array passed to
+  // cef_dialog_handler_t::ShowSelectPopup.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_select_popup_callback_t* self,
+                           size_t indicesCount,
+                           int const* indices);
+
+  ///
+  // Cancel <select> selection.
+  ///
+  void(CEF_CALLBACK* cancel)(struct _cef_select_popup_callback_t* self);
+} cef_select_popup_callback_t;
+
+///
 // Implement this structure to handle dialog events. The functions of this
 // structure will be called on the browser process UI thread.
 ///
@@ -108,6 +132,22 @@ typedef struct _cef_dialog_handler_t {
       int selected_accept_filter,
       int capture,
       struct _cef_file_dialog_callback_t* callback);
+
+  ///
+  // Show <select> popup menu.
+  ///
+  void(CEF_CALLBACK* on_select_popup_menu)(
+      struct _cef_dialog_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_rect_t* bounds,
+      int item_height,
+      double item_font_size,
+      int selected_item,
+      size_t menu_itemsCount,
+      cef_select_popup_item_t const* menu_items,
+      int right_aligned,
+      int allow_multiple_selection,
+      struct _cef_select_popup_callback_t* callback);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

@@ -664,6 +664,7 @@ typedef struct _cef_browser_settings_t {
   // Force the background color to be dark
   ///
   cef_state_t force_dark_mode_enabled;
+  cef_state_t dark_prefer_color_scheme_enabled;
   cef_state_t loads_images_automatically;
   bool javascript_can_open_windows_automatically;
   int text_size_percent;
@@ -677,6 +678,10 @@ typedef struct _cef_browser_settings_t {
   bool viewport_meta_enabled;
   bool user_gesture_required;
   bool pinch_smooth_mode;
+#if BUILDFLAG(IS_OHOS)
+  cef_state_t hide_vertical_scrollbars;
+  cef_state_t hide_horizontal_scrollbars;
+#endif
   /* ohos webview end */
 } cef_browser_settings_t;
 
@@ -3308,6 +3313,197 @@ typedef struct _cef_touch_handle_state_t {
   float edge_height;
 } cef_touch_handle_state_t;
 
+///
+// Supported context menu input field types. These constants match their equivalents
+// in Chromium's ContextMenuDataInputFieldType and should not be renumbered.
+///
+typedef enum {
+  ///
+  // Not an input field.
+  ///
+  CM_INPUTFIELDTYPE_NONE,
+
+  ///
+  // type = text, search, email, url
+  ///
+  CM_INPUTFIELDTYPE_PLAINTEXT,
+
+  ///
+  // type = password
+  ///
+  CM_INPUTFIELDTYPE_PASSWORD,
+
+  ///
+  // type = number
+  ///
+  CM_INPUTFIELDTYPE_NUMBER,
+
+  ///
+  // type = tel
+  ///
+  CM_INPUTFIELDTYPE_TELEPHONE,
+
+  ///
+  // type = <etc.>
+  ///
+  CM_INPUTFIELDTYPE_OTHER,
+} cef_context_menu_input_field_type_t;
+
+///
+// Supported context menu source types. These constants match their equivalents
+// in Chromium's ui::MenuSourceType and should not be renumbered.
+///
+typedef enum {
+  ///
+  // type = none
+  ///
+  CM_SOURCETYPE_NONE,
+
+  ///
+  // type = mouse
+  ///
+  CM_SOURCETYPE_MOUSE,
+
+  ///
+  // type = keyboard
+  ///
+  CM_SOURCETYPE_KEYBOARD,
+
+  ///
+  // type = touch
+  ///
+  CM_SOURCETYPE_TOUCH,
+
+  ///
+  // type = touch edit menu
+  ///
+  CM_SOURCETYPE_TOUCH_EDIT_MENU,
+
+  ///
+  // type = long press
+  ///
+  CM_SOURCETYPE_LONG_PRESS,
+
+  ///
+  // type = long tap
+  ///
+  CM_SOURCETYPE_LONG_TAP,
+
+  ///
+  // type = number
+  ///
+  CM_SOURCETYPE_TOUCH_HANDLE,
+
+  ///
+  // type = stylus
+  ///
+  CM_SOURCETYPE_STYLUS,
+
+  ///
+  // type = adjust selection
+  ///
+  CM_SOURCETYPE_ADJUST_SELECTION,
+
+  ///
+  // type = selection reset
+  ///
+  CM_SOURCETYPE_SELECTION_RESET,
+} cef_context_menu_source_type_t;
+
+///
+// Supported text direction. See text_direction.mojom.
+///
+typedef enum {
+  ///
+  // type = unknown direction
+  ///
+  UNKNOWN,
+
+  ///
+  // type = right to left
+  ///
+  RTL,
+
+  ///
+  // type = left to right
+  ///
+  LTR,
+} cef_text_direction_t;
+
+///
+// Supported <select> item type. See popup_menu.mojom.
+///
+typedef enum {
+  ///
+  // type = kOption
+  ///
+  OPTION,
+
+  ///
+  // type = kCheckableOption
+  ///
+  CHECKABLE_OPTION,
+
+  ///
+  // type = kGruop
+  ///
+  GROUP,
+
+  ///
+  // type = kSeparator
+  ///
+  SEPARATOR,
+
+  ///
+  // type = kSubMenu
+  ///
+  SubMenu,
+} cef_select_popup_item_type_t;
+
+/// 
+// Supported <select> item.
+///
+typedef struct _cef_select_popup_item_t {
+  ///
+  // label name of item.
+  ///
+  cef_string_t label;
+
+  ///
+  // tool tip of item.
+  ///
+  cef_string_t tool_tip;
+
+  ///
+  // type of item.
+  ///
+  cef_select_popup_item_type_t type;
+
+  ///
+  // action of item.
+  ///
+  uint32_t action;
+
+  ///
+  // text direction of item.
+  ///
+  cef_text_direction_t text_direction;
+
+  ///
+  // whether item is enabled.
+  ///
+  bool enabled;
+
+  ///
+  // whether item has text direction overridel
+  ///
+  bool has_text_direction_override;
+
+  ///
+  // whether item is checked.
+  ///
+  bool checked;
+} cef_select_popup_item_t;
 #ifdef __cplusplus
 }
 #endif

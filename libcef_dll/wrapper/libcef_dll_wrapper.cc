@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=180ca5b8f789625a725e004aa6768fd5046a3753$
+// $hash=45e769535f300e227783606b108546a49d9aa953$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -25,7 +25,6 @@
 #include "include/capi/cef_task_capi.h"
 #include "include/capi/cef_trace_capi.h"
 #include "include/capi/cef_v8_capi.h"
-#include "include/capi/cef_web_plugin_capi.h"
 #include "include/capi/test/cef_test_helpers_capi.h"
 #include "include/cef_api_hash.h"
 #include "include/cef_app.h"
@@ -41,7 +40,6 @@
 #include "include/cef_task.h"
 #include "include/cef_trace.h"
 #include "include/cef_v8.h"
-#include "include/cef_web_plugin.h"
 #include "include/test/cef_test_helpers.h"
 #include "libcef_dll/cpptoc/app_cpptoc.h"
 #include "libcef_dll/cpptoc/completion_callback_cpptoc.h"
@@ -49,8 +47,6 @@
 #include "libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
 #include "libcef_dll/cpptoc/v8handler_cpptoc.h"
-#include "libcef_dll/cpptoc/web_plugin_info_visitor_cpptoc.h"
-#include "libcef_dll/cpptoc/web_plugin_unstable_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/binary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/command_line_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -168,7 +164,7 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCrashReportingEnabled() {
 
 NO_SANITIZE("cfi-icall")
 CEF_GLOBAL
-void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
+    void CefSetCrashKeyValue(const CefString& key, const CefString& value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: key; type: string_byref_const
@@ -323,10 +319,10 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefIsRTL() {
 
 NO_SANITIZE("cfi-icall")
 CEF_GLOBAL
-bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
-                                     const CefString& target_protocol,
-                                     const CefString& target_domain,
-                                     bool allow_target_subdomains) {
+    bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
+                                         const CefString& target_protocol,
+                                         const CefString& target_domain,
+                                         bool allow_target_subdomains) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: source_origin; type: string_byref_const
@@ -350,10 +346,10 @@ bool CefAddCrossOriginWhitelistEntry(const CefString& source_origin,
 
 NO_SANITIZE("cfi-icall")
 CEF_GLOBAL
-bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
-                                        const CefString& target_protocol,
-                                        const CefString& target_domain,
-                                        bool allow_target_subdomains) {
+    bool CefRemoveCrossOriginWhitelistEntry(const CefString& source_origin,
+                                            const CefString& target_protocol,
+                                            const CefString& target_domain,
+                                            bool allow_target_subdomains) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: source_origin; type: string_byref_const
@@ -414,7 +410,7 @@ CEF_GLOBAL bool CefCreateURL(const CefURLParts& parts, CefString& url) {
 
 NO_SANITIZE("cfi-icall")
 CEF_GLOBAL CefString
-CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
+    CefFormatUrlForSecurityDisplay(const CefString& origin_url) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: origin_url; type: string_byref_const
@@ -452,8 +448,8 @@ CEF_GLOBAL CefString CefGetMimeType(const CefString& extension) {
 
 NO_SANITIZE("cfi-icall")
 CEF_GLOBAL
-void CefGetExtensionsForMimeType(const CefString& mime_type,
-                                 std::vector<CefString>& extensions) {
+    void CefGetExtensionsForMimeType(const CefString& mime_type,
+                                     std::vector<CefString>& extensions) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: mime_type; type: string_byref_const
@@ -607,8 +603,8 @@ CEF_GLOBAL CefRefPtr<CefValue> CefParseJSONAndReturnError(
 }
 
 NO_SANITIZE("cfi-icall")
-CEF_GLOBAL CefString CefWriteJSON(CefRefPtr<CefValue> node,
-                                  cef_json_writer_options_t options) {
+CEF_GLOBAL CefString
+    CefWriteJSON(CefRefPtr<CefValue> node, cef_json_writer_options_t options) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: node; type: refptr_same
@@ -804,73 +800,6 @@ CEF_GLOBAL bool CefRegisterExtension(const CefString& extension_name,
 
   // Return type: bool
   return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL
-void CefVisitWebPluginInfo(CefRefPtr<CefWebPluginInfoVisitor> visitor) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: visitor; type: refptr_diff
-  DCHECK(visitor.get());
-  if (!visitor.get())
-    return;
-
-  // Execute
-  cef_visit_web_plugin_info(CefWebPluginInfoVisitorCppToC::Wrap(visitor));
-}
-
-NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefRefreshWebPlugins() {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_refresh_web_plugins();
-}
-
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefUnregisterInternalWebPlugin(const CefString& path) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: path; type: string_byref_const
-  DCHECK(!path.empty());
-  if (path.empty())
-    return;
-
-  // Execute
-  cef_unregister_internal_web_plugin(path.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefRegisterWebPluginCrash(const CefString& path) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: path; type: string_byref_const
-  DCHECK(!path.empty());
-  if (path.empty())
-    return;
-
-  // Execute
-  cef_register_web_plugin_crash(path.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-CEF_GLOBAL void CefIsWebPluginUnstable(
-    const CefString& path,
-    CefRefPtr<CefWebPluginUnstableCallback> callback) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: path; type: string_byref_const
-  DCHECK(!path.empty());
-  if (path.empty())
-    return;
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get())
-    return;
-
-  // Execute
-  cef_is_web_plugin_unstable(
-      path.GetStruct(), CefWebPluginUnstableCallbackCppToC::Wrap(callback));
 }
 
 NO_SANITIZE("cfi-icall")

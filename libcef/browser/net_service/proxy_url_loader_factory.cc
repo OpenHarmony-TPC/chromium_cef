@@ -500,13 +500,15 @@ void InterceptedRequest::Restart() {
     }
   }
 
-  if (IsURLBlocked(request_.url)) {
+  struct NetHelperSetting setting;
+  factory_->request_handler_->GetSettingOfNetHelper(setting);
+  if (IsURLBlocked(request_.url, setting)) {
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
     LOG(INFO) << "File url access denied! url=" << request_.url.spec();
     return;
   }
 
-  request_.load_flags = UpdateLoadFlags(request_.load_flags);
+  request_.load_flags = UpdateLoadFlags(request_.load_flags, setting);
 
   const GURL original_url = request_.url;
 
@@ -612,11 +614,7 @@ void InterceptedRequest::OnReceiveResponse(
     request->SetURL(CefString(request_.url.spec()));
     request->SetMethod(CefString(request_.method));
     request->Set(request_.headers);
-    content::GetUIThreadTaskRunner({})->PostTask(
-        FROM_HERE, base::BindOnce(&InterceptedRequest::OnHttpErrorForUIThread,
-                                  base::Unretained(this), id_, request,
-                                  request_.is_main_frame,
-                                  request_.has_user_gesture, error_reponse));
+    OnHttpErrorForUIThread(id_, request, request_.is_main_frame, request_.has_user_gesture, error_reponse);
   }
 
   if (current_request_uses_header_client_) {

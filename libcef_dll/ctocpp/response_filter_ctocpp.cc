@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ddb4710d1e5bc73df68f132d56661b0d22520ad9$
+// $hash=dc1f2774aa0a5d586afb09a77cd4fdf5022af04a$
 //
 
 #include "libcef_dll/ctocpp/response_filter_ctocpp.h"
@@ -34,13 +34,13 @@ NO_SANITIZE("cfi-icall") bool CefResponseFilterCToCpp::InitFilter() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefResponseFilter::FilterStatus CefResponseFilterCToCpp::Filter(
-    void* data_in,
-    size_t data_in_size,
-    size_t& data_in_read,
-    void* data_out,
-    size_t data_out_size,
-    size_t& data_out_written) {
+CefResponseFilter::FilterStatus
+    CefResponseFilterCToCpp::Filter(void* data_in,
+                                    size_t data_in_size,
+                                    size_t& data_in_read,
+                                    void* data_out,
+                                    size_t data_out_size,
+                                    size_t& data_out_written) {
   shutdown_checker::AssertNotShutdown();
 
   cef_response_filter_t* _struct = GetStruct();

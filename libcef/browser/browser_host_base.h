@@ -108,10 +108,10 @@ class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
   // WebMessagePort::MessageReceiver implementation:
   bool OnMessage(blink::WebMessagePort::Message message) override;
 
-  void SetOnMessageCallback(CefRefPtr<CefJavaScriptResultCallback> callback);
+  void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback);
 
  private:
-  CefRefPtr<CefJavaScriptResultCallback> callback_;
+  CefRefPtr<CefWebMessageReceiver> callback_;
 };
 
 struct CefHitData {
@@ -239,6 +239,12 @@ class CefBrowserHostBase : public CefBrowserHost,
   CefString GetOriginalUrl() override;
   void PutNetworkAvailable(bool available) override;
   void RemoveCache(bool include_disk_files) override;
+  CefRefPtr<CefBinaryValue> GetWebState() override;
+  bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
+  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+  void ScrollTo(float x, float y) override;
+  void ScrollBy(float delta_x, float delta_y) override;
+  void SlideScroll(float vx, float vy) override;
   /* ohos webview end */
 #endif
 
@@ -276,10 +282,10 @@ class CefBrowserHostBase : public CefBrowserHost,
                       std::vector<CefString>& ports,
                       CefString& targetUri) override;
   void ClosePort(CefString& port_handle) override;
-  void PostPortMessage(CefString& port_handle, CefString& data) override;
+  void PostPortMessage(CefString& port_handle, CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
       CefString& port_handle,
-      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+      CefRefPtr<CefWebMessageReceiver> callback) override;
   void DestroyAllWebMessagePorts() override;
 #endif
   CefString Title() override;
@@ -408,6 +414,18 @@ class CefBrowserHostBase : public CefBrowserHost,
 
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
+
+#if BUILDFLAG(IS_OHOS)
+  void SetFileAccess(bool flag) override;
+  void SetBlockNetwork(bool flag) override;
+  void SetCacheMode(int flag) override;
+  bool GetFileAccess();
+  bool GetBlockNetwork();
+  int GetCacheMode();
+  bool file_access_ = false;
+  bool network_blocked_ = false;
+  int cache_mode_ = 0;
+#endif
 
 #if BUILDFLAG(IS_OHOS)
   bool ShouldShowLoadingUI() override;

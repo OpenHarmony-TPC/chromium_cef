@@ -140,6 +140,9 @@ class InterceptedRequestHandler {
                            bool is_main_frame,
                            bool has_user_gesture,
                            CefRefPtr<CefResponse> error_response) {}
+
+  // To get setting of net helper.
+  virtual void GetSettingOfNetHelper(struct NetHelperSetting& setting) {}
 };
 
 // URL Loader Factory that supports request/response interception, processing

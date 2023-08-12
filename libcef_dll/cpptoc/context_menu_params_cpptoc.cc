@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e2f6dee4f74c0eb0979d7a557b007fb8e495bcbb$
+// $hash=b086ddccc396ae8b81f8847a2942325ea7b68faf$
 //
 
 #include "libcef_dll/cpptoc/context_menu_params_cpptoc.h"
@@ -383,6 +383,43 @@ context_menu_params_is_custom_menu(struct _cef_context_menu_params_t* self) {
   return _retval;
 }
 
+cef_context_menu_input_field_type_t CEF_CALLBACK
+context_menu_params_get_input_field_type(
+    struct _cef_context_menu_params_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return CM_INPUTFIELDTYPE_NONE;
+
+  // Execute
+  cef_context_menu_input_field_type_t _retval =
+      CefContextMenuParamsCppToC::Get(self)->GetInputFieldType();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_context_menu_source_type_t CEF_CALLBACK
+context_menu_params_get_source_type(struct _cef_context_menu_params_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return CM_SOURCETYPE_NONE;
+
+  // Execute
+  cef_context_menu_source_type_t _retval =
+      CefContextMenuParamsCppToC::Get(self)->GetSourceType();
+
+  // Return type: simple
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -412,6 +449,8 @@ CefContextMenuParamsCppToC::CefContextMenuParamsCppToC() {
       context_menu_params_is_spell_check_enabled;
   GetStruct()->get_edit_state_flags = context_menu_params_get_edit_state_flags;
   GetStruct()->is_custom_menu = context_menu_params_is_custom_menu;
+  GetStruct()->get_input_field_type = context_menu_params_get_input_field_type;
+  GetStruct()->get_source_type = context_menu_params_get_source_type;
 }
 
 // DESTRUCTOR - Do not edit by hand.

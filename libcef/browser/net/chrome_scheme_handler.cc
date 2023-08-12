@@ -166,9 +166,11 @@ bool IsUnlistedHost(const std::string& host) {
 
 // Returns true if a host is WebUI and should be allowed to load.
 bool IsAllowedWebUIHost(const std::string& host) {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   // Chrome runtime allows all WebUI hosts.
   if (cef::IsChromeRuntimeEnabled())
     return true;
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   // Explicitly whitelisted WebUI hosts.
   for (size_t i = 0;
@@ -293,6 +295,7 @@ class TemplateParser {
 bool OnExtensionsSupportUI(std::string* mime_type, std::string* output) {
   *mime_type = "text/html";
 
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     // Redirect to the Chrome documentation.
     *output =
@@ -302,6 +305,7 @@ bool OnExtensionsSupportUI(std::string* mime_type, std::string* output) {
         "</head></html>\n";
     return true;
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   static const char kDevURL[] = "https://developer.chrome.com/extensions/";
 

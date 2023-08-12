@@ -225,6 +225,9 @@ class CefRenderWidgetHostViewOSR
       RenderWidgetHostViewBase* updated_view,
       bool did_update_state) override;
 
+  void FocusedNodeChanged(bool is_editable_node,
+      const gfx::Rect& node_bounds_in_screen) override;
+
   // ui::GestureProviderClient implementation.
   void ProcessAckedTouchEvent(
       const content::TouchEventWithLatencyInfo& touch,

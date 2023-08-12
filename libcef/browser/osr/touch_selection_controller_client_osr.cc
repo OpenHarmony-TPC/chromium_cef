@@ -21,6 +21,7 @@
 #include "ui/base/pointer/touch_editing_controller.h"
 #include "ui/gfx/geometry/point_conversions.h"
 #include "ui/gfx/geometry/size_conversions.h"
+#include "base/logging.h"
 
 namespace {
 
@@ -125,7 +126,22 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
   CloseQuickMenu();
-  rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
+  auto controller = rwhv_->selection_controller();
+  if (controller) {
+    if (!controller->GetInsertHandle() || !controller->GetInsertHandle()->GetEnabled()) {
+      rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
+    } else if (controller->GetInsertHandle()->GetEnabled()) {
+      rwhv_->selection_controller()->SetTemporarilyHidden(true);
+      NotifyTouchSelectionChanged(true);
+    }
+  }
+}
+
+void CefTouchSelectionControllerClientOSR::SetTemporarilyHidden(bool hidden) {
+  if (rwhv_ && rwhv_->selection_controller()) {
+    rwhv_->selection_controller()->SetTemporarilyHidden(hidden);
+    NotifyTouchSelectionChanged(false);
+  }
 }
 
 void CefTouchSelectionControllerClientOSR::OnWindowMoved() {
@@ -290,7 +306,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
         new CefRunQuickMenuCallbackImpl(base::BindOnce(
             &CefTouchSelectionControllerClientOSR::ExecuteCommand,
             weak_ptr_factory_.GetWeakPtr())));
-
     quick_menu_running_ = true;
     if (!handler->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
@@ -307,6 +322,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
+      browser->SetTouchInsertHandleMenuShow(false);
     }
   }
 }
@@ -404,6 +420,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     ui::SelectionEventType event) {
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
+  auto browser = rwhv_->browser_impl();
   switch (event) {
     case ui::SELECTION_HANDLES_SHOWN:
       quick_menu_requested_ = true;
@@ -416,7 +433,9 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
             rwhv_->browser_impl()->GetTouchInsertHandleMenuShow();
       }
       NotifyTouchSelectionChanged(true);
-      UpdateQuickMenu();
+      if (quick_menu_requested_) {
+        ShowQuickMenu();
+      }
       break;
     case ui::SELECTION_HANDLES_CLEARED:
     case ui::INSERTION_HANDLE_CLEARED:
@@ -433,11 +452,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       handle_drag_in_progress_ = false;
       break;
     case ui::SELECTION_HANDLES_MOVED:
+    case ui::INSERTION_HANDLE_MOVED:
       if (!handle_drag_in_progress_) {
         UpdateQuickMenu();
       }
-      [[fallthrough]];
-    case ui::INSERTION_HANDLE_MOVED:
       NotifyTouchSelectionChanged(true);
       break;
     case ui::INSERTION_HANDLE_TAPPED:
@@ -449,9 +467,6 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
         NotifyTouchSelectionChanged(true);
       }
       break;
-  }
-  if (rwhv_ && rwhv_->browser_impl()) {
-    rwhv_->browser_impl()->SetTouchInsertHandleMenuShow(false);
   }
 }
 

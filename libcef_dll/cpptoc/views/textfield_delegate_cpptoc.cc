@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0009ced13fa9f1e26064455df0c9f5043d7618cf$
+// $hash=e9c21f1320ea2c7c750afbe1901f273f71df8213$
 //
 
 #include "libcef_dll/cpptoc/views/textfield_delegate_cpptoc.h"

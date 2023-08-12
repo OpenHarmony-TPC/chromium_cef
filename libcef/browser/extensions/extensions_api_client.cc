@@ -11,15 +11,28 @@
 #include "libcef/browser/extensions/api/storage/sync_value_store_cache.h"
 #include "libcef/browser/extensions/extension_web_contents_observer.h"
 #include "libcef/browser/extensions/mime_handler_view_guest_delegate.h"
-#include "libcef/browser/printing/print_view_manager.h"
 
 #include "base/memory/ptr_util.h"
-#include "chrome/browser/ui/pdf/chrome_pdf_web_contents_helper_client.h"
 #include "chrome/browser/ui/prefs/prefs_tab_helper.h"
-#include "components/pdf/browser/pdf_web_contents_helper.h"
 #include "components/zoom/zoom_controller.h"
 #include "extensions/browser/guest_view/extensions_guest_view_manager_delegate.h"
 #include "printing/mojom/print.mojom.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "libcef/browser/printing/print_view_manager.h"
+#endif
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "pdf/buildflags.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
+#include "chrome/browser/ui/pdf/chrome_pdf_web_contents_helper_client.h"
+#include "components/pdf/browser/pdf_web_contents_helper.h"
+#endif
 
 namespace extensions {
 
@@ -51,12 +64,16 @@ CefExtensionsAPIClient::CreateMimeHandlerViewGuestDelegate(
 void CefExtensionsAPIClient::AttachWebContentsHelpers(
     content::WebContents* web_contents) const {
   PrefsTabHelper::CreateForWebContents(web_contents);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   printing::CefPrintViewManager::CreateForWebContents(web_contents);
+#endif
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   // Used by the PDF extension.
   pdf::PDFWebContentsHelper::CreateForWebContentsWithClient(
       web_contents, std::unique_ptr<pdf::PDFWebContentsHelperClient>(
                         new ChromePDFWebContentsHelperClient()));
+#endif
 
   // Used by the tabs extension API.
   zoom::ZoomController::CreateForWebContents(web_contents);

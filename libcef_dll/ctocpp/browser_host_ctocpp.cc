@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da4be0653a8e67000f1c6e34219ee3f7b288ca58$
+// $hash=4912cb91f0c5d4e550ab1441c8848477bc787a11$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -22,6 +22,8 @@
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/store_web_archive_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
+#include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"
+#include "libcef_dll/ctocpp/binary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
@@ -29,6 +31,7 @@
 #include "libcef_dll/ctocpp/navigation_entry_ctocpp.h"
 #include "libcef_dll/ctocpp/registration_ctocpp.h"
 #include "libcef_dll/ctocpp/request_context_ctocpp.h"
+#include "libcef_dll/ctocpp/value_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -1122,7 +1125,7 @@ void CefBrowserHostCToCpp::DestroyAllWebMessagePorts() {
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
-                                           CefString& data) {
+                                           CefRefPtr<CefValue> message) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -1131,15 +1134,20 @@ void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
+  // Verify param: message; type: refptr_same
+  DCHECK(message.get());
+  if (!message.get())
+    return;
+
   // Execute
   _struct->post_port_message(_struct, port_handle.GetWritableStruct(),
-                             data.GetWritableStruct());
+                             CefValueCToCpp::Unwrap(message));
 }
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetPortMessageCallback(
     CefString& port_handle,
-    CefRefPtr<CefJavaScriptResultCallback> callback) {
+    CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -1156,7 +1164,7 @@ void CefBrowserHostCToCpp::SetPortMessageCallback(
   // Execute
   _struct->set_port_message_callback(
       _struct, port_handle.GetWritableStruct(),
-      CefJavaScriptResultCallbackCppToC::Wrap(callback));
+      CefWebMessageReceiverCppToC::Wrap(callback));
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1756,6 +1764,143 @@ void CefBrowserHostCToCpp::RemoveCache(bool include_disk_files) {
 
   // Execute
   _struct->remove_cache(_struct, include_disk_files);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollPageUpDown(bool is_up,
+                                            bool is_half,
+                                            float view_height) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_page_up_down))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_page_up_down(_struct, is_up, is_half, view_height);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefBinaryValue> CefBrowserHostCToCpp::GetWebState() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_web_state))
+    return nullptr;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_binary_value_t* _retval = _struct->get_web_state(_struct);
+
+  // Return type: refptr_same
+  return CefBinaryValueCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::RestoreWebState(
+    const CefRefPtr<CefBinaryValue> state) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, restore_web_state))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: state; type: refptr_same
+  DCHECK(state.get());
+  if (!state.get())
+    return false;
+
+  // Execute
+  int _retval =
+      _struct->restore_web_state(_struct, CefBinaryValueCToCpp::Unwrap(state));
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ScrollTo(float x, float y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_to))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_to(_struct, x, y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollBy(float delta_x, float delta_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_by))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_by(_struct, delta_x, delta_y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SlideScroll(float vx, float vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, slide_scroll))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->slide_scroll(_struct, vx, vy);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFileAccess(bool falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_file_access))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_file_access(_struct, falg);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetBlockNetwork(bool falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_block_network))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_block_network(_struct, falg);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetCacheMode(int falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_cache_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_cache_mode(_struct, falg);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

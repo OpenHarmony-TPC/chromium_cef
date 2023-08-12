@@ -9,7 +9,13 @@
 
 #include "base/compiler_specific.h"
 #include "content/public/common/content_client.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "ppapi/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PLUGINS)
 #include "content/public/common/pepper_plugin_info.h"
+#endif
+#endif
 
 class AlloyContentClient : public content::ContentClient {
  public:
@@ -17,8 +23,10 @@ class AlloyContentClient : public content::ContentClient {
   ~AlloyContentClient() override;
 
   // content::ContentClient overrides.
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   void AddPepperPlugins(
       std::vector<content::PepperPluginInfo>* plugins) override;
+#endif
   void AddContentDecryptionModules(
       std::vector<content::CdmInfo>* cdms,
       std::vector<media::CdmHostFilePath>* cdm_host_file_paths) override;
@@ -32,10 +40,12 @@ class AlloyContentClient : public content::ContentClient {
   base::RefCountedMemory* GetDataResourceBytes(int resource_id) override;
   gfx::Image& GetNativeImageNamed(int resource_id) override;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   static void SetPDFEntryFunctions(
       content::PepperPluginInfo::GetInterfaceFunc get_interface,
       content::PepperPluginInfo::PPP_InitializeModuleFunc initialize_module,
       content::PepperPluginInfo::PPP_ShutdownModuleFunc shutdown_module);
+#endif
 };
 
 #endif  // CEF_LIBCEF_COMMON_ALLOY_ALLOY_CONTENT_CLIENT_H_

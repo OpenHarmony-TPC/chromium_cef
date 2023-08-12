@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e2ce6d109390673bbfa660a9a43b8f7ce2e3adf7$
+// $hash=2efc0918bc483be69599cf2cd08c0f3894b560d0$
 //
 
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
@@ -20,8 +20,8 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_cookie_manager_t *
-cef_cookie_manager_get_global_manager(cef_completion_callback_t *callback) {
+CEF_EXPORT cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
+    cef_completion_callback_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Unverified params: callback
@@ -34,10 +34,10 @@ cef_cookie_manager_get_global_manager(cef_completion_callback_t *callback) {
   return CefCookieManagerCppToC::Wrap(_retval);
 }
 
-CEF_EXPORT int
-cef_cookie_manager_create_cef_cookie(const cef_string_t *url,
-                                     const cef_string_t *value,
-                                     struct _cef_cookie_t *cef_cookie) {
+CEF_EXPORT int cef_cookie_manager_create_cef_cookie(
+    const cef_string_t* url,
+    const cef_string_t* value,
+    struct _cef_cookie_t* cef_cookie) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: url; type: string_byref_const
@@ -75,7 +75,7 @@ namespace {
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
 int CEF_CALLBACK
-cookie_manager_is_accept_cookie_allowed(struct _cef_cookie_manager_t *self) {
+cookie_manager_is_accept_cookie_allowed(struct _cef_cookie_manager_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -89,8 +89,9 @@ cookie_manager_is_accept_cookie_allowed(struct _cef_cookie_manager_t *self) {
   return _retval;
 }
 
-void CEF_CALLBACK cookie_manager_put_accept_cookie_enabled(
-    struct _cef_cookie_manager_t *self, int accept) {
+void CEF_CALLBACK
+cookie_manager_put_accept_cookie_enabled(struct _cef_cookie_manager_t* self,
+                                         int accept) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -103,7 +104,7 @@ void CEF_CALLBACK cookie_manager_put_accept_cookie_enabled(
 }
 
 int CEF_CALLBACK cookie_manager_is_third_party_cookie_allowed(
-    struct _cef_cookie_manager_t *self) {
+    struct _cef_cookie_manager_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -118,7 +119,8 @@ int CEF_CALLBACK cookie_manager_is_third_party_cookie_allowed(
 }
 
 void CEF_CALLBACK cookie_manager_put_accept_third_party_cookie_enabled(
-    struct _cef_cookie_manager_t *self, int accept) {
+    struct _cef_cookie_manager_t* self,
+    int accept) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -131,7 +133,7 @@ void CEF_CALLBACK cookie_manager_put_accept_third_party_cookie_enabled(
 }
 
 int CEF_CALLBACK cookie_manager_is_file_urlscheme_cookies_allowed(
-    struct _cef_cookie_manager_t *self) {
+    struct _cef_cookie_manager_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -147,7 +149,8 @@ int CEF_CALLBACK cookie_manager_is_file_urlscheme_cookies_allowed(
 }
 
 void CEF_CALLBACK cookie_manager_put_accept_file_urlscheme_cookies_enabled(
-    struct _cef_cookie_manager_t *self, int allow) {
+    struct _cef_cookie_manager_t* self,
+    int allow) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -159,8 +162,9 @@ void CEF_CALLBACK cookie_manager_put_accept_file_urlscheme_cookies_enabled(
       allow ? true : false);
 }
 
-int CEF_CALLBACK cookie_manager_visit_all_cookies(
-    struct _cef_cookie_manager_t *self, struct _cef_cookie_visitor_t *visitor) {
+int CEF_CALLBACK
+cookie_manager_visit_all_cookies(struct _cef_cookie_manager_t* self,
+                                 struct _cef_cookie_visitor_t* visitor) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -179,9 +183,11 @@ int CEF_CALLBACK cookie_manager_visit_all_cookies(
   return _retval;
 }
 
-int CEF_CALLBACK cookie_manager_visit_url_cookies(
-    struct _cef_cookie_manager_t *self, const cef_string_t *url,
-    int includeHttpOnly, struct _cef_cookie_visitor_t *visitor) {
+int CEF_CALLBACK
+cookie_manager_visit_url_cookies(struct _cef_cookie_manager_t* self,
+                                 const cef_string_t* url,
+                                 int includeHttpOnly,
+                                 struct _cef_cookie_visitor_t* visitor) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -205,10 +211,11 @@ int CEF_CALLBACK cookie_manager_visit_url_cookies(
   return _retval;
 }
 
-int CEF_CALLBACK cookie_manager_set_cookie(
-    struct _cef_cookie_manager_t *self, const cef_string_t *url,
-    const struct _cef_cookie_t *cookie,
-    struct _cef_set_cookie_callback_t *callback) {
+int CEF_CALLBACK
+cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
+                          const cef_string_t* url,
+                          const struct _cef_cookie_t* cookie,
+                          struct _cef_set_cookie_callback_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -237,10 +244,12 @@ int CEF_CALLBACK cookie_manager_set_cookie(
   return _retval;
 }
 
-int CEF_CALLBACK cookie_manager_delete_cookies(
-    struct _cef_cookie_manager_t *self, const cef_string_t *url,
-    const cef_string_t *cookie_name, int is_session,
-    struct _cef_delete_cookies_callback_t *callback) {
+int CEF_CALLBACK
+cookie_manager_delete_cookies(struct _cef_cookie_manager_t* self,
+                              const cef_string_t* url,
+                              const cef_string_t* cookie_name,
+                              int is_session,
+                              struct _cef_delete_cookies_callback_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -257,8 +266,9 @@ int CEF_CALLBACK cookie_manager_delete_cookies(
   return _retval;
 }
 
-int CEF_CALLBACK cookie_manager_flush_store(
-    struct _cef_cookie_manager_t *self, cef_completion_callback_t *callback) {
+int CEF_CALLBACK
+cookie_manager_flush_store(struct _cef_cookie_manager_t* self,
+                           cef_completion_callback_t* callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -274,7 +284,7 @@ int CEF_CALLBACK cookie_manager_flush_store(
   return _retval;
 }
 
-} // namespace
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -303,16 +313,17 @@ CefCookieManagerCppToC::CefCookieManagerCppToC() {
 CefCookieManagerCppToC::~CefCookieManagerCppToC() {}
 
 template <>
-CefRefPtr<CefCookieManager>
-CefCppToCRefCounted<CefCookieManagerCppToC, CefCookieManager,
-                    cef_cookie_manager_t>::UnwrapDerived(CefWrapperType type,
-                                                         cef_cookie_manager_t
-                                                             *s) {
+CefRefPtr<CefCookieManager> CefCppToCRefCounted<
+    CefCookieManagerCppToC,
+    CefCookieManager,
+    cef_cookie_manager_t>::UnwrapDerived(CefWrapperType type,
+                                         cef_cookie_manager_t* s) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCppToCRefCounted<CefCookieManagerCppToC, CefCookieManager,
+CefWrapperType CefCppToCRefCounted<CefCookieManagerCppToC,
+                                   CefCookieManager,
                                    cef_cookie_manager_t>::kWrapperType =
     WT_COOKIE_MANAGER;

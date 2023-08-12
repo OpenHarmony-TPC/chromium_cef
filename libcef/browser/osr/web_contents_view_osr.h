@@ -65,6 +65,8 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   bool CloseTabAfterEventTrackingIfNeeded() override;
 #endif
 
+  void FullscreenStateChanged(bool is_fullscreen) override;
+
   // RenderViewHostDelegateView methods.
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
@@ -78,6 +80,18 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   virtual void LostFocus(
       content::RenderWidgetHostImpl* render_widget_host) override;
   virtual void TakeFocus(bool reverse) override;
+#if BUILDFLAG(USE_EXTERNAL_POPUP_MENU)
+  void ShowPopupMenu(
+      content::RenderFrameHost* render_frame_host,
+      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+      const gfx::Rect& bounds,
+      int item_height,
+      double item_font_size,
+      int selected_item,
+      std::vector<blink::mojom::MenuItemPtr> menu_items,
+      bool right_aligned,
+      bool allow_multiple_selection) override;
+#endif
 
  private:
   CefRenderWidgetHostViewOSR* GetView() const;

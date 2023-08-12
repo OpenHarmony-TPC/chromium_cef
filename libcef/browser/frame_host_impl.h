@@ -169,7 +169,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
                              response_callback);
   void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
   void RemoveCache(bool include_disk_files);
-
+  void ScrollPageUpDown(bool is_up, bool is_half, float view_height);
+  void ScrollTo(float x, float y);
+  void ScrollBy(float delta_x, float delta_y);
+  void SlideScroll(float vx, float vy);
 #endif  // BUILDFLAG(IS_OHOS)
 
   static const int64_t kMainFrameId;

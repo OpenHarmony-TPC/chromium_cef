@@ -19,9 +19,7 @@
 #include "chrome/browser/component_updater/chrome_component_updater_configurator.h"
 #include "chrome/browser/net/system_network_context_manager.h"
 #include "chrome/browser/policy/chrome_browser_policy_connector.h"
-#include "chrome/browser/printing/background_printing_manager.h"
 #include "chrome/browser/printing/print_job_manager.h"
-#include "chrome/browser/printing/print_preview_dialog_controller.h"
 #include "chrome/browser/ui/prefs/pref_watcher.h"
 #include "components/component_updater/component_updater_service.h"
 #include "components/component_updater/timer_update_scheduler.h"
@@ -94,7 +92,9 @@ void ChromeBrowserProcessAlloy::CleanupOnUIThread() {
   // tasks to run once teardown has started.
   print_job_manager_->Shutdown();
   print_job_manager_.reset(nullptr);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   print_preview_dialog_controller_ = nullptr;
+#endif
 
   profile_manager_.reset();
   event_router_forwarder_ = nullptr;
@@ -112,16 +112,20 @@ void ChromeBrowserProcessAlloy::CleanupOnUIThread() {
     if (pref_watcher)
       pref_watcher->Shutdown();
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
     // Unregister observers for |background_printing_manager_|.
     if (background_printing_manager_) {
       background_printing_manager_->DeletePreviewContentsForBrowserContext(
           profile);
     }
+#endif
   }
 
   local_state_.reset();
   browser_policy_connector_.reset();
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   background_printing_manager_.reset();
+#endif
   field_trial_list_.reset();
   component_updater_.reset();
 
@@ -259,20 +263,28 @@ printing::PrintJobManager* ChromeBrowserProcessAlloy::print_job_manager() {
 
 printing::PrintPreviewDialogController*
 ChromeBrowserProcessAlloy::print_preview_dialog_controller() {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   if (!print_preview_dialog_controller_.get()) {
     print_preview_dialog_controller_ =
         new printing::PrintPreviewDialogController();
   }
   return print_preview_dialog_controller_.get();
+#else
+  return nullptr;
+#endif
 }
 
 printing::BackgroundPrintingManager*
 ChromeBrowserProcessAlloy::background_printing_manager() {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   if (!background_printing_manager_.get()) {
     background_printing_manager_.reset(
         new printing::BackgroundPrintingManager());
   }
   return background_printing_manager_.get();
+#else
+  return nullptr;
+#endif
 }
 
 IntranetRedirectDetector*

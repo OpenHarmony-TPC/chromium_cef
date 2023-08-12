@@ -33,7 +33,6 @@
 #include "libcef/renderer/alloy/url_loader_throttle_provider_impl.h"
 #include "libcef/renderer/browser_impl.h"
 #include "libcef/renderer/extensions/extensions_renderer_client.h"
-#include "libcef/renderer/extensions/print_render_frame_helper_delegate.h"
 #include "libcef/renderer/render_frame_observer.h"
 #include "libcef/renderer/render_manager.h"
 #include "libcef/renderer/thread_util.h"
@@ -53,14 +52,9 @@
 #include "chrome/renderer/chrome_content_renderer_client.h"
 #include "chrome/renderer/extensions/chrome_extensions_renderer_client.h"
 #include "chrome/renderer/loadtimes_extension_bindings.h"
-#include "chrome/renderer/pepper/chrome_pdf_print_client.h"
-#include "chrome/renderer/pepper/pepper_helper.h"
 #include "chrome/renderer/plugins/chrome_plugin_placeholder.h"
 #include "components/content_settings/core/common/content_settings_types.h"
 #include "components/nacl/common/nacl_constants.h"
-#include "components/pdf/common/internal_plugin_helpers.h"
-#include "components/pdf/renderer/internal_plugin_renderer_helpers.h"
-#include "components/pdf/renderer/pdf_find_in_page.h"
 #include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/renderer/spellcheck.h"
 #include "components/spellcheck/renderer/spellcheck_provider.h"
@@ -107,6 +101,21 @@
 #if BUILDFLAG(IS_MAC)
 #include "base/mac/mac_util.h"
 #include "base/strings/sys_string_conversions.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "libcef/renderer/extensions/print_render_frame_helper_delegate.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/renderer/pepper/pepper_helper.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
+#include "chrome/renderer/pepper/chrome_pdf_print_client.h"
+#include "components/pdf/common/internal_plugin_helpers.h"
+#include "components/pdf/renderer/internal_plugin_renderer_helpers.h"
+#include "components/pdf/renderer/pdf_find_in_page.h"
 #endif
 
 AlloyContentRendererClient::AlloyContentRendererClient()
@@ -232,10 +241,12 @@ void AlloyContentRendererClient::RenderThreadStarted() {
   }
 #endif  // BUILDFLAG(IS_MAC)
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (extensions::PdfExtensionEnabled()) {
     pdf_print_client_.reset(new ChromePDFPrintClient());
     pdf::PepperPDFHost::SetPrintClient(pdf_print_client_.get());
   }
+#endif
 
   if (extensions::ExtensionsEnabled())
     extensions_renderer_client_->RenderThreadStarted();
@@ -276,7 +287,9 @@ void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   new PepperHelper(render_frame);
+#endif
 
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RenderFrameCreated(
@@ -302,18 +315,22 @@ void AlloyContentRendererClient::RenderFrameCreated(
     OnBrowserCreated(render_frame->GetRenderView(), is_windowless);
   }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   if (is_windowless.has_value()) {
     new printing::PrintRenderFrameHelper(
         render_frame,
         base::WrapUnique(
             new extensions::CefPrintRenderFrameHelperDelegate(*is_windowless)));
   }
+#endif
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (base::FeatureList::IsEnabled(chrome_pdf::features::kPdfUnseasoned)) {
     render_frame_observer->associated_interfaces()->AddInterface(
         base::BindRepeating(&pdf::PdfFindInPageFactory::BindReceiver,
                             render_frame->GetRoutingID()));
   }
+#endif
 }
 
 void AlloyContentRendererClient::WebViewCreated(blink::WebView* web_view) {
@@ -332,6 +349,7 @@ bool AlloyContentRendererClient::IsPluginHandledExternally(
     const blink::WebElement& plugin_element,
     const GURL& original_url,
     const std::string& mime_type) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   if (!extensions::ExtensionsEnabled())
     return false;
 
@@ -373,12 +391,16 @@ bool AlloyContentRendererClient::IsPluginHandledExternally(
   return ChromeExtensionsRendererClient::MaybeCreateMimeHandlerView(
       plugin_element, original_url, plugin_info->actual_mime_type,
       plugin_info->plugin);
+#else
+  return false;
+#endif
 }
 
 bool AlloyContentRendererClient::OverrideCreatePlugin(
     content::RenderFrame* render_frame,
     const blink::WebPluginParams& params,
     blink::WebPlugin** plugin) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   std::string orig_mime_type = params.mime_type.Utf8();
   if (extensions::ExtensionsEnabled() &&
       !extensions_renderer_client_->OverrideCreatePlugin(render_frame,
@@ -394,6 +416,7 @@ bool AlloyContentRendererClient::OverrideCreatePlugin(
       &plugin_info);
   *plugin = ChromeContentRendererClient::CreatePlugin(render_frame, params,
                                                       *plugin_info);
+#endif
   return true;
 }
 

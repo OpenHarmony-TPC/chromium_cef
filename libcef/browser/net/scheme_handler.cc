@@ -6,12 +6,15 @@
 
 #include <string>
 
-#include "libcef/browser/net/chrome_scheme_handler.h"
 #include "libcef/browser/net/devtools_scheme_handler.h"
 #include "libcef/common/net/scheme_registration.h"
 #include "libcef/features/runtime.h"
 
 #include "content/public/common/url_constants.h"
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/net/chrome_scheme_handler.h"
+#endif
 
 namespace scheme {
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5cc7dfcfeb969f00a01d13456464b2811bda3a85$
+// $hash=8781ffbbab1b14d126dd8e91270e04628354940e$
 //
 
 #include "libcef_dll/cpptoc/data_base_cpptoc.h"
@@ -95,7 +95,9 @@ void CEF_CALLBACK
 data_base_get_http_auth_credentials(struct _cef_data_base_t* self,
                                     const cef_string_t* host,
                                     const cef_string_t* realm,
-                                    cef_string_list_t username_password) {
+                                    cef_string_t* username,
+                                    char* password,
+                                    uint32_t passwordSize) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -109,26 +111,27 @@ data_base_get_http_auth_credentials(struct _cef_data_base_t* self,
   DCHECK(realm);
   if (!realm)
     return;
-  // Verify param: username_password; type: string_vec_byref
-  DCHECK(username_password);
-  if (!username_password)
+  // Verify param: username; type: string_byref
+  DCHECK(username);
+  if (!username)
+    return;
+  // Verify param: password; type: simple_byaddr
+  DCHECK(password);
+  if (!password)
     return;
 
-  // Translate param: username_password; type: string_vec_byref
-  std::vector<CefString> username_passwordList;
-  transfer_string_list_contents(username_password, username_passwordList);
+  // Translate param: username; type: string_byref
+  CefString usernameStr(username);
 
   // Execute
   CefDataBaseCppToC::Get(self)->GetHttpAuthCredentials(
-      CefString(host), CefString(realm), username_passwordList);
-
-  // Restore param: username_password; type: string_vec_byref
-  cef_string_list_clear(username_password);
-  transfer_string_list_contents(username_passwordList, username_password);
+      CefString(host), CefString(realm), usernameStr, password, passwordSize);
 }
 
-int CEF_CALLBACK data_base_exist_permission_by_origin(
-    struct _cef_data_base_t *self, const cef_string_t *origin, int type) {
+int CEF_CALLBACK
+data_base_exist_permission_by_origin(struct _cef_data_base_t* self,
+                                     const cef_string_t* origin,
+                                     int type) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -147,9 +150,11 @@ int CEF_CALLBACK data_base_exist_permission_by_origin(
   return _retval;
 }
 
-int CEF_CALLBACK data_base_get_permission_result_by_origin(
-    struct _cef_data_base_t *self, const cef_string_t *origin, int type,
-    int *result) {
+int CEF_CALLBACK
+data_base_get_permission_result_by_origin(struct _cef_data_base_t* self,
+                                          const cef_string_t* origin,
+                                          int type,
+                                          int* result) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -179,9 +184,11 @@ int CEF_CALLBACK data_base_get_permission_result_by_origin(
   return _retval;
 }
 
-void CEF_CALLBACK data_base_set_permission_by_origin(
-    struct _cef_data_base_t *self, const cef_string_t *origin, int type,
-    int result) {
+void CEF_CALLBACK
+data_base_set_permission_by_origin(struct _cef_data_base_t* self,
+                                   const cef_string_t* origin,
+                                   int type,
+                                   int result) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -197,8 +204,10 @@ void CEF_CALLBACK data_base_set_permission_by_origin(
                                                       result ? true : false);
 }
 
-void CEF_CALLBACK data_base_clear_permission_by_origin(
-    struct _cef_data_base_t *self, const cef_string_t *origin, int type) {
+void CEF_CALLBACK
+data_base_clear_permission_by_origin(struct _cef_data_base_t* self,
+                                     const cef_string_t* origin,
+                                     int type) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -214,7 +223,7 @@ void CEF_CALLBACK data_base_clear_permission_by_origin(
                                                         type);
 }
 
-void CEF_CALLBACK data_base_clear_all_permission(struct _cef_data_base_t *self,
+void CEF_CALLBACK data_base_clear_all_permission(struct _cef_data_base_t* self,
                                                  int type) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -226,8 +235,10 @@ void CEF_CALLBACK data_base_clear_all_permission(struct _cef_data_base_t *self,
   CefDataBaseCppToC::Get(self)->ClearAllPermission(type);
 }
 
-void CEF_CALLBACK data_base_get_origins_by_permission(
-    struct _cef_data_base_t *self, int type, cef_string_list_t origins) {
+void CEF_CALLBACK
+data_base_get_origins_by_permission(struct _cef_data_base_t* self,
+                                    int type,
+                                    cef_string_list_t origins) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);

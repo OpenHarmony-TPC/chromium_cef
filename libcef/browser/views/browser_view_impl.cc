@@ -6,7 +6,6 @@
 
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/browser_util.h"
-#include "libcef/browser/chrome/views/chrome_browser_view.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/request_context_impl.h"
 #include "libcef/browser/thread_util.h"
@@ -14,6 +13,10 @@
 
 #include "content/public/browser/native_web_keyboard_event.h"
 #include "ui/content_accelerators/accelerator_util.h"
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/chrome/views/chrome_browser_view.h"
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
 // static
 CefRefPtr<CefBrowserView> CefBrowserView::CreateBrowserView(
@@ -138,9 +141,11 @@ CefRefPtr<CefBrowser> CefBrowserViewImpl::GetBrowser() {
 
 CefRefPtr<CefView> CefBrowserViewImpl::GetChromeToolbar() {
   CEF_REQUIRE_VALID_RETURN(nullptr);
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     return static_cast<ChromeBrowserView*>(root_view())->cef_toolbar();
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   return nullptr;
 }
@@ -232,25 +237,33 @@ void CefBrowserViewImpl::SetDefaults(const CefBrowserSettings& settings) {
 }
 
 views::View* CefBrowserViewImpl::CreateRootView() {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     return new ChromeBrowserView(delegate(), this);
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   return new CefBrowserViewView(delegate(), this);
 }
 
 void CefBrowserViewImpl::InitializeRootView() {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     static_cast<ChromeBrowserView*>(root_view())->Initialize();
   } else {
     static_cast<CefBrowserViewView*>(root_view())->Initialize();
   }
+#else
+  static_cast<CefBrowserViewView*>(root_view())->Initialize();
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 }
 
 views::WebView* CefBrowserViewImpl::web_view() const {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     return static_cast<ChromeBrowserView*>(root_view())->contents_web_view();
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   return static_cast<CefBrowserViewView*>(root_view());
 }

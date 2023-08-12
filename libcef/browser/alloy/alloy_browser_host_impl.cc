@@ -331,6 +331,13 @@ void AlloyBrowserHostImpl::CloseBrowser(bool force_close) {
       // Will result in a call to BeforeUnloadFired() and, if the close isn't
       // canceled, CloseContents().
       contents->DispatchBeforeUnload(false /* auto_cancel */);
+#if BUILDFLAG(IS_OHOS)
+      // In cef_life_span_handler.h file show DoClose step.
+      // Step 1 to Step 3 is over.
+      // This will replace Step 4 : User approves the close. Beause both in 
+      // Android and OH close will not be blocked by beforeunload event.
+      CloseContents(contents);
+#endif
     } else {
       CloseContents(contents);
     }
@@ -1180,6 +1187,14 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
     if (handler.get()) {
       close_browser = !handler->DoClose(this);
     }
+#if BUILDFLAG(IS_OHOS)
+    // |DoClose| will notify the UI to close, |DESTRUCTION_STATE_NONE| means
+    // |CloseBrowser| has not been triggered by UI. We should close browser
+    // when received |CloseBrowser| request from UI.
+    if (destruction_state_ == DESTRUCTION_STATE_NONE) {
+      close_browser = false;
+    }
+#endif
   }
 
   if (close_browser) {
@@ -1254,7 +1269,6 @@ bool AlloyBrowserHostImpl::HandleContextMenu(
   auto rvh = web_contents()->GetRenderViewHost();
   CefRenderWidgetHostViewOSR* view =
       static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
-  touch_insert_handle_menu_show_ = true;
   if (view) {
     CefTouchSelectionControllerClientOSR* touch_client =
         static_cast<CefTouchSelectionControllerClientOSR*>(
@@ -1747,6 +1761,23 @@ void AlloyBrowserHostImpl::StartDragging(
   if (platform_delegate_) {
     platform_delegate_->StartDragging(drop_data, allowed_ops, image,
                                       image_offset, event_info, source_rwh);
+  }
+}
+
+void AlloyBrowserHostImpl::ShowPopupMenu(
+    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+    const gfx::Rect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    std::vector<blink::mojom::MenuItemPtr> menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection) {
+  if (platform_delegate_) {
+    platform_delegate_->ShowPopupMenu(std::move(popup_client), bounds,
+                                      item_height, item_font_size, selected_item,
+                                      std::move(menu_items), right_aligned,
+                                      allow_multiple_selection);
   }
 }
 

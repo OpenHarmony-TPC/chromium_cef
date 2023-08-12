@@ -147,3 +147,14 @@ bool CefContextMenuParamsImpl::IsCustomMenu() {
   CEF_VALUE_VERIFY_RETURN(false, false);
   return !const_value().custom_items.empty();
 }
+
+CefContextMenuParamsImpl::InputFieldType CefContextMenuParamsImpl::GetInputFieldType() {
+  CEF_VALUE_VERIFY_RETURN(false, CM_INPUTFIELDTYPE_NONE);
+  return static_cast<InputFieldType>(const_value().input_field_type);
+}
+
+CefContextMenuParamsImpl::SourceType CefContextMenuParamsImpl::GetSourceType() {
+  CEF_VALUE_VERIFY_RETURN(false, CM_SOURCETYPE_NONE);
+  return static_cast<SourceType>(const_value().source_type);
+}
+

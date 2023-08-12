@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e930f6445aaeb80ff2f6b1a3077d7d0d4bbd7109$
+// $hash=51af1ce96096db7ed212692b5915a74a18e0222d$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
@@ -60,18 +60,18 @@ typedef struct _cef_access_request_t {
   // Get the origin that is trying to acess the resource.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *origin)(
-      struct _cef_access_request_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* origin)(
+      struct _cef_access_request_t* self);
 
   ///
   // Get the resource that the origin is trying to acess.
   ///
-  int(CEF_CALLBACK *resource_acess_id)(struct _cef_access_request_t *self);
+  int(CEF_CALLBACK* resource_acess_id)(struct _cef_access_request_t* self);
 
   ///
   // Report whether the origin is allowed to acess the resource.
   ///
-  void(CEF_CALLBACK *report_request_result)(struct _cef_access_request_t *self,
+  void(CEF_CALLBACK* report_request_result)(struct _cef_access_request_t* self,
                                             int allowed);
 } cef_access_request_t;
 
@@ -90,14 +90,15 @@ typedef struct _cef_permission_request_t {
   // set for that origin. The host application should invoke the specified
   // callback with the desired permission state.
   ///
-  void(CEF_CALLBACK *on_geolocation_show)(
-      struct _cef_permission_request_t *self, const cef_string_t *origin);
+  void(CEF_CALLBACK* on_geolocation_show)(
+      struct _cef_permission_request_t* self,
+      const cef_string_t* origin);
 
   ///
   // Revert the operation in the OnGeolocationShow.
   ///
-  void(CEF_CALLBACK *on_geolocation_hide)(
-      struct _cef_permission_request_t *self);
+  void(CEF_CALLBACK* on_geolocation_hide)(
+      struct _cef_permission_request_t* self);
 
   ///
   // Notify the host application that web content from the specified origin is
@@ -105,16 +106,16 @@ typedef struct _cef_permission_request_t {
   // set for that origin. The host application should invoke the specified
   // callback with the desired permission state.
   ///
-  void(CEF_CALLBACK *on_permission_request)(
-      struct _cef_permission_request_t *self,
-      struct _cef_access_request_t *request);
+  void(CEF_CALLBACK* on_permission_request)(
+      struct _cef_permission_request_t* self,
+      struct _cef_access_request_t* request);
 
   ///
   // Revert the operation in the OnPermissionRequest.
   ///
-  void(CEF_CALLBACK *on_permission_request_canceled)(
-      struct _cef_permission_request_t *self,
-      struct _cef_access_request_t *request);
+  void(CEF_CALLBACK* on_permission_request_canceled)(
+      struct _cef_permission_request_t* self,
+      struct _cef_access_request_t* request);
 } cef_permission_request_t;
 
 ///
@@ -129,51 +130,55 @@ typedef struct _cef_browser_permission_request_delegate_t {
   ///
   // Handle the Geolocation permission requests.
   ///
-  void(CEF_CALLBACK *ask_geolocation_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin, cef_permission_callback_t callback);
+  void(CEF_CALLBACK* ask_geolocation_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
 
   ///
   // Cancel the Geolocation permission requests.
   ///
-  void(CEF_CALLBACK *abort_ask_geolocation_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin);
+  void(CEF_CALLBACK* abort_ask_geolocation_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
 
   ///
   // Handle the Protected Media Identifier permission requests.
   ///
-  void(CEF_CALLBACK *ask_protected_media_identifier_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin, cef_permission_callback_t callback);
+  void(CEF_CALLBACK* ask_protected_media_identifier_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
 
   ///
   // Cancel the Protected Media Identifier permission requests.
   ///
-  void(CEF_CALLBACK *abort_ask_protected_media_identifier_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin);
+  void(CEF_CALLBACK* abort_ask_protected_media_identifier_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
 
   ///
   // Handle the MIDI Sysex permission requests.
   ///
-  void(CEF_CALLBACK *ask_midisysex_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin, cef_permission_callback_t callback);
+  void(CEF_CALLBACK* ask_midisysex_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
 
   ///
   // Cancel the MIDI Sysex permission requests.
   ///
-  void(CEF_CALLBACK *abort_ask_midisysex_permission)(
-      struct _cef_browser_permission_request_delegate_t *self,
-      const cef_string_t *origin);
+  void(CEF_CALLBACK* abort_ask_midisysex_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
 
   ///
   // The callback for the Geolocation permission requests.
   ///
-  void(CEF_CALLBACK *notify_geolocation_permission)(
-      struct _cef_browser_permission_request_delegate_t *self, int value,
-      const cef_string_t *origin);
+  void(CEF_CALLBACK* notify_geolocation_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      int value,
+      const cef_string_t* origin);
 } cef_browser_permission_request_delegate_t;
 
 ///
@@ -190,32 +195,33 @@ typedef struct _cef_geolocation_acess_t {
   // Return true (1) if the geolocation permission state is set for the
   // specified origin.
   ///
-  int(CEF_CALLBACK *contain_origin)(struct _cef_geolocation_acess_t *self,
-                                    const cef_string_t *origin);
+  int(CEF_CALLBACK* contain_origin)(struct _cef_geolocation_acess_t* self,
+                                    const cef_string_t* origin);
 
   ///
   // Return true (1) if the geolocation permission state set for the specified
   // origin is true (1).
   ///
-  int(CEF_CALLBACK *is_origin_access_enabled)(
-      struct _cef_geolocation_acess_t *self, const cef_string_t *origin);
+  int(CEF_CALLBACK* is_origin_access_enabled)(
+      struct _cef_geolocation_acess_t* self,
+      const cef_string_t* origin);
 
   ///
   // Set the geolocation permission state to true (1)  for the specified origin.
   ///
-  void(CEF_CALLBACK *enabled)(struct _cef_geolocation_acess_t *self,
-                              const cef_string_t *origin);
+  void(CEF_CALLBACK* enabled)(struct _cef_geolocation_acess_t* self,
+                              const cef_string_t* origin);
 
   ///
   // Set the geolocation permission state to false (0)  for the specified
   // origin.
   ///
-  void(CEF_CALLBACK *disabled)(struct _cef_geolocation_acess_t *self,
-                               const cef_string_t *origin);
+  void(CEF_CALLBACK* disabled)(struct _cef_geolocation_acess_t* self,
+                               const cef_string_t* origin);
 } cef_geolocation_acess_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_

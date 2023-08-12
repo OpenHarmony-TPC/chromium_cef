@@ -71,6 +71,7 @@ void GetStorageKeysTask::OnStorageKeysObtained(
     blink::mojom::StorageType type,
     const std::set<blink::StorageKey>& storage_keys) {
   DCHECK(CEF_CURRENTLY_ON_IOT());
+  LOG(INFO) << "OnStorageKeysObtained storage_keys size: " << storage_keys.size();
   num_callbacks_to_wait_ = storage_keys.size();
   num_callbacks_received_ = 0u;
   for (const blink::StorageKey& storage_key : storage_keys) {

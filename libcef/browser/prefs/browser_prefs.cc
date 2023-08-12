@@ -22,10 +22,8 @@
 #include "chrome/browser/accessibility/accessibility_ui.h"
 #include "chrome/browser/download/download_prefs.h"
 #include "chrome/browser/media/media_device_id_salt.h"
-#include "chrome/browser/media/router/media_router_feature.h"
 #include "chrome/browser/net/profile_network_context_service.h"
 #include "chrome/browser/net/system_network_context_manager.h"
-#include "chrome/browser/plugins/plugin_info_host_impl.h"
 #include "chrome/browser/prefetch/prefetch_prefs.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
 #include "chrome/browser/printing/print_preview_sticky_settings.h"
@@ -73,6 +71,14 @@
 #include "chrome/browser/supervised_user/supervised_user_pref_store.h"
 #include "chrome/browser/supervised_user/supervised_user_settings_service.h"
 #include "chrome/browser/supervised_user/supervised_user_settings_service_factory.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/plugin_info_host_impl.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
+#include "chrome/browser/media/router/media_router_feature.h"
 #endif
 
 namespace browser_prefs {
@@ -223,8 +229,12 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   CefMediaCaptureDevicesDispatcher::RegisterPrefs(registry.get());
   certificate_transparency::prefs::RegisterPrefs(registry.get());
   flags_ui::PrefServiceFlagsStorage::RegisterPrefs(registry.get());
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   media_router::RegisterLocalStatePrefs(registry.get());
+#endif
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   PluginInfoHostImpl::RegisterUserPrefs(registry.get());
+#endif
   PrefProxyConfigTrackerImpl::RegisterPrefs(registry.get());
   ProfileNetworkContextService::RegisterLocalStatePrefs(registry.get());
   SSLConfigServiceManager::RegisterPrefs(registry.get());
@@ -266,7 +276,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     extensions::ExtensionPrefs::RegisterProfilePrefs(registry.get());
     HostContentSettingsMap::RegisterProfilePrefs(registry.get());
     language::LanguagePrefs::RegisterProfilePrefs(registry.get());
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
     media_router::RegisterProfilePrefs(registry.get());
+#endif
     MediaDeviceIDSalt::RegisterProfilePrefs(registry.get());
     prefetch::RegisterPredictionOptionsProfilePrefs(registry.get());
     ProfileNetworkContextService::RegisterProfilePrefs(registry.get());
@@ -291,8 +303,10 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
         prefs::kPrintPreviewDefaultDestinationSelectionRules, std::string());
     registry->RegisterBooleanPref(prefs::kCloudPrintSubmitEnabled, false);
     registry->RegisterBooleanPref(prefs::kEnableMediaRouter, true);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
     printing::PolicySettings::RegisterProfilePrefs(registry.get());
     printing::PrintPreviewStickySettings::RegisterProfilePrefs(registry.get());
+#endif
     DownloadPrefs::RegisterProfilePrefs(registry.get());
 
     // Cache preferences.

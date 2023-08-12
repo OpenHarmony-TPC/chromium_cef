@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7d2cea734649b808710e6c44ee7eab4f5e5b47cc$
+// $hash=29c3bfce4a45f38ec3fd21096e13addeb83f6310$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -129,10 +129,11 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                       CefString& targetUri) override;
   void ClosePort(CefString& port_handle) override;
   void DestroyAllWebMessagePorts() override;
-  void PostPortMessage(CefString& port_handle, CefString& data) override;
+  void PostPortMessage(CefString& port_handle,
+                       CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
       CefString& port_handle,
-      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+      CefRefPtr<CefWebMessageReceiver> callback) override;
   void GetHitData(int& type, CefString& extra_data) override;
   void SetInitialScale(float scale) override;
   int PageLoadProgress() override;
@@ -186,6 +187,15 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   CefString GetOriginalUrl() override;
   void PutNetworkAvailable(bool available) override;
   void RemoveCache(bool include_disk_files) override;
+  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+  CefRefPtr<CefBinaryValue> GetWebState() override;
+  bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
+  void ScrollTo(float x, float y) override;
+  void ScrollBy(float delta_x, float delta_y) override;
+  void SlideScroll(float vx, float vy) override;
+  void SetFileAccess(bool falg) override;
+  void SetBlockNetwork(bool falg) override;
+  void SetCacheMode(int falg) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

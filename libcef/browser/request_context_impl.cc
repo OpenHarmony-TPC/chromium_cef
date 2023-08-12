@@ -579,12 +579,14 @@ CefRefPtr<CefExtension> CefRequestContextImpl::GetExtension(
   return browser_context()->GetExtension(extension_id);
 }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 CefRefPtr<CefMediaRouter> CefRequestContextImpl::GetMediaRouter(
     CefRefPtr<CefCompletionCallback> callback) {
   CefRefPtr<CefMediaRouterImpl> media_router = new CefMediaRouterImpl();
   InitializeMediaRouterInternal(media_router, callback);
   return media_router.get();
 }
+#endif
 
 void CefRequestContextImpl::OnRenderFrameCreated(
     const content::GlobalRenderFrameHostId& global_id,
@@ -805,6 +807,7 @@ void CefRequestContextImpl::InitializeWebStorageInternal(
                         web_storage, callback));
 }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 void CefRequestContextImpl::InitializeMediaRouterInternal(
     CefRefPtr<CefMediaRouterImpl> media_router,
     CefRefPtr<CefCompletionCallback> callback) {
@@ -818,6 +821,7 @@ void CefRequestContextImpl::InitializeMediaRouterInternal(
                         },
                         media_router, callback));
 }
+#endif
 
 CefBrowserContext* CefRequestContextImpl::browser_context() const {
   return browser_context_;

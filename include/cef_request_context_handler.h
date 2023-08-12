@@ -43,7 +43,7 @@
 #include "include/cef_frame.h"
 #include "include/cef_request.h"
 #include "include/cef_resource_request_handler.h"
-#include "include/cef_web_plugin.h"
+//#include "include/cef_web_plugin.h" // !enable_plugins
 
 ///
 // Implement this interface to provide handler implementations. The handler

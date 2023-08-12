@@ -1200,6 +1200,27 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                               error_response);
   }
 
+  void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
+    CEF_REQUIRE_UIT();
+    if (!init_state_) {
+      // set the default value
+      setting.file_access = false;
+      setting.block_network = false;
+      setting.cache_mode = 0;
+      return;
+    }
+    if (!init_state_->browser_) {
+      // set the default value
+      setting.file_access = false;
+      setting.block_network = false;
+      setting.cache_mode = 0;
+      return;
+    }
+    setting.file_access = init_state_->browser_->GetFileAccess();
+    setting.block_network = init_state_->browser_->GetBlockNetwork();
+    setting.cache_mode = init_state_->browser_->GetCacheMode();
+  }
+
  private:
   void CallHandlerOnComplete(RequestState* state,
                              const network::URLLoaderCompletionStatus& status) {

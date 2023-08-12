@@ -28,6 +28,7 @@
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "extensions/common/mojom/view_type.mojom-forward.h"
+#include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 
 class CefAudioCapturer;
 class CefBrowserInfo;
@@ -207,9 +208,20 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   /* ohos webview begin */
   void SetBackgroundColor(int color) override;
   void SetTouchInsertHandleMenuShow(bool show) {
-    touch_insert_handle_menu_show_ = show;
+    web_contents()->SetTouchInsertHandleMenuShow(show);
   }
-  bool GetTouchInsertHandleMenuShow() { return touch_insert_handle_menu_show_; }
+  bool GetTouchInsertHandleMenuShow() {
+    return web_contents()->GetTouchInsertHandleMenuShow();
+  }
+  void ShowPopupMenu(
+    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+    const gfx::Rect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    std::vector<blink::mojom::MenuItemPtr> menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection);
   /* ohos webview end */
 
   // content::WebContentsDelegate methods.

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e13b741eb5cb983fde79d62937d9eb8a55dd6ebb$
+// $hash=097fc69d7b712dde294d45394bc0eff518a34689$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -59,6 +59,7 @@ struct _cef_browser_host_t;
 struct _cef_client_t;
 struct _cef_java_script_result_callback_t;
 struct _cef_store_web_archive_result_callback_t;
+struct _cef_web_message_receiver_t;
 
 ///
 // Structure used to represent a browser. When used in the browser process the
@@ -864,7 +865,7 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* post_port_message)(struct _cef_browser_host_t* self,
                                         cef_string_t* port_handle,
-                                        cef_string_t* data);
+                                        struct _cef_value_t* message);
 
   ///
   // Set the callback of the port.
@@ -872,7 +873,7 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_port_message_callback)(
       struct _cef_browser_host_t* self,
       cef_string_t* port_handle,
-      struct _cef_java_script_result_callback_t* callback);
+      struct _cef_web_message_receiver_t* callback);
 
   ///
   // Gets the latest hitdata
@@ -1195,6 +1196,65 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* remove_cache)(struct _cef_browser_host_t* self,
                                    int include_disk_files);
+
+  ///
+  // Scroll page up or down
+  ///
+  void(CEF_CALLBACK* scroll_page_up_down)(struct _cef_browser_host_t* self,
+                                          int is_up,
+                                          int is_half,
+                                          float view_height);
+
+  ///
+  // Get web history state
+  ///
+  struct _cef_binary_value_t*(CEF_CALLBACK* get_web_state)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  // Restore web history state
+  ///
+  int(CEF_CALLBACK* restore_web_state)(struct _cef_browser_host_t* self,
+                                       struct _cef_binary_value_t* state);
+
+  ///
+  // Scroll to the position.
+  ///
+  void(CEF_CALLBACK* scroll_to)(struct _cef_browser_host_t* self,
+                                float x,
+                                float y);
+
+  ///
+  // Scroll by the delta distance.
+  ///
+  void(CEF_CALLBACK* scroll_by)(struct _cef_browser_host_t* self,
+                                float delta_x,
+                                float delta_y);
+
+  ///
+  // Slide Scroll by the speed.
+  ///
+  void(CEF_CALLBACK* slide_scroll)(struct _cef_browser_host_t* self,
+                                   float vx,
+                                   float vy);
+
+  ///
+  // Set whether webview can access files
+  ///
+  void(CEF_CALLBACK* set_file_access)(struct _cef_browser_host_t* self,
+                                      int falg);
+
+  ///
+  // Set whether webview can access network
+  ///
+  void(CEF_CALLBACK* set_block_network)(struct _cef_browser_host_t* self,
+                                        int falg);
+
+  ///
+  // Set the cache mode of webview
+  ///
+  void(CEF_CALLBACK* set_cache_mode)(struct _cef_browser_host_t* self,
+                                     int falg);
 } cef_browser_host_t;
 
 ///
@@ -1268,6 +1328,23 @@ typedef struct _cef_store_web_archive_result_callback_t {
       struct _cef_store_web_archive_result_callback_t* self,
       const cef_string_t* result);
 } cef_store_web_archive_result_callback_t;
+
+///
+// Structure to implement to be notified of asynchronous web message channel.
+///
+typedef struct _cef_web_message_receiver_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon |PostPortMessage|. |message| will be sent
+  // to another end of web message channel.
+  ///
+  void(CEF_CALLBACK* on_message)(struct _cef_web_message_receiver_t* self,
+                                 struct _cef_value_t* message);
+} cef_web_message_receiver_t;
 
 #ifdef __cplusplus
 }

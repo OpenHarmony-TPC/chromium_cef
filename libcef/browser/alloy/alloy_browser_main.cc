@@ -13,8 +13,6 @@
 #include "libcef/browser/context.h"
 #include "libcef/browser/devtools/devtools_manager_delegate.h"
 #include "libcef/browser/extensions/extension_system_factory.h"
-#include "libcef/browser/net/chrome_scheme_handler.h"
-#include "libcef/browser/printing/constrained_window_views_client.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/common/app_manager.h"
 #include "libcef/common/extensions/extensions_util.h"
@@ -25,11 +23,8 @@
 #include "base/task/post_task.h"
 #include "base/task/thread_pool.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/media/router/chrome_media_router_factory.h"
 #include "chrome/browser/net/system_network_context_manager.h"
-#include "chrome/browser/plugins/plugin_finder.h"
 #include "chrome/common/chrome_switches.h"
-#include "components/constrained_window/constrained_window_views.h"
 #include "content/public/browser/gpu_data_manager.h"
 #include "content/public/browser/network_service_instance.h"
 #include "content/public/common/result_codes.h"
@@ -92,12 +87,31 @@
 #include "chrome/browser/component_updater/widevine_cdm_component_installer.h"
 #endif
 
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/net/chrome_scheme_handler.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "components/constrained_window/constrained_window_views.h"
+#include "libcef/browser/printing/constrained_window_views_client.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/plugin_finder.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
+#include "chrome/browser/media/router/chrome_media_router_factory.h"
+#endif
+
 AlloyBrowserMainParts::AlloyBrowserMainParts(
     content::MainFunctionParams parameters)
     : BrowserMainParts(), parameters_(std::move(parameters)) {}
 
 AlloyBrowserMainParts::~AlloyBrowserMainParts() {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   constrained_window::SetConstrainedWindowViewsClient(nullptr);
+#endif
 }
 
 int AlloyBrowserMainParts::PreEarlyInitialization() {
@@ -111,7 +125,9 @@ int AlloyBrowserMainParts::PreEarlyInitialization() {
 }
 
 void AlloyBrowserMainParts::ToolkitInitialized() {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   SetConstrainedWindowViewsClient(CreateCefConstrainedWindowViewsClient());
+#endif
 #if defined(USE_AURA)
   CHECK(aura::Env::GetInstance());
 
@@ -147,7 +163,9 @@ void AlloyBrowserMainParts::PreCreateMainMessageLoop() {
   ChromeBrowserMainPartsWin::SetupInstallerUtilStrings();
 #endif  // BUILDFLAG(IS_WIN)
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   media_router::ChromeMediaRouterFactory::DoPlatformInit();
+#endif
 }
 
 void AlloyBrowserMainParts::PostCreateMainMessageLoop() {
@@ -237,10 +255,14 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
   InitializeWinParentalControls();
 #endif
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   // Triggers initialization of the singleton instance on UI thread.
   PluginFinder::GetInstance()->Init();
+#endif
 
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   scheme::RegisterWebUIControllerFactory();
+#endif
 
 #if BUILDFLAG(ENABLE_MEDIA_FOUNDATION_WIDEVINE_CDM) || \
     BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT)

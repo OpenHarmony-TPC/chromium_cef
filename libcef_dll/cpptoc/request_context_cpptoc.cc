@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f895effb80d27ea9ae57687c81df2f8871e2ea53$
+// $hash=8b3881774a33c2efa32765341a72e050d321db58$
 //
 
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
@@ -17,7 +17,6 @@
 #include "libcef_dll/cpptoc/data_base_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/extension_cpptoc.h"
-#include "libcef_dll/cpptoc/media_router_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/cpptoc/web_storage_cpptoc.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
@@ -579,25 +578,6 @@ request_context_get_extension(struct _cef_request_context_t* self,
   return CefExtensionCppToC::Wrap(_retval);
 }
 
-cef_media_router_t* CEF_CALLBACK
-request_context_get_media_router(struct _cef_request_context_t* self,
-                                 cef_completion_callback_t* callback) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self)
-    return NULL;
-  // Unverified params: callback
-
-  // Execute
-  CefRefPtr<CefMediaRouter> _retval =
-      CefRequestContextCppToC::Get(self)->GetMediaRouter(
-          CefCompletionCallbackCToCpp::Wrap(callback));
-
-  // Return type: refptr_same
-  return CefMediaRouterCppToC::Wrap(_retval);
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -633,7 +613,6 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
   GetStruct()->has_extension = request_context_has_extension;
   GetStruct()->get_extensions = request_context_get_extensions;
   GetStruct()->get_extension = request_context_get_extension;
-  GetStruct()->get_media_router = request_context_get_media_router;
 }
 
 // DESTRUCTOR - Do not edit by hand.

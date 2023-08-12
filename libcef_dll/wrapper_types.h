@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6894c8a307f28f26de4baaf4f541637cef7c8d72$
+// $hash=dfb6a82e093895922f6f06700eb74d9d64493c24$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -84,13 +84,6 @@ enum CefWrapperType {
   WT_LIFE_SPAN_HANDLER,
   WT_LIST_VALUE,
   WT_LOAD_HANDLER,
-  WT_MEDIA_OBSERVER,
-  WT_MEDIA_ROUTE,
-  WT_MEDIA_ROUTE_CREATE_CALLBACK,
-  WT_MEDIA_ROUTER,
-  WT_MEDIA_SINK,
-  WT_MEDIA_SINK_DEVICE_INFO_CALLBACK,
-  WT_MEDIA_SOURCE,
   WT_MENU_BUTTON,
   WT_MENU_BUTTON_DELEGATE,
   WT_MENU_BUTTON_PRESSED_LOCK,
@@ -136,6 +129,7 @@ enum CefWrapperType {
   WT_SCHEME_REGISTRAR,
   WT_SCROLL_VIEW,
   WT_SELECT_CLIENT_CERTIFICATE_CALLBACK,
+  WT_SELECT_POPUP_CALLBACK,
   WT_SERVER,
   WT_SERVER_HANDLER,
   WT_SET_COOKIE_CALLBACK,
@@ -174,9 +168,7 @@ enum CefWrapperType {
   WT_VIEW,
   WT_VIEW_DELEGATE,
   WT_WAITABLE_EVENT,
-  WT_WEB_PLUGIN_INFO,
-  WT_WEB_PLUGIN_INFO_VISITOR,
-  WT_WEB_PLUGIN_UNSTABLE_CALLBACK,
+  WT_WEB_MESSAGE_RECEIVER,
   WT_WEB_STORAGE,
   WT_WINDOW,
   WT_WINDOW_DELEGATE,

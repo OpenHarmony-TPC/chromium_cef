@@ -730,6 +730,7 @@ struct CefBrowserSettingsTraits {
 
     /* ohos webview begin */
     target->force_dark_mode_enabled = src->force_dark_mode_enabled;
+    target->dark_prefer_color_scheme_enabled = src->dark_prefer_color_scheme_enabled;
     target->javascript_can_open_windows_automatically =
         src->javascript_can_open_windows_automatically;
     target->loads_images_automatically = src->loads_images_automatically;
@@ -746,6 +747,10 @@ struct CefBrowserSettingsTraits {
     target->viewport_meta_enabled = src->viewport_meta_enabled;
     target->user_gesture_required = src->user_gesture_required;
     target->pinch_smooth_mode = src->pinch_smooth_mode;
+#if BUILDFLAG(IS_OHOS)
+    target->hide_vertical_scrollbars = src->hide_vertical_scrollbars;
+    target->hide_horizontal_scrollbars = src->hide_horizontal_scrollbars;
+#endif
     /* ohos webview end */
   }
 };
@@ -1049,5 +1054,24 @@ struct CefMediaSinkDeviceInfoTraits {
 // Class representing MediaSink device info.
 ///
 typedef CefStructBase<CefMediaSinkDeviceInfoTraits> CefMediaSinkDeviceInfo;
+
+struct CefSelectPopupItemTraits {
+  typedef cef_select_popup_item_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+///
+// Class representing select popup item.
+///
+typedef CefStructBase<CefSelectPopupItemTraits> CefSelectPopupItem;
 
 #endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_WRAPPERS_H_

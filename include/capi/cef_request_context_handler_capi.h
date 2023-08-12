@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b44d320d5cceb5022543e8154170b8d276628c76$
+// $hash=f517370ae17962732a0894555330fd002860b83a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_HANDLER_CAPI_H_
@@ -45,11 +45,12 @@
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_request_capi.h"
 #include "include/capi/cef_resource_request_handler_capi.h"
-#include "include/capi/cef_web_plugin_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// #include "include/cef_web_plugin.h" // !enable_plugins
 
 ///
 // Implement this structure to provide handler implementations. The handler

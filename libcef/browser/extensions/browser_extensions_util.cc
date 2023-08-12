@@ -23,6 +23,10 @@
 #include "content/public/browser/render_view_host.h"
 #include "extensions/browser/extension_registry.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "printing/buildflags/buildflags.h"
+#endif
+
 namespace extensions {
 
 namespace {
@@ -52,10 +56,14 @@ content::WebContents* GetOwnerForGuestContents(content::WebContents* guest) {
     return plugin_guest->owner_web_contents();
   }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   // Maybe it's a print preview dialog.
   auto print_preview_controller =
       g_browser_process->print_preview_dialog_controller();
   return print_preview_controller->GetInitiator(guest);
+#else
+  return nullptr;
+#endif
 }
 
 CefRefPtr<CefBrowserHostBase> GetOwnerBrowserForGlobalId(

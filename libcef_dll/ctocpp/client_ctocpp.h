@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7516e646aea8db0ff68ea79041e05ebb9a320cf2$
+// $hash=13d421c7598593f4bee5b3e62cb8aaf348a350f9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed DLL-side only.
 class CefClientCToCpp
     : public CefCToCppRefCounted<CefClientCToCpp, CefClient, cef_client_t> {
-public:
+ public:
   CefClientCToCpp();
   virtual ~CefClientCToCpp();
 
@@ -55,9 +55,9 @@ public:
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) override;
   int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                             const CefString &method,
-                             const CefString &object_name,
+                             const CefString& method,
+                             const CefString& object_name,
                              CefRefPtr<CefListValue> result) override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

@@ -67,6 +67,27 @@ class CefFileDialogCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+// Callback interface for asynchronous continuation of <select> selection.
+///
+/*--cef(source=library)--*/
+class CefSelectPopupCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Continue the <select> selection. |indices| should be the 0-based array
+  // index of the value selected from the <select> array passed to
+  // CefDialogHandler::ShowSelectPopup.
+  ///
+  /*--cef(capi_name=cont)--*/
+  virtual void Continue(const std::vector<int>& indices) = 0;
+
+  ///
+  // Cancel <select> selection.
+  ///
+  /*--cef()--*/
+  virtual void Cancel() = 0;
+};
+
+///
 // Implement this interface to handle dialog events. The methods of this class
 // will be called on the browser process UI thread.
 ///
@@ -102,6 +123,20 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
                             CefRefPtr<CefFileDialogCallback> callback) {
     return false;
   }
+
+  /// 
+  // Show <select> popup menu.
+  ///
+  /*--cef()--*/
+  virtual void OnSelectPopupMenu(CefRefPtr<CefBrowser> browser,
+                                 const CefRect& bounds,
+                                 int item_height,
+                                 double item_font_size,
+                                 int selected_item,
+                                 const std::vector<CefSelectPopupItem>& menu_items,
+                                 bool right_aligned,
+                                 bool allow_multiple_selection,
+                                 CefRefPtr<CefSelectPopupCallback> callback) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_

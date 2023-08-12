@@ -14,7 +14,8 @@ extern int layer_num;
 
 class SocPerUtil {
  public:
-  static void ApplySocConfig();
+  static void EnableFlingBoost();
+  static void DisableFlingBoost();
   static void StartBoost();
 
  private:

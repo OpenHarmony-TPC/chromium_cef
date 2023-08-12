@@ -28,7 +28,9 @@ class CefDataBaseImpl : public CefDataBase {
   void GetHttpAuthCredentials(
       const CefString& host,
       const CefString& realm,
-      std::vector<CefString>& username_password) override;
+      CefString& username,
+      char* password,
+      uint32_t passwordSize) override;
 
   bool ExistPermissionByOrigin(const CefString& origin, int type) override;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,12 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=df2505130721df8255b0d5bd511fb8ef394a7d8e$
+// $hash=2ce0bd2dda4afb008613b357545251c4e498dd53$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/file_dialog_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/select_popup_callback_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -70,6 +71,59 @@ bool CefDialogHandlerCToCpp::OnFileDialog(
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::OnSelectPopupMenu(
+    CefRefPtr<CefBrowser> browser,
+    const CefRect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    const std::vector<CefSelectPopupItem>& menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection,
+    CefRefPtr<CefSelectPopupCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_select_popup_menu))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get())
+    return;
+
+  // Translate param: menu_items; type: simple_vec_byref_const
+  const size_t menu_itemsCount = menu_items.size();
+  cef_select_popup_item_t* menu_itemsList = NULL;
+  if (menu_itemsCount > 0) {
+    menu_itemsList = new cef_select_popup_item_t[menu_itemsCount];
+    DCHECK(menu_itemsList);
+    if (menu_itemsList) {
+      for (size_t i = 0; i < menu_itemsCount; ++i) {
+        menu_itemsList[i] = menu_items[i];
+      }
+    }
+  }
+
+  // Execute
+  _struct->on_select_popup_menu(_struct, CefBrowserCppToC::Wrap(browser),
+                                &bounds, item_height, item_font_size,
+                                selected_item, menu_itemsCount, menu_itemsList,
+                                right_aligned, allow_multiple_selection,
+                                CefSelectPopupCallbackCppToC::Wrap(callback));
+
+  // Restore param:menu_items; type: simple_vec_byref_const
+  if (menu_itemsList)
+    delete[] menu_itemsList;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

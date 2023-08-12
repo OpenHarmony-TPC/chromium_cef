@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f9f0ebd4c8a44fb9c2d2136e0791770fc72dfe0$
+// $hash=4200c2184c268c8a81967053abedbff5fcbc7582$
 //
 
 #include "libcef_dll/cpptoc/browser_permission_request_delegate_cpptoc.h"
@@ -21,8 +21,9 @@ namespace {
 
 void CEF_CALLBACK
 browser_permission_request_delegate_ask_geolocation_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin, cef_permission_callback_t callback) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -42,8 +43,8 @@ browser_permission_request_delegate_ask_geolocation_permission(
 
 void CEF_CALLBACK
 browser_permission_request_delegate_abort_ask_geolocation_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -63,8 +64,9 @@ browser_permission_request_delegate_abort_ask_geolocation_permission(
 
 void CEF_CALLBACK
 browser_permission_request_delegate_ask_protected_media_identifier_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin, cef_permission_callback_t callback) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -84,8 +86,8 @@ browser_permission_request_delegate_ask_protected_media_identifier_permission(
 
 void CEF_CALLBACK
 browser_permission_request_delegate_abort_ask_protected_media_identifier_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -104,8 +106,9 @@ browser_permission_request_delegate_abort_ask_protected_media_identifier_permiss
 }
 
 void CEF_CALLBACK browser_permission_request_delegate_ask_midisysex_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin, cef_permission_callback_t callback) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -125,8 +128,8 @@ void CEF_CALLBACK browser_permission_request_delegate_ask_midisysex_permission(
 
 void CEF_CALLBACK
 browser_permission_request_delegate_abort_ask_midisysex_permission(
-    struct _cef_browser_permission_request_delegate_t *self,
-    const cef_string_t *origin) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -146,8 +149,9 @@ browser_permission_request_delegate_abort_ask_midisysex_permission(
 
 void CEF_CALLBACK
 browser_permission_request_delegate_notify_geolocation_permission(
-    struct _cef_browser_permission_request_delegate_t *self, int value,
-    const cef_string_t *origin) {
+    struct _cef_browser_permission_request_delegate_t* self,
+    int value,
+    const cef_string_t* origin) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -165,7 +169,7 @@ browser_permission_request_delegate_notify_geolocation_permission(
       ->NotifyGeolocationPermission(value ? true : false, CefString(origin));
 }
 
-} // namespace
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -200,7 +204,7 @@ CefCppToCRefCounted<CefBrowserPermissionRequestDelegateCppToC,
                     CefBrowserPermissionRequestDelegate,
                     cef_browser_permission_request_delegate_t>::
     UnwrapDerived(CefWrapperType type,
-                  cef_browser_permission_request_delegate_t *s) {
+                  cef_browser_permission_request_delegate_t* s) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }

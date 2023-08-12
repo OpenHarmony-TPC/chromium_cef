@@ -8,11 +8,14 @@
 
 #include "include/cef_request_context.h"
 #include "libcef/browser/browser_context.h"
-#include "libcef/browser/media_router/media_router_impl.h"
 #include "libcef/browser/net_database/cef_data_base_impl.h"
 #include "libcef/browser/net_service/cookie_manager_impl.h"
 #include "libcef/browser/storage/web_storage_impl.h"
 #include "libcef/browser/thread_util.h"
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
+#include "libcef/browser/media_router/media_router_impl.h"
+#endif
 
 namespace content {
 struct GlobalRenderFrameHostId;
@@ -100,8 +103,10 @@ class CefRequestContextImpl : public CefRequestContext {
   bool HasExtension(const CefString& extension_id) override;
   bool GetExtensions(std::vector<CefString>& extension_ids) override;
   CefRefPtr<CefExtension> GetExtension(const CefString& extension_id) override;
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   CefRefPtr<CefMediaRouter> GetMediaRouter(
       CefRefPtr<CefCompletionCallback> callback) override;
+#endif
 
   const CefRequestContextSettings& settings() const { return config_.settings; }
 
@@ -174,8 +179,10 @@ class CefRequestContextImpl : public CefRequestContext {
       CefRefPtr<CefCompletionCallback> callback);
   void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
                                     CefRefPtr<CefCompletionCallback> callback);
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   void InitializeMediaRouterInternal(CefRefPtr<CefMediaRouterImpl> media_router,
                                      CefRefPtr<CefCompletionCallback> callback);
+#endif
 
   CefBrowserContext* browser_context() const;
 

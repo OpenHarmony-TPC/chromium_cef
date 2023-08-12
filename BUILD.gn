@@ -249,7 +249,7 @@ if (is_linux) {
 
 # Set ENABLE_PRINTING=1 ENABLE_BASIC_PRINTING=1.
 assert(enable_basic_printing)
-assert(enable_print_preview)
+assert(enable_print_preview || is_ohos)
 
 # Enable support for Widevine CDM.
 assert(enable_widevine || is_ohos)
@@ -257,6 +257,13 @@ assert(enable_widevine || is_ohos)
 if (is_clang) {
   # Don't use the chrome style plugin.
   assert(!clang_use_chrome_plugins)
+}
+
+if (is_ohos) {
+  import("//pdf/features.gni")
+  declare_args() {
+    ohos_enable_cef_chrome_runtime = false
+  }
 }
 
 #
@@ -449,6 +456,8 @@ static_library("libcef_static") {
               "libcef/browser/browser_platform_delegate_create.cc",
               "libcef/browser/browser_util.cc",
               "libcef/browser/browser_util.h",
+              "libcef/browser/navigation_state_serializer.cc",
+              "libcef/browser/navigation_state_serializer.h",
               "libcef/browser/chrome/browser_delegate.h",
               "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
               "libcef/browser/chrome/browser_platform_delegate_chrome.h",
@@ -863,6 +872,75 @@ static_library("libcef_static") {
     "//third_party/crashpad/crashpad",
   ]
 
+  if (defined(ohos_enable_cef_chrome_runtime) &&
+      !ohos_enable_cef_chrome_runtime) {
+    sources -= [
+      "//chrome/app/chrome_main_delegate.cc",
+      "//chrome/app/chrome_main_delegate.h",
+      "libcef/browser/chrome/browser_delegate.h",
+      "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
+      "libcef/browser/chrome/browser_platform_delegate_chrome.h",
+      "libcef/browser/chrome/chrome_browser_context.cc",
+      "libcef/browser/chrome/chrome_browser_context.h",
+      "libcef/browser/chrome/chrome_browser_delegate.cc",
+      "libcef/browser/chrome/chrome_browser_delegate.h",
+      "libcef/browser/chrome/chrome_browser_host_impl.cc",
+      "libcef/browser/chrome/chrome_browser_host_impl.h",
+      "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.cc",
+      "libcef/browser/chrome/chrome_browser_main_extra_parts_cef.h",
+      "libcef/browser/chrome/chrome_content_browser_client_cef.cc",
+      "libcef/browser/chrome/chrome_content_browser_client_cef.h",
+      "libcef/browser/chrome/chrome_context_menu_handler.cc",
+      "libcef/browser/chrome/chrome_context_menu_handler.h",
+      "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.cc",
+      "libcef/browser/chrome/extensions/chrome_mime_handler_view_guest_delegate_cef.h",
+      "libcef/browser/chrome_crash_reporter_client_stub.cc",
+      "libcef/browser/net/chrome_scheme_handler.cc",
+      "libcef/browser/net/chrome_scheme_handler.h",
+      "libcef/common/chrome/chrome_content_client_cef.cc",
+      "libcef/common/chrome/chrome_content_client_cef.h",
+      "libcef/common/chrome/chrome_main_delegate_cef.cc",
+      "libcef/common/chrome/chrome_main_delegate_cef.h",
+      "libcef/common/chrome/chrome_main_runner_delegate.cc",
+      "libcef/common/chrome/chrome_main_runner_delegate.h",
+      "libcef/renderer/chrome/chrome_content_renderer_client_cef.cc",
+      "libcef/renderer/chrome/chrome_content_renderer_client_cef.h",
+    ]
+  }
+
+  if (is_ohos && !enable_print_preview) {
+    sources -= [
+      "libcef/browser/printing/constrained_window_views_client.cc",
+      "libcef/browser/printing/constrained_window_views_client.h",
+      "libcef/browser/printing/print_view_manager.cc",
+      "libcef/browser/printing/print_view_manager.h",
+      "libcef/renderer/extensions/print_render_frame_helper_delegate.cc",
+      "libcef/renderer/extensions/print_render_frame_helper_delegate.h",
+    ]
+  }
+
+  if (is_ohos && !enable_plugins) {
+    sources -= [
+      "libcef/browser/web_plugin_impl.cc",
+      "libcef/browser/web_plugin_impl.h",
+    ]
+  }
+
+  if (is_ohos && !ohos_enable_media_router) {
+    sources -= [
+      "libcef/browser/media_router/media_route_impl.cc",
+      "libcef/browser/media_router/media_route_impl.h",
+      "libcef/browser/media_router/media_router_impl.cc",
+      "libcef/browser/media_router/media_router_impl.h",
+      "libcef/browser/media_router/media_router_manager.cc",
+      "libcef/browser/media_router/media_router_manager.h",
+      "libcef/browser/media_router/media_sink_impl.cc",
+      "libcef/browser/media_router/media_sink_impl.h",
+      "libcef/browser/media_router/media_source_impl.cc",
+      "libcef/browser/media_router/media_source_impl.h",
+    ]
+  }
+
   public_deps = [
     # Bring in feature flag defines.
     "//cef/libcef/features",
@@ -973,6 +1051,42 @@ static_library("libcef_static") {
     "//url",
     "//v8",
   ]
+
+  if (defined(ohos_enable_cef_chrome_runtime) &&
+      !ohos_enable_cef_chrome_runtime) {
+    deps -= [
+      "//chrome:packed_resources",
+      "//chrome:resources",
+      "//chrome:strings",
+      "//chrome/services/printing:lib",
+    ]
+  }
+
+  if (is_ohos && !enable_print_preview) {
+    deps -= [
+      "//components/printing/browser",
+      "//components/printing/common",
+      "//components/printing/renderer",
+      "//components/services/print_compositor/public/cpp",
+      "//components/services/print_compositor/public/mojom",
+    ]
+  }
+
+  if (is_ohos && !enable_plugins) {
+    deps -= [ "//components/plugins/renderer" ]
+  }
+
+  if (is_ohos && !enable_pdf) {
+    deps -= [
+      "//components/pdf/browser",
+      "//components/pdf/renderer",
+      "//pdf",
+    ]
+  }
+
+  if (is_ohos && !ohos_enable_media_router) {
+    deps -= [ "//components/media_router/common/mojom:media_router" ]
+  }
 
   if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
     deps += [ "//ohos_nweb_ex/overrides/cef" ]
@@ -1113,7 +1227,7 @@ static_library("libcef_static") {
     deps += [ "//tools/v8_context_snapshot" ]
   }
 
-  if (toolkit_views || is_ohos) {
+  if (toolkit_views) {
     sources += [
       "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.cc",
       "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h",
@@ -1330,6 +1444,58 @@ static_library("libcef_static") {
       "libcef_dll/views_stub.cc",
     ]
   }
+
+  if (is_ohos) {
+    sources += [
+      "libcef/browser/chrome/views/chrome_views_util.cc",
+      "libcef/browser/chrome/views/chrome_views_util.h",
+      "libcef/browser/views/view_util.cc",
+      "libcef/browser/views/view_util.h",
+    ]
+
+    if (use_aura) {
+      sources += [
+        "libcef/browser/native/browser_platform_delegate_native_aura.cc",
+        "libcef/browser/native/browser_platform_delegate_native_aura.h",
+        "libcef/browser/views/view_util_aura.cc",
+
+        # Part of //ui/views:test_support which is testingonly.
+        "//ui/views/test/desktop_test_views_delegate_aura.cc",
+        "//ui/views/test/test_views_delegate_aura.cc",
+
+        # Support for UI input events.
+        # Part of //ui/base:test_support which is testingonly.
+        "//ui/aura/test/ui_controls_factory_aura.h",
+        "//ui/base/test/ui_controls_aura.cc",
+      ]
+
+      deps += [
+        "//ui/aura",
+        "//ui/wm",
+        "//ui/wm/public",
+      ]
+
+      if (is_ohos) {
+        sources += [
+          # Support for UI input events.
+          # Part of //ui/aura:test_support which is testingonly.
+          "//ui/aura/test/aura_test_utils.cc",
+          "//ui/aura/test/aura_test_utils.h",
+
+          # Part of //ui/events:test_support which is testingonly.
+          # "//ui/events/test/x11_event_waiter.cc",
+          # "//ui/events/test/x11_event_waiter.h",
+        ]
+
+        deps += [
+          "//ui/events",
+          "//ui/strings",
+          "//ui/views",
+          "//ui/views/controls/webview",
+        ]
+      }
+    }
+  }
 }
 
 #
@@ -1519,7 +1685,27 @@ make_pack_header("resources") {
     "//ui/resources:webui_resources_grd",
   ]
 
-  if (toolkit_views || is_ohos) {
+  if (defined(ohos_enable_cef_chrome_runtime) &&
+      !ohos_enable_cef_chrome_runtime) {
+    inputs -= [
+      "$root_gen_dir/chrome/grit/browser_resources.h",
+      "$root_gen_dir/chrome/grit/common_resources.h",
+      "$root_gen_dir/chrome/grit/component_extension_resources.h",
+      "$root_gen_dir/chrome/grit/dev_ui_browser_resources.h",
+      "$root_gen_dir/chrome/grit/pdf_resources.h",
+      "$root_gen_dir/chrome/grit/renderer_resources.h",
+    ]
+    deps -= [
+      "//chrome/browser:dev_ui_browser_resources",
+      "//chrome/browser:resources",
+      "//chrome/browser/resources:component_extension_resources",
+      "//chrome/browser/resources/pdf:resources",
+      "//chrome/common:resources",
+      "//chrome/renderer:resources",
+    ]
+  }
+
+  if (toolkit_views) {
     inputs += [ "$root_gen_dir/ui/views/resources/grit/views_resources.h" ]
     deps += [ "//ui/views/resources:resources_grd" ]
   }
@@ -1561,6 +1747,22 @@ make_pack_header("strings") {
     "//ui/strings:app_locale_settings",
     "//ui/strings:ui_strings",
   ]
+
+  if (defined(ohos_enable_cef_chrome_runtime) &&
+      !ohos_enable_cef_chrome_runtime) {
+    inputs -= [
+      "$root_gen_dir/chrome/grit/chromium_strings.h",
+      "$root_gen_dir/chrome/grit/generated_resources.h",
+      "$root_gen_dir/chrome/grit/locale_settings.h",
+      "$root_gen_dir/chrome/grit/platform_locale_settings.h",
+    ]
+    deps -= [
+      "//chrome/app:chromium_strings",
+      "//chrome/app:generated_resources",
+      "//chrome/app/resources:locale_settings",
+      "//chrome/app/resources:platform_locale_settings",
+    ]
+  }
 }
 
 # Generate cef_api_hash.h.
@@ -1752,6 +1954,18 @@ if (is_mac) {
       # https://crbug.com/832808.
       ldflags = [ "-Wl,--version-script=" +
                   rebase_path("//cef/libcef_dll/libcef.lst") ]
+    }
+
+    if (is_ohos) {
+      deps += [ "//ohos_nweb:nweb_sources" ]
+      if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
+        deps += [ "//ohos_nweb_ex:nweb_ex" ]
+      }
+      configs += [ "//build/config/ohos:lld_pack_relocations" ]
+      if (!(defined(testonly) && testonly)) {
+        configs -= [ "//build/config/compiler:thinlto_optimize_default" ]
+        configs += [ "//build/config/compiler:thinlto_optimize_max" ]
+      }
     }
   }
 }

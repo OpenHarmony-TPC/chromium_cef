@@ -24,7 +24,6 @@
 #include "base/strings/string_util.h"
 #include "chrome/browser/font_family_cache.h"
 #include "chrome/browser/media/media_device_id_salt.h"
-#include "chrome/browser/plugins/chrome_plugin_service_filter.h"
 #include "chrome/browser/profiles/profile_key.h"
 #include "chrome/browser/ui/zoom/chrome_zoom_level_prefs.h"
 #include "chrome/common/pref_names.h"
@@ -48,6 +47,10 @@
 #include "extensions/common/constants.h"
 #include "net/proxy_resolution/proxy_config_service.h"
 #include "services/network/public/mojom/cors_origin_pattern.mojom.h"
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/chrome_plugin_service_filter.h"
+#endif
 
 using content::BrowserThread;
 
@@ -183,7 +186,9 @@ void AlloyBrowserContext::Initialize() {
   if (extensions_enabled)
     extension_system_->Init();
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   ChromePluginServiceFilter::GetInstance()->RegisterProfile(this);
+#endif
 
   media_device_id_salt_ = new MediaDeviceIDSalt(pref_service);
 }
@@ -194,7 +199,9 @@ void AlloyBrowserContext::Shutdown() {
   // Send notifications to clean up objects associated with this Profile.
   MaybeSendDestroyedNotification();
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   ChromePluginServiceFilter::GetInstance()->UnregisterProfile(this);
+#endif
 
   // Remove any BrowserContextKeyedServiceFactory associations. This must be
   // called before the ProxyService owned by AlloyBrowserContext is destroyed.

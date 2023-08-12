@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4a9c34d8dd8e49725dd7288c3a8c3e2a978c977c$
+// $hash=7af372362be16cd5150da026dbbf41c85daeba88$
 //
 
 #include "libcef_dll/ctocpp/browser_permission_request_delegate_ctocpp.h"
@@ -19,10 +19,11 @@
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::AskGeolocationPermission(
-    const CefString &origin, cef_permission_callback_t callback) {
+    const CefString& origin,
+    cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, ask_geolocation_permission))
     return;
 
@@ -39,10 +40,10 @@ void CefBrowserPermissionRequestDelegateCToCpp::AskGeolocationPermission(
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::AbortAskGeolocationPermission(
-    const CefString &origin) {
+    const CefString& origin) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, abort_ask_geolocation_permission))
     return;
 
@@ -59,11 +60,11 @@ void CefBrowserPermissionRequestDelegateCToCpp::AbortAskGeolocationPermission(
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::
-    AskProtectedMediaIdentifierPermission(const CefString &origin,
+    AskProtectedMediaIdentifierPermission(const CefString& origin,
                                           cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, ask_protected_media_identifier_permission))
     return;
 
@@ -81,10 +82,10 @@ void CefBrowserPermissionRequestDelegateCToCpp::
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::
-    AbortAskProtectedMediaIdentifierPermission(const CefString &origin) {
+    AbortAskProtectedMediaIdentifierPermission(const CefString& origin) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct,
                          abort_ask_protected_media_identifier_permission))
     return;
@@ -103,10 +104,11 @@ void CefBrowserPermissionRequestDelegateCToCpp::
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::AskMIDISysexPermission(
-    const CefString &origin, cef_permission_callback_t callback) {
+    const CefString& origin,
+    cef_permission_callback_t callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, ask_midisysex_permission))
     return;
 
@@ -123,10 +125,10 @@ void CefBrowserPermissionRequestDelegateCToCpp::AskMIDISysexPermission(
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::AbortAskMIDISysexPermission(
-    const CefString &origin) {
+    const CefString& origin) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, abort_ask_midisysex_permission))
     return;
 
@@ -143,10 +145,11 @@ void CefBrowserPermissionRequestDelegateCToCpp::AbortAskMIDISysexPermission(
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::NotifyGeolocationPermission(
-    bool value, const CefString &origin) {
+    bool value,
+    const CefString& origin) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_permission_request_delegate_t *_struct = GetStruct();
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, notify_geolocation_permission))
     return;
 
@@ -174,11 +177,11 @@ CefBrowserPermissionRequestDelegateCToCpp::
 }
 
 template <>
-cef_browser_permission_request_delegate_t *
+cef_browser_permission_request_delegate_t*
 CefCToCppRefCounted<CefBrowserPermissionRequestDelegateCToCpp,
                     CefBrowserPermissionRequestDelegate,
                     cef_browser_permission_request_delegate_t>::
-    UnwrapDerived(CefWrapperType type, CefBrowserPermissionRequestDelegate *c) {
+    UnwrapDerived(CefWrapperType type, CefBrowserPermissionRequestDelegate* c) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }

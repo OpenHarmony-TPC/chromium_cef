@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=caa6b1e4b3ff4716bb47e181b96c9483342b28de$
+// $hash=178710b8193986502c91eff7bbe6cbfe0e158055$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_
@@ -79,8 +79,6 @@ class CefRequestContextCToCpp
   bool HasExtension(const CefString& extension_id) override;
   bool GetExtensions(std::vector<CefString>& extension_ids) override;
   CefRefPtr<CefExtension> GetExtension(const CefString& extension_id) override;
-  CefRefPtr<CefMediaRouter> GetMediaRouter(
-      CefRefPtr<CefCompletionCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_

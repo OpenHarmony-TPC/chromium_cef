@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7b5c7ec8ac08f9547744baa38e840cf35a3e7a25$
+// $hash=0a76a650645cbe773c0109fd95ce88ff4c0841e5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DATA_BASE_CTOCPP_H_
@@ -41,10 +41,11 @@ class CefDataBaseCToCpp : public CefCToCppRefCounted<CefDataBaseCToCpp,
                                const CefString& realm,
                                const CefString& username,
                                const char* password) override;
-  void GetHttpAuthCredentials(
-      const CefString& host,
-      const CefString& realm,
-      std::vector<CefString>& username_password) override;
+  void GetHttpAuthCredentials(const CefString& host,
+                              const CefString& realm,
+                              CefString& username,
+                              char* password,
+                              uint32_t passwordSize) override;
   bool ExistPermissionByOrigin(const CefString& origin, int type) override;
   bool GetPermissionResultByOrigin(const CefString& origin,
                                    int type,

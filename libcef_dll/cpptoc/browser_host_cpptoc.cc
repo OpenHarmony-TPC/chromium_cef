@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1d35c0dce6fb6b92779d45000924a5c0992e5ce7$
+// $hash=fbbfbf396665393a59e2487e84880bafe3568174$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
+#include "libcef_dll/cpptoc/binary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
@@ -20,6 +21,7 @@
 #include "libcef_dll/cpptoc/navigation_entry_cpptoc.h"
 #include "libcef_dll/cpptoc/registration_cpptoc.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
+#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
 #include "libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.h"
 #include "libcef_dll/ctocpp/download_image_callback_ctocpp.h"
@@ -29,6 +31,7 @@
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
+#include "libcef_dll/ctocpp/web_message_receiver_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -1251,7 +1254,7 @@ browser_host_destroy_all_web_message_ports(struct _cef_browser_host_t* self) {
 void CEF_CALLBACK
 browser_host_post_port_message(struct _cef_browser_host_t* self,
                                cef_string_t* port_handle,
-                               cef_string_t* data) {
+                               struct _cef_value_t* message) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1263,24 +1266,23 @@ browser_host_post_port_message(struct _cef_browser_host_t* self,
   DCHECK(port_handle);
   if (!port_handle)
     return;
-  // Verify param: data; type: string_byref
-  DCHECK(data);
-  if (!data)
+  // Verify param: message; type: refptr_same
+  DCHECK(message);
+  if (!message)
     return;
 
   // Translate param: port_handle; type: string_byref
   CefString port_handleStr(port_handle);
-  // Translate param: data; type: string_byref
-  CefString dataStr(data);
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->PostPortMessage(port_handleStr, dataStr);
+  CefBrowserHostCppToC::Get(self)->PostPortMessage(
+      port_handleStr, CefValueCppToC::Unwrap(message));
 }
 
 void CEF_CALLBACK browser_host_set_port_message_callback(
     struct _cef_browser_host_t* self,
     cef_string_t* port_handle,
-    struct _cef_java_script_result_callback_t* callback) {
+    struct _cef_web_message_receiver_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1302,7 +1304,7 @@ void CEF_CALLBACK browser_host_set_port_message_callback(
 
   // Execute
   CefBrowserHostCppToC::Get(self)->SetPortMessageCallback(
-      port_handleStr, CefJavaScriptResultCallbackCToCpp::Wrap(callback));
+      port_handleStr, CefWebMessageReceiverCToCpp::Wrap(callback));
 }
 
 void CEF_CALLBACK browser_host_get_hit_data(struct _cef_browser_host_t* self,
@@ -1985,6 +1987,152 @@ void CEF_CALLBACK browser_host_remove_cache(struct _cef_browser_host_t* self,
                                                                   : false);
 }
 
+void CEF_CALLBACK
+browser_host_scroll_page_up_down(struct _cef_browser_host_t* self,
+                                 int is_up,
+                                 int is_half,
+                                 float view_height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollPageUpDown(
+      is_up ? true : false, is_half ? true : false, view_height);
+}
+
+struct _cef_binary_value_t* CEF_CALLBACK
+browser_host_get_web_state(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefBinaryValue> _retval =
+      CefBrowserHostCppToC::Get(self)->GetWebState();
+
+  // Return type: refptr_same
+  return CefBinaryValueCppToC::Wrap(_retval);
+}
+
+int CEF_CALLBACK
+browser_host_restore_web_state(struct _cef_browser_host_t* self,
+                               struct _cef_binary_value_t* state) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: state; type: refptr_same
+  DCHECK(state);
+  if (!state)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->RestoreWebState(
+      CefBinaryValueCppToC::Unwrap(state));
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK browser_host_scroll_to(struct _cef_browser_host_t* self,
+                                         float x,
+                                         float y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollTo(x, y);
+}
+
+void CEF_CALLBACK browser_host_scroll_by(struct _cef_browser_host_t* self,
+                                         float delta_x,
+                                         float delta_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollBy(delta_x, delta_y);
+}
+
+void CEF_CALLBACK browser_host_slide_scroll(struct _cef_browser_host_t* self,
+                                            float vx,
+                                            float vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SlideScroll(vx, vy);
+}
+
+void CEF_CALLBACK browser_host_set_file_access(struct _cef_browser_host_t* self,
+                                               int falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetFileAccess(falg ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_set_block_network(struct _cef_browser_host_t* self, int falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetBlockNetwork(falg ? true : false);
+}
+
+void CEF_CALLBACK browser_host_set_cache_mode(struct _cef_browser_host_t* self,
+                                              int falg) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetCacheMode(falg);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2098,6 +2246,15 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_original_url = browser_host_get_original_url;
   GetStruct()->put_network_available = browser_host_put_network_available;
   GetStruct()->remove_cache = browser_host_remove_cache;
+  GetStruct()->scroll_page_up_down = browser_host_scroll_page_up_down;
+  GetStruct()->get_web_state = browser_host_get_web_state;
+  GetStruct()->restore_web_state = browser_host_restore_web_state;
+  GetStruct()->scroll_to = browser_host_scroll_to;
+  GetStruct()->scroll_by = browser_host_scroll_by;
+  GetStruct()->slide_scroll = browser_host_slide_scroll;
+  GetStruct()->set_file_access = browser_host_set_file_access;
+  GetStruct()->set_block_network = browser_host_set_block_network;
+  GetStruct()->set_cache_mode = browser_host_set_cache_mode;
 }
 
 // DESTRUCTOR - Do not edit by hand.

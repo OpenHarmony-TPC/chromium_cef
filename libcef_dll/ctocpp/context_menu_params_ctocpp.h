@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=de83ca0067722af09407abc0b7723a8d91d083ad$
+// $hash=fd06aad327c518573e68c645f3facd55fea2da34$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_
@@ -56,6 +56,8 @@ class CefContextMenuParamsCToCpp
   bool IsSpellCheckEnabled() override;
   EditStateFlags GetEditStateFlags() override;
   bool IsCustomMenu() override;
+  InputFieldType GetInputFieldType() override;
+  SourceType GetSourceType() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fb268437c35b6a412dc6305ae83798d4d1db56d6$
+// $hash=9d70e8e88a252b29a7157b30e487ce44b6d77404$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
@@ -44,6 +44,15 @@ class CefDialogHandlerCToCpp
                     int selected_accept_filter,
                     bool capture,
                     CefRefPtr<CefFileDialogCallback> callback) override;
+  void OnSelectPopupMenu(CefRefPtr<CefBrowser> browser,
+                         const CefRect& bounds,
+                         int item_height,
+                         double item_font_size,
+                         int selected_item,
+                         const std::vector<CefSelectPopupItem>& menu_items,
+                         bool right_aligned,
+                         bool allow_multiple_selection,
+                         CefRefPtr<CefSelectPopupCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

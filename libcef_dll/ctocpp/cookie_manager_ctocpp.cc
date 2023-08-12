@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6e1bd6af22e730b6d6a12a7296414250bf415979$
+// $hash=3a8702e5b54310d93f9f43d60dd4d6d77b83da9d$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -28,7 +28,7 @@ CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalManager(
   // Unverified params: callback
 
   // Execute
-  cef_cookie_manager_t *_retval = cef_cookie_manager_get_global_manager(
+  cef_cookie_manager_t* _retval = cef_cookie_manager_get_global_manager(
       CefCompletionCallbackCppToC::Wrap(callback));
 
   // Return type: refptr_same
@@ -36,9 +36,9 @@ CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalManager(
 }
 
 NO_SANITIZE("cfi-icall")
-bool CefCookieManager::CreateCefCookie(const CefString &url,
-                                       const CefString &value,
-                                       CefCookie &cef_cookie) {
+bool CefCookieManager::CreateCefCookie(const CefString& url,
+                                       const CefString& value,
+                                       CefCookie& cef_cookie) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: url; type: string_byref_const
@@ -61,7 +61,7 @@ bool CefCookieManager::CreateCefCookie(const CefString &url,
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::IsAcceptCookieAllowed() {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_accept_cookie_allowed))
     return false;
 
@@ -76,7 +76,7 @@ NO_SANITIZE("cfi-icall") bool CefCookieManagerCToCpp::IsAcceptCookieAllowed() {
 
 NO_SANITIZE("cfi-icall")
 void CefCookieManagerCToCpp::PutAcceptCookieEnabled(bool accept) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, put_accept_cookie_enabled))
     return;
 
@@ -88,7 +88,7 @@ void CefCookieManagerCToCpp::PutAcceptCookieEnabled(bool accept) {
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::IsThirdPartyCookieAllowed() {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_third_party_cookie_allowed))
     return false;
 
@@ -103,7 +103,7 @@ bool CefCookieManagerCToCpp::IsThirdPartyCookieAllowed() {
 
 NO_SANITIZE("cfi-icall")
 void CefCookieManagerCToCpp::PutAcceptThirdPartyCookieEnabled(bool accept) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, put_accept_third_party_cookie_enabled))
     return;
 
@@ -115,7 +115,7 @@ void CefCookieManagerCToCpp::PutAcceptThirdPartyCookieEnabled(bool accept) {
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::IsFileURLSchemeCookiesAllowed() {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_file_urlscheme_cookies_allowed))
     return false;
 
@@ -130,7 +130,7 @@ bool CefCookieManagerCToCpp::IsFileURLSchemeCookiesAllowed() {
 
 NO_SANITIZE("cfi-icall")
 void CefCookieManagerCToCpp::PutAcceptFileURLSchemeCookiesEnabled(bool allow) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, put_accept_file_urlscheme_cookies_enabled))
     return;
 
@@ -143,7 +143,7 @@ void CefCookieManagerCToCpp::PutAcceptFileURLSchemeCookiesEnabled(bool allow) {
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::VisitAllCookies(
     CefRefPtr<CefCookieVisitor> visitor) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, visit_all_cookies))
     return false;
 
@@ -164,9 +164,10 @@ bool CefCookieManagerCToCpp::VisitAllCookies(
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::VisitUrlCookies(
-    const CefString &url, bool includeHttpOnly,
+    const CefString& url,
+    bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, visit_url_cookies))
     return false;
 
@@ -192,9 +193,10 @@ bool CefCookieManagerCToCpp::VisitUrlCookies(
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::SetCookie(
-    const CefString &url, const CefCookie &cookie,
+    const CefString& url,
+    const CefCookie& cookie,
     CefRefPtr<CefSetCookieCallback> callback) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_cookie))
     return false;
 
@@ -216,9 +218,11 @@ bool CefCookieManagerCToCpp::SetCookie(
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::DeleteCookies(
-    const CefString &url, const CefString &cookie_name, bool is_session,
+    const CefString& url,
+    const CefString& cookie_name,
+    bool is_session,
     CefRefPtr<CefDeleteCookiesCallback> callback) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, delete_cookies))
     return false;
 
@@ -238,7 +242,7 @@ bool CefCookieManagerCToCpp::DeleteCookies(
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::FlushStore(
     CefRefPtr<CefCompletionCallback> callback) {
-  cef_cookie_manager_t *_struct = GetStruct();
+  cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, flush_store))
     return false;
 
@@ -263,15 +267,17 @@ CefCookieManagerCToCpp::CefCookieManagerCToCpp() {}
 CefCookieManagerCToCpp::~CefCookieManagerCToCpp() {}
 
 template <>
-cef_cookie_manager_t *
-CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager,
+cef_cookie_manager_t*
+CefCToCppRefCounted<CefCookieManagerCToCpp,
+                    CefCookieManager,
                     cef_cookie_manager_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefCookieManager *c) {
+                                                         CefCookieManager* c) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager,
+CefWrapperType CefCToCppRefCounted<CefCookieManagerCToCpp,
+                                   CefCookieManager,
                                    cef_cookie_manager_t>::kWrapperType =
     WT_COOKIE_MANAGER;

@@ -12,7 +12,6 @@
 #include "build/build_config.h"
 
 #include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/chrome/browser_platform_delegate_chrome.h"
 #include "libcef/browser/extensions/browser_platform_delegate_background.h"
 #include "libcef/features/runtime_checks.h"
 
@@ -30,9 +29,15 @@
 #endif
 
 #if defined(TOOLKIT_VIEWS)
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 #include "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h"
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 #include "libcef/browser/views/browser_platform_delegate_views.h"
 #endif
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/chrome/browser_platform_delegate_chrome.h"
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
 namespace {
 
@@ -79,6 +84,7 @@ std::unique_ptr<CefBrowserPlatformDelegate> CefBrowserPlatformDelegate::Create(
   const SkColor background_color = CefContext::Get()->GetBackgroundColor(
       &create_params.settings, is_windowless ? STATE_ENABLED : STATE_DISABLED);
 
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     // CefWindowInfo is not used in this case.
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate =
@@ -94,6 +100,7 @@ std::unique_ptr<CefBrowserPlatformDelegate> CefBrowserPlatformDelegate::Create(
     return std::make_unique<CefBrowserPlatformDelegateChrome>(
         std::move(native_delegate));
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   if (create_params.window_info) {
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate =

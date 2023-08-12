@@ -21,8 +21,14 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
+#include "ui/base/clipboard/clipboard.h"
+#include "ui/base/data_transfer_policy/data_transfer_endpoint.h"
 
 namespace {
+
+constexpr cef_context_menu_edit_state_flags_t kMenuCommands[] = {
+    CM_EDITFLAG_CAN_CUT, CM_EDITFLAG_CAN_COPY, CM_EDITFLAG_CAN_PASTE,
+    CM_EDITFLAG_CAN_DELETE, CM_EDITFLAG_CAN_SELECT_ALL};
 
 CefString GetLabel(int message_id) {
   std::u16string label =
@@ -120,6 +126,53 @@ bool CefMenuManager::IsShowingContextMenu() {
   return web_contents()->IsShowingContextMenu();
 }
 
+bool CefMenuManager::IsCommandIdEnabled(int command_id,
+    content::ContextMenuParams& params) const {
+  bool editable = params.is_editable;
+  bool readable = params.input_field_type != blink::mojom::ContextMenuDataInputFieldType::kPassword;
+  bool has_selection = !params.selection_text.empty();
+  bool has_image_contents = params.has_image_contents;
+
+  switch (command_id) {
+    case CM_EDITFLAG_CAN_CUT:
+    case CM_EDITFLAG_CAN_DELETE:
+      return editable && readable && has_selection;
+    case CM_EDITFLAG_CAN_COPY:
+      return readable && (has_selection || has_image_contents);
+    case CM_EDITFLAG_CAN_PASTE: {
+      std::u16string result;
+      bool can_paste = false;
+      ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
+          ui::EndpointType::kDefault, false);
+      ui::Clipboard::GetForCurrentThread()->ReadText(
+          ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
+
+      if (result.empty()) {
+        can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
+            ui::ClipboardFormatType::BitmapType(),
+            ui::ClipboardBuffer::kCopyPaste, &data_dst);
+      }
+      can_paste = can_paste ? can_paste : !result.empty();
+      return editable && can_paste;
+    }
+    case CM_EDITFLAG_CAN_SELECT_ALL:
+      return editable || readable;
+    default:
+      return false;
+  }
+}
+
+void CefMenuManager::UpdateMenuEditStateFlags(content::ContextMenuParams& params) {
+  int menu_flags = 0;
+  for (const auto& command : kMenuCommands) {
+    if (IsCommandIdEnabled(command, params)) {
+      menu_flags |= command;
+    }
+  }
+
+  params.edit_flags = menu_flags;
+}
+
 bool CefMenuManager::CreateContextMenu(
     const content::ContextMenuParams& params) {
   // The renderer may send the "show context menu" message multiple times, one
@@ -134,6 +187,7 @@ bool CefMenuManager::CreateContextMenu(
 
   params_ = params;
   model_->Clear();
+  UpdateMenuEditStateFlags(params_);
 
   // Create the default menu model.
   CreateDefaultModel();

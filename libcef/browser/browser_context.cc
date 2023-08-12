@@ -8,7 +8,6 @@
 #include <utility>
 
 #include "libcef/browser/context.h"
-#include "libcef/browser/media_router/media_router_manager.h"
 #include "libcef/browser/request_context_impl.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/common/cef_switches.h"
@@ -27,6 +26,10 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/storage_partition.h"
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
+#include "libcef/browser/media_router/media_router_manager.h"
+#endif
 
 using content::BrowserThread;
 
@@ -212,8 +215,10 @@ void CefBrowserContext::Shutdown() {
   // Unregister the context first to avoid re-entrancy during shutdown.
   g_manager.Get().RemoveImpl(this, cache_path_);
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   // Destroy objects that may hold references to the MediaRouter.
   media_router_manager_.reset();
+#endif
 
   // Invalidate any Getter references to this object.
   weak_ptr_factory_.InvalidateWeakPtrs();
@@ -264,6 +269,7 @@ CefBrowserContext* CefBrowserContext::FromProfile(const Profile* profile) {
   if (cef_context)
     return cef_context;
 
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     auto* original_profile = profile->GetOriginalProfile();
     if (original_profile != profile) {
@@ -273,6 +279,7 @@ CefBrowserContext* CefBrowserContext::FromProfile(const Profile* profile) {
       return FromBrowserContext(original_profile);
     }
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   return nullptr;
 }
@@ -403,6 +410,7 @@ network::mojom::NetworkContext* CefBrowserContext::GetNetworkContext() {
   return browser_context->GetDefaultStoragePartition()->GetNetworkContext();
 }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 CefMediaRouterManager* CefBrowserContext::GetMediaRouterManager() {
   CEF_REQUIRE_UIT();
   if (!media_router_manager_) {
@@ -410,6 +418,7 @@ CefMediaRouterManager* CefBrowserContext::GetMediaRouterManager() {
   }
   return media_router_manager_.get();
 }
+#endif
 
 CefBrowserContext::CookieableSchemes CefBrowserContext::GetCookieableSchemes()
     const {

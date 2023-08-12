@@ -5,10 +5,13 @@
 
 #include "include/cef_browser.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/chrome/chrome_browser_host_impl.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/features/runtime.h"
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/chrome/chrome_browser_host_impl.h"
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
 namespace {
 
@@ -138,10 +141,12 @@ CefRefPtr<CefBrowser> CefBrowserHost::CreateBrowserSync(
 // static
 CefRefPtr<CefBrowserHostBase> CefBrowserHostBase::Create(
     CefBrowserCreateParams& create_params) {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   if (cef::IsChromeRuntimeEnabled()) {
     auto browser = ChromeBrowserHostImpl::Create(create_params);
     return browser.get();
   }
+#endif // defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
 
   auto browser = AlloyBrowserHostImpl::Create(create_params);
   return browser.get();

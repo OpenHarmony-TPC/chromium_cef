@@ -50,6 +50,7 @@
 #include "base/strings/string_number_conversions.h"
 #include "chrome/browser/browser_process.h"
 #include "content/public/common/mhtml_generation_params.h"
+#include "libcef/browser/navigation_state_serializer.h"
 #include "libcef/browser/javascript/oh_javascript_injector.h"
 #include "ui/base/resource/resource_bundle.h"
 #endif
@@ -498,6 +499,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   //    browser_settings.file_access_from_file_urls;
   /* ohos webview add*/
   settings_.force_dark_mode_enabled = browser_settings.force_dark_mode_enabled;
+  settings_.dark_prefer_color_scheme_enabled = browser_settings.dark_prefer_color_scheme_enabled;
   settings_.javascript_can_open_windows_automatically =
       browser_settings.javascript_can_open_windows_automatically;
   settings_.loads_images_automatically =
@@ -519,6 +521,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
   settings_.user_gesture_required = browser_settings.user_gesture_required;
   settings_.pinch_smooth_mode = browser_settings.pinch_smooth_mode;
+#if BUILDFLAG(IS_OHOS)
+  settings_.hide_vertical_scrollbars = browser_settings.hide_vertical_scrollbars;
+  settings_.hide_horizontal_scrollbars = browser_settings.hide_horizontal_scrollbars;
+#endif
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -721,8 +727,7 @@ CefString CefBrowserHostBase::GetOriginalUrl() {
 void CefBrowserHostBase::PutNetworkAvailable(bool available) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->SetJsOnlineProperty(available);
+    static_cast<CefFrameHostImpl*>(frame.get())->SetJsOnlineProperty(available);
   }
 }
 
@@ -767,7 +772,8 @@ void CefBrowserHostBase::ExitFullScreen() {
     return;
   }
   wc->GetMainFrame()->AllowInjectingJavaScript();
-  std::string jscode("{if(document.fullscreenElement){document.exitFullscreen()}}");
+  std::string jscode(
+      "{if(document.fullscreenElement){document.exitFullscreen()}}");
   wc->GetMainFrame()->ExecuteJavaScript(base::UTF8ToUTF16(jscode),
                                         base::NullCallback());
 }
@@ -974,6 +980,59 @@ void CefBrowserHostBase::RemoveCache(bool include_disk_files) {
     LOG(ERROR) << "browser host remove cache failed, frame is not valid";
     return;
   }
+}
+void CefBrowserHostBase::ScrollPageUpDown(bool is_up,
+                                          bool is_half,
+                                          float view_height) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->ScrollPageUpDown(is_up, is_half, view_height);
+  }
+}
+
+void CefBrowserHostBase::ScrollTo(float x,
+                                  float y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->ScrollTo(x, y);
+  }
+}
+
+void CefBrowserHostBase::ScrollBy(float delta_x,
+                                  float delta_y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->ScrollBy(delta_x, delta_y);
+  }
+}
+
+void CefBrowserHostBase::SlideScroll(float vx,
+                                     float vy) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+       ->SlideScroll(vx, vy);
+  }
+}
+
+CefRefPtr<CefBinaryValue> CefBrowserHostBase::GetWebState() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    return nullptr;
+  }
+
+  return NavigationStateSerializer::WriteNavigationStatus(*web_contents);
+}
+
+bool CefBrowserHostBase::RestoreWebState(const CefRefPtr<CefBinaryValue> state) {
+  auto web_contents = GetWebContents();
+  if (!web_contents || !state) {
+    return false;
+  }
+  return NavigationStateSerializer::RestoreNavigationStatus(*web_contents, state);
 }
 #endif  // IS_OHOS
 
@@ -1539,19 +1598,32 @@ void CefBrowserHostBase::ClosePort(CefString& portHandle) {
 }
 
 void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
-                                         CefString& data) {
+                                         CefRefPtr<CefValue> data) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
 
-  std::u16string message(base::UTF8ToUTF16(data.ToString()));
+  blink::WebMessagePort::Message message;
+  if (data->GetType() == VTYPE_STRING) {
+    message = blink::WebMessagePort::Message(base::UTF8ToUTF16(data->GetString().ToString()));
+  } else if (data->GetType() == VTYPE_BINARY) {
+    CefRefPtr<CefBinaryValue> binValue = data->GetBinary();
+    size_t len = binValue->GetSize();
+    std::vector<uint8_t> arr(len);
+    binValue->GetData(&arr[0], len, 0);
+    message = blink::WebMessagePort::Message(std::move(arr));
+  } else {
+    LOG(ERROR) << "CefBrowserHostBase::PostPortMessage not support type";
+	return;
+  }
+
   // find the WebMessagePort in map
   for (auto iter = portMap_.begin(); iter != portMap_.end(); ++iter) {
     if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0) {
       if (iter->second.first.CanPostMessage()) {
-        iter->second.first.PostMessage(blink::WebMessagePort::Message(message));
+        iter->second.first.PostMessage(std::move(message));
       } else {
         LOG(ERROR) << "port can not post messsage";
       }
@@ -1559,8 +1631,7 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
     } else if (portHandle.ToString().compare(
                    std::to_string(iter->first.second)) == 0) {
       if (iter->second.second.CanPostMessage()) {
-        iter->second.second.PostMessage(
-            blink::WebMessagePort::Message(message));
+        iter->second.second.PostMessage(std::move(message));
       } else {
         LOG(ERROR) << "port can not post messsage";
       }
@@ -1574,7 +1645,7 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::SetPortMessageCallback(
     CefString& portHandle,
-    CefRefPtr<CefJavaScriptResultCallback> callback) {
+    CefRefPtr<CefWebMessageReceiver> callback) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
@@ -1640,7 +1711,7 @@ WebMessageReceiverImpl::~WebMessageReceiverImpl() {
 }
 
 void WebMessageReceiverImpl::SetOnMessageCallback(
-    CefRefPtr<CefJavaScriptResultCallback> callback) {
+    CefRefPtr<CefWebMessageReceiver> callback) {
   LOG(INFO) << "WebMessageReceiverImpl::SetOnMessageCallback ";
   callback_ = callback;
 }
@@ -1650,9 +1721,17 @@ bool WebMessageReceiverImpl::OnMessage(blink::WebMessagePort::Message message) {
   LOG(INFO) << "OnMessage start";
   // Pass the message on to the receiver.
   if (callback_) {
-    LOG(INFO) << "OnMessage:" << message.data;
-    std::u16string data = message.data;
-    callback_->OnJavaScriptExeResult(base::UTF16ToUTF8(data));
+    CefRefPtr<CefValue> data = CefValue::Create();
+    if (!message.data.empty()) {
+      data->SetString(base::UTF16ToUTF8(message.data));
+    } else {
+      std::vector<uint8_t> vecBinary = message.array_buffer;
+      CefRefPtr<CefBinaryValue> value =
+        CefBinaryValue::Create(vecBinary.data(), vecBinary.size());
+      data->SetBinary(value);
+    }
+
+    callback_->OnMessage(data);
   } else {
     LOG(ERROR) << "u should set callback to receive message";
   }
@@ -1717,8 +1796,10 @@ void CefBrowserHostBase::LoadWithDataAndBaseUrl(const CefString& baseUrl,
                                                 const CefString& encoding,
                                                 const CefString& historyUrl) {
   if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(CEF_UIT, base::BindOnce(&CefBrowserHostBase::LoadWithDataAndBaseUrl,
-      this, baseUrl, data, mimeType, encoding, historyUrl));
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefBrowserHostBase::LoadWithDataAndBaseUrl, this,
+                       baseUrl, data, mimeType, encoding, historyUrl));
     return;
   }
   std::string dataBase = data.empty() ? "" : data;
@@ -1761,7 +1842,7 @@ void CefBrowserHostBase::LoadWithData(const CefString& data,
                                       const CefString& encoding) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT, base::BindOnce(&CefBrowserHostBase::LoadWithData,
-      this, data, mimeType, encoding));
+                                          this, data, mimeType, encoding));
     return;
   }
   std::string dataBase = data.empty() ? "" : data;
@@ -1834,6 +1915,48 @@ bool CefBrowserHostBase::GetWebDebuggingAccess() {
   base::AutoLock lock_scope(state_lock_);
   return is_web_debugging_access_;
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::SetFileAccess(bool flag) {
+  base::AutoLock lock_scope(state_lock_);
+  if (file_access_ == flag) {
+    return;
+  }
+  file_access_ = flag;
+}
+
+void CefBrowserHostBase::SetBlockNetwork(bool flag) {
+  base::AutoLock lock_scope(state_lock_);
+  if (network_blocked_ == flag) {
+    return;
+  }
+  network_blocked_ = flag;
+}
+
+void CefBrowserHostBase::SetCacheMode(int flag) {
+  base::AutoLock lock_scope(state_lock_);
+  if (cache_mode_ == flag) {
+    return;
+  }
+  cache_mode_ = flag;
+}
+
+
+bool CefBrowserHostBase::GetFileAccess() {
+  base::AutoLock lock_scope(state_lock_);
+  return file_access_;
+}
+
+bool CefBrowserHostBase::GetBlockNetwork() {
+  base::AutoLock lock_scope(state_lock_);
+  return network_blocked_;
+}
+
+int CefBrowserHostBase::GetCacheMode() {
+  base::AutoLock lock_scope(state_lock_);
+  return cache_mode_;
+}
+#endif
 
 void CefBrowserHostBase::GetImageForContextNode() {
   auto frame = GetMainFrame();

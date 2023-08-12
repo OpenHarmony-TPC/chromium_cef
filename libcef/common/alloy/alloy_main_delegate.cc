@@ -25,7 +25,6 @@
 #include "base/strings/string_util.h"
 #include "base/synchronization/waitable_event.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/child/pdf_child_init.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
@@ -41,7 +40,6 @@
 #include "content/public/common/url_constants.h"
 #include "extensions/common/constants.h"
 #include "net/base/features.h"
-#include "pdf/pdf_ppapi.h"
 #include "sandbox/policy/switches.h"
 #include "services/network/public/cpp/features.h"
 #include "third_party/blink/public/common/switches.h"
@@ -56,6 +54,14 @@
 
 #if BUILDFLAG(IS_WIN)
 #include "ui/base/resource/resource_bundle_win.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "pdf/buildflags.h"
+#if BUILDFLAG(ENABLE_PDF)
+#include "chrome/child/pdf_child_init.h"
+#include "pdf/pdf_ppapi.h"
+#endif
 #endif
 
 namespace {
@@ -379,13 +385,17 @@ void AlloyMainDelegate::PreSandboxStartup() {
                                           chrome::DIR_USER_DATA);
 
   InitializeResourceBundle();
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   MaybePatchGdiGetFontData();
+#endif
 }
 
 void AlloyMainDelegate::SandboxInitialized(const std::string& process_type) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   AlloyContentClient::SetPDFEntryFunctions(chrome_pdf::PPP_GetInterface,
                                            chrome_pdf::PPP_InitializeModule,
                                            chrome_pdf::PPP_ShutdownModule);
+#endif
 }
 
 absl::variant<int, content::MainFunctionParams> AlloyMainDelegate::RunProcess(
@@ -548,7 +558,6 @@ void AlloyMainDelegate::InitializeResourceBundle() {
 
   std::string locale = command_line->GetSwitchValueASCII(switches::kLang);
   DCHECK(!locale.empty());
-
   const std::string loaded_locale =
       ui::ResourceBundle::InitSharedInstanceWithLocale(
           locale, &resource_bundle_delegate_,
@@ -562,33 +571,47 @@ void AlloyMainDelegate::InitializeResourceBundle() {
       LOG(ERROR) << "Could not load locale pak for " << locale;
 
     resource_bundle_delegate_.set_allow_pack_file_load(true);
-
+#if BUILDFLAG(IS_OHOS)
+    resource_bundle.AddDataPackFromPath(resources_pak_file,
+                                        ui::kScaleFactorNone);
+#else
     if (base::PathExists(resources_pak_file)) {
       resource_bundle.AddDataPackFromPath(resources_pak_file,
                                           ui::kScaleFactorNone);
     } else {
       LOG(ERROR) << "Could not load resources.pak";
     }
+#endif
 
     // Always load the 1x data pack first as the 2x data pack contains both 1x
     // and 2x images. The 1x data pack only has 1x images, thus passes in an
     // accurate scale factor to gfx::ImageSkia::AddRepresentation.
     if (resource_util::IsScaleFactorSupported(ui::k100Percent)) {
+#if BUILDFLAG(IS_OHOS)
+      resource_bundle.AddDataPackFromPath(chrome_100_percent_pak_file,
+                                          ui::k100Percent);
+#else
       if (base::PathExists(chrome_100_percent_pak_file)) {
         resource_bundle.AddDataPackFromPath(chrome_100_percent_pak_file,
                                             ui::k100Percent);
       } else {
         LOG(ERROR) << "Could not load chrome_100_percent.pak";
       }
+#endif
     }
 
     if (resource_util::IsScaleFactorSupported(ui::k200Percent)) {
+#if BUILDFLAG(IS_OHOS)
+      resource_bundle.AddDataPackFromPath(chrome_200_percent_pak_file,
+                                          ui::k200Percent);
+#else
       if (base::PathExists(chrome_200_percent_pak_file)) {
         resource_bundle.AddDataPackFromPath(chrome_200_percent_pak_file,
                                             ui::k200Percent);
       } else {
         LOG(ERROR) << "Could not load chrome_200_percent.pak";
       }
+#endif
     }
 
     // Skip the default pak file loading that would otherwise occur in

@@ -81,7 +81,9 @@ class CefDataBase : public virtual CefBaseRefCounted {
   virtual void GetHttpAuthCredentials(
       const CefString& host,
       const CefString& realm,
-      std::vector<CefString>& username_password) = 0;
+      CefString& username,
+      char* password,
+      uint32_t passwordSize) = 0;
 
   ///
   // gets whether the instance holds the specified permissions for the specified

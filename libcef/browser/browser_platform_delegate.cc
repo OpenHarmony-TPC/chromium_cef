@@ -393,6 +393,18 @@ void CefBrowserPlatformDelegate::StopFinding(bool clearSelection) {
   NOTIMPLEMENTED();
 }
 
+void CefBrowserPlatformDelegate::ShowPopupMenu(
+    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+    const gfx::Rect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    std::vector<blink::mojom::MenuItemPtr> menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection) {
+  NOTIMPLEMENTED();
+}
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {

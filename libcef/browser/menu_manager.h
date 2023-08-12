@@ -63,6 +63,11 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   // Returns true if the specified id is a custom context menu command.
   bool IsCustomContextMenuCommand(int command_id);
 
+  bool IsCommandIdEnabled(int command_id,
+    content::ContextMenuParams& params) const;
+
+  void UpdateMenuEditStateFlags(content::ContextMenuParams& params);
+
   // AlloyBrowserHostImpl pointer is guaranteed to outlive this object.
   AlloyBrowserHostImpl* browser_;
 

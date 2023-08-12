@@ -41,6 +41,7 @@ class CefTouchSelectionControllerClientOSR
   ~CefTouchSelectionControllerClientOSR() override;
 
   void CloseQuickMenuAndHideHandles();
+  void SetTemporarilyHidden(bool hidden);
 
   void OnWindowMoved();
 

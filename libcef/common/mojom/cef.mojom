@@ -12,6 +12,7 @@ import "services/network/public/mojom/url_request.mojom";
 import "third_party/blink/public/mojom/loader/referrer.mojom";
 import "ui/gfx/geometry/mojom/geometry.mojom";
 import "url/mojom/url.mojom";
+import "mojo/public/mojom/base/time.mojom";
 
 [EnableIf=is_ohos]
 import "skia/public/mojom/bitmap.mojom";
@@ -130,6 +131,18 @@ interface RenderFrame {
 
   [EnableIf=is_ohos]
   RemoveCache();
+
+  [EnableIf=is_ohos]
+  ScrollPageUpDown(bool is_up, bool move_half, float view_height);
+
+  [EnableIf=is_ohos]
+  ScrollTo(float x, float y);
+
+  [EnableIf=is_ohos]
+  ScrollBy(float delta_x, float delta_y);
+
+  [EnableIf=is_ohos]
+  SlideScroll(float vx, float vy);
 };
 
 // Interface for communicating with a frame in the browser process.

@@ -18,6 +18,14 @@
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "media/media_buildflags.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/browser/printing/background_printing_manager.h"
+#include "chrome/browser/printing/print_preview_dialog_controller.h"
+#endif
+#endif
+
 namespace extensions {
 class ExtensionsBrowserClient;
 class ExtensionsClient;
@@ -127,10 +135,12 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
   std::unique_ptr<printing::PrintJobManager> print_job_manager_;
   std::unique_ptr<ChromeProfileManagerAlloy> profile_manager_;
   scoped_refptr<extensions::EventRouterForwarder> event_router_forwarder_;
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   scoped_refptr<printing::PrintPreviewDialogController>
       print_preview_dialog_controller_;
   std::unique_ptr<printing::BackgroundPrintingManager>
       background_printing_manager_;
+#endif
   std::unique_ptr<PrefService> local_state_;
   // Must be destroyed after |local_state_|.
   std::unique_ptr<policy::ChromeBrowserPolicyConnector>

@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=379974b466cf5b511906b6492c7fa594a26e4d33$
+// $hash=cef68f9f361591f91495436c08d0f5e07738a594$
 //
 
 #include "libcef_dll/ctocpp/views/browser_view_delegate_ctocpp.h"
@@ -75,12 +75,11 @@ void CefBrowserViewDelegateCToCpp::OnBrowserDestroyed(
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefBrowserViewDelegate>
-CefBrowserViewDelegateCToCpp::GetDelegateForPopupBrowserView(
-    CefRefPtr<CefBrowserView> browser_view,
-    const CefBrowserSettings& settings,
-    CefRefPtr<CefClient> client,
-    bool is_devtools) {
+CefRefPtr<CefBrowserViewDelegate> CefBrowserViewDelegateCToCpp::
+    GetDelegateForPopupBrowserView(CefRefPtr<CefBrowserView> browser_view,
+                                   const CefBrowserSettings& settings,
+                                   CefRefPtr<CefClient> client,
+                                   bool is_devtools) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_view_delegate_t* _struct = GetStruct();
@@ -141,7 +140,7 @@ bool CefBrowserViewDelegateCToCpp::OnPopupBrowserViewCreated(
 
 NO_SANITIZE("cfi-icall")
 CefBrowserViewDelegate::ChromeToolbarType
-CefBrowserViewDelegateCToCpp::GetChromeToolbarType() {
+    CefBrowserViewDelegateCToCpp::GetChromeToolbarType() {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_view_delegate_t* _struct = GetStruct();
@@ -158,8 +157,8 @@ CefBrowserViewDelegateCToCpp::GetChromeToolbarType() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefSize CefBrowserViewDelegateCToCpp::GetPreferredSize(
-    CefRefPtr<CefView> view) {
+CefSize
+    CefBrowserViewDelegateCToCpp::GetPreferredSize(CefRefPtr<CefView> view) {
   shutdown_checker::AssertNotShutdown();
 
   cef_view_delegate_t* _struct =

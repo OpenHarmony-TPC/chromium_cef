@@ -53,6 +53,7 @@
 class CefBrowserHost;
 class CefClient;
 class CefJavaScriptResultCallback;
+class CefWebMessageReceiver;
 class CefStoreWebArchiveResultCallback;
 
 ///
@@ -237,7 +238,8 @@ class CefBrowser : public virtual CefBaseRefCounted {
   // Returns the Permission Request Delegate object.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate() = 0;
+  virtual CefRefPtr<CefBrowserPermissionRequestDelegate>
+  GetPermissionRequestDelegate() = 0;
 
   ///
   // Returns the Geolocation Permission handler object.
@@ -899,7 +901,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // Post a message to the port.
   ///
   /*--cef()--*/
-  virtual void PostPortMessage(CefString& port_handle, CefString& data) = 0;
+  virtual void PostPortMessage(CefString& port_handle, CefRefPtr<CefValue> message) = 0;
 
   ///
   // Set the callback of the port.
@@ -907,7 +909,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetPortMessageCallback(
       CefString& port_handle,
-      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+      CefRefPtr<CefWebMessageReceiver> callback) = 0;
 
   ///
   // Gets the latest hitdata
@@ -953,7 +955,8 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // Loads the given data into this WebView
   // optional_param=data, optional_param=mimeType, optional_param=encoding,
   ///
-  /*--cef(optional_param=data, optional_param=mimeType, optional_param=encoding,)--*/
+  /*--cef(optional_param=data, optional_param=mimeType,
+          optional_param=encoding,)--*/
   virtual void LoadWithData(const CefString& data,
                             const CefString& mimeType,
                             const CefString& encoding) = 0;
@@ -1235,6 +1238,62 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void RemoveCache(bool include_disk_files) = 0;
+
+  ///
+  // Scroll page up or down
+  ///
+  /*--cef()--*/
+  virtual void ScrollPageUpDown(bool is_up,
+                                bool is_half,
+                                float view_height) = 0;
+
+  ///
+  // Get web history state
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefBinaryValue> GetWebState() = 0;
+
+  ///
+  // Restore web history state
+  ///
+  /*--cef()--*/
+  virtual bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) = 0;
+
+  ///
+  // Scroll to the position.
+  ///
+  /*--cef()--*/
+  virtual void ScrollTo(float x, float y) = 0;
+
+  ///
+  // Scroll by the delta distance.
+  ///
+  /*--cef()--*/
+  virtual void ScrollBy(float delta_x, float delta_y) = 0;
+
+  ///
+  // Slide Scroll by the speed.
+  ///
+  /*--cef()--*/
+  virtual void SlideScroll(float vx, float vy) = 0;
+
+  ///
+  // Set whether webview can access files
+  ///
+  /*--cef()--*/
+  virtual void SetFileAccess(bool falg) = 0;
+
+  ///
+  // Set whether webview can access network
+  ///
+  /*--cef()--*/
+  virtual void SetBlockNetwork(bool falg) = 0;
+
+  ///
+  // Set the cache mode of webview
+  ///
+  /*--cef()--*/
+  virtual void SetCacheMode(int falg) = 0;
 };
 
 ///
@@ -1267,6 +1326,20 @@ class CefStoreWebArchiveResultCallback : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=result)--*/
   virtual void OnStoreWebArchiveDone(const CefString& result) = 0;
+};
+
+///
+// Interface to implement to be notified of asynchronous web message channel.
+///
+/*--cef(source=client)--*/
+class CefWebMessageReceiver : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon |PostPortMessage|. |message| will be sent
+  // to another end of web message channel.
+  ///
+  /*--cef()--*/
+  virtual void OnMessage(CefRefPtr<CefValue> message) = 0;
 };
 /* ---------- ohos webview add end --------- */
 

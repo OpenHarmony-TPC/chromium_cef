@@ -11,10 +11,16 @@ namespace net_service {
 
 #define NETHELPERS_EXPORT __attribute__((visibility("default")))
 
+struct NetHelperSetting {
+  bool file_access;
+  bool block_network;
+  int cache_mode;
+};
+
 class NETHELPERS_EXPORT NetHelpers {
  public:
   static bool ShouldBlockContentUrls();
-  static bool ShouldBlockFileUrls();
+  static bool ShouldBlockFileUrls(struct NetHelperSetting setting);
   static bool IsAllowAcceptCookies();
   static bool IsThirdPartyCookieAllowed();
 
@@ -29,11 +35,11 @@ class NETHELPERS_EXPORT NetHelpers {
 bool IsSpecialFileUrl(const GURL& url);
 
 // Update request's |load_flags| based on the settings.
-int UpdateLoadFlags(int load_flags);
+int UpdateLoadFlags(int load_flags, struct NetHelperSetting setting);
 
 // Returns true if the given URL should be aborted with
 // net::ERR_ACCESS_DENIED.
-bool IsURLBlocked(const GURL& url);
+bool IsURLBlocked(const GURL& url, struct NetHelperSetting setting);
 
 }  // namespace net_service
 

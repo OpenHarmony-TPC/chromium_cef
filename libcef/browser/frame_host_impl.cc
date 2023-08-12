@@ -294,11 +294,12 @@ void CefFrameHostImpl::RefreshAttributes() {
 }
 
 void CefFrameHostImpl::UpdateLocale(const CefString& locale) {
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce([](const std::string& locale,
-                      const RenderFrameType& render_frame) {
-                      render_frame->UpdateLocale(locale);
-                    }, locale.ToString()));
+  SendToRenderFrame(__FUNCTION__, base::BindOnce(
+                                      [](const std::string& locale,
+                                         const RenderFrameType& render_frame) {
+                                        render_frame->UpdateLocale(locale);
+                                      },
+                                      locale.ToString()));
 }
 
 void CefFrameHostImpl::NotifyMoveOrResizeStarted() {
@@ -779,12 +780,13 @@ void CefFrameHostImpl::SetInitialScale(float scale) {
 }
 
 void CefFrameHostImpl::SetJsOnlineProperty(bool network_up) {
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](bool network_up, const RenderFrameType& render_frame) {
-                          render_frame->SetJsOnlineProperty(network_up);
-                        },
-                        network_up));
+  SendToRenderFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](bool network_up, const RenderFrameType& render_frame) {
+            render_frame->SetJsOnlineProperty(network_up);
+          },
+          network_up));
 }
 
 void CefFrameHostImpl::GetImageForContextNode() {
@@ -804,16 +806,17 @@ void CefFrameHostImpl::PutZoomingForTextFactor(float factor) {
                         factor));
 }
 
-void CefFrameHostImpl::GetImagesCallback(CefRefPtr<CefFrameHostImpl> frame,
-                                         CefRefPtr<CefGetImagesCallback> callback, bool response) {
+void CefFrameHostImpl::GetImagesCallback(
+    CefRefPtr<CefFrameHostImpl> frame,
+    CefRefPtr<CefGetImagesCallback> callback,
+    bool response) {
   if (auto browser = frame->GetBrowser()) {
     callback->GetImages(response);
   }
 }
 
 void CefFrameHostImpl::GetImagesWithResponse(
-    cef::mojom::RenderFrame::GetImagesWithResponseCallback
-        response_callback) {
+    cef::mojom::RenderFrame::GetImagesWithResponseCallback response_callback) {
   SendToRenderFrame(
       __FUNCTION__,
       base::BindOnce(
@@ -826,17 +829,16 @@ void CefFrameHostImpl::GetImagesWithResponse(
 }
 
 void CefFrameHostImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
-  GetImagesWithResponse(
-      base::BindOnce(&CefFrameHostImpl::GetImagesCallback, base::Unretained(this),
-                     CefRefPtr<CefFrameHostImpl>(this), callback));
+  GetImagesWithResponse(base::BindOnce(
+      &CefFrameHostImpl::GetImagesCallback, base::Unretained(this),
+      CefRefPtr<CefFrameHostImpl>(this), callback));
 }
 
 void CefFrameHostImpl::RemoveCache(bool include_disk_files) {
   SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](const RenderFrameType& render_frame) {
-                          render_frame->RemoveCache();
-                        }));
+                    base::BindOnce([](const RenderFrameType& render_frame) {
+                      render_frame->RemoveCache();
+                    }));
 
   if (include_disk_files) {
     auto browser = GetBrowserHostBase();
@@ -857,8 +859,54 @@ void CefFrameHostImpl::RemoveCache(bool include_disk_files) {
         base::Time(), base::Time::Max(),
         content::BrowsingDataRemover::DATA_TYPE_CACHE,
         content::BrowsingDataRemover::ORIGIN_TYPE_UNPROTECTED_WEB |
-        content::BrowsingDataRemover::ORIGIN_TYPE_PROTECTED_WEB);
+            content::BrowsingDataRemover::ORIGIN_TYPE_PROTECTED_WEB);
   }
+}
+
+void CefFrameHostImpl::ScrollPageUpDown(bool is_up,
+                                        bool is_half,
+                                        float view_height) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](bool is_up, bool is_half, float view_height,
+                           const RenderFrameType& render_frame) {
+                          render_frame->ScrollPageUpDown(is_up, is_half,
+                                                         view_height);
+                        },
+                        is_up, is_half, view_height));
+}
+
+void CefFrameHostImpl::ScrollTo(float x,
+                                float y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float x, float y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->ScrollTo(x, y);
+                        },
+                        x, y));
+}
+
+void CefFrameHostImpl::ScrollBy(float delta_x,
+                                float delta_y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float delta_x, float delta_y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->ScrollBy(delta_x, delta_y);
+                        },
+                        delta_x, delta_y));
+}
+
+void CefFrameHostImpl::SlideScroll(float vx,
+                                   float vy) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float vx, float vy,
+                           const RenderFrameType& render_frame) {
+                          render_frame->SlideScroll(vx, vy);
+                        },
+                        vx, vy));
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

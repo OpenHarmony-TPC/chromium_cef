@@ -38,8 +38,8 @@ bool NetHelpers::ShouldBlockContentUrls() {
   return !allow_content_access;
 }
 
-bool NetHelpers::ShouldBlockFileUrls() {
-  return !allow_file_access;
+bool NetHelpers::ShouldBlockFileUrls(struct NetHelperSetting setting) {
+  return !setting.file_access;
 }
 
 bool NetHelpers::IsAllowAcceptCookies() {
@@ -77,33 +77,33 @@ bool IsSpecialFileUrl(const GURL& url) {
   return false;
 }
 
-bool IsURLBlocked(const GURL& url) {
+bool IsURLBlocked(const GURL& url, struct NetHelperSetting setting) {
   // Part of implementation of NWebPreference.allowContentAccess.
   if (url.SchemeIs(url::kContentScheme) && NetHelpers::ShouldBlockContentUrls())
     return true;
 
   // Part of implementation of NWebPreference.allowFileAccess.
-  if (url.SchemeIsFile() && NetHelpers::ShouldBlockFileUrls()) {
+  if (url.SchemeIsFile() && NetHelpers::ShouldBlockFileUrls(setting)) {
     // Appdatas are always available.
     return !IsSpecialFileUrl(url);
   }
 
-  return NetHelpers::is_network_blocked && url.SchemeIs(url::kFtpScheme);
+  return setting.block_network && url.SchemeIs(url::kFtpScheme);
 }
 
-int UpdateLoadFlags(int load_flags) {
-  if (NetHelpers::is_network_blocked) {
+int UpdateLoadFlags(int load_flags, NetHelperSetting setting) {
+  if (setting.block_network) {
     LOG(INFO) << "Update cache control flag to block network.";
     return UpdateCacheLoadFlags(
         load_flags,
         net::LOAD_ONLY_FROM_CACHE | net::LOAD_SKIP_CACHE_VALIDATION);
   }
 
-  if (!NetHelpers::cache_mode) {
+  if (!setting.cache_mode) {
     return load_flags;
   }
 
-  return UpdateCacheLoadFlags(load_flags, NetHelpers::cache_mode);
+  return UpdateCacheLoadFlags(load_flags, setting.cache_mode);
 }
 
 }  // namespace net_service

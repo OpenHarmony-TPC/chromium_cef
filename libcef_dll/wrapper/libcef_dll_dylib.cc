@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7185f14aad39a002663816fe05a4990f76d8ad6f$
+// $hash=577c6334f41f1be591969c7789081b002e86b91c$
 //
 
 #include <dlfcn.h>
@@ -26,7 +26,6 @@
 #include "include/capi/cef_file_util_capi.h"
 #include "include/capi/cef_i18n_util_capi.h"
 #include "include/capi/cef_image_capi.h"
-#include "include/capi/cef_media_router_capi.h"
 #include "include/capi/cef_menu_model_capi.h"
 #include "include/capi/cef_origin_whitelist_capi.h"
 #include "include/capi/cef_parser_capi.h"
@@ -49,7 +48,6 @@
 #include "include/capi/cef_v8_capi.h"
 #include "include/capi/cef_values_capi.h"
 #include "include/capi/cef_waitable_event_capi.h"
-#include "include/capi/cef_web_plugin_capi.h"
 #include "include/capi/cef_web_storage_capi.h"
 #include "include/capi/cef_xml_reader_capi.h"
 #include "include/capi/cef_zip_reader_capi.h"
@@ -173,14 +171,6 @@ typedef int64 (*cef_now_from_system_trace_time_ptr)();
 typedef int (*cef_register_extension_ptr)(const cef_string_t*,
                                           const cef_string_t*,
                                           struct _cef_v8handler_t*);
-typedef void (*cef_visit_web_plugin_info_ptr)(
-    struct _cef_web_plugin_info_visitor_t*);
-typedef void (*cef_refresh_web_plugins_ptr)();
-typedef void (*cef_unregister_internal_web_plugin_ptr)(const cef_string_t*);
-typedef void (*cef_register_web_plugin_crash_ptr)(const cef_string_t*);
-typedef void (*cef_is_web_plugin_unstable_ptr)(
-    const cef_string_t*,
-    struct _cef_web_plugin_unstable_callback_t*);
 typedef void (*cef_execute_java_script_with_user_gesture_for_tests_ptr)(
     struct _cef_frame_t*,
     const cef_string_t*);
@@ -209,8 +199,6 @@ typedef int (*cef_cookie_manager_create_cef_cookie_ptr)(const cef_string_t*,
 typedef struct _cef_data_base_t* (*cef_data_base_get_global_ptr)();
 typedef struct _cef_drag_data_t* (*cef_drag_data_create_ptr)();
 typedef struct _cef_image_t* (*cef_image_create_ptr)();
-typedef struct _cef_media_router_t* (*cef_media_router_get_global_ptr)(
-    struct _cef_completion_callback_t*);
 typedef struct _cef_menu_model_t* (*cef_menu_model_create_ptr)(
     struct _cef_menu_model_delegate_t*);
 typedef struct _cef_print_settings_t* (*cef_print_settings_create_ptr)();
@@ -573,11 +561,6 @@ struct libcef_pointers {
   cef_end_tracing_ptr cef_end_tracing;
   cef_now_from_system_trace_time_ptr cef_now_from_system_trace_time;
   cef_register_extension_ptr cef_register_extension;
-  cef_visit_web_plugin_info_ptr cef_visit_web_plugin_info;
-  cef_refresh_web_plugins_ptr cef_refresh_web_plugins;
-  cef_unregister_internal_web_plugin_ptr cef_unregister_internal_web_plugin;
-  cef_register_web_plugin_crash_ptr cef_register_web_plugin_crash;
-  cef_is_web_plugin_unstable_ptr cef_is_web_plugin_unstable;
   cef_execute_java_script_with_user_gesture_for_tests_ptr
       cef_execute_java_script_with_user_gesture_for_tests;
   cef_browser_host_create_browser_ptr cef_browser_host_create_browser;
@@ -590,7 +573,6 @@ struct libcef_pointers {
   cef_data_base_get_global_ptr cef_data_base_get_global;
   cef_drag_data_create_ptr cef_drag_data_create;
   cef_image_create_ptr cef_image_create;
-  cef_media_router_get_global_ptr cef_media_router_get_global;
   cef_menu_model_create_ptr cef_menu_model_create;
   cef_print_settings_create_ptr cef_print_settings_create;
   cef_process_message_create_ptr cef_process_message_create;
@@ -793,11 +775,6 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_end_tracing);
   INIT_ENTRY(cef_now_from_system_trace_time);
   INIT_ENTRY(cef_register_extension);
-  INIT_ENTRY(cef_visit_web_plugin_info);
-  INIT_ENTRY(cef_refresh_web_plugins);
-  INIT_ENTRY(cef_unregister_internal_web_plugin);
-  INIT_ENTRY(cef_register_web_plugin_crash);
-  INIT_ENTRY(cef_is_web_plugin_unstable);
   INIT_ENTRY(cef_execute_java_script_with_user_gesture_for_tests);
   INIT_ENTRY(cef_browser_host_create_browser);
   INIT_ENTRY(cef_browser_host_create_browser_sync);
@@ -808,7 +785,6 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_data_base_get_global);
   INIT_ENTRY(cef_drag_data_create);
   INIT_ENTRY(cef_image_create);
-  INIT_ENTRY(cef_media_router_get_global);
   INIT_ENTRY(cef_menu_model_create);
   INIT_ENTRY(cef_print_settings_create);
   INIT_ENTRY(cef_process_message_create);
@@ -1112,8 +1088,8 @@ int cef_create_url(const struct _cef_urlparts_t* parts, cef_string_t* url) {
 }
 
 NO_SANITIZE("cfi-icall")
-cef_string_userfree_t cef_format_url_for_security_display(
-    const cef_string_t* origin_url) {
+cef_string_userfree_t
+    cef_format_url_for_security_display(const cef_string_t* origin_url) {
   return g_libcef_pointers.cef_format_url_for_security_display(origin_url);
 }
 
@@ -1247,32 +1223,6 @@ int cef_register_extension(const cef_string_t* extension_name,
 }
 
 NO_SANITIZE("cfi-icall")
-void cef_visit_web_plugin_info(struct _cef_web_plugin_info_visitor_t* visitor) {
-  g_libcef_pointers.cef_visit_web_plugin_info(visitor);
-}
-
-NO_SANITIZE("cfi-icall") void cef_refresh_web_plugins() {
-  g_libcef_pointers.cef_refresh_web_plugins();
-}
-
-NO_SANITIZE("cfi-icall")
-void cef_unregister_internal_web_plugin(const cef_string_t* path) {
-  g_libcef_pointers.cef_unregister_internal_web_plugin(path);
-}
-
-NO_SANITIZE("cfi-icall")
-void cef_register_web_plugin_crash(const cef_string_t* path) {
-  g_libcef_pointers.cef_register_web_plugin_crash(path);
-}
-
-NO_SANITIZE("cfi-icall")
-void cef_is_web_plugin_unstable(
-    const cef_string_t* path,
-    struct _cef_web_plugin_unstable_callback_t* callback) {
-  g_libcef_pointers.cef_is_web_plugin_unstable(path, callback);
-}
-
-NO_SANITIZE("cfi-icall")
 void cef_execute_java_script_with_user_gesture_for_tests(
     struct _cef_frame_t* frame,
     const cef_string_t* javascript) {
@@ -1337,12 +1287,6 @@ NO_SANITIZE("cfi-icall") struct _cef_drag_data_t* cef_drag_data_create() {
 
 NO_SANITIZE("cfi-icall") struct _cef_image_t* cef_image_create() {
   return g_libcef_pointers.cef_image_create();
-}
-
-NO_SANITIZE("cfi-icall")
-struct _cef_media_router_t* cef_media_router_get_global(
-    struct _cef_completion_callback_t* callback) {
-  return g_libcef_pointers.cef_media_router_get_global(callback);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1611,46 +1555,54 @@ struct _cef_translator_test_t* cef_translator_test_create() {
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_ref_ptr_library_t*
-cef_translator_test_ref_ptr_library_create(int value) {
+struct
+    _cef_translator_test_ref_ptr_library_t* cef_translator_test_ref_ptr_library_create(
+        int value) {
   return g_libcef_pointers.cef_translator_test_ref_ptr_library_create(value);
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_ref_ptr_library_child_t*
-cef_translator_test_ref_ptr_library_child_create(int value, int other_value) {
+struct
+    _cef_translator_test_ref_ptr_library_child_t* cef_translator_test_ref_ptr_library_child_create(
+        int value,
+        int other_value) {
   return g_libcef_pointers.cef_translator_test_ref_ptr_library_child_create(
       value, other_value);
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_ref_ptr_library_child_child_t*
-cef_translator_test_ref_ptr_library_child_child_create(int value,
-                                                       int other_value,
-                                                       int other_other_value) {
+struct
+    _cef_translator_test_ref_ptr_library_child_child_t* cef_translator_test_ref_ptr_library_child_child_create(
+        int value,
+        int other_value,
+        int other_other_value) {
   return g_libcef_pointers
       .cef_translator_test_ref_ptr_library_child_child_create(
           value, other_value, other_other_value);
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_scoped_library_t*
-cef_translator_test_scoped_library_create(int value) {
+struct
+    _cef_translator_test_scoped_library_t* cef_translator_test_scoped_library_create(
+        int value) {
   return g_libcef_pointers.cef_translator_test_scoped_library_create(value);
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_scoped_library_child_t*
-cef_translator_test_scoped_library_child_create(int value, int other_value) {
+struct
+    _cef_translator_test_scoped_library_child_t* cef_translator_test_scoped_library_child_create(
+        int value,
+        int other_value) {
   return g_libcef_pointers.cef_translator_test_scoped_library_child_create(
       value, other_value);
 }
 
 NO_SANITIZE("cfi-icall")
-struct _cef_translator_test_scoped_library_child_child_t*
-cef_translator_test_scoped_library_child_child_create(int value,
-                                                      int other_value,
-                                                      int other_other_value) {
+struct
+    _cef_translator_test_scoped_library_child_child_t* cef_translator_test_scoped_library_child_child_create(
+        int value,
+        int other_value,
+        int other_other_value) {
   return g_libcef_pointers
       .cef_translator_test_scoped_library_child_child_create(value, other_value,
                                                              other_other_value);

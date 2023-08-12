@@ -6,8 +6,6 @@
 #include "libcef/common/extensions/extensions_util.h"
 
 #include "chrome/browser/content_settings/cookie_settings_factory.h"
-#include "chrome/browser/media/router/chrome_media_router_factory.h"
-#include "chrome/browser/plugins/plugin_prefs_factory.h"
 #include "chrome/browser/profiles/renderer_updater_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/themes/theme_service_factory.h"
@@ -16,12 +14,30 @@
 #include "extensions/browser/api/storage/storage_frontend.h"
 #include "extensions/browser/renderer_startup_helper.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "ppapi/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/plugin_prefs_factory.h"
+#endif
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "media/media_buildflags.h"
+#if BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
+#include "chrome/browser/media/router/chrome_media_router_factory.h"
+#endif
+#endif
+
 namespace cef {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
   CookieSettingsFactory::GetInstance();
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   media_router::ChromeMediaRouterFactory::GetInstance();
+#endif
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   PluginPrefsFactory::GetInstance();
+#endif
   PrefsTabHelper::GetServiceInstance();
   RendererUpdaterFactory::GetInstance();
   SpellcheckServiceFactory::GetInstance();

@@ -28,7 +28,6 @@
 #include "libcef/browser/extensions/extension_system.h"
 #include "libcef/browser/extensions/extension_web_contents_observer.h"
 #include "libcef/browser/media_capture_devices_dispatcher.h"
-#include "libcef/browser/net/chrome_scheme_handler.h"
 #include "libcef/browser/net/throttle_handler.h"
 #include "libcef/browser/net_service/cookie_manager_impl.h"
 #include "libcef/browser/net_service/login_delegate.h"
@@ -36,7 +35,6 @@
 #include "libcef/browser/net_service/resource_request_handler_wrapper.h"
 #include "libcef/browser/net_service/restrict_cookie_manager.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
-#include "libcef/browser/printing/print_view_manager.h"
 #include "libcef/browser/speech_recognition_manager_delegate.h"
 #include "libcef/browser/ssl_info_impl.h"
 #include "libcef/browser/thread_util.h"
@@ -66,36 +64,24 @@
 #include "chrome/browser/net/profile_network_context_service.h"
 #include "chrome/browser/net/profile_network_context_service_factory.h"
 #include "chrome/browser/net/system_network_context_manager.h"
-#include "chrome/browser/pdf/chrome_pdf_stream_delegate.h"
-#include "chrome/browser/plugins/pdf_iframe_navigation_throttle.h"
-#include "chrome/browser/plugins/plugin_info_host_impl.h"
-#include "chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.h"
 #include "chrome/browser/plugins/plugin_utils.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/renderer_updater.h"
 #include "chrome/browser/profiles/renderer_updater_factory.h"
-#include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
 #include "chrome/browser/spellchecker/spell_check_host_chrome_impl.h"
 #include "chrome/common/chrome_content_client.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/google_url_loader_throttle.h"
-#include "chrome/common/pdf_util.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/common/webui_url_constants.h"
 #include "chrome/grit/browser_resources.h"
 #include "chrome/grit/generated_resources.h"
-#include "chrome/services/printing/printing_service.h"
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/embedder_support/switches.h"
 #include "components/embedder_support/user_agent_utils.h"
-#include "components/pdf/browser/pdf_navigation_throttle.h"
-#include "components/pdf/browser/pdf_url_loader_request_interceptor.h"
-#include "components/pdf/browser/pdf_web_contents_helper.h"
-#include "components/pdf/common/internal_plugin_helpers.h"
 #include "components/spellcheck/common/spellcheck.mojom.h"
 #include "components/version_info/version_info.h"
-#include "content/browser/plugin_service_impl.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/browser_ppapi_host.h"
@@ -178,6 +164,37 @@
 
 #if BUILDFLAG(HAS_SPELLCHECK_PANEL)
 #include "chrome/browser/spellchecker/spell_check_panel_host_impl.h"
+#endif
+
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
+#include "libcef/browser/net/chrome_scheme_handler.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "printing/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PRINT_PREVIEW)
+#include "chrome/services/printing/printing_service.h"
+#include "libcef/browser/printing/print_view_manager.h"
+#endif
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
+#include "chrome/browser/plugins/plugin_info_host_impl.h"
+#include "chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.h"
+#include "chrome/browser/renderer_host/pepper/chrome_browser_pepper_host_factory.h"
+#include "content/browser/plugin_service_impl.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
+#include "chrome/browser/pdf/chrome_pdf_stream_delegate.h"
+#include "chrome/browser/plugins/pdf_iframe_navigation_throttle.h"
+#include "chrome/common/pdf_util.h"
+#include "components/pdf/browser/pdf_navigation_throttle.h"
+#include "components/pdf/browser/pdf_url_loader_request_interceptor.h"
+#include "components/pdf/browser/pdf_web_contents_helper.h"
+#include "components/pdf/common/internal_plugin_helpers.h"
+#else
+#include "content/public/browser/url_loader_request_interceptor.h"
 #endif
 
 namespace {
@@ -644,6 +661,7 @@ int GetCrashSignalFD(const base::CommandLine& command_line) {
 }
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
 // From chrome/browser/plugins/chrome_content_browser_client_plugins_part.cc.
 void BindPluginInfoHost(
     int render_process_id,
@@ -659,6 +677,7 @@ void BindPluginInfoHost(
       std::make_unique<PluginInfoHostImpl>(render_process_id, profile),
       std::move(receiver));
 }
+#endif
 
 base::FilePath GetRootCachePath() {
   // The CefContext::ValidateCachePath method enforces the requirement that all
@@ -817,7 +836,11 @@ void AlloyContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
 
 bool AlloyContentBrowserClient::IsWebUIAllowedToMakeNetworkRequests(
     const url::Origin& origin) {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   return scheme::IsWebUIAllowedToMakeNetworkRequests(origin);
+#else
+  return false;
+#endif
 }
 
 bool AlloyContentBrowserClient::IsHandledURL(const GURL& url) {
@@ -1207,7 +1230,7 @@ bool AlloyContentBrowserClient::CanCreateWindow(
   if (!browser_host) {
     return false;
   }
-  if (!browser_host->settings().javascript_can_open_windows_automatically) {
+  if (!browser_host->settings().javascript_can_open_windows_automatically && !user_gesture) {
     LOG(INFO) << "javascript_can_open_windows_automatically false";
     return false;
   }
@@ -1238,7 +1261,7 @@ bool AlloyContentBrowserClient::CanCreateWindow(
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
 
-  if (!browser_host->settings().javascript_can_open_windows_automatically) {
+  if (!browser_host->settings().javascript_can_open_windows_automatically && !user_gesture) {
     LOG(INFO) << "javascript_can_open_windows_automatically false";
     return false;
   }
@@ -1270,7 +1293,9 @@ bool AlloyContentBrowserClient::OverrideWebPreferencesAfterNavigation(
 
 void AlloyContentBrowserClient::BrowserURLHandlerCreated(
     content::BrowserURLHandler* handler) {
+#if defined(OHOS_ENABLE_CEF_CHROME_RUNTIME)
   scheme::BrowserURLHandlerCreated(handler);
+#endif
 }
 
 std::string AlloyContentBrowserClient::GetDefaultDownloadName() {
@@ -1279,9 +1304,11 @@ std::string AlloyContentBrowserClient::GetDefaultDownloadName() {
 
 void AlloyContentBrowserClient::DidCreatePpapiPlugin(
     content::BrowserPpapiHost* browser_host) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   browser_host->GetPpapiHost()->AddHostFactoryFilter(
       std::unique_ptr<ppapi::host::HostFactory>(
           new ChromeBrowserPepperHostFactory(browser_host)));
+#endif
 }
 
 std::unique_ptr<content::DevToolsManagerDelegate>
@@ -1302,6 +1329,7 @@ void AlloyContentBrowserClient::
       },
       &render_frame_host));
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   associated_registry.AddInterface(base::BindRepeating(
       [](content::RenderFrameHost* render_frame_host,
          mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost>
@@ -1310,7 +1338,9 @@ void AlloyContentBrowserClient::
                                                             render_frame_host);
       },
       &render_frame_host));
+#endif
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   associated_registry.AddInterface(base::BindRepeating(
       [](content::RenderFrameHost* render_frame_host,
          mojo::PendingAssociatedReceiver<pdf::mojom::PdfService> receiver) {
@@ -1318,6 +1348,7 @@ void AlloyContentBrowserClient::
                                                   render_frame_host);
       },
       &render_frame_host));
+#endif
 }
 
 std::vector<std::unique_ptr<content::NavigationThrottle>>
@@ -1325,6 +1356,7 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
     content::NavigationHandle* navigation_handle) {
   throttle::NavigationThrottleList throttles;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (extensions::ExtensionsEnabled()) {
     auto pdf_iframe_throttle =
         PDFIFrameNavigationThrottle::MaybeCreateThrottleFor(navigation_handle);
@@ -1336,6 +1368,7 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
     if (pdf_throttle)
       throttles.push_back(std::move(pdf_throttle));
   }
+#endif
 
   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
 
@@ -1351,9 +1384,11 @@ AlloyContentBrowserClient::CreateURLLoaderThrottles(
     int frame_tree_node_id) {
   std::vector<std::unique_ptr<blink::URLLoaderThrottle>> result;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   // Used to substitute View ID for PDF contents when using the PDF plugin.
   result.push_back(std::make_unique<PluginResponseInterceptorURLLoaderThrottle>(
       request.destination, frame_tree_node_id));
+#endif
 
   Profile* profile = Profile::FromBrowserContext(browser_context);
 
@@ -1376,6 +1411,7 @@ AlloyContentBrowserClient::WillCreateURLLoaderRequestInterceptors(
   std::vector<std::unique_ptr<content::URLLoaderRequestInterceptor>>
       interceptors;
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (extensions::ExtensionsEnabled()) {
     auto pdf_interceptor =
         pdf::PdfURLLoaderRequestInterceptor::MaybeCreateInterceptor(
@@ -1383,6 +1419,7 @@ AlloyContentBrowserClient::WillCreateURLLoaderRequestInterceptors(
     if (pdf_interceptor)
       interceptors.push_back(std::move(pdf_interceptor));
   }
+#endif
 
   return interceptors;
 }
@@ -1403,8 +1440,10 @@ void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
     service_manager::BinderRegistry* registry,
     blink::AssociatedInterfaceRegistry* associated_registry,
     content::RenderProcessHost* host) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   associated_registry->AddInterface(
       base::BindRepeating(&BindPluginInfoHost, host->GetID()));
+#endif
 
   if (extensions::ExtensionsEnabled()) {
     associated_registry->AddInterface(base::BindRepeating(
@@ -1487,6 +1526,10 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
   }
 
   factories->emplace(url::kFileScheme,
+                     content::CreateFileURLLoaderFactory(
+                         browser_context->GetPath(),
+                         browser_context->GetSharedCorsOriginAccessList()));
+  factories->emplace(url::kResourcesScheme,
                      content::CreateFileURLLoaderFactory(
                          browser_context->GetPath(),
                          browser_context->GetSharedCorsOriginAccessList()));
@@ -1621,6 +1664,11 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   // TODO(cef): Remove this and add required NetworkIsolationKeys,
   // this is currently not the case and this was not required pre M84.
   network_context_params->require_network_isolation_key = false;
+#if BUILDFLAG(IS_OHOS)
+  network_context_params->initial_ssl_config = network::mojom::SSLConfig::New();
+  network_context_params->initial_ssl_config->version_min =
+        network::mojom::SSLVersion::kTLS1;
+#endif
 
   return true;
 }
@@ -1789,11 +1837,15 @@ base::flat_set<std::string>
 AlloyContentBrowserClient::GetPluginMimeTypesWithExternalHandlers(
     content::BrowserContext* browser_context) {
   base::flat_set<std::string> mime_types;
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   auto map = PluginUtils::GetMimeTypeToExtensionIdMap(browser_context);
   for (const auto& pair : map)
     mime_types.insert(pair.first);
+#endif
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (pdf::IsInternalPluginExternallyHandled())
     mime_types.insert(pdf::kInternalPluginMimeType);
+#endif
   return mime_types;
 }
 
@@ -1808,6 +1860,7 @@ bool AlloyContentBrowserClient::ArePersistentMediaDeviceIDsAllowed(
       ->IsFullCookieAccessAllowed(url, site_for_cookies, top_frame_origin);
 }
 
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
 bool AlloyContentBrowserClient::ShouldAllowPluginCreation(
     const url::Origin& embedder_origin,
     const content::PepperPluginInfo& plugin_info) {
@@ -1817,6 +1870,7 @@ bool AlloyContentBrowserClient::ShouldAllowPluginCreation(
 
   return true;
 }
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 bool AlloyContentBrowserClient::ShouldTryToUseExistingProcessHost(
@@ -1895,10 +1949,14 @@ void AlloyContentBrowserClient::OnWebContentsCreated(
 
 bool AlloyContentBrowserClient::IsFindInPageDisabledForOrigin(
     const url::Origin& origin) {
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   // For PDF viewing with the PPAPI-free PDF Viewer, find-in-page should only
   // display results from the PDF content, and not from the UI.
   return base::FeatureList::IsEnabled(chrome_pdf::features::kPdfUnseasoned) &&
          IsPdfExtensionOrigin(origin);
+#else
+  return false;
+#endif
 }
 
 CefRefPtr<CefRequestContextImpl> AlloyContentBrowserClient::request_context()

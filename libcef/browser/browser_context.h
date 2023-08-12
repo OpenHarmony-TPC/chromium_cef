@@ -22,6 +22,10 @@
 #include "third_party/abseil-cpp/absl/types/optional.h"
 #include "url/origin.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "media/media_buildflags.h"
+#endif
+
 /*
 // Classes used in request processing (network, storage, service, etc.):
 //
@@ -220,7 +224,9 @@ class CefBrowserContext {
 
   scoped_refptr<CefIOThreadState> iothread_state_;
   CookieableSchemes cookieable_schemes_;
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
   std::unique_ptr<CefMediaRouterManager> media_router_manager_;
+#endif
 
   // CefRequestContextImpl objects referencing this object.
   std::set<CefRequestContextImpl*> request_context_set_;

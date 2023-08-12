@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3ab167d92ecbdc7c4c52483058038ed50a68231a$
+// $hash=2cf79925fe0507a777cba65aadf5d72f57e38a3c$
 //
 
 #include "libcef_dll/ctocpp/data_base_ctocpp.h"
@@ -90,10 +90,11 @@ void CefDataBaseCToCpp::SaveHttpAuthCredentials(const CefString& host,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefDataBaseCToCpp::GetHttpAuthCredentials(
-    const CefString& host,
-    const CefString& realm,
-    std::vector<CefString>& username_password) {
+void CefDataBaseCToCpp::GetHttpAuthCredentials(const CefString& host,
+                                               const CefString& realm,
+                                               CefString& username,
+                                               char* password,
+                                               uint32_t passwordSize) {
   cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_http_auth_credentials))
     return;
@@ -108,29 +109,21 @@ void CefDataBaseCToCpp::GetHttpAuthCredentials(
   DCHECK(!realm.empty());
   if (realm.empty())
     return;
-
-  // Translate param: username_password; type: string_vec_byref
-  cef_string_list_t username_passwordList = cef_string_list_alloc();
-  DCHECK(username_passwordList);
-  if (username_passwordList)
-    transfer_string_list_contents(username_password, username_passwordList);
+  // Verify param: password; type: simple_byaddr
+  DCHECK(password);
+  if (!password)
+    return;
 
   // Execute
-  _struct->get_http_auth_credentials(_struct, host.GetStruct(),
-                                     realm.GetStruct(), username_passwordList);
-
-  // Restore param:username_password; type: string_vec_byref
-  if (username_passwordList) {
-    username_password.clear();
-    transfer_string_list_contents(username_passwordList, username_password);
-    cef_string_list_free(username_passwordList);
-  }
+  _struct->get_http_auth_credentials(
+      _struct, host.GetStruct(), realm.GetStruct(),
+      username.GetWritableStruct(), password, passwordSize);
 }
 
 NO_SANITIZE("cfi-icall")
-bool CefDataBaseCToCpp::ExistPermissionByOrigin(const CefString &origin,
+bool CefDataBaseCToCpp::ExistPermissionByOrigin(const CefString& origin,
                                                 int type) {
-  cef_data_base_t *_struct = GetStruct();
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, exist_permission_by_origin))
     return false;
 
@@ -150,9 +143,10 @@ bool CefDataBaseCToCpp::ExistPermissionByOrigin(const CefString &origin,
 }
 
 NO_SANITIZE("cfi-icall")
-bool CefDataBaseCToCpp::GetPermissionResultByOrigin(const CefString &origin,
-                                                    int type, bool &result) {
-  cef_data_base_t *_struct = GetStruct();
+bool CefDataBaseCToCpp::GetPermissionResultByOrigin(const CefString& origin,
+                                                    int type,
+                                                    bool& result) {
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_permission_result_by_origin))
     return false;
 
@@ -178,9 +172,10 @@ bool CefDataBaseCToCpp::GetPermissionResultByOrigin(const CefString &origin,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefDataBaseCToCpp::SetPermissionByOrigin(const CefString &origin, int type,
+void CefDataBaseCToCpp::SetPermissionByOrigin(const CefString& origin,
+                                              int type,
                                               bool result) {
-  cef_data_base_t *_struct = GetStruct();
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_permission_by_origin))
     return;
 
@@ -196,9 +191,9 @@ void CefDataBaseCToCpp::SetPermissionByOrigin(const CefString &origin, int type,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefDataBaseCToCpp::ClearPermissionByOrigin(const CefString &origin,
+void CefDataBaseCToCpp::ClearPermissionByOrigin(const CefString& origin,
                                                 int type) {
-  cef_data_base_t *_struct = GetStruct();
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, clear_permission_by_origin))
     return;
 
@@ -214,7 +209,7 @@ void CefDataBaseCToCpp::ClearPermissionByOrigin(const CefString &origin,
 }
 
 NO_SANITIZE("cfi-icall") void CefDataBaseCToCpp::ClearAllPermission(int type) {
-  cef_data_base_t *_struct = GetStruct();
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, clear_all_permission))
     return;
 
@@ -226,8 +221,9 @@ NO_SANITIZE("cfi-icall") void CefDataBaseCToCpp::ClearAllPermission(int type) {
 
 NO_SANITIZE("cfi-icall")
 void CefDataBaseCToCpp::GetOriginsByPermission(
-    int type, std::vector<CefString> &origins) {
-  cef_data_base_t *_struct = GetStruct();
+    int type,
+    std::vector<CefString>& origins) {
+  cef_data_base_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_origins_by_permission))
     return;
 

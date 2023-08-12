@@ -18,6 +18,48 @@
 #include "content/public/browser/render_view_host.h"
 #include "ui/events/base_event_utils.h"
 
+namespace {
+void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
+                            CefSelectPopupItem& menu_item) {
+  CefString label = CefString(menu_ptr->label.value_or(""));
+  CefString tool_tip = CefString(menu_ptr->tool_tip.value_or(""));
+  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
+  cef_string_set(tool_tip.c_str(), tool_tip.length(), &(menu_item.tool_tip),
+                 true);
+  menu_item.action = menu_ptr->action;
+  menu_item.enabled = menu_ptr->enabled;
+  menu_item.checked = menu_ptr->checked;
+  menu_item.type = static_cast<cef_select_popup_item_type_t>(menu_ptr->type);
+  menu_item.text_direction =
+      static_cast<cef_text_direction_t>(menu_ptr->text_direction);
+  menu_item.has_text_direction_override = menu_ptr->has_text_direction_override;
+}
+}  // namespace
+
+class CefSelectPopupCallbackImpl : public CefSelectPopupCallback {
+ public:
+  explicit CefSelectPopupCallbackImpl(
+      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client) {
+    popup_client_.Bind(std::move(popup_client));
+  }
+
+  void Continue(const std::vector<int>& indices) override {
+    if (popup_client_) {
+      popup_client_->DidAcceptIndices(indices);
+    }
+  }
+
+  void Cancel() override {
+    if (popup_client_) {
+      popup_client_->DidCancel();
+    }
+  }
+
+ private:
+  mojo::Remote<blink::mojom::PopupMenuClient> popup_client_;
+  IMPLEMENT_REFCOUNTING(CefSelectPopupCallbackImpl);
+};
+
 CefBrowserPlatformDelegateOsr::CefBrowserPlatformDelegateOsr(
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
     bool use_shared_texture,
@@ -493,6 +535,34 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
 
   if (!handled)
     DragSourceSystemDragEnded();
+}
+
+void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
+    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+    const gfx::Rect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    std::vector<blink::mojom::MenuItemPtr> menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    std::vector<CefSelectPopupItem> item_list;
+    for (int i = 0; i < menu_items.size(); i++) {
+      CefSelectPopupItem menu_item;
+      ConvertSelectPopupItem(menu_items[i], menu_item);
+      item_list.push_back(menu_item);
+    }
+    CefRefPtr<CefSelectPopupCallback> callback =
+        new CefSelectPopupCallbackImpl(std::move(popup_client));
+    handler->OnSelectPopupMenu(
+        browser_,
+        CefRect(bounds.x(), bounds.y(), bounds.width(), bounds.height()),
+        item_height, item_font_size, selected_item, item_list, right_aligned,
+        allow_multiple_selection, callback);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::UpdateDragCursor(

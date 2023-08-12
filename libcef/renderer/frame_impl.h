@@ -159,7 +159,10 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void GetImagesWithResponse(
     cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) override;
   void RemoveCache() override;
-  
+  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+  void ScrollTo(float x, float y) override;
+  void ScrollBy(float delta_x, float delta_y) override;
+  void SlideScroll(float vx, float vy) override;
   GURL GetAbsoluteUrl(const blink::WebNode& node,
                       const std::u16string& url_fragment);
   GURL GetAbsoluteSrcUrl(const blink::WebElement& element);

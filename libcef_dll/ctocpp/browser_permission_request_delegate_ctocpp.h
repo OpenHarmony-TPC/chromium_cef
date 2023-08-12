@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c9c5f759ffc22b4c39e35c6273d17966ec357b35$
+// $hash=a2e7c9e77ee45cef4da269e9e613fd4fdef5f9ac$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_
@@ -30,23 +30,24 @@ class CefBrowserPermissionRequestDelegateCToCpp
     : public CefCToCppRefCounted<CefBrowserPermissionRequestDelegateCToCpp,
                                  CefBrowserPermissionRequestDelegate,
                                  cef_browser_permission_request_delegate_t> {
-public:
+ public:
   CefBrowserPermissionRequestDelegateCToCpp();
   virtual ~CefBrowserPermissionRequestDelegateCToCpp();
 
   // CefBrowserPermissionRequestDelegate methods.
-  void AskGeolocationPermission(const CefString &origin,
+  void AskGeolocationPermission(const CefString& origin,
                                 cef_permission_callback_t callback) override;
-  void AbortAskGeolocationPermission(const CefString &origin) override;
+  void AbortAskGeolocationPermission(const CefString& origin) override;
   void AskProtectedMediaIdentifierPermission(
-      const CefString &origin, cef_permission_callback_t callback) override;
-  void
-  AbortAskProtectedMediaIdentifierPermission(const CefString &origin) override;
-  void AskMIDISysexPermission(const CefString &origin,
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
+  void AbortAskProtectedMediaIdentifierPermission(
+      const CefString& origin) override;
+  void AskMIDISysexPermission(const CefString& origin,
                               cef_permission_callback_t callback) override;
-  void AbortAskMIDISysexPermission(const CefString &origin) override;
+  void AbortAskMIDISysexPermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
-                                   const CefString &origin) override;
+                                   const CefString& origin) override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_

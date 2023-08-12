@@ -4,6 +4,8 @@
 
 #include "libcef/browser/net_service/login_delegate.h"
 
+#include <securec.h>
+
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/net_database/cef_data_base_impl.h"
 #include "libcef/browser/net_service/browser_urlrequest_impl.h"
@@ -17,8 +19,6 @@
 namespace net_service {
 
 namespace {
-const int USERNAME_PASSWORD_VECTOR_NUM = 2;
-
 class AuthCallbackImpl : public CefAuthCallback {
  public:
   explicit AuthCallbackImpl(base::WeakPtr<LoginDelegate> delegate,
@@ -68,6 +68,7 @@ class AuthCallbackImpl : public CefAuthCallback {
   }
 
   bool IsHttpAuthInfoSaved() override {
+    constexpr int32_t MAX_PWD_LENGTH = 256;
     auto dataBase = CefDataBase::GetGlobalDataBase();
     if (dataBase == nullptr) {
       return false;
@@ -75,25 +76,29 @@ class AuthCallbackImpl : public CefAuthCallback {
     if (!dataBase->ExistHttpAuthCredentials()) {
       return false;
     }
-    std::vector<CefString> usernamePassword;
-    usernamePassword.clear();
-    dataBase->GetHttpAuthCredentials(host_, realm_, usernamePassword);
-    if (usernamePassword.size() < USERNAME_PASSWORD_VECTOR_NUM) {
+    CefString username;
+    char password[MAX_PWD_LENGTH + 1] = {0};
+    dataBase->GetHttpAuthCredentials(host_, realm_, username, password, MAX_PWD_LENGTH + 1);
+    if (username.empty() || strlen(password) == 0) {
+      (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
       return false;
     }
-    CefString username = usernamePassword[0];
-    CefString password = usernamePassword[1];
+    CefString passwordCef(password, strlen(password));
+    (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
     if (!task_runner_->RunsTasksInCurrentSequence()) {
       task_runner_->PostTask(
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
-                                    password));
+                                    passwordCef));
+      passwordCef.MemsetToZero();
       return true;
     }
     if (delegate_) {
-      delegate_->Continue(username, password);
+      delegate_->Continue(username, passwordCef);
       delegate_ = nullptr;
+      passwordCef.MemsetToZero();
       return true;
     }
+    passwordCef.MemsetToZero();
     return false;
   }
 

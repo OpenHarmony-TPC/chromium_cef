@@ -21,7 +21,6 @@
 #include "base/strings/string_tokenizer.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_restrictions.h"
-#include "chrome/browser/pdf/pdf_extension_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/chrome_paths.h"
 #include "components/crx_file/id_util.h"
@@ -31,7 +30,6 @@
 #include "content/public/browser/notification_details.h"
 #include "content/public/browser/notification_service.h"
 #include "content/public/browser/notification_source.h"
-#include "content/public/browser/plugin_service.h"
 #include "content/public/browser/render_process_host.h"
 #include "extensions/browser/api/app_runtime/app_runtime_api.h"
 #include "extensions/browser/extension_prefs.h"
@@ -51,6 +49,20 @@
 #include "extensions/common/manifest_handlers/mime_types_handler.h"
 #include "extensions/common/switches.h"
 #include "net/base/mime_util.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "ppapi/buildflags/buildflags.h"
+#if BUILDFLAG(ENABLE_PLUGINS)
+#include "content/public/browser/plugin_service.h"
+#endif
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "pdf/buildflags.h"
+#if BUILDFLAG(ENABLE_PDF)
+#include "chrome/browser/pdf/pdf_extension_util.h"
+#endif
+#endif
 
 using content::BrowserContext;
 
@@ -263,11 +275,13 @@ void CefExtensionSystem::Init() {
   //    the guest WebContents will be destroyed. This triggers a call to
   //    CefMimeHandlerViewGuestDelegate::OnGuestDetached which removes the
   //    routing ID association with the owner CefBrowser.
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   if (PdfExtensionEnabled()) {
     LoadExtension(ParseManifest(pdf_extension_util::GetManifest()),
                   base::FilePath(FILE_PATH_LITERAL("pdf")), true /* internal */,
                   nullptr, nullptr);
   }
+#endif
 
   initialized_ = true;
 }
@@ -683,10 +697,12 @@ void CefExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
       }
       info.mime_types.push_back(mime_type_info);
     }
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
     content::PluginService* plugin_service =
         content::PluginService::GetInstance();
     plugin_service->RefreshPlugins();
     plugin_service->RegisterInternalPlugin(info, true);
+#endif
   }
 }
 
@@ -707,10 +723,12 @@ void CefExtensionSystem::NotifyExtensionUnloaded(
   if (handler && !handler->handler_url().empty()) {
     base::FilePath path =
         base::FilePath::FromUTF8Unsafe(extension->url().spec());
+#if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
     content::PluginService* plugin_service =
         content::PluginService::GetInstance();
     plugin_service->UnregisterInternalPlugin(path);
     plugin_service->RefreshPlugins();
+#endif
   }
 
   registry_->TriggerOnUnloaded(extension, reason);

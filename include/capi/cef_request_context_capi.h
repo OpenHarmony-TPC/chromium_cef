@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=d2ccf65028b87821b92eda7e8d715ec98f8e1623$
+// $hash=c6c04067690990978ca3bbbbc6ddd6f5a0186f91$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
@@ -45,7 +45,6 @@
 #include "include/capi/cef_data_base_capi.h"
 #include "include/capi/cef_extension_capi.h"
 #include "include/capi/cef_extension_handler_capi.h"
-#include "include/capi/cef_media_router_capi.h"
 #include "include/capi/cef_values_capi.h"
 #include "include/capi/cef_web_storage_capi.h"
 
@@ -370,15 +369,6 @@ typedef struct _cef_request_context_t {
   struct _cef_extension_t*(CEF_CALLBACK* get_extension)(
       struct _cef_request_context_t* self,
       const cef_string_t* extension_id);
-
-  ///
-  // Returns the MediaRouter object associated with this context.  If |callback|
-  // is non-NULL it will be executed asnychronously on the UI thread after the
-  // manager's context has been initialized.
-  ///
-  struct _cef_media_router_t*(CEF_CALLBACK* get_media_router)(
-      struct _cef_request_context_t* self,
-      struct _cef_completion_callback_t* callback);
 } cef_request_context_t;
 
 ///

@@ -57,17 +57,19 @@ void CefDataBaseImpl::SaveHttpAuthCredentials(const CefString& host,
 void CefDataBaseImpl::GetHttpAuthCredentials(
     const CefString& host,
     const CefString& realm,
-    std::vector<CefString>& username_password) {
+    CefString& username,
+    char* password,
+    uint32_t passwordSize) {
   if (host.empty() || realm.empty()) {
     return;
   }
 
-  std::vector<std::string> result;
+  std::string usernameStr;
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
           .GetOhosWebDataBaseAdapterInstance();
-  databaseAdapter.GetHttpAuthCredentials(host, realm, result);
-  TransferVector(result, username_password);
+  databaseAdapter.GetHttpAuthCredentials(host, realm, usernameStr, password, passwordSize);
+  username = usernameStr;
   return;
 }
 

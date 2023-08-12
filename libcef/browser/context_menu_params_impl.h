@@ -41,6 +41,8 @@ class CefContextMenuParamsImpl
   bool IsSpellCheckEnabled() override;
   EditStateFlags GetEditStateFlags() override;
   bool IsCustomMenu() override;
+  InputFieldType GetInputFieldType() override;
+  SourceType GetSourceType() override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CONTEXT_MENU_PARAMS_IMPL_H_

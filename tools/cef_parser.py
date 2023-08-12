@@ -406,7 +406,8 @@ _simpletypes = {
     'CefDraggableRegion': ['cef_draggable_region_t', 'CefDraggableRegion()'],
     'CefThreadId': ['cef_thread_id_t', 'TID_UI'],
     'CefTime': ['cef_time_t', 'CefTime()'],
-    'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()']
+    'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()'],
+    'CefSelectPopupItem': ['cef_select_popup_item_t', 'CefSelectPopupItem()']
 }
 
 

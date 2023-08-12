@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3ea3777da287fb256c81d7659000104b85d99c45$
+// $hash=ef42fcbe56e93182d9f4b5063d55b33ce9086e55$
 //
 
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"

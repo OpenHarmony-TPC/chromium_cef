@@ -10,7 +10,9 @@ AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
     : origin_(origin), resources_(resources), callback_(std::move(callback)) {}
 
 AlloyAccessRequest::~AlloyAccessRequest() {
-  std::move(callback_).Run(false);
+  if (!callback_.is_null()) {
+    std::move(callback_).Run(false);
+  }
 }
 
 CefString AlloyAccessRequest::Origin() {
@@ -22,5 +24,7 @@ int AlloyAccessRequest::ResourceAcessId() {
 }
 
 void AlloyAccessRequest::ReportRequestResult(bool allowed) {
-  std::move(callback_).Run(allowed);
+  if (!callback_.is_null()) {
+    std::move(callback_).Run(allowed);
+  }
 }

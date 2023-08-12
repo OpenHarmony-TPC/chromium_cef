@@ -148,6 +148,8 @@ bool CefWebContentsViewOSR::CloseTabAfterEventTrackingIfNeeded() {
 }
 #endif  // BUILDFLAG(IS_MAC)
 
+void CefWebContentsViewOSR::FullscreenStateChanged(bool is_fullscreen) {}
+
 void CefWebContentsViewOSR::StartDragging(
     const content::DropData& drop_data,
     blink::DragOperationsMask allowed_ops,
@@ -171,6 +173,27 @@ void CefWebContentsViewOSR::UpdateDragCursor(
   if (browser.get())
     browser->UpdateDragCursor(operation);
 }
+
+#if BUILDFLAG(USE_EXTERNAL_POPUP_MENU)
+void CefWebContentsViewOSR::ShowPopupMenu(
+    content::RenderFrameHost* render_frame_host,
+    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
+    const gfx::Rect& bounds,
+    int item_height,
+    double item_font_size,
+    int selected_item,
+    std::vector<blink::mojom::MenuItemPtr> menu_items,
+    bool right_aligned,
+    bool allow_multiple_selection) {
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get()) {
+    browser->ShowPopupMenu(std::move(popup_client), bounds,
+                           item_height, item_font_size, selected_item,
+                           std::move(menu_items), right_aligned,
+                           allow_multiple_selection);
+  }
+}
+#endif
 
 CefRenderWidgetHostViewOSR* CefWebContentsViewOSR::GetView() const {
   if (web_contents_) {

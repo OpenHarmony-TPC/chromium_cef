@@ -532,6 +532,16 @@ class CefStringBase {
   }
 
   ///
+  // Memset the data to zero.
+  ///
+  void MemsetToZero() {
+    if (!string_)
+      return;
+    if (string_->str != NULL)
+      memset(string_->str, 0, string_->length);
+  }
+
+  ///
   // Attach to the specified string structure. If |owner| is true this class
   // will take ownership of the structure.
   ///

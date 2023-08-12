@@ -219,6 +219,8 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   typedef cef_context_menu_media_type_t MediaType;
   typedef cef_context_menu_media_state_flags_t MediaStateFlags;
   typedef cef_context_menu_edit_state_flags_t EditStateFlags;
+  typedef cef_context_menu_input_field_type_t InputFieldType;
+  typedef cef_context_menu_source_type_t SourceType;
 
   ///
   // Returns the X coordinate of the mouse where the context menu was invoked.
@@ -356,6 +358,18 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsCustomMenu() = 0;
+
+  ///
+  // Returns the input field type of context node that the context menu was invoked on.
+  ///
+  /*--cef(default_retval=CM_INPUTFIELDTYPE_NONE)--*/
+  virtual InputFieldType GetInputFieldType() = 0;
+
+  ///
+  // Returns the source type of context node that the context menu was invoked on.
+  ///
+  /*--cef(default_retval=CM_SOURCETYPE_NONE)--*/
+  virtual SourceType GetSourceType() = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_CONTEXT_MENU_HANDLER_H_

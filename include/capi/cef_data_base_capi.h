@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=d2a63576b59c75e748b5a725af9a4337414c82b9$
+// $hash=99bb61cf23fa49b4a7ce08c77d0c98980bc07a1f$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DATA_BASE_CAPI_H_
@@ -78,11 +78,12 @@ typedef struct _cef_data_base_t {
   ///
   // get http auth data by host and realm.
   ///
-  void(CEF_CALLBACK* get_http_auth_credentials)(
-      struct _cef_data_base_t* self,
-      const cef_string_t* host,
-      const cef_string_t* realm,
-      cef_string_list_t username_password);
+  void(CEF_CALLBACK* get_http_auth_credentials)(struct _cef_data_base_t* self,
+                                                const cef_string_t* host,
+                                                const cef_string_t* realm,
+                                                cef_string_t* username,
+                                                char* password,
+                                                uint32_t passwordSize);
 
   ///
   // gets whether the instance holds the specified permissions for the specified
