@@ -152,6 +152,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
       content::RenderWidgetHost* render_widget_host) override;
   void OnFocusChangedInPage(content::FocusedNodeDetails* details) override;
   void WebContentsDestroyed() override;
+#if BUILDFLAG(IS_OHOS)
+  void DidStartNavigation(content::NavigationHandle* navigation) override;
+  void DocumentOnLoadCompletedInPrimaryMainFrame() override;
+#endif
 
   // NotificationObserver methods.
   void Observe(int type,

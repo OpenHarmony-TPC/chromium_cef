@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=580b424b488c3974143484a05df444e91edfca5c$
+// $hash=5eabdc3dbebae73e8cfb60a46d7f91a9974e6969$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LIFE_SPAN_HANDLER_CTOCPP_H_
@@ -53,7 +53,8 @@ class CefLifeSpanHandlerCToCpp
                         CefRefPtr<CefFrame> frame,
                         const CefString& target_url,
                         WindowOpenDisposition target_disposition,
-                        bool user_gesture) override;
+                        bool user_gesture,
+                        CefRefPtr<CefCallback> callback) override;
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
   bool DoClose(CefRefPtr<CefBrowser> browser) override;
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;

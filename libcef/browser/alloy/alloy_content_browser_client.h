@@ -10,13 +10,17 @@
 #include <utility>
 
 #include "include/cef_request_context_handler.h"
+#include "libcef/browser/net_service/proxy_config_monitor.h"
 #include "libcef/browser/request_context_impl.h"
 
 #include "base/memory/ref_counted.h"
 #include "build/build_config.h"
 #include "content/public/browser/content_browser_client.h"
 #include "third_party/skia/include/core/SkColor.h"
-
+#if BUILDFLAG(IS_OHOS)
+#include "chrome/common/renderer_configuration.mojom.h"
+#include "mojo/public/cpp/bindings/associated_remote.h"
+#endif
 class AlloyBrowserMainParts;
 class CefDevToolsDelegate;
 
@@ -111,7 +115,8 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
  bool CanCreateWindow(content::RenderFrameHost* opener,
                       const GURL& target_url,
                       WindowOpenDisposition disposition,
-                      bool user_gesture) override;
+                      bool user_gesture,
+                      content::mojom::FrameHost::GetCreateNewWindowCallback callback) override;
 #endif
   void OverrideWebkitPrefs(content::WebContents* web_contents,
                            blink::web_pref::WebPreferences* prefs) override;
@@ -143,7 +148,7 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       const scoped_refptr<network::SharedURLLoaderFactory>&
           network_loader_factory) override;
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
   void GetAdditionalMappedFilesForChildProcess(
       const base::CommandLine& command_line,
       int child_process_id,
@@ -253,9 +258,6 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   bool IsFindInPageDisabledForOrigin(const url::Origin& origin) override;
 
 #if BUILDFLAG(IS_OHOS)
-  bool ShouldTryToUseExistingProcessHost(
-      content::BrowserContext* browser_context,
-      const GURL& url) override;
   bool ShouldDisableSiteIsolation(
       content::SiteIsolationMode site_isolation_mode) override;
   bool ShouldLockProcessToSite(content::BrowserContext* browser_context,
@@ -288,6 +290,10 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       content::SiteInstance* site_instance);
 
   AlloyBrowserMainParts* browser_main_parts_ = nullptr;
+#if BUILDFLAG(IS_OHOS)
+  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+  GetRendererConfiguration(content::RenderProcessHost* render_process_host);
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_CONTENT_BROWSER_CLIENT_H_

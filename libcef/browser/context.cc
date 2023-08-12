@@ -28,7 +28,12 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "cef/libcef/browser/net_service/net_helpers.h"
+#include "content/public/browser/browser_context.h"
+#include "content/public/browser/download_manager_delegate.h"
 #include "content/public/browser/network_service_instance.h"
+#include "libcef/browser/download_manager_delegate.h"
+#include "libcef/browser/download_resume_util.h"
+#include "libcef/browser/received_slice_helper.h"
 #include "services/network/public/mojom/network_service.mojom.h"
 #endif
 
@@ -91,13 +96,18 @@ bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
     return true;
   }
 
+#if BUILDFLAG(IS_OHOS)
+  *sk_out = SkColorSetARGB(CefColorGetA(cef_in), CefColorGetR(cef_in), CefColorGetG(cef_in),
+                           CefColorGetB(cef_in));
+#else
   // Ignore the alpha component.
   *sk_out = SkColorSetRGB(CefColorGetR(cef_in), CefColorGetG(cef_in),
                           CefColorGetB(cef_in));
+#endif
   return true;
 }
 
-// Convert |path_str| to a normalized FilePath.
+// Convert |path_str| tnew CefDownloadItemImpl(o a normalized FilePath.
 base::FilePath NormalizePath(const cef_string_t& path_str,
                              const char* name,
                              bool* has_error = nullptr) {
@@ -334,6 +344,67 @@ void CefApplyHttpDns() {
               << "will apply doh config after network service created";
   }
 }
+
+void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
+  std::vector<CefBrowserContext*> browser_context_all =
+      CefBrowserContext::GetAll();
+  LOG(INFO) << "set download_handler for all browser contexts, browser context "
+               "all size:"
+            << browser_context_all.size();
+  if (browser_context_all.size() > 0) {
+    for (CefBrowserContext* context : browser_context_all) {
+      content::BrowserContext* browser_context = context->AsBrowserContext();
+      browser_context->GetDownloadManager();
+      content::DownloadManagerDelegate* download_manager_delegate =
+          browser_context->GetDownloadManagerDelegate();
+      CefDownloadManagerDelegate* cef_download_manager_delegate =
+          static_cast<CefDownloadManagerDelegate*>(download_manager_delegate);
+      cef_download_manager_delegate->SetDownloadHandler(download_handler);
+    }
+  }
+}
+
+void CefResumeDownload(const CefString& guid,
+                       const CefString& url,
+                       const CefString& full_path,
+                       int64 received_bytes,
+                       int64 total_bytes,
+                       const CefString& etag,
+                       const CefString& mime_type,
+                       const CefString& last_modified,
+                       const CefString& received_slices_string) {
+  std::vector<CefBrowserContext*> browser_context_all =
+      CefBrowserContext::GetAll();
+  if (browser_context_all.size() > 0) {
+    //  use first browser context to resume
+    CefBrowserContext* context = browser_context_all[0];
+    content::BrowserContext* browser_context = context->AsBrowserContext();
+    content::DownloadManager* manager = browser_context->GetDownloadManager();
+    if (!manager) {
+      LOG(ERROR) << "download manager not exists, resume download failed";
+      return;
+    }
+    GURL gurl = GURL(url.ToString());
+    if (gurl.is_empty() || !gurl.is_valid()) {
+      LOG(ERROR) << "download url is not valid, resume download failed, url:"
+                 << url.ToString();
+      return;
+    }
+    base::FilePath file_full_path =
+        base::FilePath::FromUTF8Unsafe(full_path.ToString());
+
+    std::vector<download::DownloadItem::ReceivedSlice> received_slices =
+        received_slice_helper::FromString(received_slices_string.ToString());
+    manager->GetNextId(base::BindOnce(
+        &download_resume_util::ResumeDownloadWithId, manager, guid.ToString(),
+        std::move(gurl), std::move(file_full_path), received_bytes, total_bytes,
+        etag.ToString(), mime_type.ToString(), last_modified.ToString(),
+        received_slices));
+  } else {
+    LOG(ERROR) << "browser contexts is empty, resume download failed";
+  }
+}
+
 #endif
 
 // CefContext

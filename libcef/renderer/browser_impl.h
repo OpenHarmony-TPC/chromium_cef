@@ -102,13 +102,18 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void FrameDetached(int64_t frame_id);
 
   void OnLoadingStateChange(bool isLoading);
-
+  void PrefetchPage(CefString& url,
+                    CefString& additionalHttpHeaders) override{};
 #if BUILDFLAG(IS_OHOS)
   bool ShouldShowLoadingUI() override;
   void SetForceEnableZoom(bool forceEnableZoom) override {};
   bool GetForceEnableZoom() override {
     return false;
   }
+  void SelectAndCopy() override{};
+  bool ShouldShowFreeCopy() override { return false; };
+  int GetNWebId() override { return -1; };
+  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override {};
 #endif
 
  private:

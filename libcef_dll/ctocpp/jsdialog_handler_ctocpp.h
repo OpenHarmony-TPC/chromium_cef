@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=55b3bcb925cfaf44f79c0e03fc55878d748f55ce$
+// $hash=cdfe3bece7137f53e8b00682064f7831617a7b2f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_JSDIALOG_HANDLER_CTOCPP_H_
@@ -43,6 +43,7 @@ class CefJSDialogHandlerCToCpp
                   CefRefPtr<CefJSDialogCallback> callback,
                   bool& suppress_message) override;
   bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                            const CefString& url,
                             const CefString& message_text,
                             bool is_reload,
                             CefRefPtr<CefJSDialogCallback> callback) override;

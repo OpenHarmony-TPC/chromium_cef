@@ -42,15 +42,15 @@
 // way that may cause binary incompatibility with other builds. The universal
 // hash value will change if any platform is affected whereas the platform hash
 // values will change only if that particular platform is affected.
-#define CEF_API_HASH_UNIVERSAL "15a77691d9b7ff482ca4ceee18514ec1b500e8c5"
+#define CEF_API_HASH_UNIVERSAL "1a2e23fce37a7aa2b88a8639ec416d83935d30f7"
 #if defined(OS_WIN)
-#define CEF_API_HASH_PLATFORM "dee470876e52bfe39b81590a6a5c14d23f424e6c"
+#define CEF_API_HASH_PLATFORM "466f8169d4afdc237b58b7fa91c77cd9ea0a827f"
 #elif defined(OS_MAC)
-#define CEF_API_HASH_PLATFORM "7e6489e305fc24fbee8728997f6e5cba0eb03840"
+#define CEF_API_HASH_PLATFORM "afd63d075efea87d44e5302f2d9a9e211717b21d"
 #elif defined(OS_LINUX)
-#define CEF_API_HASH_PLATFORM "15f1a89d21c64571c59ecc6cc01a0d774d7961f9"
+#define CEF_API_HASH_PLATFORM "ede99f707bf33b8a11e5de383354eebb9c9911a2"
 #elif defined(OS_OHOS)
-#define CEF_API_HASH_PLATFORM "15f1a89d21c64571c59ecc6cc01a0d774d7961f9"
+#define CEF_API_HASH_PLATFORM "ede99f707bf33b8a11e5de383354eebb9c9911a2"
 #endif
 
 #ifdef __cplusplus

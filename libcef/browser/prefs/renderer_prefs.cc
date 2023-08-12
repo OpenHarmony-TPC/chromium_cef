@@ -45,7 +45,13 @@
 #include "third_party/blink/public/common/peerconnection/webrtc_ip_handling_policy.h"
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
 #include "ui/native_theme/native_theme.h"
-
+#if BUILDFLAG(IS_OHOS)
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#include "components/content_settings/core/common/content_settings.h"
+#include "components/content_settings/core/common/content_settings_types.h"
+#include "content/public/common/content_switches.h"
+#endif
 namespace renderer_prefs {
 
 namespace {
@@ -379,11 +385,14 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if BUILDFLAG(IS_OHOS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
   SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
+  web.contextmenu_customization_enabled = cef.contextmenu_customization_enabled;
+  web.scrollbar_color = cef.scrollbar_color; 
+  web.blank_target_popup_intercept_enabled = cef.blank_target_popup_intercept_enabled;
 #endif
   web.viewport_meta_enabled = cef.viewport_meta_enabled;
   web.autoplay_policy =
       cef.user_gesture_required
-          ? blink::mojom::AutoplayPolicy::kUserGestureRequired
+          ? blink::mojom::AutoplayPolicy::kDocumentUserActivationRequired
           : blink::mojom::AutoplayPolicy::kNoUserGestureRequired;
   /* ohos webview end */
 }
@@ -471,7 +480,27 @@ void PopulateWebPreferences(content::RenderViewHost* rvh,
   if (browser) {
     // Set preferences based on CefBrowserSettings.
     SetCefPrefs(browser->settings(), web);
+#if BUILDFLAG(IS_OHOS)
+    const base::CommandLine* command_line =
+        base::CommandLine::ForCurrentProcess();
+    if (command_line->HasSwitch(switches::kForBrowser)) {
+      bool javascript_enabled = web.javascript_enabled;
 
+      // Update content setting default value
+      ContentSetting setting =
+          javascript_enabled ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK;
+      if (!web_contents)
+        return;
+      HostContentSettingsMap* host_content_settings_map =
+          HostContentSettingsMapFactory::GetForProfile(
+              web_contents->GetBrowserContext());
+      host_content_settings_map->SetDefaultContentSetting(
+          ContentSettingsType::JAVASCRIPT, setting);
+      DVLOG(0)
+          << "ExceptionList Update default content setting for JavaScript: "
+          << int(setting);
+    }
+#endif
     SetCefSpecialPrefs(rvh, browser, web);
 
     web.picture_in_picture_enabled = browser->IsPictureInPictureSupported();

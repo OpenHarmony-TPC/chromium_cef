@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=17a3f0d9b77b19f01a9c147f900dc30016fa9e6e$
+// $hash=3e43b09c02b4c9974c12ea450872d4ce0da42116$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_JAVA_SCRIPT_RESULT_CALLBACK_CTOCPP_H_
@@ -37,7 +37,7 @@ class CefJavaScriptResultCallbackCToCpp
   virtual ~CefJavaScriptResultCallbackCToCpp();
 
   // CefJavaScriptResultCallback methods.
-  void OnJavaScriptExeResult(const CefString& result) override;
+  void OnJavaScriptExeResult(CefRefPtr<CefValue> result) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_JAVA_SCRIPT_RESULT_CALLBACK_CTOCPP_H_

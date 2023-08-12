@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <string>
 #include <utility>
 
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
@@ -70,6 +71,9 @@ const size_t kMaxDamageRects = 10;
 
 const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
+const size_t kMaxGestureQueueSize = 10;
+const size_t KFirstRecordingTimes = 3;
+
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
   switch (type) {
@@ -154,6 +158,10 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   }
 
   bool ShouldShowStaleContentOnEviction() override { return false; }
+
+#if BUILDFLAG(IS_OHOS)
+  void OnVsync() override { view_->OnVsync(); }
+#endif
 
  private:
   CefRenderWidgetHostViewOSR* const view_;
@@ -256,10 +264,13 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
   // Matching the attributes from BrowserCompositorMac.
   delegated_frame_host_ = std::make_unique<content::DelegatedFrameHost>(
       AllocateFrameSinkId(), delegated_frame_host_client_.get(),
+#if BUILDFLAG(IS_OHOS)
+      true /* should_register_frame_sink_id */);
+#else
       false /* should_register_frame_sink_id */);
+#endif
 
   root_layer_.reset(new ui::Layer(ui::LAYER_SOLID_COLOR));
-
   bool opaque = SkColorGetA(background_color_) == SK_AlphaOPAQUE;
   GetRootLayer()->SetFillsBoundsOpaquely(opaque);
   GetRootLayer()->SetColor(background_color_);
@@ -464,7 +475,6 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
       browser_impl_->GetAcceleratedWidget());
   compositor->SetDelegate(this);
   compositor->SetRootLayer(root_layer_.get());
-  compositor->AddChildFrameSink(GetFrameSinkId());
 
   content::RenderWidgetHostImpl* render_widget_host_impl =
       content::RenderWidgetHostImpl::From(render_widget_host_);
@@ -577,7 +587,23 @@ absl::optional<SkColor> CefRenderWidgetHostViewOSR::GetBackgroundColor() {
   return background_color_;
 }
 
-void CefRenderWidgetHostViewOSR::UpdateBackgroundColor() {}
+void CefRenderWidgetHostViewOSR::UpdateBackgroundColor() {
+#if BUILDFLAG(IS_OHOS)
+  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+#ifdef DISABLE_GPU
+    if (compositor_) {
+      compositor_->SetBackgroundColor(background_color_);
+    }
+#else
+    auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+    if (compositor) {
+      compositor->SetBackgroundColor(background_color_);
+    }
+#endif
+  }
+#endif
+}
 
 absl::optional<content::DisplayFeature>
 CefRenderWidgetHostViewOSR::GetDisplayFeature() {
@@ -649,10 +675,6 @@ void CefRenderWidgetHostViewOSR::OnDidUpdateVisualPropertiesComplete(
   } else {
     SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
                                 metadata.local_surface_id);
-#if BUILDFLAG(IS_OHOS)
-    // Fix egl resize pending problem.
-    ReleaseResizeHold();
-#endif
   }
 }
 
@@ -868,9 +890,9 @@ display::ScreenInfos CefRenderWidgetHostViewOSR::GetNewScreenInfosForUpdate() {
         screen_info.available_rect = screenRect;
       }
       LOG(DEBUG) << "CefRenderWidgetHostViewOSR::GetScreenInfo orientation:"
-                << screen_info.orientation;
+                 << screen_info.orientation;
       LOG(DEBUG) << "CefRenderWidgetHostViewOSR::GetScreenInfo angel:"
-                << screen_info.angle;
+                 << screen_info.angle;
     }
 
     display_screen_info = ScreenInfoFrom(screen_info);
@@ -991,6 +1013,7 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     size_t n = range.length();
     if (pos + n <= text.length())
       selected_text = text.substr(pos, n);
+    is_select_text_ = n - pos > 0;
   }
 
   CefRefPtr<CefRenderHandler> handler =
@@ -1000,6 +1023,42 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
   CefRange cef_range(range.start(), range.end());
   handler->OnTextSelectionChanged(browser_impl_.get(), selected_text,
                                   cef_range);
+  handler->OnSelectionChanged(browser_impl_.get(), text, cef_range);
+}
+
+void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
+    const gfx::Rect& anchor_rect,
+    base::i18n::TextDirection anchor_dir,
+    const gfx::Rect& focus_rect,
+    base::i18n::TextDirection focus_dir,
+    const gfx::Rect& bounding_box,
+    bool is_anchor_first) {
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser_impl_ is nullptr";
+    return;
+  }
+
+  focus_rect_x_ = focus_rect.x();
+  focus_rect_y_ = focus_rect.y();
+  focus_rect_width_ = focus_rect.width();
+  focus_rect_height_ = focus_rect.height();
+
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+
+  if (!is_select_text_) {
+    handler->OnCursorUpdate(browser_impl_->GetBrowser(),
+                            CefRect(focus_rect_x_, focus_rect_y_,
+                                    focus_rect_width_, focus_rect_height_));
+    return;
+  }
+
+  UpdateEditBounds();
+  auto processedOffset = HandleCursorOffset();
+  handler->OnCursorUpdate(browser_impl_->GetBrowser(),
+                          CefRect(processedOffset.first, processedOffset.second,
+                                  focus_rect_width_, focus_rect_height_));
 }
 
 const viz::LocalSurfaceId& CefRenderWidgetHostViewOSR::GetLocalSurfaceId()
@@ -1075,10 +1134,6 @@ void CefRenderWidgetHostViewOSR::DidNavigate() {
       // can use the ID that was already provided.
       SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                                   GetLocalSurfaceId());
-#if BUILDFLAG(IS_OHOS)
-      // Fix egl resize pending problem.
-      ReleaseResizeHold();
-#endif
     } else {
       SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                                   absl::nullopt);
@@ -1112,7 +1167,12 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   if (metadata.root_scroll_offset) {
     root_scroll_offset = *metadata.root_scroll_offset;
   }
+#if BUILDFLAG(IS_OHOS)
+  if (root_scroll_offset != last_scroll_offset_ &&
+      (root_scroll_offset.x() != 0 || root_scroll_offset.y() != 0)) {
+#else
   if (root_scroll_offset != last_scroll_offset_) {
+#endif
     last_scroll_offset_ = root_scroll_offset;
 
     if (!is_scroll_offset_changed_pending_) {
@@ -1140,6 +1200,18 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
         CEF_UIT, base::BindOnce(&CefRenderWidgetHostViewOSR::OnRootLayerChanged,
                                 weak_ptr_factory_.GetWeakPtr()));
 #endif
+  }
+
+  gfx::Size viewport_size_in_pixels = metadata.viewport_size_in_pixels;
+  if (viewport_size_in_pixels != viewport_size_in_pixels_) {
+    TRACE_EVENT1("cef",
+                 "CefRenderWidgetHostViewOSR::"
+                 "OnRenderFrameMetadataChangedAfterActivation",
+                 "viewport_size_in_pixels", viewport_size_in_pixels.ToString());
+    viewport_size_in_pixels_ = viewport_size_in_pixels;
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
+                                 weak_ptr_factory_.GetWeakPtr()));
   }
 #endif
   if (!page_scale_factor_) {
@@ -1188,7 +1260,11 @@ CefRenderWidgetHostViewOSR::CreateHostDisplayClient() {
 }
 
 bool CefRenderWidgetHostViewOSR::InstallTransparency() {
+#if BUILDFLAG(IS_OHOS)
+  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+#else
   if (background_color_ == SK_ColorTRANSPARENT) {
+#endif
     SetBackgroundColor(background_color_);
 #ifdef DISABLE_GPU
     if (compositor_) {
@@ -1207,6 +1283,17 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 }
 
 void CefRenderWidgetHostViewOSR::WasResized() {
+  UpdateEditBounds();
+  if (is_select_text_) {
+    auto processedOffset = HandleCursorOffset();
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnCursorUpdate(
+        browser_impl_->GetBrowser(),
+        CefRect(processedOffset.first, processedOffset.second,
+                focus_rect_width_, focus_rect_height_));
+  }
   // Only one resize will be in-flight at a time.
   if (hold_resize_) {
     if (!pending_resize_)
@@ -1216,10 +1303,13 @@ void CefRenderWidgetHostViewOSR::WasResized() {
 
   SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                               absl::nullopt);
-#if BUILDFLAG(IS_OHOS)
-  // Fix egl resize pending problem.
-  ReleaseResizeHold();
-#endif
+}
+
+void CefRenderWidgetHostViewOSR::SetShouldFrameSubmissionBeforeDraw(
+    bool should) {
+  TRACE_EVENT0(
+      "base", "CefRenderWidgetHostViewOSR::SetShouldFrameSubmissionBeforeDraw");
+  should_wait_ = should;
 }
 
 void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
@@ -1228,6 +1318,12 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
   SetFrameRate();
 
   const bool resized = ResizeRootLayer();
+  if (resized && should_wait_) {
+    if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+            browser_impl_->GetAcceleratedWidget())) {
+      compositor->SetShouldFrameSubmissionBeforeDraw(true);
+    }
+  }
   bool surface_id_updated = false;
 
   if (!resized && child_local_surface_id) {
@@ -1339,9 +1435,11 @@ void CefRenderWidgetHostViewOSR::SendKeyEvent(
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendKeyEvent");
   content::RenderWidgetHostImpl* target_host = render_widget_host_;
 
+#if !BUILDFLAG(IS_OHOS)
   if (selection_controller_client_) {
     selection_controller_client_->CloseQuickMenuAndHideHandles();
   }
+#endif
 
   // If there are multiple widgets on the page (such as when there are
   // out-of-process iframes), pick the one that should process this event.
@@ -1513,6 +1611,18 @@ void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
 void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchEvent");
 
+#if BUILDFLAG(IS_OHOS)
+  if (event.type == CEF_TET_PRESSED) {
+    auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+    if (compositor) {
+      compositor->SetCurrentFrameSinkId(GetFrameSinkId());
+    } else {
+      LOG(ERROR) << "compositor is null when send touch event";
+    }
+  }
+#endif
+
   if (!IsPopupWidget() && popup_host_view_) {
     if (!forward_touch_to_popup_ && event.type == CEF_TET_PRESSED &&
         pointer_state_.GetPointerCount() == 0) {
@@ -1530,6 +1640,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   }
 
   // Update the touch event first.
+  pointer_state_.SetFromOverlay(event.from_overlay);
   if (!pointer_state_.OnTouch(event)) {
     return;
   }
@@ -1620,24 +1731,15 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     content::RenderWidgetHostViewBase* updated_view,
     bool did_update_state) {
   const auto state = text_input_manager->GetTextInputState();
-#if BUILDFLAG(IS_OHOS)
-  if (!state || !state->show_ime_if_needed) {
+
+  if (state && state->type == ui::TEXT_INPUT_TYPE_TEXT_AREA && !is_need_show_keyboard_) {
+    is_need_show_keyboard_ = true;
+    LOG(INFO) << "In this type of area, there is no need to pull up the keyboard when pressing";
     return;
   }
 
-  CefRefPtr<CefRenderHandler> handler = browser_impl_->GetClient()->GetRenderHandler();
-  CHECK(handler);
-
-  if (state->type != ui::TEXT_INPUT_TYPE_NONE && state->mode != ui::TEXT_INPUT_MODE_NONE) {
-    if (state->type == ui::TEXT_INPUT_TYPE_NUMBER) {
-      handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), CEF_TEXT_INPUT_MODE_NUMERIC, true);
-    } else {
-      handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
-        static_cast<CefRenderHandler::TextInputMode>(ui::TEXT_INPUT_MODE_DEFAULT), true);
-    }
-  }
-#else
   if (state && !state->show_ime_if_needed) {
+    LOG(INFO) << "Do not need show ime";
     return;
   }
 
@@ -1656,24 +1758,29 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
 
+#if BUILDFLAG(IS_OHOS)
+  if (state && (state->type == ui::TEXT_INPUT_TYPE_NUMBER ||
+                state->type == ui::TEXT_INPUT_TYPE_TELEPHONE)) {
+    mode = CEF_TEXT_INPUT_MODE_NUMERIC;
+  } else if (mode == CEF_TEXT_INPUT_MODE_NONE && is_editable_node_) {
+    mode = CEF_TEXT_INPUT_MODE_DEFAULT;
+    show_keyboard = true;
+  }
+#endif
+
   handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                       show_keyboard);
-#endif
+  is_need_show_keyboard_ = false;
 }
 
-void CefRenderWidgetHostViewOSR::FocusedNodeChanged(bool is_editable_node,
-  const gfx::Rect& node_bounds_in_screen)
-{
+void CefRenderWidgetHostViewOSR::FocusedNodeChanged(
+    bool is_editable_node,
+    const gfx::Rect& node_bounds_in_screen) {
   CefRefPtr<CefRenderHandler> handler =
-    browser_impl_->GetClient()->GetRenderHandler();
+      browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-  if (is_editable_node) {
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
-        CEF_TEXT_INPUT_MODE_DEFAULT, false);
-  } else {
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
-        CEF_TEXT_INPUT_MODE_NONE, false);
-  }
+
+  is_editable_node_ = is_editable_node;
 }
 
 void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
@@ -1685,6 +1792,29 @@ void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
                                     event_consumed, false);
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::OnVsync() {
+  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::OnVsync");
+
+  if (gesture_event_queue_.size() > kMaxGestureQueueSize) {
+    LOG(ERROR) << "gesture event queue size is error:"
+               << gesture_event_queue_.size();
+    gesture_event_queue_.clear();
+  }
+
+  if (!gesture_event_queue_.empty()) {
+    SendGestureEvent(std::move(gesture_event_queue_.front()));
+    gesture_event_queue_.pop_front();
+  }
+}
+
+std::u16string CefRenderWidgetHostViewOSR::GetSelectedText() {
+  if (text_input_manager_)
+    return text_input_manager_->GetTextSelection(this)->selected_text();
+  return std::u16string();
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnGestureEvent(
     const ui::GestureEventData& gesture) {
   if ((gesture.type() == ui::ET_GESTURE_PINCH_BEGIN ||
@@ -1693,6 +1823,25 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
       !pinch_zoom_enabled_) {
     return;
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (gesture.type() == ui::ET_GESTURE_SCROLL_BEGIN) {
+    gesture_update_count_ = 0;
+  } else if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE) {
+    gesture_update_count_++;
+  }
+  // Don't push the first three times so that will not affect touch delay
+  if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE &&
+      gesture_update_count_ > KFirstRecordingTimes) {
+    gesture_event_queue_.push_back(gesture);
+  } else {
+    SendGestureEvent(gesture);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::SendGestureEvent(
+    const ui::GestureEventData& gesture) {
+#endif
 
   blink::WebGestureEvent web_event =
       ui::CreateWebGestureEventFromGestureEventData(gesture);
@@ -1762,6 +1911,11 @@ void CefRenderWidgetHostViewOSR::OnPaint(const gfx::Rect& damage_rect,
     return;
   }
 
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "get client failed.";
+    return;
+  }
+
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->client()->GetRenderHandler();
   CHECK(handler);
@@ -1793,7 +1947,6 @@ ui::Layer* CefRenderWidgetHostViewOSR::GetRootLayer() const {
 ui::TextInputType CefRenderWidgetHostViewOSR::GetTextInputType() {
   if (text_input_manager_ && text_input_manager_->GetTextInputState())
     return text_input_manager_->GetTextInputState()->type;
-
   return ui::TEXT_INPUT_TYPE_NONE;
 }
 
@@ -1924,7 +2077,13 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
         compositor_local_surface_id_allocator_.GetCurrentLocalSurfaceId());
   }
 
+#if BUILDFLAG(IS_OHOS)
+  // We only need to notify the screen information change, the visual window
+  // adjustment is done by CefRenderWidgetHostViewOSR::WasResized.
+  return view_bounds_changed;
+#else
   return (screen_info_changed || view_bounds_changed);
+#endif
 }
 
 bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
@@ -2002,15 +2161,15 @@ void CefRenderWidgetHostViewOSR::OnScrollOffsetChanged() {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-  #if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_OHOS)
     float x = last_scroll_offset_.x();
     float y = last_scroll_offset_.y();
     handler->OnScrollOffsetChanged(browser_impl_.get(), std::round(x),
                                    std::round(y));
-  #else
+#else
     handler->OnScrollOffsetChanged(browser_impl_.get(), last_scroll_offset_.x(),
                                    last_scroll_offset_.y());
-  #endif
+#endif
   }
   is_scroll_offset_changed_pending_ = false;
 }
@@ -2024,6 +2183,12 @@ void CefRenderWidgetHostViewOSR::OnRootLayerChanged() {
     handler->OnRootLayerChanged(browser_impl_.get(), root_layer_size_.height(),
                                 root_layer_size_.width());
   }
+}
+
+void CefRenderWidgetHostViewOSR::GestureEventAck(
+    const blink::WebGestureEvent& event,
+    blink::mojom::InputEventResultState ack_result) {
+  StopFlingingIfNecessary(event, ack_result);
 }
 #endif
 
@@ -2110,4 +2275,41 @@ ui::Compositor* CefRenderWidgetHostViewOSR::GetCompositor(
     return nullptr;
   }
   return it->second;
+}
+
+void CefRenderWidgetHostViewOSR::UpdateEditBounds() {
+  if (text_input_manager_ && text_input_manager_->GetTextInputState()) {
+    auto state = text_input_manager_->GetTextInputState();
+    CHECK(state);
+    CHECK(state->edit_context_control_bounds);
+    edit_bounds_x_ = state->edit_context_control_bounds->x();
+    edit_bounds_y_ = state->edit_context_control_bounds->y();
+    edit_bounds_width_ = state->edit_context_control_bounds->width();
+    edit_bounds_height_ = state->edit_context_control_bounds->height();
+  }
+}
+
+std::pair<int, int> CefRenderWidgetHostViewOSR::HandleCursorOffset() {
+  int x = focus_rect_x_;
+  int y = focus_rect_y_;
+  x = x < edit_bounds_x_ ? edit_bounds_x_ : x;
+  x = x > (edit_bounds_x_ + edit_bounds_width_)
+          ? (edit_bounds_x_ + edit_bounds_width_)
+          : x;
+  y = y < edit_bounds_y_ ? edit_bounds_y_ : y;
+  y = y > (edit_bounds_y_ + edit_bounds_height_)
+          ? (edit_bounds_y_ + edit_bounds_height_)
+          : y;
+  return std::make_pair(x, y);
+}
+
+void CefRenderWidgetHostViewOSR::DidOverscroll(const ui::DidOverscrollParams& params) {
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    float x = params.latest_overscroll_delta.x();
+    float y = params.latest_overscroll_delta.y();
+    handler->OnOverscroll(browser_impl_.get(), x, y);
+  }
 }

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fbbfbf396665393a59e2487e84880bafe3568174$
+// $hash=07772abe346378f4c16ea5332b1db9fe2fd3d534$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -372,6 +372,44 @@ void CEF_CALLBACK browser_host_start_download(struct _cef_browser_host_t* self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->StartDownload(CefString(url));
+}
+
+void CEF_CALLBACK
+browser_host_resume_download(struct _cef_browser_host_t* self,
+                             const cef_string_t* url,
+                             const cef_string_t* full_path,
+                             int64 received_bytes,
+                             int64 total_bytes,
+                             const cef_string_t* etag,
+                             const cef_string_t* mime_type,
+                             const cef_string_t* last_modified,
+                             const cef_string_t* received_slices_string) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+  // Verify param: full_path; type: string_byref_const
+  DCHECK(full_path);
+  if (!full_path)
+    return;
+  // Verify param: mime_type; type: string_byref_const
+  DCHECK(mime_type);
+  if (!mime_type)
+    return;
+  // Unverified params: etag, last_modified, received_slices_string
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ResumeDownload(
+      CefString(url), CefString(full_path), received_bytes, total_bytes,
+      CefString(etag), CefString(mime_type), CefString(last_modified),
+      CefString(received_slices_string));
 }
 
 void CEF_CALLBACK
@@ -1801,10 +1839,42 @@ int CEF_CALLBACK browser_host_is_audio_muted(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK
+browser_host_set_audio_resume_interval(struct _cef_browser_host_t* self,
+                                       int resumeInterval) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetAudioResumeInterval(resumeInterval);
+}
+
+void CEF_CALLBACK
+browser_host_set_audio_exclusive(struct _cef_browser_host_t* self,
+                                 int audioExclusive) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetAudioExclusive(audioExclusive ? true
+                                                                    : false);
+}
+
 void CEF_CALLBACK browser_host_execute_java_script(
     struct _cef_browser_host_t* self,
     const cef_string_t* code,
-    struct _cef_java_script_result_callback_t* callback) {
+    struct _cef_java_script_result_callback_t* callback,
+    int extention) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1823,7 +1893,8 @@ void CEF_CALLBACK browser_host_execute_java_script(
 
   // Execute
   CefBrowserHostCppToC::Get(self)->ExecuteJavaScript(
-      CefString(code), CefJavaScriptResultCallbackCToCpp::Wrap(callback));
+      CefString(code), CefJavaScriptResultCallbackCToCpp::Wrap(callback),
+      extention ? true : false);
 }
 
 void CEF_CALLBACK
@@ -2133,6 +2204,38 @@ void CEF_CALLBACK browser_host_set_cache_mode(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetCacheMode(falg);
 }
 
+void CEF_CALLBACK browser_host_set_should_frame_submission_before_draw(
+    struct _cef_browser_host_t* self,
+    int should) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetShouldFrameSubmissionBeforeDraw(
+      should ? true : false);
+}
+
+void CEF_CALLBACK browser_host_zoom_by(struct _cef_browser_host_t* self,
+                                       float delta,
+                                       float width,
+                                       float height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ZoomBy(delta, width, height);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2152,6 +2255,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_zoom_level = browser_host_set_zoom_level;
   GetStruct()->run_file_dialog = browser_host_run_file_dialog;
   GetStruct()->start_download = browser_host_start_download;
+  GetStruct()->resume_download = browser_host_resume_download;
   GetStruct()->download_image = browser_host_download_image;
   GetStruct()->print = browser_host_print;
   GetStruct()->print_to_pdf = browser_host_print_to_pdf;
@@ -2234,6 +2338,9 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->is_background_host = browser_host_is_background_host;
   GetStruct()->set_audio_muted = browser_host_set_audio_muted;
   GetStruct()->is_audio_muted = browser_host_is_audio_muted;
+  GetStruct()->set_audio_resume_interval =
+      browser_host_set_audio_resume_interval;
+  GetStruct()->set_audio_exclusive = browser_host_set_audio_exclusive;
   GetStruct()->execute_java_script = browser_host_execute_java_script;
   GetStruct()->set_native_window = browser_host_set_native_window;
   GetStruct()->set_web_debugging_access = browser_host_set_web_debugging_access;
@@ -2255,6 +2362,9 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_file_access = browser_host_set_file_access;
   GetStruct()->set_block_network = browser_host_set_block_network;
   GetStruct()->set_cache_mode = browser_host_set_cache_mode;
+  GetStruct()->set_should_frame_submission_before_draw =
+      browser_host_set_should_frame_submission_before_draw;
+  GetStruct()->zoom_by = browser_host_zoom_by;
 }
 
 // DESTRUCTOR - Do not edit by hand.

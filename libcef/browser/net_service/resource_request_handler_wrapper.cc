@@ -753,6 +753,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (state->handler_) {
       // Does the client want to handle the request?
+      if (request) {
+        state->pending_request_->SetDestination(request->destination);
+      }
       resource_handler = state->handler_->GetResourceHandler(
           init_state_->browser_, init_state_->frame_,
           state->pending_request_.get());
@@ -834,6 +837,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (state->handler_) {
       // Does the client want to handle the request?
+      if (request) {
+        state->pending_request_->SetDestination(request->destination);
+      }
       resource_handler = state->handler_->GetResourceHandler(
           init_state_->browser_, init_state_->frame_,
           state->pending_request_.get());

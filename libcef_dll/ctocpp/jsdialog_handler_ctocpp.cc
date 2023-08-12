@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c95849f5069d934dcca81e86a11e76931582a22b$
+// $hash=b6989ef194a6cebcb2fe9b2ba7c027081e8e79b3$
 //
 
 #include "libcef_dll/ctocpp/jsdialog_handler_ctocpp.h"
@@ -65,6 +65,7 @@ bool CefJSDialogHandlerCToCpp::OnJSDialog(
 NO_SANITIZE("cfi-icall")
 bool CefJSDialogHandlerCToCpp::OnBeforeUnloadDialog(
     CefRefPtr<CefBrowser> browser,
+    const CefString& url,
     const CefString& message_text,
     bool is_reload,
     CefRefPtr<CefJSDialogCallback> callback) {
@@ -80,6 +81,10 @@ bool CefJSDialogHandlerCToCpp::OnBeforeUnloadDialog(
   DCHECK(browser.get());
   if (!browser.get())
     return false;
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty())
+    return false;
   // Verify param: callback; type: refptr_diff
   DCHECK(callback.get());
   if (!callback.get())
@@ -88,8 +93,9 @@ bool CefJSDialogHandlerCToCpp::OnBeforeUnloadDialog(
 
   // Execute
   int _retval = _struct->on_before_unload_dialog(
-      _struct, CefBrowserCppToC::Wrap(browser), message_text.GetStruct(),
-      is_reload, CefJSDialogCallbackCppToC::Wrap(callback));
+      _struct, CefBrowserCppToC::Wrap(browser), url.GetStruct(),
+      message_text.GetStruct(), is_reload,
+      CefJSDialogCallbackCppToC::Wrap(callback));
 
   // Return type: bool
   return _retval ? true : false;

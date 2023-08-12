@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=77ebea253e3607ed44c60791bb461a202d95c222$
+// $hash=1320c06229c36ceb433a0bcf79ba66e8de87ca69$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_
@@ -214,6 +214,12 @@ typedef struct _cef_request_t {
   // the browser process to track a single request across multiple callbacks.
   ///
   uint64(CEF_CALLBACK* get_identifier)(struct _cef_request_t* self);
+
+  ///
+  // Returns whether the request was made for the main frame document. Will be
+  // false (0) for subresources or iframes
+  ///
+  int(CEF_CALLBACK* is_main_frame)(struct _cef_request_t* self);
 } cef_request_t;
 
 ///

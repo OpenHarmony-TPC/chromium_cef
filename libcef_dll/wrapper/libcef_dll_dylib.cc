@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c9224d945947dbe5cbaf9ee8adedad755621e62f$
+// $hash=22bb7681b21e9e57f6f549823ba2995bafbc196d$
 //
 
 #include <dlfcn.h>
@@ -101,6 +101,16 @@ typedef void (*cef_quit_message_loop_ptr)();
 typedef void (*cef_set_osmodal_loop_ptr)(int);
 typedef void (*cef_enable_highdpi_support_ptr)();
 typedef void (*cef_apply_http_dns_ptr)();
+typedef void (*cef_set_download_handler_ptr)(struct _cef_download_handler_t*);
+typedef void (*cef_resume_download_ptr)(const cef_string_t*,
+                                        const cef_string_t*,
+                                        const cef_string_t*,
+                                        int64,
+                                        int64,
+                                        const cef_string_t*,
+                                        const cef_string_t*,
+                                        const cef_string_t*,
+                                        const cef_string_t*);
 typedef int (*cef_crash_reporting_enabled_ptr)();
 typedef void (*cef_set_crash_key_value_ptr)(const cef_string_t*,
                                             const cef_string_t*);
@@ -522,6 +532,8 @@ struct libcef_pointers {
   cef_set_osmodal_loop_ptr cef_set_osmodal_loop;
   cef_enable_highdpi_support_ptr cef_enable_highdpi_support;
   cef_apply_http_dns_ptr cef_apply_http_dns;
+  cef_set_download_handler_ptr cef_set_download_handler;
+  cef_resume_download_ptr cef_resume_download;
   cef_crash_reporting_enabled_ptr cef_crash_reporting_enabled;
   cef_set_crash_key_value_ptr cef_set_crash_key_value;
   cef_create_directory_ptr cef_create_directory;
@@ -739,6 +751,8 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_set_osmodal_loop);
   INIT_ENTRY(cef_enable_highdpi_support);
   INIT_ENTRY(cef_apply_http_dns);
+  INIT_ENTRY(cef_set_download_handler);
+  INIT_ENTRY(cef_resume_download);
   INIT_ENTRY(cef_crash_reporting_enabled);
   INIT_ENTRY(cef_set_crash_key_value);
   INIT_ENTRY(cef_create_directory);
@@ -1002,6 +1016,27 @@ NO_SANITIZE("cfi-icall") void cef_enable_highdpi_support() {
 
 NO_SANITIZE("cfi-icall") void cef_apply_http_dns() {
   g_libcef_pointers.cef_apply_http_dns();
+}
+
+NO_SANITIZE("cfi-icall")
+void cef_set_download_handler(
+    struct _cef_download_handler_t* download_handler) {
+  g_libcef_pointers.cef_set_download_handler(download_handler);
+}
+
+NO_SANITIZE("cfi-icall")
+void cef_resume_download(const cef_string_t* guid,
+                         const cef_string_t* url,
+                         const cef_string_t* full_path,
+                         int64 received_bytes,
+                         int64 total_bytes,
+                         const cef_string_t* etag,
+                         const cef_string_t* mime_type,
+                         const cef_string_t* last_modified,
+                         const cef_string_t* received_slices_string) {
+  g_libcef_pointers.cef_resume_download(guid, url, full_path, received_bytes,
+                                        total_bytes, etag, mime_type,
+                                        last_modified, received_slices_string);
 }
 
 NO_SANITIZE("cfi-icall") int cef_crash_reporting_enabled() {

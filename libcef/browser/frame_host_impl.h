@@ -144,15 +144,16 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
       absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
 #if BUILDFLAG(IS_OHOS)
-  void OnUpdateHitData(cef::mojom::HitDataParamsPtr params) override;
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params) override;
   void OnGetImageForContextNodeNull() override;
   void LoadHeaderUrl(const CefString& url,
                      const CefString& additionalHttpHeaders) override;
+  void OnScriptedPrint(bool user_initiated) override;
 
   // Send the touch point to the rederer to get hitdata.
   void SendTouchEvent(const CefTouchEvent& event);
+  void SendHitEvent(float x, float y, float width, float height);
 
   void SetInitialScale(float scale);
   void SetJsOnlineProperty(bool network_up);
@@ -173,6 +174,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void ScrollTo(float x, float y);
   void ScrollBy(float delta_x, float delta_y);
   void SlideScroll(float vx, float vy);
+  void ZoomBy(float delta, float width, float height);
+  void GetHitData(int& type, CefString& extra_data);
 #endif  // BUILDFLAG(IS_OHOS)
 
   static const int64_t kMainFrameId;

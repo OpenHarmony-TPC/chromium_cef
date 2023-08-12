@@ -11,6 +11,9 @@
 #include "base/command_line.h"
 #include "base/strings/string_piece.h"
 #include "build/build_config.h"
+#if BUILDFLAG(IS_OHOS)
+#include "components/performance_manager/embedder/performance_manager_lifetime.h"
+#endif
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_main_parts.h"
 #include "content/public/common/main_function_params.h"
@@ -49,6 +52,9 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
   void PreCreateMainMessageLoop() override;
   void PostCreateMainMessageLoop() override;
   int PreCreateThreads() override;
+#if BUILDFLAG(IS_OHOS)
+  void PostCreateThreads() override;
+#endif
   int PreMainMessageLoopRun() override;
   void PostMainMessageLoopRun() override;
   void PostDestroyThreads() override;
@@ -98,6 +104,11 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
   std::unique_ptr<views::LayoutProvider> layout_provider_;
 #endif
 #endif  // defined(TOOLKIT_VIEWS)
+
+#if BUILDFLAG(IS_OHOS)
+  std::unique_ptr<performance_manager::PerformanceManagerLifetime>
+      performance_manager_lifetime_;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_MAIN_H_

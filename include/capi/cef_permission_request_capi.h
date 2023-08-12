@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=51af1ce96096db7ed212692b5915a74a18e0222d$
+// $hash=9ebba0d75e26b973f242563f58081b9f0e97ad53$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
@@ -76,6 +76,45 @@ typedef struct _cef_access_request_t {
 } cef_access_request_t;
 
 ///
+// Structure used to report screen capture permission request for the specified
+// origin.
+///
+typedef struct _cef_screen_capture_access_request_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Get the origin that is trying to acess the resource.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(CEF_CALLBACK* origin)(
+      struct _cef_screen_capture_access_request_t* self);
+
+  ///
+  // Set screen capture mode. {@link #cef_screen_capture_mode_t}
+  ///
+  void(CEF_CALLBACK* set_capture_mode)(
+      struct _cef_screen_capture_access_request_t* self,
+      int32_t mode);
+
+  ///
+  // Set screen capture source id.
+  ///
+  void(CEF_CALLBACK* set_capture_source_id)(
+      struct _cef_screen_capture_access_request_t* self,
+      int32_t sourceId);
+
+  ///
+  // Report whether the origin is allowed to acess the resource.
+  ///
+  void(CEF_CALLBACK* report_request_result)(
+      struct _cef_screen_capture_access_request_t* self,
+      int allowed);
+} cef_screen_capture_access_request_t;
+
+///
 // Implement this structure to handle permission requests.
 ///
 typedef struct _cef_permission_request_t {
@@ -116,6 +155,16 @@ typedef struct _cef_permission_request_t {
   void(CEF_CALLBACK* on_permission_request_canceled)(
       struct _cef_permission_request_t* self,
       struct _cef_access_request_t* request);
+
+  ///
+  // Notify the host application that web content from the specified origin is
+  // attempting to access the screen capture resources, but no permission state
+  // is currently set for that origin. The host application should invoke the
+  // specified callback with the desired permission state.
+  ///
+  void(CEF_CALLBACK* on_screen_capture_request)(
+      struct _cef_permission_request_t* self,
+      struct _cef_screen_capture_access_request_t* request);
 } cef_permission_request_t;
 
 ///

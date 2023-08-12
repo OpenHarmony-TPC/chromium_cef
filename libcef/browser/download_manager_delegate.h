@@ -16,6 +16,10 @@
 #include "content/public/browser/download_manager.h"
 #include "content/public/browser/download_manager_delegate.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "cef/include/cef_download_handler.h"
+#endif  //  BUILDFLAG(IS_OHOS)
+
 class AlloyBrowserHostImpl;
 
 class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
@@ -30,7 +34,9 @@ class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
       delete;
 
   ~CefDownloadManagerDelegate() override;
-
+#if BUILDFLAG(IS_OHOS)
+  void SetDownloadHandler(CefRefPtr<CefDownloadHandler> handler);
+#endif  //  BUILDFLAG(IS_OHOS)
  private:
   // DownloadItem::Observer methods.
   void OnDownloadUpdated(download::DownloadItem* item) override;
@@ -63,6 +69,10 @@ class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
   using ItemBrowserMap =
       std::map<download::DownloadItem*, AlloyBrowserHostImpl*>;
   ItemBrowserMap item_browser_map_;
+
+#if BUILDFLAG(IS_OHOS)
+  CefRefPtr<CefDownloadHandler> download_handler_per_context_ = nullptr;
+#endif  //  BUILDFLAG(IS_OHOS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_H_

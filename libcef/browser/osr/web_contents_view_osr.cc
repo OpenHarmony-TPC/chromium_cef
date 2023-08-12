@@ -13,6 +13,7 @@
 #include "content/browser/browser_plugin/browser_plugin_guest.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/render_widget_host.h"
+#include "components/performance_manager/embedder/performance_manager_registry.h"
 
 CefWebContentsViewOSR::CefWebContentsViewOSR(SkColor background_color,
                                              bool use_shared_texture,
@@ -28,6 +29,11 @@ void CefWebContentsViewOSR::WebContentsCreated(
     content::WebContents* web_contents) {
   DCHECK(!web_contents_);
   web_contents_ = web_contents;
+  LOG(INFO) << "CefWebContentsViewOSR::WebContentsCreated";
+  if (auto* registry =
+          performance_manager::PerformanceManagerRegistry::GetInstance()) {
+    registry->MaybeCreatePageNodeForWebContents(web_contents_);
+  }
 
   RenderViewCreated();
 }

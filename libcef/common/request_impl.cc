@@ -388,6 +388,11 @@ uint64 CefRequestImpl::GetIdentifier() {
   return identifier_;
 }
 
+bool CefRequestImpl::IsMainFrame() {
+  base::AutoLock lock_scope(lock_);
+  return (destination_ == network::mojom::RequestDestination::kDocument);
+}
+
 void CefRequestImpl::Set(const network::ResourceRequest* request,
                          uint64 identifier) {
   base::AutoLock lock_scope(lock_);
@@ -859,6 +864,10 @@ void CefRequestImpl::Reset() {
   changes_ = kChangedNone;
 }
 
+void CefRequestImpl::SetDestination(network::mojom::RequestDestination destination) {
+  base::AutoLock lock_scope(lock_);
+  destination_ = destination;
+}
 // CefPostData ----------------------------------------------------------------
 
 // static

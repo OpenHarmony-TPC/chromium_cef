@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=319451cc942ceffde5c1b4f5e19972e5132ee71e$
+// $hash=a9334b9e088f44925da1bfe428afaf8bacd360e6$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DRAG_DATA_CAPI_H_
@@ -67,6 +67,12 @@ typedef struct _cef_drag_data_t {
   // Returns true (1) if this object is read-only.
   ///
   int(CEF_CALLBACK* is_read_only)(struct _cef_drag_data_t* self);
+
+  ///
+  // True if this object is read-only.
+  ///
+  void(CEF_CALLBACK* set_read_only)(struct _cef_drag_data_t* self,
+                                    int readonly);
 
   ///
   // Returns true (1) if the drag data is a link.
@@ -214,6 +220,11 @@ typedef struct _cef_drag_data_t {
   // Returns true (1) if an image representation of drag data is available.
   ///
   int(CEF_CALLBACK* has_image)(struct _cef_drag_data_t* self);
+
+  ///
+  // Returns true (1) if drag data is single image.
+  ///
+  int(CEF_CALLBACK* is_image_file_contents)(struct _cef_drag_data_t* self);
 } cef_drag_data_t;
 
 ///

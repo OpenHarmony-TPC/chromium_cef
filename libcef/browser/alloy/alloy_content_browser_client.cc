@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
 #include "include/cef_version.h"
 #include "libcef/browser/alloy/alloy_browser_context.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
@@ -16,6 +18,7 @@
 #include "libcef/browser/alloy/alloy_client_cert_identity.h"
 #include "libcef/browser/alloy/alloy_client_cert_lookup_table.h"
 #include "libcef/browser/alloy/alloy_ssl_platform_key.h"
+#include "libcef/browser/alloy/alloy_ssl_platform_key_ohos.h"
 #include "libcef/browser/alloy/alloy_web_contents_view_delegate.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/browser_frame.h"
@@ -80,6 +83,7 @@
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/embedder_support/switches.h"
 #include "components/embedder_support/user_agent_utils.h"
+#include "components/site_isolation/site_isolation_policy.h"
 #include "components/spellcheck/common/spellcheck.mojom.h"
 #include "components/version_info/version_info.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
@@ -171,7 +175,21 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/timer/timer.h"
 #include "base/values.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "chrome/browser/content_settings/page_specific_content_settings_delegate.h"
+#include "components/content_settings/browser/page_specific_content_settings.h"
+#include "components/page_load_metrics/browser/metrics_navigation_throttle.h"
+#include "components/page_load_metrics/browser/metrics_web_contents_observer.h"
+#include "components/page_load_metrics/browser/page_load_metrics_embedder_base.h"
+#include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
+#include "libcef/browser/content_settings/oh_host_content_settings_observer.h"
+#include "libcef/browser/content_settings/oh_host_content_settings_observer_factory.h"
+#include "libcef/browser/page_load_metrics/page_load_metrics_initialize.h"
+#include "libcef/browser/printing/ohos_print_manager.h"
+#include "net/proxy_resolution/proxy_config_service_ohos.h"
+#include "net/proxy_resolution/proxy_resolution_service.h"
 #include "printing/buildflags/buildflags.h"
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "chrome/services/printing/printing_service.h"
@@ -199,7 +217,57 @@
 #include "content/public/browser/url_loader_request_interceptor.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "chrome/browser/prefetch/no_state_prefetch/chrome_no_state_prefetch_contents_delegate.h"
+#include "chrome/browser/prefetch/no_state_prefetch/chrome_no_state_prefetch_processor_impl_delegate.h"
+#include "chrome/browser/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
+#include "components/network_hints/browser/simple_network_hints_handler_impl.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_contents.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_processor_impl.h"
+#include "components/no_state_prefetch/common/prerender_url_loader_throttle.h"
+#include "libcef/browser/predictors/loading_predictor.h"
+#include "libcef/browser/predictors/loading_predictor_factory.h"
+#include "libcef/browser/predictors/predictor_database.h"
+#endif
+
+constexpr int32_t APPLICATION_API_10 = 10;
+
 namespace {
+
+#if BUILDFLAG(IS_OHOS)
+void BindNetworkHintsHandler(
+    content::RenderFrameHost* frame_host,
+    mojo::PendingReceiver<network_hints::mojom::NetworkHintsHandler> receiver) {
+  network_hints::SimpleNetworkHintsHandlerImpl::Create(frame_host,
+                                                       std::move(receiver));
+}
+
+void BindPrerenderCanceler(
+    content::RenderFrameHost* frame_host,
+    mojo::PendingReceiver<prerender::mojom::PrerenderCanceler> receiver) {
+  auto* web_contents = content::WebContents::FromRenderFrameHost(frame_host);
+  if (!web_contents)
+    return;
+
+  auto* no_state_prefetch_contents =
+      prerender::ChromeNoStatePrefetchContentsDelegate::FromWebContents(
+          web_contents);
+  if (!no_state_prefetch_contents)
+    return;
+  no_state_prefetch_contents->AddPrerenderCancelerReceiver(std::move(receiver));
+}
+
+void BindNoStatePrefetchProcessor(
+    content::RenderFrameHost* frame_host,
+    mojo::PendingReceiver<blink::mojom::NoStatePrefetchProcessor> receiver) {
+  prerender::NoStatePrefetchProcessorImpl::Create(
+      frame_host, std::move(receiver),
+      std::make_unique<
+          prerender::ChromeNoStatePrefetchProcessorImplDelegate>());
+}
+#endif
+
 void TransferVector(const std::vector<std::string>& source,
                     std::vector<CefString>& target) {
   if (!target.empty())
@@ -421,6 +489,19 @@ class CefSelectClientCertificateCallbackImpl
     delegate->ContinueWithCertificate(nullptr, nullptr);
   }
 
+  static int32_t GetApplicationApiVersion() {
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kOhosAppApiVersion)) {
+      LOG(ERROR) << "kOhosAppApiVersion not exist";
+      return -1;
+    }
+    std::string apiVersion = base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+      switches::kOhosAppApiVersion);
+    if (apiVersion.empty()) {
+      return -1;
+    }
+    return std::stoi(apiVersion);
+  }
+
   static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKey(
       bssl::UniquePtr<EVP_PKEY> key) {
     if (!key)
@@ -428,6 +509,18 @@ class CefSelectClientCertificateCallbackImpl
 
     return base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
         std::make_unique<SSLPlatformKey>(std::move(key)),
+        net::GetSSLPlatformKeyTaskRunner());
+  }
+
+  static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKeyOHOS(
+      const std::string& private_key_file) {
+    if (!private_key_file.c_str()) {
+      LOG(ERROR) << "WrapOpenSSLPrivateKey, private key file is null";
+      return nullptr;
+    }
+
+    return base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
+        std::make_unique<SSLPlatformKeyOHOS>(private_key_file),
         net::GetSSLPlatformKeyTaskRunner());
   }
 
@@ -446,23 +539,30 @@ class CefSelectClientCertificateCallbackImpl
       CefRefPtr<CefX509Certificate> cert,
       const std::string& private_key_file,
       std::string& pkcs8) {
-    CBS cbs;
-    CBS_init(&cbs, reinterpret_cast<const uint8_t*>(pkcs8.data()),
-             pkcs8.size());
-    bssl::UniquePtr<EVP_PKEY> pkey(EVP_parse_private_key(&cbs));
-    if (!pkey || CBS_len(&cbs) != 0) {
-      LOG(ERROR) << "AcquirePrivateKey: EVP parse private key failed, pkey = "
-                 << pkey << ", CBS length = " << CBS_len(&cbs);
-      return;
-    }
+    scoped_refptr<net::SSLPrivateKey> ssl_private_key = nullptr;
+    if (GetApplicationApiVersion() < APPLICATION_API_10) {
+      CBS cbs;
+      CBS_init(&cbs, reinterpret_cast<const uint8_t*>(pkcs8.data()),
+              pkcs8.size());
+      bssl::UniquePtr<EVP_PKEY> pkey(EVP_parse_private_key(&cbs));
+      if (!pkey || CBS_len(&cbs) != 0) {
+        LOG(ERROR) << "AcquirePrivateKey: EVP parse private key failed, pkey = "
+                  << pkey << ", CBS length = " << CBS_len(&cbs);
+        return;
+      }
 
-    scoped_refptr<net::SSLPrivateKey> ssl_private_key =
-        WrapOpenSSLPrivateKey(std::move(pkey));
-    if (!ssl_private_key) {
-      LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
-      return;
+      ssl_private_key = WrapOpenSSLPrivateKey(std::move(pkey));
+      if (!ssl_private_key) {
+        LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
+        return;
+      }
+    } else {
+      ssl_private_key = WrapOpenSSLPrivateKeyOHOS(private_key_file);
+      if (!ssl_private_key) {
+        LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
+        return;
+      }
     }
-
     RunWithPrivateKey(std::move(delegate), cert, ssl_private_key);
   }
 
@@ -475,24 +575,77 @@ class CefSelectClientCertificateCallbackImpl
     LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunSelectNow";
     CEF_REQUIRE_UIT();
 
-    // Client certificate file read
-    std::string cert_data;
-    base::FilePath src_root_cert;
-    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_cert);
-    if (!base::ReadFileToString(src_root_cert.AppendASCII(cert_chain_file),
-                                &cert_data)) {
-      LOG(ERROR) << "RunSelectNow: read cert file to string failed";
-      return;
-    }
+    net::CertificateList certsList;
+    if (GetApplicationApiVersion() < APPLICATION_API_10) {
+      // Client certificate file read
+      std::string cert_data;
+      base::FilePath src_root_cert;
+      base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_cert);
+      if (!base::ReadFileToString(src_root_cert.AppendASCII(cert_chain_file),
+                                  &cert_data)) {
+        LOG(ERROR) << "RunSelectNow: read cert file to string failed";
+        return;
+      }
 
-    // Convert the client certificates file to X509
-    net::CertificateList certsList =
-        net::X509Certificate::CreateCertificateListFromBytes(
-            base::as_bytes(base::make_span(cert_data)),
-            net::X509Certificate::FORMAT_AUTO);
-    if (certsList.empty()) {
-      LOG(ERROR) << "RunSelectNow: certs list is empty";
-      return;
+      // Convert the client certificates file to X509
+      certsList =
+          net::X509Certificate::CreateCertificateListFromBytes(
+              base::as_bytes(base::make_span(cert_data)),
+              net::X509Certificate::FORMAT_AUTO);
+      if (certsList.empty()) {
+        LOG(ERROR) << "RunSelectNow: certs list is empty";
+        return;
+      }
+    } else {
+      //Get client certificate from ohos cert manager
+      auto RootCertDataAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
+      if (RootCertDataAdapter == nullptr) {
+        LOG(ERROR) << "RunSelectNow: root cert data adapter is null";
+        return;
+      }
+      char* uri = new char[private_key_file.length() + 1];
+      if (uri == nullptr) {
+        LOG(ERROR) << "RunSelectNow: new uri memory failed";
+        return;
+      }
+
+      uint32_t i = 0;
+      for (; i < private_key_file.length(); i++) {
+        uri[i] = private_key_file[i];
+      }
+      uri[i]  = '\0';
+
+      auto certMaxSize = RootCertDataAdapter->GetAppCertMaxSize();
+      uint8_t* certData = new uint8_t[certMaxSize];
+      if (certData == nullptr) {
+        LOG(ERROR) << "RunSelectNow: new cert data memory failed";
+        delete[] uri;
+        return;
+      }
+
+      memset(certData, 0, certMaxSize);
+      uint32_t len = 0;
+      RootCertDataAdapter->GetAppCert((uint8_t*)uri, certData, &len);
+      if (len == 0) {
+        LOG(ERROR) << "RunSelectNow: get app cert failed";
+        delete[] uri;
+        delete[] certData;
+        return;
+      }
+
+      certsList =
+          net::X509Certificate::CreateCertificateListFromBytes(
+              base::as_bytes(base::make_span(static_cast<const uint8_t*>(certData), len)),
+              net::X509Certificate::FORMAT_AUTO);
+      if (certsList.empty()) {
+        LOG(ERROR) << "RunSelectNow: certs list is empty";
+        delete[] uri;
+        delete[] certData;
+        return;
+      }
+
+      delete[] uri;
+      delete[] certData;
     }
 
     auto client_certs = ClientCertIdentityListFromCertificateList(certsList);
@@ -519,12 +672,14 @@ class CefSelectClientCertificateCallbackImpl
 
     // Private key file read
     std::string prikey_data;
-    base::FilePath src_root_prikey;
-    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_prikey);
-    if (!base::ReadFileToString(src_root_prikey.AppendASCII(private_key_file),
-                                &prikey_data)) {
-      LOG(ERROR) << "RunSelectNow: private key file to string failed";
-      return;
+    if (GetApplicationApiVersion() < APPLICATION_API_10) {
+      base::FilePath src_root_prikey;
+      base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_prikey);
+      if (!base::ReadFileToString(src_root_prikey.AppendASCII(private_key_file),
+                                  &prikey_data)) {
+        LOG(ERROR) << "RunSelectNow: private key file to string failed";
+        return;
+      }
     }
 
     AcquirePrivateKey(std::move(delegate), certs[0], private_key_file,
@@ -606,7 +761,7 @@ class CefQuotaPermissionContext : public content::QuotaPermissionContext {
   ~CefQuotaPermissionContext() override = default;
 };
 
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
     const std::string& process_type) {
   base::FilePath dumps_path;
@@ -617,7 +772,12 @@ breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
     // AlloyMainDelegate::InitCrashReporter.
     breakpad::CrashHandlerHostLinux* crash_handler =
         new breakpad::CrashHandlerHostLinux(process_type, dumps_path,
-                                            true /* upload */);
+#if BUILDFLAG(IS_OHOS)
+                                            false /* upload */
+#else
+                                            true /* upload */
+#endif  // BUILDFLAG(IS_OHOS)
+        );
     crash_handler->StartUploaderThread();
     return crash_handler;
   }
@@ -701,6 +861,59 @@ const extensions::Extension* GetEnabledExtensionFromSiteURL(
   return registry->enabled_extensions().GetByID(site_url.host());
 }
 
+#if BUILDFLAG(IS_OHOS)
+static constexpr base::TimeDelta kPopupWindowCallbackTimeout = base::Milliseconds(500);
+class PopupWindowCallbackImpl: public CefCallback {
+public:
+  explicit PopupWindowCallbackImpl(content::mojom::FrameHost::GetCreateNewWindowCallback callback)
+      : callback_(std::move(callback)), task_runner_(base::SequencedTaskRunnerHandle::Get()) {
+    timeout_timer_ = std::make_unique<base::OneShotTimer>();
+    if (timeout_timer_) {
+      timeout_timer_->Start(
+        FROM_HERE, kPopupWindowCallbackTimeout,
+        base::BindOnce(&PopupWindowCallbackImpl::Cancel, this));
+    }
+  }
+
+  ~PopupWindowCallbackImpl() override {
+    if (timeout_timer_) {
+      timeout_timer_->Stop();
+      timeout_timer_.reset();
+    }
+  }
+
+  void Continue() override {
+    if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
+      task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(&PopupWindowCallbackImpl::Continue, this));
+      return;
+    }
+    LOG(INFO) << "PopupWindowCallbackImpl Continue";
+    if (!callback_.is_null()) {
+      std::move(callback_).Run(content::mojom::CreateNewWindowStatus::kSuccess);
+    }
+  }
+
+  void Cancel() override {
+    if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
+      task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(&PopupWindowCallbackImpl::Cancel, this));
+      return;
+    }
+    LOG(INFO) << "PopupWindowCallbackImpl Cancel";
+    if (!callback_.is_null()) {
+      std::move(callback_).Run(content::mojom::CreateNewWindowStatus::kBlocked);
+    }
+  }
+private:
+  content::mojom::FrameHost::GetCreateNewWindowCallback callback_;
+  scoped_refptr<base::SequencedTaskRunner> task_runner_;
+  std::unique_ptr<base::OneShotTimer> timeout_timer_;
+
+  IMPLEMENT_REFCOUNTING(PopupWindowCallbackImpl);
+};
+#endif
+
 }  // namespace
 
 AlloyContentBrowserClient::AlloyContentBrowserClient() = default;
@@ -735,6 +948,17 @@ void AlloyContentBrowserClient::RenderProcessWillLaunch(
   Profile* original_profile = profile->GetOriginalProfile();
   RendererUpdaterFactory::GetForProfile(original_profile)
       ->InitializeRenderer(host);
+#if BUILDFLAG(IS_OHOS)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    auto renderer_configuration = GetRendererConfiguration(host);
+    RendererContentSettingRules rules;
+    content_settings::GetRendererContentSettingRules(
+        HostContentSettingsMapFactory::GetForProfile(host->GetBrowserContext()),
+        &rules);
+    renderer_configuration->SetContentSettingRules(rules);
+  }
+#endif
 }
 
 bool AlloyContentBrowserClient::ShouldUseProcessPerSite(
@@ -1223,21 +1447,25 @@ bool AlloyContentBrowserClient::CanCreateWindow(
     content::RenderFrameHost* opener,
     const GURL& target_url,
     WindowOpenDisposition disposition,
-    bool user_gesture) {
+    bool user_gesture,
+    content::mojom::FrameHost::GetCreateNewWindowCallback callback) {
   CEF_REQUIRE_UIT();
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
   if (!browser_host) {
+    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
     return false;
   }
   if (!browser_host->settings().javascript_can_open_windows_automatically && !user_gesture) {
     LOG(INFO) << "javascript_can_open_windows_automatically false";
+    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
     return false;
   }
+  CefRefPtr<PopupWindowCallbackImpl> callbackImpl = new PopupWindowCallbackImpl(std::move(callback));
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
-      opener, target_url, disposition, user_gesture);
+      opener, target_url, disposition, user_gesture, callbackImpl);
 }
 #endif
 
@@ -1285,6 +1513,7 @@ void AlloyContentBrowserClient::OverrideWebkitPrefs(
 
 #if BUILDFLAG(IS_OHOS) && defined (OHOS_NWEB_EX)
   prefs->force_enable_zoom = web_contents->GetForceEnableZoom();
+  prefs->blank_target_popup_intercept_enabled = web_contents->GetEnableBlankTargetPopupIntercept();
 #endif
 
   web_contents->SetPageBaseBackgroundColor(base_background_color);
@@ -1326,6 +1555,16 @@ void AlloyContentBrowserClient::
     RegisterAssociatedInterfaceBindersForRenderFrameHost(
         content::RenderFrameHost& render_frame_host,
         blink::AssociatedInterfaceRegistry& associated_registry) {
+#if BUILDFLAG(IS_OHOS)
+  associated_registry.AddInterface(base::BindRepeating(
+      [](content::RenderFrameHost* render_frame_host,
+         mojo::PendingAssociatedReceiver<
+             page_load_metrics::mojom::PageLoadMetrics> receiver) {
+        page_load_metrics::MetricsWebContentsObserver::BindPageLoadMetrics(
+            std::move(receiver), render_frame_host);
+      },
+      &render_frame_host));
+#endif
   associated_registry.AddInterface(base::BindRepeating(
       [](content::RenderFrameHost* render_frame_host,
          mojo::PendingAssociatedReceiver<extensions::mojom::LocalFrameHost>
@@ -1355,6 +1594,18 @@ void AlloyContentBrowserClient::
       },
       &render_frame_host));
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+  associated_registry.AddInterface(base::BindRepeating(
+      [](content::RenderFrameHost* render_frame_host,
+         mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost>
+             receiver) {
+
+        printing::OhosPrintManager::BindPrintManagerHost(std::move(receiver),
+                                                            render_frame_host);
+      },
+      &render_frame_host));
+#endif
 }
 
 std::vector<std::unique_ptr<content::NavigationThrottle>>
@@ -1373,6 +1624,17 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
         navigation_handle, std::make_unique<ChromePdfStreamDelegate>());
     if (pdf_throttle)
       throttles.push_back(std::move(pdf_throttle));
+  }
+#endif
+#if BUILDFLAG(IS_OHOS)
+  if (navigation_handle->IsInMainFrame()) {
+    // MetricsNavigationThrottle requires that it runs before
+    // NavigationThrottles that may delay or cancel navigations, so only
+    // NavigationThrottles that don't delay or cancel navigations (e.g.
+    // throttles that are only observing callbacks without affecting navigation
+    // behavior) should be added before MetricsNavigationThrottle.
+    throttles.push_back(page_load_metrics::MetricsNavigationThrottle::Create(
+        navigation_handle));
   }
 #endif
 
@@ -1405,6 +1667,24 @@ AlloyContentBrowserClient::CreateURLLoaderThrottles(
   result.push_back(
       std::make_unique<GoogleURLLoaderThrottle>(std::move(dynamic_params)));
 
+#if BUILDFLAG(IS_OHOS)
+  prerender::NoStatePrefetchManager* no_state_prefetch_manager =
+      prerender::NoStatePrefetchManagerFactory::GetForBrowserContext(
+          browser_context);
+  if (no_state_prefetch_manager) {
+    prerender::NoStatePrefetchContents* no_state_prefetch_contents =
+        no_state_prefetch_manager->GetNoStatePrefetchContents(wc_getter.Run());
+    if (no_state_prefetch_contents) {
+      mojo::PendingRemote<prerender::mojom::PrerenderCanceler> canceler;
+      no_state_prefetch_contents->AddPrerenderCancelerReceiver(
+          canceler.InitWithNewPipeAndPassReceiver());
+      result.push_back(std::make_unique<prerender::PrerenderURLLoaderThrottle>(
+          prerender::PrerenderHistograms::GetHistogramPrefix(
+              no_state_prefetch_contents->origin()),
+          std::move(canceler)));
+    }
+  }
+#endif
   return result;
 }
 
@@ -1430,7 +1710,7 @@ AlloyContentBrowserClient::WillCreateURLLoaderRequestInterceptors(
   return interceptors;
 }
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 void AlloyContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     const base::CommandLine& command_line,
     int child_process_id,
@@ -1440,7 +1720,7 @@ void AlloyContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     mappings->Share(kCrashDumpSignal, crash_signal_fd);
   }
 }
-#endif  // BUILDFLAG(IS_LINUX)
+#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 
 void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
     service_manager::BinderRegistry* registry,
@@ -1608,6 +1888,19 @@ bool AlloyContentBrowserClient::WillCreateURLLoaderFactory(
 void AlloyContentBrowserClient::OnNetworkServiceCreated(
     network::mojom::NetworkService* network_service) {
   DCHECK(g_browser_process);
+#if BUILDFLAG(IS_OHOS)
+  std::set<std::string> urls =
+      predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
+  auto browser_context = CefBrowserContext::GetAll()[0];
+  ohos_predictors::LoadingPredictor* predictor =
+      ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
+          browser_context->AsBrowserContext());
+  for (auto& url : urls) {
+    LOG(INFO) << "will preconnect url:" << url;
+    predictor->PrepareForPageLoad(GURL(url),
+                                  ohos_predictors::HintOrigin::OMNIBOX, true);
+  }
+#endif
   PrefService* local_state = g_browser_process->local_state();
   DCHECK(local_state);
   // Need to set up global NetworkService state before anything else uses it.
@@ -1674,7 +1967,6 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
     network_context_params->user_agent = GetUserAgent();
     network_context_params->accept_language = GetApplicationLocale();
   }
-
   network_context_params->cookieable_schemes =
       cef_context->GetCookieableSchemes();
 
@@ -1685,7 +1977,27 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   network_context_params->initial_ssl_config = network::mojom::SSLConfig::New();
   network_context_params->initial_ssl_config->version_min =
         network::mojom::SSLVersion::kTLS1;
+
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    OhHostContentSettingsObserverFactory::GetInstance()->RegisterObserver(
+        context);
+    LOG(INFO) << "ExceptionList "
+                 "AlloyContentBrowserClient::ConfigureNetworkContextParams ";
+  }
+  
+  auto& system_properties_adapter =
+        OHOS::NWeb::OhosAdapterHelper::GetInstance()
+            .GetSystemPropertiesInstance();
+  OHOS::NWeb::ProductDeviceType deviceType =
+      system_properties_adapter.GetProductDeviceType();
+  if (deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
+    network_context_params->http_cache_max_size = 20 * 1024 * 1024;
+  }
 #endif
+  // Add proxy settings
+  NWEB::ProxyConfigMonitor::GetInstance()->AddProxyToNetworkContextParams(
+      network_context_params);
 
   return true;
 }
@@ -1783,7 +2095,16 @@ void AlloyContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
     mojo::BinderMapWithContext<content::RenderFrameHost*>* map) {
   CefBrowserFrame::RegisterBrowserInterfaceBindersForFrame(render_frame_host,
                                                            map);
+#if BUILDFLAG(IS_OHOS)
+  map->Add<prerender::mojom::PrerenderCanceler>(
+      base::BindRepeating(&BindPrerenderCanceler));
 
+  map->Add<blink::mojom::NoStatePrefetchProcessor>(
+      base::BindRepeating(&BindNoStatePrefetchProcessor));
+
+  map->Add<network_hints::mojom::NetworkHintsHandler>(
+      base::BindRepeating(&BindNetworkHintsHandler));
+#endif
   if (!extensions::ExtensionsEnabled())
     return;
 
@@ -1890,17 +2211,6 @@ bool AlloyContentBrowserClient::ShouldAllowPluginCreation(
 #endif
 
 #if BUILDFLAG(IS_OHOS)
-bool AlloyContentBrowserClient::ShouldTryToUseExistingProcessHost(
-    content::BrowserContext* browser_context,
-    const GURL& url) {
-  const base::CommandLine* command_line =
-      base::CommandLine::ForCurrentProcess();
-  if (!command_line)
-    return false;
-  return command_line->HasSwitch(switches::kEnableMultiRendererProcess) ? false
-                                                                        : true;
-}
-
 bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
     content::SiteIsolationMode site_isolation_mode) {
   return true;
@@ -1962,6 +2272,13 @@ void AlloyContentBrowserClient::OnWebContentsCreated(
     extensions::CefExtensionWebContentsObserver::CreateForWebContents(
         web_contents);
   }
+#if BUILDFLAG(IS_OHOS)
+  cef::InitializePageLoadMetricsForWebContents(web_contents);
+  content_settings::PageSpecificContentSettings::CreateForWebContents(
+      web_contents,
+      std::make_unique<chrome::PageSpecificContentSettingsDelegate>(
+          web_contents));
+#endif
 }
 
 bool AlloyContentBrowserClient::IsFindInPageDisabledForOrigin(
@@ -2009,3 +2326,18 @@ const extensions::Extension* AlloyContentBrowserClient::GetExtension(
   return registry->enabled_extensions().GetExtensionOrAppByURL(
       site_instance->GetSiteURL());
 }
+
+#if BUILDFLAG(IS_OHOS)
+mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+AlloyContentBrowserClient::GetRendererConfiguration(
+    content::RenderProcessHost* render_process_host) {
+  IPC::ChannelProxy* channel = render_process_host->GetChannel();
+  if (!channel)
+    return mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>();
+
+  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+      renderer_configuration;
+  channel->GetRemoteAssociatedInterface(&renderer_configuration);
+  return renderer_configuration;
+}
+#endif

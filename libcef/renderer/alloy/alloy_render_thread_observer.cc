@@ -62,10 +62,21 @@ void AlloyRenderThreadObserver::SetConfiguration(
 }
 
 void AlloyRenderThreadObserver::SetContentSettingRules(
-    const RendererContentSettingRules& rules) {}
+    const RendererContentSettingRules& rules) {
+#if BUILDFLAG(IS_OHOS)
+  content_setting_rules_ = rules;
+#endif
+}
 
 void AlloyRenderThreadObserver::OnRendererConfigurationAssociatedRequest(
     mojo::PendingAssociatedReceiver<chrome::mojom::RendererConfiguration>
         receiver) {
   renderer_configuration_receivers_.Add(this, std::move(receiver));
 }
+
+#if BUILDFLAG(IS_OHOS)
+const RendererContentSettingRules*
+AlloyRenderThreadObserver::content_setting_rules() const {
+  return &content_setting_rules_;
+}
+#endif

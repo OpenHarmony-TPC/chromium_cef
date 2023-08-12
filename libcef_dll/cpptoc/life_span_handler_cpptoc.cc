@@ -9,12 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=402f069391e367a81c76fc24b1081e713acabcae$
+// $hash=41a83a28a4e40cf71a5a65a2b1ad51af98c38283$
 //
 
 #include "libcef_dll/cpptoc/life_span_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/client_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/callback_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -151,7 +152,8 @@ int CEF_CALLBACK life_span_handler_on_pre_before_popup(
     cef_frame_t* frame,
     const cef_string_t* target_url,
     cef_window_open_disposition_t target_disposition,
-    int user_gesture) {
+    int user_gesture,
+    cef_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -167,12 +169,17 @@ int CEF_CALLBACK life_span_handler_on_pre_before_popup(
   DCHECK(frame);
   if (!frame)
     return 0;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback)
+    return 0;
   // Unverified params: target_url
 
   // Execute
   bool _retval = CefLifeSpanHandlerCppToC::Get(self)->OnPreBeforePopup(
       CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefString(target_url), target_disposition, user_gesture ? true : false);
+      CefString(target_url), target_disposition, user_gesture ? true : false,
+      CefCallbackCToCpp::Wrap(callback));
 
   // Return type: bool
   return _retval;

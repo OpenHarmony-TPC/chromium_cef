@@ -88,6 +88,19 @@ class CefSelectPopupCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+// Callback interface for asynchronous continuation of datetime chooser.
+///
+/*--cef(source=library)--*/
+class CefDateTimeChooserCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Notify the date time chooser result.
+  ///
+  /*--cef(capi_name=cont)--*/
+  virtual void Continue(bool success, double dialog_value) = 0;
+};
+
+///
 // Implement this interface to handle dialog events. The methods of this class
 // will be called on the browser process UI thread.
 ///
@@ -137,6 +150,19 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
                                  bool right_aligned,
                                  bool allow_multiple_selection,
                                  CefRefPtr<CefSelectPopupCallback> callback) {}
+  
+  ///
+  // Show <input type="date"> or <input type="datatime">
+  ///
+  virtual void OnDateTimeChooserPopup(CefRefPtr<CefBrowser> browser,
+                                  const CefDateTimeChooser& date_time_chooser,
+                                  const std::vector<CefDateTimeSuggestion>& suggestion,
+                                  CefRefPtr<CefDateTimeChooserCallback> callback) {}
+  
+  ///
+  // Close date chooser popup.
+  ///
+  virtual void OnDateTimeChooserClose() {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_

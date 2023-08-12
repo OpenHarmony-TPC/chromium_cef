@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef780dfecd072718fe9380c9436dc7b0c2ae7a74$
+// $hash=d6136f4b7c6887f6c72675fd00759d76d94230c0$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -213,6 +213,35 @@ void CEF_CALLBACK browser_reload_original_url(struct _cef_browser_t* self) {
 
   // Execute
   CefBrowserCppToC::Get(self)->ReloadOriginalUrl();
+}
+
+void CEF_CALLBACK browser_select_and_copy(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SelectAndCopy();
+}
+
+int CEF_CALLBACK browser_should_show_free_copy(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->ShouldShowFreeCopy();
+
+  // Return type: bool
+  return _retval;
 }
 
 void CEF_CALLBACK
@@ -503,6 +532,34 @@ browser_get_geolocation_permissions(struct _cef_browser_t* self) {
   return CefGeolocationAcessCppToC::Wrap(_retval);
 }
 
+void CEF_CALLBACK browser_prefetch_page(struct _cef_browser_t* self,
+                                        cef_string_t* url,
+                                        cef_string_t* additionalHttpHeaders) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref
+  DCHECK(url);
+  if (!url)
+    return;
+  // Verify param: additionalHttpHeaders; type: string_byref
+  DCHECK(additionalHttpHeaders);
+  if (!additionalHttpHeaders)
+    return;
+
+  // Translate param: url; type: string_byref
+  CefString urlStr(url);
+  // Translate param: additionalHttpHeaders; type: string_byref
+  CefString additionalHttpHeadersStr(additionalHttpHeaders);
+
+  // Execute
+  CefBrowserCppToC::Get(self)->PrefetchPage(urlStr, additionalHttpHeadersStr);
+}
+
 int CEF_CALLBACK browser_should_show_loading_ui(struct _cef_browser_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -550,6 +607,38 @@ int CEF_CALLBACK browser_get_force_enable_zoom(struct _cef_browser_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK browser_get_nweb_id(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  int _retval = CefBrowserCppToC::Get(self)->GetNWebId();
+
+  // Return type: simple
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_set_enable_blank_target_popup_intercept(struct _cef_browser_t* self,
+                                                int enableBlankTargetPopup) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetEnableBlankTargetPopupIntercept(
+      enableBlankTargetPopup ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -568,6 +657,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->reload = browser_reload;
   GetStruct()->reload_ignore_cache = browser_reload_ignore_cache;
   GetStruct()->reload_original_url = browser_reload_original_url;
+  GetStruct()->select_and_copy = browser_select_and_copy;
+  GetStruct()->should_show_free_copy = browser_should_show_free_copy;
   GetStruct()->set_browser_user_agent_string =
       browser_set_browser_user_agent_string;
   GetStruct()->stop_load = browser_stop_load;
@@ -586,9 +677,13 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_get_permission_request_delegate;
   GetStruct()->get_geolocation_permissions =
       browser_get_geolocation_permissions;
+  GetStruct()->prefetch_page = browser_prefetch_page;
   GetStruct()->should_show_loading_ui = browser_should_show_loading_ui;
   GetStruct()->set_force_enable_zoom = browser_set_force_enable_zoom;
   GetStruct()->get_force_enable_zoom = browser_get_force_enable_zoom;
+  GetStruct()->get_nweb_id = browser_get_nweb_id;
+  GetStruct()->set_enable_blank_target_popup_intercept =
+      browser_set_enable_blank_target_popup_intercept;
 }
 
 // DESTRUCTOR - Do not edit by hand.

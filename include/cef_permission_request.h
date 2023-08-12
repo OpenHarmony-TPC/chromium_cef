@@ -33,6 +33,34 @@ class CefAccessRequest : public virtual CefBaseRefCounted {
 };
 
 ///
+// Class used to report screen capture permission request for the specified origin.
+///
+/*--cef(source=library)--*/
+class CefScreenCaptureAccessRequest : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Get the origin that is trying to acess the resource.
+  ///
+  /*--cef()--*/
+  virtual CefString Origin() = 0;
+  ///
+  // Set screen capture mode. {@link #cef_screen_capture_mode_t}
+  ///
+  /*--cef()--*/
+  virtual void SetCaptureMode(int32_t mode) = 0;
+  ///
+  // Set screen capture source id.
+  ///
+  /*--cef()--*/
+  virtual void SetCaptureSourceId(int32_t sourceId) = 0;
+  ///
+  // Report whether the origin is allowed to acess the resource.
+  ///
+  /*--cef()--*/
+  virtual void ReportRequestResult(bool allowed) = 0;
+};
+
+///
 // Implement this interface to handle permission requests.
 ///
 /*--cef(source=client,no_debugct_check)--*/
@@ -65,6 +93,14 @@ class CefPermissionRequest : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnPermissionRequestCanceled(
       CefRefPtr<CefAccessRequest> request) = 0;
+  ///
+  // Notify the host application that web content from the specified origin is
+  // attempting to access the screen capture resources, but no permission state
+  // is currently set for that origin. The host application should invoke the
+  // specified callback with the desired permission state.
+  ///
+  /*--cef()--*/
+  virtual void OnScreenCaptureRequest(CefRefPtr<CefScreenCaptureAccessRequest> request) = 0;
 };
 
 ///

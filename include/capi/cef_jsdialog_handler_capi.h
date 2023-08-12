@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f8dc9d32c3f345e1c3b7d02a098bebaafad7e81f$
+// $hash=b1cf567f0ff92e9ca62280d3d99b3dafcca1018a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_JSDIALOG_HANDLER_CAPI_H_
@@ -113,6 +113,7 @@ typedef struct _cef_jsdialog_handler_t {
   int(CEF_CALLBACK* on_before_unload_dialog)(
       struct _cef_jsdialog_handler_t* self,
       struct _cef_browser_t* browser,
+      const cef_string_t* url,
       const cef_string_t* message_text,
       int is_reload,
       struct _cef_jsdialog_callback_t* callback);

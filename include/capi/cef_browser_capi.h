@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3014ea8199d065830c7940c5d032f721d2003d1f$
+// $hash=68c8400a18393833ceb8e6689dbedd81e90f4ccb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -144,6 +144,16 @@ typedef struct _cef_browser_t {
   void(CEF_CALLBACK* reload_original_url)(struct _cef_browser_t* self);
 
   ///
+  // display the selection control when click Free copy structure
+  ///
+  void(CEF_CALLBACK* select_and_copy)(struct _cef_browser_t* self);
+
+  ///
+  // should show free copy menu
+  ///
+  int(CEF_CALLBACK* should_show_free_copy)(struct _cef_browser_t* self);
+
+  ///
   // Set user agent for current page.
   ///
   void(CEF_CALLBACK* set_browser_user_agent_string)(
@@ -241,6 +251,14 @@ typedef struct _cef_browser_t {
       struct _cef_browser_t* self);
 
   ///
+  // Prefetch the resources required by the page, but will not execute js or
+  // render the page.
+  ///
+  void(CEF_CALLBACK* prefetch_page)(struct _cef_browser_t* self,
+                                    cef_string_t* url,
+                                    cef_string_t* additionalHttpHeaders);
+
+  ///
   // Is loading to different document.
   ///
   int(CEF_CALLBACK* should_show_loading_ui)(struct _cef_browser_t* self);
@@ -255,6 +273,18 @@ typedef struct _cef_browser_t {
   // Whether force enable zoom had been enabled.
   ///
   int(CEF_CALLBACK* get_force_enable_zoom)(struct _cef_browser_t* self);
+
+  ///
+  // Returns the NWeb Id.
+  ///
+  int(CEF_CALLBACK* get_nweb_id)(struct _cef_browser_t* self);
+
+  ///
+  // Set whether the target_blank pop-up window is opened in the current tab.
+  ///
+  void(CEF_CALLBACK* set_enable_blank_target_popup_intercept)(
+      struct _cef_browser_t* self,
+      int enableBlankTargetPopup);
 } cef_browser_t;
 
 ///
@@ -480,6 +510,20 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* start_download)(struct _cef_browser_host_t* self,
                                      const cef_string_t* url);
+
+  ///
+  // Resume download after interrupted.
+  ///
+  void(CEF_CALLBACK* resume_download)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* url,
+      const cef_string_t* full_path,
+      int64 received_bytes,
+      int64 total_bytes,
+      const cef_string_t* etag,
+      const cef_string_t* mime_type,
+      const cef_string_t* last_modified,
+      const cef_string_t* received_slices_string);
 
   ///
   // Download |image_url| and execute |callback| on completion with the images
@@ -1142,12 +1186,26 @@ typedef struct _cef_browser_host_t {
   int(CEF_CALLBACK* is_audio_muted)(struct _cef_browser_host_t* self);
 
   ///
+  //  Set the audio resume interval of the broswer.
+  ///
+  void(CEF_CALLBACK* set_audio_resume_interval)(
+      struct _cef_browser_host_t* self,
+      int resumeInterval);
+
+  ///
+  //  Set whether the browser's audio is exclusive.
+  ///
+  void(CEF_CALLBACK* set_audio_exclusive)(struct _cef_browser_host_t* self,
+                                          int audioExclusive);
+
+  ///
   // Execute a string of JavaScript code, return result by callback
   ///
   void(CEF_CALLBACK* execute_java_script)(
       struct _cef_browser_host_t* self,
       const cef_string_t* code,
-      struct _cef_java_script_result_callback_t* callback);
+      struct _cef_java_script_result_callback_t* callback,
+      int extention);
 
   ///
   // Set native window from ohos rs
@@ -1266,6 +1324,21 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_cache_mode)(struct _cef_browser_host_t* self,
                                      int falg);
+
+  ///
+  // Set should frame submission before draw
+  ///
+  void(CEF_CALLBACK* set_should_frame_submission_before_draw)(
+      struct _cef_browser_host_t* self,
+      int should);
+
+  ///
+  // Set zoom with the dela facetor
+  ///
+  void(CEF_CALLBACK* zoom_by)(struct _cef_browser_host_t* self,
+                              float delta,
+                              float width,
+                              float height);
 } cef_browser_host_t;
 
 ///
@@ -1318,7 +1391,7 @@ typedef struct _cef_java_script_result_callback_t {
   ///
   void(CEF_CALLBACK* on_java_script_exe_result)(
       struct _cef_java_script_result_callback_t* self,
-      const cef_string_t* result);
+      struct _cef_value_t* result);
 } cef_java_script_result_callback_t;
 
 ///

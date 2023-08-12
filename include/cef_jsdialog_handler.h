@@ -103,6 +103,7 @@ class CefJSDialogHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=message_text)--*/
   virtual bool OnBeforeUnloadDialog(CefRefPtr<CefBrowser> browser,
+                                    const CefString& url,
                                     const CefString& message_text,
                                     bool is_reload,
                                     CefRefPtr<CefJSDialogCallback> callback) {

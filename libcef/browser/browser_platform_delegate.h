@@ -370,6 +370,7 @@ class CefBrowserPlatformDelegate {
     bool right_aligned,
     bool allow_multiple_selection);
 
+  virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

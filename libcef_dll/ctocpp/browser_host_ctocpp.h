@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=29c3bfce4a45f38ec3fd21096e13addeb83f6310$
+// $hash=1722aa909b29d09d8251e7278113052996935174$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -56,6 +56,14 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                      int selected_accept_filter,
                      CefRefPtr<CefRunFileDialogCallback> callback) override;
   void StartDownload(const CefString& url) override;
+  void ResumeDownload(const CefString& url,
+                      const CefString& full_path,
+                      int64 received_bytes,
+                      int64 total_bytes,
+                      const CefString& etag,
+                      const CefString& mime_type,
+                      const CefString& last_modified,
+                      const CefString& received_slices_string) override;
   void DownloadImage(const CefString& image_url,
                      bool is_favicon,
                      uint32 max_image_size,
@@ -174,9 +182,11 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool IsBackgroundHost() override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-  void ExecuteJavaScript(
-      const CefString& code,
-      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+  void SetAudioResumeInterval(int resumeInterval) override;
+  void SetAudioExclusive(bool audioExclusive) override;
+  void ExecuteJavaScript(const CefString& code,
+                         CefRefPtr<CefJavaScriptResultCallback> callback,
+                         bool extention) override;
   void SetNativeWindow(cef_native_window_t window) override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
@@ -196,6 +206,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetFileAccess(bool falg) override;
   void SetBlockNetwork(bool falg) override;
   void SetCacheMode(int falg) override;
+  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void ZoomBy(float delta, float width, float height) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

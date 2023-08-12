@@ -456,6 +456,8 @@ static_library("libcef_static") {
               "libcef/browser/browser_platform_delegate_create.cc",
               "libcef/browser/browser_util.cc",
               "libcef/browser/browser_util.h",
+              "libcef/browser/received_slice_helper.h",
+              "libcef/browser/received_slice_helper.cc",
               "libcef/browser/navigation_state_serializer.cc",
               "libcef/browser/navigation_state_serializer.h",
               "libcef/browser/chrome/browser_delegate.h",
@@ -480,6 +482,10 @@ static_library("libcef_static") {
               "libcef/browser/context.h",
               "libcef/browser/context_menu_params_impl.cc",
               "libcef/browser/context_menu_params_impl.h",
+              "libcef/browser/content_settings/oh_host_content_settings_observer_factory.h",
+              "libcef/browser/content_settings/oh_host_content_settings_observer_factory.cc",
+              "libcef/browser/content_settings/oh_host_content_settings_observer.h",
+              "libcef/browser/content_settings/oh_host_content_settings_observer.cc",
               "libcef/browser/devtools/devtools_controller.cc",
               "libcef/browser/devtools/devtools_controller.h",
               "libcef/browser/devtools/devtools_file_manager.cc",
@@ -494,6 +500,8 @@ static_library("libcef_static") {
               "libcef/browser/download_item_impl.h",
               "libcef/browser/download_manager_delegate.cc",
               "libcef/browser/download_manager_delegate.h",
+              "libcef/browser/download_resume_util.cc",
+              "libcef/browser/download_resume_util.h",
               "libcef/browser/extension_impl.cc",
               "libcef/browser/extension_impl.h",
               "libcef/browser/extensions/api/file_system/cef_file_system_delegate.cc",
@@ -601,6 +609,8 @@ static_library("libcef_static") {
               "libcef/browser/net_service/cookie_manager_impl.h",
               "libcef/browser/net_service/login_delegate.cc",
               "libcef/browser/net_service/login_delegate.h",
+              "libcef/browser/net_service/proxy_config_monitor.cc",
+              "libcef/browser/net_service/proxy_config_monitor.h",
               "libcef/browser/net_service/proxy_url_loader_factory.cc",
               "libcef/browser/net_service/proxy_url_loader_factory.h",
               "libcef/browser/net_service/resource_handler_wrapper.cc",
@@ -641,6 +651,12 @@ static_library("libcef_static") {
               "libcef/browser/osr/touch_handle_drawable_osr.h",
               "libcef/browser/osr/touch_selection_controller_client_osr.cc",
               "libcef/browser/osr/touch_selection_controller_client_osr.h",
+              "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.cc",
+              "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.h",
+              "libcef/browser/page_load_metrics/page_load_metrics_initialize.cc",
+              "libcef/browser/page_load_metrics/page_load_metrics_initialize.h",
+              "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.h",
+              "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.cc",
               "libcef/browser/path_util_impl.cc",
               "libcef/browser/permission/alloy_access_request.cc",
               "libcef/browser/permission/alloy_access_request.h",
@@ -650,6 +666,24 @@ static_library("libcef_static") {
               "libcef/browser/permission/alloy_permission_manager.h",
               "libcef/browser/permission/alloy_permission_request_handler.cc",
               "libcef/browser/permission/alloy_permission_request_handler.h",
+              "libcef/browser/predictors/loading_predictor.cc",
+              "libcef/browser/predictors/loading_predictor.h",
+              "libcef/browser/predictors/loading_predictor_config.cc",
+              "libcef/browser/predictors/loading_predictor_config.h",
+              "libcef/browser/predictors/loading_predictor_factory.cc",
+              "libcef/browser/predictors/loading_predictor_factory.h",
+              "libcef/browser/predictors/loading_predictor_tab_helper.cc",
+              "libcef/browser/predictors/loading_predictor_tab_helper.h",
+              "libcef/browser/predictors/navigation_id.cc",
+              "libcef/browser/predictors/navigation_id.h",
+              "libcef/browser/predictors/preconnect_manager.cc",
+              "libcef/browser/predictors/preconnect_manager.h",
+              "libcef/browser/predictors/proxy_lookup_client_impl.cc",
+              "libcef/browser/predictors/proxy_lookup_client_impl.h",
+              "libcef/browser/predictors/resolve_host_client_impl.cc",
+              "libcef/browser/predictors/resolve_host_client_impl.h",
+              "libcef/browser/predictors/resource_prefetch_predictor.cc",
+              "libcef/browser/predictors/resource_prefetch_predictor.h",
               "libcef/browser/prefs/browser_prefs.cc",
               "libcef/browser/prefs/browser_prefs.h",
               "libcef/browser/prefs/pref_store.cc",
@@ -660,6 +694,8 @@ static_library("libcef_static") {
               "libcef/browser/print_settings_impl.h",
               "libcef/browser/printing/constrained_window_views_client.cc",
               "libcef/browser/printing/constrained_window_views_client.h",
+              "libcef/browser/printing/ohos_print_manager.cc",
+              "libcef/browser/printing/ohos_print_manager.h",
               "libcef/browser/printing/print_view_manager.cc",
               "libcef/browser/printing/print_view_manager.h",
               "libcef/browser/process_util_impl.cc",
@@ -812,6 +848,8 @@ static_library("libcef_static") {
               "libcef/renderer/extensions/extensions_dispatcher_delegate.h",
               "libcef/renderer/extensions/extensions_renderer_client.cc",
               "libcef/renderer/extensions/extensions_renderer_client.h",
+              "libcef/renderer/extensions/ohos_print_render_frame_helper_delegate.cc",
+              "libcef/renderer/extensions/ohos_print_render_frame_helper_delegate.h",
               "libcef/renderer/extensions/print_render_frame_helper_delegate.cc",
               "libcef/renderer/extensions/print_render_frame_helper_delegate.h",
               "libcef/renderer/frame_impl.cc",
@@ -908,14 +946,19 @@ static_library("libcef_static") {
     ]
   }
 
+  if (is_ohos) {
+    sources += [
+      "libcef/browser/predictors/predictor_database.cc",
+      "libcef/browser/predictors/predictor_database.h",
+    ]
+  }
+
   if (is_ohos && !enable_print_preview) {
     sources -= [
       "libcef/browser/printing/constrained_window_views_client.cc",
       "libcef/browser/printing/constrained_window_views_client.h",
       "libcef/browser/printing/print_view_manager.cc",
       "libcef/browser/printing/print_view_manager.h",
-      "libcef/renderer/extensions/print_render_frame_helper_delegate.cc",
-      "libcef/renderer/extensions/print_render_frame_helper_delegate.h",
     ]
   }
 
@@ -1036,6 +1079,7 @@ static_library("libcef_static") {
     "//third_party/icu",
     "//third_party/leveldatabase",
     "//third_party/libxml:libxml",
+    "//third_party/pdfium",
     "//third_party/widevine/cdm",
     "//third_party/widevine/cdm:headers",
     "//third_party/zlib:minizip",
@@ -1051,6 +1095,8 @@ static_library("libcef_static") {
     "//url",
     "//v8",
   ]
+
+  deps += [ "//components/no_state_prefetch/renderer" ]
 
   if (defined(ohos_enable_cef_chrome_runtime) &&
       !ohos_enable_cef_chrome_runtime) {
@@ -1090,6 +1136,10 @@ static_library("libcef_static") {
 
   if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
     deps += [ "//ohos_nweb_ex/overrides/cef" ]
+  }
+
+  if (is_ohos) {
+    deps += [ "//components/network_hints/browser" ]
   }
 
   if (safe_browsing_mode != 0) {

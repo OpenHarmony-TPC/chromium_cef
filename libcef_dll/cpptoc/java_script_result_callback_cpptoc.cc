@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=98a8f58c5379ac345b36c7cde9ba25d31837447b$
+// $hash=9607b573a87d3440470b9a9fe3de07a1aa92af01$
 //
 
 #include "libcef_dll/cpptoc/java_script_result_callback_cpptoc.h"
+#include "libcef_dll/ctocpp/value_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -21,7 +22,7 @@ namespace {
 
 void CEF_CALLBACK java_script_result_callback_on_java_script_exe_result(
     struct _cef_java_script_result_callback_t* self,
-    const cef_string_t* result) {
+    struct _cef_value_t* result) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -29,14 +30,14 @@ void CEF_CALLBACK java_script_result_callback_on_java_script_exe_result(
   DCHECK(self);
   if (!self)
     return;
-  // Verify param: result; type: string_byref_const
+  // Verify param: result; type: refptr_diff
   DCHECK(result);
   if (!result)
     return;
 
   // Execute
   CefJavaScriptResultCallbackCppToC::Get(self)->OnJavaScriptExeResult(
-      CefString(result));
+      CefValueCToCpp::Wrap(result));
 }
 
 }  // namespace

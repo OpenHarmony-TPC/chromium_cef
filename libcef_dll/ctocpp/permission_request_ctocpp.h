@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8600f1096fac8d37c3506fce7d76157ae067b427$
+// $hash=bbb72f97a2958e75d4480c042d9b3281341ec672$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PERMISSION_REQUEST_CTOCPP_H_
@@ -40,6 +40,8 @@ class CefPermissionRequestCToCpp
   void OnPermissionRequest(CefRefPtr<CefAccessRequest> request) override;
   void OnPermissionRequestCanceled(
       CefRefPtr<CefAccessRequest> request) override;
+  void OnScreenCaptureRequest(
+      CefRefPtr<CefScreenCaptureAccessRequest> request) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_PERMISSION_REQUEST_CTOCPP_H_

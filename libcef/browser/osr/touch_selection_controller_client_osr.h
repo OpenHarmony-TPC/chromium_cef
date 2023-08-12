@@ -111,7 +111,9 @@ class CefTouchSelectionControllerClientOSR
   void RunContextMenu() override;
   bool ShouldShowQuickMenu() override;
   std::u16string GetSelectedText() override;
-
+#if defined(OHOS_NWEB_EX)
+  void SelectionTextNotEmpty(bool has_selection);
+#endif
   void NotifyTouchSelectionChanged(bool need_report);
   void RunQuickMenu();
   // Not owned, non-null for the lifetime of this object.
@@ -153,6 +155,9 @@ class CefTouchSelectionControllerClientOSR
   bool touch_down_ = false;
   bool scroll_in_progress_ = false;
   bool handle_drag_in_progress_ = false;
+#if defined(OHOS_NWEB_EX)
+  bool isSelectionTextNotEmpty_ = false;
+#endif
 
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;
 };

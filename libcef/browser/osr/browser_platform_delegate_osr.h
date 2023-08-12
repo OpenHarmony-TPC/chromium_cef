@@ -99,6 +99,8 @@ class CefBrowserPlatformDelegateOsr
     bool right_aligned,
     bool allow_multiple_selection) override;
 
+  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
   gfx::Point GetParentScreenPoint(const gfx::Point& view) const override;

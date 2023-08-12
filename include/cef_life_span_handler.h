@@ -102,7 +102,8 @@ public:
                                 CefRefPtr<CefFrame> frame,
                                 const CefString& target_url,
                                 WindowOpenDisposition target_disposition,
-                                bool user_gesture) {
+                                bool user_gesture,
+                                CefRefPtr<CefCallback> callback) {
     return true;
   }
 

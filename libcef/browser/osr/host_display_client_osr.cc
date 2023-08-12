@@ -9,6 +9,7 @@
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 
 #include "base/memory/shared_memory_mapping.h"
+#include "base/trace_event/trace_event.h"
 #include "components/viz/common/resources/resource_format.h"
 #include "components/viz/common/resources/resource_sizes.h"
 #include "mojo/public/cpp/system/platform_handle.h"
@@ -103,7 +104,10 @@ void CefLayeredWindowUpdaterOSR::Draw(const gfx::Rect& damage_rect,
 CefHostDisplayClientOSR::CefHostDisplayClientOSR(
     CefRenderWidgetHostViewOSR* const view,
     gfx::AcceleratedWidget widget)
-    : viz::HostDisplayClient(widget), view_(view) {}
+    : viz::HostDisplayClient(widget), view_(view) {
+  if (view_)
+    browser_impl_ = view_->browser_impl();
+}
 
 CefHostDisplayClientOSR::~CefHostDisplayClientOSR() {}
 
@@ -129,14 +133,29 @@ void CefHostDisplayClientOSR::UseProxyOutputDevice(
   std::move(callback).Run(true);
 }
 
+#ifdef DISABLE_GPU
 void CefHostDisplayClientOSR::CreateLayeredWindowUpdater(
     mojo::PendingReceiver<viz::mojom::LayeredWindowUpdater> receiver) {
   layered_window_updater_ =
       std::make_unique<CefLayeredWindowUpdaterOSR>(view_, std::move(receiver));
   layered_window_updater_->SetActive(active_);
 }
+#endif
 
 #if BUILDFLAG(IS_LINUX)
 void CefHostDisplayClientOSR::DidCompleteSwapWithNewSize(
     const gfx::Size& size) {}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+void CefHostDisplayClientOSR::DidCompleteSwapWithNewSizeOHOS(
+    const gfx::Size& size) {
+  TRACE_EVENT1("cef", "CefHostDisplayClientOSR::DidCompleteSwapWithNewSize",
+               "size", size.ToString());
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    auto render_handler = browser_impl_->GetClient()->GetRenderHandler();
+    if (render_handler)
+      render_handler->OnCompleteSwapWithNewSize();
+  }
+}
 #endif

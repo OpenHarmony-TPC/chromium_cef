@@ -84,7 +84,8 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
   bool CanCreateWindow(content::RenderFrameHost* opener,
                        const GURL& target_url,
                        WindowOpenDisposition disposition,
-                       bool user_gesture);
+                       bool user_gesture,
+                       CefRefPtr<CefCallback> callback);
 #endif
 
   // Called from WebContentsDelegate::GetCustomWebContentsView (alloy runtime

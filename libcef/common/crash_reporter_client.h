@@ -99,7 +99,11 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
                         const base::StringPiece& value);
 
  private:
+#if BUILDFLAG(IS_OHOS)
+  bool has_crash_config_file_ = true;
+#else
   bool has_crash_config_file_ = false;
+#endif  // BUILDFLAG(IS_OHOS)
 
   enum KeySize { SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE };
 

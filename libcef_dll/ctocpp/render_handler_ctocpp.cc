@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f2f817e11a4ff708bf3e1be68b75527681387d39$
+// $hash=5708c2465956ed8b7b3e72db2d4e244e3f3bf93d$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -495,6 +495,30 @@ void CefRenderHandlerCToCpp::OnTextSelectionChanged(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnSelectionChanged(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& text,
+    const CefRange& selected_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_selection_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+  // Unverified params: text, selected_range
+
+  // Execute
+  _struct->on_selection_changed(_struct, CefBrowserCppToC::Wrap(browser),
+                                text.GetStruct(), &selected_range);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
     TextInputMode input_mode,
@@ -515,6 +539,74 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
   // Execute
   _struct->on_virtual_keyboard_requested(
       _struct, CefBrowserCppToC::Wrap(browser), input_mode, show_keyboard);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnCursorUpdate(CefRefPtr<CefBrowser> browser,
+                                            const CefRect& rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_cursor_update))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_cursor_update(_struct, CefBrowserCppToC::Wrap(browser), &rect);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnCompleteSwapWithNewSize() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_complete_swap_with_new_size))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_complete_swap_with_new_size(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefRenderHandlerCToCpp::OnResizeNotWork() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_resize_not_work))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_resize_not_work(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnOverscroll(CefRefPtr<CefBrowser> browser,
+                                          const float x,
+                                          const float y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_overscroll))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_overscroll(_struct, CefBrowserCppToC::Wrap(browser), x, y);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

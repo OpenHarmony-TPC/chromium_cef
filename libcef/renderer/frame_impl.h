@@ -104,6 +104,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void LoadHeaderUrl(const CefString& url,
                      const CefString& additionalHttpHeaders) override;
   void OnFocusedNodeChanged(const blink::WebElement& element);
+  void ScriptedPrint(bool user_initiated);
 #endif  // BUILDFLAG(IS_OHOS)
 
  private:
@@ -150,7 +151,11 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void DidStopLoading() override;
   void MoveOrResizeStarted() override;
 #if BUILDFLAG(IS_OHOS)
-  void SendTouchEvent(cef::mojom::TouchEventParamsPtr params) override;
+  struct CefHitData {
+    int type;
+    CefString extra_data;
+  };
+  void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
   void SetInitialScale(float initialScale) override;
   void SetJsOnlineProperty(bool network_up) override;
   void PutZoomingForTextFactor(float factor) override;
@@ -163,6 +168,8 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void ScrollTo(float x, float y) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void SlideScroll(float vx, float vy) override;
+  void ZoomBy(float delta, float width, float height, cef::mojom::RenderFrame::ZoomByCallback callback) override;
+  void GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) override;
   GURL GetAbsoluteUrl(const blink::WebNode& node,
                       const std::u16string& url_fragment);
   GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
@@ -178,6 +185,8 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
                            bool is_editable,
                            cef::mojom::HitDataParamsPtr& data);
   bool is_update_ = false;
+  CefHitData cef_hit_data_;
+  int total_mem_ = -1;
 #endif  // BUILDFLAG(IS_OHOS)
 
   CefBrowserImpl* browser_;
@@ -210,7 +219,6 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   mojo::Remote<cef::mojom::BrowserFrame> browser_frame_;
 
   base::WeakPtrFactory<CefFrameImpl> weak_ptr_factory_{this};
-
   IMPLEMENT_REFCOUNTING(CefFrameImpl);
 };
 

@@ -27,7 +27,7 @@
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
 #include "extensions/common/mojom/view_type.mojom.h"
-
+#include "components/download/public/common/download_item.h"
 namespace extensions {
 class Extension;
 }
@@ -109,14 +109,10 @@ class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
   bool OnMessage(blink::WebMessagePort::Message message) override;
 
   void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback);
+  void ConvertBlinkMsgToCefValue(blink::WebMessagePort::Message& message, CefRefPtr<CefValue> data);
 
  private:
   CefRefPtr<CefWebMessageReceiver> callback_;
-};
-
-struct CefHitData {
-  int type;
-  CefString extra_data;
 };
 
 // Base class for CefBrowserHost implementations. Includes functionality that is
@@ -187,6 +183,15 @@ class CefBrowserHostBase : public CefBrowserHost,
   CefRefPtr<CefRequestContext> GetRequestContext() override;
   bool HasView() override;
   void StartDownload(const CefString& url) override;
+  void ResumeDownload(const CefString& url,
+                      const CefString& full_path,
+                      int64 received_bytes,
+                      int64 total_bytes,
+                      const CefString& etag,
+                      const CefString& mime_type,
+                      const CefString& last_modified,
+                      const CefString& received_slices_string) override;
+
   void DownloadImage(const CefString& image_url,
                      bool is_favicon,
                      uint32 max_image_size,
@@ -212,7 +217,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetNavigationEntries(CefRefPtr<CefNavigationEntryVisitor> visitor,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
-
+  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
 #if BUILDFLAG(IS_OHOS)
   /* ohos webview begin */
   void SetWebPreferences(const CefBrowserSettings& browser_settings) override;
@@ -245,8 +250,13 @@ class CefBrowserHostBase : public CefBrowserHost,
   void ScrollTo(float x, float y) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void SlideScroll(float vx, float vy) override;
+  void ZoomBy(float delta, float width, float height) override;
   void SetForceEnableZoom(bool forceEnableZoom) override;
   bool GetForceEnableZoom() override;
+  void SelectAndCopy() override;
+  bool ShouldShowFreeCopy() override;
+  int GetNWebId() override;
+  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
   /* ohos webview end */
 #endif
 
@@ -309,7 +319,8 @@ class CefBrowserHostBase : public CefBrowserHost,
 
   void ExecuteJavaScript(
       const CefString& code,
-      CefRefPtr<CefJavaScriptResultCallback> callback) override;
+      CefRefPtr<CefJavaScriptResultCallback> callback,
+      bool extention) override;
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
@@ -360,7 +371,6 @@ class CefBrowserHostBase : public CefBrowserHost,
   void OnDidFinishLoad(CefRefPtr<CefFrameHostImpl> frame,
                        const GURL& validated_url,
                        int http_status_code);
-  void OnUpdateHitData(const int type, const CefString extra_data);
   virtual void OnSetFocus(cef_focus_source_t source) = 0;
   void ViewText(const std::string& text);
 
@@ -430,6 +440,10 @@ class CefBrowserHostBase : public CefBrowserHost,
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessagePort::Message& message);
+#endif
+
+#if BUILDFLAG(IS_OHOS)
   bool ShouldShowLoadingUI() override;
 #endif
 
@@ -472,6 +486,20 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StoreWebArchiveInternal(
       CefRefPtr<CefStoreWebArchiveResultCallback> callback,
       const CefString& path);
+  uint64_t GetCurrentTimestamp();
+
+  // ResumeDownloadWithId is callback param in DownloadManager::GetNextId to
+  // resume an interrupted download.
+  void ResumeDownloadWithId(
+      const GURL& url,
+      const base::FilePath& full_path,
+      int64 received_bytes,
+      int64 total_bytes,
+      const std::string& etag,
+      const std::string& mime_type,
+      const std::string& last_modified,
+      std::vector<download::DownloadItem::ReceivedSlice> received_slices,
+      uint32_t next_id);
 #endif  // IS_OHOS
   bool UseLegacyGeolocationPermissionAPI();
   // GURL is supplied by the content layer as requesting frame.
@@ -490,9 +518,9 @@ class CefBrowserHostBase : public CefBrowserHost,
       runnerMap_;
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
       receiverMap_;
+  uint64_t last_zoom_time_ = 0;
 #endif
 
-  CefHitData cef_hit_data_;
   CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
   std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=93d039a400e46cc0b87bbab7a9b68b61e6dd6a66$
+// $hash=ba963d168a68dff5cdc383349f5e71ced0bebd06$
 //
 
 #include "libcef_dll/cpptoc/jsdialog_handler_cpptoc.h"
@@ -72,6 +72,7 @@ jsdialog_handler_on_jsdialog(struct _cef_jsdialog_handler_t* self,
 int CEF_CALLBACK
 jsdialog_handler_on_before_unload_dialog(struct _cef_jsdialog_handler_t* self,
                                          cef_browser_t* browser,
+                                         const cef_string_t* url,
                                          const cef_string_t* message_text,
                                          int is_reload,
                                          cef_jsdialog_callback_t* callback) {
@@ -86,6 +87,10 @@ jsdialog_handler_on_before_unload_dialog(struct _cef_jsdialog_handler_t* self,
   DCHECK(browser);
   if (!browser)
     return 0;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return 0;
   // Verify param: callback; type: refptr_diff
   DCHECK(callback);
   if (!callback)
@@ -94,7 +99,7 @@ jsdialog_handler_on_before_unload_dialog(struct _cef_jsdialog_handler_t* self,
 
   // Execute
   bool _retval = CefJSDialogHandlerCppToC::Get(self)->OnBeforeUnloadDialog(
-      CefBrowserCToCpp::Wrap(browser), CefString(message_text),
+      CefBrowserCToCpp::Wrap(browser), CefString(url), CefString(message_text),
       is_reload ? true : false, CefJSDialogCallbackCToCpp::Wrap(callback));
 
   // Return type: bool

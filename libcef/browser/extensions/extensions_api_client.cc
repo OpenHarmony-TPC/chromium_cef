@@ -20,6 +20,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "printing/buildflags/buildflags.h"
+#include "libcef/browser/printing/ohos_print_manager.h"
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "libcef/browser/printing/print_view_manager.h"
 #endif
@@ -64,6 +65,11 @@ CefExtensionsAPIClient::CreateMimeHandlerViewGuestDelegate(
 void CefExtensionsAPIClient::AttachWebContentsHelpers(
     content::WebContents* web_contents) const {
   PrefsTabHelper::CreateForWebContents(web_contents);
+
+#if BUILDFLAG(IS_OHOS)
+  printing::OhosPrintManager::CreateForWebContents(web_contents);
+#endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   printing::CefPrintViewManager::CreateForWebContents(web_contents);
 #endif

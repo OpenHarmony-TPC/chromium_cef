@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=999efab317d9de20cf31c967a7facaed253ced56$
+// $hash=812ea80d7ce94cb282389f7359f7093249c48f93$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -96,6 +96,23 @@ typedef struct _cef_select_popup_callback_t {
   ///
   void(CEF_CALLBACK* cancel)(struct _cef_select_popup_callback_t* self);
 } cef_select_popup_callback_t;
+
+///
+// Callback structure for asynchronous continuation of datetime chooser.
+///
+typedef struct _cef_date_time_chooser_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Notify the date time chooser result.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_date_time_chooser_callback_t* self,
+                           int success,
+                           double dialog_value);
+} cef_date_time_chooser_callback_t;
 
 ///
 // Implement this structure to handle dialog events. The functions of this

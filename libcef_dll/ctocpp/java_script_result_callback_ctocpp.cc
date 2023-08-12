@@ -9,17 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ec746fb1184b4ac8124e90ddcb226035a06bfeb2$
+// $hash=4f1d80cb3bd00c0c9b94a9e2663f09f13474158a$
 //
 
 #include "libcef_dll/ctocpp/java_script_result_callback_ctocpp.h"
+#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
 void CefJavaScriptResultCallbackCToCpp::OnJavaScriptExeResult(
-    const CefString& result) {
+    CefRefPtr<CefValue> result) {
   shutdown_checker::AssertNotShutdown();
 
   cef_java_script_result_callback_t* _struct = GetStruct();
@@ -28,13 +29,13 @@ void CefJavaScriptResultCallbackCToCpp::OnJavaScriptExeResult(
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: result; type: string_byref_const
-  DCHECK(!result.empty());
-  if (result.empty())
+  // Verify param: result; type: refptr_diff
+  DCHECK(result.get());
+  if (!result.get())
     return;
 
   // Execute
-  _struct->on_java_script_exe_result(_struct, result.GetStruct());
+  _struct->on_java_script_exe_result(_struct, CefValueCppToC::Wrap(result));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=db2cc3ecd0fa1658ae8ce19b1347175a1902daec$
+// $hash=c5ae479d5aac17000598ed014a5d6f011323ace4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -86,9 +86,19 @@ class CefRenderHandlerCToCpp
   void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser,
                               const CefString& selected_text,
                               const CefRange& selected_range) override;
+  void OnSelectionChanged(CefRefPtr<CefBrowser> browser,
+                          const CefString& text,
+                          const CefRange& selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
                                   bool show_keyboard) override;
+  void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
+                      const CefRect& rect) override;
+  void OnCompleteSwapWithNewSize() override;
+  void OnResizeNotWork() override;
+  void OnOverscroll(CefRefPtr<CefBrowser> browser,
+                    const float x,
+                    const float y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

@@ -17,6 +17,10 @@
 #include "third_party/blink/public/common/loader/resource_type_util.h"
 #include "third_party/blink/public/platform/web_url.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/no_state_prefetch/renderer/no_state_prefetch_helper.h"
+#endif
+
 CefURLLoaderThrottleProviderImpl::CefURLLoaderThrottleProviderImpl(
     blink::URLLoaderThrottleProviderType type)
     : type_(type) {
@@ -61,6 +65,16 @@ CefURLLoaderThrottleProviderImpl::CreateThrottles(
   throttles.emplace_back(std::make_unique<GoogleURLLoaderThrottle>(
       AlloyRenderThreadObserver::GetDynamicParams()));
 
+#if BUILDFLAG(IS_OHOS)
+  if (type_ == blink::URLLoaderThrottleProviderType::kFrame &&
+      !is_frame_resource) {
+    auto throttle =
+        prerender::NoStatePrefetchHelper::MaybeCreateThrottle(render_frame_id);
+    if (throttle) {
+      throttles.emplace_back(std::move(throttle));
+    }
+  }
+#endif
   return throttles;
 }
 

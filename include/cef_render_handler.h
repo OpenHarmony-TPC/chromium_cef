@@ -259,6 +259,16 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                       const CefRange& selected_range) {}
 
   ///
+  // Called when text selection has changed for the specified |browser|.
+  // |text| is the currently text and |selected_range| is
+  // the character range.
+  ///
+  /*--cef(optional_param=text,optional_param=selected_range)--*/
+  virtual void OnSelectionChanged(CefRefPtr<CefBrowser> browser,
+                                  const CefString& text,
+                                  const CefRange& selected_range) {}
+
+  ///
   // Called when an on-screen keyboard should be shown or hidden for the
   // specified |browser|. |input_mode| specifies what kind of keyboard
   // should be opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any
@@ -269,6 +279,33 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                           TextInputMode input_mode,
                                           bool show_keyboard) {}
+
+  ///
+  // Called when the cursor position has changed.
+  ///
+  /*--cef()--*/
+  virtual void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
+                              const CefRect& rect) {}
+
+  ///
+  /// Called when swap buffer completed with new size.
+  ///
+  /*--cef()--*/
+  virtual void OnCompleteSwapWithNewSize() {}
+
+  ///
+  /// Called when resize not work.
+  ///
+  /*--cef()--*/
+  virtual void OnResizeNotWork() {}
+
+  ///
+  /// Called when over scroll.
+  ///
+  /*--cef()--*/
+  virtual void OnOverscroll(CefRefPtr<CefBrowser> browser,
+                            const float x,
+                            const float y) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

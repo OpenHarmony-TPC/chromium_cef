@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6fbfc46d229413699c26e2e8d669e04c5ce776b1$
+// $hash=ea2b73d48a51116c55ebbe91e33c88453b023a51$
 //
 
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
@@ -67,6 +67,20 @@ int CEF_CALLBACK drag_data_is_read_only(struct _cef_drag_data_t* self) {
 
   // Return type: bool
   return _retval;
+}
+
+void CEF_CALLBACK drag_data_set_read_only(struct _cef_drag_data_t* self,
+                                          int readonly) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefDragDataCppToC::Get(self)->SetReadOnly(readonly ? true : false);
 }
 
 int CEF_CALLBACK drag_data_is_link(struct _cef_drag_data_t* self) {
@@ -460,6 +474,23 @@ int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK
+drag_data_is_image_file_contents(struct _cef_drag_data_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefDragDataCppToC::Get(self)->IsImageFileContents();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -467,6 +498,7 @@ int CEF_CALLBACK drag_data_has_image(struct _cef_drag_data_t* self) {
 CefDragDataCppToC::CefDragDataCppToC() {
   GetStruct()->clone = drag_data_clone;
   GetStruct()->is_read_only = drag_data_is_read_only;
+  GetStruct()->set_read_only = drag_data_set_read_only;
   GetStruct()->is_link = drag_data_is_link;
   GetStruct()->is_fragment = drag_data_is_fragment;
   GetStruct()->is_file = drag_data_is_file;
@@ -490,6 +522,7 @@ CefDragDataCppToC::CefDragDataCppToC() {
   GetStruct()->get_image = drag_data_get_image;
   GetStruct()->get_image_hotspot = drag_data_get_image_hotspot;
   GetStruct()->has_image = drag_data_has_image;
+  GetStruct()->is_image_file_contents = drag_data_is_image_file_contents;
 }
 
 // DESTRUCTOR - Do not edit by hand.

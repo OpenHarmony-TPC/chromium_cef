@@ -143,6 +143,24 @@ void CefEnableHighDPISupport();
 ///
 /*--cef()--*/
 void CefApplyHttpDns();
+///
+// This function should be called on the main application thread.
+///
+/*--cef()--*/
+void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler);
+///
+// This function should be called on the main application thread.
+///
+/*--cef()--*/
+void CefResumeDownload(const CefString& guid,
+                       const CefString& url,
+                       const CefString& full_path,
+                       int64 received_bytes,
+                       int64 total_bytes,
+                       const CefString& etag,
+                       const CefString& mime_type,
+                       const CefString& last_modified,
+                       const CefString& received_slices_string);
 /* ---------- ohos nweb add end --------- */
 
 ///

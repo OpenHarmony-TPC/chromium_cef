@@ -107,7 +107,8 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::CreatePopupBrowserInfo(
 bool CefBrowserInfoManager::CanCreateWindow(content::RenderFrameHost* opener,
     const GURL& target_url,
     WindowOpenDisposition disposition,
-    bool user_gesture) {
+    bool user_gesture,
+    CefRefPtr<CefCallback> callback) {
   CEF_REQUIRE_UIT();
   content::Referrer referrer;
   content::OpenURLParams params(target_url, referrer, disposition,
@@ -118,6 +119,7 @@ bool CefBrowserInfoManager::CanCreateWindow(content::RenderFrameHost* opener,
   CefRefPtr<CefBrowserHostBase> browser;
   if (!MaybeAllowNavigation(opener, params, browser) || !browser) {
     LOG(INFO) << "not allow popup, cancel the popup";
+    callback->Cancel();
     return false;
   }
  
@@ -130,8 +132,11 @@ bool CefBrowserInfoManager::CanCreateWindow(content::RenderFrameHost* opener,
       DCHECK(opener_frame);
       allow = !handler->OnPreBeforePopup(
           browser.get(), opener_frame, target_url.spec(),
-          static_cast<cef_window_open_disposition_t>(disposition), user_gesture);
+          static_cast<cef_window_open_disposition_t>(disposition), user_gesture, callback);
     }
+  }
+  if (!allow) {
+    callback->Cancel();
   }
   return allow;
 }
@@ -178,6 +183,7 @@ bool CefBrowserInfoManager::CanCreateWindow(
   // Start with the current browser's settings.
   pending_popup->client = client;
   pending_popup->settings = browser->settings();
+  pending_popup->extra_info = CefDictionaryValue::Create();
 
   if (client.get()) {
     CefRefPtr<CefLifeSpanHandler> handler = client->GetLifeSpanHandler();

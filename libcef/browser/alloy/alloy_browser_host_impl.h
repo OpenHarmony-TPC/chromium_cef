@@ -140,6 +140,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
+  void SetAudioResumeInterval(int resumeInterval) override;
+  void SetAudioExclusive(bool audioExclusive) override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
@@ -192,6 +194,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
                       CefFileDialogRunner::RunFileChooserCallback callback);
 #if BUILDFLAG(IS_OHOS)
   bool ShowContextMenu(const content::ContextMenuParams& params);
+  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);
@@ -340,6 +343,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       override;
   void WebContentsDestroyed() override;
   void AddVisitedLinks(const std::vector<CefString>& urls) override;
+#if BUILDFLAG(IS_OHOS)
+  void OpenDateTimeChooser() override;
+  void CloseDateTimeChooser() override;
+#endif
 
  private:
   friend class CefBrowserPlatformDelegateAlloy;

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=787cf2fc4d59195e39c7517fbec56c20e4415e6d$
+// $hash=1d1bba8decc82bf85e69773b92a59db9caa4cced$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -46,6 +46,7 @@
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/app_ctocpp.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/download_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/end_tracing_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/scheme_handler_factory_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
@@ -164,6 +165,67 @@ CEF_EXPORT void cef_apply_http_dns() {
 
   // Execute
   CefApplyHttpDns();
+}
+
+CEF_EXPORT void cef_set_download_handler(
+    struct _cef_download_handler_t* download_handler) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: download_handler; type: refptr_diff
+  DCHECK(download_handler);
+  if (!download_handler)
+    return;
+
+  // Execute
+  CefSetDownloadHandler(CefDownloadHandlerCToCpp::Wrap(download_handler));
+}
+
+CEF_EXPORT void cef_resume_download(
+    const cef_string_t* guid,
+    const cef_string_t* url,
+    const cef_string_t* full_path,
+    int64 received_bytes,
+    int64 total_bytes,
+    const cef_string_t* etag,
+    const cef_string_t* mime_type,
+    const cef_string_t* last_modified,
+    const cef_string_t* received_slices_string) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: guid; type: string_byref_const
+  DCHECK(guid);
+  if (!guid)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+  // Verify param: full_path; type: string_byref_const
+  DCHECK(full_path);
+  if (!full_path)
+    return;
+  // Verify param: etag; type: string_byref_const
+  DCHECK(etag);
+  if (!etag)
+    return;
+  // Verify param: mime_type; type: string_byref_const
+  DCHECK(mime_type);
+  if (!mime_type)
+    return;
+  // Verify param: last_modified; type: string_byref_const
+  DCHECK(last_modified);
+  if (!last_modified)
+    return;
+  // Verify param: received_slices_string; type: string_byref_const
+  DCHECK(received_slices_string);
+  if (!received_slices_string)
+    return;
+
+  // Execute
+  CefResumeDownload(CefString(guid), CefString(url), CefString(full_path),
+                    received_bytes, total_bytes, CefString(etag),
+                    CefString(mime_type), CefString(last_modified),
+                    CefString(received_slices_string));
 }
 
 CEF_EXPORT int cef_crash_reporting_enabled() {

@@ -36,6 +36,10 @@ class AlloyPermissionRequestHandler : public content::WebContentsObserver {
   // Allow |origin| to access the |resources|.
   void PreauthorizePermission(const CefString& origin, int resources);
 
+#if BUILDFLAG(IS_OHOS)
+  void SendScreenCaptureRequest(CefRefPtr<CefScreenCaptureAccessRequest> request);
+#endif
+
   // WebContentsObserver
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;

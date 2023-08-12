@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4f049ec48856670279424f11d8e1d8ed178d0a1b$
+// $hash=7de1b15970e35c0ef6272719cb7e984e0b152f92$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -209,6 +209,35 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::ReloadOriginalUrl() {
 
   // Execute
   _struct->reload_original_url(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::SelectAndCopy() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, select_and_copy))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->select_and_copy(_struct);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowFreeCopy() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, should_show_free_copy))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->should_show_free_copy(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 NO_SANITIZE("cfi-icall")
@@ -502,6 +531,22 @@ CefRefPtr<CefGeolocationAcess> CefBrowserCToCpp::GetGeolocationPermissions() {
   return CefGeolocationAcessCToCpp::Wrap(_retval);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::PrefetchPage(CefString& url,
+                                    CefString& additionalHttpHeaders) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, prefetch_page))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->prefetch_page(_struct, url.GetWritableStruct(),
+                         additionalHttpHeaders.GetWritableStruct());
+}
+
 NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowLoadingUI() {
   shutdown_checker::AssertNotShutdown();
 
@@ -546,6 +591,38 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetForceEnableZoom() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") int CefBrowserCToCpp::GetNWebId() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_nweb_id))
+    return 0;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_nweb_id(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SetEnableBlankTargetPopupIntercept(
+    bool enableBlankTargetPopup) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_enable_blank_target_popup_intercept))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_enable_blank_target_popup_intercept(_struct,
+                                                   enableBlankTargetPopup);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

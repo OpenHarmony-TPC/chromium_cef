@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=100836d9c768fb63da4c355cb0571e34d0c6a8dd$
+// $hash=4e00a9ba8322af0c50d7afe9a6af5438bfdca3b9$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
@@ -54,6 +54,7 @@
 #include "include/capi/cef_keyboard_handler_capi.h"
 #include "include/capi/cef_life_span_handler_capi.h"
 #include "include/capi/cef_load_handler_capi.h"
+#include "include/capi/cef_media_handler_capi.h"
 #include "include/capi/cef_permission_request_capi.h"
 #include "include/capi/cef_print_handler_capi.h"
 #include "include/capi/cef_process_message_capi.h"
@@ -174,6 +175,12 @@ typedef struct _cef_client_t {
   // Return the handler for browser request events.
   ///
   struct _cef_request_handler_t*(CEF_CALLBACK* get_request_handler)(
+      struct _cef_client_t* self);
+
+  ///
+  // Return the handler for browser media events.
+  ///
+  struct _cef_media_handler_t*(CEF_CALLBACK* get_media_handler)(
       struct _cef_client_t* self);
 
   ///

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4912cb91f0c5d4e550ab1441c8848477bc787a11$
+// $hash=82c15dbab72ff7d2479547ef4d96a94c54697091$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -340,6 +340,45 @@ void CefBrowserHostCToCpp::StartDownload(const CefString& url) {
 
   // Execute
   _struct->start_download(_struct, url.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ResumeDownload(
+    const CefString& url,
+    const CefString& full_path,
+    int64 received_bytes,
+    int64 total_bytes,
+    const CefString& etag,
+    const CefString& mime_type,
+    const CefString& last_modified,
+    const CefString& received_slices_string) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, resume_download))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty())
+    return;
+  // Verify param: full_path; type: string_byref_const
+  DCHECK(!full_path.empty());
+  if (full_path.empty())
+    return;
+  // Verify param: mime_type; type: string_byref_const
+  DCHECK(!mime_type.empty());
+  if (mime_type.empty())
+    return;
+  // Unverified params: etag, last_modified, received_slices_string
+
+  // Execute
+  _struct->resume_download(_struct, url.GetStruct(), full_path.GetStruct(),
+                           received_bytes, total_bytes, etag.GetStruct(),
+                           mime_type.GetStruct(), last_modified.GetStruct(),
+                           received_slices_string.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1586,9 +1625,38 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetAudioResumeInterval(int resumeInterval) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_audio_resume_interval))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_audio_resume_interval(_struct, resumeInterval);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetAudioExclusive(bool audioExclusive) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_audio_exclusive))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_audio_exclusive(_struct, audioExclusive);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ExecuteJavaScript(
     const CefString& code,
-    CefRefPtr<CefJavaScriptResultCallback> callback) {
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -1609,7 +1677,7 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
   // Execute
   _struct->execute_java_script(
       _struct, code.GetStruct(),
-      CefJavaScriptResultCallbackCppToC::Wrap(callback));
+      CefJavaScriptResultCallbackCppToC::Wrap(callback), extention);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1901,6 +1969,34 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetCacheMode(int falg) {
 
   // Execute
   _struct->set_cache_mode(_struct, falg);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetShouldFrameSubmissionBeforeDraw(bool should) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_should_frame_submission_before_draw))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_should_frame_submission_before_draw(_struct, should);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ZoomBy(float delta, float width, float height) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, zoom_by))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->zoom_by(_struct, delta, width, height);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

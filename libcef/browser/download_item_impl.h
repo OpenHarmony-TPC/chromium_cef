@@ -18,10 +18,12 @@ class CefDownloadItemImpl
     : public CefValueBase<CefDownloadItem, download::DownloadItem> {
  public:
   explicit CefDownloadItemImpl(download::DownloadItem* value);
-
+#if BUILDFLAG(IS_OHOS)
+  explicit CefDownloadItemImpl(download::DownloadItem* value, int nweb_id);
+#endif  //  BUILDFLAG(IS_OHOS)
   CefDownloadItemImpl(const CefDownloadItemImpl&) = delete;
   CefDownloadItemImpl& operator=(const CefDownloadItemImpl&) = delete;
-
+#if BUILDFLAG(IS_OHOS)
   // CefDownloadItem methods.
   bool IsValid() override;
   bool IsInProgress() override;
@@ -40,6 +42,20 @@ class CefDownloadItemImpl
   CefString GetSuggestedFileName() override;
   CefString GetContentDisposition() override;
   CefString GetMimeType() override;
+  CefString GetOriginalMimeType() override;
+  CefString GetGuid() override;
+
+  // additional methods
+  int GetState() override;
+  bool IsPaused() override;
+  CefString GetMethod() override;
+  int GetLastErrorCode() override;
+  bool IsPending() override;
+  CefString GetLastModifiedTime() override;
+  CefString GetETag() override;
+  CefString GetReceivedSlices() override;
+  int GetNWebId() override;
+#endif  //  BUILDFLAG(IS_OHOS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_

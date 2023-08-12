@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7e87acb36c494058615248f36c7536368d3d5fb5$
+// $hash=677073805c6a87f896745311d30a7832768d66b0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_
@@ -61,6 +61,7 @@ class CefRequestCToCpp
   ResourceType GetResourceType() override;
   TransitionType GetTransitionType() override;
   uint64 GetIdentifier() override;
+  bool IsMainFrame() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_

@@ -285,9 +285,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
 
   CefRefPtr<CefListValue> result = CefListValue::Create();
 
+  if (!client_)
+    return;
   int error =
       client_->NotifyJavaScriptResult(ceflistvalue, method, classname, result);
-  *error_code = OhGinJavascriptBridgeError(error);
+  *error_code = static_cast<OhGinJavascriptBridgeError>(error);
   if (error != 0) {
     return;
   }

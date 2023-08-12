@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4f55af31ee0cf2bde8f353e26283210430f2d871$
+// $hash=8e59e7bde1fd99b84669621b2516f7f883e7eacd$
 //
 
 #include "libcef_dll/cpptoc/request_cpptoc.h"
@@ -402,6 +402,20 @@ uint64 CEF_CALLBACK request_get_identifier(struct _cef_request_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK request_is_main_frame(struct _cef_request_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefRequestCppToC::Get(self)->IsMainFrame();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -431,6 +445,7 @@ CefRequestCppToC::CefRequestCppToC() {
   GetStruct()->get_resource_type = request_get_resource_type;
   GetStruct()->get_transition_type = request_get_transition_type;
   GetStruct()->get_identifier = request_get_identifier;
+  GetStruct()->is_main_frame = request_is_main_frame;
 }
 
 // DESTRUCTOR - Do not edit by hand.

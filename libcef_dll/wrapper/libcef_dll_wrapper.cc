@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=91c7f364ad0c5a79cace6aa81d16c10933d1937b$
+// $hash=b91d8e3027cf43d74d27b7fe7e36b1da82bb3f68$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -43,6 +43,7 @@
 #include "include/test/cef_test_helpers.h"
 #include "libcef_dll/cpptoc/app_cpptoc.h"
 #include "libcef_dll/cpptoc/completion_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/download_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/end_tracing_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
@@ -157,6 +158,68 @@ NO_SANITIZE("cfi-icall") CEF_GLOBAL void CefApplyHttpDns() {
 
   // Execute
   cef_apply_http_dns();
+}
+
+NO_SANITIZE("cfi-icall")
+CEF_GLOBAL
+    void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: download_handler; type: refptr_diff
+  DCHECK(download_handler.get());
+  if (!download_handler.get())
+    return;
+
+  // Execute
+  cef_set_download_handler(CefDownloadHandlerCppToC::Wrap(download_handler));
+}
+
+NO_SANITIZE("cfi-icall")
+CEF_GLOBAL void CefResumeDownload(const CefString& guid,
+                                  const CefString& url,
+                                  const CefString& full_path,
+                                  int64 received_bytes,
+                                  int64 total_bytes,
+                                  const CefString& etag,
+                                  const CefString& mime_type,
+                                  const CefString& last_modified,
+                                  const CefString& received_slices_string) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: guid; type: string_byref_const
+  DCHECK(!guid.empty());
+  if (guid.empty())
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty())
+    return;
+  // Verify param: full_path; type: string_byref_const
+  DCHECK(!full_path.empty());
+  if (full_path.empty())
+    return;
+  // Verify param: etag; type: string_byref_const
+  DCHECK(!etag.empty());
+  if (etag.empty())
+    return;
+  // Verify param: mime_type; type: string_byref_const
+  DCHECK(!mime_type.empty());
+  if (mime_type.empty())
+    return;
+  // Verify param: last_modified; type: string_byref_const
+  DCHECK(!last_modified.empty());
+  if (last_modified.empty())
+    return;
+  // Verify param: received_slices_string; type: string_byref_const
+  DCHECK(!received_slices_string.empty());
+  if (received_slices_string.empty())
+    return;
+
+  // Execute
+  cef_resume_download(guid.GetStruct(), url.GetStruct(), full_path.GetStruct(),
+                      received_bytes, total_bytes, etag.GetStruct(),
+                      mime_type.GetStruct(), last_modified.GetStruct(),
+                      received_slices_string.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall") CEF_GLOBAL bool CefCrashReportingEnabled() {

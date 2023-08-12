@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a9a85999cc0792beae39e7b2796eedf435a88a1b$
+// $hash=5ea1bee590f400cbd0debd4f21e2b0a3b0172a72$
 //
 
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
@@ -64,6 +64,19 @@ NO_SANITIZE("cfi-icall") bool CefDragDataCToCpp::IsReadOnly() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefDragDataCToCpp::SetReadOnly(bool readonly) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_drag_data_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_read_only))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_read_only(_struct, readonly);
 }
 
 NO_SANITIZE("cfi-icall") bool CefDragDataCToCpp::IsLink() {
@@ -463,6 +476,22 @@ NO_SANITIZE("cfi-icall") bool CefDragDataCToCpp::HasImage() {
 
   // Execute
   int _retval = _struct->has_image(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") bool CefDragDataCToCpp::IsImageFileContents() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_drag_data_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_image_file_contents))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_image_file_contents(_struct);
 
   // Return type: bool
   return _retval ? true : false;

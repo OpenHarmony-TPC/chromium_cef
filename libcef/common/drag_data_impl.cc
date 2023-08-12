@@ -205,3 +205,9 @@ bool CefDragDataImpl::HasImage() {
   base::AutoLock lock_scope(lock_);
   return image_ ? true : false;
 }
+
+#if BUILDFLAG(IS_OHOS)
+bool CefDragDataImpl::IsImageFileContents() {
+  return data_.IsImageFileContents();
+}
+#endif

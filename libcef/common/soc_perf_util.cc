@@ -6,7 +6,7 @@
 #include "soc_perf_util.h"
 
 #include "base/logging.h"
-#include "base/trace_event/common/trace_event_common.h"
+#include "base/trace_event/trace_event.h"
 #include "ohos_adapter_helper.h"
 #include "soc_perf_client_adapter.h"
 
@@ -29,7 +29,7 @@ const int REST_TIME_IN_SECOND = 2;
 }  // namespace
 
 void SocPerUtil::EnableFlingBoost() {
-  TRACE_EVENT2("soc_perf", "SocPerUtil::EnableFlingBoost2", "layout_num",
+  TRACE_EVENT2("power", "SocPerUtil::EnableFlingBoost2", "layout_num",
                video_layout_num, "layer_num", layer_num);
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
@@ -47,7 +47,7 @@ void SocPerUtil::EnableFlingBoost() {
 }
 
 void SocPerUtil::DisableFlingBoost() {
-  TRACE_EVENT0("soc_perf", "SocPerUtil::DisableFlingBoost");
+  TRACE_EVENT0("power", "SocPerUtil::DisableFlingBoost");
 
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
@@ -66,12 +66,12 @@ void SocPerUtil::TryRunSocPerf() {
   if ((base::Time().Now() - first_time_boost_timestamp).InSeconds() >=
       MAX_BOOST_RUN_TIME_IN_SECOND) {
     boost_finished = true;
-    TRACE_EVENT0("soc_perf", "SocPerUtil::JsSocPerfFinished");
+    TRACE_EVENT0("power", "SocPerUtil::JsSocPerfFinished");
     return;
   }
   if ((base::Time().Now() - last_time_boost_timestamp).InSeconds() >=
       REST_TIME_IN_SECOND) {
-    TRACE_EVENT0("soc_perf", "SocPerUtil::JsSocPerfThreadBoost");
+    TRACE_EVENT0("power", "SocPerUtil::JsSocPerfThreadBoost");
     last_time_boost_timestamp = base::Time().Now();
     OHOS::NWeb::OhosAdapterHelper::GetInstance()
         .CreateSocPerfClientAdapter()

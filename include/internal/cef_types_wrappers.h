@@ -750,6 +750,11 @@ struct CefBrowserSettingsTraits {
 #if BUILDFLAG(IS_OHOS)
     target->hide_vertical_scrollbars = src->hide_vertical_scrollbars;
     target->hide_horizontal_scrollbars = src->hide_horizontal_scrollbars;
+    target->contextmenu_customization_enabled =
+        src->contextmenu_customization_enabled;
+    target->scrollbar_color = src->scrollbar_color;   
+    target->blank_target_popup_intercept_enabled = 
+        src->blank_target_popup_intercept_enabled;
 #endif
     /* ohos webview end */
   }
@@ -1074,4 +1079,85 @@ struct CefSelectPopupItemTraits {
 ///
 typedef CefStructBase<CefSelectPopupItemTraits> CefSelectPopupItem;
 
+struct CefDateTimeChooserTraits {
+  typedef cef_date_time_chooser_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+///
+// Class representing date time chooser.
+///
+class CefDateTimeChooser : public CefStructBase<CefDateTimeChooserTraits> {
+ public:
+  typedef CefStructBase<CefDateTimeChooserTraits> parent;
+
+  CefDateTimeChooser() {}
+  CefDateTimeChooser(const cef_date_time_chooser_t& r) : parent(r) {}
+  CefDateTimeChooser(cef_text_input_type_t dialog_type,
+                     double dialog_value,
+                     double minumum,
+                     double maximum,
+                     double step) {
+    Set(dialog_type, dialog_value, minumum, maximum, step);
+  }
+
+  void Set(cef_text_input_type_t dialog_type_value,
+           double dialog_value_value,
+           double minumum_value,
+           double maximum_value,
+           double step_value) {
+    dialog_type = dialog_type_value;
+    dialog_value = dialog_value_value;
+    minimum = minumum_value;
+    maximum = maximum_value;
+    step = step_value;
+  }
+};
+
+struct CefDateTimeSuggestionTraits {
+  typedef cef_date_time_suggestion_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+///
+// Class representing date time chooser.
+///
+class CefDateTimeSuggestion : public CefStructBase<CefDateTimeSuggestionTraits> {
+ public:
+  typedef CefStructBase<CefDateTimeSuggestionTraits> parent;
+
+  CefDateTimeSuggestion() {}
+  CefDateTimeSuggestion(const cef_date_time_suggestion_t& r) : parent(r) {}
+  CefDateTimeSuggestion(double value,
+                        cef_string_t localized_value,
+                        cef_string_t label) {
+    Set(value, localized_value, label);
+  }
+
+  void Set(double value_value,
+           cef_string_t localized_value_value,
+           cef_string_t label_value) {
+    value = value_value;
+    localized_value = localized_value_value;
+    label = label_value;
+  }
+};
 #endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_WRAPPERS_H_

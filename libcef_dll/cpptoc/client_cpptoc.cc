@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9d36943180a6382a12e74a92d9d9967039f14ad3$
+// $hash=7abad1c3dec145629b7d1d17793c7949154c498f$
 //
 
 #include "libcef_dll/cpptoc/client_cpptoc.h"
@@ -26,6 +26,7 @@
 #include "libcef_dll/cpptoc/keyboard_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/life_span_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
+#include "libcef_dll/cpptoc/media_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/permission_request_cpptoc.h"
 #include "libcef_dll/cpptoc/print_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -295,6 +296,22 @@ client_get_request_handler(struct _cef_client_t* self) {
   return CefRequestHandlerCppToC::Wrap(_retval);
 }
 
+struct _cef_media_handler_t* CEF_CALLBACK
+client_get_media_handler(struct _cef_client_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return NULL;
+
+  // Execute
+  CefRefPtr<CefMediaHandler> _retval =
+      CefClientCppToC::Get(self)->GetMediaHandler();
+
+  // Return type: refptr_same
+  return CefMediaHandlerCppToC::Wrap(_retval);
+}
+
 struct _cef_permission_request_t* CEF_CALLBACK
 client_get_permission_request(struct _cef_client_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -402,6 +419,7 @@ CefClientCppToC::CefClientCppToC() {
   GetStruct()->get_print_handler = client_get_print_handler;
   GetStruct()->get_render_handler = client_get_render_handler;
   GetStruct()->get_request_handler = client_get_request_handler;
+  GetStruct()->get_media_handler = client_get_media_handler;
   GetStruct()->get_permission_request = client_get_permission_request;
   GetStruct()->on_process_message_received = client_on_process_message_received;
   GetStruct()->notify_java_script_result = client_notify_java_script_result;

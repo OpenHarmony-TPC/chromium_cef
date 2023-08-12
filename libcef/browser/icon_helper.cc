@@ -7,12 +7,17 @@
 
 #include "include/cef_display_handler.h"
 
+#include "base/hash/hash.h"
 #include "base/logging.h"
 #include "components/favicon_base/select_favicon_frames.h"
 #include "content/public/browser/favicon_status.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/blink/public/mojom/favicon/favicon_url.mojom.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "content/public/browser/navigation_handle.h"
+#endif
 
 namespace {
 
@@ -69,7 +74,8 @@ void IconHelper::OnUpdateFaviconURL(
     return;
   }
   for (const auto& candidate : candidates) {
-    if (!candidate->icon_url.is_valid())
+    if (!candidate->icon_url.is_valid() ||
+        CheckFailedFaviconUrl(candidate->icon_url))
       continue;
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
@@ -115,12 +121,20 @@ void IconHelper::DownloadFaviconCallback(
     const std::vector<SkBitmap>& bitmaps,
     const std::vector<gfx::Size>& original_bitmap_sizes) {
   if (http_status_code == 404) {
+    InsertFailedFaviconUrl(image_url);
     return;
   }
 
   if (bitmaps.size() == 0) {
     return;
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (ShouldAbort()) {
+    return;
+  }
+#endif
+
   std::vector<size_t> best_indices;
   SelectFaviconFrameIndices(original_bitmap_sizes,
                             std::vector<int>(1U, LARGEST_ICON_SIZE),
@@ -149,7 +163,7 @@ void IconHelper::DownloadFaviconCallback(
 
   if (web_contents_) {
     content::NavigationEntry* entry =
-      web_contents_->GetController().GetLastCommittedEntry();
+        web_contents_->GetController().GetLastCommittedEntry();
     if (entry) {
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
@@ -187,3 +201,55 @@ void IconHelper::OnReceivedIconUrl(const CefString& image_url,
   handler_->OnReceivedIconUrl(image_url, data, width, height, color_type,
                               alpha_type);
 }
+
+void IconHelper::InsertFailedFaviconUrl(const GURL& icon_url) {
+  size_t url_hash = base::FastHash(icon_url.spec());
+  failed_favicon_urls_set_.insert(url_hash);
+}
+
+bool IconHelper::CheckFailedFaviconUrl(const GURL& icon_url) {
+  size_t url_hash = base::FastHash(icon_url.spec());
+  return failed_favicon_urls_set_.find(url_hash) !=
+         failed_favicon_urls_set_.end();
+}
+
+void IconHelper::ClearFailedFaviconUrlSets(
+    content::NavigationHandle* navigation) {
+  if (navigation && navigation->IsInPrimaryMainFrame() &&
+      navigation->GetReloadType() == content::ReloadType::BYPASSING_CACHE) {
+    failed_favicon_urls_set_.clear();
+  }
+}
+
+#if BUILDFLAG(IS_OHOS)
+// should abort fetching favicon or not.
+bool IconHelper::ShouldAbort() {
+  if (!web_contents_) {
+    return true;
+  }
+
+  GURL page_url = web_contents_->GetURL();
+  if (!document_on_load_completed_) {
+    LOG(INFO) << "should abort fetching favicon, document load not completed,"
+              << " page_url: " << page_url;
+    return true;
+  }
+
+  if (last_page_url_ != web_contents_->GetURL()) {
+    LOG(INFO) << "should abort fetching favicon, page urls not equal,"
+              << " last_page_url_:" << last_page_url_
+              << ", page_url:" << page_url;
+    return true;
+  }
+
+  return false;
+}
+
+void IconHelper::SetMainFrameDocumentOnLoadCompleted(bool complete) {
+  document_on_load_completed_ = complete;
+}
+
+void IconHelper::SetLastPageUrl(const GURL& url) {
+  last_page_url_ = url;
+}
+#endif

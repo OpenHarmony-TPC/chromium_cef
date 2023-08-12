@@ -37,6 +37,7 @@
 #include "base/command_line.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "content/browser/gpu/compositor_util.h"
+#include "content/browser/media/session/media_session_impl.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
 #include "content/public/browser/desktop_media_id.h"
 #include "content/public/browser/file_select_listener.h"
@@ -60,6 +61,12 @@
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "base/logging.h"
+#include "content/browser/ohos/date_time_chooser_ohos.h"
+#include "libcef/browser/permission/alloy_access_request.h"
+#endif
 
 using content::KeyboardEventProcessingResult;
 
@@ -136,6 +143,24 @@ class CefWidgetHostInterceptor
 
 static constexpr base::TimeDelta kRecentlyAudibleTimeout = base::Seconds(2);
 
+#if BUILDFLAG(IS_OHOS)
+class CefDateTimeChooserCallbackImpl : public CefDateTimeChooserCallback {
+ public:
+  explicit CefDateTimeChooserCallbackImpl(
+    content::DateTimeChooserOHOS* date_time_chooser)
+      : date_time_chooser_(date_time_chooser){}
+
+  void Continue(bool success, double value) override {
+    if (date_time_chooser_) {
+      date_time_chooser_->NotifyResult(success, value);
+    }
+  }
+
+ private:
+  content::DateTimeChooserOHOS* date_time_chooser_ = nullptr;
+  IMPLEMENT_REFCOUNTING(CefDateTimeChooserCallbackImpl);
+};
+#endif
 }  // namespace
 
 // AlloyBrowserHostImpl static methods.
@@ -334,7 +359,7 @@ void AlloyBrowserHostImpl::CloseBrowser(bool force_close) {
 #if BUILDFLAG(IS_OHOS)
       // In cef_life_span_handler.h file show DoClose step.
       // Step 1 to Step 3 is over.
-      // This will replace Step 4 : User approves the close. Beause both in 
+      // This will replace Step 4 : User approves the close. Beause both in
       // Android and OH close will not be blocked by beforeunload event.
       CloseContents(contents);
 #endif
@@ -1130,6 +1155,24 @@ bool AlloyBrowserHostImpl::IsAudioMuted() {
   return web_contents()->IsAudioMuted();
 }
 
+void AlloyBrowserHostImpl::SetAudioResumeInterval(int resumeInterval) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
+  if (!mediaSession) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
+    return;
+  }
+  mediaSession->audioResumeInterval_ = resumeInterval;
+}
+
+void AlloyBrowserHostImpl::SetAudioExclusive(bool audioExclusive) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
+  if (!mediaSession) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioExclusive get mediaSession failed.";
+    return;
+  }
+  mediaSession->audioExclusive_ = audioExclusive;
+}
+
 // content::WebContentsDelegate methods.
 // -----------------------------------------------------------------------------
 
@@ -1292,6 +1335,9 @@ void AlloyBrowserHostImpl::SetBackgroundColor(int color) {
 
   base_background_color_ = color;
   OnWebPreferencesChanged();
+#if BUILDFLAG(IS_OHOS)
+  UpdateBackgroundColor(color);
+#endif
 }
 
 void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
@@ -1498,9 +1544,29 @@ void AlloyBrowserHostImpl::RequestMediaAccessPermission(
        blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE);
   bool webcam_requested = (request.video_type ==
                            blink::mojom::MediaStreamType::DEVICE_VIDEO_CAPTURE);
+#if BUILDFLAG(IS_OHOS)
+  bool screen_requested =
+      (request.video_type ==
+       blink::mojom::MediaStreamType::DISPLAY_VIDEO_CAPTURE);
+  LOG(INFO) << "RequestMediaAccessPermission screen_requested: " << screen_requested;
+  AlloyPermissionRequestHandler* permission_handler = GetPermissionRequestHandler();
+  if (!permission_handler) {
+    // Cancel the request.
+    std::move(callback).Run(
+        devices, blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
+        std::unique_ptr<content::MediaStreamUI>());
+    return;
+  }
+  if (!screen_requested && (microphone_requested || webcam_requested)) {
+    permission_handler->SendRequest(new AlloyMediaAccessRequest(request, std::move(callback)));
+  } else {
+    permission_handler->SendScreenCaptureRequest(new AlloyScreenCaptureAccessRequest(request, std::move(callback)));
+  }
+#else
   bool screen_requested =
       (request.video_type ==
        blink::mojom::MediaStreamType::GUM_DESKTOP_VIDEO_CAPTURE);
+
   if (microphone_requested || webcam_requested || screen_requested) {
     // Pick the desired device or fall back to the first available of the
     // given type.
@@ -1509,6 +1575,8 @@ void AlloyBrowserHostImpl::RequestMediaAccessPermission(
           request.requested_audio_device_id, true, false, &devices);
     }
     if (webcam_requested) {
+      LOG(INFO) << "RequestMediaAccessPermission requested_video_device_id: " <<
+        request.requested_video_device_id;
       CefMediaCaptureDevicesDispatcher::GetInstance()->GetRequestedDevice(
           request.requested_video_device_id, false, true, &devices);
     }
@@ -1530,6 +1598,7 @@ void AlloyBrowserHostImpl::RequestMediaAccessPermission(
 
   std::move(callback).Run(devices, blink::mojom::MediaStreamRequestResult::OK,
                           std::unique_ptr<content::MediaStreamUI>());
+#endif // BUILDFLAG(IS_OHOS)
 }
 
 bool AlloyBrowserHostImpl::CheckMediaAccessPermission(
@@ -1625,6 +1694,13 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
 }
 
 void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
+#if BUILDFLAG(IS_OHOS)
+  LOG(INFO) << "OnAudioStateChanged: " << audible;
+  if (client_.get() && client_->GetMediaHandler().get()) {
+    client_->GetMediaHandler()->OnAudioStateChanged(this, audible);
+  }
+#endif  // BUILDFLAG(IS_OHOS)
+
   if (audible) {
     if (recently_audible_timer_)
       recently_audible_timer_->Stop();
@@ -1808,3 +1884,66 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
     }
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(
+                      &AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw,
+                      this, should));
+    return;
+  }
+
+  if (platform_delegate_)
+    platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
+}
+
+void AlloyBrowserHostImpl::OpenDateTimeChooser() {
+  content::DateTimeChooserOHOS* date_time_chooser =
+    content::DateTimeChooserOHOS::FromWebContents(web_contents());
+  if (date_time_chooser && client_) {
+    if (auto handler = client_->GetDialogHandler()) {
+      blink::mojom::DateTimeDialogValuePtr& date_time_dialog_ptr =
+         date_time_chooser->GetDialogValue();
+      if (!date_time_dialog_ptr) {
+        LOG(ERROR) << "OpenDateTime chooser failed";
+        date_time_chooser->NotifyResult(false, 0);
+        return;
+      }
+      CefDateTimeChooser chooser(
+        static_cast<cef_text_input_type_t>(date_time_dialog_ptr->dialog_type),
+        date_time_dialog_ptr->dialog_value,
+        date_time_dialog_ptr->minimum, date_time_dialog_ptr->maximum,
+        date_time_dialog_ptr->step);
+      CefRefPtr<CefDateTimeChooserCallback> callback =
+        new CefDateTimeChooserCallbackImpl(date_time_chooser);
+      std::vector<CefDateTimeSuggestion> suggestions;
+      for (size_t index = 0; index < date_time_dialog_ptr->suggestions.size();
+          index++) {
+        CefDateTimeSuggestion sug;
+        CefString label;
+        CefString localized_value;
+        label.FromString16(date_time_dialog_ptr->suggestions[index]->label);
+        localized_value.FromString16(
+          date_time_dialog_ptr->suggestions[index]->localized_value);
+        sug.value = date_time_dialog_ptr->suggestions[index]->value;
+        cef_string_set(label.c_str(), label.length(), &(sug.label), true);
+        cef_string_set(localized_value.c_str(), localized_value.length(),
+          &(sug.localized_value), true);
+        suggestions.push_back(sug);
+      }
+      handler->OnDateTimeChooserPopup(this, chooser,
+        suggestions, callback);
+    }
+  }
+}
+
+void AlloyBrowserHostImpl::CloseDateTimeChooser() {
+  if (client_) {
+    if (auto handler = client_->GetDialogHandler()) {
+      handler->OnDateTimeChooserClose();
+    }
+  }
+}
+#endif

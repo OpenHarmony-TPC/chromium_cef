@@ -129,16 +129,13 @@ bool CefMenuManager::IsShowingContextMenu() {
 bool CefMenuManager::IsCommandIdEnabled(int command_id,
     content::ContextMenuParams& params) const {
   bool editable = params.is_editable;
-  bool readable = params.input_field_type != blink::mojom::ContextMenuDataInputFieldType::kPassword;
-  bool has_selection = !params.selection_text.empty();
-  bool has_image_contents = params.has_image_contents;
-
   switch (command_id) {
     case CM_EDITFLAG_CAN_CUT:
+      return !!(params.edit_flags & CM_EDITFLAG_CAN_CUT);
     case CM_EDITFLAG_CAN_DELETE:
-      return editable && readable && has_selection;
+      return !!(params.edit_flags & CM_EDITFLAG_CAN_DELETE);
     case CM_EDITFLAG_CAN_COPY:
-      return readable && (has_selection || has_image_contents);
+      return !!(params.edit_flags & CM_EDITFLAG_CAN_COPY);
     case CM_EDITFLAG_CAN_PASTE: {
       std::u16string result;
       bool can_paste = false;
@@ -156,7 +153,7 @@ bool CefMenuManager::IsCommandIdEnabled(int command_id,
       return editable && can_paste;
     }
     case CM_EDITFLAG_CAN_SELECT_ALL:
-      return editable || readable;
+      return !!(params.edit_flags & CM_EDITFLAG_CAN_SELECT_ALL);
     default:
       return false;
   }

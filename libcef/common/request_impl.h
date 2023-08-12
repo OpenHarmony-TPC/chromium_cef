@@ -81,7 +81,7 @@ class CefRequestImpl : public CefRequest {
   ResourceType GetResourceType() override;
   TransitionType GetTransitionType() override;
   uint64 GetIdentifier() override;
-
+  bool IsMainFrame() override;
   // Populate this object from the ResourceRequest object.
   void Set(const network::ResourceRequest* request, uint64 identifier);
 
@@ -128,6 +128,7 @@ class CefRequestImpl : public CefRequest {
   static cef_referrer_policy_t BlinkReferrerPolicyToNetReferrerPolicy(
       network::mojom::ReferrerPolicy blink_policy);
 
+  void SetDestination(network::mojom::RequestDestination destination);
  private:
   // Mark values as changed. Must be called before the new values are assigned.
   void Changed(uint8_t changes);
@@ -149,6 +150,7 @@ class CefRequestImpl : public CefRequest {
   ResourceType resource_type_;
   TransitionType transition_type_;
   uint64 identifier_;
+  network::mojom::RequestDestination destination_;
 
   // The below members are used by CefURLRequest.
   int flags_;

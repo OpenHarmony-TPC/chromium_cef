@@ -43,10 +43,10 @@ class CefBrowserFrame
   void UpdateDraggableRegions(
       absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
-  void OnUpdateHitData(cef::mojom::HitDataParamsPtr params) override;
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params) override;
   void OnGetImageForContextNodeNull() override;
+  void OnScriptedPrint(bool user_initiated) override;
 
   // FrameServiceBase methods:
   bool ShouldCloseOnFinishNavigation() const override { return false; }

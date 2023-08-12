@@ -3,8 +3,6 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/browser_host_base.h"
-
 #include <tuple>
 
 #include "cef/include/cef_parser.h"
@@ -23,18 +21,17 @@
 
 #include "base/json/json_writer.h"
 #include "base/logging.h"
+#include "chrome/browser/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_factory.h"
 #include "chrome/browser/spellchecker/spellcheck_service.h"
 #include "components/embedder_support/user_agent_utils.h"
 #include "components/favicon/core/favicon_url.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_handle.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
 #include "components/spellcheck/common/spellcheck_features.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/download_manager.h"
 #include "content/public/browser/download_request_utils.h"
-#if BUILDFLAG(IS_OHOS)
-#include "content/public/browser/message_port_provider.h"
-#include "third_party/blink/public/common/messaging/web_message_port.h"
-#endif
 #include "content/public/browser/navigation_entry.h"
 #include "ui/gfx/image/image_skia.h"
 #include "ui/gl/nweb_native_window_tracker.h"
@@ -46,12 +43,25 @@
 #include "content/browser/web_contents/web_contents_impl.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include <chrono>
+#include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/guid.h"
+#include "base/rand_util.h"
 #include "base/strings/string_number_conversions.h"
 #include "chrome/browser/browser_process.h"
+#include "components/download/public/common/download_danger_type.h"
+#include "components/download/public/common/download_file.h"
+#include "components/download/public/common/download_item_impl.h"
+#include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
-#include "libcef/browser/navigation_state_serializer.h"
+#include "libcef/browser/browser_host_base.h"
+#include "libcef/browser/browser_util.h"
 #include "libcef/browser/javascript/oh_javascript_injector.h"
+#include "libcef/browser/navigation_state_serializer.h"
+#include "libcef/browser/received_slice_helper.h"
+#include "services/network/public/cpp/resource_request_body.h"
+#include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
 #endif
 
@@ -60,6 +70,13 @@
 #endif
 
 namespace {
+
+#if BUILDFLAG(IS_OHOS)
+const char kNWebId[] = "nweb_id";
+static uint64_t DEFAULT_ZOOM_TIME_INTERNAL = 250;
+static float DEFAULT_MIN_ZOOM_FACTOR = 0.01f;
+static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
+#endif
 
 // Associates a CefBrowserHostBase instance with a WebContents. This object will
 // be deleted automatically when the WebContents is destroyed.
@@ -304,6 +321,118 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
   manager->DownloadUrl(std::move(params));
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::ResumeDownload(
+    const CefString& url,
+    const CefString& full_path,
+    int64 received_bytes,
+    int64 total_bytes,
+    const CefString& etag,
+    const CefString& mime_type,
+    const CefString& last_modified,
+    const CefString& received_slices_string) {
+  LOG(INFO) << "CefBrowserHostBase::ResumeDownload";
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefBrowserHostBase::ResumeDownload, this, url,
+                       full_path, received_bytes, total_bytes, etag, mime_type,
+                       last_modified, received_slices_string));
+    return;
+  }
+
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid())
+    return;
+
+  auto web_contents = GetWebContents();
+  if (!web_contents)
+    return;
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    return;
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager)
+    return;
+  base::FilePath file_full_path = base::FilePath::FromUTF8Unsafe(
+      full_path.ToString());  // FILE_PATH_LITERAL()
+
+  std::vector<download::DownloadItem::ReceivedSlice> received_slices =
+      received_slice_helper::FromString(received_slices_string.ToString());
+  manager->GetNextId(base::BindOnce(
+      &CefBrowserHostBase::ResumeDownloadWithId, weak_ptr_factory_.GetWeakPtr(),
+      std::move(gurl), std::move(file_full_path), received_bytes, total_bytes,
+      etag, mime_type, last_modified, received_slices));
+}
+
+void CefBrowserHostBase::ResumeDownloadWithId(
+    const GURL& gurl,
+    const base::FilePath& full_path,
+    int64 received_bytes,
+    int64 total_bytes,
+    const std::string& etag,
+    const std::string& mime_type,
+    const std::string& last_modified,
+    std::vector<download::DownloadItem::ReceivedSlice> received_slices,
+    uint32_t next_id) {
+  LOG(INFO) << "CefBrowserHostBase::ResumeDownloadWithId url:" << gurl.spec();
+  auto web_contents = GetWebContents();
+  if (!web_contents)
+    return;
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    return;
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager)
+    return;
+
+  std::vector<GURL> url_chain;
+  url_chain.push_back(gurl);
+  auto download_item = manager->CreateDownloadItem(
+      base::GenerateGUID(),                               /*guid*/
+      next_id,                                            /*id*/
+      full_path,                                          /*current_path*/
+      full_path,                                          /*target_path*/
+      url_chain,                                          /*url_chain*/
+      GURL(),                                             /*referrer_url*/
+      GURL(),                                             /*site_url*/
+      GURL(),                                             /*tab_url*/
+      GURL(),                                             /*tab_referrer_url*/
+      url::Origin(),                                      /*request_initiator*/
+      mime_type,                                          /*mime_type*/
+      mime_type,                                          /*original_mime_type*/
+      base::Time::Now(),                                  /*start_time*/
+      base::Time::Now(),                                  /*end_time*/
+      etag,                                               /*etag*/
+      last_modified,                                      /*last_modified*/
+      received_bytes,                                     /*received_bytes*/
+      total_bytes,                                        /*total_bytes*/
+      std::string(),                                      /*hash*/
+      download::DownloadItem::INTERRUPTED,                /*state*/
+      download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS,       /*danger_type*/
+      download::DOWNLOAD_INTERRUPT_REASON_NETWORK_FAILED, /*interrupt_reason*/
+      false,                                              /*opened*/
+      base::Time(),                                       /*last_access_time*/
+      false,                                              /*transient*/
+      received_slices,                                    /*received_slices*/
+      download::DownloadItemRerouteInfo()                 /*reroute_info*/
+  );
+  if (download_item) {
+    auto browser = GetBrowser();
+    if (browser) {
+      int nweb_id = browser->GetNWebId();
+      download_item->SetUserData(kNWebId, std::make_unique<download::DownloadItemImpl::NWebIdData>(nweb_id));
+      download_item->Resume(true /*is_user_resume*/);
+      return;
+    }
+  }
+}
+#endif  // IS_OHOS
+
 void CefBrowserHostBase::DownloadImage(
     const CefString& image_url,
     bool is_favicon,
@@ -503,7 +632,8 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   //    browser_settings.file_access_from_file_urls;
   /* ohos webview add*/
   settings_.force_dark_mode_enabled = browser_settings.force_dark_mode_enabled;
-  settings_.dark_prefer_color_scheme_enabled = browser_settings.dark_prefer_color_scheme_enabled;
+  settings_.dark_prefer_color_scheme_enabled =
+      browser_settings.dark_prefer_color_scheme_enabled;
   settings_.javascript_can_open_windows_automatically =
       browser_settings.javascript_can_open_windows_automatically;
   settings_.loads_images_automatically =
@@ -526,8 +656,13 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.user_gesture_required = browser_settings.user_gesture_required;
   settings_.pinch_smooth_mode = browser_settings.pinch_smooth_mode;
 #if BUILDFLAG(IS_OHOS)
-  settings_.hide_vertical_scrollbars = browser_settings.hide_vertical_scrollbars;
-  settings_.hide_horizontal_scrollbars = browser_settings.hide_horizontal_scrollbars;
+  settings_.hide_vertical_scrollbars =
+      browser_settings.hide_vertical_scrollbars;
+  settings_.hide_horizontal_scrollbars =
+      browser_settings.hide_horizontal_scrollbars;
+  settings_.contextmenu_customization_enabled =
+      browser_settings.contextmenu_customization_enabled;
+  settings_.scrollbar_color = browser_settings.scrollbar_color;
 #endif
 }
 
@@ -659,6 +794,15 @@ void CefBrowserHostBase::SendMouseClickEvent(const CefMouseEvent& event,
 
   if (platform_delegate_) {
     platform_delegate_->SendMouseClickEvent(event, type, mouseUp, clickCount);
+  }
+
+  if (mouseUp)
+    return;
+
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SendHitEvent(event.x, event.y, 0, 0);
   }
 }
 
@@ -1006,30 +1150,55 @@ void CefBrowserHostBase::ScrollPageUpDown(bool is_up,
   }
 }
 
-void CefBrowserHostBase::ScrollTo(float x,
-                                  float y) {
+void CefBrowserHostBase::ScrollTo(float x, float y) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->ScrollTo(x, y);
+    static_cast<CefFrameHostImpl*>(frame.get())->ScrollTo(x, y);
   }
 }
 
-void CefBrowserHostBase::ScrollBy(float delta_x,
-                                  float delta_y) {
+void CefBrowserHostBase::ScrollBy(float delta_x, float delta_y) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->ScrollBy(delta_x, delta_y);
+    static_cast<CefFrameHostImpl*>(frame.get())->ScrollBy(delta_x, delta_y);
   }
 }
 
-void CefBrowserHostBase::SlideScroll(float vx,
-                                     float vy) {
+void CefBrowserHostBase::SlideScroll(float vx, float vy) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())
-       ->SlideScroll(vx, vy);
+    static_cast<CefFrameHostImpl*>(frame.get())->SlideScroll(vx, vy);
+  }
+}
+
+uint64_t CefBrowserHostBase::GetCurrentTimestamp() {
+  auto now = std::chrono::system_clock::now();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             now.time_since_epoch())
+      .count();
+}
+
+void CefBrowserHostBase::ZoomBy(float delta, float width, float height) {
+  if (delta < DEFAULT_MIN_ZOOM_FACTOR || delta > DEFAULT_MAX_ZOOM_FACTOR) {
+    LOG(ERROR) << "invalid zommby delta";
+    return;
+  }
+  uint64_t cur_zoom_time = GetCurrentTimestamp();
+  if (cur_zoom_time - last_zoom_time_ <= DEFAULT_ZOOM_TIME_INTERNAL) {
+    LOG(ERROR) << "zoomby ignore";
+    return;
+  }
+  last_zoom_time_ = cur_zoom_time;
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->ZoomBy(delta, width, height);
+  }
+}
+
+void CefBrowserHostBase::GetHitData(int& type, CefString& extra_data) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->GetHitData(type, extra_data);
   }
 }
 
@@ -1042,12 +1211,14 @@ CefRefPtr<CefBinaryValue> CefBrowserHostBase::GetWebState() {
   return NavigationStateSerializer::WriteNavigationStatus(*web_contents);
 }
 
-bool CefBrowserHostBase::RestoreWebState(const CefRefPtr<CefBinaryValue> state) {
+bool CefBrowserHostBase::RestoreWebState(
+    const CefRefPtr<CefBinaryValue> state) {
   auto web_contents = GetWebContents();
   if (!web_contents || !state) {
     return false;
   }
-  return NavigationStateSerializer::RestoreNavigationStatus(*web_contents, state);
+  return NavigationStateSerializer::RestoreNavigationStatus(*web_contents,
+                                                            state);
 }
 #endif  // IS_OHOS
 
@@ -1372,12 +1543,6 @@ void CefBrowserHostBase::OnDidFinishLoad(CefRefPtr<CefFrameHostImpl> frame,
   contents_delegate_->OnLoadEnd(frame, validated_url, http_status_code);
 }
 
-void CefBrowserHostBase::OnUpdateHitData(const int type,
-                                         const CefString extra_data) {
-  cef_hit_data_.type = type;
-  cef_hit_data_.extra_data = extra_data;
-}
-
 void CefBrowserHostBase::ViewText(const std::string& text) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
@@ -1506,18 +1671,27 @@ CefString CefBrowserHostBase::Title() {
 void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
   auto web_contents = GetWebContents();
   if (web_contents) {
-    std::vector<blink::WebMessagePort> portArr;
-    web_contents->CreateWebMessagePorts(portArr);
-    if (portArr.size() != 2) {
-      LOG(ERROR) << "CreateWebMessagePorts size wrong";
-      return;
-    }
-    uint64_t pointer0 = reinterpret_cast<uint64_t>(&portArr[0]);
-    uint64_t pointer1 = reinterpret_cast<uint64_t>(&portArr[1]);
-    portMap_[std::make_pair(pointer0, pointer1)] =
-        std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
-    ports.emplace_back(std::to_string(pointer0));
-    ports.emplace_back(std::to_string(pointer1));
+    int retry_times = 0;
+    constexpr int MAX_RETRY_TIMES = 5;
+    do {
+      std::vector<blink::WebMessagePort> portArr;
+      web_contents->CreateWebMessagePorts(portArr);
+      if (portArr.size() != 2) {
+        LOG(ERROR) << "CreateWebMessagePorts size wrong";
+        return;
+      }
+      uint64_t pointer0 = base::RandUint64();
+      uint64_t pointer1 = base::RandUint64();
+      auto iter = portMap_.find(std::make_pair(pointer0, pointer1));
+      if (iter == portMap_.end()) {
+        portMap_[std::make_pair(pointer0, pointer1)] =
+            std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
+        ports.emplace_back(std::to_string(pointer0));
+        ports.emplace_back(std::to_string(pointer1));
+        return;
+      }
+      retry_times++;
+    } while (retry_times < MAX_RETRY_TIMES);
   } else {
     LOG(ERROR) << "CreateWebMessagePorts web_contents its null";
   }
@@ -1612,6 +1786,117 @@ void CefBrowserHostBase::ClosePort(CefString& portHandle) {
   LOG(INFO) << "ClosePort end";
 }
 
+bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
+    CefRefPtr<CefValue>& original,
+    blink::WebMessagePort::Message& message) {
+  LOG(INFO) << "ConvertCefValueToBlinkMsg type:" << (int)original->GetType();
+  switch (original->GetType()) {
+    case VTYPE_STRING: {
+      message = blink::WebMessagePort::Message(
+          base::UTF8ToUTF16(original->GetString().ToString()));
+      message.type_ = blink::WebMessagePort::Message::MessageType::STRING;
+      break;
+    }
+    case VTYPE_BINARY: {
+      CefRefPtr<CefBinaryValue> binValue = original->GetBinary();
+      size_t len = binValue->GetSize();
+      std::vector<uint8_t> arr(len);
+      binValue->GetData(&arr[0], len, 0);
+      message = blink::WebMessagePort::Message(std::move(arr));
+      message.type_ = blink::WebMessagePort::Message::MessageType::BINARY;
+      break;
+    }
+    case VTYPE_BOOL: {
+      message.bool_value_ = original->GetBool();
+      message.type_ = blink::WebMessagePort::Message::MessageType::BOOLEAN;
+      break;
+    }
+    case VTYPE_INT: {
+      message.int64_value_ = original->GetInt();
+      message.type_ = blink::WebMessagePort::Message::MessageType::INTEGER;
+      break;
+    }
+    case VTYPE_DOUBLE: {
+      message.double_value_ = original->GetDouble();
+      message.type_ = blink::WebMessagePort::Message::MessageType::DOUBLE;
+      break;
+    }
+    case VTYPE_LIST: {
+      CefRefPtr<CefListValue> value = original->GetList();
+      CefValueType type = value->GetType(0);
+      size_t len = value->GetSize();
+      switch (type) {
+        case VTYPE_STRING: {
+          std::vector<std::u16string> msg_arr;
+          for (size_t i = 0; i < len; i++) {
+            msg_arr.push_back(
+                base::UTF8ToUTF16(value->GetString(i).ToString()));
+          }
+          message.string_arr_ = std::move(msg_arr);
+          message.type_ =
+              blink::WebMessagePort::Message::MessageType::STRINGARRAY;
+          break;
+        }
+        case VTYPE_BOOL: {
+          std::vector<bool> msg_arr;
+          for (size_t i = 0; i < len; i++) {
+            msg_arr.push_back(value->GetBool(i));
+          }
+          message.bool_arr_ = std::move(msg_arr);
+          message.type_ =
+              blink::WebMessagePort::Message::MessageType::BOOLEANARRAY;
+          break;
+        }
+        case VTYPE_INT: {
+          std::vector<int64_t> msg_arr;
+          for (size_t i = 0; i < len; i++) {
+            msg_arr.push_back(value->GetInt(i));
+          }
+          message.int64_arr_ = std::move(msg_arr);
+          message.type_ =
+              blink::WebMessagePort::Message::MessageType::INT64ARRAY;
+          break;
+        }
+        case VTYPE_DOUBLE: {
+          std::vector<double> msg_arr;
+          for (size_t i = 0; i < len; i++) {
+            msg_arr.push_back(value->GetDouble(i));
+          }
+          message.double_arr_ = std::move(msg_arr);
+          message.type_ =
+              blink::WebMessagePort::Message::MessageType::DOUBLEARRAY;
+          break;
+        }
+        default:
+          LOG(ERROR) << "Only support string, bool, int, double";
+          break;
+      }
+      break;
+    }
+    case VTYPE_DICTIONARY: {
+      CefRefPtr<CefDictionaryValue> dict = original->GetDictionary();
+      std::u16string err_name = u"";
+      std::u16string err_msg = u"";
+      if (dict->HasKey("Error.name")) {
+        err_name = base::UTF8ToUTF16(dict->GetString("Error.name").ToString());
+      }
+      if (dict->HasKey("Error.message")) {
+        err_msg =
+            base::UTF8ToUTF16(dict->GetString("Error.message").ToString());
+      }
+      message.err_name_ = std::move(err_name);
+      message.err_msg_ = std::move(err_msg);
+      message.type_ = blink::WebMessagePort::Message::MessageType::ERROR;
+      break;
+    }
+    default: {
+      LOG(ERROR) << "Not support type:" << (int)original->GetType();
+      break;
+    }
+  }
+  return true;
+}
+
 void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
                                          CefRefPtr<CefValue> data) {
   auto web_contents = GetWebContents();
@@ -1620,18 +1905,11 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
     return;
   }
 
+  // construct blink message
   blink::WebMessagePort::Message message;
-  if (data->GetType() == VTYPE_STRING) {
-    message = blink::WebMessagePort::Message(base::UTF8ToUTF16(data->GetString().ToString()));
-  } else if (data->GetType() == VTYPE_BINARY) {
-    CefRefPtr<CefBinaryValue> binValue = data->GetBinary();
-    size_t len = binValue->GetSize();
-    std::vector<uint8_t> arr(len);
-    binValue->GetData(&arr[0], len, 0);
-    message = blink::WebMessagePort::Message(std::move(arr));
-  } else {
-    LOG(ERROR) << "CefBrowserHostBase::PostPortMessage not support type";
-	return;
+  if (!ConvertCefValueToBlinkMsg(data, message)) {
+    LOG(ERROR) << "Post meessage: convert cef value to blink message failed";
+    return;
   }
 
   // find the WebMessagePort in map
@@ -1731,21 +2009,86 @@ void WebMessageReceiverImpl::SetOnMessageCallback(
   callback_ = callback;
 }
 
+void WebMessageReceiverImpl::ConvertBlinkMsgToCefValue(
+    blink::WebMessagePort::Message& message,
+    CefRefPtr<CefValue> data) {
+  switch (message.type_) {
+    case blink::WebMessagePort::Message::MessageType::STRING: {
+      data->SetString(base::UTF16ToUTF8(message.data));
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::BINARY: {
+      std::vector<uint8_t> vecBinary = message.array_buffer;
+      CefRefPtr<CefBinaryValue> value =
+          CefBinaryValue::Create(vecBinary.data(), vecBinary.size());
+      data->SetBinary(value);
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::DOUBLE: {
+      data->SetDouble((message.double_value_));
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::BOOLEAN: {
+      data->SetBool((message.bool_value_));
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::INTEGER: {
+      data->SetInt((message.int64_value_));
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::STRINGARRAY: {
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      for (size_t i = 0; i < message.string_arr_.size(); i++) {
+        value->SetString(i, base::UTF16ToUTF8(message.string_arr_[i]));
+      }
+      data->SetList(value);
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::BOOLEANARRAY: {
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      for (size_t i = 0; i < message.bool_arr_.size(); i++) {
+        value->SetBool(i, message.bool_arr_[i]);
+      }
+      data->SetList(value);
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::DOUBLEARRAY: {
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      for (size_t i = 0; i < message.double_arr_.size(); i++) {
+        value->SetDouble(i, message.double_arr_[i]);
+      }
+      data->SetList(value);
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::INT64ARRAY: {
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      for (size_t i = 0; i < message.int64_arr_.size(); i++) {
+        value->SetInt(i, message.int64_arr_[i]);
+      }
+      data->SetList(value);
+      break;
+    }
+    case blink::WebMessagePort::Message::MessageType::ERROR: {
+      std::u16string err_name = message.err_name_;
+      std::u16string err_msg = message.err_msg_;
+      CefRefPtr<CefDictionaryValue> dict = CefDictionaryValue::Create();
+      dict->SetString("Error.name", err_name);
+      dict->SetString("Error.message", err_msg);
+      data->SetDictionary(dict);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 // this will receive message from html5
 bool WebMessageReceiverImpl::OnMessage(blink::WebMessagePort::Message message) {
   LOG(INFO) << "OnMessage start";
   // Pass the message on to the receiver.
   if (callback_) {
     CefRefPtr<CefValue> data = CefValue::Create();
-    if (!message.data.empty()) {
-      data->SetString(base::UTF16ToUTF8(message.data));
-    } else {
-      std::vector<uint8_t> vecBinary = message.array_buffer;
-      CefRefPtr<CefBinaryValue> value =
-        CefBinaryValue::Create(vecBinary.data(), vecBinary.size());
-      data->SetBinary(value);
-    }
-
+    ConvertBlinkMsgToCefValue(message, data);
     callback_->OnMessage(data);
   } else {
     LOG(ERROR) << "u should set callback to receive message";
@@ -1753,11 +2096,6 @@ bool WebMessageReceiverImpl::OnMessage(blink::WebMessagePort::Message message) {
   return true;
 }
 #endif
-
-void CefBrowserHostBase::GetHitData(int& type, CefString& extra_data) {
-  type = cef_hit_data_.type;
-  extra_data = cef_hit_data_.extra_data;
-}
 
 void CefBrowserHostBase::SetInitialScale(float scale) {
   auto frame = GetMainFrame();
@@ -1880,27 +2218,154 @@ void CefBrowserHostBase::LoadWithData(const CefString& data,
   }
 }
 
+// static
+bool ValidateResultType(base::Value::Type type) {
+  if (type == base::Value::Type::STRING || type == base::Value::Type::DOUBLE ||
+      type == base::Value::Type::INTEGER ||
+      type == base::Value::Type::BOOLEAN) {
+    return true;
+  }
+  return false;
+}
+
 void CefBrowserHostBase::ExecuteJavaScript(
     const CefString& code,
-    CefRefPtr<CefJavaScriptResultCallback> callback) {
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
   auto web_contents = GetWebContents();
   // enable inject javaScript
-  web_contents->GetMainFrame()->AllowInjectingJavaScript();
-  if (web_contents) {
+  LOG(INFO) << "ExecuteJavaScript with callback enter";
+  if (web_contents && web_contents->GetMainFrame()) {
     LOG(INFO) << "ExecuteJavaScript with callback";
-    web_contents->GetMainFrame()->ExecuteJavaScript(
-        code.ToString16(),
-        base::BindOnce(
-            [](CefRefPtr<CefJavaScriptResultCallback> callback,
-               base::Value result) {
-              LOG(INFO) << "javascript result callback enter";
-              std::string json;
-              base::JSONWriter::Write(result, &json);
-              if (callback != nullptr) {
-                callback->OnJavaScriptExeResult(json);
-              }
-            },
-            callback));
+    web_contents->GetMainFrame()->AllowInjectingJavaScript();
+    if (!extention) {
+      web_contents->GetMainFrame()->ExecuteJavaScript(
+          code.ToString16(),
+          base::BindOnce(
+              [](CefRefPtr<CefJavaScriptResultCallback> callback,
+                 base::Value result) {
+                LOG(INFO) << "javascript result callback enter";
+                std::string json;
+                base::JSONWriter::Write(result, &json);
+                if (callback != nullptr) {
+                  CefRefPtr<CefValue> data = CefValue::Create();
+                  data->SetString(json);
+                  callback->OnJavaScriptExeResult(data);
+                }
+              },
+              callback));
+    } else {
+      web_contents->GetMainFrame()->ExecuteJavaScript(
+          code.ToString16(),
+          base::BindOnce(
+              [](CefRefPtr<CefJavaScriptResultCallback> callback,
+                 base::Value result) {
+                LOG(INFO) << "javascript result callback enter, type:"
+                          << result.GetTypeName(result.type());
+                std::string json;
+                base::JSONWriter::Write(result, &json);
+                CefRefPtr<CefValue> data = CefValue::Create();
+                switch (result.type()) {
+                  case base::Value::Type::STRING: {
+                    data->SetString(json);
+                    break;
+                  }
+                  case base::Value::Type::DOUBLE: {
+                    data->SetDouble(result.GetDouble());
+                    break;
+                  }
+                  case base::Value::Type::INTEGER: {
+                    data->SetDouble(result.GetInt());
+                    break;
+                  }
+                  case base::Value::Type::BOOLEAN: {
+                    data->SetBool(result.GetBool());
+                    break;
+                  }
+                  case base::Value::Type::BINARY: {
+                    std::vector<uint8_t> vec = result.GetBlob();
+                    CefRefPtr<CefBinaryValue> value =
+                        CefBinaryValue::Create(vec.data(), vec.size());
+                    data->SetBinary(value);
+                    break;
+                  }
+                  case base::Value::Type::LIST: {
+                    int len = result.GetList().size();
+                    CefRefPtr<CefListValue> value = CefListValue::Create();
+                    base::Value::Type typeFirst = base::Value::Type::NONE;
+                    base::Value::Type typeCur = base::Value::Type::NONE;
+                    bool support = true;
+                    for (int i = 0; i < len; i++) {
+                      base::Value list_ele = std::move(result.GetList()[i]);
+                      typeCur = list_ele.type();
+                      if (!ValidateResultType(typeCur)) {
+                        data->SetString(
+                            "This type not support, only string/number/boolean "
+                            "is supported for array elements");
+                        support = false;
+                        break;
+                      }
+                      if (i == 0) {
+                        typeFirst = typeCur;
+                      }
+                      if (typeCur != typeFirst) {
+                        support = false;
+                        data->SetString(
+                            "This type not support, The elements in the array "
+                            "must be the same.");
+                        break;
+                      }
+                      switch (list_ele.type()) {
+                        case base::Value::Type::STRING: {
+                          CefString msgCef;
+                          msgCef.FromString(list_ele.GetString());
+                          value->SetString(i, msgCef);
+                          break;
+                        }
+                        case base::Value::Type::DOUBLE: {
+                          value->SetDouble(i, list_ele.GetDouble());
+                          break;
+                        }
+                        case base::Value::Type::INTEGER: {
+                          value->SetInt(i, list_ele.GetInt());
+                          break;
+                        }
+                        case base::Value::Type::BOOLEAN: {
+                          value->SetBool(i, list_ele.GetBool());
+                          break;
+                        }
+                        default: {
+                          LOG(ERROR) << "Not support type";
+                          support = false;
+                          data->SetString(
+                              "This type not support, only "
+                              "string/number/boolean is supported for array "
+                              "elements");
+                          break;
+                        }
+                      }
+                    }
+                    if (support) {
+                      data->SetList(value);
+                    }
+                    break;
+                  }
+                  default: {
+                    LOG(ERROR)
+                        << "base::Value not support type:" << result.type();
+                    data->SetString(
+                        "This type not support, only "
+                        "string/number/boolean/arraybuffer/array is supported");
+                    break;
+                  }
+                }
+
+                if (callback != nullptr) {
+                  callback->OnJavaScriptExeResult(data);
+                }
+              },
+              callback));
+    }
   }
 }
 
@@ -1956,7 +2421,6 @@ void CefBrowserHostBase::SetCacheMode(int flag) {
   cache_mode_ = flag;
 }
 
-
 bool CefBrowserHostBase::GetFileAccess() {
   base::AutoLock lock_scope(state_lock_);
   return file_access_;
@@ -2006,8 +2470,19 @@ bool CefBrowserHostBase::ShouldShowLoadingUI() {
   return false;
 }
 
+bool CefBrowserHostBase::ShouldShowFreeCopy() {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->ShouldShowFreeCopy();
+#else
+  return false;
+#endif
+}
+
 void CefBrowserHostBase::SetForceEnableZoom(bool forceEnableZoom) {
-#if defined (OHOS_NWEB_EX)
+#if defined(OHOS_NWEB_EX)
   if (!GetWebContents()) {
     return;
   }
@@ -2015,8 +2490,18 @@ void CefBrowserHostBase::SetForceEnableZoom(bool forceEnableZoom) {
 #endif
 }
 
+void CefBrowserHostBase::SelectAndCopy() {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  LOG(INFO) << "select and copy invoke";
+  GetWebContents()->SelectAndCopy();
+#endif
+}
+
 bool CefBrowserHostBase::GetForceEnableZoom() {
-#if defined (OHOS_NWEB_EX)
+#if defined(OHOS_NWEB_EX)
   if (!GetWebContents()) {
     return false;
   }
@@ -2025,4 +2510,53 @@ bool CefBrowserHostBase::GetForceEnableZoom() {
   return false;
 #endif
 }
+
+int CefBrowserHostBase::GetNWebId() {
+#if BUILDFLAG(IS_OHOS)
+  if (browser_info() && browser_info()->extra_info()) {
+    auto nweb_id_value = browser_info()->extra_info()->GetValue(kNWebId);
+    if (nweb_id_value) {
+      return nweb_id_value->GetInt();
+    }
+  }
+  return -1;
+#else
+  return -1;
 #endif
+}
+
+void CefBrowserHostBase::SetEnableBlankTargetPopupIntercept(
+    bool enableBlankTargetPopup) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->SetEnableBlankTargetPopupIntercept(enableBlankTargetPopup);
+#endif
+}
+#endif
+
+void CefBrowserHostBase::PrefetchPage(CefString& url,
+                                      CefString& additionalHttpHeaders) {
+#if BUILDFLAG(IS_OHOS)
+  if (!GetWebContents()) {
+    return;
+  }
+
+  prerender::NoStatePrefetchManager* no_state_prefetch_manager =
+      prerender::NoStatePrefetchManagerFactory::GetForBrowserContext(
+          GetWebContents()->GetBrowserContext());
+  if (!no_state_prefetch_manager) {
+    return;
+  }
+  content::SessionStorageNamespace* session_storage_namespace =
+      GetWebContents()->GetController().GetDefaultSessionStorageNamespace();
+  gfx::Size size = GetWebContents()->GetContainerBounds().size();
+
+  std::string prefetch_url = url;
+  std::string additional_http_headers = additionalHttpHeaders;
+  no_state_prefetch_manager->StartOhPrefetchingFromOmnibox(
+      GURL(prefetch_url), session_storage_namespace, size,
+      additional_http_headers);
+#endif
+}

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0cd351db644cd18b1cde6adf5355d2ceff949827$
+// $hash=da9f4bfe6e4d4a75f3f4ccc672777467bcf52691$
 //
 
 #include "libcef_dll/ctocpp/request_ctocpp.h"
@@ -411,6 +411,20 @@ NO_SANITIZE("cfi-icall") uint64 CefRequestCToCpp::GetIdentifier() {
 
   // Return type: simple
   return _retval;
+}
+
+NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::IsMainFrame() {
+  cef_request_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_main_frame))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_main_frame(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

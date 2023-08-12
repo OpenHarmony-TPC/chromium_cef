@@ -5,6 +5,7 @@
 
 #ifndef CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
+#include <string>
 #pragma once
 
 #include <map>
@@ -19,6 +20,7 @@
 #include "libcef/browser/osr/host_display_client_osr.h"
 #include "libcef/browser/osr/motion_event_osr.h"
 
+#include "base/containers/circular_deque.h"
 #include "base/memory/weak_ptr.h"
 #include "build/build_config.h"
 #include "cc/layers/deadline_policy.h"
@@ -180,6 +182,8 @@ class CefRenderWidgetHostViewOSR
       const cc::RenderFrameMetadata& metadata) override;
 #endif
 
+  void SetShouldFrameSubmissionBeforeDraw(bool should);
+
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
       const gfx::Range& range,
@@ -194,6 +198,12 @@ class CefRenderWidgetHostViewOSR
   void SelectionChanged(const std::u16string& text,
                         size_t offset,
                         const gfx::Range& range) override;
+  void SelectionBoundsChanged(const gfx::Rect& anchor_rect,
+                              base::i18n::TextDirection anchor_dir,
+                              const gfx::Rect& focus_rect,
+                              base::i18n::TextDirection focus_dir,
+                              const gfx::Rect& bounding_box,
+                              bool is_anchor_first) override;
   const viz::LocalSurfaceId& GetLocalSurfaceId() const override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
   viz::FrameSinkId GetRootFrameSinkId() override;
@@ -226,13 +236,21 @@ class CefRenderWidgetHostViewOSR
       bool did_update_state) override;
 
   void FocusedNodeChanged(bool is_editable_node,
-      const gfx::Rect& node_bounds_in_screen) override;
+                          const gfx::Rect& node_bounds_in_screen) override;
 
   // ui::GestureProviderClient implementation.
   void ProcessAckedTouchEvent(
       const content::TouchEventWithLatencyInfo& touch,
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
+  void DidOverscroll(const ui::DidOverscrollParams& params) override;
+
+#if BUILDFLAG(IS_OHOS)
+  void OnVsync();
+
+  void SendGestureEvent(const ui::GestureEventData& gesture);
+  std::u16string GetSelectedText() override;
+#endif
 
   bool InstallTransparency();
 
@@ -346,6 +364,10 @@ class CefRenderWidgetHostViewOSR
 
 #if BUILDFLAG(IS_OHOS)
   void OnRootLayerChanged();
+  void GestureEventAck(const blink::WebGestureEvent& event,
+                       blink::mojom::InputEventResultState ack_result) override;
+  void UpdateEditBounds();
+  std::pair<int, int> HandleCursorOffset();
 #endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
@@ -443,6 +465,19 @@ class CefRenderWidgetHostViewOSR
   std::set<CefRenderWidgetHostViewOSR*> guest_host_views_;
 #if BUILDFLAG(IS_OHOS)
   gfx::SizeF root_layer_size_;
+  double focus_rect_x_ = 0;
+  double focus_rect_y_ = 0;
+  double focus_rect_width_ = 0;
+  double focus_rect_height_ = 0;
+  int edit_bounds_x_ = 0;
+  int edit_bounds_y_ = 0;
+  int edit_bounds_width_ = 0;
+  int edit_bounds_height_ = 0;
+  bool should_wait_ = false;
+  bool is_select_text_ = false;
+  bool is_editable_node_ = false;
+  gfx::Size viewport_size_in_pixels_;
+  bool is_need_show_keyboard_ = false;
 #endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
@@ -487,6 +522,12 @@ class CefRenderWidgetHostViewOSR
   float page_scale_factor_ = 0.f;
 
   bool is_mouse_locked_ = false;
+
+#if BUILDFLAG(IS_OHOS)
+  base::circular_deque<ui::GestureEventData> gesture_event_queue_;
+
+  size_t gesture_update_count_ = 0;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_

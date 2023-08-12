@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c743a09408ec26e3af7b55f9b1040dd8fae208ae$
+// $hash=dc50f33de466fe9a75d59c0fbad0239c79edc44e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
@@ -198,6 +198,25 @@ CEF_EXPORT void cef_enable_highdpi_support();
 // This function should be called on the main application thread.
 ///
 CEF_EXPORT void cef_apply_http_dns();
+
+///
+// This function should be called on the main application thread.
+///
+CEF_EXPORT void cef_set_download_handler(
+    struct _cef_download_handler_t* download_handler);
+
+///
+// This function should be called on the main application thread.
+///
+CEF_EXPORT void cef_resume_download(const cef_string_t* guid,
+                                    const cef_string_t* url,
+                                    const cef_string_t* full_path,
+                                    int64 received_bytes,
+                                    int64 total_bytes,
+                                    const cef_string_t* etag,
+                                    const cef_string_t* mime_type,
+                                    const cef_string_t* last_modified,
+                                    const cef_string_t* received_slices_string);
 
 #ifdef __cplusplus
 }

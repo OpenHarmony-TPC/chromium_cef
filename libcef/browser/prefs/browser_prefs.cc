@@ -63,6 +63,8 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/ui_base_switches.h"
 
+#include "libcef/browser/predictors/predictor_database.h"
+
 #if BUILDFLAG(IS_WIN)
 #include "components/os_crypt/os_crypt.h"
 #endif
@@ -79,6 +81,11 @@
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 #include "chrome/browser/media/router/media_router_feature.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#include "components/prefs/segregated_pref_store.h"
 #endif
 
 namespace browser_prefs {
@@ -175,9 +182,22 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
         pref_path, std::unique_ptr<PrefFilter>(), sequenced_task_runner);
     factory.set_user_prefs(json_pref_store.get());
   } else {
+#if BUILDFLAG(IS_OHOS)
+    sequenced_task_runner = base::ThreadPool::CreateSequencedTaskRunner(
+        {base::MayBlock(), base::TaskShutdownBehavior::BLOCK_SHUTDOWN});
+    const base::FilePath& pref_path = cache_path.AppendASCII(
+        profile ? kUserPrefsFileName : kLocalPrefsFileName);
+    std::set<std::string> persistent_prefs;
+    persistent_prefs.insert(predictor::kVisitedUrls);
+    factory.set_user_prefs(base::MakeRefCounted<SegregatedPrefStore>(
+        base::MakeRefCounted<CefPrefStore>(),
+        base::MakeRefCounted<JsonPrefStore>(pref_path),
+        std::move(persistent_prefs)));
+#else
     scoped_refptr<CefPrefStore> cef_pref_store = new CefPrefStore();
     cef_pref_store->SetInitializationCompleted();
     factory.set_user_prefs(cef_pref_store.get());
+#endif
   }
 
 #if BUILDFLAG(ENABLE_SUPERVISED_USERS)
@@ -207,6 +227,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   // are registered with default values that may be changed via a *PrefStore.
   scoped_refptr<user_prefs::PrefRegistrySyncable> registry(
       new user_prefs::PrefRegistrySyncable());
+#if BUILDFLAG(IS_OHOS)
+  predictor::PredictorDatabase::RegisterPrefs(registry.get());
+#endif  // IS_OHOS
 
   // Some preferences are specific to CEF and others are defined in Chromium.
   // The preferred approach for registering preferences defined in Chromium is
@@ -239,6 +262,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   ProfileNetworkContextService::RegisterLocalStatePrefs(registry.get());
   SSLConfigServiceManager::RegisterPrefs(registry.get());
   update_client::RegisterPrefs(registry.get());
+#if BUILDFLAG(IS_OHOS)
+  HostContentSettingsMap::RegisterProfilePrefs(registry.get());
+#endif
 
   if (!profile) {
     component_updater::RegisterComponentUpdateServicePrefs(registry.get());

@@ -201,6 +201,12 @@ bool CefRenderFrameObserver::OnAssociatedInterfaceRequestForFrame(
   return associated_interfaces_.TryBindInterface(interface_name, handle);
 }
 
+void CefRenderFrameObserver::ScriptedPrint(bool user_initiated) {
+  if (!frame_)
+    return;
+  frame_->ScriptedPrint(user_initiated);
+}
+
 void CefRenderFrameObserver::AttachFrame(CefFrameImpl* frame) {
   DCHECK(frame);
   DCHECK(!frame_);

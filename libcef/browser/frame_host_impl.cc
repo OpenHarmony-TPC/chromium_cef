@@ -660,12 +660,6 @@ void CefFrameHostImpl::UpdateDraggableRegions(
 }
 
 #if BUILDFLAG(IS_OHOS)
-void CefFrameHostImpl::OnUpdateHitData(cef::mojom::HitDataParamsPtr params) {
-  auto browser = GetBrowserHostBase();
-  if (browser)
-    browser->OnUpdateHitData(params->type, params->extra_data_for_type);
-}
-
 void CefFrameHostImpl::OnGetImageForContextNode(
     cef::mojom::GetImageForContextNodeParamsPtr params) {
   CefImageImpl* image_impl = new (std::nothrow) CefImageImpl();
@@ -754,20 +748,40 @@ void CefFrameHostImpl::LoadHeaderUrl(const CefString& url,
                     additionalHttpHeaders);
 }
 
-void CefFrameHostImpl::SendTouchEvent(const CefTouchEvent& event) {
-  cef::mojom::TouchEventParamsPtr touch_event =
-      cef::mojom::TouchEventParams::New();
-  touch_event->x = event.x;
-  touch_event->y = event.y;
-  touch_event->width = event.radius_x;
-  touch_event->height = event.radius_y;
+void CefFrameHostImpl::OnScriptedPrint(bool user_initiated) {
+  CefRefPtr<CefPrintHandler> handler = nullptr;
+  auto browser = GetBrowserHostBase();
+  if (!browser) {
+    LOG(ERROR) << "browser is nullptr";
+    return;
+  }
+  auto client = browser->GetClient();
+  if (client) {
+    handler = client->GetPrintHandler();
+  }
+  if (handler) {
+    handler->OnPrintStart(GetBrowser());
+  }
+}
+
+void CefFrameHostImpl::SendHitEvent(
+    float x,
+    float y,
+    float width,
+    float height) {
+  cef::mojom::HitEventParamsPtr hit_event =
+      cef::mojom::HitEventParams::New();
+  hit_event->x = x;
+  hit_event->y = y;
+  hit_event->width = width;
+  hit_event->height = height;
   SendToRenderFrame(__FUNCTION__,
                     base::BindOnce(
-                        [](cef::mojom::TouchEventParamsPtr touch_event,
+                        [](cef::mojom::HitEventParamsPtr hit_event,
                            const RenderFrameType& render_frame) {
-                          render_frame->SendTouchEvent(std::move(touch_event));
+                          render_frame->SendHitEvent(std::move(hit_event));
                         },
-                        std::move(touch_event)));
+                        std::move(hit_event)));
 }
 
 void CefFrameHostImpl::SetInitialScale(float scale) {
@@ -907,6 +921,31 @@ void CefFrameHostImpl::SlideScroll(float vx,
                           render_frame->SlideScroll(vx, vy);
                         },
                         vx, vy));
+}
+
+void CefFrameHostImpl::ZoomBy(float delta,
+                              float width,
+                              float height) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float delta, float width, float height,
+                           const RenderFrameType& render_frame) {
+                          render_frame->ZoomBy(delta, width, height);
+                        },
+                        delta, width, height));
+}
+
+void CefFrameHostImpl::GetHitData(int& type,
+                                  CefString& extra_data) {
+  std::string temp_extra_data;
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](int32_t* out_type, std::string* out_extra_data,
+                           const RenderFrameType& render_frame) {
+                          render_frame->GetHitData(out_type, out_extra_data);
+                        },
+                        &type, &temp_extra_data));
+  extra_data = temp_extra_data;
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

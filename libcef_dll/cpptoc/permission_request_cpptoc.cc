@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=26d002adb41352f89861e1da149863a378f00a1e$
+// $hash=637d55ef23794b30503f8b85a6231c2fe3c87521$
 //
 
 #include "libcef_dll/cpptoc/permission_request_cpptoc.h"
 #include "libcef_dll/ctocpp/access_request_ctocpp.h"
+#include "libcef_dll/ctocpp/screen_capture_access_request_ctocpp.h"
 
 namespace {
 
@@ -84,6 +85,24 @@ void CEF_CALLBACK permission_request_on_permission_request_canceled(
       CefAccessRequestCToCpp::Wrap(request));
 }
 
+void CEF_CALLBACK permission_request_on_screen_capture_request(
+    struct _cef_permission_request_t* self,
+    cef_screen_capture_access_request_t* request) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: request; type: refptr_diff
+  DCHECK(request);
+  if (!request)
+    return;
+
+  // Execute
+  CefPermissionRequestCppToC::Get(self)->OnScreenCaptureRequest(
+      CefScreenCaptureAccessRequestCToCpp::Wrap(request));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -94,6 +113,8 @@ CefPermissionRequestCppToC::CefPermissionRequestCppToC() {
   GetStruct()->on_permission_request = permission_request_on_permission_request;
   GetStruct()->on_permission_request_canceled =
       permission_request_on_permission_request_canceled;
+  GetStruct()->on_screen_capture_request =
+      permission_request_on_screen_capture_request;
 }
 
 // DESTRUCTOR - Do not edit by hand.

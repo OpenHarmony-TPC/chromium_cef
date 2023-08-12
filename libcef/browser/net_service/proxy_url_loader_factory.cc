@@ -234,7 +234,11 @@ class InterceptedRequest : public network::mojom::URLLoader,
   ~InterceptedRequest() override;
 
   // Restart the request. This happens on initial start and after redirect.
+#if BUILDFLAG(IS_OHOS)
+  void Restart(bool is_redirect);
+#else
   void Restart();
+#endif
 
   // Called from ProxyURLLoaderFactory::OnLoaderCreated.
   void OnLoaderCreated(
@@ -333,6 +337,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
                       bool wait_for_loader_error);
 
   void SendErrorAndCompleteImmediately(int error_code);
+#if BUILDFLAG(IS_OHOS)
+  void CancelRequest(int error_code);
+#endif  //  BUILDFLAG(IS_OHOS)
   void SendErrorStatusAndCompleteImmediately(
       const network::URLLoaderCompletionStatus& status);
 
@@ -466,15 +473,21 @@ InterceptedRequest::~InterceptedRequest() {
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void InterceptedRequest::Restart(bool is_redirect) {
+#else
 void InterceptedRequest::Restart() {
+#endif
   stream_loader_ = nullptr;
-  if (proxied_client_receiver_.is_bound()) {
-    proxied_client_receiver_.reset();
-    target_loader_.reset();
-  }
+  if (!is_redirect) {
+    if (proxied_client_receiver_.is_bound()) {
+      proxied_client_receiver_.reset();
+      target_loader_.reset();
+    }
 
-  if (header_client_receiver_.is_bound())
-    std::ignore = header_client_receiver_.Unbind();
+    if (header_client_receiver_.is_bound())
+      std::ignore = header_client_receiver_.Unbind();
+  }
 
   current_request_uses_header_client_ =
       factory_->url_loader_header_client_receiver_.is_bound();
@@ -511,13 +524,21 @@ void InterceptedRequest::Restart() {
   request_.load_flags = UpdateLoadFlags(request_.load_flags, setting);
 
   const GURL original_url = request_.url;
-
+#if BUILDFLAG(IS_OHOS)
+  factory_->request_handler_->OnBeforeRequest(
+      id_, &request_, request_was_redirected_,
+      base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
+                     weak_factory_.GetWeakPtr(), original_url),
+      base::BindOnce(&InterceptedRequest::CancelRequest,
+                     weak_factory_.GetWeakPtr()));
+#else
   factory_->request_handler_->OnBeforeRequest(
       id_, &request_, request_was_redirected_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                      weak_factory_.GetWeakPtr(), original_url),
       base::BindOnce(&InterceptedRequest::SendErrorAndCompleteImmediately,
                      weak_factory_.GetWeakPtr()));
+#endif  //  BUILDFLAG(IS_OHOS)
 }
 
 void InterceptedRequest::OnLoaderCreated(
@@ -544,7 +565,12 @@ void InterceptedRequest::InputStreamFailed(bool restart_needed) {
     return;
 
   input_stream_previously_failed_ = true;
+
+#if BUILDFLAG(IS_OHOS)
+  Restart(false);
+#else
   Restart();
+#endif
 }
 
 // TrustedHeaderClient methods.
@@ -614,7 +640,8 @@ void InterceptedRequest::OnReceiveResponse(
     request->SetURL(CefString(request_.url.spec()));
     request->SetMethod(CefString(request_.method));
     request->Set(request_.headers);
-    OnHttpErrorForUIThread(id_, request, request_.is_main_frame, request_.has_user_gesture, error_reponse);
+    request->SetDestination(request_.destination);
+    OnHttpErrorForUIThread(id_, request, request->IsMainFrame(), request_.has_user_gesture, error_reponse);
   }
 
   if (current_request_uses_header_client_) {
@@ -740,6 +767,12 @@ void InterceptedRequest::FollowRedirect(
   net::HttpRequestHeaders modified_headers = modified_headers_ext;
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
+#if BUILDFLAG(IS_OHOS)
+  if (target_loader_) {
+    target_loader_->FollowRedirect(removed_headers, modified_headers,
+                                   modified_cors_exempt_headers, new_url);
+  }
+#endif
 
   // If |OnURLLoaderClientError| was called then we're just waiting for the
   // connection error handler of |proxied_loader_receiver_|. Don't restart the
@@ -750,7 +783,13 @@ void InterceptedRequest::FollowRedirect(
   // Normally we would call FollowRedirect on the target loader and it would
   // begin loading the redirected request. However, the client might want to
   // intercept that request so restart the job instead.
+#if BUILDFLAG(IS_OHOS)
+  // Continue call FollowRedirect on the target loader, if the client intercept that
+  // request the loader will be reset when OnComplete.
+  Restart(true);
+#else
   Restart();
+#endif
 }
 
 void InterceptedRequest::SetPriority(net::RequestPriority priority,
@@ -914,7 +953,11 @@ void InterceptedRequest::ContinueResponseOrRedirect(
     return;
   } else if (response_mode ==
              InterceptedRequestHandler::ResponseMode::RESTART) {
+#if BUILDFLAG(IS_OHOS)
+    Restart(false);
+#else
     Restart();
+#endif
     return;
   }
 
@@ -1185,6 +1228,14 @@ void InterceptedRequest::CallOnComplete(
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void InterceptedRequest::CancelRequest(int error_code) {
+  network::URLLoaderCompletionStatus status(error_code);
+  status.abort_due_to_cef_browser_destroyed = true;
+  SendErrorStatusAndCompleteImmediately(status);
+}
+#endif  //  BUILDFLAG(IS_OHOS)
+
 void InterceptedRequest::SendErrorAndCompleteImmediately(int error_code) {
   SendErrorStatusAndCompleteImmediately(
       network::URLLoaderCompletionStatus(error_code));
@@ -1397,8 +1448,11 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     // Don't start a request while we're shutting down.
     return;
   }
-
+#if BUILDFLAG(IS_OHOS)
+  if ((request.is_download_request)|| (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS())) {
+#else
   if (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS()) {
+#endif  //  BUILDFLAG(IS_OHOS)
     // This is the so-called pass-through, no-op option.
     if (target_factory_) {
       target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
@@ -1426,7 +1480,11 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
+#if BUILDFLAG(IS_OHOS)
+  req->Restart(false);
+#else
   req->Restart();
+#endif
 }
 
 void ProxyURLLoaderFactory::Clone(

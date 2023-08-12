@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=873c979fdd4b48e65375437e6a70a900de50840d$
+// $hash=138ac938523decbcb23ea3a483f7e5356ef931d9$
 //
 
 #include "libcef_dll/ctocpp/life_span_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
@@ -108,7 +109,8 @@ bool CefLifeSpanHandlerCToCpp::OnPreBeforePopup(
     CefRefPtr<CefFrame> frame,
     const CefString& target_url,
     WindowOpenDisposition target_disposition,
-    bool user_gesture) {
+    bool user_gesture,
+    CefRefPtr<CefCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_life_span_handler_t* _struct = GetStruct();
@@ -125,12 +127,17 @@ bool CefLifeSpanHandlerCToCpp::OnPreBeforePopup(
   DCHECK(frame.get());
   if (!frame.get())
     return false;
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get())
+    return false;
   // Unverified params: target_url
 
   // Execute
   int _retval = _struct->on_pre_before_popup(
       _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      target_url.GetStruct(), target_disposition, user_gesture);
+      target_url.GetStruct(), target_disposition, user_gesture,
+      CefCallbackCppToC::Wrap(callback));
 
   // Return type: bool
   return _retval ? true : false;

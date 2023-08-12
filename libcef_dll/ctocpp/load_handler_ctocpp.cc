@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=710979924c3b6f6b6f1479dd75ed0e3c6dd02126$
+// $hash=fa23abd5e49712096e86494af9b3654d1aef0b4f$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
@@ -267,6 +267,22 @@ void CefLoadHandlerCToCpp::OnDataResubmission(CefRefPtr<CefBrowser> browser,
   // Execute
   _struct->on_data_resubmission(_struct, CefBrowserCppToC::Wrap(browser),
                                 CefCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnFirstContentfulPaint(long navigationStartTick,
+                                                  long firstContentfulPaintMs) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_first_contentful_paint))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_first_contentful_paint(_struct, navigationStartTick,
+                                     firstContentfulPaintMs);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -16,6 +16,10 @@
 #include "content/public/browser/navigation_throttle.h"
 #include "content/public/browser/page_navigator.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "libcef/browser/predictors/predictor_database.h"
+#endif  // IS_OHOS
+
 namespace throttle {
 
 namespace {
@@ -91,7 +95,13 @@ void CreateThrottlesForNavigation(content::NavigationHandle* navigation_handle,
   const bool is_main_frame = navigation_handle->IsInMainFrame();
   const bool is_pdf = navigation_handle->IsPdf();
   const auto global_id = frame_util::GetGlobalId(navigation_handle);
-
+#if BUILDFLAG(IS_OHOS)
+  // Record the url so that it can be preconnected at the next startup.
+  if (is_main_frame) {
+    predictor::VisitedUrlInfo url_info(navigation_handle->GetURL());
+    predictor::PredictorDatabase::GetInstance()->RecordVisitedUrl(url_info);
+  }
+#endif  // IS_OHOS
   // Identify the RenderFrameHost that originated the navigation.
   const auto parent_global_id =
       !is_main_frame ? navigation_handle->GetParentFrame()->GetGlobalId()

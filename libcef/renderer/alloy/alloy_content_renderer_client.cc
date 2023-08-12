@@ -103,6 +103,11 @@
 #include "base/strings/sys_string_conversions.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "libcef/renderer/alloy/alloy_content_settings_client.h"
+#include "libcef/renderer/extensions/ohos_print_render_frame_helper_delegate.h"
+#endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 #include "libcef/renderer/extensions/print_render_frame_helper_delegate.h"
 #endif
@@ -116,6 +121,18 @@
 #include "components/pdf/common/internal_plugin_helpers.h"
 #include "components/pdf/renderer/internal_plugin_renderer_helpers.h"
 #include "components/pdf/renderer/pdf_find_in_page.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "components/network_hints/renderer/web_prescient_networking_impl.h"
+#include "components/no_state_prefetch/renderer/no_state_prefetch_client.h"
+#include "components/no_state_prefetch/renderer/no_state_prefetch_helper.h"
+#include "components/no_state_prefetch/renderer/prerender_render_frame_observer.h"
+#include "components/page_load_metrics/renderer/metrics_render_frame_observer.h"
+#include "components/subresource_filter/content/renderer/subresource_filter_agent.h"
+#include "components/subresource_filter/content/renderer/unverified_ruleset_dealer.h"
+#include "components/subresource_filter/core/common/common_features.h"
+#include "libcef/renderer/alloy/alloy_content_settings_client.h"
 #endif
 
 AlloyContentRendererClient::AlloyContentRendererClient()
@@ -247,6 +264,11 @@ void AlloyContentRendererClient::RenderThreadStarted() {
     pdf::PepperPDFHost::SetPrintClient(pdf_print_client_.get());
   }
 #endif
+#if BUILDFLAG(IS_OHOS)
+  subresource_filter_ruleset_dealer_ =
+      std::make_unique<subresource_filter::UnverifiedRulesetDealer>();
+  thread->AddObserver(subresource_filter_ruleset_dealer_.get());
+#endif
 
   if (extensions::ExtensionsEnabled())
     extensions_renderer_client_->RenderThreadStarted();
@@ -285,8 +307,34 @@ void AlloyContentRendererClient::RenderThreadConnected() {
 
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
+#if BUILDFLAG(IS_OHOS)
+  new AlloyContentSettingsClient(render_frame);
+#endif
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
+#if BUILDFLAG(IS_OHOS)
+  new prerender::PrerenderRenderFrameObserver(render_frame);
+  if (!render_frame->IsMainFrame()) {
+    auto* main_frame_no_state_prefetch_helper =
+        prerender::NoStatePrefetchHelper::Get(
+            render_frame->GetMainRenderFrame());
+    if (main_frame_no_state_prefetch_helper) {
+      // Avoid any race conditions from having the browser tell subframes that
+      // they're no-state prefetching.
+      new prerender::NoStatePrefetchHelper(
+          render_frame,
+          main_frame_no_state_prefetch_helper->histogram_prefix());
+    }
+  }
 
+  auto* alloy_content_settings_client =
+      new AlloyContentSettingsClient(render_frame);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser) &&
+      observer_.get() && alloy_content_settings_client) {
+    alloy_content_settings_client->SetContentSettingRules(
+        observer_->content_setting_rules());
+  }
+#endif
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   new PepperHelper(render_frame);
 #endif
@@ -315,6 +363,15 @@ void AlloyContentRendererClient::RenderFrameCreated(
     OnBrowserCreated(render_frame->GetRenderView(), is_windowless);
   }
 
+#if BUILDFLAG(IS_OHOS)
+  if (is_windowless.has_value()) {
+    new printing::PrintRenderFrameHelper(
+        render_frame,
+        base::WrapUnique(new extensions::OhosPrintRenderFrameHelperDelegate(
+            *is_windowless)));
+  }
+#endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   if (is_windowless.has_value()) {
     new printing::PrintRenderFrameHelper(
@@ -331,6 +388,26 @@ void AlloyContentRendererClient::RenderFrameCreated(
                             render_frame->GetRoutingID()));
   }
 #endif
+#if BUILDFLAG(IS_OHOS)
+  // Owned by |render_frame|.
+  page_load_metrics::MetricsRenderFrameObserver* metrics_render_frame_observer =
+      new page_load_metrics::MetricsRenderFrameObserver(render_frame);
+  // There is no render thread, thus no UnverifiedRulesetDealer in
+  // ChromeRenderViewTests.
+  if (subresource_filter_ruleset_dealer_) {
+    // Create AdResourceTracker to tracker ad resource loads at the chrome
+    // layer.
+    auto ad_resource_tracker =
+        std::make_unique<subresource_filter::AdResourceTracker>();
+    metrics_render_frame_observer->SetAdResourceTracker(
+        ad_resource_tracker.get());
+    auto* subresource_filter_agent =
+        new subresource_filter::SubresourceFilterAgent(
+            render_frame, subresource_filter_ruleset_dealer_.get(),
+            std::move(ad_resource_tracker));
+    subresource_filter_agent->Initialize();
+  }
+#endif
 }
 
 void AlloyContentRendererClient::WebViewCreated(blink::WebView* web_view) {
@@ -342,7 +419,17 @@ void AlloyContentRendererClient::WebViewCreated(blink::WebView* web_view) {
     CHECK(render_view);
     OnBrowserCreated(render_view, is_windowless);
   }
+#if BUILDFLAG(IS_OHOS)
+  new prerender::NoStatePrefetchClient(web_view);
+#endif
 }
+
+#if BUILDFLAG(IS_OHOS)
+bool AlloyContentRendererClient::IsPrefetchOnly(
+    content::RenderFrame* render_frame) {
+  return prerender::NoStatePrefetchHelper::IsPrefetching(render_frame);
+}
+#endif
 
 bool AlloyContentRendererClient::IsPluginHandledExternally(
     content::RenderFrame* render_frame,
@@ -570,6 +657,14 @@ void AlloyContentRendererClient::RunSingleProcessCleanupOnUIThread() {
     delete host;
 }
 
+#if BUILDFLAG(IS_OHOS)
+std::unique_ptr<blink::WebPrescientNetworking>
+AlloyContentRendererClient::CreatePrescientNetworking(
+    content::RenderFrame* render_frame) {
+  return std::make_unique<network_hints::WebPrescientNetworkingImpl>(
+      render_frame);
+}
+#endif
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
 #if defined(__clang__)

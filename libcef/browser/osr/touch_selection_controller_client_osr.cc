@@ -23,6 +23,12 @@
 #include "ui/gfx/geometry/size_conversions.h"
 #include "base/logging.h"
 
+#if defined(OHOS_NWEB_EX)
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace {
 
 // Delay before showing the quick menu, in milliseconds.
@@ -48,6 +54,7 @@ class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
       delete;
 
   ~CefRunQuickMenuCallbackImpl() {
+#if !BUILDFLAG(IS_OHOS)
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
@@ -59,6 +66,7 @@ class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
                                      kEmptyEventFlags));
       }
     }
+#endif
   }
 
   void Continue(int command_id, cef_event_flags_t event_flags) override {
@@ -173,6 +181,17 @@ void CefTouchSelectionControllerClientOSR::OnScrollCompleted() {
 
 bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
     const content::ContextMenuParams& params) {
+#if defined(OHOS_NWEB_EX)
+  bool is_browser =
+      base::CommandLine::ForCurrentProcess() &&
+      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
+  bool has_select = !rwhv_->GetSelectedText().empty();
+  if (is_browser && !has_select && !params.is_editable) {
+    quick_menu_requested_ = false;
+    return false;
+  }
+#endif
+
   if ((params.source_type == ui::MENU_SOURCE_LONG_PRESS ||
        params.source_type == ui::MENU_SOURCE_TOUCH_EDIT_MENU ||
        params.source_type == ui::MENU_SOURCE_LONG_TAP) &&
@@ -183,12 +202,23 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
     return true;
   }
 
-  const bool from_touch =
-      params.source_type == ui::MENU_SOURCE_LONG_PRESS ||
-      params.source_type == ui::MENU_SOURCE_LONG_TAP ||
-      params.source_type == ui::MENU_SOURCE_TOUCH_EDIT_MENU ||
-      params.source_type == ui::MENU_SOURCE_TOUCH;
+  bool from_touch = params.source_type == ui::MENU_SOURCE_LONG_PRESS ||
+                    params.source_type == ui::MENU_SOURCE_LONG_TAP ||
+                    params.source_type == ui::MENU_SOURCE_TOUCH_EDIT_MENU ||
+                    params.source_type == ui::MENU_SOURCE_TOUCH;
+#if defined(OHOS_NWEB_EX)
+  if (is_browser) {
+    from_touch =
+        from_touch || params.source_type == ui::MENU_SOURCE_SELECT_AND_COPY;
+  }
+#endif
+
   if (from_touch && (quick_menu_requested_ || !params.selection_text.empty())) {
+#if defined(OHOS_NWEB_EX)
+    if (is_browser) {
+      SelectionTextNotEmpty(!params.selection_text.empty());
+    }
+#endif
     quick_menu_requested_ = true;
     ShowQuickMenu();
     return true;
@@ -278,6 +308,13 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   if (browser->web_contents()) {
     browser->web_contents()->SetShowingContextMenu(false);
   }
+
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess() &&
+          base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser)) {
+    isSelectionTextNotEmpty_ = false;
+  }
+#endif
 }
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
@@ -420,6 +457,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     ui::SelectionEventType event) {
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
+  SetTemporarilyHidden(false);
   auto browser = rwhv_->browser_impl();
   switch (event) {
     case ui::SELECTION_HANDLES_SHOWN:
@@ -507,6 +545,12 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
   bool editable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE;
   bool readable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_PASSWORD;
   bool has_selection = !rwhv_->GetSelectedText().empty();
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    has_selection = has_selection || isSelectionTextNotEmpty_;
+  }
+#endif
   switch (command_id) {
     case QM_EDITFLAG_CAN_ELLIPSIS:
       return true;  // Always allowed to show the ellipsis button.
@@ -542,10 +586,11 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
 
 void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
                                                           int event_flags) {
+#if !BUILDFLAG(IS_OHOS)
   if (command_id == kInvalidCommandId) {
     return;
   }
-
+#endif
   if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
       command_id != QM_EDITFLAG_CAN_SELECT_ALL) {
     rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
@@ -635,3 +680,10 @@ bool CefTouchSelectionControllerClientOSR::
   }
   return false;
 }
+
+#if defined(OHOS_NWEB_EX)
+void CefTouchSelectionControllerClientOSR::SelectionTextNotEmpty(
+    bool selectionTextNotEmpty) {
+  isSelectionTextNotEmpty_ = selectionTextNotEmpty;
+}
+#endif

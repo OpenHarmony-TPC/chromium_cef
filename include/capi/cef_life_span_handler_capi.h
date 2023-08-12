@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f9ae882bb6092d1f94b7c78dc6b45369c8b0ec2e$
+// $hash=09c6688a8b0655876e4b8fa58563e9db744ba953$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LIFE_SPAN_HANDLER_CAPI_H_
@@ -109,7 +109,8 @@ typedef struct _cef_life_span_handler_t {
       struct _cef_frame_t* frame,
       const cef_string_t* target_url,
       cef_window_open_disposition_t target_disposition,
-      int user_gesture);
+      int user_gesture,
+      struct _cef_callback_t* callback);
 
   ///
   // Called after a new browser is created. It is now safe to begin performing

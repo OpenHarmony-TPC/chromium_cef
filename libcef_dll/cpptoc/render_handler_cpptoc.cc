@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5da07c9f36d3f52ef73ea85ebd73fecb31838536$
+// $hash=18485a377df8e22ca8f9002fa90463517780d270$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -599,6 +599,32 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
 }
 
 void CEF_CALLBACK
+render_handler_on_selection_changed(struct _cef_render_handler_t* self,
+                                    cef_browser_t* browser,
+                                    const cef_string_t* text,
+                                    const cef_range_t* selected_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Unverified params: text, selected_range
+
+  // Translate param: selected_range; type: simple_byref_const
+  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnSelectionChanged(
+      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal);
+}
+
+void CEF_CALLBACK
 render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              cef_text_input_mode_t input_mode,
@@ -619,6 +645,84 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
       CefBrowserCToCpp::Wrap(browser), input_mode,
       show_keyboard ? true : false);
+}
+
+void CEF_CALLBACK
+render_handler_on_cursor_update(struct _cef_render_handler_t* self,
+                                cef_browser_t* browser,
+                                const cef_rect_t* rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: rect; type: simple_byref_const
+  DCHECK(rect);
+  if (!rect)
+    return;
+
+  // Translate param: rect; type: simple_byref_const
+  CefRect rectVal = rect ? *rect : CefRect();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnCursorUpdate(
+      CefBrowserCToCpp::Wrap(browser), rectVal);
+}
+
+void CEF_CALLBACK render_handler_on_complete_swap_with_new_size(
+    struct _cef_render_handler_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnCompleteSwapWithNewSize();
+}
+
+void CEF_CALLBACK
+render_handler_on_resize_not_work(struct _cef_render_handler_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnResizeNotWork();
+}
+
+void CEF_CALLBACK
+render_handler_on_overscroll(struct _cef_render_handler_t* self,
+                             cef_browser_t* browser,
+                             const float x,
+                             const float y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnOverscroll(
+      CefBrowserCToCpp::Wrap(browser), x, y);
 }
 
 }  // namespace
@@ -650,8 +754,14 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_ime_composition_range_changed;
   GetStruct()->on_text_selection_changed =
       render_handler_on_text_selection_changed;
+  GetStruct()->on_selection_changed = render_handler_on_selection_changed;
   GetStruct()->on_virtual_keyboard_requested =
       render_handler_on_virtual_keyboard_requested;
+  GetStruct()->on_cursor_update = render_handler_on_cursor_update;
+  GetStruct()->on_complete_swap_with_new_size =
+      render_handler_on_complete_swap_with_new_size;
+  GetStruct()->on_resize_not_work = render_handler_on_resize_not_work;
+  GetStruct()->on_overscroll = render_handler_on_overscroll;
 }
 
 // DESTRUCTOR - Do not edit by hand.

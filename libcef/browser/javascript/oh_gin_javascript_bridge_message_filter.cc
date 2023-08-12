@@ -6,6 +6,8 @@
 #include "oh_gin_javascript_bridge_message_filter.h"
 
 #include <thread>
+#include "base/memory/scoped_refptr.h"
+#include "base/task/thread_pool.h"
 #include "base/types/pass_key.h"
 #include "cef/libcef/common/javascript/oh_gin_javascript_bridge_messages.h"
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
@@ -31,7 +33,9 @@ OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
       agent_scheduling_group_(agent_scheduling_group),
       current_routing_id_(MSG_ROUTING_NONE) {}
 
-OhGinJavascriptBridgeMessageFilter::~OhGinJavascriptBridgeMessageFilter() {}
+OhGinJavascriptBridgeMessageFilter::~OhGinJavascriptBridgeMessageFilter() {
+  LOG(INFO) << "OhGinJavascriptBridgeMessageFilter dtor";
+}
 
 void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
@@ -43,9 +47,12 @@ void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
 
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
     const IPC::Message& message) {
-  std::thread dump_thread(
-      [message, this] { this->OnMessageReceivedThread(message); });
-  dump_thread.detach();
+  base::ThreadPool::PostTask(
+      FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
+      base::BindOnce(
+          base::IgnoreResult(
+              &OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+          base::WrapRefCounted(this), message));
   return true;
 }
 

@@ -32,8 +32,10 @@
 #include "libcef/renderer/v8_impl.h"
 
 #include "base/strings/utf_string_conversions.h"
+#include "base/process/process_metrics.h"
 #include "content/public/renderer/render_view.h"
 #include "content/renderer/render_frame_impl.h"
+#include "skia/ext/image_operations.h"
 #include "third_party/blink/public/mojom/frame/frame.mojom-blink.h"
 #include "third_party/blink/public/platform/web_back_forward_cache_loader_helper.h"
 #include "third_party/blink/public/platform/web_cache.h"
@@ -70,6 +72,9 @@ constexpr auto kConnectionTimeout = base::Seconds(4);
 const std::string kAddressPrefix = "geo:0,0?q=";
 const std::string kEmailPrefix = "mailto:";
 const std::string kPhoneNumberPrefix = "tel:";
+const int kMaxContextImageNodeSizeIfDownScale = 1024;
+// 2GB
+const int kNeedImageDownScaleSysMemKB = 2097152;
 
 // The amount of content to overlap between two screens when using
 // pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
@@ -101,6 +106,49 @@ int computeDurationInMilliSec(int dx, int dy) {
 
 float computeSlidePosition(float v) {
     return (v * POSITION_RATIO / 1000);
+}
+
+int GetSystemTotalMem() {
+  base::SystemMemoryInfoKB meminfo;
+  if (base::GetSystemMemoryInfo(&meminfo)) {
+    return meminfo.total;
+  }
+  LOG(WARNING) << "Get sys meminfo failed";
+  return -1;
+}
+
+bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem) {
+  if (total_mem > kNeedImageDownScaleSysMemKB) {
+    return false;
+  }
+  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
+      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale)
+    return false;
+  return true;
+}
+
+SkBitmap Downscale(const SkBitmap& image, int total_mem) {
+  if (image.isNull())
+    return SkBitmap();
+
+  gfx::Size image_size(image.width(), image.height());
+  if (!NeedsDownscale(image_size, total_mem))
+    return image;
+
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+
+  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale / scaled_size.width());
+  }
+
+  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale / scaled_size.height());
+  }
+
+  return skia::ImageOperations::Resize(image,
+                                       skia::ImageOperations::RESIZE_GOOD,
+                                       static_cast<int>(scaled_size.width()),
+                                       static_cast<int>(scaled_size.height()));
 }
 
 #endif  // BUILDFLAG(IS_OHOS)
@@ -594,7 +642,7 @@ void CefFrameImpl::OnBrowserFrameDisconnect() {
                                    &CefFrameImpl::ConnectBrowserFrame);
     } else {
       // Trigger a crash in official builds.
-      LOG(FATAL) << "Connection retry failure for frame "
+      LOG(ERROR) << "Connection retry failure for frame "
                  << frame_util::GetFrameDebugString(frame_id_);
     }
   }
@@ -765,22 +813,26 @@ void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
   GURL absolute_image_url = GetChildImageUrlFromElement(element);
   PopulateHitTestData(absolute_link_url, absolute_image_url,
                       element.IsEditable(), data);
-  LOG(INFO) << "FocusedHitDataChangeEnd";
-  SendToBrowserFrame(__FUNCTION__,
-                     base::BindOnce(
-                         [](cef::mojom::HitDataParamsPtr data,
-                            const BrowserFrameType& browser_frame) {
-                           browser_frame->OnUpdateHitData(std::move(data));
-                         },
-                         std::move(data)));
+  cef_hit_data_.type = data->type;
+  cef_hit_data_.extra_data = data->extra_data_for_type;
 }
 
-void CefFrameImpl::SendTouchEvent(cef::mojom::TouchEventParamsPtr params) {
+void CefFrameImpl::ScriptedPrint(bool user_initiated) {
+  SendToBrowserFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](bool user_initiated, const BrowserFrameType& browser_frame) {
+            browser_frame->OnScriptedPrint(std::move(user_initiated));
+          },
+          std::move(user_initiated)));
+}
+
+void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetRenderView()->GetWebView();
   if (!webview) {
-    LOG(INFO) << "SendTouchEvent webview is NULL";
+    LOG(INFO) << "SendHitEvent webview is NULL";
     return;
   }
   const blink::WebHitTestResult result =
@@ -797,14 +849,8 @@ void CefFrameImpl::SendTouchEvent(cef::mojom::TouchEventParamsPtr params) {
 
   PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
                       result.IsContentEditable(), data);
-  SendToBrowserFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](cef::mojom::HitDataParamsPtr hit_test_data,
-             const BrowserFrameType& browser_frame) {
-            browser_frame->OnUpdateHitData(std::move(hit_test_data));
-          },
-          std::move(data)));
+  cef_hit_data_.type = data->type;
+  cef_hit_data_.extra_data = data->extra_data_for_type;
   is_update_ = true;
 }
 
@@ -846,6 +892,10 @@ void CefFrameImpl::GetImageForContextNode() {
     LOG(ERROR) << "GetImageForContextNode frame is nullptr";
     return;
   }
+  if (total_mem_ == -1) {
+    total_mem_ = GetSystemTotalMem();
+  }
+
   cef::mojom::GetImageForContextNodeParamsPtr params =
       cef::mojom::GetImageForContextNodeParams::New();
   blink::WebNode context_node = frame_->ContextMenuImageNode();
@@ -868,10 +918,11 @@ void CefFrameImpl::GetImageForContextNode() {
   original_size = web_element.GetImageSize();
 
   SkBitmap image = web_element.ImageContents();
+  SkBitmap resize_image = Downscale(image, total_mem_);
   image_extension = "." + web_element.ImageExtension();
-  params->width = original_size.width();
-  params->height = original_size.height();
-  params->image = image;
+  params->width = resize_image.width();
+  params->height = resize_image.height();
+  params->image = resize_image;
   params->image_extension = image_extension;
   SendToBrowserFrame(
       __FUNCTION__,
@@ -1075,6 +1126,17 @@ void CefFrameImpl::SlideScroll(float vx, float vy) {
   auto scroll_offset = webview->GetScrollOffset();
   webview->SmoothScroll(dx + scroll_offset.x(), dy + scroll_offset.y(),
                         base::Milliseconds(DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC));
+}
+
+void CefFrameImpl::ZoomBy(float delta, float width, float height, cef::mojom::RenderFrame::ZoomByCallback callback) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  render_frame->SetZoomLevel(delta, gfx::Point(width / 2, height / 2));
+  std::move(callback).Run();
+}
+
+void CefFrameImpl::GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) {
+  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=c0184bbfa08d5b1a2168f3886235203d2fa5b758$
+# $hash=312d01131515090885c5bc3bd8eaf00371748c3e$
 #
 
 {
@@ -48,6 +48,7 @@
       'include/cef_keyboard_handler.h',
       'include/cef_life_span_handler.h',
       'include/cef_load_handler.h',
+      'include/cef_media_handler.h',
       'include/cef_menu_model.h',
       'include/cef_menu_model_delegate.h',
       'include/cef_navigation_entry.h',
@@ -148,6 +149,7 @@
       'include/capi/cef_keyboard_handler_capi.h',
       'include/capi/cef_life_span_handler_capi.h',
       'include/capi/cef_load_handler_capi.h',
+      'include/capi/cef_media_handler_capi.h',
       'include/capi/cef_menu_model_capi.h',
       'include/capi/cef_menu_model_delegate_capi.h',
       'include/capi/cef_navigation_entry_capi.h',
@@ -272,6 +274,8 @@
       'libcef_dll/ctocpp/domvisitor_ctocpp.h',
       'libcef_dll/cpptoc/data_base_cpptoc.cc',
       'libcef_dll/cpptoc/data_base_cpptoc.h',
+      'libcef_dll/cpptoc/date_time_chooser_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/date_time_chooser_callback_cpptoc.h',
       'libcef_dll/ctocpp/delete_cookies_callback_ctocpp.cc',
       'libcef_dll/ctocpp/delete_cookies_callback_ctocpp.h',
       'libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.cc',
@@ -344,6 +348,8 @@
       'libcef_dll/cpptoc/list_value_cpptoc.h',
       'libcef_dll/ctocpp/load_handler_ctocpp.cc',
       'libcef_dll/ctocpp/load_handler_ctocpp.h',
+      'libcef_dll/ctocpp/media_handler_ctocpp.cc',
+      'libcef_dll/ctocpp/media_handler_ctocpp.h',
       'libcef_dll/cpptoc/views/menu_button_cpptoc.cc',
       'libcef_dll/cpptoc/views/menu_button_cpptoc.h',
       'libcef_dll/ctocpp/views/menu_button_delegate_ctocpp.cc',
@@ -430,6 +436,8 @@
       'libcef_dll/ctocpp/scheme_handler_factory_ctocpp.h',
       'libcef_dll/cpptoc/scheme_registrar_cpptoc.cc',
       'libcef_dll/cpptoc/scheme_registrar_cpptoc.h',
+      'libcef_dll/cpptoc/screen_capture_access_request_cpptoc.cc',
+      'libcef_dll/cpptoc/screen_capture_access_request_cpptoc.h',
       'libcef_dll/cpptoc/views/scroll_view_cpptoc.cc',
       'libcef_dll/cpptoc/views/scroll_view_cpptoc.h',
       'libcef_dll/cpptoc/select_client_certificate_callback_cpptoc.cc',
@@ -590,6 +598,8 @@
       'libcef_dll/cpptoc/domvisitor_cpptoc.h',
       'libcef_dll/ctocpp/data_base_ctocpp.cc',
       'libcef_dll/ctocpp/data_base_ctocpp.h',
+      'libcef_dll/ctocpp/date_time_chooser_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/date_time_chooser_callback_ctocpp.h',
       'libcef_dll/cpptoc/delete_cookies_callback_cpptoc.cc',
       'libcef_dll/cpptoc/delete_cookies_callback_cpptoc.h',
       'libcef_dll/cpptoc/dev_tools_message_observer_cpptoc.cc',
@@ -662,6 +672,8 @@
       'libcef_dll/ctocpp/list_value_ctocpp.h',
       'libcef_dll/cpptoc/load_handler_cpptoc.cc',
       'libcef_dll/cpptoc/load_handler_cpptoc.h',
+      'libcef_dll/cpptoc/media_handler_cpptoc.cc',
+      'libcef_dll/cpptoc/media_handler_cpptoc.h',
       'libcef_dll/ctocpp/views/menu_button_ctocpp.cc',
       'libcef_dll/ctocpp/views/menu_button_ctocpp.h',
       'libcef_dll/cpptoc/views/menu_button_delegate_cpptoc.cc',
@@ -748,6 +760,8 @@
       'libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h',
       'libcef_dll/ctocpp/scheme_registrar_ctocpp.cc',
       'libcef_dll/ctocpp/scheme_registrar_ctocpp.h',
+      'libcef_dll/ctocpp/screen_capture_access_request_ctocpp.cc',
+      'libcef_dll/ctocpp/screen_capture_access_request_ctocpp.h',
       'libcef_dll/ctocpp/views/scroll_view_ctocpp.cc',
       'libcef_dll/ctocpp/views/scroll_view_ctocpp.h',
       'libcef_dll/ctocpp/select_client_certificate_callback_ctocpp.cc',

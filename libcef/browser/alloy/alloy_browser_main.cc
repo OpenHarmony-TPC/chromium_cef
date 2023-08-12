@@ -66,18 +66,18 @@
 #include "ui/base/ime/init/input_method_initializer.h"
 #endif
 
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "components/os_crypt/os_crypt.h"
 #endif
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 #include "base/path_service.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/grit/chromium_strings.h"
 #include "components/os_crypt/key_storage_config_linux.h"
 #include "libcef/browser/printing/print_dialog_linux.h"
 #include "ui/base/l10n/l10n_util.h"
-#endif  // BUILDFLAG(IS_LINUX)
+#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(ENABLE_MEDIA_FOUNDATION_WIDEVINE_CDM)
 #include "chrome/browser/component_updater/media_foundation_widevine_cdm_component_installer.h"
@@ -102,6 +102,13 @@
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(OHOS_ENABLE_MEDIA_ROUTER)
 #include "chrome/browser/media/router/chrome_media_router_factory.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include "components/performance_manager/embedder/graph_features.h"
+#include "components/performance_manager/embedder/performance_manager_lifetime.h"
+#include "components/performance_manager/embedder/performance_manager_registry.h"
+#include "ohos_nweb/browser/performance_manager/nweb_performance_manager.h"
 #endif
 
 AlloyBrowserMainParts::AlloyBrowserMainParts(
@@ -174,7 +181,9 @@ void AlloyBrowserMainParts::PostCreateMainMessageLoop() {
       &CefPrintDialogLinux::CreatePrintDialog);
   printing::PrintingContextLinux::SetPdfPaperSizeFunction(
       &CefPrintDialogLinux::GetPdfPaperSize);
+#endif  // BUILDFLAG(IS_LINUX)
 
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
   const base::CommandLine* command_line =
       base::CommandLine::ForCurrentProcess();
 
@@ -196,7 +205,7 @@ void AlloyBrowserMainParts::PostCreateMainMessageLoop() {
   base::PathService::Get(chrome::DIR_USER_DATA, &config->user_data_path);
   DCHECK(!config->user_data_path.empty());
   OSCrypt::SetConfig(std::move(config));
-#endif  // BUILDFLAG(IS_LINUX)
+#endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 }
 
 int AlloyBrowserMainParts::PreCreateThreads() {
@@ -213,6 +222,16 @@ int AlloyBrowserMainParts::PreCreateThreads() {
 
   return 0;
 }
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserMainParts::PostCreateThreads() {
+  performance_manager_lifetime_ = std::make_unique<
+      performance_manager::PerformanceManagerLifetime>(
+      performance_manager::GraphFeatures::WithOHOSDefault(),
+      base::BindOnce(
+          &OHOS::NWeb::NwebPerformanceManager::CreatePoliciesAndDecorators));
+}
+#endif
 
 int AlloyBrowserMainParts::PreMainMessageLoopRun() {
 #if defined(USE_AURA)
@@ -292,6 +311,13 @@ void AlloyBrowserMainParts::PostMainMessageLoopRun() {
   // during shutdown. Did you forget to release a CefBrowser reference?
   DCHECK(global_request_context_->HasOneRef());
   global_request_context_ = nullptr;
+
+#if BUILDFLAG(IS_OHOS)
+  if (performance_manager_lifetime_) {
+    LOG(INFO) << "performance_manager_lifetime_ reset";
+    performance_manager_lifetime_.reset();
+  }
+#endif
 }
 
 void AlloyBrowserMainParts::PostDestroyThreads() {

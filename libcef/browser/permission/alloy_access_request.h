@@ -9,6 +9,11 @@
 
 #include "include/cef_permission_request.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "content/public/browser/media_stream_request.h"
+#include "third_party/blink/public/common/mediastream/media_stream_request.h"
+#endif // BUILDFLAG(IS_OHOS)
+
 // This class is used to handle the permission request which just needs
 // a callback with bool parameter to indicate the permission granted or not. It
 // works with PermissionRequestHandler. The specific permission request should
@@ -44,5 +49,53 @@ class AlloyAccessRequest : public CefAccessRequest {
 
   IMPLEMENT_REFCOUNTING(AlloyAccessRequest);
 };
+
+#if BUILDFLAG(IS_OHOS)
+class AlloyMediaAccessRequest : public CefAccessRequest {
+public:
+  AlloyMediaAccessRequest(const content::MediaStreamRequest& request,
+                          content::MediaResponseCallback callback);
+
+  AlloyMediaAccessRequest(const AlloyMediaAccessRequest&) = delete;
+  AlloyMediaAccessRequest& operator=(const AlloyMediaAccessRequest&) = delete;
+
+  ~AlloyMediaAccessRequest() override;
+
+  // CefAccessRequest implementation.
+  CefString Origin() override;
+  int ResourceAcessId() override;
+  void ReportRequestResult(bool allowed) override;
+
+private:
+  const content::MediaStreamRequest request_;
+  content::MediaResponseCallback callback_;
+
+  IMPLEMENT_REFCOUNTING(AlloyMediaAccessRequest);
+};
+
+class AlloyScreenCaptureAccessRequest : public CefScreenCaptureAccessRequest {
+public:
+  AlloyScreenCaptureAccessRequest(const content::MediaStreamRequest& request,
+                                  content::MediaResponseCallback callback);
+
+  AlloyScreenCaptureAccessRequest(const AlloyScreenCaptureAccessRequest&) = delete;
+  AlloyScreenCaptureAccessRequest& operator=(const AlloyScreenCaptureAccessRequest&) = delete;
+
+  ~AlloyScreenCaptureAccessRequest() override;
+
+  // CefScreenCaptureAccessRequest implementation.
+  CefString Origin() override;
+  void SetCaptureMode(int32_t mode) override;
+  void SetCaptureSourceId(int32_t sourceId) override;
+  void ReportRequestResult(bool allowed) override;
+private:
+  const content::MediaStreamRequest request_;
+  content::MediaResponseCallback callback_;
+  int32_t mode_;
+  int32_t sourceId_;
+
+  IMPLEMENT_REFCOUNTING(AlloyScreenCaptureAccessRequest);
+};
+#endif // BUILDFLAG(IS_OHOS)
 
 #endif  // CEF_LIBCEF_BROWSER_PERMISSION_ALLOY_ACCESS_REQUEST_H_

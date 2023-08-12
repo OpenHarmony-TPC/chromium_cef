@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3f75fba8637bea0df47821a3fb445b07107fdf61$
+// $hash=0dd0e9c8f49543cf0f8bd0fe85c0df4fc9fe1ecb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -49,6 +49,8 @@ class CefBrowserCToCpp
   void Reload() override;
   void ReloadIgnoreCache() override;
   void ReloadOriginalUrl() override;
+  void SelectAndCopy() override;
+  bool ShouldShowFreeCopy() override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
   void StopLoad() override;
   int GetIdentifier() override;
@@ -65,9 +67,12 @@ class CefBrowserCToCpp
   CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
       override;
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
+  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
   bool ShouldShowLoadingUI() override;
   void SetForceEnableZoom(bool forceEnableZoom) override;
   bool GetForceEnableZoom() override;
+  int GetNWebId() override;
+  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

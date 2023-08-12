@@ -147,6 +147,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void ReloadOriginalUrl() = 0;
 
   ///
+  // display the selection control when click Free copy interface
+  ///
+  /*--cef()--*/
+  virtual void SelectAndCopy() = 0;
+
+  ///
+  // should show free copy menu
+  ///
+  /*--cef()--*/
+  virtual bool ShouldShowFreeCopy() = 0;
+
+  ///
   // Set user agent for current page.
   ///
   /*--cef()--*/
@@ -247,6 +259,14 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() = 0;
 
+  ///
+  // Prefetch the resources required by the page, but will not execute js or
+  // render the page.
+  ///
+  /*--cef()--*/
+  virtual void PrefetchPage(CefString& url,
+                            CefString& additionalHttpHeaders) = 0;
+
   /* ---------- ohos_nweb_ex add begin --------- */
   ///
   // Is loading to different document.
@@ -265,6 +285,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetForceEnableZoom() = 0;
+
+  ///
+  // Returns the NWeb Id.
+  ///
+  /*--cef()--*/
+  virtual int GetNWebId() = 0;
+  
+  ///
+  // Set whether the target_blank pop-up window is opened in the current tab.
+  ///
+  /*--cef()--*/
+  virtual void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) = 0;
   /* ---------- ohos_nweb_ex add end --------- */
 };
 
@@ -516,9 +548,21 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   // Download the file at |url| using CefDownloadHandler.
   ///
-  /*--cef()--*/
+  /*--cef(optional_param=post_body)--*/
   virtual void StartDownload(const CefString& url) = 0;
 
+  ///
+  // Resume download after interrupted.
+  ///
+  /*--cef(optional_param=etag,optional_param=last_modified,optional_param=received_slices_string)--*/
+  virtual void ResumeDownload(const CefString& url,
+                              const CefString& full_path,
+                              int64 received_bytes,
+                              int64 total_bytes,
+                              const CefString& etag,
+                              const CefString& mime_type,
+                              const CefString& last_modified,
+                              const CefString& received_slices_string) = 0;
   ///
   // Download |image_url| and execute |callback| on completion with the images
   // received from the renderer. If |is_favicon| is true then cookies are not
@@ -1184,12 +1228,25 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual bool IsAudioMuted() = 0;
 
   ///
+  //  Set the audio resume interval of the broswer.
+  ///
+  /*--cef()--*/
+  virtual void SetAudioResumeInterval(int resumeInterval) = 0;
+
+  ///
+  //  Set whether the browser's audio is exclusive.
+  ///
+  /*--cef()--*/
+  virtual void SetAudioExclusive(bool audioExclusive) = 0;
+
+  ///
   // Execute a string of JavaScript code, return result by callback
   ///
   /*--cef()--*/
   virtual void ExecuteJavaScript(
       const CefString& code,
-      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+      CefRefPtr<CefJavaScriptResultCallback> callback,
+      bool extention) = 0;
 
   ///
   // Set native window from ohos rs
@@ -1306,6 +1363,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetCacheMode(int falg) = 0;
+
+  ///
+  // Set should frame submission before draw
+  ///
+  /*--cef()--*/
+  virtual void SetShouldFrameSubmissionBeforeDraw(bool should) = 0;
+
+  ///
+  // Set zoom with the dela facetor
+  ///
+  /*--cef()--*/
+  virtual void ZoomBy(float delta, float width, float height) = 0;
 };
 
 ///
@@ -1320,7 +1389,7 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   // number of cookies that were deleted.
   ///
   /*--cef()--*/
-  virtual void OnJavaScriptExeResult(const CefString& result) = 0;
+  virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
 };
 
 /* ---------- ohos webview add begin --------- */

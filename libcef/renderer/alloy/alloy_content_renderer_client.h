@@ -46,6 +46,12 @@ namespace web_cache {
 class WebCacheImpl;
 }
 
+#if BUILDFLAG(IS_OHOS)
+namespace subresource_filter {
+class UnverifiedRulesetDealer;
+}
+#endif
+
 class AlloyRenderThreadObserver;
 class CefRenderManager;
 class ChromePDFPrintClient;
@@ -126,6 +132,11 @@ class AlloyContentRendererClient
   void RunScriptsAtDocumentIdle(content::RenderFrame* render_frame) override;
   void DevToolsAgentAttached() override;
   void DevToolsAgentDetached() override;
+#if BUILDFLAG(IS_OHOS)
+  std::unique_ptr<blink::WebPrescientNetworking> CreatePrescientNetworking(
+      content::RenderFrame* render_frame) override;
+  bool IsPrefetchOnly(content::RenderFrame* render_frame) override;
+#endif
   std::unique_ptr<blink::URLLoaderThrottleProvider>
   CreateURLLoaderThrottleProvider(
       blink::URLLoaderThrottleProviderType provider_type) override;
@@ -158,6 +169,10 @@ class AlloyContentRendererClient
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)
   std::unique_ptr<ChromePDFPrintClient> pdf_print_client_;
+#endif
+#if BUILDFLAG(IS_OHOS)
+  std::unique_ptr<subresource_filter::UnverifiedRulesetDealer>
+      subresource_filter_ruleset_dealer_;
 #endif
 
   std::unique_ptr<extensions::ExtensionsClient> extensions_client_;

@@ -52,7 +52,7 @@ struct RequestParams {
 };
 
 [EnableIf=is_ohos]
-struct TouchEventParams {
+struct HitEventParams {
   float x;
   float y;
   int32 width;
@@ -111,7 +111,7 @@ interface RenderFrame {
   UpdateLocale(string locale);
 
   [EnableIf=is_ohos]
-  SendTouchEvent(TouchEventParams params);
+  SendHitEvent(HitEventParams params);
 
   [EnableIf=is_ohos]
   SetInitialScale(float initialScale);
@@ -143,6 +143,12 @@ interface RenderFrame {
 
   [EnableIf=is_ohos]
   SlideScroll(float vx, float vy);
+
+  [EnableIf=is_ohos, Sync]
+  ZoomBy(float delta, float width, float height) => ();
+
+  [EnableIf=is_ohos, Sync]
+  GetHitData() => (int32 type, string extra_data);
 };
 
 // Interface for communicating with a frame in the browser process.
@@ -161,13 +167,13 @@ interface BrowserFrame {
   UpdateDraggableRegions(array<DraggableRegionEntry>? regions);
 
   [EnableIf=is_ohos]
-  OnUpdateHitData(HitDataParams params);
-
-  [EnableIf=is_ohos]
   OnGetImageForContextNode(GetImageForContextNodeParams params);
 
   [EnableIf=is_ohos]
   OnGetImageForContextNodeNull();
+
+  [EnableIf=is_ohos]
+  OnScriptedPrint(bool user_initiated);
 };
 
 struct CrossOriginWhiteListEntry {

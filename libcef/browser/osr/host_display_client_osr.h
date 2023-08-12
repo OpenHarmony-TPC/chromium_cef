@@ -10,6 +10,7 @@
 #include "base/callback.h"
 #include "base/memory/shared_memory_mapping.h"
 #include "components/viz/host/host_display_client.h"
+#include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "ui/gfx/native_widget_types.h"
 
 class CefLayeredWindowUpdaterOSR;
@@ -33,12 +34,19 @@ class CefHostDisplayClientOSR : public viz::HostDisplayClient {
   // mojom::DisplayClient implementation.
   void UseProxyOutputDevice(UseProxyOutputDeviceCallback callback) override;
 
+#ifdef DISABLE_GPU
   void CreateLayeredWindowUpdater(
       mojo::PendingReceiver<viz::mojom::LayeredWindowUpdater> receiver)
       override;
+#endif
 
 #if BUILDFLAG(IS_LINUX)
   void DidCompleteSwapWithNewSize(const gfx::Size& size) override;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  void DidCompleteSwapWithNewSizeOHOS(const gfx::Size& size) override;
+  CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
 #endif
 
   CefRenderWidgetHostViewOSR* const view_;

@@ -18,9 +18,11 @@
 #include "base/threading/thread.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "content/public/browser/browser_thread.h"
+#include "net/base/features.h"
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
+#include "services/network/public/cpp/features.h"
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
 namespace net_service {
@@ -718,8 +720,15 @@ void StreamReaderURLLoader::ContinueResponse(bool was_redirected) {
 void StreamReaderURLLoader::SendBody() {
   DCHECK(thread_checker_.CalledOnValidThread());
 
+  MojoCreateDataPipeOptions options;
+  options.struct_size = sizeof(MojoCreateDataPipeOptions);
+  options.flags = MOJO_CREATE_DATA_PIPE_FLAG_NONE;
+  options.element_num_bytes = 1;
+  options.capacity_num_bytes =
+      network::features::GetDataPipeDefaultAllocationSize(
+          network::features::DataPipeAllocationSize::kLargerSizeIfPossible);
   mojo::ScopedDataPipeConsumerHandle consumer_handle;
-  if (CreateDataPipe(nullptr /*options*/, producer_handle_, consumer_handle) !=
+  if (CreateDataPipe(&options /*options*/, producer_handle_, consumer_handle) !=
       MOJO_RESULT_OK) {
     RequestComplete(net::ERR_FAILED);
     return;

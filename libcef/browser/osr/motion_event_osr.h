@@ -39,11 +39,18 @@ class CefMotionEventOSR : public ui::MotionEventGeneric {
   // touchcancel to make sure only send one ack per WebTouchEvent.
   void MarkUnchangedTouchPointsAsStationary(blink::WebTouchEvent* event,
                                             const CefTouchEvent& cef_event);
-
+#if BUILDFLAG(IS_OHOS)
+  bool FromOverlay() const override { return from_overlay_; };
+  void SetFromOverlay(bool from_overlay) override { from_overlay_ = from_overlay; };
+#endif
+  
  private:
   // Chromium can't cope with touch ids >31, so let's map the incoming
   // ids to a safe range.
   int id_map_[blink::WebTouchEvent::kTouchesLengthCap];
+#if BUILDFLAG(IS_OHOS)
+  bool from_overlay_ = false;
+#endif
 
   int LookupId(int id);
   int AddId(int id);

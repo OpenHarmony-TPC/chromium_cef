@@ -218,6 +218,13 @@ class CefRequest : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual uint64 GetIdentifier() = 0;
+
+  ///
+  // Returns whether the request was made for the main frame document.
+  // Will be false for subresources or iframes
+  ///
+  /*--cef()--*/
+  virtual bool IsMainFrame() = 0;
 };
 
 ///

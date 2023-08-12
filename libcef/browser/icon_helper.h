@@ -7,11 +7,13 @@
 #define CEF_LIBCEF_BROWSER_ICON_HELPER_H_
 #pragma once
 
+#include <unordered_set>
 #include <vector>
 
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
 
+#include "content/public/browser/navigation_handle.h"
 #include "third_party/blink/public/mojom/favicon/favicon_url.mojom-forward.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 
@@ -36,6 +38,10 @@ class IconHelper : public virtual CefBaseRefCounted {
   IconHelper(const IconHelper&) = delete;
   IconHelper& operator=(const IconHelper&) = delete;
 
+#if BUILDFLAG(IS_OHOS)
+  void SetMainFrameDocumentOnLoadCompleted(bool complete);
+  void SetLastPageUrl(const GURL& url);
+#endif
   void SetDisplayHandler(const CefRefPtr<CefDisplayHandler>& handler);
   void SetBrowser(const CefRefPtr<CefBrowser>& browser);
   void SetWebContents(content::WebContents* new_contents);
@@ -61,12 +67,22 @@ class IconHelper : public virtual CefBaseRefCounted {
                          size_t height,
                          cef_color_type_t color_type,
                          cef_alpha_type_t alpha_type);
+  void ClearFailedFaviconUrlSets(content::NavigationHandle* navigation_handle);
 
  private:
+  void InsertFailedFaviconUrl(const GURL& icon_url);
+  bool CheckFailedFaviconUrl(const GURL& icon_url);
+#if BUILDFLAG(IS_OHOS)
+  bool ShouldAbort();
+
+  bool document_on_load_completed_ = false;
+  GURL last_page_url_;
+#endif
   content::WebContents* web_contents_ = nullptr;
   CefRefPtr<CefDisplayHandler> handler_ = nullptr;
   CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
+  std::unordered_set<size_t> failed_favicon_urls_set_;
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(IconHelper);
 };

@@ -152,6 +152,7 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
   }
 
   const std::u16string& message_text = u"Is it OK to leave/reload this page?";
+  std::string url = web_contents ? web_contents->GetURL().spec() : "";
 
   CefRefPtr<CefClient> client = browser_->GetClient();
   if (client.get()) {
@@ -162,7 +163,7 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
 
       // Execute the user callback.
       bool handled = handler->OnBeforeUnloadDialog(
-          browser_, message_text, is_reload, callbackPtr.get());
+          browser_, url, message_text, is_reload, callbackPtr.get());
       if (handled)
         return;
 

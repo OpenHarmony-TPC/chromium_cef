@@ -157,6 +157,13 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   /*--cef(optional_param=url)--*/
   virtual void OnDataResubmission(CefRefPtr<CefBrowser> browser,
                                   CefRefPtr<CefCallback> callback) {}
+
+  ///
+  // Called when the first content rendering of web page.
+  ///
+  /*--cef()--*/
+  virtual void OnFirstContentfulPaint(long navigationStartTick,
+                                      long firstContentfulPaintMs) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_LOAD_HANDLER_H_

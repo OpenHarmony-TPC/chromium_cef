@@ -516,6 +516,25 @@ void CefBrowserContentsDelegate::DidStopLoading() {
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserContentsDelegate::DidStartNavigation(
+    content::NavigationHandle* navigation) {
+  if (icon_helper_) {
+    icon_helper_->ClearFailedFaviconUrlSets(navigation);
+
+    if (navigation->IsInMainFrame() && !navigation->IsSameDocument()) {
+      icon_helper_->SetMainFrameDocumentOnLoadCompleted(false);
+    }
+  }
+}
+
+void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
+  if (icon_helper_) {
+    icon_helper_->SetMainFrameDocumentOnLoadCompleted(true);
+  }
+}
+#endif
+
 void CefBrowserContentsDelegate::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   const net::Error error_code = navigation_handle->GetNetErrorCode();
@@ -524,6 +543,13 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
   // error code. For example, when creating a browser without loading a URL.
   if (!navigation_handle->HasCommitted() && error_code == net::OK)
     return;
+
+#if BUILDFLAG(IS_OHOS)
+  if (navigation_handle->IsInMainFrame() && navigation_handle->HasCommitted() &&
+      !navigation_handle->IsErrorPage() && icon_helper_) {
+    icon_helper_->SetLastPageUrl(navigation_handle->GetURL());
+  }
+#endif
 
   const bool is_main_frame = navigation_handle->IsInMainFrame();
   const auto global_id = frame_util::GetGlobalId(navigation_handle);
@@ -597,7 +623,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     CefString cef_method(navigation_handle->IsPost() ? "POST" : "GET");
     request->SetURL(cef_url);
     request->SetMethod(cef_method);
-    request->Set(net::HttpRequestHeaders());
+    request->Set(navigation_handle->GetRequestHeaders());
     OnLoadError(request, navigation_handle->IsInMainFrame(),
                 navigation_handle->HasUserGesture(), error_code);
   }

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3a236866417ec98ad3fb5f325b07250a31c0183c$
+// $hash=849d11a4573c74c39f2efe9cd3595703bd91329c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -260,6 +260,15 @@ typedef struct _cef_render_handler_t {
       const cef_range_t* selected_range);
 
   ///
+  // Called when text selection has changed for the specified |browser|. |text|
+  // is the currently text and |selected_range| is the character range.
+  ///
+  void(CEF_CALLBACK* on_selection_changed)(struct _cef_render_handler_t* self,
+                                           struct _cef_browser_t* browser,
+                                           const cef_string_t* text,
+                                           const cef_range_t* selected_range);
+
+  ///
   // Called when an on-screen keyboard should be shown or hidden for the
   // specified |browser|. |input_mode| specifies what kind of keyboard should be
   // opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any existing keyboard
@@ -271,6 +280,32 @@ typedef struct _cef_render_handler_t {
       struct _cef_browser_t* browser,
       cef_text_input_mode_t input_mode,
       int show_keyboard);
+
+  ///
+  // Called when the cursor position has changed.
+  ///
+  void(CEF_CALLBACK* on_cursor_update)(struct _cef_render_handler_t* self,
+                                       struct _cef_browser_t* browser,
+                                       const cef_rect_t* rect);
+
+  ///
+  /// Called when swap buffer completed with new size.
+  ///
+  void(CEF_CALLBACK* on_complete_swap_with_new_size)(
+      struct _cef_render_handler_t* self);
+
+  ///
+  /// Called when resize not work.
+  ///
+  void(CEF_CALLBACK* on_resize_not_work)(struct _cef_render_handler_t* self);
+
+  ///
+  /// Called when over scroll.
+  ///
+  void(CEF_CALLBACK* on_overscroll)(struct _cef_render_handler_t* self,
+                                    struct _cef_browser_t* browser,
+                                    const float x,
+                                    const float y);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

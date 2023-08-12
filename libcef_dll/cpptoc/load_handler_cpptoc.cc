@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c0c0bf119990d7ce088a2c9c7fc0fc4a0a378460$
+// $hash=f1ffcd166d591807cd34edcbcc700d09bb11e0a5$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
@@ -269,6 +269,23 @@ load_handler_on_data_resubmission(struct _cef_load_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), CefCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK
+load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
+                                       long navigationStartTick,
+                                       long firstContentfulPaintMs) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnFirstContentfulPaint(
+      navigationStartTick, firstContentfulPaintMs);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -285,6 +302,8 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
       load_handler_on_refresh_accessed_history;
   GetStruct()->on_page_visible = load_handler_on_page_visible;
   GetStruct()->on_data_resubmission = load_handler_on_data_resubmission;
+  GetStruct()->on_first_contentful_paint =
+      load_handler_on_first_contentful_paint;
 }
 
 // DESTRUCTOR - Do not edit by hand.

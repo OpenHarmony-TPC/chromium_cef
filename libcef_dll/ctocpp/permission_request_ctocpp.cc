@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=62fd641af7c0e8767c775f3e5d0148103822d62d$
+// $hash=115110934d5c4e5ab927062faabd0617c6208c46$
 //
 
 #include "libcef_dll/ctocpp/permission_request_ctocpp.h"
 #include "libcef_dll/cpptoc/access_request_cpptoc.h"
+#include "libcef_dll/cpptoc/screen_capture_access_request_cpptoc.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
@@ -81,6 +82,25 @@ void CefPermissionRequestCToCpp::OnPermissionRequestCanceled(
   // Execute
   _struct->on_permission_request_canceled(
       _struct, CefAccessRequestCppToC::Wrap(request));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefPermissionRequestCToCpp::OnScreenCaptureRequest(
+    CefRefPtr<CefScreenCaptureAccessRequest> request) {
+  cef_permission_request_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_screen_capture_request))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: request; type: refptr_diff
+  DCHECK(request.get());
+  if (!request.get())
+    return;
+
+  // Execute
+  _struct->on_screen_capture_request(
+      _struct, CefScreenCaptureAccessRequestCppToC::Wrap(request));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -29,15 +29,23 @@
 #include "third_party/blink/public/mojom/frame/find_in_page.mojom.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "chrome/browser/printing/print_view_manager_common.h"
+#include "libcef/browser/printing/ohos_print_manager.h"
 #include "printing/buildflags/buildflags.h"
 #if BUILDFLAG(ENABLE_PRINT_PREVIEW)
-#include "libcef/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager.h"
-#include "chrome/browser/printing/print_view_manager_common.h"
+#include "libcef/browser/printing/print_view_manager.h"
 #endif
 #endif
 
 namespace {
+
+#if BUILDFLAG(IS_OHOS)
+printing::OhosPrintManager* GetPrintViewManager(
+    content::WebContents* web_contents) {
+  return printing::OhosPrintManager::FromWebContents(web_contents);
+}
+#endif
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 printing::CefPrintViewManager* GetPrintViewManager(
@@ -189,6 +197,10 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   web_contents_->SetDelegate(static_cast<AlloyBrowserHostImpl*>(browser));
 
   PrefsTabHelper::CreateForWebContents(web_contents_);
+#if BUILDFLAG(IS_OHOS)
+  printing::OhosPrintManager::CreateForWebContents(web_contents_);
+#endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   printing::CefPrintViewManager::CreateForWebContents(web_contents_);
 #endif
@@ -275,7 +287,8 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
     return;
   auto frame = browser_->GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->SendTouchEvent(event);
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SendHitEvent(event.x, event.y, event.radius_x, event.radius_y);
   }
 }
 
@@ -373,6 +386,23 @@ bool CefBrowserPlatformDelegateAlloy::IsPrintPreviewSupported() const {
 }
 
 void CefBrowserPlatformDelegateAlloy::Print() {
+#if BUILDFLAG(IS_OHOS)
+  REQUIRE_ALLOY_RUNTIME();
+
+  auto contents_to_use = printing::GetWebContentsToUse(web_contents_);
+  if (!contents_to_use) {
+    LOG(ERROR) << "contents_to_use is nullptr";
+    return;
+  }
+
+  auto printViewManager = GetPrintViewManager(contents_to_use);
+  if (!printViewManager) {
+    LOG(ERROR) << "printViewManager is nullptr";
+    return;
+  }
+
+  printViewManager->PrintNow();
+#endif
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   REQUIRE_ALLOY_RUNTIME();
 
@@ -430,7 +460,7 @@ void CefBrowserPlatformDelegateAlloy::Find(const CefString& searchText,
       ->StartFinding(searchText.ToString16(), forward, matchCase, findNext,
                      /*run_synchronously_for_testing=*/false
 #if BUILDFLAG(IS_OHOS)
-					 ,
+                     ,
                      newSession
 #endif
       );

@@ -120,3 +120,10 @@ bool AlloyPermissionRequestHandler::Preauthorized(const CefString& origin,
 
   return i != preauthorized_permission_.end() && i->second == resources;
 }
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyPermissionRequestHandler::SendScreenCaptureRequest(
+    CefRefPtr<CefScreenCaptureAccessRequest> request) {
+  client_->OnScreenCaptureRequest(request);
+}
+#endif

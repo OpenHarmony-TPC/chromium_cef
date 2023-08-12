@@ -517,7 +517,6 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
   drag_start_rwh_ = source_rwh->GetWeakPtr();
 
   bool handled = false;
-
   CefRefPtr<CefRenderHandler> handler =
       browser_->GetClient()->GetRenderHandler();
   if (handler.get()) {
@@ -679,4 +678,11 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
   }
 
   return nullptr;
+}
+
+void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
+    bool should) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetShouldFrameSubmissionBeforeDraw(should);
 }

@@ -681,6 +681,9 @@ typedef struct _cef_browser_settings_t {
 #if BUILDFLAG(IS_OHOS)
   cef_state_t hide_vertical_scrollbars;
   cef_state_t hide_horizontal_scrollbars;
+  bool contextmenu_customization_enabled;
+  cef_color_t scrollbar_color;
+  bool blank_target_popup_intercept_enabled;
 #endif
   /* ohos webview end */
 } cef_browser_settings_t;
@@ -1030,6 +1033,7 @@ typedef enum {
   CEF_TEXT_INPUT_MODE_NUMERIC,
   CEF_TEXT_INPUT_MODE_DECIMAL,
   CEF_TEXT_INPUT_MODE_SEARCH,
+
 
   CEF_TEXT_INPUT_MODE_MAX = CEF_TEXT_INPUT_MODE_SEARCH,
 } cef_text_input_mode_t;
@@ -1803,6 +1807,10 @@ typedef struct _cef_touch_event_t {
   ///
   cef_pointer_type_t pointer_type;
 
+  ///
+  // The touch is from overlay.
+  ///
+  bool from_overlay;
 } cef_touch_event_t;
 
 ///
@@ -3504,6 +3512,88 @@ typedef struct _cef_select_popup_item_t {
   ///
   bool checked;
 } cef_select_popup_item_t;
+
+///
+// Type of an <input>.
+///
+typedef enum {
+  CEF_TEXT_INPUT_TYPE_NONE,
+  CEF_TEXT_INPUT_TYPE_TEXT,
+  CEF_TEXT_INPUT_TYPE_PASSWORD,
+  CEF_TEXT_INPUT_TYPE_SEARCH,
+  CEF_TEXT_INPUT_TYPE_EMAIL,
+  CEF_TEXT_INPUT_TYPE_NUMBER,
+  CEF_TEXT_INPUT_TYPE_TELEPHONE,
+  CEF_TEXT_INPUT_TYPE_URL,
+  CEF_TEXT_INPUT_TYPE_DATE,
+  CEF_TEXT_INPUT_TYPE_DATE_TIME,
+  CEF_TEXT_INPUT_TYPE_DATE_TIME_LOCAL,
+  CEF_TEXT_INPUT_TYPE_MONTH,
+  CEF_TEXT_INPUT_TYPE_TIME,
+  CEF_TEXT_INPUT_TYPE_WEEK,
+  CEF_TEXT_INPUT_TYPE_TEXT_AREA,
+  CEF_TEXT_INPUT_TYPE_CONTENT_EDITABLE,
+  CEF_TEXT_INPUT_TYPE_DATE_TIME_FIELD,
+  CEF_TEXT_INPUT_TYPE_TYPE_NULL,
+  CEF_TEXT_INPUT_TYPE_MAX = CEF_TEXT_INPUT_TYPE_TYPE_NULL,
+} cef_text_input_type_t;
+
+/// 
+// Supported date time chooser.
+///
+typedef struct _cef_date_time_chooser_t {
+  ///
+  // date time chooser type.
+  ///
+  cef_text_input_type_t dialog_type;
+
+  ///
+  // select date time.
+  ///
+  double dialog_value;
+
+  ///
+  // minimum date time.
+  ///
+  double minimum;
+
+  ///
+  // minimum date time.
+  ///
+  double maximum;
+
+  ///
+  // select step.
+  ///
+  double step;
+} cef_date_time_chooser_t;
+
+///
+// Support date time suggestion.
+///
+typedef struct _cef_date_time_suggestion_t {
+  ///
+  // The date/time value represented as a double.
+  ///
+  double value;
+
+  ///
+  // The localized value to be shown to the user.
+  ///
+  cef_string_t localized_value;
+
+  ///
+  // The label for the suggestion.
+  ///
+  cef_string_t label;
+} cef_date_time_suggestion_t;
+
+typedef enum {
+  CAPTURE_INVAILD_MODE = -1,
+  CAPTURE_HOME_SCREEN_MODE = 0,
+  CAPTURE_SPECIFIED_SCREEN_MODE = 1,
+  CAPTURE_SPECIFIED_WINDOW_MODE = 2
+} cef_screen_capture_mode_t;
 #ifdef __cplusplus
 }
 #endif

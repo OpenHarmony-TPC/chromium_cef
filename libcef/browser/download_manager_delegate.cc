@@ -284,6 +284,18 @@ CefDownloadManagerDelegate::~CefDownloadManagerDelegate() {
 }
 
 void CefDownloadManagerDelegate::OnDownloadUpdated(DownloadItem* download) {
+#if BUILDFLAG(IS_OHOS)
+  CefRefPtr<CefDownloadItemImpl> download_item(
+      new CefDownloadItemImpl(download));
+  CefRefPtr<CefDownloadItemCallback> callback(new CefDownloadItemCallbackImpl(
+      manager_ptr_factory_.GetWeakPtr(), download->GetId()));
+  if (download_handler_per_context_) {
+    download_handler_per_context_->OnDownloadUpdated(
+        nullptr, download_item.get(), callback);
+  } else {
+    LOG(ERROR) << "download_handler_for_browser_context not set";
+  }
+#else
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser(download);
   CefRefPtr<CefDownloadHandler> handler;
   if (browser.get())
@@ -299,7 +311,15 @@ void CefDownloadManagerDelegate::OnDownloadUpdated(DownloadItem* download) {
 
     std::ignore = download_item->Detach(nullptr);
   }
+#endif  //  BUILDFLAG(IS_OHOS)
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefDownloadManagerDelegate::SetDownloadHandler(
+    CefRefPtr<CefDownloadHandler> handler) {
+  download_handler_per_context_ = handler;
+}
+#endif  //  BUILDFLAG(IS_OHOS)
 
 void CefDownloadManagerDelegate::OnDownloadDestroyed(DownloadItem* item) {
   item->RemoveObserver(this);
@@ -346,7 +366,11 @@ void CefDownloadManagerDelegate::OnDownloadCreated(DownloadManager* manager,
     if (!url_chain.empty()) {
       LOG(INFO) << "Rejected download of " << url_chain.back().spec();
     }
+#if BUILDFLAG(IS_OHOS)
+    // When download item not has associated browser, do not cancel the download item.
+#else
     item->Cancel(true);
+#endif
   }
 }
 
@@ -361,6 +385,19 @@ void CefDownloadManagerDelegate::ManagerGoingDown(DownloadManager* manager) {
 bool CefDownloadManagerDelegate::DetermineDownloadTarget(
     DownloadItem* item,
     content::DownloadTargetCallback* callback) {
+#if BUILDFLAG(IS_OHOS)
+  // For new-created download, full path is empty.
+  // For resumed download, full path has value. So skip call
+  // onBeforeDownload when full path is no empty.
+  // The delegate should return |true| if it
+  // will determine the target information and will invoke |callback|. The
+  // callback may be invoked directly (synchronously). If this function returns
+  //|false|, the download manager will continue the download using a default
+  // target path.
+  if (!item->GetFullPath().empty()) {
+    return false;
+  }
+#else
   if (!item->GetForcedFilePath().empty()) {
     std::move(*callback).Run(
         item->GetForcedFilePath(), DownloadItem::TARGET_DISPOSITION_OVERWRITE,
@@ -370,10 +407,45 @@ bool CefDownloadManagerDelegate::DetermineDownloadTarget(
         download::DOWNLOAD_INTERRUPT_REASON_NONE);
     return true;
   }
-
-  // This callback may arrive before OnDownloadCreated, so we allow association
-  // from either method.
+#endif  //
+  // This callback may arrive before OnDownloadCreated, so we allow
+  // association from either method.
   CefRefPtr<AlloyBrowserHostImpl> browser = GetOrAssociateBrowser(item);
+#if BUILDFLAG(IS_OHOS)
+  int nweb_id = -1;
+  if (browser.get()) {
+    nweb_id = browser.get()->GetNWebId();
+  } else {
+    LOG(ERROR) << "DetermineDownloadTarget associate browser failed";
+  }
+  base::FilePath suggested_name = net::GenerateFileName(
+      item->GetURL(), item->GetContentDisposition(), std::string(),
+      item->GetSuggestedFilename(), item->GetMimeType(), "download");
+
+  CefRefPtr<CefDownloadItemImpl> download_item(
+      new CefDownloadItemImpl(item, nweb_id));
+
+  CefRefPtr<CefBeforeDownloadCallback> callbackObj(
+      new CefBeforeDownloadCallbackImpl(manager_ptr_factory_.GetWeakPtr(),
+                                        item->GetId(), suggested_name,
+                                        std::move(*callback)));
+  if (download_handler_per_context_) {
+    download_handler_per_context_->OnBeforeDownload(
+        browser.get(), download_item.get(), suggested_name.value(),
+        callbackObj);
+  }
+  // Call original download handler.
+  CefRefPtr<CefDownloadHandler> handler;
+  if (browser.get())
+    handler = GetDownloadHandler(browser);
+
+  if (handler.get())
+    handler->OnBeforeDownload(browser.get(), download_item.get(),
+                              suggested_name.value(), callbackObj);
+  std::ignore = download_item->Detach(nullptr);
+
+  return true;
+#else
   CefRefPtr<CefDownloadHandler> handler;
   if (browser.get())
     handler = GetDownloadHandler(browser);
@@ -396,6 +468,7 @@ bool CefDownloadManagerDelegate::DetermineDownloadTarget(
   }
 
   return true;
+#endif  //  BUILDFLAG(IS_OHOS)
 }
 
 void CefDownloadManagerDelegate::GetNextId(
@@ -419,8 +492,8 @@ void CefDownloadManagerDelegate::OnBrowserDestroyed(
   for (; it != item_browser_map_.end(); ++it) {
     if (it->second == browser) {
       // Don't call back into browsers that have been destroyed. We're not
-      // canceling the download so it will continue silently until it completes
-      // or until the associated browser context is destroyed.
+      // canceling the download so it will continue silently until it
+      // completes or until the associated browser context is destroyed.
       it->second = nullptr;
     }
   }
@@ -439,18 +512,30 @@ AlloyBrowserHostImpl* CefDownloadManagerDelegate::GetOrAssociateBrowser(
     browser = AlloyBrowserHostImpl::GetBrowserForContents(contents).get();
     DCHECK(browser);
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (!browser) {
+    // If download item not find associated browser, still add observer.
+  } else {
+    item_browser_map_.insert(std::make_pair(item, browser));
+    // Register as an observer so that we can cancel associated DownloadItems
+    // when the browser is destroyed.
+    if (!browser->HasObserver(this))
+      browser->AddObserver(this);
+  }
+  item->AddObserver(this);
+#else
   if (!browser)
     return nullptr;
-
   item->AddObserver(this);
 
   item_browser_map_.insert(std::make_pair(item, browser));
 
-  // Register as an observer so that we can cancel associated DownloadItems when
-  // the browser is destroyed.
+  // Register as an observer so that we can cancel associated DownloadItems
+  // when the browser is destroyed.
   if (!browser->HasObserver(this))
     browser->AddObserver(this);
-
+#endif  //  BUILDFLAG(IS_OHOS)
   return browser;
 }
 

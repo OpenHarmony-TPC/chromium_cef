@@ -52,7 +52,11 @@ class CefDragDataImpl : public CefDragData {
   // This method is not safe. Use Lock/Unlock to get mutually exclusive access.
   content::DropData* drop_data() { return &data_; }
 
-  void SetReadOnly(bool read_only);
+  void SetReadOnly(bool read_only) override;
+
+#if BUILDFLAG(IS_OHOS)
+  bool IsImageFileContents() override;
+#endif
 
   base::Lock& lock() { return lock_; }
 

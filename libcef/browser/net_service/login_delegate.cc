@@ -4,8 +4,6 @@
 
 #include "libcef/browser/net_service/login_delegate.h"
 
-#include <securec.h>
-
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/net_database/cef_data_base_impl.h"
 #include "libcef/browser/net_service/browser_urlrequest_impl.h"
@@ -80,11 +78,11 @@ class AuthCallbackImpl : public CefAuthCallback {
     char password[MAX_PWD_LENGTH + 1] = {0};
     dataBase->GetHttpAuthCredentials(host_, realm_, username, password, MAX_PWD_LENGTH + 1);
     if (username.empty() || strlen(password) == 0) {
-      (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
+      memset(password, 0, MAX_PWD_LENGTH + 1);
       return false;
     }
     CefString passwordCef(password, strlen(password));
-    (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
+    memset(password, 0, MAX_PWD_LENGTH + 1);
     if (!task_runner_->RunsTasksInCurrentSequence()) {
       task_runner_->PostTask(
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,

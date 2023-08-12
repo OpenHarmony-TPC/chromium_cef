@@ -52,6 +52,7 @@
 #include "include/cef_keyboard_handler.h"
 #include "include/cef_life_span_handler.h"
 #include "include/cef_load_handler.h"
+#include "include/cef_media_handler.h"
 #include "include/cef_permission_request.h"
 #include "include/cef_print_handler.h"
 #include "include/cef_process_message.h"
@@ -168,6 +169,12 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() { return nullptr; }
+
+  ///
+  // Return the handler for browser media events.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefMediaHandler> GetMediaHandler() { return nullptr; }
 
   ///
   // Return the handler for browser geolocation permission request events.
