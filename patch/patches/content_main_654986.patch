@@ -1,0 +1,178 @@
+diff --git content/app/content_main.cc content/app/content_main.cc
+index bf4cbe990cb4d..e494fff1fa5d5 100644
+--- content/app/content_main.cc
++++ content/app/content_main.cc
+@@ -225,16 +225,10 @@ ContentMainParams::~ContentMainParams() = default;
+ ContentMainParams::ContentMainParams(ContentMainParams&&) = default;
+ ContentMainParams& ContentMainParams::operator=(ContentMainParams&&) = default;
+ 
+-// This function must be marked with NO_STACK_PROTECTOR or it may crash on
+-// return, see the --change-stack-guard-on-fork command line flag.
+-int NO_STACK_PROTECTOR
+-RunContentProcess(ContentMainParams params,
+-                  ContentMainRunner* content_main_runner) {
++int ContentMainInitialize(ContentMainParams params,
++                          ContentMainRunner* content_main_runner) {
+   int exit_code = -1;
+   base::debug::GlobalActivityTracker* tracker = nullptr;
+-#if BUILDFLAG(IS_MAC)
+-  std::unique_ptr<base::mac::ScopedNSAutoreleasePool> autorelease_pool;
+-#endif
+ 
+   // A flag to indicate whether Main() has been called before. On Android, we
+   // may re-run Main() without restarting the browser process. This flag
+@@ -318,12 +312,6 @@ RunContentProcess(ContentMainParams params,
+ #endif
+ 
+ #if BUILDFLAG(IS_MAC)
+-    // We need this pool for all the objects created before we get to the event
+-    // loop, but we don't want to leave them hanging around until the app quits.
+-    // Each "main" needs to flush this pool right before it goes into its main
+-    // event loop to get rid of the cruft.
+-    autorelease_pool = std::make_unique<base::mac::ScopedNSAutoreleasePool>();
+-    params.autorelease_pool = autorelease_pool.get();
+     InitializeMac();
+ #endif
+ 
+@@ -396,8 +384,18 @@ RunContentProcess(ContentMainParams params,
+ 
+   if (IsSubprocess())
+     CommonSubprocessInit();
+-  exit_code = content_main_runner->Run();
+ 
++  return exit_code;
++}
++
++// This function must be marked with NO_STACK_PROTECTOR or it may crash on
++// return, see the --change-stack-guard-on-fork command line flag.
++int NO_STACK_PROTECTOR
++ContentMainRun(ContentMainRunner* content_main_runner) {
++  int exit_code = content_main_runner->Run();
++
++  base::debug::GlobalActivityTracker* tracker =
++      base::debug::GlobalActivityTracker::Get();
+   if (tracker) {
+     if (exit_code == 0) {
+       tracker->SetProcessPhaseIfEnabled(
+@@ -409,14 +407,41 @@ RunContentProcess(ContentMainParams params,
+     }
+   }
+ 
+-#if BUILDFLAG(IS_MAC)
+-  autorelease_pool.reset();
+-#endif
++  return exit_code;
++}
+ 
++void ContentMainShutdown(ContentMainRunner* content_main_runner) {
+ #if !BUILDFLAG(IS_ANDROID)
+   content_main_runner->Shutdown();
+ #endif
++}
++
++// This function must be marked with NO_STACK_PROTECTOR or it may crash on
++// return, see the --change-stack-guard-on-fork command line flag.
++int NO_STACK_PROTECTOR
++RunContentProcess(ContentMainParams params,
++                  ContentMainRunner* content_main_runner) {
++#if BUILDFLAG(IS_MAC)
++  // We need this pool for all the objects created before we get to the event
++  // loop, but we don't want to leave them hanging around until the app quits.
++  // Each "main" needs to flush this pool right before it goes into its main
++  // event loop to get rid of the cruft.
++  std::unique_ptr<base::mac::ScopedNSAutoreleasePool> autorelease_pool =
++      std::make_unique<base::mac::ScopedNSAutoreleasePool>();
++  params.autorelease_pool = autorelease_pool.get();
++#endif
++
++  int exit_code = ContentMainInitialize(std::move(params), content_main_runner);
++  if (exit_code >= 0)
++    return exit_code;
++  exit_code = ContentMainRun(content_main_runner);
++
++#if BUILDFLAG(IS_MAC)
++  params.autorelease_pool = nullptr;
++  autorelease_pool.reset();
++#endif
+ 
++  ContentMainShutdown(content_main_runner);
+   return exit_code;
+ }
+ 
+diff --git content/app/content_main_runner_impl.cc content/app/content_main_runner_impl.cc
+index 5a365936031e6..ab4a3f2138e28 100644
+--- content/app/content_main_runner_impl.cc
++++ content/app/content_main_runner_impl.cc
+@@ -44,6 +44,7 @@
+ #include "base/task/thread_pool/thread_pool_instance.h"
+ #include "base/threading/hang_watcher.h"
+ #include "base/threading/platform_thread.h"
++#include "base/threading/thread_restrictions.h"
+ #include "base/time/time.h"
+ #include "base/trace_event/trace_event.h"
+ #include "build/build_config.h"
+@@ -1182,6 +1183,11 @@ void ContentMainRunnerImpl::Shutdown() {
+   is_shutdown_ = true;
+ }
+ 
++void ContentMainRunnerImpl::ShutdownOnUIThread() {
++  base::ScopedAllowBaseSyncPrimitivesForTesting allow_wait;
++  discardable_shared_memory_manager_.reset();
++}
++
+ // static
+ std::unique_ptr<ContentMainRunner> ContentMainRunner::Create() {
+   return ContentMainRunnerImpl::Create();
+diff --git content/app/content_main_runner_impl.h content/app/content_main_runner_impl.h
+index 2cfcb5330af5d..e1966af803dfb 100644
+--- content/app/content_main_runner_impl.h
++++ content/app/content_main_runner_impl.h
+@@ -31,7 +31,7 @@ namespace content {
+ class ContentClient;
+ class MojoIpcSupport;
+ 
+-class ContentMainRunnerImpl : public ContentMainRunner {
++class CONTENT_EXPORT ContentMainRunnerImpl : public ContentMainRunner {
+  public:
+   static std::unique_ptr<ContentMainRunnerImpl> Create();
+ 
+@@ -50,6 +50,8 @@ class ContentMainRunnerImpl : public ContentMainRunner {
+   int Run() override;
+   void Shutdown() override;
+ 
++  void ShutdownOnUIThread();
++
+  private:
+   int RunBrowser(MainFunctionParams main_function_params,
+                  bool start_minimal_browser);
+diff --git content/common/set_process_title.cc content/common/set_process_title.cc
+index 06cdab47c8cdf..1f0ea6c7215ca 100644
+--- content/common/set_process_title.cc
++++ content/common/set_process_title.cc
+@@ -54,7 +54,7 @@ void SetProcessTitleFromCommandLine(const char** main_argv) {
+   bool have_argv0 = false;
+ 
+ #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+-  DCHECK_EQ(base::PlatformThread::CurrentId(), getpid());
++  // DCHECK_EQ(base::PlatformThread::CurrentId(), getpid());
+ 
+   if (main_argv)
+     setproctitle_init(main_argv);
+diff --git content/public/app/content_main.h content/public/app/content_main.h
+index 268b201ab060a..b745f44139a3d 100644
+--- content/public/app/content_main.h
++++ content/public/app/content_main.h
+@@ -93,6 +93,13 @@ struct CONTENT_EXPORT ContentMainParams {
+   }
+ };
+ 
++// Split RunContentProcess() into separate stages.
++CONTENT_EXPORT int ContentMainInitialize(
++    ContentMainParams params,
++    ContentMainRunner* content_main_runner);
++CONTENT_EXPORT int ContentMainRun(ContentMainRunner* content_main_runner);
++CONTENT_EXPORT void ContentMainShutdown(ContentMainRunner* content_main_runner);
++
+ CONTENT_EXPORT int RunContentProcess(ContentMainParams params,
+                                      ContentMainRunner* content_main_runner);
+ 

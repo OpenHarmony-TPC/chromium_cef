@@ -1,0 +1,26 @@
+diff --git build/config/linux/atk/BUILD.gn build/config/linux/atk/BUILD.gn
+index 647bef697ec8f..64708b91d273f 100644
+--- build/config/linux/atk/BUILD.gn
++++ build/config/linux/atk/BUILD.gn
+@@ -11,7 +11,7 @@ import("//build/config/ui.gni")
+ assert(!is_chromeos)
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   assert(use_glib, "use_atk=true requires that use_glib=true")
+diff --git build/config/linux/atspi2/BUILD.gn build/config/linux/atspi2/BUILD.gn
+index d103d09a39a51..e032b7f357e85 100644
+--- build/config/linux/atspi2/BUILD.gn
++++ build/config/linux/atspi2/BUILD.gn
+@@ -6,7 +6,7 @@ import("//build/config/linux/pkg_config.gni")
+ import("//build/config/ui.gni")
+ 
+ # These packages should _only_ be expected when building for a target.
+-assert(current_toolchain == default_toolchain)
++# assert(current_toolchain == default_toolchain)
+ 
+ if (use_atk) {
+   pkg_config("atspi2") {

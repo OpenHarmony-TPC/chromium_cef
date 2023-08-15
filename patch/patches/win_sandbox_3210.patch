@@ -1,0 +1,18 @@
+diff --git sandbox/policy/win/sandbox_win.cc sandbox/policy/win/sandbox_win.cc
+index 197e66eeb5b3b..f92f0659aa13f 100644
+--- sandbox/policy/win/sandbox_win.cc
++++ sandbox/policy/win/sandbox_win.cc
+@@ -1155,6 +1155,13 @@ ResultCode SandboxWin::StartSandboxedProcess(
+     const base::HandlesToInheritVector& handles_to_inherit,
+     SandboxDelegate* delegate,
+     base::Process* process) {
++  // Will be nullptr if SandboxInterfaceInfo was not initialized by the CEF
++  // client, meaning that the sandbox is implicitly disabled.
++  if (!g_broker_services) {
++    return LaunchWithoutSandbox(cmd_line, handles_to_inherit, delegate,
++                                process);
++  }
++
+   scoped_refptr<TargetPolicy> policy = g_broker_services->CreatePolicy();
+   ResultCode result = GeneratePolicyForSandboxedProcess(
+       cmd_line, process_type, handles_to_inherit, delegate, policy);
