@@ -62,10 +62,6 @@ used to filter file path.
     <oatconfig>
         <policylist>
             <policy name="projectPolicy" desc="">
-                <policyitem type="compatibility" name="Khronos License" path="SPIRV.*" desc="" />
-                <policyitem type="compatibility" name="GPL-2.0-with-bison-exception" path=".*" desc="" />
-                <policyitem type="compatibility" name="GPL-3.0+" path=".*" desc="" />
-                <policyitem type="compatibility" name="Khronos Group License" path="glslang/MachineIndependent.*" desc="" />
                 <!-- <policyitem type="compatibility" name="Khronos License" path=".*" desc="" />
                 <policyitem type="compatibility" name="Apache-2.0" path=".*" desc="" />
                 <policyitem type="compatibility" name="GPLStyleLicense" path=".*" desc="" />
@@ -97,6 +93,12 @@ used to filter file path.
                 <filteritem type="filepath" name="third_party/llvm-10.0/Android.bp"
                     desc="" />
                 <filteritem type="filepath" name="third_party/SPIRV-Headers/BUILD.bazel"
+                    desc="" />
+                 <filteritem type="filepath" name="README.OpenSource"
+                    desc="" />
+            </filefilter>
+            <filefilter name="defaultFilter">
+                <filteritem type="filepath" name="README.OpenSource"
                     desc="" />
             </filefilter>
         </filefilterlist>
@@ -130,11 +132,6 @@ used to filter file path.
                 * Copyright (c) 2007-2016 The Khronos Group Inc
             " desc="" />
             </licensematcher> -->
-            <licensematcher name="Khronos Group License" desc="">
-                <licensetext name="
-                * Copyright (c) 2013 The Khronos Group Inc.
-            " desc="" />
-            </licensematcher>
         </licensematcherlist>
     </oatconfig>
 </configuration>
