@@ -132,9 +132,14 @@
 #include "components/subresource_filter/content/renderer/subresource_filter_agent.h"
 #include "components/subresource_filter/content/renderer/unverified_ruleset_dealer.h"
 #include "components/subresource_filter/core/common/common_features.h"
-#include "libcef/renderer/alloy/alloy_content_settings_client.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/autofill/content/renderer/autofill_agent.h"
+#include "components/autofill/content/renderer/autofill_assistant_agent.h"
+#include "components/autofill/content/renderer/password_autofill_agent.h"
+#include "components/autofill/content/renderer/password_generation_agent.h"
+#endif
 AlloyContentRendererClient::AlloyContentRendererClient()
     : main_entry_time_(base::TimeTicks::Now()),
       render_manager_(new CefRenderManager) {
@@ -325,16 +330,8 @@ void AlloyContentRendererClient::RenderFrameCreated(
           main_frame_no_state_prefetch_helper->histogram_prefix());
     }
   }
-
-  auto* alloy_content_settings_client =
-      new AlloyContentSettingsClient(render_frame);
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser) &&
-      observer_.get() && alloy_content_settings_client) {
-    alloy_content_settings_client->SetContentSettingRules(
-        observer_->content_setting_rules());
-  }
 #endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PLUGINS)
   new PepperHelper(render_frame);
 #endif
@@ -379,6 +376,24 @@ void AlloyContentRendererClient::RenderFrameCreated(
         base::WrapUnique(
             new extensions::CefPrintRenderFrameHelperDelegate(*is_windowless)));
   }
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  blink::AssociatedInterfaceRegistry* associated_interfaces =
+      render_frame_observer->associated_interfaces();
+  autofill::PasswordAutofillAgent* password_autofill_agent =
+      new autofill::PasswordAutofillAgent(render_frame, associated_interfaces);
+  autofill::PasswordGenerationAgent* password_generation_agent = nullptr;
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    password_generation_agent = new autofill::PasswordGenerationAgent(
+        render_frame, password_autofill_agent, associated_interfaces);
+  }
+#endif
+  new autofill::AutofillAgent(render_frame, password_autofill_agent,
+                              password_generation_agent, nullptr,
+                              associated_interfaces);
 #endif
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PDF)

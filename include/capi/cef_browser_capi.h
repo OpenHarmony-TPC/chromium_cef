@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=68c8400a18393833ceb8e6689dbedd81e90f4ccb$
+// $hash=767afed213b1b68fb25b19582112b1337ab80b25$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -152,6 +152,12 @@ typedef struct _cef_browser_t {
   // should show free copy menu
   ///
   int(CEF_CALLBACK* should_show_free_copy)(struct _cef_browser_t* self);
+
+  ///
+  // select password dialog to fill
+  ///
+  void(CEF_CALLBACK* password_suggestion_selected)(struct _cef_browser_t* self,
+                                                   int list_index);
 
   ///
   // Set user agent for current page.
@@ -285,6 +291,36 @@ typedef struct _cef_browser_t {
   void(CEF_CALLBACK* set_enable_blank_target_popup_intercept)(
       struct _cef_browser_t* self,
       int enableBlankTargetPopup);
+
+  ///
+  // Whether automatically saving password had been enabled.
+  ///
+  int(CEF_CALLBACK* get_save_password_automatically)(
+      struct _cef_browser_t* self);
+
+  ///
+  // Set enable to allow automatically save password
+  ///
+  void(CEF_CALLBACK* set_save_password_automatically)(
+      struct _cef_browser_t* self,
+      int enable);
+
+  ///
+  // save or upddate current page password
+  ///
+  void(CEF_CALLBACK* save_or_update_password)(struct _cef_browser_t* self,
+                                              int is_update);
+
+  ///
+  // Whether saving password had been enabled.
+  ///
+  int(CEF_CALLBACK* get_save_password)(struct _cef_browser_t* self);
+
+  ///
+  // Set enable to save password
+  ///
+  void(CEF_CALLBACK* set_save_password)(struct _cef_browser_t* self,
+                                        int enable);
 } cef_browser_t;
 
 ///
@@ -720,6 +756,14 @@ typedef struct _cef_browser_host_t {
   // hidden. This function is only used when window rendering is disabled.
   ///
   void(CEF_CALLBACK* was_hidden)(struct _cef_browser_host_t* self, int hidden);
+
+  ///
+  // Notify the browser that it has been occluded or unoccluded. Layouting and
+  // cef_render_handler_t::OnPaint notification will stop when the browser is
+  // occluded. This function is only used when window rendering is disabled.
+  ///
+  void(CEF_CALLBACK* was_occluded)(struct _cef_browser_host_t* self,
+                                   int occluded);
 
   ///
   // Send a notification to the browser that the screen info has changed. The
@@ -1339,6 +1383,13 @@ typedef struct _cef_browser_host_t {
                               float delta,
                               float width,
                               float height);
+
+  ///
+  // Set the window id of the UI framework
+  ///
+  void(CEF_CALLBACK* set_window_id)(struct _cef_browser_host_t* self,
+                                    int window_id,
+                                    int nweb_id);
 } cef_browser_host_t;
 
 ///

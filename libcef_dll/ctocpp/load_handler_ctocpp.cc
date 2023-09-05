@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fa23abd5e49712096e86494af9b3654d1aef0b4f$
+// $hash=dde952064b6d13a7374cffa191a217e5016b5944$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
@@ -48,6 +48,7 @@ void CefLoadHandlerCToCpp::OnLoadingStateChange(CefRefPtr<CefBrowser> browser,
 NO_SANITIZE("cfi-icall")
 void CefLoadHandlerCToCpp::OnLoadStart(CefRefPtr<CefBrowser> browser,
                                        CefRefPtr<CefFrame> frame,
+                                       const CefString& url,
                                        TransitionType transition_type) {
   shutdown_checker::AssertNotShutdown();
 
@@ -65,10 +66,12 @@ void CefLoadHandlerCToCpp::OnLoadStart(CefRefPtr<CefBrowser> browser,
   DCHECK(frame.get());
   if (!frame.get())
     return;
+  // Unverified params: url
 
   // Execute
   _struct->on_load_start(_struct, CefBrowserCppToC::Wrap(browser),
-                         CefFrameCppToC::Wrap(frame), transition_type);
+                         CefFrameCppToC::Wrap(frame), url.GetStruct(),
+                         transition_type);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -270,8 +273,9 @@ void CefLoadHandlerCToCpp::OnDataResubmission(CefRefPtr<CefBrowser> browser,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnFirstContentfulPaint(long navigationStartTick,
-                                                  long firstContentfulPaintMs) {
+void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
+    int64_t navigationStartTick,
+    int64_t firstContentfulPaintMs) {
   shutdown_checker::AssertNotShutdown();
 
   cef_load_handler_t* _struct = GetStruct();

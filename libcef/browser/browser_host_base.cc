@@ -67,6 +67,7 @@
 
 #if defined(OHOS_NWEB_EX)
 #include "content/public/common/content_switches.h"
+#include "libcef/browser/autofill/oh_autofill_client.h"
 #endif
 
 namespace {
@@ -2490,6 +2491,56 @@ void CefBrowserHostBase::SetForceEnableZoom(bool forceEnableZoom) {
 #endif
 }
 
+void CefBrowserHostBase::SaveOrUpdatePassword(bool is_update) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->SaveOrUpdatePassword(is_update);
+#endif
+}
+
+void CefBrowserHostBase::SetSavePasswordAutomatically(bool enable) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->SetSavePasswordAutomatically(enable);
+#endif
+}
+
+bool CefBrowserHostBase::GetSavePasswordAutomatically() {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->GetSavePasswordAutomatically();
+#else
+  return false;
+#endif
+}
+
+void CefBrowserHostBase::SetSavePassword(bool enable) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  LOG(INFO) << "set save password " << enable;
+  GetWebContents()->SetSavePassword(enable);
+#endif
+}
+
+bool CefBrowserHostBase::GetSavePassword() {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->GetSavePassword();
+#else
+  return false;
+#endif
+}
+
 void CefBrowserHostBase::SelectAndCopy() {
 #if defined(OHOS_NWEB_EX)
   if (!GetWebContents()) {
@@ -2497,6 +2548,19 @@ void CefBrowserHostBase::SelectAndCopy() {
   }
   LOG(INFO) << "select and copy invoke";
   GetWebContents()->SelectAndCopy();
+#endif
+}
+
+void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+  autofill::OhAutofillClient* autofill_client =
+      autofill::OhAutofillClient::FromWebContents(GetWebContents());
+  if (autofill_client) {
+    autofill_client->SuggestionSelected(list_index);
+  }
 #endif
 }
 

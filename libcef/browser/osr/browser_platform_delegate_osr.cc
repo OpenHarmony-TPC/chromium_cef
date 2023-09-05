@@ -34,6 +34,18 @@ void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
       static_cast<cef_text_direction_t>(menu_ptr->text_direction);
   menu_item.has_text_direction_override = menu_ptr->has_text_direction_override;
 }
+
+#if defined(OHOS_NWEB_EX)
+void ConvertAutofillPopupItem(const autofill::Suggestion& suggestion,
+                              CefAutofillPopupItem& menu_item) {
+  CefString label = CefString(base::UTF16ToUTF8(suggestion.value));
+  CefString sublabel = CefString(suggestion.label);
+  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
+  cef_string_set(sublabel.c_str(), sublabel.length(), &(menu_item.sublabel),
+                 true);
+}
+#endif
+
 }  // namespace
 
 class CefSelectPopupCallbackImpl : public CefSelectPopupCallback {
@@ -272,6 +284,20 @@ void CefBrowserPlatformDelegateOsr::WasHidden(bool hidden) {
       web_contents->WasShown();
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateOsr::WasOccluded(bool occluded) {
+  // The WebContentsImpl will notify the OSR view.
+  content::WebContentsImpl* web_contents =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+  if (web_contents) {
+    if (occluded)
+      web_contents->WasOccluded();
+    else
+      web_contents->WasShown();
+  }
+}
+#endif
 
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
@@ -564,6 +590,50 @@ void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
   }
 }
 
+#if defined(OHOS_NWEB_EX)
+void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
+    const gfx::RectF& element_bounds,
+    bool is_rtl,
+    const std::vector<autofill::Suggestion>& suggestions) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    std::vector<CefAutofillPopupItem> item_list;
+    for (auto& item : suggestions) {
+      CefAutofillPopupItem menu_item;
+      ConvertAutofillPopupItem(item, menu_item);
+      item_list.push_back(menu_item);
+    }
+    LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
+              << ", y: " << element_bounds.y()
+              << ", element_bounds width: " << element_bounds.width()
+              << ", element_bounds height:" << element_bounds.height();
+    handler->OnShowAutofillPopup(
+        browser_,
+        CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
+                element_bounds.height()),
+        is_rtl, item_list);
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::OnHideAutofillPopup() {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    handler->OnHideAutofillPopup();
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
+                                                       const std::string& url) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    handler->ShowPasswordDialog(is_update, url);
+  }
+}
+#endif
+
 void CefBrowserPlatformDelegateOsr::UpdateDragCursor(
     ui::mojom::DragOperation operation) {
   CefRefPtr<CefRenderHandler> handler =
@@ -685,4 +755,4 @@ void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
     view->SetShouldFrameSubmissionBeforeDraw(should);
-}
+}

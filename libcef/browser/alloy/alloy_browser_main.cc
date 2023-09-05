@@ -108,6 +108,8 @@
 #include "components/performance_manager/embedder/graph_features.h"
 #include "components/performance_manager/embedder/performance_manager_lifetime.h"
 #include "components/performance_manager/embedder/performance_manager_registry.h"
+#include "content/public/browser/network_quality_observer_factory.h"
+#include "content/public/common/content_switches.h"
 #include "ohos_nweb/browser/performance_manager/nweb_performance_manager.h"
 #endif
 
@@ -182,7 +184,6 @@ void AlloyBrowserMainParts::PostCreateMainMessageLoop() {
   printing::PrintingContextLinux::SetPdfPaperSizeFunction(
       &CefPrintDialogLinux::GetPdfPaperSize);
 #endif  // BUILDFLAG(IS_LINUX)
-
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
   const base::CommandLine* command_line =
       base::CommandLine::ForCurrentProcess();
@@ -237,6 +238,18 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
 #if defined(USE_AURA)
   screen_ = views::CreateDesktopScreen();
   display::Screen::SetScreenInstance(screen_.get());
+#endif
+#if BUILDFLAG(IS_OHOS)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (!network_quality_tracker_) {
+      network_quality_tracker_ =
+          std::make_unique<network::NetworkQualityTracker>(
+              base::BindRepeating(&content::GetNetworkService));
+    }
+    network_quality_observer_ =
+        content::CreateNetworkQualityObserver(network_quality_tracker_.get());
+  }
 #endif
 
   if (extensions::ExtensionsEnabled()) {
@@ -328,3 +341,10 @@ void AlloyBrowserMainParts::PostDestroyThreads() {
 #endif
 #endif  // defined(TOOLKIT_VIEWS)
 }
+
+#if BUILDFLAG(IS_OHOS)
+network::NetworkQualityTracker* AlloyBrowserMainParts::network_quality_tracker()
+    const {
+  return network_quality_tracker_.get();
+}
+#endif

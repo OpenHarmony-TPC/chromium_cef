@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=fcda5b9ec03f8bae722fa681f0cde144caf6c929$
+// $hash=cdba4ba5d7263e7659504384a7565cb56e1b1d11$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -110,7 +110,8 @@ typedef struct _cef_cookie_manager_t {
   // cannot be accessed.
   ///
   int(CEF_CALLBACK* visit_all_cookies)(struct _cef_cookie_manager_t* self,
-                                       struct _cef_cookie_visitor_t* visitor);
+                                       struct _cef_cookie_visitor_t* visitor,
+                                       int is_sync);
 
   ///
   // Visit a subset of cookies on the UI thread. The results are filtered by the
@@ -122,7 +123,8 @@ typedef struct _cef_cookie_manager_t {
   int(CEF_CALLBACK* visit_url_cookies)(struct _cef_cookie_manager_t* self,
                                        const cef_string_t* url,
                                        int includeHttpOnly,
-                                       struct _cef_cookie_visitor_t* visitor);
+                                       struct _cef_cookie_visitor_t* visitor,
+                                       int is_sync);
 
   ///
   // Sets a cookie given a valid URL and explicit user-provided cookie
@@ -136,7 +138,8 @@ typedef struct _cef_cookie_manager_t {
   int(CEF_CALLBACK* set_cookie)(struct _cef_cookie_manager_t* self,
                                 const cef_string_t* url,
                                 const struct _cef_cookie_t* cookie,
-                                struct _cef_set_cookie_callback_t* callback);
+                                struct _cef_set_cookie_callback_t* callback,
+                                int is_sync);
 
   ///
   // Delete all cookies that match the specified parameters. If both |url| and
@@ -154,7 +157,8 @@ typedef struct _cef_cookie_manager_t {
       const cef_string_t* url,
       const cef_string_t* cookie_name,
       int is_session,
-      struct _cef_delete_cookies_callback_t* callback);
+      struct _cef_delete_cookies_callback_t* callback,
+      int is_sync);
 
   ///
   // Flush the backing store (if any) to disk. If |callback| is non-NULL it will

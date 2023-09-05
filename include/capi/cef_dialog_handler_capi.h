@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=812ea80d7ce94cb282389f7359f7093249c48f93$
+// $hash=bc3b61b457452101ecbb18abc37a83955cc076ce$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -165,6 +165,31 @@ typedef struct _cef_dialog_handler_t {
       int right_aligned,
       int allow_multiple_selection,
       struct _cef_select_popup_callback_t* callback);
+
+  ///
+  // hide password Autofill popup menu.
+  ///
+  void(CEF_CALLBACK* on_hide_autofill_popup)(
+      struct _cef_dialog_handler_t* self);
+
+  ///
+  // Show password Autofill popup menu.
+  ///
+  void(CEF_CALLBACK* on_show_autofill_popup)(
+      struct _cef_dialog_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_rect_t* bounds,
+      int right_aligned,
+      size_t menu_itemsCount,
+      cef_autofill_popup_item_t const* menu_items);
+
+  ///
+  // Called when notify ui to show password dialog to query user to save
+  // password.
+  ///
+  void(CEF_CALLBACK* show_password_dialog)(struct _cef_dialog_handler_t* self,
+                                           int is_update,
+                                           const cef_string_t* url);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

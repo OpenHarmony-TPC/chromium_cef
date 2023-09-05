@@ -24,6 +24,7 @@
 
 #include "base/synchronization/lock.h"
 #include "base/synchronization/waitable_event.h"
+#include "components/autofill/core/browser/ui/suggestion.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
@@ -112,6 +113,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
+#if BUILDFLAG(IS_OHOS)
+  void WasOccluded(bool occluded) override;
+#endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
@@ -195,6 +199,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if BUILDFLAG(IS_OHOS)
   bool ShowContextMenu(const content::ContextMenuParams& params);
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void SetWindowId(int window_id, int nweb_id) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);
@@ -329,6 +334,15 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
 #endif
 
+#if defined(OHOS_NWEB_EX)
+  void ShowPasswordDialog(bool is_update, const std::string& url) override;
+  void OnShowAutofillPopup(
+      const gfx::RectF& element_bounds,
+      bool is_rtl,
+      const std::vector<autofill::Suggestion>& suggestions) override;
+  void OnHideAutofillPopup() override;
+#endif
+
   // content::WebContentsObserver methods.
   using content::WebContentsObserver::BeforeUnloadFired;
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
@@ -387,6 +401,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateBackgroundColor(int color);
 
   void UpdateZoomSupportEnabled();
+#if BUILDFLAG(IS_OHOS)
+  void ReportWindowStatus(bool first_view_ready);
+#endif
 
   CefWindowHandle opener_;
   const bool is_windowless_;
@@ -426,6 +443,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   double curFactor_ = 0.0;
 
   std::shared_ptr<base::WaitableEvent> event_ = nullptr;
+#if BUILDFLAG(IS_OHOS)
+  int window_id_ = -1;
+  int nweb_id_ = -1;
+  bool is_hidden_ = false;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

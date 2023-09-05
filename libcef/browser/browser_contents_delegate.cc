@@ -617,7 +617,9 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     // If the error happened before commit then this call will originate from
     // RenderFrameHostImpl::OnDidFailProvisionalLoadWithError.
     // OnLoadStart/OnLoadEnd will not be called.
-
+  #if BUILDFLAG(IS_OHOS)
+    // See also InterceptedRequestHandlerWrapper.OnRequestError
+  #else
     CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
     CefString cef_url(navigation_handle->GetURL().spec());
     CefString cef_method(navigation_handle->IsPost() ? "POST" : "GET");
@@ -626,6 +628,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     request->Set(navigation_handle->GetRequestHeaders());
     OnLoadError(request, navigation_handle->IsInMainFrame(),
                 navigation_handle->HasUserGesture(), error_code);
+  #endif
   }
 }
 
@@ -795,7 +798,7 @@ void CefBrowserContentsDelegate::OnLoadStart(
     if (auto handler = c->GetLoadHandler()) {
       auto navigation_lock = browser_info_->CreateNavigationLock();
       // On the handler that loading has started.
-      handler->OnLoadStart(browser(), frame,
+      handler->OnLoadStart(browser(), frame, frame->GetURL(),
                            static_cast<cef_transition_type_t>(transition_type));
     }
   }

@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=53c636c06989583d0ad24c92f4aedce825e5e8ad$
+// $hash=8f53226a1e612adb09e97a9dead0735dda213e89$
 //
 
 #include "libcef_dll/cpptoc/web_storage_cpptoc.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/get_origin_usage_or_quota_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/get_origins_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/get_password_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/get_saved_passwords_callback_ctocpp.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
@@ -113,6 +115,123 @@ void CEF_CALLBACK web_storage_get_origin_usage(
       CefGetOriginUsageOrQuotaCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK web_storage_clear_password(struct _cef_web_storage_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->ClearPassword();
+}
+
+void CEF_CALLBACK web_storage_remove_password(struct _cef_web_storage_t* self,
+                                              const cef_string_t* url,
+                                              const cef_string_t* username) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+  // Verify param: username; type: string_byref_const
+  DCHECK(username);
+  if (!username)
+    return;
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->RemovePassword(CefString(url),
+                                                 CefString(username));
+}
+
+void CEF_CALLBACK
+web_storage_modify_password(struct _cef_web_storage_t* self,
+                            const cef_string_t* url,
+                            const cef_string_t* old_username,
+                            const cef_string_t* new_username,
+                            const cef_string_t* new_password) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+  // Verify param: old_username; type: string_byref_const
+  DCHECK(old_username);
+  if (!old_username)
+    return;
+  // Verify param: new_username; type: string_byref_const
+  DCHECK(new_username);
+  if (!new_username)
+    return;
+  // Verify param: new_password; type: string_byref_const
+  DCHECK(new_password);
+  if (!new_password)
+    return;
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->ModifyPassword(
+      CefString(url), CefString(old_username), CefString(new_username),
+      CefString(new_password));
+}
+
+void CEF_CALLBACK
+web_storage_remove_password_by_url(struct _cef_web_storage_t* self,
+                                   const cef_string_t* url) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->RemovePasswordByUrl(CefString(url));
+}
+
+void CEF_CALLBACK
+web_storage_get_password(struct _cef_web_storage_t* self,
+                         const cef_string_t* url,
+                         const cef_string_t* username,
+                         struct _cef_get_password_callback_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Unverified params: url, username, callback
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->GetPassword(
+      CefString(url), CefString(username),
+      CefGetPasswordCallbackCToCpp::Wrap(callback));
+}
+
+void CEF_CALLBACK web_storage_get_saved_passwords_info(
+    struct _cef_web_storage_t* self,
+    struct _cef_get_saved_passwords_callback_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Unverified params: callback
+
+  // Execute
+  CefWebStorageCppToC::Get(self)->GetSavedPasswordsInfo(
+      CefGetSavedPasswordsCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -123,6 +242,12 @@ CefWebStorageCppToC::CefWebStorageCppToC() {
   GetStruct()->get_origins = web_storage_get_origins;
   GetStruct()->get_origin_quota = web_storage_get_origin_quota;
   GetStruct()->get_origin_usage = web_storage_get_origin_usage;
+  GetStruct()->clear_password = web_storage_clear_password;
+  GetStruct()->remove_password = web_storage_remove_password;
+  GetStruct()->modify_password = web_storage_modify_password;
+  GetStruct()->remove_password_by_url = web_storage_remove_password_by_url;
+  GetStruct()->get_password = web_storage_get_password;
+  GetStruct()->get_saved_passwords_info = web_storage_get_saved_passwords_info;
 }
 
 // DESTRUCTOR - Do not edit by hand.

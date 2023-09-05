@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f01cdd91598d151bee833a80f50f550adda82d37$
+// $hash=b07faf163ac2c26e83e78ba10e175f4e2e7c5edb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_WEB_STORAGE_CTOCPP_H_
@@ -43,6 +43,18 @@ class CefWebStorageCToCpp : public CefCToCppRefCounted<CefWebStorageCToCpp,
   void GetOriginUsage(
       const CefString& origin,
       CefRefPtr<CefGetOriginUsageOrQuotaCallback> callback) override;
+  void ClearPassword() override;
+  void RemovePassword(const CefString& url, const CefString& username) override;
+  void ModifyPassword(const CefString& url,
+                      const CefString& old_username,
+                      const CefString& new_username,
+                      const CefString& new_password) override;
+  void RemovePasswordByUrl(const CefString& url) override;
+  void GetPassword(const CefString& url,
+                   const CefString& username,
+                   CefRefPtr<CefGetPasswordCallback> callback) override;
+  void GetSavedPasswordsInfo(
+      CefRefPtr<CefGetSavedPasswordsCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WEB_STORAGE_CTOCPP_H_

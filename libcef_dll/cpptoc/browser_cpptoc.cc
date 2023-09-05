@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d6136f4b7c6887f6c72675fd00759d76d94230c0$
+// $hash=26210059fb0d033a1912863cad794f4c950624b1$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -242,6 +242,21 @@ int CEF_CALLBACK browser_should_show_free_copy(struct _cef_browser_t* self) {
 
   // Return type: bool
   return _retval;
+}
+
+void CEF_CALLBACK
+browser_password_suggestion_selected(struct _cef_browser_t* self,
+                                     int list_index) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->PasswordSuggestionSelected(list_index);
 }
 
 void CEF_CALLBACK
@@ -639,6 +654,83 @@ browser_set_enable_blank_target_popup_intercept(struct _cef_browser_t* self,
       enableBlankTargetPopup ? true : false);
 }
 
+int CEF_CALLBACK
+browser_get_save_password_automatically(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->GetSavePasswordAutomatically();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_set_save_password_automatically(struct _cef_browser_t* self,
+                                        int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetSavePasswordAutomatically(enable ? true
+                                                                   : false);
+}
+
+void CEF_CALLBACK browser_save_or_update_password(struct _cef_browser_t* self,
+                                                  int is_update) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SaveOrUpdatePassword(is_update ? true : false);
+}
+
+int CEF_CALLBACK browser_get_save_password(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->GetSavePassword();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK browser_set_save_password(struct _cef_browser_t* self,
+                                            int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetSavePassword(enable ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -659,6 +751,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->reload_original_url = browser_reload_original_url;
   GetStruct()->select_and_copy = browser_select_and_copy;
   GetStruct()->should_show_free_copy = browser_should_show_free_copy;
+  GetStruct()->password_suggestion_selected =
+      browser_password_suggestion_selected;
   GetStruct()->set_browser_user_agent_string =
       browser_set_browser_user_agent_string;
   GetStruct()->stop_load = browser_stop_load;
@@ -684,6 +778,13 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->get_nweb_id = browser_get_nweb_id;
   GetStruct()->set_enable_blank_target_popup_intercept =
       browser_set_enable_blank_target_popup_intercept;
+  GetStruct()->get_save_password_automatically =
+      browser_get_save_password_automatically;
+  GetStruct()->set_save_password_automatically =
+      browser_set_save_password_automatically;
+  GetStruct()->save_or_update_password = browser_save_or_update_password;
+  GetStruct()->get_save_password = browser_get_save_password;
+  GetStruct()->set_save_password = browser_set_save_password;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -13,6 +13,13 @@
 #include "libcef/browser/thread_util.h"
 #include "storage/browser/quota/quota_manager.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/password_manager/core/browser/password_form.h"
+#include "components/password_manager/core/browser/password_store.h"
+#include "components/password_manager/core/browser/password_store_consumer.h"
+#include "components/password_manager/core/browser/statistics_table.h"
+#endif
+
 // Implementation of the CefWebStorage interface. May be created on any
 // thread.
 class CefWebStorageImpl : public CefWebStorage {
@@ -60,7 +67,79 @@ class CefWebStorageImpl : public CefWebStorage {
       int64_t usage,
       int64_t quota);
 
+#if BUILDFLAG(IS_OHOS)
+  void GetPassword(const CefString& url,
+                   const CefString& username,
+                   CefRefPtr<CefGetPasswordCallback> callback) override;
+  void GetSavedPasswordsInfo(
+      CefRefPtr<CefGetSavedPasswordsCallback> callback) override;
+  void GetSavedPasswordsInfoInternal(
+      CefRefPtr<CefGetSavedPasswordsCallback> callback);
+  void GetPasswordInternal(const CefString& url,
+                           const CefString& username,
+                           CefRefPtr<CefGetPasswordCallback> callback);
+  void GetPasswordCallbackImpl(CefRefPtr<CefGetPasswordCallback> callback,
+                               const std::u16string& password);
+  void GetSavedPasswordsCallbackImpl(
+      CefRefPtr<CefGetSavedPasswordsCallback> callback,
+      const std::vector<CefString>& url,
+      const std::vector<CefString>& username);
+  void ClearPassword() override;
+  void ClearPasswordInternal();
+  void RemovePasswordByUrl(const CefString& url) override;
+  void RemovePasswordByUrlInternal(const CefString& url);
+  void ModifyPassword(const CefString& url,
+                      const CefString& old_username,
+                      const CefString& new_username,
+                      const CefString& new_password) override;
+  void ModifyPasswordInternal(const CefString& url,
+                              const CefString& old_username,
+                              const CefString& new_username,
+                              const CefString& new_password);
+  void RemovePassword(const CefString& url, const CefString& username) override;
+  void RemovePasswordInternal(const CefString& url, const CefString& username);
+  std::vector<std::unique_ptr<password_manager::PasswordForm>>
+  GetPasswordFormsByUrl(password_manager::PasswordStore* password_store,
+                        const std::u16string& url_string);
+  password_manager::PasswordStore* GetPasswordStore();
+  void OnGetAutofillableLogins(CefRefPtr<CefGetSavedPasswordsCallback> callback,
+                               const std::vector<CefString>& url,
+                               const std::vector<CefString>& username,
+                               int iter_number);
+#endif
+
  private:
+#if BUILDFLAG(IS_OHOS)
+  class OhPasswordStoreConsumer
+      : public password_manager::PasswordStoreConsumer {
+   public:
+    explicit OhPasswordStoreConsumer(CefWebStorageImpl* web_storage);
+    ~OhPasswordStoreConsumer() override;
+
+    void OnGetPasswordStoreResults(
+        std::vector<std::unique_ptr<password_manager::PasswordForm>> results)
+        override;
+
+    // Send the password store's reply back to the handler.
+    void OnGetPasswordStoreResultsFrom(
+        password_manager::PasswordStoreInterface* store,
+        std::vector<std::unique_ptr<password_manager::PasswordForm>> results)
+        override;
+    void RequestAutofillableLogins(
+        CefRefPtr<CefGetSavedPasswordsCallback> callback);
+
+   protected:
+    CefWebStorageImpl* web_storage_impl_;
+
+   private:
+    base::WeakPtrFactory<OhPasswordStoreConsumer> weak_ptr_factory_{this};
+  };
+
+  OhPasswordStoreConsumer oh_password_consumer_{this};
+
+  std::queue<CefRefPtr<CefGetSavedPasswordsCallback>> callback_queue_;
+#endif
+
   // Only accessed on the UI thread. Will be non-null after Initialize().
   CefBrowserContext::Getter browser_context_getter_;
   bool initialized_ = false;

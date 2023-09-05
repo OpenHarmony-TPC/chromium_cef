@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=82c15dbab72ff7d2479547ef4d96a94c54697091$
+// $hash=e77450a14e73e27cba5898fe13eedc8ebec6a90e$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -710,6 +710,19 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::WasHidden(bool hidden) {
 
   // Execute
   _struct->was_hidden(_struct, hidden);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::WasOccluded(bool occluded) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, was_occluded))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->was_occluded(_struct, occluded);
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::NotifyScreenInfoChanged() {
@@ -1997,6 +2010,20 @@ void CefBrowserHostCToCpp::ZoomBy(float delta, float width, float height) {
 
   // Execute
   _struct->zoom_by(_struct, delta, width, height);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetWindowId(int window_id, int nweb_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_window_id))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_window_id(_struct, window_id, nweb_id);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

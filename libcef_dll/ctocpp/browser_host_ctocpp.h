@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1722aa909b29d09d8251e7278113052996935174$
+// $hash=56a195a9cf3701e06b58c3aaee18f33961c205c4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -98,6 +98,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
+  void WasOccluded(bool occluded) override;
   void NotifyScreenInfoChanged() override;
   void SetVirtualPixelRatio(float ratio) override;
   void Invalidate(PaintElementType type) override;
@@ -208,6 +209,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetCacheMode(int falg) override;
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void ZoomBy(float delta, float width, float height) override;
+  void SetWindowId(int window_id, int nweb_id) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

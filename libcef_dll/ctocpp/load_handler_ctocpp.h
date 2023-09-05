@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=af4e0887244222b251dc40401ce0dfc6af788d90$
+// $hash=e930cc92d0749d552b3e03af273ab86869cc4214$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -40,6 +40,7 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                             bool canGoForward) override;
   void OnLoadStart(CefRefPtr<CefBrowser> browser,
                    CefRefPtr<CefFrame> frame,
+                   const CefString& url,
                    TransitionType transition_type) override;
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
                  CefRefPtr<CefFrame> frame,
@@ -67,8 +68,8 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                      bool success) override;
   void OnDataResubmission(CefRefPtr<CefBrowser> browser,
                           CefRefPtr<CefCallback> callback) override;
-  void OnFirstContentfulPaint(long navigationStartTick,
-                              long firstContentfulPaintMs) override;
+  void OnFirstContentfulPaint(int64_t navigationStartTick,
+                              int64_t firstContentfulPaintMs) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

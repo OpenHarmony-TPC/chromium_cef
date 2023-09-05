@@ -8,6 +8,10 @@
 #include "libcef/browser/alloy/browser_platform_delegate_alloy.h"
 #include "libcef/browser/native/browser_platform_delegate_native.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/autofill/core/browser/ui/suggestion.h"
+#endif
+
 class CefRenderWidgetHostViewOSR;
 class CefWebContentsViewOSR;
 
@@ -55,6 +59,9 @@ class CefBrowserPlatformDelegateOsr
   std::unique_ptr<CefMenuRunner> CreateMenuRunner() override;
   bool IsWindowless() const override;
   void WasHidden(bool hidden) override;
+#if BUILDFLAG(IS_OHOS)
+  void WasOccluded(bool occluded) override;
+#endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;
   void SendExternalBeginFrame() override;
@@ -99,8 +106,15 @@ class CefBrowserPlatformDelegateOsr
     bool right_aligned,
     bool allow_multiple_selection) override;
 
+#if defined(OHOS_NWEB_EX)
+  void OnShowAutofillPopup(
+      const gfx::RectF& element_bounds,
+      bool is_rtl,
+      const std::vector<autofill::Suggestion>& suggestions) override;
+  void OnHideAutofillPopup() override;
+  void ShowPasswordDialog(bool is_update, const std::string& url) override;
+#endif
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
   gfx::Point GetParentScreenPoint(const gfx::Point& view) const override;

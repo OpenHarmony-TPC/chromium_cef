@@ -248,6 +248,10 @@ void CefBrowserPlatformDelegate::WasHidden(bool hidden) {
   NOTREACHED();
 }
 
+void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
+  NOTREACHED();
+}
+
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {
   NOTREACHED();
 }
@@ -404,6 +408,24 @@ void CefBrowserPlatformDelegate::ShowPopupMenu(
     bool allow_multiple_selection) {
   NOTIMPLEMENTED();
 }
+
+#if defined(OHOS_NWEB_EX)
+void CefBrowserPlatformDelegate::OnShowAutofillPopup(
+    const gfx::RectF& element_bounds,
+    bool is_rtl,
+    const std::vector<autofill::Suggestion>& suggestions) {
+  NOTIMPLEMENTED();
+}
+
+void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
+  NOTIMPLEMENTED();
+}
+
+void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
+                                                    const std::string& url) {
+  NOTIMPLEMENTED();
+}
+#endif
 
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(

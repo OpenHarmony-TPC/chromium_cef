@@ -3594,6 +3594,27 @@ typedef enum {
   CAPTURE_SPECIFIED_SCREEN_MODE = 1,
   CAPTURE_SPECIFIED_WINDOW_MODE = 2
 } cef_screen_capture_mode_t;
+
+///
+// Supported autofill item.
+///
+typedef struct _cef_autofill_popup_item_t {
+  ///
+  // value name of item.
+  ///
+  cef_string_t label;
+
+  ///
+  // sub label value of item.
+  ///
+  cef_string_t sublabel;
+
+  ///
+  // id of item.
+  ///
+  uint32_t unique_id;
+} cef_autofill_popup_item_t;
+
 #ifdef __cplusplus
 }
 #endif

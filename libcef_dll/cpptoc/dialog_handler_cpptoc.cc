@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3c71c8ae9b8f6ae947bfccd7e018137d7f30737c$
+// $hash=a287c09eb1ba7757d9968ba11bbf06c65253c7a4$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
@@ -123,6 +123,85 @@ dialog_handler_on_select_popup_menu(struct _cef_dialog_handler_t* self,
       CefSelectPopupCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK
+dialog_handler_on_hide_autofill_popup(struct _cef_dialog_handler_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnHideAutofillPopup();
+}
+
+void CEF_CALLBACK dialog_handler_on_show_autofill_popup(
+    struct _cef_dialog_handler_t* self,
+    cef_browser_t* browser,
+    const cef_rect_t* bounds,
+    int right_aligned,
+    size_t menu_itemsCount,
+    cef_autofill_popup_item_t const* menu_items) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+  // Verify param: bounds; type: simple_byref_const
+  DCHECK(bounds);
+  if (!bounds)
+    return;
+  // Verify param: menu_items; type: simple_vec_byref_const
+  DCHECK(menu_itemsCount == 0 || menu_items);
+  if (menu_itemsCount > 0 && !menu_items)
+    return;
+
+  // Translate param: bounds; type: simple_byref_const
+  CefRect boundsVal = bounds ? *bounds : CefRect();
+  // Translate param: menu_items; type: simple_vec_byref_const
+  std::vector<CefAutofillPopupItem> menu_itemsList;
+  if (menu_itemsCount > 0) {
+    for (size_t i = 0; i < menu_itemsCount; ++i) {
+      CefAutofillPopupItem menu_itemsVal = menu_items[i];
+      menu_itemsList.push_back(menu_itemsVal);
+    }
+  }
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnShowAutofillPopup(
+      CefBrowserCToCpp::Wrap(browser), boundsVal, right_aligned ? true : false,
+      menu_itemsList);
+}
+
+void CEF_CALLBACK
+dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
+                                    int is_update,
+                                    const cef_string_t* url) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url)
+    return;
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->ShowPasswordDialog(
+      is_update ? true : false, CefString(url));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -130,6 +209,9 @@ dialog_handler_on_select_popup_menu(struct _cef_dialog_handler_t* self,
 CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_file_dialog = dialog_handler_on_file_dialog;
   GetStruct()->on_select_popup_menu = dialog_handler_on_select_popup_menu;
+  GetStruct()->on_hide_autofill_popup = dialog_handler_on_hide_autofill_popup;
+  GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
+  GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
 }
 
 // DESTRUCTOR - Do not edit by hand.

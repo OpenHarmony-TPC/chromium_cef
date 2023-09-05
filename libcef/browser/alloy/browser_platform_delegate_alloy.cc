@@ -38,14 +38,20 @@
 #endif
 #endif
 
-namespace {
-
 #if BUILDFLAG(IS_OHOS)
-printing::OhosPrintManager* GetPrintViewManager(
-    content::WebContents* web_contents) {
-  return printing::OhosPrintManager::FromWebContents(web_contents);
-}
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "chrome/browser/browser_process.h"
+#include "components/autofill/content/browser/content_autofill_driver_factory.h"
+#include "components/autofill/core/browser/browser_autofill_manager.h"
+#include "content/public/common/content_switches.h"
+#include "libcef/browser/autofill/oh_autofill_client.h"
+#include "libcef/browser/autofill/oh_autofill_manager.h"
+#include "libcef/browser/autofill/oh_autofill_provider.h"
+#include "libcef/browser/password/oh_password_manager_client.h"
 #endif
+
+namespace {
 
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 printing::CefPrintViewManager* GetPrintViewManager(
@@ -209,6 +215,32 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
     // Used by the tabs extension API.
     zoom::ZoomController::CreateForWebContents(web_contents_);
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (autofill::ContentAutofillDriverFactory::FromWebContents(web_contents_))
+    return;
+
+  autofill::OhAutofillClient::CreateForWebContents(web_contents_);
+
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+        web_contents_,  autofill::OhAutofillClient::FromWebContents(web_contents_),
+        g_browser_process->GetApplicationLocale(),
+        autofill::AutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER);
+
+    OhPasswordManagerClient::CreateForWebContentsWithAutofillClient(
+        web_contents_,
+        autofill::OhAutofillClient::FromWebContents(web_contents_));
+  }
+#endif  // OHOS_NWEB_EX
+  autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(
+      web_contents_, autofill::OhAutofillClient::FromWebContents(web_contents_),
+      g_browser_process->GetApplicationLocale(),
+      autofill::BrowserAutofillManager::DISABLE_AUTOFILL_DOWNLOAD_MANAGER,
+      base::BindRepeating(&autofill::OhAutofillManager::Create));
+#endif
 
   if (IsPrintPreviewSupported()) {
     web_contents_dialog_helper_.reset(
@@ -386,23 +418,6 @@ bool CefBrowserPlatformDelegateAlloy::IsPrintPreviewSupported() const {
 }
 
 void CefBrowserPlatformDelegateAlloy::Print() {
-#if BUILDFLAG(IS_OHOS)
-  REQUIRE_ALLOY_RUNTIME();
-
-  auto contents_to_use = printing::GetWebContentsToUse(web_contents_);
-  if (!contents_to_use) {
-    LOG(ERROR) << "contents_to_use is nullptr";
-    return;
-  }
-
-  auto printViewManager = GetPrintViewManager(contents_to_use);
-  if (!printViewManager) {
-    LOG(ERROR) << "printViewManager is nullptr";
-    return;
-  }
-
-  printViewManager->PrintNow();
-#endif
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
   REQUIRE_ALLOY_RUNTIME();
 

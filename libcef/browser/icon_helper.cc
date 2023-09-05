@@ -230,13 +230,13 @@ bool IconHelper::ShouldAbort() {
 
   GURL page_url = web_contents_->GetURL();
   if (!document_on_load_completed_) {
-    LOG(INFO) << "should abort fetching favicon, document load not completed,"
+    LOG(DEBUG) << "should abort fetching favicon, document load not completed,"
               << " page_url: " << page_url;
     return true;
   }
 
   if (last_page_url_ != web_contents_->GetURL()) {
-    LOG(INFO) << "should abort fetching favicon, page urls not equal,"
+    LOG(DEBUG) << "should abort fetching favicon, page urls not equal,"
               << " last_page_url_:" << last_page_url_
               << ", page_url:" << page_url;
     return true;

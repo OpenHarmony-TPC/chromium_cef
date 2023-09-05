@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2efc0918bc483be69599cf2cd08c0f3894b560d0$
+// $hash=5879048946c718ab1daf62a638b6476682995a3b$
 //
 
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
@@ -164,7 +164,8 @@ void CEF_CALLBACK cookie_manager_put_accept_file_urlscheme_cookies_enabled(
 
 int CEF_CALLBACK
 cookie_manager_visit_all_cookies(struct _cef_cookie_manager_t* self,
-                                 struct _cef_cookie_visitor_t* visitor) {
+                                 struct _cef_cookie_visitor_t* visitor,
+                                 int is_sync) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -177,7 +178,7 @@ cookie_manager_visit_all_cookies(struct _cef_cookie_manager_t* self,
 
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->VisitAllCookies(
-      CefCookieVisitorCToCpp::Wrap(visitor));
+      CefCookieVisitorCToCpp::Wrap(visitor), is_sync ? true : false);
 
   // Return type: bool
   return _retval;
@@ -187,7 +188,8 @@ int CEF_CALLBACK
 cookie_manager_visit_url_cookies(struct _cef_cookie_manager_t* self,
                                  const cef_string_t* url,
                                  int includeHttpOnly,
-                                 struct _cef_cookie_visitor_t* visitor) {
+                                 struct _cef_cookie_visitor_t* visitor,
+                                 int is_sync) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -205,7 +207,7 @@ cookie_manager_visit_url_cookies(struct _cef_cookie_manager_t* self,
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->VisitUrlCookies(
       CefString(url), includeHttpOnly ? true : false,
-      CefCookieVisitorCToCpp::Wrap(visitor));
+      CefCookieVisitorCToCpp::Wrap(visitor), is_sync ? true : false);
 
   // Return type: bool
   return _retval;
@@ -215,7 +217,8 @@ int CEF_CALLBACK
 cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
                           const cef_string_t* url,
                           const struct _cef_cookie_t* cookie,
-                          struct _cef_set_cookie_callback_t* callback) {
+                          struct _cef_set_cookie_callback_t* callback,
+                          int is_sync) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -238,7 +241,8 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
 
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->SetCookie(
-      CefString(url), cookieObj, CefSetCookieCallbackCToCpp::Wrap(callback));
+      CefString(url), cookieObj, CefSetCookieCallbackCToCpp::Wrap(callback),
+      is_sync ? true : false);
 
   // Return type: bool
   return _retval;
@@ -249,7 +253,8 @@ cookie_manager_delete_cookies(struct _cef_cookie_manager_t* self,
                               const cef_string_t* url,
                               const cef_string_t* cookie_name,
                               int is_session,
-                              struct _cef_delete_cookies_callback_t* callback) {
+                              struct _cef_delete_cookies_callback_t* callback,
+                              int is_sync) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -260,7 +265,7 @@ cookie_manager_delete_cookies(struct _cef_cookie_manager_t* self,
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->DeleteCookies(
       CefString(url), CefString(cookie_name), is_session ? true : false,
-      CefDeleteCookiesCallbackCToCpp::Wrap(callback));
+      CefDeleteCookiesCallbackCToCpp::Wrap(callback), is_sync ? true : false);
 
   // Return type: bool
   return _retval;

@@ -163,6 +163,29 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   // Close date chooser popup.
   ///
   virtual void OnDateTimeChooserClose() {}
+
+  ///
+  // hide password Autofill popup menu.
+  ///
+  /*--cef()--*/
+  virtual void OnHideAutofillPopup() {}
+
+  ///
+  // Show password Autofill popup menu.
+  ///
+  /*--cef()--*/
+  virtual void OnShowAutofillPopup(
+      CefRefPtr<CefBrowser> browser,
+      const CefRect& bounds,
+      bool right_aligned,
+      const std::vector<CefAutofillPopupItem>& menu_items) {}
+
+  ///
+  // Called when notify ui to show password dialog to query user to save
+  // password.
+  ///
+  /*--cef()--*/
+  virtual void ShowPasswordDialog(bool is_update, const CefString& url) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_

@@ -817,16 +817,6 @@ void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
   cef_hit_data_.extra_data = data->extra_data_for_type;
 }
 
-void CefFrameImpl::ScriptedPrint(bool user_initiated) {
-  SendToBrowserFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](bool user_initiated, const BrowserFrameType& browser_frame) {
-            browser_frame->OnScriptedPrint(std::move(user_initiated));
-          },
-          std::move(user_initiated)));
-}
-
 void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
@@ -1128,11 +1118,10 @@ void CefFrameImpl::SlideScroll(float vx, float vy) {
                         base::Milliseconds(DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC));
 }
 
-void CefFrameImpl::ZoomBy(float delta, float width, float height, cef::mojom::RenderFrame::ZoomByCallback callback) {
+void CefFrameImpl::ZoomBy(float delta, float width, float height) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   render_frame->SetZoomLevel(delta, gfx::Point(width / 2, height / 2));
-  std::move(callback).Run();
 }
 
 void CefFrameImpl::GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) {

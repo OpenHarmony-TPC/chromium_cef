@@ -31,9 +31,9 @@
 #include "chrome/common/chrome_switches.h"
 #include "components/printing/browser/print_manager_utils.h"
 #include "components/printing/common/print.mojom.h"
+#include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
-#include "ohos_adapter_helper.h"
 #include "printing/print_job_constants.h"
 #include "printing/units.h"
 #include "third_party/pdfium/public/fpdfview.h"
@@ -45,8 +45,8 @@ namespace printing {
 
 namespace {
 
-const std::string pdf_fileName = "/print.pdf";
-const std::string image_fileName = "/print.png";
+constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 28;
+constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29;
 
 uint32_t SaveDataToFd(int fd,
                       uint32_t page_count,
@@ -56,11 +56,6 @@ uint32_t SaveDataToFd(int fd,
   if (result) {
     result = base::WriteFileDescriptor(fd, *data);
   }
-  if (fd > 0) {
-    sync();
-    close(fd);
-  }
-
   return result ? page_count : 0;
 }
 
@@ -70,14 +65,50 @@ int MilsToDots(int val, int dpi) {
 
 }  // namespace
 
+class OhosPrintManager;
+
+class PrintDocumentAdapterImpl
+    : public OHOS::NWeb::PrintDocumentAdapterAdapter {
+ public:
+  PrintDocumentAdapterImpl(OhosPrintManager* ohosPrintManager)
+      : ohosPrintManager_(ohosPrintManager) {}
+  ~PrintDocumentAdapterImpl() = default;
+
+  void onStartLayoutWrite(
+      const std::string& jobId,
+      const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
+      const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
+      uint32_t fd,
+      std::function<void(std::string, uint32_t)> writeResultCallback) override {
+    LOG(INFO) << "onStartLayoutWrite.";
+    PrintAttrs printAttrs;
+    printAttrs.jobId = jobId;
+    printAttrs.attrs = newAttrs;
+    printAttrs.fd = fd;
+    printAttrs.writeResultCallback = writeResultCallback;
+    ohosPrintManager_->SetPrintAttrs(printAttrs);
+    ohosPrintManager_->PrintPage();
+  }
+
+  void onJobStateChanged(const std::string& jobId, uint32_t state) override {
+    LOG(INFO) << "onJobStateChanged";
+    state_ = state;
+    ohosPrintManager_->RunPrintRequestedCallback();
+  }
+
+ private:
+  uint32_t state_ = 0;
+  OhosPrintManager* ohosPrintManager_;
+};
+
 OhosPrintManager::OhosPrintManager(content::WebContents* contents)
     : PrintManager(contents),
       content::WebContentsUserData<OhosPrintManager>(*contents) {}
 
 OhosPrintManager::~OhosPrintManager() = default;
 
-int OhosPrintManager::imageFd_ = -1;
-
+std::unordered_map<std::string, PrintAttrs> OhosPrintManager::printAttrsMap_{};
+std::string OhosPrintManager::printJobId_ = "";
 // static
 void OhosPrintManager::BindPrintManagerHost(
     mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost> receiver,
@@ -103,14 +134,51 @@ void OhosPrintManager::PdfWritingDone(int page_count) {
 }
 
 bool OhosPrintManager::PrintNow() {
+  LOG(INFO) << "OhosPrintManager::PrintNow";
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
+      printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
+  OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
+  int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
+                    .GetPrintManagerInstance()
+                    .Print("webPrintJob", printDocumentAdapterImpl,
+                           printAttributesAdapter);
+  if (ret == -1) {
+    LOG(ERROR) << "print failed";
+    return false;
+  }
+  return true;
+}
+
+void OhosPrintManager::PrintPage() {
+  LOG(INFO) << "OhosPrintManager::PrintPage";
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  auto main_task_runner = content::GetUIThreadTaskRunner({});
+  if (!main_task_runner) {
+    LOG(ERROR) << "main_task_runner is nullptr";
+    return;
+  }
+  main_task_runner->PostTask(
+      FROM_HERE,
+      base::BindOnce(&OhosPrintManager::PrintPageImpl, base::Unretained(this)));
+}
+
+void OhosPrintManager::PrintPageImpl() {
   auto* rfh = web_contents()->GetMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
-    return false;
+    if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+      printAttrsMap_[printJobId_].writeResultCallback(
+          printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
+    }
+    return;
   }
   GetPrintRenderFrame(rfh)->PrintRequestedPages();
-  return true;
+}
+
+void OhosPrintManager::DidShowPrintDialog() {
+  LOG(INFO) << "OhosPrintManager::DidShowPrintDialog";
 }
 
 void OhosPrintManager::GetDefaultPrintSettings(
@@ -119,7 +187,6 @@ void OhosPrintManager::GetDefaultPrintSettings(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto params = printing::mojom::PrintParams::New();
 
-  DidExportPdf();
   printing::PageRanges page_ranges;
   PdfWritingDoneCallback pdf_writing_done_callback =
       base::BindRepeating([](int page_count) {
@@ -220,41 +287,25 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
   if (callback)
     callback.Run(base::checked_cast<int>(page_count));
   std::move(did_print_document_cb).Run(true);
-  std::string filePath =
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kUserDataDir);
-  std::string pdf_file = filePath + pdf_fileName;
-  std::string image_file = filePath + image_fileName;
-  ConvertPdfToImage(pdf_file, image_file);
-
-  std::vector<std::string> fileList;
-  std::vector<uint32_t> fdList;
-  fdList.push_back(imageFd_);
-  std::string taskId;
-  OHOS::NWeb::OhosAdapterHelper::GetInstance()
-      .GetPrintManagerInstance()
-      .StartPrint(fileList, fdList, taskId);
-  if (imageFd_ > 0) {
-    sync();
-    close(imageFd_);
+  if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+    printAttrsMap_[printJobId_].writeResultCallback(
+        printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
   }
-  base::FilePath pdf_file_path(pdf_file);
-  base::DeleteFile(pdf_file_path);
-
-  base::FilePath image_file_path(image_file);
-  base::DeleteFile(image_file_path);
 }
 
 std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
     const printing::PageRanges& page_ranges) {
+  OHOS::NWeb::PrintAttributesAdapter newAttrs;
+  if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+    newAttrs = printAttrsMap_[printJobId_].attrs;
+  }
   auto settings = std::make_unique<printing::PrintSettings>();
-  // TODO:
-  // The printing subsystem needs to provide an interface to set DPI page width,
-  // height, margins, etc.
   int dpi = dpi_;
   gfx::Size physical_size_device_units;
-  int width_in_dots = MilsToDots(width_, dpi);
-  int height_in_dots = MilsToDots(height_, dpi);
+  int width_in_dots = MilsToDots(
+      newAttrs.pageSize.width ? newAttrs.pageSize.width : width_, dpi);
+  int height_in_dots = MilsToDots(
+      newAttrs.pageSize.height ? newAttrs.pageSize.height : height_, dpi);
   physical_size_device_units.SetSize(width_in_dots, height_in_dots);
 
   gfx::Rect printable_area_device_units;
@@ -269,96 +320,27 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
                                     printable_area_device_units, true);
 
   printing::PageMargins margins;
-  margins.left = 0;
-  margins.right = 0;
-  margins.top = 0;
-  margins.bottom = 0;
+  margins.left = newAttrs.margin.left;
+  margins.right = newAttrs.margin.right;
+  margins.top = newAttrs.margin.top;
+  margins.bottom = newAttrs.margin.bottom;
   settings->SetCustomMargins(margins);
   settings->set_should_print_backgrounds(true);
   return settings;
 }
 
-void OhosPrintManager::DidExportPdf() {
-  std::string filePath =
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kUserDataDir);
-  filePath += pdf_fileName;
-  int fd = open(filePath.c_str(), O_RDWR | O_CREAT, (mode_t)0777);
-  if (fd <= 0) {
-    LOG(ERROR) << "open failed, errno = " << strerror(errno);
+void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
+  if (!PrintNow()) {
+    LOG(ERROR) << "Pulling up the printing application failed.";
+    std::move(callback).Run();
     return;
   }
-  fd_ = fd;
+
+  printRequestedCallback_ = std::move(callback);
 }
 
-bool OhosPrintManager::ConvertPdfToImage(const std::string& pdf_filename,
-                                         const std::string& image_filename) {
-  // Init PDFium library.
-  FPDF_InitLibrary();
-
-  // Open PDF.
-  FPDF_DOCUMENT pdf_doc = FPDF_LoadDocument(pdf_filename.c_str(), nullptr);
-  if (!pdf_doc) {
-    return false;
-  }
-
-  // Get PDF pageCount.
-  // int pageCount = FPDF_GetPageCount(pdf_doc);
-
-  // Get the first PDF document.
-  FPDF_PAGE pdf_page = FPDF_LoadPage(pdf_doc, 0);
-  if (!pdf_page) {
-    FPDF_CloseDocument(pdf_doc);
-    FPDF_DestroyLibrary();
-    return false;
-  }
-
-  // Get page width and height.
-  int page_width = FPDF_GetPageWidth(pdf_page);
-  int page_height = FPDF_GetPageHeight(pdf_page);
-
-  // Create bitmap
-  FPDF_BITMAP bitmap = FPDFBitmap_Create(page_width, page_height, 0);
-
-  FPDFBitmap_FillRect(bitmap, 0, 0, page_width, page_height, 0xFFFFFFFF);
-
-  FPDF_RenderPageBitmap(bitmap, pdf_page, 0, 0, page_width, page_height, 0, 0);
-
-  // Save PNG.
-  int width = FPDFBitmap_GetWidth(bitmap);
-  int height = FPDFBitmap_GetHeight(bitmap);
-  SkBitmap skBitmap;
-  skBitmap.setInfo(SkImageInfo::Make(width, height, kBGRA_8888_SkColorType,
-                                     kPremul_SkAlphaType));
-  skBitmap.setPixels(FPDFBitmap_GetBuffer(bitmap));
-
-  sk_sp<SkImage> image = SkImage::MakeFromBitmap(skBitmap);
-  sk_sp<SkData> skData(image->encodeToData(SkEncodedImageFormat::kPNG, 100));
-
-  int fd = open(image_filename.c_str(), O_RDWR | O_CREAT, (mode_t)0777);
-  imageFd_ = fd;
-  if (fd <= 0) {
-    LOG(ERROR) << "open failed, errno = " << strerror(errno);
-    FPDF_ClosePage(pdf_page);
-    FPDF_CloseDocument(pdf_doc);
-    FPDFBitmap_Destroy(bitmap);
-    FPDF_DestroyLibrary();
-    return false;
-  }
-
-  ssize_t bytes_written_total = 0;
-  ssize_t size = base::checked_cast<ssize_t>(skData->size());
-  for (ssize_t bytes_written_partial = 0; bytes_written_total < size;
-       bytes_written_total += bytes_written_partial) {
-    bytes_written_partial = write(fd, skData->bytes() + bytes_written_total,
-                                  size - bytes_written_total);
-  }
-
-  FPDF_ClosePage(pdf_page);
-  FPDF_CloseDocument(pdf_doc);
-  FPDFBitmap_Destroy(bitmap);
-  FPDF_DestroyLibrary();
-  return true;
+void OhosPrintManager::RunPrintRequestedCallback() {
+  std::move(printRequestedCallback_).Run();
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);

@@ -1093,6 +1093,25 @@ struct CefDateTimeChooserTraits {
   }
 };
 
+struct CefAutofillPopupItemTraits {
+  typedef cef_autofill_popup_item_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+///
+// Class representing password autofill popup item.
+///
+typedef CefStructBase<CefAutofillPopupItemTraits> CefAutofillPopupItem;
+
 ///
 // Class representing date time chooser.
 ///

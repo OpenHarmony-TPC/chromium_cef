@@ -15,6 +15,20 @@
 #include "third_party/blink/public/mojom/quota/quota_types.mojom.h"
 #include "url/gurl.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "base/task/post_task.h"
+#include "components/password_manager/core/browser/form_parsing/form_parser.h"
+#include "components/password_manager/core/browser/password_form.h"
+#include "components/password_manager/core/browser/password_form_digest.h"
+#include "components/password_manager/core/common/credential_manager_types.h"
+#include "content/browser/browsing_data/browsing_data_filter_builder_impl.h"
+#include "content/public/browser/browsing_data_filter_builder.h"
+#include "libcef/browser/password/oh_password_store_factory.h"
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+static const int kMaxDataCount = 10000;
+#endif
 class GetStorageKeysTask
     : public base::RefCountedThreadSafe<GetStorageKeysTask> {
  public:
@@ -364,6 +378,303 @@ void CefWebStorageImpl::CefGetOriginUsageOrQuotaCallbackImpl(
   int64_t result = is_quota == true ? quota : usage;
   callback.get()->OnComplete(result);
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefWebStorageImpl::GetPassword(
+    const CefString& url,
+    const CefString& username,
+    CefRefPtr<CefGetPasswordCallback> callback) {
+#if defined(OHOS_NWEB_EX)
+  if (!ValidContext()) {
+    StoreOrTriggerUIInitCallback(base::BindOnce(
+        base::IgnoreResult(&CefWebStorageImpl::GetPasswordInternal), this, url,
+        username, callback));
+    return;
+  }
+  GetPasswordInternal(url, username, callback);
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::GetSavedPasswordsInfo(
+    CefRefPtr<CefGetSavedPasswordsCallback> callback) {
+#if defined(OHOS_NWEB_EX)
+  CEF_POST_TASK(
+      CEF_IOT, base::BindOnce(&CefWebStorageImpl::GetSavedPasswordsInfoInternal,
+                              weak_factory_.GetWeakPtr(), callback));
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::GetSavedPasswordsInfoInternal(
+    CefRefPtr<CefGetSavedPasswordsCallback> callback) {
+  oh_password_consumer_.RequestAutofillableLogins(callback);
+}
+
+CefWebStorageImpl::OhPasswordStoreConsumer::OhPasswordStoreConsumer(
+    CefWebStorageImpl* web_storage_impl)
+    : web_storage_impl_(web_storage_impl) {}
+
+CefWebStorageImpl::OhPasswordStoreConsumer::~OhPasswordStoreConsumer() {}
+
+void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResults(
+    std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
+  // This class overrides OnGetPasswordStoreResultsFrom() (the version of this
+  // method that also receives the originating store), so the store-less version
+  // never gets called.
+  NOTREACHED();
+}
+
+void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
+    password_manager::PasswordStoreInterface* store,
+    std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
+  std::vector<CefString> url;
+  std::vector<CefString> username;
+  int count = 0;
+  for (auto& form : results) {
+    if (form->password_value.empty())
+      continue;
+
+    url.push_back(CefString(form->url.spec()));
+    const std::string& name = base::UTF16ToUTF8(form->username_value);
+    username.push_back(CefString(name));
+    count++;
+    if (count == kMaxDataCount)
+      break;
+  }
+
+  if (!web_storage_impl_->callback_queue_.empty()) {
+    CefRefPtr<CefGetSavedPasswordsCallback> callback =
+        web_storage_impl_->callback_queue_.front();
+    web_storage_impl_->callback_queue_.pop();
+    web_storage_impl_->OnGetAutofillableLogins(callback, url, username, count);
+  }
+}
+
+void CefWebStorageImpl::OhPasswordStoreConsumer::RequestAutofillableLogins(
+    CefRefPtr<CefGetSavedPasswordsCallback> callback) {
+  password_manager::PasswordStore* password_store =
+      web_storage_impl_->GetPasswordStore();
+  if (!password_store)
+    return;
+  web_storage_impl_->callback_queue_.push(callback);
+  password_store->GetAutofillableLogins(weak_ptr_factory_.GetWeakPtr());
+}
+
+void CefWebStorageImpl::OnGetAutofillableLogins(
+    CefRefPtr<CefGetSavedPasswordsCallback> callback,
+    const std::vector<CefString>& url,
+    const std::vector<CefString>& username,
+    int iter_number) {
+  GetSavedPasswordsCallbackImpl(callback, url, username);
+}
+
+void CefWebStorageImpl::GetPasswordInternal(
+    const CefString& url,
+    const CefString& username,
+    CefRefPtr<CefGetPasswordCallback> callback) {
+  DCHECK(CEF_CURRENTLY_ON_UIT());
+  password_manager::PasswordStore* password_store = GetPasswordStore();
+
+  if (!password_store) {
+    LOG(INFO) << "password_store is null ";
+    return;
+  }
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> passwordForms =
+      GetPasswordFormsByUrl(password_store, url.ToString16());
+  for (auto& form : passwordForms) {
+    if (form->username_value == username.ToString16()) {
+      CEF_POST_TASK(CEF_IOT,
+                    base::BindOnce(&CefWebStorageImpl::GetPasswordCallbackImpl,
+                                   weak_factory_.GetWeakPtr(), callback,
+                                   form->password_value));
+      return;
+    }
+  }
+  CEF_POST_TASK(
+      CEF_IOT,
+      base::BindOnce(&CefWebStorageImpl::GetPasswordCallbackImpl,
+                     weak_factory_.GetWeakPtr(), callback, std::u16string()));
+  LOG(WARNING) << "get Password fail";
+}
+
+void CefWebStorageImpl::GetPasswordCallbackImpl(
+    CefRefPtr<CefGetPasswordCallback> callback,
+    const std::u16string& password) {
+  if (!callback.get()) {
+    return;
+  }
+  callback.get()->OnComplete(CefString(password));
+}
+
+void CefWebStorageImpl::GetSavedPasswordsCallbackImpl(
+    CefRefPtr<CefGetSavedPasswordsCallback> callback,
+    const std::vector<CefString>& url,
+    const std::vector<CefString>& username) {
+  if (!callback.get()) {
+    return;
+  }
+  callback.get()->OnComplete(url, username);
+}
+
+password_manager::PasswordStore* CefWebStorageImpl::GetPasswordStore() {
+  auto browser_context = GetBrowserContext(browser_context_getter_);
+  if (!browser_context) {
+    return nullptr;
+  }
+
+  return OhPasswordStoreFactory::GetPasswordStoreForContext(
+             browser_context->AsBrowserContext(),
+             ServiceAccessType::EXPLICIT_ACCESS)
+      .get();
+}
+
+std::vector<std::unique_ptr<password_manager::PasswordForm>>
+CefWebStorageImpl::GetPasswordFormsByUrl(
+    password_manager::PasswordStore* password_store,
+    const std::u16string& url_string) {
+  GURL origin = GURL(url_string);
+  password_manager::PasswordFormDigest form = {
+      password_manager::PasswordForm::Scheme::kHtml,
+      password_manager::GetSignonRealm(origin), origin};
+  return password_store->GetMatchingLogins(form);
+}
+
+void CefWebStorageImpl::ClearPassword() {
+#if defined(OHOS_NWEB_EX)
+  if (!ValidContext()) {
+    StoreOrTriggerUIInitCallback(base::BindOnce(
+        base::IgnoreResult(&CefWebStorageImpl::ClearPasswordInternal), this));
+    return;
+  }
+  return ClearPasswordInternal();
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::ClearPasswordInternal() {
+  password_manager::PasswordStore* password_store = GetPasswordStore();
+  if (!password_store)
+    return;
+
+  std::unique_ptr<content::BrowsingDataFilterBuilder> filter_builder =
+      content::BrowsingDataFilterBuilder::Create(
+          content::BrowsingDataFilterBuilder::Mode::kPreserve);
+  DCHECK(filter_builder->MatchesAllOriginsAndDomains());
+
+  if (password_store) {
+    password_store->RemoveLoginsByURLAndTime(filter_builder->BuildUrlFilter(),
+                                             base::Time(), base::Time::Max(),
+                                             base::DoNothing());
+  }
+}
+
+void CefWebStorageImpl::RemovePassword(const CefString& url,
+                                       const CefString& username) {
+#if defined(OHOS_NWEB_EX)
+  if (!ValidContext()) {
+    StoreOrTriggerUIInitCallback(base::BindOnce(
+        base::IgnoreResult(&CefWebStorageImpl::RemovePasswordInternal), this,
+        url, username));
+    return;
+  }
+  return RemovePasswordInternal(url, username);
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::RemovePasswordInternal(const CefString& url_string,
+                                               const CefString& username) {
+  password_manager::PasswordStore* password_store = GetPasswordStore();
+  if (!password_store)
+    return;
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> passwordForms =
+      GetPasswordFormsByUrl(password_store, url_string.ToString16());
+
+  for (auto& form : passwordForms) {
+    if (form->username_value == username.ToString16()) {
+      password_store->RemoveLogin(*form);
+      return;
+    }
+  }
+  LOG(INFO) << "No available forms to remove";
+}
+
+void CefWebStorageImpl::ModifyPassword(const CefString& url,
+                                       const CefString& old_username,
+                                       const CefString& new_username,
+                                       const CefString& new_password) {
+#if defined(OHOS_NWEB_EX)
+  if (!ValidContext()) {
+    StoreOrTriggerUIInitCallback(base::BindOnce(
+        base::IgnoreResult(&CefWebStorageImpl::ModifyPasswordInternal), this,
+        url, old_username, new_username, new_password));
+    return;
+  }
+  return ModifyPasswordInternal(url, old_username, new_username, new_password);
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::ModifyPasswordInternal(const CefString& url,
+                                               const CefString& old_username,
+                                               const CefString& new_username,
+                                               const CefString& new_password) {
+  password_manager::PasswordStore* password_store = GetPasswordStore();
+  if (!password_store)
+    return;
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> passwordForms =
+      GetPasswordFormsByUrl(password_store, url.ToString16());
+  // if new_username has saved, not suppport modify password
+  for (auto& form : passwordForms) {
+    if (form->username_value == new_username.ToString16()) {
+      LOG(WARNING) << "change password fail owing to new username has saved";
+      return;
+    }
+  }
+
+  for (auto& form : passwordForms) {
+    if (form->username_value == old_username.ToString16()) {
+      if (form->password_value == new_password.ToString16() &&
+          old_username == new_username) {
+        LOG(WARNING) << "username and password not changed";
+        return;
+      }
+      password_manager::PasswordForm* new_password_form =
+          new password_manager::PasswordForm(*form);
+      new_password_form->username_value = new_username.ToString16();
+      new_password_form->password_value = new_password.ToString16();
+      password_store->UpdateLoginWithPrimaryKey(*new_password_form, *form);
+      return;
+    }
+  }
+  LOG(INFO) << "No available forms to modify";
+}
+
+void CefWebStorageImpl::RemovePasswordByUrl(const CefString& url) {
+#if defined(OHOS_NWEB_EX)
+  if (!ValidContext()) {
+    StoreOrTriggerUIInitCallback(base::BindOnce(
+        base::IgnoreResult(&CefWebStorageImpl::RemovePasswordByUrlInternal),
+        this, url));
+    return;
+  }
+  return RemovePasswordByUrlInternal(url);
+#endif  // OHOS_NWEB_EX
+}
+
+void CefWebStorageImpl::RemovePasswordByUrlInternal(
+    const CefString& url_string) {
+  password_manager::PasswordStore* password_store = GetPasswordStore();
+  if (!password_store)
+    return;
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> passwordForms =
+      GetPasswordFormsByUrl(password_store, url_string.ToString16());
+  if (passwordForms.size() == 0) {
+    LOG(INFO) << "No available forms to remove.";
+    return;
+  }
+
+  for (auto& form : passwordForms) {
+    password_store->RemoveLogin(*form);
+  }
+}
+#endif
 
 // static
 CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalManager(

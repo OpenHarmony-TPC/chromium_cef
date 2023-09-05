@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9d70e8e88a252b29a7157b30e487ce44b6d77404$
+// $hash=ed6715cdf717c90f852d98116c6c47d4f592332c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
@@ -53,6 +53,13 @@ class CefDialogHandlerCToCpp
                          bool right_aligned,
                          bool allow_multiple_selection,
                          CefRefPtr<CefSelectPopupCallback> callback) override;
+  void OnHideAutofillPopup() override;
+  void OnShowAutofillPopup(
+      CefRefPtr<CefBrowser> browser,
+      const CefRect& bounds,
+      bool right_aligned,
+      const std::vector<CefAutofillPopupItem>& menu_items) override;
+  void ShowPasswordDialog(bool is_update, const CefString& url) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

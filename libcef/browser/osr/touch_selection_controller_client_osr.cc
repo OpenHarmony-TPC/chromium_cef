@@ -109,6 +109,23 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
   state.origin = {handle->focus_bottom().x(), handle->focus_bottom().y()};
   state.edge_height = handle->focus_bottom().y() - handle->focus_top().y();
   state.alpha = handle->alpha();
+#if BUILDFLAG(IS_OHOS)
+  cef_horizontal_alignment_t orientation;
+  switch (handle->orientation()) {
+    case ui::TouchHandleOrientation::LEFT:
+      orientation = CEF_HORIZONTAL_ALIGNMENT_LEFT;
+      break;
+    case ui::TouchHandleOrientation::CENTER:
+      orientation = CEF_HORIZONTAL_ALIGNMENT_CENTER;
+      break;
+    case ui::TouchHandleOrientation::RIGHT:
+      orientation = CEF_HORIZONTAL_ALIGNMENT_RIGHT;
+      break;
+    default:
+      orientation = CEF_HORIZONTAL_ALIGNMENT_UNDEFINED;
+  }
+  state.orientation = orientation;
+#endif
 }
 }  // namespace
 
@@ -186,7 +203,7 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
       base::CommandLine::ForCurrentProcess() &&
       base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
   bool has_select = !rwhv_->GetSelectedText().empty();
-  if (is_browser && !has_select && !params.is_editable) {
+  if (is_browser && !has_select && params.selection_text.empty() && !params.is_editable) {
     quick_menu_requested_ = false;
     return false;
   }
@@ -559,8 +576,12 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
     case QM_EDITFLAG_CAN_COPY:
       return readable && has_selection;
     case QM_EDITFLAG_CAN_PASTE: {
-      std::u16string result;
       bool can_paste = false;
+      if (!editable) {
+        LOG(INFO) << "This area is not editable.";
+        return can_paste;
+      }
+      std::u16string result;
       ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
           ui::EndpointType::kDefault, /*notify_if_restricted=*/false);
       ui::Clipboard::GetForCurrentThread()->ReadText(
@@ -575,7 +596,7 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
             ui::ClipboardBuffer::kCopyPaste, &data_dst);
       }
       can_paste = can_paste ? can_paste : !result.empty();
-      return editable && can_paste;
+      return can_paste;
     }
     case QM_EDITFLAG_CAN_SELECT_ALL:
       return editable || readable;

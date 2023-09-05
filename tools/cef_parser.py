@@ -407,7 +407,8 @@ _simpletypes = {
     'CefThreadId': ['cef_thread_id_t', 'TID_UI'],
     'CefTime': ['cef_time_t', 'CefTime()'],
     'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()'],
-    'CefSelectPopupItem': ['cef_select_popup_item_t', 'CefSelectPopupItem()']
+    'CefSelectPopupItem': ['cef_select_popup_item_t', 'CefSelectPopupItem()'],
+    'CefAutofillPopupItem': ['cef_autofill_popup_item_t', 'CefAutofillPopupItem()']
 }
 
 

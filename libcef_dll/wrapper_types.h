@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9db00bb346f8f5f286cccf770a6f84dd4fc994d4$
+// $hash=40d2ab18521b32a52a78269a1dbb5800661ca849$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -75,6 +75,8 @@ enum CefWrapperType {
   WT_GET_IMAGES_CALLBACK,
   WT_GET_ORIGIN_USAGE_OR_QUOTA_CALLBACK,
   WT_GET_ORIGINS_CALLBACK,
+  WT_GET_PASSWORD_CALLBACK,
+  WT_GET_SAVED_PASSWORDS_CALLBACK,
   WT_IMAGE,
   WT_JSDIALOG_CALLBACK,
   WT_JSDIALOG_HANDLER,

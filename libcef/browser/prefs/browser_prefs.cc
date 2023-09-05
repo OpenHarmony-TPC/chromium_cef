@@ -84,10 +84,11 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "chrome/browser/browser_process.h"
+#include "chrome/browser/policy/chrome_browser_policy_connector.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/prefs/segregated_pref_store.h"
 #endif
-
 namespace browser_prefs {
 
 namespace {
@@ -152,6 +153,17 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   // Use of PrefServiceSyncable is required by Chrome code such as
   // HostContentSettingsMapFactory that calls PrefServiceSyncableFromProfile.
   sync_preferences::PrefServiceSyncableFactory factory;
+
+#if BUILDFLAG(IS_OHOS)
+  auto browser_policy_connector = g_browser_process->browser_policy_connector();
+  auto browser_policy_service = g_browser_process->policy_service();
+  if (browser_policy_connector && browser_policy_service) {
+    factory.SetManagedPolicies(browser_policy_service,
+                               browser_policy_connector);
+    factory.SetRecommendedPolicies(browser_policy_service,
+                                   browser_policy_connector);
+  }
+#endif
 
   // Used to store command-line preferences, most of which will be evaluated in
   // the CommandLinePrefStore constructor. Preferences set in this manner cannot
@@ -262,9 +274,6 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   ProfileNetworkContextService::RegisterLocalStatePrefs(registry.get());
   SSLConfigServiceManager::RegisterPrefs(registry.get());
   update_client::RegisterPrefs(registry.get());
-#if BUILDFLAG(IS_OHOS)
-  HostContentSettingsMap::RegisterProfilePrefs(registry.get());
-#endif
 
   if (!profile) {
     component_updater::RegisterComponentUpdateServicePrefs(registry.get());
