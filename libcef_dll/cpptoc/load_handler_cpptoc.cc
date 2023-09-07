@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f1ffcd166d591807cd34edcbcc700d09bb11e0a5$
+// $hash=3d32152c08ddaad8f945a1d70d4609cb3b50fe03$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
@@ -52,6 +52,7 @@ void CEF_CALLBACK
 load_handler_on_load_start(struct _cef_load_handler_t* self,
                            cef_browser_t* browser,
                            cef_frame_t* frame,
+                           const cef_string_t* url,
                            cef_transition_type_t transition_type) {
   shutdown_checker::AssertNotShutdown();
 
@@ -68,11 +69,12 @@ load_handler_on_load_start(struct _cef_load_handler_t* self,
   DCHECK(frame);
   if (!frame)
     return;
+  // Unverified params: url
 
   // Execute
   CefLoadHandlerCppToC::Get(self)->OnLoadStart(CefBrowserCToCpp::Wrap(browser),
                                                CefFrameCToCpp::Wrap(frame),
-                                               transition_type);
+                                               CefString(url), transition_type);
 }
 
 void CEF_CALLBACK load_handler_on_load_end(struct _cef_load_handler_t* self,
@@ -271,8 +273,8 @@ load_handler_on_data_resubmission(struct _cef_load_handler_t* self,
 
 void CEF_CALLBACK
 load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
-                                       long navigationStartTick,
-                                       long firstContentfulPaintMs) {
+                                       int64_t navigationStartTick,
+                                       int64_t firstContentfulPaintMs) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

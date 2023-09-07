@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3a8702e5b54310d93f9f43d60dd4d6d77b83da9d$
+// $hash=b048a460deb1f501fb5d695801ceb9c0cfbbc4fd$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -142,7 +142,8 @@ void CefCookieManagerCToCpp::PutAcceptFileURLSchemeCookiesEnabled(bool allow) {
 
 NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::VisitAllCookies(
-    CefRefPtr<CefCookieVisitor> visitor) {
+    CefRefPtr<CefCookieVisitor> visitor,
+    bool is_sync) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, visit_all_cookies))
     return false;
@@ -156,7 +157,7 @@ bool CefCookieManagerCToCpp::VisitAllCookies(
 
   // Execute
   int _retval = _struct->visit_all_cookies(
-      _struct, CefCookieVisitorCppToC::Wrap(visitor));
+      _struct, CefCookieVisitorCppToC::Wrap(visitor), is_sync);
 
   // Return type: bool
   return _retval ? true : false;
@@ -166,7 +167,8 @@ NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::VisitUrlCookies(
     const CefString& url,
     bool includeHttpOnly,
-    CefRefPtr<CefCookieVisitor> visitor) {
+    CefRefPtr<CefCookieVisitor> visitor,
+    bool is_sync) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, visit_url_cookies))
     return false;
@@ -183,19 +185,19 @@ bool CefCookieManagerCToCpp::VisitUrlCookies(
     return false;
 
   // Execute
-  int _retval =
-      _struct->visit_url_cookies(_struct, url.GetStruct(), includeHttpOnly,
-                                 CefCookieVisitorCppToC::Wrap(visitor));
+  int _retval = _struct->visit_url_cookies(
+      _struct, url.GetStruct(), includeHttpOnly,
+      CefCookieVisitorCppToC::Wrap(visitor), is_sync);
 
   // Return type: bool
   return _retval ? true : false;
 }
 
 NO_SANITIZE("cfi-icall")
-bool CefCookieManagerCToCpp::SetCookie(
-    const CefString& url,
-    const CefCookie& cookie,
-    CefRefPtr<CefSetCookieCallback> callback) {
+bool CefCookieManagerCToCpp::SetCookie(const CefString& url,
+                                       const CefCookie& cookie,
+                                       CefRefPtr<CefSetCookieCallback> callback,
+                                       bool is_sync) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_cookie))
     return false;
@@ -209,8 +211,9 @@ bool CefCookieManagerCToCpp::SetCookie(
   // Unverified params: callback
 
   // Execute
-  int _retval = _struct->set_cookie(_struct, url.GetStruct(), &cookie,
-                                    CefSetCookieCallbackCppToC::Wrap(callback));
+  int _retval =
+      _struct->set_cookie(_struct, url.GetStruct(), &cookie,
+                          CefSetCookieCallbackCppToC::Wrap(callback), is_sync);
 
   // Return type: bool
   return _retval ? true : false;
@@ -221,7 +224,8 @@ bool CefCookieManagerCToCpp::DeleteCookies(
     const CefString& url,
     const CefString& cookie_name,
     bool is_session,
-    CefRefPtr<CefDeleteCookiesCallback> callback) {
+    CefRefPtr<CefDeleteCookiesCallback> callback,
+    bool is_sync) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, delete_cookies))
     return false;
@@ -233,7 +237,7 @@ bool CefCookieManagerCToCpp::DeleteCookies(
   // Execute
   int _retval = _struct->delete_cookies(
       _struct, url.GetStruct(), cookie_name.GetStruct(), is_session,
-      CefDeleteCookiesCallbackCppToC::Wrap(callback));
+      CefDeleteCookiesCallbackCppToC::Wrap(callback), is_sync);
 
   // Return type: bool
   return _retval ? true : false;

@@ -46,7 +46,6 @@ class CefBrowserFrame
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params) override;
   void OnGetImageForContextNodeNull() override;
-  void OnScriptedPrint(bool user_initiated) override;
 
   // FrameServiceBase methods:
   bool ShouldCloseOnFinishNavigation() const override { return false; }

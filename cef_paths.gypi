@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=312d01131515090885c5bc3bd8eaf00371748c3e$
+# $hash=4f6b933b4acd75197e0d8b27e5a3d89ec0784d05$
 #
 
 {
@@ -328,6 +328,10 @@
       'libcef_dll/ctocpp/get_origin_usage_or_quota_callback_ctocpp.h',
       'libcef_dll/ctocpp/get_origins_callback_ctocpp.cc',
       'libcef_dll/ctocpp/get_origins_callback_ctocpp.h',
+      'libcef_dll/ctocpp/get_password_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/get_password_callback_ctocpp.h',
+      'libcef_dll/ctocpp/get_saved_passwords_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/get_saved_passwords_callback_ctocpp.h',
       'libcef_dll/cpptoc/image_cpptoc.cc',
       'libcef_dll/cpptoc/image_cpptoc.h',
       'libcef_dll/cpptoc/jsdialog_callback_cpptoc.cc',
@@ -652,6 +656,10 @@
       'libcef_dll/cpptoc/get_origin_usage_or_quota_callback_cpptoc.h',
       'libcef_dll/cpptoc/get_origins_callback_cpptoc.cc',
       'libcef_dll/cpptoc/get_origins_callback_cpptoc.h',
+      'libcef_dll/cpptoc/get_password_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/get_password_callback_cpptoc.h',
+      'libcef_dll/cpptoc/get_saved_passwords_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/get_saved_passwords_callback_cpptoc.h',
       'libcef_dll/ctocpp/image_ctocpp.cc',
       'libcef_dll/ctocpp/image_ctocpp.h',
       'libcef_dll/ctocpp/jsdialog_callback_ctocpp.cc',

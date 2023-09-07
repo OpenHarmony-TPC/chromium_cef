@@ -23,6 +23,10 @@ namespace net_service {
 
 class InputStreamReader;
 
+static const char kResponseDataID[] = "ResponseDataID";
+// length of unix timestamp accurate to milliseconds
+static const int kResponseDataIDMaxLength = 13;
+
 // Abstract class representing an input stream. All methods are called in
 // sequence on a worker thread, but not necessarily on the same thread.
 class InputStream {

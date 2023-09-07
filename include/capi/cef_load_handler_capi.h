@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4c56790292e7dc7c00e3465a32f04aace17dab3a$
+// $hash=310061e8cf9b88f81fa3f4f7a2176b426da4e6a2$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
@@ -89,6 +89,7 @@ typedef struct _cef_load_handler_t {
   void(CEF_CALLBACK* on_load_start)(struct _cef_load_handler_t* self,
                                     struct _cef_browser_t* browser,
                                     struct _cef_frame_t* frame,
+                                    const cef_string_t* url,
                                     cef_transition_type_t transition_type);
 
   ///
@@ -171,8 +172,8 @@ typedef struct _cef_load_handler_t {
   ///
   void(CEF_CALLBACK* on_first_contentful_paint)(
       struct _cef_load_handler_t* self,
-      long navigationStartTick,
-      long firstContentfulPaintMs);
+      int64_t navigationStartTick,
+      int64_t firstContentfulPaintMs);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

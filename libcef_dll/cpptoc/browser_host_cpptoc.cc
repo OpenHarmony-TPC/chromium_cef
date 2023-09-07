@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=07772abe346378f4c16ea5332b1db9fe2fd3d534$
+// $hash=00bc7f369fc275076cb3d2c3ea81f871d2d52754$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -765,6 +765,20 @@ void CEF_CALLBACK browser_host_was_hidden(struct _cef_browser_host_t* self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->WasHidden(hidden ? true : false);
+}
+
+void CEF_CALLBACK browser_host_was_occluded(struct _cef_browser_host_t* self,
+                                            int occluded) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->WasOccluded(occluded ? true : false);
 }
 
 void CEF_CALLBACK
@@ -2236,6 +2250,21 @@ void CEF_CALLBACK browser_host_zoom_by(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->ZoomBy(delta, width, height);
 }
 
+void CEF_CALLBACK browser_host_set_window_id(struct _cef_browser_host_t* self,
+                                             int window_id,
+                                             int nweb_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetWindowId(window_id, nweb_id);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2275,6 +2304,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_is_window_rendering_disabled;
   GetStruct()->was_resized = browser_host_was_resized;
   GetStruct()->was_hidden = browser_host_was_hidden;
+  GetStruct()->was_occluded = browser_host_was_occluded;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;
   GetStruct()->set_virtual_pixel_ratio = browser_host_set_virtual_pixel_ratio;
@@ -2365,6 +2395,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_should_frame_submission_before_draw =
       browser_host_set_should_frame_submission_before_draw;
   GetStruct()->zoom_by = browser_host_zoom_by;
+  GetStruct()->set_window_id = browser_host_set_window_id;
 }
 
 // DESTRUCTOR - Do not edit by hand.

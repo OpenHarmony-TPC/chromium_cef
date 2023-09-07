@@ -45,7 +45,6 @@ class CefRenderFrameObserver : public content::RenderFrameObserver {
   bool OnAssociatedInterfaceRequestForFrame(
       const std::string& interface_name,
       mojo::ScopedInterfaceEndpointHandle* handle) override;
-  void ScriptedPrint(bool user_initiated) override;
 
   service_manager::BinderRegistry* registry() { return &registry_; }
   blink::AssociatedInterfaceRegistry* associated_interfaces() {

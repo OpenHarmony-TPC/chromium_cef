@@ -13,6 +13,7 @@
 #include "build/build_config.h"
 #if BUILDFLAG(IS_OHOS)
 #include "components/performance_manager/embedder/performance_manager_lifetime.h"
+#include "services/network/public/cpp/network_quality_tracker.h"
 #endif
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_main_parts.h"
@@ -54,6 +55,7 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
   int PreCreateThreads() override;
 #if BUILDFLAG(IS_OHOS)
   void PostCreateThreads() override;
+  network::NetworkQualityTracker* network_quality_tracker() const;
 #endif
   int PreMainMessageLoopRun() override;
   void PostMainMessageLoopRun() override;
@@ -108,6 +110,14 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
 #if BUILDFLAG(IS_OHOS)
   std::unique_ptr<performance_manager::PerformanceManagerLifetime>
       performance_manager_lifetime_;
+
+  std::unique_ptr<network::NetworkQualityTracker> network_quality_tracker_;
+
+  // Listens to NetworkQualityTracker and sends network quality updates to the
+  // renderer.
+  std::unique_ptr<
+      network::NetworkQualityTracker::RTTAndThroughputEstimatesObserver>
+      network_quality_observer_;
 #endif
 };
 

@@ -77,7 +77,5 @@ void OhPageLoadMetricsObserver::ReportFirstContentfulPaint(
   CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
   if (!load_handler.get())
     return;
-  load_handler->OnFirstContentfulPaint(
-      static_cast<long>(navigation_start_tick),
-      static_cast<long>(first_contentful_paint_ms));
+  load_handler->OnFirstContentfulPaint(navigation_start_tick, first_contentful_paint_ms);
 }

@@ -4,6 +4,7 @@
 
 #include "libcef/browser/devtools/devtools_manager_delegate.h"
 
+#include <pwd.h>
 #include <stdint.h>
 
 #include <vector>
@@ -18,6 +19,7 @@
 #include "base/strings/utf_string_conversions.h"
 #include "build/build_config.h"
 #include "cef/grit/cef_resources.h"
+#include "content/public/browser/android/devtools_auth.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/devtools_agent_host.h"
 #include "content/public/browser/devtools_frontend_host.h"
@@ -32,12 +34,81 @@
 #include "net/base/net_errors.h"
 #include "net/log/net_log_source.h"
 #include "net/socket/tcp_server_socket.h"
+#include "net/socket/unix_domain_server_socket_posix.h"
 #include "ui/base/resource/resource_bundle.h"
+
+namespace content {
+
+bool CanUserConnectToDevTools(
+    const net::UnixDomainServerSocket::Credentials& credentials) {
+  struct passwd* creds = getpwuid(credentials.user_id);
+  if (!creds || !creds->pw_name) {
+    LOG(WARNING) << "DevTools: can't obtain creds for uid "
+                 << credentials.user_id;
+    return false;
+  }
+  if (credentials.group_id == credentials.user_id &&
+      (strcmp("root", creds->pw_name) == 0 ||   // For rooted devices
+       strcmp("shell", creds->pw_name) == 0 ||  // For non-rooted devices
+
+       // From processes signed with the same key
+       credentials.user_id == getuid())) {
+    return true;
+  }
+  LOG(WARNING) << "DevTools: connection attempt from " << creds->pw_name;
+  return false;
+}
+
+}  // namespace content
 
 namespace {
 
+const char kSocketNameFormat[] = "webview_devtools_remote_%d";
+const char kTetheringSocketName[] = "webview_devtools_tethering_%d_%d";
+
 const int kBackLog = 10;
 
+// Factory for UnixDomainServerSocket.
+class UnixDomainServerSocketFactory : public content::DevToolsSocketFactory {
+ public:
+  explicit UnixDomainServerSocketFactory(const std::string& socket_name)
+      : socket_name_(socket_name), last_tethering_socket_(0) {}
+
+  UnixDomainServerSocketFactory(const UnixDomainServerSocketFactory&) = delete;
+  UnixDomainServerSocketFactory& operator=(
+      const UnixDomainServerSocketFactory&) = delete;
+
+ private:
+  // content::DevToolsAgentHost::ServerSocketFactory.
+  std::unique_ptr<net::ServerSocket> CreateForHttpServer() override {
+    std::unique_ptr<net::UnixDomainServerSocket> socket(
+        new net::UnixDomainServerSocket(
+            base::BindRepeating(&content::CanUserConnectToDevTools),
+            true /* use_abstract_namespace */));
+    if (socket->BindAndListen(socket_name_, kBackLog) != net::OK)
+      return nullptr;
+    return socket;
+  }
+
+  std::unique_ptr<net::ServerSocket> CreateForTethering(
+      std::string* name) override {
+    *name = base::StringPrintf(kTetheringSocketName, getpid(),
+                               ++last_tethering_socket_);
+    std::unique_ptr<net::UnixDomainServerSocket> socket(
+        new net::UnixDomainServerSocket(
+            base::BindRepeating(&content::CanUserConnectToDevTools),
+            true /* use_abstract_namespace */));
+    if (socket->BindAndListen(*name, kBackLog) != net::OK)
+      return nullptr;
+
+    return socket;
+  }
+
+  std::string socket_name_;
+  int last_tethering_socket_;
+};
+
+#if BUILDFLAG(IS_OHOS)
 class TCPServerSocketFactory : public content::DevToolsSocketFactory {
  public:
   TCPServerSocketFactory(const std::string& address, uint16_t port)
@@ -66,6 +137,11 @@ class TCPServerSocketFactory : public content::DevToolsSocketFactory {
 };
 
 std::unique_ptr<content::DevToolsSocketFactory> CreateSocketFactory() {
+#if BUILDFLAG(IS_OHOS)
+  LOG(INFO) << "Domain Socket Entry.";
+  return std::make_unique<UnixDomainServerSocketFactory>(
+      base::StringPrintf(kSocketNameFormat, getpid()));
+#else
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
   // See if the user specified a port on the command line. Specifying 0 would
@@ -89,7 +165,9 @@ std::unique_ptr<content::DevToolsSocketFactory> CreateSocketFactory() {
     return nullptr;
   return std::unique_ptr<content::DevToolsSocketFactory>(
       new TCPServerSocketFactory("127.0.0.1", port));
+#endif
 }
+#endif
 
 }  //  namespace
 

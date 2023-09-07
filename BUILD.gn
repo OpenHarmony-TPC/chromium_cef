@@ -482,10 +482,6 @@ static_library("libcef_static") {
               "libcef/browser/context.h",
               "libcef/browser/context_menu_params_impl.cc",
               "libcef/browser/context_menu_params_impl.h",
-              "libcef/browser/content_settings/oh_host_content_settings_observer_factory.h",
-              "libcef/browser/content_settings/oh_host_content_settings_observer_factory.cc",
-              "libcef/browser/content_settings/oh_host_content_settings_observer.h",
-              "libcef/browser/content_settings/oh_host_content_settings_observer.cc",
               "libcef/browser/devtools/devtools_controller.cc",
               "libcef/browser/devtools/devtools_controller.h",
               "libcef/browser/devtools/devtools_file_manager.cc",
@@ -898,6 +894,23 @@ static_library("libcef_static") {
               "libcef/renderer/javascript/oh_gin_javascript_bridge_value_converter.cc",
             ]
 
+  if (is_ohos) {
+    sources += [
+      "libcef/browser/password/oh_password_manager_client.h",
+      "libcef/browser/password/oh_password_manager_client.cc",
+      "libcef/browser/password/oh_password_store_factory.h",
+      "libcef/browser/password/oh_password_store_factory.cc",
+      "libcef/browser/password/oh_sync_start_util.h",
+      "libcef/browser/password/oh_sync_start_util.cc",
+      "libcef/browser/autofill/oh_autofill_client.cc",
+      "libcef/browser/autofill/oh_autofill_client.h",
+
+      "libcef/browser/autofill/oh_autofill_provider.cc",
+      "libcef/browser/autofill/oh_autofill_provider.h",
+      "libcef/browser/autofill/oh_autofill_manager.cc",
+      "libcef/browser/autofill/oh_autofill_manager.h",
+    ]
+  }
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
@@ -1097,6 +1110,13 @@ static_library("libcef_static") {
   ]
 
   deps += [ "//components/no_state_prefetch/renderer" ]
+  
+  if (is_ohos) {
+    deps += [
+      "//components/password_manager/content/browser",
+      "//components/ukm/content:content",
+    ]
+  }
 
   if (defined(ohos_enable_cef_chrome_runtime) &&
       !ohos_enable_cef_chrome_runtime) {

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=94416352092795abfea395fe1b6853fea26edf5e$
+// $hash=d6cd43f38c7e1fc0f5091fa8016c04b4ac12fd0b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_WEB_STORAGE_CAPI_H_
@@ -49,6 +49,8 @@ extern "C" {
 
 struct _cef_get_origin_usage_or_quota_callback_t;
 struct _cef_get_origins_callback_t;
+struct _cef_get_password_callback_t;
+struct _cef_get_saved_passwords_callback_t;
 
 ///
 // Structure used for managing storage. The functions of this structure may be
@@ -94,6 +96,49 @@ typedef struct _cef_web_storage_t {
       struct _cef_web_storage_t* self,
       const cef_string_t* origin,
       struct _cef_get_origin_usage_or_quota_callback_t* callback);
+
+  ///
+  // clear password
+  ///
+  void(CEF_CALLBACK* clear_password)(struct _cef_web_storage_t* self);
+
+  ///
+  // remove save pssword by url and username
+  ///
+  void(CEF_CALLBACK* remove_password)(struct _cef_web_storage_t* self,
+                                      const cef_string_t* url,
+                                      const cef_string_t* username);
+
+  ///
+  // modify save pssword by url
+  ///
+  void(CEF_CALLBACK* modify_password)(struct _cef_web_storage_t* self,
+                                      const cef_string_t* url,
+                                      const cef_string_t* old_username,
+                                      const cef_string_t* new_username,
+                                      const cef_string_t* new_password);
+
+  ///
+  // remove password by host url
+  ///
+  void(CEF_CALLBACK* remove_password_by_url)(struct _cef_web_storage_t* self,
+                                             const cef_string_t* url);
+
+  ///
+  // Get password by url and username
+  ///
+  void(CEF_CALLBACK* get_password)(
+      struct _cef_web_storage_t* self,
+      const cef_string_t* url,
+      const cef_string_t* username,
+      struct _cef_get_password_callback_t* callback);
+
+  ///
+  // Get password by url and username
+  ///
+  void(CEF_CALLBACK* get_saved_passwords_info)(
+      struct _cef_web_storage_t* self,
+      struct _cef_get_saved_passwords_callback_t* callback);
 } cef_web_storage_t;
 
 ///
@@ -153,6 +198,42 @@ typedef struct _cef_get_origin_usage_or_quota_callback_t {
       struct _cef_get_origin_usage_or_quota_callback_t* self,
       int64 nums);
 } cef_get_origin_usage_or_quota_callback_t;
+
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_web_storage_t::GetPassword.
+///
+typedef struct _cef_get_password_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK* on_complete)(struct _cef_get_password_callback_t* self,
+                                  const cef_string_t* result);
+} cef_get_password_callback_t;
+
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_web_storage_t::GetSavedPasswords.
+///
+typedef struct _cef_get_saved_passwords_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK* on_complete)(
+      struct _cef_get_saved_passwords_callback_t* self,
+      cef_string_list_t url,
+      cef_string_list_t username);
+} cef_get_saved_passwords_callback_t;
 
 #ifdef __cplusplus
 }

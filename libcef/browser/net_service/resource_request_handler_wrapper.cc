@@ -87,6 +87,35 @@ class RequestCallbackWrapper : public CefCallback {
   IMPLEMENT_REFCOUNTING(RequestCallbackWrapper);
 };
 
+#if BUILDFLAG(IS_OHOS)
+void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
+                            CefRefPtr<CefFrame> frame,
+                            CefRefPtr<CefRequest> request,
+                            bool has_user_gesture,
+                            int32_t error_code,
+                            cef_transition_type_t transition_type) {
+  if (!browser || !browser->GetHost() || !browser->browser_info() || !request) {
+    LOG(ERROR) << "OnRequestErrorInUiTask parame error";
+    return;
+  }
+  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
+  if (client) {
+    CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+    if (!load_handler) {
+      LOG(ERROR) << "OnRequestErrorInUiTask get load_handler failed";
+      return;
+    }
+    auto navigation_lock = browser->browser_info()->CreateNavigationLock();
+    LOG(DEBUG) << "OnRequestErrorInUiTask IsMainFrame: " << request->IsMainFrame() << ", url: " << request->GetURL().ToString();
+    if (request->IsMainFrame()) {
+      load_handler->OnLoadStart(browser, frame, request->GetURL(), transition_type);
+    }
+    load_handler->OnLoadErrorWithRequest(request, request->IsMainFrame(),
+      has_user_gesture, error_code, net::ErrorToShortString(error_code));
+  }
+}
+#endif
+
 class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
  public:
   struct RequestState {
@@ -705,6 +734,26 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   }
 
 #if BUILDFLAG(IS_OHOS)
+  void OnRequestError(int32_t request_id,
+                      const network::ResourceRequest& request,
+                      int error_code,
+                      bool safebrowsing_hit) override {
+    LOG(DEBUG) << "OnRequestError " << error_code << ", url: " << request.url.spec();
+    if (init_state_ && error_code != net::ERR_ABORTED) {
+      CefRefPtr<CefRequestImpl> cef_request = new CefRequestImpl();
+      cef_request->SetURL(CefString(request.url.spec()));
+      cef_request->SetMethod(CefString(request.method));
+      cef_request->Set(request.headers);
+      cef_request->SetDestination(request.destination);
+      CEF_POST_TASK(
+          CEF_UIT,
+          base::BindOnce(
+              &OnRequestErrorInUiTask, init_state_->browser_, init_state_->frame_, cef_request,
+              request.has_user_gesture, error_code,
+              static_cast<cef_transition_type_t>(request.transition_type)));
+    }
+  }
+
   void GetOhosResourceHandlerResult(
       int32_t request_id,
       network::ResourceRequest* request,
@@ -962,12 +1011,40 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
     state->pending_request_->SetReadOnly(true);
 
+#if !BUILDFLAG(IS_OHOS)
     auto exec_callback = base::BindOnce(
         std::move(callback), ResponseMode::CONTINUE, nullptr, new_url);
-
+#else
+    auto exec_callback = base::BindOnce(
+        &InterceptedRequestHandlerWrapper::RedirectSavedCookieDone,
+        weak_ptr_factory_.GetWeakPtr(), request_id, request,
+        std::move(callback), new_url);
+#endif
     MaybeSaveCookies(request_id, state, request, headers,
                      std::move(exec_callback));
   }
+
+#if BUILDFLAG(IS_OHOS)
+  void RedirectSavedCookieDone(int32_t request_id,
+                               network::ResourceRequest* request,
+                               OnRequestResponseResultCallback callback,
+                               const GURL& new_url) {
+    auto exec_callback = base::BindOnce(
+        std::move(callback), ResponseMode::CONTINUE, nullptr, new_url);
+    RequestState* state = GetState(request_id);
+    if (!state) {
+      // The request may have been canceled while the async callback was
+      // pending.
+      std::move(exec_callback).Run();
+      return;
+    }
+    // Clear the headers first. we will get cookie for this redirect.
+    request->headers.Clear();
+    // Get cookies for redirect url.
+    request->url = new_url;
+    MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
+  }
+#endif
 
   void HandleResponse(int32_t request_id,
                       RequestState* state,

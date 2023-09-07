@@ -65,9 +65,10 @@
 #if BUILDFLAG(IS_OHOS)
 #include "base/logging.h"
 #include "content/browser/ohos/date_time_chooser_ohos.h"
+#include "libcef/browser/autofill/oh_autofill_client.h"
 #include "libcef/browser/permission/alloy_access_request.h"
+#include "res_sched_client_adapter.h"
 #endif
-
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -172,7 +173,6 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::Create(
   std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate =
       CefBrowserPlatformDelegate::Create(create_params);
   CHECK(platform_delegate);
-
   const bool is_devtools_popup = !!create_params.devtools_opener;
 
   scoped_refptr<CefBrowserInfo> info =
@@ -631,6 +631,7 @@ void AlloyBrowserHostImpl::WasResized() {
 }
 
 void AlloyBrowserHostImpl::WasHidden(bool hidden) {
+  LOG(DEBUG) << "web was hidden:" << hidden;
   if (!IsWindowless()) {
     NOTREACHED() << "Window rendering is not disabled";
     return;
@@ -642,9 +643,34 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
     return;
   }
 
+  is_hidden_ = hidden;
+  ReportWindowStatus(false);
+
   if (platform_delegate_)
     platform_delegate_->WasHidden(hidden);
 }
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
+  LOG(DEBUG) << "web was occluded:" << occluded;
+  if (!IsWindowless()) {
+    NOTREACHED() << "Window rendering is not disabled";
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHost::WasOccluded, this, occluded));
+    return;
+  }
+
+  is_hidden_ = occluded;
+  ReportWindowStatus(false);
+
+  if (platform_delegate_)
+    platform_delegate_->WasOccluded(occluded);
+}
+#endif
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
   if (!IsWindowless()) {
@@ -1663,6 +1689,31 @@ void AlloyBrowserHostImpl::ShowRepostFormWarningDialog(content::WebContents* sou
 }
 #endif
 
+#if defined(OHOS_NWEB_EX)
+void AlloyBrowserHostImpl::ShowPasswordDialog(bool is_update,
+                                              const std::string& url) {
+  if (platform_delegate_) {
+    platform_delegate_->ShowPasswordDialog(is_update, url);
+  }
+}
+
+void AlloyBrowserHostImpl::OnShowAutofillPopup(
+    const gfx::RectF& element_bounds,
+    bool is_rtl,
+    const std::vector<autofill::Suggestion>& suggestions) {
+  if (platform_delegate_) {
+    platform_delegate_->OnShowAutofillPopup(element_bounds, is_rtl,
+                                            suggestions);
+  }
+}
+
+void AlloyBrowserHostImpl::OnHideAutofillPopup() {
+  if (platform_delegate_) {
+    platform_delegate_->OnHideAutofillPopup();
+  }
+}
+#endif
+
 // content::WebContentsObserver methods.
 // -----------------------------------------------------------------------------
 
@@ -1679,6 +1730,16 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   platform_delegate_->RenderViewReady();
   UpdateBackgroundColor(base_background_color_);
   UpdateZoomSupportEnabled();
+
+#if BUILDFLAG(IS_OHOS)
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatus, this, true));
+    return;
+  }
+  ReportWindowStatus(true);
+#endif
 }
 
 void AlloyBrowserHostImpl::DidFinishNavigation(
@@ -1899,6 +1960,11 @@ void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
     platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
 }
 
+void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
+  window_id_ = window_id;
+  nweb_id_ = nweb_id;
+};
+
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
     content::DateTimeChooserOHOS::FromWebContents(web_contents());
@@ -1944,6 +2010,47 @@ void AlloyBrowserHostImpl::CloseDateTimeChooser() {
     if (auto handler = client_->GetDialogHandler()) {
       handler->OnDateTimeChooserClose();
     }
+  }
+}
+
+void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
+  using namespace OHOS::NWeb;
+  if (first_view_ready && is_hidden_) {
+    LOG(INFO)
+        << "no need to report render view ready because the view is hidden";
+    return;
+  }
+
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImpl::OnRenderViewReady web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::OnRenderViewReady "
+                    "render_process_host is null";
+      return;
+    }
+
+    ResSchedStatusAdapter status = is_hidden_
+                                       ? ResSchedStatusAdapter::WEB_INACTIVE
+                                       : ResSchedStatusAdapter::WEB_ACTIVE;
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                              nweb_id_);
+    if (!is_hidden_) {
+      ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
+                                         ResSchedSceneAdapter::VISIBLE,
+                                         nweb_id_);
+    }
+  } else {
+    LOG(ERROR)
+        << "AlloyBrowserHostImpl::OnRenderViewReady render_view_host is null";
+    return;
   }
 }
 #endif

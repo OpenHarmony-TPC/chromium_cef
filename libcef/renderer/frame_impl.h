@@ -104,7 +104,6 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void LoadHeaderUrl(const CefString& url,
                      const CefString& additionalHttpHeaders) override;
   void OnFocusedNodeChanged(const blink::WebElement& element);
-  void ScriptedPrint(bool user_initiated);
 #endif  // BUILDFLAG(IS_OHOS)
 
  private:
@@ -168,7 +167,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void ScrollTo(float x, float y) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void SlideScroll(float vx, float vy) override;
-  void ZoomBy(float delta, float width, float height, cef::mojom::RenderFrame::ZoomByCallback callback) override;
+  void ZoomBy(float delta, float width, float height) override;
   void GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) override;
   GURL GetAbsoluteUrl(const blink::WebNode& node,
                       const std::u16string& url_fragment);

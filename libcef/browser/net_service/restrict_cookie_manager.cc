@@ -18,11 +18,6 @@
 #include "net_helpers.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
-#endif
-
 class ProxyingRestrictedCookieManagerListener
     : public network::mojom::CookieChangeListener {
  public:
@@ -76,23 +71,6 @@ void ProxyingRestrictedCookieManager::GetAllForUrl(
     network::mojom::CookieManagerGetOptionsPtr options,
     GetAllForUrlCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-#if BUILDFLAG(IS_OHOS)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    if (site_for_cookies.IsFirstParty(url) ||
-        AllowCookies(url, site_for_cookies)) {
-      // 进入此分支，要么是first party，要么是third party，
-      // 对于third party而言，说明允许其获取Cookie，后面对于third
-      // party不需要再查询content_settings配置
-      underlying_restricted_cookie_manager_->GetAllForUrl(
-          url, site_for_cookies, top_frame_origin, std::move(options),
-          std::move(callback));
-      return;
-    }
-    std::move(callback).Run(std::vector<net::CookieWithAccessResult>());
-    return;
-  }
-#endif
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->GetAllForUrl(
         url, site_for_cookies, top_frame_origin, std::move(options),
@@ -109,22 +87,6 @@ void ProxyingRestrictedCookieManager::SetCanonicalCookie(
     const url::Origin& top_frame_origin,
     SetCanonicalCookieCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-#if BUILDFLAG(IS_OHOS)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    if (site_for_cookies.IsFirstParty(url) ||
-        AllowCookies(url, site_for_cookies)) {
-      // 进入此分支，要么是first party，要么是third party，
-      // 对于third party而言，说明允许其获取Cookie，后面对于third
-      // party不需要再查询content_settings配置
-      underlying_restricted_cookie_manager_->SetCanonicalCookie(
-          cookie, url, site_for_cookies, top_frame_origin, std::move(callback));
-      return;
-    }
-    std::move(callback).Run(false);
-    return;
-  }
-#endif
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->SetCanonicalCookie(
         cookie, url, site_for_cookies, top_frame_origin, std::move(callback));
@@ -163,22 +125,7 @@ void ProxyingRestrictedCookieManager::SetCookieFromString(
     const std::string& cookie,
     SetCookieFromStringCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-#if BUILDFLAG(IS_OHOS)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    if (site_for_cookies.IsFirstParty(url) ||
-        AllowCookies(url, site_for_cookies)) {
-      // 进入此分支，要么是first party，要么是third party，
-      // 对于third party而言，说明允许其获取Cookie，后面对于third
-      // party不需要再查询content_settings配置
-      underlying_restricted_cookie_manager_->SetCookieFromString(
-          url, site_for_cookies, top_frame_origin, cookie, std::move(callback));
-      return;
-    }
-    std::move(callback).Run();
-    return;
-  }
-#endif
+
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->SetCookieFromString(
         url, site_for_cookies, top_frame_origin, cookie, std::move(callback));
@@ -193,22 +140,6 @@ void ProxyingRestrictedCookieManager::GetCookiesString(
     const url::Origin& top_frame_origin,
     GetCookiesStringCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-#if BUILDFLAG(IS_OHOS)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    if (site_for_cookies.IsFirstParty(url) ||
-        AllowCookies(url, site_for_cookies)) {
-      // 进入此分支，要么是first party，要么是third party，
-      // 对于third party而言，说明允许其获取Cookie，后面对于third
-      // party不需要再查询content_settings配置
-      underlying_restricted_cookie_manager_->GetCookiesString(
-          url, site_for_cookies, top_frame_origin, std::move(callback));
-      return;
-    }
-    std::move(callback).Run("");
-    return;
-  }
-#endif
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->GetCookiesString(
         url, site_for_cookies, top_frame_origin, std::move(callback));

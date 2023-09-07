@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0dd0e9c8f49543cf0f8bd0fe85c0df4fc9fe1ecb$
+// $hash=39ecb8043d05d919118cb137ee0d9df5cf0fd0a1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -51,6 +51,7 @@ class CefBrowserCToCpp
   void ReloadOriginalUrl() override;
   void SelectAndCopy() override;
   bool ShouldShowFreeCopy() override;
+  void PasswordSuggestionSelected(int list_index) override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
   void StopLoad() override;
   int GetIdentifier() override;
@@ -73,6 +74,11 @@ class CefBrowserCToCpp
   bool GetForceEnableZoom() override;
   int GetNWebId() override;
   void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
+  bool GetSavePasswordAutomatically() override;
+  void SetSavePasswordAutomatically(bool enable) override;
+  void SaveOrUpdatePassword(bool is_update) override;
+  bool GetSavePassword() override;
+  void SetSavePassword(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

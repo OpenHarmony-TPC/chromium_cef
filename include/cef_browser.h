@@ -159,6 +159,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual bool ShouldShowFreeCopy() = 0;
 
   ///
+  // select password dialog to fill
+  ///
+  /*--cef()--*/
+  virtual void PasswordSuggestionSelected(int list_index) = 0;
+
+  ///
   // Set user agent for current page.
   ///
   /*--cef()--*/
@@ -291,12 +297,42 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual int GetNWebId() = 0;
-  
+
   ///
   // Set whether the target_blank pop-up window is opened in the current tab.
   ///
   /*--cef()--*/
   virtual void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) = 0;
+
+  ///
+  // Whether automatically saving password had been enabled.
+  ///
+  /*--cef()--*/
+  virtual bool GetSavePasswordAutomatically() = 0;
+
+  ///
+  // Set enable to allow automatically save password
+  ///
+  /*--cef()--*/
+  virtual void SetSavePasswordAutomatically(bool enable) = 0;
+
+  ///
+  // save or upddate current page password
+  ///
+  /*--cef()--*/
+  virtual void SaveOrUpdatePassword(bool is_update) = 0;
+
+  ///
+  // Whether saving password had been enabled.
+  ///
+  /*--cef()--*/
+  virtual bool GetSavePassword() = 0;
+
+  ///
+  // Set enable to save password
+  ///
+  /*--cef()--*/
+  virtual void SetSavePassword(bool enable) = 0;
   /* ---------- ohos_nweb_ex add end --------- */
 };
 
@@ -758,6 +794,14 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void WasHidden(bool hidden) = 0;
+
+  ///
+  // Notify the browser that it has been occluded or unoccluded. Layouting and
+  // CefRenderHandler::OnPaint notification will stop when the browser is
+  // occluded. This method is only used when window rendering is disabled.
+  ///
+  /*--cef()--*/
+  virtual void WasOccluded(bool occluded) = 0;
 
   ///
   // Send a notification to the browser that the screen info has changed. The
@@ -1375,6 +1419,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ZoomBy(float delta, float width, float height) = 0;
+
+  ///
+  // Set the window id of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void SetWindowId(int window_id, int nweb_id) = 0;
 };
 
 ///

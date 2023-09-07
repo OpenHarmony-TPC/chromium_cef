@@ -253,6 +253,12 @@ class CefBrowserHostBase : public CefBrowserHost,
   void ZoomBy(float delta, float width, float height) override;
   void SetForceEnableZoom(bool forceEnableZoom) override;
   bool GetForceEnableZoom() override;
+  void SetSavePasswordAutomatically(bool enable) override;
+  bool GetSavePasswordAutomatically() override;
+  void SetSavePassword(bool enable) override;
+  void SaveOrUpdatePassword(bool is_udpate) override;
+  void PasswordSuggestionSelected(int list_index) override;
+  bool GetSavePassword() override;
   void SelectAndCopy() override;
   bool ShouldShowFreeCopy() override;
   int GetNWebId() override;

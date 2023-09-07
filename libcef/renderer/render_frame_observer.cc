@@ -201,12 +201,6 @@ bool CefRenderFrameObserver::OnAssociatedInterfaceRequestForFrame(
   return associated_interfaces_.TryBindInterface(interface_name, handle);
 }
 
-void CefRenderFrameObserver::ScriptedPrint(bool user_initiated) {
-  if (!frame_)
-    return;
-  frame_->ScriptedPrint(user_initiated);
-}
-
 void CefRenderFrameObserver::AttachFrame(CefFrameImpl* frame) {
   DCHECK(frame);
   DCHECK(!frame_);
@@ -224,7 +218,7 @@ void CefRenderFrameObserver::OnLoadStart() {
         blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
         CefRefPtr<CefBrowserImpl> browserPtr =
             CefBrowserImpl::GetBrowserForMainFrame(frame->Top());
-        load_handler->OnLoadStart(browserPtr.get(), frame_, TT_EXPLICIT);
+        load_handler->OnLoadStart(browserPtr.get(), frame_, frame_->GetURL(), TT_EXPLICIT);
       }
     }
   }

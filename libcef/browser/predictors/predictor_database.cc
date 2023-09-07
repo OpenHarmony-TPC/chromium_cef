@@ -117,7 +117,7 @@ void PredictorDatabase::RecordVisitedUrl(VisitedUrlInfo url_info) {
     }
   }
 
-  if (!is_update && visited_urls_.size() > kMaxVisitedUrlsLength) {
+  if (!is_update && (visited_urls_.size() + 1) > kMaxVisitedUrlsLength) {
     return;
   }
 
@@ -138,13 +138,16 @@ void PredictorDatabase::RecordVisitedUrl(VisitedUrlInfo url_info) {
 void PredictorDatabase::UpdateFromPrefsAndClear() {
   // Get last visited url list.
   if (last_visited_urls_.size() == 0 && last_visited_urls_sorted_.size() == 0) {
-    auto cef_browser_context = CefBrowserContext::GetAll()[0];
-    if (!cef_browser_context) {
+    std::vector<CefBrowserContext*> browser_context_all =
+        CefBrowserContext::GetAll();
+    if (browser_context_all.size() == 0) {
       return;
     }
-
-    content::BrowserContext* browser_context =
-        cef_browser_context->AsBrowserContext();
+    CefBrowserContext* context = browser_context_all[0];
+    content::BrowserContext* browser_context = context->AsBrowserContext();
+    if (!browser_context) {
+      return;
+    }
     PrefService* pref_service = user_prefs::UserPrefs::Get(browser_context);
     if (!pref_service) {
       return;

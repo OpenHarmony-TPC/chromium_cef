@@ -80,9 +80,10 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   // navigations that fail or are canceled before commit. For notification of
   // overall browser load status use OnLoadingStateChange instead.
   ///
-  /*--cef()--*/
+  /*--cef(optional_param=url)--*/
   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame,
+                           const CefString& url,
                            TransitionType transition_type) {}
 
   ///
@@ -162,8 +163,8 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   // Called when the first content rendering of web page.
   ///
   /*--cef()--*/
-  virtual void OnFirstContentfulPaint(long navigationStartTick,
-                                      long firstContentfulPaintMs) {}
+  virtual void OnFirstContentfulPaint(int64_t navigationStartTick,
+                                      int64_t firstContentfulPaintMs) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_LOAD_HANDLER_H_

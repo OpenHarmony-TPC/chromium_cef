@@ -57,6 +57,10 @@
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_selection_controller.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "res_sched_client_adapter.h"
+#endif
+
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -555,6 +559,12 @@ bool CefRenderWidgetHostViewOSR::IsShowing() {
   return is_showing_;
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::WasOccluded() {
+  Hide();
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::EnsureSurfaceSynchronizedForWebTest() {
   ++latest_capture_sequence_number_;
   SynchronizeVisualProperties(cc::DeadlinePolicy::UseInfiniteDeadline(),
@@ -1033,6 +1043,7 @@ void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
     base::i18n::TextDirection focus_dir,
     const gfx::Rect& bounding_box,
     bool is_anchor_first) {
+  is_editable_node_ = true;
   if (!browser_impl_) {
     LOG(ERROR) << "browser_impl_ is nullptr";
     return;
@@ -1318,12 +1329,19 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
   SetFrameRate();
 
   const bool resized = ResizeRootLayer();
-  if (resized && should_wait_) {
-    if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-            browser_impl_->GetAcceleratedWidget())) {
-      compositor->SetShouldFrameSubmissionBeforeDraw(true);
-    }
+#if BUILDFLAG(IS_OHOS)
+  if (resized) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportScene(
+        OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER,
+        OHOS::NWeb::ResSchedSceneAdapter::RESIZE);
+
+    if (should_wait_)
+      if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+              browser_impl_->GetAcceleratedWidget())) {
+        compositor->SetShouldFrameSubmissionBeforeDraw(true);
+      }
   }
+#endif
   bool surface_id_updated = false;
 
   if (!resized && child_local_surface_id) {
@@ -1613,6 +1631,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
 
 #if BUILDFLAG(IS_OHOS)
   if (event.type == CEF_TET_PRESSED) {
+    is_editable_node_ = false;
     auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
         browser_impl_->GetAcceleratedWidget());
     if (compositor) {
@@ -1731,7 +1750,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     content::RenderWidgetHostViewBase* updated_view,
     bool did_update_state) {
   const auto state = text_input_manager->GetTextInputState();
-
   if (state && state->type == ui::TEXT_INPUT_TYPE_TEXT_AREA && !is_need_show_keyboard_) {
     is_need_show_keyboard_ = true;
     LOG(INFO) << "In this type of area, there is no need to pull up the keyboard when pressing";
@@ -1762,12 +1780,13 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (state && (state->type == ui::TEXT_INPUT_TYPE_NUMBER ||
                 state->type == ui::TEXT_INPUT_TYPE_TELEPHONE)) {
     mode = CEF_TEXT_INPUT_MODE_NUMERIC;
-  } else if (mode == CEF_TEXT_INPUT_MODE_NONE && is_editable_node_) {
+  } else if (updated_view && text_input_manager->IsRegistered(updated_view) &&
+             mode == CEF_TEXT_INPUT_MODE_NONE && is_editable_node_) {
+    LOG(INFO) << "add selection removeAllRange and addRange";
     mode = CEF_TEXT_INPUT_MODE_DEFAULT;
     show_keyboard = true;
   }
 #endif
-
   handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                       show_keyboard);
   is_need_show_keyboard_ = false;
@@ -2303,7 +2322,8 @@ std::pair<int, int> CefRenderWidgetHostViewOSR::HandleCursorOffset() {
   return std::make_pair(x, y);
 }
 
-void CefRenderWidgetHostViewOSR::DidOverscroll(const ui::DidOverscrollParams& params) {
+void CefRenderWidgetHostViewOSR::DidOverscroll(
+    const ui::DidOverscrollParams& params) {
   if (browser_impl_.get()) {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();

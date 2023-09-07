@@ -768,6 +768,10 @@ void InterceptedRequest::FollowRedirect(
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
 #if BUILDFLAG(IS_OHOS)
+  // We will not create a new url loader for redirects. However, the cef
+  // controls the add/save of cookies, so we need to load cookies and then
+  // transfer them to the network layer. Will only merge cookie headers bellow.
+  modified_headers.MergeFrom(request_.headers);
   if (target_loader_) {
     target_loader_->FollowRedirect(removed_headers, modified_headers,
                                    modified_cors_exempt_headers, new_url);
@@ -833,6 +837,13 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
 void InterceptedRequest::InterceptResponseReceived(
     const GURL& original_url,
     std::unique_ptr<ResourceResponse> response) {
+#if !BUILDFLAG(IS_OHOS)
+  // We donn't reset and create a new url_loader for redirects then
+  // donn't need call HandleResponseOrRedirectHeaders when received
+  // response.
+  // See c68654c58db10e0add64ab0ddd1bcf9ace337324, if we reset and
+  // create a new url_loader for redirects then we will loss the
+  // information for cors check.
   if (request_.url != original_url) {
     // A response object shouldn't be created if we're redirecting.
     DCHECK(!response);
@@ -874,6 +885,7 @@ void InterceptedRequest::InterceptResponseReceived(
                        weak_factory_.GetWeakPtr(), redirect_info));
     return;
   }
+#endif  // IS_OHOS
 
   if (response) {
     // Non-null response: make sure to use it as an override for the
@@ -1073,7 +1085,12 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   bool should_clear_upload;
   net::RedirectUtil::UpdateHttpRequest(original_url, original_method,
                                        new_redirect_info,
+#if BUILDFLAG(IS_OHOS)
+                                       // OHOS not restart on redirect.
+                                       absl::nullopt,
+#else
                                        absl::make_optional(remove_headers),
+#endif
                                        /*modified_headers=*/absl::nullopt,
                                        &request_.headers, &should_clear_upload);
 

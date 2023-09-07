@@ -3,6 +3,8 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
+#include <regex>
+
 #include "libcef/browser/net_service/stream_reader_url_loader.h"
 
 #include "libcef/browser/thread_util.h"
@@ -609,6 +611,14 @@ void StreamReaderURLLoader::OnReaderSkipCompleted(int64_t bytes_skipped) {
   }
 }
 
+bool checkResponseDataID(const std::string& identity) {
+  if (identity.empty() || identity.length() > kResponseDataIDMaxLength) {
+    return false;
+  }
+  static std::regex pattern(R"(\d+)");
+  return std::regex_match(identity, pattern);
+}
+
 void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                             int64_t expected_content_length) {
   DCHECK(thread_checker_.CalledOnValidThread());
@@ -632,6 +642,25 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   auto pending_response = network::mojom::URLResponseHead::New();
   pending_response->request_start = base::TimeTicks::Now();
   pending_response->response_start = base::TimeTicks::Now();
+
+  // When user custom resource responses via 'onInterceptRequest',
+  // they can set 'ResponseDataID' value in the reponse header.
+  // This value will be utilized to generate codecache for interupt js resource.
+  //
+  // 'ResponseDataID': A string of 13 pure digits representing response data ID.
+  // When response data changes, a different 'ResponseDataID' must be set.
+  const auto& it = extra_headers.find(kResponseDataID);
+  if (it != extra_headers.end()) {
+    auto identity = it->second;
+    if (checkResponseDataID(identity)) {
+      pending_response->response_time =
+          base::Time::FromJsTime(std::stod(identity));
+      LOG(INFO) << "ResponseDataID have set";
+    } else {
+      LOG(WARNING) << "ResponseDataID[" << (identity)
+                   << "] not a reasonable value!";
+    }
+  }
 
   auto headers = MakeResponseHeaders(
       status_code, status_text, mime_type, charset, content_length,

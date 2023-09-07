@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7de1b15970e35c0ef6272719cb7e984e0b152f92$
+// $hash=4ba8c53b333e54f8700d2394fc5fbc9c569e7882$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -238,6 +238,20 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowFreeCopy() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::PasswordSuggestionSelected(int list_index) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, password_suggestion_selected))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->password_suggestion_selected(_struct, list_index);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -623,6 +637,79 @@ void CefBrowserCToCpp::SetEnableBlankTargetPopupIntercept(
   // Execute
   _struct->set_enable_blank_target_popup_intercept(_struct,
                                                    enableBlankTargetPopup);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetSavePasswordAutomatically() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_save_password_automatically))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_save_password_automatically(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SetSavePasswordAutomatically(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_save_password_automatically))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_save_password_automatically(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SaveOrUpdatePassword(bool is_update) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, save_or_update_password))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->save_or_update_password(_struct, is_update);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetSavePassword() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_save_password))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_save_password(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::SetSavePassword(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_save_password))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_save_password(_struct, enable);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

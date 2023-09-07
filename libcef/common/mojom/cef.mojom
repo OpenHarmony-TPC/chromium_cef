@@ -144,8 +144,8 @@ interface RenderFrame {
   [EnableIf=is_ohos]
   SlideScroll(float vx, float vy);
 
-  [EnableIf=is_ohos, Sync]
-  ZoomBy(float delta, float width, float height) => ();
+  [EnableIf=is_ohos]
+  ZoomBy(float delta, float width, float height);
 
   [EnableIf=is_ohos, Sync]
   GetHitData() => (int32 type, string extra_data);
@@ -171,9 +171,6 @@ interface BrowserFrame {
 
   [EnableIf=is_ohos]
   OnGetImageForContextNodeNull();
-
-  [EnableIf=is_ohos]
-  OnScriptedPrint(bool user_initiated);
 };
 
 struct CrossOriginWhiteListEntry {

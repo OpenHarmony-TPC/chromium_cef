@@ -35,17 +35,21 @@ class CefCookieManagerImpl : public CefCookieManager {
   void PutAcceptThirdPartyCookieEnabled(bool accept) override;
   bool IsFileURLSchemeCookiesAllowed() override;
   void PutAcceptFileURLSchemeCookiesEnabled(bool allow) override;
-  bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) override;
+  bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor,
+                       bool is_sync) override;
   bool VisitUrlCookies(const CefString& url,
                        bool includeHttpOnly,
-                       CefRefPtr<CefCookieVisitor> visitor) override;
+                       CefRefPtr<CefCookieVisitor> visitor,
+                       bool is_sync) override;
   bool SetCookie(const CefString& url,
                  const CefCookie& cookie,
-                 CefRefPtr<CefSetCookieCallback> callback) override;
+                 CefRefPtr<CefSetCookieCallback> callback,
+                 bool is_sync) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
                      bool is_session,
-                     CefRefPtr<CefDeleteCookiesCallback> callback) override;
+                     CefRefPtr<CefDeleteCookiesCallback> callback,
+                     bool is_sync) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
 
  private:
@@ -53,17 +57,21 @@ class CefCookieManagerImpl : public CefCookieManager {
   void PutAcceptFileURLSchemeCookiesEnabledCompleted(bool allow,
                                                      bool can_change_schemes);
   bool PutAcceptFileURLSchemeCookiesEnabledInternal(bool allow);
-  bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor);
+  bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor,
+                               bool is_sync);
   bool VisitUrlCookiesInternal(const GURL& url,
                                bool includeHttpOnly,
-                               CefRefPtr<CefCookieVisitor> visitor);
+                               CefRefPtr<CefCookieVisitor> visitor,
+                               bool is_sync);
   bool SetCookieInternal(const GURL& url,
                          const CefCookie& cookie,
-                         CefRefPtr<CefSetCookieCallback> callback);
+                         CefRefPtr<CefSetCookieCallback> callback,
+                         bool is_sync);
   bool DeleteCookiesInternal(const GURL& url,
                              const CefString& cookie_name,
                              bool is_session,
-                             CefRefPtr<CefDeleteCookiesCallback> callback);
+                             CefRefPtr<CefDeleteCookiesCallback> callback,
+                             bool is_sync);
   bool FlushStoreInternal(CefRefPtr<CefCompletionCallback> callback);
 
   void SetCookieCallbackImpl(CefRefPtr<CefSetCookieCallback> callback,
@@ -93,8 +101,6 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool initialized_ = false;
   std::atomic<bool> allow_file_scheme_cookies_ = false;
   std::vector<base::OnceClosure> init_callbacks_;
-  base::Thread cookie_thread;
-  scoped_refptr<base::SingleThreadTaskRunner> cookie_store_task_runner_;
 
   IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
 };

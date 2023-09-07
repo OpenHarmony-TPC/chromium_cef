@@ -17,10 +17,7 @@
 #include "build/build_config.h"
 #include "content/public/browser/content_browser_client.h"
 #include "third_party/skia/include/core/SkColor.h"
-#if BUILDFLAG(IS_OHOS)
-#include "chrome/common/renderer_configuration.mojom.h"
-#include "mojo/public/cpp/bindings/associated_remote.h"
-#endif
+
 class AlloyBrowserMainParts;
 class CefDevToolsDelegate;
 
@@ -273,6 +270,9 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       int routing_id,
       mojo::PendingReceiver<network::mojom::RestrictedCookieManager>* receiver)
       override;
+  bool ShouldAllowInsecurePrivateNetworkRequests(
+      content::BrowserContext* browser_context,
+      const url::Origin& origin) override;
 #endif
 
   base::FilePath GetShaderDiskCacheDirectory() override;
@@ -290,10 +290,6 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       content::SiteInstance* site_instance);
 
   AlloyBrowserMainParts* browser_main_parts_ = nullptr;
-#if BUILDFLAG(IS_OHOS)
-  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
-  GetRendererConfiguration(content::RenderProcessHost* render_process_host);
-#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_CONTENT_BROWSER_CLIENT_H_

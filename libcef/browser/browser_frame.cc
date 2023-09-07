@@ -90,9 +90,3 @@ void CefBrowserFrame::OnGetImageForContextNodeNull() {
     host->OnGetImageForContextNodeNull();
   }
 }
-
-void CefBrowserFrame::OnScriptedPrint(bool user_initiated) {
-  if (auto host = GetFrameHost()) {
-    host->OnScriptedPrint(user_initiated);
-  }
-}

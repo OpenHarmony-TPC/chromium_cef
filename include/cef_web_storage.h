@@ -12,6 +12,8 @@
 
 class CefGetOriginsCallback;
 class CefGetOriginUsageOrQuotaCallback;
+class CefGetPasswordCallback;
+class CefGetSavedPasswordsCallback;
 
 ///
 // Class used for managing storage. The methods of this class may be called on
@@ -62,6 +64,48 @@ class CefWebStorage : public virtual CefBaseRefCounted {
   virtual void GetOriginUsage(
       const CefString& origin,
       CefRefPtr<CefGetOriginUsageOrQuotaCallback> callback) = 0;
+
+  ///
+  // clear password
+  ///
+  /*--cef()--*/
+  virtual void ClearPassword() = 0;
+
+  ///
+  // remove save pssword by url and username
+  ///
+  /*--cef()--*/
+  virtual void RemovePassword(const CefString& url,
+                              const CefString& username) = 0;
+
+  ///
+  // modify save pssword by url
+  ///
+  /*--cef()--*/
+  virtual void ModifyPassword(const CefString& url,
+                              const CefString& old_username,
+                              const CefString& new_username,
+                              const CefString& new_password) = 0;
+
+  ///
+  // remove password by host url
+  ///
+  /*--cef()--*/
+  virtual void RemovePasswordByUrl(const CefString& url) = 0;
+
+  ///
+  // Get password by url and username
+  ///
+  /*--cef(optional_param=url,optional_param=username,optional_param=callback)--*/
+  virtual void GetPassword(const CefString& url,
+                           const CefString& username,
+                           CefRefPtr<CefGetPasswordCallback> callback) = 0;
+  ///
+  // Get password by url and username
+  ///
+  /*--cef(optional_param=url,optional_param=username,optional_param=callback)--*/
+  virtual void GetSavedPasswordsInfo(
+      CefRefPtr<CefGetSavedPasswordsCallback> callback) = 0;
 };
 
 ///
@@ -108,6 +152,35 @@ class CefGetOriginUsageOrQuotaCallback : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnComplete(int64 nums) = 0;
+};
+
+///
+// Interface to implement to be notified of asynchronous completion via
+// CefWebStorage::GetPassword.
+///
+/*--cef(source=client)--*/
+class CefGetPasswordCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void OnComplete(const CefString& result) = 0;
+};
+
+///
+// Interface to implement to be notified of asynchronous completion via
+// CefWebStorage::GetSavedPasswords.
+///
+/*--cef(source=client)--*/
+class CefGetSavedPasswordsCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  // Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void OnComplete(const std::vector<CefString>& url,
+                          const std::vector<CefString>& username) = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_STORAGE_H_

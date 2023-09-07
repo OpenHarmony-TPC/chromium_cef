@@ -748,22 +748,6 @@ void CefFrameHostImpl::LoadHeaderUrl(const CefString& url,
                     additionalHttpHeaders);
 }
 
-void CefFrameHostImpl::OnScriptedPrint(bool user_initiated) {
-  CefRefPtr<CefPrintHandler> handler = nullptr;
-  auto browser = GetBrowserHostBase();
-  if (!browser) {
-    LOG(ERROR) << "browser is nullptr";
-    return;
-  }
-  auto client = browser->GetClient();
-  if (client) {
-    handler = client->GetPrintHandler();
-  }
-  if (handler) {
-    handler->OnPrintStart(GetBrowser());
-  }
-}
-
 void CefFrameHostImpl::SendHitEvent(
     float x,
     float y,

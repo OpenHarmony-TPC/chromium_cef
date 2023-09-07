@@ -149,8 +149,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void OnGetImageForContextNodeNull() override;
   void LoadHeaderUrl(const CefString& url,
                      const CefString& additionalHttpHeaders) override;
-  void OnScriptedPrint(bool user_initiated) override;
-
   // Send the touch point to the rederer to get hitdata.
   void SendTouchEvent(const CefTouchEvent& event);
   void SendHitEvent(float x, float y, float width, float height);

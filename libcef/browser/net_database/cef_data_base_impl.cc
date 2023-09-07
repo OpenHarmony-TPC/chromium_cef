@@ -43,15 +43,15 @@ void CefDataBaseImpl::SaveHttpAuthCredentials(const CefString& host,
                                               const CefString& realm,
                                               const CefString& username,
                                               const char* password) {
-  if (host.empty() || realm.empty() || username.empty() ||
+  if (host.empty() || username.empty() ||
       password == nullptr) {
     return;
   }
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
           .GetOhosWebDataBaseAdapterInstance();
-  return databaseAdapter.SaveHttpAuthCredentials(host, realm, username,
-                                                 password);
+  databaseAdapter.SaveHttpAuthCredentials(host, realm, username,
+                                          password);
 }
 
 void CefDataBaseImpl::GetHttpAuthCredentials(
@@ -60,7 +60,7 @@ void CefDataBaseImpl::GetHttpAuthCredentials(
     CefString& username,
     char* password,
     uint32_t passwordSize) {
-  if (host.empty() || realm.empty()) {
+  if (host.empty()) {
     return;
   }
 
@@ -70,7 +70,6 @@ void CefDataBaseImpl::GetHttpAuthCredentials(
           .GetOhosWebDataBaseAdapterInstance();
   databaseAdapter.GetHttpAuthCredentials(host, realm, usernameStr, password, passwordSize);
   username = usernameStr;
-  return;
 }
 
 static OHOS::NWeb::WebPermissionType TypeToWebPermissionType(int type) {

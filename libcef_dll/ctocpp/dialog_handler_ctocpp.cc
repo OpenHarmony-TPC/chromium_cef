@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2ce0bd2dda4afb008613b357545251c4e498dd53$
+// $hash=ccf107b66cf6f96f33b175db326916c6418c3cc9$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
@@ -124,6 +124,81 @@ void CefDialogHandlerCToCpp::OnSelectPopupMenu(
   // Restore param:menu_items; type: simple_vec_byref_const
   if (menu_itemsList)
     delete[] menu_itemsList;
+}
+
+NO_SANITIZE("cfi-icall") void CefDialogHandlerCToCpp::OnHideAutofillPopup() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_hide_autofill_popup))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_hide_autofill_popup(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::OnShowAutofillPopup(
+    CefRefPtr<CefBrowser> browser,
+    const CefRect& bounds,
+    bool right_aligned,
+    const std::vector<CefAutofillPopupItem>& menu_items) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_show_autofill_popup))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Translate param: menu_items; type: simple_vec_byref_const
+  const size_t menu_itemsCount = menu_items.size();
+  cef_autofill_popup_item_t* menu_itemsList = NULL;
+  if (menu_itemsCount > 0) {
+    menu_itemsList = new cef_autofill_popup_item_t[menu_itemsCount];
+    DCHECK(menu_itemsList);
+    if (menu_itemsList) {
+      for (size_t i = 0; i < menu_itemsCount; ++i) {
+        menu_itemsList[i] = menu_items[i];
+      }
+    }
+  }
+
+  // Execute
+  _struct->on_show_autofill_popup(_struct, CefBrowserCppToC::Wrap(browser),
+                                  &bounds, right_aligned, menu_itemsCount,
+                                  menu_itemsList);
+
+  // Restore param:menu_items; type: simple_vec_byref_const
+  if (menu_itemsList)
+    delete[] menu_itemsList;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::ShowPasswordDialog(bool is_update,
+                                                const CefString& url) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, show_password_dialog))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty())
+    return;
+
+  // Execute
+  _struct->show_password_dialog(_struct, is_update, url.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

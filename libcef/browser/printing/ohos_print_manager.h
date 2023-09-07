@@ -17,13 +17,22 @@
 #define OHOS_PRINT_MANAGER_H_
 
 #include <memory>
+#include <vector>
 
 #include "components/printing/browser/print_manager.h"
 #include "components/printing/common/print.mojom-forward.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "ohos_adapter_helper.h"
 #include "printing/print_settings.h"
 
 namespace printing {
+
+struct PrintAttrs {
+  std::string jobId;
+  OHOS::NWeb::PrintAttributesAdapter attrs;
+  uint32_t fd;
+  std::function<void(std::string, uint32_t)> writeResultCallback;
+};
 
 class OhosPrintManager : public printing::PrintManager,
                          public content::WebContentsUserData<OhosPrintManager> {
@@ -41,12 +50,28 @@ class OhosPrintManager : public printing::PrintManager,
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
+  void DidShowPrintDialog() override;
+
   bool PrintNow();
+
+  void PrintPage();
+
+  void PrintPageImpl();
 
   // Updates the parameters for printing.
   void UpdateParam(std::unique_ptr<printing::PrintSettings> settings,
                    int file_descriptor,
                    PdfWritingDoneCallback callback);
+
+  void SetPrintAttrs(const PrintAttrs printAttrs) {
+    printAttrsMap_[printAttrs.jobId] = printAttrs;
+    fd_ = printAttrs.fd;
+    printJobId_ = printAttrs.jobId;
+  }
+
+  void OnScriptedPrint();
+
+  void RunPrintRequestedCallback();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -60,6 +85,7 @@ class OhosPrintManager : public printing::PrintManager,
       GetDefaultPrintSettingsCallback callback) override;
   void ScriptedPrint(printing::mojom::ScriptedPrintParamsPtr params,
                      ScriptedPrintCallback callback) override;
+  void PrintRequested(PrintRequestedCallback callback) override;
 
   static void OnDidPrintDocumentWritingDone(
       const PdfWritingDoneCallback& callback,
@@ -68,17 +94,17 @@ class OhosPrintManager : public printing::PrintManager,
 
   std::unique_ptr<printing::PrintSettings> CreatePdfSettings(
       const printing::PageRanges& page_ranges);
-  void DidExportPdf();
-  static bool ConvertPdfToImage(const std::string& pdf_filename,
-                                const std::string& image_filename);
 
   std::unique_ptr<printing::PrintSettings> settings_;
 
-  int fd_ = -1;
-  static int imageFd_;
+  uint32_t fd_ = 0;
   uint32_t width_ = 8270;
   uint32_t height_ = 11690;
-  int dpi_ = 300; // DPI (Dots Per Inch)
+  int dpi_ = 300;  // DPI (Dots Per Inch)
+
+  static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
+  static std::string printJobId_;
+  PrintRequestedCallback printRequestedCallback_;
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };

@@ -110,6 +110,13 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool GetForceEnableZoom() override {
     return false;
   }
+
+  void SetSavePasswordAutomatically(bool enable) override{};
+  bool GetSavePasswordAutomatically() override { return false; }
+  void SetSavePassword(bool enable) override{};
+  bool GetSavePassword() override { return false; }
+  void SaveOrUpdatePassword(bool is_update) override{};
+  void PasswordSuggestionSelected(int list_index) override{};
   void SelectAndCopy() override{};
   bool ShouldShowFreeCopy() override { return false; };
   int GetNWebId() override { return -1; };

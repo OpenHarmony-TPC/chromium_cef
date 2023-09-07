@@ -126,6 +126,9 @@ class CefRenderWidgetHostViewOSR
       content::PageVisibilityState page_visibility) override;
   void Hide() override;
   bool IsShowing() override;
+#if BUILDFLAG(IS_OHOS)
+  void WasOccluded() override;
+#endif
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*
   GetTouchSelectionControllerClientManager() override;

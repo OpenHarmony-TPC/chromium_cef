@@ -23,6 +23,11 @@
 #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-forward.h"
 #include "ui/base/window_open_disposition.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/autofill/core/browser/ui/suggestion.h"
+#include "ui/gfx/geometry/rect_f.h"
+#endif
+
 class GURL;
 
 namespace blink {
@@ -292,6 +297,11 @@ class CefBrowserPlatformDelegate {
   // Notify the browser that it was hidden. Only used with windowless rendering.
   virtual void WasHidden(bool hidden);
 
+#if BUILDFLAG(IS_OHOS)
+  // Notify the browser that it was occluded. Only used with windowless rendering.
+  virtual void WasOccluded(bool occluded);
+#endif
+
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering.
   virtual void NotifyScreenInfoChanged();
@@ -360,6 +370,16 @@ class CefBrowserPlatformDelegate {
                     bool findNext,
                     bool newSession);
   virtual void StopFinding(bool clearSelection);
+
+#if defined(OHOS_NWEB_EX)
+  virtual void OnShowAutofillPopup(
+      const gfx::RectF& element_bounds,
+      bool is_rtl,
+      const std::vector<autofill::Suggestion>& suggestions);
+  virtual void OnHideAutofillPopup();
+  virtual void ShowPasswordDialog(bool is_update, const std::string& url);
+#endif // IS_OHOS
+
   virtual void ShowPopupMenu(
     mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
     const gfx::Rect& bounds,

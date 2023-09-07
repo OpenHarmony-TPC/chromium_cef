@@ -178,14 +178,10 @@
 #include "base/timer/timer.h"
 #include "base/values.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-#include "chrome/browser/content_settings/page_specific_content_settings_delegate.h"
-#include "components/content_settings/browser/page_specific_content_settings.h"
 #include "components/page_load_metrics/browser/metrics_navigation_throttle.h"
 #include "components/page_load_metrics/browser/metrics_web_contents_observer.h"
 #include "components/page_load_metrics/browser/page_load_metrics_embedder_base.h"
 #include "components/page_load_metrics/browser/page_load_metrics_memory_tracker.h"
-#include "libcef/browser/content_settings/oh_host_content_settings_observer.h"
-#include "libcef/browser/content_settings/oh_host_content_settings_observer_factory.h"
 #include "libcef/browser/page_load_metrics/page_load_metrics_initialize.h"
 #include "libcef/browser/printing/ohos_print_manager.h"
 #include "net/proxy_resolution/proxy_config_service_ohos.h"
@@ -221,11 +217,14 @@
 #include "chrome/browser/prefetch/no_state_prefetch/chrome_no_state_prefetch_contents_delegate.h"
 #include "chrome/browser/prefetch/no_state_prefetch/chrome_no_state_prefetch_processor_impl_delegate.h"
 #include "chrome/browser/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
+#include "components/content_settings/core/browser/private_network_settings.h"
 #include "components/network_hints/browser/simple_network_hints_handler_impl.h"
 #include "components/no_state_prefetch/browser/no_state_prefetch_contents.h"
 #include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
 #include "components/no_state_prefetch/browser/no_state_prefetch_processor_impl.h"
 #include "components/no_state_prefetch/common/prerender_url_loader_throttle.h"
+#include "components/autofill/content/browser/content_autofill_driver_factory.h"
+#include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #include "libcef/browser/predictors/loading_predictor.h"
 #include "libcef/browser/predictors/loading_predictor_factory.h"
 #include "libcef/browser/predictors/predictor_database.h"
@@ -948,17 +947,6 @@ void AlloyContentBrowserClient::RenderProcessWillLaunch(
   Profile* original_profile = profile->GetOriginalProfile();
   RendererUpdaterFactory::GetForProfile(original_profile)
       ->InitializeRenderer(host);
-#if BUILDFLAG(IS_OHOS)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    auto renderer_configuration = GetRendererConfiguration(host);
-    RendererContentSettingRules rules;
-    content_settings::GetRendererContentSettingRules(
-        HostContentSettingsMapFactory::GetForProfile(host->GetBrowserContext()),
-        &rules);
-    renderer_configuration->SetContentSettingRules(rules);
-  }
-#endif
 }
 
 bool AlloyContentBrowserClient::ShouldUseProcessPerSite(
@@ -1564,7 +1552,31 @@ void AlloyContentBrowserClient::
             std::move(receiver), render_frame_host);
       },
       &render_frame_host));
+
+  associated_registry.AddInterface(base::BindRepeating(
+      [](content::RenderFrameHost* render_frame_host,
+         mojo::PendingAssociatedReceiver<autofill::mojom::AutofillDriver>
+             receiver) {
+        autofill::ContentAutofillDriverFactory::BindAutofillDriver(
+            std::move(receiver), render_frame_host);
+      },
+      &render_frame_host));
+
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    associated_registry.AddInterface(base::BindRepeating(
+        [](content::RenderFrameHost* render_frame_host,
+           mojo::PendingAssociatedReceiver<
+               autofill::mojom::PasswordManagerDriver> receiver) {
+          password_manager::ContentPasswordManagerDriverFactory::
+              BindPasswordManagerDriver(std::move(receiver), render_frame_host);
+        },
+        &render_frame_host));
+
+    LOG(INFO) << "PASSWORD bind associated receiver from frame";
+  }
 #endif
+
   associated_registry.AddInterface(base::BindRepeating(
       [](content::RenderFrameHost* render_frame_host,
          mojo::PendingAssociatedReceiver<extensions::mojom::LocalFrameHost>
@@ -1888,19 +1900,6 @@ bool AlloyContentBrowserClient::WillCreateURLLoaderFactory(
 void AlloyContentBrowserClient::OnNetworkServiceCreated(
     network::mojom::NetworkService* network_service) {
   DCHECK(g_browser_process);
-#if BUILDFLAG(IS_OHOS)
-  std::set<std::string> urls =
-      predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
-  auto browser_context = CefBrowserContext::GetAll()[0];
-  ohos_predictors::LoadingPredictor* predictor =
-      ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
-          browser_context->AsBrowserContext());
-  for (auto& url : urls) {
-    LOG(INFO) << "will preconnect url:" << url;
-    predictor->PrepareForPageLoad(GURL(url),
-                                  ohos_predictors::HintOrigin::OMNIBOX, true);
-  }
-#endif
   PrefService* local_state = g_browser_process->local_state();
   DCHECK(local_state);
   // Need to set up global NetworkService state before anything else uses it.
@@ -1919,6 +1918,31 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
       LOG(INFO) << "doh server invalid";
     }
   }
+#if BUILDFLAG(IS_OHOS)
+  std::set<std::string> urls =
+      predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
+  std::vector<CefBrowserContext*> browser_context_all =
+      CefBrowserContext::GetAll();
+  if (browser_context_all.size() == 0) {
+    return;
+  }
+  CefBrowserContext* context = browser_context_all[0];
+  content::BrowserContext* browser_context = context->AsBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "PrepareForPageLoad null browser_context";
+    return;
+  }
+  ohos_predictors::LoadingPredictor* loading_predictor =
+      ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
+          browser_context);
+  if (!loading_predictor) {
+    return;
+  }
+  for (auto& url : urls) {
+    loading_predictor->PrepareForPageLoad(
+        GURL(url), ohos_predictors::HintOrigin::OMNIBOX, true);
+  }
+#endif
 }
 
 bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
@@ -1978,14 +2002,6 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   network_context_params->initial_ssl_config->version_min =
         network::mojom::SSLVersion::kTLS1;
 
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    OhHostContentSettingsObserverFactory::GetInstance()->RegisterObserver(
-        context);
-    LOG(INFO) << "ExceptionList "
-                 "AlloyContentBrowserClient::ConfigureNetworkContextParams ";
-  }
-  
   auto& system_properties_adapter =
         OHOS::NWeb::OhosAdapterHelper::GetInstance()
             .GetSystemPropertiesInstance();
@@ -2260,6 +2276,13 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
   return false;  // only made a proxy, still need the actual impl to be made.
 }
 
+bool AlloyContentBrowserClient::ShouldAllowInsecurePrivateNetworkRequests(
+    content::BrowserContext* browser_context,
+    const url::Origin& origin) {
+  return content_settings::ShouldAllowInsecurePrivateNetworkRequests(
+      HostContentSettingsMapFactory::GetForProfile(browser_context), origin);
+}
+
 #endif
 
 void AlloyContentBrowserClient::OnWebContentsCreated(
@@ -2274,10 +2297,6 @@ void AlloyContentBrowserClient::OnWebContentsCreated(
   }
 #if BUILDFLAG(IS_OHOS)
   cef::InitializePageLoadMetricsForWebContents(web_contents);
-  content_settings::PageSpecificContentSettings::CreateForWebContents(
-      web_contents,
-      std::make_unique<chrome::PageSpecificContentSettingsDelegate>(
-          web_contents));
 #endif
 }
 
@@ -2326,18 +2345,3 @@ const extensions::Extension* AlloyContentBrowserClient::GetExtension(
   return registry->enabled_extensions().GetExtensionOrAppByURL(
       site_instance->GetSiteURL());
 }
-
-#if BUILDFLAG(IS_OHOS)
-mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
-AlloyContentBrowserClient::GetRendererConfiguration(
-    content::RenderProcessHost* render_process_host) {
-  IPC::ChannelProxy* channel = render_process_host->GetChannel();
-  if (!channel)
-    return mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>();
-
-  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
-      renderer_configuration;
-  channel->GetRemoteAssociatedInterface(&renderer_configuration);
-  return renderer_configuration;
-}
-#endif

@@ -119,7 +119,8 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   // cannot be accessed.
   ///
   /*--cef()--*/
-  virtual bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor) = 0;
+  virtual bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor,
+                               bool is_sync) = 0;
 
   ///
   // Visit a subset of cookies on the UI thread. The results are filtered by the
@@ -131,7 +132,8 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool VisitUrlCookies(const CefString& url,
                                bool includeHttpOnly,
-                               CefRefPtr<CefCookieVisitor> visitor) = 0;
+                               CefRefPtr<CefCookieVisitor> visitor,
+                               bool is_sync) = 0;
 
   ///
   // Sets a cookie given a valid URL and explicit user-provided cookie
@@ -145,7 +147,8 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /*--cef(optional_param=callback)--*/
   virtual bool SetCookie(const CefString& url,
                          const CefCookie& cookie,
-                         CefRefPtr<CefSetCookieCallback> callback) = 0;
+                         CefRefPtr<CefSetCookieCallback> callback,
+                         bool is_sync) = 0;
 
   ///
   // Delete all cookies that match the specified parameters. If both |url| and
@@ -163,7 +166,8 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   virtual bool DeleteCookies(const CefString& url,
                              const CefString& cookie_name,
                              bool is_session,
-                             CefRefPtr<CefDeleteCookiesCallback> callback) = 0;
+                             CefRefPtr<CefDeleteCookiesCallback> callback,
+                             bool is_sync) = 0;
 
   ///
   // Flush the backing store (if any) to disk. If |callback| is non-NULL it will
