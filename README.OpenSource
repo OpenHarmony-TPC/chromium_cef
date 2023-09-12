@@ -1,10 +1,10 @@
 [
     {
-        "Name": "chromium_cef",                   # 上游开源软件名全称
+        "Name": "cef",                   # 上游开源软件名全称
         "License":         # 上游开源软件中包含的许可证信息
-        "License File": "LICENSE.TXT"      # 许可证所在文件路径
+        "License File": "LICENSE.txt"      # 许可证所在文件路径
         "Version Number": "99.2.15+g71e9523+chromium-99.0.4844.84",
         "Upstream URL": "https://github.com/chromiumembedded/cef/tree/71e95237436e8fed71819f8c2f7881842f754f63@99.2.15+g71e9523+chromium-99.0.4844.84",   # 上游软件包发布地址
-        "Description": "第三方软件vulkan-deps/glslang"           # 开源软件功能描述
+        "Description": "Cef是chromium项目的一个分支，抽离webkite和内核层，提供content层上的API接口，把复杂的底层接口进行封装，更加友好的给用户使用，多数用于客户端的开发，通过内置页面实现快速开发客户端界面的效果"           # 开源软件功能描述
     }
 ]

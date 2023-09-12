@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <oatconfig>
+        <licensefile>LICENSE.txt</licensefile>
         <policylist>
             <policy name="projectPolicy" desc="">
             </policy>
@@ -13,6 +14,38 @@
             </filefilter>
             <filefilter name="defaultFilter">
                 <filteritem type="filepath" name="README.OpenSource"
+                    desc="" />
+                <filteritem type="filepath" name=".*ico"
+                    desc="" />
+                <filteritem type="filepath" name=".*dll"
+                    desc="" />
+                <filteritem type="filepath" name=".*png"
+                    desc="" />
+                <filteritem type="filepath" name=".*icns"
+                    desc="" />
+                <filteritem type="filepath" name=".*pdf"
+                    desc="" />
+                <filteritem type="filepath" name=".*style.yapf"
+                    desc="" />
+                <filteritem type="filepath" name="include.*"
+                    desc="" />
+                <filteritem type="filepath" name="libcef.*"
+                    desc="" />
+                <filteritem type="filepath" name="tests.*"
+                    desc="" />
+                <filteritem type="filepath" name="tools.*"
+                    desc="" />
+                <filteritem type="filepath" name=".*gn"
+                    desc="" />
+                <filteritem type="filepath" name=".*DEPS"
+                    desc="" />
+                <filteritem type="filepath" name=".*LICENSE.txt"
+                    desc="" />
+                <filteritem type="filepath" name=".*bat"
+                    desc="" />
+                <filteritem type="filepath" name=".*sh"
+                    desc="" />
+                <filteritem type="filepath" name=".*gypi"
                     desc="" />
             </filefilter>
         </filefilterlist>
