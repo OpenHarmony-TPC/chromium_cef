@@ -1,6 +1,6 @@
 [
     {
-        "Name": "chromium_cef",                   # 上游开源软件名全称
+        "Name": "cef",                   # 上游开源软件名全称
         "License":         # 上游开源软件中包含的许可证信息
         "License File": "LICENSE.txt"      # 许可证所在文件路径
         "Version Number": "99.2.15+g71e9523+chromium-99.0.4844.84",
