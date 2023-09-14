@@ -1508,7 +1508,13 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
     if (browserPtr) {
       framePtr = browserPtr->GetFrameForHost(frame);
+#if BUILDFLAG(IS_OHOS)
+      if (!framePtr) {
+	 LOG(WARNING) << "cef frame ptr is nullptr";
+      }
+#else
       CHECK(framePtr);
+#endif
       global_id = frame->GetGlobalId();
     }
   }
