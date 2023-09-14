@@ -78,7 +78,7 @@ class PrintDocumentAdapterImpl
       : ohosPrintManager_(ohosPrintManager) {}
   ~PrintDocumentAdapterImpl() = default;
 
-  void onStartLayoutWrite(
+  void OnStartLayoutWrite(
       const std::string& jobId,
       const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
       const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
@@ -96,7 +96,7 @@ class PrintDocumentAdapterImpl
     }
   }
 
-  void onJobStateChanged(const std::string& jobId, uint32_t state) override {
+  void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "OhosPrintManager onJobStateChanged.";
     state_ = state;
     if (ohosPrintManager_ && state == PRINT_JOB_COMPLETED_CANCELLED) {
