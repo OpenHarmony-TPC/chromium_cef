@@ -1959,11 +1959,9 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
 
   base::FilePath cache_path;
   if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
-    if (cef_context->ShouldPersistSessionCookies()) {
-      network_context_params->file_paths =
+    network_context_params->file_paths =
           ::network::mojom::NetworkContextFilePaths::New();
-      network_context_params->file_paths->data_path = cache_path;
-    }
+    network_context_params->file_paths->data_path = cache_path;
     network_context_params->file_paths->cookie_database_name =
         base::FilePath("cookie.db");
     network_context_params->persist_session_cookies =
