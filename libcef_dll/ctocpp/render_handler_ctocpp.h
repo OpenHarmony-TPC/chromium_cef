@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c5ae479d5aac17000598ed014a5d6f011323ace4$
+// $hash=c7471f14081b068e17d0ff3c049856df382c372a$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -99,6 +99,8 @@ class CefRenderHandlerCToCpp
   void OnOverscroll(CefRefPtr<CefBrowser> browser,
                     const float x,
                     const float y) override;
+  void OnEditableChanged(CefRefPtr<CefBrowser> browser,
+                         bool is_editable_node) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

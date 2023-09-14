@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=849d11a4573c74c39f2efe9cd3595703bd91329c$
+// $hash=92756b79e86f7c641928193eab6f541e7b126ab7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -306,6 +306,13 @@ typedef struct _cef_render_handler_t {
                                     struct _cef_browser_t* browser,
                                     const float x,
                                     const float y);
+
+  ///
+  /// Called when editable status has been changed.
+  ///
+  void(CEF_CALLBACK* on_editable_changed)(struct _cef_render_handler_t* self,
+                                          struct _cef_browser_t* browser,
+                                          int is_editable_node);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

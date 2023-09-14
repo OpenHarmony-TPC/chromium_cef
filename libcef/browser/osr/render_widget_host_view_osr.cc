@@ -1840,7 +1840,12 @@ void CefRenderWidgetHostViewOSR::InitHideKeyboardFlag() {
 void CefRenderWidgetHostViewOSR::FocusedNodeChanged(
     bool is_editable_node,
     const gfx::Rect& node_bounds_in_screen) {
-  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FocusedNodeChanged";
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FocusedNodeChanged, editable="
+             << is_editable_node;
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnEditableChanged(browser_impl_.get(), is_editable_node);
   is_editable_node_ = is_editable_node;
 }
 

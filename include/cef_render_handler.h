@@ -306,6 +306,13 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnOverscroll(CefRefPtr<CefBrowser> browser,
                             const float x,
                             const float y) {}
+
+  ///
+  /// Called when editable status has been changed.
+  ///
+  /*--cef()--*/
+  virtual void OnEditableChanged(CefRefPtr<CefBrowser> browser,
+                                 bool is_editable_node) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

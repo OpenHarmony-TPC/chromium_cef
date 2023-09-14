@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5708c2465956ed8b7b3e72db2d4e244e3f3bf93d$
+// $hash=6ade3729f9d523f2abec2b6b4f02eb49a4074d95$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -607,6 +607,27 @@ void CefRenderHandlerCToCpp::OnOverscroll(CefRefPtr<CefBrowser> browser,
 
   // Execute
   _struct->on_overscroll(_struct, CefBrowserCppToC::Wrap(browser), x, y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnEditableChanged(CefRefPtr<CefBrowser> browser,
+                                               bool is_editable_node) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_editable_changed))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_editable_changed(_struct, CefBrowserCppToC::Wrap(browser),
+                               is_editable_node);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

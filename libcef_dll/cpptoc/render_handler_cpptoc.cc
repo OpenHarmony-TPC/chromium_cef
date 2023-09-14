@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=18485a377df8e22ca8f9002fa90463517780d270$
+// $hash=9a336189c38ced7f1c64e4372c95e5ba2ac52abc$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -725,6 +725,27 @@ render_handler_on_overscroll(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), x, y);
 }
 
+void CEF_CALLBACK
+render_handler_on_editable_changed(struct _cef_render_handler_t* self,
+                                   cef_browser_t* browser,
+                                   int is_editable_node) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnEditableChanged(
+      CefBrowserCToCpp::Wrap(browser), is_editable_node ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -762,6 +783,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_complete_swap_with_new_size;
   GetStruct()->on_resize_not_work = render_handler_on_resize_not_work;
   GetStruct()->on_overscroll = render_handler_on_overscroll;
+  GetStruct()->on_editable_changed = render_handler_on_editable_changed;
 }
 
 // DESTRUCTOR - Do not edit by hand.
