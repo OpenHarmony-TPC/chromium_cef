@@ -200,6 +200,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool ShowContextMenu(const content::ContextMenuParams& params);
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void SetWindowId(int window_id, int nweb_id) override;
+  void WasKeyboardResized() override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);

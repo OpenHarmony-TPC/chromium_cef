@@ -1327,7 +1327,12 @@ void CefRenderWidgetHostViewOSR::SetShouldFrameSubmissionBeforeDraw(
 
 void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
     const cc::DeadlinePolicy& deadline_policy,
+#if BUILDFLAG(IS_OHOS)
+    const absl::optional<viz::LocalSurfaceId>& child_local_surface_id,
+    bool isKeyboard) {
+#else
     const absl::optional<viz::LocalSurfaceId>& child_local_surface_id) {
+#endif
   SetFrameRate();
 
   const bool resized = ResizeRootLayer();
@@ -1368,6 +1373,13 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
     // DelegatedFrameHost and this view, so SynchronizeVisualProperties must be
     // called last.
     if (render_widget_host_) {
+#if BUILDFLAG(IS_OHOS)
+      if (isKeyboard) {
+        LOG(INFO) << "scroll focused node into view";
+        render_widget_host_->SynchronizeVisualProperties(isKeyboard);
+        return;
+      }
+#endif
       render_widget_host_->SynchronizeVisualProperties();
     }
   }
@@ -1878,6 +1890,30 @@ std::u16string CefRenderWidgetHostViewOSR::GetSelectedText() {
   if (text_input_manager_)
     return text_input_manager_->GetTextSelection(this)->selected_text();
   return std::u16string();
+}
+
+void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
+  UpdateEditBounds();
+  if (is_select_text_) {
+    auto processedOffset = HandleCursorOffset();
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnCursorUpdate(
+        browser_impl_->GetBrowser(),
+        CefRect(processedOffset.first, processedOffset.second,
+                focus_rect_width_, focus_rect_height_));
+  }
+  // Only one resize will be in-flight at a time.
+  if (hold_resize_) {
+    if (!pending_resize_)
+      pending_resize_ = true;
+    return;
+  }
+
+  bool isKeyboardResized = true;
+  SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
+                              absl::nullopt, isKeyboardResized);
 }
 #endif
 

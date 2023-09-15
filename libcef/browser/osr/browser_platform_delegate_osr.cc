@@ -750,9 +750,17 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
   return nullptr;
 }
 
+#if BUILDFLAG(IS_OHOS)
 void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
     bool should) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
     view->SetShouldFrameSubmissionBeforeDraw(should);
-}
+}
+
+void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->WasKeyboardResized();
+}
+#endif

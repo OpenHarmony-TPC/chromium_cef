@@ -1965,6 +1965,18 @@ void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
   nweb_id_ = nweb_id;
 };
 
+void AlloyBrowserHostImpl::WasKeyboardResized() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::WasKeyboardResized, this));
+    return;
+  }
+
+  if (platform_delegate_)
+    platform_delegate_->WasKeyboardResized();
+}
+
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
     content::DateTimeChooserOHOS::FromWebContents(web_contents());

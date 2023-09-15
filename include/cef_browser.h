@@ -963,6 +963,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       bool auto_name,
       CefRefPtr<CefStoreWebArchiveResultCallback> callback) = 0;
 
+  ///
+  // Notify the browser that the widget has been resized because of virtual
+  // keyboard.
+  ///
+  /*--cef()--*/
+  virtual void WasKeyboardResized() = 0;
+
   /* ---------- ohos webview add end --------- */
 
   ///

@@ -114,7 +114,10 @@ class CefBrowserPlatformDelegateOsr
   void OnHideAutofillPopup() override;
   void ShowPasswordDialog(bool is_update, const std::string& url) override;
 #endif
+#if BUILDFLAG(IS_OHOS)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void WasKeyboardResized() override;
+#endif
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
   gfx::Point GetParentScreenPoint(const gfx::Point& view) const override;
