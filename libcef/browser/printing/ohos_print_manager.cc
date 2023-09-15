@@ -16,6 +16,8 @@
 #include "libcef/browser/printing/ohos_print_manager.h"
 
 #include <fcntl.h>
+#include <codecvt>
+#include <locale>
 #include <utility>
 
 #include "base/bind.h"
@@ -136,12 +138,15 @@ void OhosPrintManager::PdfWritingDone(int page_count) {
 bool OhosPrintManager::PrintNow() {
   LOG(INFO) << "OhosPrintManager::PrintNow";
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  std::string printJobName = GetHtmlTitle();
   std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
   OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
+
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
-                    .Print("webPrintJob", printDocumentAdapterImpl,
+                    .Print(printJobName, printDocumentAdapterImpl,
                            printAttributesAdapter);
   if (ret == -1) {
     LOG(ERROR) << "print failed";
@@ -169,6 +174,7 @@ void OhosPrintManager::PrintPageImpl() {
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
     if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+      LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_FAILED";
       printAttrsMap_[printJobId_].writeResultCallback(
           printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     }
@@ -283,11 +289,13 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
     const PdfWritingDoneCallback& callback,
     DidPrintDocumentCallback did_print_document_cb,
     uint32_t page_count) {
+  LOG(INFO) << "OnDidPrintDocumentWritingDone";
   DCHECK_LE(page_count, printing::kMaxPageCount);
   if (callback)
     callback.Run(base::checked_cast<int>(page_count));
   std::move(did_print_document_cb).Run(true);
   if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+    LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS";
     printAttrsMap_[printJobId_].writeResultCallback(
         printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
   }
@@ -329,6 +337,12 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   return settings;
 }
 
+void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
+  printAttrsMap_[printAttrs.jobId] = printAttrs;
+  fd_ = printAttrs.fd;
+  printJobId_ = printAttrs.jobId;
+}
+
 void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
   if (!PrintNow()) {
     LOG(ERROR) << "Pulling up the printing application failed.";
@@ -341,6 +355,19 @@ void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
 
 void OhosPrintManager::RunPrintRequestedCallback() {
   std::move(printRequestedCallback_).Run();
+}
+
+std::string OhosPrintManager::GetHtmlTitle() {
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  std::u16string u16str = u"";
+  std::string printJobName = "";
+  u16str = web_contents()->GetTitle();
+  printJobName = convert.to_bytes(u16str);
+  if (printJobName.empty()) {
+    printJobName = web_contents()->GetURL().spec();
+  }
+  LOG(INFO) << "printJobName is = " << printJobName;
+  return printJobName;
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);
