@@ -52,26 +52,15 @@ class OhosPrintManager : public printing::PrintManager,
 
   void DidShowPrintDialog() override;
 
-  bool PrintNow();
-
-  void PrintPage();
-
-  void PrintPageImpl();
-
   // Updates the parameters for printing.
   void UpdateParam(std::unique_ptr<printing::PrintSettings> settings,
                    int file_descriptor,
                    PdfWritingDoneCallback callback);
-
-  void SetPrintAttrs(const PrintAttrs printAttrs) {
-    printAttrsMap_[printAttrs.jobId] = printAttrs;
-    fd_ = printAttrs.fd;
-    printJobId_ = printAttrs.jobId;
-  }
-
-  void OnScriptedPrint();
-
-  void RunPrintRequestedCallback();
+  bool PrintNow();
+  void PrintPage();
+  void PrintPageImpl();
+  void SetPrintAttrs(const PrintAttrs printAttrs);
+  void RunPrintRequestedCallback(const std::string& jobId);
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -94,6 +83,10 @@ class OhosPrintManager : public printing::PrintManager,
 
   std::unique_ptr<printing::PrintSettings> CreatePdfSettings(
       const printing::PageRanges& page_ranges);
+
+  void OnScriptedPrint();
+  std::string GetHtmlTitle();
+  std::string RemoveProtocol(const std::string& url);
 
   std::unique_ptr<printing::PrintSettings> settings_;
 
