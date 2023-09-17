@@ -12,6 +12,7 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
 
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
@@ -413,6 +414,9 @@ class CefRenderWidgetHostViewOSR
 
   void OnScaleChanged(float old_page_scale_factor, float nwe_page_scale_factor);
 
+  void HideVirtualKeyboardRequested();
+  void InitHideKeyboardFlag();
+
   // The last selection bounds reported to the view.
   gfx::SelectionBound selection_start_;
   gfx::SelectionBound selection_end_;
@@ -482,6 +486,8 @@ class CefRenderWidgetHostViewOSR
   int last_key_code_ = -1;
   gfx::Size viewport_size_in_pixels_;
   bool is_need_show_keyboard_ = false;
+  bool is_need_hide_keyboard_ = true;
+  std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
 #endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
