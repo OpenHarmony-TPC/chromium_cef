@@ -49,6 +49,8 @@ namespace {
 
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 28;
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29;
+constexpr int PRINT_JOB_COMPLETED_CANCELLED = 2;
+const std::string PROTOCOL_PATH = "://";
 
 uint32_t SaveDataToFd(int fd,
                       uint32_t page_count,
@@ -82,20 +84,24 @@ class PrintDocumentAdapterImpl
       const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
       uint32_t fd,
       std::function<void(std::string, uint32_t)> writeResultCallback) override {
-    LOG(INFO) << "onStartLayoutWrite.";
+    LOG(INFO) << "OhosPrintManager onStartLayoutWrite.";
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
     printAttrs.fd = fd;
     printAttrs.writeResultCallback = writeResultCallback;
-    ohosPrintManager_->SetPrintAttrs(printAttrs);
-    ohosPrintManager_->PrintPage();
+    if (ohosPrintManager_) {
+      ohosPrintManager_->SetPrintAttrs(printAttrs);
+      ohosPrintManager_->PrintPage();
+    }
   }
 
   void onJobStateChanged(const std::string& jobId, uint32_t state) override {
-    LOG(INFO) << "onJobStateChanged";
+    LOG(INFO) << "OhosPrintManager onJobStateChanged.";
     state_ = state;
-    ohosPrintManager_->RunPrintRequestedCallback();
+    if (ohosPrintManager_ && state == PRINT_JOB_COMPLETED_CANCELLED) {
+      ohosPrintManager_->RunPrintRequestedCallback(jobId);
+    }
   }
 
  private:
@@ -289,7 +295,7 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
     const PdfWritingDoneCallback& callback,
     DidPrintDocumentCallback did_print_document_cb,
     uint32_t page_count) {
-  LOG(INFO) << "OnDidPrintDocumentWritingDone";
+  LOG(INFO) << "OhosPrintManager::OnDidPrintDocumentWritingDone";
   DCHECK_LE(page_count, printing::kMaxPageCount);
   if (callback)
     callback.Run(base::checked_cast<int>(page_count));
@@ -334,6 +340,7 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   margins.bottom = newAttrs.margin.bottom;
   settings->SetCustomMargins(margins);
   settings->set_should_print_backgrounds(true);
+  settings->SetOrientation(newAttrs.isLandscape);
   return settings;
 }
 
@@ -353,7 +360,8 @@ void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
   printRequestedCallback_ = std::move(callback);
 }
 
-void OhosPrintManager::RunPrintRequestedCallback() {
+void OhosPrintManager::RunPrintRequestedCallback(const std::string& jobId) {
+  LOG(ERROR) << "OhosPrintManager::RunPrintRequestedCallback.";
   std::move(printRequestedCallback_).Run();
 }
 
@@ -363,11 +371,21 @@ std::string OhosPrintManager::GetHtmlTitle() {
   std::string printJobName = "";
   u16str = web_contents()->GetTitle();
   printJobName = convert.to_bytes(u16str);
-  if (printJobName.empty()) {
-    printJobName = web_contents()->GetURL().spec();
-  }
-  LOG(INFO) << "printJobName is = " << printJobName;
+  printJobName = RemoveProtocol(printJobName);
+  std::replace(printJobName.begin(), printJobName.end(), '/', '_');
+  std::replace(printJobName.begin(), printJobName.end(), '?', '_');
+  LOG(INFO) << "OhosPrintManager::GetHtmlTitle printJobName is = " << printJobName;
   return printJobName;
+}
+
+std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
+  LOG(INFO) << "OhosPrintManager::RemoveProtocol";
+    std::string result = url;
+    std::size_t pos = result.find(PROTOCOL_PATH);
+    if (pos != std::string::npos) {
+        result = result.substr(pos + PROTOCOL_PATH.size());
+    }
+    return result;
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);

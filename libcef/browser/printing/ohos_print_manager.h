@@ -60,7 +60,7 @@ class OhosPrintManager : public printing::PrintManager,
   void PrintPage();
   void PrintPageImpl();
   void SetPrintAttrs(const PrintAttrs printAttrs);
-  void RunPrintRequestedCallback();
+  void RunPrintRequestedCallback(const std::string& jobId);
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -86,6 +86,7 @@ class OhosPrintManager : public printing::PrintManager,
 
   void OnScriptedPrint();
   std::string GetHtmlTitle();
+  std::string RemoveProtocol(const std::string& url);
 
   std::unique_ptr<printing::PrintSettings> settings_;
 
