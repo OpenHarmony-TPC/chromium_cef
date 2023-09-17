@@ -479,6 +479,7 @@ class CefRenderWidgetHostViewOSR
   bool should_wait_ = false;
   bool is_select_text_ = false;
   bool is_editable_node_ = false;
+  int last_key_code_ = -1;
   gfx::Size viewport_size_in_pixels_;
   bool is_need_show_keyboard_ = false;
 #endif

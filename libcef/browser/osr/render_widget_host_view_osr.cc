@@ -1043,7 +1043,9 @@ void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
     base::i18n::TextDirection focus_dir,
     const gfx::Rect& bounding_box,
     bool is_anchor_first) {
-  is_editable_node_ = true;
+  if (last_key_code_ != ui::VKEY_RETURN) {
+    is_editable_node_ = true;
+  }
   if (!browser_impl_) {
     LOG(ERROR) << "browser_impl_ is nullptr";
     return;
@@ -1452,6 +1454,9 @@ void CefRenderWidgetHostViewOSR::SendKeyEvent(
     const content::NativeWebKeyboardEvent& event) {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendKeyEvent");
   content::RenderWidgetHostImpl* target_host = render_widget_host_;
+#if BUILDFLAG(IS_OHOS)
+    last_key_code_ = event.windows_key_code;
+#endif
 
 #if !BUILDFLAG(IS_OHOS)
   if (selection_controller_client_) {
@@ -1749,6 +1754,10 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     content::TextInputManager* text_input_manager,
     content::RenderWidgetHostViewBase* updated_view,
     bool did_update_state) {
+  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN) {
+    LOG(INFO) << "The keyboard status is not updated when pressed";
+    return;
+  }
   const auto state = text_input_manager->GetTextInputState();
   if (state && state->type == ui::TEXT_INPUT_TYPE_TEXT_AREA && !is_need_show_keyboard_) {
     is_need_show_keyboard_ = true;
@@ -1785,6 +1794,10 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     LOG(INFO) << "add selection removeAllRange and addRange";
     mode = CEF_TEXT_INPUT_MODE_DEFAULT;
     show_keyboard = true;
+  }
+
+  if (!show_keyboard) {
+    last_key_code_ = -1;
   }
 #endif
   handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
