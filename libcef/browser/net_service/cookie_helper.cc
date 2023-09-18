@@ -39,7 +39,8 @@ network::mojom::CookieManager* GetCookieManager(
       ->GetCookieManagerForBrowserProcess();
 }
 
-net::CookieOptions GetCookieOptions(const network::ResourceRequest& request) {
+net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
+                                    bool is_save) {
   // Match the logic from InterceptionJob::FetchCookies and
   // ChromeContentBrowserClient::ShouldIgnoreSameSiteCookieRestrictionsWhenTopLevel.
   bool should_treat_as_first_party =
@@ -53,12 +54,18 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request) {
   // Match the logic from URLRequestHttpJob::AddCookieHeaderAndStart.
   net::CookieOptions options;
   options.set_include_httponly();
-  options.set_same_site_cookie_context(
-      net::cookie_util::ComputeSameSiteContextForRequest(
-          request.method, {request.url}, request.site_for_cookies,
-          request.request_initiator, is_main_frame_navigation,
-          should_treat_as_first_party));
-
+  if (is_save) {
+     options.set_same_site_cookie_context(
+         net::cookie_util::ComputeSameSiteContextForResponse(
+	     {request.url}, request.site_for_cookies, request.request_initiator,
+             is_main_frame_navigation, should_treat_as_first_party));
+  } else {
+    options.set_same_site_cookie_context(
+        net::cookie_util::ComputeSameSiteContextForRequest(
+            request.method, {request.url}, request.site_for_cookies,
+            request.request_initiator, is_main_frame_navigation,
+            should_treat_as_first_party));
+  }
   return options;
 }
 
@@ -228,7 +235,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   CEF_POST_TASK(
       CEF_UIT, base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
-                              request.url, GetCookieOptions(request),
+                              request.url, GetCookieOptions(request, false),
                               net::CookiePartitionKeyCollection(),
                               allow_cookie_callback, std::move(done_callback)));
 }
@@ -282,7 +289,7 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
     CEF_POST_TASK(
         CEF_UIT,
         base::BindOnce(SaveCookiesOnUIThread, browser_context_getter,
-                       request.url, GetCookieOptions(request), total_count,
+                       request.url, GetCookieOptions(request, true), total_count,
                        std::move(allowed_cookies), std::move(done_callback)));
 
   } else {
