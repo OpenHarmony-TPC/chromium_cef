@@ -254,6 +254,7 @@ class CefRenderWidgetHostViewOSR
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
   std::u16string GetSelectedText() override;
+  void WasKeyboardResized();
 #endif
 
   bool InstallTransparency();
@@ -261,7 +262,12 @@ class CefRenderWidgetHostViewOSR
   void WasResized();
   void SynchronizeVisualProperties(
       const cc::DeadlinePolicy& deadline_policy,
+#if BUILDFLAG(IS_OHOS)
+      const absl::optional<viz::LocalSurfaceId>& child_local_surface_id,
+      bool isKeyboard = false);
+#else
       const absl::optional<viz::LocalSurfaceId>& child_local_surface_id);
+#endif
   void OnScreenInfoChanged();
   void Invalidate(CefBrowserHost::PaintElementType type);
   void SendExternalBeginFrame();

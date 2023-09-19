@@ -390,7 +390,10 @@ class CefBrowserPlatformDelegate {
     bool right_aligned,
     bool allow_multiple_selection);
 
+#if BUILDFLAG(IS_OHOS)
   virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
+  virtual void WasKeyboardResized() {};
+#endif
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
