@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e54557b8104e13c6fe2c59456ab362cc219a8606$
+// $hash=3691a500f9953dab9b1ee4caf9a82386baaaeef1$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2009,6 +2009,24 @@ void CefBrowserHostCToCpp::SetWindowId(int window_id, int nweb_id) {
 
   // Execute
   _struct->set_window_id(_struct, window_id, nweb_id);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetToken(void *token) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_token))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: token; type: simple_byaddr
+  DCHECK(token);
+  if (!token)
+    return;
+
+  // Execute
+  _struct->set_token(_struct, token);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

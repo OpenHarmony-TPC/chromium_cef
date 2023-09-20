@@ -149,11 +149,11 @@ bool OhosPrintManager::PrintNow() {
   std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
   OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
-
+  LOG(INFO) << "OhosPrintManager::PrintNow";
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
                     .Print(printJobName, printDocumentAdapterImpl,
-                           printAttributesAdapter);
+                           printAttributesAdapter, token_);
   if (ret == -1) {
     LOG(ERROR) << "print failed";
     return false;
@@ -386,6 +386,11 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
         result = result.substr(pos + PROTOCOL_PATH.size());
     }
     return result;
+}
+
+void OhosPrintManager::SetToken(void* token) {
+  LOG(INFO) << "OhosPrintManager::SetToken";
+  token_ = token;
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);

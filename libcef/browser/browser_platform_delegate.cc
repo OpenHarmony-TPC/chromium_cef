@@ -427,6 +427,12 @@ void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
 }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  void CefBrowserPlatformDelegate::SetToken(void* token) {
+    NOTIMPLEMENTED();
+  }
+#endif
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {

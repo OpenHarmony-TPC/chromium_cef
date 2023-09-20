@@ -61,6 +61,7 @@ class OhosPrintManager : public printing::PrintManager,
   void PrintPageImpl();
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
+  void SetToken(void* token);
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -94,7 +95,7 @@ class OhosPrintManager : public printing::PrintManager,
   uint32_t width_ = 8270;
   uint32_t height_ = 11690;
   int dpi_ = 300;  // DPI (Dots Per Inch)
-
+  void* token_;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string printJobId_;
   PrintRequestedCallback printRequestedCallback_;

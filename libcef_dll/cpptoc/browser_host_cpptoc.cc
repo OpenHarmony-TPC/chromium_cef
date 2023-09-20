@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9c96357f5492ca971fb691efde09334789599e47$
+// $hash=f189b57327c9226121c0ff30543c1107e119bbb3$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2199,6 +2199,24 @@ void CEF_CALLBACK browser_host_set_window_id(struct _cef_browser_host_t *self,
   CefBrowserHostCppToC::Get(self)->SetWindowId(window_id, nweb_id);
 }
 
+void CEF_CALLBACK browser_host_set_token(struct _cef_browser_host_t *self,
+                                         void *token) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: token; type: simple_byaddr
+  DCHECK(token);
+  if (!token)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetToken(token);
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2331,6 +2349,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_set_should_frame_submission_before_draw;
   GetStruct()->zoom_by = browser_host_zoom_by;
   GetStruct()->set_window_id = browser_host_set_window_id;
+  GetStruct()->set_token = browser_host_set_token;
 }
 
 // DESTRUCTOR - Do not edit by hand.

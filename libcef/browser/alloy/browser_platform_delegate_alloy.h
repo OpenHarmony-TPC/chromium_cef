@@ -78,6 +78,10 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
     return last_search_result_;
   }
 
+#if BUILDFLAG(IS_OHOS)
+  void SetToken(void* token) override;
+#endif
+
  protected:
   CefBrowserPlatformDelegateAlloy();
 
