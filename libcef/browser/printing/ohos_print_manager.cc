@@ -149,11 +149,12 @@ bool OhosPrintManager::PrintNow() {
   std::shared_ptr<OHOS::NWeb::PrintDocumentAdapterAdapter>
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
   OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
-  LOG(INFO) << "OhosPrintManager::PrintNow";
+
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
                     .Print(printJobName, printDocumentAdapterImpl,
                            printAttributesAdapter, token_);
+  LOG(INFO) << "OhosPrintManager::PrintNow ret = " << ret;
   if (ret == -1) {
     LOG(ERROR) << "print failed";
     return false;
@@ -374,18 +375,19 @@ std::string OhosPrintManager::GetHtmlTitle() {
   printJobName = RemoveProtocol(printJobName);
   std::replace(printJobName.begin(), printJobName.end(), '/', '_');
   std::replace(printJobName.begin(), printJobName.end(), '?', '_');
-  LOG(INFO) << "OhosPrintManager::GetHtmlTitle printJobName is = " << printJobName;
+  LOG(INFO) << "OhosPrintManager::GetHtmlTitle printJobName is = "
+            << printJobName;
   return printJobName;
 }
 
 std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
   LOG(INFO) << "OhosPrintManager::RemoveProtocol";
-    std::string result = url;
-    std::size_t pos = result.find(PROTOCOL_PATH);
-    if (pos != std::string::npos) {
-        result = result.substr(pos + PROTOCOL_PATH.size());
-    }
-    return result;
+  std::string result = url;
+  std::size_t pos = result.find(PROTOCOL_PATH);
+  if (pos != std::string::npos) {
+    result = result.substr(pos + PROTOCOL_PATH.size());
+  }
+  return result;
 }
 
 void OhosPrintManager::SetToken(void* token) {

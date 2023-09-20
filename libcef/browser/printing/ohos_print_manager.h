@@ -95,7 +95,7 @@ class OhosPrintManager : public printing::PrintManager,
   uint32_t width_ = 8270;
   uint32_t height_ = 11690;
   int dpi_ = 300;  // DPI (Dots Per Inch)
-  void* token_;
+  void* token_ = nullptr;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string printJobId_;
   PrintRequestedCallback printRequestedCallback_;
