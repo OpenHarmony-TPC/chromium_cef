@@ -1247,9 +1247,9 @@ void InterceptedRequest::CallOnComplete(
 
 #if BUILDFLAG(IS_OHOS)
 void InterceptedRequest::CancelRequest(int error_code) {
-  network::URLLoaderCompletionStatus status(error_code);
-  status.abort_due_to_cef_browser_destroyed = true;
-  SendErrorStatusAndCompleteImmediately(status);
+  // Donn't cancel network requests. Network requests should be cannceled by the
+  // holder instead of following the tab, such as download, etc. Although the
+  // tab is destroyed, the request still needs to be maintained.
 }
 #endif  //  BUILDFLAG(IS_OHOS)
 
