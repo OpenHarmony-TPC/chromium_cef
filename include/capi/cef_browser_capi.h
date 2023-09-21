@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7ef2a76186a15d25bd6e66b8f311366a7955d2e3$
+// $hash=bd8050242da82fa39fa2b3a37815cbd884f3efa8$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1335,6 +1335,11 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *set_window_id)(struct _cef_browser_host_t *self,
                                     int window_id, int nweb_id);
+
+  ///
+  // Set the token of the UI framework
+  ///
+  void(CEF_CALLBACK *set_token)(struct _cef_browser_host_t *self, void *token);
 } cef_browser_host_t;
 
 ///

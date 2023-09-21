@@ -1432,6 +1432,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetWindowId(int window_id, int nweb_id) = 0;
+
+  ///
+  // Set the token of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void SetToken(void* token) = 0;
 };
 
 ///

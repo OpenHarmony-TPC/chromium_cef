@@ -53,6 +53,13 @@
 
 namespace {
 
+#if BUILDFLAG(IS_OHOS)
+printing::OhosPrintManager* GetPrintViewManager(
+    content::WebContents* web_contents) {
+  return printing::OhosPrintManager::FromWebContents(web_contents);
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS) && BUILDFLAG(ENABLE_PRINT_PREVIEW)
 printing::CefPrintViewManager* GetPrintViewManager(
     content::WebContents* web_contents) {
@@ -554,3 +561,22 @@ void CefBrowserPlatformDelegateAlloy::OnExtensionHostDeleted() {
   DCHECK(extension_host_);
   extension_host_ = nullptr;
 }
+
+#if BUILDFLAG(IS_OHOS)
+  void CefBrowserPlatformDelegateAlloy::SetToken(void* token) {
+    REQUIRE_ALLOY_RUNTIME();
+    auto contents_to_use = printing::GetWebContentsToUse(web_contents_);
+    if (!contents_to_use) {
+      LOG(ERROR) << "contents_to_use is nullptr";
+      return;
+    }
+
+    auto ohosPrintManager = GetPrintViewManager(contents_to_use);
+    if (!ohosPrintManager) {
+      LOG(ERROR) << "ohosPrintManager is nullptr";
+      return;
+    }
+
+    ohosPrintManager->SetToken(token);
+  }
+#endif

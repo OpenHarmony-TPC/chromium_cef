@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=27a92060c53540973408590dd50a4e0b553c3a02$
+// $hash=01e70f22f4d554ed94d4208b086797596ba0291b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -191,6 +191,7 @@ public:
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void ZoomBy(float delta, float width, float height) override;
   void SetWindowId(int window_id, int nweb_id) override;
+  void SetToken(void *token) override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

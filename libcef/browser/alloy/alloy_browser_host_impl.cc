@@ -1977,6 +1977,12 @@ void AlloyBrowserHostImpl::WasKeyboardResized() {
     platform_delegate_->WasKeyboardResized();
 }
 
+void AlloyBrowserHostImpl::SetToken(void* token) {
+  if (platform_delegate_) {
+    platform_delegate_->SetToken(token);
+  }
+};
+
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
     content::DateTimeChooserOHOS::FromWebContents(web_contents());

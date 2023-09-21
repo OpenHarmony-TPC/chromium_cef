@@ -393,6 +393,7 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(IS_OHOS)
   virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
   virtual void WasKeyboardResized() {};
+  virtual void SetToken(void* token);
 #endif
  protected:
   // Allow deletion via std::unique_ptr only.
