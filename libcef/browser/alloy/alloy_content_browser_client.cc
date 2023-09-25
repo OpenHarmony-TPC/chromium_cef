@@ -83,6 +83,8 @@
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/embedder_support/switches.h"
 #include "components/embedder_support/user_agent_utils.h"
+#include "components/performance_manager/embedder/binders.h"
+#include "components/performance_manager/public/mojom/coordination_unit.mojom.h"
 #include "components/site_isolation/site_isolation_policy.h"
 #include "components/spellcheck/common/spellcheck.mojom.h"
 #include "components/version_info/version_info.h"
@@ -2118,6 +2120,10 @@ void AlloyContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
 
   map->Add<network_hints::mojom::NetworkHintsHandler>(
       base::BindRepeating(&BindNetworkHintsHandler));
+    
+  map->Add<performance_manager::mojom::DocumentCoordinationUnit>(
+      base::BindRepeating(
+          &performance_manager::BindDocumentCoordinationUnit));
 #endif
   if (!extensions::ExtensionsEnabled())
     return;

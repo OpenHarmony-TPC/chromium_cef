@@ -202,6 +202,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetWindowId(int window_id, int nweb_id) override;
   void WasKeyboardResized() override;
   void SetToken(void* token) override;
+  void ContentsZoomChange(bool zoom_in) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);
@@ -352,6 +353,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
   void OnAudioStateChanged(bool audible) override;
+  void OnFormEditingStateChanged(bool state) override;
   void AccessibilityEventReceived(
       const content::AXEventNotificationDetails& content_event_bundle) override;
   void AccessibilityLocationChangesReceived(

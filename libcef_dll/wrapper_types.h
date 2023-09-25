@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=40d2ab18521b32a52a78269a1dbb5800661ca849$
+// $hash=4d2ec3d5526417532e54ac84ba1c6f47d1f8245f$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -68,6 +68,7 @@ enum CefWrapperType {
   WT_FILL_LAYOUT,
   WT_FIND_HANDLER,
   WT_FOCUS_HANDLER,
+  WT_FORM_HANDLER,
   WT_FRAME,
   WT_FRAME_HANDLER,
   WT_GEOLOCATION_ACESS,
@@ -186,4 +187,4 @@ enum CefWrapperType {
   WT_LAST
 };
 
-#endif  // CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
+#endif // CEF_LIBCEF_DLL_WRAPPER_TYPES_H_

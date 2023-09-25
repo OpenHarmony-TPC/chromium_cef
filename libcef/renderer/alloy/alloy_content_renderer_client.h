@@ -132,6 +132,7 @@ class AlloyContentRendererClient
   void RunScriptsAtDocumentIdle(content::RenderFrame* render_frame) override;
   void DevToolsAgentAttached() override;
   void DevToolsAgentDetached() override;
+  void SetRuntimeFeaturesDefaultsBeforeBlinkInitialization() override;
 #if BUILDFLAG(IS_OHOS)
   std::unique_ptr<blink::WebPrescientNetworking> CreatePrescientNetworking(
       content::RenderFrame* render_frame) override;

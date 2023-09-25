@@ -1782,6 +1782,12 @@ void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
   }
 }
 
+void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state) {
+  LOG(ERROR) << "AlloyBrowserHostImpl::OnFormEditingStateChanged state: " << state;
+  if (client_.get() && client_->GetFormHandler().get()) 
+    client_->GetFormHandler()->OnFormEditingStateChanged(this, state);
+}
+
 void AlloyBrowserHostImpl::OnRecentlyAudibleTimerFired() {
   audio_capturer_.reset();
 }
@@ -1982,6 +1988,16 @@ void AlloyBrowserHostImpl::SetToken(void* token) {
     platform_delegate_->SetToken(token);
   }
 };
+
+void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
+  double curFactor = GetZoomLevel();
+  double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
+  if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
+    LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
+    return;
+  }
+  SetZoomLevel(tempZoomFactor);
+}
 
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =

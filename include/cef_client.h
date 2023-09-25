@@ -48,6 +48,7 @@
 #include "include/cef_find_handler.h"
 #include "include/cef_focus_handler.h"
 #include "include/cef_frame_handler.h"
+#include "include/cef_form_handler.h"
 #include "include/cef_jsdialog_handler.h"
 #include "include/cef_keyboard_handler.h"
 #include "include/cef_life_span_handler.h"
@@ -205,6 +206,12 @@ class CefClient : public virtual CefBaseRefCounted {
                                      CefRefPtr<CefListValue> result) {
     return 0;
   };
+
+  ///
+  // Return the handler for browser form events.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefFormHandler> GetFormHandler() { return nullptr; }
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_
