@@ -1983,6 +1983,16 @@ void AlloyBrowserHostImpl::SetToken(void* token) {
   }
 };
 
+void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
+  double curFactor = GetZoomLevel();
+  double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
+  if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
+    LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
+    return;
+  }
+  SetZoomLevel(tempZoomFactor);
+}
+
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
     content::DateTimeChooserOHOS::FromWebContents(web_contents());
