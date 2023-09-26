@@ -3615,6 +3615,33 @@ typedef struct _cef_autofill_popup_item_t {
   uint32_t unique_id;
 } cef_autofill_popup_item_t;
 
+///
+// Media playing state.
+///
+typedef enum {
+  ///
+  // media is playing
+  ///
+  PLAYING,
+
+  ///
+  // media is paused
+  ///
+  PAUSE,
+
+  ///
+  // media playing reached end of the stream 
+  ///
+  END_OF_STREAM,
+} cef_media_playing_state_t;
+
+///
+// Media type.
+///
+typedef enum {
+  VIDEO,
+  AUDIO,
+} cef_media_type_t;
 #ifdef __cplusplus
 }
 #endif
