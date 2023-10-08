@@ -595,8 +595,6 @@ static_library("libcef_static") {
               "libcef/browser/net/throttle_handler.h",
               "libcef/browser/net_database/cef_data_base_impl.cc",
               "libcef/browser/net_database/cef_data_base_impl.h",
-              "libcef/browser/net_database/cef_dns_data_base.cc",
-              "libcef/browser/net_database/cef_dns_data_base.h",
               "libcef/browser/net_service/browser_urlrequest_impl.cc",
               "libcef/browser/net_service/browser_urlrequest_impl.h",
               "libcef/browser/net_service/cookie_helper.cc",
