@@ -1771,14 +1771,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   }
 
   const auto state = text_input_manager->GetTextInputState();
-  if (state && state->type == ui::TEXT_INPUT_TYPE_TEXT_AREA &&
-      !is_need_show_keyboard_) {
-    is_need_show_keyboard_ = true;
-    LOG(INFO) << "In this type of area, there is no need to pull up the "
-                 "keyboard when pressing";
-    return;
-  }
-
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
@@ -1817,7 +1809,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (state && state->show_ime_if_needed) {
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                         show_keyboard);
-    is_need_show_keyboard_ = false;
   } else if (!state || mode == CEF_TEXT_INPUT_MODE_NONE) {
     CEF_POST_DELAYED_TASK(
       CEF_UIT,
