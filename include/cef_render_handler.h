@@ -313,6 +313,21 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnEditableChanged(CefRefPtr<CefBrowser> browser,
                                  bool is_editable_node) {}
+
+  ///
+  /// Called when over scroll.
+  ///
+  /*--cef()--*/
+  virtual void OnOverScrollFlingVelocity(CefRefPtr<CefBrowser> browser,
+                                         const float x,
+                                         const float y,
+                                         bool is_fling) {}
+  
+  ///
+  /// Called when over scroll fling end.
+  ///
+  /*--cef()--*/
+  virtual void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

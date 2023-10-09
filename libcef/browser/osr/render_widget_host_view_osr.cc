@@ -2419,5 +2419,34 @@ void CefRenderWidgetHostViewOSR::DidOverscroll(
     float x = params.latest_overscroll_delta.x();
     float y = params.latest_overscroll_delta.y();
     handler->OnOverscroll(browser_impl_.get(), x, y);
+
+    float fling_velocity_x = params.current_fling_velocity.x() * current_frames_;
+    float fling_velocity_y = params.current_fling_velocity.y() * current_frames_;
+    bool is_fling = true;
+    if (fling_velocity_x == 0 && fling_velocity_y == 0) {
+      fling_velocity_x = x;
+      fling_velocity_y = y;
+      is_fling = false;
+    }
+    handler->OnOverScrollFlingVelocity(browser_impl_.get(), fling_velocity_x,
+                                       fling_velocity_y, is_fling);
   }
+}
+
+void CefRenderWidgetHostViewOSR::DidStopFlinging() {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::DidStopFlinging";
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnOverScrollFlingEnd(browser_impl_.get());
+  }
+}
+
+blink::mojom::InputEventResultState
+CefRenderWidgetHostViewOSR::FilterInputEvent(
+    const blink::WebInputEvent& input_event) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
+
+  return blink::mojom::InputEventResultState::kNotConsumed;
 }
