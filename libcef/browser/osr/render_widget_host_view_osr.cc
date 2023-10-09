@@ -1813,6 +1813,11 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (!show_keyboard) {
     last_key_code_ = -1;
   }
+
+  if (!HasFocus()) {
+    show_keyboard = false;
+    mode = CEF_TEXT_INPUT_MODE_NONE;
+  }
 #endif
   if (state && state->show_ime_if_needed) {
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
