@@ -56,6 +56,8 @@ class CefDragDataImpl : public CefDragData {
 
 #if BUILDFLAG(IS_OHOS)
   bool IsImageFileContents() override;
+  void ClearFileNames() override;
+  size_t GetImageFileSize() override;
 #endif
 
   base::Lock& lock() { return lock_; }
