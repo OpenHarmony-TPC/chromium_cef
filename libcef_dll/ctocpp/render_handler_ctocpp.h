@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c7471f14081b068e17d0ff3c049856df382c372a$
+// $hash=2b8942c35ec869f92ef2e111a9c4ffbc9064fbf8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -27,80 +27,69 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed DLL-side only.
 class CefRenderHandlerCToCpp
-    : public CefCToCppRefCounted<CefRenderHandlerCToCpp,
-                                 CefRenderHandler,
+    : public CefCToCppRefCounted<CefRenderHandlerCToCpp, CefRenderHandler,
                                  cef_render_handler_t> {
- public:
+public:
   CefRenderHandlerCToCpp();
   virtual ~CefRenderHandlerCToCpp();
 
   // CefRenderHandler methods.
   CefRefPtr<CefAccessibilityHandler> GetAccessibilityHandler() override;
-  bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
-  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
-  bool GetScreenPoint(CefRefPtr<CefBrowser> browser,
-                      int viewX,
-                      int viewY,
-                      int& screenX,
-                      int& screenY) override;
+  bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) override;
+  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect) override;
+  bool GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int viewY,
+                      int &screenX, int &screenY) override;
   bool GetScreenInfo(CefRefPtr<CefBrowser> browser,
-                     CefScreenInfo& screen_info) override;
+                     CefScreenInfo &screen_info) override;
   void OnPopupShow(CefRefPtr<CefBrowser> browser, bool show) override;
-  void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect) override;
-  void OnPaint(CefRefPtr<CefBrowser> browser,
-               PaintElementType type,
-               const RectList& dirtyRects,
-               const void* buffer,
-               int width,
+  void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect &rect) override;
+  void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
+               const RectList &dirtyRects, const void *buffer, int width,
                int height) override;
-  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
-                          PaintElementType type,
-                          const RectList& dirtyRects,
-                          void* shared_handle) override;
+  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser, PaintElementType type,
+                          const RectList &dirtyRects,
+                          void *shared_handle) override;
   void GetTouchHandleSize(CefRefPtr<CefBrowser> browser,
                           cef_horizontal_alignment_t orientation,
-                          CefSize& size) override;
+                          CefSize &size) override;
   void OnTouchHandleStateChanged(CefRefPtr<CefBrowser> browser,
-                                 const CefTouchHandleState& state) override;
-  void OnTouchSelectionChanged(
-      const CefTouchHandleState& insert_handle,
-      const CefTouchHandleState& start_selection_handle,
-      const CefTouchHandleState& end_selection_handle,
-      bool need_report) override;
+                                 const CefTouchHandleState &state) override;
+  void
+  OnTouchSelectionChanged(const CefTouchHandleState &insert_handle,
+                          const CefTouchHandleState &start_selection_handle,
+                          const CefTouchHandleState &end_selection_handle,
+                          bool need_report) override;
   bool StartDragging(CefRefPtr<CefBrowser> browser,
                      CefRefPtr<CefDragData> drag_data,
-                     DragOperationsMask allowed_ops,
-                     int x,
-                     int y) override;
+                     DragOperationsMask allowed_ops, int x, int y) override;
   void UpdateDragCursor(CefRefPtr<CefBrowser> browser,
                         DragOperation operation) override;
-  void OnScrollOffsetChanged(CefRefPtr<CefBrowser> browser,
-                             double x,
+  void OnScrollOffsetChanged(CefRefPtr<CefBrowser> browser, double x,
                              double y) override;
-  void OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
-                          int height,
+  void OnRootLayerChanged(CefRefPtr<CefBrowser> browser, int height,
                           int width) override;
   void OnImeCompositionRangeChanged(CefRefPtr<CefBrowser> browser,
-                                    const CefRange& selected_range,
-                                    const RectList& character_bounds) override;
+                                    const CefRange &selected_range,
+                                    const RectList &character_bounds) override;
   void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser,
-                              const CefString& selected_text,
-                              const CefRange& selected_range) override;
-  void OnSelectionChanged(CefRefPtr<CefBrowser> browser,
-                          const CefString& text,
-                          const CefRange& selected_range) override;
+                              const CefString &selected_text,
+                              const CefRange &selected_range) override;
+  void OnSelectionChanged(CefRefPtr<CefBrowser> browser, const CefString &text,
+                          const CefRange &selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
                                   bool show_keyboard) override;
   void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
-                      const CefRect& rect) override;
+                      const CefRect &rect) override;
   void OnCompleteSwapWithNewSize() override;
   void OnResizeNotWork() override;
-  void OnOverscroll(CefRefPtr<CefBrowser> browser,
-                    const float x,
+  void OnOverscroll(CefRefPtr<CefBrowser> browser, const float x,
                     const float y) override;
   void OnEditableChanged(CefRefPtr<CefBrowser> browser,
                          bool is_editable_node) override;
+  void OnOverScrollFlingVelocity(CefRefPtr<CefBrowser> browser, const float x,
+                                 const float y, bool is_fling) override;
+  void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

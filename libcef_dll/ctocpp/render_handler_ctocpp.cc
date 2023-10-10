@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6ade3729f9d523f2abec2b6b4f02eb49a4074d95$
+// $hash=a8f553984903844d389f7a5f6b5b3d22d700982a$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -25,14 +25,14 @@ CefRefPtr<
     CefAccessibilityHandler> CefRenderHandlerCToCpp::GetAccessibilityHandler() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_accessibility_handler))
     return nullptr;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_accessibility_handler_t* _retval =
+  cef_accessibility_handler_t *_retval =
       _struct->get_accessibility_handler(_struct);
 
   // Return type: refptr_same
@@ -41,10 +41,10 @@ CefRefPtr<
 
 NO_SANITIZE("cfi-icall")
 bool CefRenderHandlerCToCpp::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
-                                               CefRect& rect) {
+                                               CefRect &rect) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_root_screen_rect))
     return false;
 
@@ -65,10 +65,10 @@ bool CefRenderHandlerCToCpp::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::GetViewRect(CefRefPtr<CefBrowser> browser,
-                                         CefRect& rect) {
+                                         CefRect &rect) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_view_rect))
     return;
 
@@ -85,13 +85,11 @@ void CefRenderHandlerCToCpp::GetViewRect(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 bool CefRenderHandlerCToCpp::GetScreenPoint(CefRefPtr<CefBrowser> browser,
-                                            int viewX,
-                                            int viewY,
-                                            int& screenX,
-                                            int& screenY) {
+                                            int viewX, int viewY, int &screenX,
+                                            int &screenY) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_screen_point))
     return false;
 
@@ -113,10 +111,10 @@ bool CefRenderHandlerCToCpp::GetScreenPoint(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 bool CefRenderHandlerCToCpp::GetScreenInfo(CefRefPtr<CefBrowser> browser,
-                                           CefScreenInfo& screen_info) {
+                                           CefScreenInfo &screen_info) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_screen_info))
     return false;
 
@@ -140,7 +138,7 @@ void CefRenderHandlerCToCpp::OnPopupShow(CefRefPtr<CefBrowser> browser,
                                          bool show) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_popup_show))
     return;
 
@@ -157,10 +155,10 @@ void CefRenderHandlerCToCpp::OnPopupShow(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnPopupSize(CefRefPtr<CefBrowser> browser,
-                                         const CefRect& rect) {
+                                         const CefRect &rect) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_popup_size))
     return;
 
@@ -178,13 +176,12 @@ void CefRenderHandlerCToCpp::OnPopupSize(CefRefPtr<CefBrowser> browser,
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnPaint(CefRefPtr<CefBrowser> browser,
                                      PaintElementType type,
-                                     const RectList& dirtyRects,
-                                     const void* buffer,
-                                     int width,
+                                     const RectList &dirtyRects,
+                                     const void *buffer, int width,
                                      int height) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_paint))
     return;
 
@@ -201,7 +198,7 @@ void CefRenderHandlerCToCpp::OnPaint(CefRefPtr<CefBrowser> browser,
 
   // Translate param: dirtyRects; type: simple_vec_byref_const
   const size_t dirtyRectsCount = dirtyRects.size();
-  cef_rect_t* dirtyRectsList = NULL;
+  cef_rect_t *dirtyRectsList = NULL;
   if (dirtyRectsCount > 0) {
     dirtyRectsList = new cef_rect_t[dirtyRectsCount];
     DCHECK(dirtyRectsList);
@@ -224,11 +221,11 @@ void CefRenderHandlerCToCpp::OnPaint(CefRefPtr<CefBrowser> browser,
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                                                 PaintElementType type,
-                                                const RectList& dirtyRects,
-                                                void* shared_handle) {
+                                                const RectList &dirtyRects,
+                                                void *shared_handle) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_accelerated_paint))
     return;
 
@@ -245,7 +242,7 @@ void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
 
   // Translate param: dirtyRects; type: simple_vec_byref_const
   const size_t dirtyRectsCount = dirtyRects.size();
-  cef_rect_t* dirtyRectsList = NULL;
+  cef_rect_t *dirtyRectsList = NULL;
   if (dirtyRectsCount > 0) {
     dirtyRectsList = new cef_rect_t[dirtyRectsCount];
     DCHECK(dirtyRectsList);
@@ -267,12 +264,11 @@ void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::GetTouchHandleSize(
-    CefRefPtr<CefBrowser> browser,
-    cef_horizontal_alignment_t orientation,
-    CefSize& size) {
+    CefRefPtr<CefBrowser> browser, cef_horizontal_alignment_t orientation,
+    CefSize &size) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_touch_handle_size))
     return;
 
@@ -290,11 +286,10 @@ void CefRenderHandlerCToCpp::GetTouchHandleSize(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnTouchHandleStateChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefTouchHandleState& state) {
+    CefRefPtr<CefBrowser> browser, const CefTouchHandleState &state) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_touch_handle_state_changed))
     return;
 
@@ -312,13 +307,12 @@ void CefRenderHandlerCToCpp::OnTouchHandleStateChanged(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnTouchSelectionChanged(
-    const CefTouchHandleState& insert_handle,
-    const CefTouchHandleState& start_selection_handle,
-    const CefTouchHandleState& end_selection_handle,
-    bool need_report) {
+    const CefTouchHandleState &insert_handle,
+    const CefTouchHandleState &start_selection_handle,
+    const CefTouchHandleState &end_selection_handle, bool need_report) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_touch_selection_changed))
     return;
 
@@ -334,11 +328,10 @@ NO_SANITIZE("cfi-icall")
 bool CefRenderHandlerCToCpp::StartDragging(CefRefPtr<CefBrowser> browser,
                                            CefRefPtr<CefDragData> drag_data,
                                            DragOperationsMask allowed_ops,
-                                           int x,
-                                           int y) {
+                                           int x, int y) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, start_dragging))
     return false;
 
@@ -367,7 +360,7 @@ void CefRenderHandlerCToCpp::UpdateDragCursor(CefRefPtr<CefBrowser> browser,
                                               DragOperation operation) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, update_drag_cursor))
     return;
 
@@ -385,12 +378,10 @@ void CefRenderHandlerCToCpp::UpdateDragCursor(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnScrollOffsetChanged(
-    CefRefPtr<CefBrowser> browser,
-    double x,
-    double y) {
+    CefRefPtr<CefBrowser> browser, double x, double y) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_scroll_offset_changed))
     return;
 
@@ -408,11 +399,10 @@ void CefRenderHandlerCToCpp::OnScrollOffsetChanged(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
-                                                int height,
-                                                int width) {
+                                                int height, int width) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_root_layer_changed))
     return;
 
@@ -430,12 +420,11 @@ void CefRenderHandlerCToCpp::OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnImeCompositionRangeChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefRange& selected_range,
-    const RectList& character_bounds) {
+    CefRefPtr<CefBrowser> browser, const CefRange &selected_range,
+    const RectList &character_bounds) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_ime_composition_range_changed))
     return;
 
@@ -448,7 +437,7 @@ void CefRenderHandlerCToCpp::OnImeCompositionRangeChanged(
 
   // Translate param: character_bounds; type: simple_vec_byref_const
   const size_t character_boundsCount = character_bounds.size();
-  cef_rect_t* character_boundsList = NULL;
+  cef_rect_t *character_boundsList = NULL;
   if (character_boundsCount > 0) {
     character_boundsList = new cef_rect_t[character_boundsCount];
     DCHECK(character_boundsList);
@@ -471,12 +460,11 @@ void CefRenderHandlerCToCpp::OnImeCompositionRangeChanged(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnTextSelectionChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& selected_text,
-    const CefRange& selected_range) {
+    CefRefPtr<CefBrowser> browser, const CefString &selected_text,
+    const CefRange &selected_range) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_text_selection_changed))
     return;
 
@@ -496,12 +484,11 @@ void CefRenderHandlerCToCpp::OnTextSelectionChanged(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnSelectionChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& text,
-    const CefRange& selected_range) {
+    CefRefPtr<CefBrowser> browser, const CefString &text,
+    const CefRange &selected_range) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_selection_changed))
     return;
 
@@ -520,12 +507,11 @@ void CefRenderHandlerCToCpp::OnSelectionChanged(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
-    CefRefPtr<CefBrowser> browser,
-    TextInputMode input_mode,
+    CefRefPtr<CefBrowser> browser, TextInputMode input_mode,
     bool show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_virtual_keyboard_requested))
     return;
 
@@ -543,10 +529,10 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnCursorUpdate(CefRefPtr<CefBrowser> browser,
-                                            const CefRect& rect) {
+                                            const CefRect &rect) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_cursor_update))
     return;
 
@@ -565,7 +551,7 @@ NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnCompleteSwapWithNewSize() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_complete_swap_with_new_size))
     return;
 
@@ -578,7 +564,7 @@ void CefRenderHandlerCToCpp::OnCompleteSwapWithNewSize() {
 NO_SANITIZE("cfi-icall") void CefRenderHandlerCToCpp::OnResizeNotWork() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_resize_not_work))
     return;
 
@@ -590,11 +576,10 @@ NO_SANITIZE("cfi-icall") void CefRenderHandlerCToCpp::OnResizeNotWork() {
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnOverscroll(CefRefPtr<CefBrowser> browser,
-                                          const float x,
-                                          const float y) {
+                                          const float x, const float y) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_overscroll))
     return;
 
@@ -614,7 +599,7 @@ void CefRenderHandlerCToCpp::OnEditableChanged(CefRefPtr<CefBrowser> browser,
                                                bool is_editable_node) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_render_handler_t* _struct = GetStruct();
+  cef_render_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_editable_changed))
     return;
 
@@ -630,6 +615,48 @@ void CefRenderHandlerCToCpp::OnEditableChanged(CefRefPtr<CefBrowser> browser,
                                is_editable_node);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnOverScrollFlingVelocity(
+    CefRefPtr<CefBrowser> browser, const float x, const float y,
+    bool is_fling) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_over_scroll_fling_velocity))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_over_scroll_fling_velocity(
+      _struct, CefBrowserCppToC::Wrap(browser), x, y, is_fling);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnOverScrollFlingEnd(
+    CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_over_scroll_fling_end))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get())
+    return;
+
+  // Execute
+  _struct->on_over_scroll_fling_end(_struct, CefBrowserCppToC::Wrap(browser));
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}
@@ -641,17 +668,15 @@ CefRenderHandlerCToCpp::~CefRenderHandlerCToCpp() {
 }
 
 template <>
-cef_render_handler_t*
-CefCToCppRefCounted<CefRenderHandlerCToCpp,
-                    CefRenderHandler,
+cef_render_handler_t *
+CefCToCppRefCounted<CefRenderHandlerCToCpp, CefRenderHandler,
                     cef_render_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                         CefRenderHandler* c) {
+                                                         CefRenderHandler *c) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCToCppRefCounted<CefRenderHandlerCToCpp,
-                                   CefRenderHandler,
+CefWrapperType CefCToCppRefCounted<CefRenderHandlerCToCpp, CefRenderHandler,
                                    cef_render_handler_t>::kWrapperType =
     WT_RENDER_HANDLER;

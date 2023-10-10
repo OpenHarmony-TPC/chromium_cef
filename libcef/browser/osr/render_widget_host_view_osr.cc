@@ -1771,14 +1771,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   }
 
   const auto state = text_input_manager->GetTextInputState();
-  if (state && state->type == ui::TEXT_INPUT_TYPE_TEXT_AREA &&
-      !is_need_show_keyboard_) {
-    is_need_show_keyboard_ = true;
-    LOG(INFO) << "In this type of area, there is no need to pull up the "
-                 "keyboard when pressing";
-    return;
-  }
-
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
@@ -1813,11 +1805,15 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (!show_keyboard) {
     last_key_code_ = -1;
   }
+
+  if (!HasFocus()) {
+    show_keyboard = false;
+    mode = CEF_TEXT_INPUT_MODE_NONE;
+  }
 #endif
   if (state && state->show_ime_if_needed) {
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
                                         show_keyboard);
-    is_need_show_keyboard_ = false;
   } else if (!state || mode == CEF_TEXT_INPUT_MODE_NONE) {
     CEF_POST_DELAYED_TASK(
       CEF_UIT,
@@ -2414,5 +2410,34 @@ void CefRenderWidgetHostViewOSR::DidOverscroll(
     float x = params.latest_overscroll_delta.x();
     float y = params.latest_overscroll_delta.y();
     handler->OnOverscroll(browser_impl_.get(), x, y);
+
+    float fling_velocity_x = params.current_fling_velocity.x() * current_frames_;
+    float fling_velocity_y = params.current_fling_velocity.y() * current_frames_;
+    bool is_fling = true;
+    if (fling_velocity_x == 0 && fling_velocity_y == 0) {
+      fling_velocity_x = x;
+      fling_velocity_y = y;
+      is_fling = false;
+    }
+    handler->OnOverScrollFlingVelocity(browser_impl_.get(), fling_velocity_x,
+                                       fling_velocity_y, is_fling);
   }
+}
+
+void CefRenderWidgetHostViewOSR::DidStopFlinging() {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::DidStopFlinging";
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnOverScrollFlingEnd(browser_impl_.get());
+  }
+}
+
+blink::mojom::InputEventResultState
+CefRenderWidgetHostViewOSR::FilterInputEvent(
+    const blink::WebInputEvent& input_event) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
+
+  return blink::mojom::InputEventResultState::kNotConsumed;
 }
