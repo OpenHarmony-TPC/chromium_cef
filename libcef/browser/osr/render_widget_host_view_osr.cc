@@ -927,6 +927,16 @@ gfx::Rect CefRenderWidgetHostViewOSR::GetBoundsInRootWindow() {
   return GetViewBounds();
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
+  auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+    browser_impl_->GetAcceleratedWidget());
+  if (compositor) {
+    compositor->SendInternalBeginFrame();
+  }
+}
+#endif
+
 #if !BUILDFLAG(IS_MAC)
 viz::ScopedSurfaceIdAllocator
 CefRenderWidgetHostViewOSR::DidUpdateVisualProperties(
