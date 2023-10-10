@@ -5,6 +5,10 @@
 #include <string>
 
 #include "base/files/file_path.h"
+#if BUILDFLAG(IS_OHOS)
+#include "base/files/file_util.h"
+#endif
+
 #include "libcef/browser/stream_impl.h"
 #include "libcef/common/drag_data_impl.h"
 
@@ -207,6 +211,19 @@ bool CefDragDataImpl::HasImage() {
 }
 
 #if BUILDFLAG(IS_OHOS)
+size_t CefDragDataImpl::GetImageFileSize() {
+  base::AutoLock lock_scope(lock_);
+  if (data_.file_contents.empty())
+    return 0;
+  return data_.file_contents.size();
+}
+
+void CefDragDataImpl::ClearFileNames() {
+  base::AutoLock lock_scope(lock_);
+  CHECK_READONLY_RETURN_VOID();
+  data_.filenames.clear();
+}
+
 bool CefDragDataImpl::IsImageFileContents() {
   return data_.IsImageFileContents();
 }

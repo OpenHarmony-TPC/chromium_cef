@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f523d68dc6117a78f40d86a2f417c00b7c6925b6$
+// $hash=1281dbd3cc7029077b3319350e9474cbf73f5580$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_
@@ -20,17 +20,17 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_drag_data_capi.h"
 #include "include/cef_drag_data.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
+#include <vector>
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
-                                                     CefDragData,
-                                                     cef_drag_data_t> {
- public:
+class CefDragDataCToCpp
+    : public CefCToCppRefCounted<CefDragDataCToCpp, CefDragData,
+                                 cef_drag_data_t> {
+public:
   CefDragDataCToCpp();
   virtual ~CefDragDataCToCpp();
 
@@ -49,19 +49,21 @@ class CefDragDataCToCpp : public CefCToCppRefCounted<CefDragDataCToCpp,
   CefString GetFragmentBaseURL() override;
   CefString GetFileName() override;
   size_t GetFileContents(CefRefPtr<CefStreamWriter> writer) override;
-  bool GetFileNames(std::vector<CefString>& names) override;
-  void SetLinkURL(const CefString& url) override;
-  void SetLinkTitle(const CefString& title) override;
-  void SetLinkMetadata(const CefString& data) override;
-  void SetFragmentText(const CefString& text) override;
-  void SetFragmentHtml(const CefString& html) override;
-  void SetFragmentBaseURL(const CefString& base_url) override;
+  bool GetFileNames(std::vector<CefString> &names) override;
+  void SetLinkURL(const CefString &url) override;
+  void SetLinkTitle(const CefString &title) override;
+  void SetLinkMetadata(const CefString &data) override;
+  void SetFragmentText(const CefString &text) override;
+  void SetFragmentHtml(const CefString &html) override;
+  void SetFragmentBaseURL(const CefString &base_url) override;
   void ResetFileContents() override;
-  void AddFile(const CefString& path, const CefString& display_name) override;
+  void AddFile(const CefString &path, const CefString &display_name) override;
   CefRefPtr<CefImage> GetImage() override;
   CefPoint GetImageHotspot() override;
   bool HasImage() override;
   bool IsImageFileContents() override;
+  void ClearFileNames() override;
+  size_t GetImageFileSize() override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_DRAG_DATA_CTOCPP_H_
