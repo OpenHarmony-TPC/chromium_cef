@@ -1788,6 +1788,46 @@ void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state) {
     client_->GetFormHandler()->OnFormEditingStateChanged(this, state);
 }
 
+void AlloyBrowserHostImpl::MediaStartedPlaying(
+    const content::WebContentsObserver::MediaPlayerInfo& video_type,
+    const content::MediaPlayerId& id) {
+  LOG(INFO) << "AlloyBrowserHostImpl::MediaStartedPlaying, is_video: " << video_type.has_video;
+
+  start_play_ = true;
+  cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
+  if (client_.get() && client_->GetMediaHandler().get()) {
+    client_->GetMediaHandler()->OnMediaStateChanged(this, type, cef_media_playing_state_t::PLAYING);
+  }
+}
+
+void AlloyBrowserHostImpl::MediaStoppedPlaying(
+    const content::WebContentsObserver::MediaPlayerInfo& video_type,
+    const content::MediaPlayerId& id,
+    content::WebContentsObserver::MediaStoppedReason reason) {
+  LOG(INFO) << "AlloyBrowserHostImpl::MediaStoppedPlaying, is_video: " << video_type.has_video << " stopped reason: " << static_cast<int>(reason);
+  
+  if (!start_play_) {
+    return;
+  }
+
+  cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
+  cef_media_playing_state_t state;
+  
+  switch(reason) 
+  {
+    case content::WebContentsObserver::MediaStoppedReason::kReachedEndOfStream:
+      state = cef_media_playing_state_t::END_OF_STREAM;
+      break;
+    case content::WebContentsObserver::MediaStoppedReason::kUnspecified:
+      state = cef_media_playing_state_t::PAUSE;
+      break;
+  }
+
+  if (client_.get() && client_->GetMediaHandler().get()) {
+    client_->GetMediaHandler()->OnMediaStateChanged(this, type, state);
+  }
+}
+
 void AlloyBrowserHostImpl::OnRecentlyAudibleTimerFired() {
   audio_capturer_.reset();
 }

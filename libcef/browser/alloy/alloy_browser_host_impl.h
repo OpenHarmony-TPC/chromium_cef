@@ -14,6 +14,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
 #include "include/cef_frame.h"
+#include "include/internal/cef_types.h"
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/browser_info.h"
 #include "libcef/browser/file_dialog_manager.h"
@@ -354,6 +355,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       content::NavigationHandle* navigation_handle) override;
   void OnAudioStateChanged(bool audible) override;
   void OnFormEditingStateChanged(bool state) override;
+  void MediaStartedPlaying(const content::WebContentsObserver::MediaPlayerInfo& video_type,
+                           const content::MediaPlayerId& id) override;
+  void MediaStoppedPlaying(
+    const content::WebContentsObserver::MediaPlayerInfo& video_type,
+    const content::MediaPlayerId& id,
+    content::WebContentsObserver::MediaStoppedReason reason) override;
   void AccessibilityEventReceived(
       const content::AXEventNotificationDetails& content_event_bundle) override;
   void AccessibilityLocationChangesReceived(
@@ -452,6 +459,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   int nweb_id_ = -1;
   bool is_hidden_ = false;
 #endif
+
+  bool start_play_ = false;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
