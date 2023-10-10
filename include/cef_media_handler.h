@@ -49,13 +49,21 @@
 /*--cef(source=client)--*/
 class CefMediaHandler : public virtual CefBaseRefCounted {
  public:
-
+  typedef cef_media_playing_state_t MediaPlayingState;
+  typedef cef_media_type_t MediaType;
   ///
   // Called when the audio state changed.
   ///
   /*--cef()--*/
   virtual void OnAudioStateChanged(CefRefPtr<CefBrowser> browser,
                                    bool audible) {}
+  ///
+  // Called when the media playing state changed.
+  ///
+  /*--cef()--*/
+  virtual void OnMediaStateChanged(CefRefPtr<CefBrowser> browser,
+                                   MediaType type,
+                                   MediaPlayingState state) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_MEDIA_HANDLER_H_

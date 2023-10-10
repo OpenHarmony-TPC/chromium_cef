@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e823f91059dcf96103209e695047899105a83d5d$
+// $hash=95b00c792aeb50ffe1e0b3d733c5874481ccdadf$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_MEDIA_HANDLER_CAPI_H_
@@ -61,13 +61,21 @@ typedef struct _cef_media_handler_t {
   ///
   // Called when the audio state changed.
   ///
-  void(CEF_CALLBACK* on_audio_state_changed)(struct _cef_media_handler_t* self,
-                                             struct _cef_browser_t* browser,
+  void(CEF_CALLBACK *on_audio_state_changed)(struct _cef_media_handler_t *self,
+                                             struct _cef_browser_t *browser,
                                              int audible);
+
+  ///
+  // Called when the media playing state changed.
+  ///
+  void(CEF_CALLBACK *on_media_state_changed)(struct _cef_media_handler_t *self,
+                                             struct _cef_browser_t *browser,
+                                             cef_media_type_t type,
+                                             cef_media_playing_state_t state);
 } cef_media_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_MEDIA_HANDLER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_MEDIA_HANDLER_CAPI_H_

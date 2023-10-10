@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2dcdc10f6a076e7300650e5bb427fbec9e42fc7e$
+// $hash=a41d88232e2c9d26dbe56672b58214f97d3a0ff4$
 //
 
 #include "libcef_dll/cpptoc/media_handler_cpptoc.h"
@@ -20,10 +20,8 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK
-media_handler_on_audio_state_changed(struct _cef_media_handler_t* self,
-                                     cef_browser_t* browser,
-                                     int audible) {
+void CEF_CALLBACK media_handler_on_audio_state_changed(
+    struct _cef_media_handler_t *self, cef_browser_t *browser, int audible) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -41,12 +39,33 @@ media_handler_on_audio_state_changed(struct _cef_media_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), audible ? true : false);
 }
 
-}  // namespace
+void CEF_CALLBACK media_handler_on_media_state_changed(
+    struct _cef_media_handler_t *self, cef_browser_t *browser,
+    cef_media_type_t type, cef_media_playing_state_t state) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return;
+
+  // Execute
+  CefMediaHandlerCppToC::Get(self)->OnMediaStateChanged(
+      CefBrowserCToCpp::Wrap(browser), type, state);
+}
+
+} // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefMediaHandlerCppToC::CefMediaHandlerCppToC() {
   GetStruct()->on_audio_state_changed = media_handler_on_audio_state_changed;
+  GetStruct()->on_media_state_changed = media_handler_on_media_state_changed;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -56,17 +75,16 @@ CefMediaHandlerCppToC::~CefMediaHandlerCppToC() {
 }
 
 template <>
-CefRefPtr<CefMediaHandler> CefCppToCRefCounted<
-    CefMediaHandlerCppToC,
-    CefMediaHandler,
-    cef_media_handler_t>::UnwrapDerived(CefWrapperType type,
-                                        cef_media_handler_t* s) {
+CefRefPtr<CefMediaHandler>
+CefCppToCRefCounted<CefMediaHandlerCppToC, CefMediaHandler,
+                    cef_media_handler_t>::UnwrapDerived(CefWrapperType type,
+                                                        cef_media_handler_t
+                                                            *s) {
   NOTREACHED() << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCppToCRefCounted<CefMediaHandlerCppToC,
-                                   CefMediaHandler,
+CefWrapperType CefCppToCRefCounted<CefMediaHandlerCppToC, CefMediaHandler,
                                    cef_media_handler_t>::kWrapperType =
     WT_MEDIA_HANDLER;

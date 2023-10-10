@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b3b158709709751c908d88949d4d83081e2ae1f0$
+// $hash=19ab4c6d715b63d1acb26150828c87d08f2b188e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_HANDLER_CTOCPP_H_
@@ -26,16 +26,18 @@
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed DLL-side only.
-class CefMediaHandlerCToCpp : public CefCToCppRefCounted<CefMediaHandlerCToCpp,
-                                                         CefMediaHandler,
-                                                         cef_media_handler_t> {
- public:
+class CefMediaHandlerCToCpp
+    : public CefCToCppRefCounted<CefMediaHandlerCToCpp, CefMediaHandler,
+                                 cef_media_handler_t> {
+public:
   CefMediaHandlerCToCpp();
   virtual ~CefMediaHandlerCToCpp();
 
   // CefMediaHandler methods.
   void OnAudioStateChanged(CefRefPtr<CefBrowser> browser,
                            bool audible) override;
+  void OnMediaStateChanged(CefRefPtr<CefBrowser> browser, MediaType type,
+                           MediaPlayingState state) override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_MEDIA_HANDLER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_MEDIA_HANDLER_CTOCPP_H_
