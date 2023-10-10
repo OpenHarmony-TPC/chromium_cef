@@ -494,7 +494,6 @@ class CefRenderWidgetHostViewOSR
   bool is_editable_node_ = false;
   int last_key_code_ = -1;
   gfx::Size viewport_size_in_pixels_;
-  bool is_need_show_keyboard_ = false;
   bool is_need_hide_keyboard_ = true;
   std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
   int current_frames_ = 60;
