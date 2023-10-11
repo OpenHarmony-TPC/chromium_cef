@@ -606,6 +606,10 @@ void AlloyContentRendererClient::DevToolsAgentDetached() {
   render_manager_->DevToolsAgentDetached();
 }
 
+void AlloyContentRendererClient::SetRuntimeFeaturesDefaultsBeforeBlinkInitialization() {
+  blink::WebRuntimeFeatures::EnablePerformanceManagerInstrumentation(true);
+}
+
 std::unique_ptr<blink::URLLoaderThrottleProvider>
 AlloyContentRendererClient::CreateURLLoaderThrottleProvider(
     blink::URLLoaderThrottleProviderType provider_type) {

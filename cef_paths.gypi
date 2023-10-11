@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=4f6b933b4acd75197e0d8b27e5a3d89ec0784d05$
+# $hash=01946dbf599c9ffa8615a3cf6f64be6ae0f51533$
 #
 
 {
@@ -40,6 +40,7 @@
       'include/cef_file_util.h',
       'include/cef_find_handler.h',
       'include/cef_focus_handler.h',
+      'include/cef_form_handler.h',
       'include/cef_frame.h',
       'include/cef_frame_handler.h',
       'include/cef_i18n_util.h',
@@ -141,6 +142,7 @@
       'include/capi/cef_file_util_capi.h',
       'include/capi/cef_find_handler_capi.h',
       'include/capi/cef_focus_handler_capi.h',
+      'include/capi/cef_form_handler_capi.h',
       'include/capi/cef_frame_capi.h',
       'include/capi/cef_frame_handler_capi.h',
       'include/capi/cef_i18n_util_capi.h',
@@ -314,6 +316,8 @@
       'libcef_dll/ctocpp/find_handler_ctocpp.h',
       'libcef_dll/ctocpp/focus_handler_ctocpp.cc',
       'libcef_dll/ctocpp/focus_handler_ctocpp.h',
+      'libcef_dll/ctocpp/form_handler_ctocpp.cc',
+      'libcef_dll/ctocpp/form_handler_ctocpp.h',
       'libcef_dll/cpptoc/frame_cpptoc.cc',
       'libcef_dll/cpptoc/frame_cpptoc.h',
       'libcef_dll/ctocpp/frame_handler_ctocpp.cc',
@@ -642,6 +646,8 @@
       'libcef_dll/cpptoc/find_handler_cpptoc.h',
       'libcef_dll/cpptoc/focus_handler_cpptoc.cc',
       'libcef_dll/cpptoc/focus_handler_cpptoc.h',
+      'libcef_dll/cpptoc/form_handler_cpptoc.cc',
+      'libcef_dll/cpptoc/form_handler_cpptoc.h',
       'libcef_dll/ctocpp/frame_ctocpp.cc',
       'libcef_dll/ctocpp/frame_ctocpp.h',
       'libcef_dll/cpptoc/frame_handler_cpptoc.cc',

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c9388b2d6e48b8298be0726e39170da862fce7aa$
+// $hash=e1cdde25aa8a221bab4912acbd12da20b11fa029$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed DLL-side only.
 class CefClientCToCpp
     : public CefCToCppRefCounted<CefClientCToCpp, CefClient, cef_client_t> {
- public:
+public:
   CefClientCToCpp();
   virtual ~CefClientCToCpp();
 
@@ -56,9 +56,10 @@ class CefClientCToCpp
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) override;
   int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                             const CefString& method,
-                             const CefString& object_name,
+                             const CefString &method,
+                             const CefString &object_name,
                              CefRefPtr<CefListValue> result) override;
+  CefRefPtr<CefFormHandler> GetFormHandler() override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

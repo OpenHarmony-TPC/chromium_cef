@@ -1782,6 +1782,12 @@ void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
   }
 }
 
+void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state) {
+  LOG(ERROR) << "AlloyBrowserHostImpl::OnFormEditingStateChanged state: " << state;
+  if (client_.get() && client_->GetFormHandler().get()) 
+    client_->GetFormHandler()->OnFormEditingStateChanged(this, state);
+}
+
 void AlloyBrowserHostImpl::MediaStartedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) {
