@@ -180,6 +180,9 @@ class CefRenderWidgetHostViewOSR
   display::ScreenInfos GetNewScreenInfosForUpdate() override;
   void TransformPointToRootSurface(gfx::PointF* point) override;
   gfx::Rect GetBoundsInRootWindow() override;
+#if BUILDFLAG(IS_OHOS)
+  void SendInternalBeginFrame() override;
+#endif
 
 #if !BUILDFLAG(IS_MAC)
   viz::ScopedSurfaceIdAllocator DidUpdateVisualProperties(
