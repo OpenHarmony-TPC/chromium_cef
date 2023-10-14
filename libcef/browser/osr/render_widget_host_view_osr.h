@@ -384,6 +384,7 @@ class CefRenderWidgetHostViewOSR
                        blink::mojom::InputEventResultState ack_result) override;
   void UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
+  void OnScrollState(bool scroll_state);
 #endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);

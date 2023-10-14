@@ -2448,6 +2448,21 @@ blink::mojom::InputEventResultState
 CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
-
+  if (input_event.GetType() == blink::WebInputEvent::Type::kGestureScrollBegin) {
+    LOG(INFO) << "blink::WebInputEvent::Type::kGestureScrollBegin";
+    OnScrollState(true);
+  } else if (input_event.GetType() == blink::WebInputEvent::Type::kGestureScrollEnd) {
+    LOG(INFO) << "blink::WebInputEvent::Type::kGestureScrollEnd";
+    OnScrollState(false);
+  }
   return blink::mojom::InputEventResultState::kNotConsumed;
+}
+
+void CefRenderWidgetHostViewOSR::OnScrollState(bool scroll_state) {
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnScrollState(browser_impl_.get(), scroll_state);
+  }
 }
