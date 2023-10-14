@@ -328,6 +328,13 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) {}
+
+  ///
+  /// Called when scroll begin or end.
+  ///
+  /*--cef()--*/
+  virtual void OnScrollState(CefRefPtr<CefBrowser> browser,
+                             bool scroll_state) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_
