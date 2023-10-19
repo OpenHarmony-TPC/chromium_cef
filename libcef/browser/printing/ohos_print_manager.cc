@@ -248,6 +248,7 @@ void OhosPrintManager::ScriptedPrint(
 void OhosPrintManager::DidPrintDocument(
     printing::mojom::DidPrintDocumentParamsPtr params,
     DidPrintDocumentCallback callback) {
+  LOG(INFO) << "OhosPrintManager::DidPrintDocument";
   if (params->document_cookie != cookie()) {
     std::move(callback).Run(false);
     return;
@@ -357,12 +358,17 @@ void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
     std::move(callback).Run();
     return;
   }
-
+  cancel_ = false;
   printRequestedCallback_ = std::move(callback);
 }
 
+void OhosPrintManager::CheckCancel(CheckCancelCallback callback) {
+  std::move(callback).Run(cancel_);
+}
+
 void OhosPrintManager::RunPrintRequestedCallback(const std::string& jobId) {
-  LOG(ERROR) << "OhosPrintManager::RunPrintRequestedCallback.";
+  LOG(INFO) << "OhosPrintManager::RunPrintRequestedCallback.";
+  cancel_ = true;
   std::move(printRequestedCallback_).Run();
 }
 
