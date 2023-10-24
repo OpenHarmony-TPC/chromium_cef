@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f033cd1506f32931da3b2d042bab4c10ae9b1d03$
+// $hash=93add428165b8bec2f5613cf465c8c2e9e838f27$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -628,6 +628,7 @@ void CEF_CALLBACK
 render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              cef_text_input_mode_t input_mode,
+                                             cef_text_input_type_t input_type,
                                              int show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
@@ -643,7 +644,7 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode,
+      CefBrowserCToCpp::Wrap(browser), input_mode, input_type,
       show_keyboard ? true : false);
 }
 

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d761c7a08d004f08d63e31d27cb194f89d21ce9d$
+// $hash=4d886993fd5dc656ec0538f4a6115507f6a8fb27$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -522,6 +522,7 @@ NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
     TextInputMode input_mode,
+    TextInputType input_type,
     bool show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
@@ -537,8 +538,9 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     return;
 
   // Execute
-  _struct->on_virtual_keyboard_requested(
-      _struct, CefBrowserCppToC::Wrap(browser), input_mode, show_keyboard);
+  _struct->on_virtual_keyboard_requested(_struct,
+                                         CefBrowserCppToC::Wrap(browser),
+                                         input_mode, input_type, show_keyboard);
 }
 
 NO_SANITIZE("cfi-icall")

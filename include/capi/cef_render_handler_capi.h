@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a712143680187762429d1e6854a635449a9409f6$
+// $hash=31ab9ee89046f68609cec90a874b3c3d35c9d54e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -279,6 +279,7 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       cef_text_input_mode_t input_mode,
+      cef_text_input_type_t input_type,
       int show_keyboard);
 
   ///

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9717150119f11035e0b341ec9add1dc555be4298$
+// $hash=52ca2faa70a85873cf12ba2fe3a6b6b63320eaf4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -91,6 +91,7 @@ class CefRenderHandlerCToCpp
                           const CefRange& selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
+                                  TextInputType input_type,
                                   bool show_keyboard) override;
   void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
                       const CefRect& rect) override;

@@ -1796,6 +1796,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CHECK(handler);
 
   CefRenderHandler::TextInputMode mode = CEF_TEXT_INPUT_MODE_NONE;
+  CefRenderHandler::TextInputType type = CEF_TEXT_INPUT_TYPE_NONE;
   bool show_keyboard = false;
   InitHideKeyboardFlag();
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
@@ -1804,6 +1805,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
             static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
     mode = static_cast<CefRenderHandler::TextInputMode>(state->mode);
+    type = static_cast<CefRenderHandler::TextInputType>(state->type);
     show_keyboard = state->show_ime_if_needed;
     is_need_hide_keyboard_ = false;
     lastHideKeyboardTime_ = std::chrono::high_resolution_clock::now();
@@ -1811,17 +1813,12 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (state && !state->show_ime_if_needed && did_update_state) {
     LOG(INFO) << "Autofocus requires a keyboard to be bound, "
                  "but there is no need to pull up the keyboard";
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
                                         state->show_ime_if_needed);
     return;
   }
 
 #if BUILDFLAG(IS_OHOS)
-  if (state && (state->type == ui::TEXT_INPUT_TYPE_NUMBER ||
-                state->type == ui::TEXT_INPUT_TYPE_TELEPHONE)) {
-    mode = CEF_TEXT_INPUT_MODE_NUMERIC;
-  }
-
   if (!show_keyboard) {
     last_key_code_ = -1;
   }
@@ -1832,7 +1829,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   }
 #endif
   if (state && state->show_ime_if_needed) {
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode,
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
                                         show_keyboard);
   } else if (!state || mode == CEF_TEXT_INPUT_MODE_NONE) {
     CEF_POST_DELAYED_TASK(
@@ -1849,8 +1846,9 @@ void CefRenderWidgetHostViewOSR::HideVirtualKeyboardRequested() {
     CefRefPtr<CefRenderHandler> handler =
     browser_impl_->GetClient()->GetRenderHandler();
     CHECK(handler);
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), CEF_TEXT_INPUT_MODE_NONE,
-                                        false);
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
+                                        CEF_TEXT_INPUT_MODE_NONE,
+                                        CEF_TEXT_INPUT_TYPE_NONE, false);
   }
   is_need_hide_keyboard_ = true;
 }
