@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7dfb9d932a8c388a7d43adc902b250a7e083045e$
+// $hash=2ba5cfd34e8f50c93d94ed669f425f24166d3967$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FORM_HANDLER_CAPI_H_
@@ -63,7 +63,7 @@ typedef struct _cef_form_handler_t {
   ///
   void(CEF_CALLBACK *on_form_editing_state_changed)(
       struct _cef_form_handler_t *self, struct _cef_browser_t *browser,
-      int is_editing);
+      int is_editing, uint64_t form_id);
 } cef_form_handler_t;
 
 #ifdef __cplusplus

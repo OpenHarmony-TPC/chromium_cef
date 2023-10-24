@@ -23,7 +23,8 @@ class CefFormHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnFormEditingStateChanged(CefRefPtr<CefBrowser> browser,
-                                         bool is_editing) {}
+                                         bool is_editing,
+                                         uint64_t form_id) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_FORM_HANDLER_H_

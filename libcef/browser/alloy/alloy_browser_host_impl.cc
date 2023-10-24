@@ -1782,10 +1782,10 @@ void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
   }
 }
 
-void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state) {
+void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state, uint64_t form_id) {
   LOG(ERROR) << "AlloyBrowserHostImpl::OnFormEditingStateChanged state: " << state;
   if (client_.get() && client_->GetFormHandler().get()) 
-    client_->GetFormHandler()->OnFormEditingStateChanged(this, state);
+    client_->GetFormHandler()->OnFormEditingStateChanged(this, state, form_id);
 }
 
 void AlloyBrowserHostImpl::MediaStartedPlaying(
