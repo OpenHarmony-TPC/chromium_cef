@@ -557,6 +557,14 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetZoomLevel(double zoomLevel) = 0;
 
   ///
+  // Change the zoom factor for browser zoom.
+  // If called on the UI thread the change will be applied immediately.
+  // Otherwise, the change will be applied asynchronously on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
+
+  ///
   // Call to run a file chooser dialog. Only a single file chooser dialog may be
   // pending at any given time. |mode| represents the type of dialog to display.
   // |title| to the title to be used for the dialog and may be empty to show the

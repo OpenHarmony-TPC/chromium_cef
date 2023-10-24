@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c0f63499eeaca2b73ff5b2c146d111eff1813cb4$
+// $hash=39021614a456d7348f6858a213b933d07cf866c7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -169,8 +169,8 @@ typedef struct _cef_cookie_manager_t {
 // CefSettings.cache_path if specified or in memory otherwise. If |callback| is
 // non-NULL it will be executed asnychronously on the UI thread after the
 // manager's storage has been initialized. Using this function is equivalent to
-// calling cef_request_context_t::cef_request_context_get_global_context()-
-// >GetDefaultCookieManager().
+// calling cef_request_context_t::cef_request_context_get_global_context()->GetD
+// efaultCookieManager().
 ///
 CEF_EXPORT cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
     struct _cef_completion_callback_t* callback);

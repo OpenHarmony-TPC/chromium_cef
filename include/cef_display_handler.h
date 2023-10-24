@@ -185,6 +185,12 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   virtual void OnScaleChanged(CefRefPtr<CefBrowser> browser,
                               float old_page_scale_factor,
                               float new_page_scale_factor) {}
+
+  ///
+  // Called when the page browser zoom has changed.
+  ///
+  /*--cef()--*/
+  virtual void OnContentsBrowserZoomChange(double zoom_factor) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_

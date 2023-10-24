@@ -69,6 +69,15 @@
 #include "libcef/browser/permission/alloy_access_request.h"
 #include "res_sched_client_adapter.h"
 #endif
+
+#ifdef OHOS_NWEB_EX
+#include "base/command_line.h"
+#include "net/base/url_util.h"
+#include "content/public/common/content_switches.h"
+#include "third_party/blink/public/common/page/page_zoom.h"
+#include "components/zoom/page_zoom.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -458,6 +467,57 @@ void AlloyBrowserHostImpl::SetZoomLevel(double zoomLevel) {
     CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetZoomLevel,
                                           this, zoomLevel));
   }
+}
+
+#ifdef OHOS_NWEB_EX
+double AlloyBrowserHostImpl::GetDefaultZoomLevel() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    get_zoom_level_event_ = std::make_shared<base::WaitableEvent>(
+        base::WaitableEvent::ResetPolicy::AUTOMATIC,
+        base::WaitableEvent::InitialState::NOT_SIGNALED);
+    CEF_POST_TASK(
+        CEF_UIT, base::BindOnce(
+                     &AlloyBrowserHostImpl::GetDefaultZoomLevelCallback, this));
+    if (!get_zoom_level_event_->TimeWait(base::Milliseconds(10))) {
+      return 0;
+    }
+    return default_zoom_level_;
+  }
+  if (web_contents()) {
+    default_zoom_level_ =
+        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
+  }
+  return default_zoom_level_;
+}
+
+void AlloyBrowserHostImpl::GetDefaultZoomLevelCallback() {
+  if (web_contents()) {
+    default_zoom_level_ =
+        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
+    if (get_zoom_level_event_ != nullptr) {
+      get_zoom_level_event_->Signal();
+    }
+  } else {
+    default_zoom_level_ = 0;
+  }
+}
+#endif
+
+void AlloyBrowserHostImpl::SetBrowserZoomLevel(double zoom_factor) {
+#ifdef OHOS_NWEB_EX
+  if (CEF_CURRENTLY_ON_UIT()) {
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser) &&
+        web_contents()) {
+      content::HostZoomMap::SetZoomLevel(
+          web_contents(), blink::PageZoomFactorToZoomLevel(zoom_factor));
+    }
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&AlloyBrowserHostImpl::SetBrowserZoomLevel,
+                                 this, zoom_factor));
+  }
+#endif
 }
 
 void AlloyBrowserHostImpl::RunFileDialog(
@@ -2062,6 +2122,24 @@ bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
 
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
   double curFactor = GetZoomLevel();
+#ifdef OHOS_NWEB_EX
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches:kForBrowser)) {
+    double defaultZoomLevel = GetDefaultZoomLevel();
+    std::vector<double> zoom_levels =
+	zoom::PageZoom::PresetZoomLevels(defaultZoomLevel);
+    zoom::ZoomType zoomType = zoom_in ? zoom::ZoomType::ZOOM_IN :
+	zoom::ZoomType::ZOOM_OUT;
+    SetZoomLevel(zoom::PageZoom::GetNextZoomLevel(zoomType, curFactor, zoom_levels));
+    if (client_) {
+      CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
+      if (handler) {
+        handler->OnContentsBrowserZoomChange(blink::PageZoomLevelToZoomFactor(zoomLevel));
+	}
+      }
+    return; 
+  }
+#endif
+
   double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
   if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
     LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
