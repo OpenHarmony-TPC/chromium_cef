@@ -129,6 +129,7 @@ class CefRenderWidgetHostViewOSR
   bool IsShowing() override;
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded() override;
+  void SetEnableLowerFrameRate(bool enabled);
 #endif
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*

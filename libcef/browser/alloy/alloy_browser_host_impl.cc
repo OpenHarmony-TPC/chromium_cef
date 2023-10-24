@@ -670,6 +670,24 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
   if (platform_delegate_)
     platform_delegate_->WasOccluded(occluded);
 }
+
+void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
+  LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHost::SetEnableLowerFrameRate, this, enabled));
+    return;
+  }
+
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    CefRenderWidgetHostViewOSR* view =
+        static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->SetEnableLowerFrameRate(enabled);
+    }
+  }
+}
 #endif
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {

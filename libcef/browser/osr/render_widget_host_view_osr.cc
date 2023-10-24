@@ -563,6 +563,16 @@ bool CefRenderWidgetHostViewOSR::IsShowing() {
 void CefRenderWidgetHostViewOSR::WasOccluded() {
   Hide();
 }
+
+void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+    ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+    if (compositor) {
+      compositor->SetEnableLowerFrameRate(enabled);
+    }
+  }
+}
 #endif
 
 void CefRenderWidgetHostViewOSR::EnsureSurfaceSynchronizedForWebTest() {
