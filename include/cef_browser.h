@@ -804,6 +804,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void WasOccluded(bool occluded) = 0;
 
   ///
+  // Set if lower the frame rate.
+  ///
+  /*--cef()--*/
+  virtual void SetEnableLowerFrameRate(bool enabled) = 0;
+
+  ///
   // Send a notification to the browser that the screen info has changed. The
   // browser will then call CefRenderHandler::GetScreenInfo to update the
   // screen information with the new values. This simulates moving the webview
