@@ -642,7 +642,7 @@ void CefFrameImpl::OnBrowserFrameDisconnect() {
                                    &CefFrameImpl::ConnectBrowserFrame);
     } else {
       // Trigger a crash in official builds.
-      LOG(ERROR) << "Connection retry failure for frame "
+      LOG(FATAL) << "Connection retry failure for frame "
                  << frame_util::GetFrameDebugString(frame_id_);
     }
   }
