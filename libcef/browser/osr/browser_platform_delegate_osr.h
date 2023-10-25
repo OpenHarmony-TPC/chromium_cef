@@ -10,6 +10,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "components/autofill/core/browser/ui/suggestion.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #endif
 
 class CefRenderWidgetHostViewOSR;
@@ -82,6 +83,12 @@ class CefBrowserPlatformDelegateOsr
                           cef_drag_operations_mask_t allowed_ops) override;
   void DragTargetDragLeave() override;
   void DragTargetDrop(const CefMouseEvent& event) override;
+
+#if BUILDFLAG(IS_OHOS)
+  bool GetCurRWH(content::WebContentsImpl* web_contents,
+    const gfx::PointF& client_pt, gfx::PointF* transformed_pt);
+#endif
+
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
                      const gfx::ImageSkia& image,
