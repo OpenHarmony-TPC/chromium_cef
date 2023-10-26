@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac006bc1cdc28b5217e84534a54fcf5b5a464d7a$
+// $hash=856812e985ced680382e68506a9bb5d6676a51d5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -50,7 +50,8 @@ class CefCookieManagerCToCpp
   bool SetCookie(const CefString& url,
                  const CefCookie& cookie,
                  CefRefPtr<CefSetCookieCallback> callback,
-                 bool is_sync) override;
+                 bool is_sync,
+                 const CefString& str_cookie) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
                      bool is_session,
