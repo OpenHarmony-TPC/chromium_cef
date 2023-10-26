@@ -262,6 +262,7 @@ class CefRenderWidgetHostViewOSR
   void SendGestureEvent(const ui::GestureEventData& gesture);
   std::u16string GetSelectedText() override;
   void WasKeyboardResized();
+  void SetNestedScrollMode(int mode);
 #endif
 
   bool InstallTransparency();
@@ -501,7 +502,6 @@ class CefRenderWidgetHostViewOSR
   gfx::Size viewport_size_in_pixels_;
   bool is_need_hide_keyboard_ = true;
   std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
-  int current_frames_ = 60;
 #endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
