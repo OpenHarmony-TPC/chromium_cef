@@ -1444,6 +1444,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetToken(void* token) = 0;
+
+  ///
+  // Set the nested scrollMode of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void SetNestedScrollMode(int mode) = 0;
 };
 
 ///

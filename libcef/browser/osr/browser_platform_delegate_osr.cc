@@ -813,4 +813,10 @@ void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
   if (view)
     view->WasKeyboardResized();
 }
+
+void CefBrowserPlatformDelegateOsr::SetNestedScrollMode(int mode) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetNestedScrollMode(mode);
+}
 #endif

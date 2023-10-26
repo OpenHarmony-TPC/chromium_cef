@@ -1802,7 +1802,7 @@ void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
 
 void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state) {
   LOG(ERROR) << "AlloyBrowserHostImpl::OnFormEditingStateChanged state: " << state;
-  if (client_.get() && client_->GetFormHandler().get()) 
+  if (client_.get() && client_->GetFormHandler().get())
     client_->GetFormHandler()->OnFormEditingStateChanged(this, state);
 }
 
@@ -1823,15 +1823,15 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
     const content::MediaPlayerId& id,
     content::WebContentsObserver::MediaStoppedReason reason) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStoppedPlaying, is_video: " << video_type.has_video << " stopped reason: " << static_cast<int>(reason);
-  
+
   if (!start_play_) {
     return;
   }
 
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
-  
-  switch(reason) 
+
+  switch(reason)
   {
     case content::WebContentsObserver::MediaStoppedReason::kReachedEndOfStream:
       state = cef_media_playing_state_t::END_OF_STREAM;
@@ -2094,6 +2094,12 @@ void AlloyBrowserHostImpl::OpenDateTimeChooser() {
       handler->OnDateTimeChooserPopup(this, chooser,
         suggestions, callback);
     }
+  }
+}
+
+void AlloyBrowserHostImpl::SetNestedScrollMode(int mode) {
+  if (platform_delegate_) {
+    platform_delegate_->SetNestedScrollMode(mode);
   }
 }
 

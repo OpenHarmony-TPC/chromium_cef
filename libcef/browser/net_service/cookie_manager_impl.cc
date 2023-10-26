@@ -208,7 +208,7 @@ bool CefCookieManagerImpl::SetCookie(const CefString& url,
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImpl::SetCookieInternal), this,
-        gurl, cookie, callback, is_sync));
+        gurl, cookie, callback, is_sync, str_cookie));
     return true;
   }
 
@@ -369,7 +369,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
   if (cookie.has_expires)
     cef_time_to_basetime(cookie.expires, expiration_time);
 
-#if
+#if !BUILDFLAG(IS_OHOS)
   net::CookieSameSite same_site =
       net_service::MakeCookieSameSite(cookie.same_site);
   net::CookiePriority priority =
@@ -394,7 +394,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
     SetCookieCallbackImpl(
         callback, net::CookieAccessResult(net::CookieInclusionStatus(
                       net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
-    return false;
+    return true;
   }
 
   net::CookieOptions options;
