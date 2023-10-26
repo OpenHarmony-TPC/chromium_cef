@@ -753,6 +753,81 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
               static_cast<cef_transition_type_t>(request.transition_type)));
     }
   }
+
+  void GetOhosResourceHandlerResult(
+      int32_t request_id,
+      network::ResourceRequest* request,
+      CefRefPtr<CefResourceHandler> resource_handler,
+      ShouldInterceptRequestResultCallback callback) {
+    CEF_REQUIRE_IOT();
+    RequestState* state = GetState(request_id);
+    if (!state) {
+      std::move(callback).Run(nullptr);
+      return;
+    }
+
+    if (!resource_handler && state->scheme_factory_) {
+      // Does the scheme factory want to handle the request?
+      resource_handler = state->scheme_factory_->Create(
+          init_state_->browser_, init_state_->frame_, request->url.scheme(),
+          state->pending_request_.get());
+    }
+
+    std::unique_ptr<ResourceResponse> resource_response;
+    if (resource_handler) {
+      resource_response = CreateResourceResponse(request_id, resource_handler);
+      DCHECK(resource_response);
+      state->was_custom_handled_ = true;
+    } else {
+      // The request will be handled by the NetworkService. Remove the
+      // "Accept-Language" header here so that it can be re-added in
+      // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
+    }
+
+    // Continue the request.
+    std::move(callback).Run(std::move(resource_response));
+  }
+
+  void GetOhosResourceHandlerInUiTask(
+      int32_t request_id,
+      network::ResourceRequest* request,
+      ShouldInterceptRequestResultCallback callback) {
+    CEF_REQUIRE_UIT();
+    RequestState* state = GetState(request_id);
+    if (!state) {
+      std::move(callback).Run(nullptr);
+      return;
+    }
+    CefRefPtr<CefResourceHandler> resource_handler;
+
+    if (state->handler_) {
+      // Does the client want to handle the request?
+      if (request) {
+        state->pending_request_->SetDestination(request->destination);
+      }
+      resource_handler = state->handler_->GetResourceHandler(
+          init_state_->browser_, init_state_->frame_,
+          state->pending_request_.get());
+    }
+
+    CEF_POST_TASK(
+        CEF_IOT,
+        base::BindOnce(
+            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResult,
+            weak_ptr_factory_.GetWeakPtr(), request_id, request,
+            resource_handler, std::move(callback)));
+  }
+
+  void GetOhosResourceHandler(int32_t request_id,
+                              network::ResourceRequest* request,
+                              ShouldInterceptRequestResultCallback callback) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(
+            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerInUiTask,
+            weak_ptr_factory_.GetWeakPtr(), request_id, request,
+            std::move(callback)));
+  }
 #endif
 
   void ContinueShouldInterceptRequest(
@@ -803,6 +878,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         return;
       }
     }
+#if BUILDFLAG(IS_OHOS)
+    GetOhosResourceHandler(request_id, request, std::move(callback));
+#else
 
     CefRefPtr<CefResourceHandler> resource_handler;
 
@@ -835,6 +913,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     // Continue the request.
     std::move(callback).Run(std::move(resource_response));
+#endif
   }
 
   void ProcessResponseHeaders(int32_t request_id,
