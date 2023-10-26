@@ -205,6 +205,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasKeyboardResized() override;
   void SetToken(void* token) override;
   void ContentsZoomChange(bool zoom_in) override;
+  void SetNestedScrollMode(int mode) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);

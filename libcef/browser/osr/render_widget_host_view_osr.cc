@@ -1929,6 +1929,10 @@ void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
   SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                               absl::nullopt, isKeyboardResized);
 }
+
+void CefRenderWidgetHostViewOSR::SetNestedScrollMode(int mode) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SetNestedScrollMode mode = " << mode;
+}
 #endif
 
 void CefRenderWidgetHostViewOSR::OnGestureEvent(
@@ -2429,14 +2433,16 @@ void CefRenderWidgetHostViewOSR::DidOverscroll(
     float y = params.latest_overscroll_delta.y();
     handler->OnOverscroll(browser_impl_.get(), x, y);
 
-    float fling_velocity_x = params.current_fling_velocity.x() * current_frames_;
-    float fling_velocity_y = params.current_fling_velocity.y() * current_frames_;
+    float fling_velocity_x = params.current_fling_velocity.x();
+    float fling_velocity_y = params.current_fling_velocity.y();
     bool is_fling = true;
     if (fling_velocity_x == 0 && fling_velocity_y == 0) {
       fling_velocity_x = x;
       fling_velocity_y = y;
       is_fling = false;
     }
+    fling_velocity_x = params.accumulated_overscroll.x() == 0 ? 0 : fling_velocity_x;
+    fling_velocity_y = params.accumulated_overscroll.y() == 0 ? 0 : fling_velocity_y;
     handler->OnOverScrollFlingVelocity(browser_impl_.get(), fling_velocity_x,
                                        fling_velocity_y, is_fling);
   }

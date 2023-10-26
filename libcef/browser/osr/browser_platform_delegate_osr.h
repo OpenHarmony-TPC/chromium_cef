@@ -124,6 +124,7 @@ class CefBrowserPlatformDelegateOsr
 #if BUILDFLAG(IS_OHOS)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void WasKeyboardResized() override;
+  void SetNestedScrollMode(int mode) override;
 #endif
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
