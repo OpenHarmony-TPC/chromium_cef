@@ -395,6 +395,9 @@ class CefBrowserPlatformDelegate {
   virtual void WasKeyboardResized() {};
   virtual void SetToken(void* token) {};
   virtual void SetNestedScrollMode(int mode) {};
+  virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard){};
+  virtual bool ShouldVirtualKeyboardOverlay(){return false;};
+
 #endif
  protected:
   // Allow deletion via std::unique_ptr only.

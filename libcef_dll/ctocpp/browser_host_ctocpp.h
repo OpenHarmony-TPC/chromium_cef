@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b3a992887bac05cc5408e2a2eaae2e0446efadd4$
+// $hash=90d09af162fca80f710d4a53d35c1881b36394c0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -194,6 +194,9 @@ public:
   void SetWindowId(int window_id, int nweb_id) override;
   void SetToken(void *token) override;
   void SetNestedScrollMode(int mode) override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height,
+                             double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

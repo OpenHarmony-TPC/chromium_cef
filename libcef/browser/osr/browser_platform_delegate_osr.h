@@ -125,6 +125,8 @@ class CefBrowserPlatformDelegateOsr
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void WasKeyboardResized() override;
   void SetNestedScrollMode(int mode) override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
 #endif
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c8f99d2f23e74d0a2fbaf373dec8bd052ac95f67$
+// $hash=83a95a5618c4bab2aede7138fc9ab97542ce2777$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1352,6 +1352,19 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *set_nested_scroll_mode)(struct _cef_browser_host_t *self,
                                              int mode);
+
+  ///
+  // Set the property values for width, height, and keyboard height
+  ///
+  void(CEF_CALLBACK *set_virtual_key_board_arg)(
+      struct _cef_browser_host_t *self, int32_t width, int32_t height,
+      double keyboard);
+
+  ///
+  // Set the virtual keyboard to override the web status
+  ///
+  int(CEF_CALLBACK *should_virtual_keyboard_overlay)(
+      struct _cef_browser_host_t *self);
 } cef_browser_host_t;
 
 ///
