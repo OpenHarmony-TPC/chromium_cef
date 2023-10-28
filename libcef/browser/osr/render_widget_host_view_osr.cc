@@ -46,6 +46,7 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/common/content_switches.h"
+#include "content/browser/renderer_host/frame_tree.h"
 #include "media/base/video_frame.h"
 #include "media/capture/mojom/video_capture_buffer.mojom.h"
 #include "services/device/public/mojom/screen_orientation.mojom.h"
@@ -2478,5 +2479,33 @@ void CefRenderWidgetHostViewOSR::OnScrollState(bool scroll_state) {
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
     handler->OnScrollState(browser_impl_.get(), scroll_state);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::NotifyVirtualKeyboardOverlayRect(
+    const gfx::Rect& keyboard_rect) {
+  content::RenderFrameHostImpl* frame_host = render_widget_host()->frame_tree()->GetMainFrame();
+  if(!frame_host){
+    return;
+  }
+  frame_host->GetPage().NotifyVirtualKeyboardOverlayRect(keyboard_rect);
+}
+
+bool CefRenderWidgetHostViewOSR::ShouldVirtualKeyboardOverlayContent() {
+  content::RenderFrameHostImpl* frame_host = render_widget_host()->frame_tree()->GetMainFrame();
+  return frame_host &&
+         frame_host->GetPage().virtual_keyboard_overlays_content();
+}
+
+void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg ; width = "
+             << width << "height = " << height << "keyboard = " << keyboard;
+  gfx::Rect keyboard_rect;
+  keyboard_rect.set_x(0);
+  keyboard_rect.set_y(0);
+  keyboard_rect.set_width(width);
+  keyboard_rect.set_height(keyboard);
+  if(ShouldVirtualKeyboardOverlayContent()){
+    NotifyVirtualKeyboardOverlayRect(keyboard_rect);
   }
 }

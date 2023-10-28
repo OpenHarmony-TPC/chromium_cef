@@ -2047,6 +2047,19 @@ void AlloyBrowserHostImpl::SetToken(void* token) {
   }
 };
 
+void AlloyBrowserHostImpl::SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {
+  if (platform_delegate_) {
+    platform_delegate_->SetVirtualKeyBoardArg(width, height, keyboard);
+  }
+};
+
+bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
+  if (platform_delegate_) {
+    return platform_delegate_->ShouldVirtualKeyboardOverlay();
+  }
+  return false;
+};
+
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
   double curFactor = GetZoomLevel();
   double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;

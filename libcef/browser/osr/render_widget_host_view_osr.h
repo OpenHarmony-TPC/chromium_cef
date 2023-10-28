@@ -188,10 +188,12 @@ class CefRenderWidgetHostViewOSR
 #if !BUILDFLAG(IS_MAC)
   viz::ScopedSurfaceIdAllocator DidUpdateVisualProperties(
       const cc::RenderFrameMetadata& metadata) override;
+      void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
+      bool ShouldVirtualKeyboardOverlayContent() override;
 #endif
 
   void SetShouldFrameSubmissionBeforeDraw(bool should);
-
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
       const gfx::Range& range,

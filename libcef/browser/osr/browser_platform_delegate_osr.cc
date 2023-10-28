@@ -819,4 +819,18 @@ void CefBrowserPlatformDelegateOsr::SetNestedScrollMode(int mode) {
   if (view)
     view->SetNestedScrollMode(mode);
 }
+
+void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(
+  int32_t width, int32_t height, double keyboard) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetVirtualKeyBoardArg(width, height, keyboard);
+}
+
+bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    return view->ShouldVirtualKeyboardOverlayContent();
+  return false;
+}
 #endif

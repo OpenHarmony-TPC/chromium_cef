@@ -1450,6 +1450,20 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetNestedScrollMode(int mode) = 0;
+
+  ///
+  // Set the property values for width, height, and keyboard height
+  ///
+  /*--cef()--*/
+  virtual void SetVirtualKeyBoardArg(int32_t width,
+                                     int32_t height,
+                                     double keyboard) = 0;
+
+  ///
+  // Set the virtual keyboard to override the web status
+  ///
+  /*--cef()--*/
+  virtual bool ShouldVirtualKeyboardOverlay() = 0;
 };
 
 ///

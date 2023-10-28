@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c5a8a14f58353c4e2e98fbc4addd2cf4152a4b47$
+// $hash=7502a9f059e64917da6f4596dec1538807f208ae$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2055,6 +2055,38 @@ void CefBrowserHostCToCpp::SetNestedScrollMode(int mode) {
 
   // Execute
   _struct->set_nested_scroll_mode(_struct, mode);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetVirtualKeyBoardArg(int32_t width, int32_t height,
+                                                 double keyboard) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_virtual_key_board_arg))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_virtual_key_board_arg(_struct, width, height, keyboard);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::ShouldVirtualKeyboardOverlay() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, should_virtual_keyboard_overlay))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->should_virtual_keyboard_overlay(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

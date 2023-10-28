@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=589ec555823e8cc830050400cc736387c94933a6$
+// $hash=6dceea9df559f7a4fa814655b93746e4d32d266a$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2246,6 +2246,40 @@ void CEF_CALLBACK browser_host_set_nested_scroll_mode(
   CefBrowserHostCppToC::Get(self)->SetNestedScrollMode(mode);
 }
 
+void CEF_CALLBACK browser_host_set_virtual_key_board_arg(
+    struct _cef_browser_host_t *self, int32_t width, int32_t height,
+    double keyboard) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetVirtualKeyBoardArg(width, height,
+                                                         keyboard);
+}
+
+int CEF_CALLBACK
+browser_host_should_virtual_keyboard_overlay(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+
+  // Execute
+  bool _retval =
+      CefBrowserHostCppToC::Get(self)->ShouldVirtualKeyboardOverlay();
+
+  // Return type: bool
+  return _retval;
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2382,6 +2416,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_window_id = browser_host_set_window_id;
   GetStruct()->set_token = browser_host_set_token;
   GetStruct()->set_nested_scroll_mode = browser_host_set_nested_scroll_mode;
+  GetStruct()->set_virtual_key_board_arg =
+      browser_host_set_virtual_key_board_arg;
+  GetStruct()->should_virtual_keyboard_overlay =
+      browser_host_should_virtual_keyboard_overlay;
 }
 
 // DESTRUCTOR - Do not edit by hand.
