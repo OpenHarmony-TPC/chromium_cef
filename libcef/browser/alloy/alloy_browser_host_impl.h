@@ -89,6 +89,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   double GetZoomLevel() override;
   void GetZoomLevelCallback();
   void SetZoomLevel(double zoomLevel) override;
+
+  void SetBrowserZoomLevel(double zoom_factor) override;
+
   void RunFileDialog(FileDialogMode mode,
                      const CefString& title,
                      const CefString& default_file_path,
@@ -420,6 +423,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ReportWindowStatus(bool first_view_ready);
 #endif
 
+#ifdef OHOS_NWEB_EX
+  double GetDefaultZoomLevel();
+  void GetDefaultZoomLevelCallback();
+#endif
+
   CefWindowHandle opener_;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
@@ -465,6 +473,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
 
   bool start_play_ = false;
+
+#ifdef OHOS_NWEB_EX
+  double default_zoom_level_ = 0.0;
+  std::shared_ptr<base::WaitableEvent> get_zoom_level_event_ = nullptr;
+#endif  
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
