@@ -478,7 +478,7 @@ double AlloyBrowserHostImpl::GetDefaultZoomLevel() {
     CEF_POST_TASK(
         CEF_UIT, base::BindOnce(
                      &AlloyBrowserHostImpl::GetDefaultZoomLevelCallback, this));
-    if (!get_zoom_level_event_->TimeWait(base::Milliseconds(10))) {
+    if (!get_zoom_level_event_->TimedWait(base::Milliseconds(10))) {
       return 0;
     }
     return default_zoom_level_;
@@ -2123,19 +2123,23 @@ bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
   double curFactor = GetZoomLevel();
 #ifdef OHOS_NWEB_EX
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches:kForBrowser)) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
     double defaultZoomLevel = GetDefaultZoomLevel();
     std::vector<double> zoom_levels =
-	zoom::PageZoom::PresetZoomLevels(defaultZoomLevel);
-    zoom::ZoomType zoomType = zoom_in ? zoom::ZoomType::ZOOM_IN :
-	zoom::ZoomType::ZOOM_OUT;
-    SetZoomLevel(zoom::PageZoom::GetNextZoomLevel(zoomType, curFactor, zoom_levels));
+        zoom::PageZoom::PresetZoomLevels(defaultZoomLevel);
+    zoom::ZoomType zoomType =
+        zoom_in ? zoom::ZoomType::ZOOM_IN : zoom::ZoomType::ZOOM_OUT;
+    double zoom_level =
+        zoom::PageZoom::GetNextZoomLevel(zoomType, curFactor, zoom_levels);
+    SetZoomLevel(zoom_level);
     if (client_) {
       CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
       if (handler) {
-        handler->OnContentsBrowserZoomChange(blink::PageZoomLevelToZoomFactor(zoomLevel));
-	}
+        handler->OnContentsBrowserZoomChange(
+            blink::PageZoomLevelToZoomFactor(zoom_level));
       }
+    }
     return; 
   }
 #endif
