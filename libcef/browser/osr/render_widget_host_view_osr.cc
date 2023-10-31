@@ -1237,12 +1237,16 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   }
 
   gfx::Size viewport_size_in_pixels = metadata.viewport_size_in_pixels;
-  if (viewport_size_in_pixels != viewport_size_in_pixels_) {
-    TRACE_EVENT1("cef",
+  float  device_scale_factor = metadata.device_scale_factor;
+  if (viewport_size_in_pixels != viewport_size_in_pixels_ ||
+      device_scale_factor != device_scale_factor_) {
+    TRACE_EVENT2("cef",
                  "CefRenderWidgetHostViewOSR::"
                  "OnRenderFrameMetadataChangedAfterActivation",
-                 "viewport_size_in_pixels", viewport_size_in_pixels.ToString());
+                 "viewport_size_in_pixels", viewport_size_in_pixels.ToString(),
+                 "device_scale_factor", device_scale_factor);
     viewport_size_in_pixels_ = viewport_size_in_pixels;
+    device_scale_factor_ = device_scale_factor;
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
                                  weak_ptr_factory_.GetWeakPtr()));

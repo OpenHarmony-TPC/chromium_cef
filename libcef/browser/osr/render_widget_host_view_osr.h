@@ -504,6 +504,7 @@ class CefRenderWidgetHostViewOSR
   gfx::Size viewport_size_in_pixels_;
   bool is_need_hide_keyboard_ = true;
   std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
+  float device_scale_factor_ = 1.0f;
 #endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
