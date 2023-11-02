@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=95a253b9722216be6efa126d5522ac4c5cfcb728$
+// $hash=7332adde2d3eddbf2eaac5c7e76e0ac9a443c484$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -214,7 +214,6 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ZoomBy(float delta, float width, float height) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetToken(void* token) override;
-  void SetNestedScrollMode(int mode) override;
   void SetVirtualKeyBoardArg(int32_t width,
                              int32_t height,
                              double keyboard) override;

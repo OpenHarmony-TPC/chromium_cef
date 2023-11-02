@@ -2192,12 +2192,6 @@ void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   }
 }
 
-void AlloyBrowserHostImpl::SetNestedScrollMode(int mode) {
-  if (platform_delegate_) {
-    platform_delegate_->SetNestedScrollMode(mode);
-  }
-}
-
 void AlloyBrowserHostImpl::CloseDateTimeChooser() {
   if (client_) {
     if (auto handler = client_->GetDialogHandler()) {

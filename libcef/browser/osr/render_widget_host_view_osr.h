@@ -264,7 +264,6 @@ class CefRenderWidgetHostViewOSR
   void SendGestureEvent(const ui::GestureEventData& gesture);
   std::u16string GetSelectedText() override;
   void WasKeyboardResized();
-  void SetNestedScrollMode(int mode);
 #endif
 
   bool InstallTransparency();
@@ -388,7 +387,6 @@ class CefRenderWidgetHostViewOSR
                        blink::mojom::InputEventResultState ack_result) override;
   void UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
-  void OnScrollState(bool scroll_state);
 #endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
