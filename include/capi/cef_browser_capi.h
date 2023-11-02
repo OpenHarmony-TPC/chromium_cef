@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e4c9eae841ce2680a58ae76489d28cf9dfe62200$
+// $hash=86cd174adfd553e1ce7d5655f2c20b9158164e0c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1418,12 +1418,6 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_token)(struct _cef_browser_host_t* self, void* token);
 
   ///
-  // Set the nested scrollMode of the UI framework
-  ///
-  void(CEF_CALLBACK* set_nested_scroll_mode)(struct _cef_browser_host_t* self,
-                                             int mode);
-
-  ///
   // Set the property values for width, height, and keyboard height
   ///
   void(CEF_CALLBACK* set_virtual_key_board_arg)(
@@ -1439,9 +1433,10 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
-  // Set over-scroll mode of web 
+  // Set the over-scroll mode of web
   ///
-  void(CEF_CALLBACK *overscroll_mode)(struct _cef_browser_host_t *self, int mode);
+  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
+                                          int mode);
 } cef_browser_host_t;
 
 ///

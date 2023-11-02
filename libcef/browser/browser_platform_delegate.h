@@ -394,7 +394,6 @@ class CefBrowserPlatformDelegate {
   virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
   virtual void WasKeyboardResized() {};
   virtual void SetToken(void* token) {};
-  virtual void SetNestedScrollMode(int mode) {};
   virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard){};
   virtual bool ShouldVirtualKeyboardOverlay(){return false;};
 

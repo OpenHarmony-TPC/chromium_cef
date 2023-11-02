@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=93add428165b8bec2f5613cf465c8c2e9e838f27$
+// $hash=2c191e8b529f7897ccceedb15152d05424534561$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -811,6 +811,33 @@ render_handler_on_scroll_state(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), scroll_state ? true : false);
 }
 
+int CEF_CALLBACK
+render_handler_filter_scroll_event(struct _cef_render_handler_t* self,
+                                   cef_browser_t* browser,
+                                   const float x,
+                                   const float y,
+                                   const float fling_x,
+                                   const float fling_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return 0;
+
+  // Execute
+  bool _retval = CefRenderHandlerCppToC::Get(self)->FilterScrollEvent(
+      CefBrowserCToCpp::Wrap(browser), x, y, fling_x, fling_y);
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -854,6 +881,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_over_scroll_fling_end =
       render_handler_on_over_scroll_fling_end;
   GetStruct()->on_scroll_state = render_handler_on_scroll_state;
+  GetStruct()->filter_scroll_event = render_handler_filter_scroll_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.

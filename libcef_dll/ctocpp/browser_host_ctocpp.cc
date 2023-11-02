@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ddf744d92a338d0bc95ac6be42299560627b3550$
+// $hash=5651c4de400cb09f95af6077e4063a05a4e4124e$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2054,19 +2054,6 @@ void CefBrowserHostCToCpp::ZoomBy(float delta, float width, float height) {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t *_struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, overscroll_mode))
-    return;
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-  // Execute
-  _struct->overscroll_mode(_struct, mode);
-}
-
-NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetWindowId(int window_id, int nweb_id) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2096,20 +2083,6 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetToken(void* token) {
 
   // Execute
   _struct->set_token(_struct, token);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetNestedScrollMode(int mode) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_nested_scroll_mode))
-    return;
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_nested_scroll_mode(_struct, mode);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -2143,6 +2116,20 @@ bool CefBrowserHostCToCpp::ShouldVirtualKeyboardOverlay() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_overscroll_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_overscroll_mode(_struct, mode);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
