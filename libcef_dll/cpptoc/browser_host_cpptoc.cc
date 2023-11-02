@@ -2295,6 +2295,19 @@ void CEF_CALLBACK browser_host_zoom_by(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->ZoomBy(delta, width, height);
 }
 
+void CEF_CALLBACK browser_host_overscroll_mode(struct _cef_browser_host_t *self,
+                                     int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
+}
+
 void CEF_CALLBACK browser_host_set_window_id(struct _cef_browser_host_t* self,
                                              int window_id,
                                              int nweb_id) {
@@ -2520,6 +2533,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_set_virtual_key_board_arg;
   GetStruct()->should_virtual_keyboard_overlay =
       browser_host_should_virtual_keyboard_overlay;
+  GetStruct()->overscroll_mode = browser_host_overscroll_mode;
 }
 
 // DESTRUCTOR - Do not edit by hand.

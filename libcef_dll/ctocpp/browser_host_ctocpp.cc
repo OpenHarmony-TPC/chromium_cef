@@ -2054,6 +2054,19 @@ void CefBrowserHostCToCpp::ZoomBy(float delta, float width, float height) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, overscroll_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+  // Execute
+  _struct->overscroll_mode(_struct, mode);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetWindowId(int window_id, int nweb_id) {
   shutdown_checker::AssertNotShutdown();
 

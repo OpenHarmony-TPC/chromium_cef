@@ -1127,6 +1127,12 @@ void CefFrameImpl::ZoomBy(float delta, float width, float height) {
 void CefFrameImpl::GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) {
   std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
 }
+
+void CefFrameImpl::SetOverscrollMode(int mode) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  render_frame->SetOverscrollMode(mode);
+}
 #endif  // BUILDFLAG(IS_OHOS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.

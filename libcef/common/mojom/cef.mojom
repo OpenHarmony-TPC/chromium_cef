@@ -149,6 +149,9 @@ interface RenderFrame {
 
   [EnableIf=is_ohos, Sync]
   GetHitData() => (int32 type, string extra_data);
+
+  [EnableIf=is_ohos]
+  SetOverscrollMode(int32 mode);
 };
 
 // Interface for communicating with a frame in the browser process.
