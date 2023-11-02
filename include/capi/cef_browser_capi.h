@@ -1437,6 +1437,11 @@ typedef struct _cef_browser_host_t {
   ///
   int(CEF_CALLBACK* should_virtual_keyboard_overlay)(
       struct _cef_browser_host_t* self);
+
+  ///
+  // Set over-scroll mode of web 
+  ///
+  void(CEF_CALLBACK *overscroll_mode)(struct _cef_browser_host_t *self, int mode);
 } cef_browser_host_t;
 
 ///

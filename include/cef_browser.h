@@ -1472,6 +1472,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool ShouldVirtualKeyboardOverlay() = 0;
+
+  ///
+  // Set the over-scroll mode of web
+  ///
+  /*--cef()--*/
+  virtual void SetOverscrollMode(int mode) = 0;
 };
 
 ///

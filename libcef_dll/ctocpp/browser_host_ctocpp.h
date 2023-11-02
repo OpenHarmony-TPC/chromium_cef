@@ -219,6 +219,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                              int32_t height,
                              double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+  void SetOverscrollMode(int mode) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

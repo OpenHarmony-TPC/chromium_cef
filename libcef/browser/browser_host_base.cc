@@ -1196,6 +1196,14 @@ void CefBrowserHostBase::ZoomBy(float delta, float width, float height) {
   }
 }
 
+void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SetOverscrollMode(overscrollMode);
+  }
+}
+
 void CefBrowserHostBase::GetHitData(int& type, CefString& extra_data) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
