@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e0aaa30043650168dd18a957ac4de570a00a94f0$
+// $hash=b04c8b0a11822b22a2e5d3c02d1477c33798fbd3$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -61,6 +61,8 @@ struct _cef_java_script_result_callback_t;
 struct _cef_store_web_archive_result_callback_t;
 struct _cef_web_message_receiver_t;
 
+// #if defined(OHOS_ENABLE_ACCESSIBILITY) namespace content { structure
+// BrowserAccessibilityManager; } #endif
 ///
 // Structure used to represent a browser. When used in the browser process the
 // functions of this structure may be called on any thread unless otherwise
@@ -939,7 +941,8 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
                                               const cef_string_t* object_name,
-                                              cef_string_list_t method_list);
+                                              cef_string_list_t method_list,
+                                              int32_t object_id);
 
   ///
   // UnregisterArkJSfunction

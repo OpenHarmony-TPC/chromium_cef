@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=560bc7826529d5b101255404bf8ef6d3f03a7841$
+// $hash=3f821d5ac55644728c451ed22b511125ff1af314$
 //
 
 #include "libcef_dll/cpptoc/client_cpptoc.h"
@@ -36,6 +36,7 @@
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/ctocpp/list_value_ctocpp.h"
 #include "libcef_dll/ctocpp/process_message_ctocpp.h"
+#include "libcef_dll/ctocpp/value_ctocpp.h"
 
 namespace {
 
@@ -367,7 +368,9 @@ client_notify_java_script_result(struct _cef_client_t* self,
                                  struct _cef_list_value_t* args,
                                  const cef_string_t* method,
                                  const cef_string_t* object_name,
-                                 struct _cef_list_value_t* result) {
+                                 struct _cef_list_value_t* result,
+                                 int32_t routing_id,
+                                 int32_t object_id) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -393,10 +396,77 @@ client_notify_java_script_result(struct _cef_client_t* self,
   // Execute
   int _retval = CefClientCppToC::Get(self)->NotifyJavaScriptResult(
       CefListValueCToCpp::Wrap(args), CefString(method), CefString(object_name),
-      CefListValueCToCpp::Wrap(result));
+      CefListValueCToCpp::Wrap(result), routing_id, object_id);
 
   // Return type: simple
   return _retval;
+}
+
+int CEF_CALLBACK
+client_has_java_script_object_methods(struct _cef_client_t* self,
+                                      int32_t object_id,
+                                      const cef_string_t* method_name) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: method_name; type: string_byref_const
+  DCHECK(method_name);
+  if (!method_name)
+    return 0;
+
+  // Execute
+  bool _retval = CefClientCppToC::Get(self)->HasJavaScriptObjectMethods(
+      object_id, CefString(method_name));
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK client_get_java_script_object_methods(
+    struct _cef_client_t* self,
+    int32_t object_id,
+    struct _cef_value_t* returned_method_names) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: returned_method_names; type: refptr_diff
+  DCHECK(returned_method_names);
+  if (!returned_method_names)
+    return;
+
+  // Execute
+  CefClientCppToC::Get(self)->GetJavaScriptObjectMethods(
+      object_id, CefValueCToCpp::Wrap(returned_method_names));
+}
+
+void CEF_CALLBACK
+client_remove_java_script_object_holder(struct _cef_client_t* self,
+                                        int32_t holder,
+                                        int32_t object_id) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefClientCppToC::Get(self)->RemoveJavaScriptObjectHolder(holder, object_id);
+}
+
+void CEF_CALLBACK
+client_remove_transient_java_script_object(struct _cef_client_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefClientCppToC::Get(self)->RemoveTransientJavaScriptObject();
 }
 
 struct _cef_form_handler_t* CEF_CALLBACK
@@ -484,6 +554,14 @@ CefClientCppToC::CefClientCppToC() {
   GetStruct()->get_permission_request = client_get_permission_request;
   GetStruct()->on_process_message_received = client_on_process_message_received;
   GetStruct()->notify_java_script_result = client_notify_java_script_result;
+  GetStruct()->has_java_script_object_methods =
+      client_has_java_script_object_methods;
+  GetStruct()->get_java_script_object_methods =
+      client_get_java_script_object_methods;
+  GetStruct()->remove_java_script_object_holder =
+      client_remove_java_script_object_holder;
+  GetStruct()->remove_transient_java_script_object =
+      client_remove_transient_java_script_object;
   GetStruct()->get_form_handler = client_get_form_handler;
   GetStruct()->on_top_controls_changed = client_on_top_controls_changed;
   GetStruct()->on_get_top_controls_height = client_on_get_top_controls_height;

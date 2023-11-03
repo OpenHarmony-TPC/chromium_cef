@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a93bcfc648d9c18c5e742d57a96c687dbd7496ac$
+// $hash=6874afc1a7bee8c9dd8f22be1ecba2a8125c5a3c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
@@ -205,12 +205,43 @@ typedef struct _cef_client_t {
   ///
   // Returns the list of arguments NotifyJavaScriptResult.
   ///
-  int(CEF_CALLBACK* notify_java_script_result)(
+  int(CEF_CALLBACK* notify_java_script_result)(struct _cef_client_t* self,
+                                               struct _cef_list_value_t* args,
+                                               const cef_string_t* method,
+                                               const cef_string_t* object_name,
+                                               struct _cef_list_value_t* result,
+                                               int32_t routing_id,
+                                               int32_t object_id);
+
+  ///
+  // has javaScript object function.
+  ///
+  int(CEF_CALLBACK* has_java_script_object_methods)(
       struct _cef_client_t* self,
-      struct _cef_list_value_t* args,
-      const cef_string_t* method,
-      const cef_string_t* object_name,
-      struct _cef_list_value_t* result);
+      int32_t object_id,
+      const cef_string_t* method_name);
+
+  ///
+  // get javaScript object functions.
+  ///
+  void(CEF_CALLBACK* get_java_script_object_methods)(
+      struct _cef_client_t* self,
+      int32_t object_id,
+      struct _cef_value_t* returned_method_names);
+
+  ///
+  // remove javaScript object holder.
+  ///
+  void(CEF_CALLBACK* remove_java_script_object_holder)(
+      struct _cef_client_t* self,
+      int32_t holder,
+      int32_t object_id);
+
+  ///
+  // remove transient javaScript object holder.
+  ///
+  void(CEF_CALLBACK* remove_transient_java_script_object)(
+      struct _cef_client_t* self);
 
   ///
   // Return the handler for browser form events.
