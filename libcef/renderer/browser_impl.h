@@ -121,6 +121,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool ShouldShowFreeCopy() override { return false; };
   int GetNWebId() override { return -1; };
   void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override {};
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override {}
+  void UpdateBrowserControlsHeight(int height, bool animate) override {}
 #endif
 
  private:

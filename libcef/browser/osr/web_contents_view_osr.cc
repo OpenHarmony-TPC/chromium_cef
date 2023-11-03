@@ -15,6 +15,11 @@
 #include "content/public/browser/render_widget_host.h"
 #include "components/performance_manager/embedder/performance_manager_registry.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 CefWebContentsViewOSR::CefWebContentsViewOSR(SkColor background_color,
                                              bool use_shared_texture,
                                              bool use_external_begin_frame)
@@ -215,3 +220,49 @@ AlloyBrowserHostImpl* CefWebContentsViewOSR::GetBrowser() const {
     return view->browser_impl().get();
   return nullptr;
 }
+
+#if BUILDFLAG(IS_OHOS)
+int CefWebContentsViewOSR::GetTopControlsHeight() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    return 0;
+  }
+
+  int top_controls_height = top_controls_height_;
+
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get() && browser->GetClient().get()) {
+    top_controls_height = browser->GetClient()->OnGetTopControlsHeight();
+  }
+  if (top_controls_height != top_controls_height_) {
+    top_controls_height_ = top_controls_height;
+  }
+
+  return top_controls_height_;
+}
+
+bool CefWebContentsViewOSR::DoBrowserControlsShrinkRendererSize() const {
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get() && browser->GetClient().get()) {
+    return browser->GetClient()->DoBrowserControlsShrinkRendererSize();
+  }
+  return false;
+}
+#endif
+
+#if defined(OHOS_NWEB_EX)
+void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
+                                                        bool animate) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser) ||
+      height == top_controls_height_)
+    return;
+
+  top_controls_height_ = height;
+
+  if (CefRenderWidgetHostViewOSR* view = GetView()) {
+    view->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
+                                      absl::nullopt);
+  }
+}
+#endif

@@ -170,6 +170,20 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetBrowserUserAgentString(const CefString& user_agent) = 0;
 
+  ///
+  // Update browser controls state.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsState(int constraints,
+                                          int current,
+                                          bool animate) = 0;
+
+  ///
+  // Update browser controls height.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
+
   /* ---------- ohos nweb_ex add end --------- */
 
   ///
