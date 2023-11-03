@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ddf744d92a338d0bc95ac6be42299560627b3550$
+// $hash=633b1ab9c8b6dfa572d9f256f66f56009b182a03$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1009,7 +1009,8 @@ void CefBrowserHostCToCpp::SetBackgroundColor(int color) {
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::RegisterArkJSfunction(
     const CefString& object_name,
-    const std::vector<CefString>& method_list) {
+    const std::vector<CefString>& method_list,
+    const int32_t object_id) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -1031,7 +1032,7 @@ void CefBrowserHostCToCpp::RegisterArkJSfunction(
 
   // Execute
   _struct->register_ark_jsfunction(_struct, object_name.GetStruct(),
-                                   method_listList);
+                                   method_listList, object_id);
 
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList)

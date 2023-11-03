@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e4c9eae841ce2680a58ae76489d28cf9dfe62200$
+// $hash=1bd38ddc188fe4b2b2249cb44eed06fa12ef3781$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -923,7 +923,8 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
                                               const cef_string_t* object_name,
-                                              cef_string_list_t method_list);
+                                              cef_string_list_t method_list,
+                                              int32_t object_id);
 
   ///
   // UnregisterArkJSfunction

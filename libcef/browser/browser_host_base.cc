@@ -709,14 +709,21 @@ CefString CefBrowserHostBase::DefaultUserAgent() {
 
 void CefBrowserHostBase::RegisterArkJSfunction(
     const CefString& object_name,
-    const std::vector<CefString>& method_list) {
+    const std::vector<CefString>& method_list,
+    const int32_t object_id) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   std::vector<std::string> method_vector;
   for (CefString method : method_list) {
     method_vector.push_back(method.ToString());
   }
-  javascriptInjector->AddInterface(object_name.ToString(), method_vector);
+  if (!javascriptInjector) {
+    LOG(ERROR) << "CefBrowserHostBase::RegisterArkJSfunction "
+                  "javascriptInjector is null";
+    return;
+  }
+  javascriptInjector->AddInterface(object_name.ToString(), method_vector,
+                                   object_id);
 }
 
 void CefBrowserHostBase::UnregisterArkJSfunction(
