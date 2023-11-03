@@ -174,6 +174,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SlideScroll(float vx, float vy);
   void ZoomBy(float delta, float width, float height);
   void GetHitData(int& type, CefString& extra_data);
+  void SetOverscrollMode(int mode);
 #endif  // BUILDFLAG(IS_OHOS)
 
   static const int64_t kMainFrameId;

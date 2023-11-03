@@ -2087,20 +2087,6 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetToken(void* token) {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetNestedScrollMode(int mode) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_nested_scroll_mode))
-    return;
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_nested_scroll_mode(_struct, mode);
-}
-
-NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetVirtualKeyBoardArg(int32_t width,
                                                  int32_t height,
                                                  double keyboard) {
@@ -2131,6 +2117,20 @@ bool CefBrowserHostCToCpp::ShouldVirtualKeyboardOverlay() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_overscroll_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_overscroll_mode(_struct, mode);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

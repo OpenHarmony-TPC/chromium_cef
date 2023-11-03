@@ -214,11 +214,11 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ZoomBy(float delta, float width, float height) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetToken(void* token) override;
-  void SetNestedScrollMode(int mode) override;
   void SetVirtualKeyBoardArg(int32_t width,
                              int32_t height,
                              double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+  void SetOverscrollMode(int mode) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

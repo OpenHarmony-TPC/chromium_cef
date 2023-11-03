@@ -919,6 +919,15 @@ void CefFrameHostImpl::ZoomBy(float delta,
                         delta, width, height));
 }
 
+void CefFrameHostImpl::SetOverscrollMode(int mode) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](int mode, const RenderFrameType& render_frame) {
+                          render_frame->SetOverscrollMode(mode);
+                        },
+                        mode));
+}
+
 void CefFrameHostImpl::GetHitData(int& type,
                                   CefString& extra_data) {
   std::string temp_extra_data;

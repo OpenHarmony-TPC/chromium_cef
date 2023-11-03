@@ -1454,12 +1454,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetToken(void* token) = 0;
 
   ///
-  // Set the nested scrollMode of the UI framework
-  ///
-  /*--cef()--*/
-  virtual void SetNestedScrollMode(int mode) = 0;
-
-  ///
   // Set the property values for width, height, and keyboard height
   ///
   /*--cef()--*/
@@ -1472,6 +1466,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool ShouldVirtualKeyboardOverlay() = 0;
+
+  ///
+  // Set the over-scroll mode of web
+  ///
+  /*--cef()--*/
+  virtual void SetOverscrollMode(int mode) = 0;
 };
 
 ///

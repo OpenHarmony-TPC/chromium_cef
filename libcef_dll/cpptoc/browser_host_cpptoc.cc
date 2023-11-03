@@ -2330,21 +2330,6 @@ void CEF_CALLBACK browser_host_set_token(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
-browser_host_set_nested_scroll_mode(struct _cef_browser_host_t* self,
-                                    int mode) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self)
-    return;
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->SetNestedScrollMode(mode);
-}
-
-void CEF_CALLBACK
 browser_host_set_virtual_key_board_arg(struct _cef_browser_host_t* self,
                                        int32_t width,
                                        int32_t height,
@@ -2378,6 +2363,20 @@ browser_host_should_virtual_keyboard_overlay(struct _cef_browser_host_t* self) {
 
   // Return type: bool
   return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
 }
 
 }  // namespace
@@ -2516,11 +2515,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->zoom_by = browser_host_zoom_by;
   GetStruct()->set_window_id = browser_host_set_window_id;
   GetStruct()->set_token = browser_host_set_token;
-  GetStruct()->set_nested_scroll_mode = browser_host_set_nested_scroll_mode;
   GetStruct()->set_virtual_key_board_arg =
       browser_host_set_virtual_key_board_arg;
   GetStruct()->should_virtual_keyboard_overlay =
       browser_host_should_virtual_keyboard_overlay;
+  GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
 }
 
 // DESTRUCTOR - Do not edit by hand.

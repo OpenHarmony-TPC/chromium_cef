@@ -208,7 +208,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasKeyboardResized() override;
   void SetToken(void* token) override;
   void ContentsZoomChange(bool zoom_in) override;
-  void SetNestedScrollMode(int mode) override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
 #else

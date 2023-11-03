@@ -1934,10 +1934,6 @@ void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
   SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                               absl::nullopt, isKeyboardResized);
 }
-
-void CefRenderWidgetHostViewOSR::SetNestedScrollMode(int mode) {
-  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SetNestedScrollMode mode = " << mode;
-}
 #endif
 
 void CefRenderWidgetHostViewOSR::OnGestureEvent(
@@ -2446,8 +2442,10 @@ void CefRenderWidgetHostViewOSR::DidOverscroll(
       fling_velocity_y = y;
       is_fling = false;
     }
-    fling_velocity_x = params.accumulated_overscroll.x() == 0 ? 0 : fling_velocity_x;
-    fling_velocity_y = params.accumulated_overscroll.y() == 0 ? 0 : fling_velocity_y;
+    fling_velocity_x =
+        params.accumulated_overscroll.x() == 0 ? 0 : fling_velocity_x;
+    fling_velocity_y =
+        params.accumulated_overscroll.y() == 0 ? 0 : fling_velocity_y;
     handler->OnOverScrollFlingVelocity(browser_impl_.get(), fling_velocity_x,
                                        fling_velocity_y, is_fling);
   }
@@ -2467,23 +2465,37 @@ blink::mojom::InputEventResultState
 CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
-  if (input_event.GetType() == blink::WebInputEvent::Type::kGestureScrollBegin) {
-    LOG(INFO) << "blink::WebInputEvent::Type::kGestureScrollBegin";
-    OnScrollState(true);
-  } else if (input_event.GetType() == blink::WebInputEvent::Type::kGestureScrollEnd) {
-    LOG(INFO) << "blink::WebInputEvent::Type::kGestureScrollEnd";
-    OnScrollState(false);
-  }
-  return blink::mojom::InputEventResultState::kNotConsumed;
-}
 
-void CefRenderWidgetHostViewOSR::OnScrollState(bool scroll_state) {
-  if (browser_impl_.get()) {
+  if (browser_impl_.get() && input_event.IsGestureScroll()) {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-    handler->OnScrollState(browser_impl_.get(), scroll_state);
+    blink::WebGestureEvent gesture_event =
+        static_cast<const blink::WebGestureEvent&>(input_event);
+    if (input_event.GetType() ==
+        blink::WebInputEvent::Type::kGestureScrollBegin) {
+      handler->OnScrollState(browser_impl_.get(), true);
+    } else if (input_event.GetType() ==
+               blink::WebInputEvent::Type::kGestureScrollEnd) {
+      handler->OnScrollState(browser_impl_.get(), false);
+    }
+    bool is_consumed = false;
+    if (gesture_event.GetType() ==
+        blink::WebInputEvent::Type::kGestureScrollUpdate) {
+      is_consumed = handler->FilterScrollEvent(
+          browser_impl_.get(), gesture_event.data.scroll_update.delta_x,
+          gesture_event.data.scroll_update.delta_y, 0, 0);
+    } else if (gesture_event.GetType() ==
+               blink::WebInputEvent::Type::kGestureFlingStart) {
+      is_consumed = handler->FilterScrollEvent(
+          browser_impl_.get(), 0, 0, gesture_event.data.fling_start.velocity_x,
+          gesture_event.data.fling_start.velocity_y);
+    }
+    return is_consumed ? blink::mojom::InputEventResultState::kConsumed
+                       : blink::mojom::InputEventResultState::kNotConsumed;
   }
+
+  return blink::mojom::InputEventResultState::kNotConsumed;
 }
 
 void CefRenderWidgetHostViewOSR::NotifyVirtualKeyboardOverlayRect(

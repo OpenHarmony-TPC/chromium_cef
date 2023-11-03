@@ -1419,12 +1419,6 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_token)(struct _cef_browser_host_t* self, void* token);
 
   ///
-  // Set the nested scrollMode of the UI framework
-  ///
-  void(CEF_CALLBACK* set_nested_scroll_mode)(struct _cef_browser_host_t* self,
-                                             int mode);
-
-  ///
   // Set the property values for width, height, and keyboard height
   ///
   void(CEF_CALLBACK* set_virtual_key_board_arg)(
@@ -1438,6 +1432,12 @@ typedef struct _cef_browser_host_t {
   ///
   int(CEF_CALLBACK* should_virtual_keyboard_overlay)(
       struct _cef_browser_host_t* self);
+
+  ///
+  // Set the over-scroll mode of web
+  ///
+  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
+                                          int mode);
 } cef_browser_host_t;
 
 ///
