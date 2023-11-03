@@ -56,7 +56,11 @@ class AlloyRenderThreadObserver;
 class CefRenderManager;
 class ChromePDFPrintClient;
 class SpellCheck;
-
+#if BUILDFLAG(IS_OHOS)
+namespace js_injection {
+class JsCommunication;
+}
+#endif // IS_OHOS
 class AlloyContentRendererClient
     : public content::ContentRendererClient,
       public service_manager::LocalInterfaceProvider,

@@ -730,6 +730,19 @@ void CefBrowserHostBase::UnregisterArkJSfunction(
   }
   javascriptInjector->RemoveInterface(object_name.ToString(), method_vector);
 }
+
+js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (!js_communication_host_.get()) {
+    js_communication_host_ =
+        std::make_unique<js_injection::JsCommunicationHost>(GetWebContents());
+  }
+  return js_communication_host_.get();
+}
+
+void CefBrowserHostBase::JavaScriptOnDocumentStart(const ScriptItems& scriptItems) {
+  GetJsCommunicationHost()->AddDocumentStartJavaScripts(scriptItems);
+}
 #endif
 
 void CefBrowserHostBase::ReplaceMisspelling(const CefString& word) {

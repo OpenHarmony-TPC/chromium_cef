@@ -54,6 +54,7 @@
 #include "chrome/renderer/loadtimes_extension_bindings.h"
 #include "chrome/renderer/plugins/chrome_plugin_placeholder.h"
 #include "components/content_settings/core/common/content_settings_types.h"
+#include "components/js_injection/renderer/js_communication.h"
 #include "components/nacl/common/nacl_constants.h"
 #include "components/printing/renderer/print_render_frame_helper.h"
 #include "components/spellcheck/renderer/spellcheck.h"
@@ -313,6 +314,7 @@ void AlloyContentRendererClient::RenderThreadConnected() {
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
 #if BUILDFLAG(IS_OHOS)
+  new js_injection::JsCommunication(render_frame);
   new AlloyContentSettingsClient(render_frame);
 #endif
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
@@ -566,6 +568,11 @@ void AlloyContentRendererClient::RunScriptsAtDocumentStart(
     content::RenderFrame* render_frame) {
   if (extensions::ExtensionsEnabled())
     extensions_renderer_client_->RunScriptsAtDocumentStart(render_frame);
+#if BUILDFLAG(IS_OHOS)
+  js_injection::JsCommunication* communication =
+      js_injection::JsCommunication::Get(render_frame);
+  communication->RunScriptsAtDocumentStart();
+#endif //IS_OHOS
 }
 
 void AlloyContentRendererClient::RunScriptsAtDocumentEnd(

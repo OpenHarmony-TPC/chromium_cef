@@ -28,6 +28,7 @@
 #include "base/synchronization/lock.h"
 #include "extensions/common/mojom/view_type.mojom.h"
 #include "components/download/public/common/download_item.h"
+#include "components/js_injection/browser/js_communication_host.h"
 namespace extensions {
 class Extension;
 }
@@ -230,6 +231,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
+  void JavaScriptOnDocumentStart(const ScriptItems& scriptItems) override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(
@@ -458,7 +460,7 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);
-
+  js_injection::JsCommunicationHost* GetJsCommunicationHost();
   // Called from LoadMainFrameURL to perform the actual navigation.
   virtual bool Navigate(const content::OpenURLParams& params);
 
@@ -528,6 +530,7 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
   uint64_t last_zoom_time_ = 0;
 #endif
 
+  std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
   CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
   std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
