@@ -1,0 +1,92 @@
+diff --git base/BUILD.gn base/BUILD.gn
+index dbef16bc35790..4343b1759c757 100644
+--- base/BUILD.gn
++++ base/BUILD.gn
+@@ -36,6 +36,7 @@ import("//build/nocompile.gni")
+ import("//build/rust/mixed_component.gni")
+ import("//build/timestamp.gni")
+ import("//build_overrides/build.gni")
++import("//cef/libcef/features/features.gni")
+ import("//testing/libfuzzer/fuzzer_test.gni")
+ import("//testing/test.gni")
+ import("//third_party/icu/config.gni")
+@@ -1867,7 +1868,11 @@ mixed_component("base") {
+     "hash/md5_constexpr_internal.h",
+     "hash/sha1.h",
+   ]
+-  if (is_nacl) {
++  deps += [ "//cef/libcef/features" ]
++  if (enable_cef) {
++    configs += [ "//cef/libcef/features:config" ]
++  }
++  if (is_nacl || is_cef_sandbox_build) {
+     sources += [
+       "hash/md5_nacl.cc",
+       "hash/md5_nacl.h",
+@@ -2116,6 +2121,12 @@ mixed_component("base") {
+       defines += [ "COM_INIT_CHECK_HOOK_DISABLED" ]
+     }
+ 
++    if (!use_custom_libcxx) {
++      # Enable the VS 2015 Update 2 fix when building with the MSVC standard
++      # library.
++      defines += [ "_ENABLE_ATOMIC_ALIGNMENT_FIX" ]
++    }
++
+     libs += [
+       "cfgmgr32.lib",
+       "powrprof.lib",
+diff --git base/hash/md5.h base/hash/md5.h
+index ea6bbd31e3fc8..9941050ac0113 100644
+--- base/hash/md5.h
++++ base/hash/md5.h
+@@ -10,8 +10,9 @@
+ #include "base/base_export.h"
+ #include "base/strings/string_piece.h"
+ #include "build/build_config.h"
++#include "cef/libcef/features/features.h"
+ 
+-#if BUILDFLAG(IS_NACL)
++#if BUILDFLAG(IS_NACL) || BUILDFLAG(IS_CEF_SANDBOX_BUILD)
+ #include "base/hash/md5_nacl.h"
+ #else
+ #include "base/hash/md5_boringssl.h"
+diff --git base/hash/sha1.h base/hash/sha1.h
+index c4e656b9a68ef..8eb01343cd5d1 100644
+--- base/hash/sha1.h
++++ base/hash/sha1.h
+@@ -14,7 +14,9 @@
+ #include "base/containers/span.h"
+ #include "base/strings/string_piece.h"
+ #include "build/build_config.h"
+-#if BUILDFLAG(IS_NACL)
++#include "cef/libcef/features/features.h"
++
++#if BUILDFLAG(IS_NACL) || BUILDFLAG(IS_CEF_SANDBOX_BUILD)
+ #include "base/hash/sha1_nacl.h"
+ #else
+ #include "base/hash/sha1_boringssl.h"
+diff --git base/unguessable_token.cc base/unguessable_token.cc
+index 04ea514c6ce35..4f69b8a7f87f3 100644
+--- base/unguessable_token.cc
++++ base/unguessable_token.cc
+@@ -9,8 +9,9 @@
+ #include "base/format_macros.h"
+ #include "base/rand_util.h"
+ #include "build/build_config.h"
++#include "cef/libcef/features/features.h"
+ 
+-#if !BUILDFLAG(IS_NACL)
++#if !BUILDFLAG(IS_NACL) && !BUILDFLAG(IS_CEF_SANDBOX_BUILD)
+ #include "third_party/boringssl/src/include/openssl/mem.h"
+ #endif
+ 
+@@ -41,7 +42,7 @@ UnguessableToken UnguessableToken::Deserialize(uint64_t high, uint64_t low) {
+ }
+ 
+ bool UnguessableToken::operator==(const UnguessableToken& other) const {
+-#if BUILDFLAG(IS_NACL)
++#if BUILDFLAG(IS_NACL) || BUILDFLAG(IS_CEF_SANDBOX_BUILD)
+   // BoringSSL is unavailable for NaCl builds so it remains timing dependent.
+   return token_ == other.token_;
+ #else

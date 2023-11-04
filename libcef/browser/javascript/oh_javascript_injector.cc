@@ -1,0 +1,34 @@
+// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright 2018 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include "oh_javascript_injector.h"
+#include "oh_gin_javascript_bridge_dispatcher_host.h"
+namespace NWEB {
+OhJavascriptInjector::OhJavascriptInjector(content::WebContents* web_contents,
+                                           CefRefPtr<CefClient> client)
+    : content::WebContentsUserData<OhJavascriptInjector>(*web_contents) {
+  javascript_bridge_dispatcher_host_ =
+      new OhGinJavascriptBridgeDispatcherHost(web_contents, client);
+  web_contents->SetUserData(UserDataKey(), base::WrapUnique(this));
+}
+
+OhJavascriptInjector::~OhJavascriptInjector() {}
+
+void OhJavascriptInjector::AddInterface(
+    const std::string& object_name,
+    const std::vector<std::string> method_list) {
+  LOG(INFO) << "AddInterface name : " << object_name.c_str();
+  javascript_bridge_dispatcher_host_->AddNamedObject(object_name, method_list);
+}
+
+void OhJavascriptInjector::RemoveInterface(
+    const std::string& object_name,
+    const std::vector<std::string> method_list) {
+  LOG(INFO) << "RemoveInterface name : " << object_name.c_str();
+  javascript_bridge_dispatcher_host_->RemoveNamedObject(object_name,
+                                                        method_list);
+}
+WEB_CONTENTS_USER_DATA_KEY_IMPL(OhJavascriptInjector);
+}  // namespace NWEB

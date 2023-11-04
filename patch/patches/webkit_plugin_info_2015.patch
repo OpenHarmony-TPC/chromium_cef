@@ -1,0 +1,44 @@
+diff --git third_party/blink/public/platform/platform.h third_party/blink/public/platform/platform.h
+index f545c18c2e142..26757184a79d5 100644
+--- third_party/blink/public/platform/platform.h
++++ third_party/blink/public/platform/platform.h
+@@ -865,6 +865,11 @@ class BLINK_PLATFORM_EXPORT Platform {
+       const WebURL& url,
+       blink::WebVector<blink::WebContentSecurityPolicyHeader>* csp) {}
+ 
++  // DevTools ------------------------------------------------------------
++
++  virtual void DevToolsAgentAttached() {}
++  virtual void DevToolsAgentDetached() {}
++
+  private:
+   static void InitializeMainThreadCommon(Platform* platform,
+                                          std::unique_ptr<Thread> main_thread);
+diff --git third_party/blink/renderer/core/inspector/devtools_session.cc third_party/blink/renderer/core/inspector/devtools_session.cc
+index 513bee6f4a3e3..df7c2512a343e 100644
+--- third_party/blink/renderer/core/inspector/devtools_session.cc
++++ third_party/blink/renderer/core/inspector/devtools_session.cc
+@@ -8,6 +8,7 @@
+ #include <utility>
+ #include <vector>
+ 
++#include "third_party/blink/public/platform/platform.h"
+ #include "third_party/blink/renderer/bindings/core/v8/script_controller.h"
+ #include "third_party/blink/renderer/core/frame/local_frame.h"
+ #include "third_party/blink/renderer/core/inspector/devtools_agent.h"
+@@ -146,6 +147,7 @@ DevToolsSession::DevToolsSession(
+     for (wtf_size_t i = 0; i < agents_.size(); i++)
+       agents_[i]->Restore();
+   }
++  Platform::Current()->DevToolsAgentAttached();
+ }
+ 
+ DevToolsSession::~DevToolsSession() {
+@@ -186,6 +188,7 @@ void DevToolsSession::Detach() {
+   agents_.clear();
+   v8_session_.reset();
+   agent_->client_->DebuggerTaskFinished();
++  Platform::Current()->DevToolsAgentDetached();
+ }
+ 
+ void DevToolsSession::DispatchProtocolCommand(
