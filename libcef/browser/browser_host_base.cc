@@ -741,7 +741,11 @@ js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() 
 }
 
 void CefBrowserHostBase::JavaScriptOnDocumentStart(const ScriptItems& scriptItems) {
-  GetJsCommunicationHost()->AddDocumentStartJavaScripts(scriptItems);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    host->AddDocumentStartJavaScripts(scriptItems);
+  }
 }
 #endif
 
