@@ -68,8 +68,12 @@ OhGinJavascriptBridgeObject::OhGinJavascriptBridgeObject(
 
 OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject() {
   if (dispatcher_) {
+    LOG(DEBUG)
+        << "OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject called";
     dispatcher_->OnOhGinJavascriptBridgeObjectDeleted(this);
   } else {
+    LOG(DEBUG)
+        << "OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject called";
     // A wrapper can outlive a render frame, and thus the dispatcher.
     // Note that we intercept GinJavaBridgeHostMsg messages in a browser filter
     // thus it's OK to send the message with a routing id of a ceased frame.
