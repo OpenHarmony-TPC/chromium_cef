@@ -19,14 +19,6 @@ class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
       public content::WebContentsObserver {
  public:
-  // 为了兼容老版本webcontroller, 要保持跟ace和core侧定义一致
-  enum class JavaScriptObjIdErrorCode : int32_t {
-    WEBCONTROLLERERROR = -2,
-    WEBVIEWCONTROLLERERROR = -1,
-    END = 0
-  };
-  typedef int32_t ObjectID;
-
   OhGinJavascriptBridgeDispatcherHost(content::WebContents* web_contents,
                                       CefRefPtr<CefClient> client);
   OhGinJavascriptBridgeDispatcherHost(
@@ -35,8 +27,7 @@ class OhGinJavascriptBridgeDispatcherHost
       const OhGinJavascriptBridgeDispatcherHost&) = delete;
 
   void AddNamedObject(const std::string& classname,
-                      const std::vector<std::string>& method_list,
-                      const ObjectID object_id);
+                      const std::vector<std::string>& method_list);
   void RemoveNamedObject(const std::string& classname,
                          const std::vector<std::string>& method_list);
 
@@ -60,9 +51,9 @@ class OhGinJavascriptBridgeDispatcherHost
                       const base::ListValue& arguments,
                       base::ListValue* result,
                       OhGinJavascriptBridgeError* error_code);
-  void OnObjectWrapperDeleted(int routing_id, ObjectID object_id);
 
  private:
+  typedef int32_t ObjectID;
   friend class base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>;
 
   // object id and ace js function name
@@ -73,20 +64,11 @@ class OhGinJavascriptBridgeDispatcherHost
   // Run on the UI thread.
   void InstallFilterAndRegisterAllRoutingIds();
 
-  void AddNamedObjectForWebController(
-      const std::string& classname,
-      const std::vector<std::string>& method_list);
-
-  void AddNamedObjectForWebViewController(
-      const std::string& classname,
-      const std::vector<std::string>& method_list,
-      const ObjectID object_id);
-
   // js property name and object id
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
   ObjectMethodMap method_map_;
-  int32_t object_id_ = 1;
+  int32_t object_id_ = 0;
 
   std::mutex object_mtx_;
   CefRefPtr<CefClient> client_;

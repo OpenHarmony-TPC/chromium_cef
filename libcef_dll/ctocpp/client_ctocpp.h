@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=813b2200ec0d4c400c492a9f8a0c442b74ca15c8$
+// $hash=e1cdde25aa8a221bab4912acbd12da20b11fa029$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed DLL-side only.
 class CefClientCToCpp
     : public CefCToCppRefCounted<CefClientCToCpp, CefClient, cef_client_t> {
- public:
+public:
   CefClientCToCpp();
   virtual ~CefClientCToCpp();
 
@@ -56,19 +56,10 @@ class CefClientCToCpp
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) override;
   int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                             const CefString& method,
-                             const CefString& object_name,
-                             CefRefPtr<CefListValue> result,
-                             int32_t routing_id,
-                             int32_t object_id) override;
-  bool HasJavaScriptObjectMethods(int32_t object_id,
-                                  const CefString& method_name) override;
-  void GetJavaScriptObjectMethods(
-      int32_t object_id,
-      CefRefPtr<CefValue> returned_method_names) override;
-  void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) override;
-  void RemoveTransientJavaScriptObject() override;
+                             const CefString &method,
+                             const CefString &object_name,
+                             CefRefPtr<CefListValue> result) override;
   CefRefPtr<CefFormHandler> GetFormHandler() override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

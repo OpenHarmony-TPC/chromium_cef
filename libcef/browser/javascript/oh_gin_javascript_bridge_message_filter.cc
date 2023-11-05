@@ -186,9 +186,6 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
 }
 
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
-  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
-    host->OnObjectWrapperDeleted(current_routing_id_, object_id);
-  }
+  (void)object_id;
 }
 }  // namespace NWEB
