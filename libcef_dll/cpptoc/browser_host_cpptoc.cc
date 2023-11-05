@@ -2365,6 +2365,37 @@ browser_host_should_virtual_keyboard_overlay(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK browser_host_set_draw_rect(struct _cef_browser_host_t* self,
+                                             int x,
+                                             int y,
+                                             int width,
+                                             int height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetDrawRect(x, y, width, height);
+}
+
+void CEF_CALLBACK browser_host_set_draw_mode(struct _cef_browser_host_t* self,
+                                             int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetDrawMode(mode);
+}
+
 void CEF_CALLBACK
 browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
   shutdown_checker::AssertNotShutdown();
@@ -2519,6 +2550,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_set_virtual_key_board_arg;
   GetStruct()->should_virtual_keyboard_overlay =
       browser_host_should_virtual_keyboard_overlay;
+  GetStruct()->set_draw_rect = browser_host_set_draw_rect;
+  GetStruct()->set_draw_mode = browser_host_set_draw_mode;
   GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
 }
 

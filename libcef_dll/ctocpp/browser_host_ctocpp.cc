@@ -2120,6 +2120,33 @@ bool CefBrowserHostCToCpp::ShouldVirtualKeyboardOverlay() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetDrawRect(int x, int y, int width, int height) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_draw_rect))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_draw_rect(_struct, x, y, width, height);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetDrawMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_draw_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_draw_mode(_struct, mode);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
   shutdown_checker::AssertNotShutdown();
 

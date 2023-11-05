@@ -801,6 +801,19 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 }
 
 #if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetDrawRect(gfx::Rect(x, y, width, height));
+}
+
+void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetDrawMode(mode);
+  }
+}
+
 void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
     bool should) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();

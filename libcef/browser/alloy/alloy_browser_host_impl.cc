@@ -2071,6 +2071,16 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
 }
 
 #if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawRect(x, y, width, height);
+}
+
+void AlloyBrowserHostImpl::SetDrawMode(int mode) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawMode(mode);
+}
+
 void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,

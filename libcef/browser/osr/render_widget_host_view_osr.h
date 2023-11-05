@@ -193,6 +193,8 @@ class CefRenderWidgetHostViewOSR
 #endif
 
   void SetShouldFrameSubmissionBeforeDraw(bool should);
+  void SetDrawMode(int mode);
+  void SetDrawRect(const gfx::Rect& rect);
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
