@@ -1472,6 +1472,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetOverscrollMode(int mode) = 0;
+
+  ///
+  // Set the draw rect
+  ///
+  /*--cef()--*/
+  virtual void SetDrawRect(int x, int y, int width, int height) = 0;
+
+  ///
+  // Set the draw mode
+  ///
+  /*--cef()--*/
+  virtual void SetDrawMode(int mode) = 0;
 };
 
 ///

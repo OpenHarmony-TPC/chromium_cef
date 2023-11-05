@@ -946,6 +946,22 @@ void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
     compositor->SendInternalBeginFrame();
   }
 }
+
+void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
+    if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+              browser_impl_->GetAcceleratedWidget())) {
+        compositor->SetDrawRect(rect);
+    }
+}
+
+void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
+  LOG(INFO) <<"CefRenderWidgetHostViewOSR SetDrawMode11";
+    if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+              browser_impl_->GetAcceleratedWidget())) {
+        LOG(INFO) <<"CefRenderWidgetHostViewOSR SetDrawMode223";
+        compositor->SetDrawMode(mode);
+    }
+}
 #endif
 
 #if !BUILDFLAG(IS_MAC)

@@ -1438,6 +1438,19 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
                                           int mode);
+  ///
+  // Set the draw rect
+  ///
+  void(CEF_CALLBACK* set_draw_rect)(struct _cef_browser_host_t* self,
+                                    int x,
+                                    int y,
+                                    int width,
+                                    int height);
+
+  ///
+  // Set the draw mode
+  ///
+  void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
 } cef_browser_host_t;
 
 ///

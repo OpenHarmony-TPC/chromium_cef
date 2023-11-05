@@ -123,6 +123,8 @@ class CefBrowserPlatformDelegateOsr
 #endif
 #if BUILDFLAG(IS_OHOS)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
   void WasKeyboardResized() override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
