@@ -203,41 +203,9 @@ class CefClient : public virtual CefBaseRefCounted {
   virtual int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
                                      const CefString& method,
                                      const CefString& object_name,
-                                     CefRefPtr<CefListValue> result,
-                                     int32_t routing_id,
-                                     int32_t object_id) {
+                                     CefRefPtr<CefListValue> result) {
     return 0;
-  }
-
-  ///
-  // has javaScript object method.
-  ///
-  /*--cef()--*/
-  virtual bool HasJavaScriptObjectMethods(int32_t object_id,
-                                          const CefString& method_name) {
-    return false;
-  }
-
-  ///
-  // get javaScript object methods.
-  ///
-  /*--cef()--*/
-  virtual void GetJavaScriptObjectMethods(
-      int32_t object_id,
-      CefRefPtr<CefValue> returned_method_names) {}
-
-  ///
-  // remove javaScript object holder.
-  ///
-  /*--cef()--*/
-  virtual void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) {
-  }
-
-  ///
-  // remove transient javaScript object holder.
-  ///
-  /*--cef()--*/
-  virtual void RemoveTransientJavaScriptObject() {}
+  };
 
   ///
   // Return the handler for browser form events.

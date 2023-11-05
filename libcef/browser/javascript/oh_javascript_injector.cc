@@ -18,11 +18,9 @@ OhJavascriptInjector::~OhJavascriptInjector() {}
 
 void OhJavascriptInjector::AddInterface(
     const std::string& object_name,
-    const std::vector<std::string> method_list,
-    const int32_t object_id) {
+    const std::vector<std::string> method_list) {
   LOG(INFO) << "AddInterface name : " << object_name.c_str();
-  javascript_bridge_dispatcher_host_->AddNamedObject(object_name, method_list,
-                                                     object_id);
+  javascript_bridge_dispatcher_host_->AddNamedObject(object_name, method_list);
 }
 
 void OhJavascriptInjector::RemoveInterface(

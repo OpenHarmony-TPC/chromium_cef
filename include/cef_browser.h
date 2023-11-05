@@ -956,9 +956,9 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // RegisterArkJSfunction
   ///
   /*--cef()--*/
-  virtual void RegisterArkJSfunction(const CefString& object_name,
-                                     const std::vector<CefString>& method_list,
-                                     const int32_t object_id) = 0;
+  virtual void RegisterArkJSfunction(
+      const CefString& object_name,
+      const std::vector<CefString>& method_list) = 0;
 
   ///
   // UnregisterArkJSfunction
