@@ -401,6 +401,9 @@ void OhosPrintManager::SetToken(void* token) {
   token_ = token;
 }
 
+void OhosPrintManager::CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {
+  *webPrintDocumentAdapter = static_cast<void*>(new PrintDocumentAdapterImpl(this));
+}
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);
 
 }  // namespace printing

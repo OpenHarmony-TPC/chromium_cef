@@ -212,6 +212,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ContentsZoomChange(bool zoom_in) override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);

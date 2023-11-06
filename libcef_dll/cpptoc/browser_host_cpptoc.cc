@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=759a53559e024738c2a1e91b67449319fdd35ec5$
+// $hash=7ddbb18e4ba4e22894a7c02dcaee992a4c56e8fb$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2364,6 +2364,20 @@ browser_host_should_virtual_keyboard_overlay(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK
+browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
+}
+
 void CEF_CALLBACK browser_host_set_draw_rect(struct _cef_browser_host_t* self,
                                              int x,
                                              int y,
@@ -2396,7 +2410,9 @@ void CEF_CALLBACK browser_host_set_draw_mode(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
-browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
+browser_host_create_web_print_document_adapter(struct _cef_browser_host_t* self,
+                                               const cef_string_t* jobName,
+                                               void** webPrintDocumentAdapter) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2404,9 +2420,18 @@ browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
   DCHECK(self);
   if (!self)
     return;
+  // Verify param: jobName; type: string_byref_const
+  DCHECK(jobName);
+  if (!jobName)
+    return;
+  // Verify param: webPrintDocumentAdapter; type: simple_byaddr
+  DCHECK(webPrintDocumentAdapter);
+  if (!webPrintDocumentAdapter)
+    return;
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
+  CefBrowserHostCppToC::Get(self)->CreateWebPrintDocumentAdapter(
+      CefString(jobName), webPrintDocumentAdapter);
 }
 
 }  // namespace
@@ -2549,9 +2574,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_set_virtual_key_board_arg;
   GetStruct()->should_virtual_keyboard_overlay =
       browser_host_should_virtual_keyboard_overlay;
+  GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
   GetStruct()->set_draw_rect = browser_host_set_draw_rect;
   GetStruct()->set_draw_mode = browser_host_set_draw_mode;
-  GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
+  GetStruct()->create_web_print_document_adapter =
+      browser_host_create_web_print_document_adapter;
 }
 
 // DESTRUCTOR - Do not edit by hand.

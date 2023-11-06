@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5651c4de400cb09f95af6077e4063a05a4e4124e$
+// $hash=82979bebb55d1780b6d32f4ce15405485d5151bc$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2119,6 +2119,20 @@ bool CefBrowserHostCToCpp::ShouldVirtualKeyboardOverlay() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_overscroll_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_overscroll_mode(_struct, mode);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetDrawRect(int x, int y, int width, int height) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2146,17 +2160,29 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetDrawMode(int mode) {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
+void CefBrowserHostCToCpp::CreateWebPrintDocumentAdapter(
+    const CefString& jobName,
+    void** webPrintDocumentAdapter) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_overscroll_mode))
+  if (CEF_MEMBER_MISSING(_struct, create_web_print_document_adapter))
     return;
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
+  // Verify param: jobName; type: string_byref_const
+  DCHECK(!jobName.empty());
+  if (jobName.empty())
+    return;
+  // Verify param: webPrintDocumentAdapter; type: simple_byaddr
+  DCHECK(webPrintDocumentAdapter);
+  if (!webPrintDocumentAdapter)
+    return;
+
   // Execute
-  _struct->set_overscroll_mode(_struct, mode);
+  _struct->create_web_print_document_adapter(_struct, jobName.GetStruct(),
+                                             webPrintDocumentAdapter);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

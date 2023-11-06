@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7332adde2d3eddbf2eaac5c7e76e0ac9a443c484$
+// $hash=51e2b25812b0328baa283870239c399d0ebc1c44$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -218,9 +218,11 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                              int32_t height,
                              double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+  void SetOverscrollMode(int mode) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
-  void SetOverscrollMode(int mode) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

@@ -2162,6 +2162,12 @@ void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
   SetZoomLevel(tempZoomFactor);
 }
 
+void AlloyBrowserHostImpl::CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {
+  if (platform_delegate_) {
+    platform_delegate_->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
+  }
+}
+
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
     content::DateTimeChooserOHOS::FromWebContents(web_contents());

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=86cd174adfd553e1ce7d5655f2c20b9158164e0c$
+// $hash=4737abb0b18b99bcb1564f7df1cf7a8ccfc89e3c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1437,6 +1437,7 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
                                           int mode);
+
   ///
   // Set the draw rect
   ///
@@ -1450,6 +1451,14 @@ typedef struct _cef_browser_host_t {
   // Set the draw mode
   ///
   void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
+
+  ///
+  // Create the Web print document adapter of the UI framework
+  ///
+  void(CEF_CALLBACK* create_web_print_document_adapter)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* jobName,
+      void** webPrintDocumentAdapter);
 } cef_browser_host_t;
 
 ///
