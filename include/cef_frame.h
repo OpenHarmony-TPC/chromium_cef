@@ -274,6 +274,12 @@ class CefFrame : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetImages(CefRefPtr<CefGetImagesCallback> callback) = 0;
+
+  ///
+  // PostUrl
+  ///
+  /*--cef(optional_param=post_data)--*/
+  virtual void PostURL(const CefString& url, const std::vector<char>& post_data) = 0;
 };
 
 ///

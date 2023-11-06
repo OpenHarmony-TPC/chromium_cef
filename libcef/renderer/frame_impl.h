@@ -84,6 +84,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
   void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
+  void PostURL(const CefString& url, const std::vector<char>& post_data) override {};
 
   // Used by CefRenderURLRequest.
   std::unique_ptr<blink::WebURLLoader> CreateURLLoader();

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=617aa71107c0089df6f4b832a7dd30c850abc171$
+// $hash=3cfd1d328e21cf25d12a565d6981133086da2a8e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
@@ -20,6 +20,7 @@
 #error This file can be included wrapper-side only
 #endif
 
+#include <vector>
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_urlrequest_capi.h"
@@ -72,6 +73,8 @@ class CefFrameCToCpp
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
   void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
+  void PostURL(const CefString& url,
+               const std::vector<char>& post_data) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
