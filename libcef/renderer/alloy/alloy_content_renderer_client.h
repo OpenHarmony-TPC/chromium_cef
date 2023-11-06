@@ -56,6 +56,7 @@ class AlloyRenderThreadObserver;
 class CefRenderManager;
 class ChromePDFPrintClient;
 class SpellCheck;
+
 class AlloyContentRendererClient
     : public content::ContentRendererClient,
       public service_manager::LocalInterfaceProvider,
