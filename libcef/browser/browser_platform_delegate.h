@@ -398,7 +398,7 @@ class CefBrowserPlatformDelegate {
   virtual void SetToken(void* token) {};
   virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard){};
   virtual bool ShouldVirtualKeyboardOverlay(){return false;};
-
+  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {};
 #endif
  protected:
   // Allow deletion via std::unique_ptr only.

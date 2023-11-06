@@ -22,6 +22,7 @@
 #include "components/printing/browser/print_manager.h"
 #include "components/printing/common/print.mojom-forward.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "include/cef_base.h"
 #include "ohos_adapter_helper.h"
 #include "printing/print_settings.h"
 
@@ -62,6 +63,7 @@ class OhosPrintManager : public printing::PrintManager,
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
   void SetToken(void* token);
+  void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter);
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;

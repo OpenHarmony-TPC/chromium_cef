@@ -579,4 +579,20 @@ void CefBrowserPlatformDelegateAlloy::OnExtensionHostDeleted() {
 
     ohosPrintManager->SetToken(token);
   }
+
+  void CefBrowserPlatformDelegateAlloy::CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {
+    REQUIRE_ALLOY_RUNTIME();
+    auto contents_to_use = printing::GetWebContentsToUse(web_contents_);
+    if (!contents_to_use) {
+      LOG(ERROR) << "contents_to_use is nullptr";
+      return;
+    }
+
+    auto ohosPrintManager = GetPrintViewManager(contents_to_use);
+    if (!ohosPrintManager) {
+      LOG(ERROR) << "ohosPrintManager is nullptr";
+      return;
+    }
+    ohosPrintManager->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
+  }
 #endif

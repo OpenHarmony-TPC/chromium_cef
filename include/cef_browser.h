@@ -1484,6 +1484,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetDrawMode(int mode) = 0;
+
+  ///
+  // Create the Web print document adapter of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) = 0;
 };
 
 ///

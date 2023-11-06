@@ -80,6 +80,7 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
 
 #if BUILDFLAG(IS_OHOS)
   void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) override;
 #endif
 
  protected:
