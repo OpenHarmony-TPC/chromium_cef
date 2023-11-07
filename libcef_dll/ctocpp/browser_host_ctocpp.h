@@ -129,6 +129,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
+  void JavaScriptOnDocumentStart(const ScriptItems& scriptItems) override {};
   void StoreWebArchive(
       const CefString& base_name,
       bool auto_name,

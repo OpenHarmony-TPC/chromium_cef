@@ -28,6 +28,9 @@
 #include "base/synchronization/lock.h"
 #include "extensions/common/mojom/view_type.mojom.h"
 #include "components/download/public/common/download_item.h"
+#if BUILDFLAG(IS_OHOS)
+#include "components/js_injection/browser/js_communication_host.h"
+#endif //IS_OHOS
 namespace extensions {
 class Extension;
 }
@@ -230,6 +233,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
+  void JavaScriptOnDocumentStart(const ScriptItems& scriptItems) override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(
@@ -458,7 +462,6 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);
-
   // Called from LoadMainFrameURL to perform the actual navigation.
   virtual bool Navigate(const content::OpenURLParams& params);
 
@@ -490,6 +493,7 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
 
  private:
 #if BUILDFLAG(IS_OHOS)
+  js_injection::JsCommunicationHost* GetJsCommunicationHost();
   void StoreWebArchiveInternal(
       CefRefPtr<CefStoreWebArchiveResultCallback> callback,
       const CefString& path);
@@ -526,6 +530,8 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
       receiverMap_;
   uint64_t last_zoom_time_ = 0;
+  std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
+  std::vector<js_injection::JsCommunicationHost::AddScriptResult> add_script_results_;
 #endif
 
   CefRefPtr<CefGeolocationAcess> geolocation_permissions_;

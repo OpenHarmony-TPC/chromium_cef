@@ -55,6 +55,7 @@ class CefClient;
 class CefJavaScriptResultCallback;
 class CefWebMessageReceiver;
 class CefStoreWebArchiveResultCallback;
+using ScriptItems = std::map<std::string, std::vector<std::string>>;
 
 ///
 // Class used to represent a browser. When used in the browser process the
@@ -967,6 +968,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) = 0;
+
+  ///
+  // JavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void JavaScriptOnDocumentStart(const ScriptItems& scriptItems) = 0;
 
   ///
   // Saves the current view as a web archive.
