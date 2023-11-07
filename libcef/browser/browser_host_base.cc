@@ -319,6 +319,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
   std::unique_ptr<download::DownloadUrlParameters> params(
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
+  params->set_referrer(web_contents->GetURL());
   manager->DownloadUrl(std::move(params));
 }
 
