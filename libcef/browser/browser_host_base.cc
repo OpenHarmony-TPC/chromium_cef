@@ -1565,8 +1565,18 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
     if (!url_util::FixupGURL(gurl))
       return false;
 
-    web_contents->GetController().LoadURL(
+#if BUILDFLAG(IS_OHOS)
+    if (params.post_data) {
+      content::NavigationController::LoadURLParams LoadURLParams(params);
+      web_contents->GetController().LoadURLWithParams(LoadURLParams);
+    } else {
+      web_contents->GetController().LoadURL(
         gurl, params.referrer, params.transition, params.extra_headers);
+    }
+#else
+      web_contents->GetController().LoadURL(
+        gurl, params.referrer, params.transition, params.extra_headers);
+#endif
     return true;
   }
   return false;

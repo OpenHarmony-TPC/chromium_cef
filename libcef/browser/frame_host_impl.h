@@ -60,6 +60,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void GetText(CefRefPtr<CefStringVisitor> visitor) override;
   void LoadRequest(CefRefPtr<CefRequest> request) override;
   void LoadURL(const CefString& url) override;
+  void PostURL(const CefString& url, const std::vector<char>& post_data) override;
   void ExecuteJavaScript(const CefString& jsCode,
                          const CefString& scriptUrl,
                          int startLine) override;
@@ -99,7 +100,13 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void LoadURLWithExtras(const std::string& url,
                          const content::Referrer& referrer,
                          ui::PageTransition transition,
+#if BUILDFLAG(IS_OHOS)
+                         const std::string& extra_headers,
+                         const std::string& method = std::string(),
+                         const std::vector<char>& post_data = std::vector<char>());
+#else
                          const std::string& extra_headers);
+#endif
 
   // Send a command to the renderer for execution.
   void SendCommand(const std::string& command);
