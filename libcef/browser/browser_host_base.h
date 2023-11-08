@@ -533,7 +533,6 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
       receiverMap_;
   uint64_t last_zoom_time_ = 0;
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
-  std::vector<js_injection::JsCommunicationHost::AddScriptResult> add_script_results_;
   std::map<std::string, int> script_result_map_;
 #endif
 
