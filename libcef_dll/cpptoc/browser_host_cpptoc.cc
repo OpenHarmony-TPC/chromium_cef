@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7ddbb18e4ba4e22894a7c02dcaee992a4c56e8fb$
+// $hash=088bd8f40cc2123760993d3ec191d545919925ed$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1184,6 +1184,35 @@ browser_host_unregister_ark_jsfunction(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->UnregisterArkJSfunction(
       CefString(object_name), method_listList);
+}
+
+void CEF_CALLBACK
+browser_host_java_script_on_document_start(struct _cef_browser_host_t* self,
+                                           const cef_string_t* script,
+                                           cef_string_list_t script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: script; type: string_byref_const
+  DCHECK(script);
+  if (!script)
+    return;
+  // Verify param: script_rules; type: string_vec_byref_const
+  DCHECK(script_rules);
+  if (!script_rules)
+    return;
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  std::vector<CefString> script_rulesList;
+  transfer_string_list_contents(script_rules, script_rulesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->JavaScriptOnDocumentStart(CefString(script),
+                                                             script_rulesList);
 }
 
 void CEF_CALLBACK browser_host_store_web_archive(
@@ -2502,6 +2531,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->register_ark_jsfunction = browser_host_register_ark_jsfunction;
   GetStruct()->unregister_ark_jsfunction =
       browser_host_unregister_ark_jsfunction;
+  GetStruct()->java_script_on_document_start =
+      browser_host_java_script_on_document_start;
   GetStruct()->store_web_archive = browser_host_store_web_archive;
   GetStruct()->was_keyboard_resized = browser_host_was_keyboard_resized;
   GetStruct()->title = browser_host_title;

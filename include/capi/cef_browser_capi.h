@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4737abb0b18b99bcb1564f7df1cf7a8ccfc89e3c$
+// $hash=446d1b79625ac6cf7f15133514038e371e02cc67$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -932,6 +932,14 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const cef_string_t* object_name,
       cef_string_list_t method_list);
+
+  ///
+  // JavaScriptOnDocumentStart
+  ///
+  void(CEF_CALLBACK* java_script_on_document_start)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* script,
+      cef_string_list_t script_rules);
 
   ///
   // Saves the current view as a web archive.

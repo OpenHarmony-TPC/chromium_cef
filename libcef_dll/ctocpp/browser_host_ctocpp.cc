@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=82979bebb55d1780b6d32f4ce15405485d5151bc$
+// $hash=7c1bd1758a85d3ee32539b9a7cff3c2d275d5086$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1069,6 +1069,38 @@ void CefBrowserHostCToCpp::UnregisterArkJSfunction(
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList)
     cef_string_list_free(method_listList);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::JavaScriptOnDocumentStart(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, java_script_on_document_start))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: script; type: string_byref_const
+  DCHECK(!script.empty());
+  if (script.empty())
+    return;
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  cef_string_list_t script_rulesList = cef_string_list_alloc();
+  DCHECK(script_rulesList);
+  if (script_rulesList)
+    transfer_string_list_contents(script_rules, script_rulesList);
+
+  // Execute
+  _struct->java_script_on_document_start(_struct, script.GetStruct(),
+                                         script_rulesList);
+
+  // Restore param:script_rules; type: string_vec_byref_const
+  if (script_rulesList)
+    cef_string_list_free(script_rulesList);
 }
 
 NO_SANITIZE("cfi-icall")
