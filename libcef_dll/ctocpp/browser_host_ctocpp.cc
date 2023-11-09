@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7c1bd1758a85d3ee32539b9a7cff3c2d275d5086$
+// $hash=9864c062acb57009d266ec7973f9673c5466d377$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1101,6 +1101,20 @@ void CefBrowserHostCToCpp::JavaScriptOnDocumentStart(
   // Restore param:script_rules; type: string_vec_byref_const
   if (script_rulesList)
     cef_string_list_free(script_rulesList);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::RemoveJavaScriptOnDocumentStart() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_java_script_on_document_start))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_java_script_on_document_start(_struct);
 }
 
 NO_SANITIZE("cfi-icall")

@@ -977,6 +977,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       const std::vector<CefString>& script_rules) = 0;
 
   ///
+  // RemoveJavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void RemoveJavaScriptOnDocumentStart() = 0;
+
+  ///
   // Saves the current view as a web archive.
   ///
   /*--cef()--*/

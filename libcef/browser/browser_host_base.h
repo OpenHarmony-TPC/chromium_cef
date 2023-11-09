@@ -236,6 +236,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void JavaScriptOnDocumentStart(
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentStart() override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(

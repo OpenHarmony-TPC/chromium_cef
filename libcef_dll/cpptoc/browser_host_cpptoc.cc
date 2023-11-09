@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=088bd8f40cc2123760993d3ec191d545919925ed$
+// $hash=12b7250e78e55b8bad5a9ada8a9b23368f72aa44$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1213,6 +1213,20 @@ browser_host_java_script_on_document_start(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->JavaScriptOnDocumentStart(CefString(script),
                                                              script_rulesList);
+}
+
+void CEF_CALLBACK browser_host_remove_java_script_on_document_start(
+    struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnDocumentStart();
 }
 
 void CEF_CALLBACK browser_host_store_web_archive(
@@ -2533,6 +2547,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_unregister_ark_jsfunction;
   GetStruct()->java_script_on_document_start =
       browser_host_java_script_on_document_start;
+  GetStruct()->remove_java_script_on_document_start =
+      browser_host_remove_java_script_on_document_start;
   GetStruct()->store_web_archive = browser_host_store_web_archive;
   GetStruct()->was_keyboard_resized = browser_host_was_keyboard_resized;
   GetStruct()->title = browser_host_title;

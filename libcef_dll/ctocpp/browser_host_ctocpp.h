@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5cb855e8bbfe9fb66bdfb9fde194317a7d2b6b1e$
+// $hash=f3895e23655503a9fc3cc63d890f8acb857bd15c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -132,6 +132,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void JavaScriptOnDocumentStart(
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentStart() override;
   void StoreWebArchive(
       const CefString& base_name,
       bool auto_name,

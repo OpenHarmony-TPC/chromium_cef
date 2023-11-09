@@ -748,11 +748,6 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
   auto* host = GetJsCommunicationHost();
   if (host) {
     std::string stdScript = script.ToString();
-    auto iter = script_result_map_.find(stdScript);
-    if (iter != script_result_map_.end()) {
-      script_result_map_.erase(iter);
-      host->RemoveDocumentStartJavaScript(iter->second);
-    }
     std::vector<std::string> scriptRules;
     for (CefString rule: script_rules) {
       scriptRules.push_back(rule.ToString());
@@ -761,6 +756,16 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
       host->AddDocumentStartJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
       script_result_map_.emplace(std::make_pair(stdScript, result.script_id.value()));
+    }
+  }
+}
+
+void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    for (auto iter: script_result_map_) {
+      host->RemoveDocumentStartJavaScript(iter.second);
     }
   }
 }
