@@ -741,21 +741,31 @@ js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() 
   return js_communication_host_.get();
 }
 
-void CefBrowserHostBase::JavaScriptOnDocumentStart(const ScriptItems& scriptItems) {
+void CefBrowserHostBase::JavaScriptOnDocumentStart(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    for (auto result : add_script_results_) {
-      if (result.script_id.has_value()) {
-        host->RemoveDocumentStartJavaScript(result.script_id.value());
-      }
+    std::string stdScript = script.ToString();
+    std::vector<std::string> scriptRules;
+    for (CefString rule: script_rules) {
+      scriptRules.push_back(rule.ToString());
     }
-    add_script_results_.clear();
-    js_injection::JsCommunicationHost::AddScriptResult result;
-    for (auto scriptItem : scriptItems) {
-      result = host->AddDocumentStartJavaScript(base::UTF8ToUTF16(scriptItem.first),
-                                       scriptItem.second);
-      add_script_results_.emplace_back(result);
+    js_injection::JsCommunicationHost::AddScriptResult result =
+      host->AddDocumentStartJavaScript(script, scriptRules);
+    if (result.script_id.has_value()) {
+      script_result_map_.emplace(std::make_pair(stdScript, result.script_id.value()));
+    }
+  }
+}
+
+void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    for (auto iter: script_result_map_) {
+      host->RemoveDocumentStartJavaScript(iter.second);
     }
   }
 }

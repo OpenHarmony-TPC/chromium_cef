@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=51e2b25812b0328baa283870239c399d0ebc1c44$
+// $hash=f3895e23655503a9fc3cc63d890f8acb857bd15c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -129,7 +129,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
-  void JavaScriptOnDocumentStart(const ScriptItems& scriptItems) override {};
+  void JavaScriptOnDocumentStart(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentStart() override;
   void StoreWebArchive(
       const CefString& base_name,
       bool auto_name,
