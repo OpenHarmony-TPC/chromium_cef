@@ -1,0 +1,25 @@
+diff --git components/embedder_support/user_agent_utils.cc components/embedder_support/user_agent_utils.cc
+index 4c38233047000..4601ad9df744d 100644
+--- components/embedder_support/user_agent_utils.cc
++++ components/embedder_support/user_agent_utils.cc
+@@ -15,6 +15,7 @@
+ #include "base/version.h"
+ #include "build/branding_buildflags.h"
+ #include "build/build_config.h"
++#include "cef/libcef/common/cef_switches.h"
+ #include "components/embedder_support/pref_names.h"
+ #include "components/embedder_support/switches.h"
+ #include "components/policy/core/common/policy_pref_names.h"
+@@ -353,6 +354,12 @@ std::string GetMajorVersionForUserAgentString(
+ 
+ std::string GetProduct(const bool allow_version_override,
+                        ForceMajorVersionToMinorPosition force_major_to_minor) {
++  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
++  if (command_line->HasSwitch(switches::kUserAgentProductAndVersion)) {
++    return command_line->GetSwitchValueASCII(
++        switches::kUserAgentProductAndVersion);
++  }
++
+   // FF Priority 1: force major version to 99 and minor version to major version
+   // number.
+   if (allow_version_override &&
