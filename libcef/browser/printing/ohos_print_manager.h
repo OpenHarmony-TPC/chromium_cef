@@ -58,8 +58,10 @@ class OhosPrintManager : public printing::PrintManager,
                    int file_descriptor,
                    PdfWritingDoneCallback callback);
   bool PrintNow();
-  void PrintPage();
-  void PrintPageImpl();
+  void PrintPage(bool isApplication);
+  void PrintPageImpl(bool isApplication);
+  void DidDispatchPrintEvent(bool isBefore);
+  void DidDispatchPrintEventImpl(bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
   void SetToken(void* token);
