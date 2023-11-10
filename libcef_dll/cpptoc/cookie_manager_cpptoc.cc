@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=eb9eb72a5f1e26c6e392d581a68685a53f26af20$
+// $hash=4798bf9b821f8fea28a9836fa39d7edd6940c063$
 //
 
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
@@ -294,6 +294,18 @@ cookie_manager_flush_store(struct _cef_cookie_manager_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK
+cookie_manager_set_net_work_cookie_manager(struct _cef_cookie_manager_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefCookieManagerCppToC::Get(self)->SetNetWorkCookieManager();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -316,6 +328,8 @@ CefCookieManagerCppToC::CefCookieManagerCppToC() {
   GetStruct()->set_cookie = cookie_manager_set_cookie;
   GetStruct()->delete_cookies = cookie_manager_delete_cookies;
   GetStruct()->flush_store = cookie_manager_flush_store;
+  GetStruct()->set_net_work_cookie_manager =
+      cookie_manager_set_net_work_cookie_manager;
 }
 
 // DESTRUCTOR - Do not edit by hand.
