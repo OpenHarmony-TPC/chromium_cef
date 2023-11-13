@@ -66,6 +66,7 @@
 #endif
 
 #if defined(OHOS_NWEB_EX)
+#include "cc/input/browser_controls_state.h"
 #include "content/public/common/content_switches.h"
 #include "libcef/browser/autofill/oh_autofill_client.h"
 #endif
@@ -2653,6 +2654,34 @@ void CefBrowserHostBase::SetEnableBlankTargetPopupIntercept(
     return;
   }
   GetWebContents()->SetEnableBlankTargetPopupIntercept(enableBlankTargetPopup);
+#endif
+}
+
+void CefBrowserHostBase::UpdateBrowserControlsState(int constraints,
+                                                    int current,
+                                                    bool animate) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+
+  cc::BrowserControlsState constraints_state =
+      static_cast<cc::BrowserControlsState>(constraints);
+  cc::BrowserControlsState current_state =
+      static_cast<cc::BrowserControlsState>(current);
+
+  GetWebContents()->UpdateBrowserControlsState(constraints_state, current_state,
+                                               animate);
+#endif
+}
+
+void CefBrowserHostBase::UpdateBrowserControlsHeight(int height, bool animate) {
+#if defined(OHOS_NWEB_EX)
+  if (!GetWebContents()) {
+    return;
+  }
+
+  GetWebContents()->UpdateBrowserControlsHeight(height, animate);
 #endif
 }
 #endif

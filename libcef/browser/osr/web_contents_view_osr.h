@@ -93,6 +93,15 @@ class CefWebContentsViewOSR : public content::WebContentsView,
       bool allow_multiple_selection) override;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  int GetTopControlsHeight() override;
+  bool DoBrowserControlsShrinkRendererSize() const override;
+#endif
+
+#if defined(OHOS_NWEB_EX)
+  void UpdateBrowserControlsHeight(int height, bool animate) override;
+#endif
+
  private:
   CefRenderWidgetHostViewOSR* GetView() const;
   AlloyBrowserHostImpl* GetBrowser() const;
@@ -102,6 +111,9 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   const bool use_external_begin_frame_;
 
   content::WebContents* web_contents_;
+#if BUILDFLAG(IS_OHOS)
+  int top_controls_height_ = 0;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_WEB_CONTENTS_VIEW_OSR_H_

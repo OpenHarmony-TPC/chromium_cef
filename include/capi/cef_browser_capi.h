@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3a359ba14442693ed6433e4e2f419084cc9f575c$
+// $hash=e0aaa30043650168dd18a957ac4de570a00a94f0$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -165,6 +165,22 @@ typedef struct _cef_browser_t {
   void(CEF_CALLBACK* set_browser_user_agent_string)(
       struct _cef_browser_t* self,
       const cef_string_t* user_agent);
+
+  ///
+  // Update browser controls state.
+  ///
+  void(CEF_CALLBACK* update_browser_controls_state)(struct _cef_browser_t* self,
+                                                    int constraints,
+                                                    int current,
+                                                    int animate);
+
+  ///
+  // Update browser controls height.
+  ///
+  void(CEF_CALLBACK* update_browser_controls_height)(
+      struct _cef_browser_t* self,
+      int height,
+      int animate);
 
   ///
   // Stop loading the page.

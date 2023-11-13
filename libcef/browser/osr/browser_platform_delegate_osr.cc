@@ -214,10 +214,24 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view)
     return;
-  view->SendTouchEvent(event);
+
+  CefTouchEvent event_adjust = event;
+#ifdef OHOS_NWEB_EX
+  if (event.type == CEF_TET_PRESSED) {
+    shrink_viewport_height_ = view->GetShrinkViewportHeight();
+  } else if (event.type == CEF_TET_CANCELLED) {
+    shrink_viewport_height_ = 0;
+  }
+  event_adjust.y -= shrink_viewport_height_;
+  if (event.type == CEF_TET_RELEASED) {
+    shrink_viewport_height_ = 0;
+  }
+#endif
+
+  view->SendTouchEvent(event_adjust);
 
   if (event.type == CEF_TET_PRESSED) {
-    SendTouchEventToRender(event);
+    SendTouchEventToRender(event_adjust);
   }
 }
 
@@ -602,10 +616,22 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
         new CefDragDataImpl(drop_data, cef_image, cef_image_pos));
     drag_data->SetReadOnly(true);
     base::CurrentThread::ScopedNestableTaskAllower allow;
+#ifdef OHOS_NWEB_EX
+    int shrink_viewport_height = 0;
+    if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+      shrink_viewport_height = view->GetShrinkViewportHeight();
+    }
+    handled = handler->StartDragging(
+        browser_, drag_data.get(),
+        static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
+        event_info.location.x(),
+        event_info.location.y() + shrink_viewport_height);
+#else
     handled = handler->StartDragging(
         browser_, drag_data.get(),
         static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
         event_info.location.x(), event_info.location.y());
+#endif
   }
 
   if (!handled)

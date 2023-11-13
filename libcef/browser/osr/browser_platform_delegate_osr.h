@@ -164,6 +164,10 @@ class CefBrowserPlatformDelegateOsr
   // view. |current_rvh_for_drag_| should not be dereferenced.
   void* current_rvh_for_drag_;
 
+#ifdef OHOS_NWEB_EX
+  int shrink_viewport_height_ = 0;
+#endif
+
   // We keep track of the RenderWidgetHost from which the current drag started,
   // in order to properly route the drag end message to it.
   base::WeakPtr<content::RenderWidgetHostImpl> drag_start_rwh_;

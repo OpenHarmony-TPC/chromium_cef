@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=26210059fb0d033a1912863cad794f4c950624b1$
+// $hash=06b3157cfa08a3cbcad33099555fe93fd354f11a$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -276,6 +276,41 @@ browser_set_browser_user_agent_string(struct _cef_browser_t* self,
 
   // Execute
   CefBrowserCppToC::Get(self)->SetBrowserUserAgentString(CefString(user_agent));
+}
+
+void CEF_CALLBACK
+browser_update_browser_controls_state(struct _cef_browser_t* self,
+                                      int constraints,
+                                      int current,
+                                      int animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->UpdateBrowserControlsState(
+      constraints, current, animate ? true : false);
+}
+
+void CEF_CALLBACK
+browser_update_browser_controls_height(struct _cef_browser_t* self,
+                                       int height,
+                                       int animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+
+  // Execute
+  CefBrowserCppToC::Get(self)->UpdateBrowserControlsHeight(
+      height, animate ? true : false);
 }
 
 void CEF_CALLBACK browser_stop_load(struct _cef_browser_t* self) {
@@ -755,6 +790,10 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_password_suggestion_selected;
   GetStruct()->set_browser_user_agent_string =
       browser_set_browser_user_agent_string;
+  GetStruct()->update_browser_controls_state =
+      browser_update_browser_controls_state;
+  GetStruct()->update_browser_controls_height =
+      browser_update_browser_controls_height;
   GetStruct()->stop_load = browser_stop_load;
   GetStruct()->get_identifier = browser_get_identifier;
   GetStruct()->is_same = browser_is_same;

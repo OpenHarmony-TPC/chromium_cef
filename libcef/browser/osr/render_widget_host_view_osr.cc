@@ -59,6 +59,7 @@
 #include "ui/touch_selection/touch_selection_controller.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #include "res_sched_client_adapter.h"
 #endif
 
@@ -254,6 +255,11 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       weak_ptr_factory_(this) {
   DCHECK(render_widget_host_);
   DCHECK(!render_widget_host_->GetView());
+
+#if BUILDFLAG(IS_OHOS)
+  for_browser_ =
+      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
+#endif
 
   if (parent_host_view_) {
     browser_impl_ = parent_host_view_->browser_impl();
@@ -504,7 +510,8 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
 #else
     delegated_frame_host_->AttachToCompositor(compositor);
 #endif
-    delegated_frame_host_->WasShown(GetLocalSurfaceId(), GetViewBounds().size(),
+    delegated_frame_host_->WasShown(GetLocalSurfaceId(),
+                                    GetPhysicalViewBounds().size(),
                                     /*record_tab_switch_time_request=*/{});
   }
 
@@ -587,12 +594,31 @@ CefRenderWidgetHostViewOSR::GetTouchSelectionControllerClientManager() {
   return selection_controller_client_.get();
 }
 
+#if BUILDFLAG(IS_OHOS)
+gfx::Rect CefRenderWidgetHostViewOSR::GetPhysicalViewBounds() {
+  // the physical view bounds means the size and position information
+  // of the device, utilized for the root layer and surface.
+  if (IsPopupWidget())
+    return popup_position_;
+
+  return current_view_bounds_;
+}
+
+gfx::Rect CefRenderWidgetHostViewOSR::GetViewBounds() {
+  // the view bounds refers to the size of the viewport
+  // area where the webpage is drawn and rendered.
+  gfx::Rect bounds = GetPhysicalViewBounds();
+  bounds.set_height(bounds.height() - GetShrinkViewportHeight());
+  return bounds;
+}
+#else
 gfx::Rect CefRenderWidgetHostViewOSR::GetViewBounds() {
   if (IsPopupWidget())
     return popup_position_;
 
   return current_view_bounds_;
 }
+#endif
 
 void CefRenderWidgetHostViewOSR::SetBackgroundColor(SkColor color) {
   // The renderer will feed its color back to us with the first CompositorFrame.
@@ -856,8 +882,13 @@ void CefRenderWidgetHostViewOSR::UpdateTooltipUnderCursor(
 }
 
 gfx::Size CefRenderWidgetHostViewOSR::GetCompositorViewportPixelSize() {
+#if BUILDFLAG(IS_OHOS)
+  return gfx::ScaleToCeiledSize(GetPhysicalViewBounds().size(),
+                                GetDeviceScaleFactor());
+#else
   return gfx::ScaleToCeiledSize(GetRequestedRendererSize(),
                                 GetDeviceScaleFactor());
+#endif
 }
 
 uint32_t CefRenderWidgetHostViewOSR::GetCaptureSequenceNumber() const {
@@ -923,7 +954,11 @@ display::ScreenInfos CefRenderWidgetHostViewOSR::GetNewScreenInfosForUpdate() {
 }
 
 void CefRenderWidgetHostViewOSR::TransformPointToRootSurface(
-    gfx::PointF* point) {}
+    gfx::PointF* point) {
+#if BUILDFLAG(IS_OHOS)
+  *point += gfx::Vector2d(0, GetShrinkViewportHeight());
+#endif
+}
 
 gfx::Rect CefRenderWidgetHostViewOSR::GetBoundsInRootWindow() {
   if (!browser_impl_.get())
@@ -1200,6 +1235,22 @@ void CefRenderWidgetHostViewOSR::OnFrameComplete(
   begin_frame_pending_ = false;
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
+    const cc::RenderFrameMetadata& metadata) {
+  float top_content_offset =
+      metadata.top_controls_height * metadata.top_controls_shown_ratio;
+  float top_controls_offset = top_content_offset - metadata.top_controls_height;
+
+  if (top_content_offset != prev_top_content_offset_ ||
+      top_controls_offset != prev_top_controls_offset_) {
+    prev_top_content_offset_ = top_content_offset;
+    prev_top_controls_offset_ = top_controls_offset;
+    OnTopControlsChanged(prev_top_controls_offset_, prev_top_content_offset_);
+  }
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     base::TimeTicks activation_time) {
   auto metadata =
@@ -1289,6 +1340,18 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
                                                               selection_end_);
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (for_browser_) {
+    // Set parameters for adaptive handle orientation.
+    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
+    viewport_size.Scale(page_scale_factor_);
+    gfx::RectF viewport_rect(
+        0.0f, metadata.top_controls_height * metadata.top_controls_shown_ratio,
+        viewport_size.width(), viewport_size.height());
+    selection_controller_->OnViewportChanged(viewport_rect);
+  }
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::OnScaleChanged(float old_page_scale_factor,
@@ -1405,9 +1468,14 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
   }
 
   if (surface_id_updated) {
+#if BUILDFLAG(IS_OHOS)
+    delegated_frame_host_->EmbedSurface(GetCurrentLocalSurfaceId(),
+                                        GetPhysicalViewBounds().size(),
+                                        deadline_policy);
+#else
     delegated_frame_host_->EmbedSurface(
         GetCurrentLocalSurfaceId(), GetViewBounds().size(), deadline_policy);
-
+#endif
     // |render_widget_host_| will retrieve resize parameters from the
     // DelegatedFrameHost and this view, so SynchronizeVisualProperties must be
     // called last.
@@ -2009,7 +2077,12 @@ void CefRenderWidgetHostViewOSR::UpdateFrameRate() {
 }
 
 gfx::Size CefRenderWidgetHostViewOSR::SizeInPixels() {
+#if BUILDFLAG(IS_OHOS)
+  return gfx::ScaleToCeiledSize(GetPhysicalViewBounds().size(),
+                                GetDeviceScaleFactor());
+#else
   return gfx::ScaleToCeiledSize(GetViewBounds().size(), GetDeviceScaleFactor());
+#endif
 }
 
 #if BUILDFLAG(IS_MAC)
@@ -2068,8 +2141,13 @@ void CefRenderWidgetHostViewOSR::OnPaint(const gfx::Rect& damage_rect,
   // Release the resize hold when we reach the desired size.
   if (hold_resize_) {
     DCHECK_GT(cached_scale_factor_, 0);
+#if BUILDFLAG(IS_OHOS)
+    gfx::Size expected_size = gfx::ScaleToCeiledSize(
+        GetPhysicalViewBounds().size(), cached_scale_factor_);
+#else
     gfx::Size expected_size =
         gfx::ScaleToCeiledSize(GetViewBounds().size(), cached_scale_factor_);
+#endif
     if (pixel_size == expected_size)
       ReleaseResizeHold();
   }
@@ -2195,7 +2273,11 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
   if (!force && !screen_info_changed && !view_bounds_changed)
     return false;
 
+#if BUILDFLAG(IS_OHOS)
+  GetRootLayer()->SetBounds(gfx::Rect(GetPhysicalViewBounds().size()));
+#else
   GetRootLayer()->SetBounds(gfx::Rect(GetViewBounds().size()));
+#endif
 
 #ifdef DISABLE_GPU
   if (compositor_) {
@@ -2539,3 +2621,38 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
     NotifyVirtualKeyboardOverlayRect(keyboard_rect);
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+int CefRenderWidgetHostViewOSR::GetShrinkViewportHeight() {
+  int shrink_viewport_height = 0;
+  if (!for_browser_ || !host()->delegate()) {
+    return shrink_viewport_height;
+  }
+
+  auto rvh_delegate_view = host()->delegate()->GetDelegateView();
+  if (rvh_delegate_view->DoBrowserControlsShrinkRendererSize()) {
+    gfx::Size shrink_size(0, rvh_delegate_view->GetTopControlsHeight());
+    shrink_viewport_height =
+        gfx::ScaleToFlooredSize(shrink_size, 1.f / GetDeviceScaleFactor())
+            .height();
+  }
+
+  return shrink_viewport_height;
+}
+
+void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
+    float top_controls_offset,
+    float top_content_offset) {
+  if (!for_browser_ || !browser_impl_.get() ||
+      !browser_impl_->GetClient().get()) {
+    return;
+  }
+  browser_impl_->GetClient()->OnTopControlsChanged(top_controls_offset,
+                                                   top_content_offset);
+
+  OnScreenInfoChanged();
+  gfx::Transform root_layer_transform;
+  root_layer_transform.Translate(gfx::Vector2dF(0, top_content_offset));
+  GetRootLayer()->SetTransform(root_layer_transform);
+}
+#endif

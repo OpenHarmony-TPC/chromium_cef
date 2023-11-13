@@ -271,6 +271,11 @@ class CefBrowserHostBase : public CefBrowserHost,
   int GetNWebId() override;
   void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
   void SetOverscrollMode(int overScrollMode) override;
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override;
+  void UpdateBrowserControlsHeight(int height, bool animate) override;
+
   /* ohos webview end */
 #endif
 
