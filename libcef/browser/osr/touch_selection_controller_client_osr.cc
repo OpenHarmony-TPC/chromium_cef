@@ -106,7 +106,8 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
   }
 
   state.enabled = handle->GetEnabled();
-  state.origin = {handle->focus_bottom().x(), handle->focus_bottom().y()};
+  state.origin = {handle->focus_bottom().x() + handle->viewport().x(),
+                  handle->focus_bottom().y() + handle->viewport().y()};
   state.edge_height = handle->focus_bottom().y() - handle->focus_top().y();
   state.alpha = handle->alpha();
 #if BUILDFLAG(IS_OHOS)

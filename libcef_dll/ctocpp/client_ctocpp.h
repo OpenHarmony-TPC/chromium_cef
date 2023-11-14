@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e1cdde25aa8a221bab4912acbd12da20b11fa029$
+// $hash=3013f6a90891575bbc2d5ce73af74cf73cbbcb98$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -28,7 +28,7 @@
 // This class may be instantiated and accessed DLL-side only.
 class CefClientCToCpp
     : public CefCToCppRefCounted<CefClientCToCpp, CefClient, cef_client_t> {
-public:
+ public:
   CefClientCToCpp();
   virtual ~CefClientCToCpp();
 
@@ -56,10 +56,14 @@ public:
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) override;
   int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                             const CefString &method,
-                             const CefString &object_name,
+                             const CefString& method,
+                             const CefString& object_name,
                              CefRefPtr<CefListValue> result) override;
   CefRefPtr<CefFormHandler> GetFormHandler() override;
+  void OnTopControlsChanged(float top_controls_offset,
+                            float top_content_offset) override;
+  int OnGetTopControlsHeight() override;
+  bool DoBrowserControlsShrinkRendererSize() override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f033cd1506f32931da3b2d042bab4c10ae9b1d03$
+// $hash=2c191e8b529f7897ccceedb15152d05424534561$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -628,6 +628,7 @@ void CEF_CALLBACK
 render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              cef_text_input_mode_t input_mode,
+                                             cef_text_input_type_t input_type,
                                              int show_keyboard) {
   shutdown_checker::AssertNotShutdown();
 
@@ -643,7 +644,7 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode,
+      CefBrowserCToCpp::Wrap(browser), input_mode, input_type,
       show_keyboard ? true : false);
 }
 
@@ -810,6 +811,33 @@ render_handler_on_scroll_state(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), scroll_state ? true : false);
 }
 
+int CEF_CALLBACK
+render_handler_filter_scroll_event(struct _cef_render_handler_t* self,
+                                   cef_browser_t* browser,
+                                   const float x,
+                                   const float y,
+                                   const float fling_x,
+                                   const float fling_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return 0;
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser)
+    return 0;
+
+  // Execute
+  bool _retval = CefRenderHandlerCppToC::Get(self)->FilterScrollEvent(
+      CefBrowserCToCpp::Wrap(browser), x, y, fling_x, fling_y);
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -853,6 +881,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_over_scroll_fling_end =
       render_handler_on_over_scroll_fling_end;
   GetStruct()->on_scroll_state = render_handler_on_scroll_state;
+  GetStruct()->filter_scroll_event = render_handler_filter_scroll_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.

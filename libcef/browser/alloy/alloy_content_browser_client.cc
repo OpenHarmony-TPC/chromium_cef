@@ -1945,6 +1945,8 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
         GURL(url), ohos_predictors::HintOrigin::OMNIBOX, true);
   }
 #endif
+
+  network_service->SetConnectTimeout(net_service::NetHelpers::connection_timeout);
 }
 
 bool AlloyContentBrowserClient::ConfigureNetworkContextParams(

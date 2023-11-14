@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=39ecb8043d05d919118cb137ee0d9df5cf0fd0a1$
+// $hash=01942d3003826424bedd0e6984be9cf4d90f40c2$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -53,6 +53,10 @@ class CefBrowserCToCpp
   bool ShouldShowFreeCopy() override;
   void PasswordSuggestionSelected(int list_index) override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override;
+  void UpdateBrowserControlsHeight(int height, bool animate) override;
   void StopLoad() override;
   int GetIdentifier() override;
   bool IsSame(CefRefPtr<CefBrowser> that) override;

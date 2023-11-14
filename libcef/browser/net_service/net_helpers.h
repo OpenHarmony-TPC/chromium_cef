@@ -41,6 +41,7 @@ class NETHELPERS_EXPORT NetHelpers {
   static bool accept_cookies;
   static bool third_party_cookies;
   static int cache_mode;
+  static int connection_timeout;
 
 #if BUILDFLAG(IS_OHOS)
   static int doh_mode;

@@ -10,6 +10,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "components/autofill/core/browser/ui/suggestion.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #endif
 
 class CefRenderWidgetHostViewOSR;
@@ -82,6 +83,12 @@ class CefBrowserPlatformDelegateOsr
                           cef_drag_operations_mask_t allowed_ops) override;
   void DragTargetDragLeave() override;
   void DragTargetDrop(const CefMouseEvent& event) override;
+
+#if BUILDFLAG(IS_OHOS)
+  bool GetCurRWH(content::WebContentsImpl* web_contents,
+    const gfx::PointF& client_pt, gfx::PointF* transformed_pt);
+#endif
+
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
                      const gfx::ImageSkia& image,
@@ -116,7 +123,11 @@ class CefBrowserPlatformDelegateOsr
 #endif
 #if BUILDFLAG(IS_OHOS)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
   void WasKeyboardResized() override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
 #endif
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
@@ -152,6 +163,10 @@ class CefBrowserPlatformDelegateOsr
   // sending the drag exited message after leaving the current
   // view. |current_rvh_for_drag_| should not be dereferenced.
   void* current_rvh_for_drag_;
+
+#ifdef OHOS_NWEB_EX
+  int shrink_viewport_height_ = 0;
+#endif
 
   // We keep track of the RenderWidgetHost from which the current drag started,
   // in order to properly route the drag end message to it.

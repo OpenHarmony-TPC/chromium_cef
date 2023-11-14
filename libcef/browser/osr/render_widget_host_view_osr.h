@@ -129,6 +129,9 @@ class CefRenderWidgetHostViewOSR
   bool IsShowing() override;
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded() override;
+  void SetEnableLowerFrameRate(bool enabled);
+  gfx::Rect GetPhysicalViewBounds();
+  int GetShrinkViewportHeight();
 #endif
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*
@@ -187,10 +190,14 @@ class CefRenderWidgetHostViewOSR
 #if !BUILDFLAG(IS_MAC)
   viz::ScopedSurfaceIdAllocator DidUpdateVisualProperties(
       const cc::RenderFrameMetadata& metadata) override;
+      void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
+      bool ShouldVirtualKeyboardOverlayContent() override;
 #endif
 
   void SetShouldFrameSubmissionBeforeDraw(bool should);
-
+  void SetDrawMode(int mode);
+  void SetDrawRect(const gfx::Rect& rect);
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
       const gfx::Range& range,
@@ -225,8 +232,14 @@ class CefRenderWidgetHostViewOSR
   void OnFrameComplete(const viz::BeginFrameAck& ack);
 
   // RenderFrameMetadataProvider::Observer implementation.
+
+#if BUILDFLAG(IS_OHOS)
+  void OnRenderFrameMetadataChangedBeforeActivation(
+      const cc::RenderFrameMetadata& metadata) override;
+#else
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override {}
+#endif
   void OnRenderFrameMetadataChangedAfterActivation(
       base::TimeTicks activation_time) override;
   void OnRenderFrameSubmission() override {}
@@ -384,7 +397,8 @@ class CefRenderWidgetHostViewOSR
                        blink::mojom::InputEventResultState ack_result) override;
   void UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
-  void OnScrollState(bool scroll_state);
+  void OnTopControlsChanged(float top_controls_offset,
+                            float top_content_offset);
 #endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
@@ -500,7 +514,10 @@ class CefRenderWidgetHostViewOSR
   gfx::Size viewport_size_in_pixels_;
   bool is_need_hide_keyboard_ = true;
   std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
-  int current_frames_ = 60;
+  float device_scale_factor_ = 1.0f;
+  float prev_top_controls_offset_ = 0.f;
+  float prev_top_content_offset_ = 0.f;
+  bool for_browser_ = false;
 #endif
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9717150119f11035e0b341ec9add1dc555be4298$
+// $hash=f8c2b122eb27bd825e20cd266b93e3cca0a7de5d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -91,6 +91,7 @@ class CefRenderHandlerCToCpp
                           const CefRange& selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
+                                  TextInputType input_type,
                                   bool show_keyboard) override;
   void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
                       const CefRect& rect) override;
@@ -107,6 +108,11 @@ class CefRenderHandlerCToCpp
                                  bool is_fling) override;
   void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) override;
   void OnScrollState(CefRefPtr<CefBrowser> browser, bool scroll_state) override;
+  bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
+                         const float x,
+                         const float y,
+                         const float fling_x,
+                         const float fling_y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

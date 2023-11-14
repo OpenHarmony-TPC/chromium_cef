@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1f592012807b171ad5177d991d53c972559ea56a$
+// $hash=2faec026b419023a7a3064244cef7ff1ddcd8503$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_
@@ -272,6 +272,14 @@ typedef struct _cef_frame_t {
   ///
   void(CEF_CALLBACK* get_images)(struct _cef_frame_t* self,
                                  struct _cef_get_images_callback_t* callback);
+
+  ///
+  // PostUrl
+  ///
+  void(CEF_CALLBACK* post_url)(struct _cef_frame_t* self,
+                               const cef_string_t* url,
+                               size_t post_dataCount,
+                               char const* post_data);
 } cef_frame_t;
 
 ///

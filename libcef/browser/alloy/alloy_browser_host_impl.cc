@@ -69,6 +69,15 @@
 #include "libcef/browser/permission/alloy_access_request.h"
 #include "res_sched_client_adapter.h"
 #endif
+
+#ifdef OHOS_NWEB_EX
+#include "base/command_line.h"
+#include "net/base/url_util.h"
+#include "content/public/common/content_switches.h"
+#include "third_party/blink/public/common/page/page_zoom.h"
+#include "components/zoom/page_zoom.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -460,6 +469,57 @@ void AlloyBrowserHostImpl::SetZoomLevel(double zoomLevel) {
   }
 }
 
+#ifdef OHOS_NWEB_EX
+double AlloyBrowserHostImpl::GetDefaultZoomLevel() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    get_zoom_level_event_ = std::make_shared<base::WaitableEvent>(
+        base::WaitableEvent::ResetPolicy::AUTOMATIC,
+        base::WaitableEvent::InitialState::NOT_SIGNALED);
+    CEF_POST_TASK(
+        CEF_UIT, base::BindOnce(
+                     &AlloyBrowserHostImpl::GetDefaultZoomLevelCallback, this));
+    if (!get_zoom_level_event_->TimedWait(base::Milliseconds(10))) {
+      return 0;
+    }
+    return default_zoom_level_;
+  }
+  if (web_contents()) {
+    default_zoom_level_ =
+        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
+  }
+  return default_zoom_level_;
+}
+
+void AlloyBrowserHostImpl::GetDefaultZoomLevelCallback() {
+  if (web_contents()) {
+    default_zoom_level_ =
+        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
+    if (get_zoom_level_event_ != nullptr) {
+      get_zoom_level_event_->Signal();
+    }
+  } else {
+    default_zoom_level_ = 0;
+  }
+}
+#endif
+
+void AlloyBrowserHostImpl::SetBrowserZoomLevel(double zoom_factor) {
+#ifdef OHOS_NWEB_EX
+  if (CEF_CURRENTLY_ON_UIT()) {
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser) &&
+        web_contents()) {
+      content::HostZoomMap::SetZoomLevel(
+          web_contents(), blink::PageZoomFactorToZoomLevel(zoom_factor));
+    }
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&AlloyBrowserHostImpl::SetBrowserZoomLevel,
+                                 this, zoom_factor));
+  }
+#endif
+}
+
 void AlloyBrowserHostImpl::RunFileDialog(
     FileDialogMode mode,
     const CefString& title,
@@ -669,6 +729,24 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 
   if (platform_delegate_)
     platform_delegate_->WasOccluded(occluded);
+}
+
+void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
+  LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHost::SetEnableLowerFrameRate, this, enabled));
+    return;
+  }
+
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    CefRenderWidgetHostViewOSR* view =
+        static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->SetEnableLowerFrameRate(enabled);
+    }
+  }
 }
 #endif
 
@@ -1805,15 +1883,15 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
     const content::MediaPlayerId& id,
     content::WebContentsObserver::MediaStoppedReason reason) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStoppedPlaying, is_video: " << video_type.has_video << " stopped reason: " << static_cast<int>(reason);
-  
+
   if (!start_play_) {
     return;
   }
 
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
-  
-  switch(reason) 
+
+  switch(reason)
   {
     case content::WebContentsObserver::MediaStoppedReason::kReachedEndOfStream:
       state = cef_media_playing_state_t::END_OF_STREAM;
@@ -1993,6 +2071,16 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
 }
 
 #if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawRect(x, y, width, height);
+}
+
+void AlloyBrowserHostImpl::SetDrawMode(int mode) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawMode(mode);
+}
+
 void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
@@ -2029,14 +2117,55 @@ void AlloyBrowserHostImpl::SetToken(void* token) {
   }
 };
 
+void AlloyBrowserHostImpl::SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {
+  if (platform_delegate_) {
+    platform_delegate_->SetVirtualKeyBoardArg(width, height, keyboard);
+  }
+};
+
+bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
+  if (platform_delegate_) {
+    return platform_delegate_->ShouldVirtualKeyboardOverlay();
+  }
+  return false;
+};
+
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
   double curFactor = GetZoomLevel();
+#ifdef OHOS_NWEB_EX
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    double defaultZoomLevel = GetDefaultZoomLevel();
+    std::vector<double> zoom_levels =
+        zoom::PageZoom::PresetZoomLevels(defaultZoomLevel);
+    zoom::ZoomType zoomType =
+        zoom_in ? zoom::ZoomType::ZOOM_IN : zoom::ZoomType::ZOOM_OUT;
+    double zoom_level =
+        zoom::PageZoom::GetNextZoomLevel(zoomType, curFactor, zoom_levels);
+    SetZoomLevel(zoom_level);
+    if (client_) {
+      CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
+      if (handler) {
+        handler->OnContentsBrowserZoomChange(
+            blink::PageZoomLevelToZoomFactor(zoom_level));
+      }
+    }
+    return; 
+  }
+#endif
+
   double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
   if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
     LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
     return;
   }
   SetZoomLevel(tempZoomFactor);
+}
+
+void AlloyBrowserHostImpl::CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {
+  if (platform_delegate_) {
+    platform_delegate_->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
+  }
 }
 
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {

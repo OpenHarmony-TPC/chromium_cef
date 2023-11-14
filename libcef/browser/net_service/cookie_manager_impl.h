@@ -44,7 +44,7 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool SetCookie(const CefString& url,
                  const CefCookie& cookie,
                  CefRefPtr<CefSetCookieCallback> callback,
-                 bool is_sync) override;
+                 bool is_sync, const CefString& str_cookie) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
                      bool is_session,
@@ -66,7 +66,7 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool SetCookieInternal(const GURL& url,
                          const CefCookie& cookie,
                          CefRefPtr<CefSetCookieCallback> callback,
-                         bool is_sync);
+                         bool is_sync, const CefString& str_cookie);
   bool DeleteCookiesInternal(const GURL& url,
                              const CefString& cookie_name,
                              bool is_session,

@@ -1111,6 +1111,8 @@ static_library("libcef_static") {
   
   if (is_ohos) {
     deps += [
+      "//components/js_injection/browser",
+      "//components/js_injection/renderer",
       "//components/password_manager/content/browser",
       "//components/ukm/content:content",
     ]

@@ -212,6 +212,25 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefFormHandler> GetFormHandler() { return nullptr; }
+
+  ///
+  // Called when top controls offset has been changed.
+  ///
+  /*--cef()--*/
+  virtual void OnTopControlsChanged(float top_controls_offset,
+                                    float top_content_offset) {}
+
+  ///
+  // Return the height of top controls.
+  ///
+  /*--cef()--*/
+  virtual int OnGetTopControlsHeight() { return 0; }
+
+  ///
+  // Return the shrink renderer size of top controls.
+  ///
+  /*--cef()--*/
+  virtual bool DoBrowserControlsShrinkRendererSize() { return false; }
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

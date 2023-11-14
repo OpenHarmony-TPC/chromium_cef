@@ -57,6 +57,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef cef_paint_element_type_t PaintElementType;
   typedef std::vector<CefRect> RectList;
   typedef cef_text_input_mode_t TextInputMode;
+  typedef cef_text_input_type_t TextInputType;
 
   ///
   // Return the handler for accessibility notifications. If no handler is
@@ -278,6 +279,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                           TextInputMode input_mode,
+                                          TextInputType input_type,
                                           bool show_keyboard) {}
 
   ///
@@ -335,6 +337,18 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnScrollState(CefRefPtr<CefBrowser> browser,
                              bool scroll_state) {}
+
+  ///
+  /// Called when scroll.
+  ///
+  /*--cef()--*/
+  virtual bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
+                                 const float x,
+                                 const float y,
+                                 const float fling_x,
+                                 const float fling_y) {
+    return false;
+  }
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

@@ -214,10 +214,24 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view)
     return;
-  view->SendTouchEvent(event);
+
+  CefTouchEvent event_adjust = event;
+#ifdef OHOS_NWEB_EX
+  if (event.type == CEF_TET_PRESSED) {
+    shrink_viewport_height_ = view->GetShrinkViewportHeight();
+  } else if (event.type == CEF_TET_CANCELLED) {
+    shrink_viewport_height_ = 0;
+  }
+  event_adjust.y -= shrink_viewport_height_;
+  if (event.type == CEF_TET_RELEASED) {
+    shrink_viewport_height_ = 0;
+  }
+#endif
+
+  view->SendTouchEvent(event_adjust);
 
   if (event.type == CEF_TET_PRESSED) {
-    SendTouchEventToRender(event);
+    SendTouchEventToRender(event_adjust);
   }
 }
 
@@ -357,6 +371,43 @@ void CefBrowserPlatformDelegateOsr::ImeCancelComposition() {
     view->ImeCancelComposition();
 }
 
+#if BUILDFLAG(IS_OHOS)
+bool CefBrowserPlatformDelegateOsr::GetCurRWH(content::WebContentsImpl* web_contents,
+    const gfx::PointF& client_pt, gfx::PointF* transformed_pt) {
+  auto event_router = web_contents->GetInputEventRouter();
+  if (!event_router) {
+    LOG(WARNING) << "DragDrop Get event router failed";
+    return false;
+  }
+
+  auto rvh = web_contents->GetRenderViewHost();
+  if (!rvh) {
+    LOG(WARNING) << "DragDrop Get render view host failed";
+    return false;
+  }
+  auto rvh_widget = rvh->GetWidget();
+  if (!rvh_widget) {
+    LOG(WARNING) << "DragDrop Get render widget failed";
+    return false;
+  }
+  auto root_view =  rvh_widget->GetView();
+  if (!root_view) {
+    LOG(WARNING) << "DragDrop Get view failed";
+    return false;
+  }
+
+  auto current_rwh_for_drag = event_router->GetRenderWidgetHostAtPoint(root_view,
+    gfx::PointF(client_pt), transformed_pt);
+  if (!current_rwh_for_drag) {
+    LOG(WARNING) << "DragDrop Get render widget host failed ";
+    return false;
+  }
+
+  current_rwh_for_drag_ = current_rwh_for_drag->GetWeakPtr();
+  return true;
+}
+#endif
+
 void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
     CefRefPtr<CefDragData> drag_data,
     const CefMouseEvent& event,
@@ -371,12 +422,19 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
 
   const gfx::Point client_pt(event.x, event.y);
   gfx::PointF transformed_pt;
+#if BUILDFLAG(IS_OHOS)
+  if (!GetCurRWH(web_contents, gfx::PointF(client_pt), &transformed_pt)) {
+    LOG(WARNING) << "DragDrop Get render widget host failed";
+    return;
+  }
+#else
   current_rwh_for_drag_ =
       web_contents->GetInputEventRouter()
           ->GetRenderWidgetHostAtPoint(
               web_contents->GetRenderViewHost()->GetWidget()->GetView(),
               gfx::PointF(client_pt), &transformed_pt)
           ->GetWeakPtr();
+#endif
   current_rvh_for_drag_ = web_contents->GetRenderViewHost();
 
   drag_data_ = drag_data;
@@ -390,6 +448,12 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
       static_cast<blink::DragOperationsMask>(allowed_ops);
   int modifiers = TranslateWebEventModifiers(event.modifiers);
 
+#if BUILDFLAG(IS_OHOS)
+  if (!current_rwh_for_drag_) {
+    LOG(WARNING) << "DragDrop current render widget host is null";
+    return;
+  }
+#endif
   current_rwh_for_drag_->FilterDropData(drop_data);
 
   // Give the delegate an opportunity to cancel the drag.
@@ -552,10 +616,22 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
         new CefDragDataImpl(drop_data, cef_image, cef_image_pos));
     drag_data->SetReadOnly(true);
     base::CurrentThread::ScopedNestableTaskAllower allow;
+#ifdef OHOS_NWEB_EX
+    int shrink_viewport_height = 0;
+    if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+      shrink_viewport_height = view->GetShrinkViewportHeight();
+    }
+    handled = handler->StartDragging(
+        browser_, drag_data.get(),
+        static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
+        event_info.location.x(),
+        event_info.location.y() + shrink_viewport_height);
+#else
     handled = handler->StartDragging(
         browser_, drag_data.get(),
         static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
         event_info.location.x(), event_info.location.y());
+#endif
   }
 
   if (!handled)
@@ -751,6 +827,19 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 }
 
 #if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetDrawRect(gfx::Rect(x, y, width, height));
+}
+
+void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetDrawMode(mode);
+  }
+}
+
 void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
     bool should) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
@@ -762,5 +851,19 @@ void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
     view->WasKeyboardResized();
+}
+
+void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(
+  int32_t width, int32_t height, double keyboard) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetVirtualKeyBoardArg(width, height, keyboard);
+}
+
+bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    return view->ShouldVirtualKeyboardOverlayContent();
+  return false;
 }
 #endif

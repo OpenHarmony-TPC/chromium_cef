@@ -89,6 +89,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   double GetZoomLevel() override;
   void GetZoomLevelCallback();
   void SetZoomLevel(double zoomLevel) override;
+
+  void SetBrowserZoomLevel(double zoom_factor) override;
+
   void RunFileDialog(FileDialogMode mode,
                      const CefString& title,
                      const CefString& default_file_path,
@@ -116,6 +119,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasHidden(bool hidden) override;
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
+  void SetEnableLowerFrameRate(bool enabled) override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
@@ -200,10 +204,15 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if BUILDFLAG(IS_OHOS)
   bool ShowContextMenu(const content::ContextMenuParams& params);
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void WasKeyboardResized() override;
   void SetToken(void* token) override;
   void ContentsZoomChange(bool zoom_in) override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) override;
 #else
   bool HandleContextMenu(content::WebContents* web_contents,
                          const content::ContextMenuParams& params);
@@ -416,6 +425,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ReportWindowStatus(bool first_view_ready);
 #endif
 
+#ifdef OHOS_NWEB_EX
+  double GetDefaultZoomLevel();
+  void GetDefaultZoomLevelCallback();
+#endif
+
   CefWindowHandle opener_;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
@@ -461,6 +475,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
 
   bool start_play_ = false;
+
+#ifdef OHOS_NWEB_EX
+  double default_zoom_level_ = 0.0;
+  std::shared_ptr<base::WaitableEvent> get_zoom_level_event_ = nullptr;
+#endif  
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

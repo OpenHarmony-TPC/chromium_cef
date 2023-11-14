@@ -33,6 +33,7 @@ bool NetHelpers::is_network_blocked = false;
 bool NetHelpers::accept_cookies = true;
 bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
+int NetHelpers::connection_timeout = 30;
 
 #if BUILDFLAG(IS_OHOS)
 int NetHelpers::doh_mode = -1;

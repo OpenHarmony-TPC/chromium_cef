@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a712143680187762429d1e6854a635449a9409f6$
+// $hash=57ce01640e1617f6dc1ff25822d8bfad96774a69$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -279,6 +279,7 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       cef_text_input_mode_t input_mode,
+      cef_text_input_type_t input_type,
       int show_keyboard);
 
   ///
@@ -337,6 +338,16 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_scroll_state)(struct _cef_render_handler_t* self,
                                       struct _cef_browser_t* browser,
                                       int scroll_state);
+
+  ///
+  /// Called when scroll.
+  ///
+  int(CEF_CALLBACK* filter_scroll_event)(struct _cef_render_handler_t* self,
+                                         struct _cef_browser_t* browser,
+                                         const float x,
+                                         const float y,
+                                         const float fling_x,
+                                         const float fling_y);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

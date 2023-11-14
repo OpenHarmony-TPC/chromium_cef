@@ -642,7 +642,7 @@ void CefFrameImpl::OnBrowserFrameDisconnect() {
                                    &CefFrameImpl::ConnectBrowserFrame);
     } else {
       // Trigger a crash in official builds.
-      LOG(ERROR) << "Connection retry failure for frame "
+      LOG(FATAL) << "Connection retry failure for frame "
                  << frame_util::GetFrameDebugString(frame_id_);
     }
   }
@@ -1126,6 +1126,12 @@ void CefFrameImpl::ZoomBy(float delta, float width, float height) {
 
 void CefFrameImpl::GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) {
   std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
+}
+
+void CefFrameImpl::SetOverscrollMode(int mode) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  render_frame->SetOverscrollMode(mode);
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

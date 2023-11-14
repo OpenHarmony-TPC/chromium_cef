@@ -84,6 +84,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
   void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
+  void PostURL(const CefString& url, const std::vector<char>& post_data) override {};
 
   // Used by CefRenderURLRequest.
   std::unique_ptr<blink::WebURLLoader> CreateURLLoader();
@@ -169,6 +170,7 @@ class CefFrameImpl : public CefFrame, public cef::mojom::RenderFrame {
   void SlideScroll(float vx, float vy) override;
   void ZoomBy(float delta, float width, float height) override;
   void GetHitData(cef::mojom::RenderFrame::GetHitDataCallback callback) override;
+  void SetOverscrollMode(int mode) override;
   GURL GetAbsoluteUrl(const blink::WebNode& node,
                       const std::u16string& url_fragment);
   GURL GetAbsoluteSrcUrl(const blink::WebElement& element);

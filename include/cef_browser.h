@@ -170,6 +170,20 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetBrowserUserAgentString(const CefString& user_agent) = 0;
 
+  ///
+  // Update browser controls state.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsState(int constraints,
+                                          int current,
+                                          bool animate) = 0;
+
+  ///
+  // Update browser controls height.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
+
   /* ---------- ohos nweb_ex add end --------- */
 
   ///
@@ -557,6 +571,14 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetZoomLevel(double zoomLevel) = 0;
 
   ///
+  // Change the zoom factor for browser zoom.
+  // If called on the UI thread the change will be applied immediately.
+  // Otherwise, the change will be applied asynchronously on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
+
+  ///
   // Call to run a file chooser dialog. Only a single file chooser dialog may be
   // pending at any given time. |mode| represents the type of dialog to display.
   // |title| to the title to be used for the dialog and may be empty to show the
@@ -804,6 +826,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void WasOccluded(bool occluded) = 0;
 
   ///
+  // Set if lower the frame rate.
+  ///
+  /*--cef()--*/
+  virtual void SetEnableLowerFrameRate(bool enabled) = 0;
+
+  ///
   // Send a notification to the browser that the screen info has changed. The
   // browser will then call CefRenderHandler::GetScreenInfo to update the
   // screen information with the new values. This simulates moving the webview
@@ -953,6 +981,20 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) = 0;
+
+  ///
+  // JavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void JavaScriptOnDocumentStart(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) = 0;
+
+  ///
+  // RemoveJavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void RemoveJavaScriptOnDocumentStart() = 0;
 
   ///
   // Saves the current view as a web archive.
@@ -1438,6 +1480,44 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetToken(void* token) = 0;
+
+  ///
+  // Set the property values for width, height, and keyboard height
+  ///
+  /*--cef()--*/
+  virtual void SetVirtualKeyBoardArg(int32_t width,
+                                     int32_t height,
+                                     double keyboard) = 0;
+
+  ///
+  // Set the virtual keyboard to override the web status
+  ///
+  /*--cef()--*/
+  virtual bool ShouldVirtualKeyboardOverlay() = 0;
+
+  ///
+  // Set the over-scroll mode of web
+  ///
+  /*--cef()--*/
+  virtual void SetOverscrollMode(int mode) = 0;
+
+  ///
+  // Set the draw rect
+  ///
+  /*--cef()--*/
+  virtual void SetDrawRect(int x, int y, int width, int height) = 0;
+
+  ///
+  // Set the draw mode
+  ///
+  /*--cef()--*/
+  virtual void SetDrawMode(int mode) = 0;
+
+  ///
+  // Create the Web print document adapter of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) = 0;
 };
 
 ///

@@ -392,8 +392,13 @@ class CefBrowserPlatformDelegate {
 
 #if BUILDFLAG(IS_OHOS)
   virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {};
+  virtual void SetDrawRect(int x, int y, int width, int height) {};
+  virtual void SetDrawMode(int mode) {};
   virtual void WasKeyboardResized() {};
-  virtual void SetToken(void* token);
+  virtual void SetToken(void* token) {};
+  virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard){};
+  virtual bool ShouldVirtualKeyboardOverlay(){return false;};
+  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) {};
 #endif
  protected:
   // Allow deletion via std::unique_ptr only.
