@@ -1,0 +1,54 @@
+diff --git content/browser/child_process_security_policy_impl.cc content/browser/child_process_security_policy_impl.cc
+index 620b3fdc4403a..f20399d453680 100644
+--- content/browser/child_process_security_policy_impl.cc
++++ content/browser/child_process_security_policy_impl.cc
+@@ -1724,6 +1724,16 @@ bool ChildProcessSecurityPolicyImpl::CanAccessDataForMaybeOpaqueOrigin(
+             // DeclarativeApiTest.PersistRules.
+             if (actual_process_lock.matches_scheme(url::kDataScheme))
+               return true;
++
++            // Allow other schemes that are non-standard, non-local and WebSafe.
++            if (lock_url.is_valid() &&
++                !lock_url.IsStandard() &&
++                !base::Contains(url::GetLocalSchemes(),
++                                lock_url.scheme_piece()) &&
++                base::Contains(schemes_okay_to_request_in_any_process_,
++                               lock_url.scheme())) {
++              return true;
++            }
+           }
+ 
+           // TODO(wjmaclean): We should update the ProcessLock comparison API
+diff --git content/browser/renderer_host/navigation_request.cc content/browser/renderer_host/navigation_request.cc
+index 2f17127dc4ba6..32c7890a69379 100644
+--- content/browser/renderer_host/navigation_request.cc
++++ content/browser/renderer_host/navigation_request.cc
+@@ -5896,6 +5896,12 @@ NavigationRequest::GetOriginForURLLoaderFactoryWithoutFinalFrameHost(
+     network::mojom::WebSandboxFlags sandbox_flags) {
+   // Calculate an approximation of the origin. The sandbox/csp are ignored.
+   url::Origin origin = GetOriginForURLLoaderFactoryUnchecked(this);
++  if (!origin.GetURL().IsStandard()) {
++    // Always return an opaque origin for non-standard URLs. Otherwise, the
++    // below CanAccessDataForOrigin() check may fail for unregistered custom
++    // scheme requests in CEF.
++    return origin.DeriveNewOpaqueOrigin();
++  }
+ 
+   // Apply sandbox flags.
+   // See https://html.spec.whatwg.org/#sandboxed-origin-browsing-context-flag
+@@ -5929,6 +5935,15 @@ NavigationRequest::GetOriginForURLLoaderFactoryWithFinalFrameHost() {
+   if (IsSameDocument() || IsPageActivation())
+     return GetRenderFrameHost()->GetLastCommittedOrigin();
+ 
++  // Calculate an approximation of the origin. The sandbox/csp are ignored.
++  url::Origin unchecked_origin = GetOriginForURLLoaderFactoryUnchecked(this);
++  if (!unchecked_origin.GetURL().IsStandard()) {
++    // Always return an opaque origin for non-standard URLs. Otherwise, the
++    // below CanAccessDataForOrigin() check may fail for unregistered custom
++    // scheme requests in CEF.
++    return unchecked_origin.DeriveNewOpaqueOrigin();
++  }
++
+   url::Origin origin = GetOriginForURLLoaderFactoryWithoutFinalFrameHost(
+       sandbox_flags_to_commit_.value());
+ 
