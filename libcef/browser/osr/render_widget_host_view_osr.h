@@ -399,6 +399,7 @@ class CefRenderWidgetHostViewOSR
   std::pair<int, int> HandleCursorOffset();
   void OnTopControlsChanged(float top_controls_offset,
                             float top_content_offset);
+  void FilterScrollEventImpl(const ui::GestureEventData& gesture);
 #endif
 
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
@@ -567,6 +568,7 @@ class CefRenderWidgetHostViewOSR
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
 
   size_t gesture_update_count_ = 0;
+  bool is_scroll_consumed_ = false;
 #endif
 };
 

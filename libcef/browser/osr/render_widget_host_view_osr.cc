@@ -2028,6 +2028,8 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
   }
 
 #if BUILDFLAG(IS_OHOS)
+  FilterScrollEventImpl(gesture);
+
   if (gesture.type() == ui::ET_GESTURE_SCROLL_BEGIN) {
     gesture_update_count_ = 0;
   } else if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE) {
@@ -2570,25 +2572,15 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
         static_cast<const blink::WebGestureEvent&>(input_event);
     if (input_event.GetType() ==
         blink::WebInputEvent::Type::kGestureScrollBegin) {
+      is_scroll_consumed_ = false;
       handler->OnScrollState(browser_impl_.get(), true);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
+      is_scroll_consumed_ = false;
       handler->OnScrollState(browser_impl_.get(), false);
     }
-    bool is_consumed = false;
-    if (gesture_event.GetType() ==
-        blink::WebInputEvent::Type::kGestureScrollUpdate) {
-      is_consumed = handler->FilterScrollEvent(
-          browser_impl_.get(), gesture_event.data.scroll_update.delta_x,
-          gesture_event.data.scroll_update.delta_y, 0, 0);
-    } else if (gesture_event.GetType() ==
-               blink::WebInputEvent::Type::kGestureFlingStart) {
-      is_consumed = handler->FilterScrollEvent(
-          browser_impl_.get(), 0, 0, gesture_event.data.fling_start.velocity_x,
-          gesture_event.data.fling_start.velocity_y);
-    }
-    return is_consumed ? blink::mojom::InputEventResultState::kConsumed
-                       : blink::mojom::InputEventResultState::kNotConsumed;
+    return is_scroll_consumed_ ? blink::mojom::InputEventResultState::kConsumed
+                               : blink::mojom::InputEventResultState::kNotConsumed;
   }
 
   return blink::mojom::InputEventResultState::kNotConsumed;
@@ -2654,5 +2646,34 @@ void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
   gfx::Transform root_layer_transform;
   root_layer_transform.Translate(gfx::Vector2dF(0, top_content_offset));
   GetRootLayer()->SetTransform(root_layer_transform);
+}
+
+void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
+  const ui::GestureEventData& gesture) {
+  blink::WebGestureEvent web_event =
+    ui::CreateWebGestureEventFromGestureEventData(gesture);
+  if (!browser_impl_.get()) {
+    LOG(ERROR) << "FilterScrollEventImpl get browser_impl_ is nullptr.";
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+    browser_impl_->client()->GetRenderHandler();
+  if (!handler) {
+    LOG(ERROR) << "FilterScrollEventImpl get handler is nullptr.";
+    return;
+  }
+  if (web_event.GetType() ==
+      blink::WebInputEvent::Type::kGestureScrollUpdate) {
+    is_scroll_consumed_ =
+      handler->FilterScrollEvent(browser_impl_.get(),
+                                  web_event.data.scroll_update.delta_x,
+                                  web_event.data.scroll_update.delta_y, 0, 0);
+  } else if (web_event.GetType() ==
+              blink::WebInputEvent::Type::kGestureFlingStart) {
+    is_scroll_consumed_ =
+      handler->FilterScrollEvent(browser_impl_.get(),
+                                  0, 0, web_event.data.fling_start.velocity_x,
+                                  web_event.data.fling_start.velocity_y);
+  }
 }
 #endif
