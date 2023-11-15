@@ -118,7 +118,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
   LOG(INFO) << "AddNamedObject::" << object_name;
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   {
-    std::unique_lock<std::mutex> lk(object_mtx_);
     ObjectMethodMap::iterator it;
     for (it = method_map_.begin(); it != method_map_.end(); ++it) {
       if (it->second.first == object_name) {
@@ -162,7 +161,6 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     return;
   }
   {
-    std::unique_lock<std::mutex> lk(object_mtx_);
     ObjectMethodMap::iterator it;
     for (it = method_map_.begin(); it != method_map_.end(); ++it) {
       if (!(object_name == it->second.first)) {

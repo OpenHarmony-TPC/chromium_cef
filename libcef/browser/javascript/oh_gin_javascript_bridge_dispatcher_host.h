@@ -70,7 +70,6 @@ class OhGinJavascriptBridgeDispatcherHost
   ObjectMethodMap method_map_;
   int32_t object_id_ = 0;
 
-  std::mutex object_mtx_;
   CefRefPtr<CefClient> client_;
 };
 }  // namespace NWEB
