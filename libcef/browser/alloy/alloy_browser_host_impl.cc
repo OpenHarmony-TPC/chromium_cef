@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 // Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
@@ -648,6 +648,16 @@ void AlloyBrowserHostImpl::SetAccessibilityState(
   }
 }
 
+#if defined(OHOS_ENABLE_ACCESSIBILITY)
+content::BrowserAccessibilityManager*
+AlloyBrowserHostImpl::GetOrCreateRootBrowserAccessibilityManager() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetOrCreateRootBrowserAccessibilityManager();
+  }
+  return nullptr;
+}
+
+#endif
 void AlloyBrowserHostImpl::SetAutoResizeEnabled(bool enabled,
                                                 const CefSize& min_size,
                                                 const CefSize& max_size) {

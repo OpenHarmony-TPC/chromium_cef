@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Huawei Device Co., Ltd.
+// Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 // Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
@@ -152,6 +152,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
+#if defined(OHOS_ENABLE_ACCESSIBILITY)
+  content::BrowserAccessibilityManager*
+  GetOrCreateRootBrowserAccessibilityManager() override;
+#endif
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;

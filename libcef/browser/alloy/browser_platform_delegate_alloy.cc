@@ -408,10 +408,26 @@ void CefBrowserPlatformDelegateAlloy::SetAccessibilityState(
   // accessibility APIs, specific to each platform, are also created.
   if (accessibility_state == STATE_ENABLED) {
     accMode = IsWindowless() ? ui::kAXModeWebContentsOnly : ui::kAXModeComplete;
+#if defined(OHOS_ENABLE_ACCESSIBILITY)
+    accMode = ui::kAXModeComplete;
+#endif
   }
   web_contents_impl->SetAccessibilityMode(accMode);
 }
 
+#if defined(OHOS_ENABLE_ACCESSIBILITY)
+content::BrowserAccessibilityManager*
+CefBrowserPlatformDelegateAlloy::GetOrCreateRootBrowserAccessibilityManager() {
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+
+  if (!web_contents_impl) {
+    return nullptr;
+  }
+  return web_contents_impl->GetOrCreateRootBrowserAccessibilityManager();
+}
+
+#endif
 bool CefBrowserPlatformDelegateAlloy::IsPrintPreviewSupported() const {
   REQUIRE_ALLOY_RUNTIME();
 
