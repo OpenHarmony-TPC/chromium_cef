@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9a2f17acabed2291dd1f08381122a5675e43552a$
+// $hash=d63beb407dab5d540b48e65b27fa56d90832ded2$
 //
 
 #include "libcef_dll/ctocpp/form_handler_ctocpp.h"
@@ -20,7 +20,7 @@
 
 NO_SANITIZE("cfi-icall")
 void CefFormHandlerCToCpp::OnFormEditingStateChanged(
-    CefRefPtr<CefBrowser> browser, bool is_editing) {
+    CefRefPtr<CefBrowser> browser, bool is_editing, uint64_t form_id) {
   shutdown_checker::AssertNotShutdown();
 
   cef_form_handler_t *_struct = GetStruct();
@@ -36,7 +36,7 @@ void CefFormHandlerCToCpp::OnFormEditingStateChanged(
 
   // Execute
   _struct->on_form_editing_state_changed(
-      _struct, CefBrowserCppToC::Wrap(browser), is_editing);
+      _struct, CefBrowserCppToC::Wrap(browser), is_editing, form_id);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -363,7 +363,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
   void OnAudioStateChanged(bool audible) override;
-  void OnFormEditingStateChanged(bool state) override;
+  void OnFormEditingStateChanged(bool state, uint64_t form_id) override;
   void MediaStartedPlaying(const content::WebContentsObserver::MediaPlayerInfo& video_type,
                            const content::MediaPlayerId& id) override;
   void MediaStoppedPlaying(

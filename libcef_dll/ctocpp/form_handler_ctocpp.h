@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0ba733445c533a12543e65918cca598e73e76e68$
+// $hash=badfd56e41853f80eb0b92fed2afcac1dfab570e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FORM_HANDLER_CTOCPP_H_
@@ -34,8 +34,8 @@ public:
   virtual ~CefFormHandlerCToCpp();
 
   // CefFormHandler methods.
-  void OnFormEditingStateChanged(CefRefPtr<CefBrowser> browser,
-                                 bool is_editing) override;
+  void OnFormEditingStateChanged(CefRefPtr<CefBrowser> browser, bool is_editing,
+                                 uint64_t form_id) override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_FORM_HANDLER_CTOCPP_H_

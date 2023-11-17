@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cc1557a7c6d8a1272f0931a4679f18103b9a7a89$
+// $hash=5ce64575469ae7c4854d631dfe0f6d82bb538aa1$
 //
 
 #include "libcef_dll/cpptoc/form_handler_cpptoc.h"
@@ -21,7 +21,8 @@ namespace {
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
 void CEF_CALLBACK form_handler_on_form_editing_state_changed(
-    struct _cef_form_handler_t *self, cef_browser_t *browser, int is_editing) {
+    struct _cef_form_handler_t *self, cef_browser_t *browser, int is_editing,
+    uint64_t form_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -36,7 +37,7 @@ void CEF_CALLBACK form_handler_on_form_editing_state_changed(
 
   // Execute
   CefFormHandlerCppToC::Get(self)->OnFormEditingStateChanged(
-      CefBrowserCToCpp::Wrap(browser), is_editing ? true : false);
+      CefBrowserCToCpp::Wrap(browser), is_editing ? true : false, form_id);
 }
 
 } // namespace
