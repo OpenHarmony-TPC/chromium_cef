@@ -341,7 +341,11 @@ CefString CefRequestContextImpl::GetCachePath() {
 
 CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
     CefRefPtr<CefCompletionCallback> callback) {
+#if BUILDFLAG(IS_OHOS)
+  CefRefPtr<CefCookieManagerImpl> cookie_manager = CefCookieManagerImpl::GetInstance();
+#else
   CefRefPtr<CefCookieManagerImpl> cookie_manager = new CefCookieManagerImpl();
+#endif
   InitializeCookieManagerInternal(cookie_manager, callback);
   return cookie_manager.get();
 }

@@ -2012,6 +2012,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   if (deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
     network_context_params->http_cache_max_size = 20 * 1024 * 1024;
   }
+  CefCookieManager::GetGlobalManager(nullptr)->SetNetWorkCookieManager();
 #endif
   // Add proxy settings
   NWEB::ProxyConfigMonitor::GetInstance()->AddProxyToNetworkContextParams(

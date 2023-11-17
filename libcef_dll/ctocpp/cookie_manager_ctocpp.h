@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=856812e985ced680382e68506a9bb5d6676a51d5$
+// $hash=34e46fe18910eb9f72c7fc9cb6e01f5157e51735$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -58,6 +58,7 @@ class CefCookieManagerCToCpp
                      CefRefPtr<CefDeleteCookiesCallback> callback,
                      bool is_sync) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
+  void SetNetWorkCookieManager() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
