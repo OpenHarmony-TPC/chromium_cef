@@ -149,8 +149,8 @@ void DiscardBool(base::OnceClosure f, CefRefPtr<CefSetCookieCallback> callback, 
   }
 }
 
-base::OnceCallback<void(bool)> BoolCallbackAdapter(base::OnceClosure f,
-                                                   const CefRefPtr<CefSetCookieCallback>& callback) {
+base::OnceCallback<void(bool)> OnceClosureToBoolCallback(base::OnceClosure f,
+                                                         const CefRefPtr<CefSetCookieCallback>& callback) {
   return base::BindOnce(&DiscardBool, std::move(f), callback);
 }
 
@@ -161,8 +161,8 @@ void DiscardUint32(base::OnceClosure f, CefRefPtr<CefDeleteCookiesCallback> call
   }
 }
 
-base::OnceCallback<void(uint32_t)> Uint32CallbackAdapter(base::OnceClosure f,
-                                                         const CefRefPtr<CefDeleteCookiesCallback>& callback) {
+base::OnceCallback<void(uint32_t)> OnceClosureToUintCallback(base::OnceClosure f,
+                                                             const CefRefPtr<CefDeleteCookiesCallback>& callback) {
   return base::BindOnce(&DiscardUint32, std::move(f), callback);
 }
 
@@ -191,7 +191,7 @@ void CefCookieManagerImpl::RunCookieTaskSync(base::OnceCallback<void(base::OnceC
   base::WaitableEvent completion(base::WaitableEvent::ResetPolicy::AUTOMATIC,
                                  base::WaitableEvent::InitialState::NOT_SIGNALED);
   RunCookieTaskAsync(base::BindOnce(
-      std::move(task), BoolCallbackAdapter(SignalEventClosure(&completion), callback)));
+      std::move(task), OnceClosureToBoolCallback(SignalEventClosure(&completion), callback)));
   base::ScopedAllowBaseSyncPrimitivesOutsideBlockingScope wait;
   completion.Wait();
 }
@@ -201,32 +201,30 @@ void CefCookieManagerImpl::RunCookieTaskSync(base::OnceCallback<void(base::OnceC
   base::WaitableEvent completion(base::WaitableEvent::ResetPolicy::AUTOMATIC,
                                  base::WaitableEvent::InitialState::NOT_SIGNALED);
   RunCookieTaskAsync(base::BindOnce(
-      std::move(task), Uint32CallbackAdapter(SignalEventClosure(&completion), callback)));
+      std::move(task), OnceClosureToUintCallback(SignalEventClosure(&completion), callback)));
   base::ScopedAllowBaseSyncPrimitivesOutsideBlockingScope wait;
   completion.Wait();
 }
 
 void CefCookieManagerImpl::RunCookieTaskAsync(base::OnceClosure task) {
-  base::AutoLock lock(task_queue_lock_);
-  tasks_.push(std::move(task));
   cookie_store_task_runner_->PostTask(
       FROM_HERE, base::BindOnce(&CefCookieManagerImpl::RunCookieTasks,
-                                base::Unretained(this)));
+                                base::Unretained(this), std::move(task)));
 }
 
-void CefCookieManagerImpl::RunCookieTasks() {
+void CefCookieManagerImpl::RunCookieTasks(base::OnceClosure task) {
   DCHECK(cookie_store_task_runner_->RunsTasksInCurrentSequence());
-  if (setting_network_cookie_manager_)
-    return;
-
-  std::queue<base::OnceClosure> temp_queue;
-  {
-    base::AutoLock lock(task_queue_lock_);
-    temp_queue.swap(tasks_);
+  if (task) {
+    tasks_.push(std::move(task));
   }
-  while (!temp_queue.empty()) {
-    std::move(temp_queue.front()).Run();
-    temp_queue.pop();
+  if (setting_network_cookie_manager_) {
+    LOG(DEBUG) << "network service starting";
+    return;
+  }
+
+  while (!tasks_.empty()) {
+    std::move(tasks_.front()).Run();
+    tasks_.pop();
   }
 }
 
@@ -269,7 +267,8 @@ void CefCookieManagerImpl::SetNetWorkCookieManagerComplete(base::OnceClosure com
   setting_network_cookie_manager_ = false;
   if (complete)
     std::move(complete).Run();
-  RunCookieTasks();
+  base::OnceClosure task;
+  RunCookieTasks(std::move(task));
 }
 
 void CefCookieManagerImpl::SetNetWorkCookieManagerAsync(base::OnceClosure complete) {

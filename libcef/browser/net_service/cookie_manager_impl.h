@@ -74,7 +74,7 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   net::CookieStore* GetCookieStore();
 
-  void RunCookieTasks();
+  void RunCookieTasks(base::OnceClosure task);
   void RunCookieTaskAsync(base::OnceClosure task);
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceCallback<void(bool)>)> task,
@@ -180,7 +180,6 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   base::FilePath cookie_store_path_;
 
-  base::Lock task_queue_lock_;
   std::queue<base::OnceClosure> tasks_;
 
   bool setting_network_cookie_manager_complete_ = false;
