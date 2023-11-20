@@ -174,6 +174,8 @@ bool GetCookieAccessResultInclude(net::CookieAccessResult cookie_access_result) 
   }
   return is_include;
 }
+
+void DoNothing() {}
 #endif // BUILDFLAG(IS_OHOS)
 }  // namespace
 
@@ -223,8 +225,9 @@ void CefCookieManagerImpl::RunCookieTasks(base::OnceClosure task) {
   }
 
   while (!tasks_.empty()) {
-    std::move(tasks_.front()).Run();
+    auto t = std::move(tasks_.front());
     tasks_.pop();
+    std::move(t).Run();
   }
 }
 
@@ -267,8 +270,7 @@ void CefCookieManagerImpl::SetNetWorkCookieManagerComplete(base::OnceClosure com
   setting_network_cookie_manager_ = false;
   if (complete)
     std::move(complete).Run();
-  base::OnceClosure task;
-  RunCookieTasks(std::move(task));
+  RunCookieTasks(base::BindOnce(&DoNothing));
 }
 
 void CefCookieManagerImpl::SetNetWorkCookieManagerAsync(base::OnceClosure complete) {
@@ -743,9 +745,8 @@ bool CefCookieManagerImpl::VisitAllCookiesInternal(
     RunCookieTaskSync(base::BindOnce(&CefCookieManagerImpl::GetAllCookieListCookieTask,
                                      base::Unretained(this), visitor));
   } else {
-    base::OnceClosure complete;
     RunCookieTaskAsync(base::BindOnce(&CefCookieManagerImpl::GetAllCookieListCookieTask,
-                                      base::Unretained(this), visitor, std::move(complete)));
+                                      base::Unretained(this), visitor, base::BindOnce(&DoNothing)));
   }
 #else
   DCHECK(ValidContext());
@@ -797,10 +798,9 @@ bool CefCookieManagerImpl::VisitUrlCookiesInternal(
     RunCookieTaskSync(base::BindOnce(&CefCookieManagerImpl::GetCookieListCookieTask,
                                      base::Unretained(this), std::move(url), options, visitor));
   } else {
-    base::OnceClosure complete;
     RunCookieTaskAsync(base::BindOnce(&CefCookieManagerImpl::GetCookieListCookieTask,
                                       base::Unretained(this), std::move(url), options, visitor,
-                                      std::move(complete)));
+                                      base::BindOnce(&DoNothing)));
   }
 #else
   auto browser_context = GetBrowserContext(browser_context_getter_);
