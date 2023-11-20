@@ -176,12 +176,6 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=callback)--*/
   virtual bool FlushStore(CefRefPtr<CefCompletionCallback> callback) = 0;
-
-  ///
-  // SetNetWorkCookieManager
-  ///
-  /*--cef()--*/
-  virtual void SetNetWorkCookieManager() = 0;
 };
 
 ///

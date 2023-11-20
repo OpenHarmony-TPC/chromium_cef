@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=843629a0b5d71f1b70671a32125f23178bac82d3$
+// $hash=ce3c7af3f2f966c7d3faefb60e070500b626c1b0$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -265,18 +265,6 @@ bool CefCookieManagerCToCpp::FlushStore(
 
   // Return type: bool
   return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefCookieManagerCToCpp::SetNetWorkCookieManager() {
-  cef_cookie_manager_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_net_work_cookie_manager))
-    return;
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_net_work_cookie_manager(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
