@@ -52,6 +52,10 @@ class OhGinJavascriptBridgeDispatcherHost
                       base::ListValue* result,
                       OhGinJavascriptBridgeError* error_code);
 
+  void ClearMethodMap() {
+    method_map_.clear();
+  }
+
  private:
   typedef int32_t ObjectID;
   friend class base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>;
