@@ -1266,12 +1266,8 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   if (metadata.root_scroll_offset) {
     root_scroll_offset = *metadata.root_scroll_offset;
   }
-#if BUILDFLAG(IS_OHOS)
-  if (root_scroll_offset != last_scroll_offset_ &&
-      (root_scroll_offset.x() != 0 || root_scroll_offset.y() != 0)) {
-#else
+
   if (root_scroll_offset != last_scroll_offset_) {
-#endif
     last_scroll_offset_ = root_scroll_offset;
 
     if (!is_scroll_offset_changed_pending_) {
