@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e0aaa30043650168dd18a957ac4de570a00a94f0$
+// $hash=36ebfc0d54ad7fb4a7305304d15f2af093376dce$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1243,6 +1243,13 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_accessibility_state)(struct _cef_browser_host_t* self,
                                               cef_state_t accessibility_state);
+
+  ///
+  // GetOrCreateRootBrowserAccessibilityManager
+  ///
+  void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t* self,
+      void** manager);
 
   ///
   // Enable notifications of auto resize via

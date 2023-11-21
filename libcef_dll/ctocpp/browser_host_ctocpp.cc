@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9864c062acb57009d266ec7973f9673c5466d377$
+// $hash=c2de5c7ff9ae3be325165033de4862548c22948a$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1644,6 +1644,27 @@ void CefBrowserHostCToCpp::SetAccessibilityState(
 
   // Execute
   _struct->set_accessibility_state(_struct, accessibility_state);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetOrCreateRootBrowserAccessibilityManager(
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct,
+                         get_or_create_root_browser_accessibility_manager))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager)
+    return;
+
+  // Execute
+  _struct->get_or_create_root_browser_accessibility_manager(_struct, manager);
 }
 
 NO_SANITIZE("cfi-icall")

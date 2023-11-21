@@ -41,6 +41,7 @@ class WebTouchEvent;
 namespace content {
 struct AXEventNotificationDetails;
 struct AXLocationChangeNotificationDetails;
+class BrowserAccessibilityManager;
 struct DropData;
 struct NativeWebKeyboardEvent;
 class RenderViewHost;
