@@ -649,12 +649,12 @@ void AlloyBrowserHostImpl::SetAccessibilityState(
 }
 
 #if defined(OHOS_ENABLE_ACCESSIBILITY)
-content::BrowserAccessibilityManager*
-AlloyBrowserHostImpl::GetOrCreateRootBrowserAccessibilityManager() {
-  if (platform_delegate_) {
-    return platform_delegate_->GetOrCreateRootBrowserAccessibilityManager();
-  }
-  return nullptr;
+void AlloyBrowserHostImpl::GetOrCreateRootBrowserAccessibilityManager(
+    void** manager) {
+  if (!platform_delegate_)
+    return;
+  *manager = static_cast<void*>(
+        platform_delegate_->GetOrCreateRootBrowserAccessibilityManager());
 }
 
 #endif
