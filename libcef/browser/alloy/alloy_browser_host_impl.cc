@@ -925,6 +925,18 @@ void AlloyBrowserHostImpl::DestroyBrowser() {
   // If the WebContents still exists at this point, signal destruction before
   // browser destruction.
   if (web_contents()) {
+#if defined(OHOS_NWEB_EX)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser)) {
+      AlloyBrowserContext* browser_context = static_cast<AlloyBrowserContext*>(
+          web_contents()->GetBrowserContext());
+      if (browser_context) {
+        DCHECK(browser_context->GetPrefs());
+        browser_context->GetPrefs()->CommitPendingWrite();
+      }
+    }
+#endif
+
     WebContentsDestroyed();
   }
 
