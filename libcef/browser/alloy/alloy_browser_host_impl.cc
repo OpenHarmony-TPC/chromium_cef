@@ -648,7 +648,6 @@ void AlloyBrowserHostImpl::SetAccessibilityState(
   }
 }
 
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
 void AlloyBrowserHostImpl::GetOrCreateRootBrowserAccessibilityManager(
     void** manager) {
   if (!platform_delegate_)
@@ -657,7 +656,6 @@ void AlloyBrowserHostImpl::GetOrCreateRootBrowserAccessibilityManager(
         platform_delegate_->GetOrCreateRootBrowserAccessibilityManager());
 }
 
-#endif
 void AlloyBrowserHostImpl::SetAutoResizeEnabled(bool enabled,
                                                 const CefSize& min_size,
                                                 const CefSize& max_size) {

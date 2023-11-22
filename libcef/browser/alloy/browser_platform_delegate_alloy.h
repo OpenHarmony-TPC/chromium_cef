@@ -55,10 +55,8 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
                             const CefSize& min_size,
                             const CefSize& max_size) override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
   content::BrowserAccessibilityManager*
   GetOrCreateRootBrowserAccessibilityManager() override;
-#endif
   bool IsPrintPreviewSupported() const override;
   void Print() override;
   void PrintToPDF(const CefString& path,

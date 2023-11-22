@@ -1280,13 +1280,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetAccessibilityState(cef_state_t accessibility_state) = 0;
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
+
   ///
   // GetOrCreateRootBrowserAccessibilityManager
   ///
   /*--cef()--*/
   virtual void GetOrCreateRootBrowserAccessibilityManager(void** manager) = 0;
-#endif
+
   ///
   // Enable notifications of auto resize via CefDisplayHandler::OnAutoResize.
   // Notifications are disabled by default. |min_size| and |max_size| define the
