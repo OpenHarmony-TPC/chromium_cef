@@ -1777,6 +1777,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
     }
   }
 
+  bool had_no_pointer = !pointer_state_.GetPointerCount();
   // Update the touch event first.
   pointer_state_.SetFromOverlay(event.from_overlay);
   if (!pointer_state_.OnTouch(event)) {
@@ -1796,6 +1797,13 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
 
   pointer_state_.CleanupRemovedTouchPoints(event);
 
+  if (had_no_pointer && !event.from_overlay) {
+    selection_controller_client_->OnTouchDown();
+  }
+
+  if (!pointer_state_.GetPointerCount() && !event.from_overlay) {
+    selection_controller_client_->OnTouchUp();
+  }
   // Set unchanged touch point to StateStationary for touchmove and
   // touchcancel to make sure only send one ack per WebTouchEvent.
   if (!result.succeeded)
