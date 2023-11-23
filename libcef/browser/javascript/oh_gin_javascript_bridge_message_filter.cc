@@ -36,6 +36,12 @@ OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
 
 OhGinJavascriptBridgeMessageFilter::~OhGinJavascriptBridgeMessageFilter() {
   LOG(INFO) << "OhGinJavascriptBridgeMessageFilter dtor";
+  for (const auto &[_, dispatherHost] : hosts_) {
+    if (dispatherHost) {
+      dispatherHost->ClearMethodMap();
+    }
+  }
+  hosts_.clear();
 }
 
 void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
