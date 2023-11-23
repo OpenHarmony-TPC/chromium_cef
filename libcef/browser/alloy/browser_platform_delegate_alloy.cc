@@ -176,6 +176,35 @@ void CefBrowserPlatformDelegateAlloy::AddNewContents(
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(
+    content::WebContents* web_contents) {
+  DCHECK(web_contents_ && web_contents_ == web_contents);
+  if (!web_contents) {
+    LOG(ERROR)
+        << "CefBrowserPlatformDelegateAlloy WebContentsDestroyed is null. ";
+    return;
+  }
+
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (!browser_) {
+      return;
+    }
+    AlloyBrowserHostImpl* delegate =
+        static_cast<AlloyBrowserHostImpl*>(browser_);
+    zoom::ZoomController* zoom_controller =
+        zoom::ZoomController::FromWebContents(web_contents);
+    if (zoom_controller && delegate) {
+      zoom_controller->RemoveObserver(delegate);
+    }
+  }
+#endif
+  CefBrowserPlatformDelegate::WebContentsDestroyed(web_contents);
+}
+#endif
+
 bool CefBrowserPlatformDelegateAlloy::
     ShouldAllowRendererInitiatedCrossProcessNavigation(
         bool is_main_frame_navigation) {
@@ -240,6 +269,14 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
     OhPasswordManagerClient::CreateForWebContentsWithAutofillClient(
         web_contents_,
         autofill::OhAutofillClient::FromWebContents(web_contents_));
+  
+    // Add observer for zoomcontroller.
+    AlloyBrowserHostImpl* delegate = static_cast<AlloyBrowserHostImpl*>(browser);
+    zoom::ZoomController* zoom_controller =
+        zoom::ZoomController::FromWebContents(web_contents_);
+    if (zoom_controller && delegate) {
+      zoom_controller->AddObserver(delegate);
+    }
   }
 #endif  // OHOS_NWEB_EX
   autofill::ContentAutofillDriverFactory::CreateForWebContentsAndDelegate(

@@ -469,48 +469,20 @@ void AlloyBrowserHostImpl::SetZoomLevel(double zoomLevel) {
   }
 }
 
-#ifdef OHOS_NWEB_EX
-double AlloyBrowserHostImpl::GetDefaultZoomLevel() {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    get_zoom_level_event_ = std::make_shared<base::WaitableEvent>(
-        base::WaitableEvent::ResetPolicy::AUTOMATIC,
-        base::WaitableEvent::InitialState::NOT_SIGNALED);
-    CEF_POST_TASK(
-        CEF_UIT, base::BindOnce(
-                     &AlloyBrowserHostImpl::GetDefaultZoomLevelCallback, this));
-    if (!get_zoom_level_event_->TimedWait(base::Milliseconds(10))) {
-      return 0;
-    }
-    return default_zoom_level_;
-  }
-  if (web_contents()) {
-    default_zoom_level_ =
-        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
-  }
-  return default_zoom_level_;
-}
-
-void AlloyBrowserHostImpl::GetDefaultZoomLevelCallback() {
-  if (web_contents()) {
-    default_zoom_level_ =
-        content::HostZoomMap::GetDefaultBrowserZoomLevel(web_contents());
-    if (get_zoom_level_event_ != nullptr) {
-      get_zoom_level_event_->Signal();
-    }
-  } else {
-    default_zoom_level_ = 0;
-  }
-}
-#endif
-
 void AlloyBrowserHostImpl::SetBrowserZoomLevel(double zoom_factor) {
 #ifdef OHOS_NWEB_EX
   if (CEF_CURRENTLY_ON_UIT()) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kForBrowser) &&
         web_contents()) {
-      content::HostZoomMap::SetZoomLevel(
-          web_contents(), blink::PageZoomFactorToZoomLevel(zoom_factor));
+      zoom::ZoomController* zoom_controller =
+          zoom::ZoomController::FromWebContents(web_contents());
+      if (!zoom_controller) {
+        LOG(ERROR) << "SetBrowserZoomLevel has no zoom controller.";
+        return;
+      }
+      zoom_controller->SetZoomLevel(
+          blink::PageZoomFactorToZoomLevel(zoom_factor));
     }
   } else {
     CEF_POST_TASK(CEF_UIT,
@@ -1992,6 +1964,13 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
 
   // Make sure RenderFrameCreated is called at least one time.
   RenderFrameCreated(web_contents->GetMainFrame());
+
+#ifdef OHOS_NWEB_EX
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    zoom::ZoomController::CreateForWebContents(web_contents);
+  }
+#endif
 }
 
 bool AlloyBrowserHostImpl::CreateHostWindow() {
@@ -2131,29 +2110,17 @@ bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
 };
 
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
-  double curFactor = GetZoomLevel();
 #ifdef OHOS_NWEB_EX
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {
-    double defaultZoomLevel = GetDefaultZoomLevel();
-    std::vector<double> zoom_levels =
-        zoom::PageZoom::PresetZoomLevels(defaultZoomLevel);
-    zoom::ZoomType zoomType =
-        zoom_in ? zoom::ZoomType::ZOOM_IN : zoom::ZoomType::ZOOM_OUT;
-    double zoom_level =
-        zoom::PageZoom::GetNextZoomLevel(zoomType, curFactor, zoom_levels);
-    SetZoomLevel(zoom_level);
-    if (client_) {
-      CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
-      if (handler) {
-        handler->OnContentsBrowserZoomChange(
-            blink::PageZoomLevelToZoomFactor(zoom_level));
-      }
-    }
-    return; 
+    content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN
+                                         : content::PageZoom::PAGE_ZOOM_OUT;
+    zoom::PageZoom::Zoom(web_contents(), zoomType);
+    return;
   }
 #endif
 
+  double curFactor = GetZoomLevel();
   double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
   if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
     LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
@@ -2256,4 +2223,22 @@ void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
     return;
   }
 }
+
+#ifdef OHOS_NWEB_EX
+void AlloyBrowserHostImpl::OnZoomChanged(
+    const zoom::ZoomController::ZoomChangedEventData& data) {
+  if (data.web_contents != web_contents()) {
+    return;
+  }
+  if (client_) {
+    CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
+    if (handler) {
+      handler->OnContentsBrowserZoomChange(
+          blink::PageZoomLevelToZoomFactor(data.new_zoom_level),
+          data.can_show_bubble);
+    }
+  }
+}
+#endif  // OHOS_NWEB_EX
+
 #endif

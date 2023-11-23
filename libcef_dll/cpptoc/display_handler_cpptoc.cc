@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=20beeac8e9df526251ad41ece8777eccc5915ebd$
+// $hash=bc1fde114638f99e68ddb00e1740abf40d6e09ec$
 //
 
 #include "libcef_dll/cpptoc/display_handler_cpptoc.h"
@@ -392,7 +392,8 @@ display_handler_on_scale_changed(struct _cef_display_handler_t* self,
 
 void CEF_CALLBACK display_handler_on_contents_browser_zoom_change(
     struct _cef_display_handler_t* self,
-    double zoom_factor) {
+    double zoom_factor,
+    int can_show_bubble) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -402,7 +403,8 @@ void CEF_CALLBACK display_handler_on_contents_browser_zoom_change(
     return;
 
   // Execute
-  CefDisplayHandlerCppToC::Get(self)->OnContentsBrowserZoomChange(zoom_factor);
+  CefDisplayHandlerCppToC::Get(self)->OnContentsBrowserZoomChange(
+      zoom_factor, can_show_bubble ? true : false);
 }
 
 }  // namespace

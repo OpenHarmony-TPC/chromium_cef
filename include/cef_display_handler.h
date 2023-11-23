@@ -190,7 +190,8 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   // Called when the page browser zoom has changed.
   ///
   /*--cef()--*/
-  virtual void OnContentsBrowserZoomChange(double zoom_factor) {}
+  virtual void OnContentsBrowserZoomChange(double zoom_factor,
+                                           bool can_show_bubble) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_
