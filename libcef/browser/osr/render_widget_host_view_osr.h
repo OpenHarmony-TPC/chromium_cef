@@ -569,6 +569,7 @@ class CefRenderWidgetHostViewOSR
 
   size_t gesture_update_count_ = 0;
   bool is_scroll_consumed_ = false;
+  bool is_mouse_wheel_scroll_ = false;
 #endif
 };
 
