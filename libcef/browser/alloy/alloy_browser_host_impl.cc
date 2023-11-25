@@ -2090,6 +2090,33 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
   }
 }
 
+bool AlloyBrowserHostImpl::FinishDiscard() {
+  if (web_contents()) {
+    bool fast_shutdown_success = web_contents()->GetMainFrame()->GetProcess()->FastShutdownIfPossible(1u, false);
+    if (!fast_shutdown_success) {
+      content::RenderFrameHost* main_frame = web_contents()->GetMainFrame();
+      DCHECK(main_frame);
+      if (!main_frame->GetSuddenTerminationDisablerState(
+        blink::mojom::SuddenTerminationDisablerType::kBeforeUnloadHandler)) {
+          fast_shutdown_success = main_frame->GetProcess()->FastShutdownIfPossible(1u, /*skip_unload_handler*/true);
+      }
+    }
+    web_contents()->SetWasDiscarded(fast_shutdown_success);
+    return fast_shutdown_success;
+  }
+  return false;
+}
+
+bool AlloyBrowserHostImpl::FinishReload() {
+  if (web_contents()) {
+    web_contents()->GetController().SetNeedsReload();
+    web_contents()->GetController().LoadIfNecessary();
+    web_contents()->Focus();
+    return true;
+  }
+  return false;
+}
+
 #if BUILDFLAG(IS_OHOS)
 void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
   if (platform_delegate_)

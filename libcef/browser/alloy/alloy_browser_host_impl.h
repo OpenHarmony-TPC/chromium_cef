@@ -378,6 +378,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       override;
   void WebContentsDestroyed() override;
   void AddVisitedLinks(const std::vector<CefString>& urls) override;
+  bool FinishDiscard() override;
+  bool FinishReload() override;
 #if BUILDFLAG(IS_OHOS)
   void OpenDateTimeChooser() override;
   void CloseDateTimeChooser() override;
