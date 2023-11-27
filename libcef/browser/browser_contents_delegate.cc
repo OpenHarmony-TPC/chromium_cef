@@ -25,6 +25,12 @@
 #include "third_party/blink/public/mojom/input/focus_type.mojom-blink.h"
 #include "ui/events/keycodes/keyboard_codes_posix.h"
 
+#ifdef OHOS_NWEB_EX
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -33,6 +39,27 @@ namespace {
 constexpr base::TimeDelta kEffectiveUserEscapeDuration =
     base::Milliseconds(1250);
 
+#ifdef OHOS_NWEB_EX
+void SetUserAgentOverrideForMainFrame(content::NavigationHandle* navigation,
+                                      const std::string& ua) {
+  if (!navigation) {
+    return;
+  }
+
+  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, ua);
+  if (!navigation->IsInMainFrame()) {
+    return;
+  }
+
+  content::WebContents* web_contents = navigation->GetWebContents();
+  if (!web_contents) {
+    return;
+  }
+
+  web_contents->SetUserAgentOverride(
+      blink::UserAgentOverride::UserAgentOnly(ua), true);
+}
+#endif  // OHOS_NWEB_EX
 }  // namespace
 
 CefBrowserContentsDelegate::CefBrowserContentsDelegate(
@@ -526,6 +553,25 @@ void CefBrowserContentsDelegate::DidStartNavigation(
       icon_helper_->SetMainFrameDocumentOnLoadCompleted(false);
     }
   }
+
+#ifdef OHOS_NWEB_EX
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    return;
+  }
+
+  const GURL& url = navigation->GetURL();
+  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
+    return;
+  }
+  std::string final_ua =
+      nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(
+          url.host());
+  LOG(INFO) << "DidStartNavigation, url: " << url.spec() << ", final_ua: "
+            << final_ua;
+  // |final_ua| will be added to the navigation of the mainframe and iframe.
+  SetUserAgentOverrideForMainFrame(navigation, final_ua);
+#endif  // OHOS_NWEB_EX
 }
 
 void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
@@ -534,6 +580,31 @@ void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
   }
 }
 #endif
+
+#ifdef OHOS_NWEB_EX
+void CefBrowserContentsDelegate::DidRedirectNavigation(
+    content::NavigationHandle* navigation) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    return;
+  }
+
+  const GURL& url = navigation->GetURL();
+  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
+    return;
+  }
+  std::string final_ua = nweb_ex::AlloyBrowserUAConfig::GetInstance()
+                             ->GetUserAgentForHostWithoutDefaultUA(url.host());
+  LOG(INFO) << "DidRedirectNavigation, url: " << url.spec() << ", final_ua: "
+            << final_ua;
+  if (final_ua.empty()) {
+    return;
+  }
+
+  // |final_ua| will be added to the navigation of the mainframe and iframe.
+  SetUserAgentOverrideForMainFrame(navigation, final_ua);
+}
+#endif  // OHOS_NWEB_EX
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
