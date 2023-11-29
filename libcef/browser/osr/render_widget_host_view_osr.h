@@ -273,6 +273,7 @@ class CefRenderWidgetHostViewOSR
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
   std::u16string GetSelectedText() override;
+  std::u16string GetText();
   void WasKeyboardResized();
 #endif
 
