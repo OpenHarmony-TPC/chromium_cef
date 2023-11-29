@@ -181,6 +181,9 @@ void CefTouchSelectionControllerClientOSR::OnTouchDown() {
 
 void CefTouchSelectionControllerClientOSR::OnTouchUp() {
   touch_down_ = false;
+  if (quick_menu_running_) {
+    return;
+  }
   UpdateQuickMenu();
 }
 
@@ -563,6 +566,9 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
   bool editable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE;
   bool readable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_PASSWORD;
   bool has_selection = !rwhv_->GetSelectedText().empty();
+#if BUILDFLAG(IS_OHOS)
+  bool has_text = !rwhv_->GetText().empty();
+#endif
 #if defined(OHOS_NWEB_EX)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {
@@ -600,7 +606,17 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
       return can_paste;
     }
     case QM_EDITFLAG_CAN_SELECT_ALL:
+#if BUILDFLAG(IS_OHOS)
+      if (!editable && readable) {
+        return true;
+      }
+      if (editable && has_text) {
+        return true;
+      }
+      return false;
+#else
       return editable || readable;
+#endif
     default:
       return false;
   }

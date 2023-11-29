@@ -1997,6 +1997,12 @@ std::u16string CefRenderWidgetHostViewOSR::GetSelectedText() {
   return std::u16string();
 }
 
+std::u16string CefRenderWidgetHostViewOSR::GetText() {
+  if (text_input_manager_)
+    return text_input_manager_->GetTextSelection(this)->text();
+  return std::u16string();
+}
+
 void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
   UpdateEditBounds();
   if (is_select_text_) {
