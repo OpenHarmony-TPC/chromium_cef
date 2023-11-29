@@ -32,6 +32,11 @@
 #include "extensions/common/mojom/view_type.mojom-forward.h"
 #include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 
+#ifdef OHOS_NWEB_EX
+#include "components/zoom/zoom_controller.h"
+#include "components/zoom/zoom_observer.h"
+#endif
+
 class CefAudioCapturer;
 class CefBrowserInfo;
 class SiteInstance;
@@ -53,7 +58,11 @@ class SiteInstance;
 // WebContentsObserver::routing_id() when sending IPC messages.
 class AlloyBrowserHostImpl : public CefBrowserHostBase,
                              public content::WebContentsDelegate,
-                             public content::WebContentsObserver {
+                             public content::WebContentsObserver
+#ifdef OHOS_NWEB_EX
+                             , public zoom::ZoomObserver
+#endif
+{
  public:
   // Used for handling the response to command messages.
   class CommandResponseHandler : public virtual CefBaseRefCounted {
@@ -152,10 +161,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
-  content::BrowserAccessibilityManager*
-  GetOrCreateRootBrowserAccessibilityManager() override;
-#endif
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
@@ -358,6 +364,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       bool is_rtl,
       const std::vector<autofill::Suggestion>& suggestions) override;
   void OnHideAutofillPopup() override;
+  void OnZoomChanged(
+      const zoom::ZoomController::ZoomChangedEventData& data) override;
 #endif
 
   // content::WebContentsObserver methods.
@@ -429,11 +437,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ReportWindowStatus(bool first_view_ready);
 #endif
 
-#ifdef OHOS_NWEB_EX
-  double GetDefaultZoomLevel();
-  void GetDefaultZoomLevelCallback();
-#endif
-
   CefWindowHandle opener_;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
@@ -479,11 +482,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
 
   bool start_play_ = false;
-
-#ifdef OHOS_NWEB_EX
-  double default_zoom_level_ = 0.0;
-  std::shared_ptr<base::WaitableEvent> get_zoom_level_event_ = nullptr;
-#endif  
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

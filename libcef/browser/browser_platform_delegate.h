@@ -41,6 +41,7 @@ class WebTouchEvent;
 namespace content {
 struct AXEventNotificationDetails;
 struct AXLocationChangeNotificationDetails;
+class BrowserAccessibilityManager;
 struct DropData;
 struct NativeWebKeyboardEvent;
 class RenderViewHost;
@@ -359,12 +360,10 @@ class CefBrowserPlatformDelegate {
                                     const CefSize& min_size,
                                     const CefSize& max_size);
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
   virtual content::BrowserAccessibilityManager*
   GetOrCreateRootBrowserAccessibilityManager() {
     return nullptr;
   }
-#endif
   virtual bool IsPrintPreviewSupported() const;
   virtual void Print();
   virtual void PrintToPDF(const CefString& path,

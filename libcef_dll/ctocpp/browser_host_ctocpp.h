@@ -183,6 +183,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void DragSourceSystemDragEnded() override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;

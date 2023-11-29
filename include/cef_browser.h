@@ -55,11 +55,6 @@ class CefClient;
 class CefJavaScriptResultCallback;
 class CefWebMessageReceiver;
 class CefStoreWebArchiveResultCallback;
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
-namespace content {
-class BrowserAccessibilityManager;
-}
-#endif
 ///
 // Class used to represent a browser. When used in the browser process the
 // methods of this class may be called on any thread unless otherwise indicated
@@ -1285,12 +1280,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetAccessibilityState(cef_state_t accessibility_state) = 0;
-#if defined(OHOS_ENABLE_ACCESSIBILITY)
-  virtual content::BrowserAccessibilityManager*
-  GetOrCreateRootBrowserAccessibilityManager() {
-    return nullptr;
-  }
-#endif
+
+  ///
+  // GetOrCreateRootBrowserAccessibilityManager
+  ///
+  /*--cef()--*/
+  virtual void GetOrCreateRootBrowserAccessibilityManager(void** manager) = 0;
+
   ///
   // Enable notifications of auto resize via CefDisplayHandler::OnAutoResize.
   // Notifications are disabled by default. |min_size| and |max_size| define the

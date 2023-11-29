@@ -1846,6 +1846,26 @@ browser_host_set_accessibility_state(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetAccessibilityState(accessibility_state);
 }
 
+void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
+    struct _cef_browser_host_t* self,
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager)
+    return;
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->GetOrCreateRootBrowserAccessibilityManager(
+      manager);
+}
+
 void CEF_CALLBACK
 browser_host_set_auto_resize_enabled(struct _cef_browser_host_t* self,
                                      int enabled,
@@ -2584,6 +2604,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_visible_navigation_entry =
       browser_host_get_visible_navigation_entry;
   GetStruct()->set_accessibility_state = browser_host_set_accessibility_state;
+  GetStruct()->get_or_create_root_browser_accessibility_manager =
+      browser_host_get_or_create_root_browser_accessibility_manager;
   GetStruct()->set_auto_resize_enabled = browser_host_set_auto_resize_enabled;
   GetStruct()->get_extension = browser_host_get_extension;
   GetStruct()->is_background_host = browser_host_is_background_host;

@@ -62,6 +62,10 @@ class OhGinJavascriptBridgeDispatcherHost
                       OhGinJavascriptBridgeError* error_code);
   void OnObjectWrapperDeleted(int routing_id, ObjectID object_id);
 
+  void ClearMethodMap() {
+    method_map_.clear();
+  }
+
  private:
   friend class base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>;
 

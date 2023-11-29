@@ -1648,6 +1648,27 @@ void CefBrowserHostCToCpp::SetAccessibilityState(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetOrCreateRootBrowserAccessibilityManager(
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct,
+                         get_or_create_root_browser_accessibility_manager))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager)
+    return;
+
+  // Execute
+  _struct->get_or_create_root_browser_accessibility_manager(_struct, manager);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetAutoResizeEnabled(bool enabled,
                                                 const CefSize& min_size,
                                                 const CefSize& max_size) {

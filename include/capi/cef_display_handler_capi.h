@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1c4293465fdfa43d147b4ce9e26e5288747dc298$
+// $hash=027b37424b6f44397901e3d5b65777fa3229e3e8$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -198,7 +198,8 @@ typedef struct _cef_display_handler_t {
   ///
   void(CEF_CALLBACK* on_contents_browser_zoom_change)(
       struct _cef_display_handler_t* self,
-      double zoom_factor);
+      double zoom_factor,
+      int can_show_bubble);
 } cef_display_handler_t;
 
 #ifdef __cplusplus

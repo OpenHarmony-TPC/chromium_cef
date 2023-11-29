@@ -1248,6 +1248,13 @@ typedef struct _cef_browser_host_t {
                                               cef_state_t accessibility_state);
 
   ///
+  // GetOrCreateRootBrowserAccessibilityManager
+  ///
+  void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t* self,
+      void** manager);
+
+  ///
   // Enable notifications of auto resize via
   // cef_display_handler_t::OnAutoResize. Notifications are disabled by default.
   // |min_size| and |max_size| define the range of allowed sizes.
