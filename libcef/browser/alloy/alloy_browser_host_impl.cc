@@ -2090,31 +2090,45 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
   }
 }
 
-bool AlloyBrowserHostImpl::FinishDiscard() {
-  if (web_contents()) {
-    bool fast_shutdown_success = web_contents()->GetMainFrame()->GetProcess()->FastShutdownIfPossible(1u, false);
-    if (!fast_shutdown_success) {
-      content::RenderFrameHost* main_frame = web_contents()->GetMainFrame();
-      DCHECK(main_frame);
-      if (!main_frame->GetSuddenTerminationDisablerState(
-        blink::mojom::SuddenTerminationDisablerType::kBeforeUnloadHandler)) {
-          fast_shutdown_success = main_frame->GetProcess()->FastShutdownIfPossible(1u, /*skip_unload_handler*/true);
-      }
-    }
-    web_contents()->SetWasDiscarded(fast_shutdown_success);
-    return fast_shutdown_success;
+bool AlloyBrowserHostImpl::DiscardWeb() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::DiscardWeb failed, called on invalid thread";
+    return false;
   }
-  return false;
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::DiscardWeb failed, WebContents is nullptr";
+    return false;
+  }
+
+  content::RenderFrameHost* main_frame = web_contents()->GetMainFrame();
+  content::RenderProcessHost* render_process = main_frame->GetProcess();
+  if (!render_process) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::DiscardWeb failed, RenderProcessHost is nullptr";
+    return false;
+  }
+
+  bool fast_shutdown_success = render_process->FastShutdownIfPossible(1u, true);
+  if (fast_shutdown_success) {
+    web_contents()->SetWasDiscarded(true);
+  }
+
+  return fast_shutdown_success;
 }
 
-bool AlloyBrowserHostImpl::FinishReload() {
-  if (web_contents()) {
-    web_contents()->GetController().SetNeedsReload();
-    web_contents()->GetController().LoadIfNecessary();
-    web_contents()->Focus();
-    return true;
+bool AlloyBrowserHostImpl::ReloadWeb() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReloadWeb failed, called on invalid thread";
+    return false;
   }
-  return false;
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReloadWeb failed, WebContents is nullptr";
+    return false;
+  }
+  
+  web_contents()->GetController().SetNeedsReload();
+  web_contents()->GetController().LoadIfNecessary();
+  web_contents()->Focus();
+  return true;
 }
 
 #if BUILDFLAG(IS_OHOS)

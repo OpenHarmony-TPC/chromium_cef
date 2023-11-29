@@ -1528,13 +1528,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // Discard a webview window
   ///
   /*--cef()--*/
-  virtual bool FinishDiscard() = 0;
+  virtual bool DiscardWeb() = 0;
 
   ///
   // Reload the discarded webview window
   ///
   /*--cef()--*/
-  virtual bool FinishReload() = 0;
+  virtual bool ReloadWeb() = 0;
 };
 
 ///
