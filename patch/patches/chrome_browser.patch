@@ -1,0 +1,40 @@
+diff --git chrome/browser/BUILD.gn chrome/browser/BUILD.gn
+index acf48b7ffd061..9b441db457bee 100644
+--- chrome/browser/BUILD.gn
++++ chrome/browser/BUILD.gn
+@@ -11,6 +11,7 @@ import("//build/config/compiler/pgo/pgo.gni")
+ import("//build/config/features.gni")
+ import("//build/config/python.gni")
+ import("//build/config/ui.gni")
++import("//cef/libcef/features/features.gni")
+ import("//chrome/browser/buildflags.gni")
+ import("//chrome/browser/downgrade/buildflags.gni")
+ import("//chrome/common/features.gni")
+@@ -1935,6 +1936,7 @@ static_library("browser") {
+     "//build/config/chromebox_for_meetings:buildflags",
+     "//build/config/compiler:compiler_buildflags",
+     "//cc",
++    "//cef/libcef/features",
+     "//chrome:extra_resources",
+     "//chrome:resources",
+     "//chrome:strings",
+@@ -2522,6 +2524,10 @@ static_library("browser") {
+     ]
+   }
+ 
++  if (enable_cef) {
++    configs += [ "//cef/libcef/features:config" ]
++  }
++
+   if (is_android) {
+     sources += [
+       "after_startup_task_utils_android.cc",
+@@ -6118,8 +6124,6 @@ static_library("browser") {
+     sources += [
+       "enterprise/chrome_browser_main_extra_parts_enterprise.cc",
+       "enterprise/chrome_browser_main_extra_parts_enterprise.h",
+-      "enterprise/connectors/analysis/content_analysis_sdk_manager.cc",
+-      "enterprise/connectors/analysis/content_analysis_sdk_manager.h",
+       "enterprise/connectors/analysis/local_binary_upload_service.cc",
+       "enterprise/connectors/analysis/local_binary_upload_service.h",
+       "enterprise/connectors/analysis/local_binary_upload_service_factory.cc",
