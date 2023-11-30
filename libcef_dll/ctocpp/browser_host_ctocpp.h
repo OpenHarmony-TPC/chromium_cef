@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=efb866ae5e921ad6480bf25c7a64d2bb7e2ab145$
+// $hash=69e32b124c150515fa8cab7ed9ac571ee9b017a3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -123,9 +123,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void SetBackgroundColor(int color) override;
-  void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
+  void RegisterArkJSfunction(const CefString& object_name,
+                             const std::vector<CefString>& method_list,
+                             const int32_t object_id) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;

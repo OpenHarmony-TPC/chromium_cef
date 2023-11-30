@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=df2813e55c4de535e1be99b878cd983543aaf94e$
+// $hash=a6fa428e85042395e409cdeb2ed14666e6fe8327$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1134,7 +1134,8 @@ browser_host_set_background_color(struct _cef_browser_host_t* self, int color) {
 void CEF_CALLBACK
 browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
-                                     cef_string_list_t method_list) {
+                                     cef_string_list_t method_list,
+                                     int32_t object_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1156,8 +1157,8 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
   transfer_string_list_contents(method_list, method_listList);
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(CefString(object_name),
-                                                         method_listList);
+  CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(
+      CefString(object_name), method_listList, object_id);
 }
 
 void CEF_CALLBACK

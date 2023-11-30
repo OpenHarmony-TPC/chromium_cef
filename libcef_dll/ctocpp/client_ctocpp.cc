@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=874bca3f407fac9f2b27c105e586e3fb8f1c601c$
+// $hash=ef3fc7693e2708bfac0305b912c34beeb4779c06$
 //
 
 #include "libcef_dll/ctocpp/client_ctocpp.h"
@@ -17,6 +17,7 @@
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/list_value_cpptoc.h"
 #include "libcef_dll/cpptoc/process_message_cpptoc.h"
+#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/audio_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
@@ -348,7 +349,9 @@ NO_SANITIZE("cfi-icall")
 int CefClientCToCpp::NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
                                             const CefString& method,
                                             const CefString& object_name,
-                                            CefRefPtr<CefListValue> result) {
+                                            CefRefPtr<CefListValue> result,
+                                            int32_t routing_id,
+                                            int32_t object_id) {
   cef_client_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, notify_java_script_result))
     return 0;
@@ -375,10 +378,78 @@ int CefClientCToCpp::NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
   // Execute
   int _retval = _struct->notify_java_script_result(
       _struct, CefListValueCppToC::Wrap(args), method.GetStruct(),
-      object_name.GetStruct(), CefListValueCppToC::Wrap(result));
+      object_name.GetStruct(), CefListValueCppToC::Wrap(result), routing_id,
+      object_id);
 
   // Return type: simple
   return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefClientCToCpp::HasJavaScriptObjectMethods(int32_t object_id,
+                                                 const CefString& method_name) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, has_java_script_object_methods))
+    return false;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: method_name; type: string_byref_const
+  DCHECK(!method_name.empty());
+  if (method_name.empty())
+    return false;
+
+  // Execute
+  int _retval = _struct->has_java_script_object_methods(
+      _struct, object_id, method_name.GetStruct());
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::GetJavaScriptObjectMethods(
+    int32_t object_id,
+    CefRefPtr<CefValue> returned_method_names) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_java_script_object_methods))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: returned_method_names; type: refptr_diff
+  DCHECK(returned_method_names.get());
+  if (!returned_method_names.get())
+    return;
+
+  // Execute
+  _struct->get_java_script_object_methods(
+      _struct, object_id, CefValueCppToC::Wrap(returned_method_names));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::RemoveJavaScriptObjectHolder(int32_t holder,
+                                                   int32_t object_id) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_java_script_object_holder))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_java_script_object_holder(_struct, holder, object_id);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::RemoveTransientJavaScriptObject() {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_transient_java_script_object))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_transient_java_script_object(_struct);
 }
 
 NO_SANITIZE("cfi-icall")
