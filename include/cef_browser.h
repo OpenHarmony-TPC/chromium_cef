@@ -969,9 +969,9 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // RegisterArkJSfunction
   ///
   /*--cef()--*/
-  virtual void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) = 0;
+  virtual void RegisterArkJSfunction(const CefString& object_name,
+                                     const std::vector<CefString>& method_list,
+                                     const int32_t object_id) = 0;
 
   ///
   // UnregisterArkJSfunction
@@ -1528,13 +1528,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   // Discard a webview window
   ///
   /*--cef()--*/
-  virtual bool DiscardWeb() = 0;
+  virtual bool Discard() = 0;
 
   ///
-  // Reload the discarded webview window
+  // Restore the discarded webview window
   ///
   /*--cef()--*/
-  virtual bool ReloadWeb() = 0;
+  virtual bool Restore() = 0;
 };
 
 ///

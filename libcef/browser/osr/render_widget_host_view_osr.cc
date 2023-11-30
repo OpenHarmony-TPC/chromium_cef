@@ -1997,6 +1997,12 @@ std::u16string CefRenderWidgetHostViewOSR::GetSelectedText() {
   return std::u16string();
 }
 
+std::u16string CefRenderWidgetHostViewOSR::GetText() {
+  if (text_input_manager_)
+    return text_input_manager_->GetTextSelection(this)->text();
+  return std::u16string();
+}
+
 void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
   UpdateEditBounds();
   if (is_select_text_) {
@@ -2568,6 +2574,11 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
+  if (input_event.GetType() ==
+        blink::WebInputEvent::Type::kMouseWheel) {
+    is_mouse_wheel_scroll_ = true;
+  }
+
   if (browser_impl_.get() && input_event.IsGestureScroll()) {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
@@ -2582,6 +2593,14 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
                blink::WebInputEvent::Type::kGestureScrollEnd) {
       is_scroll_consumed_ = false;
       handler->OnScrollState(browser_impl_.get(), false);
+    } else if (input_event.GetType() ==
+               blink::WebInputEvent::Type::kGestureScrollUpdate &&
+               is_mouse_wheel_scroll_) {
+      is_scroll_consumed_ =
+        handler->FilterScrollEvent(browser_impl_.get(),
+                                  gesture_event.data.scroll_update.delta_x,
+                                  gesture_event.data.scroll_update.delta_y, 0, 0);
+      is_mouse_wheel_scroll_ = false;
     }
     return is_scroll_consumed_ ? blink::mojom::InputEventResultState::kConsumed
                                : blink::mojom::InputEventResultState::kNotConsumed;

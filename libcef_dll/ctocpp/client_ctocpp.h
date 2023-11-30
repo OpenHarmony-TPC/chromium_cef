@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3013f6a90891575bbc2d5ce73af74cf73cbbcb98$
+// $hash=f00a6336e15a8478a6228927be75d05888d3cb91$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -58,7 +58,16 @@ class CefClientCToCpp
   int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
                              const CefString& method,
                              const CefString& object_name,
-                             CefRefPtr<CefListValue> result) override;
+                             CefRefPtr<CefListValue> result,
+                             int32_t routing_id,
+                             int32_t object_id) override;
+  bool HasJavaScriptObjectMethods(int32_t object_id,
+                                  const CefString& method_name) override;
+  void GetJavaScriptObjectMethods(
+      int32_t object_id,
+      CefRefPtr<CefValue> returned_method_names) override;
+  void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) override;
+  void RemoveTransientJavaScriptObject() override;
   CefRefPtr<CefFormHandler> GetFormHandler() override;
   void OnTopControlsChanged(float top_controls_offset,
                             float top_content_offset) override;

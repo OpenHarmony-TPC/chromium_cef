@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4a3a6a78d39fd60e4fb1261bbe751659c06e39dd$
+// $hash=19bd3281c44c2abe47c892dfd22c2bc017070878$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -20,19 +20,19 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
+#include <vector>
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
-class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
-                                                        CefBrowserHost,
-                                                        cef_browser_host_t> {
- public:
+class CefBrowserHostCToCpp
+    : public CefCToCppRefCounted<CefBrowserHostCToCpp, CefBrowserHost,
+                                 cef_browser_host_t> {
+public:
   CefBrowserHostCToCpp();
   virtual ~CefBrowserHostCToCpp();
 
@@ -50,52 +50,41 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   double GetZoomLevel() override;
   void SetZoomLevel(double zoomLevel) override;
   void SetBrowserZoomLevel(double zoomFactor) override;
-  void RunFileDialog(FileDialogMode mode,
-                     const CefString& title,
-                     const CefString& default_file_path,
-                     const std::vector<CefString>& accept_filters,
+  void RunFileDialog(FileDialogMode mode, const CefString &title,
+                     const CefString &default_file_path,
+                     const std::vector<CefString> &accept_filters,
                      int selected_accept_filter,
                      CefRefPtr<CefRunFileDialogCallback> callback) override;
-  void StartDownload(const CefString& url) override;
-  void ResumeDownload(const CefString& url,
-                      const CefString& full_path,
-                      int64 received_bytes,
-                      int64 total_bytes,
-                      const CefString& etag,
-                      const CefString& mime_type,
-                      const CefString& last_modified,
-                      const CefString& received_slices_string) override;
-  void DownloadImage(const CefString& image_url,
-                     bool is_favicon,
-                     uint32 max_image_size,
-                     bool bypass_cache,
+  void StartDownload(const CefString &url) override;
+  void ResumeDownload(const CefString &url, const CefString &full_path,
+                      int64 received_bytes, int64 total_bytes,
+                      const CefString &etag, const CefString &mime_type,
+                      const CefString &last_modified,
+                      const CefString &received_slices_string) override;
+  void DownloadImage(const CefString &image_url, bool is_favicon,
+                     uint32 max_image_size, bool bypass_cache,
                      CefRefPtr<CefDownloadImageCallback> callback) override;
   void Print() override;
-  void PrintToPDF(const CefString& path,
-                  const CefPdfPrintSettings& settings,
+  void PrintToPDF(const CefString &path, const CefPdfPrintSettings &settings,
                   CefRefPtr<CefPdfPrintCallback> callback) override;
-  void Find(const CefString& searchText,
-            bool forward,
-            bool matchCase,
-            bool findNext,
-            bool newSession) override;
+  void Find(const CefString &searchText, bool forward, bool matchCase,
+            bool findNext, bool newSession) override;
   void StopFinding(bool clearSelection) override;
-  void ShowDevTools(const CefWindowInfo& windowInfo,
+  void ShowDevTools(const CefWindowInfo &windowInfo,
                     CefRefPtr<CefClient> client,
-                    const CefBrowserSettings& settings,
-                    const CefPoint& inspect_element_at) override;
+                    const CefBrowserSettings &settings,
+                    const CefPoint &inspect_element_at) override;
   void CloseDevTools() override;
   bool HasDevTools() override;
-  bool SendDevToolsMessage(const void* message, size_t message_size) override;
-  int ExecuteDevToolsMethod(int message_id,
-                            const CefString& method,
+  bool SendDevToolsMessage(const void *message, size_t message_size) override;
+  int ExecuteDevToolsMethod(int message_id, const CefString &method,
                             CefRefPtr<CefDictionaryValue> params) override;
   CefRefPtr<CefRegistration> AddDevToolsMessageObserver(
       CefRefPtr<CefDevToolsMessageObserver> observer) override;
   void GetNavigationEntries(CefRefPtr<CefNavigationEntryVisitor> visitor,
                             bool current_only) override;
-  void ReplaceMisspelling(const CefString& word) override;
-  void AddWordToDictionary(const CefString& word) override;
+  void ReplaceMisspelling(const CefString &word) override;
+  void AddWordToDictionary(const CefString &word) override;
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
@@ -105,104 +94,95 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetVirtualPixelRatio(float ratio) override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
-  void SendKeyEvent(const CefKeyEvent& event) override;
-  void SendMouseClickEvent(const CefMouseEvent& event,
-                           MouseButtonType type,
-                           bool mouseUp,
-                           int clickCount) override;
-  void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
-  void SendMouseWheelEvent(const CefMouseEvent& event,
-                           int deltaX,
+  void SendKeyEvent(const CefKeyEvent &event) override;
+  void SendMouseClickEvent(const CefMouseEvent &event, MouseButtonType type,
+                           bool mouseUp, int clickCount) override;
+  void SendMouseMoveEvent(const CefMouseEvent &event, bool mouseLeave) override;
+  void SendMouseWheelEvent(const CefMouseEvent &event, int deltaX,
                            int deltaY) override;
-  void SendTouchEvent(const CefTouchEvent& event) override;
+  void SendTouchEvent(const CefTouchEvent &event) override;
   void SendCaptureLostEvent() override;
   void NotifyMoveOrResizeStarted() override;
   int GetWindowlessFrameRate() override;
   void SetWindowlessFrameRate(int frame_rate) override;
-  void SetWebPreferences(const CefBrowserSettings& browser_settings) override;
-  void PutUserAgent(const CefString& ua) override;
+  void SetWebPreferences(const CefBrowserSettings &browser_settings) override;
+  void PutUserAgent(const CefString &ua) override;
   CefString DefaultUserAgent() override;
   void SetBackgroundColor(int color) override;
-  void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
-  void UnregisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
+  void RegisterArkJSfunction(const CefString &object_name,
+                             const std::vector<CefString> &method_list,
+                             const int32_t object_id) override;
+  void
+  UnregisterArkJSfunction(const CefString &object_name,
+                          const std::vector<CefString> &method_list) override;
   void JavaScriptOnDocumentStart(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) override;
+      const CefString &script,
+      const std::vector<CefString> &script_rules) override;
   void RemoveJavaScriptOnDocumentStart() override;
   void StoreWebArchive(
-      const CefString& base_name,
-      bool auto_name,
+      const CefString &base_name, bool auto_name,
       CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
   void WasKeyboardResized() override;
   CefString Title() override;
-  void CreateWebMessagePorts(std::vector<CefString>& ports) override;
-  void PostWebMessage(CefString& message,
-                      std::vector<CefString>& ports,
-                      CefString& targetUri) override;
-  void ClosePort(CefString& port_handle) override;
+  void CreateWebMessagePorts(std::vector<CefString> &ports) override;
+  void PostWebMessage(CefString &message, std::vector<CefString> &ports,
+                      CefString &targetUri) override;
+  void ClosePort(CefString &port_handle) override;
   void DestroyAllWebMessagePorts() override;
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(CefString &port_handle,
                        CefRefPtr<CefValue> message) override;
-  void SetPortMessageCallback(
-      CefString& port_handle,
-      CefRefPtr<CefWebMessageReceiver> callback) override;
-  void GetHitData(int& type, CefString& extra_data) override;
+  void
+  SetPortMessageCallback(CefString &port_handle,
+                         CefRefPtr<CefWebMessageReceiver> callback) override;
+  void GetHitData(int &type, CefString &extra_data) override;
   void SetInitialScale(float scale) override;
   int PageLoadProgress() override;
   float Scale() override;
-  void LoadWithDataAndBaseUrl(const CefString& baseUrl,
-                              const CefString& data,
-                              const CefString& mimeType,
-                              const CefString& encoding,
-                              const CefString& historyUrl) override;
-  void LoadWithData(const CefString& data,
-                    const CefString& mimeType,
-                    const CefString& encoding) override;
-  void AddVisitedLinks(const std::vector<CefString>& urls) override;
-  void ImeSetComposition(const CefString& text,
-                         const std::vector<CefCompositionUnderline>& underlines,
-                         const CefRange& replacement_range,
-                         const CefRange& selection_range) override;
-  void ImeCommitText(const CefString& text,
-                     const CefRange& replacement_range,
+  void LoadWithDataAndBaseUrl(const CefString &baseUrl, const CefString &data,
+                              const CefString &mimeType,
+                              const CefString &encoding,
+                              const CefString &historyUrl) override;
+  void LoadWithData(const CefString &data, const CefString &mimeType,
+                    const CefString &encoding) override;
+  void AddVisitedLinks(const std::vector<CefString> &urls) override;
+  void ImeSetComposition(const CefString &text,
+                         const std::vector<CefCompositionUnderline> &underlines,
+                         const CefRange &replacement_range,
+                         const CefRange &selection_range) override;
+  void ImeCommitText(const CefString &text, const CefRange &replacement_range,
                      int relative_cursor_pos) override;
   void ImeFinishComposingText(bool keep_selection) override;
   void ImeCancelComposition() override;
   void DragTargetDragEnter(CefRefPtr<CefDragData> drag_data,
-                           const CefMouseEvent& event,
+                           const CefMouseEvent &event,
                            DragOperationsMask allowed_ops) override;
-  void DragTargetDragOver(const CefMouseEvent& event,
+  void DragTargetDragOver(const CefMouseEvent &event,
                           DragOperationsMask allowed_ops) override;
   void DragTargetDragLeave() override;
-  void DragTargetDrop(const CefMouseEvent& event) override;
+  void DragTargetDrop(const CefMouseEvent &event) override;
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void DragSourceSystemDragEnded() override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
-  void SetAutoResizeEnabled(bool enabled,
-                            const CefSize& min_size,
-                            const CefSize& max_size) override;
+  void GetOrCreateRootBrowserAccessibilityManager(void **manager) override;
+  void SetAutoResizeEnabled(bool enabled, const CefSize &min_size,
+                            const CefSize &max_size) override;
   CefRefPtr<CefExtension> GetExtension() override;
   bool IsBackgroundHost() override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
-  void ExecuteJavaScript(const CefString& code,
+  void ExecuteJavaScript(const CefString &code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
   void SetNativeWindow(cef_native_window_t window) override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
   void GetImageForContextNode() override;
-  void GetImageFromCache(const CefString& url) override;
+  void GetImageFromCache(const CefString &url) override;
   void ExitFullScreen() override;
-  void UpdateLocale(const CefString& locale) override;
+  void UpdateLocale(const CefString &locale) override;
   CefString GetOriginalUrl() override;
   void PutNetworkAvailable(bool available) override;
   void RemoveCache(bool include_disk_files) override;
@@ -218,18 +198,17 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void ZoomBy(float delta, float width, float height) override;
   void SetWindowId(int window_id, int nweb_id) override;
-  void SetToken(void* token) override;
-  void SetVirtualKeyBoardArg(int32_t width,
-                             int32_t height,
+  void SetToken(void *token) override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height,
                              double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
   void SetOverscrollMode(int mode) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
-  void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                     void** webPrintDocumentAdapter) override;
-  bool DiscardWeb() override;
-  bool ReloadWeb() override;
+  void CreateWebPrintDocumentAdapter(const CefString &jobName,
+                                     void **webPrintDocumentAdapter) override;
+  bool Discard() override;
+  bool Restore() override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
