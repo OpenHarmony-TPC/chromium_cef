@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c24337231eca79122a174ebe65f14a898e8f3792$
+// $hash=0ed9da3f650fe60901e4519267583baf56f51f92$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1048,6 +1048,47 @@ void CefBrowserHostCToCpp::UnregisterArkJSfunction(
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList)
     cef_string_list_free(method_listList);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::CallH5Function(
+    int32_t routing_id,
+    int32_t h5_object_id,
+    const CefString& h5_method_name,
+    const std::vector<CefRefPtr<CefValue>>& args) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, call_h5function))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: h5_method_name; type: string_byref_const
+  DCHECK(!h5_method_name.empty());
+  if (h5_method_name.empty())
+    return;
+
+  // Translate param: args; type: refptr_vec_same_byref_const
+  const size_t argsCount = args.size();
+  cef_value_t** argsList = NULL;
+  if (argsCount > 0) {
+    argsList = new cef_value_t*[argsCount];
+    DCHECK(argsList);
+    if (argsList) {
+      for (size_t i = 0; i < argsCount; ++i) {
+        argsList[i] = CefValueCToCpp::Unwrap(args[i]);
+      }
+    }
+  }
+
+  // Execute
+  _struct->call_h5function(_struct, routing_id, h5_object_id,
+                           h5_method_name.GetStruct(), argsCount, argsList);
+
+  // Restore param:args; type: refptr_vec_same_byref_const
+  if (argsList)
+    delete[] argsList;
 }
 
 NO_SANITIZE("cfi-icall")
