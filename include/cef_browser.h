@@ -1523,6 +1523,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName, void** webPrintDocumentAdapter) = 0;
+
+  ///
+  // Discard a webview window
+  ///
+  /*--cef()--*/
+  virtual bool Discard() = 0;
+
+  ///
+  // Restore the discarded webview window
+  ///
+  /*--cef()--*/
+  virtual bool Restore() = 0;
 };
 
 ///

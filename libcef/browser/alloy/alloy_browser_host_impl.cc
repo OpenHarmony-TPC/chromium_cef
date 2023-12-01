@@ -2069,6 +2069,47 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
   }
 }
 
+bool AlloyBrowserHostImpl::Discard() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, called on invalid thread";
+    return false;
+  }
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, WebContents is nullptr";
+    return false;
+  }
+
+  content::RenderFrameHost* main_frame = web_contents()->GetMainFrame();
+  content::RenderProcessHost* render_process = main_frame->GetProcess();
+  if (!render_process) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, RenderProcessHost is nullptr";
+    return false;
+  }
+
+  bool fast_shutdown_success = render_process->FastShutdownIfPossible(1u, true);
+  if (fast_shutdown_success) {
+    web_contents()->SetWasDiscarded(true);
+  }
+
+  return fast_shutdown_success;
+}
+
+bool AlloyBrowserHostImpl::Restore() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, called on invalid thread";
+    return false;
+  }
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, WebContents is nullptr";
+    return false;
+  }
+  
+  web_contents()->GetController().SetNeedsReload();
+  web_contents()->GetController().LoadIfNecessary();
+  web_contents()->Focus();
+  return true;
+}
+
 #if BUILDFLAG(IS_OHOS)
 void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
   if (platform_delegate_)
