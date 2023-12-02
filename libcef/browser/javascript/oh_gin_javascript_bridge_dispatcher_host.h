@@ -65,11 +65,6 @@ class OhGinJavascriptBridgeDispatcherHost
   void ClearMethodMap() {
     method_map_.clear();
   }
- 
-  void DoCallH5Function(int32_t routing_id,
-                        int32_t h5_object_id,
-                        const std::string& h5_method_name,
-                        const std::vector<CefRefPtr<CefValue>>& args);
 
  private:
   friend class base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>;

@@ -237,10 +237,6 @@ class CefBrowserHostBase : public CefBrowserHost,
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
   void RemoveJavaScriptOnDocumentStart() override;
-  void CallH5Function(int32_t routing_id,
-                      int32_t h5_object_id,
-                      const CefString& h5_method_name,
-                      const std::vector<CefRefPtr<CefValue>>& args) override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(

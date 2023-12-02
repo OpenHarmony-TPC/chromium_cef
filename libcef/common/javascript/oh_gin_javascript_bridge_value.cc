@@ -57,22 +57,6 @@ std::unique_ptr<base::Value> OhGinJavascriptBridgeValue ::CreateObjectIDValue(
 }
 
 // static
-std::unique_ptr<base::Value> OhGinJavascriptBridgeValue ::CreateH5FunctionIDValue(
-    int32_t in_value) {
-  OhGinJavascriptBridgeValue gin_value(TYPE_H5_FUNCTION_ID);
-  gin_value.pickle_.WriteInt(in_value);
-  return gin_value.SerializeToBinaryValue();
-}
-
-//static
-std::unique_ptr<base::Value> OhGinJavascriptBridgeValue ::CreateH5ObjectIDValueWithMdNames(
-    std::string in_value) {
-  OhGinJavascriptBridgeValue gin_value(TYPE_H5_OBJECT_ID);
-  gin_value.pickle_.WriteData(in_value.c_str(), in_value.size());
-  return gin_value.SerializeToBinaryValue();
-}
-
-// static
 std::unique_ptr<base::Value> OhGinJavascriptBridgeValue ::CreateUInt32Value(
     uint32_t in_value) {
   OhGinJavascriptBridgeValue gin_value(TYPE_UINT32);
@@ -124,18 +108,9 @@ bool OhGinJavascriptBridgeValue ::GetAsNonFinite(float* out_value) const {
 }
 
 bool OhGinJavascriptBridgeValue ::GetAsObjectID(int32_t* out_object_id) const {
-  if (GetType() == TYPE_OBJECT_ID || GetType() == TYPE_H5_FUNCTION_ID) {
+  if (GetType() == TYPE_OBJECT_ID) {
     base::PickleIterator iter(pickle_);
     return iter.ReadInt(out_object_id);
-  } else {
-    return false;
-  }
-}
-
-bool OhGinJavascriptBridgeValue::GetAsObjectIDWithMdNames(std::string* out_object_id) const {
-  if (GetType() == TYPE_H5_OBJECT_ID) {
-    base::PickleIterator iter(pickle_);
-    return iter.ReadString(out_object_id);
   } else {
     return false;
   }

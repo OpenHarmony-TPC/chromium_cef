@@ -28,10 +28,6 @@ class OhJavascriptInjector
                     const int32_t object_id);
   void RemoveInterface(const std::string& object_name,
                        const std::vector<std::string> method_list);
-  void DoCallH5Function(int32_t routing_id,
-                        int32_t h5_object_id,
-                        const std::string& h5_method_name,
-                        const std::vector<CefRefPtr<CefValue>>& args);
 
  private:
   friend class content::WebContentsUserData<OhJavascriptInjector>;

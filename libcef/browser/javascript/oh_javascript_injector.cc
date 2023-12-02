@@ -20,10 +20,6 @@ void OhJavascriptInjector::AddInterface(
     const std::string& object_name,
     const std::vector<std::string> method_list,
     const int32_t object_id) {
-  if (!javascript_bridge_dispatcher_host_) {
-    return;
-  }
-
   LOG(INFO) << "AddInterface name : " << object_name.c_str();
   javascript_bridge_dispatcher_host_->AddNamedObject(object_name, method_list,
                                                      object_id);
@@ -32,26 +28,9 @@ void OhJavascriptInjector::AddInterface(
 void OhJavascriptInjector::RemoveInterface(
     const std::string& object_name,
     const std::vector<std::string> method_list) {
-  if (!javascript_bridge_dispatcher_host_) {
-    return;
-  }
-
   LOG(INFO) << "RemoveInterface name : " << object_name.c_str();
   javascript_bridge_dispatcher_host_->RemoveNamedObject(object_name,
                                                         method_list);
-}
-
-void OhJavascriptInjector::DoCallH5Function(
-          int32_t routing_id,
-          int32_t h5_object_id,
-          const std::string& h5_method_name,
-          const std::vector<CefRefPtr<CefValue>>& args) {
-  if (!javascript_bridge_dispatcher_host_) {
-    return;
-  }
-
-  javascript_bridge_dispatcher_host_->DoCallH5Function(
-      routing_id, h5_object_id, h5_method_name, args);
 }
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhJavascriptInjector);
 }  // namespace NWEB
