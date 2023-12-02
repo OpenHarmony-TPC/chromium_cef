@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=78cd8fa2b44b4bf8692b9e8cbe1c11e55e956bd6$
+// $hash=19bd3281c44c2abe47c892dfd22c2bc017070878$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -112,13 +112,9 @@ public:
   void RegisterArkJSfunction(const CefString &object_name,
                              const std::vector<CefString> &method_list,
                              const int32_t object_id) override;
-  void UnregisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
-  void CallH5Function(int32_t routing_id,
-                      int32_t h5_object_id,
-                      const CefString& h5_method_name,
-                      const std::vector<CefRefPtr<CefValue>>& args) override;
+  void
+  UnregisterArkJSfunction(const CefString &object_name,
+                          const std::vector<CefString> &method_list) override;
   void JavaScriptOnDocumentStart(
       const CefString &script,
       const std::vector<CefString> &script_rules) override;

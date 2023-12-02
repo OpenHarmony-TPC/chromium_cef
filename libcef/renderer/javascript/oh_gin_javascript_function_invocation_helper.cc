@@ -32,7 +32,7 @@ OhGinJavascriptFunctionInvocationHelper::
         const base::WeakPtr<OhGinJavascriptBridgeDispatcher>& dispatcher)
     : method_name_(method_name),
       dispatcher_(dispatcher),
-      converter_(new OhGinJavascriptBridgeValueConverter(dispatcher)) {}
+      converter_(new OhGinJavascriptBridgeValueConverter()) {}
 
 OhGinJavascriptFunctionInvocationHelper::
     ~OhGinJavascriptFunctionInvocationHelper() {}
