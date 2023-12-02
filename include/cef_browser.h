@@ -982,6 +982,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       const std::vector<CefString>& method_list) = 0;
 
   ///
+  // CallH5Function
+  ///
+  /*--cef()--*/
+  virtual void CallH5Function(int32_t routing_id,
+                              int32_t h5_object_id,
+                              const CefString& h5_method_name,
+                              const std::vector<CefRefPtr<CefValue>>& args) = 0;
+
+  ///
   // JavaScriptOnDocumentStart
   ///
   /*--cef()--*/

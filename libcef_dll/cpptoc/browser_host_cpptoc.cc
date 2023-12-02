@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f61052af4e881b8713425b8275285a892334e353$
+// $hash=77c22a91447ccca66ff6f231c72808ef923663f2$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1147,9 +1147,47 @@ void CEF_CALLBACK browser_host_unregister_ark_jsfunction(
       CefString(object_name), method_listList);
 }
 
-void CEF_CALLBACK browser_host_java_script_on_document_start(
-    struct _cef_browser_host_t *self, const cef_string_t *script,
-    cef_string_list_t script_rules) {
+void CEF_CALLBACK
+browser_host_call_h5function(struct _cef_browser_host_t* self,
+                             int32_t routing_id,
+                             int32_t h5_object_id,
+                             const cef_string_t* h5_method_name,
+                             size_t argsCount,
+                             struct _cef_value_t* const* args) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self)
+    return;
+  // Verify param: h5_method_name; type: string_byref_const
+  DCHECK(h5_method_name);
+  if (!h5_method_name)
+    return;
+  // Verify param: args; type: refptr_vec_same_byref_const
+  DCHECK(argsCount == 0 || args);
+  if (argsCount > 0 && !args)
+    return;
+
+  // Translate param: args; type: refptr_vec_same_byref_const
+  std::vector<CefRefPtr<CefValue>> argsList;
+  if (argsCount > 0) {
+    for (size_t i = 0; i < argsCount; ++i) {
+      CefRefPtr<CefValue> argsVal = CefValueCppToC::Unwrap(args[i]);
+      argsList.push_back(argsVal);
+    }
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CallH5Function(
+      routing_id, h5_object_id, CefString(h5_method_name), argsList);
+}
+
+void CEF_CALLBACK
+browser_host_java_script_on_document_start(struct _cef_browser_host_t* self,
+                                           const cef_string_t* script,
+                                           cef_string_list_t script_rules) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2508,6 +2546,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->register_ark_jsfunction = browser_host_register_ark_jsfunction;
   GetStruct()->unregister_ark_jsfunction =
       browser_host_unregister_ark_jsfunction;
+  GetStruct()->call_h5function = browser_host_call_h5function;
   GetStruct()->java_script_on_document_start =
       browser_host_java_script_on_document_start;
   GetStruct()->remove_java_script_on_document_start =

@@ -9,11 +9,15 @@
 #include <memory>
 
 #include "content/public/renderer/v8_value_converter.h"
+#include "cef/libcef/renderer/javascript/oh_gin_javascript_bridge_dispatcher.h"
 
 namespace NWEB {
 class OhGinJavascriptBridgeValueConverter
     : public content::V8ValueConverter::Strategy {
  public:
+  OhGinJavascriptBridgeValueConverter(
+        const base::WeakPtr<OhGinJavascriptBridgeDispatcher>& dispatcher);
+
   OhGinJavascriptBridgeValueConverter();
 
   OhGinJavascriptBridgeValueConverter(
@@ -33,6 +37,11 @@ class OhGinJavascriptBridgeValueConverter
   bool FromV8Object(v8::Local<v8::Object> value,
                     std::unique_ptr<base::Value>* out,
                     v8::Isolate* isolate) override;
+  bool FromV8Object(v8::Local<v8::Object> value,
+                    std::unique_ptr<base::Value>* out,
+                    v8::Isolate* isolate,
+                    bool is_function,
+                    bool is_promise) override;
   bool FromV8ArrayBuffer(v8::Local<v8::Object> value,
                          std::unique_ptr<base::Value>* out,
                          v8::Isolate* isolate) override;
@@ -42,6 +51,7 @@ class OhGinJavascriptBridgeValueConverter
 
  private:
   std::unique_ptr<content::V8ValueConverter> converter_;
+  base::WeakPtr<OhGinJavascriptBridgeDispatcher> dispatcher_;
 };
 }  // namespace NWEB
 #endif
