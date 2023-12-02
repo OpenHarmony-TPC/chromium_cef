@@ -777,23 +777,6 @@ void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
     }
   }
 }
-
-void CefBrowserHostBase::CallH5Function(int32_t routing_id,
-                    int32_t h5_object_id,
-                    const CefString& h5_method_name,
-                    const std::vector<CefRefPtr<CefValue>>& args) {
-  OhJavascriptInjector* javascriptInjector =
-      OhJavascriptInjector::FromWebContents(GetWebContents());
-  if (!javascriptInjector || h5_object_id <= 0) {
-    LOG(ERROR) << "CefBrowserHostBase::GetH5ObjectMethods "
-                  "javascriptInjector is null or h5_object_id = "
-               << h5_object_id;
-    return;
-  }
-
-  std::string name = h5_method_name.ToString();
-  javascriptInjector->DoCallH5Function(routing_id, h5_object_id, name, args);
-}
 #endif
 
 void CefBrowserHostBase::ReplaceMisspelling(const CefString& word) {
