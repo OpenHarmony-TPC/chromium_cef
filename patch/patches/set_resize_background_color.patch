@@ -1,0 +1,30 @@
+diff --git ui/views/controls/webview/webview.cc ui/views/controls/webview/webview.cc
+index fd325017d2347..84ab42c78c1fd 100644
+--- ui/views/controls/webview/webview.cc
++++ ui/views/controls/webview/webview.cc
+@@ -143,6 +143,10 @@ void WebView::EnableSizingFromWebContents(const gfx::Size& min_size,
+     MaybeEnableAutoResize(web_contents()->GetPrimaryMainFrame());
+ }
+ 
++void WebView::SetResizeBackgroundColor(SkColor resize_background_color) {
++  holder_->SetBackgroundColorWhenClipped(resize_background_color);
++}
++
+ void WebView::SetCrashedOverlayView(View* crashed_overlay_view) {
+   if (crashed_overlay_view_ == crashed_overlay_view)
+     return;
+diff --git ui/views/controls/webview/webview.h ui/views/controls/webview/webview.h
+index 33e93fd257574..b25e00d6b4f48 100644
+--- ui/views/controls/webview/webview.h
++++ ui/views/controls/webview/webview.h
+@@ -85,6 +85,10 @@ class WEBVIEW_EXPORT WebView : public View,
+   void EnableSizingFromWebContents(const gfx::Size& min_size,
+                                    const gfx::Size& max_size);
+ 
++  // Set the background color to use while resizing with a clip. This is white
++  // by default.
++  void SetResizeBackgroundColor(SkColor resize_background_color);
++
+   // If provided, this View will be shown in place of the web contents
+   // when the web contents is in a crashed state. This is cleared automatically
+   // if the web contents is changed.
