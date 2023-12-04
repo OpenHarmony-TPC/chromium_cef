@@ -156,9 +156,6 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void DidStartNavigation(content::NavigationHandle* navigation) override;
   void DocumentOnLoadCompletedInPrimaryMainFrame() override;
 #endif
-#ifdef OHOS_NWEB_EX
-  void DidRedirectNavigation(content::NavigationHandle* navigation) override;
-#endif
 
   // NotificationObserver methods.
   void Observe(int type,

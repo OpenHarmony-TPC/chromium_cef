@@ -27,6 +27,7 @@
 
 #ifdef OHOS_NWEB_EX
 #include "base/command_line.h"
+#include "content/browser/renderer_host/navigation_request.h"
 #include "content/public/common/content_switches.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
@@ -40,13 +41,30 @@ constexpr base::TimeDelta kEffectiveUserEscapeDuration =
     base::Milliseconds(1250);
 
 #ifdef OHOS_NWEB_EX
-void SetUserAgentOverrideForMainFrame(content::NavigationHandle* navigation,
-                                      const std::string& ua) {
-  if (!navigation) {
+void MaybeSetUserAgentOverrideForMainFrame(content::NavigationHandle* navigation) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser) || !navigation) {
     return;
   }
 
-  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, ua);
+  // UserAgent won't be added when the navigation_request created by renderer process.
+  if (content::NavigationRequest::From(navigation)
+          ->is_synchronous_renderer_commit()) {
+    return;
+  }
+
+  const GURL& url = navigation->GetURL();
+  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
+    return;
+  }
+
+  std::string final_ua =
+      nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(
+          url.host());
+  LOG(INFO) << "DidStartNavigation, url: " << url.spec() << ", final_ua: "
+            << final_ua;
+
+  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
   if (!navigation->IsInMainFrame()) {
     return;
   }
@@ -57,7 +75,7 @@ void SetUserAgentOverrideForMainFrame(content::NavigationHandle* navigation,
   }
 
   web_contents->SetUserAgentOverride(
-      blink::UserAgentOverride::UserAgentOnly(ua), true);
+      blink::UserAgentOverride::UserAgentOnly(final_ua), true);
 }
 #endif  // OHOS_NWEB_EX
 }  // namespace
@@ -555,22 +573,8 @@ void CefBrowserContentsDelegate::DidStartNavigation(
   }
 
 #ifdef OHOS_NWEB_EX
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    return;
-  }
-
-  const GURL& url = navigation->GetURL();
-  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
-    return;
-  }
-  std::string final_ua =
-      nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(
-          url.host());
-  LOG(INFO) << "DidStartNavigation, url: " << url.spec() << ", final_ua: "
-            << final_ua;
-  // |final_ua| will be added to the navigation of the mainframe and iframe.
-  SetUserAgentOverrideForMainFrame(navigation, final_ua);
+  // UserAgent maybe added to the navigation of the mainframe and iframe.
+  MaybeSetUserAgentOverrideForMainFrame(navigation);
 #endif  // OHOS_NWEB_EX
 }
 
@@ -580,31 +584,6 @@ void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
   }
 }
 #endif
-
-#ifdef OHOS_NWEB_EX
-void CefBrowserContentsDelegate::DidRedirectNavigation(
-    content::NavigationHandle* navigation) {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    return;
-  }
-
-  const GURL& url = navigation->GetURL();
-  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
-    return;
-  }
-  std::string final_ua = nweb_ex::AlloyBrowserUAConfig::GetInstance()
-                             ->GetUserAgentForHostWithoutDefaultUA(url.host());
-  LOG(INFO) << "DidRedirectNavigation, url: " << url.spec() << ", final_ua: "
-            << final_ua;
-  if (final_ua.empty()) {
-    return;
-  }
-
-  // |final_ua| will be added to the navigation of the mainframe and iframe.
-  SetUserAgentOverrideForMainFrame(navigation, final_ua);
-}
-#endif  // OHOS_NWEB_EX
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
