@@ -122,7 +122,6 @@ std::vector<std::string> OhGinJavascriptBridgeObject::EnumerateNamedProperties(
 v8::Local<v8::FunctionTemplate>
 OhGinJavascriptBridgeObject::GetFunctionTemplate(v8::Isolate* isolate,
                                                  const std::string& name) {
-  LOG(INFO) << "GetFunctionTemplate name : " << name.c_str();
   v8::Local<v8::FunctionTemplate> function_template = template_cache_.Get(name);
   if (!function_template.IsEmpty())
     return function_template;

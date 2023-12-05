@@ -60,8 +60,6 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
 
 void OhGinJavascriptBridgeDispatcher::OnAddNamedObject(const std::string& name,
                                                        ObjectID object_id) {
-  LOG(INFO) << "OnAddNamedObject name : " << name
-            << " object_id : " << object_id;
   named_objects_.insert(std::make_pair(name, object_id));
 }
 
@@ -86,7 +84,6 @@ void OhGinJavascriptBridgeDispatcher::GetJavascriptMethods(
 bool OhGinJavascriptBridgeDispatcher::HasJavascriptMethod(
     ObjectID object_id,
     const std::string& method_name) {
-  LOG(INFO) << "HasJavascriptMethod";
   bool result;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_HasMethod(
       routing_id(), object_id, method_name, &result));
@@ -112,7 +109,6 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
 
 OhGinJavascriptBridgeObject* OhGinJavascriptBridgeDispatcher::GetObject(
     const ObjectID object_id) {
-  LOG(INFO) << "GetObject";
   OhGinJavascriptBridgeObject* result = objects_.Lookup(object_id);
   if (!result) {
     result =
