@@ -187,7 +187,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
     const ObjectID object_id) {
-  LOG(INFO) << "AddNamedObject::" << object_name;
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   // In order to be compatible with older webcotroller,
   // Currently, the webcontroller save the object_id on the core side, get object from ace side by object_name
@@ -206,7 +205,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
         method_list) {  // todo: method_list 参数删除
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (method_map_.empty()) {
-    LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                  "is empty!";
     return;
   }
@@ -215,7 +214,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     for (it = method_map_.begin(); it != method_map_.end(); ++it) {
       if (!(object_name == it->second.first) &&
           std::next(it) == method_map_.end()) {
-        LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:"
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:"
                      "object_name:"
                   << object_name << " is not exist!";
         return;
@@ -244,7 +243,7 @@ void OhGinJavascriptBridgeDispatcherHost::DocumentAvailableInMainFrame(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   (void)render_frame_host;
   if (!client_) {
-    LOG(INFO)
+    LOG(ERROR)
         << "OhGinJavascriptBridgeDispatcherHost::DocumentAvailableInMainFrame: "
            "client_ is null";
     return;
@@ -257,8 +256,6 @@ void OhGinJavascriptBridgeDispatcherHost::DocumentAvailableInMainFrame(
 void OhGinJavascriptBridgeDispatcherHost::OnGetMethods(
     int32_t object_id,
     std::set<std::string>* returned_method_names) {
-  LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::OnGetMethods::"
-            << object_id;
   // get from web_webview side
   if (method_map_.find(object_id) == method_map_.end()) {
     if (!client_) {
@@ -290,8 +287,6 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasMethod(
     int32_t object_id,
     const std::string& method_name,
     bool* result) {
-  LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::OnHasMethod::"
-            << method_name.c_str();
   *result = false;
   if (method_map_.find(object_id) != method_map_.end()) {
     MethodPair p = method_map_[object_id];
@@ -314,7 +309,7 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
     CefRefPtr<CefValue> result) {
   std::unique_ptr<base::Value> baseValue = std::make_unique<base::Value>();
   if (!result.get()) {
-    LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                  "ParseCefValueTObaseValueHelper: result is null";
     return baseValue;
   }
@@ -340,7 +335,7 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       auto cefArr = result->GetList();
       baseValue = std::make_unique<base::ListValue>();
       if (!cefArr) {
-        LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                      "ParseCefValueTObaseValueHelper: cefArr is null";
         break;
       }
@@ -356,7 +351,7 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       auto cefDict = result->GetDictionary();
       baseValue = std::make_unique<base::DictionaryValue>();
       if (!cefDict) {
-        LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                      "ParseCefValueTObaseValueHelper: cefDict is null";
         break;
       }
@@ -480,7 +475,7 @@ std::unique_ptr<base::Value> ParseCefValueTOBaseValue(
     CefRefPtr<CefListValue> result) {
   std::unique_ptr<base::Value> value = std::make_unique<base::Value>();
   if (!result.get() || result->GetSize() == 0) {
-    LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                  "ParseCefValueTOBaseValue: result is null or empty";
     return value;
   }
@@ -494,7 +489,7 @@ std::unique_ptr<base::Value> ParseCefValueTOBaseValue(
 CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::ListValue* value) {
   auto cefList = CefListValue::Create();
   if (!value) {
-    LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                  "ParseBaseValueTOCefValue: value is null";
     return cefList;
   }
@@ -513,8 +508,6 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     const base::ListValue& arguments,
     base::ListValue* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  LOG(INFO) << "OnInvokeMethod method_name : " << method_name.c_str();
-
   base::ListValue* argument = const_cast<base::ListValue*>(&arguments);
 
   CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
