@@ -237,6 +237,10 @@ class CefBrowserHostBase : public CefBrowserHost,
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
   void RemoveJavaScriptOnDocumentStart() override;
+  void JavaScriptOnDocumentEnd(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentEnd() override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(
@@ -539,7 +543,8 @@ bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original, blink::WebMessageP
       receiverMap_;
   uint64_t last_zoom_time_ = 0;
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
-  std::map<std::string, int> script_result_map_;
+  std::map<std::string, int> document_start_script_result_map_;
+  std::map<std::string, int> document_end_script_result_map_;
 #endif
 
   CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
