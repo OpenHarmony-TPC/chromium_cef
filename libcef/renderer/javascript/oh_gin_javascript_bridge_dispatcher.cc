@@ -48,6 +48,8 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
     if (object) {
       objects_.AddWithID(object, iter->second);
     } else {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::DidClearWindowObject "
+                    "ObjectWrapperDeleted called";
       // Inform the host about wrapper creation failure.
       render_frame()->Send(
           new OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted(routing_id(),
@@ -58,8 +60,6 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
 
 void OhGinJavascriptBridgeDispatcher::OnAddNamedObject(const std::string& name,
                                                        ObjectID object_id) {
-  LOG(INFO) << "OnAddNamedObject name : " << name
-            << " object_id : " << object_id;
   named_objects_.insert(std::make_pair(name, object_id));
 }
 
@@ -84,7 +84,6 @@ void OhGinJavascriptBridgeDispatcher::GetJavascriptMethods(
 bool OhGinJavascriptBridgeDispatcher::HasJavascriptMethod(
     ObjectID object_id,
     const std::string& method_name) {
-  LOG(INFO) << "HasJavascriptMethod";
   bool result;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_HasMethod(
       routing_id(), object_id, method_name, &result));
@@ -110,7 +109,6 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
 
 OhGinJavascriptBridgeObject* OhGinJavascriptBridgeDispatcher::GetObject(
     const ObjectID object_id) {
-  LOG(INFO) << "GetObject";
   OhGinJavascriptBridgeObject* result = objects_.Lookup(object_id);
   if (!result) {
     result =
@@ -124,9 +122,17 @@ OhGinJavascriptBridgeObject* OhGinJavascriptBridgeDispatcher::GetObject(
 void OhGinJavascriptBridgeDispatcher::OnOhGinJavascriptBridgeObjectDeleted(
     const OhGinJavascriptBridgeObject* object) {
   int object_id = object->object_id();
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::"
+                "OnOhGinJavascriptBridgeObjectDeleted called, object_id = "
+             << object_id;
   // Ignore cleaning up of old object wrappers.
   if (objects_.Lookup(object_id) != object)
     return;
+  LOG(DEBUG)
+      << "OhGinJavascriptBridgeDispatcher::"
+         "OnOhGinJavascriptBridgeObjectDeleted called, object_id = "
+      << object_id
+      << " ,new OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted called";
   objects_.Remove(object_id);
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted(
       routing_id(), object_id));

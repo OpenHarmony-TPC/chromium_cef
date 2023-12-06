@@ -39,7 +39,6 @@ OhGinJavascriptFunctionInvocationHelper::
 
 v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
     gin::Arguments* args) {
-  LOG(INFO) << "OhGinJavascriptFunctionInvocationHelper Invoke";
   if (!dispatcher_) {
     args->isolate()->ThrowException(v8::Exception::Error(
         gin::StringToV8(args->isolate(), kMethodInvocationErrorMessage)));
@@ -77,11 +76,15 @@ v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
   std::unique_ptr<base::Value> result = dispatcher_->InvokeJavascriptMethod(
       object->object_id(), method_name_, arguments, &error);
   if (!result.get()) {
+    LOG(ERROR)
+        << "OhGinJavascriptFunctionInvocationHelper::Invoke result is null";
     args->isolate()->ThrowException(v8::Exception::Error(gin::StringToV8(
         args->isolate(), OhGinJavascriptBridgeErrorToString(error))));
     return v8::Undefined(args->isolate());
   }
   if (!result->is_blob()) {
+    LOG(ERROR)
+        << "OhGinJavascriptFunctionInvocationHelper::Invoke result is not blob";
     return converter_->ToV8Value(result.get(),
                                  args->isolate()->GetCurrentContext());
   }
@@ -95,6 +98,9 @@ v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
       object_result = dispatcher_->GetObject(object_id);
     }
     if (object_result) {
+      LOG(ERROR) << "OhGinJavascriptFunctionInvocationHelper::Invoke result is "
+                    "blob, object_id = "
+                 << (uint32_t)object_id;
       gin::Handle<OhGinJavascriptBridgeObject> controller =
           gin::CreateHandle(args->isolate(), object_result);
       if (controller.IsEmpty())

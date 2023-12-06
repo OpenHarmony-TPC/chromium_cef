@@ -68,8 +68,12 @@ OhGinJavascriptBridgeObject::OhGinJavascriptBridgeObject(
 
 OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject() {
   if (dispatcher_) {
+    LOG(DEBUG)
+        << "OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject called";
     dispatcher_->OnOhGinJavascriptBridgeObjectDeleted(this);
   } else {
+    LOG(DEBUG)
+        << "OhGinJavascriptBridgeObject::~OhGinJavascriptBridgeObject called";
     // A wrapper can outlive a render frame, and thus the dispatcher.
     // Note that we intercept GinJavaBridgeHostMsg messages in a browser filter
     // thus it's OK to send the message with a routing id of a ceased frame.
@@ -118,7 +122,6 @@ std::vector<std::string> OhGinJavascriptBridgeObject::EnumerateNamedProperties(
 v8::Local<v8::FunctionTemplate>
 OhGinJavascriptBridgeObject::GetFunctionTemplate(v8::Isolate* isolate,
                                                  const std::string& name) {
-  LOG(INFO) << "GetFunctionTemplate name : " << name.c_str();
   v8::Local<v8::FunctionTemplate> function_template = template_cache_.Get(name);
   if (!function_template.IsEmpty())
     return function_template;
