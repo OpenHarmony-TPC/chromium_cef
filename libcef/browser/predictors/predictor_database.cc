@@ -83,6 +83,14 @@ VisitedUrlInfo VisitedUrlInfo::FromDict(const base::DictionaryValue& dict) {
   return VisitedUrlInfo(url, origin, count);
 }
 
+predictor::PreconnectUrlInfo::PreconnectUrlInfo() {}
+
+predictor::PreconnectUrlInfo::~PreconnectUrlInfo() {}
+
+predictor::PreconnectUrlInfo::PreconnectUrlInfo(const PreconnectUrlInfo& other) = default;
+
+std::vector<PreconnectUrlInfo> PredictorDatabase::preconnect_url_info_list = std::vector<PreconnectUrlInfo>();
+
 // static
 PredictorDatabase* PredictorDatabase::GetInstance() {
   static PredictorDatabase instance;

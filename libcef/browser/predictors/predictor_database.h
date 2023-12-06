@@ -29,6 +29,15 @@ namespace predictor {
 
 extern const char kVisitedUrls[];
 
+struct PreconnectUrlInfo {
+  PreconnectUrlInfo();
+  PreconnectUrlInfo(const PreconnectUrlInfo& other);
+  ~PreconnectUrlInfo();
+  std::string url;
+  int num_sockets;
+  bool is_preconnectable;
+};
+
 class VisitedUrlInfo {
  public:
   VisitedUrlInfo(const GURL& url);
@@ -64,6 +73,8 @@ class PredictorDatabase {
 
   void RecordVisitedUrl(VisitedUrlInfo url_info);
   std::set<std::string> GetRecentVisitedUrl();
+
+  static std::vector<PreconnectUrlInfo> preconnect_url_info_list;
 
  private:
   void UpdateFromPrefsAndClear();
