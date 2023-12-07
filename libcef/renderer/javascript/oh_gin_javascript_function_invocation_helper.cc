@@ -32,7 +32,7 @@ OhGinJavascriptFunctionInvocationHelper::
         const base::WeakPtr<OhGinJavascriptBridgeDispatcher>& dispatcher)
     : method_name_(method_name),
       dispatcher_(dispatcher),
-      converter_(new OhGinJavascriptBridgeValueConverter()) {}
+      converter_(new OhGinJavascriptBridgeValueConverter(dispatcher)) {}
 
 OhGinJavascriptFunctionInvocationHelper::
     ~OhGinJavascriptFunctionInvocationHelper() {}
@@ -66,6 +66,7 @@ v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
     v8::Local<v8::Value> val;
     while (args->GetNext(&val)) {
       std::unique_ptr<base::Value> arg(converter_->FromV8Value(val, context));
+      LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call FromV8Value end";
       if (arg.get())
         arguments.Append(std::move(arg));
       else
@@ -76,6 +77,7 @@ v8::Local<v8::Value> OhGinJavascriptFunctionInvocationHelper::Invoke(
   OhGinJavascriptBridgeError error;
   std::unique_ptr<base::Value> result = dispatcher_->InvokeJavascriptMethod(
       object->object_id(), method_name_, arguments, &error);
+  LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call InvokeJavascriptMethod end";
   if (!result.get()) {
     LOG(DEBUG)
         << "OhGinJavascriptFunctionInvocationHelper::Invoke result is null";

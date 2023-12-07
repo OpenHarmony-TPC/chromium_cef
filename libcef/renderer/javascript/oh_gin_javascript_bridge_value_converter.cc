@@ -17,11 +17,22 @@
 #include "libcef/renderer/javascript/oh_gin_javascript_bridge_object.h"
 
 namespace NWEB {
+OhGinJavascriptBridgeValueConverter::OhGinJavascriptBridgeValueConverter(
+    const base::WeakPtr<OhGinJavascriptBridgeDispatcher>& dispatcher)
+    : converter_(content::V8ValueConverter::Create()), dispatcher_(dispatcher) {
+  converter_->SetDateAllowed(false);
+  converter_->SetRegExpAllowed(false);
+  converter_->SetFunctionAllowed(true);
+  converter_->SetPromiseAllowed(true);
+  converter_->SetStrategy(this);
+}
+
 OhGinJavascriptBridgeValueConverter::OhGinJavascriptBridgeValueConverter()
     : converter_(content::V8ValueConverter::Create()) {
   converter_->SetDateAllowed(false);
   converter_->SetRegExpAllowed(false);
   converter_->SetFunctionAllowed(true);
+  converter_->SetPromiseAllowed(true);
   converter_->SetStrategy(this);
 }
 
@@ -44,11 +55,81 @@ bool OhGinJavascriptBridgeValueConverter::FromV8Object(
     std::unique_ptr<base::Value>* out,
     v8::Isolate* isolate) {
   OhGinJavascriptBridgeObject* unwrapped;
-  if (!gin::ConvertFromV8(isolate, value, &unwrapped)) {
+  v8::HandleScope handle_scope(isolate);
+  if (gin::ConvertFromV8(isolate, value, &unwrapped)) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object native object";
+    *out =
+        OhGinJavascriptBridgeValue::CreateObjectIDValue(unwrapped->object_id());
+  } else if (dispatcher_ && dispatcher_->HasH5ObjectMethod(value)) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object HasH5ObjectMethod true";
+    int h5_object_id = dispatcher_->AddH5Object(value);
+    std::vector<std::string> names = dispatcher_->GetH5ObjectMethodNames(
+        value, h5_object_id);
+    std::string str = std::to_string(h5_object_id) + std::string(";");
+    for (auto name : names) {
+      str += name + std::string(";");
+    }
+    *out =
+        OhGinJavascriptBridgeValue::CreateH5ObjectIDValueWithMdNames(str);
+  } else {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object return false";
     return false;
   }
-  *out =
-      OhGinJavascriptBridgeValue::CreateObjectIDValue(unwrapped->object_id());
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object return true";
+  return true;
+}
+
+bool OhGinJavascriptBridgeValueConverter::FromV8Object(
+    v8::Local<v8::Object> value,
+    std::unique_ptr<base::Value>* out,
+    v8::Isolate* isolate,
+    bool is_function,
+    bool is_promise) {
+  OhGinJavascriptBridgeObject* unwrapped;
+  v8::HandleScope handle_scope(isolate);
+  if (gin::ConvertFromV8(isolate, value, &unwrapped)) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object native object";
+    *out =
+        OhGinJavascriptBridgeValue::CreateObjectIDValue(unwrapped->object_id());
+  } else {
+    if (!dispatcher_) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object dispatcher_ null";
+      return false;
+    }
+
+    if (is_function) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object function true";
+      int h5_function_id = dispatcher_->AddH5Object(value);
+      *out =
+          OhGinJavascriptBridgeValue::CreateH5FunctionIDValue(h5_function_id);
+    } else if (is_promise) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object promise true";
+      int h5_object_id = dispatcher_->AddH5Object(value);
+      std::vector<std::string> names = dispatcher_->GetH5ObjectMethodNames(
+          value, h5_object_id);
+      std::string str = std::to_string(h5_object_id) + std::string(";");
+      for (auto name : names) {
+        str += name + std::string(";");
+      }
+      *out =
+          OhGinJavascriptBridgeValue::CreateH5ObjectIDValueWithMdNames(str);
+    } else if (dispatcher_ && dispatcher_->HasH5ObjectMethod(value)) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object HasH5ObjectMethod true";
+      int h5_object_id = dispatcher_->AddH5Object(value);
+      std::vector<std::string> names = dispatcher_->GetH5ObjectMethodNames(
+          value, h5_object_id);
+      std::string str = std::to_string(h5_object_id) + std::string(";");
+      for (auto name : names) {
+        str += name + std::string(";");
+      }
+      *out =
+          OhGinJavascriptBridgeValue::CreateH5ObjectIDValueWithMdNames(str);
+   } else {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object return false";
+      return false;
+    }
+  }
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::FromV8Object return true";
   return true;
 }
 
