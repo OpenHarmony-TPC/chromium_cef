@@ -1,9 +1,6 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2018-2022. All rights reserved.
- * Various utilities for kicking off sync initialization from data types or
- * other services.
- */
-
+// Copyright (c) 2022 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #ifndef CEF_LIBCEF_BROWSER_PASSWORD_OH_SYNC_START_UTIL_H_
 #define CEF_LIBCEF_BROWSER_PASSWORD_OH_SYNC_START_UTIL_H_
 
