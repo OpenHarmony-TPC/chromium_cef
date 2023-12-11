@@ -1,7 +1,6 @@
-/*
- * Copyright (c) Huawei Technologies Co., Ltd. 2018-2022. All rights reserved.
- */
-
+// Copyright (c) 2022 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 #include "libcef/browser/password/oh_password_store_factory.h"
 
 #include "base/containers/contains.h"
