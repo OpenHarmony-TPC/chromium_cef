@@ -17,6 +17,9 @@
 #include "extensions/browser/api/alarms/alarms_api.h"
 #include "extensions/browser/api/storage/storage_api.h"
 #include "extensions/browser/extension_function_registry.h"
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
+#endif
 
 namespace extensions {
 namespace api {
@@ -63,6 +66,28 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsSetZoomSettingsFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomSettingsFunction),
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    "developerPrivate",
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionsInfoFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionSizeFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateGetItemsInfoFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateGetProfileConfigurationFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateUpdateProfileConfigurationFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateShowPermissionsDialogFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateReloadFunction),
+    EXTENSION_FUNCTION_NAME(
+        DeveloperPrivateUpdateExtensionConfigurationFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateLoadUnpackedFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateInstallDroppedFileFunction),
+    EXTENSION_FUNCTION_NAME(
+        DeveloperPrivateNotifyDragInstallInProgressFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateLoadDirectoryFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateChoosePathFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivatePackDirectoryFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateIsProfileManagedFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateRequestFileSourceFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenDevToolsFunction),
+#endif
     nullptr,  // Indicates end of array.
 };
 
@@ -109,6 +134,26 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<cefimpl::TabsGetZoomFunction>();
   registry->RegisterFunction<cefimpl::TabsSetZoomSettingsFunction>();
   registry->RegisterFunction<cefimpl::TabsGetZoomSettingsFunction>();
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  registry->RegisterFunction<DeveloperPrivateGetExtensionsInfoFunction>();
+  registry->RegisterFunction<DeveloperPrivateGetExtensionSizeFunction>();
+  registry->RegisterFunction<DeveloperPrivateGetItemsInfoFunction>();
+  registry->RegisterFunction<DeveloperPrivateGetProfileConfigurationFunction>();
+  registry
+      ->RegisterFunction<DeveloperPrivateUpdateProfileConfigurationFunction>();
+  registry->RegisterFunction<DeveloperPrivateShowPermissionsDialogFunction>();
+  registry->RegisterFunction<DeveloperPrivateReloadFunction>();
+  registry->RegisterFunction<DeveloperPrivateLoadUnpackedFunction>();
+  registry->RegisterFunction<DeveloperPrivateInstallDroppedFileFunction>();
+  registry
+      ->RegisterFunction<DeveloperPrivateNotifyDragInstallInProgressFunction>();
+  registry->RegisterFunction<DeveloperPrivateLoadDirectoryFunction>();
+  registry->RegisterFunction<DeveloperPrivateChoosePathFunction>();
+  registry->RegisterFunction<DeveloperPrivatePackDirectoryFunction>();
+  registry->RegisterFunction<DeveloperPrivateIsProfileManagedFunction>();
+  registry->RegisterFunction<DeveloperPrivateRequestFileSourceFunction>();
+  registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
+#endif
 }
 
 }  // namespace cef

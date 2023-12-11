@@ -33,6 +33,9 @@
 #include "content/public/common/content_constants.h"
 #include "content/public/common/content_plugin_info.h"
 #include "content/public/common/content_switches.h"
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
 #include "media/media_buildflags.h"
 #include "ppapi/shared_impl/ppapi_permissions.h"
 #include "third_party/widevine/cdm/buildflags.h"
@@ -101,6 +104,30 @@ void AlloyContentClient::AddContentDecryptionModules(
 }
 
 void AlloyContentClient::AddAdditionalSchemes(Schemes* schemes) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  schemes->standard_schemes.push_back(extensions::kExtensionScheme);
+
+  schemes->extension_schemes.push_back(extensions::kExtensionScheme);
+
+  schemes->savable_schemes.push_back(extensions::kExtensionScheme);
+
+  // Treat extensions as secure because communication with them is entirely in
+  // the browser, so there is no danger of manipulation or eavesdropping on
+  // communication with them by third parties.
+  schemes->secure_schemes.push_back(extensions::kExtensionScheme);
+
+  schemes->service_worker_schemes.push_back(extensions::kExtensionScheme);
+  schemes->service_worker_schemes.push_back(url::kFileScheme);
+
+  // As far as Blink is concerned, they should be allowed to receive CORS
+  // requests. At the Extensions layer, requests will actually be blocked unless
+  // overridden by the web_accessible_resources manifest key.
+  // TODO(kalman): See what happens with a service worker.
+  schemes->cors_enabled_schemes.push_back(extensions::kExtensionScheme);
+
+  schemes->csp_bypassing_schemes.push_back(extensions::kExtensionScheme);
+#endif
+
   CefAppManager::Get()->AddAdditionalSchemes(schemes);
 }
 

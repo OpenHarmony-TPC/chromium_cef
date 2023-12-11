@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=dcc37570651f7810bf30168a0033c0cf79f30209$
+// $hash=9aac900f55bcf971cef9f34938e29b7b3e7605ca$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
@@ -220,17 +220,66 @@ typedef struct _cef_client_t {
   ///
   /// Returns the list of arguments NotifyJavaScriptResult.
   ///
-  int(CEF_CALLBACK* notify_java_script_result)(
+  int(CEF_CALLBACK* notify_java_script_result)(struct _cef_client_t* self,
+                                               struct _cef_list_value_t* args,
+                                               const cef_string_t* method,
+                                               const cef_string_t* object_name,
+                                               struct _cef_list_value_t* result,
+                                               int32_t routing_id,
+                                               int32_t object_id);
+
+  ///
+  /// has javaScript object function.
+  ///
+  int(CEF_CALLBACK* has_java_script_object_methods)(
       struct _cef_client_t* self,
-      struct _cef_list_value_t* args,
-      const cef_string_t* method,
-      const cef_string_t* object_name,
-      struct _cef_list_value_t* result);
+      int32_t object_id,
+      const cef_string_t* method_name);
+
+  ///
+  /// get javaScript object functions.
+  ///
+  void(CEF_CALLBACK* get_java_script_object_methods)(
+      struct _cef_client_t* self,
+      int32_t object_id,
+      struct _cef_value_t* returned_method_names);
+
+  ///
+  /// remove javaScript object holder.
+  ///
+  void(CEF_CALLBACK* remove_java_script_object_holder)(
+      struct _cef_client_t* self,
+      int32_t holder,
+      int32_t object_id);
+
+  ///
+  /// remove transient javaScript object holder.
+  ///
+  void(CEF_CALLBACK* remove_transient_java_script_object)(
+      struct _cef_client_t* self);
 
   ///
   /// Return the handler for browser form events.
   ///
   struct _cef_form_handler_t*(CEF_CALLBACK* get_form_handler)(
+      struct _cef_client_t* self);
+
+  ///
+  /// Called when top controls offset has been changed.
+  ///
+  void(CEF_CALLBACK* on_top_controls_changed)(struct _cef_client_t* self,
+                                              float top_controls_offset,
+                                              float top_content_offset);
+
+  ///
+  /// Return the height of top controls.
+  ///
+  int(CEF_CALLBACK* on_get_top_controls_height)(struct _cef_client_t* self);
+
+  ///
+  /// Return the shrink renderer size of top controls.
+  ///
+  int(CEF_CALLBACK* do_browser_controls_shrink_renderer_size)(
       struct _cef_client_t* self);
 } cef_client_t;
 

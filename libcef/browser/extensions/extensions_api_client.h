@@ -10,6 +10,9 @@
 #include "extensions/browser/api/extensions_api_client.h"
 
 namespace extensions {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+class ManagementAPIDelegate;
+#endif
 
 class CefExtensionsAPIClient : public ExtensionsAPIClient {
  public:
@@ -37,7 +40,9 @@ class CefExtensionsAPIClient : public ExtensionsAPIClient {
       SettingsChangedCallback observer,
       std::map<settings_namespace::Namespace, ValueStoreCache*>* caches)
       override;
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  ManagementAPIDelegate* CreateManagementAPIDelegate() const override;
+#endif
  private:
   std::unique_ptr<FileSystemDelegate> file_system_delegate_;
 };

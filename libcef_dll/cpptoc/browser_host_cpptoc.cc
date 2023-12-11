@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dc53c042f9653d10f724c471f3ee8cab576c547f$
+// $hash=12cbbe92481ddbd5ee5e70e50b52dacc15fc0a3a$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1303,6 +1303,28 @@ browser_host_set_accessibility_state(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetAccessibilityState(accessibility_state);
 }
 
+void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
+    struct _cef_browser_host_t* self,
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->GetOrCreateRootBrowserAccessibilityManager(
+      manager);
+}
+
 void CEF_CALLBACK
 browser_host_set_auto_resize_enabled(struct _cef_browser_host_t* self,
                                      int enabled,
@@ -1752,7 +1774,8 @@ browser_host_set_background_color(struct _cef_browser_host_t* self, int color) {
 void CEF_CALLBACK
 browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
-                                     cef_string_list_t method_list) {
+                                     cef_string_list_t method_list,
+                                     int32_t object_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1777,8 +1800,8 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
   transfer_string_list_contents(method_list, method_listList);
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(CefString(object_name),
-                                                         method_listList);
+  CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(
+      CefString(object_name), method_listList, object_id);
 }
 
 void CEF_CALLBACK
@@ -1807,6 +1830,46 @@ browser_host_unregister_ark_jsfunction(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->UnregisterArkJSfunction(
       CefString(object_name), method_listList);
+}
+
+void CEF_CALLBACK
+browser_host_call_h5function(struct _cef_browser_host_t* self,
+                             int32_t routing_id,
+                             int32_t h5_object_id,
+                             const cef_string_t* h5_method_name,
+                             size_t argsCount,
+                             struct _cef_value_t* const* args) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: h5_method_name; type: string_byref_const
+  DCHECK(h5_method_name);
+  if (!h5_method_name) {
+    return;
+  }
+  // Verify param: args; type: refptr_vec_same_byref_const
+  DCHECK(argsCount == 0 || args);
+  if (argsCount > 0 && !args) {
+    return;
+  }
+
+  // Translate param: args; type: refptr_vec_same_byref_const
+  std::vector<CefRefPtr<CefValue>> argsList;
+  if (argsCount > 0) {
+    for (size_t i = 0; i < argsCount; ++i) {
+      CefRefPtr<CefValue> argsVal = CefValueCppToC::Unwrap(args[i]);
+      argsList.push_back(argsVal);
+    }
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CallH5Function(
+      routing_id, h5_object_id, CefString(h5_method_name), argsList);
 }
 
 void CEF_CALLBACK browser_host_store_web_archive(
@@ -2514,6 +2577,217 @@ void CEF_CALLBACK browser_host_set_token(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetToken(token);
 }
 
+void CEF_CALLBACK
+browser_host_set_virtual_key_board_arg(struct _cef_browser_host_t* self,
+                                       int32_t width,
+                                       int32_t height,
+                                       double keyboard) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetVirtualKeyBoardArg(width, height,
+                                                         keyboard);
+}
+
+int CEF_CALLBACK
+browser_host_should_virtual_keyboard_overlay(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefBrowserHostCppToC::Get(self)->ShouldVirtualKeyboardOverlay();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_java_script_on_document_start(struct _cef_browser_host_t* self,
+                                           const cef_string_t* script,
+                                           cef_string_list_t script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: script; type: string_byref_const
+  DCHECK(script);
+  if (!script) {
+    return;
+  }
+  // Verify param: script_rules; type: string_vec_byref_const
+  DCHECK(script_rules);
+  if (!script_rules) {
+    return;
+  }
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  std::vector<CefString> script_rulesList;
+  transfer_string_list_contents(script_rules, script_rulesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->JavaScriptOnDocumentStart(CefString(script),
+                                                             script_rulesList);
+}
+
+void CEF_CALLBACK browser_host_remove_java_script_on_document_start(
+    struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnDocumentStart();
+}
+
+void CEF_CALLBACK browser_host_set_draw_rect(struct _cef_browser_host_t* self,
+                                             int x,
+                                             int y,
+                                             int width,
+                                             int height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetDrawRect(x, y, width, height);
+}
+
+void CEF_CALLBACK browser_host_set_draw_mode(struct _cef_browser_host_t* self,
+                                             int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetDrawMode(mode);
+}
+
+void CEF_CALLBACK
+browser_host_create_web_print_document_adapter(struct _cef_browser_host_t* self,
+                                               const cef_string_t* jobName,
+                                               void** webPrintDocumentAdapter) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: jobName; type: string_byref_const
+  DCHECK(jobName);
+  if (!jobName) {
+    return;
+  }
+  // Verify param: webPrintDocumentAdapter; type: simple_byaddr
+  DCHECK(webPrintDocumentAdapter);
+  if (!webPrintDocumentAdapter) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CreateWebPrintDocumentAdapter(
+      CefString(jobName), webPrintDocumentAdapter);
+}
+
+void CEF_CALLBACK
+browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
+}
+
+int CEF_CALLBACK browser_host_discard(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->Discard();
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK browser_host_restore(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->Restore();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_set_browser_zoom_level(struct _cef_browser_host_t* self,
+                                    double zoomFactor) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetBrowserZoomLevel(zoomFactor);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -2584,6 +2858,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_visible_navigation_entry =
       browser_host_get_visible_navigation_entry;
   GetStruct()->set_accessibility_state = browser_host_set_accessibility_state;
+  GetStruct()->get_or_create_root_browser_accessibility_manager =
+      browser_host_get_or_create_root_browser_accessibility_manager;
   GetStruct()->set_auto_resize_enabled = browser_host_set_auto_resize_enabled;
   GetStruct()->get_extension = browser_host_get_extension;
   GetStruct()->is_background_host = browser_host_is_background_host;
@@ -2611,6 +2887,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->register_ark_jsfunction = browser_host_register_ark_jsfunction;
   GetStruct()->unregister_ark_jsfunction =
       browser_host_unregister_ark_jsfunction;
+  GetStruct()->call_h5function = browser_host_call_h5function;
   GetStruct()->store_web_archive = browser_host_store_web_archive;
   GetStruct()->was_keyboard_resized = browser_host_was_keyboard_resized;
   GetStruct()->set_enable_lower_frame_rate =
@@ -2650,6 +2927,22 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->zoom_by = browser_host_zoom_by;
   GetStruct()->set_window_id = browser_host_set_window_id;
   GetStruct()->set_token = browser_host_set_token;
+  GetStruct()->set_virtual_key_board_arg =
+      browser_host_set_virtual_key_board_arg;
+  GetStruct()->should_virtual_keyboard_overlay =
+      browser_host_should_virtual_keyboard_overlay;
+  GetStruct()->java_script_on_document_start =
+      browser_host_java_script_on_document_start;
+  GetStruct()->remove_java_script_on_document_start =
+      browser_host_remove_java_script_on_document_start;
+  GetStruct()->set_draw_rect = browser_host_set_draw_rect;
+  GetStruct()->set_draw_mode = browser_host_set_draw_mode;
+  GetStruct()->create_web_print_document_adapter =
+      browser_host_create_web_print_document_adapter;
+  GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
+  GetStruct()->discard = browser_host_discard;
+  GetStruct()->restore = browser_host_restore;
+  GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;
 }
 
 // DESTRUCTOR - Do not edit by hand.

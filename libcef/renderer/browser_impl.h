@@ -128,6 +128,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;
+  // OHOS_EX_TOPCONTROLS
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override {}
+  void UpdateBrowserControlsHeight(int height, bool animate) override {}
   // #endif  // defined(OHOS_NWEB_EX)
 
  private:

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac26e8fb01db2815f5e1af6e4549e8265bc71f2f$
+// $hash=ae90186e679c04322d7184491accc9dc41977a9c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_
@@ -81,6 +81,8 @@ class CefDisplayHandlerCToCpp
   void OnScaleChanged(CefRefPtr<CefBrowser> browser,
                       float old_page_scale_factor,
                       float new_page_scale_factor) override;
+  void OnContentsBrowserZoomChange(double zoom_factor,
+                                   bool can_show_bubble) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_

@@ -18,6 +18,11 @@
 #include "components/performance_manager/embedder/performance_manager_registry.h"
 #endif
 
+#ifdef OHOS_EX_TOPCONTROLS
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 CefWebContentsViewOSR::CefWebContentsViewOSR(SkColor background_color,
                                              bool use_shared_texture,
                                              bool use_external_begin_frame)
@@ -254,3 +259,52 @@ void CefWebContentsViewOSR::ShowPopupMenu(
 #endif  // #ifdef OHOS_HTML_SELECT
 }
 #endif
+
+#ifdef OHOS_EX_TOPCONTROLS
+int CefWebContentsViewOSR::GetTopControlsHeight() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    return 0;
+  }
+
+  int top_controls_height = top_controls_height_;
+
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get() && browser->GetClient().get()) {
+    top_controls_height = browser->GetClient()->OnGetTopControlsHeight();
+  }
+  if (top_controls_height != top_controls_height_) {
+    LOG(INFO) << "browser controls height changed:" << top_controls_height_
+              << "->" << top_controls_height;
+    top_controls_height_ = top_controls_height;
+  }
+
+  return top_controls_height_;
+}
+
+bool CefWebContentsViewOSR::DoBrowserControlsShrinkRendererSize() const {
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get() && browser->GetClient().get()) {
+    return browser->GetClient()->DoBrowserControlsShrinkRendererSize();
+  }
+  return false;
+}
+
+void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
+                                                        bool animate) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser) ||
+      height == top_controls_height_) {
+    return;
+  }
+
+  LOG(INFO) << "browser controls height changed:" << top_controls_height_
+            << "->" << height;
+  top_controls_height_ = height;
+
+  if (CefRenderWidgetHostViewOSR* view = GetView()) {
+    view->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
+                                      absl::nullopt);
+  }
+}
+#endif  // OHOS_EX_TOPCONTROLS

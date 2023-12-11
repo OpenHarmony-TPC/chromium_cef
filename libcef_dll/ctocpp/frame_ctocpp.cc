@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6d1d757af9e1b23dc609a61ae9c6072d9ce79ee1$
+// $hash=1963cfe31522bbf3ee2d582c26757940e334085e$
 //
 
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -519,6 +519,47 @@ void CefFrameCToCpp::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
 
   // Execute
   _struct->get_images(_struct, CefGetImagesCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefFrameCToCpp::PostURL(const CefString& url,
+                             const std::vector<char>& post_data) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_frame_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, post_url)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+  // Unverified params: post_data
+
+  // Translate param: post_data; type: simple_vec_byref_const
+  const size_t post_dataCount = post_data.size();
+  char* post_dataList = NULL;
+  if (post_dataCount > 0) {
+    post_dataList = new char[post_dataCount];
+    DCHECK(post_dataList);
+    if (post_dataList) {
+      for (size_t i = 0; i < post_dataCount; ++i) {
+        post_dataList[i] = post_data[i];
+      }
+    }
+  }
+
+  // Execute
+  _struct->post_url(_struct, url.GetStruct(), post_dataCount, post_dataList);
+
+  // Restore param:post_data; type: simple_vec_byref_const
+  if (post_dataList) {
+    delete[] post_dataList;
+  }
 }
 
 // CONSTRUCTOR - Do not edit by hand.

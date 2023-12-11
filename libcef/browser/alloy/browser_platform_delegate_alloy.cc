@@ -163,6 +163,35 @@ void CefBrowserPlatformDelegateAlloy::AddNewContents(
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(
+    content::WebContents* web_contents) {
+  DCHECK(web_contents_ && web_contents_ == web_contents);
+  if (!web_contents) {
+    LOG(ERROR)
+        << "CefBrowserPlatformDelegateAlloy WebContentsDestroyed is null. ";
+    return;
+  }
+
+#if defined(OHOS_EX_GET_ZOOM_LEVEL)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (!browser_) {
+      return;
+    }
+    AlloyBrowserHostImpl* delegate =
+        static_cast<AlloyBrowserHostImpl*>(browser_);
+    zoom::ZoomController* zoom_controller =
+        zoom::ZoomController::FromWebContents(web_contents);
+    if (zoom_controller && delegate) {
+      zoom_controller->RemoveObserver(delegate);
+    }
+  }
+#endif
+  CefBrowserPlatformDelegate::WebContentsDestroyed(web_contents);
+}
+#endif
+
 bool CefBrowserPlatformDelegateAlloy::
     ShouldAllowRendererInitiatedCrossProcessNavigation(
         bool is_main_frame_navigation) {
@@ -216,6 +245,16 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
     OhPasswordManagerClient::CreateForWebContentsWithAutofillClient(
         web_contents_,
         autofill::OhAutofillClient::FromWebContents(web_contents_));
+
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+    // Add observer for zoomcontroller.
+    AlloyBrowserHostImpl* delegate = static_cast<AlloyBrowserHostImpl*>(browser);
+    zoom::ZoomController* zoom_controller =
+        zoom::ZoomController::FromWebContents(web_contents_);
+    if (zoom_controller && delegate) {
+      zoom_controller->AddObserver(delegate);
+    }
+#endif
   }
 #endif  // OHOS_EX_PASSWORD
 #endif
@@ -507,10 +546,15 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
   if (!browser_) {
     return;
   }
+  float ratio = browser_->GetVirtualPixelRatio();
+  if (ratio <= 0) {
+    LOG(ERROR) << "get ratio invalid: " << ratio;
+    return;
+  }
   auto frame = browser_->GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())
-        ->SendHitEvent(event.x, event.y, event.radius_x, event.radius_y);
+        ->SendHitEvent(event.x * ratio, event.y * ratio, event.radius_x * ratio, event.radius_y * ratio);
   }
 }
 #endif
@@ -530,5 +574,22 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
     }
 
     ohos_print_manager->SetToken(token);
+  }
+  void CefBrowserPlatformDelegateAlloy::CreateWebPrintDocumentAdapter(
+      const CefString& jobName, void** webPrintDocumentAdapter) {
+    REQUIRE_ALLOY_RUNTIME();
+    content::RenderFrameHost* rfh_to_use = printing::GetFrameToPrint(web_contents_);
+    if (!rfh_to_use) {
+      LOG(ERROR) << "rfh_to_use is nullptr";
+      return;
+    }
+    auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
+      content::WebContents::FromRenderFrameHost(rfh_to_use));
+    if (!ohos_print_manager) {
+      LOG(ERROR) << "ohos_print_manager is nullptr";
+      return;
+    }
+
+    ohos_print_manager->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
   }
 #endif // defined(OHOS_PRINT)

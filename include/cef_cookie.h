@@ -101,7 +101,8 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   virtual bool SetCookie(const CefString& url,
                          const CefCookie& cookie,
                          CefRefPtr<CefSetCookieCallback> callback,
-                         bool is_sync) = 0;
+                         bool is_sync,
+                         const CefString& str_cookie) = 0;
 
   ///
   /// Delete all cookies that match the specified parameters. If both |url| and

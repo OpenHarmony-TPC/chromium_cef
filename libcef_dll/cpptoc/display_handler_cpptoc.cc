@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7f431bd32d9908a4e1e2ac2fca6d0bdf6196892e$
+// $hash=5fd828fae057aa3e5414fc1cbe9e1685a1350cf7$
 //
 
 #include "libcef_dll/cpptoc/display_handler_cpptoc.h"
@@ -448,6 +448,24 @@ display_handler_on_scale_changed(struct _cef_display_handler_t* self,
       new_page_scale_factor);
 }
 
+void CEF_CALLBACK display_handler_on_contents_browser_zoom_change(
+    struct _cef_display_handler_t* self,
+    double zoom_factor,
+    int can_show_bubble) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnContentsBrowserZoomChange(
+      zoom_factor, can_show_bubble ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -471,6 +489,8 @@ CefDisplayHandlerCppToC::CefDisplayHandlerCppToC() {
   GetStruct()->on_received_icon = display_handler_on_received_icon;
   GetStruct()->on_received_icon_url = display_handler_on_received_icon_url;
   GetStruct()->on_scale_changed = display_handler_on_scale_changed;
+  GetStruct()->on_contents_browser_zoom_change =
+      display_handler_on_contents_browser_zoom_change;
 }
 
 // DESTRUCTOR - Do not edit by hand.

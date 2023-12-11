@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=af4952eacb8a4a1c796f008484a36c44ee4e7d6b$
+// $hash=3375888cde653e8e1d38f6e336911e398a11ee9c$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -542,6 +542,39 @@ void CefBrowserCToCpp::PasswordSuggestionSelected(int list_index) {
 
   // Execute
   _struct->password_suggestion_selected(_struct, list_index);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::UpdateBrowserControlsState(int constraints,
+                                                  int current,
+                                                  bool animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_browser_controls_state)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->update_browser_controls_state(_struct, constraints, current,
+                                         animate);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::UpdateBrowserControlsHeight(int height, bool animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_browser_controls_height)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->update_browser_controls_height(_struct, height, animate);
 }
 
 NO_SANITIZE("cfi-icall")

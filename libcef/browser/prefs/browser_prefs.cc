@@ -91,7 +91,14 @@
 #include "components/prefs/segregated_pref_store.h"
 #include "libcef/browser/predictors/predictor_database.h"
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/devtools/devtools_window.h"
+#include "chrome/browser/extensions/api/commands/command_service.h"
+#include "chrome/browser/extensions/extension_web_ui.h"
+#include "chrome/browser/extensions/preinstalled_apps.h"
+#include "chrome/browser/ui/webui/extensions/extensions_ui.h"
+#include "extensions/browser/permissions_manager.h"
+#endif
 namespace browser_prefs {
 
 namespace {
@@ -303,6 +310,14 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     // Default profile preferences.
     AccessibilityUIMessageHandler::RegisterProfilePrefs(registry.get());
     extensions::ExtensionPrefs::RegisterProfilePrefs(registry.get());
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    extensions::ExtensionsUI::RegisterProfilePrefs(registry.get());
+    DevToolsWindow::RegisterProfilePrefs(registry.get());
+    extensions::CommandService::RegisterProfilePrefs(registry.get());
+    extensions::PermissionsManager::RegisterProfilePrefs(registry.get());
+    ExtensionWebUI::RegisterProfilePrefs(registry.get());
+    preinstalled_apps::RegisterProfilePrefs(registry.get());
+#endif
     HostContentSettingsMap::RegisterProfilePrefs(registry.get());
     language::LanguagePrefs::RegisterProfilePrefs(registry.get());
     media_router::RegisterProfilePrefs(registry.get());

@@ -4,7 +4,9 @@
 
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_
-
+#ifdef OHOS_COOKIE
+#include "libcef/browser/net_service/cookie_manager_ohos_impl.h"
+#else
 #include "include/cef_cookie.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/thread_util.h"
@@ -40,7 +42,8 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool SetCookie(const CefString& url,
                  const CefCookie& cookie,
                  CefRefPtr<CefSetCookieCallback> callback,
-                 bool is_sync) override;
+                 bool is_sync,
+                 const CefString& str_cookie) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
 #if BUILDFLAG(IS_OHOS)
@@ -67,7 +70,9 @@ class CefCookieManagerImpl : public CefCookieManager {
                                CefRefPtr<CefCookieVisitor> visitor, bool sync);
   bool SetCookieInternal(const GURL& url,
                          const CefCookie& cookie,
-                         CefRefPtr<CefSetCookieCallback> callback, bool sync);
+                         CefRefPtr<CefSetCookieCallback> callback,
+                         bool sync,
+                         const CefString& str_cookie);
   bool DeleteCookiesInternal(const GURL& url,
                              const CefString& cookie_name,
                              bool is_session,
@@ -128,5 +133,5 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
 };
-
+#endif  // OHOS_COOKIE
 #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_

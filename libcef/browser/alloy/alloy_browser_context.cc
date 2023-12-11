@@ -54,6 +54,24 @@
 #include "libcef/browser/permission/alloy_permission_manager.h"
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "base/trace_event/trace_event.h"
+#include "base/trace_event/traced_value.h"
+#include "chrome/browser/browser_process.h"
+#include "chrome/browser/content_settings/cookie_settings_factory.h"
+#include "chrome/browser/extensions/extension_special_storage_policy.h"
+#include "chrome/browser/policy/chrome_browser_policy_connector.h"
+#include "chrome/browser/policy/profile_policy_connector.h"
+#include "chrome/browser/policy/profile_policy_connector_builder.h"
+#include "chrome/browser/policy/schema_registry_service.h"
+#include "chrome/browser/policy/schema_registry_service_builder.h"
+#include "components/content_settings/core/browser/cookie_settings.h"
+#include "components/policy/core/common/cloud/user_cloud_policy_manager.h"
+#include "components/policy/core/common/cloud/user_cloud_policy_store.h"
+#include "content/public/browser/network_service_instance.h"
+#include "extensions/browser/browser_context_keyed_service_factories.h"
+#endif
+
 using content::BrowserThread;
 
 // Creates and manages VisitedLinkEventListener objects for each
@@ -146,6 +164,13 @@ void AlloyBrowserContext::Initialize() {
   pref_service_ = browser_prefs::CreatePrefService(
       this, cache_path_, !!settings_.persist_user_preferences);
 
+  // Spell checking support and possibly other subsystems retrieve the
+  // PrefService associated with a BrowserContext via UserPrefs::Get().
+  PrefService* pref_service = GetPrefs();
+  DCHECK(pref_service);
+  user_prefs::UserPrefs::Set(this, pref_service);
+  key_->SetPrefs(pref_service);
+
   // This must be called before creating any services to avoid hitting
   // DependencyManager::AssertContextWasntDestroyed when creating/destroying
   // multiple browser contexts (due to pointer address reuse).
@@ -156,10 +181,37 @@ void AlloyBrowserContext::Initialize() {
   if (extensions_enabled) {
     // Create the custom ExtensionSystem first because other KeyedServices
     // depend on it.
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    policy::ChromeBrowserPolicyConnector* connector =
+        g_browser_process->browser_policy_connector();
+    schema_registry_service_ = BuildSchemaRegistryServiceForProfile(
+        this, connector->GetChromeSchema(), connector->GetSchemaRegistry());
+
+    // If we are creating the profile synchronously, then we should load the
+    // policy data immediately.
+    bool force_immediate_policy_load = false;  //! async_prefs;
+
+    policy::UserCloudPolicyManager* user_cloud_policy_manager;
+    policy::ConfigurationPolicyProvider* policy_provider;
+    {
+      user_cloud_policy_manager_ = policy::UserCloudPolicyManager::Create(
+          GetPath(), GetPolicySchemaRegistryService()->registry(),
+          force_immediate_policy_load, content::GetIOThreadTaskRunner({}),
+          base::BindRepeating(&content::GetNetworkConnectionTracker));
+      user_cloud_policy_manager = user_cloud_policy_manager_.get();
+      policy_provider = user_cloud_policy_manager;
+    }
+
+    profile_policy_connector_ =
+        policy::CreateProfilePolicyConnectorForBrowserContext(
+            schema_registry_service_->registry(), user_cloud_policy_manager,
+            policy_provider, g_browser_process->browser_policy_connector(),
+            force_immediate_policy_load, this);
+#endif
     extension_system_ = static_cast<extensions::CefExtensionSystem*>(
         extensions::ExtensionSystem::Get(this));
-    extension_system_->InitForRegularProfile(true);
 
+    extension_system_->InitForRegularProfile(true);
     // Make sure the ProcessManager is created so that it receives extension
     // load notifications. This is necessary for the proper initialization of
     // background/event pages.
@@ -181,13 +233,6 @@ void AlloyBrowserContext::Initialize() {
   // Initialize proxy configuration tracker.
   pref_proxy_config_tracker_.reset(new PrefProxyConfigTrackerImpl(
       GetPrefs(), content::GetIOThreadTaskRunner({})));
-
-  // Spell checking support and possibly other subsystems retrieve the
-  // PrefService associated with a BrowserContext via UserPrefs::Get().
-  PrefService* pref_service = GetPrefs();
-  DCHECK(pref_service);
-  user_prefs::UserPrefs::Set(this, pref_service);
-  key_->SetPrefs(pref_service);
 
   if (extensions_enabled) {
     extension_system_->Init();
@@ -451,14 +496,22 @@ ProfileKey* AlloyBrowserContext::GetProfileKey() const {
 
 policy::SchemaRegistryService*
 AlloyBrowserContext::GetPolicySchemaRegistryService() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return schema_registry_service_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 policy::UserCloudPolicyManager*
 AlloyBrowserContext::GetUserCloudPolicyManager() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return user_cloud_policy_manager_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 policy::ProfileCloudPolicyManager*
@@ -469,14 +522,22 @@ AlloyBrowserContext::GetProfileCloudPolicyManager() {
 
 policy::ProfilePolicyConnector*
 AlloyBrowserContext::GetProfilePolicyConnector() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return profile_policy_connector_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 const policy::ProfilePolicyConnector*
 AlloyBrowserContext::GetProfilePolicyConnector() const {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return profile_policy_connector_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 bool AlloyBrowserContext::IsNewProfile() const {
@@ -501,3 +562,20 @@ DownloadPrefs* AlloyBrowserContext::GetDownloadPrefs() {
 void AlloyBrowserContext::AddVisitedURLs(const std::vector<GURL>& urls) {
   visitedlink_master_->AddURLs(urls);
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+ExtensionSpecialStoragePolicy*
+AlloyBrowserContext::GetExtensionSpecialStoragePolicy() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (!extension_special_storage_policy_.get()) {
+    TRACE_EVENT0("browser", "ProfileImpl::GetExtensionSpecialStoragePolicy");
+    extension_special_storage_policy_ =
+        base::MakeRefCounted<ExtensionSpecialStoragePolicy>(
+            CookieSettingsFactory::GetForProfile(this).get());
+  }
+  return extension_special_storage_policy_.get();
+#else
+  return NULL;
+#endif
+}
+#endif

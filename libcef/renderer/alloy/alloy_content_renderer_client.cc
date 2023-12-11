@@ -117,6 +117,7 @@
 #include "components/autofill/content/renderer/autofill_agent.h"
 #include "components/autofill/content/renderer/password_autofill_agent.h"
 #include "components/autofill/content/renderer/password_generation_agent.h"
+#include "components/js_injection/renderer/js_communication.h"
 #include "libcef/renderer/alloy/alloy_content_settings_client.h"
 #endif // BUILDFLAG(IS_OHOS)
 
@@ -130,6 +131,15 @@
 #include "components/no_state_prefetch/renderer/no_state_prefetch_helper.h"
 #include "components/no_state_prefetch/renderer/prerender_render_frame_observer.h"
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/common/chrome_features.h"
+#include "extensions/common/constants.h"
+#include "extensions/common/manifest_handlers/web_accessible_resources_info.h"
+#include "extensions/renderer/dispatcher.h"
+#include "extensions/renderer/extension_web_view_helper.h"
+#include "printing/metafile_agent.h"
+#endif
 
 AlloyContentRendererClient::AlloyContentRendererClient()
     : main_entry_time_(base::TimeTicks::Now()),
@@ -265,8 +275,31 @@ void AlloyContentRendererClient::RenderThreadStarted() {
 
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RenderThreadStarted();
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    blink::WebSecurityPolicy::RegisterURLSchemeAsExtension(
+        blink::WebString::FromASCII(extensions::kExtensionScheme));
+#endif
   }
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+bool AlloyContentRendererClient::AllowPopup() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extensions_renderer_client_->AllowPopup();
+#else
+  return false;
+#endif
+}
+
+blink::ProtocolHandlerSecurityLevel
+AlloyContentRendererClient::GetProtocolHandlerSecurityLevel() {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extensions_renderer_client_->GetProtocolHandlerSecurityLevel();
+#else
+  return blink::ProtocolHandlerSecurityLevel::kStrict;
+#endif
+}
+#endif
 
 void AlloyContentRendererClient::ExposeInterfacesToBrowser(
     mojo::BinderMap* binders) {
@@ -304,6 +337,7 @@ void AlloyContentRendererClient::RenderThreadConnected() {
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
 #if BUILDFLAG(IS_OHOS)
+  new js_injection::JsCommunication(render_frame);
   new AlloyContentSettingsClient(render_frame);
 #endif
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
@@ -408,6 +442,10 @@ void AlloyContentRendererClient::WebViewCreated(
 #if defined(OHOS_NO_STATE_PREFETCH)
   new prerender::NoStatePrefetchClient(web_view);
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  new extensions::ExtensionWebViewHelper(web_view, outermost_origin);
+#endif
 }
 
 #if defined(OHOS_NO_STATE_PREFETCH)
@@ -534,6 +572,13 @@ void AlloyContentRendererClient::RunScriptsAtDocumentStart(
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RunScriptsAtDocumentStart(render_frame);
   }
+#if BUILDFLAG(IS_OHOS)
+  js_injection::JsCommunication* communication =
+      js_injection::JsCommunication::Get(render_frame);
+  if (communication) {
+    communication->RunScriptsAtDocumentStart();
+  }
+#endif //IS_OHOS
 }
 
 void AlloyContentRendererClient::RunScriptsAtDocumentEnd(
@@ -578,8 +623,129 @@ void AlloyContentRendererClient::DevToolsAgentDetached() {
 
 void AlloyContentRendererClient::SetRuntimeFeaturesDefaultsBeforeBlinkInitialization() {
   blink::WebRuntimeFeatures::EnablePerformanceManagerInstrumentation(true);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // WebHID and WebUSB on service workers is only available in extensions.
+  if (CefRenderManager::IsExtensionProcess()) {
+    if (base::FeatureList::IsEnabled(
+            features::kEnableWebUsbOnExtensionServiceWorker)) {
+      blink::WebRuntimeFeatures::EnableWebUSBOnServiceWorkers(true);
+    }
+#if !BUILDFLAG(IS_ANDROID)
+    if (base::FeatureList::IsEnabled(
+            features::kEnableWebHidOnExtensionServiceWorker)) {
+      blink::WebRuntimeFeatures::EnableWebHIDOnServiceWorkers(true);
+    }
+#endif  // !BUILDFLAG(IS_ANDROID)
+  }
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
 }
- 
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+bool AlloyContentRendererClient::AllowScriptExtensionForServiceWorker(
+    const url::Origin& script_origin) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return script_origin.scheme() == extensions::kExtensionScheme;
+#else
+  return false;
+#endif
+}
+
+void AlloyContentRendererClient::
+    DidInitializeServiceWorkerContextOnWorkerThread(
+        blink::WebServiceWorkerContextProxy* context_proxy,
+        const GURL& service_worker_scope,
+        const GURL& script_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  extensions_renderer_client_->GetDispatcher()
+      ->DidInitializeServiceWorkerContextOnWorkerThread(
+          context_proxy, service_worker_scope, script_url);
+#endif
+}
+void AlloyContentRendererClient::WillEvaluateServiceWorkerOnWorkerThread(
+    blink::WebServiceWorkerContextProxy* context_proxy,
+    v8::Local<v8::Context> v8_context,
+    int64_t service_worker_version_id,
+    const GURL& service_worker_scope,
+    const GURL& script_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  extensions_renderer_client_->GetDispatcher()
+      ->WillEvaluateServiceWorkerOnWorkerThread(
+          context_proxy, v8_context, service_worker_version_id,
+          service_worker_scope, script_url);
+#endif
+}
+
+void AlloyContentRendererClient::DidStartServiceWorkerContextOnWorkerThread(
+    int64_t service_worker_version_id,
+    const GURL& service_worker_scope,
+    const GURL& script_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  extensions_renderer_client_->GetDispatcher()
+      ->DidStartServiceWorkerContextOnWorkerThread(
+          service_worker_version_id, service_worker_scope, script_url);
+#endif
+}
+
+void AlloyContentRendererClient::WillDestroyServiceWorkerContextOnWorkerThread(
+    v8::Local<v8::Context> context,
+    int64_t service_worker_version_id,
+    const GURL& service_worker_scope,
+    const GURL& script_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  extensions_renderer_client_->GetDispatcher()
+      ->WillDestroyServiceWorkerContextOnWorkerThread(
+          context, service_worker_version_id, service_worker_scope, script_url);
+#endif
+}
+
+// If we're in an extension, there is no need disabling multiple routes as
+// chrome.system.network.getNetworkInterfaces provides the same
+// information. Also, the enforcement of sending and binding UDP is already done
+// by chrome extension permission model.
+bool AlloyContentRendererClient::ShouldEnforceWebRTCRoutingPreferences() {
+  return !CefRenderManager::IsExtensionProcess();
+}
+
+blink::WebFrame* AlloyContentRendererClient::FindFrame(
+    blink::WebLocalFrame* relative_to_frame,
+    const std::string& name) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extensions::CefExtensionsRendererClient::FindFrame(relative_to_frame,
+                                                            name);
+#else
+  return nullptr;
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+}
+
+bool AlloyContentRendererClient::IsSafeRedirectTarget(const GURL& from_url,
+                                                      const GURL& to_url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (to_url.SchemeIs(extensions::kExtensionScheme)) {
+    const extensions::Extension* extension =
+        extensions::RendererExtensionRegistry::Get()->GetByID(to_url.host());
+    if (!extension) {
+      return false;
+    }
+    // TODO(solomonkinard): Use initiator_origin and add tests.
+    if (extensions::WebAccessibleResourcesInfo::IsResourceWebAccessible(
+            extension, to_url.path(), absl::optional<url::Origin>())) {
+      return true;
+    }
+    return extension->guid() == from_url.host();
+  }
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+  return true;
+}
+
+void AlloyContentRendererClient::DidSetUserAgent(
+    const std::string& user_agent) {
+#if BUILDFLAG(ENABLE_PRINTING)
+  printing::SetAgent(user_agent);
+#endif
+}
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
+
 std::unique_ptr<blink::URLLoaderThrottleProvider>
 AlloyContentRendererClient::CreateURLLoaderThrottleProvider(
     blink::URLLoaderThrottleProviderType provider_type) {

@@ -941,6 +941,11 @@ void CefFrameImpl::LoadHeaderUrl(const CefString& url,
   LoadRequest(std::move(params));
 }
 
+void CefFrameImpl::PostURL(const CefString& url,
+                           const std::vector<char>& post_data) {
+  // todo(ohos) : impl this function then remove todo
+}
+
 void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
 #if defined(OHOS_INPUT_EVENTS)
   if (element.IsNull() || is_update_) {
@@ -1297,6 +1302,12 @@ void CefFrameImpl::ZoomBy(float delta,
 void CefFrameImpl::GetHitData(
     cef::mojom::RenderFrame::GetHitDataCallback callback) {
   std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
+}
+
+void CefFrameImpl::SetOverscrollMode(int mode) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  render_frame->SetOverscrollMode(mode);
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=080f381be76fa35512d0e20ac96049ba4e73ea12$
+// $hash=c88bf529e8ceb9d78b37299e4498f8977723526f$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -96,7 +96,8 @@ typedef struct _cef_cookie_manager_t {
                                 const cef_string_t* url,
                                 const struct _cef_cookie_t* cookie,
                                 struct _cef_set_cookie_callback_t* callback,
-                                int is_sync);
+                                int is_sync,
+                                const cef_string_t* str_cookie);
 
   ///
   /// Delete all cookies that match the specified parameters. If both |url| and

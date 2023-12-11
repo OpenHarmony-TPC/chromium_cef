@@ -80,9 +80,12 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
 
 #if BUILDFLAG(IS_OHOS)
   void SendTouchEventToRender(const CefTouchEvent& event);
+  void WebContentsDestroyed(content::WebContents* web_contents) override;
 #endif
 #if defined(OHOS_PRINT)
 void SetToken(void* token) override;
+void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                   void** webPrintDocumentAdapter) override;
 #endif // defined(OHOS_PRINT)
 
 

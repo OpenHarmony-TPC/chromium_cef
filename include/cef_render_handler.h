@@ -339,6 +339,18 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnScrollState(CefRefPtr<CefBrowser> browser,
                              bool scroll_state) {}
+
+  ///
+  /// Called when scroll.
+  ///
+  /*--cef()--*/
+  virtual bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
+                                 const float x,
+                                 const float y,
+                                 const float fling_x,
+                                 const float fling_y) {
+    return false;
+  }
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

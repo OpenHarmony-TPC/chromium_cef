@@ -17,9 +17,15 @@
 #include "components/permissions/features.h"
 #include "extensions/browser/api/alarms/alarm_manager.h"
 #include "extensions/browser/api/storage/storage_frontend.h"
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/browser/api/web_request/web_request_api.h"
+#endif
 #include "extensions/browser/renderer_startup_helper.h"
 #include "services/network/public/cpp/features.h"
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
+#include "extensions/browser/api/management/management_api.h"
+#endif
 namespace cef {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
@@ -35,6 +41,11 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::AlarmManager::GetFactoryInstance();
     extensions::RendererStartupHelperFactory::GetInstance();
     extensions::StorageFrontend::GetFactoryInstance();
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    extensions::DeveloperPrivateAPI::GetFactoryInstance();
+    extensions::ManagementAPI::GetFactoryInstance();
+    extensions::WebRequestAPI::GetFactoryInstance();
+#endif
   }
 
   if (base::FeatureList::IsEnabled(network::features::kReduceAcceptLanguage)) {

@@ -108,6 +108,9 @@ class CefBrowserPlatformDelegateOsr
 
 #if defined(OHOS_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void WasKeyboardResized() override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT
@@ -121,6 +124,11 @@ class CefBrowserPlatformDelegateOsr
       bool right_aligned,
       bool allow_multiple_selection) override;
 #endif  // #ifdef OHOS_HTML_SELECT
+
+#if defined(OHOS_INPUT_EVENTS)
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
+#endif
 
 #if defined(OHOS_EX_PASSWORD)
   void OnShowAutofillPopup(
@@ -165,6 +173,10 @@ class CefBrowserPlatformDelegateOsr
   // sending the drag exited message after leaving the current
   // view. |current_rvh_for_drag_| should not be dereferenced.
   void* current_rvh_for_drag_;
+
+#ifdef OHOS_EX_TOPCONTROLS
+  int shrink_viewport_height_ = 0;
+#endif
 
   // We keep track of the RenderWidgetHost from which the current drag started,
   // in order to properly route the drag end message to it.

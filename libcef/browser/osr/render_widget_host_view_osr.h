@@ -11,7 +11,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <chrono>
 
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
@@ -134,6 +133,11 @@ class CefRenderWidgetHostViewOSR
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
 #endif
+#ifdef OHOS_EX_TOPCONTROLS
+  gfx::Rect GetPhysicalViewBounds();
+  int GetShrinkViewportHeight();
+#endif
+
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*
   GetTouchSelectionControllerClientManager() override;
@@ -192,8 +196,17 @@ class CefRenderWidgetHostViewOSR
       const cc::RenderFrameMetadata& metadata) override;
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+  void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
+  ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
+#endif
+
 #if defined(OHOS_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should);
+  void WasKeyboardResized();
+  void SetDrawMode(int mode);
+  void SetDrawRect(const gfx::Rect& rect);
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   viz::SurfaceId GetCurrentSurfaceId() const override;
@@ -224,8 +237,14 @@ class CefRenderWidgetHostViewOSR
   void OnFrameComplete(const viz::BeginFrameAck& ack);
 
   // RenderFrameMetadataProvider::Observer implementation.
+
+#ifdef OHOS_EX_TOPCONTROLS
+  void OnRenderFrameMetadataChangedBeforeActivation(
+      const cc::RenderFrameMetadata& metadata) override;
+#else
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override {}
+#endif
   void OnRenderFrameMetadataChangedAfterActivation(
       base::TimeTicks activation_time) override;
   void OnRenderFrameSubmission() override {}
@@ -273,7 +292,12 @@ class CefRenderWidgetHostViewOSR
   void WasResized();
   void SynchronizeVisualProperties(
       const cc::DeadlinePolicy& deadline_policy,
+#if defined(OHOS_COMPOSITE_RENDER)
+      const absl::optional<viz::LocalSurfaceId>& child_local_surface_id,
+      bool isKeyboard = false);
+#else
       const absl::optional<viz::LocalSurfaceId>& child_local_surface_id);
+#endif  // defined(OHOS_COMPOSITE_RENDER)
   void OnScreenInfoChanged();
   void Invalidate(CefBrowserHost::PaintElementType type);
   void SendExternalBeginFrame();
@@ -369,6 +393,7 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_CLIPBOARD
   std::u16string GetSelectedText() override;
+  std::u16string GetText();
 #endif  // #ifdef OHOS_CLIPBOARD
 
  private:
@@ -391,9 +416,12 @@ class CefRenderWidgetHostViewOSR
 #if defined(OHOS_INPUT_EVENTS)
   void UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
-  void OnScrollState(bool scroll_state);
+  void FilterScrollEventImpl(const ui::GestureEventData& gesture);
 #endif  // defined(OHOS_INPUT_EVENTS)
-
+#ifdef OHOS_EX_TOPCONTROLS
+  void OnTopControlsChanged(float top_controls_offset,
+                            float top_content_offset);
+#endif
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
   void RemoveGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
 
@@ -441,10 +469,6 @@ class CefRenderWidgetHostViewOSR
 #endif
   void OnScaleChanged(float old_page_scale_factor, float nwe_page_scale_factor);
 #endif
-#if defined(OHOS_INPUT_EVENTS)
-  void HideVirtualKeyboardRequested();
-  void InitHideKeyboardFlag();
-#endif  // defined(OHOS_INPUT_EVENTS)
 
   // The last selection bounds reported to the view.
   gfx::SelectionBound selection_start_;
@@ -566,10 +590,16 @@ class CefRenderWidgetHostViewOSR
   bool is_select_text_ = false;
   bool is_editable_node_ = false;
   gfx::Size viewport_size_in_pixels_;
-  bool is_need_hide_keyboard_ = true;
-  std::chrono::high_resolution_clock::time_point lastHideKeyboardTime_;
+  bool is_scroll_consumed_ = false;
+  bool is_mouse_wheel_scroll_ = false;
+  float device_scale_factor_ = 1.0f;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
+#ifdef OHOS_EX_TOPCONTROLS
+  float prev_top_controls_offset_ = 0.f;
+  float prev_top_content_offset_ = 0.f;
+  bool for_browser_ = false;
+#endif
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
 

@@ -157,6 +157,9 @@ interface RenderFrame {
 
   [EnableIf=ohos_input_events, Sync]
   GetHitData() => (int32 type, string extra_data);
+
+  [EnableIf=ohos_input_events]
+  SetOverscrollMode(int32 mode);
   // #endif  // defined(OHOS_INPUT_EVENTS)
 };
 

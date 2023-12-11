@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fcab4493e42413fdcb77dde6eecc284e082c9346$
+// $hash=2a4ab48451075e2a96fdf8467eb3fddaf2daa4a9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -108,6 +108,11 @@ class CefRenderHandlerCToCpp
                                  bool is_fling) override;
   void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) override;
   void OnScrollState(CefRefPtr<CefBrowser> browser, bool scroll_state) override;
+  bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
+                         const float x,
+                         const float y,
+                         const float fling_x,
+                         const float fling_y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

@@ -45,9 +45,10 @@ void AlloyAccessRequest::ReportRequestResult(bool allowed) {
 }
 
 #if defined(OHOS_WEBRTC)
-AlloyMediaAccessRequest::AlloyMediaAccessRequest(const content::MediaStreamRequest& request,
+AlloyMediaAccessRequest::AlloyMediaAccessRequest(CefBrowserHostBase* const browser,
+                                                 const content::MediaStreamRequest& request,
                                                  content::MediaResponseCallback callback)
-    : request_(request), callback_(std::move(callback)) {}
+    : browser_(browser), request_(request), callback_(std::move(callback)) {}
 
 AlloyMediaAccessRequest::~AlloyMediaAccessRequest() {
   if (!callback_.is_null()) {
@@ -116,13 +117,18 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
       result = blink::mojom::MediaStreamRequestResult::OK;
     }
   }
-
-  std::move(callback_).Run(devices_set, result, std::unique_ptr<content::MediaStreamUI>());
+  bool has_video = stream_devices.video_device.has_value();
+  bool has_audio = stream_devices.audio_device.has_value();
+  auto media_stream_ui =
+      browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(has_video, has_audio);
+  std::move(callback_).Run(devices_set, result, std::move(media_stream_ui));
 }
 
-AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(const content::MediaStreamRequest& request,
+AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(CefBrowserHostBase* const browser,
+                                                                 const content::MediaStreamRequest& request,
                                                                  content::MediaResponseCallback callback)
-    : request_(request), callback_(std::move(callback)), mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE), sourceId_(-1) {}
+    : browser_(browser), request_(request),
+      callback_(std::move(callback)), mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE), sourceId_(-1) {}
 
 AlloyScreenCaptureAccessRequest::~AlloyScreenCaptureAccessRequest() {
   if (!callback_.is_null()) {
@@ -193,11 +199,11 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
         content::DesktopMediaID::Parse(request_.requested_video_device_id);
   }
   stream_devices.video_device = blink::MediaStreamDevice(request_.video_type, media_id.ToString(), "Screen");
-
+  bool has_audio = stream_devices.audio_device.has_value();
+  auto media_stream_ui =
+      browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(true, has_audio);
   std::move(callback_).Run(
-      devices_set,
-      blink::mojom::MediaStreamRequestResult::OK,
-      std::unique_ptr<content::MediaStreamUI>());
-  }
+      devices_set, blink::mojom::MediaStreamRequestResult::OK, std::move(media_stream_ui));
+}
 #endif // defined(OHOS_WEBRTC)
 

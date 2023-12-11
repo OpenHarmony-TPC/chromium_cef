@@ -20,7 +20,10 @@ class CefSSLHostStateDelegate;
 class CefVisitedLinkListener;
 class MediaDeviceIDSalt;
 class PrefService;
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+class ProfilePolicyConnector;
+class ExtensionSpecialStoragePolicy;
+#endif
 namespace extensions {
 class CefExtensionSystem;
 }
@@ -124,6 +127,9 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
   // Called from DownloadPrefs::FromBrowserContext.
   DownloadPrefs* GetDownloadPrefs();
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  ExtensionSpecialStoragePolicy* GetExtensionSpecialStoragePolicy() override;
+#endif
  private:
   ~AlloyBrowserContext() override;
 
@@ -151,6 +157,14 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
 
 #if BUILDFLAG(IS_OHOS)
   std::unique_ptr<content::PermissionControllerDelegate> permission_manager_;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  std::unique_ptr<policy::SchemaRegistryService> schema_registry_service_;
+  std::unique_ptr<policy::UserCloudPolicyManager> user_cloud_policy_manager_;
+  std::unique_ptr<policy::ProfilePolicyConnector> profile_policy_connector_;
+  scoped_refptr<ExtensionSpecialStoragePolicy>
+      extension_special_storage_policy_;
 #endif
 };
 

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8ba319ac14de31847ba42d1d01d6a9254e52582e$
+// $hash=5d1772acbeb7824b8bf964a632d8292b1bb2eb3f$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -547,6 +547,43 @@ browser_password_suggestion_selected(struct _cef_browser_t* self,
   CefBrowserCppToC::Get(self)->PasswordSuggestionSelected(list_index);
 }
 
+void CEF_CALLBACK
+browser_update_browser_controls_state(struct _cef_browser_t* self,
+                                      int constraints,
+                                      int current,
+                                      int animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->UpdateBrowserControlsState(
+      constraints, current, animate ? true : false);
+}
+
+void CEF_CALLBACK
+browser_update_browser_controls_height(struct _cef_browser_t* self,
+                                       int height,
+                                       int animate) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->UpdateBrowserControlsHeight(
+      height, animate ? true : false);
+}
+
 void CEF_CALLBACK browser_prefetch_page(struct _cef_browser_t* self,
                                         cef_string_t* url,
                                         cef_string_t* additionalHttpHeaders) {
@@ -816,6 +853,10 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->should_show_free_copy = browser_should_show_free_copy;
   GetStruct()->password_suggestion_selected =
       browser_password_suggestion_selected;
+  GetStruct()->update_browser_controls_state =
+      browser_update_browser_controls_state;
+  GetStruct()->update_browser_controls_height =
+      browser_update_browser_controls_height;
   GetStruct()->prefetch_page = browser_prefetch_page;
   GetStruct()->reload_original_url = browser_reload_original_url;
   GetStruct()->set_browser_user_agent_string =

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2eb01256fb1be89e3551a1a57ccd64abdfdab1e7$
+// $hash=24b0ab8e70461dfecb6d1e27ccc7dbed7b770818$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -126,6 +126,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void DragSourceSystemDragEnded() override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
@@ -153,12 +154,16 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void SetBackgroundColor(int color) override;
-  void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
+  void RegisterArkJSfunction(const CefString& object_name,
+                             const std::vector<CefString>& method_list,
+                             const int32_t object_id) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
+  void CallH5Function(int32_t routing_id,
+                      int32_t h5_object_id,
+                      const CefString& h5_method_name,
+                      const std::vector<CefRefPtr<CefValue>>& args) override;
   void StoreWebArchive(
       const CefString& base_name,
       bool auto_name,
@@ -213,6 +218,22 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ZoomBy(float delta, float width, float height) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetToken(void* token) override;
+  void SetVirtualKeyBoardArg(int32_t width,
+                             int32_t height,
+                             double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
+  void JavaScriptOnDocumentStart(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentStart() override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
+  void SetOverscrollMode(int mode) override;
+  bool Discard() override;
+  bool Restore() override;
+  void SetBrowserZoomLevel(double zoomFactor) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

@@ -557,6 +557,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (init_state_->did_try_create_url_loader_network_observer_) {
       if (init_state_->url_loader_network_observer_) {
+        if (!request->trusted_params) {
+          LOG(WARNING) << "request trusted params is null";
+          std::move(cancel_callback).Run(net::ERR_ABORTED);
+          return;
+        }
         request->trusted_params->url_loader_network_observer =
             std::move(init_state_->url_loader_network_observer_);
       }

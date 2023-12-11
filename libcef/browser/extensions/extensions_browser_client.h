@@ -8,6 +8,10 @@
 
 #include "extensions/browser/extensions_browser_client.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/user_script_listener.h"
+#endif
+
 namespace extensions {
 
 class ExtensionsAPIClient;
@@ -119,6 +123,11 @@ class CefExtensionsBrowserClient : public ExtensionsBrowserClient {
   bool IsLockScreenContext(content::BrowserContext* context) override;
   std::string GetApplicationLocale() override;
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  UserScriptListener* GetUserScriptListener() override;
+  void SignalContentScriptsLoaded(content::BrowserContext* context) override;
+#endif
+
  private:
   // Support for extension APIs.
   std::unique_ptr<ExtensionsAPIClient> api_client_;
@@ -127,6 +136,10 @@ class CefExtensionsBrowserClient : public ExtensionsBrowserClient {
   std::unique_ptr<ComponentExtensionResourceManager> resource_manager_;
 
   std::unique_ptr<KioskDelegate> kiosk_delegate_;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  UserScriptListener user_script_listener_;
+#endif
 };
 
 }  // namespace extensions

@@ -10,6 +10,7 @@
 #include "include/cef_permission_request.h"
 
 #if defined(OHOS_WEBRTC)
+#include "cef/libcef/browser/browser_host_base.h"
 #include "content/public/browser/media_stream_request.h"
 #include "third_party/blink/public/common/mediastream/media_stream_request.h"
 #endif // defined(OHOS_WEBRTC)
@@ -53,7 +54,8 @@ class AlloyAccessRequest : public CefAccessRequest {
 #if defined(OHOS_WEBRTC)
 class AlloyMediaAccessRequest : public CefAccessRequest {
 public:
-  AlloyMediaAccessRequest(const content::MediaStreamRequest& request,
+  AlloyMediaAccessRequest(CefBrowserHostBase* const browser,
+                          const content::MediaStreamRequest& request,
                           content::MediaResponseCallback callback);
 
   AlloyMediaAccessRequest(const AlloyMediaAccessRequest&) = delete;
@@ -67,6 +69,7 @@ public:
   void ReportRequestResult(bool allowed) override;
 
 private:
+  CefRefPtr<CefBrowserHostBase> browser_;
   const content::MediaStreamRequest request_;
   content::MediaResponseCallback callback_;
 
@@ -75,7 +78,8 @@ private:
 
 class AlloyScreenCaptureAccessRequest : public CefScreenCaptureAccessRequest {
 public:
-  AlloyScreenCaptureAccessRequest(const content::MediaStreamRequest& request,
+  AlloyScreenCaptureAccessRequest(CefBrowserHostBase* const browser,
+                                  const content::MediaStreamRequest& request,
                                   content::MediaResponseCallback callback);
 
   AlloyScreenCaptureAccessRequest(const AlloyScreenCaptureAccessRequest&) = delete;
@@ -89,6 +93,7 @@ public:
   void SetCaptureSourceId(int32_t sourceId) override;
   void ReportRequestResult(bool allowed) override;
 private:
+  CefRefPtr<CefBrowserHostBase> browser_;
   const content::MediaStreamRequest request_;
   content::MediaResponseCallback callback_;
   int32_t mode_;

@@ -25,6 +25,10 @@
 #include "libcef/browser/printing/ohos_print_manager.h"
 #endif // defined(OHOS_PRINT)
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/management/chrome_management_api_delegate.h"
+#endif
+
 namespace extensions {
 
 CefExtensionsAPIClient::CefExtensionsAPIClient() {}
@@ -90,4 +94,10 @@ FileSystemDelegate* CefExtensionsAPIClient::GetFileSystemDelegate() {
   return file_system_delegate_.get();
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+ManagementAPIDelegate* CefExtensionsAPIClient::CreateManagementAPIDelegate()
+    const {
+  return new ChromeManagementAPIDelegate;
+}
+#endif
 }  // namespace extensions

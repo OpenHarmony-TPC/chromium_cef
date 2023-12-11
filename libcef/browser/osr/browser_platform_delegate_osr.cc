@@ -223,19 +223,30 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
 
 void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-#if BUILDFLAG(IS_OHOS)
   if (!view) {
     return;
   }
 
-  view->SendTouchEvent(event);
+#if BUILDFLAG(IS_OHOS)
+  CefTouchEvent event_adjust = event;
+#ifdef OHOS_EX_TOPCONTROLS
   if (event.type == CEF_TET_PRESSED) {
-    SendTouchEventToRender(event);
+    shrink_viewport_height_ = view->GetShrinkViewportHeight();
+  } else if (event.type == CEF_TET_CANCELLED) {
+    shrink_viewport_height_ = 0;
+  }
+  event_adjust.y -= shrink_viewport_height_;
+  if (event.type == CEF_TET_RELEASED) {
+    shrink_viewport_height_ = 0;
+  }
+#endif
+
+  view->SendTouchEvent(event_adjust);
+  if (event.type == CEF_TET_PRESSED) {
+    SendTouchEventToRender(event_adjust);
   }
 #else
-  if (view) {
-    view->SendTouchEvent(event);
-  }
+  view->SendTouchEvent(event);
 #endif
 }
 
@@ -654,10 +665,22 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
         new CefDragDataImpl(drop_data, cef_image, cef_image_pos));
     drag_data->SetReadOnly(true);
     base::CurrentThread::ScopedAllowApplicationTasksInNativeNestedLoop allow;
+#ifdef OHOS_EX_TOPCONTROLS
+    int shrink_viewport_height = 0;
+    if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+      shrink_viewport_height = view->GetShrinkViewportHeight();
+    }
+    handled = handler->StartDragging(
+        browser_, drag_data.get(),
+        static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
+        event_info.location.x(),
+        event_info.location.y() + shrink_viewport_height);
+#else
     handled = handler->StartDragging(
         browser_, drag_data.get(),
         static_cast<CefRenderHandler::DragOperationsMask>(allowed_ops),
         event_info.location.x(), event_info.location.y());
+#endif
   }
 
   if (!handled) {
@@ -832,11 +855,30 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 }
 
 #if defined(OHOS_COMPOSITE_RENDER)
+void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetDrawRect(gfx::Rect(x, y, width, height));
+}
+
+void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetDrawMode(mode);
+  }
+}
+
 void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
     bool should) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
     view->SetShouldFrameSubmissionBeforeDraw(should);
+}
+
+void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->WasKeyboardResized();
 }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 #ifdef OHOS_HTML_SELECT
@@ -853,7 +895,7 @@ void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
       browser_->GetClient()->GetDialogHandler();
   if (handler.get()) {
     std::vector<CefSelectPopupItem> item_list;
-    for (int i = 0; i < menu_items.size(); i++) {
+    for (unsigned i = 0; i < menu_items.size(); i++) {
       CefSelectPopupItem menu_item;
       ConvertSelectPopupItem(menu_items[i], menu_item);
       item_list.push_back(menu_item);
@@ -868,3 +910,21 @@ void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
   }
 }
 #endif // #ifdef OHOS_HTML_SELECT
+
+#if defined(OHOS_INPUT_EVENTS)
+void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(
+  int32_t width, int32_t height, double keyboard) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetVirtualKeyBoardArg(width, height, keyboard);
+}
+ 
+bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view && view->GetVirtualKeyboardMode() ==
+      ui::mojom::VirtualKeyboardMode::kOverlaysContent) {
+    return true;
+  }
+  return false;
+}
+#endif

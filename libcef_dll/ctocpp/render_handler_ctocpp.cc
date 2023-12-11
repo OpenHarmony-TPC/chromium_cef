@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=75103c9f032e31a2273f30452353be4b682a8a26$
+// $hash=ebfe1c40727eccbdb24068e1cf26dee203ae9c1c$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -753,6 +753,35 @@ void CefRenderHandlerCToCpp::OnScrollState(CefRefPtr<CefBrowser> browser,
   // Execute
   _struct->on_scroll_state(_struct, CefBrowserCppToC::Wrap(browser),
                            scroll_state);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefRenderHandlerCToCpp::FilterScrollEvent(CefRefPtr<CefBrowser> browser,
+                                               const float x,
+                                               const float y,
+                                               const float fling_x,
+                                               const float fling_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, filter_scroll_event)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->filter_scroll_event(
+      _struct, CefBrowserCppToC::Wrap(browser), x, y, fling_x, fling_y);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

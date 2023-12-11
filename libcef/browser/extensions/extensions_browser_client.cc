@@ -111,6 +111,17 @@ bool CefExtensionsBrowserClient::IsShuttingDown() {
   return false;
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+UserScriptListener* CefExtensionsBrowserClient::GetUserScriptListener() {
+  return &user_script_listener_;
+}
+
+void CefExtensionsBrowserClient::SignalContentScriptsLoaded(
+    content::BrowserContext* context) {
+  user_script_listener_.OnScriptsLoaded(context);
+}
+#endif
+
 bool CefExtensionsBrowserClient::AreExtensionsDisabled(
     const base::CommandLine& command_line,
     BrowserContext* context) {

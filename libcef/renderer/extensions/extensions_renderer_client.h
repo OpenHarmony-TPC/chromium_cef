@@ -16,6 +16,10 @@ class AlloyContentRendererClient;
 class GURL;
 
 namespace blink {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+enum class ProtocolHandlerSecurityLevel;
+#endif
+
 class WebFrame;
 class WebLocalFrame;
 struct WebPluginParams;
@@ -79,6 +83,14 @@ class CefExtensionsRendererClient : public ExtensionsRendererClient {
   void RunScriptsAtDocumentStart(content::RenderFrame* render_frame);
   void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame);
   void RunScriptsAtDocumentIdle(content::RenderFrame* render_frame);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  bool AllowPopup();
+  blink::ProtocolHandlerSecurityLevel GetProtocolHandlerSecurityLevel();
+
+  static blink::WebFrame* FindFrame(blink::WebLocalFrame* relative_to_frame,
+                                    const std::string& name);
+#endif
 
  private:
   AlloyContentRendererClient* const alloy_content_renderer_client_;

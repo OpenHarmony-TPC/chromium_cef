@@ -36,6 +36,11 @@
 #include "components/autofill/core/browser/ui/suggestion.h"
 #endif
 
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+#include "components/zoom/zoom_controller.h"
+#include "components/zoom/zoom_observer.h"
+#endif
+
 class CefAudioCapturer;
 class CefBrowserInfo;
 class SiteInstance;
@@ -57,7 +62,11 @@ class SiteInstance;
 // WebContentsObserver::routing_id() when sending IPC messages.
 class AlloyBrowserHostImpl : public CefBrowserHostBase,
                              public content::WebContentsDelegate,
-                             public content::WebContentsObserver {
+                             public content::WebContentsObserver
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+                             , public zoom::ZoomObserver
+#endif
+ {
  public:
   // Used for handling the response to command messages.
   class CommandResponseHandler : public virtual CefBaseRefCounted {
@@ -91,6 +100,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   CefWindowHandle GetOpenerWindowHandle() override;
   double GetZoomLevel() override;
   void SetZoomLevel(double zoomLevel) override;
+  void SetBrowserZoomLevel(double zoom_factor) override;
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
@@ -195,10 +205,29 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnSetFocus(cef_focus_source_t source) override;
 
   bool ShowContextMenu(const content::ContextMenuParams& params);
+  
+  bool Discard() override;
+  
+  bool Restore() override;
+
+#if defined(OHOS_COMPOSITE_RENDER)
+  void WasKeyboardResized() override;
+#endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #if defined(OHOS_PRINT)
   void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
 #endif // defined(OHOS_PRINT)
+
+#if defined(OHOS_INPUT_EVENTS)
+  void ContentsZoomChange(bool zoom_in) override;
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
+#endif
 
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
@@ -372,6 +401,14 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnHideAutofillPopup() override;
 #endif
 
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+  void OnZoomChanged(
+      const zoom::ZoomController::ZoomChangedEventData& data) override;
+  void OnZoomControllerDestroyed(
+      zoom::ZoomController* zoom_controller) override {}
+
+#endif
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 
@@ -413,6 +450,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
 #if defined(OHOS_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   CefWindowHandle opener_;
@@ -454,6 +493,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool is_hidden_ = false;
 #endif
   bool start_play_ = false;
+
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

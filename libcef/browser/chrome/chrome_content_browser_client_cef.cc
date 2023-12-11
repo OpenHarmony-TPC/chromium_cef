@@ -438,10 +438,17 @@ ChromeContentBrowserClientCef::CreateLoginDelegate(
   // |web_contents| is nullptr for CefURLRequests without an associated frame.
   if (!web_contents || base::CommandLine::ForCurrentProcess()->HasSwitch(
                            switches::kDisableChromeLoginPrompt)) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    // Delegate auth callbacks to GetAuthCredentials.
+    return std::make_unique<net_service::LoginDelegate>(
+        auth_info, web_contents, request_id, is_request_for_main_frame, url,
+        response_headers, std::move(auth_required_callback));
+#else
     // Delegate auth callbacks to GetAuthCredentials.
     return std::make_unique<net_service::LoginDelegate>(
         auth_info, web_contents, request_id, url,
         std::move(auth_required_callback));
+#endif
   }
 
   return ChromeContentBrowserClient::CreateLoginDelegate(
