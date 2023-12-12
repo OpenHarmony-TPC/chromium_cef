@@ -446,6 +446,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateBackgroundColor(int color);
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
+  bool IsNeedZoomChange(const content::NativeWebKeyboardEvent& event,
+    bool &zoom_in);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)

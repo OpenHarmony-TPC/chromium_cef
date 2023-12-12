@@ -58,6 +58,7 @@
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
+#include "ohos_nweb/src/nweb_inputmethod_handler.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 #endif
 
@@ -1346,6 +1347,28 @@ KeyboardEventProcessingResult AlloyBrowserHostImpl::PreHandleKeyboardEvent(
   return contents_delegate_->PreHandleKeyboardEvent(source, event);
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+bool AlloyBrowserHostImpl::IsNeedZoomChange(
+  const content::NativeWebKeyboardEvent& event, bool &zoom_in) {
+  auto native_key_code = event.native_key_code;
+  auto type = event.GetType();
+  bool is_add_or_sub_key =
+    (native_key_code == OHOS::NWeb::ScanKeyCode::MINUS_SCAN_CODE) ||
+    (native_key_code == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE) ||
+    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADSUBTRACT_SCAN_CODE) ||
+    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE);
+  zoom_in =
+    (native_key_code == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE) ||
+    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE);
+  if (is_add_or_sub_key &&
+      (event.GetModifiers() & blink::WebKeyboardEvent::kControlKey) &&
+      (type == blink::WebKeyboardEvent::Type::kRawKeyDown)) {
+    return true;
+  }
+  return false;
+}
+#endif
+
 bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     content::WebContents* source,
     const content::NativeWebKeyboardEvent& event) {
@@ -1358,9 +1381,17 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     return true;
   }
 
-  if (platform_delegate_) {
-    return platform_delegate_->HandleKeyboardEvent(event);
+  if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
+    return true;
   }
+
+#if defined(OHOS_INPUT_EVENTS)
+  bool zoom_in;
+  if (IsNeedZoomChange(event, zoom_in)) {
+    LOG(DEBUG) << "ContentsZoomChange when HandleKeyboardEvent";
+    ContentsZoomChange(zoom_in);
+  }
+#endif
   return false;
 }
 
