@@ -58,7 +58,6 @@
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
-#include "ohos_nweb/src/nweb_inputmethod_handler.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 #endif
 
@@ -82,6 +81,10 @@
 #include "third_party/blink/public/common/page/page_zoom.h"
 #include "components/zoom/page_zoom.h"
 #include "components/prefs/pref_service.h"
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+#include "ohos_nweb/src/nweb_inputmethod_handler.h"
 #endif
 
 using content::KeyboardEventProcessingResult;
@@ -1349,20 +1352,21 @@ KeyboardEventProcessingResult AlloyBrowserHostImpl::PreHandleKeyboardEvent(
 
 #if defined(OHOS_INPUT_EVENTS)
 bool AlloyBrowserHostImpl::IsNeedZoomChange(
-  const content::NativeWebKeyboardEvent& event, bool &zoom_in) {
-  auto native_key_code = event.native_key_code;
-  auto type = event.GetType();
-  bool is_add_or_sub_key =
-    (native_key_code == OHOS::NWeb::ScanKeyCode::MINUS_SCAN_CODE) ||
-    (native_key_code == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE) ||
-    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADSUBTRACT_SCAN_CODE) ||
-    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE);
-  zoom_in =
-    (native_key_code == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE) ||
-    (native_key_code == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE);
-  if (is_add_or_sub_key &&
-      (event.GetModifiers() & blink::WebKeyboardEvent::kControlKey) &&
-      (type == blink::WebKeyboardEvent::Type::kRawKeyDown)) {
+  const content::NativeWebKeyboardEvent& event, bool& zoom_in) {
+  if (!(event.GetModifiers() & blink::WebKeyboardEvent::kControlKey) ||
+      (event.GetType() != blink::WebKeyboardEvent::Type::kRawKeyDown)) {
+    LOG(DEBUG) << "not control key down";
+    return false;
+  }
+  int32_t native_key_code = event.native_key_code;
+  if (native_key_code  == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE ||
+      native_key_code  == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE) {
+    zoom_in = true;
+    return true;
+  }
+  if (native_key_code  == OHOS::NWeb::ScanKeyCode::MINUS_SCAN_CODE ||
+      native_key_code  == OHOS::NWeb::ScanKeyCode::NUMPADSUBTRACT_SCAN_CODE) {
+    zoom_in = false;
     return true;
   }
   return false;
@@ -1381,11 +1385,11 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     return true;
   }
 
+#if defined(OHOS_INPUT_EVENTS)
   if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
     return true;
   }
 
-#if defined(OHOS_INPUT_EVENTS)
   bool zoom_in;
   if (IsNeedZoomChange(event, zoom_in)) {
     LOG(DEBUG) << "ContentsZoomChange when HandleKeyboardEvent";
