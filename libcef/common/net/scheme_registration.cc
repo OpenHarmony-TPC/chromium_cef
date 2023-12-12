@@ -61,27 +61,30 @@ void AddInternalSchemes(content::ContentClient::Schemes* schemes) {
 
 bool IsInternalHandledScheme(const std::string& scheme) {
   static const char* schemes[] = {
-      url::kAboutScheme,
-      url::kBlobScheme,
-      content::kChromeDevToolsScheme,
-      content::kChromeUIScheme,
-      content::kChromeUIUntrustedScheme,
-      url::kDataScheme,
-      extensions::kExtensionScheme,
-      url::kFileScheme,
-      url::kFileSystemScheme,
-      url::kHttpScheme,
-      url::kHttpsScheme,
-      url::kJavaScriptScheme,
-      url::kWsScheme,
-      url::kWssScheme,
+    url::kAboutScheme,
+    url::kBlobScheme,
+    content::kChromeDevToolsScheme,
+    content::kChromeUIScheme,
+    content::kChromeUIUntrustedScheme,
+    url::kDataScheme,
+    extensions::kExtensionScheme,
+    url::kFileScheme,
+    url::kFileSystemScheme,
+    url::kHttpScheme,
+    url::kHttpsScheme,
+    url::kJavaScriptScheme,
+    url::kWsScheme,
+    url::kWssScheme,
 #ifdef OHOS_HAP_DECOMPRESSED
-      url::kResourcesScheme,
+    url::kResourcesScheme,
 #endif
 #ifdef OHOS_FILE_UPLOAD
-      url::kDataabilityScheme,
-      url::kDatashareScheme,
+    url::kDataabilityScheme,
+    url::kDatashareScheme,
 #endif //OHOS_FILE_UPLOAD
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    content::kArkWebUIScheme,
+#endif
   };
 
   for (size_t i = 0; i < sizeof(schemes) / sizeof(schemes[0]); ++i) {

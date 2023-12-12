@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=985168005ae909d84943c3d71906d617b1598239$
+// $hash=eabf5a0cf6034cffa6d83aab9cd050607a37a3be$
 //
 
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
@@ -514,6 +514,38 @@ void CEF_CALLBACK frame_get_images(struct _cef_frame_t* self,
       CefGetImagesCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK frame_post_url(struct _cef_frame_t* self,
+                                 const cef_string_t* url,
+                                 size_t post_dataCount,
+                                 char const* post_data) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+  // Unverified params: post_data
+
+  // Translate param: post_data; type: simple_vec_byref_const
+  std::vector<char> post_dataList;
+  if (post_dataCount > 0) {
+    for (size_t i = 0; i < post_dataCount; ++i) {
+      char post_dataVal = post_data[i];
+      post_dataList.push_back(post_dataVal);
+    }
+  }
+
+  // Execute
+  CefFrameCppToC::Get(self)->PostURL(CefString(url), post_dataList);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -546,6 +578,7 @@ CefFrameCppToC::CefFrameCppToC() {
   GetStruct()->send_process_message = frame_send_process_message;
   GetStruct()->load_header_url = frame_load_header_url;
   GetStruct()->get_images = frame_get_images;
+  GetStruct()->post_url = frame_post_url;
 }
 
 // DESTRUCTOR - Do not edit by hand.

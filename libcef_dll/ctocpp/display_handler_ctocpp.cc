@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f10eaa384355db4699d9f4ed8f983bb59d0aabf5$
+// $hash=842714129b39201a2620d17edf9af2428a7df49a$
 //
 
 #include "libcef_dll/ctocpp/display_handler_ctocpp.h"
@@ -435,6 +435,24 @@ void CefDisplayHandlerCToCpp::OnScaleChanged(CefRefPtr<CefBrowser> browser,
   // Execute
   _struct->on_scale_changed(_struct, CefBrowserCppToC::Wrap(browser),
                             old_page_scale_factor, new_page_scale_factor);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnContentsBrowserZoomChange(
+    double zoom_factor,
+    bool can_show_bubble) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_contents_browser_zoom_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_contents_browser_zoom_change(_struct, zoom_factor,
+                                           can_show_bubble);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

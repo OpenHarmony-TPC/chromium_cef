@@ -105,6 +105,11 @@ class CefFrameImpl
   void OnFocusedNodeChanged(const blink::WebElement& element);
 #endif  // BUILDFLAG(IS_OHOS)
 
+#ifdef OHOS_POST_URL
+  void PostURL(const CefString& url,
+               const std::vector<char>& post_data) override;
+#endif  // defined(OHOS_POST_URL)
+
  private:
   // Execute an action on the associated WebLocalFrame. This will queue the
   // action if the JavaScript context is not yet created.
@@ -206,6 +211,7 @@ class CefFrameImpl
               float height) override;
   void GetHitData(
       cef::mojom::RenderFrame::GetHitDataCallback callback) override;
+  void SetOverscrollMode(int mode) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,

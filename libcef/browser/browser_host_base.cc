@@ -78,6 +78,10 @@
 #include "libcef/browser/received_slice_helper.h"
 #endif
 
+#if defined(OHOS_EX_TOPCONTROLS)
+#include "cc/input/browser_controls_state.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -869,14 +873,21 @@ CefString CefBrowserHostBase::DefaultUserAgent() {
 
 void CefBrowserHostBase::RegisterArkJSfunction(
     const CefString& object_name,
-    const std::vector<CefString>& method_list) {
+    const std::vector<CefString>& method_list,
+    const int32_t object_id) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   std::vector<std::string> method_vector;
   for (CefString method : method_list) {
     method_vector.push_back(method.ToString());
   }
-  javascriptInjector->AddInterface(object_name.ToString(), method_vector);
+  if (!javascriptInjector) {
+    LOG(ERROR) << "CefBrowserHostBase::RegisterArkJSfunction "
+                  "javascriptInjector is null";
+    return;
+  }
+  javascriptInjector->AddInterface(object_name.ToString(), method_vector,
+                                   object_id);
 }
 
 void CefBrowserHostBase::UnregisterArkJSfunction(
@@ -889,6 +900,62 @@ void CefBrowserHostBase::UnregisterArkJSfunction(
     method_vector.push_back(method.ToString());
   }
   javascriptInjector->RemoveInterface(object_name.ToString(), method_vector);
+}
+
+js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (!js_communication_host_.get()) {
+    js_communication_host_ =
+        std::make_unique<js_injection::JsCommunicationHost>(GetWebContents());
+  }
+  return js_communication_host_.get();
+}
+ 
+void CefBrowserHostBase::JavaScriptOnDocumentStart(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    std::string stdScript = script.ToString();
+    std::vector<std::string> scriptRules;
+    for (CefString rule: script_rules) {
+      scriptRules.push_back(rule.ToString());
+    }
+    js_injection::JsCommunicationHost::AddScriptResult result =
+      host->AddDocumentStartJavaScript(script, scriptRules);
+    if (result.script_id.has_value()) {
+      script_result_map_.emplace(std::make_pair(stdScript, result.script_id.value()));
+    }
+  }
+}
+ 
+void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    for (auto iter: script_result_map_) {
+      host->RemoveDocumentStartJavaScript(iter.second);
+    }
+  }
+}
+
+void CefBrowserHostBase::CallH5Function(
+    int32_t routing_id,
+    int32_t h5_object_id,
+    const CefString& h5_method_name,
+    const std::vector<CefRefPtr<CefValue>>& args) {
+  OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(GetWebContents());
+  if (!javascriptInjector || h5_object_id <= 0) {
+    LOG(ERROR) << "CefBrowserHostBase::GetH5ObjectMethods "
+                  "javascriptInjector is null or h5_object_id = "
+               << h5_object_id;
+    return;
+  }
+
+  std::string name = h5_method_name.ToString();
+  javascriptInjector->DoCallH5Function(routing_id, h5_object_id, name, args);
 }
 #endif
 
@@ -965,10 +1032,15 @@ void CefBrowserHostBase::SendMouseClickEvent(const CefMouseEvent& event,
   if (mouseUp)
     return;
 
+  float ratio = GetVirtualPixelRatio();
+  if (ratio <= 0) {
+    LOG(ERROR) << "get ratio invalid: " << ratio;
+    return;
+  }
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())
-        ->SendHitEvent(event.x, event.y, 0, 0);
+        ->SendHitEvent(event.x * ratio, event.y * ratio, 0, 0);
   }
 #endif  // defined(OHOS_INPUT_EVENTS)
 }
@@ -1320,6 +1392,70 @@ void CefBrowserHostBase::RemoveCache(bool include_disk_files) {
     return;
   }
 }
+
+void CefBrowserHostBase::UpdateBrowserControlsState(int constraints,
+                                                    int current,
+                                                    bool animate) {
+#if defined(OHOS_EX_TOPCONTROLS)
+  if (!GetWebContents()) {
+    return;
+  }
+ 
+  cc::BrowserControlsState constraints_state =
+      static_cast<cc::BrowserControlsState>(constraints);
+  cc::BrowserControlsState current_state =
+      static_cast<cc::BrowserControlsState>(current);
+ 
+  GetWebContents()->UpdateBrowserControlsState(constraints_state, current_state,
+                                               animate);
+#endif
+}
+
+void CefBrowserHostBase::UpdateBrowserControlsHeight(int height, bool animate) {
+#if defined(OHOS_EX_TOPCONTROLS)
+  if (!GetWebContents()) {
+    return;
+  }
+ 
+  GetWebContents()->UpdateBrowserControlsHeight(height, animate);
+#endif
+}
+
+void CefBrowserHostBase::GetOrCreateRootBrowserAccessibilityManager(
+    void** manager) {
+  // todo(ohos):impl this function then remove todo
+}
+
+void CefBrowserHostBase::SetVirtualKeyBoardArg(int32_t width,
+                                               int32_t height,
+                                               double keyboard) {
+  // todo(ohos):impl this function then remove todo
+}
+
+bool CefBrowserHostBase::ShouldVirtualKeyboardOverlay() {
+  // todo(ohos):impl this function then remove todo
+  return false;
+}
+
+void CefBrowserHostBase::SetDrawRect(int x, int y, int width, int height) {
+  // todo(ohos):impl this function then remove todo
+}
+
+void CefBrowserHostBase::SetDrawMode(int mode) {
+  // todo(ohos):impl this function then remove todo
+}
+
+void CefBrowserHostBase::SetZoomLevel(double zoomLevel) {
+  // todo(ohos):impl this function then remove todo
+}
+double CefBrowserHostBase::GetZoomLevel() {
+  // todo(ohos):impl this function then remove todo
+  return 0;
+}
+
+void CefBrowserHostBase::SetBrowserZoomLevel(double zoom_factor) {
+  // todo(ohos):impl this function then remove todo
+}
 #endif  // IS_OHOS
 
 void CefBrowserHostBase::StopLoad() {
@@ -1642,8 +1778,18 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       return false;
     }
 
-    web_contents->GetController().LoadURL(
+#ifdef OHOS_POST_URL
+    if (params.post_data) {
+      content::NavigationController::LoadURLParams LoadURLParams(params);
+      web_contents->GetController().LoadURLWithParams(LoadURLParams);
+    } else {
+      web_contents->GetController().LoadURL(
         gurl, params.referrer, params.transition, params.extra_headers);
+    }
+#else
+      web_contents->GetController().LoadURL(
+        gurl, params.referrer, params.transition, params.extra_headers);
+#endif
     return true;
   }
   return false;
@@ -2659,6 +2805,10 @@ void CefBrowserHostBase::SetAudioExclusive(bool audioExclusive) {
   // TODO(ohos): please impl the function and remove this comment.
  }
 
+ void CefBrowserHostBase::CreateWebPrintDocumentAdapter(
+    const CefString& jobName, void** webPrintDocumentAdapter) {
+  // TODO(ohos): please impl the function and remove this comment.
+ }
 void CefBrowserHostBase::SetEnableLowerFrameRate(bool enabled) {
 // TODO(ohos): please impl the function and remove this comment.
 }
@@ -2731,6 +2881,14 @@ void CefBrowserHostBase::ZoomBy(float delta, float width, float height) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())->ZoomBy(delta, width, height);
+  }
+}
+
+void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SetOverscrollMode(overscrollMode);
   }
 }
 

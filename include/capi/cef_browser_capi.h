@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f776dd1d025f4faa179776083e01e25f6d568d08$
+// $hash=9c50de764d8c4b541095fa44fab23156efbd233b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -296,6 +296,22 @@ typedef struct _cef_browser_t {
   ///
   void(CEF_CALLBACK* password_suggestion_selected)(struct _cef_browser_t* self,
                                                    int list_index);
+
+  ///
+  /// Update browser controls state.
+  ///
+  void(CEF_CALLBACK* update_browser_controls_state)(struct _cef_browser_t* self,
+                                                    int constraints,
+                                                    int current,
+                                                    int animate);
+
+  ///
+  /// Update browser controls height.
+  ///
+  void(CEF_CALLBACK* update_browser_controls_height)(
+      struct _cef_browser_t* self,
+      int height,
+      int animate);
 
   ///
   /// Prefetch the resources required by the page, but will not execute js or
@@ -1066,6 +1082,13 @@ typedef struct _cef_browser_host_t {
                                               cef_state_t accessibility_state);
 
   ///
+  /// GetOrCreateRootBrowserAccessibilityManager
+  ///
+  void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t* self,
+      void** manager);
+
+  ///
   /// Enable notifications of auto resize via
   /// cef_display_handler_t::OnAutoResize. Notifications are disabled by
   /// default. |min_size| and |max_size| define the range of allowed sizes.
@@ -1220,7 +1243,8 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
                                               const cef_string_t* object_name,
-                                              cef_string_list_t method_list);
+                                              cef_string_list_t method_list,
+                                              int32_t object_id);
 
   ///
   /// UnregisterArkJSfunction
@@ -1229,6 +1253,16 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const cef_string_t* object_name,
       cef_string_list_t method_list);
+
+  ///
+  /// CallH5Function
+  ///
+  void(CEF_CALLBACK* call_h5function)(struct _cef_browser_host_t* self,
+                                      int32_t routing_id,
+                                      int32_t h5_object_id,
+                                      const cef_string_t* h5_method_name,
+                                      size_t argsCount,
+                                      struct _cef_value_t* const* args);
 
   ///
   /// Saves the current view as a web archive.
@@ -1465,6 +1499,81 @@ typedef struct _cef_browser_host_t {
   /// Set the token of the UI framework
   ///
   void(CEF_CALLBACK* set_token)(struct _cef_browser_host_t* self, void* token);
+
+  ///
+  /// Set the property values for width, height, and keyboard height
+  ///
+  void(CEF_CALLBACK* set_virtual_key_board_arg)(
+      struct _cef_browser_host_t* self,
+      int32_t width,
+      int32_t height,
+      double keyboard);
+
+  ///
+  /// Set the virtual keyboard to override the web status
+  ///
+  int(CEF_CALLBACK* should_virtual_keyboard_overlay)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// JavaScriptOnDocumentStart
+  ///
+  void(CEF_CALLBACK* java_script_on_document_start)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* script,
+      cef_string_list_t script_rules);
+
+  ///
+  /// RemoveJavaScriptOnDocumentStart
+  ///
+  void(CEF_CALLBACK* remove_java_script_on_document_start)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// Set the draw rect
+  ///
+  void(CEF_CALLBACK* set_draw_rect)(struct _cef_browser_host_t* self,
+                                    int x,
+                                    int y,
+                                    int width,
+                                    int height);
+
+  ///
+  /// Set the draw mode
+  ///
+  void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
+
+  ///
+  /// Create the Web print document adapter of the UI framework
+  ///
+  void(CEF_CALLBACK* create_web_print_document_adapter)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* jobName,
+      void** webPrintDocumentAdapter);
+
+  ///
+  /// Set the over-scroll mode of web
+  ///
+  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
+                                          int mode);
+
+  ///
+  /// Discard a webview window
+  ///
+  int(CEF_CALLBACK* discard)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Restore the discarded webview window
+  ///
+  int(CEF_CALLBACK* restore)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Change the zoom factor for browser zoom. If called on the UI thread the
+  /// change will be applied immediately. Otherwise, the change will be applied
+  /// asynchronously on the UI thread.
+  ///
+  void(CEF_CALLBACK* set_browser_zoom_level)(struct _cef_browser_host_t* self,
+                                             double zoomFactor);
 } cef_browser_host_t;
 
 ///

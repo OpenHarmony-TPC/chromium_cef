@@ -69,6 +69,20 @@
 #include "content/browser/ohos/date_time_chooser_ohos.h"
 #endif  // OHOS_CSS_INPUT_TIME
 
+#if defined(OHOS_WEBRTC)
+#include "cef/libcef/browser/permission/alloy_access_request.h"
+#include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+#endif
+
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+#include "base/command_line.h"
+#include "net/base/url_util.h"
+#include "content/public/common/content_switches.h"
+#include "third_party/blink/public/common/page/page_zoom.h"
+#include "components/zoom/page_zoom.h"
+#include "components/prefs/pref_service.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -416,6 +430,28 @@ void AlloyBrowserHostImpl::SetZoomLevel(double zoomLevel) {
   }
 }
 
+void AlloyBrowserHostImpl::SetBrowserZoomLevel(double zoom_factor) {
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+  if (CEF_CURRENTLY_ON_UIT()) {
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser) &&
+        web_contents()) {
+      zoom::ZoomController* zoom_controller =
+          zoom::ZoomController::FromWebContents(web_contents());
+      if (!zoom_controller) {
+        LOG(ERROR) << "SetBrowserZoomLevel has no zoom controller.";
+        return;
+      }
+      zoom_controller->SetZoomLevel(
+          blink::PageZoomFactorToZoomLevel(zoom_factor));
+    }
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&AlloyBrowserHostImpl::SetBrowserZoomLevel,
+                                 this, zoom_factor));
+  }
+#endif
+}
 void AlloyBrowserHostImpl::Find(const CefString& searchText,
                                 bool forward,
                                 bool matchCase,
@@ -783,6 +819,17 @@ void AlloyBrowserHostImpl::DestroyBrowser() {
   // If the WebContents still exists at this point, signal destruction before
   // browser destruction.
   if (web_contents()) {
+#if defined(OHOS_EX_GET_ZOOM_LEVEL)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+      AlloyBrowserContext* browser_context =
+          static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
+      if (browser_context) {
+        DCHECK(browser_context->GetPrefs());
+        browser_context->GetPrefs()->CommitPendingWrite();
+      }
+    }
+#endif
     WebContentsDestroyed();
   }
 
@@ -1454,10 +1501,44 @@ void AlloyBrowserHostImpl::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
     content::MediaResponseCallback callback) {
+#if defined(OHOS_WEBRTC)
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableMediaStream)) {
+    // Cancel the request.
+    std::move(callback).Run(blink::mojom::StreamDevicesSet(),
+                            blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
+                            std::unique_ptr<content::MediaStreamUI>());
+    return;
+  }
+
+  bool microphone_requested =
+      (request.audio_type ==
+       blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE);
+  bool webcam_requested = (request.video_type ==
+                           blink::mojom::MediaStreamType::DEVICE_VIDEO_CAPTURE);
+  bool screen_requested = (request.video_type ==
+                           blink::mojom::MediaStreamType::GUM_DESKTOP_VIDEO_CAPTURE) ||
+                          (request.video_type ==
+                           blink::mojom::MediaStreamType::DISPLAY_VIDEO_CAPTURE);
+  LOG(INFO) << "RequestMediaAccessPermission screen_requested: " << screen_requested;
+  AlloyPermissionRequestHandler* permission_handler = GetPermissionRequestHandler();
+  if (!permission_handler) {
+    // Cancel the request.
+    std::move(callback).Run(blink::mojom::StreamDevicesSet(),
+                            blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
+                            std::unique_ptr<content::MediaStreamUI>());
+    return;
+  }
+  if (!screen_requested && (microphone_requested || webcam_requested)) {
+    permission_handler->SendRequest(new AlloyMediaAccessRequest(this, request, std::move(callback)));
+  } else {
+    permission_handler->SendScreenCaptureRequest(new AlloyScreenCaptureAccessRequest(this, request, std::move(callback)));
+  }
+#else
   auto returned_callback = media_access_query::RequestMediaAccessPermission(
       this, request, std::move(callback), /*default_disallow=*/true);
   // Callback should not be returned.
   DCHECK(returned_callback.is_null());
+#endif // defined(OHOS_WEBRTC)
 }
 
 bool AlloyBrowserHostImpl::CheckMediaAccessPermission(
@@ -1742,6 +1823,13 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
 
   // Make sure RenderFrameCreated is called at least one time.
   RenderFrameCreated(web_contents->GetPrimaryMainFrame());
+
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser)) {
+    zoom::ZoomController::CreateForWebContents(web_contents);
+  }
+#endif
 }
 
 bool AlloyBrowserHostImpl::CreateHostWindow() {
@@ -1865,6 +1953,57 @@ void AlloyBrowserHostImpl::ShowPopupMenu(
 }
 #endif  // #ifdef OHOS_HTML_SELECT
 
+#if defined(OHOS_COMPOSITE_RENDER)
+void AlloyBrowserHostImpl::WasKeyboardResized() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::WasKeyboardResized, this));
+    return;
+  }
+ 
+  if (platform_delegate_)
+    platform_delegate_->WasKeyboardResized();
+}
+#endif  // defined(OHOS_COMPOSITE_RENDER)
+
+#if defined(OHOS_INPUT_EVENTS)
+void AlloyBrowserHostImpl::SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {
+  if (platform_delegate_) {
+    platform_delegate_->SetVirtualKeyBoardArg(width, height, keyboard);
+  }
+}
+ 
+bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
+  if (platform_delegate_) {
+    return platform_delegate_->ShouldVirtualKeyboardOverlay();
+  }
+  return false;
+}
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
+#ifdef OHOS_NWEB_EX
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN
+                                         : content::PageZoom::PAGE_ZOOM_OUT;
+    zoom::PageZoom::Zoom(web_contents(), zoomType);
+    return;
+  }
+#endif
+
+  double curFactor = GetZoomLevel();
+  double tempZoomFactor = zoom_in ? curFactor + 2.0 : curFactor - 2.0;
+  if (tempZoomFactor > 10.0 || tempZoomFactor < -10.0) {
+    LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
+    return;
+  }
+  SetZoomLevel(tempZoomFactor);
+}
+#endif
+
 #ifdef OHOS_CSS_INPUT_TIME
 void AlloyBrowserHostImpl::OpenDateTimeChooser() {
   content::DateTimeChooserOHOS* date_time_chooser =
@@ -1940,6 +2079,16 @@ void AlloyBrowserHostImpl::OnHideAutofillPopup() {
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)
+void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawRect(x, y, width, height);
+}
+
+void AlloyBrowserHostImpl::SetDrawMode(int mode) {
+  if (platform_delegate_)
+    platform_delegate_->SetDrawMode(mode);
+}
+
 void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
@@ -1959,5 +2108,71 @@ void AlloyBrowserHostImpl::SetToken(void* token) {
   if (platform_delegate_) {
     platform_delegate_->SetToken(token);
   }
-};
+}
+
+void AlloyBrowserHostImpl::CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                                         void** webPrintDocumentAdapter) {
+  if (platform_delegate_) {
+    platform_delegate_->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
+  }
+}
 #endif // defined(OHOS_PRINT)
+
+ 
+bool AlloyBrowserHostImpl::Discard() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, called on invalid thread";
+    return false;
+  }
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, WebContents is nullptr";
+    return false;
+  }
+ 
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* render_process = main_frame->GetProcess();
+  if (!render_process) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, RenderProcessHost is nullptr";
+    return false;
+  }
+ 
+  bool fast_shutdown_success = render_process->FastShutdownIfPossible(1u, true);
+  if (fast_shutdown_success) {
+    web_contents()->SetWasDiscarded(true);
+  }
+ 
+  return fast_shutdown_success;
+}
+ 
+bool AlloyBrowserHostImpl::Restore() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, called on invalid thread";
+    return false;
+  }
+  if (!web_contents()) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, WebContents is nullptr";
+    return false;
+  }
+  
+  web_contents()->GetController().SetNeedsReload();
+  web_contents()->GetController().LoadIfNecessary();
+  web_contents()->Focus();
+  return true;
+}
+
+#ifdef OHOS_EX_GET_ZOOM_LEVEL
+void AlloyBrowserHostImpl::OnZoomChanged(
+    const zoom::ZoomController::ZoomChangedEventData& data) {
+  if (data.web_contents != web_contents()) {
+    return;
+  }
+  if (client_) {
+    CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
+    if (handler) {
+      handler->OnContentsBrowserZoomChange(
+          blink::PageZoomLevelToZoomFactor(data.new_zoom_level),
+          data.can_show_bubble);
+    }
+  }
+}
+#endif

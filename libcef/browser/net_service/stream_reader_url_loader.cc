@@ -679,6 +679,13 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   auto headers = MakeResponseHeaders(
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
+#if defined(OHOS_NETWORK_LOAD)
+  if (status_code >= 400) {
+    if (!mime_type.empty()) {
+      headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
+    }
+  }
+#endif
   pending_response->headers = headers;
 
   if (content_length >= 0) {

@@ -50,24 +50,6 @@
 #include "include/cef_ssl_info.h"
 #include "include/cef_x509_certificate.h"
 
-// TODO(ohos): Adaptor CefSelectClientCertificateCallback, see:
-// cef/include/cef_callback.h
-// ///
-// /// Callback interface used to select a client certificate for
-// authentication.
-// ///
-// /*--cef(source=library)--*/
-// class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
-//  public:
-//   ///
-//   /// Chooses the specified certificate for client certificate
-//   authentication.
-//   /// NULL value means that no client certificate should be used.
-//   ///
-//   /*--cef(optional_param=cert)--*/
-//   virtual void Select(CefRefPtr<CefX509Certificate> cert) = 0;
-// };
-
 ///
 /// Implement this interface to handle events related to browser requests. The
 /// methods of this class will be called on the thread indicated.

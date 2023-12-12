@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=94c9e5d66361da6402c7aae2362694ae3713574e$
+// $hash=6cb0f7e66915d0928de4baeb6ffc0f9d68859e75$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -66,6 +66,10 @@ class CefBrowserCToCpp
   void SelectAndCopy() override;
   bool ShouldShowFreeCopy() override;
   void PasswordSuggestionSelected(int list_index) override;
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override;
+  void UpdateBrowserControlsHeight(int height, bool animate) override;
   void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
   void ReloadOriginalUrl() override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;

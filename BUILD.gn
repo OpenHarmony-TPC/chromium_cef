@@ -682,8 +682,6 @@ source_set("libcef_static") {
               "libcef/browser/net_service/browser_urlrequest_impl.h",
               "libcef/browser/net_service/cookie_helper.cc",
               "libcef/browser/net_service/cookie_helper.h",
-              "libcef/browser/net_service/cookie_manager_impl.cc",
-              "libcef/browser/net_service/cookie_manager_impl.h",
               "libcef/browser/net_service/login_delegate.cc",
               "libcef/browser/net_service/login_delegate.h",
               "libcef/browser/net_service/net_helpers.cc",
@@ -1019,6 +1017,20 @@ source_set("libcef_static") {
     ]
   }
 
+  #ifdef OHOS_COOKIE
+  if (defined(ohos_cookie) && ohos_cookie) {
+    sources += [
+      "libcef/browser/net_service/cookie_manager_ohos_impl.cc",
+      "libcef/browser/net_service/cookie_manager_ohos_impl.h",
+    ]
+  } else {
+    sources += [
+      "libcef/browser/net_service/cookie_manager_impl.cc",
+      "libcef/browser/net_service/cookie_manager_impl.h",
+    ]
+  }
+  #endif
+
   #ifdef OHOS_EX_PASSWORD
   if (defined(ohos_ex_password) && ohos_ex_password) {
     sources += [
@@ -1318,6 +1330,8 @@ source_set("libcef_static") {
     ]
 
     deps += [
+      "//components/js_injection/browser",
+      "//components/js_injection/renderer",
       "//ui/events",
       "//ui/strings",
       "//ui/views",

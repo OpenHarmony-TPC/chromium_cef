@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8093ffaeeffcabff78e5265a2315bae10d4012d8$
+// $hash=83a8c43db6e5cbea858773928abf39dbbeacc6d4$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -202,6 +202,14 @@ typedef struct _cef_display_handler_t {
                                        struct _cef_browser_t* browser,
                                        float old_page_scale_factor,
                                        float new_page_scale_factor);
+
+  ///
+  /// Called when the page browser zoom has changed.
+  ///
+  void(CEF_CALLBACK* on_contents_browser_zoom_change)(
+      struct _cef_display_handler_t* self,
+      double zoom_factor,
+      int can_show_bubble);
 } cef_display_handler_t;
 
 #ifdef __cplusplus

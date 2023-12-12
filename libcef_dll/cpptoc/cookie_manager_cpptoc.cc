@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9ea3fda71ef22ad84ebd1773a4be6f4b5d9fc42f$
+// $hash=5b06383d5d7c493d11c6f00ee953216d043995bb$
 //
 
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
@@ -145,7 +145,8 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
                           const cef_string_t* url,
                           const struct _cef_cookie_t* cookie,
                           struct _cef_set_cookie_callback_t* callback,
-                          int is_sync) {
+                          int is_sync,
+                          const cef_string_t* str_cookie) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -166,6 +167,11 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
     DCHECK(false) << "invalid cookie->[base.]size";
     return 0;
   }
+  // Verify param: str_cookie; type: string_byref_const
+  DCHECK(str_cookie);
+  if (!str_cookie) {
+    return 0;
+  }
   // Unverified params: callback
 
   // Translate param: cookie; type: struct_byref_const
@@ -177,7 +183,7 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->SetCookie(
       CefString(url), cookieObj, CefSetCookieCallbackCToCpp::Wrap(callback),
-      is_sync ? true : false);
+      is_sync ? true : false, CefString(str_cookie));
 
   // Return type: bool
   return _retval;

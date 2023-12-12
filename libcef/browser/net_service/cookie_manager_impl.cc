@@ -236,26 +236,18 @@ bool CefCookieManagerImpl::VisitUrlCookies(
 bool CefCookieManagerImpl::SetCookie(const CefString& url,
                                      const CefCookie& cookie,
                                      CefRefPtr<CefSetCookieCallback> callback,
-                                     bool is_sync) {
+                                     bool is_sync,
+                                     const CefString& str_cookie) {
   GURL gurl = GURL(url.ToString());
-#ifdef OHOS_COOKIE
-  if (!FixInvalidGurl(url, gurl)) {
-    return false;
-  }
-#else
-  if (!gurl.is_valid()) {
-    return false;
-  }
-#endif
 
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImpl::SetCookieInternal), this,
-        gurl, cookie, callback, is_sync));
+        gurl, cookie, callback, is_sync, str_cookie));
     return true;
   }
 
-  return SetCookieInternal(gurl, cookie, callback, is_sync);
+  return SetCookieInternal(gurl, cookie, callback, is_sync, str_cookie);
 }
 
 bool CefCookieManagerImpl::DeleteCookies(
@@ -391,7 +383,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
     const GURL& url,
     const CefCookie& cookie,
     CefRefPtr<CefSetCookieCallback> callback,
-    bool is_sync) {
+    bool is_sync, const CefString& str_cookie) {
   DCHECK(ValidContext());
   DCHECK(url.is_valid());
 
@@ -405,11 +397,14 @@ bool CefCookieManagerImpl::SetCookieInternal(
     expiration_time = CefBaseTime(cookie.expires);
   }
 
+#if !BUILDFLAG(IS_OHOS)
   net::CookieSameSite same_site =
       net_service::MakeCookieSameSite(cookie.same_site);
   net::CookiePriority priority =
       net_service::MakeCookiePriority(cookie.priority);
+#endif
 
+#if !BUILDFLAG(IS_OHOS)
   auto canonical_cookie = net::CanonicalCookie::CreateSanitizedCookie(
       url, name, value, domain, path,
       base::Time(),  // Creation time.
@@ -417,6 +412,11 @@ bool CefCookieManagerImpl::SetCookieInternal(
       base::Time(),  // Last access time.
       cookie.secure ? true : false, cookie.httponly ? true : false, same_site,
       priority, /*same_party=*/false, /*partition_key=*/absl::nullopt);
+#else
+  std::unique_ptr<net::CanonicalCookie> canonical_cookie(net::CanonicalCookie::Create(
+      url, str_cookie.ToString(), base::Time::Now(), absl::nullopt /* server_time */,
+      net::CookiePartitionKey::FromWire(net::SchemefulSite(url), absl::nullopt)));
+#endif
 
   if (!canonical_cookie) {
     SetCookieCallbackImpl(

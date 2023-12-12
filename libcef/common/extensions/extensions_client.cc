@@ -21,6 +21,14 @@ namespace extensions {
 
 namespace {
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+// TODO(battre): Delete the HTTP URL once the blocklist is downloaded via HTTPS.
+const char kExtensionBlocklistUrlPrefix[] =
+    "http://www.gstatic.com/chrome/extensions/blocklist";
+const char kExtensionBlocklistHttpsUrlPrefix[] =
+    "https://www.gstatic.com/chrome/extensions/blocklist";
+#endif
+
 template <class FeatureClass>
 SimpleFeature* CreateFeature() {
   return new FeatureClass;
@@ -94,9 +102,18 @@ const GURL& CefExtensionsClient::GetWebstoreUpdateURL() const {
 }
 
 bool CefExtensionsClient::IsBlocklistUpdateURL(const GURL& url) const {
-  // TODO(rockot): Maybe we want to do something else here. For now we accept
-  // any URL as a blocklist URL because we don't really care.
-  return true;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // The extension blocklist URL is returned from the update service and
+  // therefore not determined by Chromium. If the location of the blocklist file
+  // ever changes, we need to update this function. A DCHECK in the
+  // ExtensionUpdater ensures that we notice a change. This is the full URL
+  // of a blocklist:
+  // http://www.gstatic.com/chrome/extensions/blocklist/l_0_0_0_7.txt
+  return base::StartsWith(url.spec(), kExtensionBlocklistUrlPrefix,
+                          base::CompareCase::SENSITIVE) ||
+         base::StartsWith(url.spec(), kExtensionBlocklistHttpsUrlPrefix,
+                          base::CompareCase::SENSITIVE);
+#endif
 }
 
 }  // namespace extensions

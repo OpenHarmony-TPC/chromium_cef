@@ -121,6 +121,47 @@ class AlloyContentRendererClient
                        const net::SiteForCookies& site_for_cookies,
                        const url::Origin* initiator_origin,
                        GURL* new_url) override;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  bool AllowScriptExtensionForServiceWorker(
+      const url::Origin& script_origin) override;
+
+  void DidInitializeServiceWorkerContextOnWorkerThread(
+      blink::WebServiceWorkerContextProxy* context_proxy,
+      const GURL& service_worker_scope,
+      const GURL& script_url) override;
+
+  void WillEvaluateServiceWorkerOnWorkerThread(
+      blink::WebServiceWorkerContextProxy* context_proxy,
+      v8::Local<v8::Context> v8_context,
+      int64_t service_worker_version_id,
+      const GURL& service_worker_scope,
+      const GURL& script_url) override;
+
+  void DidStartServiceWorkerContextOnWorkerThread(
+      int64_t service_worker_version_id,
+      const GURL& service_worker_scope,
+      const GURL& script_url) override;
+
+  void WillDestroyServiceWorkerContextOnWorkerThread(
+      v8::Local<v8::Context> context,
+      int64_t service_worker_version_id,
+      const GURL& service_worker_scope,
+      const GURL& script_url) override;
+
+  bool ShouldEnforceWebRTCRoutingPreferences() override;
+
+  blink::WebFrame* FindFrame(blink::WebLocalFrame* relative_to_frame,
+                             const std::string& name) override;
+
+  bool IsSafeRedirectTarget(const GURL& from_url, const GURL& to_url) override;
+  void DidSetUserAgent(const std::string& user_agent) override;
+
+  bool AllowPopup() override;
+  blink::ProtocolHandlerSecurityLevel GetProtocolHandlerSecurityLevel()
+      override;
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
+
   uint64_t VisitedLinkHash(const char* canonical_url, size_t length) override;
   bool IsLinkVisited(uint64_t link_hash) override;
   bool IsOriginIsolatedPepperPlugin(const base::FilePath& plugin_path) override;

@@ -728,4 +728,3 @@ void CefContext::FinalizeShutdown() {
   browser_info_manager_.reset(nullptr);
   application_ = nullptr;
 }
- 

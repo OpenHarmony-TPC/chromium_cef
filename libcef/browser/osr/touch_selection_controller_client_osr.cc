@@ -111,7 +111,12 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
   }
 
   state.enabled = handle->GetEnabled();
+#ifdef OHOS_EX_TOPCONTROLS
+  state.origin = {handle->focus_bottom().x() + handle->viewport().x(),
+                  handle->focus_bottom().y() + handle->viewport().y()};
+#else
   state.origin = {handle->focus_bottom().x(), handle->focus_bottom().y()};
+#endif
   state.edge_height = handle->focus_bottom().y() - handle->focus_top().y();
   state.alpha = handle->alpha();
 
@@ -193,6 +198,11 @@ void CefTouchSelectionControllerClientOSR::OnTouchDown() {
 
 void CefTouchSelectionControllerClientOSR::OnTouchUp() {
   touch_down_ = false;
+#ifdef OHOS_CLIPBOARD
+  if (quick_menu_running_) {
+    return;
+  }
+#endif
   UpdateQuickMenu();
 }
 
@@ -609,6 +619,9 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
   bool editable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE;
   bool readable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_PASSWORD;
   bool has_selection = !rwhv_->GetSelectedText().empty();
+#ifdef OHOS_CLIPBOARD
+  bool has_text = !rwhv_->GetText().empty();
+#endif  // OHOS_CLIPBOARD
 #if defined(OHOS_EX_FREE_COPY)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {
@@ -656,7 +669,13 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
     }
 #ifdef OHOS_CLIPBOARD
     case QM_EDITFLAG_CAN_SELECT_ALL:
-      return editable || readable;
+      if (!editable && readable) {
+        return true;
+      }
+      if (editable && has_text) {
+        return true;
+      }
+      return false;
 #endif  // #ifdef OHOS_CLIPBOARD
     default:
       return false;

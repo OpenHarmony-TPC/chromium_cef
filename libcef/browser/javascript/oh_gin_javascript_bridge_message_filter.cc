@@ -9,6 +9,7 @@
 #include "base/memory/scoped_refptr.h"
 #include "base/task/thread_pool.h"
 #include "base/types/pass_key.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/javascript/oh_gin_javascript_bridge_messages.h"
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
 #include "content/public/browser/browser_task_traits.h"
@@ -35,6 +36,10 @@ OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
 
 OhGinJavascriptBridgeMessageFilter::~OhGinJavascriptBridgeMessageFilter() {
   LOG(INFO) << "OhGinJavascriptBridgeMessageFilter dtor";
+  for (const auto &[_, dispatchHost] : hosts_) {
+    dispatchHost->ClearMethodMap();
+  }
+  hosts_.clear();
 }
 
 void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
@@ -47,12 +52,10 @@ void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
 
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
     const IPC::Message& message) {
-  base::ThreadPool::PostTask(
-      FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
-      base::BindOnce(
-          base::IgnoreResult(
-              &OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
-          base::WrapRefCounted(this), message));
+  CEF_POST_TASK(CEF_UIT,
+                base::BindOnce(
+                base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+                base::WrapRefCounted(this), message));
   return true;
 }
 
@@ -144,7 +147,7 @@ OhGinJavascriptBridgeMessageFilter::FindHost() {
   if (iter != hosts_.end()) {
     return iter->second;
   }
-
+  LOG(WARNING) << "JSBridge host not found, routingID:" << current_routing_id_;
   return nullptr;
 }
 
@@ -188,6 +191,9 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
 }
 
 void OhGinJavascriptBridgeMessageFilter::OnObjectWrapperDeleted(int object_id) {
-  (void)object_id;
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+  if (host) {
+    host->OnObjectWrapperDeleted(current_routing_id_, object_id);
+  }
 }
 }  // namespace NWEB

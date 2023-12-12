@@ -30,6 +30,12 @@ class ExtensionRegistry;
 class ProcessManager;
 class RendererStartupHelper;
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+class NavigationObserver;
+class UninstallPingSender;
+class InstallGate;
+#endif
+
 // Used to manage extensions.
 class CefExtensionSystem : public ExtensionSystem {
  public:
@@ -152,6 +158,10 @@ class CefExtensionSystem : public ExtensionSystem {
   // Handles sending notification that |extension| was unloaded.
   void NotifyExtensionUnloaded(const Extension* extension,
                                UnloadedExtensionReason reason);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void InitInstallGates();
+  void MaybeSpinUpLazyContext(const Extension* extension, bool is_newly_added);
+#endif
 
   content::BrowserContext* browser_context_;  // Not owned.
 
@@ -177,6 +187,20 @@ class CefExtensionSystem : public ExtensionSystem {
 
   // Map of extension ID to CEF extension object.
   ExtensionMap extension_map_;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  std::unique_ptr<ExtensionService> extension_service_;
+  std::unique_ptr<ManagementPolicy> management_policy_;
+
+  std::unique_ptr<StateStore> dynamic_user_scripts_store_;
+  std::unique_ptr<NavigationObserver> navigation_observer_;
+  // Shared memory region manager for scripts statically declared in extension
+  // manifests. This region is shared between all extensions.
+  std::unique_ptr<UserScriptManager> user_script_manager_;
+  std::unique_ptr<InstallGate> update_install_gate_;
+  // For verifying the contents of extensions read from disk.
+  scoped_refptr<ContentVerifier> content_verifier_;
+  std::unique_ptr<UninstallPingSender> uninstall_ping_sender_;
+#endif
 
   // Must be the last member.
   base::WeakPtrFactory<CefExtensionSystem> weak_ptr_factory_;

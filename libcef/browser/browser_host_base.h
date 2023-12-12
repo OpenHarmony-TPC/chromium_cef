@@ -35,6 +35,10 @@
 
 #include "components/download/public/common/download_item.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/js_injection/browser/js_communication_host.h"
+#endif //IS_OHOS
+
 namespace extensions {
 class Extension;
 }
@@ -255,12 +259,16 @@ class CefBrowserHostBase : public CefBrowserHost,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void UpdateBrowserSettings(const CefBrowserSettings& browser_settings);
-  void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
+  void RegisterArkJSfunction(const CefString& object_name,
+                             const std::vector<CefString>& method_list,
+                             const int32_t object_id) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
+  void CallH5Function(int32_t routing_id,
+                      int32_t h5_object_id,
+                      const CefString& h5_method_name,
+                      const std::vector<CefRefPtr<CefValue>>& args) override;
   void OnWebPreferencesChanged();
   void ReloadOriginalUrl() override;
   void StoreWebArchive(
@@ -280,6 +288,24 @@ class CefBrowserHostBase : public CefBrowserHost,
 #endif
   void RemoveCache(bool include_disk_files) override;
 
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
+  void SetVirtualKeyBoardArg(int32_t width,
+                             int32_t height,
+                             double keyboard) override;
+  bool ShouldVirtualKeyboardOverlay() override;
+  void JavaScriptOnDocumentStart(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentStart() override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
+  void SetZoomLevel(double zoomLevel) override;
+  double GetZoomLevel() override;
+  void SetBrowserZoomLevel(double zoom_factor) override;
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
+                                  bool animate) override;
+  void UpdateBrowserControlsHeight(int height, bool animate) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION
@@ -350,6 +376,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
@@ -363,6 +391,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void ZoomBy(float delta, float width, float height) override;
   void GetHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
+  void SetOverscrollMode(int overScrollMode) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;
@@ -370,7 +399,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void SetCacheMode(int falg) override;
 #endif
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-
+  bool Discard() override { return false; }
+  bool Restore() override { return false; }
   // #ifdef OHOS_EX_FREE_COPY
   void SelectAndCopy() override;
   bool ShouldShowFreeCopy() override;
@@ -612,6 +642,7 @@ class CefBrowserHostBase : public CefBrowserHost,
 
  private:
 #if BUILDFLAG(IS_OHOS)
+  js_injection::JsCommunicationHost* GetJsCommunicationHost();
   void StoreWebArchiveInternal(
       CefRefPtr<CefStoreWebArchiveResultCallback> callback,
       const CefString& path);
@@ -653,6 +684,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool is_web_debugging_access_ = false;
   float virtual_pixel_ratio_ = 2.0;
   base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;
+  std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
+  std::map<std::string, int> script_result_map_;
 #endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
 };

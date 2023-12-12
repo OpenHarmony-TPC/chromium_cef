@@ -85,12 +85,12 @@
 #include "components/content_settings/core/browser/cookie_settings.h"
 #include "components/embedder_support/switches.h"
 #include "components/embedder_support/user_agent_utils.h"
-#include "components/performance_manager/embedder/binders.h"
-#include "components/performance_manager/public/mojom/coordination_unit.mojom.h"
 #include "components/pdf/browser/pdf_navigation_throttle.h"
 #include "components/pdf/browser/pdf_url_loader_request_interceptor.h"
 #include "components/pdf/browser/pdf_web_contents_helper.h"
 #include "components/pdf/common/internal_plugin_helpers.h"
+#include "components/performance_manager/embedder/binders.h"
+#include "components/performance_manager/public/mojom/coordination_unit.mojom.h"
 #include "components/policy/core/common/policy_pref_names.h"
 #include "components/spellcheck/common/spellcheck.mojom.h"
 #include "components/version_info/version_info.h"
@@ -239,6 +239,35 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "libcef/browser/predictors/predictor_database.h"
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
 
+#if defined(OHOS_COOKIE)
+#include "libcef/browser/net_service/cookie_manager_ohos_impl.h"
+#endif  // defined(OHOS_COOKIE)
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/chrome_extension_cookies.h"
+#include "chrome/browser/extensions/user_script_listener.h"
+#include "chrome/browser/web_applications/isolated_web_apps/isolated_web_app_url_info.h"
+#include "chrome/common/url_constants.h"
+#include "components/embedder_support/content_settings_utils.h"
+#include "content/public/browser/allow_service_worker_result.h"
+#include "content/public/browser/site_isolation_policy.h"
+#include "extensions/browser/api/web_request/web_request_api.h"
+#include "extensions/browser/api/web_request/web_request_proxying_webtransport.h"
+#include "extensions/browser/extension_navigation_throttle.h"
+#include "extensions/browser/extension_util.h"
+#include "extensions/browser/service_worker/service_worker_host.h"
+#include "services/network/public/cpp/self_deleting_url_loader_factory.h"
+#include "services/network/public/mojom/web_transport.mojom.h"
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+using extensions::APIPermission;
+using extensions::ChromeContentBrowserClientExtensionsPart;
+using extensions::Extension;
+using extensions::Manifest;
+using extensions::mojom::APIPermissionID;
+#endif
+
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -252,6 +281,95 @@ void TransferVector(const std::vector<std::string>& source,
     for (; it != source.end(); ++it) {
       target.push_back(*it);
     }
+  }
+}
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+// The SpecialAccessFileURLLoaderFactory provided to the extension background
+// pages.  Checks with the ChildProcessSecurityPolicy to validate the file
+// access.
+class SpecialAccessFileURLLoaderFactory
+    : public network::SelfDeletingURLLoaderFactory {
+ public:
+  // Returns mojo::PendingRemote to a newly constructed
+  // SpecialAccessFileURLLoaderFactory.  The factory is self-owned - it will
+  // delete itself once there are no more receivers (including the receiver
+  // associated with the returned mojo::PendingRemote and the receivers bound by
+  // the Clone method).
+  static mojo::PendingRemote<network::mojom::URLLoaderFactory> Create(
+      int child_id) {
+    mojo::PendingRemote<network::mojom::URLLoaderFactory> pending_remote;
+
+    // The SpecialAccessFileURLLoaderFactory will delete itself when there are
+    // no more receivers - see the
+    // network::SelfDeletingURLLoaderFactory::OnDisconnect method.
+    new SpecialAccessFileURLLoaderFactory(
+        child_id, pending_remote.InitWithNewPipeAndPassReceiver());
+
+    return pending_remote;
+  }
+
+  SpecialAccessFileURLLoaderFactory(const SpecialAccessFileURLLoaderFactory&) =
+      delete;
+  SpecialAccessFileURLLoaderFactory& operator=(
+      const SpecialAccessFileURLLoaderFactory&) = delete;
+
+ private:
+  explicit SpecialAccessFileURLLoaderFactory(
+      int child_id,
+      mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver)
+      : network::SelfDeletingURLLoaderFactory(std::move(factory_receiver)),
+        child_id_(child_id) {}
+
+  // network::mojom::URLLoaderFactory:
+  void CreateLoaderAndStart(
+      mojo::PendingReceiver<network::mojom::URLLoader> loader,
+      int32_t request_id,
+      uint32_t options,
+      const network::ResourceRequest& request,
+      mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+      const net::MutableNetworkTrafficAnnotationTag& traffic_annotation)
+      override {
+    if (!content::ChildProcessSecurityPolicy::GetInstance()->CanRequestURL(
+            child_id_, request.url)) {
+      mojo::Remote<network::mojom::URLLoaderClient>(std::move(client))
+          ->OnComplete(
+              network::URLLoaderCompletionStatus(net::ERR_ACCESS_DENIED));
+      return;
+    }
+    content::CreateFileURLLoaderBypassingSecurityChecks(
+        request, std::move(loader), std::move(client),
+        /*observer=*/nullptr,
+        /* allow_directory_listing */ true);
+  }
+
+  int child_id_;
+};
+
+void InitializeFileURLLoaderFactoryForExtension(
+    int render_process_id,
+    content::BrowserContext* browser_context,
+    const extensions::Extension* extension,
+    AlloyContentBrowserClient::NonNetworkURLLoaderFactoryMap* factories) {
+  // Extensions with the necessary permissions get access to file:// URLs that
+  // gets approval from ChildProcessSecurityPolicy. Keep this logic in sync with
+  // ExtensionWebContentsObserver::RenderFrameCreated.
+  Manifest::Type type = extension->GetType();
+  if ((type == Manifest::TYPE_EXTENSION ||
+       type == Manifest::TYPE_LEGACY_PACKAGED_APP) &&
+      extensions::util::AllowFileAccess(extension->id(), browser_context)) {
+    factories->emplace(
+        url::kFileScheme,
+        SpecialAccessFileURLLoaderFactory::Create(render_process_id));
+  }
+}
+
+void MaybeAddThrottle(
+    std::unique_ptr<content::NavigationThrottle> maybe_throttle,
+    std::vector<std::unique_ptr<content::NavigationThrottle>>* throttles) {
+  if (maybe_throttle) {
+    throttles->push_back(std::move(maybe_throttle));
   }
 }
 #endif
@@ -1015,6 +1133,9 @@ void AlloyContentBrowserClient::GetAdditionalWebUISchemes(
   // Any schemes listed here are treated as WebUI schemes but do not get WebUI
   // bindings. Also, view-source is allowed for these schemes. WebUI schemes
   // will not be passed to HandleExternalProtocol.
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  additional_schemes->push_back(content::kArkWebUIScheme);
+#endif
 }
 
 void AlloyContentBrowserClient::GetAdditionalViewSourceSchemes(
@@ -1022,6 +1143,9 @@ void AlloyContentBrowserClient::GetAdditionalViewSourceSchemes(
   GetAdditionalWebUISchemes(additional_schemes);
 
   additional_schemes->push_back(extensions::kExtensionScheme);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  additional_schemes->push_back(content::kArkWebUIScheme);
+#endif
 }
 
 std::unique_ptr<ui::SelectFilePolicy>
@@ -1037,6 +1161,9 @@ void AlloyContentBrowserClient::GetAdditionalAllowedSchemesForFileSystem(
   additional_allowed_schemes->push_back(content::kChromeDevToolsScheme);
   additional_allowed_schemes->push_back(content::kChromeUIScheme);
   additional_allowed_schemes->push_back(content::kChromeUIUntrustedScheme);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  additional_allowed_schemes->push_back(content::kArkWebUIScheme);
+#endif
 }
 
 bool AlloyContentBrowserClient::IsWebUIAllowedToMakeNetworkRequests(
@@ -1184,6 +1311,15 @@ void AlloyContentBrowserClient::AppendExtraCommandLineSwitches(
       network::switches::kUnsafelyTreatInsecureOriginAsSecure,
 #if BUILDFLAG(IS_OHOS)
       switches::kUserDataDir,
+#endif
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      extensions::switches::kAllowHTTPBackgroundPage,
+      extensions::switches::kAllowLegacyExtensionManifests,
+      extensions::switches::kDisableExtensionsHttpThrottling,
+      extensions::switches::kEnableExperimentalExtensionApis,
+      extensions::switches::kExtensionsOnChromeURLs,
+      extensions::switches::kSetExtensionThrottleTestParams,  // For tests only.
+      extensions::switches::kAllowlistedExtensionID,
 #endif
     };
     command_line->CopySwitchesFrom(*browser_cmd, kSwitchNames,
@@ -1661,6 +1797,16 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
   }
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  throttles.push_back(std::make_unique<extensions::ExtensionNavigationThrottle>(
+      navigation_handle));
+
+  MaybeAddThrottle(extensions::ExtensionsBrowserClient::Get()
+                       ->GetUserScriptListener()
+                       ->CreateNavigationThrottle(navigation_handle),
+                   &throttles);
+#endif
+
   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
 
   return throttles;
@@ -1776,6 +1922,11 @@ void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
     associated_registry->AddInterface<extensions::mojom::RendererHost>(
         base::BindRepeating(&extensions::RendererStartupHelper::BindForRenderer,
                             host->GetID()));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    associated_registry->AddInterface<extensions::mojom::ServiceWorkerHost>(
+        base::BindRepeating(&extensions::ServiceWorkerHost::BindReceiver,
+                            host->GetID()));
+#endif
   }
 
   CefBrowserManager::ExposeInterfacesToRenderer(registry, associated_registry,
@@ -1811,9 +1962,16 @@ AlloyContentBrowserClient::CreateLoginDelegate(
     scoped_refptr<net::HttpResponseHeaders> response_headers,
     bool first_auth_attempt,
     LoginAuthRequiredCallback auth_required_callback) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return std::make_unique<net_service::LoginDelegate>(
+      auth_info, web_contents, request_id, is_request_for_main_frame, url,
+      response_headers, std::move(auth_required_callback));
+#else
   return std::make_unique<net_service::LoginDelegate>(
       auth_info, web_contents, request_id, url,
       std::move(auth_required_callback));
+
+#endif
 }
 
 void AlloyContentBrowserClient::RegisterNonNetworkNavigationURLLoaderFactories(
@@ -1900,6 +2058,18 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
     return;
   }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // For service worker contexts, we only allow file access. The remainder of
+  // this code is used to allow extensions to access chrome:-scheme
+  // resources, which we are moving away from.
+  // TODO(crbug.com/1280411) Factories should not be created for unloaded
+  // extensions.
+  if (extension) {
+    InitializeFileURLLoaderFactoryForExtension(
+        render_process_id, browser_context, extension, factories);
+  }
+#endif
+
   std::vector<std::string> allowed_webui_hosts;
   // Support for chrome:// scheme if appropriate.
   if ((extension->is_extension() || extension->is_platform_app()) &&
@@ -1917,6 +2087,46 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
                            std::move(allowed_webui_hosts)));
   }
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void AlloyContentBrowserClient::
+    RegisterNonNetworkWorkerMainResourceURLLoaderFactories(
+        content::BrowserContext* browser_context,
+        NonNetworkURLLoaderFactoryMap* factories) {
+  DCHECK(browser_context);
+  DCHECK(factories);
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  DCHECK(!extensions::ChromeContentBrowserClientExtensionsPart::
+             AreExtensionsDisabledForProfile(browser_context));
+
+  factories->emplace(
+      extensions::kExtensionScheme,
+      extensions::CreateExtensionWorkerMainResourceURLLoaderFactory(
+          browser_context));
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+}
+
+void AlloyContentBrowserClient::
+    RegisterNonNetworkServiceWorkerUpdateURLLoaderFactories(
+        content::BrowserContext* browser_context,
+        NonNetworkURLLoaderFactoryMap* factories) {
+  DCHECK(browser_context);
+  DCHECK(factories);
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (extensions::ChromeContentBrowserClientExtensionsPart::
+          AreExtensionsDisabledForProfile(browser_context)) {
+    return;
+  }
+
+  factories->emplace(
+      extensions::kExtensionScheme,
+      extensions::CreateExtensionServiceWorkerScriptURLLoaderFactory(
+          browser_context));
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+}
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
 
 bool AlloyContentBrowserClient::WillCreateURLLoaderFactory(
     content::BrowserContext* browser_context,
@@ -1937,11 +2147,418 @@ bool AlloyContentBrowserClient::WillCreateURLLoaderFactory(
       type == URLLoaderFactoryType::kNavigation,
       type == URLLoaderFactoryType::kDownload, request_initiator);
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  auto* web_request_api =
+      extensions::BrowserContextKeyedAPIFactory<extensions::WebRequestAPI>::Get(
+          browser_context);
+
+  // NOTE: Some unit test environments do not initialize
+  // BrowserContextKeyedAPI factories for e.g. WebRequest.
+  if (web_request_api) {
+    bool use_proxy_for_web_request =
+        web_request_api->MaybeProxyURLLoaderFactory(
+            browser_context, frame, render_process_id, type,
+            std::move(navigation_id), ukm_source_id, factory_receiver,
+            header_client, request_initiator);
+    if (bypass_redirect_checks) {
+      *bypass_redirect_checks = use_proxy_for_web_request;
+    }
+  }
+#endif
+
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_receiver, header_client,
       std::move(request_handler));
   return true;
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+bool AlloyContentBrowserClient::WillInterceptWebSocket(
+    content::RenderFrameHost* frame) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (!frame) {
+    return false;
+  }
+  const auto* web_request_api =
+      extensions::BrowserContextKeyedAPIFactory<extensions::WebRequestAPI>::Get(
+          frame->GetBrowserContext());
+
+  // NOTE: Some unit test environments do not initialize
+  // BrowserContextKeyedAPI factories for e.g. WebRequest.
+  if (!web_request_api) {
+    return false;
+  }
+  return (web_request_api->MayHaveProxies() ||
+          web_request_api->MayHaveWebsocketProxiesForExtensionTelemetry());
+#else
+  return false;
+#endif
+}
+
+void AlloyContentBrowserClient::CreateWebSocket(
+    content::RenderFrameHost* frame,
+    WebSocketFactory factory,
+    const GURL& url,
+    const net::SiteForCookies& site_for_cookies,
+    const absl::optional<std::string>& user_agent,
+    mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+        handshake_client) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // TODO(crbug.com/1243518): Request w/o a frame also should be proxied.
+  if (!frame) {
+    return;
+  }
+  auto* web_request_api =
+      extensions::BrowserContextKeyedAPIFactory<extensions::WebRequestAPI>::Get(
+          frame->GetBrowserContext());
+
+  DCHECK(web_request_api);
+  web_request_api->ProxyWebSocket(frame, std::move(factory), url,
+                                  site_for_cookies, user_agent,
+                                  std::move(handshake_client));
+#endif
+}
+
+void AlloyContentBrowserClient::WillCreateWebTransport(
+    int process_id,
+    int frame_routing_id,
+    const GURL& url,
+    const url::Origin& initiator_origin,
+    mojo::PendingRemote<network::mojom::WebTransportHandshakeClient>
+        handshake_client,
+    WillCreateWebTransportCallback callback) {
+  MaybeInterceptWebTransport(process_id, frame_routing_id, url,
+                             initiator_origin, std::move(handshake_client),
+                             std::move(callback));
+}
+
+void AlloyContentBrowserClient::MaybeInterceptWebTransport(
+    int process_id,
+    int frame_routing_id,
+    const GURL& url,
+    const url::Origin& initiator_origin,
+    mojo::PendingRemote<network::mojom::WebTransportHandshakeClient>
+        handshake_client,
+    WillCreateWebTransportCallback callback) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  // TODO(1243518): Add a unit test which calls
+  // ChromeContentBrowserClient::WillCreateWebTransport() with invalid process
+  // id and routing id.
+  auto* render_process_host = content::RenderProcessHost::FromID(process_id);
+  if (!render_process_host) {
+    std::move(callback).Run(std::move(handshake_client), absl::nullopt);
+    return;
+  }
+  content::BrowserContext* browser_context =
+      render_process_host->GetBrowserContext();
+  auto* web_request_api =
+      extensions::BrowserContextKeyedAPIFactory<extensions::WebRequestAPI>::Get(
+          browser_context);
+  // NOTE: Some unit test environments do not initialize BrowserContextKeyedAPI
+  // factories like WebRequestAPI.
+  if (!web_request_api) {
+    std::move(callback).Run(std::move(handshake_client), absl::nullopt);
+    return;
+  }
+  web_request_api->ProxyWebTransport(
+      *render_process_host, frame_routing_id, url, initiator_origin,
+      std::move(handshake_client), std::move(callback));
+#else
+  std::move(callback).Run(std::move(handshake_client), absl::nullopt);
+#endif
+}
+
+bool AlloyContentBrowserClient::ShouldPreconnectNavigation(
+    content::BrowserContext* browser_context) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // An extension could be blocking connections for privacy reasons, so skip
+  // optimization if there are any extensions with WebRequest permissions.
+  const auto* web_request_api =
+      extensions::BrowserContextKeyedAPIFactory<extensions::WebRequestAPI>::Get(
+          browser_context);
+  if (!web_request_api || web_request_api->MayHaveProxies()) {
+    return false;
+  }
+#endif
+  return true;
+}
+
+content::AllowServiceWorkerResult AlloyContentBrowserClient::AllowServiceWorker(
+    const GURL& scope,
+    const net::SiteForCookies& site_for_cookies,
+    const absl::optional<url::Origin>& top_frame_origin,
+    const GURL& script_url,
+    content::BrowserContext* context) {
+  DCHECK(context);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  GURL first_party_url = top_frame_origin ? top_frame_origin->GetURL() : GURL();
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Check if this is an extension-related service worker, and, if so, if it's
+  // allowed (this can return false if, e.g., the extension is disabled).
+  // If it's not allowed, return immediately. We deliberately do *not* report
+  // to the PageSpecificContentSettings, since the service worker is blocked
+  // because of the extension, rather than because of the user's content
+  // settings.
+  if (extensions::ExtensionsEnabled()) {
+    if (!extensions::ChromeContentBrowserClientExtensionsPart::
+            AllowServiceWorker(scope, first_party_url, script_url, context)) {
+      return content::AllowServiceWorkerResult::No();
+    }
+  }
+#endif
+
+  Profile* profile = Profile::FromBrowserContext(context);
+  return embedder_support::AllowServiceWorker(
+      scope, site_for_cookies, top_frame_origin,
+      CookieSettingsFactory::GetForProfile(profile).get(),
+      HostContentSettingsMapFactory::GetForProfile(profile));
+}
+
+bool AlloyContentBrowserClient::MayDeleteServiceWorkerRegistration(
+    const GURL& scope,
+    content::BrowserContext* browser_context) {
+  DCHECK(browser_context);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (!extensions::ChromeContentBrowserClientExtensionsPart::
+          MayDeleteServiceWorkerRegistration(scope, browser_context)) {
+    return false;
+  }
+#endif
+
+  return true;
+}
+
+content::StoragePartitionConfig
+AlloyContentBrowserClient::GetStoragePartitionConfigForSite(
+    content::BrowserContext* browser_context,
+    const GURL& site) {
+  // Default to the browser-wide storage partition and override based on |site|
+  // below.
+  content::StoragePartitionConfig default_storage_partition_config =
+      content::StoragePartitionConfig::CreateDefault(browser_context);
+
+  // A non-default storage partition is used in the following situations:
+  // - To enforce process isolation between a more-trusted content (Chrome Apps,
+  // Extensions, and Isolated Web Apps) and regular web content.
+  // - For the <webview> tag, which Chrome Apps, Isolated Web Apps and WebUI use
+  // to create temporary storage buckets for loading various kinds of web
+  // content.
+  //
+  // In general, those use cases aren't considered part of the user's normal
+  // browsing activity.
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (site.SchemeIs(extensions::kExtensionScheme)) {
+    // The host in an extension site URL is the extension_id.
+    CHECK(site.has_host());
+    return extensions::util::GetStoragePartitionConfigForExtensionId(
+        site.host(), browser_context);
+  }
+
+  if (content::SiteIsolationPolicy::ShouldUrlUseApplicationIsolationLevel(
+          browser_context, site)) {
+    CHECK(site.SchemeIs(chrome::kIsolatedAppScheme));
+    const base::expected<web_app::IsolatedWebAppUrlInfo, std::string>
+        iwa_url_info = web_app::IsolatedWebAppUrlInfo::Create(site);
+    if (!iwa_url_info.has_value()) {
+      LOG(ERROR) << "Invalid isolated-app URL: " << site;
+      return default_storage_partition_config;
+    }
+    return iwa_url_info->storage_partition_config(browser_context);
+  }
+#endif
+
+  return default_storage_partition_config;
+}
+
+GURL AlloyContentBrowserClient::GetEffectiveURL(
+    content::BrowserContext* browser_context,
+    const GURL& url) {
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  if (!profile) {
+    return url;
+  }
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (extensions::ChromeContentBrowserClientExtensionsPart::
+          AreExtensionsDisabledForProfile(profile)) {
+    return url;
+  }
+
+  return extensions::ChromeContentBrowserClientExtensionsPart::GetEffectiveURL(
+      profile, url);
+#else
+  return url;
+#endif
+}
+
+bool AlloyContentBrowserClient::
+    ShouldCompareEffectiveURLsForSiteInstanceSelection(
+        content::BrowserContext* browser_context,
+        content::SiteInstance* candidate_site_instance,
+        bool is_outermost_main_frame,
+        const GURL& candidate_url,
+        const GURL& destination_url) {
+  DCHECK(browser_context);
+  DCHECK(candidate_site_instance);
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (extensions::ChromeContentBrowserClientExtensionsPart::
+          AreExtensionsDisabledForProfile(browser_context)) {
+    return true;
+  }
+
+  return extensions::ChromeContentBrowserClientExtensionsPart::
+      ShouldCompareEffectiveURLsForSiteInstanceSelection(
+          browser_context, candidate_site_instance, is_outermost_main_frame,
+          candidate_url, destination_url);
+#else
+  return true;
+#endif
+}
+
+// TODO(crbug.com/1087559): This is based on SubframeTask::GetTitle()
+// implementation. Find a general solution to avoid code duplication.
+std::string AlloyContentBrowserClient::GetSiteDisplayNameForCdmProcess(
+    content::BrowserContext* browser_context,
+    const GURL& site_url) {
+  // By default, use the |site_url| spec as the display name.
+  std::string name = site_url.spec();
+
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // If |site_url| wraps a chrome extension ID, we can display the extension
+  // name instead, which is more human-readable.
+  if (site_url.SchemeIs(extensions::kExtensionScheme)) {
+    const extensions::Extension* extension =
+        extensions::ExtensionRegistry::Get(browser_context)
+            ->enabled_extensions()
+            .GetExtensionOrAppByURL(site_url);
+    if (extension) {
+      name = extension->name();
+    }
+  }
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+
+  return name;
+}
+
+network::mojom::IPAddressSpace
+AlloyContentBrowserClient::DetermineAddressSpaceFromURL(const GURL& url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  if (url.SchemeIs(extensions::kExtensionScheme)) {
+    return network::mojom::IPAddressSpace::kLoopback;
+  }
+#endif
+
+  return network::mojom::IPAddressSpace::kUnknown;
+}
+
+bool AlloyContentBrowserClient::DoesSchemeAllowCrossOriginSharedWorker(
+    const std::string& scheme) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Extensions are allowed to start cross-origin shared workers.
+  if (scheme == extensions::kExtensionScheme) {
+    return true;
+  }
+#endif
+
+  return false;
+}
+
+bool AlloyContentBrowserClient::ShouldForceDownloadResource(
+    const GURL& url,
+    const std::string& mime_type) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // Special-case user scripts to get downloaded instead of viewed.
+  return extensions::UserScript::IsURLUserScript(url, mime_type);
+#else
+  return false;
+#endif
+}
+
+bool AlloyContentBrowserClient::IsBuiltinComponent(
+    content::BrowserContext* browser_context,
+    const url::Origin& origin) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return extensions::ChromeContentBrowserClientExtensionsPart::
+      IsBuiltinComponent(browser_context, origin);
+#else
+  return false;
+#endif
+}
+
+bool AlloyContentBrowserClient::
+    ShouldInheritCrossOriginEmbedderPolicyImplicitly(const GURL& url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return url.SchemeIs(extensions::kExtensionScheme);
+#else
+  return false;
+#endif
+}
+
+bool AlloyContentBrowserClient::
+    ShouldServiceWorkerInheritPolicyContainerFromCreator(const GURL& url) {
+  if (url.SchemeIsLocal()) {
+    return true;
+  }
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return url.SchemeIs(extensions::kExtensionScheme);
+#else
+  return false;
+#endif
+}
+
+bool AlloyContentBrowserClient::ShouldSendOutermostOriginToRenderer(
+    const url::Origin& outermost_origin) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // We only want to send the outermost origin if it is an extension scheme.
+  // We do not send the outermost origin to every renderer to avoid leaking
+  // additional information into the renderer about the embedder. For
+  // extensions though this is required for the way content injection API
+  // works. We do not want one extension injecting content into the context
+  // of another extension.
+  return outermost_origin.scheme() == extensions::kExtensionScheme;
+#else
+  return false;
+#endif
+}
+
+bool AlloyContentBrowserClient::IsFileSystemURLNavigationAllowed(
+    content::BrowserContext* browser_context,
+    const GURL& url) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // filesystem: URLs for Chrome Apps are in the following format:
+  // `filesystem:chrome-extension://<extension-id>/...`
+  if (!url.SchemeIsFileSystem()) {
+    return false;
+  }
+  // Once converted into an origin, we expect the following:
+  // scheme() is chrome-extension: (filesystem: is automatically discarded)
+  // host() is the extension-id
+  const url::Origin origin = url::Origin::Create(url);
+  if (origin.scheme() == extensions::kExtensionScheme) {
+    const Extension* extension =
+        extensions::ExtensionRegistry::Get(browser_context)
+            ->enabled_extensions()
+            .GetByID(origin.host());
+    DCHECK(extension);
+    return extension->is_platform_app();
+  }
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+  return false;
+}
+
+bool AlloyContentBrowserClient::ShouldUseFirstPartyStorageKey(
+    const url::Origin& origin) {
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  return origin.scheme() == extensions::kExtensionScheme;
+#else
+  return false;
+#endif  // BUILDFLAG(ENABLE_EXTENSIONS)
+}
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
 
 void AlloyContentBrowserClient::OnNetworkServiceCreated(
     network::mojom::NetworkService* network_service) {
@@ -1991,6 +2608,10 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
     loading_predictor->PrepareForPageLoad(
         GURL(url), ohos_predictors::HintOrigin::OMNIBOX, true);
   }
+#endif
+
+#ifdef OHOS_EX_NETWORK_CONNECTION
+  network_service->SetConnectTimeout(net_service::NetHelpers::connection_timeout);
 #endif
 }
 
@@ -2064,6 +2685,17 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
 #ifdef OHOS_SSL_AUTH_ALGO
   network_context_params->initial_ssl_config = network::mojom::SSLConfig::New();
 #endif
+
+#if defined(OHOS_COOKIE)
+  mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote;
+  network_context_params->cookie_manager =
+      cookie_manager_remote.InitWithNewPipeAndPassReceiver();
+  CefRefPtr<CefCookieManager> cookie_manager = CefCookieManager::GetGlobalManager(nullptr);
+  if (cookie_manager) {
+    reinterpret_cast<CefCookieManagerImpl *>(cookie_manager.get())
+        ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
+  }
+#endif  // defined(OHOS_COOKIE)
 
 #ifdef OHOS_NETWORK_PROXY
   // Add proxy settings
@@ -2399,6 +3031,17 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
     int process_id,
     int routing_id,
     mojo::PendingReceiver<network::mojom::RestrictedCookieManager>* receiver) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (origin.scheme() == extensions::kExtensionScheme) {
+    DCHECK_EQ(network::mojom::RestrictedCookieManagerRole::SCRIPT, role);
+    extensions::ChromeExtensionCookies::Get(browser_context)
+        ->CreateRestrictedCookieManager(origin, isolation_info,
+                                        std::move(*receiver));
+    return true;
+  }
+#endif
+
   mojo::PendingReceiver<network::mojom::RestrictedCookieManager> orig_receiver =
       std::move(*receiver);
 

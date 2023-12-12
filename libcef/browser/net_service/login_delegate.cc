@@ -12,6 +12,10 @@
 #include "base/task/sequenced_task_runner.h"
 #include "content/public/browser/global_request_id.h"
 #include "content/public/browser/web_contents.h"
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/browser/api/web_request/web_request_api.h"
+#include "extensions/browser/browser_context_keyed_api_factory.h"
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 #include "libcef/browser/net_database/cef_data_base_impl.h"
@@ -172,24 +176,49 @@ void RunCallbackOnIOThread(
 }
 }  // namespace
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+LoginDelegate::LoginDelegate(
+    const net::AuthChallengeInfo& auth_info,
+    content::WebContents* web_contents,
+    const content::GlobalRequestID& request_id,
+    bool is_request_for_main_frame,
+    const GURL& origin_url,
+    scoped_refptr<net::HttpResponseHeaders> response_headers,
+    LoginAuthRequiredCallback callback)
+    : web_contents_(web_contents->GetWeakPtr()),
+      callback_(std::move(callback)),
+      weak_ptr_factory_(this) {
+#else
 LoginDelegate::LoginDelegate(const net::AuthChallengeInfo& auth_info,
                              content::WebContents* web_contents,
                              const content::GlobalRequestID& request_id,
                              const GURL& origin_url,
                              LoginAuthRequiredCallback callback)
     : callback_(std::move(callback)), weak_ptr_factory_(this) {
+#endif
   CEF_REQUIRE_UIT();
 
+#ifndef OHOS_ARKWEB_EXTENSIONS
   // May be nullptr for requests originating from CefURLRequest.
   CefRefPtr<CefBrowserHostBase> browser;
   if (web_contents) {
     browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
   }
+#endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // |callback| needs to be executed asynchronously.
+  CEF_POST_TASK(
+      CEF_UIT,
+      base::BindOnce(&LoginDelegate::Start, weak_ptr_factory_.GetWeakPtr(),
+                     auth_info, request_id, is_request_for_main_frame,
+                     origin_url, response_headers));
+#else
   // |callback| needs to be executed asynchronously.
   CEF_POST_TASK(CEF_UIT, base::BindOnce(&LoginDelegate::Start,
                                         weak_ptr_factory_.GetWeakPtr(), browser,
                                         auth_info, request_id, origin_url));
+#endif
 }
 
 void LoginDelegate::Continue(const CefString& username,
@@ -208,11 +237,42 @@ void LoginDelegate::Cancel() {
   }
 }
 
-void LoginDelegate::Start(CefRefPtr<CefBrowserHostBase> browser,
-                          const net::AuthChallengeInfo& auth_info,
-                          const content::GlobalRequestID& request_id,
-                          const GURL& origin_url) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void LoginDelegate::ContinueBeforeCommit(
+    const net::AuthChallengeInfo& auth_info,
+    const GURL& request_url,
+    const content::GlobalRequestID& request_id,
+    bool is_request_for_main_frame,
+    const absl::optional<net::AuthCredentials>& credentials,
+    bool cancelled_by_extension) {
   CEF_REQUIRE_UIT();
+
+  // The request may have been handled while the WebRequest API was processing.
+  if (!web_contents_ || !web_contents_->GetDelegate() || callback_.is_null() ||
+      cancelled_by_extension) {
+    LOG(INFO) << "LoginDelegate is cancelled by extension:"
+              << cancelled_by_extension;
+    Cancel();
+    return;
+  }
+
+  if (credentials) {
+    LOG(INFO) << "LoginDelegate with credentials";
+    Continue(credentials->username(), credentials->password());
+    return;
+  }
+
+  LOG(INFO) << "LoginDelegate try to get credentials";
+  StartInternal(auth_info, request_id, request_url);
+}
+
+void LoginDelegate::StartInternal(const net::AuthChallengeInfo& auth_info,
+                                  const content::GlobalRequestID& request_id,
+                                  const GURL& origin_url) {
+  CefRefPtr<CefBrowserHostBase> browser;
+  if (web_contents_) {
+    browser = CefBrowserHostBase::GetBrowserForContents(web_contents_.get());
+  }
 
   auto url_request_info = CefBrowserURLRequest::FromRequestID(request_id);
 
@@ -235,4 +295,58 @@ void LoginDelegate::Start(CefRefPtr<CefBrowserHostBase> browser,
     Cancel();
   }
 }
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void LoginDelegate::Start(
+    const net::AuthChallengeInfo& auth_info,
+    const content::GlobalRequestID& request_id,
+    bool is_request_for_main_frame,
+    const GURL& origin_url,
+    scoped_refptr<net::HttpResponseHeaders> response_headers) {
+  CEF_REQUIRE_UIT();
+
+  if (is_request_for_main_frame) {
+    // If the WebRequest API wants to take a shot at intercepting this, we can
+    // return immediately. |continuation| will eventually be invoked if the
+    // request isn't cancelled.
+    auto* api = extensions::BrowserContextKeyedAPIFactory<
+        extensions::WebRequestAPI>::Get(web_contents_->GetBrowserContext());
+    auto continuation = base::BindOnce(&LoginDelegate::ContinueBeforeCommit,
+                                       weak_ptr_factory_.GetWeakPtr(),
+                                       auth_info, origin_url, request_id, true);
+    if (api->MaybeProxyAuthRequest(web_contents_->GetBrowserContext(),
+                                   auth_info, std::move(response_headers),
+                                   request_id, true, std::move(continuation))) {
+      return;
+    }
+  }
+
+  StartInternal(auth_info, request_id, origin_url);
+}
+#else
+void LoginDelegate::Start(CefRefPtr<CefBrowserHostBase> browser,
+                          const net::AuthChallengeInfo& auth_info,
+                          const content::GlobalRequestID& request_id,
+                          const GURL& origin_url) {
+  CEF_REQUIRE_UIT();
+
+  auto url_request_info = CefBrowserURLRequest::FromRequestID(request_id);
+
+  if (browser || url_request_info) {
+    // AuthCallbackImpl is bound to the current thread.
+    CefRefPtr<AuthCallbackImpl> callbackImpl =
+        new AuthCallbackImpl(weak_ptr_factory_.GetWeakPtr());
+
+    // Execute callbacks on the IO thread to maintain the "old"
+    // network_delegate callback behaviour.
+    CEF_POST_TASK(CEF_IOT, base::BindOnce(&RunCallbackOnIOThread, browser,
+                                          url_request_info, auth_info,
+                                          origin_url, callbackImpl));
+  } else {
+    Cancel();
+  }
+}
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
+
 }  // namespace net_service

@@ -393,6 +393,9 @@ class CefBrowserPlatformDelegate {
 
 #if defined(OHOS_COMPOSITE_RENDER)
   virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {}
+  virtual void WasKeyboardResized() {}
+  virtual void SetDrawRect(int x, int y, int width, int height) {}
+  virtual void SetDrawMode(int mode) {}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT
@@ -417,8 +420,15 @@ class CefBrowserPlatformDelegate {
 #endif  // OHOS_EX_PASSWORD
 
 #if defined(OHOS_PRINT)
-  virtual void SetToken(void* token);
+  virtual void SetToken(void* token) {}
+  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                             void** webPrintDocumentAdapter) {}
 #endif // defined(OHOS_PRINT)
+
+#if defined(OHOS_INPUT_EVENTS)
+  virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {}
+  virtual bool ShouldVirtualKeyboardOverlay() { return false; }
+#endif 
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

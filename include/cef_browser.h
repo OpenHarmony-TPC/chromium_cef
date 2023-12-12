@@ -301,6 +301,19 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void PasswordSuggestionSelected(int list_index) = 0;
 
   ///
+  /// Update browser controls state.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsState(int constraints,
+                                          int current,
+                                          bool animate) = 0;
+
+  ///
+  /// Update browser controls height.
+  ///
+  /*--cef()--*/
+  virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
+  ///
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
   ///
@@ -381,6 +394,7 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetSavePassword(bool enable) = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
@@ -1101,6 +1115,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetAccessibilityState(cef_state_t accessibility_state) = 0;
 
   ///
+  /// GetOrCreateRootBrowserAccessibilityManager
+  ///
+  /*--cef()--*/
+  virtual void GetOrCreateRootBrowserAccessibilityManager(void** manager) = 0;
+
+  ///
   /// Enable notifications of auto resize via CefDisplayHandler::OnAutoResize.
   /// Notifications are disabled by default. |min_size| and |max_size| define
   /// the range of allowed sizes.
@@ -1257,9 +1277,9 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// RegisterArkJSfunction
   ///
   /*--cef()--*/
-  virtual void RegisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) = 0;
+  virtual void RegisterArkJSfunction(const CefString& object_name,
+                                     const std::vector<CefString>& method_list,
+                                     const int32_t object_id) = 0;
 
   ///
   /// UnregisterArkJSfunction
@@ -1268,6 +1288,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) = 0;
+
+  ///
+  /// CallH5Function
+  ///
+  /*--cef()--*/
+  virtual void CallH5Function(int32_t routing_id,
+                              int32_t h5_object_id,
+                              const CefString& h5_method_name,
+                              const std::vector<CefRefPtr<CefValue>>& args) = 0;
 
   ///
   /// Saves the current view as a web archive.
@@ -1498,6 +1527,80 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetToken(void* token) = 0;
+
+  ///
+  /// Set the property values for width, height, and keyboard height
+  ///
+  /*--cef()--*/
+  virtual void SetVirtualKeyBoardArg(int32_t width,
+                                     int32_t height,
+                                     double keyboard) = 0;
+
+  ///
+  /// Set the virtual keyboard to override the web status
+  ///
+  /*--cef()--*/
+  virtual bool ShouldVirtualKeyboardOverlay() = 0;
+
+  ///
+  /// JavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void JavaScriptOnDocumentStart(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) = 0;
+
+  ///
+  /// RemoveJavaScriptOnDocumentStart
+  ///
+  /*--cef()--*/
+  virtual void RemoveJavaScriptOnDocumentStart() = 0;
+
+  ///
+  /// Set the draw rect
+  ///
+  /*--cef()--*/
+  virtual void SetDrawRect(int x, int y, int width, int height) = 0;
+
+  ///
+  /// Set the draw mode
+  ///
+  /*--cef()--*/
+  virtual void SetDrawMode(int mode) = 0;
+
+  ///
+  /// Create the Web print document adapter of the UI framework
+  ///
+  /*--cef()--*/
+  virtual void CreateWebPrintDocumentAdapter(
+      const CefString& jobName,
+      void** webPrintDocumentAdapter) = 0;
+
+  ///
+  /// Set the over-scroll mode of web
+  ///
+  /*--cef()--*/
+  virtual void SetOverscrollMode(int mode) = 0;
+
+  ///
+  /// Discard a webview window
+  ///
+  /*--cef()--*/
+  virtual bool Discard() = 0;
+
+  ///
+  /// Restore the discarded webview window
+  ///
+  /*--cef()--*/
+  virtual bool Restore() = 0;
+
+  ///
+  /// Change the zoom factor for browser zoom.
+  /// If called on the UI thread the change will be applied immediately.
+  /// Otherwise, the change will be applied asynchronously on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

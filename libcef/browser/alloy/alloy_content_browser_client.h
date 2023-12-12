@@ -174,6 +174,14 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       int frame_tree_node_id,
       ukm::SourceIdObj ukm_source_id,
       NonNetworkURLLoaderFactoryMap* factories) override;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void RegisterNonNetworkWorkerMainResourceURLLoaderFactories(
+      content::BrowserContext* browser_context,
+      NonNetworkURLLoaderFactoryMap* factories) override;
+  void RegisterNonNetworkServiceWorkerUpdateURLLoaderFactories(
+      content::BrowserContext* browser_context,
+      NonNetworkURLLoaderFactoryMap* factories) override;
+#endif
   void RegisterNonNetworkSubresourceURLLoaderFactories(
       int render_process_id,
       int render_frame_id,
@@ -285,6 +293,87 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   base::FilePath GetGrShaderDiskCacheDirectory() override;
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  bool WillInterceptWebSocket(content::RenderFrameHost* frame) override;
+
+  void CreateWebSocket(
+      content::RenderFrameHost* frame,
+      WebSocketFactory factory,
+      const GURL& url,
+      const net::SiteForCookies& site_for_cookies,
+      const absl::optional<std::string>& user_agent,
+      mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+          handshake_client) override;
+
+  void WillCreateWebTransport(
+      int process_id,
+      int frame_routing_id,
+      const GURL& url,
+      const url::Origin& initiator_origin,
+      mojo::PendingRemote<network::mojom::WebTransportHandshakeClient>
+          handshake_client,
+      WillCreateWebTransportCallback callback) override;
+
+  bool ShouldPreconnectNavigation(
+      content::BrowserContext* browser_context) override;
+
+  content::AllowServiceWorkerResult AllowServiceWorker(
+      const GURL& scope,
+      const net::SiteForCookies& site_for_cookies,
+      const absl::optional<url::Origin>& top_frame_origin,
+      const GURL& script_url,
+      content::BrowserContext* context) override;
+
+  bool MayDeleteServiceWorkerRegistration(
+      const GURL& scope,
+      content::BrowserContext* browser_context) override;
+
+  content::StoragePartitionConfig GetStoragePartitionConfigForSite(
+      content::BrowserContext* browser_context,
+      const GURL& site) override;
+
+  GURL GetEffectiveURL(content::BrowserContext* browser_context,
+                       const GURL& url) override;
+
+  bool ShouldCompareEffectiveURLsForSiteInstanceSelection(
+      content::BrowserContext* browser_context,
+      content::SiteInstance* candidate_site_instance,
+      bool is_outermost_main_frame,
+      const GURL& candidate_url,
+      const GURL& destination_url) override;
+
+  std::string GetSiteDisplayNameForCdmProcess(
+      content::BrowserContext* browser_context,
+      const GURL& site_url) override;
+
+  network::mojom::IPAddressSpace DetermineAddressSpaceFromURL(
+      const GURL& url) override;
+
+  bool DoesSchemeAllowCrossOriginSharedWorker(
+      const std::string& scheme) override;
+
+  bool ShouldForceDownloadResource(const GURL& url,
+                                   const std::string& mime_type) override;
+
+  bool IsBuiltinComponent(content::BrowserContext* browser_context,
+                          const url::Origin& origin) override;
+
+  bool ShouldInheritCrossOriginEmbedderPolicyImplicitly(
+      const GURL& url) override;
+
+  bool ShouldServiceWorkerInheritPolicyContainerFromCreator(
+      const GURL& url) override;
+
+  bool ShouldSendOutermostOriginToRenderer(
+      const url::Origin& outermost_origin) override;
+
+  bool IsFileSystemURLNavigationAllowed(
+      content::BrowserContext* browser_context,
+      const GURL& url) override;
+
+  bool ShouldUseFirstPartyStorageKey(const url::Origin& origin) override;
+#endif // defined(OHOS_ARKWEB_EXTENSIONS)
+
   CefRefPtr<CefRequestContextImpl> request_context() const;
   CefDevToolsDelegate* devtools_delegate() const;
 
@@ -296,6 +385,17 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   // Returns the extension or app associated with |site_instance| or NULL.
   const extensions::Extension* GetExtension(
       content::SiteInstance* site_instance);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void MaybeInterceptWebTransport(
+      int process_id,
+      int frame_routing_id,
+      const GURL& url,
+      const url::Origin& initiator_origin,
+      mojo::PendingRemote<network::mojom::WebTransportHandshakeClient>
+          handshake_client,
+      WillCreateWebTransportCallback callback);
+#endif
 
   AlloyBrowserMainParts* browser_main_parts_ = nullptr;
 };

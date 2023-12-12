@@ -51,6 +51,38 @@
 #include "extensions/common/switches.h"
 #include "net/base/mime_util.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "chrome/browser/extensions/chrome_app_sorting.h"
+#include "chrome/browser/extensions/chrome_content_verifier_delegate.h"
+#include "chrome/browser/extensions/component_loader.h"
+#include "chrome/browser/extensions/extension_garbage_collector.h"
+#include "chrome/browser/extensions/extension_management.h"
+#include "chrome/browser/extensions/extension_service.h"
+#include "chrome/browser/extensions/extension_sync_service.h"
+#include "chrome/browser/extensions/install_verifier.h"
+#include "chrome/browser/extensions/load_error_reporter.h"
+#include "chrome/browser/extensions/navigation_observer.h"
+#include "chrome/browser/extensions/shared_module_service.h"
+#include "chrome/browser/extensions/unpacked_installer.h"
+#include "chrome/browser/extensions/update_install_gate.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/ui/webui/extensions/extension_icon_source.h"
+#include "chrome/browser/ui/webui/extensions/extensions_internals_source.h"
+#include "content/public/browser/url_data_source.h"
+#include "extensions/browser/content_verifier.h"
+#include "extensions/browser/management_policy.h"
+#include "extensions/browser/updater/uninstall_ping_sender.h"
+#include "extensions/browser/user_script_manager.h"
+#include "extensions/browser/lazy_background_task_queue.h"
+#include "extensions/browser/lazy_context_id.h"
+#include "extensions/browser/task_queue_util.h"
+#include "extensions/common/extension.h"
+#include "extensions/common/manifest_handlers/background_info.h"
+#include "extensions/common/permissions/permissions_data.h"
+#endif
+
 using content::BrowserContext;
 
 namespace extensions {
@@ -124,7 +156,6 @@ void LoadExtensionWithManifest(base::WeakPtr<CefExtensionSystem> context,
                           internal, loader_context, handler);
 }
 
-#if !BUILDFLAG(IS_OHOS)
 void LoadExtensionFromDisk(base::WeakPtr<CefExtensionSystem> context,
                            const base::FilePath& root_directory,
                            bool internal,
@@ -143,6 +174,21 @@ void LoadExtensionFromDisk(base::WeakPtr<CefExtensionSystem> context,
 
   LoadExtensionWithManifest(context, manifest_contents, root_directory,
                             internal, loader_context, handler);
+}
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+// Helper to serve as an UninstallPingSender::Filter callback.
+UninstallPingSender::FilterResult ShouldSendUninstallPing(
+    Profile* profile,
+    const Extension* extension,
+    UninstallReason reason) {
+  ExtensionManagement* extension_management =
+      ExtensionManagementFactory::GetForBrowserContext(profile);
+  if (extension && (extension->from_webstore() ||
+                    extension_management->UpdatesFromWebstore(*extension))) {
+    return UninstallPingSender::SEND_PING;
+  }
+  return UninstallPingSender::DO_NOT_SEND_PING;
 }
 #endif
 
@@ -164,6 +210,16 @@ CefExtensionSystem::~CefExtensionSystem() {}
 void CefExtensionSystem::Init() {
   DCHECK(!initialized_);
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  Profile* profile = Profile::FromBrowserContext(browser_context_);
+
+  extension_service_ = std::make_unique<ExtensionService>(
+      profile, base::CommandLine::ForCurrentProcess(),
+      profile->GetPath().AppendASCII(extensions::kInstallDirectoryName),
+      profile->GetPath().AppendASCII(extensions::kUnpackedInstallDirectoryName),
+      ExtensionPrefs::Get(profile), Blocklist::Get(profile), false, true,
+      &ready_);
+#endif
   // There's complexity here related to the ordering of message delivery. For
   // an extension to load correctly both the ExtensionMsg_Loaded and
   // ExtensionMsg_ActivateExtension messages must be sent. These messages are
@@ -176,8 +232,9 @@ void CefExtensionSystem::Init() {
   // will classify the extension incorrectly and API bindings will not be added.
 
   // Inform the rest of the extensions system to start.
+#if !defined(OHOS_ARKWEB_EXTENSIONS)
   ready_.Signal();
-
+#endif
   // Add the internal PDF extension. PDF loading works as follows:
   // 1. The PDF plugin is registered in libcef/common/content_client.cc
   //    ComputeBuiltInPlugins to handle the pdf::kInternalPluginMimeType.
@@ -269,22 +326,51 @@ void CefExtensionSystem::Init() {
     }
   }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  TRACE_EVENT0("browser,startup", "CefExtensionSystem::Shared::Init");
+  const base::CommandLine* command_line =
+      base::CommandLine::ForCurrentProcess();
+
+  bool allow_noisy_errors =
+      !command_line->HasSwitch(::switches::kNoErrorDialogs);
+  LoadErrorReporter::Init(allow_noisy_errors);
+
+  bool skip_session_extensions = false;
+
+  extension_service_->component_loader()->AddDefaultComponentExtensions(
+      skip_session_extensions);
+  InitInstallGates();
+
+  extension_service_->Init();
+#endif
+
   initialized_ = true;
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefExtensionSystem::InitInstallGates() {
+  Profile* profile = Profile::FromBrowserContext(browser_context_);
+
+  update_install_gate_ = std::make_unique<UpdateInstallGate>(profile);
+  extension_service_->RegisterInstallGate(
+      ExtensionPrefs::DELAY_REASON_WAIT_FOR_IDLE, update_install_gate_.get());
+  extension_service_->RegisterInstallGate(
+      ExtensionPrefs::DELAY_REASON_GC, ExtensionGarbageCollector::Get(profile));
+  extension_service_->RegisterInstallGate(
+      ExtensionPrefs::DELAY_REASON_WAIT_FOR_IMPORTS,
+      extension_service_->shared_module_service());
+}
+#endif
 
 void CefExtensionSystem::LoadExtension(
     const base::FilePath& root_directory,
     bool internal,
     CefRefPtr<CefRequestContext> loader_context,
     CefRefPtr<CefExtensionHandler> handler) {
-#if !BUILDFLAG(IS_OHOS)
   CEF_REQUIRE_UIT();
   CEF_POST_USER_VISIBLE_TASK(
       base::BindOnce(LoadExtensionFromDisk, weak_ptr_factory_.GetWeakPtr(),
                      root_directory, internal, loader_context, handler));
-#else
-  LOG(INFO) << "CefExtensionSystem::LoadExtension UNIMPLEMENT for IS_OHOS";
-#endif
 }
 
 void CefExtensionSystem::LoadExtension(
@@ -400,21 +486,93 @@ void CefExtensionSystem::Shutdown() {
   }
 #endif
   extension_map_.clear();
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (content_verifier_.get()) {
+    content_verifier_->Shutdown();
+  }
+  if (extension_service_) {
+    extension_service_->Shutdown();
+  }
+#endif
 }
 
 void CefExtensionSystem::InitForRegularProfile(bool extensions_enabled) {
   DCHECK(!initialized_);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (user_script_manager() || extension_service()) {
+    return;  // Already initialized.
+  }
+  Profile* profile = Profile::FromBrowserContext(browser_context_);
+
+  navigation_observer_ = std::make_unique<NavigationObserver>(profile);
+
+  content_verifier_ = new ContentVerifier(
+      profile, std::make_unique<ChromeContentVerifierDelegate>(profile));
+
+  service_worker_manager_ = std::make_unique<ServiceWorkerManager>(profile);
+
+  user_script_manager_ = std::make_unique<UserScriptManager>(profile);
+
+  uninstall_ping_sender_ = std::make_unique<UninstallPingSender>(
+      ExtensionRegistry::Get(profile),
+      base::BindRepeating(&ShouldSendUninstallPing, profile));
+
+  // These services must be registered before the ExtensionService tries to
+  // load any extensions.
+  {
+    InstallVerifier::Get(profile)->Init();
+    ChromeContentVerifierDelegate::VerifyInfo::Mode mode =
+        ChromeContentVerifierDelegate::GetDefaultMode();
+
+    if (mode >= ChromeContentVerifierDelegate::VerifyInfo::Mode::BOOTSTRAP) {
+      content_verifier_->Start();
+    }
+
+    management_policy_ = std::make_unique<ManagementPolicy>();
+    management_policy_->RegisterProviders(
+        ExtensionManagementFactory::GetForBrowserContext(profile)
+            ->GetProviders());
+
+    management_policy_->RegisterProvider(InstallVerifier::Get(profile));
+  }
+
+  // Extension API calls require QuotaService, so create it before loading any
+  // extensions.
+  quota_service_ = std::make_unique<QuotaService>();
+  app_sorting_ = std::make_unique<ChromeAppSorting>(profile);
+
+  // Make sure ExtensionSyncService is created.
+  ExtensionSyncService::Get(profile);
+
+  // Make the chrome://extension-icon/ resource available.
+  content::URLDataSource::Add(profile,
+                              std::make_unique<ExtensionIconSource>(profile));
+
+  // Register the source for the chrome://extensions-internals page.
+  content::URLDataSource::Add(
+      profile, std::make_unique<ExtensionsInternalsSource>(profile));
+#else
   service_worker_manager_.reset(new ServiceWorkerManager(browser_context_));
   quota_service_.reset(new QuotaService);
   app_sorting_.reset(new NullAppSorting);
+#endif
 }
 
 ExtensionService* CefExtensionSystem::extension_service() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return extension_service_.get();
+#else
   return nullptr;
+#endif
 }
 
 ManagementPolicy* CefExtensionSystem::management_policy() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return management_policy_.get();
+#else
   return nullptr;
+#endif
 }
 
 ServiceWorkerManager* CefExtensionSystem::service_worker_manager() {
@@ -422,7 +580,11 @@ ServiceWorkerManager* CefExtensionSystem::service_worker_manager() {
 }
 
 UserScriptManager* CefExtensionSystem::user_script_manager() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return user_script_manager_.get();
+#else
   return nullptr;
+#endif
 }
 
 StateStore* CefExtensionSystem::state_store() {
@@ -434,7 +596,11 @@ StateStore* CefExtensionSystem::rules_store() {
 }
 
 StateStore* CefExtensionSystem::dynamic_user_scripts_store() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return dynamic_user_scripts_store_.get();
+#else
   return nullptr;
+#endif
 }
 
 scoped_refptr<value_store::ValueStoreFactory>
@@ -459,7 +625,11 @@ bool CefExtensionSystem::is_ready() const {
 }
 
 ContentVerifier* CefExtensionSystem::content_verifier() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return content_verifier_.get();
+#else
   return nullptr;
+#endif
 }
 
 std::unique_ptr<ExtensionSet> CefExtensionSystem::GetDependentExtensions(
@@ -500,7 +670,14 @@ CefExtensionSystem::ComponentExtensionInfo::ComponentExtensionInfo(
   if (!root_directory.IsAbsolute()) {
     // This path structure is required by
     // url_request_util::MaybeCreateURLRequestResourceBundleJob.
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    const base::CommandLine* command_line =
+        base::CommandLine::ForCurrentProcess();
+    root_directory =
+        command_line->GetSwitchValuePath(::switches::kBundleInstallationDir);
+#else
     CHECK(base::PathService::Get(chrome::DIR_RESOURCES, &root_directory));
+#endif
     root_directory = root_directory.Append(directory);
   }
 }
@@ -519,6 +696,10 @@ void CefExtensionSystem::InitPrefs() {
 
   rules_store_ = std::make_unique<StateStore>(
       profile, store_factory_, StateStore::BackendType::RULES, false);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  dynamic_user_scripts_store_ = std::make_unique<StateStore>(
+      profile, store_factory_, StateStore::BackendType::SCRIPTS, false);
+#endif
 }
 
 // Implementation based on ComponentLoader::CreateExtension.
@@ -602,8 +783,62 @@ void CefExtensionSystem::UnloadExtension(const std::string& extension_id,
   }
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefExtensionSystem::MaybeSpinUpLazyContext(const Extension* extension,
+                                                bool is_newly_added) {
+  DCHECK(BackgroundInfo::HasLazyContext(extension));
+
+  // Reloading component extension does not trigger install, so RuntimeAPI won't
+  // be able to detect its loading. Therefore, we need to spin up its lazy
+  // background page.
+  bool is_component_extension =
+      Manifest::IsComponentLocation(extension->location());
+
+  // TODO(crbug.com/1024211): This is either a workaround or something
+  // that will be part of the permanent solution for service worker-
+  // based extensions.
+  // We spin up extensions with the webRequest permission so their
+  // listeners are reconstructed on load.
+  bool has_web_request_permission =
+      extension->permissions_data()->HasAPIPermission(
+          mojom::APIPermissionID::kWebRequest);
+  // Event page-based extension cannot have the webRequest permission.
+  DCHECK(!has_web_request_permission ||
+         BackgroundInfo::IsServiceWorkerBased(extension));
+
+  // If there aren't any special cases, we're done.
+  if (!is_component_extension && !has_web_request_permission) {
+    return;
+  }
+
+  // If the extension's not being reloaded (|is_newly_added| = true),
+  // only wake it up if it has the webRequest permission.
+  if (is_newly_added && !has_web_request_permission) {
+    return;
+  }
+
+  // Wake up the extension by posting a dummy task. In the case of a service
+  // worker-based extension with the webRequest permission that's being newly
+  // installed, this will result in a no-op task that's not necessary, since
+  // this is really only needed for a previously-installed extension. However,
+  // that cost is minimal, since the worker is already active.
+  const LazyContextId context_id(browser_context_, extension);
+  context_id.GetTaskQueue()->AddPendingTask(context_id, base::DoNothing());
+}
+#endif
+
 // Implementation based on ExtensionService::NotifyExtensionLoaded.
 void CefExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // Activate the extension before calling
+  // RendererStartupHelper::OnExtensionLoaded() below, so that we have
+  // activation information ready while we send ExtensionMsg_Load IPC.
+  //
+  // TODO(lazyboy): We should move all logic that is required to start up an
+  // extension to a separate class, instead of calling adhoc methods like
+  // service worker ones below.
+  ActivateTaskQueueForExtension(browser_context_, extension);
+#endif
   // Tell renderers about the loaded extension.
   renderer_helper_->OnExtensionLoaded(*extension);
 
@@ -615,6 +850,19 @@ void CefExtensionSystem::NotifyExtensionLoaded(const Extension* extension) {
   // ExtensionRegistryObserver::OnExtensionLoaded the renderer is guaranteed to
   // know about it.
   registry_->TriggerOnLoaded(extension);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // When an extension is activated, and it is either event page-based or
+  // service worker-based, it may be necessary to spin up its context.
+  if (BackgroundInfo::HasLazyContext(extension)) {
+    MaybeSpinUpLazyContext(extension, true);
+  }
+
+  registry_->AddReady(extension);
+  if (registry_->enabled_extensions().Contains(extension->id())) {
+    registry_->TriggerOnReady(extension);
+  }
+#endif
 
   // Register plugins included with the extension.
   // Implementation based on PluginManager::OnExtensionLoaded.
@@ -664,6 +912,10 @@ void CefExtensionSystem::NotifyExtensionUnloaded(
 
   // Tell renderers about the unloaded extension.
   renderer_helper_->OnExtensionUnloaded(*extension);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  DeactivateTaskQueueForExtension(browser_context_, extension);
+#endif
 }
 
 }  // namespace extensions

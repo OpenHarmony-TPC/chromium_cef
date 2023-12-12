@@ -226,15 +226,66 @@ class CefClient : public virtual CefBaseRefCounted {
   virtual int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
                                      const CefString& method,
                                      const CefString& object_name,
-                                     CefRefPtr<CefListValue> result) {
+                                     CefRefPtr<CefListValue> result,
+                                     int32_t routing_id,
+                                     int32_t object_id) {
     return 0;
   }
+
+  ///
+  /// has javaScript object method.
+  ///
+  /*--cef()--*/
+  virtual bool HasJavaScriptObjectMethods(int32_t object_id,
+                                          const CefString& method_name) {
+    return false;
+  }
+
+  ///
+  /// get javaScript object methods.
+  ///
+  /*--cef()--*/
+  virtual void GetJavaScriptObjectMethods(
+      int32_t object_id,
+      CefRefPtr<CefValue> returned_method_names) {}
+
+  ///
+  /// remove javaScript object holder.
+  ///
+  /*--cef()--*/
+  virtual void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) {
+  }
+
+  ///
+  /// remove transient javaScript object holder.
+  ///
+  /*--cef()--*/
+  virtual void RemoveTransientJavaScriptObject() {}
 
   ///
   /// Return the handler for browser form events.
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefFormHandler> GetFormHandler() { return nullptr; }
+
+  ///
+  /// Called when top controls offset has been changed.
+  ///
+  /*--cef()--*/
+  virtual void OnTopControlsChanged(float top_controls_offset,
+                                    float top_content_offset) {}
+
+  ///
+  /// Return the height of top controls.
+  ///
+  /*--cef()--*/
+  virtual int OnGetTopControlsHeight() { return 0; }
+
+  ///
+  /// Return the shrink renderer size of top controls.
+  ///
+  /*--cef()--*/
+  virtual bool DoBrowserControlsShrinkRendererSize() { return false; }
 #endif
 };
 

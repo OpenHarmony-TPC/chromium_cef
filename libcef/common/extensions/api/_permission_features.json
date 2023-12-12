@@ -39,5 +39,10 @@
       "channel": "stable",
       "extension_types": ["platform_app"]
     }
-  ]
+  ],
+   // OHOS_ARKWEB_EXTENSIONS
+   "developerPrivate": {
+    "channel": "stable",
+    "extension_types": ["platform_app"]
+  }
 }

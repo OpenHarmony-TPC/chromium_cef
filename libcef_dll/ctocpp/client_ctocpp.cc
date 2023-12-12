@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=77f339fe16650000e18b0a86c9c43ac4ef35a819$
+// $hash=436a0caddb3462984212dac75c032567a9ed3b8f$
 //
 
 #include "libcef_dll/ctocpp/client_ctocpp.h"
@@ -17,6 +17,7 @@
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/list_value_cpptoc.h"
 #include "libcef_dll/cpptoc/process_message_cpptoc.h"
+#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/audio_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/command_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -404,7 +405,9 @@ NO_SANITIZE("cfi-icall")
 int CefClientCToCpp::NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
                                             const CefString& method,
                                             const CefString& object_name,
-                                            CefRefPtr<CefListValue> result) {
+                                            CefRefPtr<CefListValue> result,
+                                            int32_t routing_id,
+                                            int32_t object_id) {
   cef_client_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, notify_java_script_result)) {
     return 0;
@@ -436,10 +439,84 @@ int CefClientCToCpp::NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
   // Execute
   int _retval = _struct->notify_java_script_result(
       _struct, CefListValueCppToC::Wrap(args), method.GetStruct(),
-      object_name.GetStruct(), CefListValueCppToC::Wrap(result));
+      object_name.GetStruct(), CefListValueCppToC::Wrap(result), routing_id,
+      object_id);
 
   // Return type: simple
   return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefClientCToCpp::HasJavaScriptObjectMethods(int32_t object_id,
+                                                 const CefString& method_name) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, has_java_script_object_methods)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: method_name; type: string_byref_const
+  DCHECK(!method_name.empty());
+  if (method_name.empty()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->has_java_script_object_methods(
+      _struct, object_id, method_name.GetStruct());
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::GetJavaScriptObjectMethods(
+    int32_t object_id,
+    CefRefPtr<CefValue> returned_method_names) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_java_script_object_methods)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: returned_method_names; type: refptr_diff
+  DCHECK(returned_method_names.get());
+  if (!returned_method_names.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_java_script_object_methods(
+      _struct, object_id, CefValueCppToC::Wrap(returned_method_names));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::RemoveJavaScriptObjectHolder(int32_t holder,
+                                                   int32_t object_id) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_java_script_object_holder)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_java_script_object_holder(_struct, holder, object_id);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::RemoveTransientJavaScriptObject() {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_transient_java_script_object)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_transient_java_script_object(_struct);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -456,6 +533,52 @@ CefRefPtr<CefFormHandler> CefClientCToCpp::GetFormHandler() {
 
   // Return type: refptr_same
   return CefFormHandlerCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::OnTopControlsChanged(float top_controls_offset,
+                                           float top_content_offset) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_top_controls_changed)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_top_controls_changed(_struct, top_controls_offset,
+                                   top_content_offset);
+}
+
+NO_SANITIZE("cfi-icall") int CefClientCToCpp::OnGetTopControlsHeight() {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_get_top_controls_height)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->on_get_top_controls_height(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefClientCToCpp::DoBrowserControlsShrinkRendererSize() {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, do_browser_controls_shrink_renderer_size)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->do_browser_controls_shrink_renderer_size(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

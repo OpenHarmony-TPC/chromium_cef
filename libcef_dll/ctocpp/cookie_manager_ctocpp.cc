@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f62b05eb0b3c33fd4e60d5eae72e2ed4a4221fe3$
+// $hash=ba753b1b2191bdc2a16fd6e6e71f1d7efbb04948$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -124,7 +124,8 @@ NO_SANITIZE("cfi-icall")
 bool CefCookieManagerCToCpp::SetCookie(const CefString& url,
                                        const CefCookie& cookie,
                                        CefRefPtr<CefSetCookieCallback> callback,
-                                       bool is_sync) {
+                                       bool is_sync,
+                                       const CefString& str_cookie) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_cookie)) {
     return false;
@@ -137,12 +138,17 @@ bool CefCookieManagerCToCpp::SetCookie(const CefString& url,
   if (url.empty()) {
     return false;
   }
+  // Verify param: str_cookie; type: string_byref_const
+  DCHECK(!str_cookie.empty());
+  if (str_cookie.empty()) {
+    return false;
+  }
   // Unverified params: callback
 
   // Execute
-  int _retval =
-      _struct->set_cookie(_struct, url.GetStruct(), &cookie,
-                          CefSetCookieCallbackCppToC::Wrap(callback), is_sync);
+  int _retval = _struct->set_cookie(_struct, url.GetStruct(), &cookie,
+                                    CefSetCookieCallbackCppToC::Wrap(callback),
+                                    is_sync, str_cookie.GetStruct());
 
   // Return type: bool
   return _retval ? true : false;

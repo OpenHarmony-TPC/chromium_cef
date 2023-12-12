@@ -58,8 +58,10 @@ const char kChromeURL[] = "chrome://";
 
 namespace {
 
+#if !defined(OHOS_ARKWEB_EXTENSIONS)
 const char kChromeUIExtensionsSupportHost[] = "extensions-support";
 const char kChromeUILicenseHost[] = "license";
+#endif
 const char kChromeUIWebUIHostsHost[] = "webui-hosts";
 
 // TODO(network): Consider handling content::kChromeDevToolsScheme via WebUI
@@ -76,6 +78,9 @@ const char kChromeUIWebUIHostsHost[] = "webui-hosts";
 // additional changes. Do not add new hosts to this list without also manually
 // testing all related functionality in CEF.
 const char* kAllowedWebUIHosts[] = {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    chrome::kChromeUIExtensionsHost, kChromeUIWebUIHostsHost
+#else
     chrome::kChromeUIAccessibilityHost,
     content::kChromeUIBlobInternalsHost,
     chrome::kChromeUIChromeURLsHost,
@@ -103,6 +108,7 @@ const char* kAllowedWebUIHosts[] = {
     chrome::kChromeUIVersionHost,
     content::kChromeUIWebRTCInternalsHost,
     kChromeUIWebUIHostsHost,
+#endif
 };
 
 // Hosts that don't have useful output when linked directly. They'll be excluded
@@ -119,6 +125,9 @@ enum ChromeHostId {
   CHROME_LICENSE,
   CHROME_VERSION,
   CHROME_WEBUI_HOSTS,
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  CHROME_EXTENSION_HOSTS,
+#endif
 };
 
 // Chrome hosts implemented by CEF.
@@ -126,11 +135,15 @@ const struct {
   const char* host;
   ChromeHostId host_id;
 } kAllowedCefHosts[] = {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    {kChromeUIWebUIHostsHost, CHROME_WEBUI_HOSTS}
+#else
     {chrome::kChromeUIChromeURLsHost, CHROME_WEBUI_HOSTS},
     {kChromeUIExtensionsSupportHost, CHROME_EXTENSIONS_SUPPORT},
     {kChromeUILicenseHost, CHROME_LICENSE},
     {chrome::kChromeUIVersionHost, CHROME_VERSION},
     {kChromeUIWebUIHostsHost, CHROME_WEBUI_HOSTS},
+#endif
 };
 
 ChromeHostId GetChromeHostId(const std::string& host) {
@@ -424,8 +437,13 @@ bool OnWebUIHostsUI(std::string* mime_type, std::string* output) {
       continue;
     }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    html += "<li><a href=\"arkweb://" + list[i] + "\">arkweb://" + list[i] +
+            "</a></li>\n";
+#else
     html += "<li><a href=\"chrome://" + list[i] + "\">chrome://" + list[i] +
             "</a></li>\n";
+#endif
   }
 
   list.clear();
@@ -541,7 +559,11 @@ class CefWebUIControllerFactory : public content::WebUIControllerFactory {
     }
 
     if (!url.SchemeIs(content::kChromeUIScheme) &&
-        !url.SchemeIs(content::kChromeUIUntrustedScheme)) {
+        !url.SchemeIs(content::kChromeUIUntrustedScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+        && !url.SchemeIs(content::kArkWebUIScheme)
+#endif
+    ) {
       return false;
     }
 

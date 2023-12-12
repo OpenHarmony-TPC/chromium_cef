@@ -27,6 +27,12 @@ IPC_MESSAGE_ROUTED2(OhGinJavascriptBridgeMsg_AddNamedObject,
 IPC_MESSAGE_ROUTED1(OhGinJavascriptBridgeMsg_RemoveNamedObject,
                     std::string /* name */)
 
+IPC_MESSAGE_ROUTED4(OhGinJavascriptBridgeMsg_DoCallH5Function,
+                    int32_t /* routing_id */,
+                    int32_t /* h5_object_id */,
+                    std::string /* method_name */,
+                    base::Value::List /* args */)
+
 IPC_SYNC_MESSAGE_ROUTED1_1(OhGinJavascriptBridgeHostMsg_GetMethods,
                            int32_t /* object_id */,
                            std::set<std::string> /* returned_method_names */)

@@ -182,6 +182,14 @@ void CefFrameHostImpl::LoadURL(const CefString& url) {
                     std::string());
 }
 
+
+void CefFrameHostImpl::PostURL(const CefString& url, const std::vector<char>& post_data) {
+#ifdef OHOS_POST_URL
+  LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit,
+                   "Content-Type:application/x-www-form-urlencoded", "POST", post_data);
+#endif
+}
+
 void CefFrameHostImpl::ExecuteJavaScript(const CefString& jsCode,
                                          const CefString& scriptUrl,
                                          int startLine) {
@@ -367,7 +375,13 @@ void CefFrameHostImpl::LoadRequest(cef::mojom::RequestParamsPtr params) {
 void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
                                          const content::Referrer& referrer,
                                          ui::PageTransition transition,
+#ifdef OHOS_POST_URL
+                                         const std::string& extra_headers,
+                                         const std::string& method,
+                                         const std::vector<char>& post_data) {
+#else
                                          const std::string& extra_headers) {
+#endif
   // Only known frame ids or kMainFrameId are supported.
   const auto frame_id = GetFrameId();
   if (frame_id < CefFrameHostImpl::kMainFrameId) {
@@ -385,7 +399,16 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
           gurl, referrer, WindowOpenDisposition::CURRENT_TAB, transition,
           /*is_renderer_initiated=*/false);
       params.extra_headers = extra_headers;
-
+#ifdef OHOS_POST_URL
+      if (method == "POST") {
+        if (post_data.size() <= 0) {
+          params.post_data = new network::ResourceRequestBody();
+        } else {
+          params.post_data = network::ResourceRequestBody::CreateFromBytes(
+            reinterpret_cast<const char *>(&post_data[0]), post_data.size());
+        }
+      }
+#endif
       browser->LoadMainFrameURL(params);
     }
   } else {
@@ -394,6 +417,17 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
     params->referrer =
         blink::mojom::Referrer::New(referrer.url, referrer.policy);
     params->headers = extra_headers;
+#ifdef OHOS_POST_URL
+    if (method == "POST") {
+      params->method = method;
+      if (post_data.size() <= 0) {
+        params->upload_data = new network::ResourceRequestBody();
+      } else {
+        params->upload_data = network::ResourceRequestBody::CreateFromBytes(
+          reinterpret_cast<const char *>(&post_data[0]), post_data.size());
+      }
+    }
+#endif
     LoadRequest(std::move(params));
   }
 }
@@ -999,6 +1033,15 @@ void CefFrameHostImpl::ZoomBy(float delta, float width, float height) {
                                                              height);
                                       },
                                       delta, width, height));
+}
+
+void CefFrameHostImpl::SetOverscrollMode(int mode) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](int mode, const RenderFrameType& render_frame) {
+                          render_frame->SetOverscrollMode(mode);
+                        },
+                        mode));
 }
 
 void CefFrameHostImpl::GetHitData(int& type, CefString& extra_data) {
