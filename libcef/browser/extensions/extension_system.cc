@@ -335,10 +335,6 @@ void CefExtensionSystem::Init() {
       !command_line->HasSwitch(::switches::kNoErrorDialogs);
   LoadErrorReporter::Init(allow_noisy_errors);
 
-  bool skip_session_extensions = false;
-
-  extension_service_->component_loader()->AddDefaultComponentExtensions(
-      skip_session_extensions);
   InitInstallGates();
 
   extension_service_->Init();
