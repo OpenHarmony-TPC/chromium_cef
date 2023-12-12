@@ -58,6 +58,7 @@
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
+#include "res_sched_client_adapter.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 #endif
 
@@ -603,6 +604,9 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
                   base::BindOnce(&CefBrowserHost::WasHidden, this, hidden));
     return;
   }
+
+  is_hidden_ = hidden;
+  ReportWindowStatus(false);
 
   if (platform_delegate_) {
     platform_delegate_->WasHidden(hidden);
@@ -1921,6 +1925,53 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
   }
 }
 
+void AlloyBrowserHostImpl::RenderViewReady() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatus, this, true));
+    return;
+  }
+  ReportWindowStatus(true);
+}
+
+void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
+  using namespace OHOS::NWeb;
+  if (first_view_ready && is_hidden_) {
+    LOG(INFO) << "no need to report render view ready because the view is hidden";
+    return;
+  }
+
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportWindowStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportWindowStatus render_process_host is null";
+      return;
+    }
+
+    ResSchedStatusAdapter status = is_hidden_
+                                       ? ResSchedStatusAdapter::WEB_INACTIVE
+                                       : ResSchedStatusAdapter::WEB_ACTIVE;
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
+                                              nweb_id_);
+    if (!is_hidden_) {
+      ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
+                                         ResSchedSceneAdapter::VISIBLE,
+                                         nweb_id_);
+    }
+  } else {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportWindowStatus render_view_host is null";
+    return;
+  }
+}
+
 void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
   auto rvh = web_contents()->GetRenderViewHost();
   CefRenderWidgetHostViewOSR* view =
@@ -2102,6 +2153,14 @@ void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
     platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
 }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
+
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
+  window_id_ = window_id;
+  nweb_id_ = nweb_id;
+  OHOS::NWeb::ResSchedClientAdapter::ReportWindowId(static_cast<int32_t>(window_id), static_cast<int32_t>(nweb_id));
+}
+#endif
 
 #if defined(OHOS_PRINT)
 void AlloyBrowserHostImpl::SetToken(void* token) {

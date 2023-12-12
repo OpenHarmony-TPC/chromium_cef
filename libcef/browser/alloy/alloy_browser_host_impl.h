@@ -123,6 +123,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
   void SetEnableLowerFrameRate(bool enabled) override;
+  void SetWindowId(int window_id, int nweb_id) override;
+  void RenderViewReady() override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
@@ -491,6 +493,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
   std::shared_ptr<base::WaitableEvent> event_ = nullptr;
   bool is_hidden_ = false;
+  int window_id_ = -1;
+  int nweb_id_ = -1;
 #endif
   bool start_play_ = false;
 
