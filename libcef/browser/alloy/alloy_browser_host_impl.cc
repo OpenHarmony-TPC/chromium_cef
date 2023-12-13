@@ -83,6 +83,10 @@
 #include "components/prefs/pref_service.h"
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+#include "ohos_nweb/src/nweb_inputmethod_handler.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -1346,6 +1350,29 @@ KeyboardEventProcessingResult AlloyBrowserHostImpl::PreHandleKeyboardEvent(
   return contents_delegate_->PreHandleKeyboardEvent(source, event);
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+bool AlloyBrowserHostImpl::IsNeedZoomChange(
+  const content::NativeWebKeyboardEvent& event, bool& zoom_in) {
+  if (!(event.GetModifiers() & blink::WebKeyboardEvent::kControlKey) ||
+      (event.GetType() != blink::WebKeyboardEvent::Type::kRawKeyDown)) {
+    LOG(DEBUG) << "not control key down";
+    return false;
+  }
+  int32_t native_key_code = event.native_key_code;
+  if (native_key_code  == OHOS::NWeb::ScanKeyCode::EQUAL_SCAN_CODE ||
+      native_key_code  == OHOS::NWeb::ScanKeyCode::NUMPADADD_SCAN_CODE) {
+    zoom_in = true;
+    return true;
+  }
+  if (native_key_code  == OHOS::NWeb::ScanKeyCode::MINUS_SCAN_CODE ||
+      native_key_code  == OHOS::NWeb::ScanKeyCode::NUMPADSUBTRACT_SCAN_CODE) {
+    zoom_in = false;
+    return true;
+  }
+  return false;
+}
+#endif
+
 bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     content::WebContents* source,
     const content::NativeWebKeyboardEvent& event) {
@@ -1358,9 +1385,17 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     return true;
   }
 
-  if (platform_delegate_) {
-    return platform_delegate_->HandleKeyboardEvent(event);
+#if defined(OHOS_INPUT_EVENTS)
+  if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
+    return true;
   }
+
+  bool zoom_in;
+  if (IsNeedZoomChange(event, zoom_in)) {
+    LOG(DEBUG) << "ContentsZoomChange when HandleKeyboardEvent";
+    ContentsZoomChange(zoom_in);
+  }
+#endif
   return false;
 }
 

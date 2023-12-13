@@ -448,6 +448,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ReportWindowStatus(bool first_view_ready);
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+  bool IsNeedZoomChange(const content::NativeWebKeyboardEvent& event,
+    bool& zoom_in);
+#endif
+
 #if defined(OHOS_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void SetDrawRect(int x, int y, int width, int height) override;
