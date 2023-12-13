@@ -448,6 +448,7 @@ bool OnWebUIHostsUI(std::string* mime_type, std::string* output) {
 
   list.clear();
   GetDebugURLs(&list);
+#if !defined(OHOS_ARKWEB_EXTENSIONS)
   std::sort(list.begin(), list.end());
 
   html +=
@@ -459,6 +460,7 @@ bool OnWebUIHostsUI(std::string* mime_type, std::string* output) {
     html += "<li>" + std::string(list[i]) + "</li>\n";
   }
   html += "</ul>\n";
+#endif
 
   html += "</body>\n</html>";
 
@@ -558,12 +560,13 @@ class CefWebUIControllerFactory : public content::WebUIControllerFactory {
       return DevToolsUIBindings::IsValidFrontendURL(url);
     }
 
-    if (!url.SchemeIs(content::kChromeUIScheme) &&
-        !url.SchemeIs(content::kChromeUIUntrustedScheme)
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-        && !url.SchemeIs(content::kArkWebUIScheme)
+    if (!url.SchemeIs(content::kArkWebUIScheme))
+#else
+    if (!url.SchemeIs(content::kChromeUIScheme) &&
+        !url.SchemeIs(content::kChromeUIUntrustedScheme))
 #endif
-    ) {
+    {
       return false;
     }
 
