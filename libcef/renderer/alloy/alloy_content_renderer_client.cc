@@ -382,13 +382,20 @@ void AlloyContentRendererClient::RenderFrameCreated(
   if (browser_created) {
     OnBrowserCreated(render_frame->GetWebView(), is_windowless);
   }
-
+#if defined(OHOS_PRINT)
+  if (is_windowless.has_value()) {
+    new printing::PrintRenderFrameHelper(
+        render_frame,
+        base::WrapUnique(new extensions::OhosPrintRenderFrameHelperDelegate()));
+  }
+#else
   if (is_windowless.has_value()) {
     new printing::PrintRenderFrameHelper(
         render_frame,
         base::WrapUnique(
             new extensions::CefPrintRenderFrameHelperDelegate(*is_windowless)));
   }
+#endif
 
 #ifdef OHOS_FCP
   // Owned by |render_frame|.
