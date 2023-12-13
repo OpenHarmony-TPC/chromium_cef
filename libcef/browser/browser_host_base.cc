@@ -829,6 +829,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.contextmenu_customization_enabled =
       browser_settings.contextmenu_customization_enabled;
 #endif
+
+#if defined(OHOS_CLIPBOARD)
+  settings_.copy_option = browser_settings.copy_option;
+#endif // defined(OHOS_CLIPBOARD)
 }
 
 void CefBrowserHostBase::SetWebPreferences(
