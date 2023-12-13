@@ -1983,8 +1983,6 @@ void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
   }
 }
 
-void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {}
-
 #ifdef OHOS_HTML_SELECT
 void AlloyBrowserHostImpl::ShowPopupMenu(
     mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
