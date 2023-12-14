@@ -156,6 +156,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetAudioExclusive(bool audioExclusive) override;
 #endif // defined(OHOS_MEDIA_POLICY)
   void SetAccessibilityState(cef_state_t accessibility_state) override;
+#if BUILDFLAG(IS_OHOS)
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
+#endif
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
