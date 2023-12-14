@@ -12,14 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "libcef/browser/printing/ohos_print_manager.h"
 
 #include <fcntl.h>
 #include <codecvt>
 #include <locale>
 #include <utility>
- 
+
 #include "base/command_line.h"
 #include "base/file_descriptor_posix.h"
 #include "base/files/file_util.h"
@@ -30,25 +30,23 @@
 #include "base/numerics/safe_conversions.h"
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
+#include "chrome/browser/pdf/pdf_frame_util.h"
 #include "chrome/common/chrome_switches.h"
 #include "components/printing/browser/print_manager_utils.h"
 #include "components/printing/common/print.mojom.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
+#include "libcef/browser/browser_host_base.h"
 #include "printing/print_job_constants.h"
 #include "printing/units.h"
-#include "third_party/pdfium/public/fpdfview.h"
-#include "third_party/skia/include/core/SkBitmap.h"
-#include "third_party/skia/include/core/SkData.h"
-#include "third_party/skia/include/core/SkImage.h"
- 
+
 namespace printing {
- 
+
 namespace {
 
-constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 28;
-constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 29;
+constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 0;
+constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 1;
 const std::string PROTOCOL_PATH = "://";
 
 uint32_t SaveDataToFd(int fd,
@@ -61,11 +59,11 @@ uint32_t SaveDataToFd(int fd,
   }
   return result ? page_count : 0;
 }
- 
+
 int MilsToDots(int val, int dpi) {
   return static_cast<int>(printing::ConvertUnitFloat(val, 1000, dpi));
 }
- 
+
 }  // namespace
 
 class OhosPrintManager;
@@ -116,7 +114,7 @@ class ApplicationPrintDocumentAdapterImpl
   ApplicationPrintDocumentAdapterImpl(OhosPrintManager* ohosPrintManager)
       : ohosPrintManager_(ohosPrintManager) {}
   ~ApplicationPrintDocumentAdapterImpl() = default;
- 
+
   void OnStartLayoutWrite(
       const std::string& jobId,
       const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
@@ -138,7 +136,7 @@ class ApplicationPrintDocumentAdapterImpl
       ohosPrintManager_->PrintPage(true);
     }
   }
- 
+
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "Application OhosPrintManager onJobStateChanged.";
     state_ = state;
@@ -147,7 +145,7 @@ class ApplicationPrintDocumentAdapterImpl
       ohosPrintManager_->DidDispatchPrintEvent(false);
     }
   }
- 
+
  private:
   uint32_t state_ = 0;
   bool isCalledBeforeEvent = false;
@@ -161,35 +159,38 @@ OhosPrintManager::OhosPrintManager(content::WebContents* contents)
       task_runner_(base::ThreadPool::CreateTaskRunner(
           {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
            base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN})) {}
- 
+
 OhosPrintManager::~OhosPrintManager() = default;
 
 std::unordered_map<std::string, PrintAttrs> OhosPrintManager::printAttrsMap_{};
-std::string OhosPrintManager::printJobId_ = "";
+std::string OhosPrintManager::print_job_id_ = "";
+content::RenderFrameHost* OhosPrintManager::rfh_ = nullptr;
+void* OhosPrintManager::pdf_token_ = nullptr;
 // static
 void OhosPrintManager::BindPrintManagerHost(
     mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost> receiver,
     content::RenderFrameHost* rfh) {
+  LOG(INFO) << "OhosPrintManager::BindPrintManagerHost";
   auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!web_contents) {
     LOG(ERROR) << "web_contents is nullptr.";
     return;
   }
- 
+
   auto* print_manager = OhosPrintManager::FromWebContents(web_contents);
   if (!print_manager) {
     LOG(ERROR) << "print_manager is nullptr.";
     return;
   }
- 
+  rfh_ = rfh;
   print_manager->BindReceiver(std::move(receiver), rfh);
 }
- 
+
 void OhosPrintManager::PdfWritingDone(int page_count) {
   pdf_writing_done_callback().Run(page_count);
   fd_ = -1;
 }
- 
+
 bool OhosPrintManager::PrintNow() {
   LOG(INFO) << "OhosPrintManager::PrintNow";
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -212,19 +213,20 @@ bool OhosPrintManager::PrintNow() {
 }
 
 void OhosPrintManager::DidDispatchPrintEvent(bool isBefore) {
-  LOG(INFO) << "OhosPrintManager::DidDispatchPrintEvent isBefore = " << isBefore;
+  LOG(INFO) << "OhosPrintManager::DidDispatchPrintEvent isBefore = "
+            << isBefore;
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
- 
+
   auto main_task_runner = content::GetUIThreadTaskRunner({});
   if (!main_task_runner) {
     LOG(ERROR) << "main_task_runner is nullptr";
     return;
   }
   main_task_runner->PostTask(
-      FROM_HERE,
-      base::BindOnce(&OhosPrintManager::DidDispatchPrintEventImpl, base::Unretained(this), isBefore));
+      FROM_HERE, base::BindOnce(&OhosPrintManager::DidDispatchPrintEventImpl,
+                                base::Unretained(this), isBefore));
 }
- 
+
 void OhosPrintManager::DidDispatchPrintEventImpl(bool isBefore) {
   auto* rfh = web_contents()->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
@@ -233,30 +235,35 @@ void OhosPrintManager::DidDispatchPrintEventImpl(bool isBefore) {
   }
   GetPrintRenderFrame(rfh)->DidDispatchPrintEvent(isBefore);
 }
- 
+
 void OhosPrintManager::PrintPage(bool isApplication) {
   LOG(INFO) << "OhosPrintManager::PrintPage isApplication = " << isApplication;
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
- 
+
   auto main_task_runner = content::GetUIThreadTaskRunner({});
   if (!main_task_runner) {
     LOG(ERROR) << "main_task_runner is nullptr";
     return;
   }
   main_task_runner->PostTask(
-      FROM_HERE,
-      base::BindOnce(&OhosPrintManager::PrintPageImpl, base::Unretained(this), isApplication));
+      FROM_HERE, base::BindOnce(&OhosPrintManager::PrintPageImpl,
+                                base::Unretained(this), isApplication));
 }
- 
+
 void OhosPrintManager::PrintPageImpl(bool isApplication) {
   auto* rfh = web_contents()->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
-    if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+    if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
       LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_FAILED";
-      printAttrsMap_[printJobId_].writeResultCallback(
-          printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
+      printAttrsMap_[print_job_id_].writeResultCallback(
+          print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     }
+    return;
+  }
+
+  if (is_pdf_print_) {
+    GetPrintRenderFrame(pdf_rfh_)->ApplicationPrintRequestedPages();
     return;
   }
   if (isApplication) {
@@ -269,7 +276,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
 void OhosPrintManager::DidShowPrintDialog() {
   LOG(INFO) << "OhosPrintManager::DidShowPrintDialog";
 }
- 
+
 void OhosPrintManager::GetDefaultPrintSettings(
     GetDefaultPrintSettingsCallback callback) {
   // Please process in the UI thread.
@@ -287,7 +294,7 @@ void OhosPrintManager::GetDefaultPrintSettings(
   params->document_cookie = cookie();
   std::move(callback).Run(std::move(params));
 }
- 
+
 void OhosPrintManager::UpdateParam(
     std::unique_ptr<printing::PrintSettings> settings,
     int file_descriptor,
@@ -300,27 +307,27 @@ void OhosPrintManager::UpdateParam(
   // Set a valid dummy cookie value.
   set_cookie(1);
 }
- 
+
 void OhosPrintManager::ScriptedPrint(
     printing::mojom::ScriptedPrintParamsPtr scripted_params,
     ScriptedPrintCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto params = printing::mojom::PrintPagesParams::New();
   params->params = printing::mojom::PrintParams::New();
- 
+
   if (scripted_params->is_scripted &&
       GetCurrentTargetFrame()->IsNestedWithinFencedFrame()) {
     LOG(ERROR) << "Script Print is not allowed.";
     std::move(callback).Run(std::move(params));
     return;
   }
- 
+
   printing::RenderParamsFromPrintSettings(*settings_, params->params.get());
   params->params->document_cookie = scripted_params->cookie;
   params->pages = settings_->ranges();
   std::move(callback).Run(std::move(params));
 }
- 
+
 void OhosPrintManager::DidPrintDocument(
     printing::mojom::DidPrintDocumentParamsPtr params,
     DidPrintDocumentCallback callback) {
@@ -329,7 +336,7 @@ void OhosPrintManager::DidPrintDocument(
     std::move(callback).Run(false);
     return;
   }
- 
+
   const printing::mojom::DidPrintContentParams& content = *params->content;
   if (!content.metafile_data_region.IsValid()) {
     NOTREACHED() << "invalid memory handle";
@@ -338,7 +345,7 @@ void OhosPrintManager::DidPrintDocument(
     std::move(callback).Run(false);
     return;
   }
- 
+
   auto data = base::RefCountedSharedMemoryMapping::CreateFromWholeRegion(
       content.metafile_data_region);
   if (!data) {
@@ -348,22 +355,22 @@ void OhosPrintManager::DidPrintDocument(
     std::move(callback).Run(false);
     return;
   }
- 
+
   if (number_pages() > printing::kMaxPageCount) {
     web_contents()->Stop();
     PdfWritingDone(0);
     std::move(callback).Run(false);
     return;
   }
- 
+
   DCHECK(pdf_writing_done_callback());
- 
+
   task_runner_->PostTaskAndReplyWithResult(
       FROM_HERE, base::BindOnce(&SaveDataToFd, fd_, number_pages(), data),
       base::BindOnce(&OhosPrintManager::OnDidPrintDocumentWritingDone,
                      pdf_writing_done_callback(), std::move(callback)));
 }
- 
+
 // static
 void OhosPrintManager::OnDidPrintDocumentWritingDone(
     const PdfWritingDoneCallback& callback,
@@ -371,21 +378,22 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
     uint32_t page_count) {
   LOG(INFO) << "OhosPrintManager::OnDidPrintDocumentWritingDone";
   DCHECK_LE(page_count, printing::kMaxPageCount);
-  if (callback)
+  if (callback) {
     callback.Run(base::checked_cast<int>(page_count));
+  }
   std::move(did_print_document_cb).Run(true);
-  if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
+  if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
     LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS";
-    printAttrsMap_[printJobId_].writeResultCallback(
-        printJobId_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
+    printAttrsMap_[print_job_id_].writeResultCallback(
+        print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
   }
 }
- 
+
 std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
     const printing::PageRanges& page_ranges) {
   OHOS::NWeb::PrintAttributesAdapter newAttrs;
-  if (printAttrsMap_.find(printJobId_) != printAttrsMap_.end()) {
-    newAttrs = printAttrsMap_[printJobId_].attrs;
+  if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
+    newAttrs = printAttrsMap_[print_job_id_].attrs;
   }
   auto settings = std::make_unique<printing::PrintSettings>();
   int dpi = dpi_;
@@ -395,18 +403,19 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   int height_in_dots = MilsToDots(
       newAttrs.pageSize.height ? newAttrs.pageSize.height : height_, dpi);
   physical_size_device_units.SetSize(width_in_dots, height_in_dots);
- 
+
   gfx::Rect printable_area_device_units;
- 
+
   printable_area_device_units.SetRect(0, 0, width_in_dots, height_in_dots);
- 
-  if (!page_ranges.empty())
+
+  if (!page_ranges.empty()) {
     settings->set_ranges(page_ranges);
- 
+  }
+
   settings->set_dpi(dpi);
   settings->SetPrinterPrintableArea(physical_size_device_units,
                                     printable_area_device_units, true);
- 
+
   printing::PageMargins margins;
   margins.left = newAttrs.margin.left;
   margins.right = newAttrs.margin.right;
@@ -421,10 +430,11 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
 void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
   printAttrsMap_[printAttrs.jobId] = printAttrs;
   fd_ = printAttrs.fd;
-  printJobId_ = printAttrs.jobId;
+  print_job_id_ = printAttrs.jobId;
 }
 
 void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
+  is_pdf_print_ = false;
   if (!PrintNow()) {
     LOG(ERROR) << "Pulling up the printing application failed.";
     std::move(callback).Run();
@@ -441,7 +451,42 @@ void OhosPrintManager::CheckCancel(CheckCancelCallback callback) {
 void OhosPrintManager::RunPrintRequestedCallback(const std::string& jobId) {
   LOG(INFO) << "OhosPrintManager::RunPrintRequestedCallback.";
   cancel_ = true;
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  auto main_task_runner = content::GetUIThreadTaskRunner({});
+  if (!main_task_runner) {
+    LOG(ERROR) << "main_task_runner is nullptr";
+    return;
+  }
+  main_task_runner->PostTask(
+      FROM_HERE,
+      base::BindOnce(&OhosPrintManager::RunPrintRequestedCallbackImpl,
+                     base::Unretained(this), jobId));
+}
+
+void OhosPrintManager::RunPrintRequestedCallbackImpl(const std::string& jobId) {
+  LOG(INFO) << "OhosPrintManager::RunPrintRequestedCallbackImpl.";
+  if (is_pdf_print_) {
+    DidDispatchPrintEvent(false);
+    is_pdf_print_ = false;
+    return;
+  }
   std::move(printRequestedCallback_).Run();
+}
+
+void OhosPrintManager::BeforePrintPdfRequested() {
+  pdf_token_ = token_;
+}
+
+void OhosPrintManager::PrintPdfRequested() {
+  is_pdf_print_ = true;
+  token_ = pdf_token_;
+  pdf_rfh_ = rfh_;
+  cancel_ = false;
+  if (!PrintNow()) {
+    is_pdf_print_ = false;
+    LOG(ERROR) << "Pulling up the printing application failed.";
+  }
 }
 
 std::string OhosPrintManager::GetHtmlTitle() {
@@ -469,38 +514,37 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
 }
 
 void OhosPrintManager::SetToken(void* token) {
-  LOG(INFO) << "OhosPrintManager::SetToken";
+  LOG(INFO) << "OhosPrintManager::SetToken token = " << token;
   token_ = token;
 }
 
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
-    const CefString& jobName, void** webPrintDocumentAdapter) {
-  *webPrintDocumentAdapter = static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
+    const CefString& jobName,
+    void** webPrintDocumentAdapter) {
+  *webPrintDocumentAdapter =
+      static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
 }
 
 void OhosPrintManager::CheckForCancel(int32_t preview_ui_id,
                                       int32_t request_id,
-                                      CheckForCancelCallback callback) {
-}
+                                      CheckForCancelCallback callback) {}
 
-void OhosPrintManager::RequestPrintPreview(mojom::RequestPrintPreviewParamsPtr params) {
-}
+void OhosPrintManager::RequestPrintPreview(
+    mojom::RequestPrintPreviewParamsPtr params) {}
 
-void OhosPrintManager::SetAccessibilityTree(int32_t cookie,
-                                            const ui::AXTreeUpdate& accessibility_tree) {
-}
+void OhosPrintManager::SetAccessibilityTree(
+    int32_t cookie,
+    const ui::AXTreeUpdate& accessibility_tree) {}
 
-void OhosPrintManager::SetupScriptedPrintPreview(SetupScriptedPrintPreviewCallback callback) {
-}
+void OhosPrintManager::SetupScriptedPrintPreview(
+    SetupScriptedPrintPreviewCallback callback) {}
 
-void OhosPrintManager::ShowScriptedPrintPreview(bool source_is_modifiable) {
-}
+void OhosPrintManager::ShowScriptedPrintPreview(bool source_is_modifiable) {}
 
-void OhosPrintManager::UpdatePrintSettings(base::Value::Dict job_settings,
-                                           UpdatePrintSettingsCallback callback) {
-}
+void OhosPrintManager::UpdatePrintSettings(
+    base::Value::Dict job_settings,
+    UpdatePrintSettingsCallback callback) {}
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosPrintManager);
- 
+
 }  // namespace printing
- 

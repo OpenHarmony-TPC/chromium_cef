@@ -1300,12 +1300,8 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   if (metadata.root_scroll_offset) {
     root_scroll_offset = *metadata.root_scroll_offset;
   }
-#if defined(OHOS_INPUT_EVENTS)
-  if (root_scroll_offset != last_scroll_offset_ &&
-      (root_scroll_offset.x() != 0 || root_scroll_offset.y() != 0)) {
-#else
+
   if (root_scroll_offset != last_scroll_offset_) {
-#endif  // defined(OHOS_INPUT_EVENTS)
     last_scroll_offset_ = root_scroll_offset;
 
     if (!is_scroll_offset_changed_pending_) {
@@ -1475,7 +1471,7 @@ void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
       pending_resize_ = true;
     return;
   }
- 
+
   bool isKeyboardResized = true;
   SynchronizeVisualProperties(cc::DeadlinePolicy::UseExistingDeadline(),
                               absl::nullopt, isKeyboardResized);
@@ -1874,7 +1870,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   if (had_no_pointer && !event.from_overlay) {
     selection_controller_client_->OnTouchDown();
   }
- 
+
   if (!pointer_state_.GetPointerCount() && !event.from_overlay) {
     selection_controller_client_->OnTouchUp();
   }

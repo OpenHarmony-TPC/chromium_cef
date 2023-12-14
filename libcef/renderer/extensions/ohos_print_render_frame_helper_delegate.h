@@ -12,28 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef OHOS_PRINT_RENDER_FRAME_HELPER_DELEGATE_H_
 #define OHOS_PRINT_RENDER_FRAME_HELPER_DELEGATE_H_
- 
+
 #include "components/printing/renderer/print_render_frame_helper.h"
- 
+
 namespace extensions {
- 
+
 class OhosPrintRenderFrameHelperDelegate
     : public printing::PrintRenderFrameHelper::Delegate {
  public:
-  explicit OhosPrintRenderFrameHelperDelegate(bool is_windowless);
+  OhosPrintRenderFrameHelperDelegate();
+
+  OhosPrintRenderFrameHelperDelegate(
+      const OhosPrintRenderFrameHelperDelegate&) = delete;
+  OhosPrintRenderFrameHelperDelegate& operator=(
+      const OhosPrintRenderFrameHelperDelegate&) = delete;
+
   ~OhosPrintRenderFrameHelperDelegate() override;
- 
+
+ private:
+  // printing::PrintRenderFrameHelper::Delegate:
   blink::WebElement GetPdfElement(blink::WebLocalFrame* frame) override;
   bool IsPrintPreviewEnabled() override;
   bool OverridePrint(blink::WebLocalFrame* frame) override;
- 
- private:
-  bool is_windowless_;
+  bool ShouldGenerateTaggedPDF() override;
 };
- 
+
 }  // namespace extensions
- 
+
 #endif  // OHOS_PRINT_RENDER_FRAME_HELPER_DELEGATE_H_

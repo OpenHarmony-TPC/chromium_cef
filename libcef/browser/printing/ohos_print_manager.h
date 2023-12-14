@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef OHOS_PRINT_MANAGER_H_
 #define OHOS_PRINT_MANAGER_H_
- 
+
 #include <memory>
 #include <vector>
 
@@ -44,14 +44,14 @@ class OhosPrintManager : public printing::PrintManager,
  public:
   OhosPrintManager(const OhosPrintManager&) = delete;
   OhosPrintManager& operator=(const OhosPrintManager&) = delete;
- 
+
   ~OhosPrintManager() override;
- 
+
   static void BindPrintManagerHost(
       mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost>
           receiver,
       content::RenderFrameHost* rfh);
- 
+
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
@@ -68,6 +68,7 @@ class OhosPrintManager : public printing::PrintManager,
   void DidDispatchPrintEventImpl(bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
+  void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
@@ -75,18 +76,20 @@ class OhosPrintManager : public printing::PrintManager,
                       int32_t request_id,
                       CheckForCancelCallback callback) override;
   void RequestPrintPreview(mojom::RequestPrintPreviewParamsPtr params) override;
-  void SetAccessibilityTree(int32_t cookie,
-                            const ui::AXTreeUpdate& accessibility_tree) override;
-  void SetupScriptedPrintPreview(SetupScriptedPrintPreviewCallback callback) override;
+  void SetAccessibilityTree(
+      int32_t cookie,
+      const ui::AXTreeUpdate& accessibility_tree) override;
+  void SetupScriptedPrintPreview(
+      SetupScriptedPrintPreviewCallback callback) override;
   void ShowScriptedPrintPreview(bool source_is_modifiable) override;
   void UpdatePrintSettings(base::Value::Dict job_settings,
                            UpdatePrintSettingsCallback callback) override;
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
- 
+
   explicit OhosPrintManager(content::WebContents* contents);
- 
+
   // mojom::PrintManagerHost:
   void DidPrintDocument(printing::mojom::DidPrintDocumentParamsPtr params,
                         DidPrintDocumentCallback callback) override;
@@ -96,12 +99,14 @@ class OhosPrintManager : public printing::PrintManager,
                      ScriptedPrintCallback callback) override;
   void PrintRequested(PrintRequestedCallback callback) override;
   void CheckCancel(CheckCancelCallback callback) override;
+  void BeforePrintPdfRequested() override;
+  void PrintPdfRequested() override;
 
   static void OnDidPrintDocumentWritingDone(
       const PdfWritingDoneCallback& callback,
       DidPrintDocumentCallback did_print_document_cb,
       uint32_t page_count);
- 
+
   std::unique_ptr<printing::PrintSettings> CreatePdfSettings(
       const printing::PageRanges& page_ranges);
 
@@ -109,7 +114,7 @@ class OhosPrintManager : public printing::PrintManager,
   std::string GetHtmlTitle();
   std::string RemoveProtocol(const std::string& url);
 
-  scoped_refptr<base::TaskRunner> task_runner_; 
+  scoped_refptr<base::TaskRunner> task_runner_;
   std::unique_ptr<printing::PrintSettings> settings_;
 
   uint32_t fd_ = 0;
@@ -118,13 +123,17 @@ class OhosPrintManager : public printing::PrintManager,
   int dpi_ = 300;  // DPI (Dots Per Inch)
   void* token_ = nullptr;
   bool cancel_ = false;
+  bool is_pdf_print_ = false;
+  content::RenderFrameHost* pdf_rfh_ = nullptr;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
-  static std::string printJobId_;
+  static std::string print_job_id_;
+  static content::RenderFrameHost* rfh_;
+  static void* pdf_token_;
   PrintRequestedCallback printRequestedCallback_;
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };
- 
+
 }  // namespace printing
- 
+
 #endif  // OHOS_PRINT_MANAGER_H_
