@@ -311,6 +311,26 @@ void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {
   else if (cef_var == STATE_DISABLED) \
     web_var = false;
 
+void SetCopyOptionToWeb(const CefBrowserSettings& cef,
+                 blink::web_pref::WebPreferences& web) {
+  switch (cef.copy_option) {
+    case 0:
+      web.copy_option = blink::mojom::CopyOptionMode::NONE;
+      break;
+    case 1:
+      web.copy_option = blink::mojom::CopyOptionMode::IN_APP;
+      break;
+    case 2:
+      web.copy_option = blink::mojom::CopyOptionMode::LOCAL_DEVICE;
+      break;
+    case 3:
+      web.copy_option = blink::mojom::CopyOptionMode::CROSS_DEVICE;
+      break;
+    default:
+      web.copy_option = blink::mojom::CopyOptionMode::CROSS_DEVICE;
+  }
+}
+
 void SetCefPrefs(const CefBrowserSettings& cef,
                  blink::web_pref::WebPreferences& web) {
   if (cef.standard_font_family.length > 0) {
@@ -423,6 +443,9 @@ void SetCefPrefs(const CefBrowserSettings& cef,
           : blink::mojom::AutoplayPolicy::kNoUserGestureRequired;
   /* ohos webview end */
 #endif
+#if defined(OHOS_CLIPBOARD)
+  SetCopyOptionToWeb(cef, web);
+#endif // defined(OHOS_CLIPBOARD)
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

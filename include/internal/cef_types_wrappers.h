@@ -569,6 +569,10 @@ struct CefBrowserSettingsTraits {
 
     target->chrome_status_bubble = src->chrome_status_bubble;
 
+#if defined(OHOS_CLIPBOARD)
+  target->copy_option = src->copy_option;
+#endif // defined(OHOS_CLIPBOARD)
+
 #if BUILDFLAG(IS_OHOS)
     /* ohos webview begin */
     target->force_dark_mode_enabled = src->force_dark_mode_enabled;

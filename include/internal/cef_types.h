@@ -685,6 +685,10 @@ typedef struct _cef_browser_settings_t {
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if defined(OHOS_CLIPBOARD)
+  int32 copy_option;
+#endif // defined(OHOS_CLIPBOARD)
+
   ///
   /// Controls whether the Chrome status bubble will be used. Only supported
   /// with the Chrome runtime. For details about the status bubble see
