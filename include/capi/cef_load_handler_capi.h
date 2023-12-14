@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=464c7b0ca78c44772f545b755ba3d77a859e38f3$
+// $hash=fa957b91c4ce09792785ca1c57004bce89622b70$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
@@ -44,6 +44,7 @@
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_callback_capi.h"
 #include "include/capi/cef_frame_capi.h"
+#include "include/capi/cef_load_committed_details_capi.h"
 #include "include/capi/cef_response_capi.h"
 
 #ifdef __cplusplus
@@ -174,6 +175,13 @@ typedef struct _cef_load_handler_t {
       struct _cef_load_handler_t* self,
       int64_t navigationStartTick,
       int64_t firstContentfulPaintMs);
+
+  ///
+  /// Called when the navigation entry has been committed.
+  ///
+  void(CEF_CALLBACK* on_navigation_entry_committed)(
+      struct _cef_load_handler_t* self,
+      struct _cef_load_committed_details_t* details);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

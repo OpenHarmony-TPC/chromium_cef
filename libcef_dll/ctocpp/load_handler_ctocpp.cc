@@ -9,13 +9,14 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2c95d2c7f7ab42786f18e3b930efdab90974359b$
+// $hash=0b117b7ffb454b1cd032a4fd3917f086394dced9$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/cpptoc/load_committed_details_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -315,6 +316,29 @@ void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
   // Execute
   _struct->on_first_contentful_paint(_struct, navigationStartTick,
                                      firstContentfulPaintMs);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnNavigationEntryCommitted(
+    CefRefPtr<CefLoadCommittedDetails> details) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_navigation_entry_committed)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: details; type: refptr_diff
+  DCHECK(details.get());
+  if (!details.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_navigation_entry_committed(
+      _struct, CefLoadCommittedDetailsCppToC::Wrap(details));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e930cc92d0749d552b3e03af273ab86869cc4214$
+// $hash=0bdf9a99247c735d9dd75ae5c1b3730decd614dc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -70,6 +70,8 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                           CefRefPtr<CefCallback> callback) override;
   void OnFirstContentfulPaint(int64_t navigationStartTick,
                               int64_t firstContentfulPaintMs) override;
+  void OnNavigationEntryCommitted(
+      CefRefPtr<CefLoadCommittedDetails> details) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

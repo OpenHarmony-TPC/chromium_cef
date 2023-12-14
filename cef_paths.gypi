@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=2e550d4b68af12756aba35f4eb0135af090abc59$
+# $hash=50255f84d17ebf23c105dbb8ca8b30554d3070d2$
 #
 
 {
@@ -49,6 +49,7 @@
       'include/cef_jsdialog_handler.h',
       'include/cef_keyboard_handler.h',
       'include/cef_life_span_handler.h',
+      'include/cef_load_committed_details.h',
       'include/cef_load_handler.h',
       'include/cef_media_handler.h',
       'include/cef_media_router.h',
@@ -158,6 +159,7 @@
       'include/capi/cef_jsdialog_handler_capi.h',
       'include/capi/cef_keyboard_handler_capi.h',
       'include/capi/cef_life_span_handler_capi.h',
+      'include/capi/cef_load_committed_details_capi.h',
       'include/capi/cef_load_handler_capi.h',
       'include/capi/cef_media_handler_capi.h',
       'include/capi/cef_media_router_capi.h',
@@ -370,6 +372,8 @@
       'libcef_dll/ctocpp/life_span_handler_ctocpp.h',
       'libcef_dll/cpptoc/list_value_cpptoc.cc',
       'libcef_dll/cpptoc/list_value_cpptoc.h',
+      'libcef_dll/cpptoc/load_committed_details_cpptoc.cc',
+      'libcef_dll/cpptoc/load_committed_details_cpptoc.h',
       'libcef_dll/ctocpp/load_handler_ctocpp.cc',
       'libcef_dll/ctocpp/load_handler_ctocpp.h',
       'libcef_dll/cpptoc/media_access_callback_cpptoc.cc',
@@ -736,6 +740,8 @@
       'libcef_dll/cpptoc/life_span_handler_cpptoc.h',
       'libcef_dll/ctocpp/list_value_ctocpp.cc',
       'libcef_dll/ctocpp/list_value_ctocpp.h',
+      'libcef_dll/ctocpp/load_committed_details_ctocpp.cc',
+      'libcef_dll/ctocpp/load_committed_details_ctocpp.h',
       'libcef_dll/cpptoc/load_handler_cpptoc.cc',
       'libcef_dll/cpptoc/load_handler_cpptoc.h',
       'libcef_dll/ctocpp/media_access_callback_ctocpp.cc',

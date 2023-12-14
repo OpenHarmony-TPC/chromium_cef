@@ -1045,6 +1045,15 @@ source_set("libcef_static") {
 
   #endif
 
+  #ifdef OHOS_NAVIGATION
+  if (defined(ohos_navigation) && ohos_navigation) {
+    sources += [
+      "libcef/browser/load_committed_details_impl.cc",
+      "libcef/browser/load_committed_details_impl.h",
+    ]
+  }
+  #endif
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
