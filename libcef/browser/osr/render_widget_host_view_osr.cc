@@ -61,6 +61,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
+#include "res_sched_client_adapter.h"
 #include "services/device/public/mojom/screen_orientation.mojom.h"
 
 // static
@@ -1492,6 +1493,14 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
   SetFrameRate();
 
   const bool resized = ResizeRootLayer();
+#if BUILDFLAG(IS_OHOS)
+  if (resized) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportScene(
+        OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER,
+        OHOS::NWeb::ResSchedSceneAdapter::RESIZE);
+  }
+#endif
+
 #if defined(OHOS_COMPOSITE_RENDER)
   if (resized && should_wait_) {
     if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
