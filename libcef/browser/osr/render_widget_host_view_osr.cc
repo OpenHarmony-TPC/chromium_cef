@@ -1633,6 +1633,13 @@ void CefRenderWidgetHostViewOSR::SendExternalBeginFrame() {
 void CefRenderWidgetHostViewOSR::SendKeyEvent(
     const content::NativeWebKeyboardEvent& event) {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendKeyEvent");
+#if BUILDFLAG(IS_OHOS)
+  if (event.GetType() == blink::WebInputEvent::Type::kRawKeyDown) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportScene(
+        OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER,
+        OHOS::NWeb::ResSchedSceneAdapter::CLICK);
+  }
+#endif
   content::RenderWidgetHostImpl* target_host = render_widget_host_;
 #ifndef OHOS_CLIPBOARD
   if (selection_controller_client_) {
