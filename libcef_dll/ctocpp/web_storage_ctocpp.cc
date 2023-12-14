@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ca24f07957260c29ea338c3e3b8ae9aac656eb70$
+// $hash=4fee9cda8c46061cdba99dd8f66380547eead6e3$
 //
 
 #include "libcef_dll/ctocpp/web_storage_ctocpp.h"
@@ -30,6 +30,21 @@ CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalManager(
 
   // Execute
   cef_web_storage_t* _retval = cef_web_storage_get_global_manager(
+      CefCompletionCallbackCppToC::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefWebStorageCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalIncognitoManager(
+    CefRefPtr<CefCompletionCallback> callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  cef_web_storage_t* _retval = cef_web_storage_get_global_incognito_manager(
       CefCompletionCallbackCppToC::Wrap(callback));
 
   // Return type: refptr_same

@@ -82,6 +82,12 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
     return user_blocking_task_runner_;
   }
 
+#if defined(OHOS_INCOGNITO_MODE)
+CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const {
+    return global_otr_request_context_;
+  }
+#endif
+
  private:
 #if BUILDFLAG(IS_WIN)
   void PlatformInitialize();
@@ -124,6 +130,10 @@ class AlloyBrowserMainParts : public content::BrowserMainParts {
   std::unique_ptr<
       network::NetworkQualityTracker::RTTAndThroughputEstimatesObserver>
       network_quality_observer_;
+#endif
+
+#if defined(OHOS_INCOGNITO_MODE)
+  CefRefPtr<CefRequestContextImpl> global_otr_request_context_;
 #endif
 };
 

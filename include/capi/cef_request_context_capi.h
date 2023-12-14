@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=d251422f724234bec6051a4e290304d788d837f6$
+// $hash=bb4eae137c01490b028a832237dab4db435b3d5e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
@@ -334,6 +334,12 @@ typedef struct _cef_request_context_t {
 /// Returns the global context object.
 ///
 CEF_EXPORT cef_request_context_t* cef_request_context_get_global_context(void);
+
+///
+/// Returns the global off-the-record context object.
+///
+CEF_EXPORT cef_request_context_t* cef_request_context_get_global_otrcontext(
+    void);
 
 ///
 /// Creates a new context object with the specified |settings| and optional

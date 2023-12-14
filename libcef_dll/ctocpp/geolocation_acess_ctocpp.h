@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d405020431caf6f891ba21f967b35cc9d08da93a$
+// $hash=55dba640c3e02667053652c612e6e3c1c56aeed8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_GEOLOCATION_ACESS_CTOCPP_H_
@@ -37,8 +37,8 @@ class CefGeolocationAcessCToCpp
   // CefGeolocationAcess methods.
   bool ContainOrigin(const CefString& origin) override;
   bool IsOriginAccessEnabled(const CefString& origin) override;
-  void Enabled(const CefString& origin) override;
-  void Disabled(const CefString& origin) override;
+  void Enabled(const CefString& origin, bool incognito) override;
+  void Disabled(const CefString& origin, bool incognito) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_GEOLOCATION_ACESS_CTOCPP_H_

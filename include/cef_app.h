@@ -211,6 +211,11 @@ class CefApp : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() {
     return nullptr;
   }
+
+#if defined(OHOS_INCOGNITO_MODE)
+  virtual bool IsIncognitoMode() { return false; }
+#endif
+//#if BUILDFLAG(IS_OHOS) TODO: why
 };
 
 #endif  // CEF_INCLUDE_CEF_APP_H_

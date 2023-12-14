@@ -102,6 +102,13 @@ class CefWebStorage : public virtual CefBaseRefCounted {
       CefRefPtr<CefCompletionCallback> callback);
 
   ///
+  /// Returns the global web storage in incognito mode.
+  ///
+  /*--cef(optional_param=callback)--*/
+  static CefRefPtr<CefWebStorage> GetGlobalIncognitoManager(
+      CefRefPtr<CefCompletionCallback> callback);
+
+  ///
   /// Clears all storage currently being used by the JavaScript storage APIs.
   ///
   /*--cef()--*/

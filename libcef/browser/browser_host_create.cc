@@ -78,7 +78,15 @@ bool CefBrowserHost::CreateBrowser(
   }
 
   if (!request_context) {
+#if defined(OHOS_INCOGNITO_MODE)
+    if (settings.incognito_mode) {
+      request_context = CefRequestContext::GetGlobalOTRContext();
+    } else {
+      request_context = CefRequestContext::GetGlobalContext();
+    }
+#else
     request_context = CefRequestContext::GetGlobalContext();
+#endif
   }
 
   auto helper = std::make_unique<CreateBrowserHelper>(
@@ -124,7 +132,15 @@ CefRefPtr<CefBrowser> CefBrowserHost::CreateBrowserSync(
   }
 
   if (!request_context) {
+#if defined(OHOS_INCOGNITO_MODE)
+    if (settings.incognito_mode) {
+      request_context = CefRequestContext::GetGlobalOTRContext();
+    } else {
+      request_context = CefRequestContext::GetGlobalContext();
+    }
+#else
     request_context = CefRequestContext::GetGlobalContext();
+#endif
   }
 
   // Verify that the browser context is valid.

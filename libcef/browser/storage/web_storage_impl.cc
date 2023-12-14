@@ -617,6 +617,16 @@ CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalManager(
   return context ? context->GetWebStorage(callback) : nullptr;
 }
 
+#if defined(OHOS_INCOGNITO_MODE)
+// static
+CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalIncognitoManager(
+    CefRefPtr<CefCompletionCallback> callback) {
+  LOG(INFO) << "CefWebStorage::GetGlobalIncognitoManager.";
+  CefRefPtr<CefRequestContext> context = CefRequestContext::GetGlobalOTRContext();
+  return context ? context->GetWebStorage(callback) : nullptr;
+}
+#endif
+
 void CefWebStorageImpl::GetPassword(
     const CefString& url,
     const CefString& username,

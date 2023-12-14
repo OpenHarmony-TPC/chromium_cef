@@ -54,6 +54,14 @@ class CefAppManager {
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) = 0;
 
+#if defined(OHOS_INCOGNITO_MODE)
+  virtual CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() = 0;
+
+  virtual CefBrowserContext* CreateNewIncognitoBrowserContext(
+      const CefRequestContextSettings& settings,
+      base::OnceClosure initialized_cb) = 0;
+#endif
+
 #if BUILDFLAG(IS_WIN)
   // Returns the module name (usually libcef.dll).
   const wchar_t* GetResourceDllName();

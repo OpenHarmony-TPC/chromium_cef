@@ -1,13 +1,13 @@
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
+// Copyright (c) 2023 Huawei Device Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_
-#define CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_
+#ifndef CEF_LIBCEF_BROWSER_ALLOY_ALLOY_OFF_THE_RECORD_BROWSER_CONTEXT_H_
+#define CEF_LIBCEF_BROWSER_ALLOY_ALLOY_OFF_THE_RECORD_BROWSER_CONTEXT_H_
 #pragma once
 
 #include "include/cef_request_context_handler.h"
-#include "libcef/browser/alloy/chrome_profile_alloy.h"
+#include "libcef/browser/alloy/chrome_off_the_record_profile_alloy.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/request_context_handler_map.h"
 
@@ -36,14 +36,16 @@ class VisitedLinkWriter;
 // unless otherwise indicated. ChromeProfileAlloy must be the first listed base
 // class to avoid issues when casting between void* and content::BrowserContext*
 // in Chromium code.
-class AlloyBrowserContext : public ChromeProfileAlloy,
-                            public CefBrowserContext,
-                            public visitedlink::VisitedLinkDelegate {
+class AlloyOffTheRecordBrowserContext : public ChromeOffTheRecordProfileAlloy,
+                                        public CefBrowserContext,
+                                        public visitedlink::VisitedLinkDelegate {
  public:
-  explicit AlloyBrowserContext(const CefRequestContextSettings& settings);
+  AlloyOffTheRecordBrowserContext(
+      CefBrowserContext* origin_browser_context,
+      const CefRequestContextSettings& settings);
 
-  AlloyBrowserContext(const AlloyBrowserContext&) = delete;
-  AlloyBrowserContext& operator=(const AlloyBrowserContext&) = delete;
+  AlloyOffTheRecordBrowserContext(const AlloyOffTheRecordBrowserContext&) = delete;
+  AlloyOffTheRecordBrowserContext& operator=(const AlloyOffTheRecordBrowserContext&) = delete;
 
   // CefBrowserContext overrides.
   content::BrowserContext* AsBrowserContext() override { return this; }
@@ -106,10 +108,10 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
   // Values checked in ProfileNetworkContextService::CreateNetworkContextParams
   // when creating the NetworkContext.
   bool ShouldRestoreOldSessionCookies() override {
-    return ShouldPersistSessionCookies();
+    return false;
   }
   bool ShouldPersistSessionCookies() const override {
-    return !!settings_.persist_session_cookies;
+    return false;
   }
 
   // visitedlink::VisitedLinkDelegate methods.
@@ -122,11 +124,7 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
 
   // Called from AlloyBrowserHostImpl::DidFinishNavigation to update the table
   // of visited links.
-#if defined(OHOS_INCOGNITO_MODE)
   void AddVisitedURLs(const std::vector<GURL>& urls) override;
-#else
-  void AddVisitedURLs(const std::vector<GURL>& urls);
-#endif
 
   // Called from DownloadPrefs::FromBrowserContext.
   DownloadPrefs* GetDownloadPrefs();
@@ -135,7 +133,7 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
   ExtensionSpecialStoragePolicy* GetExtensionSpecialStoragePolicy() override;
 #endif
  private:
-  ~AlloyBrowserContext() override;
+  ~AlloyOffTheRecordBrowserContext() override;
 
   std::unique_ptr<PrefService> pref_service_;
   std::unique_ptr<PrefProxyConfigTracker> pref_proxy_config_tracker_;
@@ -172,4 +170,4 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
 #endif
 };
 
-#endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_CONTEXT_H_
+#endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_OFF_THE_RECORD_BROWSER_CONTEXT_H_

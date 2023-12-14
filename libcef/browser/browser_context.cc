@@ -205,8 +205,10 @@ CefBrowserContext::~CefBrowserContext() {
 }
 
 void CefBrowserContext::Initialize() {
-#if BUILDFLAG(IS_OHOS)
-  base::PathService::Get(base::DIR_CACHE, &cache_path_);
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_INCOGNITO_MODE)
+  if (!settings_.incognito_mode) {
+    base::PathService::Get(base::DIR_CACHE, &cache_path_);
+  }
 #else
   cache_path_ = base::FilePath(CefString(&settings_.cache_path));
 #endif

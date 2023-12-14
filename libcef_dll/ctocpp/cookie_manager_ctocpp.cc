@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ba753b1b2191bdc2a16fd6e6e71f1d7efbb04948$
+// $hash=18c9ce1faacf51fab3228ec61d331f0c2518cdb3$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -30,6 +30,22 @@ CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalManager(
   // Execute
   cef_cookie_manager_t* _retval = cef_cookie_manager_get_global_manager(
       CefCompletionCallbackCppToC::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefCookieManagerCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalIncognitoManager(
+    CefRefPtr<CefCompletionCallback> callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  cef_cookie_manager_t* _retval =
+      cef_cookie_manager_get_global_incognito_manager(
+          CefCompletionCallbackCppToC::Wrap(callback));
 
   // Return type: refptr_same
   return CefCookieManagerCToCpp::Wrap(_retval);

@@ -175,6 +175,10 @@ class CefBrowserContext {
   // Returns true if this context supports print preview.
   virtual bool IsPrintPreviewSupported() const;
 
+#if defined(OHOS_INCOGNITO_MODE)
+  virtual void AddVisitedURLs(const std::vector<GURL>& urls) {}
+#endif
+
   network::mojom::NetworkContext* GetNetworkContext();
 
   CefMediaRouterManager* GetMediaRouterManager();

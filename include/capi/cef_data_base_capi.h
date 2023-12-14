@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=25879233fc0078653b03d67b10c44f4a6b41ac1a$
+// $hash=63a36591bd2b0491cfc3b3c50c1f6604cb012c0c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DATA_BASE_CAPI_H_
@@ -135,6 +135,11 @@ typedef struct _cef_data_base_t {
 /// Returns the global data base instance.
 ///
 CEF_EXPORT cef_data_base_t* cef_data_base_get_global(void);
+
+///
+/// Returns the global data base instance in incognito mode.
+///
+CEF_EXPORT cef_data_base_t* cef_data_base_get_global_incognito(void);
 
 #ifdef __cplusplus
 }

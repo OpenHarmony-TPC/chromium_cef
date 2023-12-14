@@ -194,12 +194,12 @@ class CefGeolocationAcess : public virtual CefBaseRefCounted {
   /// Set the geolocation permission state to true  for the specified origin.
   ///
   /*--cef()--*/
-  virtual void Enabled(const CefString& origin) = 0;
+  virtual void Enabled(const CefString& origin, bool incognito) = 0;
   ///
   /// Set the geolocation permission state to false  for the specified origin.
   ///
   /*--cef()--*/
-  virtual void Disabled(const CefString& origin) = 0;
+  virtual void Disabled(const CefString& origin, bool incognito) = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_PERMISSION_REQUEST_H_

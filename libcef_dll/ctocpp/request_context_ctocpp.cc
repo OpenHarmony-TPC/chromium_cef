@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b9bd7add82289be6820acdeead532c99f9b062e0$
+// $hash=8c901acdc01d70b467ece13690ad9f16aaf51428$
 //
 
 #include "libcef_dll/ctocpp/request_context_ctocpp.h"
@@ -35,6 +35,17 @@ CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalContext() {
 
   // Execute
   cef_request_context_t* _retval = cef_request_context_get_global_context();
+
+  // Return type: refptr_same
+  return CefRequestContextCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalOTRContext() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_request_context_t* _retval = cef_request_context_get_global_otrcontext();
 
   // Return type: refptr_same
   return CefRequestContextCToCpp::Wrap(_retval);

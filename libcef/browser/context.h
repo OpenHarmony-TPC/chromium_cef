@@ -87,6 +87,11 @@ class CefContext {
   void RemoveObserver(Observer* observer);
   bool HasObserver(Observer* observer) const;
 
+#if defined(OHOS_INCOGNITO_MODE)
+  void PopulateGlobalOTRRequestContextSettings(
+      CefRequestContextSettings* settings);
+#endif
+
  private:
   void OnContextInitialized();
 

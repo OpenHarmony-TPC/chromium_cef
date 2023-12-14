@@ -54,6 +54,12 @@ class CefDataBase : public virtual CefBaseRefCounted {
   static CefRefPtr<CefDataBase> GetGlobalDataBase();
 
   ///
+  /// Returns the global data base instance in incognito mode.
+  ///
+  /*--cef()--*/
+  static CefRefPtr<CefDataBase> GetGlobalIncognitoDataBase();
+
+  ///
   /// clear all http auth data
   ///
   /*--cef()--*/

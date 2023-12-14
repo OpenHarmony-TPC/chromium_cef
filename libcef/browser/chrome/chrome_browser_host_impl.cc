@@ -391,7 +391,11 @@ Browser* ChromeBrowserHostImpl::CreateBrowser(
   // Get or create the request context and profile.
   CefRefPtr<CefRequestContextImpl> request_context_impl =
       CefRequestContextImpl::GetOrCreateForRequestContext(
-          params.request_context);
+          params.request_context
+#if defined(OHOS_INCOGNITO_MODE)
+          , params.settings.incognito_mode
+#endif
+  );
   CHECK(request_context_impl);
   auto cef_browser_context = request_context_impl->GetBrowserContext();
   CHECK(cef_browser_context);

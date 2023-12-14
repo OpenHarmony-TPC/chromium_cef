@@ -67,6 +67,17 @@ class CefCookieManager : public virtual CefBaseRefCounted {
       CefRefPtr<CefCompletionCallback> callback);
 
   ///
+  /// Returns the global cookie manager in incognito mode. By default data
+  /// will be stored  in memory otherwise. If |callback|
+  /// is non-NULL it will be executed asnychronously on the UI thread after the
+  /// manager's storage has been initialized. Using this method is equivalent to
+  /// calling CefRequestContext::GetGlobalOTRContext()->GetDefaultCookieManager().
+  ///
+  /*--cef(optional_param=callback)--*/
+  static CefRefPtr<CefCookieManager> GetGlobalIncognitoManager(
+      CefRefPtr<CefCompletionCallback> callback);
+
+  ///
   /// Visit all cookies on the UI thread. The returned cookies are ordered by
   /// longest path, then by earliest creation date. Returns false if cookies
   /// cannot be accessed.

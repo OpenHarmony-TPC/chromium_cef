@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=24b0ab8e70461dfecb6d1e27ccc7dbed7b770818$
+// $hash=ce26ea708949e6402f02012a93dbe6159bd67415$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -126,7 +126,6 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void DragSourceSystemDragEnded() override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
@@ -134,6 +133,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool IsBackgroundHost() override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void ExecuteJavaScript(const CefString& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;

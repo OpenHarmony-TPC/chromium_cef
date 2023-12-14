@@ -381,6 +381,10 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   scoped_refptr<base::SingleThreadTaskRunner> user_visible_task_runner() const;
   scoped_refptr<base::SingleThreadTaskRunner> user_blocking_task_runner() const;
 
+#if defined(OHOS_INCOGNITO_MODE)
+CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
+#endif
+
  private:
   // Returns the extension or app associated with |site_instance| or NULL.
   const extensions::Extension* GetExtension(

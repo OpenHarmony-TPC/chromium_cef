@@ -268,6 +268,10 @@ using extensions::Manifest;
 using extensions::mojom::APIPermissionID;
 #endif
 
+#if defined(OHOS_INCOGNITO_MODE)
+#include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
+#endif
+
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -2624,24 +2628,25 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
         cert_verifier_creation_params) {
   // This method may be called during shutdown when using multi-threaded
   // message loop mode. In that case exit early to avoid crashes.
-#if BUILDFLAG(IS_OHOS)
-  AlloyBrowserContext* cef_context = static_cast<AlloyBrowserContext*>(
-      CefBrowserContext::FromBrowserContext(context));
-
-  base::FilePath cache_path;
-  if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
-    network_context_params->file_paths =
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_INCOGNITO_MODE)
+  auto cef_context =
+      CefBrowserContext::FromBrowserContext(context);
+  network_context_params->file_paths =
         ::network::mojom::NetworkContextFilePaths::New();
+  base::FilePath cache_path;
+  if (context->IsOffTheRecord() || context->GetPath().empty()) {
+    network_context_params->http_cache_enabled = false;
+  } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
     network_context_params->file_paths->data_directory = cache_path;
     network_context_params->file_paths->cookie_database_name =
         base::FilePath("cookie.db");
-    network_context_params->persist_session_cookies =
-        cef_context->ShouldPersistSessionCookies();
-    network_context_params->restore_old_session_cookies =
-        cef_context->ShouldRestoreOldSessionCookies();
     network_context_params->http_cache_enabled = true;
     network_context_params->http_cache_directory = cache_path;
   }
+  network_context_params->persist_session_cookies =
+      cef_context->AsProfile()->ShouldPersistSessionCookies();
+  network_context_params->restore_old_session_cookies =
+      cef_context->AsProfile()->ShouldRestoreOldSessionCookies();
 #endif
 
   if (!SystemNetworkContextManager::GetInstance()) {
@@ -2686,14 +2691,22 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   network_context_params->initial_ssl_config = network::mojom::SSLConfig::New();
 #endif
 
-#if defined(OHOS_COOKIE)
+#if defined(OHOS_COOKIE) && defined(OHOS_INCOGNITO_MODE)
   mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote;
   network_context_params->cookie_manager =
       cookie_manager_remote.InitWithNewPipeAndPassReceiver();
-  CefRefPtr<CefCookieManager> cookie_manager = CefCookieManager::GetGlobalManager(nullptr);
+  CefRefPtr<CefCookieManager> cookie_manager =
+      context->IsOffTheRecord() ?
+          CefCookieManager::GetGlobalIncognitoManager(nullptr) :
+          CefCookieManager::GetGlobalManager(nullptr);
   if (cookie_manager) {
-    reinterpret_cast<CefCookieManagerImpl *>(cookie_manager.get())
-        ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
+    if (context->IsOffTheRecord()) {
+      reinterpret_cast<CefIncognitoCookieManagerImpl*>(cookie_manager.get())
+          ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
+    } else {
+      reinterpret_cast<CefCookieManagerImpl*>(cookie_manager.get())
+          ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
+    }
   }
 #endif  // defined(OHOS_COOKIE)
 
@@ -2943,6 +2956,13 @@ CefRefPtr<CefRequestContextImpl> AlloyContentBrowserClient::request_context()
     const {
   return browser_main_parts_->request_context();
 }
+
+#if defined(OHOS_INCOGNITO_MODE)
+CefRefPtr<CefRequestContextImpl>
+AlloyContentBrowserClient::off_the_record_request_context() const {
+  return browser_main_parts_->off_the_record_request_context();
+}
+#endif
 
 CefDevToolsDelegate* AlloyContentBrowserClient::devtools_delegate() const {
   return browser_main_parts_->devtools_delegate();

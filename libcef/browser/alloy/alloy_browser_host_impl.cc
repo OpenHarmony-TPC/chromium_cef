@@ -88,6 +88,10 @@
 #include "ohos_nweb/src/nweb_inputmethod_handler.h"
 #endif
 
+#if defined(OHOS_INCOGNITO_MODE)
+#include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -1664,12 +1668,22 @@ void AlloyBrowserHostImpl::ShowRepostFormWarningDialog(
 void AlloyBrowserHostImpl::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   if (web_contents()) {
+
+#if defined(OHOS_INCOGNITO_MODE)
+    auto cef_browser_context = CefBrowserContext::FromBrowserContext(
+        web_contents()->GetBrowserContext());
+    if (cef_browser_context) {
+      cef_browser_context->AddVisitedURLs(
+          navigation_handle->GetRedirectChain());
+    }
+#else
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
       cef_browser_context->AddVisitedURLs(
           navigation_handle->GetRedirectChain());
     }
+#endif
   }
 }
 
@@ -1829,11 +1843,19 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
     urlList.push_back(url_util::MakeGURL(url, /*fixup=*/false));
   }
   if (web_contents()) {
+#if defined(OHOS_INCOGNITO_MODE)
+    auto cef_browser_context = CefBrowserContext::FromBrowserContext(
+        web_contents()->GetBrowserContext());
+    if (cef_browser_context) {
+      cef_browser_context->AddVisitedURLs(urlList);
+    }
+#else
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
       cef_browser_context->AddVisitedURLs(urlList);
     }
+#endif
   }
 }
 #endif
