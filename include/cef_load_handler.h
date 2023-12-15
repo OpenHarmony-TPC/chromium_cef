@@ -44,6 +44,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "include/cef_callback.h"
+#include "include/cef_load_committed_details.h"
 #include "include/cef_response.h"
 #endif
 
@@ -170,6 +171,13 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnFirstContentfulPaint(int64_t navigationStartTick,
                                       int64_t firstContentfulPaintMs) {}
+
+  ///
+  /// Called when the navigation entry has been committed.
+  ///
+  /*--cef()--*/
+  virtual void OnNavigationEntryCommitted(
+      CefRefPtr<CefLoadCommittedDetails> details) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

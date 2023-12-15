@@ -279,6 +279,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetImageFromCache(const CefString& url) override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
   void ExitFullScreen() override;
+  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
 #ifdef OHOS_I18N
   void UpdateLocale(const CefString& locale) override;
 #endif  // OHOS_I18N
@@ -287,8 +288,6 @@ class CefBrowserHostBase : public CefBrowserHost,
   void PutNetworkAvailable(bool available) override;
 #endif
   void RemoveCache(bool include_disk_files) override;
-
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
   void SetVirtualKeyBoardArg(int32_t width,
                              int32_t height,
                              double keyboard) override;

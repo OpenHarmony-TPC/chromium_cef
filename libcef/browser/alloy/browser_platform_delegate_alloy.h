@@ -52,11 +52,15 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
                              const blink::WebGestureEvent& event) override;
   bool IsNeverComposited(content::WebContents* web_contents) override;
   void SetAutoResizeEnabled(bool enabled,
-                            const CefSize& min_size,
-                            const CefSize& max_size) override;
+                            const CefSize &min_size,
+                            const CefSize &max_size) override;
   void SetAccessibilityState(cef_state_t accessibility_state) override;
+#if BUILDFLAG(IS_OHOS)
+  content::BrowserAccessibilityManager*
+  GetOrCreateRootBrowserAccessibilityManager() override;
+#endif
   bool IsPrintPreviewSupported() const override;
-  void Find(const CefString& searchText,
+  void Find(const CefString &searchText,
             bool forward,
             bool matchCase,
             bool findNext
