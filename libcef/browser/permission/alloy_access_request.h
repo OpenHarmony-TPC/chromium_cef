@@ -30,6 +30,7 @@ class AlloyAccessRequest : public CefAccessRequest {
     AUDIO_CAPTURE = 1 << 2,
     PROTECTED_MEDIA_ID = 1 << 3,
     MIDI_SYSEX = 1 << 4,
+    CLIPBOARD_READ_WRITE = 1 << 5,
   };
 
   AlloyAccessRequest(const CefString& origin,

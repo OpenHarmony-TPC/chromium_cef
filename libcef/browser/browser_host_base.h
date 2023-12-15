@@ -335,8 +335,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
-
-  int GetSecurityLevel() override;
+  
 #if BUILDFLAG(IS_OHOS)
   int GetSecurityLevel() override;
   void DeleteHistory() override;
@@ -569,6 +568,9 @@ class CefBrowserHostBase : public CefBrowserHost,
                               cef_permission_callback_t callback) override;
   void AbortAskMIDISysexPermission(const CefString& origin) override;
 
+  void AskClipboardReadWritePermission(const CefString& origin,
+                              cef_permission_callback_t callback) override;
+  void AbortAskClipboardReadWritePermission(const CefString& origin) override;
   // Geolocation API support
   void PopupGeolocationPrompt(std::string origin,
                               cef_permission_callback_t callback);
