@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f843f08f9879ff1659c98675ef9625c07bb2ef71$
+// $hash=f912dd3fd7e5d22d1e418da5159aae541a147d7d$
 //
 
 #include "libcef_dll/cpptoc/browser_permission_request_delegate_cpptoc.h"
@@ -160,6 +160,53 @@ browser_permission_request_delegate_abort_ask_midisysex_permission(
 }
 
 void CEF_CALLBACK
+browser_permission_request_delegate_ask_clipboard_read_write_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskClipboardReadWritePermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_clipboard_read_write_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskClipboardReadWritePermission(CefString(origin));
+}
+
+void CEF_CALLBACK
 browser_permission_request_delegate_notify_geolocation_permission(
     struct _cef_browser_permission_request_delegate_t* self,
     int value,
@@ -201,6 +248,10 @@ CefBrowserPermissionRequestDelegateCppToC::
       browser_permission_request_delegate_ask_midisysex_permission;
   GetStruct()->abort_ask_midisysex_permission =
       browser_permission_request_delegate_abort_ask_midisysex_permission;
+  GetStruct()->ask_clipboard_read_write_permission =
+      browser_permission_request_delegate_ask_clipboard_read_write_permission;
+  GetStruct()->abort_ask_clipboard_read_write_permission =
+      browser_permission_request_delegate_abort_ask_clipboard_read_write_permission;
   GetStruct()->notify_geolocation_permission =
       browser_permission_request_delegate_notify_geolocation_permission;
 }

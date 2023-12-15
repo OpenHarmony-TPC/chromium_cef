@@ -1723,6 +1723,18 @@ void CefBrowserHostBase::AbortAskMIDISysexPermission(const CefString& origin) {
   permission_request_handler_->CancelRequest(
       origin, AlloyAccessRequest::Resources::MIDI_SYSEX);
 }
+
+void CefBrowserHostBase::AskClipboardReadWritePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  permission_request_handler_->SendRequest(new AlloyAccessRequest(
+      origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE, std::move(callback)));
+}
+
+void CefBrowserHostBase::AbortAskClipboardReadWritePermission(const CefString& origin) {
+  permission_request_handler_->CancelRequest(
+      origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE);
+}
 #endif
 
 CefRefPtr<CefFrame> CefBrowserHostBase::GetFrameForHost(
