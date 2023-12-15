@@ -125,6 +125,8 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool GetForceEnableZoom() override { return false; }
   // #endif
 #endif
+
+  int GetSecurityLevel() override{ return 0; };
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;
