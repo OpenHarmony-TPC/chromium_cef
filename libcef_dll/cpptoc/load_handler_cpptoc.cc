@@ -9,13 +9,14 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=04cd73a2e3f420c8554a8eda3ec6a04849254baa$
+// $hash=82acc13b1a3c86b905a8ad18830a1a98193bdcb3$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/callback_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
+#include "libcef_dll/ctocpp/load_committed_details_ctocpp.h"
 #include "libcef_dll/ctocpp/request_ctocpp.h"
 #include "libcef_dll/ctocpp/response_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -316,6 +317,28 @@ load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
       navigationStartTick, firstContentfulPaintMs);
 }
 
+void CEF_CALLBACK load_handler_on_navigation_entry_committed(
+    struct _cef_load_handler_t* self,
+    cef_load_committed_details_t* details) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: details; type: refptr_diff
+  DCHECK(details);
+  if (!details) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnNavigationEntryCommitted(
+      CefLoadCommittedDetailsCToCpp::Wrap(details));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -334,6 +357,8 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
   GetStruct()->on_data_resubmission = load_handler_on_data_resubmission;
   GetStruct()->on_first_contentful_paint =
       load_handler_on_first_contentful_paint;
+  GetStruct()->on_navigation_entry_committed =
+      load_handler_on_navigation_entry_committed;
 }
 
 // DESTRUCTOR - Do not edit by hand.

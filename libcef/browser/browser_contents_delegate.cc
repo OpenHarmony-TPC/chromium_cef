@@ -40,6 +40,11 @@
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
+#if defined(OHOS_NAVIGATION)
+#include "content/public/browser/navigation_details.h"
+#include "libcef/browser/load_committed_details_impl.h"
+#endif  // defined(OHOS_NAVIGATION)
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -90,6 +95,38 @@ void MaybeSetUserAgentOverrideForMainFrame(
       blink::UserAgentOverride::UserAgentOnly(final_ua), true);
 }
 #endif  // OHOS_EX_UA
+
+#if defined(OHOS_NAVIGATION)
+CefLoadCommittedDetails::NavigationType ConvertToCefLoadCommittedDetailsType(
+    const content::LoadCommittedDetails& details) {
+  CefLoadCommittedDetails::NavigationType type;
+  switch(details.type) {
+    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_UNKNOWN:
+      type = CefLoadCommittedDetails::NavigationType::NAVIGATION_TYPE_UNKNOWN;
+      break;
+    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_MAIN_FRAME_NEW_ENTRY:
+      type = CefLoadCommittedDetails::NavigationType::
+          NAVIGATION_TYPE_MAIN_FRAME_NEW_ENTRY;
+      break;
+    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY:
+      type = CefLoadCommittedDetails::NavigationType::
+          NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY;
+      break;
+    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_NEW_SUBFRAME:
+      type = CefLoadCommittedDetails::NavigationType::
+          NAVIGATION_TYPE_NEW_SUBFRAME;
+      break;
+    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_AUTO_SUBFRAME:
+      type = CefLoadCommittedDetails::NavigationType::
+          NAVIGATION_TYPE_AUTO_SUBFRAME;
+      break;
+    default:
+      type = CefLoadCommittedDetails::NavigationType::NAVIGATION_TYPE_UNKNOWN;
+      break;
+  }
+  return type;
+}
+#endif  // defined(OHOS_NAVIGATION)
 
 class CefWidgetHostInterceptor
     : public blink::mojom::WidgetHostInterceptorForTesting,
@@ -697,6 +734,29 @@ void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
   }
 }
 #endif  // defined(OHOS_FAVICON)
+
+#if defined(OHOS_NAVIGATION)
+void CefBrowserContentsDelegate::NavigationEntryCommitted(
+    const content::LoadCommittedDetails& load_details) {
+  if (!browser_info_) {
+    return;
+  }
+
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      CefLoadCommittedDetails::NavigationType type =
+          ConvertToCefLoadCommittedDetailsType(load_details);
+      CefRefPtr<CefLoadCommittedDetails> details =
+          new CefLoadCommittedDetailsImpl(
+              load_details.current_commit_entry_url.spec(), type,
+              load_details.is_main_frame, load_details.is_same_document,
+              load_details.did_replace_entry);
+      handler->OnNavigationEntryCommitted(details);
+    }
+  }
+}
+#endif  // defined(OHOS_NAVIGATION)
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {

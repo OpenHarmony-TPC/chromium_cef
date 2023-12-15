@@ -166,6 +166,11 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void DocumentOnLoadCompletedInPrimaryMainFrame() override;
 #endif  // defined(OHOS_FAVICON)
 
+#if defined(OHOS_NAVIGATION)
+  void NavigationEntryCommitted(
+      const content::LoadCommittedDetails& load_details) override;
+#endif  // defined(OHOS_NAVIGATION)
+
   // NotificationObserver methods.
   void Observe(int type,
                const content::NotificationSource& source,

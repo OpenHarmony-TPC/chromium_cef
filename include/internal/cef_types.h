@@ -4060,6 +4060,16 @@ typedef enum {
   AUDIO,
 } cef_media_type_t;
 
+///
+// Navigation entry types.
+///
+typedef enum {
+  NAVIGATION_TYPE_UNKNOWN = 0,
+  NAVIGATION_TYPE_MAIN_FRAME_NEW_ENTRY = 1,
+  NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY = 2,
+  NAVIGATION_TYPE_NEW_SUBFRAME = 4,
+  NAVIGATION_TYPE_AUTO_SUBFRAME = 5,
+} cef_navigation_entry_type_t;
 #endif  // BUILDFLAG(IS_OHOS)
 
 #ifdef __cplusplus
