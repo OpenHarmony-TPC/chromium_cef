@@ -403,6 +403,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
 
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
+
+  ///
+  /// Get security level for current page.
+  ///
+  /*--cef()--*/
+  virtual int GetSecurityLevel() = 0;
 };
 
 ///

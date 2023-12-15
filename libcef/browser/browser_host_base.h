@@ -336,6 +336,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
 
+  int GetSecurityLevel() override;
 #if BUILDFLAG(IS_OHOS)
   int GetSecurityLevel() override;
   void DeleteHistory() override;
