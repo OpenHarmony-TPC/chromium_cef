@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a2e7c9e77ee45cef4da269e9e613fd4fdef5f9ac$
+// $hash=7b02bac8fd24e69b831a73d8022f9c6b16802099$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_
@@ -46,6 +46,10 @@ class CefBrowserPermissionRequestDelegateCToCpp
   void AskMIDISysexPermission(const CefString& origin,
                               cef_permission_callback_t callback) override;
   void AbortAskMIDISysexPermission(const CefString& origin) override;
+  void AskClipboardReadWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
+  void AbortAskClipboardReadWritePermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
                                    const CefString& origin) override;
 };

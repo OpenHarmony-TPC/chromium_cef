@@ -151,6 +151,19 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AbortAskMIDISysexPermission(const CefString& origin) = 0;
+
+  ///
+  /// Handle the Clipboard Read dWrite permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskClipboardReadWritePermission(const CefString& origin,
+                                      cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Clipboard Read Write permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskClipboardReadWritePermission(const CefString& origin) = 0;
+
   ///
   /// The callback for the Geolocation permission requests.
   ///

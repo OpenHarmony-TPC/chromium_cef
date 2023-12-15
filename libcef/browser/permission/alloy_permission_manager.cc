@@ -6,7 +6,8 @@
 
 #include <memory>
 #include <string>
-
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
 #include "base/functional/callback.h"
 #include "base/logging.h"
 #include "components/permissions/permission_util.h"
@@ -23,6 +24,22 @@ using RequestPermissionsCallback =
     base::OnceCallback<void(const std::vector<PermissionStatus>&)>;
 
 namespace {
+constexpr int32_t APPLICATION_API_10 = 40000010;
+
+int32_t GetApplicationApiVersion() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kOhosAppApiVersion)) {
+    LOG(ERROR) << "kOhosAppApiVersion not exist";
+    return -1;
+  }
+  std::string apiVersion =
+      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kOhosAppApiVersion);
+  if (apiVersion.empty()) {
+    return -1;
+  }
+  return std::stoi(apiVersion);
+}
 
 void PermissionRequestResponseCallbackWrapper(
     base::OnceCallback<void(PermissionStatus)> callback,
@@ -219,6 +236,19 @@ void AlloyPermissionManager::RequestPermissionByType(
               &AlloyPermissionManager::OnRequestResponseCallBack,
               weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
       break;
+    case PermissionType::CLIPBOARD_READ_WRITE:
+      if(GetApplicationApiVersion() <= APPLICATION_API_10){
+        LOG(INFO) << "application version <= 10";
+        pending_request_raw->SetPermissionStatus(permission_type,
+                                               PermissionStatus::GRANTED);
+        break;
+      }
+      browser->AskClipboardReadWritePermission(
+        pending_request_raw->requesting_origin_.spec(),
+        base::BindRepeating(
+            &AlloyPermissionManager::OnRequestResponseCallBack,
+            weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      break;
     case PermissionType::AUDIO_CAPTURE:
     case PermissionType::VIDEO_CAPTURE:
     case PermissionType::NOTIFICATIONS:
@@ -245,7 +275,6 @@ void AlloyPermissionManager::RequestPermissionByType(
       pending_request_raw->SetPermissionStatus(permission_type,
                                                PermissionStatus::DENIED);
       break;
-    case PermissionType::CLIPBOARD_READ_WRITE:
     case PermissionType::CLIPBOARD_SANITIZED_WRITE:
     case PermissionType::WAKE_LOCK_SCREEN:
       pending_request_raw->SetPermissionStatus(permission_type,
@@ -460,13 +489,16 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
         browser->AbortAskMIDISysexPermission(requesting_origin.spec());
       }
       break;
+    case PermissionType::CLIPBOARD_READ_WRITE:
+      if (browser)
+        browser->AbortAskClipboardReadWritePermission(requesting_origin.spec());
+      break;
     case PermissionType::NOTIFICATIONS:
     case PermissionType::DURABLE_STORAGE:
     case PermissionType::AUDIO_CAPTURE:
     case PermissionType::VIDEO_CAPTURE:
     case PermissionType::BACKGROUND_SYNC:
     case PermissionType::ACCESSIBILITY_EVENTS:
-    case PermissionType::CLIPBOARD_READ_WRITE:
     case PermissionType::CLIPBOARD_SANITIZED_WRITE:
     case PermissionType::PAYMENT_HANDLER:
     case PermissionType::BACKGROUND_FETCH:
