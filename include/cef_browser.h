@@ -395,6 +395,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetSavePassword(bool enable) = 0;
 
+  ///
+  /// Get security level for current page.
+  ///
+  /*--cef()--*/
+  virtual int GetSecurityLevel() = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
