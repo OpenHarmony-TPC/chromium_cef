@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=db256cd6da60593640bbdd6f5d58fb0b780303e6$
+// $hash=6e3718ff5fa897d8d225bb91d651295b56ca5e31$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
@@ -218,6 +218,21 @@ typedef struct _cef_browser_permission_request_delegate_t {
   /// Cancel the MIDI Sysex permission requests.
   ///
   void(CEF_CALLBACK* abort_ask_midisysex_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
+
+  ///
+  /// Handle the Clipboard Read dWrite permission requests.
+  ///
+  void(CEF_CALLBACK* ask_clipboard_read_write_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
+
+  ///
+  /// Cancel the Clipboard Read Write permission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_clipboard_read_write_permission)(
       struct _cef_browser_permission_request_delegate_t* self,
       const cef_string_t* origin);
 

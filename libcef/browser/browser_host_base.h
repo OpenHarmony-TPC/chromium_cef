@@ -569,6 +569,9 @@ class CefBrowserHostBase : public CefBrowserHost,
                               cef_permission_callback_t callback) override;
   void AbortAskMIDISysexPermission(const CefString& origin) override;
 
+  void AskClipboardReadWritePermission(const CefString& origin,
+                              cef_permission_callback_t callback) override;
+  void AbortAskClipboardReadWritePermission(const CefString& origin) override;
   // Geolocation API support
   void PopupGeolocationPrompt(std::string origin,
                               cef_permission_callback_t callback);

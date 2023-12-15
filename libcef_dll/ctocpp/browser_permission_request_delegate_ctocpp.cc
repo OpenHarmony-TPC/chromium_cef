@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=16301f214f7d0322444a00eda40e0575e1f73728$
+// $hash=ae79e0f4ec733e6005a53fd2b973a4227fcc59cb$
 //
 
 #include "libcef_dll/ctocpp/browser_permission_request_delegate_ctocpp.h"
@@ -153,6 +153,53 @@ void CefBrowserPermissionRequestDelegateCToCpp::AbortAskMIDISysexPermission(
 
   // Execute
   _struct->abort_ask_midisysex_permission(_struct, origin.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AskClipboardReadWritePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_clipboard_read_write_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_clipboard_read_write_permission(_struct, origin.GetStruct(),
+                                               callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::
+    AbortAskClipboardReadWritePermission(const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, abort_ask_clipboard_read_write_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_clipboard_read_write_permission(_struct,
+                                                     origin.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")
