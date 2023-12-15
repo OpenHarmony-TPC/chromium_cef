@@ -48,6 +48,9 @@ class WindowFeatures;
 namespace content {
 struct AXEventNotificationDetails;
 struct AXLocationChangeNotificationDetails;
+#if BUILDFLAG(IS_OHOS)
+class BrowserAccessibilityManager;
+#endif
 struct DropData;
 struct NativeWebKeyboardEvent;
 class RenderViewHost;
@@ -379,6 +382,12 @@ class CefBrowserPlatformDelegate {
                                     const CefSize& min_size,
                                     const CefSize& max_size);
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
+#if BUILDFLAG(IS_OHOS)
+  virtual content::BrowserAccessibilityManager*
+  GetOrCreateRootBrowserAccessibilityManager() {
+    return nullptr;
+  }
+#endif
   virtual bool IsPrintPreviewSupported() const;
   virtual void Find(const CefString& searchText,
                     bool forward,
