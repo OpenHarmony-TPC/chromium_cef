@@ -58,8 +58,10 @@ class OhGinJavascriptBridgeDispatcher
 
   bool HasH5ObjectMethod(v8::Local<v8::Object> object);
 
-  std::vector<std::string> GetH5ObjectMethodNames(v8::Local<v8::Object> object,
-                                                  int h5_object_id);
+  std::vector<std::string> GetH5ObjectMethodNames(
+      v8::Local<v8::Object> object,
+      int h5_object_id,
+      bool is_promise);
 
  private:
   // RenderFrameObserver implementation.

@@ -184,80 +184,72 @@ OhGinJavascriptBridgeDispatcher::AddH5Object(v8::Local<v8::Object>& value) {
   return object_id;
 }
 
-std::vector<std::string>
-OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
+std::vector<std::string> OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
     v8::Local<v8::Object> object,
-    int h5_object_id) {
+    int h5_object_id,
+    bool is_promise) {
   v8::Isolate* isolate = blink::MainThreadIsolate();
   v8::HandleScope handle_scope(isolate);
 
-  if (!render_frame() || !render_frame()->GetWebFrame()) {
-    LOG(ERROR)
-        << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames frame null";
+  if(!render_frame() || !render_frame()->GetWebFrame()) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames frame null";
     return std::vector<std::string>();
   }
 
-  v8::Local<v8::Context> context =
-      render_frame()->GetWebFrame()->MainWorldScriptContext();
+  v8::Local<v8::Context> context = render_frame()->GetWebFrame()->MainWorldScriptContext();
 
-  if (context.IsEmpty()) {
-    LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                  "context empty";
+  if(context.IsEmpty()) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames context empty";
     return std::vector<std::string>();
   }
 
   v8::Context::Scope context_scope(context);
-  v8::Local<v8::Array> keys;
-  v8::Local<v8::Value> key, value;
 
-  if (!object
-           ->GetPropertyNames(context,
-                              v8::KeyCollectionMode::kIncludePrototypes,
-                              v8::PropertyFilter::ALL_PROPERTIES,
-                              v8::IndexFilter::kIncludeIndices)
-           .ToLocal(&keys)) {
+  if (is_promise) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames promise case";
+    H5ObjectMethodsMap_[h5_object_id] = std::vector<std::string>{"then", "catch", "finally"};
+    return H5ObjectMethodsMap_[h5_object_id];
+  }
+
+  v8::Local<v8::String> annotate_string =
+      v8::String::NewFromUtf8(isolate, "methodNameListForJsProxy")
+          .ToLocalChecked();
+  v8::Local<v8::Value> value;
+
+  v8::TryCatch try_catch(isolate);
+  v8::MaybeLocal<v8::Value> maybe_value =
+      object->Get(context, annotate_string);
+  if (try_catch.HasCaught() || !maybe_value.ToLocal(&value)) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames Getter property fail";
     return std::vector<std::string>();
-  }
-  LOG(DEBUG)
-      << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames called";
-  for (uint32_t i = 0; i < keys->Length(); ++i) {
-    if (!keys->Get(context, i).ToLocal(&key)) {
-      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                    "key error";
-      continue;
-    }
+  } else if (value->IsArray()) {
+    v8::Local<v8::Array> keys = value.As<v8::Array>();
+    v8::Local<v8::Value> key;
+    for (uint32_t i = 0; i < keys->Length(); ++i) {
+      if(!keys->Get(context, i).ToLocal(&key)) {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames key error";
+        continue;
+      }
 
-    v8::TryCatch try_catch(isolate);
-    v8::MaybeLocal<v8::Value> maybe_value = object->Get(context, key);
-    if (try_catch.HasCaught() || !maybe_value.ToLocal(&value)) {
-      LOG(WARNING) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                      "Getter property fail";
-      continue;
-    }
+      int len = key.As<v8::String>()->Utf8Length(isolate);
+      if (len == 0) {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames key len error";
+        continue;
+      }
 
-    if (!value->IsFunction()) {
-      continue;
+      char* buf = new char[len];
+      key.As<v8::String>()->WriteUtf8(
+            isolate, buf, len, nullptr,
+            v8::String::REPLACE_INVALID_UTF8);
+      std::string method_name(buf, len);
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames method_name = " << method_name;
+      H5ObjectMethodsMap_[h5_object_id].push_back(method_name);
+      delete[] buf;
     }
-
-    int len = key.As<v8::String>()->Utf8Length(isolate);
-    if (len == 0) {
-      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                    "key len error";
-      continue;
-    }
-
-    char* buf = new char[len];
-    key.As<v8::String>()->WriteUtf8(isolate, buf, len, nullptr,
-                                    v8::String::REPLACE_INVALID_UTF8);
-    std::string method_name(buf, len);
-    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
-                  "method_name = "
-               << method_name;
-    H5ObjectMethodsMap_[h5_object_id].push_back(method_name);
-    delete[] buf;
+    return H5ObjectMethodsMap_[h5_object_id];
   }
 
-  return H5ObjectMethodsMap_[h5_object_id];
+  return std::vector<std::string>();
 }
 
 bool OhGinJavascriptBridgeDispatcher::HasH5ObjectMethod(
@@ -300,6 +292,10 @@ bool OhGinJavascriptBridgeDispatcher::HasH5ObjectMethod(
     }
 
     v8::String::Utf8Value name_utf8(isolate, key);
+    if (std::string(*name_utf8) != "methodNameListForJsProxy") {
+      continue;
+    }
+
     v8::TryCatch try_catch(isolate);
     v8::MaybeLocal<v8::Value> maybe_value = object->Get(context, key);
     if (try_catch.HasCaught() || !maybe_value.ToLocal(&value)) {
@@ -309,7 +305,7 @@ bool OhGinJavascriptBridgeDispatcher::HasH5ObjectMethod(
       continue;
     }
 
-    if (value->IsFunction()) {
+    if (value->IsArray()) {
       LOG(DEBUG)
           << "OhGinJavascriptBridgeDispatcher::HasH5ObjectMethod return true";
       return true;

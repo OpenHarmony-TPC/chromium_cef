@@ -18,6 +18,40 @@
 
 namespace {
 #define JS_BRIDGE_BINARY_ARGS_COUNT 2
+// For the sake of the storage API, make this quite large.
+const size_t MAX_RECURSION_DEPTH = 11;
+const size_t MAX_DATA_LENGTH = 10000;
+
+class ValueConvertState {
+ public:
+  // Level scope which updates the current depth of some ValueConvertState.
+  class Level {
+   public:
+    explicit Level(ValueConvertState* state) : state_(state) {
+      state_->maxRecursionDepth_--;
+    }
+    ~Level() {
+      state_->maxRecursionDepth_++;
+    }
+
+   private:
+    ValueConvertState* state_;
+  };
+
+  explicit ValueConvertState()
+      : maxRecursionDepth_(MAX_RECURSION_DEPTH) {}
+
+  ValueConvertState(const ValueConvertState&) = delete;
+  ValueConvertState& operator=(const ValueConvertState&) = delete;
+
+  bool HasReachedMaxRecursionDepth() {
+    return maxRecursionDepth_ <= 0;
+  }
+
+ private:
+  size_t maxRecursionDepth_;
+};
+
 void StringSplit(std::string str,
                  const char split,
                  std::vector<std::string>& result) {
@@ -439,8 +473,12 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
   return baseValue;
 }
 
-CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
+CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(ValueConvertState* state, base::Value* value) {
   CefRefPtr<CefValue> cefValue = CefValue::Create();
+  ValueConvertState::Level state_level(state);
+  if (state->HasReachedMaxRecursionDepth()) {
+      return cefValue;
+  }
   if (!value) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                   "ParseBaseValueTOCefValueHelper: value is null ";
@@ -478,10 +516,11 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
       LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                     "ParseBaseValueTOCefValueHelper: LIST";
       size_t length = value->GetList().size();
+      length = std::min(length, MAX_DATA_LENGTH);
       auto cefList = CefListValue::Create();
       for (size_t i = 0; i < length; i++) {
         base::Value& child = value->GetList()[i];
-        auto cefVal = ParseBaseValueTOCefValueHelper(&child);
+        auto cefVal = ParseBaseValueTOCefValueHelper(state, &child);
         cefList->SetValue(i, cefVal);
       }
       cefValue->SetList(cefList);
@@ -491,11 +530,16 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
       LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                     "ParseBaseValueTOCefValueHelper: DICTIONARY";
       auto cefDict = CefDictionaryValue::Create();
+      size_t index = 0;
       for (base::Value::Dict::iterator iter = value->GetDict().begin();
            iter != value->GetDict().end(); iter++) {
+        index++;
+        if (index > MAX_DATA_LENGTH) {
+          break;
+        }
         const std::string& key = iter->first;
         auto found = value->GetDict().Find(key);
-        auto cefVal = ParseBaseValueTOCefValueHelper(found);
+        auto cefVal = ParseBaseValueTOCefValueHelper(state, found);
         cefDict->SetValue(CefString(key), cefVal);
       }
       cefValue->SetDictionary(cefDict);
@@ -596,7 +640,8 @@ CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::Value::List* value) {
   }
   for (size_t i = 0; i < value->size(); ++i) {
     base::Value& child = (*value)[i];
-    auto cefVal = ParseBaseValueTOCefValueHelper(&child);
+    ValueConvertState state;
+    auto cefVal = ParseBaseValueTOCefValueHelper(&state, &child);
     cefList->SetValue(i, cefVal);
   }
   return cefList;

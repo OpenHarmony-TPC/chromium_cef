@@ -66,7 +66,7 @@ bool OhGinJavascriptBridgeValueConverter::FromV8Object(
                   "HasH5ObjectMethod true";
     int h5_object_id = dispatcher_->AddH5Object(value);
     std::vector<std::string> names =
-        dispatcher_->GetH5ObjectMethodNames(value, h5_object_id);
+        dispatcher_->GetH5ObjectMethodNames(value, h5_object_id, false);
     std::string str = std::to_string(h5_object_id) + std::string(";");
     for (auto name : names) {
       str += name + std::string(";");
@@ -110,7 +110,7 @@ bool OhGinJavascriptBridgeValueConverter::FromV8Object(
           << "OhGinJavascriptBridgeDispatcher::FromV8Object promise true";
       int h5_object_id = dispatcher_->AddH5Object(value);
       std::vector<std::string> names =
-          dispatcher_->GetH5ObjectMethodNames(value, h5_object_id);
+          dispatcher_->GetH5ObjectMethodNames(value, h5_object_id, true);
       std::string str = std::to_string(h5_object_id) + std::string(";");
       for (auto name : names) {
         str += name + std::string(";");
@@ -121,7 +121,7 @@ bool OhGinJavascriptBridgeValueConverter::FromV8Object(
                     "HasH5ObjectMethod true";
       int h5_object_id = dispatcher_->AddH5Object(value);
       std::vector<std::string> names =
-          dispatcher_->GetH5ObjectMethodNames(value, h5_object_id);
+          dispatcher_->GetH5ObjectMethodNames(value, h5_object_id, false);
       std::string str = std::to_string(h5_object_id) + std::string(";");
       for (auto name : names) {
         str += name + std::string(";");
