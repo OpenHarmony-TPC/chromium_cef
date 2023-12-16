@@ -42,6 +42,8 @@
 #include "cef/include/cef_parser.h"
 #include "chrome/browser/browser_process.h"
 #include "components/embedder_support/user_agent_utils.h"
+#include "components/security_state/content/content_utils.h"
+#include "components/security_state/core/security_state.h"
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
@@ -3132,5 +3134,19 @@ bool CefBrowserHostBase::GetSavePassword() {
   return false;
 #endif
 }
-
 // #endif // defined(OHOS_NWEB_EX)
+
+#if BUILDFLAG(IS_OHOS)
+int CefBrowserHostBase::GetSecurityLevel() {
+  if (!GetWebContents()) {
+    return static_cast<int>(security_state::SecurityLevel::NONE);
+  }
+
+  auto web_contents = GetWebContents();
+  std::unique_ptr<security_state::VisibleSecurityState> state = security_state::GetVisibleSecurityState(web_contents);
+  DCHECK(state);
+
+  security_state::SecurityLevel securityValue = security_state::GetSecurityLevel(*state, false);
+  return static_cast<int>(securityValue);
+}
+#endif // BUILDFLAG(IS_OHOS)
