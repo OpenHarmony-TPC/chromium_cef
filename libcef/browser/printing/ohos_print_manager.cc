@@ -165,7 +165,7 @@ OhosPrintManager::~OhosPrintManager() = default;
 std::unordered_map<std::string, PrintAttrs> OhosPrintManager::printAttrsMap_{};
 std::string OhosPrintManager::print_job_id_ = "";
 content::RenderFrameHost* OhosPrintManager::rfh_ = nullptr;
-void* OhosPrintManager::pdf_token_ = nullptr;
+std::unordered_map<uint32_t, void*> OhosPrintManager::printTokenMap_{};
 // static
 void OhosPrintManager::BindPrintManagerHost(
     mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost> receiver,
@@ -474,13 +474,12 @@ void OhosPrintManager::RunPrintRequestedCallbackImpl(const std::string& jobId) {
   std::move(printRequestedCallback_).Run();
 }
 
-void OhosPrintManager::BeforePrintPdfRequested() {
-  pdf_token_ = token_;
-}
-
 void OhosPrintManager::PrintPdfRequested() {
   is_pdf_print_ = true;
-  token_ = pdf_token_;
+  if (printTokenMap_.find(base::Process::Current().Pid()) !=
+      printTokenMap_.end()) {
+    token_ = printTokenMap_[base::Process::Current().Pid()];
+  }
   pdf_rfh_ = rfh_;
   cancel_ = false;
   if (!PrintNow()) {
@@ -515,6 +514,7 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
 
 void OhosPrintManager::SetToken(void* token) {
   LOG(INFO) << "OhosPrintManager::SetToken token = " << token;
+  printTokenMap_[base::Process::Current().Pid()] = token;
   token_ = token;
 }
 
