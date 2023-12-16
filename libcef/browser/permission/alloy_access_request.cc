@@ -94,6 +94,8 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
   blink::mojom::StreamDevices& stream_devices = *devices_set.stream_devices[0];
 
   // Based on chrome/browser/media/media_stream_devices_controller.cc
+  blink::mojom::MediaStreamRequestResult result = blink::mojom::MediaStreamRequestResult::NO_HARDWARE;
+  
   if (request_.audio_type ==
       blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE) {
     blink::MediaStreamDevices devices;
@@ -101,10 +103,10 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
           request_.requested_audio_device_id, true, false, &devices);
     if (!devices.empty()) {
       stream_devices.audio_device = devices[0];
+      result = blink::mojom::MediaStreamRequestResult::OK;
     }
   }
 
-  blink::mojom::MediaStreamRequestResult result = blink::mojom::MediaStreamRequestResult::NO_HARDWARE;
   if (request_.video_type ==
       blink::mojom::MediaStreamType::DEVICE_VIDEO_CAPTURE) {
     LOG(INFO) << "RequestMediaAccessPermission requested_video_device_id: " <<
