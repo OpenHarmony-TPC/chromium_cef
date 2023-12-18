@@ -996,20 +996,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void RemoveJavaScriptOnDocumentStart() = 0;
 
   ///
-  // JavaScriptOnDocumentEnd
-  ///
-  /*--cef()--*/
-  virtual void JavaScriptOnDocumentEnd(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
-
-  ///
-  // RemoveJavaScriptOnDocumentEnd
-  ///
-  /*--cef()--*/
-  virtual void RemoveJavaScriptOnDocumentEnd() = 0;
-
-  ///
   // Saves the current view as a web archive.
   ///
   /*--cef()--*/

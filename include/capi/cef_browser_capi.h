@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=43d86fb5941fe546b267d17e64c100aed62d18e4$
+// $hash=a58f3ff96f74e869db14729f156636930426b6a7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -77,138 +77,134 @@ typedef struct _cef_browser_t {
   // True if this object is currently valid. This will return false (0) after
   // cef_life_span_handler_t::OnBeforeClose is called.
   ///
-  int(CEF_CALLBACK* is_valid)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *is_valid)(struct _cef_browser_t *self);
 
   ///
   // Returns the browser host object. This function can only be called in the
   // browser process.
   ///
-  struct _cef_browser_host_t*(CEF_CALLBACK* get_host)(
-      struct _cef_browser_t* self);
+  struct _cef_browser_host_t *(CEF_CALLBACK *get_host)(
+      struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if the browser can navigate backwards.
   ///
-  int(CEF_CALLBACK* can_go_back)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *can_go_back)(struct _cef_browser_t *self);
 
   ///
   // Navigate backwards.
   ///
-  void(CEF_CALLBACK* go_back)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *go_back)(struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if the browser can navigate forwards.
   ///
-  int(CEF_CALLBACK* can_go_forward)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *can_go_forward)(struct _cef_browser_t *self);
 
   ///
   // Navigate forwards.
   ///
-  void(CEF_CALLBACK* go_forward)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *go_forward)(struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if the browser can navigate forwards.
   ///
-  int(CEF_CALLBACK* can_go_back_or_forward)(struct _cef_browser_t* self,
+  int(CEF_CALLBACK *can_go_back_or_forward)(struct _cef_browser_t *self,
                                             int num_steps);
 
   ///
   // Navigate backwards or forwards.
   ///
-  void(CEF_CALLBACK* go_back_or_forward)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *go_back_or_forward)(struct _cef_browser_t *self,
                                          int num_steps);
 
   ///
   // DeleteHistory
   ///
-  void(CEF_CALLBACK* delete_history)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *delete_history)(struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if the browser is currently loading.
   ///
-  int(CEF_CALLBACK* is_loading)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *is_loading)(struct _cef_browser_t *self);
 
   ///
   // Reload the current page.
   ///
-  void(CEF_CALLBACK* reload)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *reload)(struct _cef_browser_t *self);
 
   ///
   // Reload the current page ignoring any cached data.
   ///
-  void(CEF_CALLBACK* reload_ignore_cache)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *reload_ignore_cache)(struct _cef_browser_t *self);
 
   ///
   // Reload the current page with original url.
   ///
-  void(CEF_CALLBACK* reload_original_url)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *reload_original_url)(struct _cef_browser_t *self);
 
   ///
   // display the selection control when click Free copy structure
   ///
-  void(CEF_CALLBACK* select_and_copy)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *select_and_copy)(struct _cef_browser_t *self);
 
   ///
   // should show free copy menu
   ///
-  int(CEF_CALLBACK* should_show_free_copy)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *should_show_free_copy)(struct _cef_browser_t *self);
 
   ///
   // select password dialog to fill
   ///
-  void(CEF_CALLBACK* password_suggestion_selected)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *password_suggestion_selected)(struct _cef_browser_t *self,
                                                    int list_index);
 
   ///
   // Set user agent for current page.
   ///
-  void(CEF_CALLBACK* set_browser_user_agent_string)(
-      struct _cef_browser_t* self,
-      const cef_string_t* user_agent);
+  void(CEF_CALLBACK *set_browser_user_agent_string)(
+      struct _cef_browser_t *self, const cef_string_t *user_agent);
 
   ///
   // Update browser controls state.
   ///
-  void(CEF_CALLBACK* update_browser_controls_state)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *update_browser_controls_state)(struct _cef_browser_t *self,
                                                     int constraints,
-                                                    int current,
-                                                    int animate);
+                                                    int current, int animate);
 
   ///
   // Update browser controls height.
   ///
-  void(CEF_CALLBACK* update_browser_controls_height)(
-      struct _cef_browser_t* self,
-      int height,
-      int animate);
+  void(CEF_CALLBACK *update_browser_controls_height)(
+      struct _cef_browser_t *self, int height, int animate);
 
   ///
   // Stop loading the page.
   ///
-  void(CEF_CALLBACK* stop_load)(struct _cef_browser_t* self);
+  void(CEF_CALLBACK *stop_load)(struct _cef_browser_t *self);
 
   ///
   // Returns the globally unique identifier for this browser. This value is also
   // used as the tabId for extension APIs.
   ///
-  int(CEF_CALLBACK* get_identifier)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *get_identifier)(struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if this object is pointing to the same handle as |that|
   // object.
   ///
-  int(CEF_CALLBACK* is_same)(struct _cef_browser_t* self,
-                             struct _cef_browser_t* that);
+  int(CEF_CALLBACK *is_same)(struct _cef_browser_t *self,
+                             struct _cef_browser_t *that);
 
   ///
   // Returns true (1) if the browser is a popup.
   ///
-  int(CEF_CALLBACK* is_popup)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *is_popup)(struct _cef_browser_t *self);
 
   ///
   // Returns true (1) if a document has been loaded in the browser.
   ///
-  int(CEF_CALLBACK* has_document)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *has_document)(struct _cef_browser_t *self);
 
   ///
   // Returns the main (top-level) frame for the browser. In the browser process
@@ -219,123 +215,120 @@ typedef struct _cef_browser_t {
   // change during cross-origin navigation or re-navigation after renderer
   // process termination (due to crashes, etc).
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_main_frame)(
-      struct _cef_browser_t* self);
+  struct _cef_frame_t *(CEF_CALLBACK *get_main_frame)(
+      struct _cef_browser_t *self);
 
   ///
   // Returns the focused frame for the browser.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_focused_frame)(
-      struct _cef_browser_t* self);
+  struct _cef_frame_t *(CEF_CALLBACK *get_focused_frame)(
+      struct _cef_browser_t *self);
 
   ///
   // Returns the frame with the specified identifier, or NULL if not found.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_frame_byident)(
-      struct _cef_browser_t* self,
-      int64 identifier);
+  struct _cef_frame_t *(CEF_CALLBACK *get_frame_byident)(
+      struct _cef_browser_t *self, int64 identifier);
 
   ///
   // Returns the frame with the specified name, or NULL if not found.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_frame)(struct _cef_browser_t* self,
-                                                const cef_string_t* name);
+  struct _cef_frame_t *(CEF_CALLBACK *get_frame)(struct _cef_browser_t *self,
+                                                 const cef_string_t *name);
 
   ///
   // Returns the number of frames that currently exist.
   ///
-  size_t(CEF_CALLBACK* get_frame_count)(struct _cef_browser_t* self);
+  size_t(CEF_CALLBACK *get_frame_count)(struct _cef_browser_t *self);
 
   ///
   // Returns the identifiers of all existing frames.
   ///
-  void(CEF_CALLBACK* get_frame_identifiers)(struct _cef_browser_t* self,
-                                            size_t* identifiersCount,
-                                            int64* identifiers);
+  void(CEF_CALLBACK *get_frame_identifiers)(struct _cef_browser_t *self,
+                                            size_t *identifiersCount,
+                                            int64 *identifiers);
 
   ///
   // Returns the names of all existing frames.
   ///
-  void(CEF_CALLBACK* get_frame_names)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *get_frame_names)(struct _cef_browser_t *self,
                                       cef_string_list_t names);
 
   ///
   // Returns the Permission Request Delegate object.
   ///
-  struct _cef_browser_permission_request_delegate_t*(
-      CEF_CALLBACK* get_permission_request_delegate)(
-      struct _cef_browser_t* self);
+  struct _cef_browser_permission_request_delegate_t *(
+      CEF_CALLBACK *get_permission_request_delegate)(
+      struct _cef_browser_t *self);
 
   ///
   // Returns the Geolocation Permission handler object.
   ///
-  struct _cef_geolocation_acess_t*(CEF_CALLBACK* get_geolocation_permissions)(
-      struct _cef_browser_t* self);
+  struct _cef_geolocation_acess_t *(CEF_CALLBACK *get_geolocation_permissions)(
+      struct _cef_browser_t *self);
 
   ///
   // Prefetch the resources required by the page, but will not execute js or
   // render the page.
   ///
-  void(CEF_CALLBACK* prefetch_page)(struct _cef_browser_t* self,
-                                    cef_string_t* url,
-                                    cef_string_t* additionalHttpHeaders);
+  void(CEF_CALLBACK *prefetch_page)(struct _cef_browser_t *self,
+                                    cef_string_t *url,
+                                    cef_string_t *additionalHttpHeaders);
 
   ///
   // Is loading to different document.
   ///
-  int(CEF_CALLBACK* should_show_loading_ui)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *should_show_loading_ui)(struct _cef_browser_t *self);
 
   ///
   // Set force enable zoom.
   ///
-  void(CEF_CALLBACK* set_force_enable_zoom)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *set_force_enable_zoom)(struct _cef_browser_t *self,
                                             int forceEnableZoom);
 
   ///
   // Whether force enable zoom had been enabled.
   ///
-  int(CEF_CALLBACK* get_force_enable_zoom)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *get_force_enable_zoom)(struct _cef_browser_t *self);
 
   ///
   // Returns the NWeb Id.
   ///
-  int(CEF_CALLBACK* get_nweb_id)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *get_nweb_id)(struct _cef_browser_t *self);
 
   ///
   // Set whether the target_blank pop-up window is opened in the current tab.
   ///
-  void(CEF_CALLBACK* set_enable_blank_target_popup_intercept)(
-      struct _cef_browser_t* self,
-      int enableBlankTargetPopup);
+  void(CEF_CALLBACK *set_enable_blank_target_popup_intercept)(
+      struct _cef_browser_t *self, int enableBlankTargetPopup);
 
   ///
   // Whether automatically saving password had been enabled.
   ///
-  int(CEF_CALLBACK* get_save_password_automatically)(
-      struct _cef_browser_t* self);
+  int(CEF_CALLBACK *get_save_password_automatically)(
+      struct _cef_browser_t *self);
 
   ///
   // Set enable to allow automatically save password
   ///
-  void(CEF_CALLBACK* set_save_password_automatically)(
-      struct _cef_browser_t* self,
-      int enable);
+  void(CEF_CALLBACK *set_save_password_automatically)(
+      struct _cef_browser_t *self, int enable);
 
   ///
   // save or upddate current page password
   ///
-  void(CEF_CALLBACK* save_or_update_password)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *save_or_update_password)(struct _cef_browser_t *self,
                                               int is_update);
 
   ///
   // Whether saving password had been enabled.
   ///
-  int(CEF_CALLBACK* get_save_password)(struct _cef_browser_t* self);
+  int(CEF_CALLBACK *get_save_password)(struct _cef_browser_t *self);
 
   ///
   // Set enable to save password
   ///
-  void(CEF_CALLBACK* set_save_password)(struct _cef_browser_t* self,
+  void(CEF_CALLBACK *set_save_password)(struct _cef_browser_t *self,
                                         int enable);
 } cef_browser_t;
 
@@ -356,9 +349,8 @@ typedef struct _cef_run_file_dialog_callback_t {
   // |file_paths| will be a single value or a list of values depending on the
   // dialog mode. If the selection was cancelled |file_paths| will be NULL.
   ///
-  void(CEF_CALLBACK* on_file_dialog_dismissed)(
-      struct _cef_run_file_dialog_callback_t* self,
-      int selected_accept_filter,
+  void(CEF_CALLBACK *on_file_dialog_dismissed)(
+      struct _cef_run_file_dialog_callback_t *self, int selected_accept_filter,
       cef_string_list_t file_paths);
 } cef_run_file_dialog_callback_t;
 
@@ -379,11 +371,9 @@ typedef struct _cef_navigation_entry_visitor_t {
   // navigation entry. |index| is the 0-based index of this entry and |total| is
   // the total number of entries.
   ///
-  int(CEF_CALLBACK* visit)(struct _cef_navigation_entry_visitor_t* self,
-                           struct _cef_navigation_entry_t* entry,
-                           int current,
-                           int index,
-                           int total);
+  int(CEF_CALLBACK *visit)(struct _cef_navigation_entry_visitor_t *self,
+                           struct _cef_navigation_entry_t *entry, int current,
+                           int index, int total);
 } cef_navigation_entry_visitor_t;
 
 ///
@@ -401,10 +391,8 @@ typedef struct _cef_pdf_print_callback_t {
   // the output path. |ok| will be true (1) if the printing completed
   // successfully or false (0) otherwise.
   ///
-  void(CEF_CALLBACK* on_pdf_print_finished)(
-      struct _cef_pdf_print_callback_t* self,
-      const cef_string_t* path,
-      int ok);
+  void(CEF_CALLBACK *on_pdf_print_finished)(
+      struct _cef_pdf_print_callback_t *self, const cef_string_t *path, int ok);
 } cef_pdf_print_callback_t;
 
 ///
@@ -423,11 +411,10 @@ typedef struct _cef_download_image_callback_t {
   // resulting HTTP status code. |image| is the resulting image, possibly at
   // multiple scale factors, or NULL if the download failed.
   ///
-  void(CEF_CALLBACK* on_download_image_finished)(
-      struct _cef_download_image_callback_t* self,
-      const cef_string_t* image_url,
-      int http_status_code,
-      struct _cef_image_t* image);
+  void(CEF_CALLBACK *on_download_image_finished)(
+      struct _cef_download_image_callback_t *self,
+      const cef_string_t *image_url, int http_status_code,
+      struct _cef_image_t *image);
 } cef_download_image_callback_t;
 
 ///
@@ -445,14 +432,14 @@ typedef struct _cef_browser_host_t {
   ///
   // Returns the hosted browser object.
   ///
-  struct _cef_browser_t*(CEF_CALLBACK* get_browser)(
-      struct _cef_browser_host_t* self);
+  struct _cef_browser_t *(CEF_CALLBACK *get_browser)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Post task to ui thread.
   ///
-  void(CEF_CALLBACK* post_task_to_uithread)(struct _cef_browser_host_t* self,
-                                            struct _cef_task_t* task);
+  void(CEF_CALLBACK *post_task_to_uithread)(struct _cef_browser_host_t *self,
+                                            struct _cef_task_t *task);
 
   ///
   // Request that the browser close. The JavaScript 'onbeforeunload' event will
@@ -464,7 +451,7 @@ typedef struct _cef_browser_host_t {
   // cef_life_span_handler_t::do_close() documentation for additional usage
   // information.
   ///
-  void(CEF_CALLBACK* close_browser)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *close_browser)(struct _cef_browser_host_t *self,
                                     int force_close);
 
   ///
@@ -476,12 +463,12 @@ typedef struct _cef_browser_host_t {
   // additional usage information. This function must be called on the browser
   // process UI thread.
   ///
-  int(CEF_CALLBACK* try_close_browser)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *try_close_browser)(struct _cef_browser_host_t *self);
 
   ///
   // Set whether the browser is focused.
   ///
-  void(CEF_CALLBACK* set_focus)(struct _cef_browser_host_t* self, int focus);
+  void(CEF_CALLBACK *set_focus)(struct _cef_browser_host_t *self, int focus);
 
   ///
   // Retrieve the window handle (if any) for this browser. If this browser is
@@ -489,8 +476,8 @@ typedef struct _cef_browser_host_t {
   // browser process UI thread and it will return the handle for the top-level
   // native window.
   ///
-  cef_window_handle_t(CEF_CALLBACK* get_window_handle)(
-      struct _cef_browser_host_t* self);
+  cef_window_handle_t(CEF_CALLBACK *get_window_handle)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Retrieve the window handle (if any) of the browser that opened this
@@ -498,38 +485,38 @@ typedef struct _cef_browser_host_t {
   // wrapped in a cef_browser_view_t. This function can be used in combination
   // with custom handling of modal windows.
   ///
-  cef_window_handle_t(CEF_CALLBACK* get_opener_window_handle)(
-      struct _cef_browser_host_t* self);
+  cef_window_handle_t(CEF_CALLBACK *get_opener_window_handle)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Returns true (1) if this browser is wrapped in a cef_browser_view_t.
   ///
-  int(CEF_CALLBACK* has_view)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *has_view)(struct _cef_browser_host_t *self);
 
   ///
   // Returns the client for this browser.
   ///
-  struct _cef_client_t*(CEF_CALLBACK* get_client)(
-      struct _cef_browser_host_t* self);
+  struct _cef_client_t *(CEF_CALLBACK *get_client)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Returns the request context for this browser.
   ///
-  struct _cef_request_context_t*(CEF_CALLBACK* get_request_context)(
-      struct _cef_browser_host_t* self);
+  struct _cef_request_context_t *(CEF_CALLBACK *get_request_context)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Get the current zoom level. The default zoom level is 0.0. This function
   // can only be called on the UI thread.
   ///
-  double(CEF_CALLBACK* get_zoom_level)(struct _cef_browser_host_t* self);
+  double(CEF_CALLBACK *get_zoom_level)(struct _cef_browser_host_t *self);
 
   ///
   // Change the zoom level to the specified value. Specify 0.0 to reset the zoom
   // level. If called on the UI thread the change will be applied immediately.
   // Otherwise, the change will be applied asynchronously on the UI thread.
   ///
-  void(CEF_CALLBACK* set_zoom_level)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_zoom_level)(struct _cef_browser_host_t *self,
                                      double zoomLevel);
 
   ///
@@ -537,7 +524,7 @@ typedef struct _cef_browser_host_t {
   // change will be applied immediately. Otherwise, the change will be applied
   // asynchronously on the UI thread.
   ///
-  void(CEF_CALLBACK* set_browser_zoom_level)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_browser_zoom_level)(struct _cef_browser_host_t *self,
                                              double zoomFactor);
 
   ///
@@ -556,34 +543,27 @@ typedef struct _cef_browser_host_t {
   // dismissed or immediately if another dialog is already pending. The dialog
   // will be initiated asynchronously on the UI thread.
   ///
-  void(CEF_CALLBACK* run_file_dialog)(
-      struct _cef_browser_host_t* self,
-      cef_file_dialog_mode_t mode,
-      const cef_string_t* title,
-      const cef_string_t* default_file_path,
-      cef_string_list_t accept_filters,
-      int selected_accept_filter,
-      struct _cef_run_file_dialog_callback_t* callback);
+  void(CEF_CALLBACK *run_file_dialog)(
+      struct _cef_browser_host_t *self, cef_file_dialog_mode_t mode,
+      const cef_string_t *title, const cef_string_t *default_file_path,
+      cef_string_list_t accept_filters, int selected_accept_filter,
+      struct _cef_run_file_dialog_callback_t *callback);
 
   ///
   // Download the file at |url| using cef_download_handler_t.
   ///
-  void(CEF_CALLBACK* start_download)(struct _cef_browser_host_t* self,
-                                     const cef_string_t* url);
+  void(CEF_CALLBACK *start_download)(struct _cef_browser_host_t *self,
+                                     const cef_string_t *url);
 
   ///
   // Resume download after interrupted.
   ///
-  void(CEF_CALLBACK* resume_download)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* url,
-      const cef_string_t* full_path,
-      int64 received_bytes,
-      int64 total_bytes,
-      const cef_string_t* etag,
-      const cef_string_t* mime_type,
-      const cef_string_t* last_modified,
-      const cef_string_t* received_slices_string);
+  void(CEF_CALLBACK *resume_download)(
+      struct _cef_browser_host_t *self, const cef_string_t *url,
+      const cef_string_t *full_path, int64 received_bytes, int64 total_bytes,
+      const cef_string_t *etag, const cef_string_t *mime_type,
+      const cef_string_t *last_modified,
+      const cef_string_t *received_slices_string);
 
   ///
   // Download |image_url| and execute |callback| on completion with the images
@@ -597,18 +577,15 @@ typedef struct _cef_browser_host_t {
   // unlimited. If |bypass_cache| is true (1) then |image_url| is requested from
   // the server even if it is present in the browser cache.
   ///
-  void(CEF_CALLBACK* download_image)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* image_url,
-      int is_favicon,
-      uint32 max_image_size,
-      int bypass_cache,
-      struct _cef_download_image_callback_t* callback);
+  void(CEF_CALLBACK *download_image)(
+      struct _cef_browser_host_t *self, const cef_string_t *image_url,
+      int is_favicon, uint32 max_image_size, int bypass_cache,
+      struct _cef_download_image_callback_t *callback);
 
   ///
   // Print the current browser contents.
   ///
-  void(CEF_CALLBACK* print)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *print)(struct _cef_browser_host_t *self);
 
   ///
   // Print the current browser contents to the PDF file specified by |path| and
@@ -616,11 +593,10 @@ typedef struct _cef_browser_host_t {
   // |path| when done. For PDF printing to work on Linux you must implement the
   // cef_print_handler_t::GetPdfPaperSize function.
   ///
-  void(CEF_CALLBACK* print_to_pdf)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* path,
-      const struct _cef_pdf_print_settings_t* settings,
-      struct _cef_pdf_print_callback_t* callback);
+  void(CEF_CALLBACK *print_to_pdf)(
+      struct _cef_browser_host_t *self, const cef_string_t *path,
+      const struct _cef_pdf_print_settings_t *settings,
+      struct _cef_pdf_print_callback_t *callback);
 
   ///
   // Search for |searchText|. |forward| indicates whether to search forward or
@@ -631,17 +607,14 @@ typedef struct _cef_browser_host_t {
   // cef_find_handler_t instance, if any, returned via
   // cef_client_t::GetFindHandler will be called to report find results.
   ///
-  void(CEF_CALLBACK* find)(struct _cef_browser_host_t* self,
-                           const cef_string_t* searchText,
-                           int forward,
-                           int matchCase,
-                           int findNext,
-                           int newSession);
+  void(CEF_CALLBACK *find)(struct _cef_browser_host_t *self,
+                           const cef_string_t *searchText, int forward,
+                           int matchCase, int findNext, int newSession);
 
   ///
   // Cancel all searches that are currently going on.
   ///
-  void(CEF_CALLBACK* stop_finding)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *stop_finding)(struct _cef_browser_host_t *self,
                                    int clearSelection);
 
   ///
@@ -653,23 +626,22 @@ typedef struct _cef_browser_host_t {
   // inspected. The |windowInfo| parameter will be ignored if this browser is
   // wrapped in a cef_browser_view_t.
   ///
-  void(CEF_CALLBACK* show_dev_tools)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_window_info_t* windowInfo,
-      struct _cef_client_t* client,
-      const struct _cef_browser_settings_t* settings,
-      const cef_point_t* inspect_element_at);
+  void(CEF_CALLBACK *show_dev_tools)(
+      struct _cef_browser_host_t *self,
+      const struct _cef_window_info_t *windowInfo, struct _cef_client_t *client,
+      const struct _cef_browser_settings_t *settings,
+      const cef_point_t *inspect_element_at);
 
   ///
   // Explicitly close the associated DevTools browser, if any.
   ///
-  void(CEF_CALLBACK* close_dev_tools)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *close_dev_tools)(struct _cef_browser_host_t *self);
 
   ///
   // Returns true (1) if this browser currently has an associated DevTools
   // browser. Must be called on the browser process UI thread.
   ///
-  int(CEF_CALLBACK* has_dev_tools)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *has_dev_tools)(struct _cef_browser_host_t *self);
 
   ///
   // Send a function call message over the DevTools protocol. |message| must be
@@ -704,8 +676,8 @@ typedef struct _cef_browser_host_t {
   // for development purposes by passing the `--devtools-protocol-log-
   // file=<path>` command-line flag.
   ///
-  int(CEF_CALLBACK* send_dev_tools_message)(struct _cef_browser_host_t* self,
-                                            const void* message,
+  int(CEF_CALLBACK *send_dev_tools_message)(struct _cef_browser_host_t *self,
+                                            const void *message,
                                             size_t message_size);
 
   ///
@@ -720,11 +692,9 @@ typedef struct _cef_browser_host_t {
   // was successfully submitted for validation, otherwise 0. See the
   // SendDevToolsMessage documentation for additional usage information.
   ///
-  int(CEF_CALLBACK* execute_dev_tools_method)(
-      struct _cef_browser_host_t* self,
-      int message_id,
-      const cef_string_t* method,
-      struct _cef_dictionary_value_t* params);
+  int(CEF_CALLBACK *execute_dev_tools_method)(
+      struct _cef_browser_host_t *self, int message_id,
+      const cef_string_t *method, struct _cef_dictionary_value_t *params);
 
   ///
   // Add an observer for DevTools protocol messages (function results and
@@ -732,9 +702,9 @@ typedef struct _cef_browser_host_t {
   // Registration object is destroyed. See the SendDevToolsMessage documentation
   // for additional usage information.
   ///
-  struct _cef_registration_t*(CEF_CALLBACK* add_dev_tools_message_observer)(
-      struct _cef_browser_host_t* self,
-      struct _cef_dev_tools_message_observer_t* observer);
+  struct _cef_registration_t *(CEF_CALLBACK *add_dev_tools_message_observer)(
+      struct _cef_browser_host_t *self,
+      struct _cef_dev_tools_message_observer_t *observer);
 
   ///
   // Retrieve a snapshot of current navigation entries as values sent to the
@@ -742,29 +712,28 @@ typedef struct _cef_browser_host_t {
   // navigation entry will be sent, otherwise all navigation entries will be
   // sent.
   ///
-  void(CEF_CALLBACK* get_navigation_entries)(
-      struct _cef_browser_host_t* self,
-      struct _cef_navigation_entry_visitor_t* visitor,
-      int current_only);
+  void(CEF_CALLBACK *get_navigation_entries)(
+      struct _cef_browser_host_t *self,
+      struct _cef_navigation_entry_visitor_t *visitor, int current_only);
 
   ///
   // If a misspelled word is currently selected in an editable node calling this
   // function will replace it with the specified |word|.
   ///
-  void(CEF_CALLBACK* replace_misspelling)(struct _cef_browser_host_t* self,
-                                          const cef_string_t* word);
+  void(CEF_CALLBACK *replace_misspelling)(struct _cef_browser_host_t *self,
+                                          const cef_string_t *word);
 
   ///
   // Add the specified |word| to the spelling dictionary.
   ///
-  void(CEF_CALLBACK* add_word_to_dictionary)(struct _cef_browser_host_t* self,
-                                             const cef_string_t* word);
+  void(CEF_CALLBACK *add_word_to_dictionary)(struct _cef_browser_host_t *self,
+                                             const cef_string_t *word);
 
   ///
   // Returns true (1) if window rendering is disabled.
   ///
-  int(CEF_CALLBACK* is_window_rendering_disabled)(
-      struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *is_window_rendering_disabled)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Notify the browser that the widget has been resized. The browser will first
@@ -772,29 +741,28 @@ typedef struct _cef_browser_host_t {
   // cef_render_handler_t::OnPaint asynchronously with the updated regions. This
   // function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* was_resized)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *was_resized)(struct _cef_browser_host_t *self);
 
   ///
   // Notify the browser that it has been hidden or shown. Layouting and
   // cef_render_handler_t::OnPaint notification will stop when the browser is
   // hidden. This function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* was_hidden)(struct _cef_browser_host_t* self, int hidden);
+  void(CEF_CALLBACK *was_hidden)(struct _cef_browser_host_t *self, int hidden);
 
   ///
   // Notify the browser that it has been occluded or unoccluded. Layouting and
   // cef_render_handler_t::OnPaint notification will stop when the browser is
   // occluded. This function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* was_occluded)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *was_occluded)(struct _cef_browser_host_t *self,
                                    int occluded);
 
   ///
   // Set if lower the frame rate.
   ///
-  void(CEF_CALLBACK* set_enable_lower_frame_rate)(
-      struct _cef_browser_host_t* self,
-      int enabled);
+  void(CEF_CALLBACK *set_enable_lower_frame_rate)(
+      struct _cef_browser_host_t *self, int enabled);
 
   ///
   // Send a notification to the browser that the screen info has changed. The
@@ -804,13 +772,13 @@ typedef struct _cef_browser_host_t {
   // current display. This function is only used when window rendering is
   // disabled.
   ///
-  void(CEF_CALLBACK* notify_screen_info_changed)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *notify_screen_info_changed)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Set the virtual pixel ratio
   ///
-  void(CEF_CALLBACK* set_virtual_pixel_ratio)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_virtual_pixel_ratio)(struct _cef_browser_host_t *self,
                                               float ratio);
 
   ///
@@ -818,40 +786,36 @@ typedef struct _cef_browser_host_t {
   // asynchronously. This function is only used when window rendering is
   // disabled.
   ///
-  void(CEF_CALLBACK* invalidate)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *invalidate)(struct _cef_browser_host_t *self,
                                  cef_paint_element_type_t type);
 
   ///
   // Issue a BeginFrame request to Chromium.  Only valid when
   // cef_window_tInfo::external_begin_frame_enabled is set to true (1).
   ///
-  void(CEF_CALLBACK* send_external_begin_frame)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *send_external_begin_frame)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Send a key event to the browser.
   ///
-  void(CEF_CALLBACK* send_key_event)(struct _cef_browser_host_t* self,
-                                     const struct _cef_key_event_t* event);
+  void(CEF_CALLBACK *send_key_event)(struct _cef_browser_host_t *self,
+                                     const struct _cef_key_event_t *event);
 
   ///
   // Send a mouse click event to the browser. The |x| and |y| coordinates are
   // relative to the upper-left corner of the view.
   ///
-  void(CEF_CALLBACK* send_mouse_click_event)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_mouse_event_t* event,
-      cef_mouse_button_type_t type,
-      int mouseUp,
-      int clickCount);
+  void(CEF_CALLBACK *send_mouse_click_event)(
+      struct _cef_browser_host_t *self, const struct _cef_mouse_event_t *event,
+      cef_mouse_button_type_t type, int mouseUp, int clickCount);
 
   ///
   // Send a mouse move event to the browser. The |x| and |y| coordinates are
   // relative to the upper-left corner of the view.
   ///
-  void(CEF_CALLBACK* send_mouse_move_event)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_mouse_event_t* event,
+  void(CEF_CALLBACK *send_mouse_move_event)(
+      struct _cef_browser_host_t *self, const struct _cef_mouse_event_t *event,
       int mouseLeave);
 
   ///
@@ -861,29 +825,27 @@ typedef struct _cef_browser_host_t {
   // In order to scroll inside select popups with window rendering disabled
   // cef_render_handler_t::GetScreenPoint should be implemented properly.
   ///
-  void(CEF_CALLBACK* send_mouse_wheel_event)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_mouse_event_t* event,
-      int deltaX,
-      int deltaY);
+  void(CEF_CALLBACK *send_mouse_wheel_event)(
+      struct _cef_browser_host_t *self, const struct _cef_mouse_event_t *event,
+      int deltaX, int deltaY);
 
   ///
   // Send a touch event to the browser for a windowless browser.
   ///
-  void(CEF_CALLBACK* send_touch_event)(struct _cef_browser_host_t* self,
-                                       const struct _cef_touch_event_t* event);
+  void(CEF_CALLBACK *send_touch_event)(struct _cef_browser_host_t *self,
+                                       const struct _cef_touch_event_t *event);
 
   ///
   // Send a capture lost event to the browser.
   ///
-  void(CEF_CALLBACK* send_capture_lost_event)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *send_capture_lost_event)(struct _cef_browser_host_t *self);
 
   ///
   // Notify the browser that the window hosting it is about to be moved or
   // resized. This function is only used on Windows and Linux.
   ///
-  void(CEF_CALLBACK* notify_move_or_resize_started)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *notify_move_or_resize_started)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Returns the maximum rate in frames per second (fps) that
@@ -892,8 +854,8 @@ typedef struct _cef_browser_host_t {
   // requested rate. The minimum value is 1 and the maximum value is 60 (default
   // 30). This function can only be called on the UI thread.
   ///
-  int(CEF_CALLBACK* get_windowless_frame_rate)(
-      struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *get_windowless_frame_rate)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Set the maximum rate in frames per second (fps) that cef_render_handler_t::
@@ -902,166 +864,145 @@ typedef struct _cef_browser_host_t {
   // minimum value is 1 and the maximum value is 60 (default 30). Can also be
   // set at browser creation via cef_browser_tSettings.windowless_frame_rate.
   ///
-  void(CEF_CALLBACK* set_windowless_frame_rate)(
-      struct _cef_browser_host_t* self,
-      int frame_rate);
+  void(CEF_CALLBACK *set_windowless_frame_rate)(
+      struct _cef_browser_host_t *self, int frame_rate);
 
   ///
   // Recompute the WebPreferences based on the current state of the CefSettings,
   // we will also call SetWebPreferences and send the updated WebPreferences to
   // all RenderViews by WebContents.
   ///
-  void(CEF_CALLBACK* set_web_preferences)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_browser_settings_t* browser_settings);
+  void(CEF_CALLBACK *set_web_preferences)(
+      struct _cef_browser_host_t *self,
+      const struct _cef_browser_settings_t *browser_settings);
 
   ///
   // PutUserAgent
   ///
-  void(CEF_CALLBACK* put_user_agent)(struct _cef_browser_host_t* self,
-                                     const cef_string_t* ua);
+  void(CEF_CALLBACK *put_user_agent)(struct _cef_browser_host_t *self,
+                                     const cef_string_t *ua);
 
   ///
   // DefaultUserAgent
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* default_user_agent)(
-      struct _cef_browser_host_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *default_user_agent)(
+      struct _cef_browser_host_t *self);
 
   ///
   // SetBackgroundColor
   ///
-  void(CEF_CALLBACK* set_background_color)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_background_color)(struct _cef_browser_host_t *self,
                                            int color);
 
   ///
   // RegisterArkJSfunction
   ///
-  void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
-                                              const cef_string_t* object_name,
+  void(CEF_CALLBACK *register_ark_jsfunction)(struct _cef_browser_host_t *self,
+                                              const cef_string_t *object_name,
                                               cef_string_list_t method_list,
                                               int32_t object_id);
 
   ///
   // UnregisterArkJSfunction
   ///
-  void(CEF_CALLBACK* unregister_ark_jsfunction)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* object_name,
+  void(CEF_CALLBACK *unregister_ark_jsfunction)(
+      struct _cef_browser_host_t *self, const cef_string_t *object_name,
       cef_string_list_t method_list);
 
   ///
   // JavaScriptOnDocumentStart
   ///
-  void(CEF_CALLBACK* java_script_on_document_start)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* script,
+  void(CEF_CALLBACK *java_script_on_document_start)(
+      struct _cef_browser_host_t *self, const cef_string_t *script,
       cef_string_list_t script_rules);
 
   ///
   // RemoveJavaScriptOnDocumentStart
   ///
-  void(CEF_CALLBACK* remove_java_script_on_document_start)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  // JavaScriptOnDocumentEnd
-  ///
-  void(CEF_CALLBACK* java_script_on_document_end)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* script,
-      cef_string_list_t script_rules);
-
-  ///
-  // RemoveJavaScriptOnDocumentEnd
-  ///
-  void(CEF_CALLBACK* remove_java_script_on_document_end)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *remove_java_script_on_document_start)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Saves the current view as a web archive.
   ///
-  void(CEF_CALLBACK* store_web_archive)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* base_name,
-      int auto_name,
-      struct _cef_store_web_archive_result_callback_t* callback);
+  void(CEF_CALLBACK *store_web_archive)(
+      struct _cef_browser_host_t *self, const cef_string_t *base_name,
+      int auto_name, struct _cef_store_web_archive_result_callback_t *callback);
 
   ///
   // Notify the browser that the widget has been resized because of virtual
   // keyboard.
   ///
-  void(CEF_CALLBACK* was_keyboard_resized)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *was_keyboard_resized)(struct _cef_browser_host_t *self);
 
   ///
   // Gets the title for the current page.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* title)(struct _cef_browser_host_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *title)(struct _cef_browser_host_t *self);
 
   ///
   // Create a message channel, which include two message ports.
   ///
-  void(CEF_CALLBACK* create_web_message_ports)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *create_web_message_ports)(struct _cef_browser_host_t *self,
                                                cef_string_list_t ports);
 
   ///
   // Posts a MessageEvent to the main frame.
   ///
-  void(CEF_CALLBACK* post_web_message)(struct _cef_browser_host_t* self,
-                                       cef_string_t* message,
+  void(CEF_CALLBACK *post_web_message)(struct _cef_browser_host_t *self,
+                                       cef_string_t *message,
                                        cef_string_list_t ports,
-                                       cef_string_t* targetUri);
+                                       cef_string_t *targetUri);
 
   ///
   // Close the web message port.
   ///
-  void(CEF_CALLBACK* close_port)(struct _cef_browser_host_t* self,
-                                 cef_string_t* port_handle);
+  void(CEF_CALLBACK *close_port)(struct _cef_browser_host_t *self,
+                                 cef_string_t *port_handle);
 
   ///
   // Destroy all web message ports.
   ///
-  void(CEF_CALLBACK* destroy_all_web_message_ports)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *destroy_all_web_message_ports)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Post a message to the port.
   ///
-  void(CEF_CALLBACK* post_port_message)(struct _cef_browser_host_t* self,
-                                        cef_string_t* port_handle,
-                                        struct _cef_value_t* message);
+  void(CEF_CALLBACK *post_port_message)(struct _cef_browser_host_t *self,
+                                        cef_string_t *port_handle,
+                                        struct _cef_value_t *message);
 
   ///
   // Set the callback of the port.
   ///
-  void(CEF_CALLBACK* set_port_message_callback)(
-      struct _cef_browser_host_t* self,
-      cef_string_t* port_handle,
-      struct _cef_web_message_receiver_t* callback);
+  void(CEF_CALLBACK *set_port_message_callback)(
+      struct _cef_browser_host_t *self, cef_string_t *port_handle,
+      struct _cef_web_message_receiver_t *callback);
 
   ///
   // Gets the latest hitdata
   ///
-  void(CEF_CALLBACK* get_hit_data)(struct _cef_browser_host_t* self,
-                                   int* type,
-                                   cef_string_t* extra_data);
+  void(CEF_CALLBACK *get_hit_data)(struct _cef_browser_host_t *self, int *type,
+                                   cef_string_t *extra_data);
 
   ///
   // Set the inital page scale
   ///
-  void(CEF_CALLBACK* set_initial_scale)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_initial_scale)(struct _cef_browser_host_t *self,
                                         float scale);
 
   ///
   // Gets the progress for the current page.
   ///
-  int(CEF_CALLBACK* page_load_progress)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *page_load_progress)(struct _cef_browser_host_t *self);
 
   ///
   // Gets the progress for the current page.
   ///
-  float(CEF_CALLBACK* scale)(struct _cef_browser_host_t* self);
+  float(CEF_CALLBACK *scale)(struct _cef_browser_host_t *self);
 
   ///
   // Loads the given data into this WebView, using baseUrl as the base URL for
@@ -1070,27 +1011,24 @@ typedef struct _cef_browser_host_t {
   // history entry. optional_param=baseUrl, optional_param=data,
   // optional_param=mimeType, optional_param=encoding, optional_param=historyUrl
   ///
-  void(CEF_CALLBACK* load_with_data_and_base_url)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* baseUrl,
-      const cef_string_t* data,
-      const cef_string_t* mimeType,
-      const cef_string_t* encoding,
-      const cef_string_t* historyUrl);
+  void(CEF_CALLBACK *load_with_data_and_base_url)(
+      struct _cef_browser_host_t *self, const cef_string_t *baseUrl,
+      const cef_string_t *data, const cef_string_t *mimeType,
+      const cef_string_t *encoding, const cef_string_t *historyUrl);
 
   ///
   // Loads the given data into this WebView optional_param=data,
   // optional_param=mimeType, optional_param=encoding,
   ///
-  void(CEF_CALLBACK* load_with_data)(struct _cef_browser_host_t* self,
-                                     const cef_string_t* data,
-                                     const cef_string_t* mimeType,
-                                     const cef_string_t* encoding);
+  void(CEF_CALLBACK *load_with_data)(struct _cef_browser_host_t *self,
+                                     const cef_string_t *data,
+                                     const cef_string_t *mimeType,
+                                     const cef_string_t *encoding);
 
   ///
   // add visited url.
   ///
-  void(CEF_CALLBACK* add_visited_links)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *add_visited_links)(struct _cef_browser_host_t *self,
                                         cef_string_list_t urls);
 
   ///
@@ -1117,13 +1055,10 @@ typedef struct _cef_browser_host_t {
   //
   // This function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* ime_set_composition)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* text,
-      size_t underlinesCount,
-      cef_composition_underline_t const* underlines,
-      const cef_range_t* replacement_range,
-      const cef_range_t* selection_range);
+  void(CEF_CALLBACK *ime_set_composition)(
+      struct _cef_browser_host_t *self, const cef_string_t *text,
+      size_t underlinesCount, cef_composition_underline_t const *underlines,
+      const cef_range_t *replacement_range, const cef_range_t *selection_range);
 
   ///
   // Completes the existing composition by optionally inserting the specified
@@ -1134,9 +1069,9 @@ typedef struct _cef_browser_host_t {
   // |relative_cursor_pos| values are only used on OS X. This function is only
   // used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* ime_commit_text)(struct _cef_browser_host_t* self,
-                                      const cef_string_t* text,
-                                      const cef_range_t* replacement_range,
+  void(CEF_CALLBACK *ime_commit_text)(struct _cef_browser_host_t *self,
+                                      const cef_string_t *text,
+                                      const cef_range_t *replacement_range,
                                       int relative_cursor_pos);
 
   ///
@@ -1145,16 +1080,15 @@ typedef struct _cef_browser_host_t {
   // will be discarded. See comments on ImeSetComposition for usage. This
   // function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* ime_finish_composing_text)(
-      struct _cef_browser_host_t* self,
-      int keep_selection);
+  void(CEF_CALLBACK *ime_finish_composing_text)(
+      struct _cef_browser_host_t *self, int keep_selection);
 
   ///
   // Cancels the existing composition and discards the composition node contents
   // without applying them. See comments on ImeSetComposition for usage. This
   // function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* ime_cancel_composition)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *ime_cancel_composition)(struct _cef_browser_host_t *self);
 
   ///
   // Call this function when the user drags the mouse into the web view (before
@@ -1165,10 +1099,9 @@ typedef struct _cef_browser_host_t {
   // cef_render_handler_t::StartDragging). This function is only used when
   // window rendering is disabled.
   ///
-  void(CEF_CALLBACK* drag_target_drag_enter)(
-      struct _cef_browser_host_t* self,
-      struct _cef_drag_data_t* drag_data,
-      const struct _cef_mouse_event_t* event,
+  void(CEF_CALLBACK *drag_target_drag_enter)(
+      struct _cef_browser_host_t *self, struct _cef_drag_data_t *drag_data,
+      const struct _cef_mouse_event_t *event,
       cef_drag_operations_mask_t allowed_ops);
 
   ///
@@ -1177,9 +1110,8 @@ typedef struct _cef_browser_host_t {
   // DragTargetDragLeave/DragTargetDrop). This function is only used when window
   // rendering is disabled.
   ///
-  void(CEF_CALLBACK* drag_target_drag_over)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_mouse_event_t* event,
+  void(CEF_CALLBACK *drag_target_drag_over)(
+      struct _cef_browser_host_t *self, const struct _cef_mouse_event_t *event,
       cef_drag_operations_mask_t allowed_ops);
 
   ///
@@ -1187,7 +1119,7 @@ typedef struct _cef_browser_host_t {
   // calling DragTargetDragEnter). This function is only used when window
   // rendering is disabled.
   ///
-  void(CEF_CALLBACK* drag_target_drag_leave)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *drag_target_drag_leave)(struct _cef_browser_host_t *self);
 
   ///
   // Call this function when the user completes the drag operation by dropping
@@ -1196,8 +1128,8 @@ typedef struct _cef_browser_host_t {
   // DragTargetDragEnter call. This function is only used when window rendering
   // is disabled.
   ///
-  void(CEF_CALLBACK* drag_target_drop)(struct _cef_browser_host_t* self,
-                                       const struct _cef_mouse_event_t* event);
+  void(CEF_CALLBACK *drag_target_drop)(struct _cef_browser_host_t *self,
+                                       const struct _cef_mouse_event_t *event);
 
   ///
   // Call this function when the drag operation started by a
@@ -1208,9 +1140,8 @@ typedef struct _cef_browser_host_t {
   // DragSource* mthods. This function is only used when window rendering is
   // disabled.
   ///
-  void(CEF_CALLBACK* drag_source_ended_at)(struct _cef_browser_host_t* self,
-                                           int x,
-                                           int y,
+  void(CEF_CALLBACK *drag_source_ended_at)(struct _cef_browser_host_t *self,
+                                           int x, int y,
                                            cef_drag_operations_mask_t op);
 
   ///
@@ -1221,15 +1152,15 @@ typedef struct _cef_browser_host_t {
   // then all DragTarget* functions should be called before DragSource* mthods.
   // This function is only used when window rendering is disabled.
   ///
-  void(CEF_CALLBACK* drag_source_system_drag_ended)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *drag_source_system_drag_ended)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Returns the current visible navigation entry for this browser. This
   // function can only be called on the UI thread.
   ///
-  struct _cef_navigation_entry_t*(CEF_CALLBACK* get_visible_navigation_entry)(
-      struct _cef_browser_host_t* self);
+  struct _cef_navigation_entry_t *(CEF_CALLBACK *get_visible_navigation_entry)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Set accessibility state for all frames. |accessibility_state| may be
@@ -1256,271 +1187,253 @@ typedef struct _cef_browser_host_t {
   // objects are not created. The client may implement platform accessibility
   // objects using CefAccessibiltyHandler callbacks if desired.
   ///
-  void(CEF_CALLBACK* set_accessibility_state)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_accessibility_state)(struct _cef_browser_host_t *self,
                                               cef_state_t accessibility_state);
 
   ///
   // GetOrCreateRootBrowserAccessibilityManager
   ///
-  void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
-      struct _cef_browser_host_t* self,
-      void** manager);
+  void(CEF_CALLBACK *get_or_create_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t *self, void **manager);
 
   ///
   // Enable notifications of auto resize via
   // cef_display_handler_t::OnAutoResize. Notifications are disabled by default.
   // |min_size| and |max_size| define the range of allowed sizes.
   ///
-  void(CEF_CALLBACK* set_auto_resize_enabled)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_auto_resize_enabled)(struct _cef_browser_host_t *self,
                                               int enabled,
-                                              const cef_size_t* min_size,
-                                              const cef_size_t* max_size);
+                                              const cef_size_t *min_size,
+                                              const cef_size_t *max_size);
 
   ///
   // Returns the extension hosted in this browser or NULL if no extension is
   // hosted. See cef_request_context_t::LoadExtension for details.
   ///
-  struct _cef_extension_t*(CEF_CALLBACK* get_extension)(
-      struct _cef_browser_host_t* self);
+  struct _cef_extension_t *(CEF_CALLBACK *get_extension)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Returns true (1) if this browser is hosting an extension background script.
   // Background hosts do not have a window and are not displayable. See
   // cef_request_context_t::LoadExtension for details.
   ///
-  int(CEF_CALLBACK* is_background_host)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *is_background_host)(struct _cef_browser_host_t *self);
 
   ///
   //  Set whether the browser's audio is muted.
   ///
-  void(CEF_CALLBACK* set_audio_muted)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_audio_muted)(struct _cef_browser_host_t *self,
                                       int mute);
 
   ///
   // Returns true (1) if the browser's audio is muted.  This function can only
   // be called on the UI thread.
   ///
-  int(CEF_CALLBACK* is_audio_muted)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *is_audio_muted)(struct _cef_browser_host_t *self);
 
   ///
   //  Set the audio resume interval of the broswer.
   ///
-  void(CEF_CALLBACK* set_audio_resume_interval)(
-      struct _cef_browser_host_t* self,
-      int resumeInterval);
+  void(CEF_CALLBACK *set_audio_resume_interval)(
+      struct _cef_browser_host_t *self, int resumeInterval);
 
   ///
   //  Set whether the browser's audio is exclusive.
   ///
-  void(CEF_CALLBACK* set_audio_exclusive)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_audio_exclusive)(struct _cef_browser_host_t *self,
                                           int audioExclusive);
 
   ///
   // Execute a string of JavaScript code, return result by callback
   ///
-  void(CEF_CALLBACK* execute_java_script)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* code,
-      struct _cef_java_script_result_callback_t* callback,
-      int extention);
+  void(CEF_CALLBACK *execute_java_script)(
+      struct _cef_browser_host_t *self, const cef_string_t *code,
+      struct _cef_java_script_result_callback_t *callback, int extention);
 
   ///
   // Set native window from ohos rs
   ///
-  void(CEF_CALLBACK* set_native_window)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_native_window)(struct _cef_browser_host_t *self,
                                         cef_native_window_t window);
 
   ///
   // Set web debugging access
   ///
-  void(CEF_CALLBACK* set_web_debugging_access)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_web_debugging_access)(struct _cef_browser_host_t *self,
                                                int isEnableDebug);
 
   ///
   // Get web debugging access
   ///
-  int(CEF_CALLBACK* get_web_debugging_access)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *get_web_debugging_access)(struct _cef_browser_host_t *self);
 
   ///
   // GetImageForContextNode
   ///
-  void(CEF_CALLBACK* get_image_for_context_node)(
-      struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *get_image_for_context_node)(
+      struct _cef_browser_host_t *self);
 
   ///
   // GetImageFromCache
   ///
-  void(CEF_CALLBACK* get_image_from_cache)(struct _cef_browser_host_t* self,
-                                           const cef_string_t* url);
+  void(CEF_CALLBACK *get_image_from_cache)(struct _cef_browser_host_t *self,
+                                           const cef_string_t *url);
 
   ///
   // ExitFullScreen
   ///
-  void(CEF_CALLBACK* exit_full_screen)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *exit_full_screen)(struct _cef_browser_host_t *self);
 
   ///
   // UpdateLocale
   ///
-  void(CEF_CALLBACK* update_locale)(struct _cef_browser_host_t* self,
-                                    const cef_string_t* locale);
+  void(CEF_CALLBACK *update_locale)(struct _cef_browser_host_t *self,
+                                    const cef_string_t *locale);
 
   ///
   // Returns the original url of the request.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_original_url)(
-      struct _cef_browser_host_t* self);
+  cef_string_userfree_t(CEF_CALLBACK *get_original_url)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Set network status
   ///
-  void(CEF_CALLBACK* put_network_available)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *put_network_available)(struct _cef_browser_host_t *self,
                                             int available);
 
   ///
   // Remove web cache
   ///
-  void(CEF_CALLBACK* remove_cache)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *remove_cache)(struct _cef_browser_host_t *self,
                                    int include_disk_files);
 
   ///
   // Scroll page up or down
   ///
-  void(CEF_CALLBACK* scroll_page_up_down)(struct _cef_browser_host_t* self,
-                                          int is_up,
-                                          int is_half,
+  void(CEF_CALLBACK *scroll_page_up_down)(struct _cef_browser_host_t *self,
+                                          int is_up, int is_half,
                                           float view_height);
 
   ///
   // Get web history state
   ///
-  struct _cef_binary_value_t*(CEF_CALLBACK* get_web_state)(
-      struct _cef_browser_host_t* self);
+  struct _cef_binary_value_t *(CEF_CALLBACK *get_web_state)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Restore web history state
   ///
-  int(CEF_CALLBACK* restore_web_state)(struct _cef_browser_host_t* self,
-                                       struct _cef_binary_value_t* state);
+  int(CEF_CALLBACK *restore_web_state)(struct _cef_browser_host_t *self,
+                                       struct _cef_binary_value_t *state);
 
   ///
   // Scroll to the position.
   ///
-  void(CEF_CALLBACK* scroll_to)(struct _cef_browser_host_t* self,
-                                float x,
+  void(CEF_CALLBACK *scroll_to)(struct _cef_browser_host_t *self, float x,
                                 float y);
 
   ///
   // Scroll by the delta distance.
   ///
-  void(CEF_CALLBACK* scroll_by)(struct _cef_browser_host_t* self,
-                                float delta_x,
+  void(CEF_CALLBACK *scroll_by)(struct _cef_browser_host_t *self, float delta_x,
                                 float delta_y);
 
   ///
   // Slide Scroll by the speed.
   ///
-  void(CEF_CALLBACK* slide_scroll)(struct _cef_browser_host_t* self,
-                                   float vx,
+  void(CEF_CALLBACK *slide_scroll)(struct _cef_browser_host_t *self, float vx,
                                    float vy);
 
   ///
   // Set whether webview can access files
   ///
-  void(CEF_CALLBACK* set_file_access)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_file_access)(struct _cef_browser_host_t *self,
                                       int falg);
 
   ///
   // Set whether webview can access network
   ///
-  void(CEF_CALLBACK* set_block_network)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_block_network)(struct _cef_browser_host_t *self,
                                         int falg);
 
   ///
   // Set the cache mode of webview
   ///
-  void(CEF_CALLBACK* set_cache_mode)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_cache_mode)(struct _cef_browser_host_t *self,
                                      int falg);
 
   ///
   // Set should frame submission before draw
   ///
-  void(CEF_CALLBACK* set_should_frame_submission_before_draw)(
-      struct _cef_browser_host_t* self,
-      int should);
+  void(CEF_CALLBACK *set_should_frame_submission_before_draw)(
+      struct _cef_browser_host_t *self, int should);
 
   ///
   // Set zoom with the dela facetor
   ///
-  void(CEF_CALLBACK* zoom_by)(struct _cef_browser_host_t* self,
-                              float delta,
-                              float width,
-                              float height);
+  void(CEF_CALLBACK *zoom_by)(struct _cef_browser_host_t *self, float delta,
+                              float width, float height);
 
   ///
   // Set the window id of the UI framework
   ///
-  void(CEF_CALLBACK* set_window_id)(struct _cef_browser_host_t* self,
-                                    int window_id,
-                                    int nweb_id);
+  void(CEF_CALLBACK *set_window_id)(struct _cef_browser_host_t *self,
+                                    int window_id, int nweb_id);
 
   ///
   // Set the token of the UI framework
   ///
-  void(CEF_CALLBACK* set_token)(struct _cef_browser_host_t* self, void* token);
+  void(CEF_CALLBACK *set_token)(struct _cef_browser_host_t *self, void *token);
 
   ///
   // Set the property values for width, height, and keyboard height
   ///
-  void(CEF_CALLBACK* set_virtual_key_board_arg)(
-      struct _cef_browser_host_t* self,
-      int32_t width,
-      int32_t height,
+  void(CEF_CALLBACK *set_virtual_key_board_arg)(
+      struct _cef_browser_host_t *self, int32_t width, int32_t height,
       double keyboard);
 
   ///
   // Set the virtual keyboard to override the web status
   ///
-  int(CEF_CALLBACK* should_virtual_keyboard_overlay)(
-      struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *should_virtual_keyboard_overlay)(
+      struct _cef_browser_host_t *self);
 
   ///
   // Set the over-scroll mode of web
   ///
-  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
+  void(CEF_CALLBACK *set_overscroll_mode)(struct _cef_browser_host_t *self,
                                           int mode);
 
   ///
   // Set the draw rect
   ///
-  void(CEF_CALLBACK* set_draw_rect)(struct _cef_browser_host_t* self,
-                                    int x,
-                                    int y,
-                                    int width,
-                                    int height);
+  void(CEF_CALLBACK *set_draw_rect)(struct _cef_browser_host_t *self, int x,
+                                    int y, int width, int height);
 
   ///
   // Set the draw mode
   ///
-  void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
+  void(CEF_CALLBACK *set_draw_mode)(struct _cef_browser_host_t *self, int mode);
 
   ///
   // Create the Web print document adapter of the UI framework
   ///
-  void(CEF_CALLBACK* create_web_print_document_adapter)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* jobName,
-      void** webPrintDocumentAdapter);
+  void(CEF_CALLBACK *create_web_print_document_adapter)(
+      struct _cef_browser_host_t *self, const cef_string_t *jobName,
+      void **webPrintDocumentAdapter);
 
   ///
   // Discard a webview window
   ///
-  int(CEF_CALLBACK* discard)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *discard)(struct _cef_browser_host_t *self);
 
   ///
   // Restore the discarded webview window
   ///
-  int(CEF_CALLBACK* restore)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *restore)(struct _cef_browser_host_t *self);
 } cef_browser_host_t;
 
 ///
@@ -1534,12 +1447,10 @@ typedef struct _cef_browser_host_t {
 // render process.
 ///
 CEF_EXPORT int cef_browser_host_create_browser(
-    const cef_window_info_t* windowInfo,
-    struct _cef_client_t* client,
-    const cef_string_t* url,
-    const struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t* extra_info,
-    struct _cef_request_context_t* request_context);
+    const cef_window_info_t *windowInfo, struct _cef_client_t *client,
+    const cef_string_t *url, const struct _cef_browser_settings_t *settings,
+    struct _cef_dictionary_value_t *extra_info,
+    struct _cef_request_context_t *request_context);
 
 ///
 // Create a new browser using the window parameters specified by |windowInfo|.
@@ -1549,13 +1460,11 @@ CEF_EXPORT int cef_browser_host_create_browser(
 // specific to the created browser that will be passed to
 // cef_render_process_handler_t::on_browser_created() in the render process.
 ///
-CEF_EXPORT cef_browser_t* cef_browser_host_create_browser_sync(
-    const cef_window_info_t* windowInfo,
-    struct _cef_client_t* client,
-    const cef_string_t* url,
-    const struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t* extra_info,
-    struct _cef_request_context_t* request_context);
+CEF_EXPORT cef_browser_t *cef_browser_host_create_browser_sync(
+    const cef_window_info_t *windowInfo, struct _cef_client_t *client,
+    const cef_string_t *url, const struct _cef_browser_settings_t *settings,
+    struct _cef_dictionary_value_t *extra_info,
+    struct _cef_request_context_t *request_context);
 
 ///
 // Structure to implement to be notified of asynchronous completion via
@@ -1571,9 +1480,9 @@ typedef struct _cef_java_script_result_callback_t {
   // Method that will be called upon completion. |num_deleted| will be the
   // number of cookies that were deleted.
   ///
-  void(CEF_CALLBACK* on_java_script_exe_result)(
-      struct _cef_java_script_result_callback_t* self,
-      struct _cef_value_t* result);
+  void(CEF_CALLBACK *on_java_script_exe_result)(
+      struct _cef_java_script_result_callback_t *self,
+      struct _cef_value_t *result);
 } cef_java_script_result_callback_t;
 
 ///
@@ -1590,9 +1499,9 @@ typedef struct _cef_store_web_archive_result_callback_t {
   // Method that will be called upon completion. |result| will either be the
   // filename under which the file was saved, or NULL if saving the file failed.
   ///
-  void(CEF_CALLBACK* on_store_web_archive_done)(
-      struct _cef_store_web_archive_result_callback_t* self,
-      const cef_string_t* result);
+  void(CEF_CALLBACK *on_store_web_archive_done)(
+      struct _cef_store_web_archive_result_callback_t *self,
+      const cef_string_t *result);
 } cef_store_web_archive_result_callback_t;
 
 ///
@@ -1608,12 +1517,12 @@ typedef struct _cef_web_message_receiver_t {
   // Method that will be called upon |PostPortMessage|. |message| will be sent
   // to another end of web message channel.
   ///
-  void(CEF_CALLBACK* on_message)(struct _cef_web_message_receiver_t* self,
-                                 struct _cef_value_t* message);
+  void(CEF_CALLBACK *on_message)(struct _cef_web_message_receiver_t *self,
+                                 struct _cef_value_t *message);
 } cef_web_message_receiver_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
