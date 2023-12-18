@@ -99,7 +99,6 @@ class OhosPrintManager : public printing::PrintManager,
                      ScriptedPrintCallback callback) override;
   void PrintRequested(PrintRequestedCallback callback) override;
   void CheckCancel(CheckCancelCallback callback) override;
-  void BeforePrintPdfRequested() override;
   void PrintPdfRequested() override;
 
   static void OnDidPrintDocumentWritingDone(
@@ -128,7 +127,7 @@ class OhosPrintManager : public printing::PrintManager,
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string print_job_id_;
   static content::RenderFrameHost* rfh_;
-  static void* pdf_token_;
+  static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
