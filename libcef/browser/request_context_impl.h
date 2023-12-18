@@ -17,6 +17,10 @@
 #include "libcef/browser/storage/web_storage_impl.h"
 #endif
 
+#if defined(OHOS_INCOGNITO_MODE)
+#include "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.h"
+#endif
+
 namespace content {
 struct GlobalRenderFrameHostId;
 }
@@ -38,10 +42,21 @@ class CefRequestContextImpl : public CefRequestContext {
   static CefRefPtr<CefRequestContextImpl> CreateGlobalRequestContext(
       const CefRequestContextSettings& settings);
 
+#if defined(OHOS_INCOGNITO_MODE)
+  // Creates the singleton global RequestContext in incognito mode. Called
+  // from AlloyBrowserMainParts::PreMainMessageLoopRun.
+  static CefRefPtr<CefRequestContextImpl> CreateGlobalOTRRequestContext(
+      const CefRequestContextSettings& settings);
+#endif
+
   // Returns a CefRequestContextImpl for the specified |request_context|.
   // Will return the global context if |request_context| is NULL.
   static CefRefPtr<CefRequestContextImpl> GetOrCreateForRequestContext(
-      CefRefPtr<CefRequestContext> request_context);
+      CefRefPtr<CefRequestContext> request_context
+#if defined(OHOS_INCOGNITO_MODE)
+      , bool incognito_mode = false
+#endif
+      );
 
   // Verify that the browser context can be directly accessed (e.g. on the UI
   // thread and initialized).
@@ -129,6 +144,10 @@ class CefRequestContextImpl : public CefRequestContext {
  private:
   friend class CefRequestContext;
 
+#if BUILDFLAG(IS_OHOS)
+  friend class CefBrowserHost;
+#endif
+
   struct Config {
     // True if wrapping the global context.
     bool is_global = false;
@@ -147,6 +166,10 @@ class CefRequestContextImpl : public CefRequestContext {
     // CefBrowserContext has been created. Should be set when a new
     // CefRequestContext via the API.
     int unique_id = -1;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    bool incognito_mode = false;
+#endif
   };
 
   static CefRefPtr<CefRequestContextImpl> GetOrCreateRequestContext(
@@ -188,6 +211,12 @@ class CefRequestContextImpl : public CefRequestContext {
   void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
                                     CefRefPtr<CefCompletionCallback> callback);
 #endif  // BUILDFLAG(IS_OHOS)
+
+#if defined(OHOS_INCOGNITO_MODE)
+  void InitializeIncognitoCookieManagerInternal(
+      CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
+      CefRefPtr<CefCompletionCallback> callback);
+#endif
 
   // We must disassociate from this on destruction.
   CefBrowserContext* browser_context_ = nullptr;

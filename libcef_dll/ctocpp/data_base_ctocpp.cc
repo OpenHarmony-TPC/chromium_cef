@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=93f7aaa12015eeefc20b9b97adaf23d06808f29e$
+// $hash=bd44ecfe823d9be5bec4d1b9d05d0b23dbba8ab4$
 //
 
 #include "libcef_dll/ctocpp/data_base_ctocpp.h"
@@ -23,6 +23,17 @@ CefRefPtr<CefDataBase> CefDataBase::GetGlobalDataBase() {
 
   // Execute
   cef_data_base_t* _retval = cef_data_base_get_global();
+
+  // Return type: refptr_same
+  return CefDataBaseCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefDataBase> CefDataBase::GetGlobalIncognitoDataBase() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_data_base_t* _retval = cef_data_base_get_global_incognito();
 
   // Return type: refptr_same
   return CefDataBaseCToCpp::Wrap(_retval);

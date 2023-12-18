@@ -58,6 +58,10 @@
 #include "ui/base/resource/resource_bundle_win.h"
 #endif
 
+#if defined(OHOS_INCOGNITO_MODE)
+#include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
+#endif
+
 namespace {
 
 const char* const kNonWildcardDomainNonPortSchemes[] = {
@@ -454,6 +458,28 @@ CefBrowserContext* AlloyMainDelegate::CreateNewBrowserContext(
   std::move(initialized_cb).Run();
   return context;
 }
+
+#if defined(OHOS_INCOGNITO_MODE)
+CefRefPtr<CefRequestContext> AlloyMainDelegate::GetGlobalOTRRequestContext() {
+  if (!browser_client_)
+    return nullptr;
+  return browser_client_->off_the_record_request_context();
+}
+
+CefBrowserContext* AlloyMainDelegate::CreateNewIncognitoBrowserContext(
+    const CefRequestContextSettings& settings,
+    base::OnceClosure initialized_cb) {
+  CefBrowserContext* browser_context =
+      static_cast<CefRequestContextImpl*>(GetGlobalRequestContext().get())->
+          GetBrowserContext();
+  DCHECK(browser_context);
+  auto context =
+      new AlloyOffTheRecordBrowserContext(browser_context, settings);
+  context->Initialize();
+  std::move(initialized_cb).Run();
+  return context;
+}
+#endif
 
 scoped_refptr<base::SingleThreadTaskRunner>
 AlloyMainDelegate::GetBackgroundTaskRunner() {

@@ -63,7 +63,11 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
   // Get or create the request context and browser context.
   CefRefPtr<CefRequestContextImpl> request_context_impl =
       CefRequestContextImpl::GetOrCreateForRequestContext(
-          create_params.request_context);
+          create_params.request_context
+#if defined(OHOS_INCOGNITO_MODE)
+          , create_params.settings.incognito_mode
+#endif
+  );
   CHECK(request_context_impl);
   auto cef_browser_context = request_context_impl->GetBrowserContext();
   CHECK(cef_browser_context);

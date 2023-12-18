@@ -1054,6 +1054,21 @@ source_set("libcef_static") {
   }
   #endif
 
+#ifdef OHOS_INCOGNITO_MODE
+  if (defined(ohos_incognito_mode) && ohos_incognito_mode) {
+    sources += [
+      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.cc",
+      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.h",
+      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.cc",
+      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.h",
+      "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
+      "libcef/browser/net_database/cef_incognito_data_base_impl.h",
+      "libcef/browser/alloy/alloy_off_the_record_browser_context.cc",
+      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",      
+    ]
+  }
+#endif
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",

@@ -446,6 +446,10 @@ typedef struct _cef_settings_t {
   ///
   cef_string_t cookieable_schemes_list;
   int cookieable_schemes_exclude_defaults;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    bool incognito_mode;
+#endif
 } cef_settings_t;
 
 ///
@@ -510,6 +514,10 @@ typedef struct _cef_request_context_settings_t {
   ///
   cef_string_t cookieable_schemes_list;
   int cookieable_schemes_exclude_defaults;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    bool incognito_mode;
+#endif
 } cef_request_context_settings_t;
 
 ///
@@ -695,6 +703,10 @@ typedef struct _cef_browser_settings_t {
   /// https://www.chromium.org/user-experience/status-bubble/
   ///
   cef_state_t chrome_status_bubble;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    bool incognito_mode;
+#endif
 } cef_browser_settings_t;
 
 ///

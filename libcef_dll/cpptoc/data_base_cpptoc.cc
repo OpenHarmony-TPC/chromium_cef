@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=78275b62066201008e7cfe31c65a1fa8298e9110$
+// $hash=b1b5b07c75ae0bdb48510c5a7bcc5aa0e31e7991$
 //
 
 #include "libcef_dll/cpptoc/data_base_cpptoc.h"
@@ -22,6 +22,16 @@ CEF_EXPORT cef_data_base_t* cef_data_base_get_global() {
 
   // Execute
   CefRefPtr<CefDataBase> _retval = CefDataBase::GetGlobalDataBase();
+
+  // Return type: refptr_same
+  return CefDataBaseCppToC::Wrap(_retval);
+}
+
+CEF_EXPORT cef_data_base_t* cef_data_base_get_global_incognito() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  CefRefPtr<CefDataBase> _retval = CefDataBase::GetGlobalIncognitoDataBase();
 
   // Return type: refptr_same
   return CefDataBaseCppToC::Wrap(_retval);

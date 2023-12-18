@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=12cbbe92481ddbd5ee5e70e50b52dacc15fc0a3a$
+// $hash=e66e72c21ea5c1a2e83028c1f072b80f88a094cc$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1303,28 +1303,6 @@ browser_host_set_accessibility_state(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetAccessibilityState(accessibility_state);
 }
 
-void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
-    struct _cef_browser_host_t* self,
-    void** manager) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: manager; type: simple_byaddr
-  DCHECK(manager);
-  if (!manager) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->GetOrCreateRootBrowserAccessibilityManager(
-      manager);
-}
-
 void CEF_CALLBACK
 browser_host_set_auto_resize_enabled(struct _cef_browser_host_t* self,
                                      int enabled,
@@ -1426,6 +1404,28 @@ int CEF_CALLBACK browser_host_is_audio_muted(struct _cef_browser_host_t* self) {
 
   // Return type: bool
   return _retval;
+}
+
+void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
+    struct _cef_browser_host_t* self,
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->GetOrCreateRootBrowserAccessibilityManager(
+      manager);
 }
 
 void CEF_CALLBACK
@@ -2858,13 +2858,13 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_visible_navigation_entry =
       browser_host_get_visible_navigation_entry;
   GetStruct()->set_accessibility_state = browser_host_set_accessibility_state;
-  GetStruct()->get_or_create_root_browser_accessibility_manager =
-      browser_host_get_or_create_root_browser_accessibility_manager;
   GetStruct()->set_auto_resize_enabled = browser_host_set_auto_resize_enabled;
   GetStruct()->get_extension = browser_host_get_extension;
   GetStruct()->is_background_host = browser_host_is_background_host;
   GetStruct()->set_audio_muted = browser_host_set_audio_muted;
   GetStruct()->is_audio_muted = browser_host_is_audio_muted;
+  GetStruct()->get_or_create_root_browser_accessibility_manager =
+      browser_host_get_or_create_root_browser_accessibility_manager;
   GetStruct()->execute_java_script = browser_host_execute_java_script;
   GetStruct()->set_native_window = browser_host_set_native_window;
   GetStruct()->set_web_debugging_access = browser_host_set_web_debugging_access;

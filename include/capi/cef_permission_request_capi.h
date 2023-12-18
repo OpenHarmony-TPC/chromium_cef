@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6e3718ff5fa897d8d225bb91d651295b56ca5e31$
+// $hash=fdacfd3bff50a3ad3cb6eee231c7ba6c1cdd24d1$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
@@ -275,14 +275,16 @@ typedef struct _cef_geolocation_acess_t {
   /// origin.
   ///
   void(CEF_CALLBACK* enabled)(struct _cef_geolocation_acess_t* self,
-                              const cef_string_t* origin);
+                              const cef_string_t* origin,
+                              int incognito);
 
   ///
   /// Set the geolocation permission state to false (0)  for the specified
   /// origin.
   ///
   void(CEF_CALLBACK* disabled)(struct _cef_geolocation_acess_t* self,
-                               const cef_string_t* origin);
+                               const cef_string_t* origin,
+                               int incognito);
 } cef_geolocation_acess_t;
 
 #ifdef __cplusplus

@@ -457,6 +457,10 @@ struct CefSettingsTraits {
                    &target->cookieable_schemes_list, copy);
     target->cookieable_schemes_exclude_defaults =
         src->cookieable_schemes_exclude_defaults;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    target->incognito_mode = src->incognito_mode;
+#endif
   }
 };
 
@@ -492,6 +496,10 @@ struct CefRequestContextSettingsTraits {
                    &target->cookieable_schemes_list, copy);
     target->cookieable_schemes_exclude_defaults =
         src->cookieable_schemes_exclude_defaults;
+
+#if defined(OHOS_INCOGNITO_MODE)
+    target->incognito_mode = src->incognito_mode;
+#endif
   }
 };
 
@@ -601,6 +609,10 @@ struct CefBrowserSettingsTraits {
         src->blank_target_popup_intercept_enabled;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
+
+#if defined(OHOS_INCOGNITO_MODE)
+    target->incognito_mode = src->incognito_mode;
+#endif
   }
 };
 

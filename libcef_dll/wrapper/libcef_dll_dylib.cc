@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7ed13e3f447c3d17124b6a81beadda7e5aa96c2e$
+// $hash=668b143edbc83bb6eb1c5158cb6edc21527ea4c8$
 //
 
 #include <dlfcn.h>
@@ -157,9 +157,13 @@ struct libcef_pointers {
   decltype(&cef_command_line_get_global) cef_command_line_get_global;
   decltype(&cef_cookie_manager_get_global_manager)
       cef_cookie_manager_get_global_manager;
+  decltype(&cef_cookie_manager_get_global_incognito_manager)
+      cef_cookie_manager_get_global_incognito_manager;
   decltype(&cef_cookie_manager_create_cef_cookie)
       cef_cookie_manager_create_cef_cookie;
   decltype(&cef_data_base_get_global) cef_data_base_get_global;
+  decltype(&cef_data_base_get_global_incognito)
+      cef_data_base_get_global_incognito;
   decltype(&cef_drag_data_create) cef_drag_data_create;
   decltype(&cef_image_create) cef_image_create;
   decltype(&cef_media_router_get_global) cef_media_router_get_global;
@@ -173,6 +177,8 @@ struct libcef_pointers {
   decltype(&cef_post_data_element_create) cef_post_data_element_create;
   decltype(&cef_request_context_get_global_context)
       cef_request_context_get_global_context;
+  decltype(&cef_request_context_get_global_otrcontext)
+      cef_request_context_get_global_otrcontext;
   decltype(&cef_request_context_create_context)
       cef_request_context_create_context;
   decltype(&cef_create_context_shared) cef_create_context_shared;
@@ -222,6 +228,8 @@ struct libcef_pointers {
   decltype(&cef_waitable_event_create) cef_waitable_event_create;
   decltype(&cef_web_storage_get_global_manager)
       cef_web_storage_get_global_manager;
+  decltype(&cef_web_storage_get_global_incognito_manager)
+      cef_web_storage_get_global_incognito_manager;
   decltype(&cef_xml_reader_create) cef_xml_reader_create;
   decltype(&cef_zip_reader_create) cef_zip_reader_create;
   decltype(&cef_test_server_create_and_start) cef_test_server_create_and_start;
@@ -401,8 +409,10 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_command_line_create);
   INIT_ENTRY(cef_command_line_get_global);
   INIT_ENTRY(cef_cookie_manager_get_global_manager);
+  INIT_ENTRY(cef_cookie_manager_get_global_incognito_manager);
   INIT_ENTRY(cef_cookie_manager_create_cef_cookie);
   INIT_ENTRY(cef_data_base_get_global);
+  INIT_ENTRY(cef_data_base_get_global_incognito);
   INIT_ENTRY(cef_drag_data_create);
   INIT_ENTRY(cef_image_create);
   INIT_ENTRY(cef_media_router_get_global);
@@ -414,6 +424,7 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_post_data_create);
   INIT_ENTRY(cef_post_data_element_create);
   INIT_ENTRY(cef_request_context_get_global_context);
+  INIT_ENTRY(cef_request_context_get_global_otrcontext);
   INIT_ENTRY(cef_request_context_create_context);
   INIT_ENTRY(cef_create_context_shared);
   INIT_ENTRY(cef_resource_bundle_get_global);
@@ -452,6 +463,7 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_list_value_create);
   INIT_ENTRY(cef_waitable_event_create);
   INIT_ENTRY(cef_web_storage_get_global_manager);
+  INIT_ENTRY(cef_web_storage_get_global_incognito_manager);
   INIT_ENTRY(cef_xml_reader_create);
   INIT_ENTRY(cef_zip_reader_create);
   INIT_ENTRY(cef_test_server_create_and_start);
@@ -933,6 +945,13 @@ struct _cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
 }
 
 NO_SANITIZE("cfi-icall")
+struct _cef_cookie_manager_t* cef_cookie_manager_get_global_incognito_manager(
+    struct _cef_completion_callback_t* callback) {
+  return g_libcef_pointers.cef_cookie_manager_get_global_incognito_manager(
+      callback);
+}
+
+NO_SANITIZE("cfi-icall")
 int cef_cookie_manager_create_cef_cookie(const cef_string_t* url,
                                          const cef_string_t* value,
                                          struct _cef_cookie_t* cef_cookie) {
@@ -942,6 +961,11 @@ int cef_cookie_manager_create_cef_cookie(const cef_string_t* url,
 
 NO_SANITIZE("cfi-icall") struct _cef_data_base_t* cef_data_base_get_global() {
   return g_libcef_pointers.cef_data_base_get_global();
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_data_base_t* cef_data_base_get_global_incognito() {
+  return g_libcef_pointers.cef_data_base_get_global_incognito();
 }
 
 NO_SANITIZE("cfi-icall") struct _cef_drag_data_t* cef_drag_data_create() {
@@ -996,6 +1020,11 @@ struct _cef_post_data_element_t* cef_post_data_element_create() {
 NO_SANITIZE("cfi-icall")
 struct _cef_request_context_t* cef_request_context_get_global_context() {
   return g_libcef_pointers.cef_request_context_get_global_context();
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_request_context_t* cef_request_context_get_global_otrcontext() {
+  return g_libcef_pointers.cef_request_context_get_global_otrcontext();
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1220,6 +1249,13 @@ NO_SANITIZE("cfi-icall")
 struct _cef_web_storage_t* cef_web_storage_get_global_manager(
     struct _cef_completion_callback_t* callback) {
   return g_libcef_pointers.cef_web_storage_get_global_manager(callback);
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_web_storage_t* cef_web_storage_get_global_incognito_manager(
+    struct _cef_completion_callback_t* callback) {
+  return g_libcef_pointers.cef_web_storage_get_global_incognito_manager(
+      callback);
 }
 
 NO_SANITIZE("cfi-icall")

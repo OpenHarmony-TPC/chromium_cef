@@ -666,7 +666,28 @@ void CefContext::PopulateGlobalRequestContextSettings(
       CefString(&settings_.cookieable_schemes_list);
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
+
+#if defined(OHOS_INCOGNITO_MODE)
+  settings->incognito_mode = false;
+#endif
 }
+
+#if defined(OHOS_INCOGNITO_MODE)
+void CefContext::PopulateGlobalOTRRequestContextSettings(
+    CefRequestContextSettings* settings) {
+  // This value was already normalized in Initialize.
+  CefString(&settings->cache_path) = CefString("");
+
+  settings->persist_session_cookies = false;
+  settings->persist_user_preferences = false;
+
+  CefString(&settings->cookieable_schemes_list) =
+      CefString(&settings_.cookieable_schemes_list);
+  settings->cookieable_schemes_exclude_defaults =
+      settings_.cookieable_schemes_exclude_defaults;
+  settings->incognito_mode = true;
+}
+#endif
 
 void CefContext::NormalizeRequestContextSettings(
     CefRequestContextSettings* settings) {

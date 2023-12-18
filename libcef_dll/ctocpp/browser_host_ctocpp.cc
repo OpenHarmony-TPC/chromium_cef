@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=69884552a03ca3b242a58cc3bfc6e52485470426$
+// $hash=e7dd614a61266b934e02b17c277349c6c7d20dd9$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1119,29 +1119,6 @@ void CefBrowserHostCToCpp::SetAccessibilityState(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetOrCreateRootBrowserAccessibilityManager(
-    void** manager) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct,
-                         get_or_create_root_browser_accessibility_manager)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: manager; type: simple_byaddr
-  DCHECK(manager);
-  if (!manager) {
-    return;
-  }
-
-  // Execute
-  _struct->get_or_create_root_browser_accessibility_manager(_struct, manager);
-}
-
-NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetAutoResizeEnabled(bool enabled,
                                                 const CefSize& min_size,
                                                 const CefSize& max_size) {
@@ -1222,6 +1199,29 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetOrCreateRootBrowserAccessibilityManager(
+    void** manager) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct,
+                         get_or_create_root_browser_accessibility_manager)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: manager; type: simple_byaddr
+  DCHECK(manager);
+  if (!manager) {
+    return;
+  }
+
+  // Execute
+  _struct->get_or_create_root_browser_accessibility_manager(_struct, manager);
 }
 
 NO_SANITIZE("cfi-icall")

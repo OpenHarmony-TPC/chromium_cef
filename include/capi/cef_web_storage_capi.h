@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c360c754a9b15e8ac6afd4058d904ff7478a26cf$
+// $hash=896702635dd7d185692f6b7a7b3e1d804e587cbe$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_WEB_STORAGE_CAPI_H_
@@ -230,6 +230,12 @@ typedef struct _cef_web_storage_t {
 /// Returns the global web storage.
 ///
 CEF_EXPORT cef_web_storage_t* cef_web_storage_get_global_manager(
+    struct _cef_completion_callback_t* callback);
+
+///
+/// Returns the global web storage in incognito mode.
+///
+CEF_EXPORT cef_web_storage_t* cef_web_storage_get_global_incognito_manager(
     struct _cef_completion_callback_t* callback);
 
 #ifdef __cplusplus

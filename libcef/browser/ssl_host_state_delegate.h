@@ -87,6 +87,7 @@ class CefSSLHostStateDelegate : public content::SSLHostStateDelegate {
  private:
   // Certificate policies for each host.
   std::map<std::string, internal::CertPolicy> cert_policy_for_host_;
+
 };
 
 #endif  // CEF_LIBCEF_BROWSER_SSL_HOST_STATE_DELEGATE_H_

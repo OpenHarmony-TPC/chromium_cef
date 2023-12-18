@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1a1c0ed35ae2fa53ea836acc9ae8a500930927d9$
+// $hash=a1aca55148db4e8e67f526d000806124755da3f0$
 //
 
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
@@ -35,6 +35,17 @@ CEF_EXPORT cef_request_context_t* cef_request_context_get_global_context() {
 
   // Execute
   CefRefPtr<CefRequestContext> _retval = CefRequestContext::GetGlobalContext();
+
+  // Return type: refptr_same
+  return CefRequestContextCppToC::Wrap(_retval);
+}
+
+CEF_EXPORT cef_request_context_t* cef_request_context_get_global_otrcontext() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  CefRefPtr<CefRequestContext> _retval =
+      CefRequestContext::GetGlobalOTRContext();
 
   // Return type: refptr_same
   return CefRequestContextCppToC::Wrap(_retval);

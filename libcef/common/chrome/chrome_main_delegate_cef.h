@@ -61,6 +61,18 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) override;
 
+#if defined(OHOS_INCOGNITO_MODE)
+  CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() override {
+    return nullptr;
+  }
+
+  CefBrowserContext* CreateNewIncognitoBrowserContext(
+      const CefRequestContextSettings& settings,
+      base::OnceClosure initialized_cb) override {
+        return nullptr;
+  }
+#endif
+
   // CefTaskRunnerManager overrides.
   scoped_refptr<base::SingleThreadTaskRunner> GetBackgroundTaskRunner()
       override;

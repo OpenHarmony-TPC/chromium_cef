@@ -27,8 +27,9 @@ bool AlloyGeolocationAccess::IsOriginAccessEnabled(const CefString& origin) {
   return result;
 }
 
-void AlloyGeolocationAccess::Enabled(const CefString& origin) {
-  auto dataBase = CefDataBase::GetGlobalDataBase();
+void AlloyGeolocationAccess::Enabled(const CefString& origin, bool incognito) {
+  auto dataBase = incognito ? CefDataBase::GetGlobalIncognitoDataBase()
+                            : CefDataBase::GetGlobalDataBase();
   if (dataBase == nullptr) {
     return;
   }
@@ -36,8 +37,10 @@ void AlloyGeolocationAccess::Enabled(const CefString& origin) {
                                   true);
 }
 
-void AlloyGeolocationAccess::Disabled(const CefString& origin) {
-  auto dataBase = CefDataBase::GetGlobalDataBase();
+void AlloyGeolocationAccess::Disabled(const CefString& origin,
+                                      bool incognito) {
+  auto dataBase = incognito ? CefDataBase::GetGlobalIncognitoDataBase()
+                            : CefDataBase::GetGlobalDataBase();
   if (dataBase == nullptr) {
     return;
   }

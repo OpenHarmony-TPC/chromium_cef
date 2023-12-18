@@ -21,8 +21,8 @@ class AlloyGeolocationAccess : public CefGeolocationAcess {
 
   bool ContainOrigin(const CefString& origin) override;
   bool IsOriginAccessEnabled(const CefString& origin) override;
-  void Enabled(const CefString& origin) override;
-  void Disabled(const CefString& origin) override;
+  void Enabled(const CefString& origin, bool incognito) override;
+  void Disabled(const CefString& origin, bool incognito) override;
 
  private:
   std::string GetOriginKey(std::string& origin);

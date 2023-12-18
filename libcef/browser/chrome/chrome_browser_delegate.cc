@@ -85,7 +85,11 @@ void ChromeBrowserDelegate::SetAsDelegate(content::WebContents* web_contents,
 
   auto request_context_impl =
       CefRequestContextImpl::GetOrCreateForRequestContext(
-          create_params_.request_context);
+          create_params_.request_context
+#if defined(OHOS_INCOGNITO_MODE)
+          , create_params_.settings.incognito_mode
+#endif
+          );
 
   CreateBrowser(web_contents, create_params_.settings, create_params_.client,
                 std::move(platform_delegate), browser_info, /*opener=*/nullptr,

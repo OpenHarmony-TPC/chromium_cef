@@ -71,6 +71,14 @@ class AlloyMainDelegate : public content::ContentMainDelegate,
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) override;
 
+#if BUILDFLAG(IS_OHOS)
+CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() override;
+
+CefBrowserContext* CreateNewIncognitoBrowserContext(
+    const CefRequestContextSettings& settings,
+    base::OnceClosure initialized_cb) override;
+#endif
+
   // CefTaskRunnerManager overrides.
   scoped_refptr<base::SingleThreadTaskRunner> GetBackgroundTaskRunner()
       override;

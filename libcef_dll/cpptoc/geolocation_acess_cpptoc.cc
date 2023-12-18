@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ad86b2e42eb21a4a183ca05e364344dfcae58fe0$
+// $hash=a9b5dda39aef952f3e8eb628a7a15017cd446174$
 //
 
 #include "libcef_dll/cpptoc/geolocation_acess_cpptoc.h"
@@ -71,7 +71,8 @@ int CEF_CALLBACK geolocation_acess_is_origin_access_enabled(
 
 void CEF_CALLBACK
 geolocation_acess_enabled(struct _cef_geolocation_acess_t* self,
-                          const cef_string_t* origin) {
+                          const cef_string_t* origin,
+                          int incognito) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -87,12 +88,14 @@ geolocation_acess_enabled(struct _cef_geolocation_acess_t* self,
   }
 
   // Execute
-  CefGeolocationAcessCppToC::Get(self)->Enabled(CefString(origin));
+  CefGeolocationAcessCppToC::Get(self)->Enabled(CefString(origin),
+                                                incognito ? true : false);
 }
 
 void CEF_CALLBACK
 geolocation_acess_disabled(struct _cef_geolocation_acess_t* self,
-                           const cef_string_t* origin) {
+                           const cef_string_t* origin,
+                           int incognito) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -108,7 +111,8 @@ geolocation_acess_disabled(struct _cef_geolocation_acess_t* self,
   }
 
   // Execute
-  CefGeolocationAcessCppToC::Get(self)->Disabled(CefString(origin));
+  CefGeolocationAcessCppToC::Get(self)->Disabled(CefString(origin),
+                                                 incognito ? true : false);
 }
 
 }  // namespace

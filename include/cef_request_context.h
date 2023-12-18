@@ -98,6 +98,12 @@ class CefRequestContext : public CefPreferenceManager {
   static CefRefPtr<CefRequestContext> GetGlobalContext();
 
   ///
+  /// Returns the global off-the-record context object.
+  ///
+  /*--cef()--*/
+  static CefRefPtr<CefRequestContext> GetGlobalOTRContext();
+
+  ///
   /// Creates a new context object with the specified |settings| and optional
   /// |handler|.
   ///

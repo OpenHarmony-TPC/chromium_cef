@@ -29,6 +29,10 @@
 #include "net/cert/cert_database.h"
 #endif
 
+#if defined(OHOS_INCOGNITO_MODE)
+#include "libcef/browser/net_database/cef_incognito_data_base_impl.h"
+#endif
+
 using content::BrowserThread;
 
 namespace {
@@ -115,6 +119,22 @@ CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalContext() {
   return CefRequestContextImpl::GetOrCreateRequestContext(config);
 }
 
+#if BUILDFLAG(IS_OHOS)
+// static
+CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalOTRContext() {
+  // Verify that the context is in a valid state.
+  if (!CONTEXT_STATE_VALID()) {
+    NOTREACHED() << "context not valid";
+    return nullptr;
+  }
+
+  CefRequestContextImpl::Config config;
+  config.is_global = true;
+  config.incognito_mode = true;
+  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+}
+#endif
+
 // static
 CefRefPtr<CefRequestContext> CefRequestContext::CreateContext(
     const CefRequestContextSettings& settings,
@@ -178,10 +198,29 @@ CefRequestContextImpl::CreateGlobalRequestContext(
   return impl;
 }
 
+#if defined(OHOS_INCOGNITO_MODE)
+// static
+CefRefPtr<CefRequestContextImpl>
+CefRequestContextImpl::CreateGlobalOTRRequestContext(
+    const CefRequestContextSettings& settings) {
+  Config config;
+  config.is_global = true;
+  config.settings = settings;
+  config.incognito_mode = true;
+  CefRefPtr<CefRequestContextImpl> impl = new CefRequestContextImpl(config);
+  impl->Initialize();
+  return impl;
+}
+#endif
+
 // static
 CefRefPtr<CefRequestContextImpl>
 CefRequestContextImpl::GetOrCreateForRequestContext(
-    CefRefPtr<CefRequestContext> request_context) {
+    CefRefPtr<CefRequestContext> request_context
+#if defined(OHOS_INCOGNITO_MODE)
+    , bool incognito_mode
+#endif
+    ) {
   if (request_context.get()) {
     // Use the context from the provided CefRequestContext.
     return static_cast<CefRequestContextImpl*>(request_context.get());
@@ -190,6 +229,7 @@ CefRequestContextImpl::GetOrCreateForRequestContext(
   // Use the global context.
   Config config;
   config.is_global = true;
+  config.incognito_mode = incognito_mode;
   return CefRequestContextImpl::GetOrCreateRequestContext(config);
 }
 
@@ -331,13 +371,23 @@ CefString CefRequestContextImpl::GetCachePath() {
 
 CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
     CefRefPtr<CefCompletionCallback> callback) {
-#if defined(OHOS_COOKIE)
-  CefRefPtr<CefCookieManagerImpl> cookie_manager = CefCookieManagerImpl::GetInstance();
+#if defined(OHOS_COOKIE) && defined(OHOS_INCOGNITO_MODE)
+  if (config_.incognito_mode) {
+    CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager =
+        CefIncognitoCookieManagerImpl::GetInstance();
+    InitializeIncognitoCookieManagerInternal(cookie_manager, callback);
+    return cookie_manager;
+  } else {
+    CefRefPtr<CefCookieManagerImpl> cookie_manager =
+        CefCookieManagerImpl::GetInstance();
+    InitializeCookieManagerInternal(cookie_manager, callback);
+    return cookie_manager;
+  }
 #else
   CefRefPtr<CefCookieManagerImpl> cookie_manager = new CefCookieManagerImpl();
-#endif // defined(OHOS_COOKIE)
   InitializeCookieManagerInternal(cookie_manager, callback);
   return cookie_manager.get();
+#endif // defined(OHOS_COOKIE)
 }
 
 bool CefRequestContextImpl::RegisterSchemeHandlerFactory(
@@ -534,9 +584,16 @@ CefRefPtr<CefRequestContextImpl>
 CefRequestContextImpl::GetOrCreateRequestContext(const Config& config) {
   if (config.is_global ||
       (config.other && config.other->IsGlobal() && !config.handler)) {
+#if BUILDFLAG(IS_OHOS)
+    return config.incognito_mode ? static_cast<CefRequestContextImpl*>(
+        CefAppManager::Get()->GetGlobalOTRRequestContext().get()) :
+        static_cast<CefRequestContextImpl*>(
+        CefAppManager::Get()->GetGlobalRequestContext().get());
+#else
     // Return the singleton global context.
     return static_cast<CefRequestContextImpl*>(
         CefAppManager::Get()->GetGlobalRequestContext().get());
+#endif
   }
 
   // The new context will be initialized later by EnsureBrowserContext().
@@ -591,8 +648,19 @@ void CefRequestContextImpl::Initialize() {
     // empty then this new instance will become the globally registered
     // CefBrowserContext for that path. Otherwise, this new instance will
     // be a completely isolated "incognito mode" context.
+#if BUILDFLAG(IS_OHOS)
+    if (config_.incognito_mode) {
+      browser_context_ =
+          CefAppManager::Get()->CreateNewIncognitoBrowserContext(
+              config_.settings, std::move(initialized_cb));      
+    } else {
+      browser_context_ = CefAppManager::Get()->CreateNewBrowserContext(
+          config_.settings, std::move(initialized_cb));
+    }
+#else
     browser_context_ = CefAppManager::Get()->CreateNewBrowserContext(
         config_.settings, std::move(initialized_cb));
+#endif
   } else {
     // Share the same settings as the existing context.
     config_.settings = browser_context_->settings();
@@ -701,6 +769,22 @@ void CefRequestContextImpl::InitializeCookieManagerInternal(
                         cookie_manager, callback));
 }
 
+#if defined(OHOS_INCOGNITO_MODE)
+void CefRequestContextImpl::InitializeIncognitoCookieManagerInternal(
+    CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
+    CefRefPtr<CefCompletionCallback> callback) {
+  GetBrowserContext(content::GetUIThreadTaskRunner({}),
+                    base::BindOnce(
+                        [](CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
+                           CefRefPtr<CefCompletionCallback> callback,
+                           CefBrowserContext::Getter browser_context_getter) {
+                          cookie_manager->Initialize(browser_context_getter,
+                                                     callback);
+                        },
+                        cookie_manager, callback));
+}
+#endif
+
 void CefRequestContextImpl::InitializeMediaRouterInternal(
     CefRefPtr<CefMediaRouterImpl> media_router,
     CefRefPtr<CefCompletionCallback> callback) {
@@ -721,8 +805,19 @@ CefBrowserContext* CefRequestContextImpl::browser_context() const {
 
 #if BUILDFLAG(IS_OHOS)
 CefRefPtr<CefDataBase> CefRequestContextImpl::GetDataBase() {
+#if defined(OHOS_INCOGNITO_MODE)
+  if (config_.incognito_mode) {
+    CefRefPtr<CefIncognitoDataBaseImpl> data_base =
+        new CefIncognitoDataBaseImpl();
+    return data_base;
+  } else {
+    CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
+    return data_base;
+  }
+#else
   CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
-  return data_base.get();
+  return data_ba
+#endif
 }
 
 CefRefPtr<CefWebStorage> CefRequestContextImpl::GetWebStorage(

@@ -331,6 +331,14 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
   global_request_context_ =
       CefRequestContextImpl::CreateGlobalRequestContext(settings);
 
+#if defined(OHOS_INCOGNITO_MODE)
+  // Create the Global off the record request context.
+  CefRequestContextSettings off_the_record_settings;
+  CefContext::Get()->PopulateGlobalOTRRequestContextSettings(&off_the_record_settings);
+  global_otr_request_context_ =
+      CefRequestContextImpl::CreateGlobalOTRRequestContext(settings);
+#endif
+
 #if !BUILDFLAG(IS_OHOS)
   auto browser_context =
       global_request_context_->GetBrowserContext()->AsBrowserContext();
