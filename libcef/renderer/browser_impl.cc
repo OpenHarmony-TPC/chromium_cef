@@ -459,6 +459,11 @@ CefRefPtr<CefGeolocationAcess> CefBrowserImpl::GetGeolocationPermissions() {
   return nullptr;
 }
 
+bool CefBrowserImpl::CanStoreWebArchive() {
+  // Not reached.
+  return false;
+}
+
 void CefBrowserImpl::ReloadOriginalUrl() {
   CEF_REQUIRE_RT_RETURN_VOID();
 

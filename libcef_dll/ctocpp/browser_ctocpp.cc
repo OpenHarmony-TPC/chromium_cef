@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=80d26df926f1af8cd10e90f4d214f5ace0f15a6b$
+// $hash=d0d1d1b76e91a9c6732de8c5e9709fa30fb7084e$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -605,6 +605,23 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::ReloadOriginalUrl() {
 
   // Execute
   _struct->reload_original_url(_struct);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::CanStoreWebArchive() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, can_store_web_archive)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->can_store_web_archive(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 NO_SANITIZE("cfi-icall")
