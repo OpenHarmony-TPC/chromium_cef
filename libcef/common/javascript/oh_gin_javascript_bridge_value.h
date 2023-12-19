@@ -26,6 +26,10 @@ class OhGinJavascriptBridgeValue {
     TYPE_NONFINITE,
     // Bridge Object ID
     TYPE_OBJECT_ID,
+    // Bridge H5 Object ID
+    TYPE_H5_OBJECT_ID,
+    // Bridge H5 Function ID
+    TYPE_H5_FUNCTION_ID,
     // Uint32 type
     TYPE_UINT32,
     TYPE_LAST_VALUE
@@ -40,6 +44,8 @@ class OhGinJavascriptBridgeValue {
   static std::unique_ptr<base::Value> CreateNonFiniteValue(float in_value);
   static std::unique_ptr<base::Value> CreateNonFiniteValue(double in_value);
   static std::unique_ptr<base::Value> CreateObjectIDValue(int32_t in_value);
+  static std::unique_ptr<base::Value> CreateH5FunctionIDValue(int32_t in_value);
+  static std::unique_ptr<base::Value> CreateH5ObjectIDValueWithMdNames(std::string in_value);
   static std::unique_ptr<base::Value> CreateUInt32Value(uint32_t in_value);
 
   // De-serialization
@@ -52,6 +58,7 @@ class OhGinJavascriptBridgeValue {
 
   bool GetAsNonFinite(float* out_value) const;
   bool GetAsObjectID(int32_t* out_object_id) const;
+  bool GetAsObjectIDWithMdNames(std::string* out_object_id) const;
   bool GetAsUInt32(uint32_t* out_value) const;
 
  private:

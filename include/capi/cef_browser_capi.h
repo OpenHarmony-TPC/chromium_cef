@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a58f3ff96f74e869db14729f156636930426b6a7$
+// $hash=88a7d946f4839c1f6718d57f6c83eabbb8706fe8$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -909,6 +909,16 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK *unregister_ark_jsfunction)(
       struct _cef_browser_host_t *self, const cef_string_t *object_name,
       cef_string_list_t method_list);
+
+  ///
+  // CallH5Function
+  ///
+  void(CEF_CALLBACK* call_h5function)(struct _cef_browser_host_t* self,
+                                      int32_t routing_id,
+                                      int32_t h5_object_id,
+                                      const cef_string_t* h5_method_name,
+                                      size_t argsCount,
+                                      struct _cef_value_t* const* args);
 
   ///
   // JavaScriptOnDocumentStart

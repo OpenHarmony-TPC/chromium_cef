@@ -14,6 +14,19 @@
 #include "libcef/common/values_impl.h"
 #include "oh_gin_javascript_bridge_object_deletion_message_filter.h"
 
+namespace {
+#define JS_BRIDGE_BINARY_ARGS_COUNT 2
+void StringSplit(std::string str,
+                 const char split,
+                 std::vector<std::string>& result) {
+  std::istringstream iss(str);
+  std::string token;
+  while (getline(iss, token, split)) {
+    result.push_back(token);
+  }
+}
+} // namespace
+
 namespace NWEB {
 OhGinJavascriptBridgeDispatcherHost::OhGinJavascriptBridgeDispatcherHost(
     content::WebContents* web_contents,
@@ -314,23 +327,39 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
   }
 
   switch (result->GetType()) {
-    case CefValueType::VTYPE_NULL:
+    case CefValueType::VTYPE_NULL: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_NULL";
       baseValue = std::make_unique<base::Value>();
       break;
-    case CefValueType::VTYPE_INT:
+    }
+    case CefValueType::VTYPE_INT: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_INT = " << result->GetInt();
       baseValue = std::make_unique<base::Value>(result->GetInt());
       break;
+    }
     case CefValueType::VTYPE_DOUBLE: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_DOUBLE = " << result->GetDouble();
       baseValue = std::make_unique<base::Value>(result->GetDouble());
       break;
     }
-    case CefValueType::VTYPE_BOOL:
+    case CefValueType::VTYPE_BOOL: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_BOOL = " << result->GetBool();
       baseValue = std::make_unique<base::Value>(result->GetBool());
       break;
-    case CefValueType::VTYPE_STRING:
+    }
+    case CefValueType::VTYPE_STRING: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_STRING";
       baseValue = std::make_unique<base::Value>(result->GetString().ToString());
       break;
+    }
     case CefValueType::VTYPE_LIST: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_LIST";
       auto cefArr = result->GetList();
       baseValue = std::make_unique<base::ListValue>();
       if (!cefArr) {
@@ -347,6 +376,8 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       break;
     }
     case CefValueType::VTYPE_DICTIONARY: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_DICTIONARY";
       auto cefDict = result->GetDictionary();
       baseValue = std::make_unique<base::DictionaryValue>();
       if (!cefDict) {
@@ -364,30 +395,51 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       break;
     }
     case CefValueType::VTYPE_BINARY: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_BINARY";
       auto size = result->GetBinary()->GetSize();
       auto buff = std::make_unique<char[]>(size);
       result->GetBinary()->GetData(buff.get(), size, 0);
       int32_t objId;
       std::string str(buff.get());
-      std::istringstream ss(str);
+
+      std::vector<std::string> strList;
+      StringSplit(str, ';', strList);
+      if(strList.size() != JS_BRIDGE_BINARY_ARGS_COUNT) {
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
+                      "ParseCefValueTObaseValueHelper: strList.size() == "
+                   << strList.size() << " is error";
+        baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(-1);
+        break;
+      }
+      std::istringstream ss(strList[1]);
       ss >> objId;
       if (objId <= 0) {
         LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                       "ParseCefValueTObaseValueHelper: objId == "
                    << objId << " is error";
+        baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(-1);
+        break;
       }
-
+      if (strList[0] == "TYPE_OBJECT_ID") {
+        baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(objId);
+        break;
+      }
       baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(objId);
       break;
     }
-    case CefValueType::VTYPE_INVALID:
+    case CefValueType::VTYPE_INVALID: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                   "ParseCefValueTObaseValueHelper: VTYPE_INVALID";
       baseValue = std::make_unique<base::Value>();
       break;
-    default:
+    }
+    default: {
       LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
                    "ParseCefValueTObaseValueHelper: not support value type";
       baseValue = std::make_unique<base::Value>();
       break;
+    }
   }
 
   return baseValue;
@@ -401,20 +453,33 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
     return cefValue;
   }
   switch (value->type()) {
-    case base::Value::Type::INTEGER:
+    case base::Value::Type::INTEGER: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: INTEGER = " << value->GetInt();
       cefValue->SetInt(value->GetInt());
       return cefValue;
+    }
     case base::Value::Type::DOUBLE: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: DOUBLE = " << value->GetDouble();
       cefValue->SetDouble(value->GetDouble());
       return cefValue;
     }
-    case base::Value::Type::BOOLEAN:
+    case base::Value::Type::BOOLEAN: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: BOOLEAN = " << value->GetBool();
       cefValue->SetBool(value->GetBool());
       return cefValue;
-    case base::Value::Type::STRING:
+    }
+    case base::Value::Type::STRING: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: STRING";
       cefValue->SetString(CefString(*value->GetIfString()));
       return cefValue;
+    }
     case base::Value::Type::LIST: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: LIST";
       size_t length = value->GetList().size();
       auto cefList = CefListValue::Create();
       for (size_t i = 0; i < length; i++) {
@@ -426,6 +491,8 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
       return cefValue;
     }
     case base::Value::Type::DICTIONARY: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: DICTIONARY";
       auto cefDict = CefDictionaryValue::Create();
       auto ptr = static_cast<const base::DictionaryValue*>(value);
       for (base::DictionaryValue::Iterator iter(*ptr); !iter.IsAtEnd();
@@ -439,6 +506,8 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
       return cefValue;
     }
     case base::Value::Type::BINARY: {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+          "ParseBaseValueTOCefValueHelper: BINARY";
       std::unique_ptr<const OhGinJavascriptBridgeValue> gin_value(
           OhGinJavascriptBridgeValue::FromValue(value));
       if (gin_value &&
@@ -452,15 +521,45 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(base::Value* value) {
                             "ParseBaseValueTOCefValueHelper: object_id == "
                          << object_id << " is error";
             }
-            std::string bin = std::to_string(object_id);
-            auto cefDict = CefBinaryValue::Create(bin.c_str(), bin.size());
-            cefValue->SetBinary(cefDict);
+            std::string bin = std::string("TYPE_OBJECT_ID") + std::string(";") + std::to_string(object_id);
+            auto cefBin = CefBinaryValue::Create(bin.c_str(), bin.size());
+            cefValue->SetBinary(cefBin);
+          }
+        }
+      } else if (gin_value &&
+          gin_value->GetType() == OhGinJavascriptBridgeValue::TYPE_H5_OBJECT_ID) {
+        if (OhGinJavascriptBridgeValue::ContainsOhGinJavascriptBridgeValue(
+                value)) {
+          std::string h5_object_id_with_names;
+          if (gin_value->GetAsObjectIDWithMdNames(&h5_object_id_with_names)) {
+            LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                          "ParseBaseValueTOCefValueHelper: TYPE_H5_OBJECT_ID h5_object_id_with_names .empty()= "
+                       << h5_object_id_with_names.empty();
+            std::string bin = std::string("TYPE_H5_OBJECT_ID") + std::string(";") + h5_object_id_with_names;
+            auto cefBin = CefBinaryValue::Create(bin.c_str(), bin.size());
+            cefValue->SetBinary(cefBin);
+          }
+        }
+      } else if (gin_value &&
+          gin_value->GetType() == OhGinJavascriptBridgeValue::TYPE_H5_FUNCTION_ID) {
+        if (OhGinJavascriptBridgeValue::ContainsOhGinJavascriptBridgeValue(
+                value)) {
+          OhGinJavascriptBridgeDispatcherHost::ObjectID h5_function_id;
+          if (gin_value->GetAsObjectID(&h5_function_id)) {
+            LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                          "ParseBaseValueTOCefValueHelper: TYPE_H5_FUNCTION_ID h5_function_id == "
+                       << h5_function_id;
+            std::string bin = std::string("TYPE_H5_FUNCTION_ID") + std::string(";") + std::to_string(h5_function_id);
+            auto cefBin = CefBinaryValue::Create(bin.c_str(), bin.size());
+            cefValue->SetBinary(cefBin);
           }
         }
       }
       return cefValue;
     }
     case base::Value::Type::NONE:
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                "ParseBaseValueTOCefValueHelper: NONE";
       break;
     default:
       LOG(INFO) << "OhGinJavascriptBridgeDispatcherHost::"
@@ -548,5 +647,39 @@ void OhGinJavascriptBridgeDispatcherHost::OnObjectWrapperDeleted(
     return;
   }
   client_->RemoveJavaScriptObjectHolder(routing_id, object_id);
+}
+
+void OhGinJavascriptBridgeDispatcherHost::DoCallH5Function(
+    int32_t routing_id,
+    int32_t h5_object_id,
+    const std::string& h5_method_name,   // IF h5_method_name empty, call anonymous function
+    const std::vector<CefRefPtr<CefValue>>& args) {
+  LOG(DEBUG)
+      << "OhGinJavascriptBridgeDispatcherHost::DoCallH5Function in";
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents());
+  if (!web_contents_impl) {
+    LOG(ERROR)
+        << "OhGinJavascriptBridgeDispatcherHost::DoCallH5Function web_contents_impl null";
+    return;
+  }
+
+  content::RenderFrameHost* target_frame =
+      web_contents_impl->GetTargetFramesIncludingPending(routing_id);
+
+  if(target_frame) {
+    LOG(DEBUG)
+        << "OhGinJavascriptBridgeDispatcherHost::DoCallH5Function called";
+    base::ListValue base_args;
+    std::unique_ptr<base::Value> value = std::make_unique<base::Value>();
+    for (auto& item : args) {
+      value = ParseCefValueTObaseValueHelper(item);
+      base_args.Append(std::move(value));
+    }
+
+    target_frame->Send(new OhGinJavascriptBridgeMsg_DoCallH5Function(
+        target_frame->GetRoutingID(), routing_id, h5_object_id, h5_method_name,
+        base_args));
+  }
 }
 }  // namespace NWEB
