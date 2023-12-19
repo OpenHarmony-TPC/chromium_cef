@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e7dd614a61266b934e02b17c277349c6c7d20dd9$
+// $hash=e01e515bcb7477865e6aea62bc86909bb535b4df$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2387,6 +2387,57 @@ void CefBrowserHostCToCpp::RemoveJavaScriptOnDocumentStart() {
 
   // Execute
   _struct->remove_java_script_on_document_start(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::JavaScriptOnDocumentEnd(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, java_script_on_document_end)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: script; type: string_byref_const
+  DCHECK(!script.empty());
+  if (script.empty()) {
+    return;
+  }
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  cef_string_list_t script_rulesList = cef_string_list_alloc();
+  DCHECK(script_rulesList);
+  if (script_rulesList) {
+    transfer_string_list_contents(script_rules, script_rulesList);
+  }
+
+  // Execute
+  _struct->java_script_on_document_end(_struct, script.GetStruct(),
+                                       script_rulesList);
+
+  // Restore param:script_rules; type: string_vec_byref_const
+  if (script_rulesList) {
+    cef_string_list_free(script_rulesList);
+  }
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::RemoveJavaScriptOnDocumentEnd() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_java_script_on_document_end)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_java_script_on_document_end(_struct);
 }
 
 NO_SANITIZE("cfi-icall")

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=96586f534026ba9ac83fdb22f98c099513498194$
+// $hash=c3184a78a7eb47d023a03d1336cd4e7e74df6c4a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1532,6 +1532,20 @@ typedef struct _cef_browser_host_t {
   /// RemoveJavaScriptOnDocumentStart
   ///
   void(CEF_CALLBACK* remove_java_script_on_document_start)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// JavaScriptOnDocumentEnd
+  ///
+  void(CEF_CALLBACK* java_script_on_document_end)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* script,
+      cef_string_list_t script_rules);
+
+  ///
+  /// RemoveJavaScriptOnDocumentEnd
+  ///
+  void(CEF_CALLBACK* remove_java_script_on_document_end)(
       struct _cef_browser_host_t* self);
 
   ///

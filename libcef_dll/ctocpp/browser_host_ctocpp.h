@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ce26ea708949e6402f02012a93dbe6159bd67415$
+// $hash=cc88ca436bcdb22c54b82121d76235637260e396$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -226,6 +226,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
   void RemoveJavaScriptOnDocumentStart() override;
+  void JavaScriptOnDocumentEnd(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentEnd() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,

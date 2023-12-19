@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e66e72c21ea5c1a2e83028c1f072b80f88a094cc$
+// $hash=b0a94c3f6b5fac77536545c09cac5ecc96eced4e$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2662,6 +2662,53 @@ void CEF_CALLBACK browser_host_remove_java_script_on_document_start(
   CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnDocumentStart();
 }
 
+void CEF_CALLBACK
+browser_host_java_script_on_document_end(struct _cef_browser_host_t* self,
+                                         const cef_string_t* script,
+                                         cef_string_list_t script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: script; type: string_byref_const
+  DCHECK(script);
+  if (!script) {
+    return;
+  }
+  // Verify param: script_rules; type: string_vec_byref_const
+  DCHECK(script_rules);
+  if (!script_rules) {
+    return;
+  }
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  std::vector<CefString> script_rulesList;
+  transfer_string_list_contents(script_rules, script_rulesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->JavaScriptOnDocumentEnd(CefString(script),
+                                                           script_rulesList);
+}
+
+void CEF_CALLBACK browser_host_remove_java_script_on_document_end(
+    struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnDocumentEnd();
+}
+
 void CEF_CALLBACK browser_host_set_draw_rect(struct _cef_browser_host_t* self,
                                              int x,
                                              int y,
@@ -2935,6 +2982,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_java_script_on_document_start;
   GetStruct()->remove_java_script_on_document_start =
       browser_host_remove_java_script_on_document_start;
+  GetStruct()->java_script_on_document_end =
+      browser_host_java_script_on_document_end;
+  GetStruct()->remove_java_script_on_document_end =
+      browser_host_remove_java_script_on_document_end;
   GetStruct()->set_draw_rect = browser_host_set_draw_rect;
   GetStruct()->set_draw_mode = browser_host_set_draw_mode;
   GetStruct()->create_web_print_document_adapter =
