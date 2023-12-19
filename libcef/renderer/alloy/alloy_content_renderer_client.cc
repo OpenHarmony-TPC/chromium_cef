@@ -593,6 +593,13 @@ void AlloyContentRendererClient::RunScriptsAtDocumentEnd(
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RunScriptsAtDocumentEnd(render_frame);
   }
+#if BUILDFLAG(IS_OHOS)
+  js_injection::JsCommunication* communication =
+      js_injection::JsCommunication::Get(render_frame);
+  if (communication) {
+    communication->RunScriptsAtDocumentEnd();
+  }
+#endif //IS_OHOS
 }
 
 void AlloyContentRendererClient::RunScriptsAtDocumentIdle(

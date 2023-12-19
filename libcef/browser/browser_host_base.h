@@ -296,6 +296,10 @@ class CefBrowserHostBase : public CefBrowserHost,
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
   void RemoveJavaScriptOnDocumentStart() override;
+  void JavaScriptOnDocumentEnd(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnDocumentEnd() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
   void SetZoomLevel(double zoomLevel) override;
@@ -688,7 +692,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   float virtual_pixel_ratio_ = 2.0;
   base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
-  std::map<std::string, int> script_result_map_;
+  std::map<std::string, int> document_start_script_result_map_;
+  std::map<std::string, int> document_end_script_result_map_;
 #endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
 };
