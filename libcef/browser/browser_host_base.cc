@@ -47,11 +47,13 @@
 #include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
+#include "content/public/common/url_constants.h"
 #include "libcef/browser/devtools/devtools_manager_delegate.h"
 #include "libcef/browser/javascript/oh_javascript_injector.h"
 #include "libcef/browser/navigation_state_serializer.h"
 #include "libcef/browser/permission/alloy_access_request.h"
 #include "libcef/browser/permission/alloy_geolocation_access.h"
+#include "net/base/mime_util.h"
 #include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/gl/nweb_native_window_tracker.h"
@@ -1301,6 +1303,27 @@ void CefBrowserHostBase::ReloadIgnoreCache() {
 }
 
 #if BUILDFLAG(IS_OHOS)
+bool CefBrowserHostBase::CanStoreWebArchive() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    return false;
+  }
+
+  auto web_contents = GetWebContents();
+  std::string mime_type = web_contents->GetContentsMimeType();
+  GURL url = web_contents->GetURL();
+  content::NavigationEntry* entry =
+      web_contents->GetController().GetLastCommittedEntry();
+  if (entry &&
+      (entry->GetPageType() != content::PAGE_TYPE_NORMAL ||
+          entry->GetBaseURLForDataURL().spec() == content::kUnreachableWebDataURL)) {
+    return false;
+  }
+
+  return url.SchemeIsHTTPOrHTTPS() &&
+         (net::MatchesMimeType(mime_type, "text/html") ||
+          net::MatchesMimeType(mime_type, "application/xhtml+xml"));
+}
+
 void CefBrowserHostBase::ReloadOriginalUrl() {
   auto callback = base::BindOnce(&CefBrowserHostBase::ReloadOriginalUrl, this);
   if (!CEF_CURRENTLY_ON_UIT()) {

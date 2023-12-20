@@ -270,6 +270,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                       const CefString& h5_method_name,
                       const std::vector<CefRefPtr<CefValue>>& args) override;
   void OnWebPreferencesChanged();
+  bool CanStoreWebArchive() override;
   void ReloadOriginalUrl() override;
   void StoreWebArchive(
       const CefString& base_name,

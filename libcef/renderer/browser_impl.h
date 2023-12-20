@@ -95,6 +95,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
   void DeleteHistory() override;
+  bool CanStoreWebArchive() override;
   void ReloadOriginalUrl() override;
   void SetBrowserUserAgentString(const CefString& user_agent) override {}
   CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()

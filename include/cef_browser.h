@@ -329,6 +329,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void ReloadOriginalUrl() = 0;
 
   ///
+  /// Can save current page as a archive.
+  ///
+  /*--cef()--*/
+  virtual bool CanStoreWebArchive() = 0;
+
+  ///
   /// Set user agent for current page.
   ///
   /*--cef()--*/

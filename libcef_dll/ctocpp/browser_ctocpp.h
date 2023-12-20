@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=36c1a72f52e2f05d8fca6aa8947a67097f120440$
+// $hash=b9a2c937dc5b3b5614de81754a739bd8f691bd22$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -71,6 +71,7 @@ public:
   void UpdateBrowserControlsHeight(int height, bool animate) override;
   void PrefetchPage(CefString &url, CefString &additionalHttpHeaders) override;
   void ReloadOriginalUrl() override;
+  bool CanStoreWebArchive() override;
   void SetBrowserUserAgentString(const CefString &user_agent) override;
   bool ShouldShowLoadingUI() override;
   void SetForceEnableZoom(bool forceEnableZoom) override;

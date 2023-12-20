@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5dbcd0937fe8ed076f3825e9ad45904e2b031e87$
+// $hash=9c830290435800c80133057cf3ae0b9629f2ae5b$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -623,6 +623,23 @@ void CEF_CALLBACK browser_reload_original_url(struct _cef_browser_t *self) {
   CefBrowserCppToC::Get(self)->ReloadOriginalUrl();
 }
 
+int CEF_CALLBACK browser_can_store_web_archive(struct _cef_browser_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->CanStoreWebArchive();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK browser_set_browser_user_agent_string(
     struct _cef_browser_t *self, const cef_string_t *user_agent) {
   shutdown_checker::AssertNotShutdown();
@@ -867,6 +884,7 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_update_browser_controls_height;
   GetStruct()->prefetch_page = browser_prefetch_page;
   GetStruct()->reload_original_url = browser_reload_original_url;
+  GetStruct()->can_store_web_archive = browser_can_store_web_archive;
   GetStruct()->set_browser_user_agent_string =
       browser_set_browser_user_agent_string;
   GetStruct()->should_show_loading_ui = browser_should_show_loading_ui;
