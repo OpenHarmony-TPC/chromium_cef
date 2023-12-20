@@ -198,11 +198,6 @@ void CefTouchSelectionControllerClientOSR::OnTouchDown() {
 
 void CefTouchSelectionControllerClientOSR::OnTouchUp() {
   touch_down_ = false;
-#ifdef OHOS_CLIPBOARD
-  if (quick_menu_running_) {
-    return;
-  }
-#endif
   UpdateQuickMenu();
 }
 

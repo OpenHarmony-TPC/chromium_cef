@@ -1853,7 +1853,6 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
 
   // Update the touch event first.
 #ifdef OHOS_CLIPBOARD
-  bool had_no_pointer = !pointer_state_.GetPointerCount();
   pointer_state_.SetFromOverlay(event.from_overlay);
 #endif  // #ifdef OHOS_CLIPBOARD
   if (!pointer_state_.OnTouch(event)) {
@@ -1872,16 +1871,6 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
       pointer_state_, result.moved_beyond_slop_region, false);
 
   pointer_state_.CleanupRemovedTouchPoints(event);
-
-#ifdef OHOS_CLIPBOARD
-  if (had_no_pointer && !event.from_overlay) {
-    selection_controller_client_->OnTouchDown();
-  }
-
-  if (!pointer_state_.GetPointerCount() && !event.from_overlay) {
-    selection_controller_client_->OnTouchUp();
-  }
-#endif  // #ifdef OHOS_CLIPBOARD
 
   // Set unchanged touch point to StateStationary for touchmove and
   // touchcancel to make sure only send one ack per WebTouchEvent.
@@ -2725,10 +2714,12 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     if (input_event.GetType() ==
         blink::WebInputEvent::Type::kGestureScrollBegin) {
       is_scroll_consumed_ = false;
+      selection_controller_client_->OnScrollStarted();
       handler->OnScrollState(browser_impl_.get(), true);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
       is_scroll_consumed_ = false;
+      selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
