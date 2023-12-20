@@ -345,6 +345,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
   // Shows the repost form confirmation dialog box.
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
+
+  void OnNativeEmbedStatusUpdate(
+      const content::NativeEmbedInfo& native_embed_info,
+      content::NativeEmbedInfo::TagState state) override;
 #endif
 
   // content::WebContentsObserver methods.

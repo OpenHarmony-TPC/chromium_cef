@@ -60,6 +60,7 @@
 #include "libcef/browser/prefs/renderer_prefs.h"
 #include "res_sched_client_adapter.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
+#include "gpu/ipc/common/gpu_surface_id_tracker.h"
 #endif
 
 #if defined(OHOS_MEDIA_POLICY)
@@ -1660,6 +1661,43 @@ void AlloyBrowserHostImpl::ShowRepostFormWarningDialog(
   if (contents_delegate_) {
     contents_delegate_->ShowRepostFormWarningDialog(source);
   }
+}
+
+void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
+    const content::NativeEmbedInfo& native_embed_info,
+    content::NativeEmbedInfo::TagState state) {
+  if (!platform_delegate_) {
+    return;
+  }
+  LOG(INFO) << "[NativeEmbed] OnNativeEmbedStatusUpdate state is:" << (int)state;
+  gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
+  // TODO:
+  /*
+  CefRenderHandler::CefNativeEmbedData data_info;
+    switch(state) {
+        case content::NativeEmbedInfo::TAG_STATE_CREATE:
+          data_info.status = CefRenderHandler::CefEmbedLifeStatus::CREATE;
+          break;
+        case content::NativeEmbedInfo::TAG_STATE_CHANGE:
+          data_info.status = CefRenderHandler::CefEmbedLifeStatus::UPDATE;
+          break;
+        case content::NativeEmbedInfo::TAG_STATE_DESTROY:
+          data_info.status = CefRenderHandler::CefEmbedLifeStatus::DESTROY;
+          break;
+        default:
+          return;
+  }
+  data_info.surfaceId = gpu::GpuSurfaceTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
+  data_info.embedId = std::to_string(native_embed_info.native_embed_id);
+  data_info.info.id = 111; //std::stoi(native_embed_info.embed_element_id);
+  data_info.info.width = native_embed_info.size.width();
+  data_info.info.height = native_embed_info.size.height();
+  data_info.info.type = native_embed_info.native_type;
+  data_info.info.src = native_embed_info.native_source;
+  data_info.info.url = native_embed_info.url.path();
+
+  platform_delegate_->OnNativeEmbedLifecycleChange(data_info);
+  */
 }
 #endif
 // content::WebContentsObserver methods.
