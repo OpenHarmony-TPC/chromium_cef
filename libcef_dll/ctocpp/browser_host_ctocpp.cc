@@ -2513,6 +2513,20 @@ void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
   _struct->set_overscroll_mode(_struct, mode);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetNativeEmbedModeEnabled(bool mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_embed_mode))
+    return;
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_embed_mode(_struct, mode);
+}
+
 NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::Discard() {
   shutdown_checker::AssertNotShutdown();
 

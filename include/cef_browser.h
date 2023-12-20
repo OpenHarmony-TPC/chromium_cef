@@ -1608,6 +1608,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetOverscrollMode(int mode) = 0;
 
+#ifdef BUILDFLAG(IS_OHOS)
+  ///
+  // Set the embed mode enable of web
+  ///
+  /*--cef()--*/
+  virtual void SetNativeEmbedModeEnabled(bool mode) = 0;
+#endif
   ///
   /// Discard a webview window
   ///

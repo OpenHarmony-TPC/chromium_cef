@@ -4073,6 +4073,85 @@ typedef enum {
 } cef_media_type_t;
 
 ///
+// embed life change.
+///
+typedef enum {
+  CREATE = 0,
+  UPDATE = 1,
+  DESTROY = 2,
+} cef_embed_life_change_t;
+
+///
+// Structure native embed data.
+///
+typedef struct _cef_native_embed_t {
+  int32_t id;
+  int32_t width;
+  int32_t height;
+  std::string type;
+  std::string src;
+  std::string url;
+} cef_native_embed_t;
+
+///
+// Structure native embed data.
+///
+typedef struct _cef_native_embed_data_t {
+  cef_embed_life_change_t status;
+  std::string surfaceId;
+  std::string embedId;
+  cef_native_embed_t info;
+} cef_native_embed_data_t;
+
+
+///
+// Touch type.
+///
+typedef enum {
+    DOWN,
+    UP,
+    MOVE,
+    CANCEL,
+    PULL_DOWN,
+    PULL_UP,
+    PULL_MOVE,
+    PULL_IN_WINDOW,
+    PULL_OUT_WINDOW,
+    TOUCH_UNKNOWN,
+} cef_embed_touch_type_t;
+
+///
+// Structure embed touch point data.
+///
+typedef struct _cef_embed_touch_point_t {
+    int32_t id = 0;
+    float x = 0.0f;
+    float y = 0.0f;
+    float screenX = 0.0f;
+    float screenY = 0.0f;
+} cef_embed_touch_point_t;
+
+///
+// Structure embed touch data.
+///
+typedef struct _cef_embed_touch_event_t {
+    std::string embedId;
+    int32_t id = 0;
+    float x = 0.0f;
+    float y = 0.0f;
+    float screenX = 0.0f;
+    float screenY = 0.0f;
+    cef_embed_touch_type_t type;
+    // nanosecond time stamp.
+    uint64_t time;
+    double size = 0.0;
+    float force = 0.0f;
+
+    // all points on the touch screen.
+    std::vector<_cef_embed_touch_point_t> pointers;
+} cef_embed_touch_event_t;
+
+///
 // Navigation entry types.
 ///
 typedef enum {
