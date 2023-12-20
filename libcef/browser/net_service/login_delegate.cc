@@ -185,9 +185,7 @@ LoginDelegate::LoginDelegate(
     const GURL& origin_url,
     scoped_refptr<net::HttpResponseHeaders> response_headers,
     LoginAuthRequiredCallback callback)
-    : web_contents_(web_contents->GetWeakPtr()),
-      callback_(std::move(callback)),
-      weak_ptr_factory_(this) {
+    : callback_(std::move(callback)), weak_ptr_factory_(this) {
 #else
 LoginDelegate::LoginDelegate(const net::AuthChallengeInfo& auth_info,
                              content::WebContents* web_contents,
@@ -198,21 +196,19 @@ LoginDelegate::LoginDelegate(const net::AuthChallengeInfo& auth_info,
 #endif
   CEF_REQUIRE_UIT();
 
-#ifndef OHOS_ARKWEB_EXTENSIONS
   // May be nullptr for requests originating from CefURLRequest.
   CefRefPtr<CefBrowserHostBase> browser;
   if (web_contents) {
     browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
   }
-#endif
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   // |callback| needs to be executed asynchronously.
-  CEF_POST_TASK(
-      CEF_UIT,
-      base::BindOnce(&LoginDelegate::Start, weak_ptr_factory_.GetWeakPtr(),
-                     auth_info, request_id, is_request_for_main_frame,
-                     origin_url, response_headers));
+  CEF_POST_TASK(CEF_UIT, base::BindOnce(&LoginDelegate::Start, 
+			                weak_ptr_factory_.GetWeakPtr(), browser,
+                                        auth_info, request_id,
+					is_request_for_main_frame,
+                                        origin_url, response_headers));
 #else
   // |callback| needs to be executed asynchronously.
   CEF_POST_TASK(CEF_UIT, base::BindOnce(&LoginDelegate::Start,
@@ -239,6 +235,7 @@ void LoginDelegate::Cancel() {
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 void LoginDelegate::ContinueBeforeCommit(
+    CefRefPtr<CefBrowserHostBase> browser,
     const net::AuthChallengeInfo& auth_info,
     const GURL& request_url,
     const content::GlobalRequestID& request_id,
@@ -248,8 +245,7 @@ void LoginDelegate::ContinueBeforeCommit(
   CEF_REQUIRE_UIT();
 
   // The request may have been handled while the WebRequest API was processing.
-  if (!web_contents_ || !web_contents_->GetDelegate() || callback_.is_null() ||
-      cancelled_by_extension) {
+  if (!browser || callback_.is_null() || cancelled_by_extension) {
     LOG(INFO) << "LoginDelegate is cancelled by extension:"
               << cancelled_by_extension;
     Cancel();
@@ -263,17 +259,13 @@ void LoginDelegate::ContinueBeforeCommit(
   }
 
   LOG(INFO) << "LoginDelegate try to get credentials";
-  StartInternal(auth_info, request_id, request_url);
+  StartInternal(browser, auth_info, request_id, request_url);
 }
 
-void LoginDelegate::StartInternal(const net::AuthChallengeInfo& auth_info,
+void LoginDelegate::StartInternal(CefRefPtr<CefBrowserHostBase> browser,
+		                  const net::AuthChallengeInfo& auth_info,
                                   const content::GlobalRequestID& request_id,
                                   const GURL& origin_url) {
-  CefRefPtr<CefBrowserHostBase> browser;
-  if (web_contents_) {
-    browser = CefBrowserHostBase::GetBrowserForContents(web_contents_.get());
-  }
-
   auto url_request_info = CefBrowserURLRequest::FromRequestID(request_id);
 
   if (browser || url_request_info) {
@@ -299,6 +291,7 @@ void LoginDelegate::StartInternal(const net::AuthChallengeInfo& auth_info,
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 void LoginDelegate::Start(
+    CefRefPtr<CefBrowserHostBase> browser,
     const net::AuthChallengeInfo& auth_info,
     const content::GlobalRequestID& request_id,
     bool is_request_for_main_frame,
@@ -306,23 +299,23 @@ void LoginDelegate::Start(
     scoped_refptr<net::HttpResponseHeaders> response_headers) {
   CEF_REQUIRE_UIT();
 
-  if (is_request_for_main_frame) {
+  if (browser && is_request_for_main_frame) {
     // If the WebRequest API wants to take a shot at intercepting this, we can
     // return immediately. |continuation| will eventually be invoked if the
     // request isn't cancelled.
     auto* api = extensions::BrowserContextKeyedAPIFactory<
-        extensions::WebRequestAPI>::Get(web_contents_->GetBrowserContext());
+        extensions::WebRequestAPI>::Get(browser->GetBrowserContext());
     auto continuation = base::BindOnce(&LoginDelegate::ContinueBeforeCommit,
-                                       weak_ptr_factory_.GetWeakPtr(),
+                                       weak_ptr_factory_.GetWeakPtr(), browser,
                                        auth_info, origin_url, request_id, true);
-    if (api->MaybeProxyAuthRequest(web_contents_->GetBrowserContext(),
+    if (api->MaybeProxyAuthRequest(browser->GetBrowserContext(),
                                    auth_info, std::move(response_headers),
                                    request_id, true, std::move(continuation))) {
       return;
     }
   }
 
-  StartInternal(auth_info, request_id, origin_url);
+  StartInternal(browser, auth_info, request_id, origin_url);
 }
 #else
 void LoginDelegate::Start(CefRefPtr<CefBrowserHostBase> browser,
