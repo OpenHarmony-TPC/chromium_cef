@@ -49,15 +49,18 @@ class LoginDelegate : public content::LoginDelegate {
 
  private:
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-  void Start(const net::AuthChallengeInfo& auth_info,
+  void Start(CefRefPtr<CefBrowserHostBase> browser,
+             const net::AuthChallengeInfo& auth_info,
              const content::GlobalRequestID& request_id,
              bool is_request_for_main_frame,
              const GURL& origin_url,
              scoped_refptr<net::HttpResponseHeaders> response_headers);
-  void StartInternal(const net::AuthChallengeInfo& auth_info,
+  void StartInternal(CefRefPtr<CefBrowserHostBase> browser,
+		     const net::AuthChallengeInfo& auth_info,
                      const content::GlobalRequestID& request_id,
                      const GURL& origin_url);
   void ContinueBeforeCommit(
+      CefRefPtr<CefBrowserHostBase> browser,
       const net::AuthChallengeInfo& auth_info,
       const GURL& request_url,
       const content::GlobalRequestID& request_id,
@@ -72,9 +75,6 @@ class LoginDelegate : public content::LoginDelegate {
 
 #endif
 
-#if defined(OHOS_ARKWEB_EXTENSIONS)
-  base::WeakPtr<content::WebContents> web_contents_;
-#endif
   LoginAuthRequiredCallback callback_;
   base::WeakPtrFactory<LoginDelegate> weak_ptr_factory_;
 };
