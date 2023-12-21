@@ -136,6 +136,7 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
   int GetShrinkViewportHeight();
+  int GetTopControlsOffset() const override;
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -598,8 +599,8 @@ class CefRenderWidgetHostViewOSR
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
-  float prev_top_controls_offset_ = 0.f;
-  float prev_top_content_offset_ = 0.f;
+  float top_controls_offset_ = 0.f;
+  float top_content_offset_ = 0.f;
   bool for_browser_ = false;
 #endif
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;

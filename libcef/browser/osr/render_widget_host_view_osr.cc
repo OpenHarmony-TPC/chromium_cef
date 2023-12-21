@@ -1276,11 +1276,11 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
       top_content_offset -
       metadata.top_controls_height / metadata.device_scale_factor;
 
-  if (top_content_offset != prev_top_content_offset_ ||
-      top_controls_offset != prev_top_controls_offset_) {
-    prev_top_content_offset_ = top_content_offset;
-    prev_top_controls_offset_ = top_controls_offset;
-    OnTopControlsChanged(prev_top_controls_offset_, prev_top_content_offset_);
+  if (top_content_offset != top_content_offset_ ||
+      top_controls_offset != top_controls_offset_) {
+    top_content_offset_ = top_content_offset;
+    top_controls_offset_ = top_controls_offset;
+    OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
 }
 #endif
@@ -2768,6 +2768,10 @@ void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
+int CefRenderWidgetHostViewOSR::GetTopControlsOffset() const {
+  return for_browser_ ? top_controls_offset_ : 0;
+}
+
 int CefRenderWidgetHostViewOSR::GetShrinkViewportHeight() {
   int shrink_viewport_height = 0;
   if (!for_browser_ || !host()->delegate()) {
