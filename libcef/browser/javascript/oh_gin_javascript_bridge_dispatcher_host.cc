@@ -438,7 +438,8 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       if (strList.size() != JS_BRIDGE_BINARY_ARGS_COUNT) {
         LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                       "ParseCefValueTObaseValueHelper: strList.size() == "
-                   << strList.size() << " is error";
+                   << strList.size() << " is error, str=" << str
+                   << ", size=" << size;
         baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(-1);
         break;
       }
