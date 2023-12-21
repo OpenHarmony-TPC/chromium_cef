@@ -437,6 +437,7 @@ class CefBrowserPlatformDelegate {
 #if defined(OHOS_INPUT_EVENTS)
   virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {}
   virtual bool ShouldVirtualKeyboardOverlay() { return false; }
+  virtual void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) {};
 #endif 
  protected:
   // Allow deletion via std::unique_ptr only.

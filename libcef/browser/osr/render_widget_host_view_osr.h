@@ -200,6 +200,8 @@ class CefRenderWidgetHostViewOSR
   void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
   ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
+  void DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) override;
+  void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)

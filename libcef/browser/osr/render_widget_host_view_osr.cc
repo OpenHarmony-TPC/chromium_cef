@@ -2843,4 +2843,25 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
     NotifyVirtualKeyboardOverlayRect(keyboard_rect);
   }
 }
+void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) {
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    CefRenderHandler::CefEmbedTouchEvent event{touchEvent->embedId,touchEvent->id,touchEvent->x,touchEvent->y,
+      touchEvent->screenX,touchEvent->screenY, static_cast<CefRenderHandler::CefEmbedTouchType>(touchEvent->type),
+      touchEvent->time,touchEvent->size,touchEvent->force};
+    handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info){
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnNativeEmbedLifecycleChange(browser_impl_.get(), info);
+
+  }
+}
 #endif

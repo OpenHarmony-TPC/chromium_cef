@@ -3016,6 +3016,13 @@ int CefBrowserHostBase::GetCacheMode() {
   base::AutoLock lock_scope(state_lock_);
   return cache_mode_;
 }
+void CefBrowserHostBase::SetNativeEmbedModeEnabled(bool embedMode) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SetNativeEmbedModeEnabled(embedMode);
+  }
+}
 #endif
 
 void CefBrowserHostBase::SetShouldFrameSubmissionBeforeDraw(bool should) {

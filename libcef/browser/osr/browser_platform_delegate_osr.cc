@@ -927,4 +927,10 @@ bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
   }
   return false;
 }
+void CefBrowserPlatformDelegateOsr::OnNativeEmbedLifecycleChange(
+  const CefRenderHandler::CefNativeEmbedData& info){
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->OnNativeEmbedLifecycleChange(info);
+}
 #endif

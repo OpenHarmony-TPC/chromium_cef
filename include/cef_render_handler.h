@@ -58,6 +58,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef std::vector<CefRect> RectList;
   typedef cef_text_input_mode_t TextInputMode;
   typedef cef_text_input_type_t TextInputType;
+#ifdef BUILDFLAG(IS_OHOS)
+  typedef cef_native_embed_data_t CefNativeEmbedData;
+  typedef cef_embed_touch_event_t CefEmbedTouchEvent;
+  typedef cef_embed_life_change_t CefEmbedLifeStatus;
+  typedef cef_embed_touch_type_t CefEmbedTouchType;
+#endif
 
   ///
   /// Return the handler for accessibility notifications. If no handler is
@@ -351,6 +357,18 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                  const float fling_y) {
     return false;
   }
+  ///
+  /// Called when embed touch.
+  ///
+  /*--cef()--*/
+  virtual void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
+                                   const CefEmbedTouchEvent& event) {}
+  ///
+  /// Called when embed touch.
+  ///
+  /*--cef()--*/
+  virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
+                                      const CefNativeEmbedData& info) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

@@ -397,6 +397,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
+  void SetNativeEmbedModeEnabled(bool embedMode) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;

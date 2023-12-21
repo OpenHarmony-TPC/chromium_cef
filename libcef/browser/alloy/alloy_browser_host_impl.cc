@@ -1670,9 +1670,7 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
     return;
   }
   LOG(INFO) << "[NativeEmbed] OnNativeEmbedStatusUpdate state is:" << (int)state;
-  gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
-  // TODO:
-  /*
+
   CefRenderHandler::CefNativeEmbedData data_info;
     switch(state) {
         case content::NativeEmbedInfo::TAG_STATE_CREATE:
@@ -1687,9 +1685,9 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
         default:
           return;
   }
-  data_info.surfaceId = gpu::GpuSurfaceTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
+  data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
-  data_info.info.id = 111; //std::stoi(native_embed_info.embed_element_id);
+  data_info.info.id = std::atoi(native_embed_info.embed_element_id.c_str());
   data_info.info.width = native_embed_info.size.width();
   data_info.info.height = native_embed_info.size.height();
   data_info.info.type = native_embed_info.native_type;
@@ -1697,7 +1695,6 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   data_info.info.url = native_embed_info.url.path();
 
   platform_delegate_->OnNativeEmbedLifecycleChange(data_info);
-  */
 }
 #endif
 // content::WebContentsObserver methods.

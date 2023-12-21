@@ -1510,7 +1510,11 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *set_overscroll_mode)(struct _cef_browser_host_t *self,
                                           int mode);
-
+  ///
+  // Set the embed mode enable of web
+  ///
+  void(CEF_CALLBACK* set_embed_mode)(struct _cef_browser_host_t* self,
+                                          bool mode);
   ///
   /// Discard a webview window
   ///

@@ -1309,6 +1309,11 @@ void CefFrameImpl::SetOverscrollMode(int mode) {
   DCHECK(render_frame->IsMainFrame());
   render_frame->SetOverscrollMode(mode);
 }
+void CefFrameImpl::SetNativeEmbedModeEnabled(bool mode) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  render_frame->SetNativeEmbedModeEnabled(mode);
+}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)
