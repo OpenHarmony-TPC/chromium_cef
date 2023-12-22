@@ -861,10 +861,37 @@ void CefFrameHostImpl::OnGetImageFromCache(
   handler->OnGetImageFromCache(image_impl);
 }
 
+#ifdef OHOS_NETWORK_LOAD
+  std::string CefFrameHostImpl::GetRefererValue(std::string headers) {
+    std::string refererValue = "";
+    std::string targetKeyword = "Referer: ";
+    size_t startPos = headers.find(targetKeyword);
+    if (startPos == std::string::npos) {
+      return refererValue;
+    }
+    size_t endPos = headers.find("\r\n", startPos);
+    refererValue = headers.substr(startPos + targetKeyword.length(), endPos-startPos);
+    return refererValue;
+  }
+#endif
+
 void CefFrameHostImpl::LoadHeaderUrl(const CefString& url,
                                      const CefString& additionalHttpHeaders) {
+#if defined(OHOS_NETWORK_LOAD)
+  std::string refererValue = GetRefererValue(additionalHttpHeaders.ToString());
+  content::Referrer referer;
+  if (refererValue.empty()) {
+    referer = content::Referrer();
+  } else {
+    GURL refererUrl = url_util::MakeGURL(refererValue, /*fixup=*/false);
+    referer = content::Referrer(refererUrl, network::mojom::ReferrerPolicy::kDefault);
+  }
+  LoadURLWithExtras(url, referer, kPageTransitionExplicit,
+                    additionalHttpHeaders);
+#else
   LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit,
                     additionalHttpHeaders);
+#endif
 }
 
 void CefFrameHostImpl::SendHitEvent(

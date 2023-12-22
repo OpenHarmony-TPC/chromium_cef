@@ -254,6 +254,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   mojo::Remote<cef::mojom::RenderFrame> render_frame_;
 
   IMPLEMENT_REFCOUNTING(CefFrameHostImpl);
+
+#ifdef OHOS_NETWORK_LOAD
+  std::string GetRefererValue(std::string headers);
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_H_
