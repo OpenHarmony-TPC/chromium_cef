@@ -2259,6 +2259,7 @@ void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
   window_id_ = window_id;
   nweb_id_ = nweb_id;
   OHOS::NWeb::ResSchedClientAdapter::ReportWindowId(static_cast<int32_t>(window_id), static_cast<int32_t>(nweb_id));
+  ReportWindowStatus(false);
 }
 #endif
 
