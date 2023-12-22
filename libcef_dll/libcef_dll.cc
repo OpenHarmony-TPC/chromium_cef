@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ee8862363b35a7836b688e3a95273f2c9a367f1d$
+// $hash=0d501f589a4ae4acac9dd513e69b9ab8abcb8b56$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -837,7 +837,8 @@ CEF_EXPORT int cef_launch_process(struct _cef_command_line_t* command_line) {
 CEF_EXPORT int cef_register_scheme_handler_factory(
     const cef_string_t* scheme_name,
     const cef_string_t* domain_name,
-    struct _cef_scheme_handler_factory_t* factory) {
+    struct _cef_scheme_handler_factory_t* factory,
+    int incognito_mode) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: scheme_name; type: string_byref_const
@@ -850,17 +851,18 @@ CEF_EXPORT int cef_register_scheme_handler_factory(
   // Execute
   bool _retval = CefRegisterSchemeHandlerFactory(
       CefString(scheme_name), CefString(domain_name),
-      CefSchemeHandlerFactoryCToCpp::Wrap(factory));
+      CefSchemeHandlerFactoryCToCpp::Wrap(factory),
+      incognito_mode ? true : false);
 
   // Return type: bool
   return _retval;
 }
 
-CEF_EXPORT int cef_clear_scheme_handler_factories() {
+CEF_EXPORT int cef_clear_scheme_handler_factories(int incognito_mode) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  bool _retval = CefClearSchemeHandlerFactories();
+  bool _retval = CefClearSchemeHandlerFactories(incognito_mode ? true : false);
 
   // Return type: bool
   return _retval;

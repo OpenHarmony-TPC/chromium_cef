@@ -84,7 +84,7 @@ class CefBrowserProcessHandler : public virtual CefBaseRefCounted {
   /// has been initialized.
   ///
   /*--cef()--*/
-  virtual void OnContextInitialized() {}
+  virtual void OnContextInitialized(bool incognito_mode) {}
 
   ///
   /// Called before a child process is launched. Will be called on the browser

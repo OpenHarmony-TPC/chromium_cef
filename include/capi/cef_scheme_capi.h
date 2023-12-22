@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6b6a7f754abc9ee5d6f775ba9eee802d3244faf5$
+// $hash=1ceab68bc5de6e1925b27bfbb02edc062d27573b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SCHEME_CAPI_H_
@@ -122,7 +122,8 @@ typedef struct _cef_scheme_handler_factory_t {
 CEF_EXPORT int cef_register_scheme_handler_factory(
     const cef_string_t* scheme_name,
     const cef_string_t* domain_name,
-    cef_scheme_handler_factory_t* factory);
+    cef_scheme_handler_factory_t* factory,
+    int incognito_mode);
 
 ///
 /// Clear all scheme handler factories registered with the global request
@@ -131,7 +132,7 @@ CEF_EXPORT int cef_register_scheme_handler_factory(
 /// cef_request_context_t::cef_request_context_get_global_context()->clear_schem
 /// e_handler_factories().
 ///
-CEF_EXPORT int cef_clear_scheme_handler_factories(void);
+CEF_EXPORT int cef_clear_scheme_handler_factories(int incognito_mode);
 
 #ifdef __cplusplus
 }

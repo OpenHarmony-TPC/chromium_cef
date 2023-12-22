@@ -10,23 +10,47 @@
 bool CefRegisterSchemeHandlerFactory(
     const CefString& scheme_name,
     const CefString& domain_name,
-    CefRefPtr<CefSchemeHandlerFactory> factory) {
+    CefRefPtr<CefSchemeHandlerFactory> factory
+#ifdef OHOS_INCOGNITO_MODE
+    , bool incognito_mode
+#endif
+    ) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
     DCHECK(false) << "context not valid";
     return false;
   }
 
+#ifdef OHOS_INCOGNITO_MODE
+  return incognito_mode ? CefRequestContext::GetGlobalOTRContext()->
+                              RegisterSchemeHandlerFactory(
+                                  scheme_name, domain_name, factory)
+                        : CefRequestContext::GetGlobalContext()->
+                              RegisterSchemeHandlerFactory(
+                                  scheme_name, domain_name, factory);
+#else
   return CefRequestContext::GetGlobalContext()->RegisterSchemeHandlerFactory(
       scheme_name, domain_name, factory);
+#endif
 }
 
-bool CefClearSchemeHandlerFactories() {
+bool CefClearSchemeHandlerFactories(
+#ifdef OHOS_INCOGNITO_MODE
+    bool incognito_mode
+#endif
+) {
   // Verify that the context is in a valid state.
   if (!CONTEXT_STATE_VALID()) {
     DCHECK(false) << "context not valid";
     return false;
   }
 
+#ifdef OHOS_INCOGNITO_MODE
+  return incognito_mode ? CefRequestContext::GetGlobalOTRContext()->
+                              ClearSchemeHandlerFactories()
+                        : CefRequestContext::GetGlobalContext()->
+                              ClearSchemeHandlerFactories();
+#else
   return CefRequestContext::GetGlobalContext()->ClearSchemeHandlerFactories();
+#endif
 }
