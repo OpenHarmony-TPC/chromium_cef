@@ -52,6 +52,10 @@ void CefExtensionWebContentsObserver::RenderFrameCreated(
         process_id, url::Origin::Create(GURL(blink::kChromeUIResourcesURL)));
     policy->GrantRequestOrigin(
         process_id, url::Origin::Create(GURL(chrome::kChromeUIThemeURL)));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    policy->GrantRequestOrigin(
+        process_id, url::Origin::Create(GURL(content::kArkWebUIResourcesURL)));
+#endif
   }
 }
 

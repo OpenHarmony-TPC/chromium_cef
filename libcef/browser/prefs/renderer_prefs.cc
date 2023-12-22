@@ -252,8 +252,17 @@ void SetCefSpecialPrefs(content::RenderViewHost* rvh,
         ->PutZoomingForTextFactor(browser->settings().text_size_percent /
                                   100.0f);
   }
+  if (!rvh) {
+    return;
+  }
+  content::RenderWidgetHostViewBase* rwhvb =
+      static_cast<content::RenderWidgetHostViewBase*>(
+          rvh->GetWidget()->GetView());
+  if (rwhvb && rwhvb->IsRenderWidgetHostViewChildFrame()) {
+    return;
+  }
   CefRenderWidgetHostViewOSR* view =
-      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+      static_cast<CefRenderWidgetHostViewOSR*>(rwhvb);
   if (view) {
     view->SetDoubleTapSupportEnabled(
         browser->settings().supports_double_tap_zoom);

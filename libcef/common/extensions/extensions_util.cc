@@ -18,14 +18,10 @@ bool ExtensionsEnabled() {
 }
 
 bool PdfExtensionEnabled() {
-#if !BUILDFLAG(IS_OHOS)
   static bool enabled =
       ExtensionsEnabled() && !base::CommandLine::ForCurrentProcess()->HasSwitch(
                                  switches::kDisablePdfExtension);
   return enabled;
-#else
-  return false;
-#endif
 }
 
 bool PrintPreviewEnabled() {
