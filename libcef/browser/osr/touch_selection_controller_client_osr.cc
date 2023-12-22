@@ -34,6 +34,7 @@ namespace {
 // Delay before showing the quick menu, in milliseconds.
 constexpr int kQuickMenuDelayInMs = 100;
 #ifdef OHOS_CLIPBOARD
+constexpr int kSelectHandleMoveDelayMixInMs = 400;
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
     QM_EDITFLAG_CAN_ELLIPSIS, QM_EDITFLAG_CAN_CUT, QM_EDITFLAG_CAN_COPY,
     QM_EDITFLAG_CAN_PASTE, QM_EDITFLAG_CAN_SELECT_ALL};
@@ -391,6 +392,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
     } else {
+      LOG(DEBUG) << "Show Handle Quick Menu Success";
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
@@ -480,6 +482,17 @@ void CefTouchSelectionControllerClientOSR::NotifyTouchSelectionChanged(
                                    end_selection_handle, need_report);
   }
 }
+
+bool CefTouchSelectionControllerClientOSR::IsVaildSelectionHandleMove() {
+  base::TimeDelta duration = base::TimeTicks::Now() - select_handle_move_timer_;
+  select_handle_move_timer_ = base::TimeTicks::Now();
+  LOG(DEBUG) << "Selection Handle Move Vaild Time = " << duration.InMilliseconds();
+  if (kSelectHandleMoveDelayMixInMs > duration.InMilliseconds() &&
+      duration.InMilliseconds() > kQuickMenuDelayInMs) {
+    return false;
+  }
+  return true;
+}
 #endif  // #ifdef OHOS_CLIPBOARD
 void CefTouchSelectionControllerClientOSR::InternalClient::
     SelectBetweenCoordinates(const gfx::PointF& base,
@@ -495,6 +508,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
 #ifdef OHOS_CLIPBOARD
+  LOG(DEBUG) << "Selection Event Value = " << static_cast<int32_t>(event);
   SetTemporarilyHidden(false);
   auto browser = rwhv_->browser_impl();
   switch (event) {
@@ -530,6 +544,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::SELECTION_HANDLES_MOVED:
     case ui::INSERTION_HANDLE_MOVED:
       if (!handle_drag_in_progress_) {
+        if (!IsVaildSelectionHandleMove()) {
+          LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
+          return;
+        }
         UpdateQuickMenu();
       }
       NotifyTouchSelectionChanged(true);
@@ -684,10 +702,16 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
     return;
   }
 #endif  // #ifndef OHOS_CLIPBOARD
-  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS) {
+#ifdef OHOS_CLIPBOARD
+  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
+      command_id != QM_EDITFLAG_CAN_SELECT_ALL) {
     rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
   }
-
+#else
+  if (command_id != QM_EDITFLAG_CAN_ELLIPSISL) {
+    rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
+  }
+#endif  // #ifndef OHOS_CLIPBOARD
   content::RenderWidgetHostDelegate* host_delegate = rwhv_->host()->delegate();
   if (!host_delegate) {
     return;

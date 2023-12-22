@@ -378,9 +378,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void GetZoomLevelCallback();
 
   void SetTouchInsertHandleMenuShow(bool show) {
-    touch_insert_handle_menu_show_ = show;
+    web_contents()->SetTouchInsertHandleMenuShow(show);
   }
-  bool GetTouchInsertHandleMenuShow() { return touch_insert_handle_menu_show_; }
+  bool GetTouchInsertHandleMenuShow() {
+    return web_contents()->GetTouchInsertHandleMenuShow();
+  }
 
 #ifdef OHOS_HTML_SELECT
   void ShowPopupMenu(
@@ -498,8 +500,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
 #if BUILDFLAG(IS_OHOS)
   int base_background_color_ = 0xffffffff;
-
-  bool touch_insert_handle_menu_show_ = false;
 
   double curFactor_ = 0.0;
 
