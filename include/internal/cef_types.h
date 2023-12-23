@@ -4121,17 +4121,6 @@ typedef enum {
 } cef_embed_touch_type_t;
 
 ///
-// Structure embed touch point data.
-///
-typedef struct _cef_embed_touch_point_t {
-    int32_t id = 0;
-    float x = 0.0f;
-    float y = 0.0f;
-    float screenX = 0.0f;
-    float screenY = 0.0f;
-} cef_embed_touch_point_t;
-
-///
 // Structure embed touch data.
 ///
 typedef struct _cef_embed_touch_event_t {
@@ -4142,13 +4131,8 @@ typedef struct _cef_embed_touch_event_t {
     float screenX = 0.0f;
     float screenY = 0.0f;
     cef_embed_touch_type_t type;
-    // nanosecond time stamp.
-    uint64_t time;
-    double size = 0.0;
-    float force = 0.0f;
-
-    // all points on the touch screen.
-    std::vector<_cef_embed_touch_point_t> pointers;
+    float offsetX = 0.0;
+    float offsetY = 0.0f;
 } cef_embed_touch_event_t;
 
 ///

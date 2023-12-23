@@ -2843,9 +2843,9 @@ void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::EmbedTo
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-    CefRenderHandler::CefEmbedTouchEvent event{touchEvent->embedId,touchEvent->id,touchEvent->x,touchEvent->y,
-      touchEvent->screenX,touchEvent->screenY, static_cast<CefRenderHandler::CefEmbedTouchType>(touchEvent->type),
-      touchEvent->time,touchEvent->size,touchEvent->force};
+    CefRenderHandler::CefEmbedTouchEvent event{touchEvent->embedId, touchEvent->id, touchEvent->x, touchEvent->y,
+      touchEvent->screenX, touchEvent->screenY, static_cast<CefRenderHandler::CefEmbedTouchType>(touchEvent->type),
+      touchEvent->offsetX, touchEvent->offsetY};
     handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event);
   }
 }
