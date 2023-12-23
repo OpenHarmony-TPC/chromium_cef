@@ -45,6 +45,7 @@ class CefTouchSelectionControllerClientOSR
 #ifdef OHOS_CLIPBOARD
   void SetTemporarilyHidden(bool hidden);
   void NotifyTouchSelectionChanged(bool need_report);
+  bool IsVaildSelectionHandleMove();
 #endif  // #ifdef OHOS_CLIPBOARD
 
 #if defined(OHOS_EX_FREE_COPY)
@@ -163,7 +164,9 @@ class CefTouchSelectionControllerClientOSR
 #if defined(OHOS_EX_FREE_COPY)
   bool isSelectionTextNotEmpty_ = false;
 #endif
-
+#ifdef OHOS_CLIPBOARD
+  base::TimeTicks select_handle_move_timer_;
+#endif
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;
 };
 
