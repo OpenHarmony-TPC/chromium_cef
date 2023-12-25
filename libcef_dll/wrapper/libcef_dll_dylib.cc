@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=668b143edbc83bb6eb1c5158cb6edc21527ea4c8$
+// $hash=e831b0d15ebc9ba1312425f81c4f840c11d0a988$
 //
 
 #include <dlfcn.h>
@@ -838,13 +838,15 @@ NO_SANITIZE("cfi-icall")
 int cef_register_scheme_handler_factory(
     const cef_string_t* scheme_name,
     const cef_string_t* domain_name,
-    struct _cef_scheme_handler_factory_t* factory) {
+    struct _cef_scheme_handler_factory_t* factory,
+    int incognito_mode) {
   return g_libcef_pointers.cef_register_scheme_handler_factory(
-      scheme_name, domain_name, factory);
+      scheme_name, domain_name, factory, incognito_mode);
 }
 
-NO_SANITIZE("cfi-icall") int cef_clear_scheme_handler_factories() {
-  return g_libcef_pointers.cef_clear_scheme_handler_factories();
+NO_SANITIZE("cfi-icall")
+int cef_clear_scheme_handler_factories(int incognito_mode) {
+  return g_libcef_pointers.cef_clear_scheme_handler_factories(incognito_mode);
 }
 
 NO_SANITIZE("cfi-icall")

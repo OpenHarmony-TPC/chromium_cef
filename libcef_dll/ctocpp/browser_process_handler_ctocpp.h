@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d86cc781b93a34ab7bc94f35b7c45ab9587aef10$
+// $hash=646ab650a5070780d9089cf98b7e7662f4727404$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_
@@ -38,7 +38,7 @@ class CefBrowserProcessHandlerCToCpp
   void OnRegisterCustomPreferences(
       cef_preferences_type_t type,
       CefRawPtr<CefPreferenceRegistrar> registrar) override;
-  void OnContextInitialized() override;
+  void OnContextInitialized(bool incognito_mode) override;
   void OnBeforeChildProcessLaunch(
       CefRefPtr<CefCommandLine> command_line) override;
   void OnScheduleMessagePumpWork(int64 delay_ms) override;

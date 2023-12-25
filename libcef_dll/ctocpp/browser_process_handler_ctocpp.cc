@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=db95f4b4337e9eec478f506df6f322247f8b24f6$
+// $hash=498373facd9218d8d3d2c268d3c1248d820708ff$
 //
 
 #include "libcef_dll/ctocpp/browser_process_handler_ctocpp.h"
@@ -46,7 +46,7 @@ void CefBrowserProcessHandlerCToCpp::OnRegisterCustomPreferences(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnContextInitialized() {
+void CefBrowserProcessHandlerCToCpp::OnContextInitialized(bool incognito_mode) {
   cef_browser_process_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_context_initialized)) {
     return;
@@ -55,7 +55,7 @@ void CefBrowserProcessHandlerCToCpp::OnContextInitialized() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_context_initialized(_struct);
+  _struct->on_context_initialized(_struct, incognito_mode);
 }
 
 NO_SANITIZE("cfi-icall")

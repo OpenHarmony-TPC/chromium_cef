@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4ef8b73a5218531b370fdd76c23153a1f83b7f7b$
+// $hash=f3f4cc5d026806875ff6c967d2150673532b333b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
@@ -93,7 +93,8 @@ typedef struct _cef_browser_process_handler_t {
   /// has been initialized.
   ///
   void(CEF_CALLBACK* on_context_initialized)(
-      struct _cef_browser_process_handler_t* self);
+      struct _cef_browser_process_handler_t* self,
+      int incognito_mode);
 
   ///
   /// Called before a child process is launched. Will be called on the browser

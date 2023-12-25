@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=88060c7df7f0b894e99633a60ad83c1da552ff98$
+// $hash=da149dbcc2a16be79eb903a455c220a010e36708$
 //
 
 #include "libcef_dll/cpptoc/browser_process_handler_cpptoc.h"
@@ -47,7 +47,8 @@ void CEF_CALLBACK browser_process_handler_on_register_custom_preferences(
 }
 
 void CEF_CALLBACK browser_process_handler_on_context_initialized(
-    struct _cef_browser_process_handler_t* self) {
+    struct _cef_browser_process_handler_t* self,
+    int incognito_mode) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -56,7 +57,8 @@ void CEF_CALLBACK browser_process_handler_on_context_initialized(
   }
 
   // Execute
-  CefBrowserProcessHandlerCppToC::Get(self)->OnContextInitialized();
+  CefBrowserProcessHandlerCppToC::Get(self)->OnContextInitialized(
+      incognito_mode ? true : false);
 }
 
 void CEF_CALLBACK browser_process_handler_on_before_child_process_launch(
