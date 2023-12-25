@@ -96,7 +96,7 @@ class OhGinJavascriptBridgeDispatcherHost
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
   ObjectMethodMap method_map_;
-  int32_t object_id_ = 1;
+  int32_t object_id_ = INT32_MAX;
 
   CefRefPtr<CefClient> client_;
 };
