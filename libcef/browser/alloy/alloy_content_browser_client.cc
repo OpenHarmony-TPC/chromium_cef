@@ -2085,6 +2085,12 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
     allowed_webui_hosts.emplace_back(chrome::kChromeUIThemeHost);
   }
   if (!allowed_webui_hosts.empty()) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    factories->emplace(
+        content::kArkWebUIScheme,
+        content::CreateWebUIURLLoaderFactory(
+            frame_host, content::kArkWebUIScheme, allowed_webui_hosts));
+#endif
     factories->emplace(content::kChromeUIScheme,
                        content::CreateWebUIURLLoaderFactory(
                            frame_host, content::kChromeUIScheme,
@@ -2887,6 +2893,12 @@ std::string AlloyContentBrowserClient::GetReducedUserAgent() {
 std::unique_ptr<content::WebContentsViewDelegate>
 AlloyContentBrowserClient::GetWebContentsViewDelegate(
     content::WebContents* web_contents) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (auto* registry =
+          performance_manager::PerformanceManagerRegistry::GetInstance()) {
+    registry->MaybeCreatePageNodeForWebContents(web_contents);
+  }
+#endif
   return std::make_unique<AlloyWebContentsViewDelegate>(web_contents);
 }
 

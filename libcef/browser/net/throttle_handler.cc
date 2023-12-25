@@ -18,6 +18,9 @@
 #if BUILDFLAG(IS_OHOS)
 #include "libcef/browser/predictors/predictor_database.h"
 #endif  // IS_OHOS
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
 
 namespace throttle {
 
@@ -62,7 +65,11 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
   }
 
   bool ignore_navigation = false;
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (navigation_handle->GetURL().SchemeIs(extensions::kExtensionScheme)) {
+    return false;
+  }
+#endif
   if (browser) {
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetRequestHandler()) {
