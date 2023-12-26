@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e01e515bcb7477865e6aea62bc86909bb535b4df$
+// $hash=4c10ea959864744af0c19747e1026c86f4f63a78$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2518,13 +2518,14 @@ void CefBrowserHostCToCpp::SetNativeEmbedModeEnabled(bool mode) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_embed_mode))
+  if (CEF_MEMBER_MISSING(_struct, set_native_embed_mode_enabled)) {
     return;
+  }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_embed_mode(_struct, mode);
+  _struct->set_native_embed_mode_enabled(_struct, mode);
 }
 
 NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::Discard() {

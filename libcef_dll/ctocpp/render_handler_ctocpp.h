@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2a4ab48451075e2a96fdf8467eb3fddaf2daa4a9$
+// $hash=c14eeb78afc2c2dce426591fdbea83438b67e9a0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -113,6 +113,11 @@ class CefRenderHandlerCToCpp
                          const float y,
                          const float fling_x,
                          const float fling_y) override;
+  void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
+                                 const cef_embed_touch_event_t& event) override;
+  void OnNativeEmbedLifecycleChange(
+      CefRefPtr<CefBrowser> browser,
+      const cef_native_embed_data_t& info) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

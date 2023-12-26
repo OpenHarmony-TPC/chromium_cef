@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ebfe1c40727eccbdb24068e1cf26dee203ae9c1c$
+// $hash=e3e0491df6a23fc6adb0edc6a886911da0b08532$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -782,6 +782,54 @@ bool CefRenderHandlerCToCpp::FilterScrollEvent(CefRefPtr<CefBrowser> browser,
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
+    CefRefPtr<CefBrowser> browser,
+    const cef_embed_touch_event_t& event) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_native_embed_gesture_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_native_embed_gesture_event(
+      _struct, CefBrowserCppToC::Wrap(browser), &event);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnNativeEmbedLifecycleChange(
+    CefRefPtr<CefBrowser> browser,
+    const cef_native_embed_data_t& info) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_native_embed_lifecycle_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_native_embed_lifecycle_change(
+      _struct, CefBrowserCppToC::Wrap(browser), &info);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
