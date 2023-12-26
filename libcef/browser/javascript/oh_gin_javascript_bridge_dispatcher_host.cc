@@ -179,7 +179,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
         return;
       }
     }
-    ++object_id_;
+    object_id_--;
 
     MethodPair object_pair;
     std::unordered_set<std::string> method_set;
