@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=788abccf459ebec37b8fe4d24d65b2ed303cfd66$
+// $hash=6ecdc34f7b7c32ff458896b339788067ca0e778b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -350,6 +350,22 @@ typedef struct _cef_render_handler_t {
                                          const float y,
                                          const float fling_x,
                                          const float fling_y);
+
+  ///
+  /// Called when embed touch.
+  ///
+  void(CEF_CALLBACK* on_native_embed_gesture_event)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const struct _cef_embed_touch_event_t* event);
+
+  ///
+  /// Called when embed touch.
+  ///
+  void(CEF_CALLBACK* on_native_embed_lifecycle_change)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const struct _cef_native_embed_data_t* info);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

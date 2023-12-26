@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8c69fd34199048b7ebb03c8eb94fe1ad0d863734$
+// $hash=166acdff04a96c2910ffb87469b0a2f6d9c854a1$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -17,6 +17,7 @@
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+#include "libcef_dll/template_util.h"
 
 namespace {
 
@@ -910,6 +911,82 @@ render_handler_filter_scroll_event(struct _cef_render_handler_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    const struct _cef_embed_touch_event_t* event) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: event; type: struct_byref_const
+  DCHECK(event);
+  if (!event) {
+    return;
+  }
+  if (!template_util::has_valid_size(event)) {
+    DCHECK(false) << "invalid event->[base.]size";
+    return;
+  }
+
+  // Translate param: event; type: struct_byref_const
+  cef_embed_touch_event_t eventObj;
+  if (event) {
+    eventObj = *event;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnNativeEmbedGestureEvent(
+      CefBrowserCToCpp::Wrap(browser), eventObj);
+}
+
+void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    const struct _cef_native_embed_data_t* info) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: info; type: struct_byref_const
+  DCHECK(info);
+  if (!info) {
+    return;
+  }
+  if (!template_util::has_valid_size(info)) {
+    DCHECK(false) << "invalid info->[base.]size";
+    return;
+  }
+
+  // Translate param: info; type: struct_byref_const
+  cef_native_embed_data_t infoObj;
+  if (info) {
+    infoObj = *info;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnNativeEmbedLifecycleChange(
+      CefBrowserCToCpp::Wrap(browser), infoObj);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -954,6 +1031,10 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_over_scroll_fling_end;
   GetStruct()->on_scroll_state = render_handler_on_scroll_state;
   GetStruct()->filter_scroll_event = render_handler_filter_scroll_event;
+  GetStruct()->on_native_embed_gesture_event =
+      render_handler_on_native_embed_gesture_event;
+  GetStruct()->on_native_embed_lifecycle_change =
+      render_handler_on_native_embed_lifecycle_change;
 }
 
 // DESTRUCTOR - Do not edit by hand.

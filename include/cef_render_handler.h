@@ -362,13 +362,13 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
-                                   const CefEmbedTouchEvent& event) {}
+                                   const cef_embed_touch_event_t& event) {}
   ///
   /// Called when embed touch.
   ///
   /*--cef()--*/
   virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
-                                      const CefNativeEmbedData& info) {}
+                                      const cef_native_embed_data_t& info) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
