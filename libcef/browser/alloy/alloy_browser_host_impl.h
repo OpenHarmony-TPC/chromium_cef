@@ -417,7 +417,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       const zoom::ZoomController::ZoomChangedEventData& data) override;
   void OnZoomControllerDestroyed(
       zoom::ZoomController* zoom_controller) override {}
-
 #endif
 
  private:

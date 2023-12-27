@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=23a0ab81fad2e29a409edcd5b7876c4d2dfb8afa$
+// $hash=d7d92073d453839cf2dbd683d306e08de82b7a72$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -239,6 +239,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool Discard() override;
   bool Restore() override;
   void SetBrowserZoomLevel(double zoomFactor) override;
+  int GetShrinkViewportHeight() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

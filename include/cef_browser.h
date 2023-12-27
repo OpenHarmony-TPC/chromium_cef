@@ -1633,6 +1633,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual int GetShrinkViewportHeight() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

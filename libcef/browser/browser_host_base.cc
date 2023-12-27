@@ -3209,3 +3209,14 @@ int CefBrowserHostBase::GetSecurityLevel() {
   return static_cast<int>(securityValue);
 }
 #endif // BUILDFLAG(IS_OHOS)
+
+int CefBrowserHostBase::GetShrinkViewportHeight() {
+#if defined(OHOS_EX_TOPCONTROLS)
+  if (platform_delegate_) {
+    return platform_delegate_->GetShrinkViewportHeight();
+  }
+  return 0;
+#else
+  return 0;
+#endif
+}
