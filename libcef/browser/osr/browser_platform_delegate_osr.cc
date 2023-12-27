@@ -934,3 +934,12 @@ void CefBrowserPlatformDelegateOsr::OnNativeEmbedLifecycleChange(
     view->OnNativeEmbedLifecycleChange(info);
 }
 #endif
+
+#ifdef OHOS_EX_TOPCONTROLS
+int CefBrowserPlatformDelegateOsr::GetShrinkViewportHeight() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    return view->GetShrinkViewportHeight();
+  }
+  return 0;
+}
+#endif

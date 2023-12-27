@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=85746e2dd526a03a4daaa64d528786e82fc4c9d1$
+// $hash=d31804dcb6475383da0d899d89b1de27aaed035e$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2852,6 +2852,24 @@ browser_host_set_browser_zoom_level(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetBrowserZoomLevel(zoomFactor);
 }
 
+int CEF_CALLBACK
+browser_host_get_shrink_viewport_height(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  int _retval = CefBrowserHostCppToC::Get(self)->GetShrinkViewportHeight();
+
+  // Return type: simple
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3013,6 +3031,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->discard = browser_host_discard;
   GetStruct()->restore = browser_host_restore;
   GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;
+  GetStruct()->get_shrink_viewport_height =
+      browser_host_get_shrink_viewport_height;
 }
 
 // DESTRUCTOR - Do not edit by hand.

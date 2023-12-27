@@ -447,6 +447,12 @@ void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
 }
 #endif
 
+#ifdef OHOS_EX_TOPCONTROLS
+int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
+  return 0;
+}
+#endif
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=efdbf4e2a0efef08b7242bc64b771e990f004713$
+// $hash=3be853229231e81aa1e4c6f3b523a82524ed026c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1605,6 +1605,12 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_browser_zoom_level)(struct _cef_browser_host_t* self,
                                              double zoomFactor);
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  int(CEF_CALLBACK* get_shrink_viewport_height)(
+      struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

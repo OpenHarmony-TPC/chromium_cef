@@ -451,6 +451,9 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool GetSavePassword() override;
   void SetSavePassword(bool enable) override;
   // #endif // defined(OHOS_EX_PASSWORD)
+  // if defined(OHOS_EX_TOPCONTROLS)
+  int GetShrinkViewportHeight() override;
+  // #endif
   // #endif // defined(OHOS_NWEB_EX)
 
   // CefBrowserContentsDelegate::Observer methods:

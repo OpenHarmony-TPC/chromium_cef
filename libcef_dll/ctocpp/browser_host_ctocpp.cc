@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4c10ea959864744af0c19747e1026c86f4f63a78$
+// $hash=cc4f22a9344a92d05d2846a79bdfc85f150458fa$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2575,6 +2575,23 @@ void CefBrowserHostCToCpp::SetBrowserZoomLevel(double zoomFactor) {
 
   // Execute
   _struct->set_browser_zoom_level(_struct, zoomFactor);
+}
+
+NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetShrinkViewportHeight() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_shrink_viewport_height)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_shrink_viewport_height(_struct);
+
+  // Return type: simple
+  return _retval;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
