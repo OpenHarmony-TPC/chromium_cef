@@ -722,7 +722,7 @@ void CefFrameImpl::OnDisconnect(DisconnectReason reason) {
                          ConnectReason::RETRY));
     } else {
       // Trigger a crash in official builds.
-      LOG(FATAL) << "Connection retry failure for frame "
+      LOG(ERROR) << "Connection retry failure for frame "
                  << frame_util::GetFrameDebugString(frame_id_);
     }
   }
