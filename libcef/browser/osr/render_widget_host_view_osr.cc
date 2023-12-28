@@ -617,7 +617,7 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
 }
 
 void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
-  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchEventList");
+  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::SendTouchEventList");
 
   for (const auto& event : event_list) {
 #if defined(OHOS_PERFORMANCE_JITTER)
