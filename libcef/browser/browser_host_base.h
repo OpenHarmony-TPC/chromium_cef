@@ -339,7 +339,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   size_t GetFrameCount() override;
   void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
-  
+
 #if BUILDFLAG(IS_OHOS)
   int GetSecurityLevel() override;
   void DeleteHistory() override;
@@ -386,6 +386,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
 #endif  // OHOS_PAGE_UP_DOWN

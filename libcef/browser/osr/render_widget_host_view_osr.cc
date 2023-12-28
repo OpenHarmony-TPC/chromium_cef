@@ -654,7 +654,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   for (const auto& event : event_list) {
     // Update the touch event first.
 #ifdef OHOS_CLIPBOARD
-    had_no_pointer = had_no_pointer && !pointer_state_.GetPointerCount()
+    had_no_pointer = had_no_pointer && !pointer_state_.GetPointerCount();
     pointer_state_.SetFromOverlay(event.from_overlay);
 #endif  // #ifdef OHOS_CLIPBOARD
     if (!pointer_state_.OnTouch(event)) {
