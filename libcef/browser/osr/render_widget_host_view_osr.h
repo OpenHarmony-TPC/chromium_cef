@@ -132,12 +132,12 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
   int GetShrinkViewportHeight();
   int GetTopControlsOffset() const override;
-  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
