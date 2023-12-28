@@ -670,6 +670,22 @@ void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
     }
   }
 }
+
+void AlloyBrowserHostImpl::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
+  if (!IsWindowless()) {
+    NOTREACHED() << "Window rendering is not disabled";
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SendTouchEventList,
+                                          this, event_list));
+    return;
+  }
+
+  if (platform_delegate_)
+    platform_delegate_->SendTouchEventList(event_list);
+}
 #endif
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
@@ -1754,36 +1770,36 @@ void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
 
 void AlloyBrowserHostImpl::OnFormEditingStateChanged(bool state, uint64_t form_id) {
   LOG(INFO) << "AlloyBrowserHostImpl::OnFormEditingStateChanged state: " << state;
-  if (client_.get() && client_->GetFormHandler().get()) 
+  if (client_.get() && client_->GetFormHandler().get())
     client_->GetFormHandler()->OnFormEditingStateChanged(this, state, form_id);
 }
- 
+
 void AlloyBrowserHostImpl::MediaStartedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStartedPlaying, is_video: " << video_type.has_video;
- 
+
   start_play_ = true;
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   if (client_.get() && client_->GetMediaHandler().get()) {
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, cef_media_playing_state_t::PLAYING);
   }
 }
- 
+
 void AlloyBrowserHostImpl::MediaStoppedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id,
     content::WebContentsObserver::MediaStoppedReason reason) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStoppedPlaying, is_video: " << video_type.has_video << " stopped reason: " << static_cast<int>(reason);
-  
+
   if (!start_play_) {
     return;
   }
- 
+
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
-  
-  switch(reason) 
+
+  switch(reason)
   {
     case content::WebContentsObserver::MediaStoppedReason::kReachedEndOfStream:
       state = cef_media_playing_state_t::END_OF_STREAM;
@@ -1792,12 +1808,12 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
       state = cef_media_playing_state_t::PAUSE;
       break;
   }
- 
+
   if (client_.get() && client_->GetMediaHandler().get()) {
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, state);
   }
 }
- 
+
 void AlloyBrowserHostImpl::OnRecentlyAudibleTimerFired() {
   audio_capturer_.reset();
 }
@@ -2112,7 +2128,7 @@ void AlloyBrowserHostImpl::WasKeyboardResized() {
         base::BindOnce(&AlloyBrowserHostImpl::WasKeyboardResized, this));
     return;
   }
- 
+
   if (platform_delegate_)
     platform_delegate_->WasKeyboardResized();
 }
@@ -2124,7 +2140,7 @@ void AlloyBrowserHostImpl::SetVirtualKeyBoardArg(int32_t width, int32_t height, 
     platform_delegate_->SetVirtualKeyBoardArg(width, height, keyboard);
   }
 }
- 
+
 bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
   if (platform_delegate_) {
     return platform_delegate_->ShouldVirtualKeyboardOverlay();
@@ -2278,7 +2294,7 @@ void AlloyBrowserHostImpl::CreateWebPrintDocumentAdapter(const CefString& jobNam
 }
 #endif // defined(OHOS_PRINT)
 
- 
+
 bool AlloyBrowserHostImpl::Discard() {
   if (!CEF_CURRENTLY_ON_UIT()) {
     LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, called on invalid thread";
@@ -2288,22 +2304,22 @@ bool AlloyBrowserHostImpl::Discard() {
     LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, WebContents is nullptr";
     return false;
   }
- 
+
   content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
   content::RenderProcessHost* render_process = main_frame->GetProcess();
   if (!render_process) {
     LOG(ERROR) << "AlloyBrowserHostImpl::Discard failed, RenderProcessHost is nullptr";
     return false;
   }
- 
+
   bool fast_shutdown_success = render_process->FastShutdownIfPossible(1u, true);
   if (fast_shutdown_success) {
     web_contents()->SetWasDiscarded(true);
   }
- 
+
   return fast_shutdown_success;
 }
- 
+
 bool AlloyBrowserHostImpl::Restore() {
   if (!CEF_CURRENTLY_ON_UIT()) {
     LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, called on invalid thread";
@@ -2313,7 +2329,7 @@ bool AlloyBrowserHostImpl::Restore() {
     LOG(ERROR) << "AlloyBrowserHostImpl::Restore failed, WebContents is nullptr";
     return false;
   }
-  
+
   web_contents()->GetController().SetNeedsReload();
   web_contents()->GetController().LoadIfNecessary();
   web_contents()->Focus();

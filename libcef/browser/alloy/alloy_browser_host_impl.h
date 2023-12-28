@@ -125,6 +125,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
@@ -210,9 +211,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnSetFocus(cef_focus_source_t source) override;
 
   bool ShowContextMenu(const content::ContextMenuParams& params);
-  
+
   bool Discard() override;
-  
+
   bool Restore() override;
 
 #if defined(OHOS_COMPOSITE_RENDER)

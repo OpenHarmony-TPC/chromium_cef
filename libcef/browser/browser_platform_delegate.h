@@ -323,6 +323,9 @@ class CefBrowserPlatformDelegate {
 #if BUILDFLAG(IS_OHOS)
   // Notify the browser that it was occluded. Only used with windowless rendering.
   virtual void WasOccluded(bool occluded);
+
+  // Send touch event list to the browser for a windowless browser.
+  virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif
 
   // Notify the browser that screen information has changed. Only used with

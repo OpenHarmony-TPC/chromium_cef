@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3be853229231e81aa1e4c6f3b523a82524ed026c$
+// $hash=8ab3ed0b8284271a0115625aa4837c992d344412$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -822,6 +822,14 @@ typedef struct _cef_browser_host_t {
                                    int occluded);
 
   ///
+  /// Send touch event list to the browser for a windowless browser.
+  ///
+  void(CEF_CALLBACK* send_touch_event_list)(
+      struct _cef_browser_host_t* self,
+      size_t event_listCount,
+      cef_touch_event_t const* event_list);
+
+  ///
   /// Send a notification to the browser that the screen info has changed. The
   /// browser will then call cef_render_handler_t::GetScreenInfo to update the
   /// screen information with the new values. This simulates moving the webview
@@ -847,6 +855,7 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* send_external_begin_frame)(
       struct _cef_browser_host_t* self);
 
+  ///
   ///
   /// Send a key event to the browser.
   ///

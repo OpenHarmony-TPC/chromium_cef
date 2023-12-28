@@ -137,6 +137,7 @@ class CefRenderWidgetHostViewOSR
   gfx::Rect GetPhysicalViewBounds();
   int GetShrinkViewportHeight();
   int GetTopControlsOffset() const override;
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -268,7 +269,7 @@ class CefRenderWidgetHostViewOSR
       const content::TouchEventWithLatencyInfo& touch,
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
-  
+
  #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   void OnVsync();
 
