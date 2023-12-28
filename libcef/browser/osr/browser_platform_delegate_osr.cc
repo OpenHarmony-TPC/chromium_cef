@@ -352,13 +352,13 @@ void CefBrowserPlatformDelegateOsr::SendTouchEventList(const std::vector<CefTouc
   std::vector<CefTouchEvent> event_adjust_list = event_list;
 #ifdef OHOS_NWEB_EX
   for (auto& event_adjust : event_adjust_list) {
-    if (event.type == CEF_TET_PRESSED) {
+    if (event_adjust.type == CEF_TET_PRESSED) {
       shrink_viewport_height_ = view->GetShrinkViewportHeight();
-    } else if (event.type == CEF_TET_CANCELLED) {
+    } else if (event_adjust.type == CEF_TET_CANCELLED) {
       shrink_viewport_height_ = 0;
     }
     event_adjust.y -= shrink_viewport_height_;
-    if (event.type == CEF_TET_RELEASED) {
+    if (event_adjust.type == CEF_TET_RELEASED) {
       shrink_viewport_height_ = 0;
     }
   }
@@ -367,7 +367,7 @@ void CefBrowserPlatformDelegateOsr::SendTouchEventList(const std::vector<CefTouc
   view->SendTouchEventList(event_adjust_list);
 
   for (auto& event_adjust : event_adjust_list) {
-    if (event.type == CEF_TET_PRESSED) {
+    if (event_adjust.type == CEF_TET_PRESSED) {
         SendTouchEventToRender(event_adjust);
     }
   }
@@ -947,7 +947,7 @@ void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(
   if (view)
     view->SetVirtualKeyBoardArg(width, height, keyboard);
 }
- 
+
 bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view && view->GetVirtualKeyboardMode() ==

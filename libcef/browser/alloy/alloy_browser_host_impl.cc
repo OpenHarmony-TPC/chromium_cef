@@ -673,7 +673,7 @@ void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
 
 void AlloyBrowserHostImpl::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   if (!IsWindowless()) {
-    NOTREACHED() << "Window rendering is not disabled";
+    DCHECK(false) << "Window rendering is not disabled";
     return;
   }
 

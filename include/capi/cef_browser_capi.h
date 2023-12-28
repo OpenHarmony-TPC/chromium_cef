@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8ab3ed0b8284271a0115625aa4837c992d344412$
+// $hash=cfd24311d67b2df2a9f9469f57364b2664d591be$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -855,7 +855,6 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* send_external_begin_frame)(
       struct _cef_browser_host_t* self);
 
-  ///
   ///
   /// Send a key event to the browser.
   ///

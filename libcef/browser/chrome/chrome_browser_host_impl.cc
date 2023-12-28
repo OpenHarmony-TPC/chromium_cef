@@ -248,10 +248,6 @@ void ChromeBrowserHostImpl::SendTouchEvent(const CefTouchEvent& event) {
   NOTIMPLEMENTED();
 }
 
-void ChromeBrowserHostImpl::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
-  NOTIMPLEMENTED();
-}
-
 void ChromeBrowserHostImpl::SendCaptureLostEvent() {
   NOTIMPLEMENTED();
 }

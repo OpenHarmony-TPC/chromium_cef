@@ -890,7 +890,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SendExternalBeginFrame() = 0;
-  ///
+
   ///
   /// Send a key event to the browser.
   ///

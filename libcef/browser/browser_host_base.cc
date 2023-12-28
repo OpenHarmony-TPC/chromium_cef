@@ -918,7 +918,7 @@ js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() 
   }
   return js_communication_host_.get();
 }
- 
+
 void CefBrowserHostBase::JavaScriptOnDocumentStart(
     const CefString& script,
     const std::vector<CefString>& script_rules) {
@@ -937,7 +937,7 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
     }
   }
 }
- 
+
 void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
@@ -1458,12 +1458,12 @@ void CefBrowserHostBase::UpdateBrowserControlsState(int constraints,
   if (!GetWebContents()) {
     return;
   }
- 
+
   cc::BrowserControlsState constraints_state =
       static_cast<cc::BrowserControlsState>(constraints);
   cc::BrowserControlsState current_state =
       static_cast<cc::BrowserControlsState>(current);
- 
+
   GetWebContents()->UpdateBrowserControlsState(constraints_state, current_state,
                                                animate);
 #endif
@@ -1474,7 +1474,7 @@ void CefBrowserHostBase::UpdateBrowserControlsHeight(int height, bool animate) {
   if (!GetWebContents()) {
     return;
   }
- 
+
   GetWebContents()->UpdateBrowserControlsHeight(height, animate);
 #endif
 }
@@ -2860,6 +2860,10 @@ void CefBrowserHostBase::SetAudioExclusive(bool audioExclusive) {
 
 #if BUILDFLAG(IS_OHOS)
  void CefBrowserHostBase::WasOccluded(bool occluded) {
+  // TODO(ohos): please impl the function and remove this comment.
+ }
+
+ void CefBrowserHostBase::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.
  }
 

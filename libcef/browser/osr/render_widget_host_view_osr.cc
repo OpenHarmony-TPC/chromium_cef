@@ -620,8 +620,9 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchEventList");
 
   for (const auto& event : event_list) {
-#if BUILDFLAG(IS_OHOS)
+#if defined(OHOS_PERFORMANCE_JITTER)
     if (event.type == CEF_TET_PRESSED) {
+      is_editable_node_ = false;
       auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
           browser_impl_->GetAcceleratedWidget());
       if (compositor) {
@@ -649,10 +650,13 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
     }
   }
 
-  bool had_no_pointer = !pointer_state_.GetPointerCount();
+  bool had_no_pointer = true;
   for (const auto& event : event_list) {
     // Update the touch event first.
+#ifdef OHOS_CLIPBOARD
+    had_no_pointer = had_no_pointer && !pointer_state_.GetPointerCount()
     pointer_state_.SetFromOverlay(event.from_overlay);
+#endif  // #ifdef OHOS_CLIPBOARD
     if (!pointer_state_.OnTouch(event)) {
       return;
     }
@@ -672,13 +676,6 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   for (const auto& event : event_list) {
     pointer_state_.CleanupRemovedTouchPoints(event);
 
-    if (had_no_pointer && !event.from_overlay) {
-      selection_controller_client_->OnTouchDown();
-    }
-
-    if (!pointer_state_.GetPointerCount() && !event.from_overlay) {
-      selection_controller_client_->OnTouchUp();
-    }
     // Set unchanged touch point to StateStationary for touchmove and
     // touchcancel to make sure only send one ack per WebTouchEvent.
     if (!result.succeeded)
