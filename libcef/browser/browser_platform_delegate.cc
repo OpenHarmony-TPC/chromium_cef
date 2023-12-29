@@ -271,6 +271,10 @@ void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
   NOTREACHED();
 }
 
+void CefBrowserPlatformDelegate::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
+  NOTREACHED();
+}
+
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {
   DCHECK(false);
 }

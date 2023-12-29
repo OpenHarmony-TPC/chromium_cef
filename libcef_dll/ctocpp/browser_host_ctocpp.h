@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d7d92073d453839cf2dbd683d306e08de82b7a72$
+// $hash=3c656803c23141f3bf75aebc20e89d923deef824$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -89,6 +89,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void WasResized() override;
   void WasHidden(bool hidden) override;
   void WasOccluded(bool occluded) override;
+  void SendTouchEventList(
+      const std::vector<CefTouchEvent>& event_list) override;
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;

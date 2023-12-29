@@ -132,6 +132,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
@@ -268,7 +269,7 @@ class CefRenderWidgetHostViewOSR
       const content::TouchEventWithLatencyInfo& touch,
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
-  
+
  #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   void OnVsync();
 

@@ -615,6 +615,94 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
     }
   }
 }
+
+void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
+  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::SendTouchEventList");
+
+  for (const auto& event : event_list) {
+#if defined(OHOS_PERFORMANCE_JITTER)
+    if (event.type == CEF_TET_PRESSED) {
+      is_editable_node_ = false;
+      auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+          browser_impl_->GetAcceleratedWidget());
+      if (compositor) {
+        compositor->SetCurrentFrameSinkId(GetFrameSinkId());
+      } else {
+        LOG(ERROR) << "compositor is null when send touch event";
+      }
+    }
+#endif
+
+    if (!IsPopupWidget() && popup_host_view_) {
+      if (!forward_touch_to_popup_ && event.type == CEF_TET_PRESSED &&
+          pointer_state_.GetPointerCount() == 0) {
+        forward_touch_to_popup_ =
+            popup_host_view_->popup_position_.Contains(event.x, event.y);
+      }
+
+      if (forward_touch_to_popup_) {
+        CefTouchEvent popup_event(event);
+        popup_event.x -= popup_host_view_->popup_position_.x();
+        popup_event.y -= popup_host_view_->popup_position_.y();
+        popup_host_view_->SendTouchEvent(popup_event);
+        return;
+      }
+    }
+  }
+
+  bool had_no_pointer = true;
+  for (const auto& event : event_list) {
+    // Update the touch event first.
+#ifdef OHOS_CLIPBOARD
+    had_no_pointer = had_no_pointer && !pointer_state_.GetPointerCount();
+    pointer_state_.SetFromOverlay(event.from_overlay);
+#endif  // #ifdef OHOS_CLIPBOARD
+    if (!pointer_state_.OnTouch(event)) {
+      return;
+    }
+
+    if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
+      pointer_state_.CleanupRemovedTouchPoints(event);
+      return;
+    }
+  }
+
+  ui::FilteredGestureProvider::TouchHandlingResult result =
+      gesture_provider_.OnTouchEvent(pointer_state_);
+
+  blink::WebTouchEvent touch_event = ui::CreateWebTouchEventFromMotionEvent(
+      pointer_state_, result.moved_beyond_slop_region, false);
+
+  for (const auto& event : event_list) {
+    pointer_state_.CleanupRemovedTouchPoints(event);
+
+    // Set unchanged touch point to StateStationary for touchmove and
+    // touchcancel to make sure only send one ack per WebTouchEvent.
+    if (!result.succeeded)
+      pointer_state_.MarkUnchangedTouchPointsAsStationary(&touch_event, event);
+  }
+
+  if (!render_widget_host_)
+    return;
+
+  ui::LatencyInfo latency_info = CreateLatencyInfo(touch_event);
+  if (ShouldRouteEvents()) {
+    render_widget_host_->delegate()->GetInputEventRouter()->RouteTouchEvent(
+        this, &touch_event, latency_info);
+  } else {
+    render_widget_host_->ForwardTouchEventWithLatencyInfo(touch_event,
+                                                          latency_info);
+  }
+
+  bool touch_end =
+      touch_event.GetType() == blink::WebInputEvent::Type::kTouchEnd ||
+      touch_event.GetType() == blink::WebInputEvent::Type::kTouchCancel;
+
+  if (touch_end && IsPopupWidget() && parent_host_view_ &&
+      parent_host_view_->popup_host_view_ == this) {
+    parent_host_view_->forward_touch_to_popup_ = false;
+  }
+}
 #endif
 
 void CefRenderWidgetHostViewOSR::EnsureSurfaceSynchronizedForWebTest() {

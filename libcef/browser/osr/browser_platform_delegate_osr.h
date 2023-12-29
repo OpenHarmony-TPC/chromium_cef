@@ -66,6 +66,7 @@ class CefBrowserPlatformDelegateOsr
   bool IsHidden() const override;
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;

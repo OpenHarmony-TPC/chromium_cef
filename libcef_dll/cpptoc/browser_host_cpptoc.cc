@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d31804dcb6475383da0d899d89b1de27aaed035e$
+// $hash=1219c13d27b2b37b3d4a6a7503e532ef01bcf63c$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -792,6 +792,37 @@ void CEF_CALLBACK browser_host_was_occluded(struct _cef_browser_host_t* self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->WasOccluded(occluded ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_send_touch_event_list(struct _cef_browser_host_t* self,
+                                   size_t event_listCount,
+                                   cef_touch_event_t const* event_list) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: event_list; type: simple_vec_byref_const
+  DCHECK(event_listCount == 0 || event_list);
+  if (event_listCount > 0 && !event_list) {
+    return;
+  }
+
+  // Translate param: event_list; type: simple_vec_byref_const
+  std::vector<CefTouchEvent> event_listList;
+  if (event_listCount > 0) {
+    for (size_t i = 0; i < event_listCount; ++i) {
+      CefTouchEvent event_listVal = event_list[i];
+      event_listList.push_back(event_listVal);
+    }
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SendTouchEventList(event_listList);
 }
 
 void CEF_CALLBACK
@@ -2908,6 +2939,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_resized = browser_host_was_resized;
   GetStruct()->was_hidden = browser_host_was_hidden;
   GetStruct()->was_occluded = browser_host_was_occluded;
+  GetStruct()->send_touch_event_list = browser_host_send_touch_event_list;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;
   GetStruct()->invalidate = browser_host_invalidate;

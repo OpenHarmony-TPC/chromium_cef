@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3be853229231e81aa1e4c6f3b523a82524ed026c$
+// $hash=cfd24311d67b2df2a9f9469f57364b2664d591be$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -820,6 +820,14 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* was_occluded)(struct _cef_browser_host_t* self,
                                    int occluded);
+
+  ///
+  /// Send touch event list to the browser for a windowless browser.
+  ///
+  void(CEF_CALLBACK* send_touch_event_list)(
+      struct _cef_browser_host_t* self,
+      size_t event_listCount,
+      cef_touch_event_t const* event_list);
 
   ///
   /// Send a notification to the browser that the screen info has changed. The

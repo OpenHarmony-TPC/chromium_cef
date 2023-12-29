@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cc4f22a9344a92d05d2846a79bdfc85f150458fa$
+// $hash=7cdcba4180d505728e6a0205a1af228b5abd76a8$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -704,6 +704,40 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::WasOccluded(bool occluded) {
 
   // Execute
   _struct->was_occluded(_struct, occluded);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SendTouchEventList(
+    const std::vector<CefTouchEvent>& event_list) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, send_touch_event_list)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: event_list; type: simple_vec_byref_const
+  const size_t event_listCount = event_list.size();
+  cef_touch_event_t* event_listList = NULL;
+  if (event_listCount > 0) {
+    event_listList = new cef_touch_event_t[event_listCount];
+    DCHECK(event_listList);
+    if (event_listList) {
+      for (size_t i = 0; i < event_listCount; ++i) {
+        event_listList[i] = event_list[i];
+      }
+    }
+  }
+
+  // Execute
+  _struct->send_touch_event_list(_struct, event_listCount, event_listList);
+
+  // Restore param:event_list; type: simple_vec_byref_const
+  if (event_listList) {
+    delete[] event_listList;
+  }
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::NotifyScreenInfoChanged() {

@@ -858,6 +858,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void WasOccluded(bool occluded) = 0;
+
+  ///
+  /// Send touch event list to the browser for a windowless browser.
+  ///
+  /*--cef()--*/
+  virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) = 0;
+
   ///
   /// Send a notification to the browser that the screen info has changed. The
   /// browser will then call CefRenderHandler::GetScreenInfo to update the
@@ -1170,7 +1177,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetOrCreateRootBrowserAccessibilityManager(void** manager) = 0;
-  
+
   ///
   /// Execute a string of JavaScript code, return result by callback
   ///
