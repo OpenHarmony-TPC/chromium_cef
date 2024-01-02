@@ -52,10 +52,22 @@ void OhGinJavascriptBridgeMessageFilter::OnDestruct() const {
 
 bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
     const IPC::Message& message) {
-  CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(
-                base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
-                base::WrapRefCounted(this), message));
+  base::PickleIterator iter(message);
+  int32_t routing_id = -1;
+  int32_t object_id = -1;
+  if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+    object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
+      base::ThreadPool::PostTask(
+        FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
+          base::BindOnce(
+          base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+          base::WrapRefCounted(this), message));
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+      base::BindOnce(
+      base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+      base::WrapRefCounted(this), message));
+  }
   return true;
 }
 
