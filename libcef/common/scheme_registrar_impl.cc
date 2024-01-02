@@ -36,7 +36,6 @@ bool CefSchemeRegistrarImpl::AddCustomScheme(const CefString& scheme_name,
   }
 
   registered_schemes_.insert(scheme);
-
   const bool is_standard = options & CEF_SCHEME_OPTION_STANDARD;
   const bool is_local = options & CEF_SCHEME_OPTION_LOCAL;
   const bool is_display_isolated = options & CEF_SCHEME_OPTION_DISPLAY_ISOLATED;
@@ -62,6 +61,9 @@ bool CefSchemeRegistrarImpl::AddCustomScheme(const CefString& scheme_name,
   if (is_csp_bypassing) {
     schemes_.csp_bypassing_schemes.push_back(scheme);
   }
+#ifdef OHOS_NETWORK_LOAD
+  schemes_.custom_schemes.push_back(scheme);
+#endif
 
   CefSchemeInfo scheme_info = {
       scheme,    is_standard,     is_local,         is_display_isolated,
@@ -78,4 +80,7 @@ void CefSchemeRegistrarImpl::GetSchemes(
   AppendArray(schemes_.secure_schemes, &schemes->secure_schemes);
   AppendArray(schemes_.cors_enabled_schemes, &schemes->cors_enabled_schemes);
   AppendArray(schemes_.csp_bypassing_schemes, &schemes->csp_bypassing_schemes);
+#ifdef OHOS_NETWORK_LOAD
+  AppendArray(schemes_.custom_schemes, &schemes->custom_schemes);
+#endif
 }
