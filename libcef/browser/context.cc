@@ -720,26 +720,14 @@ void CefContext::OnContextInitialized() {
         CefRequestContext::GetGlobalContext();
     auto impl = static_cast<CefRequestContextImpl*>(request_context.get());
     impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
-        [](CefRefPtr<CefApp> app
-#ifdef OHOS_INCOGNITO_MODE
-           , bool incognito_mode
-#endif
-        ) {
+        [](CefRefPtr<CefApp> app) {
           CefRefPtr<CefBrowserProcessHandler> handler =
               app->GetBrowserProcessHandler();
           if (handler) {
-            handler->OnContextInitialized(
-#ifdef OHOS_INCOGNITO_MODE
-                incognito_mode
-#endif
-            );
+            handler->OnContextInitialized();
           }
         },
-        application_
-#ifdef OHOS_INCOGNITO_MODE
-        , false
-#endif
-        ));
+        application_));
 
 #ifdef OHOS_INCOGNITO_MODE
     CefRefPtr<CefRequestContext> otr_request_context =
@@ -747,14 +735,14 @@ void CefContext::OnContextInitialized() {
     auto incognito_impl =
         static_cast<CefRequestContextImpl*>(otr_request_context.get());
     incognito_impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
-        [](CefRefPtr<CefApp> app, bool incognito_mode) {
+        [](CefRefPtr<CefApp> app) {
           CefRefPtr<CefBrowserProcessHandler> handler =
               app->GetBrowserProcessHandler();
           if (handler) {
-            handler->OnContextInitialized(incognito_mode);
+            handler->OnContextInitializedForIncognitoMode();
           }
         },
-        application_, true));
+        application_));
 #endif
   }
 }

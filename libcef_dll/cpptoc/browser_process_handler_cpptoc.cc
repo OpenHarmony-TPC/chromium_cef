@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da149dbcc2a16be79eb903a455c220a010e36708$
+// $hash=916c3112975ba2b6cb4ea27248c7822a2fe754ab$
 //
 
 #include "libcef_dll/cpptoc/browser_process_handler_cpptoc.h"
@@ -47,8 +47,7 @@ void CEF_CALLBACK browser_process_handler_on_register_custom_preferences(
 }
 
 void CEF_CALLBACK browser_process_handler_on_context_initialized(
-    struct _cef_browser_process_handler_t* self,
-    int incognito_mode) {
+    struct _cef_browser_process_handler_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -57,8 +56,7 @@ void CEF_CALLBACK browser_process_handler_on_context_initialized(
   }
 
   // Execute
-  CefBrowserProcessHandlerCppToC::Get(self)->OnContextInitialized(
-      incognito_mode ? true : false);
+  CefBrowserProcessHandlerCppToC::Get(self)->OnContextInitialized();
 }
 
 void CEF_CALLBACK browser_process_handler_on_before_child_process_launch(
@@ -113,6 +111,21 @@ struct _cef_client_t* CEF_CALLBACK browser_process_handler_get_default_client(
   return CefClientCppToC::Wrap(_retval);
 }
 
+void CEF_CALLBACK
+browser_process_handler_on_context_initialized_for_incognito_mode(
+    struct _cef_browser_process_handler_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserProcessHandlerCppToC::Get(self)
+      ->OnContextInitializedForIncognitoMode();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -127,6 +140,8 @@ CefBrowserProcessHandlerCppToC::CefBrowserProcessHandlerCppToC() {
   GetStruct()->on_schedule_message_pump_work =
       browser_process_handler_on_schedule_message_pump_work;
   GetStruct()->get_default_client = browser_process_handler_get_default_client;
+  GetStruct()->on_context_initialized_for_incognito_mode =
+      browser_process_handler_on_context_initialized_for_incognito_mode;
 }
 
 // DESTRUCTOR - Do not edit by hand.

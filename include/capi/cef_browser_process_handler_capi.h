@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2024 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f3f4cc5d026806875ff6c967d2150673532b333b$
+// $hash=a4d1d206fb64a80d31989514cbf20a9d6b12732f$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
@@ -93,8 +93,7 @@ typedef struct _cef_browser_process_handler_t {
   /// has been initialized.
   ///
   void(CEF_CALLBACK* on_context_initialized)(
-      struct _cef_browser_process_handler_t* self,
-      int incognito_mode);
+      struct _cef_browser_process_handler_t* self);
 
   ///
   /// Called before a child process is launched. Will be called on the browser
@@ -132,6 +131,13 @@ typedef struct _cef_browser_process_handler_t {
   /// used with the chrome runtime.
   ///
   struct _cef_client_t*(CEF_CALLBACK* get_default_client)(
+      struct _cef_browser_process_handler_t* self);
+
+  ///
+  /// Called on the browser process UI thread immediately after the CEF context
+  /// has been initialized to register scheme for incognito mode.
+  ///
+  void(CEF_CALLBACK* on_context_initialized_for_incognito_mode)(
       struct _cef_browser_process_handler_t* self);
 } cef_browser_process_handler_t;
 

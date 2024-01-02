@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=646ab650a5070780d9089cf98b7e7662f4727404$
+// $hash=65d47b1b0f255e2059db8833b70aa89e84b2b742$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_
@@ -38,11 +38,12 @@ class CefBrowserProcessHandlerCToCpp
   void OnRegisterCustomPreferences(
       cef_preferences_type_t type,
       CefRawPtr<CefPreferenceRegistrar> registrar) override;
-  void OnContextInitialized(bool incognito_mode) override;
+  void OnContextInitialized() override;
   void OnBeforeChildProcessLaunch(
       CefRefPtr<CefCommandLine> command_line) override;
   void OnScheduleMessagePumpWork(int64 delay_ms) override;
   CefRefPtr<CefClient> GetDefaultClient() override;
+  void OnContextInitializedForIncognitoMode() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_
