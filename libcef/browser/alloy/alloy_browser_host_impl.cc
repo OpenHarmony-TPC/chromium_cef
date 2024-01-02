@@ -1703,7 +1703,7 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   }
   data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
-  data_info.info.id = std::atoi(native_embed_info.embed_element_id.c_str());
+  data_info.info.id = native_embed_info.embed_element_id;
   data_info.info.width = native_embed_info.size.width();
   data_info.info.height = native_embed_info.size.height();
   data_info.info.type = native_embed_info.native_type;

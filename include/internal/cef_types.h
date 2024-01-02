@@ -4085,7 +4085,7 @@ typedef enum {
 // Structure native embed data.
 ///
 typedef struct _cef_native_embed_t {
-  int32_t id;
+  std::string id;
   int32_t width;
   int32_t height;
   std::string type;
