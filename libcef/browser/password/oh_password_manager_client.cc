@@ -802,6 +802,11 @@ gfx::RectF OhPasswordManagerClient::TransformToRootCoordinates(
 void OhPasswordManagerClient::PromptUserToMovePasswordToAccount(
     std::unique_ptr<password_manager::PasswordFormManagerForUI> form_to_move) {}
 
+bool OhPasswordManagerClient::IsCommittedMainFrameSecure() const {
+  return network::IsOriginPotentiallyTrustworthy(
+      web_contents()->GetPrimaryMainFrame()->GetLastCommittedOrigin());
+}
+
 const GURL& OhPasswordManagerClient::GetLastCommittedURL() const {
   return web_contents()->GetLastCommittedURL();
 }
