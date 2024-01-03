@@ -160,7 +160,7 @@ interface RenderFrame {
 
   [EnableIf=ohos_input_events]
   SetOverscrollMode(int32 mode);
-  [EnableIf=ohos_input_events]
+  [EnableIf=is_ohos]
   SetNativeEmbedModeEnabled(bool mode);
   // #endif  // defined(OHOS_INPUT_EVENTS)
 };

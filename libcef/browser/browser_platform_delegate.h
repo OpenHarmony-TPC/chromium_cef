@@ -1,3 +1,4 @@
+
 // Copyright (c) 2015 The Chromium Embedded Framework Authors.
 // Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -321,7 +322,8 @@ class CefBrowserPlatformDelegate {
   virtual bool IsHidden() const;
 
 #if BUILDFLAG(IS_OHOS)
-  // Notify the browser that it was occluded. Only used with windowless rendering.
+  // Notify the browser that it was occluded. Only used with windowless
+  // rendering.
   virtual void WasOccluded(bool occluded);
 
   // Send touch event list to the browser for a windowless browser.
@@ -397,8 +399,7 @@ class CefBrowserPlatformDelegate {
                     bool matchCase,
                     bool findNext
 #if BUILDFLAG(IS_OHOS)
-                    ,
-                    bool newSession
+                    , bool newSession
 #endif
   );
   virtual void StopFinding(bool clearSelection);
@@ -435,12 +436,15 @@ class CefBrowserPlatformDelegate {
   virtual void SetToken(void* token) {}
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                              void** webPrintDocumentAdapter) {}
-#endif // defined(OHOS_PRINT)
+#endif  // defined(OHOS_PRINT)
 
 #if defined(OHOS_INPUT_EVENTS)
-  virtual void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) {}
+  virtual void SetVirtualKeyBoardArg(int32_t width,
+                                     int32_t height,
+                                     double keyboard) {}
   virtual bool ShouldVirtualKeyboardOverlay() { return false; }
-  virtual void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) {};
+  virtual void OnNativeEmbedLifecycleChange(
+      const CefRenderHandler::CefNativeEmbedData& info) {}
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS

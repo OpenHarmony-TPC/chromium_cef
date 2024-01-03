@@ -127,7 +127,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   // #endif
 
   // #if defined(OHOS_SECURITY_STATE)
-  int GetSecurityLevel() override{ return 0; };
+  int GetSecurityLevel() override{ return 0; }
   // #endif
 #endif
 

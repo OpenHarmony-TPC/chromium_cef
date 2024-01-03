@@ -57,6 +57,7 @@
 #include "third_party/blink/public/web/web_hit_test_result.h"
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "third_party/blink/public/web/web_settings.h"
 #endif
 
 #ifdef OHOS_CLIPBOARD
@@ -1250,6 +1251,15 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
 }
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
+void CefFrameImpl::SetNativeEmbedModeEnabled(bool enabled) {
+  LOG(INFO) << "NativeEmbed SetNativeEmbedModeEnabled: " << enabled;
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  if (auto* webview = render_frame->GetWebView()) {
+    webview->GetSettings()->SetNativeEmbedModeEnabled(enabled);
+  }
+}
+
 #if defined(OHOS_INPUT_EVENTS)
 void CefFrameImpl::ScrollTo(float x, float y) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
@@ -1308,11 +1318,6 @@ void CefFrameImpl::SetOverscrollMode(int mode) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   render_frame->SetOverscrollMode(mode);
-}
-void CefFrameImpl::SetNativeEmbedModeEnabled(bool mode) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  render_frame->SetNativeEmbedModeEnabled(mode);
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 
