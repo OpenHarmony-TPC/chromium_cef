@@ -30,6 +30,7 @@ class OhGinJavascriptBridgeDispatcherHost
     END = 0
   };
   typedef int32_t ObjectID;
+  static const int32_t MIN_NATIVE_OBJ_ID = INT32_MAX >> 1;
 
   OhGinJavascriptBridgeDispatcherHost(content::WebContents* web_contents,
                                       CefRefPtr<CefClient> client);
@@ -96,7 +97,7 @@ class OhGinJavascriptBridgeDispatcherHost
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
   ObjectMethodMap method_map_;
-  int32_t object_id_ = INT32_MAX;
+  int32_t object_id_ = MIN_NATIVE_OBJ_ID;
 
   CefRefPtr<CefClient> client_;
 };
