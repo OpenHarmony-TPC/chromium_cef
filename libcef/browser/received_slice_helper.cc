@@ -40,11 +40,11 @@ std::vector<download::DownloadItem::ReceivedSlice> FromString(
       if (num_pos < i) {
         std::string num_str = input_str.substr(num_pos, i - num_pos);
         if (param_offset == 0) {
-          offset = stoi(num_str);
+          offset = stol(num_str);
         } else if (param_offset == 1) {
-          received_bytes = stoi(num_str);
+          received_bytes = stol(num_str);
         } else {
-          finished = !!stoi(num_str);
+          finished = !!stol(num_str);
           auto slice = download::DownloadItem::ReceivedSlice(
               offset, received_bytes, finished);
           received_slices.push_back(slice);
