@@ -54,6 +54,7 @@
 #include "libcef/browser/permission/alloy_access_request.h"
 #include "libcef/browser/permission/alloy_geolocation_access.h"
 #include "net/base/mime_util.h"
+#include "ohos_adapter_helper.h"
 #include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/gl/nweb_native_window_tracker.h"
@@ -69,7 +70,7 @@
 
 #if defined(OHOS_EX_PASSWORD)
 #include "libcef/browser/autofill/oh_autofill_client.h"
-#endif //defined(OHOS_EX_PASSWORD)
+#endif  // defined(OHOS_EX_PASSWORD)
 
 #if defined(OHOS_NO_STATE_PREFETCH)
 #include "chrome/browser/preloading/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
@@ -502,38 +503,40 @@ void CefBrowserHostBase::ResumeDownloadWithId(
   std::vector<GURL> url_chain;
   url_chain.push_back(gurl);
   auto download_item = manager->CreateDownloadItem(
-      base::GenerateGUID(),                               /*guid*/
-      next_id,                                            /*id*/
-      full_path,                                          /*current_path*/
-      full_path,                                          /*target_path*/
-      url_chain,                                          /*url_chain*/
-      GURL(),                                             /*referrer_url*/
+      base::GenerateGUID(),                         /*guid*/
+      next_id,                                      /*id*/
+      full_path,                                    /*current_path*/
+      full_path,                                    /*target_path*/
+      url_chain,                                    /*url_chain*/
+      GURL(),                                       /*referrer_url*/
       content::StoragePartitionConfig(),            /*storage_partition_config*/
-      GURL(),                                             /*tab_url*/
-      GURL(),                                             /*tab_referrer_url*/
-      url::Origin(),                                      /*request_initiator*/
-      mime_type,                                          /*mime_type*/
-      mime_type,                                          /*original_mime_type*/
-      base::Time::Now(),                                  /*start_time*/
-      base::Time::Now(),                                  /*end_time*/
-      etag,                                               /*etag*/
-      last_modified,                                      /*last_modified*/
-      received_bytes,                                     /*received_bytes*/
-      total_bytes,                                        /*total_bytes*/
-      std::string(),                                      /*hash*/
-      download::DownloadItem::INTERRUPTED,                /*state*/
-      download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS,       /*danger_type*/
+      GURL(),                                       /*tab_url*/
+      GURL(),                                       /*tab_referrer_url*/
+      url::Origin(),                                /*request_initiator*/
+      mime_type,                                    /*mime_type*/
+      mime_type,                                    /*original_mime_type*/
+      base::Time::Now(),                            /*start_time*/
+      base::Time::Now(),                            /*end_time*/
+      etag,                                         /*etag*/
+      last_modified,                                /*last_modified*/
+      received_bytes,                               /*received_bytes*/
+      total_bytes,                                  /*total_bytes*/
+      std::string(),                                /*hash*/
+      download::DownloadItem::INTERRUPTED,          /*state*/
+      download::DOWNLOAD_DANGER_TYPE_NOT_DANGEROUS, /*danger_type*/
       download::DOWNLOAD_INTERRUPT_REASON_NETWORK_FAILED, /*interrupt_reason*/
       false,                                              /*opened*/
       base::Time(),                                       /*last_access_time*/
       false,                                              /*transient*/
-      received_slices                                    /*received_slices*/
+      received_slices                                     /*received_slices*/
   );
   if (download_item) {
     auto browser = GetBrowser();
     if (browser) {
       int nweb_id = browser->GetNWebId();
-      download_item->SetUserData(kNWebId, std::make_unique<download::DownloadItemImpl::NWebIdData>(nweb_id));
+      download_item->SetUserData(
+          kNWebId,
+          std::make_unique<download::DownloadItemImpl::NWebIdData>(nweb_id));
       download_item->Resume(true /*is_user_resume*/);
       return;
     }
@@ -836,7 +839,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 
 #if defined(OHOS_CLIPBOARD)
   settings_.copy_option = browser_settings.copy_option;
-#endif // defined(OHOS_CLIPBOARD)
+#endif  // defined(OHOS_CLIPBOARD)
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -910,7 +913,8 @@ void CefBrowserHostBase::UnregisterArkJSfunction(
   javascriptInjector->RemoveInterface(object_name.ToString(), method_vector);
 }
 
-js_injection::JsCommunicationHost* CefBrowserHostBase::GetJsCommunicationHost() {
+js_injection::JsCommunicationHost*
+CefBrowserHostBase::GetJsCommunicationHost() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (!js_communication_host_.get()) {
     js_communication_host_ =
@@ -927,13 +931,14 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
   if (host) {
     std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
-    for (CefString rule: script_rules) {
+    for (CefString rule : script_rules) {
       scriptRules.push_back(rule.ToString());
     }
     js_injection::JsCommunicationHost::AddScriptResult result =
-      host->AddDocumentStartJavaScript(script, scriptRules);
+        host->AddDocumentStartJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_start_script_result_map_.emplace(std::make_pair(stdScript, result.script_id.value()));
+      document_start_script_result_map_.emplace(
+          std::make_pair(stdScript, result.script_id.value()));
     }
   }
 }
@@ -942,7 +947,7 @@ void CefBrowserHostBase::RemoveJavaScriptOnDocumentStart() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    for (auto iter: document_start_script_result_map_) {
+    for (auto iter : document_start_script_result_map_) {
       host->RemoveDocumentStartJavaScript(iter.second);
     }
   }
@@ -956,13 +961,14 @@ void CefBrowserHostBase::JavaScriptOnDocumentEnd(
   if (host) {
     std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
-    for (CefString rule: script_rules) {
+    for (CefString rule : script_rules) {
       scriptRules.push_back(rule.ToString());
     }
     js_injection::JsCommunicationHost::AddScriptResult result =
-      host->AddDocumentEndJavaScript(script, scriptRules);
+        host->AddDocumentEndJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_end_script_result_map_.emplace(std::make_pair(stdScript, result.script_id.value()));
+      document_end_script_result_map_.emplace(
+          std::make_pair(stdScript, result.script_id.value()));
     }
   }
 }
@@ -971,7 +977,7 @@ void CefBrowserHostBase::RemoveJavaScriptOnDocumentEnd() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    for (auto iter: document_end_script_result_map_) {
+    for (auto iter : document_end_script_result_map_) {
       host->RemoveDocumentEndJavaScript(iter.second);
     }
   }
@@ -1313,9 +1319,9 @@ bool CefBrowserHostBase::CanStoreWebArchive() {
   GURL url = web_contents->GetURL();
   content::NavigationEntry* entry =
       web_contents->GetController().GetLastCommittedEntry();
-  if (entry &&
-      (entry->GetPageType() != content::PAGE_TYPE_NORMAL ||
-          entry->GetBaseURLForDataURL().spec() == content::kUnreachableWebDataURL)) {
+  if (entry && (entry->GetPageType() != content::PAGE_TYPE_NORMAL ||
+                entry->GetBaseURLForDataURL().spec() ==
+                    content::kUnreachableWebDataURL)) {
     return false;
   }
 
@@ -1782,10 +1788,12 @@ void CefBrowserHostBase::AskClipboardReadWritePermission(
     const CefString& origin,
     cef_permission_callback_t callback) {
   permission_request_handler_->SendRequest(new AlloyAccessRequest(
-      origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE, std::move(callback)));
+      origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE,
+      std::move(callback)));
 }
 
-void CefBrowserHostBase::AbortAskClipboardReadWritePermission(const CefString& origin) {
+void CefBrowserHostBase::AbortAskClipboardReadWritePermission(
+    const CefString& origin) {
   permission_request_handler_->CancelRequest(
       origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE);
 }
@@ -1854,10 +1862,10 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       web_contents->GetController().LoadURLWithParams(LoadURLParams);
     } else {
       web_contents->GetController().LoadURL(
-        gurl, params.referrer, params.transition, params.extra_headers);
+          gurl, params.referrer, params.transition, params.extra_headers);
     }
 #else
-      web_contents->GetController().LoadURL(
+    web_contents->GetController().LoadURL(
         gurl, params.referrer, params.transition, params.extra_headers);
 #endif
     return true;
@@ -2859,32 +2867,34 @@ void CefBrowserHostBase::SetAudioExclusive(bool audioExclusive) {
 }
 
 #if BUILDFLAG(IS_OHOS)
- void CefBrowserHostBase::WasOccluded(bool occluded) {
+void CefBrowserHostBase::WasOccluded(bool occluded) {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 
- void CefBrowserHostBase::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
+void CefBrowserHostBase::SendTouchEventList(
+    const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 
- void CefBrowserHostBase::WasKeyboardResized() {
+void CefBrowserHostBase::WasKeyboardResized() {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 
- void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
+void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 
- void CefBrowserHostBase::SetToken(void* token) {
+void CefBrowserHostBase::SetToken(void* token) {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 
- void CefBrowserHostBase::CreateWebPrintDocumentAdapter(
-    const CefString& jobName, void** webPrintDocumentAdapter) {
+void CefBrowserHostBase::CreateWebPrintDocumentAdapter(
+    const CefString& jobName,
+    void** webPrintDocumentAdapter) {
   // TODO(ohos): please impl the function and remove this comment.
- }
+}
 void CefBrowserHostBase::SetEnableLowerFrameRate(bool enabled) {
-// TODO(ohos): please impl the function and remove this comment.
+  // TODO(ohos): please impl the function and remove this comment.
 }
 #endif
 
@@ -3019,13 +3029,6 @@ bool CefBrowserHostBase::GetBlockNetwork() {
 int CefBrowserHostBase::GetCacheMode() {
   base::AutoLock lock_scope(state_lock_);
   return cache_mode_;
-}
-void CefBrowserHostBase::SetNativeEmbedModeEnabled(bool embedMode) {
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->SetNativeEmbedModeEnabled(embedMode);
-  }
 }
 #endif
 
@@ -3206,13 +3209,31 @@ int CefBrowserHostBase::GetSecurityLevel() {
   }
 
   auto web_contents = GetWebContents();
-  std::unique_ptr<security_state::VisibleSecurityState> state = security_state::GetVisibleSecurityState(web_contents);
+  std::unique_ptr<security_state::VisibleSecurityState> state =
+      security_state::GetVisibleSecurityState(web_contents);
   DCHECK(state);
 
-  security_state::SecurityLevel securityValue = security_state::GetSecurityLevel(*state, false);
+  security_state::SecurityLevel securityValue =
+      security_state::GetSecurityLevel(*state, false);
   return static_cast<int>(securityValue);
 }
-#endif // BUILDFLAG(IS_OHOS)
+
+void CefBrowserHostBase::SetNativeEmbedModeEnabled(bool embed_enabled) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    auto& system_properties_adapter =
+        OHOS::NWeb::OhosAdapterHelper::GetInstance()
+            .GetSystemPropertiesInstance();
+    OHOS::NWeb::ProductDeviceType device_type =
+        system_properties_adapter.GetProductDeviceType();
+    bool supported_device_type =
+        device_type != OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_2IN1;
+
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SetNativeEmbedModeEnabled(embed_enabled && supported_device_type);
+  }
+}
+#endif  // BUILDFLAG(IS_OHOS)
 
 int CefBrowserHostBase::GetShrinkViewportHeight() {
 #if defined(OHOS_EX_TOPCONTROLS)
