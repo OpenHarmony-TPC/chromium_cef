@@ -690,6 +690,7 @@ typedef struct _cef_browser_settings_t {
   bool contextmenu_customization_enabled;
   cef_color_t scrollbar_color;
   bool blank_target_popup_intercept_enabled;
+  cef_state_t native_embed_mode_enabled;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 

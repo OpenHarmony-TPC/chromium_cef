@@ -607,6 +607,8 @@ struct CefBrowserSettingsTraits {
     target->scrollbar_color = src->scrollbar_color;
     target->blank_target_popup_intercept_enabled =
         src->blank_target_popup_intercept_enabled;
+    target->native_embed_mode_enabled =
+        src->native_embed_mode_enabled;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 

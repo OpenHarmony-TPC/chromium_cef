@@ -434,6 +434,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_INPUT_EVENTS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
   SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
+  SET_STATE(cef.native_embed_mode_enabled, web.native_embed_mode_enabled);
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_SCROLLBAR
   web.scrollbar_color = cef.scrollbar_color;
