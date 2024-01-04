@@ -339,8 +339,7 @@ AlloyOffTheRecordBrowserContext::GetClientHintsControllerDelegate() {
 }
 
 ChromeZoomLevelPrefs* AlloyOffTheRecordBrowserContext::GetZoomLevelPrefs() {
-  return static_cast<ChromeZoomLevelPrefs*>(
-      GetStoragePartition(nullptr)->GetZoomLevelDelegate());
+  return nullptr;
 }
 
 scoped_refptr<network::SharedURLLoaderFactory>
@@ -359,10 +358,6 @@ base::FilePath AlloyOffTheRecordBrowserContext::GetPath() const {
 std::unique_ptr<content::ZoomLevelDelegate>
 AlloyOffTheRecordBrowserContext::CreateZoomLevelDelegate(
     const base::FilePath& partition_path) {
-  if (cache_path_.empty()) {
-    return std::unique_ptr<content::ZoomLevelDelegate>();
-  }
-
   return std::make_unique<ChromeZoomLevelOTRDelegate>(
       zoom::ZoomEventManager::GetForBrowserContext(this)->GetWeakPtr());
 }
