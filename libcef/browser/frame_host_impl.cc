@@ -389,8 +389,11 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
   }
 
   // Any necessary fixup will occur in LoadRequest.
+#ifdef OHOS_NETWORK_LOAD
+  GURL gurl = url_util::FixupGURL(url);
+#else
   GURL gurl = url_util::MakeGURL(url, /*fixup=*/false);
-
+#endif
   if (frame_id == CefFrameHostImpl::kMainFrameId) {
     // Load via the browser using NavigationController.
     auto browser = GetBrowserHostBase();
