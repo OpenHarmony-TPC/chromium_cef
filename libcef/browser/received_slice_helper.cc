@@ -35,16 +35,22 @@ std::vector<download::DownloadItem::ReceivedSlice> FromString(
   int64_t offset = 0;
   int64_t received_bytes = 0;
   bool finished = false;
+  bool convert_result = false;
   for (std::string::size_type i = 0; i < input_str.size(); ++i) {
     if (input_str[i] == ',' || input_str[i] == ')') {
       if (num_pos < i) {
         std::string num_str = input_str.substr(num_pos, i - num_pos);
+        int64_t num = 0;
+        convert_result = base::StringToInt64(num_str, &num);
+        if (!convert_result) {
+          break;
+        }
         if (param_offset == 0) {
-          offset = stol(num_str);
+          offset = num;
         } else if (param_offset == 1) {
-          received_bytes = stol(num_str);
+          received_bytes = num;
         } else {
-          finished = !!stol(num_str);
+          finished = !!num;
           auto slice = download::DownloadItem::ReceivedSlice(
               offset, received_bytes, finished);
           received_slices.push_back(slice);
@@ -58,6 +64,9 @@ std::vector<download::DownloadItem::ReceivedSlice> FromString(
         num_pos = i + 1;
       }
     }
+  }
+  if (!convert_result) {
+    received_slices.clear();
   }
   return received_slices;
 }
