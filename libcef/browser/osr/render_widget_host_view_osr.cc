@@ -356,6 +356,10 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
   selection_controller_client_ =
       std::make_unique<CefTouchSelectionControllerClientOSR>(this);
   CreateSelectionController();
+
+#ifdef OHOS_EX_TOPCONTROLS
+  OnTopControlsHeightChanged();
+#endif
 }
 
 CefRenderWidgetHostViewOSR::~CefRenderWidgetHostViewOSR() {
@@ -2891,6 +2895,13 @@ void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
   gfx::Transform root_layer_transform;
   root_layer_transform.Translate(gfx::Vector2dF(0, top_content_offset));
   GetRootLayer()->SetTransform(root_layer_transform);
+}
+
+void CefRenderWidgetHostViewOSR::OnTopControlsHeightChanged() {
+  if (auto rvh_delegate_view = host()->delegate()->GetDelegateView()) {
+    GetRootLayer()->SetTopControlsHeight(
+        rvh_delegate_view->GetTopControlsHeight() / GetDeviceScaleFactor());
+  }
 }
 #endif  // defined(OHOS_EX_TOPCONTROLS)
 
