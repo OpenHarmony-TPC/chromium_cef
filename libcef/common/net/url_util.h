@@ -22,6 +22,10 @@ GURL MakeGURL(const CefString& url, bool fixup);
 // Modifies |gurl| if necessary. Returns true if |gurl| is empty or valid.
 bool FixupGURL(GURL& gurl);
 
+#ifdef OHOS_NETWORK_LOAD
+GURL FixupGURL(const std::string& url);
+#endif
+
 }  // namespace url_util
 
 #endif  // CEF_LIBCEF_COMMON_NET_URL_UTIL_H_

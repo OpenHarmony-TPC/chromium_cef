@@ -39,4 +39,15 @@ bool FixupGURL(GURL& gurl) {
   return true;
 }
 
+#ifdef OHOS_NETWORK_LOAD
+GURL FixupGURL(const std::string& url) {
+  GURL fixup_url =
+      url_formatter::FixupURL(url, std::string());
+  if (fixup_url.is_valid()) {
+    return fixup_url;
+  }
+  return GURL();
+}
+#endif
+
 }  // namespace url_util
