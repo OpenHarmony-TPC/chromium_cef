@@ -77,7 +77,7 @@ void MaybeSetUserAgentOverrideForMainFrame(
   }
 
   std::string host = url.host();
-  if (!navigaiton->HasUserGesture()) {
+  if (!navigation->HasUserGesture()) {
     const GURL referrer_url = navigation->GetReferrer().url;
     if (referrer_url.is_valid() && !referrer_url.is_empty() &&
         referrer_url.has_host()) {
@@ -87,7 +87,7 @@ void MaybeSetUserAgentOverrideForMainFrame(
   std::string final_ua =
       nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
   LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
-            << ", user_gesture " << navigaiton->HasUserGesture() << ", url "
+            << ", user_gesture " << navigation->HasUserGesture() << ", url "
             << url.spec();
 
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
