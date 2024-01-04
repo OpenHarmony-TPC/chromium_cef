@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=498373facd9218d8d3d2c268d3c1248d820708ff$
+// $hash=bdb469cac07bcb8da2d15c1f5acfdba52c584d85$
 //
 
 #include "libcef_dll/ctocpp/browser_process_handler_ctocpp.h"
@@ -46,7 +46,7 @@ void CefBrowserProcessHandlerCToCpp::OnRegisterCustomPreferences(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnContextInitialized(bool incognito_mode) {
+void CefBrowserProcessHandlerCToCpp::OnContextInitialized() {
   cef_browser_process_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_context_initialized)) {
     return;
@@ -55,7 +55,7 @@ void CefBrowserProcessHandlerCToCpp::OnContextInitialized(bool incognito_mode) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_context_initialized(_struct, incognito_mode);
+  _struct->on_context_initialized(_struct);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -106,6 +106,19 @@ CefRefPtr<CefClient> CefBrowserProcessHandlerCToCpp::GetDefaultClient() {
 
   // Return type: refptr_same
   return CefClientCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserProcessHandlerCToCpp::OnContextInitializedForIncognitoMode() {
+  cef_browser_process_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_context_initialized_for_incognito_mode)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_context_initialized_for_incognito_mode(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
