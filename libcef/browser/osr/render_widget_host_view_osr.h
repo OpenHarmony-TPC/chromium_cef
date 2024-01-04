@@ -138,6 +138,7 @@ class CefRenderWidgetHostViewOSR
   gfx::Rect GetPhysicalViewBounds();
   int GetShrinkViewportHeight();
   int GetTopControlsOffset() const override;
+  void OnTopControlsHeightChanged();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;

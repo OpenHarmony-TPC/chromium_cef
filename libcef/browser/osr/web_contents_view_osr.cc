@@ -277,6 +277,9 @@ int CefWebContentsViewOSR::GetTopControlsHeight() {
     LOG(INFO) << "browser controls height changed:" << top_controls_height_
               << "->" << top_controls_height;
     top_controls_height_ = top_controls_height;
+    if (CefRenderWidgetHostViewOSR* view = GetView()) {
+      view->OnTopControlsHeightChanged();
+    }
   }
 
   return top_controls_height_;
@@ -303,6 +306,7 @@ void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
   top_controls_height_ = height;
 
   if (CefRenderWidgetHostViewOSR* view = GetView()) {
+    view->OnTopControlsHeightChanged();
     view->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
                                       absl::nullopt);
   }
