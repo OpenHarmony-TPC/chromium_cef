@@ -861,11 +861,11 @@ void AlloyBrowserHostImpl::DestroyBrowser() {
 #if defined(OHOS_EX_GET_ZOOM_LEVEL)
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {
-      AlloyBrowserContext* browser_context =
-          static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
+      auto* browser_context = CefBrowserContext::FromBrowserContext(
+          web_contents()->GetBrowserContext());
       if (browser_context) {
-        DCHECK(browser_context->GetPrefs());
-        browser_context->GetPrefs()->CommitPendingWrite();
+        DCHECK(browser_context->AsProfile()->GetPrefs());
+        browser_context->AsProfile()->GetPrefs()->CommitPendingWrite();
       }
     }
 #endif
