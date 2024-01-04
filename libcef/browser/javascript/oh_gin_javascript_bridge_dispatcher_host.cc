@@ -73,6 +73,7 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::~"
                 "OhGinJavascriptBridgeDispatcherHost called";
   client_.reset();
+  std::unique_lock<std::shared_mutex> lock(share_mutex_);
   method_map_.clear();
 }
 
@@ -80,9 +81,12 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
 void OhGinJavascriptBridgeDispatcherHost::
     InstallFilterAndRegisterAllRoutingIds() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  if (method_map_.empty() ||
-      !web_contents()->GetPrimaryMainFrame()->GetProcess()->GetChannel()) {
-    return;
+  {
+    std::shared_lock<std::shared_mutex> lock(share_mutex_);
+    if (method_map_.empty() ||
+        !web_contents()->GetPrimaryMainFrame()->GetProcess()->GetChannel()) {
+      return;
+    }
   }
 
   web_contents()->GetPrimaryMainFrame()->ForEachRenderFrameHost(
@@ -126,6 +130,7 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
   } else {
     InstallFilterAndRegisterAllRoutingIds();
   }
+  std::shared_lock<std::shared_mutex> lock(share_mutex_);
   for (ObjectMethodMap::const_iterator iter = method_map_.begin();
        iter != method_map_.end(); ++iter) {
     render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
@@ -168,6 +173,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::string& object_name,
     const std::vector<std::string>& method_list) {
   {
+    std::unique_lock<std::shared_mutex> lock(share_mutex_);
     ObjectMethodMap::iterator it;
     for (it = method_map_.begin(); it != method_map_.end(); ++it) {
       if (it->second.first == object_name) {
@@ -215,6 +221,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
   }
   RemoveNamedObject(object_name, method_list);
   {
+    std::unique_lock<std::shared_mutex> lock(share_mutex_);
     MethodPair object_pair;
     std::unordered_set<std::string> method_set;
     for (std::string s : method_list) {
@@ -259,6 +266,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  std::unique_lock<std::shared_mutex> lock(share_mutex_);
   if (method_map_.empty()) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                   "is empty!";
@@ -300,6 +308,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnGetMethods(
     int32_t object_id,
     std::set<std::string>* returned_method_names) {
   // get from web_webview side
+  std::shared_lock<std::shared_mutex> lock(share_mutex_);
   if (method_map_.find(object_id) == method_map_.end()) {
     if (!client_) {
       LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
@@ -331,6 +340,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasMethod(
     const std::string& method_name,
     bool* result) {
   *result = false;
+  std::shared_lock<std::shared_mutex> lock(share_mutex_);
   if (method_map_.find(object_id) != method_map_.end()) {
     MethodPair p = method_map_[object_id];
     if (p.second.find(method_name) != p.second.end()) {
@@ -660,6 +670,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
 
   std::string classname = "";
+  std::shared_lock<std::shared_mutex> lock(share_mutex_);
   if (method_map_.find(object_id) != method_map_.end()) {
     MethodPair object_pair = method_map_[object_id];
     classname = object_pair.first;
