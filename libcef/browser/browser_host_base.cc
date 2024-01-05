@@ -827,6 +827,8 @@ void CefBrowserHostBase::UpdateBrowserSettings(
       browser_settings.hide_vertical_scrollbars;
   settings_.hide_horizontal_scrollbars =
       browser_settings.hide_horizontal_scrollbars;
+  settings_.native_embed_mode_enabled =
+      browser_settings.native_embed_mode_enabled;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
