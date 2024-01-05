@@ -243,6 +243,8 @@ void AlloyOffTheRecordBrowserContext::Initialize() {
   user_prefs::UserPrefs::Set(this, pref_service);
   key_->SetPrefs(pref_service);
   media_device_id_salt_ = new MediaDeviceIDSalt(pref_service);
+
+  TrackZoomLevelsFromParent();
 }
 
 void AlloyOffTheRecordBrowserContext::Shutdown() {
