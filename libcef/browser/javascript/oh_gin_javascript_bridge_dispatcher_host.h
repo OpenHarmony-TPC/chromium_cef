@@ -7,6 +7,7 @@
 #define OH_GIN_JAVASCRIPT_BRIDGE_DISPATCHEER_HOST_H
 
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_set>
 #include "base/memory/ref_counted.h"
 #include "content/public/browser/web_contents_observer.h"
@@ -97,6 +98,7 @@ class OhGinJavascriptBridgeDispatcherHost
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
   ObjectMethodMap method_map_;
+  std::shared_mutex share_mutex_;
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
 
   CefRefPtr<CefClient> client_;
