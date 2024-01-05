@@ -10,6 +10,8 @@
 #include "components/variations/variations_client.h"
 #include "components/variations/variations_ids_provider.h"
 #include "net/url_request/url_request_context.h"
+#include "chrome/browser/ui/zoom/chrome_zoom_level_prefs.h"
+#include "components/zoom/zoom_event_manager.h"
 
 namespace {
 
@@ -178,6 +180,16 @@ void ChromeOffTheRecordProfileAlloy::TrackZoomLevelsFromParent() {
         parent_host_zoom_map->AddZoomLevelChangedCallback(base::BindRepeating(
             &ChromeOffTheRecordProfileAlloy::OnParentZoomLevelChanged,
             base::Unretained(this)));
+    if (!original_profile_->GetZoomLevelPrefs()) {
+      return;
+    }
+
+    // Also track changes to the parent profile's default zoom level.
+    parent_default_zoom_level_subscription_ =
+        original_profile_->GetZoomLevelPrefs()
+            ->RegisterDefaultZoomLevelCallback(base::BindRepeating(
+                &ChromeOffTheRecordProfileAlloy::UpdateDefaultZoomLevel,
+                base::Unretained(this)));
 }
 
 void ChromeOffTheRecordProfileAlloy::OnParentZoomLevelChanged(
@@ -195,4 +207,17 @@ void ChromeOffTheRecordProfileAlloy::OnParentZoomLevelChanged(
           change.host, change.zoom_level);
       return;
   }
+}
+
+void ChromeOffTheRecordProfileAlloy::UpdateDefaultZoomLevel() {
+  if (!original_profile_->GetZoomLevelPrefs()) {
+      return;
+  }
+  content::HostZoomMap* host_zoom_map =
+      content::HostZoomMap::GetDefaultForBrowserContext(this);
+  double default_zoom_level =
+      original_profile_->GetZoomLevelPrefs()->GetDefaultZoomLevelPref();
+  host_zoom_map->SetDefaultZoomLevel(default_zoom_level);
+  zoom::ZoomEventManager::GetForBrowserContext(this)
+      ->OnDefaultZoomLevelChanged();
 }

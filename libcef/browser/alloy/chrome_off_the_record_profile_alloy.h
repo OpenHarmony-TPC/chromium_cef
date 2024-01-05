@@ -57,12 +57,14 @@ class ChromeOffTheRecordProfileAlloy : public Profile {
   bool IsSignedIn() override;
 
  private:
-   void OnParentZoomLevelChanged(
+  void OnParentZoomLevelChanged(
       const content::HostZoomMap::ZoomLevelChange& change);
+  void UpdateDefaultZoomLevel();
   Profile* original_profile_;
   std::unique_ptr<variations::VariationsClient> variations_client_;
   base::FilePath last_selected_directory_;
   base::CallbackListSubscription track_zoom_subscription_;
+  base::CallbackListSubscription parent_default_zoom_level_subscription_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_CHROME_OFF_THE_RECORD_PROFILE_ALLOY_H_
