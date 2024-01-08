@@ -2891,7 +2891,6 @@ void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
   browser_impl_->GetClient()->OnTopControlsChanged(top_controls_offset,
                                                    top_content_offset);
 
-  OnScreenInfoChanged();
   gfx::Transform root_layer_transform;
   root_layer_transform.Translate(gfx::Vector2dF(0, top_content_offset));
   GetRootLayer()->SetTransform(root_layer_transform);
