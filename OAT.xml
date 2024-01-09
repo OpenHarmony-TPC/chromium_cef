@@ -63,32 +63,39 @@ used to filter file path.
     <oatconfig>
          <policylist>
             <policy name="projectPolicy" desc="">
-                <policyitem type="compatibility" name="Apache-2.0" path="tools/yapf/README.cef" desc="经法务确认为宽松型许可证" />
-                <policyitem type="compatibility" name="MIT" path="tools/yapf/README.cef" desc="经法务确认为宽松型许可证" />
             </policy>
         </policylist>
         <filefilterlist>
-            <filefilter name="defaultPolicyFilter"
-                desc="Filters for compatibility,license header policies">
-            </filefilter>
-
-            <filefilter name="defaultFilter">
-                <filteritem type="filepath" name="README.OpenSource" desc="Filter readme.opensource files" />
-            </filefilter>
             <filefilter name="binaryFileTypePolicyFilter">
-                <filteritem type="filename" name="*.png"
+                <filteritem type="filepath" name="tests/shared/.*png"
                     desc="chromium原生二进制文件，不会使用" />
-                <filteritem type="filename" name="*.ico"
+                <filteritem type="filepath" name="tests/shared/.*pdf"
                     desc="chromium原生二进制文件，不会使用" />
-                <filteritem type="filename" name="*.icns"
+                <filteritem type="filepath" name="tests/cefclient/.*png"
                     desc="chromium原生二进制文件，不会使用" />
-                <filteritem type="filename" name="*.pdf"
+                <filteritem type="filepath" name="tests/cefclient/.*icns"
                     desc="chromium原生二进制文件，不会使用" />
-                <filteritem type="filename" name="*.dll"
+                <filteritem type="filepath" name="tests/cefclient/.*ico"
+                    desc="chromium原生二进制文件，不会使用" />
+                <filteritem type="filepath" name="tests/cefsimple/.*ico"
+                    desc="chromium原生二进制文件，不会使用" />
+                <filteritem type="filepath" name="tests/cefsimple/.*icns"
+                    desc="chromium原生二进制文件，不会使用" />
+                <filteritem type="filepath" name="tools/distrib/.*dll"
+                    desc="chromium原生二进制文件，不会使用" />
+                <filteritem type="filepath" name="tests/ceftests/resources/.*ico"
+                    desc="chromium原生二进制文件，不会使用" />
+                <filteritem type="filepath" name="tests/ceftests/resources/.*icns"
                     desc="chromium原生二进制文件，不会使用" />
             </filefilter>
         </filefilterlist>
         <licensematcherlist>
+            <licensematcher name="MIT" desc="">
+                <licensetext name="
+                // Use of this source code is governed by the MIT license that can be
+                // found in the LICENSE file.
+                " desc="" />
+            </licensematcher>
             <licensematcher name="Apache-2.0" desc="">
                 <licensetext name="
                 Name: yapf
@@ -99,19 +106,6 @@ used to filter file path.
                 Revision: 9f168a12
                 License: Apache 2.0
                 License File: LICENSE
-
-                Description:
-                A formatter for Python files.
-
-                Local Modifications:
-                None
-
-                " desc="" />
-            </licensematcher>
-            <licensematcher name="MIT" desc="">
-                <licensetext name="
-                // Use of this source code is governed by the MIT license that can be
-                // found in the LICENSE file.
                 " desc="" />
             </licensematcher>
         </licensematcherlist>
