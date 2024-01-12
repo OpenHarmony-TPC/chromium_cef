@@ -1590,13 +1590,6 @@ typedef struct _cef_browser_host_t {
                                           int mode);
 
   ///
-  /// Set the embed mode enable of web
-  ///
-  void(CEF_CALLBACK* set_native_embed_mode_enabled)(
-      struct _cef_browser_host_t* self,
-      int mode);
-
-  ///
   /// Discard a webview window
   ///
   int(CEF_CALLBACK* discard)(struct _cef_browser_host_t* self);

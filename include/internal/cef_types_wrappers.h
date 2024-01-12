@@ -838,6 +838,41 @@ struct CefSelectPopupItemTraits {
 ///
 typedef CefStructBase<CefSelectPopupItemTraits> CefSelectPopupItem;
 
+struct CefEmbedTouchEventTraits {
+  typedef cef_embed_touch_event_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+
+using CefEmbedTouchEvent = CefStructBase<CefEmbedTouchEventTraits>;
+
+
+struct CefNativeEmbedDataTraits {
+  typedef cef_native_embed_data_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    *target = *src;
+  }
+};
+
+
+using CefNativeEmbedData = CefStructBase<CefNativeEmbedDataTraits>;
+
 struct CefDateTimeChooserTraits {
   typedef cef_date_time_chooser_t struct_type;
 

@@ -160,9 +160,6 @@ interface RenderFrame {
 
   [EnableIf=ohos_input_events]
   SetOverscrollMode(int32 mode);
-  [EnableIf=is_ohos]
-  SetNativeEmbedModeEnabled(bool mode);
-  // #endif  // defined(OHOS_INPUT_EVENTS)
 };
 
 // Interface for communicating with a frame in the browser process.

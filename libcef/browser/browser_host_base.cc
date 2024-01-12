@@ -827,9 +827,11 @@ void CefBrowserHostBase::UpdateBrowserSettings(
       browser_settings.hide_vertical_scrollbars;
   settings_.hide_horizontal_scrollbars =
       browser_settings.hide_horizontal_scrollbars;
+#endif  // defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(IS_OHOS)
   settings_.native_embed_mode_enabled =
       browser_settings.native_embed_mode_enabled;
-#endif  // defined(OHOS_INPUT_EVENTS)
+#endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
 #endif  // OHOS_SCROLLBAR
@@ -3218,22 +3220,6 @@ int CefBrowserHostBase::GetSecurityLevel() {
   security_state::SecurityLevel securityValue =
       security_state::GetSecurityLevel(*state, false);
   return static_cast<int>(securityValue);
-}
-
-void CefBrowserHostBase::SetNativeEmbedModeEnabled(bool embed_enabled) {
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    auto& system_properties_adapter =
-        OHOS::NWeb::OhosAdapterHelper::GetInstance()
-            .GetSystemPropertiesInstance();
-    OHOS::NWeb::ProductDeviceType device_type =
-        system_properties_adapter.GetProductDeviceType();
-    bool supported_device_type =
-        device_type != OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_2IN1;
-
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->SetNativeEmbedModeEnabled(embed_enabled && supported_device_type);
-  }
 }
 #endif  // BUILDFLAG(IS_OHOS)
 

@@ -4132,7 +4132,7 @@ typedef struct _cef_embed_touch_event_t {
     float screenX = 0.0f;
     float screenY = 0.0f;
     cef_embed_touch_type_t type;
-    float offsetX = 0.0;
+    float offsetX = 0.0f;
     float offsetY = 0.0f;
 } cef_embed_touch_event_t;
 

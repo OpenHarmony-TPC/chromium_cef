@@ -202,7 +202,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void ZoomBy(float delta, float width, float height);
   void GetHitData(int& type, CefString& extra_data);
   void SetOverscrollMode(int mode);
-  void SetNativeEmbedModeEnabled(bool mode);
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)
