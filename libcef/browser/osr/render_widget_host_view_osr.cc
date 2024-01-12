@@ -538,6 +538,12 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
     provider->ReportAllFrameSubmissionsForTesting(true);
   }
 
+#if defined(OHOS_INPUT_EVENTS)
+  if (GetTextInputManager()) {
+    GetTextInputManager()->AddObserver(this);
+  }
+#endif
+
   if (delegated_frame_host_) {
 #ifdef DISABLE_GPU
     delegated_frame_host_->AttachToCompositor(compositor_.get());
@@ -599,6 +605,12 @@ void CefRenderWidgetHostViewOSR::Hide() {
         content::DelegatedFrameHost::HiddenCause::kOther);
     delegated_frame_host_->DetachFromCompositor();
   }
+
+#if defined(OHOS_INPUT_EVENTS)
+  if (GetTextInputManager()) {
+    GetTextInputManager()->RemoveObserver(this);
+  }
+#endif
 }
 
 bool CefRenderWidgetHostViewOSR::IsShowing() {
