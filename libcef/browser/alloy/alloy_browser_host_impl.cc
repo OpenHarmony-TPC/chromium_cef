@@ -934,6 +934,10 @@ void AlloyBrowserHostImpl::OnSetFocus(cef_focus_source_t source) {
     return;
   }
 
+#if BUILDFLAG(IS_OHOS)
+  ReportWindowStatus(false);
+#endif
+
   if (contents_delegate_->OnSetFocus(source)) {
     return;
   }
