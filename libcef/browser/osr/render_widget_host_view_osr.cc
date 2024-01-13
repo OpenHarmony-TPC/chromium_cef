@@ -478,6 +478,9 @@ bool CefRenderWidgetHostViewOSR::HasFocus() {
   }
   content::RenderWidgetHostImpl* widget =
       content::RenderWidgetHostImpl::From(render_widget_host_);
+  if (!widget->is_focused() && text_input_manager_->HasObserver(this)) {
+    text_input_manager_->RemoveObserver(this);
+  }
   return widget->is_focused();
 #else
   return false;
