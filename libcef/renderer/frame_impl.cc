@@ -1251,14 +1251,6 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
 }
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
-void CefFrameImpl::SetNativeEmbedModeEnabled(bool enabled) {
-  LOG(INFO) << "NativeEmbed SetNativeEmbedModeEnabled: " << enabled;
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  if (auto* webview = render_frame->GetWebView()) {
-    webview->GetSettings()->SetNativeEmbedModeEnabled(enabled);
-  }
-}
 
 #if defined(OHOS_INPUT_EVENTS)
 void CefFrameImpl::ScrollTo(float x, float y) {
