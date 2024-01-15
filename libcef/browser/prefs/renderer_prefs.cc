@@ -416,6 +416,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   /* ohos webview begin*/
   SET_STATE(cef.image_loading, web.images_enabled);
   SET_STATE(cef.force_dark_mode_enabled, web.force_dark_mode_enabled);
+  SET_STATE(cef.native_embed_mode_enabled, web.native_embed_mode_enabled);
 #if defined(OHOS_DARKMODE)
   if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
     web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
@@ -434,7 +435,6 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_INPUT_EVENTS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
   SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
-  SET_STATE(cef.native_embed_mode_enabled, web.native_embed_mode_enabled);
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_SCROLLBAR
   web.scrollbar_color = cef.scrollbar_color;

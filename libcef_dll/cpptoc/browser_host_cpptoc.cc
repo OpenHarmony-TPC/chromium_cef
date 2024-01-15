@@ -2816,22 +2816,6 @@ browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
   CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
 }
 
-void CEF_CALLBACK
-browser_host_set_native_embed_mode_enabled(struct _cef_browser_host_t* self,
-                                           int mode) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->SetNativeEmbedModeEnabled(mode ? true
-                                                                  : false);
-}
 
 int CEF_CALLBACK browser_host_discard(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
@@ -3058,8 +3042,6 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->create_web_print_document_adapter =
       browser_host_create_web_print_document_adapter;
   GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;
-  GetStruct()->set_native_embed_mode_enabled =
-      browser_host_set_native_embed_mode_enabled;
   GetStruct()->discard = browser_host_discard;
   GetStruct()->restore = browser_host_restore;
   GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;

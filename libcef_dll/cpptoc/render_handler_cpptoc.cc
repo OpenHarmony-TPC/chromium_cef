@@ -939,9 +939,9 @@ void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
   }
 
   // Translate param: event; type: struct_byref_const
-  cef_embed_touch_event_t eventObj;
+  CefEmbedTouchEvent eventObj;
   if (event) {
-    eventObj = *event;
+    eventObj.Set(*event, false);
   }
 
   // Execute
@@ -977,9 +977,9 @@ void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
   }
 
   // Translate param: info; type: struct_byref_const
-  cef_native_embed_data_t infoObj;
+  CefNativeEmbedData infoObj;
   if (info) {
-    infoObj = *info;
+    infoObj.Set(*info, false);
   }
 
   // Execute
