@@ -478,9 +478,6 @@ bool CefRenderWidgetHostViewOSR::HasFocus() {
   }
   content::RenderWidgetHostImpl* widget =
       content::RenderWidgetHostImpl::From(render_widget_host_);
-  if (!widget->is_focused() && text_input_manager_->HasObserver(this)) {
-    text_input_manager_->RemoveObserver(this);
-  }
   return widget->is_focused();
 #else
   return false;
@@ -985,9 +982,11 @@ void CefRenderWidgetHostViewOSR::SetIsLoading(bool is_loading) {
   if (!is_loading) {
     return;
   }
+#ifndef OHOS_SCROLL_PERFORMANCE
   // Make sure gesture detection is fresh.
   gesture_provider_.ResetDetection();
   forward_touch_to_popup_ = false;
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::RenderProcessGone() {
