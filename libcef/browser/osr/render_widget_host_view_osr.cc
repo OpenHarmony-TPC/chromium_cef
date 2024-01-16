@@ -982,9 +982,11 @@ void CefRenderWidgetHostViewOSR::SetIsLoading(bool is_loading) {
   if (!is_loading) {
     return;
   }
+#ifndef OHOS_SCROLL_PERFORMANCE
   // Make sure gesture detection is fresh.
   gesture_provider_.ResetDetection();
   forward_touch_to_popup_ = false;
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::RenderProcessGone() {
