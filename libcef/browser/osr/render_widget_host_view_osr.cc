@@ -1908,9 +1908,16 @@ void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
   if (render_widget_host_ && render_widget_host_->GetView()) {
     blink::WebMouseWheelEvent mouse_wheel_event(event);
 
+#if defined(OHOS_INPUT_EVENTS)
+    bool shouldRoute = ShouldRouteEvents();
+    mouse_wheel_phase_handler_.SendWheelEndForTouchpadScrollingIfNeeded(shouldRoute);
+    mouse_wheel_phase_handler_.AddPhaseIfNeededAndScheduleEndEvent(
+        mouse_wheel_event, shouldRoute);
+#else
     mouse_wheel_phase_handler_.SendWheelEndForTouchpadScrollingIfNeeded(false);
     mouse_wheel_phase_handler_.AddPhaseIfNeededAndScheduleEndEvent(
         mouse_wheel_event, false);
+#endif
 
     if (ShouldRouteEvents()) {
       render_widget_host_->delegate()
