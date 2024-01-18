@@ -346,6 +346,11 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
     isSelectionTextNotEmpty_ = false;
   }
 #endif
+#ifdef OHOS_CLIPBOARD
+  if (browser->web_contents()) {
+    browser->web_contents()->SetShowingContextMenu(false);
+  }
+#endif  // #ifdef OHOS_CLIPBOARD
 }
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
