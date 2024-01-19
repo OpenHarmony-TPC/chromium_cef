@@ -11,7 +11,6 @@
 #if defined(OHOS_EX_DOWNLOAD)
 #include "cef/libcef/browser/received_slice_helper.h"
 const char kNWebId[] = "nweb_id";
-const char kRequestMethod[] = "request_method";
 #endif
 
 CefDownloadItemImpl::CefDownloadItemImpl(download::DownloadItem* value)
@@ -156,15 +155,7 @@ CefString CefDownloadItemImpl::GetMethod() {
 #if defined(OHOS_EX_DOWNLOAD)
   const download::DownloadItemImpl& item_impl =
       static_cast<const download::DownloadItemImpl&>(const_value());
-  void* data_raw_ptr = item_impl.GetUserData(kRequestMethod);
-  std::string request_method;
-  if (data_raw_ptr) {
-    download::DownloadItemImpl::RequestMethodData* request_method_data_ptr =
-        (download::DownloadItemImpl::RequestMethodData*)data_raw_ptr;
-    if (request_method_data_ptr) {
-      request_method = request_method_data_ptr->request_method_;
-    }
-  }
+  std::string request_method = item_impl.GetRequestMethod();
   return request_method;
 #else
   return CefString();
