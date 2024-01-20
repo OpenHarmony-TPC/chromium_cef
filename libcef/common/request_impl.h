@@ -18,6 +18,11 @@
 #include "services/network/public/mojom/referrer_policy.mojom-shared.h"
 #include "url/gurl.h"
 
+#if defined(OHOS_SCHEME_HANDLER)
+#include "net/base/io_buffer.h"
+#include "net/base/upload_data_stream.h"
+#endif
+
 namespace blink {
 class WebURLRequest;
 }  // namespace blink
@@ -63,6 +68,11 @@ class CefRequestImpl : public CefRequest {
   CefString GetReferrerURL() override;
   ReferrerPolicy GetReferrerPolicy() override;
   CefRefPtr<CefPostData> GetPostData() override;
+#if defined(OHOS_SCHEME_HANDLER)
+  CefRefPtr<CefPostDataStream> GetUploadStream() override;
+  bool IsRedirect() override;
+  bool HasUserGesture() override;
+#endif  // defined(OHOS_SCHEME_HANDLER)
   void SetPostData(CefRefPtr<CefPostData> postData) override;
   void GetHeaderMap(HeaderMap& headerMap) override;
   void SetHeaderMap(const HeaderMap& headerMap) override;
@@ -153,6 +163,11 @@ class CefRequestImpl : public CefRequest {
 #ifdef OHOS_NETWORK_CONNINFO
   network::mojom::RequestDestination destination_;
 #endif
+#if defined(OHOS_SCHEME_HANDLER)
+  bool is_redirect_{false};
+  bool has_user_gesture_{false};
+  CefRefPtr<CefPostDataStream> postdata_stream_;
+#endif
   // The below members are used by CefURLRequest.
   int flags_;
   net::SiteForCookies site_for_cookies_;
@@ -190,6 +205,41 @@ class CefRequestImpl : public CefRequest {
   IMPLEMENT_REFCOUNTING(CefRequestImpl);
 };
 
+#if defined(OHOS_SCHEME_HANDLER)
+class CefPostDataStreamImpl : public CefPostDataStream {
+ public:
+  CefPostDataStreamImpl();
+
+  void SetReadCallback(
+      CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
+
+  void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
+  void Read(void* buffer,
+            int64_t buf_len,
+            CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
+  int64_t GetSize() override;
+  int64_t GetPosition() override;
+  bool IsChunked() override;
+  bool HasNullSource() override;
+  bool IsEOF() override;
+  bool IsInMemory() override;
+  void Set(network::ResourceRequestBody* body);
+
+ private:
+  void OnStreamInitialized(int rv);
+  void OnStreamRead(scoped_refptr<net::WrappedIOBuffer> buffer,
+                    CefRefPtr<CefPostDataStreamReadCallback> read_callback,
+                    int rv);
+
+  CefRefPtr<CefPostDataStreamReadCallback> read_callback_;
+  CefRefPtr<CefPostDataStreamInitCallback> init_callback_;
+
+  std::unique_ptr<net::UploadDataStream> upload_stream_;
+
+  mutable base::Lock lock_;
+  IMPLEMENT_REFCOUNTING(CefPostDataStreamImpl);
+};
+#endif  // defined(OHOS_SCHEME_HANDLER)
 // Implementation of CefPostData
 class CefPostDataImpl : public CefPostData {
  public:

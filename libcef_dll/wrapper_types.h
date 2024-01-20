@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=869733b6a751d08153db3c01eaa4551b25da2ce2$
+// $hash=422cb95a8c2a0f4731a096a34197b44c1aa40028$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -115,6 +115,9 @@ enum CefWrapperType {
   WT_PERMISSION_REQUEST,
   WT_POST_DATA,
   WT_POST_DATA_ELEMENT,
+  WT_POST_DATA_STREAM,
+  WT_POST_DATA_STREAM_INIT_CALLBACK,
+  WT_POST_DATA_STREAM_READ_CALLBACK,
   WT_PREFERENCE_MANAGER,
   WT_PREFERENCE_REGISTRAR,
   WT_PRINT_DIALOG_CALLBACK,

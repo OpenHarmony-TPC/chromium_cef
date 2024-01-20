@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e831b0d15ebc9ba1312425f81c4f840c11d0a988$
+// $hash=7aee9e2ca84db433968f2816cb0fdf22895fd904$
 //
 
 #include <dlfcn.h>
@@ -173,6 +173,7 @@ struct libcef_pointers {
   decltype(&cef_print_settings_create) cef_print_settings_create;
   decltype(&cef_process_message_create) cef_process_message_create;
   decltype(&cef_request_create) cef_request_create;
+  decltype(&cef_post_data_stream_create) cef_post_data_stream_create;
   decltype(&cef_post_data_create) cef_post_data_create;
   decltype(&cef_post_data_element_create) cef_post_data_element_create;
   decltype(&cef_request_context_get_global_context)
@@ -421,6 +422,7 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_print_settings_create);
   INIT_ENTRY(cef_process_message_create);
   INIT_ENTRY(cef_request_create);
+  INIT_ENTRY(cef_post_data_stream_create);
   INIT_ENTRY(cef_post_data_create);
   INIT_ENTRY(cef_post_data_element_create);
   INIT_ENTRY(cef_request_context_get_global_context);
@@ -1008,6 +1010,11 @@ struct _cef_process_message_t* cef_process_message_create(
 
 NO_SANITIZE("cfi-icall") struct _cef_request_t* cef_request_create() {
   return g_libcef_pointers.cef_request_create();
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_post_data_stream_t* cef_post_data_stream_create() {
+  return g_libcef_pointers.cef_post_data_stream_create();
 }
 
 NO_SANITIZE("cfi-icall") struct _cef_post_data_t* cef_post_data_create() {

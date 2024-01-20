@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=677073805c6a87f896745311d30a7832768d66b0$
+// $hash=68104b1cac8c4fd2bd86614626c9ea7daff9d0f4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_
@@ -62,6 +62,9 @@ class CefRequestCToCpp
   TransitionType GetTransitionType() override;
   uint64 GetIdentifier() override;
   bool IsMainFrame() override;
+  bool IsRedirect() override;
+  bool HasUserGesture() override;
+  CefRefPtr<CefPostDataStream> GetUploadStream() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_CTOCPP_H_
