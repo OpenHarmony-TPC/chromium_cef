@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=94971433ab3050a15f9e1d3d5a5b8dc33ecc22d2$
+// $hash=e059ed67a8918f59146ca5547fadaba885cb66d3$
 //
 
 #include "libcef_dll/ctocpp/request_ctocpp.h"
 #include "libcef_dll/ctocpp/post_data_ctocpp.h"
+#include "libcef_dll/ctocpp/post_data_stream_ctocpp.h"
 #include "libcef_dll/transfer_util.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -460,6 +461,52 @@ NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::IsMainFrame() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::IsRedirect() {
+  cef_request_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_redirect)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_redirect(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::HasUserGesture() {
+  cef_request_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, has_user_gesture)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->has_user_gesture(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefPostDataStream> CefRequestCToCpp::GetUploadStream() {
+  cef_request_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_upload_stream)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_post_data_stream_t* _retval = _struct->get_upload_stream(_struct);
+
+  // Return type: refptr_same
+  return CefPostDataStreamCToCpp::Wrap(_retval);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2024 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b87316d1973f45865013ed8b430cf6362e20026e$
+// $hash=510f3652b5f05c65bbf70dfafdee08cbb76c9844$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_
@@ -47,6 +47,7 @@ extern "C" {
 #endif
 
 struct _cef_post_data_element_t;
+struct _cef_post_data_stream_t;
 struct _cef_post_data_t;
 
 ///
@@ -221,12 +222,130 @@ typedef struct _cef_request_t {
   /// false (0) for subresources or iframes
   ///
   int(CEF_CALLBACK* is_main_frame)(struct _cef_request_t* self);
+
+  ///
+  /// Returns whether the request was redirect.
+  ///
+  int(CEF_CALLBACK* is_redirect)(struct _cef_request_t* self);
+
+  ///
+  /// Returns whether the request was triggered by user gesture.
+  ///
+  int(CEF_CALLBACK* has_user_gesture)(struct _cef_request_t* self);
+
+  ///
+  /// Get the upload stream.
+  ///
+  struct _cef_post_data_stream_t*(CEF_CALLBACK* get_upload_stream)(
+      struct _cef_request_t* self);
 } cef_request_t;
 
 ///
 /// Create a new cef_request_t object.
 ///
 CEF_EXPORT cef_request_t* cef_request_create(void);
+
+///
+/// Callback for init the stream.
+///
+typedef struct _cef_post_data_stream_init_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Callback for init the stream.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_post_data_stream_init_callback_t* self,
+                           int result);
+} cef_post_data_stream_init_callback_t;
+
+///
+/// Callback for read from stream.
+///
+typedef struct _cef_post_data_stream_read_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Callback for read from stream.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_post_data_stream_read_callback_t* self,
+                           char* buffer,
+                           int bytes_read);
+} cef_post_data_stream_read_callback_t;
+
+///
+/// Structure used to represent post data for a web request. The functions of
+/// this structure may be called on any thread.
+///
+typedef struct _cef_post_data_stream_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Set ready callback.
+  ///
+  void(CEF_CALLBACK* set_read_callback)(
+      struct _cef_post_data_stream_t* self,
+      struct _cef_post_data_stream_read_callback_t* read_callback);
+
+  ///
+  /// Init the stream.
+  ///
+  void(CEF_CALLBACK* init)(
+      struct _cef_post_data_stream_t* self,
+      struct _cef_post_data_stream_init_callback_t* init_callback);
+
+  ///
+  /// Read the stream.
+  ///
+  void(CEF_CALLBACK* read)(
+      struct _cef_post_data_stream_t* self,
+      void* buffer,
+      int64_t buf_len,
+      struct _cef_post_data_stream_read_callback_t* read_callback);
+
+  ///
+  /// Get the size of stream.
+  ///
+  int64(CEF_CALLBACK* get_size)(struct _cef_post_data_stream_t* self);
+
+  ///
+  /// Get the position of stream.
+  ///
+  int64(CEF_CALLBACK* get_position)(struct _cef_post_data_stream_t* self);
+
+  ///
+  /// Get if the stream is trunked.
+  ///
+  int(CEF_CALLBACK* is_chunked)(struct _cef_post_data_stream_t* self);
+
+  ///
+  /// Get if the stream is trunked.
+  ///
+  int(CEF_CALLBACK* has_null_source)(struct _cef_post_data_stream_t* self);
+
+  ///
+  /// Get if the stream is trunked.
+  ///
+  int(CEF_CALLBACK* is_eof)(struct _cef_post_data_stream_t* self);
+
+  ///
+  /// Get if the stream is trunked.
+  ///
+  int(CEF_CALLBACK* is_in_memory)(struct _cef_post_data_stream_t* self);
+} cef_post_data_stream_t;
+
+///
+/// Create a new cef_post_data_stream_t object.
+///
+CEF_EXPORT cef_post_data_stream_t* cef_post_data_stream_create(void);
 
 ///
 /// Structure used to represent post data for a web request. The functions of
