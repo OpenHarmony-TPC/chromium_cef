@@ -260,6 +260,13 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       pinch_zoom_enabled_(content::IsPinchToZoomEnabled()),
       mouse_wheel_phase_handler_(this),
       gesture_provider_(CreateGestureProviderConfig(), this),
+#if BUILDFLAG(IS_OHOS)
+      device_type_(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          ::switches::kOhosDeviceType)),
+      requires_double_tap_gesture_events_(
+          device_type_ == ::switches::kOhosTabletDevice ||
+          device_type_ == ::switches::kOhosMobileDevice),
+#endif
       weak_ptr_factory_(this) {
   DCHECK(render_widget_host_);
   DCHECK(!render_widget_host_->GetView());
@@ -359,6 +366,11 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 
 #ifdef OHOS_EX_TOPCONTROLS
   OnTopControlsHeightChanged();
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  gesture_provider_.SetDoubleTapSupportForPlatformEnabled(
+      requires_double_tap_gesture_events_);
 #endif
 }
 
@@ -1372,9 +1384,10 @@ void CefRenderWidgetHostViewOSR::OnFrameComplete(
   begin_frame_pending_ = false;
 }
 
-#ifdef OHOS_EX_TOPCONTROLS
+#if BUILDFLAG(IS_OHOS)
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     const cc::RenderFrameMetadata& metadata) {
+#ifdef OHOS_EX_TOPCONTROLS
   float top_content_offset = metadata.top_controls_height *
                              metadata.top_controls_shown_ratio /
                              metadata.device_scale_factor;
@@ -1388,6 +1401,10 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     top_controls_offset_ = top_controls_offset;
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
+#endif
+
+  gesture_provider_.SetDoubleTapSupportForPageEnabled(
+      !metadata.is_mobile_optimized);
 }
 #endif
 
@@ -2208,6 +2225,12 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
                                                             latency_info);
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+bool CefRenderWidgetHostViewOSR::RequiresDoubleTapGestureEvents() const {
+  return requires_double_tap_gesture_events_;
+}
+#endif
 
 void CefRenderWidgetHostViewOSR::UpdateFrameRate() {
   frame_rate_threshold_us_ = 0;
