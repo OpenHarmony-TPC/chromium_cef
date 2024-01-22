@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1727d3f36fed04486cb6be5741f3bdd0f9f922aa$
+// $hash=daa76ff1f6eaed89204cb9bf15241e3508cf9164$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -400,6 +400,17 @@ typedef struct _cef_browser_t {
   /// Get security level for current page.
   ///
   int(CEF_CALLBACK* get_security_level)(struct _cef_browser_t* self);
+
+  ///
+  /// Enable the ability to check website security risks.
+  ///
+  void(CEF_CALLBACK* enable_safe_browsing)(struct _cef_browser_t* self,
+                                           int enable);
+
+  ///
+  /// Get whether checking website security risks is enabled.
+  ///
+  int(CEF_CALLBACK* is_safe_browsing_enabled)(struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///

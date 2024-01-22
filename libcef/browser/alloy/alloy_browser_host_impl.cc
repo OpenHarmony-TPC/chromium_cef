@@ -93,6 +93,8 @@
 #include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
 #endif
 
+#include "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -1953,6 +1955,10 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
   // Make sure RenderFrameCreated is called at least one time.
   RenderFrameCreated(web_contents->GetPrimaryMainFrame());
 
+#if BUILDFLAG(IS_OHOS)
+  ohos_safe_browsing::OhosSafeBrowsingTabHelper::CreateForWebContents(
+      web_contents, request_context->IsOffTheRecord(), this);
+#endif
 #ifdef OHOS_EX_GET_ZOOM_LEVEL
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kForBrowser)) {

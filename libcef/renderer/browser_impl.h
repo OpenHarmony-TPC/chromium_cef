@@ -131,6 +131,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   // #endif
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  bool IsSafeBrowsingEnabled() override{ return false; }
+  void EnableSafeBrowsing(bool enable) override{}
+#endif
+
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;

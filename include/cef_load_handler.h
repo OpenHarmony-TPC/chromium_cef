@@ -178,6 +178,13 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnNavigationEntryCommitted(
       CefRefPtr<CefLoadCommittedDetails> details) {}
+
+
+  ///
+  /// Called when received website security risk check result.
+  ///
+  /*--cef()--*/
+  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

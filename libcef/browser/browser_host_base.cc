@@ -400,7 +400,10 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
   std::unique_ptr<download::DownloadUrlParameters> params(
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
-  params->set_referrer(web_contents->GetURL());
+  content::Referrer referrer = content::Referrer::SanitizeForRequest(
+      gurl, content::Referrer(web_contents->GetLastCommittedURL(), 
+                              network::mojom::ReferrerPolicy::kDefault));
+  params->set_referrer(referrer.url);
   manager->DownloadUrl(std::move(params));
 }
 
@@ -3217,6 +3220,19 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
   }
 #endif
 }
+
+#if BUILDFLAG(IS_OHOS)
+  bool CefBrowserHostBase::IsSafeBrowsingEnabled() {
+    return settings_.is_safe_browsing_enable;
+  }
+
+  void CefBrowserHostBase::EnableSafeBrowsing(bool enable) {
+    LOG(INFO) << "enable safe browsing" << enable;
+    if (settings_.is_safe_browsing_enable != enable) {
+      settings_.is_safe_browsing_enable = enable;
+    }
+  }
+#endif
 
 bool CefBrowserHostBase::GetSavePassword() {
 #if defined(OHOS_EX_PASSWORD)

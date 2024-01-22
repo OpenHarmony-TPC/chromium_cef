@@ -81,13 +81,16 @@ class AlloyContentRendererClient
   // single-process mode. Blocks until cleanup is complete.
   void RunSingleProcessCleanup();
 
-#if defined(OHOS_NWEB_EX)
+#if BUILDFLAG(IS_OHOS)
   void PrepareErrorPage(content::RenderFrame* render_frame,
                         const blink::WebURLError& error,
                         const std::string& http_method,
                         content::mojom::AlternativeErrorPageOverrideInfoPtr
                             alternative_error_page_info,
                         std::string* error_html) override;
+#endif
+
+#if defined(OHOS_NWEB_EX)
   void PrepareErrorPageForHttpStatusError(
       content::RenderFrame* render_frame,
       const blink::WebURLError& error,

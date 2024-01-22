@@ -141,6 +141,8 @@
 #include "printing/metafile_agent.h"
 #endif
 
+#include "libcef/renderer/alloy/ohos_safe_browsing_error_page_controller_delegate_impl.h"
+
 AlloyContentRendererClient::AlloyContentRendererClient()
     : main_entry_time_(base::TimeTicks::Now()),
       render_manager_(new CefRenderManager) {
@@ -334,11 +336,25 @@ void AlloyContentRendererClient::RenderThreadConnected() {
   render_manager_->RenderThreadConnected();
 }
 
+#if BUILDFLAG(IS_OHOS) && !defined(OHOS_NWEB_EX)
+void AlloyContentRendererClient::PrepareErrorPage(
+    content::RenderFrame* render_frame,
+    const blink::WebURLError& error,
+    const std::string& http_method,
+    content::mojom::AlternativeErrorPageOverrideInfoPtr
+    alternative_error_page_info,
+    std::string* error_html) {
+  AlloySafeBrowsingErrorPageControllerDelegateImpl::Get(render_frame)
+     ->PrepareForErrorPage();
+}
+#endif
+
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
 #if BUILDFLAG(IS_OHOS)
   new js_injection::JsCommunication(render_frame);
   new AlloyContentSettingsClient(render_frame);
+  new AlloySafeBrowsingErrorPageControllerDelegateImpl(render_frame);
 #endif
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
 

@@ -945,6 +945,8 @@ source_set("libcef_static") {
               "libcef/renderer/alloy/alloy_content_renderer_client.h",
               "libcef/renderer/alloy/alloy_render_thread_observer.cc",
               "libcef/renderer/alloy/alloy_render_thread_observer.h",
+              "libcef/renderer/alloy/ohos_safe_browsing_error_page_controller_delegate_impl.cc",
+              "libcef/renderer/alloy/ohos_safe_browsing_error_page_controller_delegate_impl.h",
               "libcef/renderer/alloy/url_loader_throttle_provider_impl.cc",
               "libcef/renderer/alloy/url_loader_throttle_provider_impl.h",
               "libcef/renderer/browser_impl.cc",
@@ -1014,6 +1016,17 @@ source_set("libcef_static") {
       "libcef/browser/autofill/oh_autofill_provider.h",
       "libcef/renderer/alloy/alloy_content_settings_client.cc",
       "libcef/renderer/alloy/alloy_content_settings_client.h",
+      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h",
+      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_response.h",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_client.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_client.h",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.h",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h",
     ]
   }
 
@@ -1356,6 +1369,10 @@ source_set("libcef_static") {
     deps += [
       "//components/js_injection/browser",
       "//components/js_injection/renderer",
+      "//components/security_interstitials/content:proto",
+      "//components/security_interstitials/content:security_interstitial_page",
+      "//components/security_interstitials/core",
+      "//components/safe_browsing/core/common:safe_browsing_prefs",
       "//ui/events",
       "//ui/strings",
       "//ui/views",

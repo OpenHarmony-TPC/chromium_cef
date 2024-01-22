@@ -610,6 +610,7 @@ struct CefBrowserSettingsTraits {
     target->native_embed_mode_enabled =
         src->native_embed_mode_enabled;
     target->scroll_enabled = src->scroll_enabled;
+    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
