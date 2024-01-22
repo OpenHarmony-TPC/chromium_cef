@@ -380,9 +380,13 @@ class CefBrowserHostBase : public CefBrowserHost,
   void WasOccluded(bool occluded) override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
+#if defined(OHOS_PRINT)
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
+#endif // defined(OHOS_PRINT)
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;

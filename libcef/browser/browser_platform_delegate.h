@@ -436,6 +436,8 @@ class CefBrowserPlatformDelegate {
   virtual void SetToken(void* token) {}
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                              void** webPrintDocumentAdapter) {}
+  virtual void SetPrintBackground(bool enable) {}
+  virtual bool GetPrintBackground() { return false; }
 #endif  // defined(OHOS_PRINT)
 
 #if defined(OHOS_INPUT_EVENTS)

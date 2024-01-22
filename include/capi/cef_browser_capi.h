@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f5c159f4ded379b4debf88903187260a27d28601$
+// $hash=123fbd4bda6b792781a2db1d3e87b25e13f9e4a1$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1612,6 +1612,17 @@ typedef struct _cef_browser_host_t {
   ///
   int(CEF_CALLBACK* get_shrink_viewport_height)(
       struct _cef_browser_host_t* self);
+
+  ///
+  /// Set background print enable.
+  ///
+  void(CEF_CALLBACK* set_print_background)(struct _cef_browser_host_t* self,
+                                           int enable);
+
+  ///
+  /// Get whether print background.
+  ///
+  int(CEF_CALLBACK* get_print_background)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

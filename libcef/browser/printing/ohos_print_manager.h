@@ -84,6 +84,8 @@ class OhosPrintManager : public printing::PrintManager,
   void ShowScriptedPrintPreview(bool source_is_modifiable) override;
   void UpdatePrintSettings(base::Value::Dict job_settings,
                            UpdatePrintSettingsCallback callback) override;
+  void SetPrintBackground(bool enable);
+  bool GetPrintBackground();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -123,6 +125,7 @@ class OhosPrintManager : public printing::PrintManager,
   void* token_ = nullptr;
   bool cancel_ = false;
   bool is_pdf_print_ = false;
+  bool should_print_background_ = true;
   content::RenderFrameHost* pdf_rfh_ = nullptr;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string print_job_id_;

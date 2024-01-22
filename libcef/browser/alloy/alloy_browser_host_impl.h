@@ -224,6 +224,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
 #endif // defined(OHOS_PRINT)
 
 #if defined(OHOS_INPUT_EVENTS)
