@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=09f26d25bde9a3c33324e64fcd3cbae00c88aed5$
+// $hash=7c23c4d51ba9ecdcd3ea0c3985d32a89064a7a42$
 //
 
 #include "libcef_dll/cpptoc/post_data_stream_cpptoc.h"
@@ -75,7 +75,7 @@ post_data_stream_init(struct _cef_post_data_stream_t* self,
 void CEF_CALLBACK
 post_data_stream_read(struct _cef_post_data_stream_t* self,
                       void* buffer,
-                      int64_t buf_len,
+                      int buf_len,
                       cef_post_data_stream_read_callback_t* read_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -100,7 +100,7 @@ post_data_stream_read(struct _cef_post_data_stream_t* self,
       CefPostDataStreamReadCallbackCppToC::Unwrap(read_callback));
 }
 
-int64 CEF_CALLBACK
+uint64 CEF_CALLBACK
 post_data_stream_get_size(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -110,13 +110,13 @@ post_data_stream_get_size(struct _cef_post_data_stream_t* self) {
   }
 
   // Execute
-  int64 _retval = CefPostDataStreamCppToC::Get(self)->GetSize();
+  uint64 _retval = CefPostDataStreamCppToC::Get(self)->GetSize();
 
   // Return type: simple
   return _retval;
 }
 
-int64 CEF_CALLBACK
+uint64 CEF_CALLBACK
 post_data_stream_get_position(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -126,7 +126,7 @@ post_data_stream_get_position(struct _cef_post_data_stream_t* self) {
   }
 
   // Execute
-  int64 _retval = CefPostDataStreamCppToC::Get(self)->GetPosition();
+  uint64 _retval = CefPostDataStreamCppToC::Get(self)->GetPosition();
 
   // Return type: simple
   return _retval;

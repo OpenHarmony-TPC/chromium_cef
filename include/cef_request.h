@@ -313,20 +313,20 @@ class CefPostDataStream : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void Read(
       void* buffer,
-      int64_t buf_len,
+      int buf_len,
       CefRefPtr<CefPostDataStreamReadCallback> read_callback) = 0;
 
   ///
   /// Get the size of stream.
   ///
   /*--cef()--*/
-  virtual int64 GetSize() = 0;
+  virtual uint64 GetSize() = 0;
 
   ///
   /// Get the position of stream.
   ///
   /*--cef()--*/
-  virtual int64 GetPosition() = 0;
+  virtual uint64 GetPosition() = 0;
 
   ///
   /// Get if the stream is trunked.

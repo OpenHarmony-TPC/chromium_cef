@@ -215,10 +215,10 @@ class CefPostDataStreamImpl : public CefPostDataStream {
 
   void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
   void Read(void* buffer,
-            int64_t buf_len,
+            int buf_len,
             CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
-  int64_t GetSize() override;
-  int64_t GetPosition() override;
+  uint64_t GetSize() override;
+  uint64_t GetPosition() override;
   bool IsChunked() override;
   bool HasNullSource() override;
   bool IsEOF() override;
