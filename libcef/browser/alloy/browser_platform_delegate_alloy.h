@@ -90,6 +90,8 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
 void SetToken(void* token) override;
 void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                    void** webPrintDocumentAdapter) override;
+void SetPrintBackground(bool enable) override;
+bool GetPrintBackground() override;
 #endif // defined(OHOS_PRINT)
 
 

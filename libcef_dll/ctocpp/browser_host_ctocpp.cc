@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7cdcba4180d505728e6a0205a1af228b5abd76a8$
+// $hash=54c3826d4edc0ebea1986e3fe25c586ef4bcbf08$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2547,7 +2547,6 @@ void CefBrowserHostCToCpp::SetOverscrollMode(int mode) {
   _struct->set_overscroll_mode(_struct, mode);
 }
 
-
 NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::Discard() {
   shutdown_checker::AssertNotShutdown();
 
@@ -2612,6 +2611,38 @@ NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetShrinkViewportHeight() {
 
   // Return type: simple
   return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetPrintBackground(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_print_background)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_print_background(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPrintBackground() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_print_background)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_print_background(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

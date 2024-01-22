@@ -2296,6 +2296,19 @@ void AlloyBrowserHostImpl::CreateWebPrintDocumentAdapter(const CefString& jobNam
     platform_delegate_->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
   }
 }
+
+void AlloyBrowserHostImpl::SetPrintBackground(bool enable) {
+  if (platform_delegate_) {
+    platform_delegate_->SetPrintBackground(enable);
+  }
+}
+
+bool AlloyBrowserHostImpl::GetPrintBackground() {
+  if (platform_delegate_) {
+     return platform_delegate_->GetPrintBackground();
+  }
+  return false;
+}
 #endif // defined(OHOS_PRINT)
 
 

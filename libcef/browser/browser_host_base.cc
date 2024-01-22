@@ -2888,6 +2888,7 @@ void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+#if defined(OHOS_PRINT)
 void CefBrowserHostBase::SetToken(void* token) {
   // TODO(ohos): please impl the function and remove this comment.
 }
@@ -2897,6 +2898,17 @@ void CefBrowserHostBase::CreateWebPrintDocumentAdapter(
     void** webPrintDocumentAdapter) {
   // TODO(ohos): please impl the function and remove this comment.
 }
+
+void CefBrowserHostBase::SetPrintBackground(bool enabled) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+bool CefBrowserHostBase::GetPrintBackground() {
+  // TODO(ohos): please impl the function and remove this comment.
+  return false;
+}
+#endif // defined(OHOS_PRINT)
+
 void CefBrowserHostBase::SetEnableLowerFrameRate(bool enabled) {
   // TODO(ohos): please impl the function and remove this comment.
 }

@@ -422,7 +422,7 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
   margins.top = newAttrs.margin.top;
   margins.bottom = newAttrs.margin.bottom;
   settings->SetCustomMargins(margins);
-  settings->set_should_print_backgrounds(true);
+  settings->set_should_print_backgrounds(should_print_background_);
   settings->SetOrientation(newAttrs.isLandscape);
   return settings;
 }
@@ -523,6 +523,16 @@ void OhosPrintManager::CreateWebPrintDocumentAdapter(
     void** webPrintDocumentAdapter) {
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
+}
+
+void OhosPrintManager::SetPrintBackground(bool enable) {
+  LOG(INFO) << "OhosPrintManager::SetPrintBackground  = " << enable;
+  should_print_background_ = enable;
+}
+
+bool OhosPrintManager::GetPrintBackground() {
+  LOG(INFO) << "OhosPrintManager::GetPrintBackground = " << should_print_background_;
+  return should_print_background_;
 }
 
 void OhosPrintManager::CheckForCancel(int32_t preview_ui_id,

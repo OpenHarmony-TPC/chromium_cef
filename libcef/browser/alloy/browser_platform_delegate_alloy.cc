@@ -612,4 +612,38 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
 
     ohos_print_manager->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
   }
+
+  void CefBrowserPlatformDelegateAlloy::SetPrintBackground(bool enable) {
+    REQUIRE_ALLOY_RUNTIME();
+    content::RenderFrameHost* rfh_to_use = printing::GetFrameToPrint(web_contents_);
+    if (!rfh_to_use) {
+      LOG(ERROR) << "rfh_to_use is nullptr";
+      return;
+    }
+    auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
+      content::WebContents::FromRenderFrameHost(rfh_to_use));
+    if (!ohos_print_manager) {
+      LOG(ERROR) << "ohos_print_manager is nullptr";
+      return;
+    }
+
+    ohos_print_manager->SetPrintBackground(enable);
+  }
+
+  bool CefBrowserPlatformDelegateAlloy::GetPrintBackground() {
+    REQUIRE_ALLOY_RUNTIME();
+    content::RenderFrameHost* rfh_to_use = printing::GetFrameToPrint(web_contents_);
+    if (!rfh_to_use) {
+      LOG(ERROR) << "rfh_to_use is nullptr";
+      return false;
+    }
+    auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
+      content::WebContents::FromRenderFrameHost(rfh_to_use));
+    if (!ohos_print_manager) {
+      LOG(ERROR) << "ohos_print_manager is nullptr";
+      return false;
+    }
+
+    return ohos_print_manager->GetPrintBackground();
+  }
 #endif // defined(OHOS_PRINT)

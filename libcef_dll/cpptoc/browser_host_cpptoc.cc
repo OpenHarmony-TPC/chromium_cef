@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1219c13d27b2b37b3d4a6a7503e532ef01bcf63c$
+// $hash=59521a4ab438e00a873f3e1c52c064c05f3b472d$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2816,7 +2816,6 @@ browser_host_set_overscroll_mode(struct _cef_browser_host_t* self, int mode) {
   CefBrowserHostCppToC::Get(self)->SetOverscrollMode(mode);
 }
 
-
 int CEF_CALLBACK browser_host_discard(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2882,6 +2881,40 @@ browser_host_get_shrink_viewport_height(struct _cef_browser_host_t* self) {
   int _retval = CefBrowserHostCppToC::Get(self)->GetShrinkViewportHeight();
 
   // Return type: simple
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_set_print_background(struct _cef_browser_host_t* self,
+                                  int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetPrintBackground(enable ? true : false);
+}
+
+int CEF_CALLBACK
+browser_host_get_print_background(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->GetPrintBackground();
+
+  // Return type: bool
   return _retval;
 }
 
@@ -3047,6 +3080,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;
   GetStruct()->get_shrink_viewport_height =
       browser_host_get_shrink_viewport_height;
+  GetStruct()->set_print_background = browser_host_set_print_background;
+  GetStruct()->get_print_background = browser_host_get_print_background;
 }
 
 // DESTRUCTOR - Do not edit by hand.
