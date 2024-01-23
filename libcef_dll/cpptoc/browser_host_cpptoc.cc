@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=59521a4ab438e00a873f3e1c52c064c05f3b472d$
+// $hash=1ce58978cdeb37c52c0e19d0b80c0fab215c080d$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -2918,6 +2918,21 @@ browser_host_get_print_background(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK browser_host_set_scrollable(struct _cef_browser_host_t* self,
+                                              int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetScrollable(enable ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3082,6 +3097,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_get_shrink_viewport_height;
   GetStruct()->set_print_background = browser_host_set_print_background;
   GetStruct()->get_print_background = browser_host_get_print_background;
+  GetStruct()->set_scrollable = browser_host_set_scrollable;
 }
 
 // DESTRUCTOR - Do not edit by hand.

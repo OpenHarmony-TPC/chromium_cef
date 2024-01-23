@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=123fbd4bda6b792781a2db1d3e87b25e13f9e4a1$
+// $hash=1727d3f36fed04486cb6be5741f3bdd0f9f922aa$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1623,6 +1623,12 @@ typedef struct _cef_browser_host_t {
   /// Get whether print background.
   ///
   int(CEF_CALLBACK* get_print_background)(struct _cef_browser_host_t* self);
+
+  ///
+  /// set Scrollable
+  ///
+  void(CEF_CALLBACK* set_scrollable)(struct _cef_browser_host_t* self,
+                                     int enable);
 } cef_browser_host_t;
 
 ///

@@ -1223,6 +1223,13 @@ void CefFrameImpl::GetImagesWithResponse(
 void CefFrameImpl::ScrollPageUpDown(bool is_up,
                                     bool is_half,
                                     float view_height) {
+#if defined(OHOS_INPUT_EVENTS)
+  if (!scroll_enabled_) {
+    LOG(DEBUG) << "can not ScrollPageUpDown, scroll is disabled";
+    return;
+  }
+#endif  // defined(OHOS_INPUT_EVENTS)
+
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1254,6 +1261,10 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
 
 #if defined(OHOS_INPUT_EVENTS)
 void CefFrameImpl::ScrollTo(float x, float y) {
+  if (!scroll_enabled_) {
+    LOG(DEBUG) << "can not ScrollTo, scroll is disabled";
+    return;
+  }
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1265,6 +1276,10 @@ void CefFrameImpl::ScrollTo(float x, float y) {
 }
 
 void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
+  if (!scroll_enabled_) {
+    LOG(DEBUG) << "can not ScrollBy, scroll is disabled";
+    return;
+  }
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1278,6 +1293,10 @@ void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
 }
 
 void CefFrameImpl::SlideScroll(float vx, float vy) {
+  if (!scroll_enabled_) {
+    LOG(DEBUG) << "can not SlideScroll, scroll is disabled";
+    return;
+  }
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1310,6 +1329,10 @@ void CefFrameImpl::SetOverscrollMode(int mode) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   render_frame->SetOverscrollMode(mode);
+}
+
+void CefFrameImpl::SetScrollable(bool enable) {
+  scroll_enabled_ = enable;
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 

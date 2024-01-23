@@ -1653,6 +1653,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool GetPrintBackground() = 0;
+
+  ///
+  /// set Scrollable
+  ///
+  /*--cef()--*/
+  virtual void SetScrollable(bool enable) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

@@ -1074,6 +1074,16 @@ void CefFrameHostImpl::SetOverscrollMode(int mode) {
                         mode));
 }
 
+void CefFrameHostImpl::SetScrollable(bool enable) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](bool enable,
+                           const RenderFrameType& render_frame) {
+                          render_frame->SetScrollable(enable);
+                        },
+                        enable));
+}
+
 void CefFrameHostImpl::GetHitData(int& type, CefString& extra_data) {
   std::string temp_extra_data;
   SendToRenderFrame(__FUNCTION__,

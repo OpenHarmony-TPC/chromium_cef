@@ -827,6 +827,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
       browser_settings.hide_vertical_scrollbars;
   settings_.hide_horizontal_scrollbars =
       browser_settings.hide_horizontal_scrollbars;
+  settings_.scroll_enabled = browser_settings.scroll_enabled;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #if BUILDFLAG(IS_OHOS)
   settings_.native_embed_mode_enabled =
@@ -2989,6 +2990,17 @@ void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())
         ->SetOverscrollMode(overscrollMode);
+  }
+}
+
+void CefBrowserHostBase::SetScrollable(bool enable) {
+  LOG(INFO) << "set scrollable: " << enable;
+  if (platform_delegate_) {
+    platform_delegate_->SetScrollable(enable);
+  }
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
   }
 }
 
