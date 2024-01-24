@@ -934,10 +934,6 @@ void AlloyBrowserHostImpl::OnSetFocus(cef_focus_source_t source) {
     return;
   }
 
-#if BUILDFLAG(IS_OHOS)
-  ReportWindowStatus(false);
-#endif
-
   if (contents_delegate_->OnSetFocus(source)) {
     return;
   }
@@ -2057,6 +2053,14 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   ReportWindowStatus(true);
 }
 
+void AlloyBrowserHostImpl::ReportWindowStatusDelay(base::ProcessId pid) {
+  using namespace OHOS::NWeb;
+  if (!is_hidden_) {
+    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_ACTIVE,
+                                              pid, window_id_, nweb_id_);
+  }
+}
+
 void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
   using namespace OHOS::NWeb;
   if (first_view_ready && is_hidden_) {
@@ -2084,6 +2088,10 @@ void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
     ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                               nweb_id_);
     if (!is_hidden_) {
+      CEF_POST_DELAYED_TASK(CEF_UIT,
+                            base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatusDelay,
+                                          this, process_id),
+                            10);
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
                                          nweb_id_);
