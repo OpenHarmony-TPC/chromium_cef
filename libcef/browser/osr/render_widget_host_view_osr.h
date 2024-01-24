@@ -192,6 +192,7 @@ class CefRenderWidgetHostViewOSR
   gfx::Rect GetBoundsInRootWindow() override;
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
+  ui::Compositor* GetCompositor() override;
 #endif
 
 #if !BUILDFLAG(IS_MAC)
