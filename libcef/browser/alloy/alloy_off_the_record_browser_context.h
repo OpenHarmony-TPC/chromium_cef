@@ -127,7 +127,7 @@ class AlloyOffTheRecordBrowserContext : public ChromeOffTheRecordProfileAlloy,
   void AddVisitedURLs(const std::vector<GURL>& urls) override;
 
   // Called from DownloadPrefs::FromBrowserContext.
-  DownloadPrefs* GetDownloadPrefs();
+  DownloadPrefs* GetDownloadPrefs() override;
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   ExtensionSpecialStoragePolicy* GetExtensionSpecialStoragePolicy() override;

@@ -10,7 +10,14 @@ namespace alloy {
 
 DownloadPrefs* GetDownloadPrefsFromBrowserContext(
     content::BrowserContext* context) {
+#ifdef OHOS_INCOGNITO_MODE
+  if (!CefBrowserContext::FromBrowserContext(context)) {
+    return nullptr;
+  }
+  return CefBrowserContext::FromBrowserContext(context)->GetDownloadPrefs();
+#else
   return static_cast<AlloyBrowserContext*>(context)->GetDownloadPrefs();
+#endif
 }
 
 }  // namespace alloy
