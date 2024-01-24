@@ -1490,7 +1490,7 @@ void CefBrowserHostBase::UpdateBrowserControlsHeight(int height, bool animate) {
 #endif
 }
 
-void CefBrowserHostBase::GetOrCreateRootBrowserAccessibilityManager(
+void CefBrowserHostBase::GetRootBrowserAccessibilityManager(
     void** manager) {
   // todo(ohos):impl this function then remove todo
 }

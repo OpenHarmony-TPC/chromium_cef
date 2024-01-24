@@ -135,7 +135,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool IsBackgroundHost() override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
+  void GetRootBrowserAccessibilityManager(void** manager) override;
   void ExecuteJavaScript(const CefString& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;

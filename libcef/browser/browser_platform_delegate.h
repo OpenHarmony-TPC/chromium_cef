@@ -389,7 +389,7 @@ class CefBrowserPlatformDelegate {
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
 #if BUILDFLAG(IS_OHOS)
   virtual content::BrowserAccessibilityManager*
-  GetOrCreateRootBrowserAccessibilityManager() {
+  GetRootBrowserAccessibilityManager() {
     return nullptr;
   }
 #endif

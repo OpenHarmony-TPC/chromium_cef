@@ -1136,7 +1136,7 @@ typedef struct _cef_browser_host_t {
   int(CEF_CALLBACK* is_audio_muted)(struct _cef_browser_host_t* self);
 
   ///
-  /// GetOrCreateRootBrowserAccessibilityManager
+  /// GetRootBrowserAccessibilityManager
   ///
   void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
       struct _cef_browser_host_t* self,

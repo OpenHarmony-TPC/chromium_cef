@@ -280,7 +280,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetImageFromCache(const CefString& url) override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
   void ExitFullScreen() override;
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
+  void GetRootBrowserAccessibilityManager(void** manager) override;
 #ifdef OHOS_I18N
   void UpdateLocale(const CefString& locale) override;
 #endif  // OHOS_I18N
