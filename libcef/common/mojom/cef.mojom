@@ -153,6 +153,9 @@ interface RenderFrame {
   SlideScroll(float vx, float vy);
 
   [EnableIf=is_ohos]
+  SetScrollable(bool enable);
+
+  [EnableIf=is_ohos]
   ZoomBy(float delta, float width, float height);
 
   [EnableIf=ohos_input_events, Sync]

@@ -2813,6 +2813,13 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
+  if (input_event.IsGestureScroll()) {
+    if (!scroll_enabled_) {
+      LOG(DEBUG) << "can not GestureScroll, scroll is disabled";
+      return blink::mojom::InputEventResultState::kConsumed;
+    }
+  }
+
   if (input_event.GetType() ==
         blink::WebInputEvent::Type::kMouseWheel) {
     is_mouse_wheel_scroll_ = true;
@@ -2977,5 +2984,9 @@ void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHan
     handler->OnNativeEmbedLifecycleChange(browser_impl_.get(), info);
 
   }
+}
+
+void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
+  scroll_enabled_ = enable;
 }
 #endif

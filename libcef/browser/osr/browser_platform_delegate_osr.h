@@ -130,6 +130,7 @@ class CefBrowserPlatformDelegateOsr
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) override;
+  void SetScrollable(bool enable) override;
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

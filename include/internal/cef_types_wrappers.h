@@ -609,6 +609,7 @@ struct CefBrowserSettingsTraits {
         src->blank_target_popup_intercept_enabled;
     target->native_embed_mode_enabled =
         src->native_embed_mode_enabled;
+    target->scroll_enabled = src->scroll_enabled;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 

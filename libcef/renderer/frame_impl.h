@@ -212,6 +212,7 @@ class CefFrameImpl
   void GetHitData(
       cef::mojom::RenderFrame::GetHitDataCallback callback) override;
   void SetOverscrollMode(int mode) override;
+  void SetScrollable(bool enable) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,
@@ -233,6 +234,7 @@ class CefFrameImpl
 #if defined(OHOS_INPUT_EVENTS)
   bool is_update_ = false;
   CefHitData cef_hit_data_;
+  bool scroll_enabled_ = true;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   // #ifdef OHOS_CLIPBOARD

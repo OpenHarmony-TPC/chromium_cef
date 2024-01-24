@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=54c3826d4edc0ebea1986e3fe25c586ef4bcbf08$
+// $hash=aaf95223086a6003a7b824d37649c197cfc22f58$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2643,6 +2643,20 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPrintBackground() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_scrollable)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_scrollable(_struct, enable);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

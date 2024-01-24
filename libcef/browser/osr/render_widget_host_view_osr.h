@@ -205,6 +205,7 @@ class CefRenderWidgetHostViewOSR
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   void DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
+  void SetScrollable(bool enable);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)
@@ -598,6 +599,7 @@ class CefRenderWidgetHostViewOSR
   bool is_scroll_consumed_ = false;
   bool is_mouse_wheel_scroll_ = false;
   float device_scale_factor_ = 1.0f;
+  bool scroll_enabled_ = true;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS

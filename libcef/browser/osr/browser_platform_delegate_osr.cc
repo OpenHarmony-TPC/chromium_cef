@@ -962,6 +962,12 @@ void CefBrowserPlatformDelegateOsr::OnNativeEmbedLifecycleChange(
   if (view)
     view->OnNativeEmbedLifecycleChange(info);
 }
+
+void CefBrowserPlatformDelegateOsr::SetScrollable(bool enable) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->SetScrollable(enable);
+}
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS
