@@ -2921,7 +2921,6 @@ void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
   }
   browser_impl_->GetClient()->OnTopControlsChanged(top_controls_offset,
                                                    top_content_offset);
-
   gfx::Transform root_layer_transform;
   root_layer_transform.Translate(gfx::Vector2dF(0, top_content_offset));
   GetRootLayer()->SetTransform(root_layer_transform);
@@ -2991,5 +2990,19 @@ void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHan
 
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+ui::Compositor* CefRenderWidgetHostViewOSR::GetCompositor() {
+#ifdef DISABLE_GPU
+  return nullptr;
+#else
+  if (browser_impl_) {
+    return CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+  }
+  return nullptr;
+#endif
 }
 #endif

@@ -14,6 +14,11 @@
 #include "chrome/grit/pdf_resources_map.h"
 #include "extensions/common/constants.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace extensions {
 
 CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
@@ -24,7 +29,17 @@ CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
   base::Value::Dict dict;
   pdf_extension_util::AddStrings(
       pdf_extension_util::PdfViewerContext::kPdfViewer, &dict);
-  pdf_extension_util::AddAdditionalData(/*enable_printing=*/true,
+
+  bool enable_printing = true;
+#if BUILDFLAG(IS_OHOS)
+  std::string device_type =
+      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kOhosDeviceType);
+  // The printing service is temporarily not supported on mobile device.
+  enable_printing = !(device_type == ::switches::kOhosMobileDevice);
+#endif
+
+  pdf_extension_util::AddAdditionalData(/*enable_printing=*/enable_printing,
                                         /*enable_annotations=*/true, &dict);
 
   ui::TemplateReplacements pdf_viewer_replacements;
