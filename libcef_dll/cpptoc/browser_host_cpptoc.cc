@@ -1455,7 +1455,7 @@ void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->GetOrCreateRootBrowserAccessibilityManager(
+  CefBrowserHostCppToC::Get(self)->GetRootBrowserAccessibilityManager(
       manager);
 }
 

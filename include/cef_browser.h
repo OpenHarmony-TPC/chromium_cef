@@ -1173,10 +1173,10 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
 
 #if BUILDFLAG(IS_OHOS)
   ///
-  /// GetOrCreateRootBrowserAccessibilityManager
+  /// GetRootBrowserAccessibilityManager
   ///
   /*--cef()--*/
-  virtual void GetOrCreateRootBrowserAccessibilityManager(void** manager) = 0;
+  virtual void GetRootBrowserAccessibilityManager(void** manager) = 0;
 
   ///
   /// Execute a string of JavaScript code, return result by callback

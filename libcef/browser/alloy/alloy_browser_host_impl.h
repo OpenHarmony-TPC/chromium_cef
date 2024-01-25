@@ -160,7 +160,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif // defined(OHOS_MEDIA_POLICY)
   void SetAccessibilityState(cef_state_t accessibility_state) override;
 #if BUILDFLAG(IS_OHOS)
-  void GetOrCreateRootBrowserAccessibilityManager(void** manager) override;
+  void GetRootBrowserAccessibilityManager(void** manager) override;
 #endif
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,

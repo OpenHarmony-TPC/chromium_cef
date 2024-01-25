@@ -57,7 +57,7 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void SetAccessibilityState(cef_state_t accessibility_state) override;
 #if BUILDFLAG(IS_OHOS)
   content::BrowserAccessibilityManager*
-  GetOrCreateRootBrowserAccessibilityManager() override;
+  GetRootBrowserAccessibilityManager() override;
 #endif
   bool IsPrintPreviewSupported() const override;
   void Find(const CefString &searchText,

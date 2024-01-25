@@ -1236,7 +1236,7 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetOrCreateRootBrowserAccessibilityManager(
+void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(
     void** manager) {
   shutdown_checker::AssertNotShutdown();
 

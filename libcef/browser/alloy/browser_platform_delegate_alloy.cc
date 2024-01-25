@@ -436,14 +436,14 @@ void CefBrowserPlatformDelegateAlloy::SetAccessibilityState(
 
 #if BUILDFLAG(IS_OHOS)
 content::BrowserAccessibilityManager*
-CefBrowserPlatformDelegateAlloy::GetOrCreateRootBrowserAccessibilityManager() {
+CefBrowserPlatformDelegateAlloy::GetRootBrowserAccessibilityManager() {
   content::WebContentsImpl* web_contents_impl =
       static_cast<content::WebContentsImpl*>(web_contents_);
 
   if (!web_contents_impl) {
     return nullptr;
   }
-  return web_contents_impl->GetOrCreateRootBrowserAccessibilityManager();
+  return web_contents_impl->GetRootBrowserAccessibilityManager();
 }
 
 #endif
