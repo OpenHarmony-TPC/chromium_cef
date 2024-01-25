@@ -443,6 +443,13 @@ void CefFileDialogManager::RunSelectFile(
   dialog_ = ui::SelectFileDialog::Create(dialog_listener_, std::move(policy),
                                          /*run_from_cef=*/true);
 
+#if defined(OHOS_BUGFIX_CRASH)
+  if (!dialog_) {
+    LOG(DEBUG) << "app hasn't onFileSelectShow event, return";
+    return;
+  }
+#endif
+
   // With windowless rendering use the parent handle specified by the client.
   if (browser_->IsWindowless()) {
     DCHECK(!owning_window);
