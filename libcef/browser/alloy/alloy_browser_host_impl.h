@@ -338,6 +338,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   content::PreloadingEligibility IsPrerender2Supported(
       content::WebContents& web_contents) override;
 
+#ifdef OHOS_FOCUS
+  void ActivateContents(content::WebContents* contents) override;
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   void RequestToLockMouse(content::WebContents* web_contents,
                           bool user_gesture,

@@ -1655,6 +1655,13 @@ content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
   return content::PreloadingEligibility::kEligible;
 }
 
+#ifdef OHOS_FOCUS
+void AlloyBrowserHostImpl::ActivateContents(content::WebContents* contents) {
+  LOG(INFO) << "AlloyBrowserHostImpl::ActivateContents";
+  OnSetFocus(FOCUS_SOURCE_SYSTEM);
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 void AlloyBrowserHostImpl::RequestToLockMouse(
     content::WebContents* web_contents,
