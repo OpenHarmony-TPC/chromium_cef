@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8685967b8036ea44a4d657ef6d09cb2921483c73$
+// $hash=f56fbff9a852f4a83251803f4719d5f57d042978$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_
@@ -39,10 +39,10 @@ class CefPostDataStreamCToCpp
       CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
   void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
   void Read(void* buffer,
-            int64_t buf_len,
+            int buf_len,
             CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
-  int64 GetSize() override;
-  int64 GetPosition() override;
+  uint64 GetSize() override;
+  uint64 GetPosition() override;
   bool IsChunked() override;
   bool HasNullSource() override;
   bool IsEOF() override;

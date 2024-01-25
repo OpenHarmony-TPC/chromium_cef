@@ -1099,7 +1099,7 @@ void CefPostDataStreamImpl::Init(CefRefPtr<CefPostDataStreamInitCallback> init_c
 
 void CefPostDataStreamImpl::Read(
     void* buffer,
-    int64_t buf_len,
+    int buf_len,
     CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
   scoped_refptr<net::WrappedIOBuffer> upload_buffer =
       base::MakeRefCounted<net::WrappedIOBuffer>(
@@ -1127,7 +1127,7 @@ void CefPostDataStreamImpl::OnStreamRead(
   }
 }
 
-int64_t CefPostDataStreamImpl::GetSize() {
+uint64_t CefPostDataStreamImpl::GetSize() {
   if (upload_stream_) {
     return upload_stream_->size();
   } else {
@@ -1136,7 +1136,7 @@ int64_t CefPostDataStreamImpl::GetSize() {
   }
 }
 
-int64_t CefPostDataStreamImpl::GetPosition() {
+uint64_t CefPostDataStreamImpl::GetPosition() {
   if (upload_stream_) {
     return upload_stream_->position();
   } else {

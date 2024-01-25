@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8014fc65ba9af4a88ab8067815e2ab64ab34439a$
+// $hash=75fe081311911376307c1406d3c85749270082d6$
 //
 
 #include "libcef_dll/ctocpp/post_data_stream_ctocpp.h"
@@ -76,7 +76,7 @@ void CefPostDataStreamCToCpp::Init(
 NO_SANITIZE("cfi-icall")
 void CefPostDataStreamCToCpp::Read(
     void* buffer,
-    int64_t buf_len,
+    int buf_len,
     CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
   cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, read)) {
@@ -101,7 +101,7 @@ void CefPostDataStreamCToCpp::Read(
                 CefPostDataStreamReadCallbackCToCpp::Unwrap(read_callback));
 }
 
-NO_SANITIZE("cfi-icall") int64 CefPostDataStreamCToCpp::GetSize() {
+NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetSize() {
   cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_size)) {
     return 0;
@@ -110,13 +110,13 @@ NO_SANITIZE("cfi-icall") int64 CefPostDataStreamCToCpp::GetSize() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = _struct->get_size(_struct);
+  uint64 _retval = _struct->get_size(_struct);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") int64 CefPostDataStreamCToCpp::GetPosition() {
+NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetPosition() {
   cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_position)) {
     return 0;
@@ -125,7 +125,7 @@ NO_SANITIZE("cfi-icall") int64 CefPostDataStreamCToCpp::GetPosition() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = _struct->get_position(_struct);
+  uint64 _retval = _struct->get_position(_struct);
 
   // Return type: simple
   return _retval;

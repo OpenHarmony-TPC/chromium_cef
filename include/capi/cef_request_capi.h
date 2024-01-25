@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=510f3652b5f05c65bbf70dfafdee08cbb76c9844$
+// $hash=20e190801d63bb2e0216be76f9893f02ae0a10e5$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_
@@ -308,18 +308,18 @@ typedef struct _cef_post_data_stream_t {
   void(CEF_CALLBACK* read)(
       struct _cef_post_data_stream_t* self,
       void* buffer,
-      int64_t buf_len,
+      int buf_len,
       struct _cef_post_data_stream_read_callback_t* read_callback);
 
   ///
   /// Get the size of stream.
   ///
-  int64(CEF_CALLBACK* get_size)(struct _cef_post_data_stream_t* self);
+  uint64(CEF_CALLBACK* get_size)(struct _cef_post_data_stream_t* self);
 
   ///
   /// Get the position of stream.
   ///
-  int64(CEF_CALLBACK* get_position)(struct _cef_post_data_stream_t* self);
+  uint64(CEF_CALLBACK* get_position)(struct _cef_post_data_stream_t* self);
 
   ///
   /// Get if the stream is trunked.
