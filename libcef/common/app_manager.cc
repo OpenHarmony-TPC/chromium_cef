@@ -18,6 +18,11 @@
 #include "base/path_service.h"
 #endif
 
+#ifdef OHOS_SCHEME_HANDLER
+#include "base/values.h"
+#include "base/json/json_reader.h"
+#endif
+
 namespace {
 
 CefAppManager* g_manager = nullptr;
@@ -87,6 +92,25 @@ void CefAppManager::AddAdditionalSchemes(
     application->OnRegisterCustomSchemes(&schemeRegistrar);
     schemeRegistrar.GetSchemes(schemes);
   }
+
+#ifdef OHOS_SCHEME_HANDLER
+  {
+    CefSchemeRegistrarImpl schemeRegistrar;
+    base::CommandLine* cmdLine = base::CommandLine::ForCurrentProcess();
+    if (cmdLine && cmdLine->HasSwitch(switches::kOhSchemeHandlerCustomScheme)) {
+      std::string cmdlineSchemes =
+          cmdLine->GetSwitchValueASCII(switches::kOhSchemeHandlerCustomScheme);
+      LOG(INFO) << "render scheme_handler cmdlineScheme:" << cmdlineSchemes;
+      absl::optional<base::Value> schemeInfos = base::JSONReader::Read(cmdlineSchemes);
+      if (schemeInfos && schemeInfos->is_dict()) {
+        for (auto kv : schemeInfos->GetDict()) {
+          schemeRegistrar.AddCustomScheme(kv.first, kv.second.GetInt());
+        }
+      }
+    }
+    schemeRegistrar.GetSchemes(schemes);
+  }
+#endif
 
 #ifdef OHOS_NETWORK_LOAD
   CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::GetGlobalCommandLine();
