@@ -1248,6 +1248,17 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
   if (!browser_impl_.get()) {
     return;
   }
+
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+
+  CefRange cef_range(range.start(), range.end());
+
+#if defined(OHOS_INPUT_EVENTS)
+  handler->OnSelectionChanged(browser_impl_.get(), text, cef_range);
+#endif  // defined(OHOS_INPUT_EVENTS)
+
 #if BUILDFLAG(IS_OHOS)
   if (text.empty() && range.is_empty()) {
     //add protection to avoid crash in IMFAdapter::OnSelectionChange
@@ -1266,16 +1277,8 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
 
-  CefRefPtr<CefRenderHandler> handler =
-      browser_impl_->GetClient()->GetRenderHandler();
-  CHECK(handler);
-
-  CefRange cef_range(range.start(), range.end());
   handler->OnTextSelectionChanged(browser_impl_.get(), selected_text,
                                   cef_range);
-#if defined(OHOS_INPUT_EVENTS)
-  handler->OnSelectionChanged(browser_impl_.get(), text, cef_range);
-#endif  // defined(OHOS_INPUT_EVENTS)
 }
 
 const viz::LocalSurfaceId& CefRenderWidgetHostViewOSR::GetLocalSurfaceId()
