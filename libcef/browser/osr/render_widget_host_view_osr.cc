@@ -539,7 +539,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
   }
 
 #if defined(OHOS_INPUT_EVENTS)
-  if (GetTextInputManager()) {
+  if (GetTextInputManager() && !GetTextInputManager()->HasObserver(this)) {
     GetTextInputManager()->AddObserver(this);
   }
 #endif
