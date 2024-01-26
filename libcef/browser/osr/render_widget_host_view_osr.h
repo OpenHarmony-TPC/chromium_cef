@@ -245,7 +245,7 @@ class CefRenderWidgetHostViewOSR
 
   // RenderFrameMetadataProvider::Observer implementation.
 
-#ifdef OHOS_EX_TOPCONTROLS
+#if BUILDFLAG(IS_OHOS)
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override;
 #else
@@ -273,7 +273,11 @@ class CefRenderWidgetHostViewOSR
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
 
- #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+#if BUILDFLAG(IS_OHOS)
+  bool RequiresDoubleTapGestureEvents() const override;
+#endif
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   void OnVsync();
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
@@ -576,6 +580,9 @@ class CefRenderWidgetHostViewOSR
   float page_scale_factor_ = 0.f;
 
   bool is_mouse_locked_ = false;
+
+  std::string device_type_;
+  bool requires_double_tap_gesture_events_ = false;
 
 #if defined(OHOS_PERFORMANCE_JITTER)
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
