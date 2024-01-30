@@ -380,20 +380,26 @@ void CefRenderWidgetHostViewOSR::ReleaseCompositor() {
   compositor_.reset(nullptr);
 #else
   LOG(INFO) << "ReleaseCompositor";
+  auto com = compositor_map_.find(browser_impl_->GetAcceleratedWidget());
   if (--accelerate_widget_map_[browser_impl_->GetAcceleratedWidget()] == 0) {
     if (!browser_impl_) {
       return;
     }
     LOG(INFO) << "ReleaseCompositor, widget = "
               << static_cast<uint32_t>(browser_impl_->GetAcceleratedWidget());
-    auto it = compositor_map_.find(browser_impl_->GetAcceleratedWidget());
-    if (it != compositor_map_.end()) {
-      if (it->second != nullptr) {
-        delete it->second;
+    if (com != compositor_map_.end()) {
+      if (com->second != nullptr) {
+        delete com->second;
       }
-      compositor_map_.erase(it);
+      compositor_map_.erase(com);
     }
     accelerate_widget_map_.erase(browser_impl_->GetAcceleratedWidget());
+  } else {
+    if (com != compositor_map_.end()) {
+      if (com->second->delegate() == this) {
+        com->second->SetDelegate(nullptr);
+      }
+    }
   }
 #endif
 }
