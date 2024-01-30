@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=82acc13b1a3c86b905a8ad18830a1a98193bdcb3$
+// $hash=16ee4c651071d882c6893f401ebf9e622cdff451$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
@@ -339,6 +339,22 @@ void CEF_CALLBACK load_handler_on_navigation_entry_committed(
       CefLoadCommittedDetailsCToCpp::Wrap(details));
 }
 
+void CEF_CALLBACK
+load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
+                                           int threat_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -359,6 +375,8 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
       load_handler_on_first_contentful_paint;
   GetStruct()->on_navigation_entry_committed =
       load_handler_on_navigation_entry_committed;
+  GetStruct()->on_safe_browsing_check_result =
+      load_handler_on_safe_browsing_check_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

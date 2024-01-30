@@ -461,6 +461,11 @@ class CefBrowserHostBase : public CefBrowserHost,
   // #endif
   // #endif // defined(OHOS_NWEB_EX)
 
+#if BUILDFLAG(IS_OHOS)
+  bool IsSafeBrowsingEnabled() override;
+  void EnableSafeBrowsing(bool enable) override;
+#endif
+
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
   void OnWebContentsDestroyed(content::WebContents* web_contents) override;

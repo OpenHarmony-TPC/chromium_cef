@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0b117b7ffb454b1cd032a4fd3917f086394dced9$
+// $hash=98f4991c1e20d4f5dc0e4607700a58e6a01cd9c0$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
@@ -339,6 +339,21 @@ void CefLoadHandlerCToCpp::OnNavigationEntryCommitted(
   // Execute
   _struct->on_navigation_entry_committed(
       _struct, CefLoadCommittedDetailsCppToC::Wrap(details));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_safe_browsing_check_result)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_safe_browsing_check_result(_struct, threat_type);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

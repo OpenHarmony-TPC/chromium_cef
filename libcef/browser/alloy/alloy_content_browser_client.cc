@@ -272,6 +272,8 @@ using extensions::mojom::APIPermissionID;
 #include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
 #endif
 
+#include "components/security_interstitials/content/security_interstitial_tab_helper.h"
+
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -1768,6 +1770,16 @@ void AlloyContentBrowserClient::
           },
           &render_frame_host));
 #endif // defined(OHOS_PRINT)
+
+  associated_registry.AddInterface<security_interstitials::mojom::InterstitialCommands>(
+      base::BindRepeating(
+        [](content::RenderFrameHost* render_frame_host,
+          mojo::PendingAssociatedReceiver<
+              security_interstitials::mojom::InterstitialCommands> receiver) {
+          security_interstitials::SecurityInterstitialTabHelper::
+            BindInterstitialCommands(std::move(receiver), render_frame_host);
+      },
+      &render_frame_host));
 }
 
 std::vector<std::unique_ptr<content::NavigationThrottle>>

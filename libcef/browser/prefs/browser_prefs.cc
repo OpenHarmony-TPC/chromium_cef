@@ -99,6 +99,9 @@
 #include "chrome/browser/ui/webui/extensions/extensions_ui.h"
 #include "extensions/browser/permissions_manager.h"
 #endif
+
+#include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
+
 namespace browser_prefs {
 
 namespace {
@@ -318,6 +321,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     ExtensionWebUI::RegisterProfilePrefs(registry.get());
     preinstalled_apps::RegisterProfilePrefs(registry.get());
 #endif
+#if BUILDFLAG(IS_OHOS)
+    ohos_safe_browsing::RegisterProfilePrefs(registry.get());
+ #endif
     HostContentSettingsMap::RegisterProfilePrefs(registry.get());
     language::LanguagePrefs::RegisterProfilePrefs(registry.get());
     media_router::RegisterProfilePrefs(registry.get());

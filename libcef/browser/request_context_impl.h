@@ -58,6 +58,10 @@ class CefRequestContextImpl : public CefRequestContext {
 #endif
       );
 
+#if defined(OHOS_INCOGNITO_MODE)
+bool IsOffTheRecord() { return config_.incognito_mode; }
+#endif
+
   // Verify that the browser context can be directly accessed (e.g. on the UI
   // thread and initialized).
   bool VerifyBrowserContext() const;

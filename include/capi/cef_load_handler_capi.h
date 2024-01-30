@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=967e33150e6caf4ec437aae3331009cfa0aa7338$
+// $hash=6ebc9a4d08972aa862e6ed24dbeab98fb3231ca1$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
@@ -182,6 +182,13 @@ typedef struct _cef_load_handler_t {
   void(CEF_CALLBACK* on_navigation_entry_committed)(
       struct _cef_load_handler_t* self,
       struct _cef_load_committed_details_t* details);
+
+  ///
+  /// Called when received website security risk check result.
+  ///
+  void(CEF_CALLBACK* on_safe_browsing_check_result)(
+      struct _cef_load_handler_t* self,
+      int threat_type);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

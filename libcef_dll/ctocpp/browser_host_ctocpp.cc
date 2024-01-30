@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=aaf95223086a6003a7b824d37649c197cfc22f58$
+// $hash=3dc1b4611bf2d103fe9d1d0285f957603e93f5b3$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"

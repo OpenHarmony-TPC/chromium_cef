@@ -407,6 +407,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual int GetSecurityLevel() = 0;
 
+  ///
+  /// Enable the ability to check website security risks.
+  ///
+  /*--cef()--*/
+  virtual void EnableSafeBrowsing(bool enable) = 0;
+
+  ///
+  /// Get whether checking website security risks is enabled.
+  ///
+  /*--cef()--*/
+  virtual bool IsSafeBrowsingEnabled() = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
