@@ -660,21 +660,7 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
         LOG(INFO) << "This area is not editable.";
         return can_paste;
       }
-      std::u16string result;
-      ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
-          ui::EndpointType::kDefault, /*notify_if_restricted=*/false);
-      ui::Clipboard::GetForCurrentThread()->ReadText(
-          ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
-      if (rwhv_->GetTextInputType() == ui::TEXT_INPUT_TYPE_CONTENT_EDITABLE &&
-          result.empty()) {
-        can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::BitmapType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
-        can_paste |= ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::HtmlType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
-      }
-      can_paste = can_paste ? can_paste : !result.empty();
+      can_paste = ui::Clipboard::GetForCurrentThread()->HasPasteData();
       return can_paste;
 #else
       std::u16string result;
@@ -704,6 +690,7 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
                                                           int event_flags) {
 #ifndef OHOS_CLIPBOARD
   if (command_id == kInvalidCommandId) {
+    LOG(ERROR) << "Quick menu Command id is invaild";
     return;
   }
 #endif  // #ifndef OHOS_CLIPBOARD
@@ -732,6 +719,7 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
   }
 #ifdef OHOS_CLIPBOARD
   absl::optional<std::u16string> value;
+  LOG(INFO) << "Quick menu Command id = " << command_id;
 #endif  // #ifdef OHOS_CLIPBOARD
   switch (command_id) {
     case QM_EDITFLAG_CAN_CUT:
