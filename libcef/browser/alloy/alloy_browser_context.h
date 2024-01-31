@@ -124,12 +124,13 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
   // of visited links.
 #if defined(OHOS_INCOGNITO_MODE)
   void AddVisitedURLs(const std::vector<GURL>& urls) override;
+  DownloadPrefs* GetDownloadPrefs() override;
 #else
   void AddVisitedURLs(const std::vector<GURL>& urls);
-#endif
 
   // Called from DownloadPrefs::FromBrowserContext.
   DownloadPrefs* GetDownloadPrefs();
+#endif
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   ExtensionSpecialStoragePolicy* GetExtensionSpecialStoragePolicy() override;

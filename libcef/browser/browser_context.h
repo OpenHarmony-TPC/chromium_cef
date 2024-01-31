@@ -85,6 +85,10 @@ class CefMediaRouterManager;
 class CefRequestContextImpl;
 class Profile;
 
+#ifdef OHOS_INCOGNITO_MODE
+class DownloadPrefs;
+#endif
+
 // Main entry point for configuring behavior on a per-RequestContext basis. The
 // content::BrowserContext represented by this class is passed to
 // WebContents::Create in AlloyBrowserHostImpl::CreateInternal. Only accessed on
@@ -177,6 +181,7 @@ class CefBrowserContext {
 
 #if defined(OHOS_INCOGNITO_MODE)
   virtual void AddVisitedURLs(const std::vector<GURL>& urls) {}
+  virtual DownloadPrefs* GetDownloadPrefs() { return nullptr; };
 #endif
 
   network::mojom::NetworkContext* GetNetworkContext();
