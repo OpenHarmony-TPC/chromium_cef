@@ -2996,6 +2996,11 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
   }
 }
 void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) {
+  if (touchEvent->type == blink::mojom::TouchType::UP || touchEvent->type == blink::mojom::TouchType::CANCEL) {
+    gesture_provider_.SetNativeEmbedEnabled(false);
+  } else {
+    gesture_provider_.SetNativeEmbedEnabled(true);
+  }
   if (browser_impl_.get()) {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
