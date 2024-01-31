@@ -385,6 +385,10 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
 CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
 
+#ifdef OHOS_USERAGENT
+void SetTabletMode(bool is_tablet) override;
+#endif
+
  private:
   // Returns the extension or app associated with |site_instance| or NULL.
   const extensions::Extension* GetExtension(
