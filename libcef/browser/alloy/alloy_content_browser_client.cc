@@ -2689,7 +2689,15 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   OHOS::NWeb::ProductDeviceType deviceType =
       system_properties_adapter.GetProductDeviceType();
   if (deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
-    network_context_params->http_cache_max_size = 20 * 1024 * 1024;
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser)) {
+      // In order to make better use of cache, we use the same strategy as
+      // chromium for httpcache.
+      // Determined by DiskCache itself.
+       network_context_params->http_cache_max_size = 0;
+    } else {
+      network_context_params->http_cache_max_size = 20 * 1024 * 1024;
+    }
   }
 #endif  // defined(OHOS_CACHE)
 
