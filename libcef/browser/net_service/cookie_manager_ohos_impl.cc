@@ -19,6 +19,7 @@
 
 #include "base/functional/bind.h"
 #include "base/logging.h"
+#include "base/ohos/sys_info_utils.h"
 #include "base/path_service.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/threading/thread_restrictions.h"
@@ -31,7 +32,6 @@
 
 #include "net/cookies/cookie_monster.h"
 #include "net/cookies/cookie_util.h"
-#include "ohos_adapter_helper.h"
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
 
@@ -196,7 +196,7 @@ net::CookieStore* CefCookieManagerImpl::GetCookieStore() {
   if (!cookie_store_) {
     content::CookieStoreConfig cookie_config(
         cookie_store_path_, /* restore_old_session_cookies= */ true,
-        /* persist_session_cookies= */ !is_pc_device_);
+        /* persist_session_cookies= */ !base::ohos::IsPcDevice());
     cookie_config.client_task_runner = cookie_store_task_runner_;
     cookie_config.background_task_runner =
         cookie_store_backend_thread_.task_runner();
@@ -278,15 +278,6 @@ CefCookieManagerImpl::CefCookieManagerImpl()
 
   base::PathService::Get(base::DIR_CACHE, &cookie_store_path_);
   cookie_store_path_ = cookie_store_path_.Append("Cookies");
-
-  auto& system_properties_adapter =
-      OHOS::NWeb::OhosAdapterHelper::GetInstance().GetSystemPropertiesInstance();
-  OHOS::NWeb::ProductDeviceType deviceType =
-      system_properties_adapter.GetProductDeviceType();
-  is_pc_device_ =
-      deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_TABLET ||
-      deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_2IN1;
-  LOG(DEBUG) << "cookie is_pc_device:" << is_pc_device_ << "database path: " << cookie_store_path_.MaybeAsASCII();
 }
 
 void CefCookieManagerImpl::Initialize(

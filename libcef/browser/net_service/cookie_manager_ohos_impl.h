@@ -170,8 +170,6 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   std::queue<base::OnceClosure> tasks_;
 
-  bool is_pc_device_ = false;
-
   mojo::Remote<network::mojom::CookieManager> network_cookie_manager_;
 
   IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);

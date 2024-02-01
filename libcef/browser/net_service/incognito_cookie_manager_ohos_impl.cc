@@ -19,6 +19,7 @@
 
 #include "base/functional/bind.h"
 #include "base/logging.h"
+#include "base/ohos/sys_info_utils.h"
 #include "base/path_service.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/threading/thread_restrictions.h"
@@ -31,7 +32,6 @@
 
 #include "net/cookies/cookie_monster.h"
 #include "net/cookies/cookie_util.h"
-#include "ohos_adapter_helper.h"
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
 
@@ -302,17 +302,6 @@ CefIncognitoCookieManagerImpl::CefIncognitoCookieManagerImpl()
   cookie_store_task_thread_.Start();
   cookie_store_backend_thread_.Start();
   cookie_store_task_runner_ = cookie_store_task_thread_.task_runner();
-
-  auto& system_properties_adapter =
-      OHOS::NWeb::OhosAdapterHelper::GetInstance().
-          GetSystemPropertiesInstance();
-  OHOS::NWeb::ProductDeviceType deviceType =
-      system_properties_adapter.GetProductDeviceType();
-  is_pc_device_ =
-      deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_TABLET ||
-      deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_2IN1;
-  LOG(DEBUG) << "cookie is_pc_device:" << is_pc_device_ << "database path: "
-             << cookie_store_path_.MaybeAsASCII();
 }
 
 void CefIncognitoCookieManagerImpl::Initialize(

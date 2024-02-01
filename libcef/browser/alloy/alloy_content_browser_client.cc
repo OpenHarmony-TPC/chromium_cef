@@ -179,6 +179,7 @@
 #include "base/files/file_util.h"
 #include "base/logging.h"
 #include "base/timer/timer.h"
+#include "base/ohos/sys_info_utils.h"
 #include "components/autofill/content/browser/content_autofill_driver_factory.h"
 #include "content/public/browser/file_url_loader.h"
 #include "content/public/browser/shared_cors_origin_access_list.h"
@@ -187,7 +188,6 @@
 #include "libcef/browser/alloy/alloy_ssl_platform_key.h"
 #include "libcef/browser/net_service/restrict_cookie_manager.h"
 #include "libcef/browser/printing/ohos_print_manager.h"
-#include "ohos_adapter_helper.h"
 #include "third_party/boringssl/src/include/openssl/evp.h"
 #endif
 
@@ -2696,11 +2696,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   // this is currently not the case and this was not required pre M84.
   network_context_params->require_network_isolation_key = false;
 #if defined(OHOS_CACHE)
-  auto& system_properties_adapter = OHOS::NWeb::OhosAdapterHelper::GetInstance()
-                                        .GetSystemPropertiesInstance();
-  OHOS::NWeb::ProductDeviceType deviceType =
-      system_properties_adapter.GetProductDeviceType();
-  if (deviceType == OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
+  if (base::ohos::IsMobileDevice()) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kForBrowser)) {
       // In order to make better use of cache, we use the same strategy as
