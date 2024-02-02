@@ -37,6 +37,7 @@
 #include "base/command_line.h"
 #include "content/browser/renderer_host/navigation_request.h"
 #include "content/public/common/content_switches.h"
+#include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
@@ -81,7 +82,15 @@ void MaybeSetUserAgentOverrideForMainFrame(
     const GURL referrer_url = navigation->GetReferrer().url;
     if (referrer_url.is_valid() && !referrer_url.is_empty() &&
         referrer_url.has_host()) {
-      host = referrer_url.host();
+      std::string referrer_sld =
+          net::registry_controlled_domains::GetDomainAndRegistry(
+              referrer_url,
+              net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
+      std::string sld = net::registry_controlled_domains::GetDomainAndRegistry(
+          url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
+      if (referrer_sld == sld) {
+        host = referrer_url.host();
+      }
     }
   }
   std::string final_ua =
