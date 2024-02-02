@@ -491,12 +491,10 @@ void CefRenderWidgetHostViewOSR::Focus() {
 
 bool CefRenderWidgetHostViewOSR::HasFocus() {
 #if BUILDFLAG(IS_OHOS)
-  if (!render_widget_host_) {
-    return false;
+  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
+    return text_input_manager_->GetActiveWidget()->is_focused();
   }
-  content::RenderWidgetHostImpl* widget =
-      content::RenderWidgetHostImpl::From(render_widget_host_);
-  return widget->is_focused();
+  return false;
 #else
   return false;
 #endif
@@ -1227,8 +1225,15 @@ void CefRenderWidgetHostViewOSR::ImeCommitText(
   }
 
   gfx::Range range(replacement_range.from, replacement_range.to);
+#if defined(OHOS_INPUT_EVENTS)
+  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
+    text_input_manager_->GetActiveWidget()->ImeCommitText(
+        text, std::vector<ui::ImeTextSpan>(), range, relative_cursor_pos);
+  }
+#else
   render_widget_host_->ImeCommitText(text, std::vector<ui::ImeTextSpan>(),
                                      range, relative_cursor_pos);
+#endif
 
   // Stop Monitoring for composition updates after we are done.
   RequestImeCompositionUpdate(false);
@@ -1240,7 +1245,13 @@ void CefRenderWidgetHostViewOSR::ImeFinishComposingText(bool keep_selection) {
     return;
   }
 
+#if defined(OHOS_INPUT_EVENTS)
+  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
+    text_input_manager_->GetActiveWidget()->ImeFinishComposingText(keep_selection);
+  }
+#else
   render_widget_host_->ImeFinishComposingText(keep_selection);
+#endif
 
   // Stop Monitoring for composition updates after we are done.
   RequestImeCompositionUpdate(false);
