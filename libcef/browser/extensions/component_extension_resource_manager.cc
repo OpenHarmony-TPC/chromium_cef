@@ -15,8 +15,7 @@
 #include "extensions/common/constants.h"
 
 #if BUILDFLAG(IS_OHOS)
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
+#include "base/ohos/sys_info_utils.h"
 #endif
 
 namespace extensions {
@@ -32,11 +31,8 @@ CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
 
   bool enable_printing = true;
 #if BUILDFLAG(IS_OHOS)
-  std::string device_type =
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kOhosDeviceType);
   // The printing service is temporarily not supported on mobile device.
-  enable_printing = !(device_type == ::switches::kOhosMobileDevice);
+  enable_printing = !base::ohos::IsMobileDevice();
 #endif
 
   pdf_extension_util::AddAdditionalData(/*enable_printing=*/enable_printing,

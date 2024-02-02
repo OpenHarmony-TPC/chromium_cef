@@ -60,6 +60,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/ohos/sys_info_utils.h"
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #include "res_sched_client_adapter.h"
 #include "services/device/public/mojom/screen_orientation.mojom.h"
@@ -260,13 +261,6 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       pinch_zoom_enabled_(content::IsPinchToZoomEnabled()),
       mouse_wheel_phase_handler_(this),
       gesture_provider_(CreateGestureProviderConfig(), this),
-#if BUILDFLAG(IS_OHOS)
-      device_type_(base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          ::switches::kOhosDeviceType)),
-      requires_double_tap_gesture_events_(
-          device_type_ == ::switches::kOhosTabletDevice ||
-          device_type_ == ::switches::kOhosMobileDevice),
-#endif
       weak_ptr_factory_(this) {
   DCHECK(render_widget_host_);
   DCHECK(!render_widget_host_->GetView());
@@ -370,7 +364,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 
 #if BUILDFLAG(IS_OHOS)
   gesture_provider_.SetDoubleTapSupportForPlatformEnabled(
-      requires_double_tap_gesture_events_);
+      base::ohos::IsTabletDevice() || base::ohos::IsMobileDevice());
 #endif
 }
 
@@ -2237,7 +2231,7 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
 
 #if BUILDFLAG(IS_OHOS)
 bool CefRenderWidgetHostViewOSR::RequiresDoubleTapGestureEvents() const {
-  return requires_double_tap_gesture_events_;
+  return base::ohos::IsTabletDevice() || base::ohos::IsMobileDevice();
 }
 #endif
 
