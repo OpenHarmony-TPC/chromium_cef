@@ -2086,8 +2086,19 @@ void AlloyBrowserHostImpl::ReportWindowStatusDelay(base::ProcessId pid) {
   }
 }
 
+void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
+  using namespace OHOS::NWeb;
+  if(pid != last_pid_ && last_pid_ != -1) {
+    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE, 
+                                              last_pid_, window_id_, nweb_id_);
+  }
+  last_pid_ = pid;
+}
+
 void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
   using namespace OHOS::NWeb;
+  static constexpr int REPORT_DELAY_TIME = 10;
+  static constexpr int GUARANTEE_DELAY_TIME = 150;
   if (first_view_ready && is_hidden_) {
     LOG(INFO) << "no need to report render view ready because the view is hidden";
     return;
@@ -2110,13 +2121,19 @@ void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    InactiveUnloadOldProcess(process_id);
     ResSchedClientAdapter::ReportWindowStatus(status, process_id, window_id_,
                                               nweb_id_);
     if (!is_hidden_) {
+      // Solve the timing issues about active status report.
       CEF_POST_DELAYED_TASK(CEF_UIT,
                             base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatusDelay,
-                                          this, process_id),
-                            10);
+                                          this, process_id), REPORT_DELAY_TIME);
+      // Different devices have different time difference for reporting status,
+      // This delay report is to guarantee the final active status reporting.
+      CEF_POST_DELAYED_TASK(CEF_UIT,
+                            base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatusDelay,
+                                          this, process_id), GUARANTEE_DELAY_TIME);
       ResSchedClientAdapter::ReportScene(ResSchedStatusAdapter::WEB_SCENE_ENTER,
                                          ResSchedSceneAdapter::VISIBLE,
                                          nweb_id_);
