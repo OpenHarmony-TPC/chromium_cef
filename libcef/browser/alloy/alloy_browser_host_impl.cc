@@ -2087,6 +2087,7 @@ void AlloyBrowserHostImpl::ReportWindowStatusDelay(base::ProcessId pid) {
 }
 
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
+  using namespace OHOS::NWeb;
   if(pid != last_pid_ && last_pid_ != -1) {
     ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE, 
                                               last_pid_, window_id_, nweb_id_);
