@@ -670,10 +670,12 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
 
   std::string classname = "";
-  std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  if (method_map_.find(object_id) != method_map_.end()) {
-    MethodPair object_pair = method_map_[object_id];
-    classname = object_pair.first;
+  {
+    std::shared_lock<std::shared_mutex> lock(share_mutex_);
+    if (method_map_.find(object_id) != method_map_.end()) {
+      MethodPair object_pair = method_map_[object_id];
+      classname = object_pair.first;
+    }
   }
 
   std::string method = method_name;
