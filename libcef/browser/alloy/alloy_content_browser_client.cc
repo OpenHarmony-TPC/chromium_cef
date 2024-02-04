@@ -2715,6 +2715,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
 
 #ifdef OHOS_SSL_AUTH_ALGO
   network_context_params->initial_ssl_config = network::mojom::SSLConfig::New();
+  network_context_params->initial_ssl_config->version_min = network::mojom::SSLVersion::kTLS1;
 #endif
 
 #if defined(OHOS_COOKIE) && defined(OHOS_INCOGNITO_MODE)
