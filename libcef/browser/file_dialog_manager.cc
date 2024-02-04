@@ -397,6 +397,15 @@ void CefFileDialogManager::RunSelectFile(
   // This will not be an exact representation of the original params.
   auto chooser_params =
       SelectFileToFileChooserParams(type, title, default_path, file_types);
+#ifdef OHOS_FILE_UPLOAD
+  typedef std::pair<std::vector<std::u16string>, bool> AcceptTypes;
+  AcceptTypes accept_types =
+      std::make_pair(std::vector<std::u16string>(), false);
+
+  if (params)
+    accept_types = *(reinterpret_cast<AcceptTypes*>(params));
+  chooser_params.use_media_capture = accept_types.second;
+#endif
   auto callback =
       base::BindOnce(&CefFileDialogManager::SelectFileDoneByDelegateCallback,
                      weak_ptr_factory_.GetWeakPtr(), base::Unretained(listener),
