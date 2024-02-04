@@ -181,7 +181,7 @@ class CefBrowserContext {
 
 #if defined(OHOS_INCOGNITO_MODE)
   virtual void AddVisitedURLs(const std::vector<GURL>& urls) {}
-  virtual DownloadPrefs* GetDownloadPrefs() { return nullptr; };
+  virtual DownloadPrefs* GetDownloadPrefs() { return nullptr; }
 #endif
 
   network::mojom::NetworkContext* GetNetworkContext();
