@@ -464,6 +464,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void ReportWindowStatusDelay(base::ProcessId pid);
+  void InactiveUnloadOldProcess(base::ProcessId pid);
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -518,6 +519,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool is_hidden_ = false;
   int window_id_ = -1;
   int nweb_id_ = -1;
+  base::ProcessId last_pid_ = -1;
 #endif
   bool start_play_ = false;
 
