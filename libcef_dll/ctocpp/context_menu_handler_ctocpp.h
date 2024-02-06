@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0d0bcb30d9e8b5894158c9ecf80fa710e4ce6b7d$
+// $hash=425950e0728d41ffcaeb6db850a4fb7198fbfee4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -55,6 +55,7 @@ class CefContextMenuHandlerCToCpp
                     CefRefPtr<CefFrame> frame,
                     const CefPoint& location,
                     const CefSize& size,
+                    const CefRect& select_bounds,
                     QuickMenuEditStateFlags edit_state_flags,
                     CefRefPtr<CefRunQuickMenuCallback> callback) override;
   bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,

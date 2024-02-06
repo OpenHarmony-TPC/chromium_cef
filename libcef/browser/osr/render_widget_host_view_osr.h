@@ -612,6 +612,10 @@ class CefRenderWidgetHostViewOSR
   float top_content_offset_ = 0.f;
   bool for_browser_ = false;
 #endif
+
+#ifdef OHOS_CLIPBOARD
+  gfx::Rect clipped_selection_bounds_;
+#endif  // OHOS_CLIPBOARD
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
 

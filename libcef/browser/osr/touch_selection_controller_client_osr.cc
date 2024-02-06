@@ -113,6 +113,7 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
 
   state.enabled = handle->GetEnabled();
 #ifdef OHOS_EX_TOPCONTROLS
+  state.view_port = {handle->viewport().x(), handle->viewport().y()};
   state.origin = {handle->focus_bottom().x() + handle->viewport().x(),
                   handle->focus_bottom().y() + handle->viewport().y()};
 #else
@@ -390,6 +391,8 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
              static_cast<int>(std::round(origin.y()))},
             {static_cast<int>(std::round(size.width())),
              static_cast<int>(std::round(size.height()))},
+            {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
+             clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
             static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(
                 quickmenuflags),
             callbackImpl)) {
@@ -497,6 +500,11 @@ bool CefTouchSelectionControllerClientOSR::IsVaildSelectionHandleMove() {
     return false;
   }
   return true;
+}
+
+void CefTouchSelectionControllerClientOSR::UpdateClientClippedSelectionBounds(
+  const gfx::Rect& clipped_selection_bounds) {
+  clipped_selection_bounds_ = clipped_selection_bounds;
 }
 #endif  // #ifdef OHOS_CLIPBOARD
 void CefTouchSelectionControllerClientOSR::InternalClient::

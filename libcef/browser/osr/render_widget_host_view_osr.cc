@@ -1523,6 +1523,13 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_->OnViewportChanged(viewport_rect);
   }
 #endif
+
+#ifdef OHOS_CLIPBOARD
+  if (clipped_selection_bounds_ != metadata.clipped_selection_bounds) {
+    clipped_selection_bounds_ = metadata.clipped_selection_bounds;
+    selection_controller_client_->UpdateClientClippedSelectionBounds(clipped_selection_bounds_);
+  }
+#endif  // OHOS_CLIPBOARD
 }
 
 std::unique_ptr<viz::HostDisplayClient>
