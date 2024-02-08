@@ -148,7 +148,8 @@
       'libcef_dll/wrapper/cef_byte_read_handler.cc',
       'libcef_dll/wrapper/cef_closure_task.cc',
       'libcef_dll/wrapper/cef_message_router.cc',
-      'libcef_dll/wrapper/cef_resource_manager.cc',
+      # unused code, deleted for asan build
+      #'libcef_dll/wrapper/cef_resource_manager.cc',
       'libcef_dll/wrapper/cef_scoped_temp_dir.cc',
       'libcef_dll/wrapper/cef_stream_resource_handler.cc',
       'libcef_dll/wrapper/cef_xml_object.cc',
