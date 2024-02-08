@@ -1694,7 +1694,6 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   if (!platform_delegate_) {
     return;
   }
-  LOG(INFO) << "[NativeEmbed] OnNativeEmbedStatusUpdate state is:" << (int)state;
 
   CefRenderHandler::CefNativeEmbedData data_info;
     switch(state) {
@@ -1718,6 +1717,8 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   data_info.info.type = native_embed_info.native_type;
   data_info.info.src = native_embed_info.native_source;
   data_info.info.url = native_embed_info.url.path();
+  data_info.info.tag = native_embed_info.tag;
+  data_info.info.params = native_embed_info.params;
 
   platform_delegate_->OnNativeEmbedLifecycleChange(data_info);
 }
