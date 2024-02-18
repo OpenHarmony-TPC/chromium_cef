@@ -48,6 +48,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include <map>
 #include "build/build_config.h"
 #include "include/base/cef_callback.h"
 #endif  // BUILDFLAG(IS_OHOS)
@@ -4094,6 +4095,8 @@ typedef struct _cef_native_embed_t {
   std::string type;
   std::string src;
   std::string url;
+  std::string tag;
+  std::map<std::string, std::string> params;
 } cef_native_embed_t;
 
 ///
