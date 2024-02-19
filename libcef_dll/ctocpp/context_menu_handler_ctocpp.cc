@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f623008a80fece4410f0ddf5ec475a1dc034b6d9$
+// $hash=f49e5780f0fc37dacaeabbab80463724d2f6c8cd$
 //
 
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -195,6 +195,7 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
     CefRefPtr<CefFrame> frame,
     const CefPoint& location,
     const CefSize& size,
+    const CefRect& select_bounds,
     QuickMenuEditStateFlags edit_state_flags,
     CefRefPtr<CefRunQuickMenuCallback> callback) {
   shutdown_checker::AssertNotShutdown();
@@ -225,7 +226,7 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
   // Execute
   int _retval = _struct->run_quick_menu(
       _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      &location, &size, edit_state_flags,
+      &location, &size, &select_bounds, edit_state_flags,
       CefRunQuickMenuCallbackCppToC::Wrap(callback));
 
   // Return type: bool

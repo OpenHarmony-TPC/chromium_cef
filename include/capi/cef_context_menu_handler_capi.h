@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=55fb148f2bb377a9e5f8f2248ed499b2376962cc$
+// $hash=b8afe313a8028b0ee08f01fd94d28cbf8217b399$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -179,6 +179,7 @@ typedef struct _cef_context_menu_handler_t {
       struct _cef_frame_t* frame,
       const cef_point_t* location,
       const cef_size_t* size,
+      const cef_rect_t* select_bounds,
       cef_quick_menu_edit_state_flags_t edit_state_flags,
       struct _cef_run_quick_menu_callback_t* callback);
 

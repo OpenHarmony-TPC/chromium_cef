@@ -3507,6 +3507,11 @@ typedef struct _cef_touch_handle_state_t {
   /// Edge height state. Only set if |flags| contains CEF_THS_FLAG_EDGE_HEIGHT.
   ///
   float edge_height;
+
+  ///
+  /// view port state. Only set if |flags| contains CEF_THS_FLAG_VIEW_PORT.
+  ///
+  cef_point_t view_port;
 #endif  // BUILDFLAG(IS_OHOS)
 } cef_touch_handle_state_t;
 

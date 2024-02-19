@@ -168,6 +168,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
                             CefRefPtr<CefFrame> frame,
                             const CefPoint& location,
                             const CefSize& size,
+                            const CefRect& select_bounds,
                             QuickMenuEditStateFlags edit_state_flags,
                             CefRefPtr<CefRunQuickMenuCallback> callback) {
     return false;
