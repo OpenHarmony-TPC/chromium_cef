@@ -17,7 +17,6 @@
 
 class CefDownloadManagerDelegate;
 class CefSSLHostStateDelegate;
-class CefVisitedLinkListener;
 class MediaDeviceIDSalt;
 class PrefService;
 #if defined(OHOS_ARKWEB_EXTENSIONS)
@@ -26,10 +25,6 @@ class ExtensionSpecialStoragePolicy;
 #endif
 namespace extensions {
 class CefExtensionSystem;
-}
-
-namespace visitedlink {
-class VisitedLinkWriter;
 }
 
 // See CefBrowserContext documentation for usage. Only accessed on the UI thread
@@ -122,10 +117,6 @@ class AlloyOffTheRecordBrowserContext : public ChromeOffTheRecordProfileAlloy,
     return extension_system_;
   }
 
-  // Called from AlloyBrowserHostImpl::DidFinishNavigation to update the table
-  // of visited links.
-  void AddVisitedURLs(const std::vector<GURL>& urls) override;
-
   // Called from DownloadPrefs::FromBrowserContext.
   DownloadPrefs* GetDownloadPrefs() override;
 
@@ -140,9 +131,6 @@ class AlloyOffTheRecordBrowserContext : public ChromeOffTheRecordProfileAlloy,
 
   std::unique_ptr<CefDownloadManagerDelegate> download_manager_delegate_;
   std::unique_ptr<CefSSLHostStateDelegate> ssl_host_state_delegate_;
-  std::unique_ptr<visitedlink::VisitedLinkWriter> visitedlink_master_;
-  // |visitedlink_listener_| is owned by visitedlink_master_.
-  CefVisitedLinkListener* visitedlink_listener_ = nullptr;
 
   // Owned by the KeyedService system.
   extensions::CefExtensionSystem* extension_system_ = nullptr;

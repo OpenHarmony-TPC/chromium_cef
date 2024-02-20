@@ -36,8 +36,6 @@
 #include "components/prefs/pref_service.h"
 #include "components/proxy_config/pref_proxy_config_tracker_impl.h"
 #include "components/user_prefs/user_prefs.h"
-#include "components/visitedlink/browser/visitedlink_event_listener.h"
-#include "components/visitedlink/browser/visitedlink_writer.h"
 #include "components/zoom/zoom_event_manager.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
@@ -77,63 +75,6 @@
 #endif
 
 using content::BrowserThread;
-
-// Creates and manages VisitedLinkEventListener objects for each
-// AlloyOffTheRecordBrowserContext sharing the same VisitedLinkWriter.
-class CefVisitedLinkListener : public visitedlink::VisitedLinkWriter::Listener {
- public:
-  CefVisitedLinkListener() { DCHECK(listener_map_.empty()); }
-
-  CefVisitedLinkListener(const CefVisitedLinkListener&) = delete;
-  CefVisitedLinkListener& operator=(const CefVisitedLinkListener&) = delete;
-
-  void CreateListenerForContext(content::BrowserContext* context) {
-    CEF_REQUIRE_UIT();
-    auto listener =
-        std::make_unique<visitedlink::VisitedLinkEventListener>(context);
-    listener_map_.insert(std::make_pair(context, std::move(listener)));
-  }
-
-  void RemoveListenerForContext(content::BrowserContext* context) {
-    CEF_REQUIRE_UIT();
-    ListenerMap::iterator it = listener_map_.find(context);
-    DCHECK(it != listener_map_.end());
-    listener_map_.erase(it);
-  }
-
-  // visitedlink::VisitedLinkWriter::Listener methods.
-
-  void NewTable(base::ReadOnlySharedMemoryRegion* table_region) override {
-    CEF_REQUIRE_UIT();
-    ListenerMap::iterator it = listener_map_.begin();
-    for (; it != listener_map_.end(); ++it) {
-      it->second->NewTable(table_region);
-    }
-  }
-
-  void Add(visitedlink::VisitedLinkCommon::Fingerprint fingerprint) override {
-    CEF_REQUIRE_UIT();
-    ListenerMap::iterator it = listener_map_.begin();
-    for (; it != listener_map_.end(); ++it) {
-      it->second->Add(fingerprint);
-    }
-  }
-
-  void Reset(bool invalidate_hashes) override {
-    CEF_REQUIRE_UIT();
-    ListenerMap::iterator it = listener_map_.begin();
-    for (; it != listener_map_.end(); ++it) {
-      it->second->Reset(invalidate_hashes);
-    }
-  }
-
- private:
-  // Map of AlloyOffTheRecordBrowserContext to the associated VisitedLinkEventListener.
-  using ListenerMap =
-      std::map<const content::BrowserContext*,
-               std::unique_ptr<visitedlink::VisitedLinkEventListener>>;
-  ListenerMap listener_map_;
-};
 
 AlloyOffTheRecordBrowserContext::AlloyOffTheRecordBrowserContext(
     CefBrowserContext* origin_browser_context,
@@ -218,18 +159,6 @@ void AlloyOffTheRecordBrowserContext::Initialize() {
     extensions::ProcessManager::Get(this);
   }
 
-  // Initialize visited links management.
-  base::FilePath visited_link_path;
-  if (!cache_path_.empty()) {
-    visited_link_path = cache_path_.Append(FILE_PATH_LITERAL("Visited Links"));
-  }
-  visitedlink_listener_ = new CefVisitedLinkListener;
-  visitedlink_master_.reset(new visitedlink::VisitedLinkWriter(
-      visitedlink_listener_, this, !visited_link_path.empty(), false,
-      visited_link_path, 0));
-  visitedlink_listener_->CreateListenerForContext(this);
-  visitedlink_master_->Init();
-
   // Initialize proxy configuration tracker.
   pref_proxy_config_tracker_.reset(new PrefProxyConfigTrackerImpl(
       GetPrefs(), content::GetIOThreadTaskRunner({})));
@@ -272,8 +201,6 @@ void AlloyOffTheRecordBrowserContext::Shutdown() {
   // (e.g. ResourceContext) is posted, so that the classes that hung on
   // StoragePartition can have time to do necessary cleanups on IO thread.
   ShutdownStoragePartitions();
-
-  visitedlink_listener_->RemoveListenerForContext(this);
 
   // The FontFamilyCache references the ProxyService so delete it before the
   // ProxyService is deleted.
@@ -517,10 +444,6 @@ DownloadPrefs* AlloyOffTheRecordBrowserContext::GetDownloadPrefs() {
     download_prefs_.reset(new DownloadPrefs(this));
   }
   return download_prefs_.get();
-}
-
-void AlloyOffTheRecordBrowserContext::AddVisitedURLs(const std::vector<GURL>& urls) {
-  visitedlink_master_->AddURLs(urls);
 }
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)

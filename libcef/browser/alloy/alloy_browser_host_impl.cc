@@ -1741,22 +1741,18 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
 void AlloyBrowserHostImpl::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   if (web_contents()) {
-
 #if defined(OHOS_INCOGNITO_MODE)
-    auto cef_browser_context = CefBrowserContext::FromBrowserContext(
-        web_contents()->GetBrowserContext());
-    if (cef_browser_context) {
-      cef_browser_context->AddVisitedURLs(
-          navigation_handle->GetRedirectChain());
+    if (web_contents()->GetBrowserContext() &&
+        web_contents()->GetBrowserContext()->IsOffTheRecord()) {
+      return;
     }
-#else
+#endif
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
       cef_browser_context->AddVisitedURLs(
           navigation_handle->GetRedirectChain());
     }
-#endif
   }
 }
 
@@ -1917,18 +1913,16 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
   }
   if (web_contents()) {
 #if defined(OHOS_INCOGNITO_MODE)
-    auto cef_browser_context = CefBrowserContext::FromBrowserContext(
-        web_contents()->GetBrowserContext());
-    if (cef_browser_context) {
-      cef_browser_context->AddVisitedURLs(urlList);
+    if (web_contents()->GetBrowserContext() &&
+        web_contents()->GetBrowserContext()->IsOffTheRecord()) {
+      return;
     }
-#else
+#endif
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
       cef_browser_context->AddVisitedURLs(urlList);
     }
-#endif
   }
 }
 #endif

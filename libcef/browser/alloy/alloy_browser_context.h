@@ -122,12 +122,11 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
 
   // Called from AlloyBrowserHostImpl::DidFinishNavigation to update the table
   // of visited links.
-#if defined(OHOS_INCOGNITO_MODE)
-  void AddVisitedURLs(const std::vector<GURL>& urls) override;
-  DownloadPrefs* GetDownloadPrefs() override;
-#else
   void AddVisitedURLs(const std::vector<GURL>& urls);
 
+#if defined(OHOS_INCOGNITO_MODE)
+  DownloadPrefs* GetDownloadPrefs() override;
+#else
   // Called from DownloadPrefs::FromBrowserContext.
   DownloadPrefs* GetDownloadPrefs();
 #endif

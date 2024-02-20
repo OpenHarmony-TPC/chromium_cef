@@ -336,7 +336,7 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
   CefRequestContextSettings off_the_record_settings;
   CefContext::Get()->PopulateGlobalOTRRequestContextSettings(&off_the_record_settings);
   global_otr_request_context_ =
-      CefRequestContextImpl::CreateGlobalOTRRequestContext(settings);
+      CefRequestContextImpl::CreateGlobalOTRRequestContext(off_the_record_settings);
 #endif
 
 #if !BUILDFLAG(IS_OHOS)
