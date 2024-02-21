@@ -11,8 +11,8 @@ const char kNWebId[] = "nweb_id";
 
 void ResumeDownloadWithId(
     content::DownloadManager *manager, const std::string &guid,
-    const GURL &gurl, const base::FilePath &full_path, int received_bytes,
-    int total_bytes, const std::string &etag, const std::string &mime_type,
+    const GURL &gurl, const base::FilePath &full_path, int64_t received_bytes,
+    int64_t total_bytes, const std::string &etag, const std::string &mime_type,
     const std::string &last_modified,
     std::vector<download::DownloadItem::ReceivedSlice> received_slices,
     uint32_t next_id) {
