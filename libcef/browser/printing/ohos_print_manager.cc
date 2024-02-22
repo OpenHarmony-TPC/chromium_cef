@@ -80,13 +80,13 @@ class PrintDocumentAdapterImpl
       const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
       const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
       uint32_t fd,
-      std::function<void(std::string, uint32_t)> writeResultCallback) override {
+      std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback) override {
     LOG(INFO) << "OhosPrintManager onStartLayoutWrite.";
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
     printAttrs.fd = fd;
-    printAttrs.writeResultCallback = writeResultCallback;
+    printAttrs.callback = callback;
     if (ohosPrintManager_) {
       ohosPrintManager_->SetPrintAttrs(printAttrs);
       ohosPrintManager_->PrintPage(false);
@@ -120,13 +120,13 @@ class ApplicationPrintDocumentAdapterImpl
       const OHOS::NWeb::PrintAttributesAdapter& oldAttrs,
       const OHOS::NWeb::PrintAttributesAdapter& newAttrs,
       uint32_t fd,
-      std::function<void(std::string, uint32_t)> writeResultCallback) override {
+      std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback) override {
     LOG(INFO) << "Application OhosPrintManager onStartLayoutWrite.";
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
     printAttrs.fd = fd;
-    printAttrs.writeResultCallback = writeResultCallback;
+    printAttrs.callback = callback;
     if (ohosPrintManager_) {
       if (!isCalledBeforeEvent) {
         isCalledBeforeEvent = true;
@@ -256,8 +256,10 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
     LOG(ERROR) << "rfh is nullptr.";
     if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
       LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_FAILED";
-      printAttrsMap_[print_job_id_].writeResultCallback(
-          print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
+      if (printAttrsMap_[print_job_id_].callback) {
+        printAttrsMap_[print_job_id_].callback->WriteResultCallback(
+            print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
+      }
     }
     return;
   }
@@ -384,8 +386,10 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
   std::move(did_print_document_cb).Run(true);
   if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
     LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS";
-    printAttrsMap_[print_job_id_].writeResultCallback(
-        print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
+    if (printAttrsMap_[print_job_id_].callback) {
+      printAttrsMap_[print_job_id_].callback->WriteResultCallback(
+          print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
+    }
   }
 }
 

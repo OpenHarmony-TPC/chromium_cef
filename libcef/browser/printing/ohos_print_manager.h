@@ -36,7 +36,7 @@ struct PrintAttrs {
   std::string jobId;
   OHOS::NWeb::PrintAttributesAdapter attrs;
   uint32_t fd;
-  std::function<void(std::string, uint32_t)> writeResultCallback;
+  std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback;
 };
 
 class OhosPrintManager : public printing::PrintManager,
