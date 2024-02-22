@@ -1055,6 +1055,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     auto exec_callback = base::BindOnce(
         std::move(callback), ResponseMode::CONTINUE, nullptr, new_url);
 #else
+    request->site_for_cookies = redirect_info.new_site_for_cookies;
     auto exec_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::RedirectSavedCookieDone,
         weak_ptr_factory_.GetWeakPtr(), request_id, request,
