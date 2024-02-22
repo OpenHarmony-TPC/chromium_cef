@@ -271,7 +271,7 @@ void AlloyPermissionManager::RequestPermissionByType(
     case PermissionType::SENSORS:
     case PermissionType::WAKE_LOCK_SYSTEM:
     default:
-      NOTREACHED() << "Invalid PermissionType.";
+      LOG(ERROR) << "Invalid PermissionType.";
       pending_request_raw->SetPermissionStatus(permission_type,
                                                PermissionStatus::DENIED);
       break;
