@@ -74,6 +74,7 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
+#include "ui/base/ime/text_input_flags.h"
 #include "ui/events/blink/did_overscroll_params.h"
 #endif  // defined(OHOS_INPUT_EVENTS)
 
@@ -2121,7 +2122,9 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
             static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
     mode = static_cast<CefRenderHandler::TextInputMode>(state->mode);
-    type = static_cast<CefRenderHandler::TextInputType>(state->type);
+    type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
+               ? CEF_TEXT_INPUT_TYPE_PASSWORD
+               : static_cast<CefRenderHandler::TextInputType>(state->type);
     show_keyboard = state->show_ime_if_needed;
   }
   if (state && !state->show_ime_if_needed && did_update_state) {
