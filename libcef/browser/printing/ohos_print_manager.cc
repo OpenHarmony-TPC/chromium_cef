@@ -30,6 +30,7 @@
 #include "base/numerics/safe_conversions.h"
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
+#include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/pdf/pdf_frame_util.h"
 #include "chrome/common/chrome_switches.h"
 #include "components/printing/browser/print_manager_utils.h"
@@ -186,6 +187,18 @@ void OhosPrintManager::BindPrintManagerHost(
   print_manager->BindReceiver(std::move(receiver), rfh);
 }
 
+// static
+content::RenderFrameHost* OhosPrintManager::GetRenderFrameHostToUse(
+  content::WebContents* contents) {
+  content::RenderFrameHost* full_page_plugin = GetFullPagePlugin(contents);
+  content::RenderFrameHost* pdf_rfh = pdf_frame_util::FindPdfChildFrame(
+      full_page_plugin ? full_page_plugin : contents->GetPrimaryMainFrame());
+  if (pdf_rfh) {
+    return pdf_rfh;
+  }
+  return printing::GetFrameToPrint(contents);
+}
+
 void OhosPrintManager::PdfWritingDone(int page_count) {
   pdf_writing_done_callback().Run(page_count);
   fd_ = -1;
@@ -269,7 +282,11 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
     return;
   }
   if (isApplication) {
-    GetPrintRenderFrame(rfh)->ApplicationPrintRequestedPages();
+    auto* contents = web_contents();
+    auto* app_rfh = GetRenderFrameHostToUse(contents);
+    if (app_rfh) {
+      GetPrintRenderFrame(app_rfh)->ApplicationPrintRequestedPages();
+    }
   } else {
     GetPrintRenderFrame(rfh)->PrintRequestedPages();
   }
@@ -525,6 +542,7 @@ void OhosPrintManager::SetToken(void* token) {
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
+  cancel_ = false;
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
 }

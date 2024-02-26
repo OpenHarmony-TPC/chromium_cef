@@ -598,7 +598,8 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
   void CefBrowserPlatformDelegateAlloy::CreateWebPrintDocumentAdapter(
       const CefString& jobName, void** webPrintDocumentAdapter) {
     REQUIRE_ALLOY_RUNTIME();
-    content::RenderFrameHost* rfh_to_use = printing::GetFrameToPrint(web_contents_);
+    content::RenderFrameHost* rfh_to_use =
+      printing::OhosPrintManager::GetRenderFrameHostToUse(web_contents_);
     if (!rfh_to_use) {
       LOG(ERROR) << "rfh_to_use is nullptr";
       return;

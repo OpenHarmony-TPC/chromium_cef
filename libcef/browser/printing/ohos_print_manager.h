@@ -52,6 +52,9 @@ class OhosPrintManager : public printing::PrintManager,
           receiver,
       content::RenderFrameHost* rfh);
 
+  static content::RenderFrameHost* GetRenderFrameHostToUse(
+      content::WebContents* contents);
+
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
