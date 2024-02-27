@@ -835,6 +835,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if BUILDFLAG(IS_OHOS)
   settings_.native_embed_mode_enabled =
       browser_settings.native_embed_mode_enabled;
+  settings_.draw_mode = browser_settings.draw_mode;
 #endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;

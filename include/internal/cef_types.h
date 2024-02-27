@@ -694,6 +694,7 @@ typedef struct _cef_browser_settings_t {
   cef_state_t native_embed_mode_enabled;
   bool scroll_enabled;
   bool is_safe_browsing_enable;
+  int draw_mode;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
