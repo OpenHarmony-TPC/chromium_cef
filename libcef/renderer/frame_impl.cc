@@ -1261,10 +1261,6 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
 
 #if defined(OHOS_INPUT_EVENTS)
 void CefFrameImpl::ScrollTo(float x, float y) {
-  if (!scroll_enabled_) {
-    LOG(DEBUG) << "can not ScrollTo, scroll is disabled";
-    return;
-  }
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1276,10 +1272,6 @@ void CefFrameImpl::ScrollTo(float x, float y) {
 }
 
 void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
-  if (!scroll_enabled_) {
-    LOG(DEBUG) << "can not ScrollBy, scroll is disabled";
-    return;
-  }
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
