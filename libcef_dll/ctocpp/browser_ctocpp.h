@@ -86,6 +86,8 @@ public:
   int GetSecurityLevel() override;
   void EnableSafeBrowsing(bool enable) override;
   bool IsSafeBrowsingEnabled() override;
+  void EnableIntelligentTrackingPrevention(bool enable) override;
+  bool IsIntelligentTrackingPreventionEnabled() override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

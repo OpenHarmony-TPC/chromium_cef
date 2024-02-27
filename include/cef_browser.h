@@ -419,6 +419,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsSafeBrowsingEnabled() = 0;
 
+  ///
+  /// Enable the ability to intelligent tracking prevention, default disabled.
+  ///
+  /*--cef()--*/
+  virtual void EnableIntelligentTrackingPrevention(bool enable) = 0;
+
+  ///
+  /// Get whether intelligent tracking prevention is enabled.
+  ///
+  /*--cef()--*/
+  virtual bool IsIntelligentTrackingPreventionEnabled() = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };

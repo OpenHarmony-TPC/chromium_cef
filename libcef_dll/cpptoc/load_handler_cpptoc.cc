@@ -355,6 +355,34 @@ load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
   CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
 }
 
+void CEF_CALLBACK load_handler_on_intelligent_tracking_prevention_result(
+    struct _cef_load_handler_t* self,
+    const cef_string_t* website_host,
+    const cef_string_t* tracker_host) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: website_host; type: string_byref_const
+  DCHECK(website_host);
+  if (!website_host) {
+    return;
+  }
+  // Verify param: tracker_host; type: string_byref_const
+  DCHECK(tracker_host);
+  if (!tracker_host) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnIntelligentTrackingPreventionResult(
+      CefString(website_host), CefString(tracker_host));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -377,6 +405,8 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
       load_handler_on_navigation_entry_committed;
   GetStruct()->on_safe_browsing_check_result =
       load_handler_on_safe_browsing_check_result;
+  GetStruct()->on_intelligent_tracking_prevention_result =
+      load_handler_on_intelligent_tracking_prevention_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

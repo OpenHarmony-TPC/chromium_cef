@@ -91,6 +91,10 @@
 #include "cc/input/browser_controls_state.h"
 #endif
 
+#ifdef OHOS_ITP
+#include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -3364,5 +3368,22 @@ void CefBrowserHostBase::CloseCamera() {
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
 CefString CefBrowserHostBase::GetLastJavascriptProxyCallingFrameUrl() {
   return base::EmptyString();
+}
+#endif
+
+#ifdef OHOS_ITP
+void CefBrowserHostBase::EnableIntelligentTrackingPrevention(bool enable) {
+  {
+    base::AutoLock locker(lock_);
+    intelligent_tracking_prevention_cookies_enabled_ = enable;
+  }
+  LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
+  ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()->
+      EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
+}
+
+bool CefBrowserHostBase::IsIntelligentTrackingPreventionEnabled() {
+  base::AutoLock locker(lock_);
+  return intelligent_tracking_prevention_cookies_enabled_;
 }
 #endif

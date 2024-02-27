@@ -176,8 +176,17 @@ typedef struct _cef_load_handler_t {
   ///
   /// Called when received website security risk check result.
   ///
-  void(CEF_CALLBACK *on_safe_browsing_check_result)(
-      struct _cef_load_handler_t *self, int threat_type);
+  void(CEF_CALLBACK* on_safe_browsing_check_result)(
+      struct _cef_load_handler_t* self,
+      int threat_type);
+
+  ///
+  /// Called when tracker's cookie is prevented.
+  ///
+  void(CEF_CALLBACK* on_intelligent_tracking_prevention_result)(
+      struct _cef_load_handler_t* self,
+      const cef_string_t* website_host,
+      const cef_string_t* tracker_host);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

@@ -40,6 +40,10 @@
 #include "net_helpers.h"
 #endif
 
+#ifdef OHOS_ITP
+#include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
+#endif
+
 namespace net_service {
 
 namespace {
@@ -116,6 +120,30 @@ void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
     load_handler->OnLoadErrorWithRequest(request, request->IsMainFrame(),
       has_user_gesture, error_code, net::ErrorToShortString(error_code));
   }
+}
+#endif
+
+#ifdef OHOS_ITP
+void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
+                             CefString tracker_host,
+                             CefString website_host) {
+  if (!browser || !browser->GetHost()) {
+    LOG(ERROR)
+        << "ReportITPResultInUiTask for browser or browser_host is nullptr";
+    return;
+  }
+  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
+  if (!client) {
+    LOG(ERROR) << "ReportITPResultInUiTask for client is nullptr";
+    return;
+  }
+  CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+  if (load_handler) {
+    LOG(ERROR) << "ReportITPResultInUiTask for load_handler is nullptr";
+    return;
+  }
+  load_handler->OnIntelligentTrackingPreventionResult(website_host,
+                                                      tracker_host);
 }
 #endif
 
@@ -646,7 +674,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         state->cookie_filter_
             ? base::BindRepeating(
                   &InterceptedRequestHandlerWrapper::AllowCookieLoad,
-                  weak_ptr_factory_.GetWeakPtr(), request_id)
+                  weak_ptr_factory_.GetWeakPtr(), request_id, request)
             : base::BindRepeating(
                   &InterceptedRequestHandlerWrapper::AllowCookieAlways);
     auto done_cookie_callback = base::BindOnce(
@@ -664,6 +692,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   }
 
   void AllowCookieLoad(int32_t request_id,
+                       network::ResourceRequest* request,
                        const net::CanonicalCookie& cookie,
                        bool* allow) {
     CEF_REQUIRE_IOT();
@@ -676,6 +705,20 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
     DCHECK(state->cookie_filter_);
+
+#ifdef OHOS_ITP
+    bool itp_cookies_enabled = IsIntelligentTrackingPreventionEnabled();
+    if (itp_cookies_enabled && request) {
+      bool third_party_cookie_access_policy =
+          ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
+              ->AllowGetCookies(*request);
+      if (!third_party_cookie_access_policy) {
+        ReportITPResult(*request);
+        *allow = false;
+        return;
+      }
+    }
+#endif  // OHOS_ITP
 
     CefCookie cef_cookie;
     if (net_service::MakeCefCookie(cookie, cef_cookie)) {
@@ -1529,6 +1572,29 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   static bool IsExternalRequest(const network::ResourceRequest* request) {
     return !scheme::IsInternalHandledScheme(request->url.scheme());
   }
+
+#ifdef OHOS_ITP
+  bool IsIntelligentTrackingPreventionEnabled() {
+    if (!init_state_ || !init_state_->browser_) {
+      return false;
+    }
+    return init_state_->browser_->IsIntelligentTrackingPreventionEnabled();
+  }
+
+  void ReportITPResult(const network::ResourceRequest& request) {
+    CEF_REQUIRE_IOT();
+    LOG(DEBUG) << "ReportITPResult, url: " << request.url.spec();
+    if (!init_state_ || !request.request_initiator || !request.url.has_host()) {
+      LOG(ERROR) << "ReportITPResult failed for param error";
+      return;
+    }
+
+    CEF_POST_TASK(
+        CEF_UIT, base::BindOnce(&ReportITPResultInUiTask, init_state_->browser_,
+                                CefString(request.url.host()),
+                                CefString(request.request_initiator->host())));
+  }
+#endif
 
   scoped_refptr<InitHelper> init_helper_;
   std::unique_ptr<InitState> init_state_;

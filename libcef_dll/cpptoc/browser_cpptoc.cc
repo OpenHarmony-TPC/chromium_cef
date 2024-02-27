@@ -873,7 +873,43 @@ int CEF_CALLBACK browser_is_safe_browsing_enabled(struct _cef_browser_t *self) {
   return _retval;
 }
 
-} // namespace
+void CEF_CALLBACK
+browser_enable_intelligent_tracking_prevention(struct _cef_browser_t* self,
+                                               int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->EnableIntelligentTrackingPrevention(
+      enable ? true : false);
+}
+
+int CEF_CALLBACK browser_is_intelligent_tracking_prevention_enabled(
+    struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefBrowserCppToC::Get(self)->IsIntelligentTrackingPreventionEnabled();
+
+  // Return type: bool
+  return _retval;
+}
+
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -935,6 +971,10 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->get_security_level = browser_get_security_level;
   GetStruct()->enable_safe_browsing = browser_enable_safe_browsing;
   GetStruct()->is_safe_browsing_enabled = browser_is_safe_browsing_enabled;
+  GetStruct()->enable_intelligent_tracking_prevention =
+      browser_enable_intelligent_tracking_prevention;
+  GetStruct()->is_intelligent_tracking_prevention_enabled =
+      browser_is_intelligent_tracking_prevention_enabled;
 }
 
 // DESTRUCTOR - Do not edit by hand.
