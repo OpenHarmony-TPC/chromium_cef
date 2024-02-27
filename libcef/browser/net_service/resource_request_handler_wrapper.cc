@@ -846,6 +846,14 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
           state->pending_request_.get());
     }
 
+    // Try to get scheme handler from ets UI thread.
+    if (!resource_handler && state->scheme_factory_) {
+      // Does the scheme factory want to handle the request?
+      resource_handler = state->scheme_factory_->Create(
+          init_state_->browser_, init_state_->frame_, request->url.scheme(),
+          state->pending_request_.get());
+    }
+
     CEF_POST_TASK(
         CEF_IOT,
         base::BindOnce(
