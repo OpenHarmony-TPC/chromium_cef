@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c14eeb78afc2c2dce426591fdbea83438b67e9a0$
+// $hash=d084e5c8b472f31b40ff3abdd556259ed71b74f8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -118,6 +118,7 @@ class CefRenderHandlerCToCpp
   void OnNativeEmbedLifecycleChange(
       CefRefPtr<CefBrowser> browser,
       const cef_native_embed_data_t& info) override;
+  void NotifySelectAllClicked(bool select_all) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

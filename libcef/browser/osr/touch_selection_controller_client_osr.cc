@@ -397,6 +397,13 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
                 quickmenuflags),
             callbackImpl)) {
       callbackImpl->Disconnect();
+      if (browser) {
+        if (auto client = browser->client()) {
+          if (auto render = client->GetRenderHandler()) {
+            render->NotifySelectAllClicked(false);
+          }
+        }
+      }
       CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
     } else {
@@ -553,6 +560,13 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
+      if (browser) {
+        if (auto client = browser->client()) {
+          if (auto render = client->GetRenderHandler()) {
+            render->NotifySelectAllClicked(false);
+          }
+        }
+      }
       break;
     case ui::SELECTION_HANDLES_MOVED:
     case ui::INSERTION_HANDLE_MOVED:
@@ -696,6 +710,10 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
 
 void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
                                                           int event_flags) {
+#ifdef OHOS_DRAG_DROP
+  SetSelectAllClicked(command_id);
+#endif
+
 #ifndef OHOS_CLIPBOARD
   if (command_id == kInvalidCommandId) {
     LOG(ERROR) << "Quick menu Command id is invaild";
@@ -725,6 +743,7 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
       return;
     }
   }
+
 #ifdef OHOS_CLIPBOARD
   absl::optional<std::u16string> value;
   LOG(INFO) << "Quick menu Command id = " << command_id;
@@ -765,6 +784,31 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
       break;
   }
 }
+
+#ifdef OHOS_DRAG_DROP
+void CefTouchSelectionControllerClientOSR::SetSelectAllClicked(int command_id) {
+  if (!rwhv_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser) {
+    return;
+  }
+  auto client = browser->client();
+  if (!client) {
+    return;
+  }
+  auto render = client->GetRenderHandler();
+  if (!render) {
+    return;
+  }
+  if (command_id == QM_EDITFLAG_CAN_SELECT_ALL) {
+    render->NotifySelectAllClicked(true);
+  } else {
+    render->NotifySelectAllClicked(false);
+  }
+}
+#endif // #ifdef OHOS_DRAG_DROP
 
 void CefTouchSelectionControllerClientOSR::RunContextMenu() {
   const gfx::RectF anchor_rect =

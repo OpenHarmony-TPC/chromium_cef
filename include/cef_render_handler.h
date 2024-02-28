@@ -369,6 +369,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
                                       const CefNativeEmbedData& info) {}
+
+  ///
+  /// Called when select all is clicked.
+  ///
+  /*--cef()--*/
+  virtual void NotifySelectAllClicked(bool select_all) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
