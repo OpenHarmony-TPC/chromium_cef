@@ -417,6 +417,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   SET_STATE(cef.image_loading, web.images_enabled);
   SET_STATE(cef.force_dark_mode_enabled, web.force_dark_mode_enabled);
   SET_STATE(cef.native_embed_mode_enabled, web.native_embed_mode_enabled);
+  web.draw_mode = cef.draw_mode;
 #if defined(OHOS_DARKMODE)
   if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
     web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
