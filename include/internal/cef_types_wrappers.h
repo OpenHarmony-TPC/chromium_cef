@@ -609,6 +609,10 @@ struct CefBrowserSettingsTraits {
         src->blank_target_popup_intercept_enabled;
     target->native_embed_mode_enabled =
         src->native_embed_mode_enabled;
+    cef_string_set(src->embed_tag.str, src->embed_tag.length, &target->embed_tag,
+                   copy);
+    cef_string_set(src->embed_tag.str, src->embed_tag.length,
+                   &target->embed_tag_type, copy);
     target->scroll_enabled = src->scroll_enabled;
     target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->draw_mode = src->draw_mode;
