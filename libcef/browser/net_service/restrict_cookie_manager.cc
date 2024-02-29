@@ -127,6 +127,21 @@ void ProxyingRestrictedCookieManager::AddChangeListener(
       std::move(proxy_listener_remote), std::move(callback));
 }
 
+#if BUILDFLAG(IS_OHOS)
+void ProxyingRestrictedCookieManager::RegisterCookieChangeObserver(
+    const GURL& url,
+    const net::SiteForCookies& site_for_cookies,
+    const url::Origin& top_frame_origin,
+    bool has_storage_access,
+    mojo::ScopedSharedBufferHandle buffer,
+    RegisterCookieChangeObserverCallback callback) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+  underlying_restricted_cookie_manager_->RegisterCookieChangeObserver(
+      url, site_for_cookies, top_frame_origin, has_storage_access,
+      std::move(buffer), std::move(callback));
+}
+#endif // BUILDFLAG(IS_OHOS)
+
 void ProxyingRestrictedCookieManager::SetCookieFromString(
     const GURL& url,
     const net::SiteForCookies& site_for_cookies,
@@ -162,6 +177,28 @@ void ProxyingRestrictedCookieManager::GetCookiesString(
     std::move(callback).Run("");
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void ProxyingRestrictedCookieManager::GetCookiesStringAndExpiryDate(
+    const GURL& url,
+    const net::SiteForCookies& site_for_cookies,
+    const url::Origin& top_frame_origin,
+    bool has_storage_access,
+    GetCookiesStringAndExpiryDateCallback callback) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+
+  if (AllowCookies(url, site_for_cookies)) {
+    underlying_restricted_cookie_manager_->GetCookiesStringAndExpiryDate(
+        url, site_for_cookies, top_frame_origin, has_storage_access,
+        std::move(callback));
+  } else {
+    base::Time time;
+    // Return empty cookie string with no expiry date by default.
+    // Third parameter 'false' means an empty cookiesString has no expiry date.
+    std::move(callback).Run("", time, false);
+  }
+}
+#endif // BUILDFLAG(IS_OHOS)
 
 void ProxyingRestrictedCookieManager::CookiesEnabledFor(
     const GURL& url,
