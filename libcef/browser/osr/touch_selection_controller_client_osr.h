@@ -102,6 +102,9 @@ class CefTouchSelectionControllerClientOSR
   void CloseQuickMenu();
   void ShowQuickMenu();
   void UpdateQuickMenu();
+#ifdef OHOS_DRAG_DROP
+  void SetSelectAllClicked(int command_id);
+#endif
 
   // ui::TouchSelectionControllerClient:
   bool SupportsAnimation() const override;

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=166acdff04a96c2910ffb87469b0a2f6d9c854a1$
+// $hash=fe16e48e84b52b93735d0d949c686f3975b50bb2$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -987,6 +987,21 @@ void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
       CefBrowserCToCpp::Wrap(browser), infoObj);
 }
 
+void CEF_CALLBACK
+render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
+                                        int select_all) {
+  shutdown_checker::AssertNotShutdown();
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true : false);
+}
+
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1035,6 +1050,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_native_embed_gesture_event;
   GetStruct()->on_native_embed_lifecycle_change =
       render_handler_on_native_embed_lifecycle_change;
+  GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
 }
 
 // DESTRUCTOR - Do not edit by hand.

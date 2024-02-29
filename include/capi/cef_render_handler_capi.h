@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f4cb6aad33f4ef0922508421630270773b10edc6$
+// $hash=6f8e2fab993ded7fac4dcd377b80be075fae9a56$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -366,6 +366,12 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       const struct _cef_native_embed_data_t* info);
+
+  ///
+  /// Called when select all is clicked.
+  ///
+  void (CEF_CALLBACK* notify_select_all_clicked)(struct _cef_render_handler_t* self,
+                                                int select_all);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
