@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bbdfd93e2c40c87048e5a38aac8232e7413abfc2$
+// $hash=c8e9c77cb0de62caffd1765bb09185a5e2f88532$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1220,10 +1220,10 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void** manager) {
+void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void **manager) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_root_browser_accessibility_manager)) {
     return;
   }
@@ -2098,7 +2098,7 @@ void CefBrowserHostCToCpp::SetAudioExclusive(bool audioExclusive) {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseMedia() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, close_media)) {
     return;
   }
@@ -2112,7 +2112,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseMedia() {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopMedia() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, stop_media)) {
     return;
   }
@@ -2126,7 +2126,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopMedia() {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ResumeMedia() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, resume_media)) {
     return;
   }
@@ -2140,7 +2140,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ResumeMedia() {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::PauseMedia() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, pause_media)) {
     return;
   }
@@ -2154,7 +2154,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::PauseMedia() {
 NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetMediaPlaybackState() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_media_playback_state)) {
     return 0;
   }
@@ -2700,7 +2700,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StartCamera() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, start_camera)) {
     return;
   }
@@ -2714,7 +2714,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StartCamera() {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopCamera() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, stop_camera)) {
     return;
   }
@@ -2728,7 +2728,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopCamera() {
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseCamera() {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t* _struct = GetStruct();
+  cef_browser_host_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, close_camera)) {
     return;
   }
@@ -2737,6 +2737,28 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseCamera() {
 
   // Execute
   _struct->close_camera(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+CefString CefBrowserHostCToCpp::GetLastJavascriptProxyCallingFrameUrl() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct,
+                         get_last_javascript_proxy_calling_frame_url)) {
+    return CefString();
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_string_userfree_t _retval =
+      _struct->get_last_javascript_proxy_calling_frame_url(_struct);
+
+  // Return type: string
+  CefString _retvalStr;
+  _retvalStr.AttachToUserFree(_retval);
+  return _retvalStr;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

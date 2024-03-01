@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc5deaa6d4d7c2193b8f4fc17a22a53f3334ff17$
+// $hash=11716b3f49e393fbbd5b1ce54fc2c4a128c5349b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -230,6 +230,7 @@ public:
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

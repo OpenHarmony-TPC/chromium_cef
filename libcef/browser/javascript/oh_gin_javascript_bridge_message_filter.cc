@@ -188,13 +188,14 @@ void OhGinJavascriptBridgeMessageFilter::OnHasMethod(
 
 void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
     int32_t object_id,
+    const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host) {
-    host->OnInvokeMethod(current_routing_id_, object_id, method_name, arguments,
+    host->OnInvokeMethod(current_routing_id_, object_id, document_url, method_name, arguments,
                          wrapped_result, error_code);
   } else {
     wrapped_result->Append(base::Value());

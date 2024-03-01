@@ -99,6 +99,10 @@
 #include "ohos_adapter_helper.h"
 #endif
 
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+#include "libcef/browser/javascript/oh_javascript_injector.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -2422,3 +2426,18 @@ void AlloyBrowserHostImpl::SetTabletMode() {
   web_contents()->SetTabletMode(is_tablet);
 }
 #endif // OHOS_USERAGENT
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+CefString AlloyBrowserHostImpl::GetLastJavascriptProxyCallingFrameUrl() {
+  if (!web_contents()) {
+    return base::EmptyString();
+  }
+
+  NWEB::OhJavascriptInjector* javascriptInjector =
+     NWEB::OhJavascriptInjector::FromWebContents(web_contents());
+  if (!javascriptInjector) {
+    return base::EmptyString();
+  }
+  return javascriptInjector->GetLastCallingFrameUrl();
+}
+#endif

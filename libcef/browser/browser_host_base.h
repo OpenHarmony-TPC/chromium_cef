@@ -625,6 +625,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool network_blocked_ = false;
   int cache_mode_ = 0;
 #endif
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
+#endif
 #endif  // IS_OHOS
 
  protected:
