@@ -92,6 +92,7 @@
 #include "components/performance_manager/embedder/binders.h"
 #include "components/performance_manager/public/mojom/coordination_unit.mojom.h"
 #include "components/policy/core/common/policy_pref_names.h"
+#include "components/site_isolation/site_isolation_policy.h"
 #include "components/spellcheck/common/spellcheck.mojom.h"
 #include "components/version_info/version_info.h"
 #include "content/browser/plugin_service_impl.h"
@@ -3045,9 +3046,26 @@ base::FilePath AlloyContentBrowserClient::GetGrShaderDiskCacheDirectory() {
   return cache_path.Append(FILE_PATH_LITERAL("GrShaderCache"));
 }
 
+static bool GetLockdownModeStatus() {
+  auto& system_properties_adapter = OHOS::NWeb::OhosAdapterHelper::GetInstance()
+                                      .GetSystemPropertiesInstance();
+  return system_properties_adapter.GetLockdownModeStatus();
+}
+
 bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
     content::SiteIsolationMode site_isolation_mode) {
-  return true;
+  if (base::ohos::IsPcDevice()) {
+    return site_isolation::SiteIsolationPolicy::
+        ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
+  } else {
+    bool isLockdownModeEnabled = GetLockdownModeStatus();
+    if(isLockdownModeEnabled) {
+      return site_isolation::SiteIsolationPolicy::
+          ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
+    } else {
+      return true;
+    }
+  }
 }
 
 bool AlloyContentBrowserClient::ShouldLockProcessToSite(
