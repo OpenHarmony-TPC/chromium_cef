@@ -449,7 +449,7 @@ typedef struct _cef_settings_t {
   int cookieable_schemes_exclude_defaults;
 
 #if defined(OHOS_INCOGNITO_MODE)
-    bool incognito_mode;
+  bool incognito_mode;
 #endif
 } cef_settings_t;
 
@@ -692,6 +692,8 @@ typedef struct _cef_browser_settings_t {
   cef_color_t scrollbar_color;
   bool blank_target_popup_intercept_enabled;
   cef_state_t native_embed_mode_enabled;
+  cef_string_t embed_tag;
+  cef_string_t embed_tag_type;
   bool scroll_enabled;
   bool is_safe_browsing_enable;
   int draw_mode;
@@ -710,7 +712,7 @@ typedef struct _cef_browser_settings_t {
   cef_state_t chrome_status_bubble;
 
 #if defined(OHOS_INCOGNITO_MODE)
-    bool incognito_mode;
+  bool incognito_mode;
 #endif
 } cef_browser_settings_t;
 
