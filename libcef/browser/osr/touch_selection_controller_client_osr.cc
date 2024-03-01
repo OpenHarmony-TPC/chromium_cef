@@ -568,11 +568,15 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
         }
       }
       break;
-    case ui::SELECTION_HANDLES_MOVED:
     case ui::INSERTION_HANDLE_MOVED:
+      if (quick_menu_requested_) {
+        quick_menu_requested_ = false;
+      }
+    case ui::SELECTION_HANDLES_MOVED:
       if (!handle_drag_in_progress_) {
         if (!IsVaildSelectionHandleMove()) {
           LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
+          NotifyTouchSelectionChanged(true);
           return;
         }
         UpdateQuickMenu();
@@ -582,7 +586,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::INSERTION_HANDLE_TAPPED:
       quick_menu_requested_ = !quick_menu_requested_;
       if (quick_menu_requested_) {
+        bool handle_drag_in_progress = handle_drag_in_progress_;
+        handle_drag_in_progress_ = false;
         UpdateQuickMenu();
+        handle_drag_in_progress_ = handle_drag_in_progress;
       } else {
         CloseQuickMenu();
         NotifyTouchSelectionChanged(true);
