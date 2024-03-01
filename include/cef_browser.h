@@ -1671,6 +1671,24 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetScrollable(bool enable) = 0;
+
+  ///
+  ///  Start current camera.
+  ///
+  /*--cef()--*/
+  virtual void StartCamera() = 0;
+
+  ///
+  ///  Stop current camera.
+  ///
+  /*--cef()--*/
+  virtual void StopCamera() = 0;
+
+  ///
+  ///  Close current camera.
+  ///
+  /*--cef()--*/
+  virtual void CloseCamera() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

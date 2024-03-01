@@ -3277,3 +3277,36 @@ int CefBrowserHostBase::GetShrinkViewportHeight() {
   return 0;
 #endif
 }
+
+void CefBrowserHostBase::StartCamera() {
+#if defined(OHOS_WEBRTC)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->StartCamera();
+#endif  // defined(OHOS_WEBRTC)
+}
+
+void CefBrowserHostBase::StopCamera() {
+#if defined(OHOS_WEBRTC)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->StopCamera();
+#endif  // defined(OHOS_WEBRTC)
+}
+
+void CefBrowserHostBase::CloseCamera() {
+#if defined(OHOS_WEBRTC)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->CloseCamera();
+#endif  // defined(OHOS_WEBRTC)
+}

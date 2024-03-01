@@ -310,6 +310,11 @@ class CefBrowserHostBase : public CefBrowserHost,
                                   int current,
                                   bool animate) override;
   void UpdateBrowserControlsHeight(int height, bool animate) override;
+
+  void StartCamera() override;
+  void StopCamera() override;
+  void CloseCamera() override;
+
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION

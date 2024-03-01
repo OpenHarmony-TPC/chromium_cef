@@ -2659,6 +2659,48 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
   _struct->set_scrollable(_struct, enable);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StartCamera() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, start_camera)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->start_camera(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopCamera() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, stop_camera)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->stop_camera(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseCamera() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, close_camera)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->close_camera(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}
