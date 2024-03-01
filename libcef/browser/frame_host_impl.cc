@@ -1106,3 +1106,30 @@ void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
     impl->ExecuteJavaScriptWithUserGestureForTests(javascript);
   }
 }
+
+bool CefFrameHostImpl::ShouldOverrideUrlLoading(const std::string& url,
+                                                const std::string& request_method,
+                                                bool user_gesture,
+                                                bool is_redirect,
+                                                bool is_outermost_main_frame)
+{
+  CefRefPtr<CefBrowserHostBase> browser_host = GetBrowserHostBase();
+  if (browser_host == nullptr)
+  {
+    return true;
+  }
+
+  if (auto client = browser_host->GetClient())
+  {
+    if (auto handler = client->GetRequestHandler())
+    {
+      retrun handler->ShouldOverrideUrlLoading(browser_host.get(),
+                                               url,
+                                               request_method,
+                                               user_gesture,
+                                               is_redirect,
+                                               is_outermost_main_frame);
+    }
+  }
+  return true;
+}

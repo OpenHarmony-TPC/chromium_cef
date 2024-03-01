@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0bb806c38633b942a23bd5d55c79d7e9f8f7ae6c$
+// $hash=f37b122209365021b1f4ff8df9a4e03549535672$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_
@@ -20,66 +20,57 @@
 #error This file can be included DLL-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_request_handler_capi.h"
 #include "include/cef_request_handler.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
+#include <vector>
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed DLL-side only.
 class CefRequestHandlerCToCpp
-    : public CefCToCppRefCounted<CefRequestHandlerCToCpp,
-                                 CefRequestHandler,
+    : public CefCToCppRefCounted<CefRequestHandlerCToCpp, CefRequestHandler,
                                  cef_request_handler_t> {
- public:
+public:
   CefRequestHandlerCToCpp();
   virtual ~CefRequestHandlerCToCpp();
 
   // CefRequestHandler methods.
-  bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
-                      CefRefPtr<CefFrame> frame,
-                      CefRefPtr<CefRequest> request,
-                      bool user_gesture,
+  bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                      CefRefPtr<CefRequest> request, bool user_gesture,
                       bool is_redirect) override;
   bool OnOpenURLFromTab(CefRefPtr<CefBrowser> browser,
-                        CefRefPtr<CefFrame> frame,
-                        const CefString& target_url,
+                        CefRefPtr<CefFrame> frame, const CefString &target_url,
                         WindowOpenDisposition target_disposition,
                         bool user_gesture) override;
   CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      bool is_navigation,
-      bool is_download,
-      const CefString& request_initiator,
-      bool& disable_default_handling) override;
+      CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request, bool is_navigation, bool is_download,
+      const CefString &request_initiator,
+      bool &disable_default_handling) override;
   bool GetAuthCredentials(CefRefPtr<CefBrowser> browser,
-                          const CefString& origin_url,
-                          bool isProxy,
-                          const CefString& host,
-                          int port,
-                          const CefString& realm,
-                          const CefString& scheme,
+                          const CefString &origin_url, bool isProxy,
+                          const CefString &host, int port,
+                          const CefString &realm, const CefString &scheme,
                           CefRefPtr<CefAuthCallback> callback) override;
   bool OnCertificateError(CefRefPtr<CefBrowser> browser,
                           cef_errorcode_t cert_error,
-                          const CefString& request_url,
+                          const CefString &request_url,
                           CefRefPtr<CefSSLInfo> ssl_info,
                           CefRefPtr<CefCallback> callback) override;
   bool OnSelectClientCertificate(
-      CefRefPtr<CefBrowser> browser,
-      bool isProxy,
-      const CefString& host,
-      int port,
-      const std::vector<CefString>& key_types,
-      const std::vector<CefString>& principals,
-      const X509CertificateList& certificates,
+      CefRefPtr<CefBrowser> browser, bool isProxy, const CefString &host,
+      int port, const std::vector<CefString> &key_types,
+      const std::vector<CefString> &principals,
+      const X509CertificateList &certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) override;
   void OnRenderViewReady(CefRefPtr<CefBrowser> browser) override;
   void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
                                  TerminationStatus status) override;
   void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) override;
+  bool ShouldOverrideUrlLoading(CefRefPtr<CefBrowser> browser,
+                                const CefString &url, const CefString &method,
+                                bool user_gesture, bool is_redirect,
+                                bool is_outermost_main_frame) override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_

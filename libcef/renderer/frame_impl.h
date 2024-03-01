@@ -110,6 +110,12 @@ class CefFrameImpl
                const std::vector<char>& post_data) override;
 #endif  // defined(OHOS_POST_URL)
 
+  bool ShouldOverrideUrlLoading(const CefString& url,
+                                const CefString& request_method,
+                                bool user_gesture,
+                                bool is_redirect,
+                                bool is_outermost_main_frame);
+
  private:
   // Execute an action on the associated WebLocalFrame. This will queue the
   // action if the JavaScript context is not yet created.

@@ -95,3 +95,19 @@ void CefBrowserFrame::OnGetImageForContextNodeNull() {
   }
 }
 #endif
+
+void CefBrowserFrame::ShouldOverrideUrlLoading(const std::string &url,
+                                               const std::string &request_method,
+                                               bool user_gesture,
+                                               bool is_redirect,
+                                               bool is_outermost_main_frame,
+                                               cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) {
+  if (auto host = GetFrameHost()) {
+    host->ShouldOverrideUrlLoading(url,
+                                   request_method,
+                                   user_gesture,
+                                   is_redirect,
+                                   is_outermost_main_frame,
+                                   std::move(callback));
+  }
+}

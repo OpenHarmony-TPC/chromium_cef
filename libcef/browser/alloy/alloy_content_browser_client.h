@@ -389,6 +389,16 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 void SetTabletMode(bool is_tablet) override;
 #endif
 
+  bool ShouldOverrideUrlLoading(int frame_tree_node_id,
+                                bool browser_initiated,
+                                const GURL& gurl,
+                                const std::string& request_method,
+                                bool has_user_gesture,
+                                bool is_redirect,
+                                bool is_outermost_main_frame,
+                                ui::PageTransition transition,
+                                bool* ignore_navigation) override;
+
  private:
   // Returns the extension or app associated with |site_instance| or NULL.
   const extensions::Extension* GetExtension(

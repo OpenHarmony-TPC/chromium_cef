@@ -1330,6 +1330,24 @@ void CefFrameImpl::SetScrollable(bool enable) {
 
 #endif  // BUILDFLAG(IS_OHOS)
 
+bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
+                                            const CefString& request_method,
+                                            bool user_gesture,
+                                            bool is_redirect,
+                                            bool is_outermost_main_frame) {
+  bool override = false;
+  if (auto& browser_frame = GetBrowserFrame()) {
+    browser_frame->ShouldOverrideUrlLoading(url.ToString(),
+                                            request_method.ToString(),
+                                            user_gesture,
+                                            is_redirect,
+                                            is_outermost_main_frame,
+                                            &override);
+  }
+  
+  return override;
+}
+
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
 #if defined(__clang__)
