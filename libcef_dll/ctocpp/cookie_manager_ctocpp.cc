@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=18c9ce1faacf51fab3228ec61d331f0c2518cdb3$
+// $hash=5c57059464bb94fa6aef835e9bfa26eaf6b53991$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"

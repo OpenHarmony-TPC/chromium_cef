@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5fd828fae057aa3e5414fc1cbe9e1685a1350cf7$
+// $hash=d3079530610199478632c22862de2f9325da225c$
 //
 
 #include "libcef_dll/cpptoc/display_handler_cpptoc.h"
@@ -109,10 +109,11 @@ display_handler_on_favicon_urlchange(struct _cef_display_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), icon_urlsList);
 }
 
-void CEF_CALLBACK
-display_handler_on_fullscreen_mode_change(struct _cef_display_handler_t* self,
-                                          cef_browser_t* browser,
-                                          int fullscreen) {
+void CEF_CALLBACK display_handler_on_fullscreen_mode_change(
+    struct _cef_display_handler_t* self,
+    cef_browser_t* browser,
+    int fullscreen,
+    const cef_size_t* video_natural_size) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -126,10 +127,20 @@ display_handler_on_fullscreen_mode_change(struct _cef_display_handler_t* self,
   if (!browser) {
     return;
   }
+  // Verify param: video_natural_size; type: simple_byref_const
+  DCHECK(video_natural_size);
+  if (!video_natural_size) {
+    return;
+  }
+
+  // Translate param: video_natural_size; type: simple_byref_const
+  CefSize video_natural_sizeVal =
+      video_natural_size ? *video_natural_size : CefSize();
 
   // Execute
   CefDisplayHandlerCppToC::Get(self)->OnFullscreenModeChange(
-      CefBrowserCToCpp::Wrap(browser), fullscreen ? true : false);
+      CefBrowserCToCpp::Wrap(browser), fullscreen ? true : false,
+      video_natural_sizeVal);
 }
 
 int CEF_CALLBACK display_handler_on_tooltip(struct _cef_display_handler_t* self,

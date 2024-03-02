@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=442b7de19c7b4f02776e9fb5975f8f9cd548cb0d$
+// $hash=c47a31b58035b534689ad22b6f9465ff4af255fc$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1437,7 +1437,7 @@ int CEF_CALLBACK browser_host_is_audio_muted(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
-void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
+void CEF_CALLBACK browser_host_get_root_browser_accessibility_manager(
     struct _cef_browser_host_t* self,
     void** manager) {
   shutdown_checker::AssertNotShutdown();
@@ -1455,8 +1455,7 @@ void CEF_CALLBACK browser_host_get_or_create_root_browser_accessibility_manager(
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->GetRootBrowserAccessibilityManager(
-      manager);
+  CefBrowserHostCppToC::Get(self)->GetRootBrowserAccessibilityManager(manager);
 }
 
 void CEF_CALLBACK
@@ -3009,8 +3008,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->is_background_host = browser_host_is_background_host;
   GetStruct()->set_audio_muted = browser_host_set_audio_muted;
   GetStruct()->is_audio_muted = browser_host_is_audio_muted;
-  GetStruct()->get_or_create_root_browser_accessibility_manager =
-      browser_host_get_or_create_root_browser_accessibility_manager;
+  GetStruct()->get_root_browser_accessibility_manager =
+      browser_host_get_root_browser_accessibility_manager;
   GetStruct()->execute_java_script = browser_host_execute_java_script;
   GetStruct()->set_native_window = browser_host_set_native_window;
   GetStruct()->set_web_debugging_access = browser_host_set_web_debugging_access;

@@ -96,8 +96,8 @@ void MaybeSetUserAgentOverrideForMainFrame(
   std::string final_ua =
       nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
   LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
-            << ", user_gesture " << navigation->HasUserGesture() << ", url "
-            << url.spec();
+             << ", user_gesture " << navigation->HasUserGesture() << ", url "
+             << url.spec();
 
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
   if (!navigation->IsInMainFrame()) {
@@ -117,7 +117,7 @@ void MaybeSetUserAgentOverrideForMainFrame(
 CefLoadCommittedDetails::NavigationType ConvertToCefLoadCommittedDetailsType(
     const content::LoadCommittedDetails& details) {
   CefLoadCommittedDetails::NavigationType type;
-  switch(details.type) {
+  switch (details.type) {
     case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_UNKNOWN:
       type = CefLoadCommittedDetails::NavigationType::NAVIGATION_TYPE_UNKNOWN;
       break;
@@ -125,13 +125,14 @@ CefLoadCommittedDetails::NavigationType ConvertToCefLoadCommittedDetailsType(
       type = CefLoadCommittedDetails::NavigationType::
           NAVIGATION_TYPE_MAIN_FRAME_NEW_ENTRY;
       break;
-    case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY:
+    case content::OhosNavigationType::
+        OHOS_NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY:
       type = CefLoadCommittedDetails::NavigationType::
           NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY;
       break;
     case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_NEW_SUBFRAME:
-      type = CefLoadCommittedDetails::NavigationType::
-          NAVIGATION_TYPE_NEW_SUBFRAME;
+      type =
+          CefLoadCommittedDetails::NavigationType::NAVIGATION_TYPE_NEW_SUBFRAME;
       break;
     case content::OhosNavigationType::OHOS_NAVIGATION_TYPE_AUTO_SUBFRAME:
       type = CefLoadCommittedDetails::NavigationType::
@@ -346,12 +347,27 @@ bool CefBrowserContentsDelegate::DidAddMessageToConsole(
 void CefBrowserContentsDelegate::EnterFullscreenModeForTab(
     content::RenderFrameHost* requesting_frame,
     const blink::mojom::FullscreenOptions& options) {
+#if defined(OHOS_MEDIA)
+  if (options.video_natural_size.has_value()) {
+    OnFullscreenModeChange(/*fullscreen=*/true,
+                           CefSize(options.video_natural_size->width(),
+                                   options.video_natural_size->height()));
+  } else {
+    OnFullscreenModeChange(/*fullscreen=*/true, CefSize(0, 0));
+  }
+#else
   OnFullscreenModeChange(/*fullscreen=*/true);
+#endif  // defined(OHOS_MEDIA)
 }
 
 void CefBrowserContentsDelegate::ExitFullscreenModeForTab(
     content::WebContents* web_contents) {
-  OnFullscreenModeChange(/*fullscreen=*/false);
+  OnFullscreenModeChange(/*fullscreen=*/false
+#if defined(OHOS_MEDIA)
+                         ,
+                         CefSize(0, 0)
+#endif  // defined(OHOS_MEDIA)
+  );
 }
 
 void CefBrowserContentsDelegate::CanDownload(
@@ -1085,7 +1101,13 @@ void CefBrowserContentsDelegate::OnTitleChange(const std::u16string& title) {
   }
 }
 
-void CefBrowserContentsDelegate::OnFullscreenModeChange(bool fullscreen) {
+void CefBrowserContentsDelegate::OnFullscreenModeChange(
+    bool fullscreen
+#if defined(OHOS_MEDIA)
+    ,
+    const CefSize& video_natural_size
+#endif  // defined(OHOS_MEDIA)
+) {
   if (fullscreen == is_fullscreen_) {
     return;
   }
@@ -1095,7 +1117,12 @@ void CefBrowserContentsDelegate::OnFullscreenModeChange(bool fullscreen) {
 
   if (auto c = client()) {
     if (auto handler = c->GetDisplayHandler()) {
-      handler->OnFullscreenModeChange(browser(), fullscreen);
+      handler->OnFullscreenModeChange(browser(), fullscreen
+#if defined(OHOS_MEDIA)
+                                      ,
+                                      video_natural_size
+#endif  // defined(OHOS_MEDIA)
+      );
     }
   }
 }

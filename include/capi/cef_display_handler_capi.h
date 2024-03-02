@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=82b79d447935a2c0ba6f678ca5043599f397f5bc$
+// $hash=3d8aff355099fa2928211aabf97052462a9492ee$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -90,7 +90,8 @@ typedef struct _cef_display_handler_t {
   void(CEF_CALLBACK* on_fullscreen_mode_change)(
       struct _cef_display_handler_t* self,
       struct _cef_browser_t* browser,
-      int fullscreen);
+      int fullscreen,
+      const cef_size_t* video_natural_size);
 
   ///
   /// Called when the browser is about to display a tooltip. |text| contains the
