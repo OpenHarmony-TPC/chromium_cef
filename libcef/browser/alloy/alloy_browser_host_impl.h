@@ -463,7 +463,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateBackgroundColor(int color);
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
-  void ReportWindowStatusDelay(base::ProcessId pid);
   void InactiveUnloadOldProcess(base::ProcessId pid);
 #endif
 
