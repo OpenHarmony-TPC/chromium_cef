@@ -2382,6 +2382,80 @@ browser_host_set_audio_exclusive(struct _cef_browser_host_t* self,
                                                                     : false);
 }
 
+void CEF_CALLBACK browser_host_close_media(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CloseMedia();
+}
+
+void CEF_CALLBACK browser_host_stop_media(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->StopMedia();
+}
+
+void CEF_CALLBACK browser_host_resume_media(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ResumeMedia();
+}
+
+void CEF_CALLBACK browser_host_pause_media(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->PauseMedia();
+}
+
+int CEF_CALLBACK
+browser_host_get_media_playback_state(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  int _retval = CefBrowserHostCppToC::Get(self)->GetMediaPlaybackState();
+
+  // Return type: simple
+  return _retval;
+}
+
 void CEF_CALLBACK
 browser_host_scroll_page_up_down(struct _cef_browser_host_t* self,
                                  int is_up,
@@ -3059,6 +3133,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_audio_resume_interval =
       browser_host_set_audio_resume_interval;
   GetStruct()->set_audio_exclusive = browser_host_set_audio_exclusive;
+  GetStruct()->close_media = browser_host_close_media;
+  GetStruct()->stop_media = browser_host_stop_media;
+  GetStruct()->resume_media = browser_host_resume_media;
+  GetStruct()->pause_media = browser_host_pause_media;
+  GetStruct()->get_media_playback_state = browser_host_get_media_playback_state;
   GetStruct()->scroll_page_up_down = browser_host_scroll_page_up_down;
   GetStruct()->get_web_state = browser_host_get_web_state;
   GetStruct()->restore_web_state = browser_host_restore_web_state;
