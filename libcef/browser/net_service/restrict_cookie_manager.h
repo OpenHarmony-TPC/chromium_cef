@@ -49,6 +49,14 @@ class ProxyingRestrictedCookieManager
                           bool has_storage_access,
                           net::CookieInclusionStatus status,
                           SetCanonicalCookieCallback callback) override;
+#if BUILDFLAG(IS_OHOS)
+  void RegisterCookieChangeObserver(const GURL& url,
+                                    const net::SiteForCookies& site_for_cookies,
+                                    const url::Origin& top_frame_origin,
+                                    bool has_storage_access,
+                                    mojo::ScopedSharedBufferHandle buffer,
+                                    RegisterCookieChangeObserverCallback callback) override;
+#endif
   void AddChangeListener(
       const GURL& url,
       const net::SiteForCookies& site_for_cookies,
@@ -69,6 +77,14 @@ class ProxyingRestrictedCookieManager
                         const url::Origin& top_frame_origin,
                         bool has_storage_access,
                         GetCookiesStringCallback callback) override;
+
+#if BUILDFLAG(IS_OHOS)
+  void GetCookiesStringAndExpiryDate(const GURL& url,
+                        const net::SiteForCookies& site_for_cookies,
+                        const url::Origin& top_frame_origin,
+                        bool has_storage_access,
+                        GetCookiesStringAndExpiryDateCallback callback) override;
+#endif
 
   void CookiesEnabledFor(const GURL& url,
                          const net::SiteForCookies& site_for_cookies,
