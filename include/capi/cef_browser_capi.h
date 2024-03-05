@@ -1112,8 +1112,9 @@ typedef struct _cef_browser_host_t {
   ///
   /// GetRootBrowserAccessibilityManager
   ///
-  void(CEF_CALLBACK *get_root_browser_accessibility_manager)(
-      struct _cef_browser_host_t *self, void **manager);
+  void(CEF_CALLBACK* get_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t* self,
+      void** manager);
 
   ///
   /// Execute a string of JavaScript code, return result by callback
@@ -1387,6 +1388,31 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *set_audio_exclusive)(struct _cef_browser_host_t *self,
                                           int audioExclusive);
+
+  ///
+  /// CloseMedia
+  ///
+  void(CEF_CALLBACK* close_media)(struct _cef_browser_host_t* self);
+
+  ///
+  /// StopMedia
+  ///
+  void(CEF_CALLBACK* stop_media)(struct _cef_browser_host_t* self);
+
+  ///
+  /// ResumeMedia
+  ///
+  void(CEF_CALLBACK* resume_media)(struct _cef_browser_host_t* self);
+
+  ///
+  /// SuspendMedia
+  ///
+  void(CEF_CALLBACK* pause_media)(struct _cef_browser_host_t* self);
+
+  ///
+  /// SuspendMedia
+  ///
+  int(CEF_CALLBACK* get_media_playback_state)(struct _cef_browser_host_t* self);
 
   ///
   /// Scroll page up or down

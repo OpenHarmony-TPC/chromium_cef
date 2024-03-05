@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c57439ec70f93f013498502da5de1824163dcf04$
+// $hash=7b86f31130ffff682546303df29d3fd46ded8b9d$
 //
 
 #include "libcef_dll/ctocpp/web_message_receiver_ctocpp.h"

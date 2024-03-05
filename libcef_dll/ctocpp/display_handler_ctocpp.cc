@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=842714129b39201a2620d17edf9af2428a7df49a$
+// $hash=1631f490784637341d49d693d415afa3a9e9a1c7$
 //
 
 #include "libcef_dll/ctocpp/display_handler_ctocpp.h"
@@ -118,7 +118,8 @@ void CefDisplayHandlerCToCpp::OnFaviconURLChange(
 NO_SANITIZE("cfi-icall")
 void CefDisplayHandlerCToCpp::OnFullscreenModeChange(
     CefRefPtr<CefBrowser> browser,
-    bool fullscreen) {
+    bool fullscreen,
+    const CefSize& video_natural_size) {
   shutdown_checker::AssertNotShutdown();
 
   cef_display_handler_t* _struct = GetStruct();
@@ -136,7 +137,7 @@ void CefDisplayHandlerCToCpp::OnFullscreenModeChange(
 
   // Execute
   _struct->on_fullscreen_mode_change(_struct, CefBrowserCppToC::Wrap(browser),
-                                     fullscreen);
+                                     fullscreen, &video_natural_size);
 }
 
 NO_SANITIZE("cfi-icall")

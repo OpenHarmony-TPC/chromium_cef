@@ -165,6 +165,14 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
   CloseQuickMenu();
+#if defined(OHOS_EX_FREE_COPY)
+  if (base::CommandLine::ForCurrentProcess() &&
+      base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    SelectionTextNotEmpty(false);
+  }
+#endif
+
 #ifdef OHOS_CLIPBOARD
   auto controller = rwhv_->selection_controller();
   if (controller) {
@@ -251,6 +259,9 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
   if (from_touch && !params.selection_text.empty()) {
 #if defined(OHOS_EX_FREE_COPY)
     if (is_browser) {
+      if (params.source_type == ui::MENU_SOURCE_SELECT_AND_COPY) {
+        quick_menu_requested_ = true;
+      }
       SelectionTextNotEmpty(!params.selection_text.empty());
     }
 #endif
@@ -340,13 +351,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   if (auto handler = browser->client()->GetContextMenuHandler()) {
     handler->OnQuickMenuDismissed(browser.get(), browser->GetFocusedFrame());
   }
-#if defined(OHOS_EX_FREE_COPY)
-  if (base::CommandLine::ForCurrentProcess() &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    isSelectionTextNotEmpty_ = false;
-  }
-#endif
+
 #ifdef OHOS_CLIPBOARD
   if (browser->web_contents()) {
     browser->web_contents()->SetShowingContextMenu(false);
@@ -568,11 +573,15 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
         }
       }
       break;
-    case ui::SELECTION_HANDLES_MOVED:
     case ui::INSERTION_HANDLE_MOVED:
+      if (quick_menu_requested_) {
+        quick_menu_requested_ = false;
+      }
+    case ui::SELECTION_HANDLES_MOVED:
       if (!handle_drag_in_progress_) {
         if (!IsVaildSelectionHandleMove()) {
           LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
+          NotifyTouchSelectionChanged(true);
           return;
         }
         UpdateQuickMenu();
@@ -582,7 +591,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::INSERTION_HANDLE_TAPPED:
       quick_menu_requested_ = !quick_menu_requested_;
       if (quick_menu_requested_) {
+        bool handle_drag_in_progress = handle_drag_in_progress_;
+        handle_drag_in_progress_ = false;
         UpdateQuickMenu();
+        handle_drag_in_progress_ = handle_drag_in_progress;
       } else {
         CloseQuickMenu();
         NotifyTouchSelectionChanged(true);

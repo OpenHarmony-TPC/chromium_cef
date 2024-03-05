@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6bcee07cfbbe753e0ccs9cf383b2dafae37b80e9$
+// $hash=6bcee07cfbbe753e0cca9cf383b2dafae37b80e9$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -787,7 +787,7 @@ bool CefRenderHandlerCToCpp::FilterScrollEvent(CefRefPtr<CefBrowser> browser,
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
     CefRefPtr<CefBrowser> browser,
-    const cef_embed_touch_event_t& event) {
+    const CefEmbedTouchEvent& event) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -811,7 +811,7 @@ void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnNativeEmbedLifecycleChange(
     CefRefPtr<CefBrowser> browser,
-    const cef_native_embed_data_t& info) {
+    const CefNativeEmbedData& info) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -835,16 +835,17 @@ void CefRenderHandlerCToCpp::OnNativeEmbedLifecycleChange(
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::NotifySelectAllClicked(bool select_all) {
   shutdown_checker::AssertNotShutdown();
+
   cef_render_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, notify_select_all_clicked)) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
   // Execute
   _struct->notify_select_all_clicked(_struct, select_all);
 }
-
 
 // CONSTRUCTOR - Do not edit by hand.
 

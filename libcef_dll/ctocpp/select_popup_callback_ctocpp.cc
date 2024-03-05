@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=51aad8e43f3934e9df61ad3f9bde4364a18d3e2a$
+// $hash=37746c77aa2fdaefef4d1fa3a8dcde7b7a6b8cba$
 //
 
 #include "libcef_dll/ctocpp/select_popup_callback_ctocpp.h"

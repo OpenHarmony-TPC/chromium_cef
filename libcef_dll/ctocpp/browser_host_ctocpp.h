@@ -186,6 +186,11 @@ public:
                       const CefString &received_slices_string) override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
+  void CloseMedia() override;
+  void StopMedia() override;
+  void ResumeMedia() override;
+  void PauseMedia() override;
+  int GetMediaPlaybackState() override;
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
   CefRefPtr<CefBinaryValue> GetWebState() override;
   bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;

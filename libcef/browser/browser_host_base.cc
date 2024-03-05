@@ -60,6 +60,10 @@
 #include "ui/gl/nweb_native_window_tracker.h"
 #endif
 
+#if defined(OHOS_MEDIA_POLICY)
+#include "content/browser/media/session/media_session_impl.h"
+#endif // defined(OHOS_MEDIA_POLICY)
+
 #if defined(OHOS_EX_UA)
 #include "content/public/common/content_switches.h"
 #endif
@@ -3132,6 +3136,52 @@ int CefBrowserHostBase::GetNWebId() {
 }
 
 #endif  // IS_OHOS
+
+#if defined(OHOS_MEDIA_POLICY)
+void CefBrowserHostBase::CloseMedia() {
+  if (is_fullscreen_) {
+    ExitFullScreen();
+    StopMedia();
+  }
+}
+
+void CefBrowserHostBase::ResumeMedia() {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
+  if (!mediaSession) {
+    LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession failed.";
+    return;
+  }
+  mediaSession->Resume(content::MediaSession::SuspendType::kSystem);
+}
+
+void CefBrowserHostBase::PauseMedia() {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
+  if (!mediaSession) {
+    LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession failed.";
+    return;
+  }
+  mediaSession->Suspend(content::MediaSession::SuspendType::kSystem);
+}
+
+void CefBrowserHostBase::StopMedia() {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
+  if (!mediaSession) {
+    LOG(ERROR) << "CefBrowserHostBase::StopMedia get mediaSession failed.";
+    return;
+  }
+  mediaSession->Stop(content::MediaSession::SuspendType::kSystem);
+}
+
+int CefBrowserHostBase::GetMediaPlaybackState() {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
+  if (!mediaSession) {
+    LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession failed.";
+    return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::NONE);
+  }
+  content::MediaSessionImpl::NWebPlaybackState playbackState = mediaSession->NWebGetState();
+  return static_cast<int>(playbackState);
+}
+#endif // defined(OHOS_MEDIA_POLICY)
 
 // #if defined(OHOS_NWEB_EX)
 // NOTE: Keep the previous line commented, add NWebEx APIs below.

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1eb378f0ca052928783ffcef7b015f41b523169b$
+// $hash=c733a7bd666f64150488d271ade42b067f984f34$
 //
 
 #include "libcef_dll/ctocpp/date_time_chooser_callback_ctocpp.h"

@@ -1220,10 +1220,10 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void **manager) {
+void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void** manager) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t *_struct = GetStruct();
+  cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_root_browser_accessibility_manager)) {
     return;
   }
@@ -2093,6 +2093,79 @@ void CefBrowserHostCToCpp::SetAudioExclusive(bool audioExclusive) {
 
   // Execute
   _struct->set_audio_exclusive(_struct, audioExclusive);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseMedia() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, close_media)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->close_media(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StopMedia() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, stop_media)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->stop_media(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ResumeMedia() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, resume_media)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->resume_media(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::PauseMedia() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, pause_media)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->pause_media(_struct);
+}
+
+NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetMediaPlaybackState() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_media_playback_state)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_media_playback_state(_struct);
+
+  // Return type: simple
+  return _retval;
 }
 
 NO_SANITIZE("cfi-icall")

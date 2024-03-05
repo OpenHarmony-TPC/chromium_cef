@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a9b5dda39aef952f3e8eb628a7a15017cd446174$
+// $hash=ffdc734d650cdc76b4cabc63a0bf52442b712cc5$
 //
 
 #include "libcef_dll/cpptoc/geolocation_acess_cpptoc.h"
