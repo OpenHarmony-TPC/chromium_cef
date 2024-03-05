@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e82abf56c58c5846d05514ef35374208a0dc150d$
+// $hash=0426e57ebc4388816ce997fd4c9628d0b1f36cb8$
 //
 
 #include "libcef_dll/ctocpp/request_handler_ctocpp.h"
@@ -35,7 +35,7 @@ bool CefRequestHandlerCToCpp::OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
                                              bool is_redirect) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_before_browse)) {
     return false;
   }
@@ -69,14 +69,12 @@ bool CefRequestHandlerCToCpp::OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 bool CefRequestHandlerCToCpp::OnOpenURLFromTab(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    const CefString& target_url,
-    WindowOpenDisposition target_disposition,
+    CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+    const CefString &target_url, WindowOpenDisposition target_disposition,
     bool user_gesture) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_open_urlfrom_tab)) {
     return false;
   }
@@ -119,7 +117,7 @@ CefRefPtr<CefResourceRequestHandler> CefRequestHandlerCToCpp::
                               bool& disable_default_handling) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_resource_request_handler)) {
     return nullptr;
   }
@@ -147,7 +145,7 @@ CefRefPtr<CefResourceRequestHandler> CefRequestHandlerCToCpp::
   int disable_default_handlingInt = disable_default_handling;
 
   // Execute
-  cef_resource_request_handler_t* _retval =
+  cef_resource_request_handler_t *_retval =
       _struct->get_resource_request_handler(
           _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
           CefRequestCppToC::Wrap(request), is_navigation, is_download,
@@ -162,17 +160,12 @@ CefRefPtr<CefResourceRequestHandler> CefRequestHandlerCToCpp::
 
 NO_SANITIZE("cfi-icall")
 bool CefRequestHandlerCToCpp::GetAuthCredentials(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& origin_url,
-    bool isProxy,
-    const CefString& host,
-    int port,
-    const CefString& realm,
-    const CefString& scheme,
-    CefRefPtr<CefAuthCallback> callback) {
+    CefRefPtr<CefBrowser> browser, const CefString &origin_url, bool isProxy,
+    const CefString &host, int port, const CefString &realm,
+    const CefString &scheme, CefRefPtr<CefAuthCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_auth_credentials)) {
     return false;
   }
@@ -213,14 +206,12 @@ bool CefRequestHandlerCToCpp::GetAuthCredentials(
 
 NO_SANITIZE("cfi-icall")
 bool CefRequestHandlerCToCpp::OnCertificateError(
-    CefRefPtr<CefBrowser> browser,
-    cef_errorcode_t cert_error,
-    const CefString& request_url,
-    CefRefPtr<CefSSLInfo> ssl_info,
+    CefRefPtr<CefBrowser> browser, cef_errorcode_t cert_error,
+    const CefString &request_url, CefRefPtr<CefSSLInfo> ssl_info,
     CefRefPtr<CefCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_certificate_error)) {
     return false;
   }
@@ -260,17 +251,14 @@ bool CefRequestHandlerCToCpp::OnCertificateError(
 
 NO_SANITIZE("cfi-icall")
 bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
-    CefRefPtr<CefBrowser> browser,
-    bool isProxy,
-    const CefString& host,
-    int port,
-    const std::vector<CefString>& key_types,
-    const std::vector<CefString>& principals,
-    const X509CertificateList& certificates,
+    CefRefPtr<CefBrowser> browser, bool isProxy, const CefString &host,
+    int port, const std::vector<CefString> &key_types,
+    const std::vector<CefString> &principals,
+    const X509CertificateList &certificates,
     CefRefPtr<CefSelectClientCertificateCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_select_client_certificate)) {
     return false;
   }
@@ -307,9 +295,9 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
   }
   // Translate param: certificates; type: refptr_vec_diff_byref_const
   const size_t certificatesCount = certificates.size();
-  cef_x509certificate_t** certificatesList = NULL;
+  cef_x509certificate_t **certificatesList = NULL;
   if (certificatesCount > 0) {
-    certificatesList = new cef_x509certificate_t*[certificatesCount];
+    certificatesList = new cef_x509certificate_t *[certificatesCount];
     DCHECK(certificatesList);
     if (certificatesList) {
       for (size_t i = 0; i < certificatesCount; ++i) {
@@ -345,7 +333,7 @@ NO_SANITIZE("cfi-icall")
 void CefRequestHandlerCToCpp::OnRenderViewReady(CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_render_view_ready)) {
     return;
   }
@@ -364,11 +352,10 @@ void CefRequestHandlerCToCpp::OnRenderViewReady(CefRefPtr<CefBrowser> browser) {
 
 NO_SANITIZE("cfi-icall")
 void CefRequestHandlerCToCpp::OnRenderProcessTerminated(
-    CefRefPtr<CefBrowser> browser,
-    TerminationStatus status) {
+    CefRefPtr<CefBrowser> browser, TerminationStatus status) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_render_process_terminated)) {
     return;
   }
@@ -391,7 +378,7 @@ void CefRequestHandlerCToCpp::OnDocumentAvailableInMainFrame(
     CefRefPtr<CefBrowser> browser) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_request_handler_t* _struct = GetStruct();
+  cef_request_handler_t *_struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_document_available_in_main_frame)) {
     return;
   }
@@ -409,6 +396,45 @@ void CefRequestHandlerCToCpp::OnDocumentAvailableInMainFrame(
                                                CefBrowserCppToC::Wrap(browser));
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefRequestHandlerCToCpp::ShouldOverrideUrlLoading(
+    CefRefPtr<CefBrowser> browser, const CefString &url,
+    const CefString &method, bool user_gesture, bool is_redirect,
+    bool is_outermost_main_frame) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, should_override_url_loading)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return false;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return false;
+  }
+  // Verify param: method; type: string_byref_const
+  DCHECK(!method.empty());
+  if (method.empty()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->should_override_url_loading(
+      _struct, CefBrowserCppToC::Wrap(browser), url.GetStruct(),
+      method.GetStruct(), user_gesture, is_redirect, is_outermost_main_frame);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRequestHandlerCToCpp::CefRequestHandlerCToCpp() {}
@@ -420,17 +446,16 @@ CefRequestHandlerCToCpp::~CefRequestHandlerCToCpp() {
 }
 
 template <>
-cef_request_handler_t* CefCToCppRefCounted<
-    CefRequestHandlerCToCpp,
-    CefRequestHandler,
-    cef_request_handler_t>::UnwrapDerived(CefWrapperType type,
-                                          CefRequestHandler* c) {
+cef_request_handler_t *
+CefCToCppRefCounted<CefRequestHandlerCToCpp, CefRequestHandler,
+                    cef_request_handler_t>::UnwrapDerived(CefWrapperType type,
+                                                          CefRequestHandler
+                                                              *c) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCToCppRefCounted<CefRequestHandlerCToCpp,
-                                   CefRequestHandler,
+CefWrapperType CefCToCppRefCounted<CefRequestHandlerCToCpp, CefRequestHandler,
                                    cef_request_handler_t>::kWrapperType =
     WT_REQUEST_HANDLER;

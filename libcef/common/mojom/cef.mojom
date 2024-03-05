@@ -185,6 +185,14 @@ interface BrowserFrame {
 
   [EnableIf=is_ohos]
   OnGetImageForContextNodeNull();
+
+  // Give the SDK a chance to decide whether to override loading the url.
+  [Sync]
+  ShouldOverrideUrlLoading(string url,
+                           string request_method,
+                           bool user_gesture,
+                           bool is_redirect,
+                           bool is_outermost_main_frame) => (bool result);
 };
 
 struct CrossOriginWhiteListEntry {

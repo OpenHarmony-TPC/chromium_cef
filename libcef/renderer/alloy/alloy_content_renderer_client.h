@@ -199,7 +199,17 @@ class AlloyContentRendererClient
     return observer_.get();
   }
 
- private:
+#if BUILDFLAG(IS_OHOS)
+  bool HandleNavigation(
+      content::RenderFrame* render_frame,
+      blink::WebFrame* frame,
+      const blink::WebURLRequest& request,
+      blink::WebNavigationType type,
+      blink::WebNavigationPolicy default_policy,
+      bool is_redirect) override;
+#endif
+
+private:
   void OnBrowserCreated(blink::WebView* web_view,
                         absl::optional<bool> is_windowless);
 

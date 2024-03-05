@@ -881,6 +881,66 @@ void AlloyContentRendererClient::RunSingleProcessCleanupOnUIThread() {
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+bool AlloyContentRendererClient::HandleNavigation(
+    content::RenderFrame* render_frame,
+    blink::WebFrame* frame,
+    const blink::WebURLRequest& request,
+    blink::WebNavigationType type,
+    blink::WebNavigationPolicy default_policy,
+    bool is_redirect) {
+  // Only GETs can be overridden.
+  if (!request.HttpMethod().Equals("GET"))
+    return false;
+
+  // Any navigation from loadUrl, and goBack/Forward are considered application-
+  // initiated and hence will not yield a shouldOverrideUrlLoading() callback.
+  // Webview classic does not consider reload application-initiated so we
+  // continue the same behavior.
+  bool application_initiated = type == blink::kWebNavigationTypeBackForward;
+
+  // Don't offer application-initiated navigations unless it's a redirect.
+  if (application_initiated && !is_redirect)
+    return false;
+
+  bool is_outermost_main_frame = frame->IsOutermostMainFrame();
+  const GURL& gurl = request.Url();
+  // For HTTP schemes, only top-level navigations can be overridden. Similarly,
+  // WebView Classic lets app override only top level about:blank navigations.
+  // So we filter out non-top about:blank navigations here.
+  if (!is_outermost_main_frame &&
+      (gurl.SchemeIs(url::kHttpScheme) || gurl.SchemeIs(url::kHttpsScheme) ||
+       gurl.SchemeIs(url::kAboutScheme)))
+    return false;
+
+  blink::WebView* web_view = render_frame->GetWebView();
+
+  bool browser_created;
+  absl::optional<bool> is_windowless;
+  render_manager_->WebViewCreated(web_view, browser_created, is_windowless);
+  if (!browser_created) {
+    return false;
+  }
+
+  blink::WebLocalFrame* local_frame = render_frame->GetWebFrame();
+  CefRefPtr<CefBrowserImpl> browserPtr =
+        CefBrowserImpl::GetBrowserForMainFrame(local_frame->Top());
+
+  if (!browserPtr) {
+    return false;
+  }
+
+  bool ignore_navigation = false;
+  bool has_user_gesture = request.HasUserGesture();
+  CefRefPtr<CefFrameImpl> framePtr = browserPtr->GetWebFrameImpl(local_frame);
+
+  ignore_navigation = framePtr->ShouldOverrideUrlLoading(
+      gurl.possibly_invalid_spec(), request.HttpMethod().Utf8(), has_user_gesture, is_redirect, is_outermost_main_frame);
+
+  return ignore_navigation;
+}
+#endif
+
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
 #if defined(__clang__)

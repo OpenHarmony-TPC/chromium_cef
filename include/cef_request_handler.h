@@ -224,6 +224,21 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) {}
+
+  ///
+  /// Called on the browser process UI thread when the url is about to be loaded
+  /// into the current Web.
+  ///
+  /*--cef()--*/
+  virtual bool ShouldOverrideUrlLoading(CefRefPtr<CefBrowser> browser,
+                                        const CefString& url,
+                                        const CefString& method,
+                                        bool user_gesture,
+                                        bool is_redirect,
+                                        bool is_outermost_main_frame)
+  {
+    return false;
+  }
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_
