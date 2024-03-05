@@ -209,7 +209,12 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                  int http_status_code);
   void OnLoadError(CefRefPtr<CefFrame> frame, const GURL& url, int error_code);
   void OnTitleChange(const std::u16string& title);
-  void OnFullscreenModeChange(bool fullscreen);
+  void OnFullscreenModeChange(bool fullscreen
+#if defined(OHOS_MEDIA)
+                              ,
+                              const CefSize& video_natural_size
+#endif  // defined(OHOS_MEDIA)
+  );
 
   void OnStateChanged(State state_changed);
 

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=daa76ff1f6eaed89204cb9bf15241e3508cf9164$
+// $hash=7ab9a9519721339a80b4125ba620a36d87307788$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1149,7 +1149,7 @@ typedef struct _cef_browser_host_t {
   ///
   /// GetRootBrowserAccessibilityManager
   ///
-  void(CEF_CALLBACK* get_or_create_root_browser_accessibility_manager)(
+  void(CEF_CALLBACK* get_root_browser_accessibility_manager)(
       struct _cef_browser_host_t* self,
       void** manager);
 

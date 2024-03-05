@@ -80,7 +80,9 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
-                                      bool fullscreen) {}
+                                      bool fullscreen,
+                                      const CefSize& video_natural_size) {
+  }
 
   ///
   /// Called when the browser is about to display a tooltip. |text| contains the

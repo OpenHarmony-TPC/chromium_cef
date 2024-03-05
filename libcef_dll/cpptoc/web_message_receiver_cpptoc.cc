@@ -1,4 +1,4 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4a3c30ab57e6deffdebe64b382c81d8057ea566b$
+// $hash=ec39ac275cf279faf1056b8ec45fc17031663a0e$
 //
 
 #include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"

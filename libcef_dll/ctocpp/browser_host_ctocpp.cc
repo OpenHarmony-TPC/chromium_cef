@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3dc1b4611bf2d103fe9d1d0285f957603e93f5b3$
+// $hash=bbdfd93e2c40c87048e5a38aac8232e7413abfc2$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1236,13 +1236,11 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsAudioMuted() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(
-    void** manager) {
+void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void** manager) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct,
-                         get_or_create_root_browser_accessibility_manager)) {
+  if (CEF_MEMBER_MISSING(_struct, get_root_browser_accessibility_manager)) {
     return;
   }
 
@@ -1255,7 +1253,7 @@ void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(
   }
 
   // Execute
-  _struct->get_or_create_root_browser_accessibility_manager(_struct, manager);
+  _struct->get_root_browser_accessibility_manager(_struct, manager);
 }
 
 NO_SANITIZE("cfi-icall")
