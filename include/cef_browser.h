@@ -1480,6 +1480,36 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetAudioExclusive(bool audioExclusive) = 0;
 
   ///
+  /// Close fullScreen video.
+  ///
+  /*--cef()--*/
+  virtual void CloseMedia() = 0;
+
+  ///
+  /// Stop all audio and video playback on the web page.
+  ///
+  /*--cef()--*/
+  virtual void StopMedia() = 0;
+
+  ///
+  /// Restart playback of all audio and video on the web page.
+  ///
+  /*--cef()--*/
+  virtual void ResumeMedia() = 0;
+
+  ///
+  /// Pause all audio and video playback on the web page.
+  ///
+  /*--cef()--*/
+  virtual void PauseMedia() = 0;
+
+  ///
+  /// View the playback status of all audio and video on the web page.
+  ///
+  /*--cef()--*/
+  virtual int GetMediaPlaybackState() = 0;
+
+  ///
   /// Scroll page up or down
   ///
   /*--cef()--*/

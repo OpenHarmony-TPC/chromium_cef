@@ -419,6 +419,14 @@ class CefBrowserHostBase : public CefBrowserHost,
   int GetNWebId() override;
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if defined(OHOS_MEDIA_POLICY)
+  void CloseMedia() override;
+  void StopMedia() override;
+  void ResumeMedia() override;
+  void PauseMedia() override;
+  int GetMediaPlaybackState() override;
+#endif // defined(OHOS_MEDIA_POLICY)
+
 #if defined(OHOS_NO_STATE_PREFETCH)
   void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
