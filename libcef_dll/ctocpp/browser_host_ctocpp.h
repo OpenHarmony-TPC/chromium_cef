@@ -249,6 +249,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
   void SetScrollable(bool enable) override;
+  void StartCamera() override;
+  void StopCamera() override;
+  void CloseCamera() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

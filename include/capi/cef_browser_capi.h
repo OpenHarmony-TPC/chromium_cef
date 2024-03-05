@@ -1665,6 +1665,21 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_scrollable)(struct _cef_browser_host_t* self,
                                      int enable);
+
+  ///
+  ///  Start current camera.
+  ///
+  void(CEF_CALLBACK* start_camera)(struct _cef_browser_host_t* self);
+
+  ///
+  ///  Stop current camera.
+  ///
+  void(CEF_CALLBACK* stop_camera)(struct _cef_browser_host_t* self);
+
+  ///
+  ///  Close current camera.
+  ///
+  void(CEF_CALLBACK* close_camera)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///
