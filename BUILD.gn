@@ -1030,6 +1030,18 @@ source_set("libcef_static") {
     ]
   }
 
+  #ifdef OHOS_ITP
+  if (defined(ohos_itp) && ohos_itp) {
+    if (!defined(ohos_nweb_ex) || !ohos_nweb_ex) {
+      sources += [ "libcef/browser/anti_tracking/anti_tracking_delegate_ohos.cc", ]
+    }
+    sources += [
+      "libcef/browser/anti_tracking/third_party_cookie_access_policy.cc",
+      "libcef/browser/anti_tracking/third_party_cookie_access_policy.h",
+    ]
+  }
+  #endif
+
   #ifdef OHOS_COOKIE
   if (defined(ohos_cookie) && ohos_cookie) {
     sources += [

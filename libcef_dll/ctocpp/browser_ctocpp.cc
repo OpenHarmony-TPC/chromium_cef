@@ -855,6 +855,39 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsSafeBrowsingEnabled() {
   return _retval ? true : false;
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::EnableIntelligentTrackingPrevention(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_intelligent_tracking_prevention)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_intelligent_tracking_prevention(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserCToCpp::IsIntelligentTrackingPreventionEnabled() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_intelligent_tracking_prevention_enabled)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_intelligent_tracking_prevention_enabled(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

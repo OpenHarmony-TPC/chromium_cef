@@ -403,7 +403,20 @@ typedef struct _cef_browser_t {
   ///
   /// Get whether checking website security risks is enabled.
   ///
-  int(CEF_CALLBACK *is_safe_browsing_enabled)(struct _cef_browser_t *self);
+  int(CEF_CALLBACK* is_safe_browsing_enabled)(struct _cef_browser_t* self);
+
+  ///
+  /// Enable the ability to intelligent tracking prevention, default disabled.
+  ///
+  void(CEF_CALLBACK* enable_intelligent_tracking_prevention)(
+      struct _cef_browser_t* self,
+      int enable);
+
+  ///
+  /// Get whether intelligent tracking prevention is enabled.
+  ///
+  int(CEF_CALLBACK* is_intelligent_tracking_prevention_enabled)(
+      struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///

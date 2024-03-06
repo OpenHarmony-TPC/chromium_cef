@@ -73,6 +73,9 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
   void OnNavigationEntryCommitted(
       CefRefPtr<CefLoadCommittedDetails> details) override;
   void OnSafeBrowsingCheckResult(int threat_type) override;
+  void OnIntelligentTrackingPreventionResult(
+      const CefString& website_host,
+      const CefString& tracker_host) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

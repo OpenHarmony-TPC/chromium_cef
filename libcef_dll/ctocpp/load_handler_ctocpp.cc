@@ -356,6 +356,35 @@ void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
   _struct->on_safe_browsing_check_result(_struct, threat_type);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnIntelligentTrackingPreventionResult(
+    const CefString& website_host,
+    const CefString& tracker_host) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_intelligent_tracking_prevention_result)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: website_host; type: string_byref_const
+  DCHECK(!website_host.empty());
+  if (website_host.empty()) {
+    return;
+  }
+  // Verify param: tracker_host; type: string_byref_const
+  DCHECK(!tracker_host.empty());
+  if (tracker_host.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_intelligent_tracking_prevention_result(
+      _struct, website_host.GetStruct(), tracker_host.GetStruct());
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefLoadHandlerCToCpp::CefLoadHandlerCToCpp() {}

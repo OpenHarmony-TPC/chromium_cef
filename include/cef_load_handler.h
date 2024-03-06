@@ -185,6 +185,13 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnSafeBrowsingCheckResult(int threat_type) {}
+
+  ///
+  /// Called when tracker's cookie is prevented.
+  ///
+  /*--cef()--*/
+  virtual void OnIntelligentTrackingPreventionResult(
+      const CefString& website_host, const CefString& tracker_host) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
