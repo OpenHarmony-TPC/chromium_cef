@@ -122,6 +122,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasHidden(bool hidden) override;
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
+  void OnWindowShow() override;
+  void OnWindowHide() override;
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;

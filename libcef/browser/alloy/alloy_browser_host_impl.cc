@@ -663,6 +663,14 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
     platform_delegate_->WasOccluded(occluded);
 }
 
+void AlloyBrowserHostImpl::OnWindowShow() {
+  ReportWindowStatus(true);
+}
+
+void AlloyBrowserHostImpl::OnWindowHide() {
+  ReportWindowStatus(false);
+}
+
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
