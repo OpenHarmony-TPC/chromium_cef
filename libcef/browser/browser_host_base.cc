@@ -3360,3 +3360,9 @@ void CefBrowserHostBase::CloseCamera() {
   web_contents->CloseCamera();
 #endif  // defined(OHOS_WEBRTC)
 }
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+CefString CefBrowserHostBase::GetLastJavascriptProxyCallingFrameUrl() {
+  return base::EmptyString();
+}
+#endif

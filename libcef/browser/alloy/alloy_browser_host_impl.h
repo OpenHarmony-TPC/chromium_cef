@@ -426,6 +426,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       zoom::ZoomController* zoom_controller) override {}
 #endif
 
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
+#endif
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 

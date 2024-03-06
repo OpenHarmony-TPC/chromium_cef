@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7ab9a9519721339a80b4125ba620a36d87307788$
+// $hash=6361e14f0a240f2f5809c3c95203c775a0622438$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1112,9 +1112,8 @@ typedef struct _cef_browser_host_t {
   ///
   /// GetRootBrowserAccessibilityManager
   ///
-  void(CEF_CALLBACK* get_root_browser_accessibility_manager)(
-      struct _cef_browser_host_t* self,
-      void** manager);
+  void(CEF_CALLBACK *get_root_browser_accessibility_manager)(
+      struct _cef_browser_host_t *self, void **manager);
 
   ///
   /// Execute a string of JavaScript code, return result by callback
@@ -1390,29 +1389,29 @@ typedef struct _cef_browser_host_t {
                                           int audioExclusive);
 
   ///
-  /// CloseMedia
+  /// Close fullScreen video.
   ///
-  void(CEF_CALLBACK* close_media)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *close_media)(struct _cef_browser_host_t *self);
 
   ///
-  /// StopMedia
+  /// Stop all audio and video playback on the web page.
   ///
-  void(CEF_CALLBACK* stop_media)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *stop_media)(struct _cef_browser_host_t *self);
 
   ///
-  /// ResumeMedia
+  /// Restart playback of all audio and video on the web page.
   ///
-  void(CEF_CALLBACK* resume_media)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *resume_media)(struct _cef_browser_host_t *self);
 
   ///
-  /// SuspendMedia
+  /// Pause all audio and video playback on the web page.
   ///
-  void(CEF_CALLBACK* pause_media)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *pause_media)(struct _cef_browser_host_t *self);
 
   ///
-  /// SuspendMedia
+  /// View the playback status of all audio and video on the web page.
   ///
-  int(CEF_CALLBACK* get_media_playback_state)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK *get_media_playback_state)(struct _cef_browser_host_t *self);
 
   ///
   /// Scroll page up or down
@@ -1599,17 +1598,25 @@ typedef struct _cef_browser_host_t {
   ///
   ///  Start current camera.
   ///
-  void(CEF_CALLBACK* start_camera)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *start_camera)(struct _cef_browser_host_t *self);
 
   ///
   ///  Stop current camera.
   ///
-  void(CEF_CALLBACK* stop_camera)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *stop_camera)(struct _cef_browser_host_t *self);
 
   ///
   ///  Close current camera.
   ///
-  void(CEF_CALLBACK* close_camera)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK *close_camera)(struct _cef_browser_host_t *self);
+
+  ///
+  /// Get the last javascript proxy calling frame url.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(
+      CEF_CALLBACK *get_last_javascript_proxy_calling_frame_url)(
+      struct _cef_browser_host_t *self);
 } cef_browser_host_t;
 
 ///

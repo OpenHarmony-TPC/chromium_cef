@@ -119,9 +119,12 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
     const std::string& method_name,
     const base::Value::List& arguments,
     OhGinJavascriptBridgeError* error) {
+  std::string url;
+  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
+  url = frame->GetDocument().Url().GetString().Utf8();
   base::Value::List result_wrapper;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
-      routing_id(), object_id, method_name, arguments, &result_wrapper, error));
+      routing_id(), object_id, url, method_name, arguments, &result_wrapper, error));
   if (result_wrapper.empty()) {
     return nullptr;
   }

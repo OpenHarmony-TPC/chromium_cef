@@ -1719,6 +1719,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CloseCamera() = 0;
+
+  ///
+  /// Get the last javascript proxy calling frame url.
+  ///
+  /*--cef()--*/
+  virtual CefString GetLastJavascriptProxyCallingFrameUrl() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

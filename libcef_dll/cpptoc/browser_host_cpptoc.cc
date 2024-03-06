@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c47a31b58035b534689ad22b6f9465ff4af255fc$
+// $hash=09bb826acfe5d12ad4594f9e32fd5173650051c4$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -1395,8 +1395,7 @@ int CEF_CALLBACK browser_host_is_audio_muted(struct _cef_browser_host_t *self) {
 }
 
 void CEF_CALLBACK browser_host_get_root_browser_accessibility_manager(
-    struct _cef_browser_host_t* self,
-    void** manager) {
+    struct _cef_browser_host_t *self, void **manager) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2306,7 +2305,7 @@ void CEF_CALLBACK browser_host_set_audio_exclusive(
                                                                     : false);
 }
 
-void CEF_CALLBACK browser_host_close_media(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK browser_host_close_media(struct _cef_browser_host_t *self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2320,7 +2319,7 @@ void CEF_CALLBACK browser_host_close_media(struct _cef_browser_host_t* self) {
   CefBrowserHostCppToC::Get(self)->CloseMedia();
 }
 
-void CEF_CALLBACK browser_host_stop_media(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK browser_host_stop_media(struct _cef_browser_host_t *self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2334,7 +2333,7 @@ void CEF_CALLBACK browser_host_stop_media(struct _cef_browser_host_t* self) {
   CefBrowserHostCppToC::Get(self)->StopMedia();
 }
 
-void CEF_CALLBACK browser_host_resume_media(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK browser_host_resume_media(struct _cef_browser_host_t *self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2348,7 +2347,7 @@ void CEF_CALLBACK browser_host_resume_media(struct _cef_browser_host_t* self) {
   CefBrowserHostCppToC::Get(self)->ResumeMedia();
 }
 
-void CEF_CALLBACK browser_host_pause_media(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK browser_host_pause_media(struct _cef_browser_host_t *self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2363,7 +2362,7 @@ void CEF_CALLBACK browser_host_pause_media(struct _cef_browser_host_t* self) {
 }
 
 int CEF_CALLBACK
-browser_host_get_media_playback_state(struct _cef_browser_host_t* self) {
+browser_host_get_media_playback_state(struct _cef_browser_host_t *self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -2912,6 +2911,68 @@ void CEF_CALLBACK browser_host_set_scrollable(struct _cef_browser_host_t *self,
   CefBrowserHostCppToC::Get(self)->SetScrollable(enable ? true : false);
 }
 
+void CEF_CALLBACK browser_host_start_camera(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->StartCamera();
+}
+
+void CEF_CALLBACK browser_host_stop_camera(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->StopCamera();
+}
+
+void CEF_CALLBACK browser_host_close_camera(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CloseCamera();
+}
+
+cef_string_userfree_t CEF_CALLBACK
+browser_host_get_last_javascript_proxy_calling_frame_url(
+    struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefString _retval =
+      CefBrowserHostCppToC::Get(self)->GetLastJavascriptProxyCallingFrameUrl();
+
+  // Return type: string
+  return _retval.DetachToUserFree();
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3082,6 +3143,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_print_background = browser_host_set_print_background;
   GetStruct()->get_print_background = browser_host_get_print_background;
   GetStruct()->set_scrollable = browser_host_set_scrollable;
+  GetStruct()->start_camera = browser_host_start_camera;
+  GetStruct()->stop_camera = browser_host_stop_camera;
+  GetStruct()->close_camera = browser_host_close_camera;
+  GetStruct()->get_last_javascript_proxy_calling_frame_url =
+      browser_host_get_last_javascript_proxy_calling_frame_url;
 }
 
 // DESTRUCTOR - Do not edit by hand.

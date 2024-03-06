@@ -71,6 +71,7 @@ class OhGinJavascriptBridgeMessageFilter
                    const std::string& method_name,
                    bool* result);
   void OnInvokeMethod(int32_t object_id,
+                      const std::string& document_url,
                       const std::string& method_name,
                       const base::Value::List& arguments,
                       base::Value::List* result,
