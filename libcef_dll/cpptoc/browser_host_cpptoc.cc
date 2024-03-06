@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=09bb826acfe5d12ad4594f9e32fd5173650051c4$
+// $hash=4c6d4797bfeadb9203773a5adda8962d05a95699$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -773,6 +773,36 @@ void CEF_CALLBACK browser_host_was_occluded(struct _cef_browser_host_t *self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->WasOccluded(occluded ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_on_window_show(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnWindowShow();
+}
+
+void CEF_CALLBACK
+browser_host_on_window_hide(struct _cef_browser_host_t *self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnWindowHide();
 }
 
 void CEF_CALLBACK browser_host_send_touch_event_list(
@@ -3011,6 +3041,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_resized = browser_host_was_resized;
   GetStruct()->was_hidden = browser_host_was_hidden;
   GetStruct()->was_occluded = browser_host_was_occluded;
+  GetStruct()->on_window_show = browser_host_on_window_show;
+  GetStruct()->on_window_hide = browser_host_on_window_hide;
   GetStruct()->send_touch_event_list = browser_host_send_touch_event_list;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;

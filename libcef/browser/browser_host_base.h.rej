@@ -1,0 +1,10 @@
+diff a/libcef/browser/browser_host_base.h b/libcef/browser/browser_host_base.h	(rejected hunks)
+@@ -383,6 +383,8 @@ class CefBrowserHostBase : public CefBrowserHost,
+                       const CefString& last_modified,
+                       const CefString& received_slices_string) override;
+   void WasOccluded(bool occluded) override;
++  void OnWindowShow() override;
++  void OnWindowHide() override;
+   void WasKeyboardResized() override;
+   void SetWindowId(int window_id, int nweb_id) override;
+ #if defined(OHOS_PRINT)

@@ -872,6 +872,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void WasOccluded(bool occluded) = 0;
 
   ///
+  /// Running and do something when the window show
+  ///
+  /*--cef()--*/
+  virtual void OnWindowShow() = 0;
+
+  ///
+  /// Running and do something when the window hide
+  ///
+  /*--cef()--*/
+  virtual void OnWindowHide() = 0;
+
+  ///
   /// Send touch event list to the browser for a windowless browser.
   ///
   /*--cef()--*/

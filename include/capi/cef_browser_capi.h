@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6361e14f0a240f2f5809c3c95203c775a0622438$
+// $hash=b811ee49b4cd3fab3a8d191a51043e529d010068$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -806,6 +806,16 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *was_occluded)(struct _cef_browser_host_t *self,
                                    int occluded);
+
+  ///
+  /// Running and do something when the window show
+  ///
+  void(CEF_CALLBACK *on_window_show)(struct _cef_browser_host_t *self);
+
+  ///
+  /// Running and do something when the window hide
+  ///
+  void(CEF_CALLBACK *on_window_hide)(struct _cef_browser_host_t *self);
 
   ///
   /// Send touch event list to the browser for a windowless browser.
