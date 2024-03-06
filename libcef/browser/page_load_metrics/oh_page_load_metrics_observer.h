@@ -46,6 +46,8 @@ class OhPageLoadMetricsObserver
   // PageLoadMetricsObserver event callbacks
   void OnFirstContentfulPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnFirstMeaningfulPaintInMainFrameDocument(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
 
  protected:
   OhPageLoadMetricsObserver(
@@ -54,6 +56,10 @@ class OhPageLoadMetricsObserver
 
   virtual void ReportFirstContentfulPaint(int64_t navigation_start_tick,
                                           int64_t first_contentful_paint_ms);
+  virtual void ReportFirstMeaningfulPaint(int64_t navigation_start_tick,
+                                          int64_t first_meaningful_paint_ms);
+  virtual void ReportLargestContentfulPaint(
+      const page_load_metrics::mojom::PageLoadTiming& timing);
 
  private:
   int64_t navigation_id_ = -1;

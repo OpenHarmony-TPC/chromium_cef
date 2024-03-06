@@ -43,7 +43,9 @@
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_callback_capi.h"
+#include "include/capi/cef_first_meaningful_paint_details_capi.h"
 #include "include/capi/cef_frame_capi.h"
+#include "include/capi/cef_largest_contentful_paint_details_capi.h"
 #include "include/capi/cef_load_committed_details_capi.h"
 #include "include/capi/cef_response_capi.h"
 
@@ -175,6 +177,20 @@ typedef struct _cef_load_handler_t {
       struct _cef_load_handler_t* self,
       int64_t navigationStartTick,
       int64_t firstContentfulPaintMs);
+
+  ///
+  /// Called when the first meaningful paint rendering of web page.
+  ///
+  void(CEF_CALLBACK* on_first_meaningful_paint)(
+      struct _cef_load_handler_t* self,
+      struct _cef_first_meaningful_paint_details_t* details);
+
+  ///
+  /// Called when the largest contentful paint rendering of web page.
+  ///
+  void(CEF_CALLBACK* on_largest_contentful_paint)(
+      struct _cef_load_handler_t* self,
+      struct _cef_largest_contentful_paint_details_t* details);
 
   ///
   /// Called when the navigation entry has been committed.
