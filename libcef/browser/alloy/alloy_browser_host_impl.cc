@@ -2075,6 +2075,10 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
+  
+#if BUILDFLAG(IS_OHOS)
+  UpdateZoomSupportEnabled();
+#endif
 }
 
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
