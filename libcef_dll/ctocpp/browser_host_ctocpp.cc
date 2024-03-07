@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c8e9c77cb0de62caffd1765bb09185a5e2f88532$
+// $hash=16a4d595784b993edae5065027413e7eeaede055$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -692,6 +692,34 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::WasOccluded(bool occluded) {
 
   // Execute
   _struct->was_occluded(_struct, occluded);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnWindowShow() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_window_show)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_window_show(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnWindowHide() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_window_hide)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_window_hide(_struct);
 }
 
 NO_SANITIZE("cfi-icall")

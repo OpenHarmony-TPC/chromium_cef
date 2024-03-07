@@ -271,6 +271,14 @@ void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
   NOTREACHED();
 }
 
+void CefBrowserPlatformDelegate::OnWindowShow() {
+  NOTREACHED();
+}
+
+void CefBrowserPlatformDelegate::OnWindowHide() {
+  NOTREACHED();
+}
+
 void CefBrowserPlatformDelegate::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   NOTREACHED();
 }

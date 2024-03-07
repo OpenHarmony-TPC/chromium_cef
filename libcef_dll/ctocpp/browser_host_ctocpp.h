@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=11716b3f49e393fbbd5b1ce54fc2c4a128c5349b$
+// $hash=d871620e9669a0d985f164a25be4bea70e4f0e0e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -81,6 +81,8 @@ public:
   void WasResized() override;
   void WasHidden(bool hidden) override;
   void WasOccluded(bool occluded) override;
+  void OnWindowShow() override;
+  void OnWindowHide() override;
   void
   SendTouchEventList(const std::vector<CefTouchEvent> &event_list) override;
   void NotifyScreenInfoChanged() override;

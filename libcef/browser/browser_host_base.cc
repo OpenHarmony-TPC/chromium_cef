@@ -2891,6 +2891,14 @@ void CefBrowserHostBase::WasOccluded(bool occluded) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+void CefBrowserHostBase::OnWindowShow() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+void CefBrowserHostBase::OnWindowHide() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
 void CefBrowserHostBase::SendTouchEventList(
     const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.
