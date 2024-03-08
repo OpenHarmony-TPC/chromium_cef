@@ -459,7 +459,7 @@ void CefFileDialogManager::RunSelectFile(
 
 #if defined(OHOS_BUGFIX_CRASH)
   if (!dialog_) {
-    LOG(ERROR) << "app hasn't onFileSelectShow event, return";
+    LOG(INFO) << "app hasn't onFileSelectShow event, return";
     return;
   }
 #endif
