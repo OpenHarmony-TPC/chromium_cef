@@ -97,6 +97,7 @@
 
 #ifdef OHOS_USERAGENT
 #include "ohos_adapter_helper.h"
+#include "content/public/common/content_switches.h"
 #endif
 
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
