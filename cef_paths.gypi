@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=f6075503eefc38bce1c4fc07ff78fa3459d3d82c$
+# $hash=516fa3deab618215f57eec157dde9276b8ea16b5$
 #
 
 {
@@ -40,6 +40,7 @@
       'include/cef_extension_handler.h',
       'include/cef_file_util.h',
       'include/cef_find_handler.h',
+      'include/cef_first_meaningful_paint_details.h',
       'include/cef_focus_handler.h',
       'include/cef_form_handler.h',
       'include/cef_frame.h',
@@ -48,6 +49,7 @@
       'include/cef_image.h',
       'include/cef_jsdialog_handler.h',
       'include/cef_keyboard_handler.h',
+      'include/cef_largest_contentful_paint_details.h',
       'include/cef_life_span_handler.h',
       'include/cef_load_committed_details.h',
       'include/cef_load_handler.h',
@@ -150,6 +152,7 @@
       'include/capi/cef_extension_handler_capi.h',
       'include/capi/cef_file_util_capi.h',
       'include/capi/cef_find_handler_capi.h',
+      'include/capi/cef_first_meaningful_paint_details_capi.h',
       'include/capi/cef_focus_handler_capi.h',
       'include/capi/cef_form_handler_capi.h',
       'include/capi/cef_frame_capi.h',
@@ -158,6 +161,7 @@
       'include/capi/cef_image_capi.h',
       'include/capi/cef_jsdialog_handler_capi.h',
       'include/capi/cef_keyboard_handler_capi.h',
+      'include/capi/cef_largest_contentful_paint_details_capi.h',
       'include/capi/cef_life_span_handler_capi.h',
       'include/capi/cef_load_committed_details_capi.h',
       'include/capi/cef_load_handler_capi.h',
@@ -332,6 +336,8 @@
       'libcef_dll/cpptoc/views/fill_layout_cpptoc.h',
       'libcef_dll/ctocpp/find_handler_ctocpp.cc',
       'libcef_dll/ctocpp/find_handler_ctocpp.h',
+      'libcef_dll/cpptoc/first_meaningful_paint_details_cpptoc.cc',
+      'libcef_dll/cpptoc/first_meaningful_paint_details_cpptoc.h',
       'libcef_dll/ctocpp/focus_handler_ctocpp.cc',
       'libcef_dll/ctocpp/focus_handler_ctocpp.h',
       'libcef_dll/ctocpp/form_handler_ctocpp.cc',
@@ -366,6 +372,8 @@
       'libcef_dll/ctocpp/keyboard_handler_ctocpp.h',
       'libcef_dll/cpptoc/views/label_button_cpptoc.cc',
       'libcef_dll/cpptoc/views/label_button_cpptoc.h',
+      'libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.cc',
+      'libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.h',
       'libcef_dll/cpptoc/views/layout_cpptoc.cc',
       'libcef_dll/cpptoc/views/layout_cpptoc.h',
       'libcef_dll/ctocpp/life_span_handler_ctocpp.cc',
@@ -706,6 +714,8 @@
       'libcef_dll/ctocpp/views/fill_layout_ctocpp.h',
       'libcef_dll/cpptoc/find_handler_cpptoc.cc',
       'libcef_dll/cpptoc/find_handler_cpptoc.h',
+      'libcef_dll/ctocpp/first_meaningful_paint_details_ctocpp.cc',
+      'libcef_dll/ctocpp/first_meaningful_paint_details_ctocpp.h',
       'libcef_dll/cpptoc/focus_handler_cpptoc.cc',
       'libcef_dll/cpptoc/focus_handler_cpptoc.h',
       'libcef_dll/cpptoc/form_handler_cpptoc.cc',
@@ -740,6 +750,8 @@
       'libcef_dll/cpptoc/keyboard_handler_cpptoc.h',
       'libcef_dll/ctocpp/views/label_button_ctocpp.cc',
       'libcef_dll/ctocpp/views/label_button_ctocpp.h',
+      'libcef_dll/ctocpp/largest_contentful_paint_details_ctocpp.cc',
+      'libcef_dll/ctocpp/largest_contentful_paint_details_ctocpp.h',
       'libcef_dll/ctocpp/views/layout_ctocpp.cc',
       'libcef_dll/ctocpp/views/layout_ctocpp.h',
       'libcef_dll/cpptoc/life_span_handler_cpptoc.cc',

@@ -17,6 +17,8 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/renderer/render_frame.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "libcef/browser/first_meaningful_paint_details_impl.h"
+#include "libcef/browser/largest_contentful_paint_details_impl.h"
 #include "libcef/common/app_manager.h"
 #include "libcef/renderer/browser_impl.h"
 #include "services/network/public/cpp/network_quality_tracker.h"
@@ -59,16 +61,20 @@ OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
   // We continue observing after being backgrounded, in case we are foregrounded
   // again without being killed. In those cases we may still report non-buffered
   // metrics such as FCP after being re-foregrounded.
+  ReportLargestContentfulPaint(timing);
   return CONTINUE_OBSERVING;
 }
 
 OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnHidden(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+  ReportLargestContentfulPaint(timing);
   return CONTINUE_OBSERVING;
 }
 
 void OhPageLoadMetricsObserver::OnComplete(
-    const page_load_metrics::mojom::PageLoadTiming& timing) {}
+    const page_load_metrics::mojom::PageLoadTiming& timing) {
+  ReportLargestContentfulPaint(timing);
+}
 
 void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
@@ -99,4 +105,114 @@ void OhPageLoadMetricsObserver::ReportFirstContentfulPaint(
   }
   load_handler->OnFirstContentfulPaint(navigation_start_tick,
                                        first_contentful_paint_ms);
+}
+
+void OhPageLoadMetricsObserver::OnFirstMeaningfulPaintInMainFrameDocument(
+    const page_load_metrics::mojom::PageLoadTiming& timing) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  int64_t first_meaningful_paint_time = 0;
+  if (timing.paint_timing->first_meaningful_paint.has_value() &&
+      timing.paint_timing->first_meaningful_paint->is_positive()) {
+    first_meaningful_paint_time =
+        timing.paint_timing->first_meaningful_paint->InMilliseconds();
+  }
+
+  int64_t navigation_start_time =
+      (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds();
+  ReportFirstMeaningfulPaint(navigation_start_time,
+                             first_meaningful_paint_time);
+}
+
+void OhPageLoadMetricsObserver::ReportFirstMeaningfulPaint(
+    int64_t navigation_start_time,
+    int64_t first_meaningful_paint_time) {
+  CefRefPtr<AlloyBrowserHostImpl> browser =
+      AlloyBrowserHostImpl::GetBrowserForContents(
+          GetDelegate().GetWebContents());
+  if (!browser.get()) {
+    return;
+  }
+
+  CefRefPtr<CefClient> client = browser->GetClient();
+  if (!client.get()) {
+    return;
+  }
+
+  CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+  if (!load_handler.get()) {
+    return;
+  }
+  CefRefPtr<CefFirstMeaningfulPaintDetails> details =
+      new CefFirstMeaningfulPaintDetailsImpl(navigation_start_time,
+                                             first_meaningful_paint_time);
+  load_handler->OnFirstMeaningfulPaint(details);
+}
+
+void OhPageLoadMetricsObserver::ReportLargestContentfulPaint(
+    const page_load_metrics::mojom::PageLoadTiming& timing) {
+  CefRefPtr<AlloyBrowserHostImpl> browser =
+      AlloyBrowserHostImpl::GetBrowserForContents(
+          GetDelegate().GetWebContents());
+  if (!browser.get()) {
+    return;
+  }
+
+  CefRefPtr<CefClient> client = browser->GetClient();
+  if (!client.get()) {
+    return;
+  }
+
+  CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
+  if (!load_handler.get()) {
+    return;
+  }
+
+  int64_t navigation_start_time =
+      (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds();
+  int64_t largest_image_paint_time = 0;
+  if (timing.paint_timing->largest_contentful_paint->largest_image_paint
+          .has_value() &&
+      timing.paint_timing->largest_contentful_paint->largest_image_paint
+          ->is_positive()) {
+    largest_image_paint_time = timing.paint_timing->largest_contentful_paint
+                                   ->largest_image_paint->InMilliseconds();
+  }
+
+  int64_t largest_text_paint_time = 0;
+  if (timing.paint_timing->largest_contentful_paint->largest_text_paint
+          .has_value() &&
+      timing.paint_timing->largest_contentful_paint->largest_text_paint
+          ->is_positive()) {
+    largest_text_paint_time = timing.paint_timing->largest_contentful_paint
+                                  ->largest_text_paint->InMilliseconds();
+  }
+
+  int64_t largest_image_load_start_time = 0;
+  if (timing.paint_timing->largest_contentful_paint->largest_image_load_start
+          .has_value() &&
+      timing.paint_timing->largest_contentful_paint->largest_image_load_start
+          ->is_positive()) {
+    largest_image_load_start_time =
+        timing.paint_timing->largest_contentful_paint->largest_image_load_start
+            ->InMilliseconds();
+  }
+
+  int64_t largest_image_load_end_time = 0;
+  if (timing.paint_timing->largest_contentful_paint->largest_image_load_end
+          .has_value() &&
+      timing.paint_timing->largest_contentful_paint->largest_image_load_end
+          ->is_positive()) {
+    largest_image_load_end_time =
+        timing.paint_timing->largest_contentful_paint->largest_image_load_end
+            ->InMilliseconds();
+  }
+
+  double_t image_bpp = timing.paint_timing->largest_contentful_paint->image_bpp;
+
+  CefRefPtr<CefLargestContentfulPaintDetails> details =
+      new CefLargestContentfulPaintDetailsImpl(
+          navigation_start_time, largest_image_paint_time,
+          largest_text_paint_time, largest_image_load_start_time,
+          largest_image_load_end_time, image_bpp);
+  load_handler->OnLargestContentfulPaint(details);
 }

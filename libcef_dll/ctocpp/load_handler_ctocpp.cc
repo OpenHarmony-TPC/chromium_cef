@@ -15,7 +15,9 @@
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
+#include "libcef_dll/cpptoc/first_meaningful_paint_details_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.h"
 #include "libcef_dll/cpptoc/load_committed_details_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
@@ -316,6 +318,52 @@ void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
   // Execute
   _struct->on_first_contentful_paint(_struct, navigationStartTick,
                                      firstContentfulPaintMs);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnFirstMeaningfulPaint(
+    CefRefPtr<CefFirstMeaningfulPaintDetails> details) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_first_meaningful_paint)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: details; type: refptr_diff
+  DCHECK(details.get());
+  if (!details.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_first_meaningful_paint(
+      _struct, CefFirstMeaningfulPaintDetailsCppToC::Wrap(details));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnLargestContentfulPaint(
+    CefRefPtr<CefLargestContentfulPaintDetails> details) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_largest_contentful_paint)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: details; type: refptr_diff
+  DCHECK(details.get());
+  if (!details.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_largest_contentful_paint(
+      _struct, CefLargestContentfulPaintDetailsCppToC::Wrap(details));
 }
 
 NO_SANITIZE("cfi-icall")
