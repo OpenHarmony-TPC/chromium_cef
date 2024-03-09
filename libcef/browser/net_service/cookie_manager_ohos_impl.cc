@@ -20,6 +20,8 @@
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "base/ohos/sys_info_utils.h"
+#include "content/public/common/content_switches.h"
+#include "base/command_line.h"
 #include "base/path_service.h"
 #include "base/synchronization/waitable_event.h"
 #include "base/threading/thread_restrictions.h"
@@ -196,7 +198,8 @@ net::CookieStore* CefCookieManagerImpl::GetCookieStore() {
   if (!cookie_store_) {
     content::CookieStoreConfig cookie_config(
         cookie_store_path_, /* restore_old_session_cookies= */ true,
-        /* persist_session_cookies= */ !base::ohos::IsPcDevice());
+        /* persist_session_cookies= */ !(base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kCookieConfigPersistSession)));
     cookie_config.client_task_runner = cookie_store_task_runner_;
     cookie_config.background_task_runner =
         cookie_store_backend_thread_.task_runner();
