@@ -451,10 +451,13 @@ source_set("libcef_test_support") {
 #
 
 source_set("libcef_static") {
+  defines = []
   if (gpu_switch == "off") {
-    defines = [ "DISABLE_GPU" ]
+    defines += [ "DISABLE_GPU" ]
   }
-
+  if (is_ohos) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
   sources = includes_common + gypi_paths.autogen_cpp_includes + [
               "libcef/browser/alloy/alloy_browser_context.cc",
               "libcef/browser/alloy/alloy_browser_context.h",
@@ -1484,7 +1487,9 @@ static_library("libcef_dll_wrapper") {
   }
 
   defines = [ "WRAPPING_CEF_SHARED" ]
-
+  if (is_ohos) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
   configs += [ ":libcef_dll_wrapper_config" ]
   public_configs = [ ":libcef_dll_wrapper_config" ]
 
@@ -1849,6 +1854,7 @@ if (is_mac) {
 
   shared_library("libweb_engine") {
     configs += [ "//build/config/sanitizers:cfi_config" ]
+    defines = [ "LOGGING_TAG=\"cef#\"" ]
     sources =
         includes_common + gypi_paths.autogen_cpp_includes +
         gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes +
