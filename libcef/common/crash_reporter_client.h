@@ -57,9 +57,6 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
   void GetProductNameAndVersion(std::string* product_name,
                                 std::string* version,
                                 std::string* channel) override;
-#if defined(OHOS_CRASH_DUMP)
-  bool EnableBreakpadForProcess(const std::string& process_type) override;
-#endif
   bool GetCrashDumpLocation(base::FilePath* crash_dir) override;
 #endif  // BUILDFLAG(IS_POSIX)
 
@@ -85,11 +82,11 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
                         const base::StringPiece& value);
 
  private:
-#if defined(OHOS_CRASH_DUMP)
+#if defined(OHOS_CRASHPAD)
   bool has_crash_config_file_ = true;
 #else
   bool has_crash_config_file_ = false;
-#endif  // defined(OHOS_CRASH_DUMP)
+#endif  // defined(OHOS_CRASHPAD)
 
   enum KeySize { SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE };
 
