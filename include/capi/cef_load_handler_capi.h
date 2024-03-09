@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=1aea9e12d42a1bce3c988b81e17f32b1207ca224$
+// $hash=42219bf0f734baf3c2ba0bdeb119a9481f02abcb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
@@ -69,9 +69,10 @@ typedef struct _cef_load_handler_t {
   /// cancellation of failure. It will be called before any calls to OnLoadStart
   /// and after all calls to OnLoadError and/or OnLoadEnd.
   ///
-  void(CEF_CALLBACK *on_loading_state_change)(struct _cef_load_handler_t *self,
-                                              struct _cef_browser_t *browser,
-                                              int isLoading, int canGoBack,
+  void(CEF_CALLBACK* on_loading_state_change)(struct _cef_load_handler_t* self,
+                                              struct _cef_browser_t* browser,
+                                              int isLoading,
+                                              int canGoBack,
                                               int canGoForward);
 
   ///
@@ -86,10 +87,10 @@ typedef struct _cef_load_handler_t {
   /// navigations that fail or are canceled before commit. For notification of
   /// overall browser load status use OnLoadingStateChange instead.
   ///
-  void(CEF_CALLBACK *on_load_start)(struct _cef_load_handler_t *self,
-                                    struct _cef_browser_t *browser,
-                                    struct _cef_frame_t *frame,
-                                    const cef_string_t *url,
+  void(CEF_CALLBACK* on_load_start)(struct _cef_load_handler_t* self,
+                                    struct _cef_browser_t* browser,
+                                    struct _cef_frame_t* frame,
+                                    const cef_string_t* url,
                                     cef_transition_type_t transition_type);
 
   ///
@@ -102,9 +103,9 @@ typedef struct _cef_load_handler_t {
   /// For notification of overall browser load status use OnLoadingStateChange
   /// instead.
   ///
-  void(CEF_CALLBACK *on_load_end)(struct _cef_load_handler_t *self,
-                                  struct _cef_browser_t *browser,
-                                  struct _cef_frame_t *frame,
+  void(CEF_CALLBACK* on_load_end)(struct _cef_load_handler_t* self,
+                                  struct _cef_browser_t* browser,
+                                  struct _cef_frame_t* frame,
                                   int httpStatusCode);
 
   ///
@@ -114,64 +115,73 @@ typedef struct _cef_load_handler_t {
   /// error text and |failedUrl| is the URL that failed to load. See
   /// net\base\net_error_list.h for complete descriptions of the error codes.
   ///
-  void(CEF_CALLBACK *on_load_error)(struct _cef_load_handler_t *self,
-                                    struct _cef_browser_t *browser,
-                                    struct _cef_frame_t *frame,
+  void(CEF_CALLBACK* on_load_error)(struct _cef_load_handler_t* self,
+                                    struct _cef_browser_t* browser,
+                                    struct _cef_frame_t* frame,
                                     cef_errorcode_t errorCode,
-                                    const cef_string_t *errorText,
-                                    const cef_string_t *failedUrl);
+                                    const cef_string_t* errorText,
+                                    const cef_string_t* failedUrl);
 
   ///
   /// OnLoadErrorWithRequest
   ///
-  void(CEF_CALLBACK *on_load_error_with_request)(
-      struct _cef_load_handler_t *self, struct _cef_request_t *request,
-      int is_main_frame, int has_user_gesture, int error_code,
-      const cef_string_t *error_text);
+  void(CEF_CALLBACK* on_load_error_with_request)(
+      struct _cef_load_handler_t* self,
+      struct _cef_request_t* request,
+      int is_main_frame,
+      int has_user_gesture,
+      int error_code,
+      const cef_string_t* error_text);
 
   ///
   /// OnHttpError
   ///
-  void(CEF_CALLBACK *on_http_error)(struct _cef_load_handler_t *self,
-                                    struct _cef_request_t *request,
-                                    int is_main_frame, int has_user_gesture,
-                                    struct _cef_response_t *response);
+  void(CEF_CALLBACK* on_http_error)(struct _cef_load_handler_t* self,
+                                    struct _cef_request_t* request,
+                                    int is_main_frame,
+                                    int has_user_gesture,
+                                    struct _cef_response_t* response);
 
   ///
   /// OnRefreshAccessedHistory
   ///
-  void(CEF_CALLBACK *on_refresh_accessed_history)(
-      struct _cef_load_handler_t *self, struct _cef_browser_t *browser,
-      struct _cef_frame_t *frame, const cef_string_t *url, int isReload);
+  void(CEF_CALLBACK* on_refresh_accessed_history)(
+      struct _cef_load_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_string_t* url,
+      int isReload);
 
   ///
   /// Notify the body that is loading the Http response to make it visible, old
   /// pages are no longer rendered.
   ///
-  void(CEF_CALLBACK *on_page_visible)(struct _cef_load_handler_t *self,
-                                      struct _cef_browser_t *browser,
-                                      const cef_string_t *url, int success);
+  void(CEF_CALLBACK* on_page_visible)(struct _cef_load_handler_t* self,
+                                      struct _cef_browser_t* browser,
+                                      const cef_string_t* url,
+                                      int success);
 
   ///
   /// OnDataResubmission.
   ///
-  void(CEF_CALLBACK *on_data_resubmission)(struct _cef_load_handler_t *self,
-                                           struct _cef_browser_t *browser,
-                                           struct _cef_callback_t *callback);
+  void(CEF_CALLBACK* on_data_resubmission)(struct _cef_load_handler_t* self,
+                                           struct _cef_browser_t* browser,
+                                           struct _cef_callback_t* callback);
 
   ///
   /// Called when the first content rendering of web page.
   ///
-  void(CEF_CALLBACK *on_first_contentful_paint)(
-      struct _cef_load_handler_t *self, int64_t navigationStartTick,
+  void(CEF_CALLBACK* on_first_contentful_paint)(
+      struct _cef_load_handler_t* self,
+      int64_t navigationStartTick,
       int64_t firstContentfulPaintMs);
 
   ///
   /// Called when the navigation entry has been committed.
   ///
-  void(CEF_CALLBACK *on_navigation_entry_committed)(
-      struct _cef_load_handler_t *self,
-      struct _cef_load_committed_details_t *details);
+  void(CEF_CALLBACK* on_navigation_entry_committed)(
+      struct _cef_load_handler_t* self,
+      struct _cef_load_committed_details_t* details);
 
   ///
   /// Called when received website security risk check result.
@@ -193,4 +203,4 @@ typedef struct _cef_load_handler_t {
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
