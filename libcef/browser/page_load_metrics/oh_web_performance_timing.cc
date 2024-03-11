@@ -4,10 +4,9 @@
  */
 
 #include "chromium_cef/libcef/browser/page_load_metrics/oh_web_performance_timing.h"
-#include <string>
 
 void OhWebPerformanceTiming::Reset() {
-    url = "";
+    navigation_id = -1;
     navigation_start = -1;
     redirect_count = 0;
     redirect_start = -1;

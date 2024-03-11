@@ -24,7 +24,6 @@
 #include "services/network/public/cpp/network_quality_tracker.h"
 #include "url/gurl.h"
 #include "ohos_nweb/src/sysevent/event_reporter.h"
-#include "url/oh_log_utils.h"
 
 OhPageLoadMetricsObserver::OhPageLoadMetricsObserver() {
   network_quality_tracker_ = g_browser_process->network_quality_tracker();
@@ -36,8 +35,7 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
     const GURL& currently_committed_url,
     bool started_in_foreground) {
   navigation_id_ = navigation_handle->GetNavigationId();
-  web_performance_timing_.url =
-    url::LogUtils::ConvertUrl(navigation_handle->GetURL().spec());
+  web_performance_timing_.navigation_id = navigation_id_;
 
   return CONTINUE_OBSERVING;
 }

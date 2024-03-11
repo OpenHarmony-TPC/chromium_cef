@@ -7,13 +7,12 @@
 #define CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_OH_WEB_PERFORMANCE_TIMING_H_
 
 #include <stdint.h>
-#include <string.h>
 
 struct OhWebPerformanceTiming {
     OhWebPerformanceTiming() = default;
     void Reset();
 
-    std::string url = "";
+    int64_t navigation_id = -1;
     int64_t navigation_start = -1;
     uint32_t redirect_count = 0;
     int64_t redirect_start = -1;
