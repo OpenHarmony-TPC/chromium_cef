@@ -733,6 +733,8 @@ source_set("libcef_static") {
               "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.h",
               "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.cc",
               "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.h",
+              "libcef/browser/page_load_metrics/oh_web_performance_timing.cc",
+              "libcef/browser/page_load_metrics/oh_web_performance_timing.h",
               "libcef/browser/page_load_metrics/page_load_metrics_initialize.cc",
               "libcef/browser/page_load_metrics/page_load_metrics_initialize.h",
               "libcef/browser/path_util_impl.cc",
@@ -1096,7 +1098,7 @@ source_set("libcef_static") {
       "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
       "libcef/browser/net_database/cef_incognito_data_base_impl.h",
       "libcef/browser/alloy/alloy_off_the_record_browser_context.cc",
-      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",      
+      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",
     ]
   }
 #endif
