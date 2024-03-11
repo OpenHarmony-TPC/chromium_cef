@@ -4105,6 +4105,8 @@ typedef struct _cef_native_embed_t {
   std::string url;
   std::string tag;
   std::map<std::string, std::string> params;
+  int32_t x;
+  int32_t y;
 } cef_native_embed_t;
 
 ///

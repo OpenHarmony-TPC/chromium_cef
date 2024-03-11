@@ -1720,24 +1720,14 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   }
 
   CefRenderHandler::CefNativeEmbedData data_info;
-    switch(state) {
-        case content::NativeEmbedInfo::TAG_STATE_CREATE:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::CREATE;
-          break;
-        case content::NativeEmbedInfo::TAG_STATE_CHANGE:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::UPDATE;
-          break;
-        case content::NativeEmbedInfo::TAG_STATE_DESTROY:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::DESTROY;
-          break;
-        default:
-          return;
-  }
+  data_info.status = static_cast<CefRenderHandler::CefEmbedLifeStatus>(state);
   data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
   data_info.info.id = native_embed_info.embed_element_id;
-  data_info.info.width = native_embed_info.size.width();
-  data_info.info.height = native_embed_info.size.height();
+  data_info.info.x = native_embed_info.rect.x();
+  data_info.info.y = native_embed_info.rect.y();
+  data_info.info.width = native_embed_info.rect.width();
+  data_info.info.height = native_embed_info.rect.height();
   data_info.info.type = native_embed_info.native_type;
   data_info.info.src = native_embed_info.native_source;
   data_info.info.url = native_embed_info.url.path();
