@@ -364,8 +364,9 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 #endif
 
 #if BUILDFLAG(IS_OHOS)
-  gesture_provider_.SetDoubleTapSupportForPlatformEnabled(
-      base::ohos::IsTabletDevice() || base::ohos::IsMobileDevice());
+  bool excludable_devices = base::CommandLine::ForCurrentProcess()
+      ->HasSwitch(switches::kDoubleTapSupportForPlatformEnabled); 
+  gesture_provider_.SetDoubleTapSupportForPlatformEnabled(excludable_devices);
 #endif
 }
 
@@ -2252,7 +2253,8 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
 
 #if BUILDFLAG(IS_OHOS)
 bool CefRenderWidgetHostViewOSR::RequiresDoubleTapGestureEvents() const {
-  return base::ohos::IsTabletDevice() || base::ohos::IsMobileDevice();
+  return base::CommandLine::ForCurrentProcess()
+      ->HasSwitch(switches::kDoubleTapSupportForPlatformEnabled);
 }
 #endif
 

@@ -2697,7 +2697,8 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   // this is currently not the case and this was not required pre M84.
   network_context_params->require_network_isolation_key = false;
 #if defined(OHOS_CACHE)
-  if (base::ohos::IsMobileDevice()) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kHttpCacheMaxSize)) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kForBrowser)) {
       // In order to make better use of cache, we use the same strategy as
@@ -3054,7 +3055,9 @@ static bool GetLockdownModeStatus() {
 
 bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
     content::SiteIsolationMode site_isolation_mode) {
-  if (base::ohos::IsPcDevice()) {
+  bool isIgnoreLockdownMode = (*base::CommandLine::ForCurrentProcess()).HasSwitch(
+            switches::kEnablePrinting);
+  if (isIgnoreLockdownMode) {
     return site_isolation::SiteIsolationPolicy::
         ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
   } else {

@@ -97,6 +97,7 @@
 
 #ifdef OHOS_USERAGENT
 #include "ohos_adapter_helper.h"
+#include "content/public/common/content_switches.h"
 #endif
 
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
@@ -2408,15 +2409,10 @@ void AlloyBrowserHostImpl::SetTabletMode() {
     return;
   }
 
-  auto& system_properties_adapter =
-      OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetSystemPropertiesInstance();
-  OHOS::NWeb::ProductDeviceType deviceType =
-      system_properties_adapter.GetProductDeviceType();
-  if (deviceType != OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kCalcTabletMode)) {
     return;
   }
-
   CefRefPtr<CefRenderHandler> handler = client()->GetRenderHandler();
   CHECK(handler);
   CefScreenInfo screen_info(1.0, 0, 0, false, CefRect(), CefRect(), 0,
