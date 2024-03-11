@@ -135,7 +135,7 @@ class CefValue : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefString GetString() = 0;
-
+  virtual std::string GetStdString() = 0;
   ///
   /// Returns the underlying value as type binary. The returned reference may
   /// become invalid if the value is owned by another object or if ownership is
@@ -203,6 +203,7 @@ class CefValue : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=value)--*/
   virtual bool SetString(const CefString& value) = 0;
+  virtual bool SetStdString(const std::string& value) = 0;
 
   ///
   /// Sets the underlying value as type binary. Returns true if the value was

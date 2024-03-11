@@ -123,7 +123,7 @@ public:
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
   void GetRootBrowserAccessibilityManager(void **manager) override;
-  void ExecuteJavaScript(const CefString &code,
+  void ExecuteJavaScript(const std::string &code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
   void SetNativeWindow(cef_native_window_t window) override;
