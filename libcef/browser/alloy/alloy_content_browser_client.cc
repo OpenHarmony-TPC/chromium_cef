@@ -202,13 +202,6 @@
 
 constexpr int32_t APPLICATION_API_10 = 10;
 #endif
-#if defined(OHOS_CRASH_DUMP)
-#include "base/debug/leak_annotations.h"
-#include "chrome/common/chrome_paths.h"
-#include "components/crash/content/browser/crash_handler_host_linux.h"
-#include "components/crash/core/app/breakpad_linux.h"
-#include "content/public/common/content_descriptors.h"
-#endif // defined(OHOS_CRASH_DUMP)
 
 #ifdef OHOS_EDM_POLICY
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
@@ -274,6 +267,10 @@ using extensions::mojom::APIPermissionID;
 #endif
 
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
+
+#if defined(OHOS_CRASHPAD)
+#include "components/crash/content/browser/crash_handler_host_linux.h"
+#endif
 
 namespace {
 #if BUILDFLAG(IS_OHOS)
@@ -809,75 +806,23 @@ class CefSelectClientCertificateCallbackImpl
   IMPLEMENT_REFCOUNTING(CefSelectClientCertificateCallbackImpl);
 };
 
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !defined(OHOS_CRASH_DUMP)
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 int GetCrashSignalFD() {
   if (!crash_reporting::Enabled()) {
     return -1;
   }
 
+#if defined(OHOS_CRASHPAD)
+  // ohos don't use linux crash handler
+  int crash_signal_fd = crashpad::CrashHandlerHost::Get()->GetDeathSignalSocket();
+  return crash_signal_fd;
+#else
   int fd;
   pid_t pid;
   return crash_reporter::GetHandlerSocket(&fd, &pid) ? fd : -1;
+#endif
 }
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
-
-#if defined(OHOS_CRASH_DUMP)
-breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
-    const std::string& process_type) {
-  base::FilePath dumps_path;
-  base::PathService::Get(chrome::DIR_CRASH_DUMPS, &dumps_path);
-  {
-    ANNOTATE_SCOPED_MEMORY_LEAK;
-    // Uploads will only occur if a non-empty crash URL is specified in
-    // AlloyMainDelegate::InitCrashReporter.
-    breakpad::CrashHandlerHostLinux* crash_handler =
-        new breakpad::CrashHandlerHostLinux(process_type, dumps_path,
-                                            false /* upload */
-        );
-    crash_handler->StartUploaderThread();
-    return crash_handler;
-  }
-}
-
-int GetCrashSignalFD(const base::CommandLine& command_line) {
-  if (!breakpad::IsCrashReporterEnabled())
-    return -1;
-
-  // Extensions have the same process type as renderers.
-  if (command_line.HasSwitch(extensions::switches::kExtensionProcess)) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost("extension");
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  std::string process_type =
-      command_line.GetSwitchValueASCII(switches::kProcessType);
-
-  if (process_type == switches::kRendererProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  if (process_type == switches::kPpapiPluginProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  if (process_type == switches::kGpuProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  return -1;
-}
-#endif  // defined(OHOS_CRASH_DUMP)
 
 // From chrome/browser/plugins/chrome_content_browser_client_plugins_part.cc.
 void BindPluginInfoHost(
@@ -1906,11 +1851,7 @@ void AlloyContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     const base::CommandLine& command_line,
     int child_process_id,
     content::PosixFileDescriptorInfo* mappings) {
-#if defined(OHOS_CRASH_DUMP)
-  int crash_signal_fd = GetCrashSignalFD(command_line);
-#else
   int crash_signal_fd = GetCrashSignalFD();
-#endif
   if (crash_signal_fd >= 0) {
     mappings->Share(kCrashDumpSignal, crash_signal_fd);
   }
