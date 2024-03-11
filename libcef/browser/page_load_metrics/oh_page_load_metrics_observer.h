@@ -9,7 +9,7 @@
 #include "base/memory/raw_ptr.h"
 #include "components/page_load_metrics/browser/page_load_metrics_observer.h"
 #include "net/nqe/effective_connection_type.h"
-#include "libcef/browser/page_load_metrics/oh_web_performance_timing.h"
+#include "ohos_nweb/src/sysevent/oh_web_performance_timing.h"
 
 namespace network {
 class NetworkQualityTracker;

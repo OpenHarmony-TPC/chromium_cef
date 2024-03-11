@@ -733,8 +733,6 @@ source_set("libcef_static") {
               "libcef/browser/page_load_metrics/alloy_page_load_metrics_memory_tracker_factory.h",
               "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.cc",
               "libcef/browser/page_load_metrics/oh_page_load_metrics_observer.h",
-              "libcef/browser/page_load_metrics/oh_web_performance_timing.cc",
-              "libcef/browser/page_load_metrics/oh_web_performance_timing.h",
               "libcef/browser/page_load_metrics/page_load_metrics_initialize.cc",
               "libcef/browser/page_load_metrics/page_load_metrics_initialize.h",
               "libcef/browser/path_util_impl.cc",
