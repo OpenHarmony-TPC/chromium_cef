@@ -3069,12 +3069,6 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
 
 #endif
 
-#ifdef OHOS_USERAGENT
-void AlloyContentBrowserClient::SetTabletMode(bool is_tablet) {
-  embedder_support::SetTabletMode(is_tablet);
-}
-#endif
-
 bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
     int frame_tree_node_id,
     bool browser_initiated,

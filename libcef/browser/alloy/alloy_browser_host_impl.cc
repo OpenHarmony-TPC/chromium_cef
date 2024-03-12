@@ -95,11 +95,6 @@
 
 #include "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
 
-#ifdef OHOS_USERAGENT
-#include "ohos_adapter_helper.h"
-#include "content/public/common/content_switches.h"
-#endif
-
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
 #include "libcef/browser/javascript/oh_javascript_injector.h"
 #endif
@@ -107,10 +102,6 @@
 using content::KeyboardEventProcessingResult;
 
 namespace {
-
-#ifdef OHOS_USERAGENT
-constexpr int kMinWidthForTablet = 600;
-#endif
 
 class ShowDevToolsHelper {
  public:
@@ -723,10 +714,6 @@ void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
         base::BindOnce(&AlloyBrowserHostImpl::NotifyScreenInfoChanged, this));
     return;
   }
-
-#ifdef OHOS_USERAGENT
-  SetTabletMode();
-#endif
 
   if (platform_delegate_) {
     platform_delegate_->NotifyScreenInfoChanged();
@@ -2402,28 +2389,6 @@ void AlloyBrowserHostImpl::OnZoomChanged(
   }
 }
 #endif
-
-#ifdef OHOS_USERAGENT
-void AlloyBrowserHostImpl::SetTabletMode() {
-  if (!web_contents() || !client()) {
-    return;
-  }
-
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kCalcTabletMode)) {
-    return;
-  }
-  CefRefPtr<CefRenderHandler> handler = client()->GetRenderHandler();
-  CHECK(handler);
-  CefScreenInfo screen_info(1.0, 0, 0, false, CefRect(), CefRect(), 0,
-                            cef_screen_orientation_type_t::UNDEFINED);
-  handler->GetScreenInfo(this, screen_info);
-  int smallest_width = screen_info.rect.width < screen_info.rect.height ?
-                       screen_info.rect.width : screen_info.rect.height;
-  bool is_tablet = smallest_width >= kMinWidthForTablet;
-  web_contents()->SetTabletMode(is_tablet);
-}
-#endif // OHOS_USERAGENT
 
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
 CefString AlloyBrowserHostImpl::GetLastJavascriptProxyCallingFrameUrl() {
