@@ -483,10 +483,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetDrawMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
-#ifdef OHOS_USERAGENT
-  void SetTabletMode();
-#endif
-
   CefWindowHandle opener_;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;

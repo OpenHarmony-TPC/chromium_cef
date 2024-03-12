@@ -385,10 +385,6 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
 CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
 
-#ifdef OHOS_USERAGENT
-void SetTabletMode(bool is_tablet) override;
-#endif
-
   bool ShouldOverrideUrlLoading(int frame_tree_node_id,
                                 bool browser_initiated,
                                 const GURL& gurl,
