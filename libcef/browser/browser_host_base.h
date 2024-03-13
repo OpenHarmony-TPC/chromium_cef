@@ -370,7 +370,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                     const CefString& mimeType,
                     const CefString& encoding) override;
 
-  void ExecuteJavaScript(const CefString& code,
+  void ExecuteJavaScript(const std::string& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
 

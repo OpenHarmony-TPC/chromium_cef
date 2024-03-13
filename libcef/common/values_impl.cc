@@ -344,6 +344,16 @@ CefString CefValueImpl::GetString() {
   return ret_value;
 }
 
+std::string CefValueImpl::GetStdString() {
+  base::AutoLock lock_scope(lock_);
+
+  std::string ret_value;
+  if (value_ && value_->is_string()) {
+    ret_value = value_->GetString();
+  }
+  return ret_value;
+}
+
 CefRefPtr<CefBinaryValue> CefValueImpl::GetBinary() {
   base::AutoLock lock_scope(lock_);
   return binary_value_;
@@ -381,6 +391,11 @@ bool CefValueImpl::SetDouble(double value) {
 
 bool CefValueImpl::SetString(const CefString& value) {
   SetValue(base::Value(value.ToString()));
+  return true;
+}
+
+bool CefValueImpl::SetStdString(const std::string& value) {
+  SetValue(base::Value(value));
   return true;
 }
 

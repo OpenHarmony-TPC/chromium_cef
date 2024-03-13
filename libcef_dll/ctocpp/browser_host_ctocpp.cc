@@ -1270,7 +1270,7 @@ void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void **manager) {
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ExecuteJavaScript(
-    const CefString &code, CefRefPtr<CefJavaScriptResultCallback> callback,
+    const std::string &code, CefRefPtr<CefJavaScriptResultCallback> callback,
     bool extention) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1292,9 +1292,10 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
     return;
   }
 
+  CefString jsCode(code);
   // Execute
   _struct->execute_java_script(
-      _struct, code.GetStruct(),
+      _struct, jsCode.GetStruct(),
       CefJavaScriptResultCallbackCppToC::Wrap(callback), extention);
 }
 

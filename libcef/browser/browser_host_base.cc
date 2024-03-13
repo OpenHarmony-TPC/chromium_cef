@@ -2687,7 +2687,7 @@ bool ValidateResultType(base::Value::Type type) {
 }
 
 void CefBrowserHostBase::ExecuteJavaScript(
-    const CefString& code,
+    const std::string& code,
     CefRefPtr<CefJavaScriptResultCallback> callback,
     bool extention) {
   auto web_contents = GetWebContents();
@@ -2698,7 +2698,7 @@ void CefBrowserHostBase::ExecuteJavaScript(
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
-          code.ToString16(),
+          base::UTF8ToUTF16(code),
           base::BindOnce(
               [](CefRefPtr<CefJavaScriptResultCallback> callback,
                  base::Value result) {
@@ -2714,7 +2714,7 @@ void CefBrowserHostBase::ExecuteJavaScript(
               callback));
     } else {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
-          code.ToString16(),
+          base::UTF8ToUTF16(code),
           base::BindOnce(
               [](CefRefPtr<CefJavaScriptResultCallback> callback,
                  base::Value result) {

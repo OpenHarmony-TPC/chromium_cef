@@ -1219,7 +1219,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ExecuteJavaScript(
-      const CefString& code,
+      const std::string& code,
       CefRefPtr<CefJavaScriptResultCallback> callback,
       bool extention) = 0;
 
