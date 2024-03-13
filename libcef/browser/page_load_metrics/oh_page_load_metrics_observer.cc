@@ -276,7 +276,7 @@ void OhPageLoadMetricsObserver::OnLoadedResource(
 
     base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
     web_performance_timing_.navigation_start =
-      navigation_start.is_null() ? -1 : 0;
+      navigation_start.is_null() ? -1 : navigation_start.since_origin().InMilliseconds;
 
     const net::LoadTimingInfo& timing =
       *extra_request_complelte_info.load_timing_info;
