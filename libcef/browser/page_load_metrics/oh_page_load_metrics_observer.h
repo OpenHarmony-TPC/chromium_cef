@@ -52,17 +52,7 @@ class OhPageLoadMetricsObserver
 
   ObservePolicy OnRedirect(
     content::NavigationHandle* navigation_handle) override;
-  void OnRedirectStart(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnRedirectEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnResponseEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnDomContentLoadedEventStart(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnDomContentLoadedEventEnd(
-      const page_load_metrics::mojom::PageLoadTiming& timing) override;
-  void OnLoadEventStart(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnLoadEventEnd(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;

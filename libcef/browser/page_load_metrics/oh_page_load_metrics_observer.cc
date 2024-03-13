@@ -230,50 +230,37 @@ OhPageLoadMetricsObserver::OnRedirect(
   return CONTINUE_OBSERVING;
 }
 
-void OhPageLoadMetricsObserver::OnRedirectStart(
-  const page_load_metrics::mojom::PageLoadTiming& timing) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.redirect_start = timing.redirect_start->InMilliseconds();
-}
-
-void OhPageLoadMetricsObserver::OnRedirectEnd(
-  const page_load_metrics::mojom::PageLoadTiming& timing) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.redirect_end = timing.redirect_end->InMilliseconds();
-}
-
-void OhPageLoadMetricsObserver::OnResponseEnd(
-  const page_load_metrics::mojom::PageLoadTiming& timing) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.fetch_start = timing.fetch_start->InMilliseconds();
-  web_performance_timing_.response_end = timing.response_end->InMilliseconds();
-}
-
 void OhPageLoadMetricsObserver::OnDomContentLoadedEventStart(
   const page_load_metrics::mojom::PageLoadTiming& timing) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.dom_interactive = timing.dom_interactive->InMilliseconds();
-  web_performance_timing_.dom_content_loaded_event_start =
-    timing.dom_content_loaded_event_start->InMilliseconds();
-}
-
-void OhPageLoadMetricsObserver::OnDomContentLoadedEventEnd(
-  const page_load_metrics::mojom::PageLoadTiming& timing) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.dom_content_loaded_event_end =
-    timing.dom_content_loaded_event_end->InMilliseconds();
-}
-
-void OhPageLoadMetricsObserver::OnLoadEventStart(
-  const page_load_metrics::mojom::PageLoadTiming& timing) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.load_event_start = timing.load_event_start->InMilliseconds();
+  web_performance_timing_.redirect_start = timing.redirect_start ?
+    timing.redirect_start->InMilliseconds() : -1;
+  web_performance_timing_.redirect_end = timing.redirect_end ?
+    timing.redirect_end->InMilliseconds() : -1;
+  web_performance_timing_.fetch_start = timing.fetch_start ?
+    timing.fetch_start->InMilliseconds() : -1;
+  web_performance_timing_.response_end = timing.response_end ?
+    timing.response_end->InMilliseconds() : -1;
 }
 
 void OhPageLoadMetricsObserver::OnLoadEventEnd(
   const page_load_metrics::mojom::PageLoadTiming& timing) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.load_event_end = timing.load_event_end->InMilliseconds();
+  web_performance_timing_.dom_interactive =
+    timing.document_timing->dom_interactive ?
+    timing.document_timing->dom_interactive->InMilliseconds() : -1;
+  web_performance_timing_.dom_content_loaded_event_start =
+    timing.document_timing->dom_content_loaded_event_start ?
+    timing.document_timing->dom_content_loaded_event_start->InMilliseconds() : -1;
+  web_performance_timing_.dom_content_loaded_event_end =
+    timing.document_timing->dom_content_loaded_event_end ?
+    timing.document_timing->dom_content_loaded_event_end->InMilliseconds() : -1;
+  web_performance_timing_.load_event_start =
+    timing.document_timing->load_event_start ?
+    timing.document_timing->load_event_start->InMilliseconds() : -1;
+  web_performance_timing_.load_event_end =
+    timing.document_timing->load_event_end ?
+    timing.document_timing->load_event_end->InMilliseconds() : -1;
 }
 
 void OhPageLoadMetricsObserver::OnLoadedResource(
@@ -322,8 +309,8 @@ void OhPageLoadMetricsObserver::OnLoadedResource(
 void OhPageLoadMetricsObserver::OnFirstPaintInPage(
   const page_load_metrics::mojom::PageLoadTiming& timing) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  web_performance_timing_.first_paint =
-    timing.paint_timing->first_paint->InMilliseconds();
+  web_performance_timing_.first_paint = timing.paint_timing->first_paint ?
+    timing.paint_timing->first_paint->InMilliseconds() : -1;
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
