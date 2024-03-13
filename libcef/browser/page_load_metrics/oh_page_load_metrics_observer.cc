@@ -264,7 +264,7 @@ void OhPageLoadMetricsObserver::OnLoadEventEnd(
 }
 
 void OhPageLoadMetricsObserver::OnLoadedResource(
-  const page_load_metrics::mojom::ExtraRequestCompleteInfo&
+  const page_load_metrics::ExtraRequestCompleteInfo&
     extra_request_complelte_info) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (extra_request_complelte_info.request_destination ==
@@ -276,33 +276,33 @@ void OhPageLoadMetricsObserver::OnLoadedResource(
 
     base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
     web_performance_timing_.navigation_start =
-      navigation_start.is_null() ? -1 : navigation_start.since_origin().InMilliseconds;
+      navigation_start.is_null() ? -1 : navigation_start.since_origin().InMilliseconds();
 
     const net::LoadTimingInfo& timing =
       *extra_request_complelte_info.load_timing_info;
-    web_performance_timing_.worker_start = timing.service_woker_start_time.is_null() ? -1 :
-      (timing.service_woker_start_time - navigation_start).InMilliseconds;
+    web_performance_timing_.worker_start = timing.service_worker_start_time.is_null() ? -1 :
+      (timing.service_worker_start_time - navigation_start).InMilliseconds();
     web_performance_timing_.domain_lookup_start =
       timing.connect_timing.domain_lookup_start.is_null() ? -1 :
-      (timing.connect_timing.domain_lookup_start - navigation_start).InMilliseconds;
+      (timing.connect_timing.domain_lookup_start - navigation_start).InMilliseconds();
     web_performance_timing_.domain_lookup_end =
       timing.connect_timing.domain_lookup_end.is_null() ? -1 :
-      (timing.connect_timing.domain_lookup_end - navigation_start).InMilliseconds;
+      (timing.connect_timing.domain_lookup_end - navigation_start).InMilliseconds();
     web_performance_timing_.connect_start =
       timing.connect_timing.connect_start.is_null() ? -1 :
-      (timing.connect_timing.connect_start - navigation_start).InMilliseconds;
+      (timing.connect_timing.connect_start - navigation_start).InMilliseconds();
     web_performance_timing_.secure_connect_start =
       timing.connect_timing.ssl_start.is_null() ? -1 :
-      (timing.connect_timing.ssl_start - navigation_start).InMilliseconds;
+      (timing.connect_timing.ssl_start - navigation_start).InMilliseconds();
     web_performance_timing_.connect_end =
       timing.connect_timing.connect_end.is_null() ? -1 :
-      (timing.connect_timing.connect_end - navigation_start).InMilliseconds;
+      (timing.connect_timing.connect_end - navigation_start).InMilliseconds();
     web_performance_timing_.request_start =
-      timing.connect_timing.send_start.is_null() ? -1 :
-      (timing.connect_timing.send_start - navigation_start).InMilliseconds;
+      timing.send_start.is_null() ? -1 :
+      (timing.send_start - navigation_start).InMilliseconds();
     web_performance_timing_.response_start =
-      timing.connect_timing.receive_headers_start.is_null() ? -1 :
-      (timing.connect_timing.receive_headers_start - navigation_start).InMilliseconds;
+      timing.receive_headers_start.is_null() ? -1 :
+      (timing.receive_headers_start - navigation_start).InMilliseconds();
   }
 }
 

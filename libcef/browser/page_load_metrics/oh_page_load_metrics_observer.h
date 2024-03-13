@@ -57,7 +57,7 @@ class OhPageLoadMetricsObserver
   void OnLoadEventEnd(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnLoadedResource(
-      const page_load_metrics::mojom::ExtraRequestCompleteInfo&
+      const page_load_metrics::ExtraRequestCompleteInfo&
       extra_request_complelte_info) override;
   void OnFirstPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
