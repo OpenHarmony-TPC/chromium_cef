@@ -2790,6 +2790,20 @@ CefString CefBrowserHostCToCpp::GetLastJavascriptProxyCallingFrameUrl() {
   return _retvalStr;
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetNWebId(int nWebId) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_nweb_id)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_nweb_id(_struct, nWebId);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

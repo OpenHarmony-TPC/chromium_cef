@@ -314,6 +314,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
+  void SetNWebId(int NWebID) override;
 
   /* ohos webview end */
 #endif

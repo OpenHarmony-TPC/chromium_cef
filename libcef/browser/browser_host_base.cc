@@ -3347,7 +3347,7 @@ void CefBrowserHostBase::StartCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->StartCamera();
+  web_contents->StartCamera(web_contents->GetNWebId());
 #endif  // defined(OHOS_WEBRTC)
 }
 
@@ -3358,7 +3358,7 @@ void CefBrowserHostBase::StopCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->StopCamera();
+  web_contents->StopCamera(web_contents->GetNWebId());
 #endif  // defined(OHOS_WEBRTC)
 }
 
@@ -3369,7 +3369,7 @@ void CefBrowserHostBase::CloseCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->CloseCamera();
+  web_contents->CloseCamera(web_contents->GetNWebId());
 #endif  // defined(OHOS_WEBRTC)
 }
 
@@ -3395,3 +3395,14 @@ bool CefBrowserHostBase::IsIntelligentTrackingPreventionEnabled() {
   return intelligent_tracking_prevention_cookies_enabled_;
 }
 #endif
+
+void CefBrowserHostBase::SetNWebId(int NWebID) {
+#if defined(OHOS_WEBRTC)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->SetNWebId(NWebID);
+#endif  // defined(OHOS_WEBRTC)
+}

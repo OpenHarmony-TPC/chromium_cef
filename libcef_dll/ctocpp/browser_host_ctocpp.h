@@ -233,6 +233,7 @@ public:
   void StopCamera() override;
   void CloseCamera() override;
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
+  void SetNWebId(int nWebId) override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
