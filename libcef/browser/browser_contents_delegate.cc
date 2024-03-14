@@ -607,6 +607,9 @@ void CefBrowserContentsDelegate::RenderFrameCreated(
       // the page base background from web_contents at the creation time
       web_contents()->SetPageBaseBackgroundColor(SkColor());
       web_contents()->SetPageBaseBackgroundColor(base_background_color);
+#if defined(OHOS_MULTI_WINDOW)
+      web_contents()->OnWebPreferencesChanged();
+#endif
     }
     if (render_view_host->GetWidget() &&
         render_view_host->GetWidget()->GetView()) {
