@@ -3003,6 +3003,21 @@ browser_host_get_last_javascript_proxy_calling_frame_url(
   return _retval.DetachToUserFree();
 }
 
+void CEF_CALLBACK browser_host_set_nweb_id(struct _cef_browser_host_t* self,
+                                           int nWebId) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetNWebId(nWebId);
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3180,6 +3195,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->close_camera = browser_host_close_camera;
   GetStruct()->get_last_javascript_proxy_calling_frame_url =
       browser_host_get_last_javascript_proxy_calling_frame_url;
+  GetStruct()->set_nweb_id = browser_host_set_nweb_id;
 }
 
 // DESTRUCTOR - Do not edit by hand.

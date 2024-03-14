@@ -1711,6 +1711,11 @@ typedef struct _cef_browser_host_t {
   cef_string_userfree_t(
       CEF_CALLBACK* get_last_javascript_proxy_calling_frame_url)(
       struct _cef_browser_host_t* self);
+
+  ///
+  ///  Set NWebID.
+  ///
+  void(CEF_CALLBACK* set_nweb_id)(struct _cef_browser_host_t* self, int nWebId);
 } cef_browser_host_t;
 
 ///
