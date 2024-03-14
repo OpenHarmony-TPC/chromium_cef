@@ -9,6 +9,7 @@
 #include "base/memory/raw_ptr.h"
 #include "components/page_load_metrics/browser/page_load_metrics_observer.h"
 #include "net/nqe/effective_connection_type.h"
+#include "ohos_nweb/src/sysevent/oh_web_performance_timing.h"
 
 namespace network {
 class NetworkQualityTracker;
@@ -49,6 +50,18 @@ class OhPageLoadMetricsObserver
   void OnFirstMeaningfulPaintInMainFrameDocument(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
 
+  ObservePolicy OnRedirect(
+    content::NavigationHandle* navigation_handle) override;
+  void OnDomContentLoadedEventStart(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnLoadEventEnd(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+  void OnLoadedResource(
+      const page_load_metrics::ExtraRequestCompleteInfo&
+      extra_request_complelte_info) override;
+  void OnFirstPaintInPage(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+
  protected:
   OhPageLoadMetricsObserver(
       network::NetworkQualityTracker* network_quality_tracker)
@@ -61,10 +74,19 @@ class OhPageLoadMetricsObserver
   virtual void ReportLargestContentfulPaint(
       const page_load_metrics::mojom::PageLoadTiming& timing);
 
+  void ReportBufferedMetrics(
+      const page_load_metrics::mojom::PageLoadTiming& timing);
+  void ReportPerformanceTiming();
+
  private:
   int64_t navigation_id_ = -1;
 
   raw_ptr<network::NetworkQualityTracker> network_quality_tracker_ = nullptr;
+
+  bool did_dispatch_on_main_resourse_ = false;
+  bool reported_buffered_metrics_ = false;
+  uint32_t main_frame_request_redirect_count_ = 0;
+  OhWebPerformanceTiming web_performance_timing_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_OH_PAGE_LOAD_METRICS_OBSERVER_H_

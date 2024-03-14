@@ -1096,7 +1096,7 @@ source_set("libcef_static") {
       "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
       "libcef/browser/net_database/cef_incognito_data_base_impl.h",
       "libcef/browser/alloy/alloy_off_the_record_browser_context.cc",
-      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",      
+      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",
     ]
   }
 #endif

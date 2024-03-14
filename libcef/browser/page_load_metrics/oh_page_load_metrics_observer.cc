@@ -23,6 +23,7 @@
 #include "libcef/renderer/browser_impl.h"
 #include "services/network/public/cpp/network_quality_tracker.h"
 #include "url/gurl.h"
+#include "ohos_nweb/src/sysevent/event_reporter.h"
 
 OhPageLoadMetricsObserver::OhPageLoadMetricsObserver() {
   network_quality_tracker_ = g_browser_process->network_quality_tracker();
@@ -34,6 +35,7 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
     const GURL& currently_committed_url,
     bool started_in_foreground) {
   navigation_id_ = navigation_handle->GetNavigationId();
+  web_performance_timing_.navigation_id = navigation_id_;
 
   return CONTINUE_OBSERVING;
 }
@@ -58,6 +60,7 @@ OhPageLoadMetricsObserver::OnPrerenderStart(
 page_load_metrics::PageLoadMetricsObserver::ObservePolicy
 OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+  ReportBufferedMetrics(timing);
   // We continue observing after being backgrounded, in case we are foregrounded
   // again without being killed. In those cases we may still report non-buffered
   // metrics such as FCP after being re-foregrounded.
@@ -67,12 +70,14 @@ OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
 
 OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnHidden(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+  ReportBufferedMetrics(timing);
   ReportLargestContentfulPaint(timing);
   return CONTINUE_OBSERVING;
 }
 
 void OhPageLoadMetricsObserver::OnComplete(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+  ReportBufferedMetrics(timing);
   ReportLargestContentfulPaint(timing);
 }
 
@@ -81,6 +86,7 @@ void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   int64_t first_contentful_paint_ms =
       timing.paint_timing->first_contentful_paint->InMilliseconds();
+  web_performance_timing_.first_contentful_paint = first_contentful_paint_ms;
   ReportFirstContentfulPaint(
       (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds(),
       first_contentful_paint_ms);
@@ -215,4 +221,120 @@ void OhPageLoadMetricsObserver::ReportLargestContentfulPaint(
           largest_text_paint_time, largest_image_load_start_time,
           largest_image_load_end_time, image_bpp);
   load_handler->OnLargestContentfulPaint(details);
+}
+
+page_load_metrics::PageLoadMetricsObserver::ObservePolicy
+OhPageLoadMetricsObserver::OnRedirect(
+    content::NavigationHandle* navigation_handle) {
+  main_frame_request_redirect_count_++;
+  return CONTINUE_OBSERVING;
+}
+
+void OhPageLoadMetricsObserver::OnDomContentLoadedEventStart(
+  const page_load_metrics::mojom::PageLoadTiming& timing) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  web_performance_timing_.redirect_start = timing.redirect_start ?
+    timing.redirect_start->InMilliseconds() : -1;
+  web_performance_timing_.redirect_end = timing.redirect_end ?
+    timing.redirect_end->InMilliseconds() : -1;
+  web_performance_timing_.fetch_start = timing.fetch_start ?
+    timing.fetch_start->InMilliseconds() : -1;
+  web_performance_timing_.response_end = timing.response_end ?
+    timing.response_end->InMilliseconds() : -1;
+}
+
+void OhPageLoadMetricsObserver::OnLoadEventEnd(
+  const page_load_metrics::mojom::PageLoadTiming& timing) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  web_performance_timing_.dom_interactive =
+    timing.document_timing->dom_interactive ?
+    timing.document_timing->dom_interactive->InMilliseconds() : -1;
+  web_performance_timing_.dom_content_loaded_event_start =
+    timing.document_timing->dom_content_loaded_event_start ?
+    timing.document_timing->dom_content_loaded_event_start->InMilliseconds() : -1;
+  web_performance_timing_.dom_content_loaded_event_end =
+    timing.document_timing->dom_content_loaded_event_end ?
+    timing.document_timing->dom_content_loaded_event_end->InMilliseconds() : -1;
+  web_performance_timing_.load_event_start =
+    timing.document_timing->load_event_start ?
+    timing.document_timing->load_event_start->InMilliseconds() : -1;
+  web_performance_timing_.load_event_end =
+    timing.document_timing->load_event_end ?
+    timing.document_timing->load_event_end->InMilliseconds() : -1;
+}
+
+void OhPageLoadMetricsObserver::OnLoadedResource(
+  const page_load_metrics::ExtraRequestCompleteInfo&
+    extra_request_complelte_info) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  if (extra_request_complelte_info.request_destination ==
+      network::mojom::RequestDestination::kDocument) {
+    if (did_dispatch_on_main_resourse_) {
+      return;
+    }
+    did_dispatch_on_main_resourse_ = true;
+
+    base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
+    web_performance_timing_.navigation_start =
+      navigation_start.is_null() ? -1 : navigation_start.since_origin().InMilliseconds();
+
+    const net::LoadTimingInfo& timing =
+      *extra_request_complelte_info.load_timing_info;
+    web_performance_timing_.worker_start = timing.service_worker_start_time.is_null() ? -1 :
+      (timing.service_worker_start_time - navigation_start).InMilliseconds();
+    web_performance_timing_.domain_lookup_start =
+      timing.connect_timing.domain_lookup_start.is_null() ? -1 :
+      (timing.connect_timing.domain_lookup_start - navigation_start).InMilliseconds();
+    web_performance_timing_.domain_lookup_end =
+      timing.connect_timing.domain_lookup_end.is_null() ? -1 :
+      (timing.connect_timing.domain_lookup_end - navigation_start).InMilliseconds();
+    web_performance_timing_.connect_start =
+      timing.connect_timing.connect_start.is_null() ? -1 :
+      (timing.connect_timing.connect_start - navigation_start).InMilliseconds();
+    web_performance_timing_.secure_connect_start =
+      timing.connect_timing.ssl_start.is_null() ? -1 :
+      (timing.connect_timing.ssl_start - navigation_start).InMilliseconds();
+    web_performance_timing_.connect_end =
+      timing.connect_timing.connect_end.is_null() ? -1 :
+      (timing.connect_timing.connect_end - navigation_start).InMilliseconds();
+    web_performance_timing_.request_start =
+      timing.send_start.is_null() ? -1 :
+      (timing.send_start - navigation_start).InMilliseconds();
+    web_performance_timing_.response_start =
+      timing.receive_headers_start.is_null() ? -1 :
+      (timing.receive_headers_start - navigation_start).InMilliseconds();
+  }
+}
+
+void OhPageLoadMetricsObserver::OnFirstPaintInPage(
+  const page_load_metrics::mojom::PageLoadTiming& timing) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  web_performance_timing_.first_paint = timing.paint_timing->first_paint ?
+    timing.paint_timing->first_paint->InMilliseconds() : -1;
+}
+
+void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
+  ReportPageLoadTimeStats(web_performance_timing_);
+  web_performance_timing_.Reset();
+}
+
+void OhPageLoadMetricsObserver::ReportBufferedMetrics(
+  const page_load_metrics::mojom::PageLoadTiming& timing) {
+  if (!GetDelegate().DidCommit() || reported_buffered_metrics_) {
+    return;
+  }
+
+  reported_buffered_metrics_ = true;
+
+  web_performance_timing_.redirect_count = main_frame_request_redirect_count_;
+  const page_load_metrics::ContentfulPaintTimingInfo& largest_contentful_paint =
+    GetDelegate().GetLargestContentfulPaintHandler()
+      .MergeMainFrameAndSubframes();
+
+  if (largest_contentful_paint.ContainsValidTime()) {
+    web_performance_timing_.largest_contentful_paint =
+      largest_contentful_paint.Time()->InMilliseconds();
+    ReportPerformanceTiming();
+    return;
+  }
 }
