@@ -131,6 +131,10 @@ FileChooserParams SelectFileToFileChooserParams(
     case ui::SelectFileDialog::Type::SELECT_OPEN_MULTI_FILE:
       mode = FileChooserParams::Mode::kOpenMultiple;
       break;
+ #if BUILDFLAG(IS_OHOS)
+    case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
+      mode = FileChooserParams::Mode::kUploadFolder;
+ #endif
     default:
       NOTIMPLEMENTED();
       return params;
