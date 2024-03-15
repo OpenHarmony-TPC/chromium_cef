@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6200669abe01c67ef048d3c82fd870a1a5629324$
+// $hash=2a9e27516ca71f15e3e029fc29108ccb398b8d5a$
 //
 
 #include "libcef_dll/cpptoc/request_handler_cpptoc.h"
@@ -29,10 +29,13 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK request_handler_on_before_browse(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    cef_frame_t *frame, cef_request_t *request, int user_gesture,
-    int is_redirect) {
+int CEF_CALLBACK
+request_handler_on_before_browse(struct _cef_request_handler_t* self,
+                                 cef_browser_t* browser,
+                                 cef_frame_t* frame,
+                                 cef_request_t* request,
+                                 int user_gesture,
+                                 int is_redirect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -68,9 +71,12 @@ int CEF_CALLBACK request_handler_on_before_browse(
 }
 
 int CEF_CALLBACK request_handler_on_open_urlfrom_tab(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    cef_frame_t *frame, const cef_string_t *target_url,
-    cef_window_open_disposition_t target_disposition, int user_gesture) {
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser,
+    cef_frame_t* frame,
+    const cef_string_t* target_url,
+    cef_window_open_disposition_t target_disposition,
+    int user_gesture) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -104,12 +110,16 @@ int CEF_CALLBACK request_handler_on_open_urlfrom_tab(
   return _retval;
 }
 
-struct _cef_resource_request_handler_t *CEF_CALLBACK
+struct _cef_resource_request_handler_t* CEF_CALLBACK
 request_handler_get_resource_request_handler(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    cef_frame_t *frame, cef_request_t *request, int is_navigation,
-    int is_download, const cef_string_t *request_initiator,
-    int *disable_default_handling) {
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser,
+    cef_frame_t* frame,
+    cef_request_t* request,
+    int is_navigation,
+    int is_download,
+    const cef_string_t* request_initiator,
+    int* disable_default_handling) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -161,11 +171,16 @@ request_handler_get_resource_request_handler(
   return CefResourceRequestHandlerCppToC::Wrap(_retval);
 }
 
-int CEF_CALLBACK request_handler_get_auth_credentials(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    const cef_string_t *origin_url, int isProxy, const cef_string_t *host,
-    int port, const cef_string_t *realm, const cef_string_t *scheme,
-    cef_auth_callback_t *callback) {
+int CEF_CALLBACK
+request_handler_get_auth_credentials(struct _cef_request_handler_t* self,
+                                     cef_browser_t* browser,
+                                     const cef_string_t* origin_url,
+                                     int isProxy,
+                                     const cef_string_t* host,
+                                     int port,
+                                     const cef_string_t* realm,
+                                     const cef_string_t* scheme,
+                                     cef_auth_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -206,10 +221,13 @@ int CEF_CALLBACK request_handler_get_auth_credentials(
   return _retval;
 }
 
-int CEF_CALLBACK request_handler_on_certificate_error(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    cef_errorcode_t cert_error, const cef_string_t *request_url,
-    struct _cef_sslinfo_t *ssl_info, cef_callback_t *callback) {
+int CEF_CALLBACK
+request_handler_on_certificate_error(struct _cef_request_handler_t* self,
+                                     cef_browser_t* browser,
+                                     cef_errorcode_t cert_error,
+                                     const cef_string_t* request_url,
+                                     struct _cef_sslinfo_t* ssl_info,
+                                     cef_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -249,11 +267,16 @@ int CEF_CALLBACK request_handler_on_certificate_error(
 }
 
 int CEF_CALLBACK request_handler_on_select_client_certificate(
-    struct _cef_request_handler_t *self, cef_browser_t *browser, int isProxy,
-    const cef_string_t *host, int port, cef_string_list_t key_types,
-    cef_string_list_t principals, size_t certificatesCount,
-    struct _cef_x509certificate_t *const *certificates,
-    cef_select_client_certificate_callback_t *callback) {
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser,
+    int isProxy,
+    const cef_string_t* host,
+    int port,
+    cef_string_list_t key_types,
+    cef_string_list_t principals,
+    size_t certificatesCount,
+    struct _cef_x509certificate_t* const* certificates,
+    cef_select_client_certificate_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -319,8 +342,9 @@ int CEF_CALLBACK request_handler_on_select_client_certificate(
   return _retval;
 }
 
-void CEF_CALLBACK request_handler_on_render_view_ready(
-    struct _cef_request_handler_t *self, cef_browser_t *browser) {
+void CEF_CALLBACK
+request_handler_on_render_view_ready(struct _cef_request_handler_t* self,
+                                     cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -341,7 +365,8 @@ void CEF_CALLBACK request_handler_on_render_view_ready(
 }
 
 void CEF_CALLBACK request_handler_on_render_process_terminated(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser,
     cef_termination_status_t status) {
   shutdown_checker::AssertNotShutdown();
 
@@ -363,7 +388,8 @@ void CEF_CALLBACK request_handler_on_render_process_terminated(
 }
 
 void CEF_CALLBACK request_handler_on_document_available_in_main_frame(
-    struct _cef_request_handler_t *self, cef_browser_t *browser) {
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -383,10 +409,14 @@ void CEF_CALLBACK request_handler_on_document_available_in_main_frame(
       CefBrowserCToCpp::Wrap(browser));
 }
 
-int CEF_CALLBACK request_handler_should_override_url_loading(
-    struct _cef_request_handler_t *self, cef_browser_t *browser,
-    const cef_string_t *url, const cef_string_t *method, int user_gesture,
-    int is_redirect, int is_outermost_main_frame) {
+int CEF_CALLBACK
+request_handler_should_override_url_loading(struct _cef_request_handler_t* self,
+                                            cef_browser_t* browser,
+                                            const cef_string_t* url,
+                                            const cef_string_t* method,
+                                            int user_gesture,
+                                            int is_redirect,
+                                            int is_outermost_main_frame) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -421,7 +451,68 @@ int CEF_CALLBACK request_handler_should_override_url_loading(
   return _retval;
 }
 
-} // namespace
+int CEF_CALLBACK
+request_handler_on_all_certificate_error(struct _cef_request_handler_t* self,
+                                         cef_browser_t* browser,
+                                         cef_errorcode_t cert_error,
+                                         const cef_string_t* request_url,
+                                         const cef_string_t* origin_url,
+                                         const cef_string_t* referrer,
+                                         int is_main_frame_request,
+                                         int is_fatal_error,
+                                         struct _cef_sslinfo_t* ssl_info,
+                                         cef_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return 0;
+  }
+  // Verify param: request_url; type: string_byref_const
+  DCHECK(request_url);
+  if (!request_url) {
+    return 0;
+  }
+  // Verify param: origin_url; type: string_byref_const
+  DCHECK(origin_url);
+  if (!origin_url) {
+    return 0;
+  }
+  // Verify param: referrer; type: string_byref_const
+  DCHECK(referrer);
+  if (!referrer) {
+    return 0;
+  }
+  // Verify param: ssl_info; type: refptr_diff
+  DCHECK(ssl_info);
+  if (!ssl_info) {
+    return 0;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefRequestHandlerCppToC::Get(self)->OnAllCertificateError(
+      CefBrowserCToCpp::Wrap(browser), cert_error, CefString(request_url),
+      CefString(origin_url), CefString(referrer),
+      is_main_frame_request ? true : false, is_fatal_error ? true : false,
+      CefSSLInfoCToCpp::Wrap(ssl_info), CefCallbackCToCpp::Wrap(callback));
+
+  // Return type: bool
+  return _retval;
+}
+
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -441,6 +532,8 @@ CefRequestHandlerCppToC::CefRequestHandlerCppToC() {
       request_handler_on_document_available_in_main_frame;
   GetStruct()->should_override_url_loading =
       request_handler_should_override_url_loading;
+  GetStruct()->on_all_certificate_error =
+      request_handler_on_all_certificate_error;
 }
 
 // DESTRUCTOR - Do not edit by hand.
@@ -450,16 +543,17 @@ CefRequestHandlerCppToC::~CefRequestHandlerCppToC() {
 }
 
 template <>
-CefRefPtr<CefRequestHandler>
-CefCppToCRefCounted<CefRequestHandlerCppToC, CefRequestHandler,
-                    cef_request_handler_t>::UnwrapDerived(CefWrapperType type,
-                                                          cef_request_handler_t
-                                                              *s) {
+CefRefPtr<CefRequestHandler> CefCppToCRefCounted<
+    CefRequestHandlerCppToC,
+    CefRequestHandler,
+    cef_request_handler_t>::UnwrapDerived(CefWrapperType type,
+                                          cef_request_handler_t* s) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCppToCRefCounted<CefRequestHandlerCppToC, CefRequestHandler,
+CefWrapperType CefCppToCRefCounted<CefRequestHandlerCppToC,
+                                   CefRequestHandler,
                                    cef_request_handler_t>::kWrapperType =
     WT_REQUEST_HANDLER;

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=9338429aaac13cd9b4ce9d6ce9a4c34cd699bc4d$
+// $hash=edb0bd501ae389682218a058aef153c191f5f8d3$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
@@ -77,11 +77,12 @@ typedef struct _cef_request_handler_t {
   /// link) or false (0) if it navigated automatically (e.g. via the
   /// DomContentLoaded event).
   ///
-  int(CEF_CALLBACK *on_before_browse)(struct _cef_request_handler_t *self,
-                                      struct _cef_browser_t *browser,
-                                      struct _cef_frame_t *frame,
-                                      struct _cef_request_t *request,
-                                      int user_gesture, int is_redirect);
+  int(CEF_CALLBACK* on_before_browse)(struct _cef_request_handler_t* self,
+                                      struct _cef_browser_t* browser,
+                                      struct _cef_frame_t* frame,
+                                      struct _cef_request_t* request,
+                                      int user_gesture,
+                                      int is_redirect);
 
   ///
   /// Called on the UI thread before OnBeforeBrowse in certain limited cases
@@ -99,10 +100,13 @@ typedef struct _cef_request_handler_t {
   /// true (1) to cancel the navigation or false (0) to allow the navigation to
   /// proceed in the source browser's top-level frame.
   ///
-  int(CEF_CALLBACK *on_open_urlfrom_tab)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
-      struct _cef_frame_t *frame, const cef_string_t *target_url,
-      cef_window_open_disposition_t target_disposition, int user_gesture);
+  int(CEF_CALLBACK* on_open_urlfrom_tab)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_string_t* target_url,
+      cef_window_open_disposition_t target_disposition,
+      int user_gesture);
 
   ///
   /// Called on the browser process IO thread before a resource request is
@@ -120,12 +124,16 @@ typedef struct _cef_request_handler_t {
   /// same function will be called on the associated
   /// cef_request_context_handler_t, if any.
   ///
-  struct _cef_resource_request_handler_t *(
-      CEF_CALLBACK *get_resource_request_handler)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
-      struct _cef_frame_t *frame, struct _cef_request_t *request,
-      int is_navigation, int is_download, const cef_string_t *request_initiator,
-      int *disable_default_handling);
+  struct _cef_resource_request_handler_t*(
+      CEF_CALLBACK* get_resource_request_handler)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      int is_navigation,
+      int is_download,
+      const cef_string_t* request_initiator,
+      int* disable_default_handling);
 
   ///
   /// Called on the IO thread when the browser needs credentials from the user.
@@ -139,11 +147,16 @@ typedef struct _cef_request_handler_t {
   /// when the authentication information is available. Return false (0) to
   /// cancel the request immediately.
   ///
-  int(CEF_CALLBACK *get_auth_credentials)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
-      const cef_string_t *origin_url, int isProxy, const cef_string_t *host,
-      int port, const cef_string_t *realm, const cef_string_t *scheme,
-      struct _cef_auth_callback_t *callback);
+  int(CEF_CALLBACK* get_auth_credentials)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* origin_url,
+      int isProxy,
+      const cef_string_t* host,
+      int port,
+      const cef_string_t* realm,
+      const cef_string_t* scheme,
+      struct _cef_auth_callback_t* callback);
 
   ///
   /// Called on the UI thread to handle requests for URLs with an invalid SSL
@@ -153,12 +166,12 @@ typedef struct _cef_request_handler_t {
   /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
   /// will be accepted without calling this function.
   ///
-  int(CEF_CALLBACK *on_certificate_error)(struct _cef_request_handler_t *self,
-                                          struct _cef_browser_t *browser,
+  int(CEF_CALLBACK* on_certificate_error)(struct _cef_request_handler_t* self,
+                                          struct _cef_browser_t* browser,
                                           cef_errorcode_t cert_error,
-                                          const cef_string_t *request_url,
-                                          struct _cef_sslinfo_t *ssl_info,
-                                          struct _cef_callback_t *callback);
+                                          const cef_string_t* request_url,
+                                          struct _cef_sslinfo_t* ssl_info,
+                                          struct _cef_callback_t* callback);
 
   ///
   /// Called on the UI thread when a client certificate is being requested for
@@ -173,49 +186,79 @@ typedef struct _cef_request_handler_t {
   /// already been pruned by Chromium so that it only contains certificates from
   /// issuers that the server trusts.
   ///
-  int(CEF_CALLBACK *on_select_client_certificate)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
-      int isProxy, const cef_string_t *host, int port,
-      cef_string_list_t key_types, cef_string_list_t principals,
+  int(CEF_CALLBACK* on_select_client_certificate)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      int isProxy,
+      const cef_string_t* host,
+      int port,
+      cef_string_list_t key_types,
+      cef_string_list_t principals,
       size_t certificatesCount,
-      struct _cef_x509certificate_t *const *certificates,
-      struct _cef_select_client_certificate_callback_t *callback);
+      struct _cef_x509certificate_t* const* certificates,
+      struct _cef_select_client_certificate_callback_t* callback);
 
   ///
   /// Called on the browser process UI thread when the render view associated
   /// with |browser| is ready to receive/handle IPC messages in the render
   /// process.
   ///
-  void(CEF_CALLBACK *on_render_view_ready)(struct _cef_request_handler_t *self,
-                                           struct _cef_browser_t *browser);
+  void(CEF_CALLBACK* on_render_view_ready)(struct _cef_request_handler_t* self,
+                                           struct _cef_browser_t* browser);
 
   ///
   /// Called on the browser process UI thread when the render process terminates
   /// unexpectedly. |status| indicates how the process terminated.
   ///
-  void(CEF_CALLBACK *on_render_process_terminated)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
+  void(CEF_CALLBACK* on_render_process_terminated)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
       cef_termination_status_t status);
 
   ///
   /// Called on the browser process UI thread when the window.document object of
   /// the main frame has been created.
   ///
-  void(CEF_CALLBACK *on_document_available_in_main_frame)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser);
+  void(CEF_CALLBACK* on_document_available_in_main_frame)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser);
 
   ///
   /// Called on the browser process UI thread when the url is about to be loaded
   /// into the current Web.
   ///
-  int(CEF_CALLBACK *should_override_url_loading)(
-      struct _cef_request_handler_t *self, struct _cef_browser_t *browser,
-      const cef_string_t *url, const cef_string_t *method, int user_gesture,
-      int is_redirect, int is_outermost_main_frame);
+  int(CEF_CALLBACK* should_override_url_loading)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* url,
+      const cef_string_t* method,
+      int user_gesture,
+      int is_redirect,
+      int is_outermost_main_frame);
+
+  ///
+  /// Called on the UI thread to handle requests for URLs with an invalid SSL
+  /// certificate. Return true (1) and call cef_callback_t functions either in
+  /// this function or at a later time to continue or cancel the request. Return
+  /// false (0) to cancel the request immediately. If
+  /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
+  /// will be accepted without calling this function.
+  ///
+  int(CEF_CALLBACK* on_all_certificate_error)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_errorcode_t cert_error,
+      const cef_string_t* request_url,
+      const cef_string_t* origin_url,
+      const cef_string_t* referrer,
+      int is_main_frame_request,
+      int is_fatal_error,
+      struct _cef_sslinfo_t* ssl_info,
+      struct _cef_callback_t* callback);
 } cef_request_handler_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_

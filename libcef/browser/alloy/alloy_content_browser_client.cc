@@ -1416,10 +1416,26 @@ void AlloyContentBrowserClient::AllowCertificateError(
     const GURL& request_url,
     bool is_main_frame_request,
     bool strict_enforcement,
+#ifdef OHOS_NETWORK_LOAD
+    const GURL& origin_url,
+    const std::string& referrer,
+#endif
     base::OnceCallback<void(content::CertificateRequestResultType)> callback) {
+#ifdef OHOS_NETWORK_LOAD
+  auto returned_callback = certificate_query::AllowAllCertificateError(
+      web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
+      strict_enforcement,
+      origin_url,
+      referrer,
+      std::move(callback), /*default_disallow=*/true
+      );
+#else
   auto returned_callback = certificate_query::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, std::move(callback), /*default_disallow=*/true);
+      strict_enforcement,
+      std::move(callback), /*default_disallow=*/true
+      );
+#endif
   // Callback should not be returned.
   DCHECK(returned_callback.is_null());
 }

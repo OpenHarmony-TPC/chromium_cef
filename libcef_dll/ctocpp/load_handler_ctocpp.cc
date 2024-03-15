@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=80441c984612c6be249c1850a2263b833f4b43c9$
+// $hash=55c4a854ec310901631baca8bffc29be77f57463$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=044f2c953f1ad4e377d3f806f40d6ddbff5b7a8b$
+// $hash=f1292af9a0d3e4a6387f14c42516969621ab04f6$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FIRST_MEANINGFUL_PAINT_DETAILS_CAPI_H_
@@ -56,13 +56,13 @@ typedef struct _cef_first_meaningful_paint_details_t {
   cef_base_ref_counted_t base;
 
   ///
-  /// Returns absolute navigation start time
+  /// Returns start time of navigation
   ///
   int64_t(CEF_CALLBACK* get_navigation_start_time)(
       struct _cef_first_meaningful_paint_details_t* self);
 
   ///
-  /// Returns time to first contentful paint from navigation start
+  /// Returns paint time of first meaningful content.
   ///
   int64_t(CEF_CALLBACK* get_first_meaningful_paint_time)(
       struct _cef_first_meaningful_paint_details_t* self);
