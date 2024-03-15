@@ -16,12 +16,21 @@
 #include "base/memory/weak_ptr.h"
 #include "base/time/time.h"
 #include "components/keyed_service/core/keyed_service.h"
+#include "include/cef_resource_handler.h"
+#include "libcef/browser/net_service/url_loader_factory_getter.h"
 #include "libcef/browser/predictors/navigation_id.h"
 #include "libcef/browser/predictors/preconnect_manager.h"
 #include "libcef/browser/predictors/resource_prefetch_predictor.h"
+#include "services/network/public/cpp/simple_url_loader.h"
 #include "url/gurl.h"
 
 namespace ohos_predictors {
+
+struct PreRequestInfo {
+  GURL url;
+  std::string method;
+  std::string request_body;
+};
 
 // Entry point for the Loading predictor.
 // From a high-level request (GURL and motivation) and a database of historical
@@ -57,6 +66,16 @@ class LoadingPredictor : public KeyedService,
   void StartInitialization();
 
   PreconnectManager* preconnect_manager();
+
+  void PrefetchResource(
+      const std::shared_ptr<PreRequestInfo>& requestInfo,
+      const std::map<std::string, std::string>& request_headers,
+      const std::string& cache_key,
+      const uint32_t& cache_valid_time);
+
+  CefRefPtr<CefResourceHandler> GetResourceHandler(
+      const GURL& url,
+      const std::string& cache_key);
 
   // KeyedService:
   void Shutdown() override;
@@ -95,6 +114,12 @@ class LoadingPredictor : public KeyedService,
   // indicates if preconnect is possible.
   void HandleOmniboxHint(const GURL& url, bool preconnectable);
 
+  void OnSimpleURLLoaderComplete(network::SimpleURLLoader* url_loader,
+                                 const std::string& cache_key,
+                                 const size_t& request_id,
+                                 const uint32_t& cache_valid_time,
+                                 std::unique_ptr<std::string> responce_body);
+
   LoadingPredictorConfig config_;
   content::BrowserContext* context_;
   std::unique_ptr<PreconnectManager> preconnect_manager_;
@@ -106,6 +131,11 @@ class LoadingPredictor : public KeyedService,
   url::Origin last_omnibox_origin_;
   base::TimeTicks last_omnibox_preconnect_time_;
   base::TimeTicks last_omnibox_preresolve_time_;
+
+  scoped_refptr<net_service::URLLoaderFactoryGetter> loader_factory_getter_;
+  std::map<size_t, std::unique_ptr<network::SimpleURLLoader>> loader_map_;
+  // Next request ID
+  size_t next_request_id_ = 0;
 
   base::WeakPtrFactory<LoadingPredictor> weak_factory_{this};
 };
