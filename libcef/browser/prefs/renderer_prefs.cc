@@ -420,6 +420,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.embed_tag = CefString(&cef.embed_tag);
   web.embed_tag_type = CefString(&cef.embed_tag_type);
   web.draw_mode = cef.draw_mode;
+  SET_STATE(cef.text_autosizing_enabled, web.text_autosizing_enabled);
 #if defined(OHOS_DARKMODE)
   if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
     web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;

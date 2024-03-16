@@ -847,6 +847,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   SETTINGS_STRING_SET(browser_settings.embed_tag_type,
                       settings_.embed_tag_type);
   settings_.draw_mode = browser_settings.draw_mode;
+  settings_.text_autosizing_enabled = browser_settings.text_autosizing_enabled;
 #endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
