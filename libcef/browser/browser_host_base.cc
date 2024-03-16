@@ -3159,20 +3159,22 @@ void CefBrowserHostBase::CloseMedia() {
 
 void CefBrowserHostBase::ResumeMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession or webContents failed.";
     return;
   }
   mediaSession->Resume(content::MediaSession::SuspendType::kSystem);
+  GetWebContents()->SetHtmlPlayEnabled(true);
 }
 
 void CefBrowserHostBase::PauseMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession or webContents failed.";
     return;
   }
   mediaSession->Suspend(content::MediaSession::SuspendType::kSystem);
+  GetWebContents()->SetHtmlPlayEnabled(false);
 }
 
 void CefBrowserHostBase::StopMedia() {
@@ -3186,9 +3188,12 @@ void CefBrowserHostBase::StopMedia() {
 
 int CefBrowserHostBase::GetMediaPlaybackState() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession or webContents failed.";
     return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::NONE);
+  }
+  if (!GetWebContents()->IsHtmlPlayEnabled()) {
+    return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::PAUSED);
   }
   content::MediaSessionImpl::NWebPlaybackState playbackState = mediaSession->NWebGetState();
   return static_cast<int>(playbackState);
