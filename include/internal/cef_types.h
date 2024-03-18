@@ -683,7 +683,7 @@ typedef struct _cef_browser_settings_t {
   bool supports_double_tap_zoom;
   bool supports_multi_touch_zoom;
   cef_state_t initialize_at_minimum_page_scale;
-  bool viewport_meta_enabled;
+  std::optional<bool> viewport_meta_enabled;
   bool user_gesture_required;
   bool pinch_smooth_mode;
   cef_state_t hide_vertical_scrollbars;
