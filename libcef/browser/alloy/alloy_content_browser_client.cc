@@ -272,6 +272,9 @@ using extensions::mojom::APIPermissionID;
 #include "components/crash/content/browser/crash_handler_host_linux.h"
 #endif
 
+#if defined(OHOS_SITE_ISOLATION)
+bool g_siteIsolationMode = false;
+#endif
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -2988,28 +2991,15 @@ base::FilePath AlloyContentBrowserClient::GetGrShaderDiskCacheDirectory() {
   return cache_path.Append(FILE_PATH_LITERAL("GrShaderCache"));
 }
 
-static bool GetLockdownModeStatus() {
-  auto& system_properties_adapter = OHOS::NWeb::OhosAdapterHelper::GetInstance()
-                                      .GetSystemPropertiesInstance();
-  return system_properties_adapter.GetLockdownModeStatus();
-}
-
 bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
     content::SiteIsolationMode site_isolation_mode) {
-  bool isIgnoreLockdownMode = (*base::CommandLine::ForCurrentProcess()).HasSwitch(
-            switches::kEnablePrinting);
-  if (isIgnoreLockdownMode) {
+#if defined(OHOS_SITE_ISOLATION)
+  if (g_siteIsolationMode) {
     return site_isolation::SiteIsolationPolicy::
         ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
-  } else {
-    bool isLockdownModeEnabled = GetLockdownModeStatus();
-    if(isLockdownModeEnabled) {
-      return site_isolation::SiteIsolationPolicy::
-          ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
-    } else {
-      return true;
-    }
   }
+#endif
+  return true;
 }
 
 bool AlloyContentBrowserClient::ShouldLockProcessToSite(
