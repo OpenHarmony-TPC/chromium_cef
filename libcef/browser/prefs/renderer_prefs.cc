@@ -451,7 +451,8 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.blank_target_popup_intercept_enabled =
       cef.blank_target_popup_intercept_enabled;
 #endif
-  web.viewport_meta_enabled = cef.viewport_meta_enabled;
+  if (cef.viewport_meta_enabled.has_value())
+    web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   web.autoplay_policy =
       cef.user_gesture_required
           ? blink::mojom::AutoplayPolicy::kDocumentUserActivationRequired
