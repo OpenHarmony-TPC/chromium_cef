@@ -7,10 +7,16 @@
 #include <algorithm>
 #include <vector>
 
+#include "base/trace_event/trace_event.h"
 #include "content/public/browser/browser_thread.h"
 #include "libcef/browser/predictors/navigation_id.h"
 #include "libcef/browser/predictors/resource_prefetch_predictor.h"
+#include "libcef/common/response_impl.h"
 #include "net/base/network_anonymization_key.h"
+#include "services/network/public/cpp/resource_request.h"
+#include "services/network/public/cpp/shared_url_loader_factory.h"
+#include "services/network/public/mojom/url_response_head.mojom.h"
+#include "url/gurl.h"
 #include "url/origin.h"
 
 namespace ohos_predictors {
@@ -19,6 +25,74 @@ namespace {
 
 const base::TimeDelta kMinDelayBetweenPreresolveRequests = base::Seconds(60);
 const base::TimeDelta kMinDelayBetweenPreconnectRequests = base::Seconds(10);
+
+#define MAX_POST_NUM 6
+struct ResourceInfo {
+  std::string cache_key;
+  scoped_refptr<net::HttpResponseHeaders> response_headers;
+  std::string response_body;
+  base::Time response_time;
+  uint32_t cache_valid_time = 300;  //默认有效期为300s
+};
+std::list<std::shared_ptr<ResourceInfo>> g_predictor_post_cache_;
+
+class PredictorResourceHandler : public CefResourceHandler {
+ public:
+  explicit PredictorResourceHandler(
+      const GURL& url,
+      std::shared_ptr<ResourceInfo> resource_response)
+      : url_(url), resource_response_(resource_response) {}
+  bool Open(CefRefPtr<CefRequest> request,
+            bool& handle_request,
+            CefRefPtr<CefCallback> callback) override {
+    // Continue immediately.
+    handle_request = true;
+    return true;
+  }
+
+  void GetResponseHeaders(CefRefPtr<CefResponse> response,
+                          int64& response_length,
+                          CefString& redirectUrl) override {
+    //填充下response
+    const net::HttpResponseHeaders* headers =
+        resource_response_.get()->response_headers.get();
+    reinterpret_cast<CefResponseImpl*>(response.get())
+        ->SetResponseHeaders(*headers);
+  }
+
+  bool Read(void* data_out,
+            int bytes_to_read,
+            int& bytes_read,
+            CefRefPtr<CefResourceReadCallback> callback) override {
+    LOG(INFO) << "intercept ReadStringData";
+    bool has_data = false;
+    bytes_read = 0;
+
+    data_ = resource_response_->response_body;
+    if (offset_ < data_.length()) {
+      // Copy the next block of data info the buffer.
+      int transfer_size =
+          std::min(bytes_to_read, static_cast<int>(data_.length() - offset_));
+      memcpy(data_out, data_.c_str() + offset_, transfer_size);
+      offset_ += transfer_size;
+
+      bytes_read = transfer_size;
+      has_data = true;
+    }
+
+    return has_data;
+  }
+
+  void Cancel() override {}
+
+ private:
+  GURL url_;
+  std::shared_ptr<ResourceInfo> resource_response_;
+  std::string data_;
+  size_t offset_ = 0;
+
+  IMPLEMENT_REFCOUNTING(PredictorResourceHandler);
+};
 
 // Returns true iff |prediction| is not empty.
 bool AddInitialUrlToPreconnectPrediction(const GURL& initial_url,
@@ -235,6 +309,118 @@ void LoadingPredictor::PreconnectFinished(
 
   DCHECK(stats);
   active_hints_.erase(stats->url);
+}
+
+void LoadingPredictor::PrefetchResource(
+    const std::shared_ptr<PreRequestInfo>& request_info,
+    const std::map<std::string, std::string>& request_headers,
+    const std::string& cache_key,
+    const uint32_t& cache_valid_time) {
+  TRACE_EVENT1("net", "LoadingPredictor::PrefetchResource", "url",
+               request_info->url.spec());
+  // Build resource request.
+  auto resource_request = std::make_unique<network::ResourceRequest>();
+  resource_request->url = request_info->url;
+  resource_request->method = request_info->method;
+  for (auto it = request_headers.begin(); it != request_headers.end(); it++) {
+    resource_request->headers.SetHeader(it->first, it->second);
+  }
+  // Send resource request.
+  auto loader = network::SimpleURLLoader::Create(std::move(resource_request),
+                                                 MISSING_TRAFFIC_ANNOTATION);
+  if (!request_info->request_body.empty()) {
+    loader->AttachStringForUpload(request_info->request_body,
+                                  "application/x-www-form-urlencoded");
+  }
+  scoped_refptr<net_service::URLLoaderFactoryGetter> loader_factory_getter;
+  loader_factory_getter =
+      net_service::URLLoaderFactoryGetter::Create(nullptr, context_);
+  loader_factory_getter_ = loader_factory_getter;
+  auto loader_factory = loader_factory_getter_->GetURLLoaderFactory();
+  loader->DownloadToStringOfUnboundedSizeUntilCrashAndDie(
+      loader_factory.get(),
+      base::BindOnce(&LoadingPredictor::OnSimpleURLLoaderComplete,
+                     weak_factory_.GetWeakPtr(), loader.get(), cache_key,
+                     next_request_id_, cache_valid_time));
+  loader_map_.emplace(next_request_id_++, std::move(loader));
+}
+
+void LoadingPredictor::OnSimpleURLLoaderComplete(
+    network::SimpleURLLoader* url_loader,
+    const std::string& cache_key,
+    const size_t& request_id,
+    const uint32_t& cache_valid_time,
+    std::unique_ptr<std::string> response_body) {
+  TRACE_EVENT1("net", "LoadingPredictor::OnSimpleURLLoaderComplete", "cacheKey",
+               cache_key);
+  std::shared_ptr<ResourceInfo> resource = std::make_shared<ResourceInfo>();
+  resource->cache_key = cache_key;
+  if (url_loader->ResponseInfo() && url_loader->ResponseInfo()->headers) {
+    if (url_loader->ResponseInfo()->headers->response_code() != 200) {
+      LOG(ERROR) << "prefetch resource failed.";
+      return;
+    }
+    resource->response_time = url_loader->ResponseInfo()->response_time;
+    resource->response_headers = url_loader->ResponseInfo()->headers;
+  }
+  if (cache_valid_time != 0) {
+    resource->cache_valid_time = cache_valid_time;
+  }
+
+  if (response_body.get()) {
+    resource->response_body = std::move(*response_body);
+  }
+
+  for (auto it = g_predictor_post_cache_.begin();
+       it != g_predictor_post_cache_.end(); it++) {
+    if ((*it)->cache_key == cache_key) {
+      TRACE_EVENT0("net", "update the old same post cache");
+      g_predictor_post_cache_.erase(it);
+    }
+  }
+
+  if (g_predictor_post_cache_.size() == MAX_POST_NUM) {
+    TRACE_EVENT0("net", "remove the oldest post cache");
+    g_predictor_post_cache_.pop_front();
+  }
+  TRACE_EVENT0("net", "add new post cache");
+  g_predictor_post_cache_.push_back(resource);
+  loader_map_.erase(request_id);
+}
+
+CefRefPtr<CefResourceHandler> LoadingPredictor::GetResourceHandler(
+    const GURL& url,
+    const std::string& cache_key) {
+  TRACE_EVENT2("net", "LoadingPredictor::GetResourceHandler", "url", url.spec(),
+               "cacheKey", cache_key);
+  std::shared_ptr<ResourceInfo> resource_response;
+  std::list<std::shared_ptr<ResourceInfo>>::iterator it;
+  for (it = g_predictor_post_cache_.begin();
+       it != g_predictor_post_cache_.end(); it++) {
+    if ((*it)->cache_key == cache_key) {
+      resource_response = *it;
+      break;
+    }
+  }
+  if (resource_response == nullptr) {
+    TRACE_EVENT0("net", "get no prefetched resource");
+    return nullptr;
+  }
+
+  base::TimeDelta response_time_in_cache =
+      base::Time::Now() - resource_response->response_time;
+  if (response_time_in_cache >= base::TimeDelta() &&
+      response_time_in_cache <
+          base::Seconds(resource_response->cache_valid_time)) {
+    TRACE_EVENT0("net", "get prefetched resource");
+    return new PredictorResourceHandler(url, resource_response);
+  }
+
+  if (it != g_predictor_post_cache_.end()) {
+    g_predictor_post_cache_.erase(it);
+  }
+  TRACE_EVENT0("net", "prefetched resource is invalid.");
+  return nullptr;
 }
 
 }  // namespace ohos_predictors

@@ -11,6 +11,8 @@
 #include "libcef/browser/net_service/proxy_url_loader_factory.h"
 #include "libcef/browser/net_service/resource_handler_wrapper.h"
 #include "libcef/browser/net_service/response_filter_wrapper.h"
+#include "libcef/browser/predictors/loading_predictor.h"
+#include "libcef/browser/predictors/loading_predictor_factory.h"
 #include "libcef/browser/prefs/browser_prefs.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/common/app_manager.h"
@@ -19,6 +21,7 @@
 #include "libcef/common/request_impl.h"
 #include "libcef/common/response_impl.h"
 
+#include "base/trace_event/trace_event.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_service.h"
@@ -47,6 +50,7 @@
 namespace net_service {
 
 namespace {
+#define POST_CACHE_KEY "ArkWebPostCacheKey"
 
 const int kLoadNoCookiesFlags =
     net::LOAD_DO_NOT_SEND_COOKIES | net::LOAD_DO_NOT_SAVE_COOKIES;
@@ -850,6 +854,28 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       resource_handler = state->scheme_factory_->Create(
           init_state_->browser_, init_state_->frame_, request->url.scheme(),
           state->pending_request_.get());
+    }
+
+    std::string key;
+    if (!resource_handler &&
+        request->method == net::HttpRequestHeaders::kPostMethod &&
+        request->headers.GetHeader(POST_CACHE_KEY, &key)) {
+      TRACE_EVENT0("net",
+                   "GetOhosResourceHandlerResult get post prefetched cache");
+      request->headers.RemoveHeader(POST_CACHE_KEY);
+      std::vector<CefBrowserContext*> browser_context_all =
+          CefBrowserContext::GetAll();
+      if (browser_context_all.size() != 0) {
+        CefBrowserContext* context = browser_context_all[0];
+        content::BrowserContext* browser_context = context->AsBrowserContext();
+        if (browser_context) {
+          ohos_predictors::LoadingPredictor* loading_predictor =
+              ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
+                  browser_context);
+          resource_handler =
+              loading_predictor->GetResourceHandler(request->url, key);
+        }
+      }
     }
 
     std::unique_ptr<ResourceResponse> resource_response;
