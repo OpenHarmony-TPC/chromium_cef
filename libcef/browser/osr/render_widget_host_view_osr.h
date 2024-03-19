@@ -115,6 +115,7 @@ class CefRenderWidgetHostViewOSR
 
   ~CefRenderWidgetHostViewOSR() override;
 
+  using GestureEventCallbackTask = base::OnceCallback<void(bool)>;
   // RenderWidgetHostView implementation.
   void InitAsChild(gfx::NativeView parent_view) override;
   void SetSize(const gfx::Size& size) override;
@@ -204,7 +205,7 @@ class CefRenderWidgetHostViewOSR
   void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
   ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
-  void DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) override;
+  void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
   void SetScrollable(bool enable);
 #endif
@@ -400,6 +401,7 @@ class CefRenderWidgetHostViewOSR
       const CefTouchHandleState& end_selection_handle,
       bool need_report);
   bool NeedPopupInsertTouchHandleQuickMenu();
+  void SetGestureEventResult(bool result);
 #endif
 
 #ifdef OHOS_CLIPBOARD
