@@ -156,6 +156,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void UpdateDraggableRegions(
       absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
+
+#if BUILDFLAG(IS_OHOS)
   void ShouldOverrideUrlLoading(const std::string& url,
                                 const std::string& request_method,
                                 bool user_gesture,
@@ -163,7 +165,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
                                 bool is_outermost_main_frame,
                                 cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) override;
 
-#if BUILDFLAG(IS_OHOS)
   void OnGetImageFromCache(std::string url,
                            uint32_t buffer_size,
                            base::ReadOnlySharedMemoryRegion region);

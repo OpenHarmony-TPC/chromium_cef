@@ -1107,6 +1107,7 @@ void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
 void CefFrameHostImpl::ShouldOverrideUrlLoading(const std::string& url,
                                                 const std::string& request_method,
                                                 bool user_gesture,
@@ -1132,3 +1133,4 @@ void CefFrameHostImpl::ShouldOverrideUrlLoading(const std::string& url,
   }
   std::move(callback).Run(override);
   }
+#endif  // BUILDFLAG(IS_OHOS)

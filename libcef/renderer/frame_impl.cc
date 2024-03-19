@@ -1328,8 +1328,6 @@ void CefFrameImpl::SetScrollable(bool enable) {
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 
-#endif  // BUILDFLAG(IS_OHOS)
-
 bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
                                             const CefString& request_method,
                                             bool user_gesture,
@@ -1347,6 +1345,7 @@ bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
   
   return override;
 }
+#endif  // BUILDFLAG(IS_OHOS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)

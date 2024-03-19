@@ -94,7 +94,6 @@ void CefBrowserFrame::OnGetImageForContextNodeNull() {
     host->OnGetImageForContextNodeNull();
   }
 }
-#endif
 
 void CefBrowserFrame::ShouldOverrideUrlLoading(const std::string &url,
                                                const std::string &request_method,
@@ -111,3 +110,4 @@ void CefBrowserFrame::ShouldOverrideUrlLoading(const std::string &url,
                                    std::move(callback));
   }
 }
+#endif
