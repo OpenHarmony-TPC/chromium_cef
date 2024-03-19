@@ -389,6 +389,7 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
 CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
   bool ShouldOverrideUrlLoading(int frame_tree_node_id,
                                 bool browser_initiated,
                                 const GURL& gurl,
@@ -398,6 +399,7 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
                                 bool is_outermost_main_frame,
                                 ui::PageTransition transition,
                                 bool* ignore_navigation) override;
+#endif
 
  private:
   // Returns the extension or app associated with |site_instance| or NULL.

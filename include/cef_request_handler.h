@@ -235,8 +235,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
                                         const CefString& method,
                                         bool user_gesture,
                                         bool is_redirect,
-                                        bool is_outermost_main_frame)
-  {
+                                        bool is_outermost_main_frame) {
     return false;
   }
 

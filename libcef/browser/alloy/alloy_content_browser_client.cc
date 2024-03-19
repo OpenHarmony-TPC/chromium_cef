@@ -3085,6 +3085,7 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
 
 #endif
 
+#if BUILDFLAG(IS_OHOS)
 bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
     int frame_tree_node_id,
     bool browser_initiated,
@@ -3094,13 +3095,11 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
     bool is_redirect,
     bool is_outermost_main_frame,
     ui::PageTransition transition,
-    bool *ignore_navigation)
-{
+    bool *ignore_navigation) {
   *ignore_navigation = false;
 
   // Only GETs can be overridden.
-  if (request_method != "GET")
-  {
+  if (request_method != "GET") {
     return true;
   }
 
@@ -3108,8 +3107,7 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
       browser_initiated || transition & ui::PAGE_TRANSITION_FORWARD_BACK;
 
   // Don't offer application-initiated navigations unless it's a redirect.
-  if (application_initiated && !is_redirect)
-  {
+  if (application_initiated && !is_redirect) {
     return true;
   }
 
@@ -3127,29 +3125,24 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
   if (!is_outermost_main_frame &&
       (gurl.SchemeIs(url::kHttpScheme) || gurl.SchemeIs(url::kHttpsScheme) ||
        gurl.SchemeIs(url::kAboutScheme) ||
-       gurl.SchemeIs(url::kUuidInPackageScheme)))
-  {
+       gurl.SchemeIs(url::kUuidInPackageScheme))) {
     return true;
   }
 
   content::WebContents *web_contents =
       content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
-  if (web_contents == nullptr)
-  {
+  if (web_contents == nullptr) {
     return true;
   }
 
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
-  if (browser_host == nullptr)
-  {
+  if (browser_host == nullptr) {
     return true;
   }
 
-  if (auto client = browser_host->GetClient())
-  {
-    if (auto handler = client->GetRequestHandler())
-    {
+  if (auto client = browser_host->GetClient()) {
+    if (auto handler = client->GetRequestHandler()) {
       *ignore_navigation = handler->ShouldOverrideUrlLoading(browser_host.get(),
                                                              gurl.possibly_invalid_spec(),
                                                              request_method,
@@ -3162,3 +3155,4 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
 
   return true;
 }
+#endif

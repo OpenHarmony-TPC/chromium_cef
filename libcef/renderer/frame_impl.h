@@ -110,11 +110,13 @@ class CefFrameImpl
                const std::vector<char>& post_data) override;
 #endif  // defined(OHOS_POST_URL)
 
+#if BUILDFLAG(IS_OHOS)
   bool ShouldOverrideUrlLoading(const CefString& url,
                                 const CefString& request_method,
                                 bool user_gesture,
                                 bool is_redirect,
                                 bool is_outermost_main_frame);
+#endif  // BUILDFLAG(IS_OHOS)
 
  private:
   // Execute an action on the associated WebLocalFrame. This will queue the

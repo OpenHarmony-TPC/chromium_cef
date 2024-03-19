@@ -49,7 +49,6 @@ class CefBrowserFrame
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params) override;
   void OnGetImageForContextNodeNull() override;
-#endif
 
   void ShouldOverrideUrlLoading(const std::string& url,
                                 const std::string& request_method,
@@ -57,6 +56,7 @@ class CefBrowserFrame
                                 bool is_redirect,
                                 bool is_outermost_main_frame,
                                 cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) override;
+#endif
 
   // FrameServiceBase methods:
   bool ShouldCloseOnFinishNavigation() const override { return false; }
