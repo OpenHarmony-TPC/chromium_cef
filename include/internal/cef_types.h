@@ -715,6 +715,10 @@ typedef struct _cef_browser_settings_t {
 #if defined(OHOS_INCOGNITO_MODE)
   bool incognito_mode;
 #endif
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  bool custom_video_player_enable;
+  bool custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 } cef_browser_settings_t;
 
 ///

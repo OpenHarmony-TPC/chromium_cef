@@ -462,6 +462,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_CLIPBOARD)
   SetCopyOptionToWeb(cef, web);
 #endif // defined(OHOS_CLIPBOARD)
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  web.custom_video_player_enable = cef.custom_video_player_enable;
+  web.custom_video_player_overlay = cef.custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

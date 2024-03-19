@@ -861,6 +861,12 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if defined(OHOS_CLIPBOARD)
   settings_.copy_option = browser_settings.copy_option;
 #endif  // defined(OHOS_CLIPBOARD)
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  settings_.custom_video_player_enable =
+      browser_settings.custom_video_player_enable;
+  settings_.custom_video_player_overlay =
+      browser_settings.custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 }
 
 void CefBrowserHostBase::SetWebPreferences(
