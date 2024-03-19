@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=922b9fc9f46790ea767edd9150e4f14f578f3b1a$
+// $hash=d4972aaa05ce16b57b38cad75717f2d1a0692bf9$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LARGEST_CONTENTFUL_PAINT_DETAILS_CAPI_H_
@@ -56,31 +56,31 @@ typedef struct _cef_largest_contentful_paint_details_t {
   cef_base_ref_counted_t base;
 
   ///
-  /// Returns absolute navigation start time
+  /// Returns start time of navigation
   ///
   int64_t(CEF_CALLBACK* get_navigation_start_time)(
       struct _cef_largest_contentful_paint_details_t* self);
 
   ///
-  /// Returns time to largest image paint from navigation start
+  /// Returns paint time of largest image.
   ///
   int64_t(CEF_CALLBACK* get_largest_image_paint_time)(
       struct _cef_largest_contentful_paint_details_t* self);
 
   ///
-  /// Returns time to largest text paint from navigation start
+  /// Returns paint time of largest text.
   ///
   int64_t(CEF_CALLBACK* get_largest_text_paint_time)(
       struct _cef_largest_contentful_paint_details_t* self);
 
   ///
-  /// Returns max image loading start time.
+  /// Returns load start time of largest image.
   ///
   int64_t(CEF_CALLBACK* get_largest_image_load_start_time)(
       struct _cef_largest_contentful_paint_details_t* self);
 
   ///
-  /// Returns max image loading end time.
+  /// Returns load end time of largest image.
   ///
   int64_t(CEF_CALLBACK* get_largest_image_load_end_time)(
       struct _cef_largest_contentful_paint_details_t* self);

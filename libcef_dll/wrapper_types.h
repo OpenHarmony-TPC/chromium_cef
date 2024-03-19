@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=422cb95a8c2a0f4731a096a34197b44c1aa40028$
+// $hash=cea7a7b4c3ef026f9d9893ed119392125b10979c$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
