@@ -133,6 +133,7 @@ class CefRenderWidgetHostViewOSR
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
+  void EvictFrameBackBuffers(bool invisible) override;
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
