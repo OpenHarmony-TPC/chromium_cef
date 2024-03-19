@@ -622,6 +622,10 @@ struct CefBrowserSettingsTraits {
 #if defined(OHOS_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
 #endif
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+    target->custom_video_player_enable = src->custom_video_player_enable;
+    target->custom_video_player_overlay = src->custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
   }
 };
 
