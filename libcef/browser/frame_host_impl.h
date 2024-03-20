@@ -83,6 +83,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
 
+#ifdef OHOS_NETWORK_LOAD
+  void LoadURLWithUserGesture(const CefString& url, bool user_gesture = false) override;
+#endif
+
   bool is_temporary() const { return frame_id_ == kInvalidFrameId; }
 
   void SetFocused(bool focused);
@@ -99,13 +103,17 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void LoadURLWithExtras(const std::string& url,
                          const content::Referrer& referrer,
                          ui::PageTransition transition,
+                         const std::string& extra_headers
 #ifdef OHOS_POST_URL
-                         const std::string& extra_headers,
+                         ,
                          const std::string& method = std::string(),
-                         const std::vector<char>& post_data = std::vector<char>());
-#else
-                         const std::string& extra_headers);
+                         const std::vector<char>& post_data = std::vector<char>()
 #endif
+#ifdef OHOS_NETWORK_LOAD
+                         ,
+                         bool user_gesture = false
+#endif
+                        );
 
   // Send a command to the renderer for execution.
   void SendCommand(const std::string& command);

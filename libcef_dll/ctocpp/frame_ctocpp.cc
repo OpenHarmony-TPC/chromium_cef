@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c5baf82d340c21578684c66edfcd00cd3ef53bb8$
+// $hash=4defe58ed0565aaa01faf14da4dfa5b35015906c$
 //
 
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
@@ -560,6 +560,28 @@ void CefFrameCToCpp::PostURL(const CefString& url,
   if (post_dataList) {
     delete[] post_dataList;
   }
+}
+
+NO_SANITIZE("cfi-icall")
+void CefFrameCToCpp::LoadURLWithUserGesture(const CefString& url,
+                                            bool user_gesture) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_frame_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, load_urlwith_user_gesture)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->load_urlwith_user_gesture(_struct, url.GetStruct(), user_gesture);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8119c16246e30bec42511e5d0482c18f9421c17f$
+// $hash=a84d40fb61c9d65e54dff4577c97760b9d808420$
 //
 
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
@@ -546,6 +546,28 @@ void CEF_CALLBACK frame_post_url(struct _cef_frame_t* self,
   CefFrameCppToC::Get(self)->PostURL(CefString(url), post_dataList);
 }
 
+void CEF_CALLBACK frame_load_urlwith_user_gesture(struct _cef_frame_t* self,
+                                                  const cef_string_t* url,
+                                                  int user_gesture) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+
+  // Execute
+  CefFrameCppToC::Get(self)->LoadURLWithUserGesture(
+      CefString(url), user_gesture ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -579,6 +601,7 @@ CefFrameCppToC::CefFrameCppToC() {
   GetStruct()->load_header_url = frame_load_header_url;
   GetStruct()->get_images = frame_get_images;
   GetStruct()->post_url = frame_post_url;
+  GetStruct()->load_urlwith_user_gesture = frame_load_urlwith_user_gesture;
 }
 
 // DESTRUCTOR - Do not edit by hand.

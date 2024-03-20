@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=580f315cae73d613e99731ea70a9f9b2052b7416$
+// $hash=900bd6e17b07d9ee1044814db863c3853525c737$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_
@@ -290,6 +290,13 @@ typedef struct _cef_frame_t {
                                const cef_string_t* url,
                                size_t post_dataCount,
                                char const* post_data);
+
+  ///
+  /// LoadURLWithUserGesture
+  ///
+  void(CEF_CALLBACK* load_urlwith_user_gesture)(struct _cef_frame_t* self,
+                                                const cef_string_t* url,
+                                                int user_gesture);
 } cef_frame_t;
 
 #ifdef __cplusplus

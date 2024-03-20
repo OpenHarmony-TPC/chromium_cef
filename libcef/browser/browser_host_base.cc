@@ -1889,11 +1889,21 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       web_contents->GetController().LoadURLWithParams(LoadURLParams);
     } else {
       web_contents->GetController().LoadURL(
-          gurl, params.referrer, params.transition, params.extra_headers);
+          gurl, params.referrer, params.transition, params.extra_headers
+#ifdef OHOS_NETWORK_LOAD
+          ,
+          params.user_gesture
+#endif
+          );
     }
 #else
     web_contents->GetController().LoadURL(
-        gurl, params.referrer, params.transition, params.extra_headers);
+        gurl, params.referrer, params.transition, params.extra_headers
+#ifdef OHOS_NETWORK_LOAD
+        ,
+        params.user_gesture
+#endif
+      );
 #endif
     return true;
   }

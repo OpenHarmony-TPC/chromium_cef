@@ -947,6 +947,12 @@ void CefFrameImpl::PostURL(const CefString& url,
   // todo(ohos) : impl this function then remove todo
 }
 
+#ifdef OHOS_NETWORK_LOAD
+void CefFrameImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
+  // todo(ohos) : impl this function then remove todo
+}
+#endif
+
 void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
 #if defined(OHOS_INPUT_EVENTS)
   if (element.IsNull() || is_update_) {

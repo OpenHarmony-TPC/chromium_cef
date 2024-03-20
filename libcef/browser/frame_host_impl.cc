@@ -372,16 +372,33 @@ void CefFrameHostImpl::LoadRequest(cef::mojom::RequestParamsPtr params) {
   }
 }
 
+#ifdef OHOS_NETWORK_LOAD
+void CefFrameHostImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
+  LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit, std::string()
+#ifdef OHOS_POST_URL
+                    ,
+                    std::string(),
+                    std::vector<char>()
+#endif
+                    ,
+                    user_gesture);
+}
+#endif
+
 void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
                                          const content::Referrer& referrer,
                                          ui::PageTransition transition,
+                                         const std::string& extra_headers
 #ifdef OHOS_POST_URL
-                                         const std::string& extra_headers,
+                                         ,
                                          const std::string& method,
-                                         const std::vector<char>& post_data) {
-#else
-                                         const std::string& extra_headers) {
+                                         const std::vector<char>& post_data
 #endif
+#ifdef OHOS_NETWORK_LOAD
+                                         ,
+                                         bool user_gesture
+ #endif
+                                        ) {
   // Only known frame ids or kMainFrameId are supported.
   const auto frame_id = GetFrameId();
   if (frame_id < CefFrameHostImpl::kMainFrameId) {
@@ -402,6 +419,9 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
           gurl, referrer, WindowOpenDisposition::CURRENT_TAB, transition,
           /*is_renderer_initiated=*/false);
       params.extra_headers = extra_headers;
+#ifdef OHOS_NETWORK_LOAD
+      params.user_gesture = user_gesture;
+#endif
 #ifdef OHOS_POST_URL
       if (method == "POST") {
         if (post_data.size() <= 0) {

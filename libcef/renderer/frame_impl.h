@@ -110,6 +110,10 @@ class CefFrameImpl
                const std::vector<char>& post_data) override;
 #endif  // defined(OHOS_POST_URL)
 
+#ifdef OHOS_NETWORK_LOAD
+  void LoadURLWithUserGesture(const CefString& url, bool user_gesture = false) override;
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   bool ShouldOverrideUrlLoading(const CefString& url,
                                 const CefString& request_method,
