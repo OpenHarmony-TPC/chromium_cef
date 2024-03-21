@@ -14,6 +14,7 @@
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/accessibility_handler_cpptoc.h"
+#include "libcef_dll/cpptoc/gesture_event_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -914,7 +915,8 @@ render_handler_filter_scroll_event(struct _cef_render_handler_t* self,
 void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
     struct _cef_render_handler_t* self,
     cef_browser_t* browser,
-    const struct _cef_embed_touch_event_t* event) {
+    const struct _cef_embed_touch_event_t* event,
+    cef_gesture_event_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -937,6 +939,11 @@ void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
     DCHECK(false) << "invalid event->[base.]size";
     return;
   }
+  // Verify param: callback; type: refptr_same
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
 
   // Translate param: event; type: struct_byref_const
   CefEmbedTouchEvent eventObj;
@@ -946,7 +953,8 @@ void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnNativeEmbedGestureEvent(
-      CefBrowserCToCpp::Wrap(browser), eventObj);
+      CefBrowserCToCpp::Wrap(browser), eventObj,
+      CefGestureEventCallbackCppToC::Unwrap(callback));
 }
 
 void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(

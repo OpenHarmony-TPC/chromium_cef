@@ -90,6 +90,20 @@ class CefStoreWebArchiveResultCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// Interface to implement to be notified of asynchronous completion via
+/// CefBrowserHostBase::SetGestureEventResult().
+///
+/*--cef(source=client)--*/
+class CefGestureEventCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void ContinueTask(bool result) = 0;
+};
+
+///
 /// Interface to implement to be notified of asynchronous web message channel.
 ///
 /*--cef(source=client)--*/

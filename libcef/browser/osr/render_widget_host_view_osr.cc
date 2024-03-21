@@ -64,7 +64,7 @@
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #include "res_sched_client_adapter.h"
 #include "services/device/public/mojom/screen_orientation.mojom.h"
-
+#include "third_party/blink/renderer/platform/widget/input/input_handler_proxy.h"
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -182,6 +182,53 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
  private:
   CefRenderWidgetHostViewOSR* const view_;
 };
+
+#if BUILDFLAG(IS_OHOS)
+class CefGestureEventCallbackImpl : public CefGestureEventCallback {
+ public:
+  using CallbackType = blink::InputHandlerProxy::GestureEventCallback;
+
+  CefGestureEventCallbackImpl(CallbackType callback)
+      : callback_(std::move(callback)) {}
+  ~CefGestureEventCallbackImpl() override {
+    if (!callback_.is_null()) {
+      // The callback is still pending. Cancel it now.
+      if (CEF_CURRENTLY_ON_UIT()) {
+        CancelNow(std::move(callback_));
+      } else {
+        CEF_POST_TASK(CEF_UIT,
+                      base::BindOnce(&CefGestureEventCallbackImpl::CancelNow,
+                                     std::move(callback_)));
+      }
+    }
+  }
+
+  void ContinueTask(bool user_input) override {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      if (!callback_.is_null()) {
+        std::move(callback_).Run(user_input);
+      }
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefGestureEventCallbackImpl::ContinueTask, this,
+                                   user_input));
+    }
+  }
+
+
+  [[nodiscard]] CallbackType Disconnect() { return std::move(callback_); }
+
+ private:
+  static void CancelNow(CallbackType callback) {
+    CEF_REQUIRE_UIT();
+    std::move(callback).Run(false);
+  }
+
+  CallbackType callback_;
+
+  IMPLEMENT_REFCOUNTING(CefGestureEventCallbackImpl);
+};
+#endif
 
 ui::GestureProvider::Config CreateGestureProviderConfig() {
   ui::GestureProvider::Config config = ui::GetGestureProviderConfig(
@@ -3012,8 +3059,8 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
     NotifyVirtualKeyboardOverlayRect(keyboard_rect);
   }
 }
-void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) {
-  if (touchEvent->type == blink::mojom::TouchType::UP) {
+void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) {
+  if (touchEvent->type == blink::mojom::NativeTouchType::UP) {
     gesture_provider_.SetNativeEmbedEnabled(false);
   } else {
     gesture_provider_.SetNativeEmbedEnabled(true);
@@ -3025,7 +3072,11 @@ void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::EmbedTo
     CefRenderHandler::CefEmbedTouchEvent event{touchEvent->embedId, touchEvent->id, touchEvent->x, touchEvent->y,
       touchEvent->screenX, touchEvent->screenY, static_cast<CefRenderHandler::CefEmbedTouchType>(touchEvent->type),
       touchEvent->offsetX, touchEvent->offsetY};
-    handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event);
+    auto new_callback = base::BindOnce(
+      &CefRenderWidgetHostViewOSR::SetGestureEventResult, weak_ptr_factory_.GetWeakPtr());
+    CefRefPtr<CefGestureEventCallbackImpl> callbackPtr(
+      new CefGestureEventCallbackImpl(std::move(new_callback)));
+    handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event, callbackPtr.get());
   }
 }
 
@@ -3037,6 +3088,16 @@ void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHan
     handler->OnNativeEmbedLifecycleChange(browser_impl_.get(), info);
 
   }
+}
+
+void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
+  if (!render_widget_host_) {
+    return;
+  }
+  if (!result) {
+    gesture_provider_.SetNativeEmbedEnabled(false);
+  }
+  render_widget_host_->input_router()->SetGestureEventResult(result);
 }
 
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {

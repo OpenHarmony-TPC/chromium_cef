@@ -98,6 +98,23 @@ typedef struct _cef_store_web_archive_result_callback_t {
 } cef_store_web_archive_result_callback_t;
 
 ///
+/// Structure to implement to be notified of asynchronous completion via
+/// cef_browser_host_tBase::SetGestureEventResult().
+///
+typedef struct _cef_gesture_event_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK* continue_task)(struct _cef_gesture_event_callback_t* self,
+                                    int result);
+} cef_gesture_event_callback_t;
+
+///
 /// Structure to implement to be notified of asynchronous web message channel.
 ///
 typedef struct _cef_web_message_receiver_t {

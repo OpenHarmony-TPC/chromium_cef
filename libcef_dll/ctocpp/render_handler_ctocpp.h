@@ -114,7 +114,8 @@ class CefRenderHandlerCToCpp
                          const float fling_x,
                          const float fling_y) override;
   void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
-                                 const cef_embed_touch_event_t& event) override;
+                                 const cef_embed_touch_event_t& event,
+                                 CefRefPtr<CefGestureEventCallback> callback) override;
   void OnNativeEmbedLifecycleChange(
       CefRefPtr<CefBrowser> browser,
       const cef_native_embed_data_t& info) override;
