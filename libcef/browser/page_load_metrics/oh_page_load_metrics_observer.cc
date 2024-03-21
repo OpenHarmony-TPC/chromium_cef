@@ -314,7 +314,9 @@ void OhPageLoadMetricsObserver::OnFirstPaintInPage(
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
+#if defined(REPORT_SYS_EVENT)
   ReportPageLoadTimeStats(web_performance_timing_);
+#endif
   web_performance_timing_.Reset();
 }
 
