@@ -65,6 +65,8 @@
 #include "res_sched_client_adapter.h"
 #include "services/device/public/mojom/screen_orientation.mojom.h"
 #include "third_party/blink/renderer/platform/widget/input/input_handler_proxy.h"
+#include "content/browser/browser_main_loop.h"
+
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -89,6 +91,7 @@ const float kDefaultScaleFactor = 1.0;
 #if defined(OHOS_PERFORMANCE_JITTER)
 const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
+const size_t KFirstTouchRecordingTimes = 5;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -177,6 +180,8 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   void OnVsync() override { view_->OnVsync(); }
+
+  void OnVsyncReceived() override { view_->OnVsyncReceived(); }
 #endif
 
  private:
@@ -412,7 +417,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 
 #if BUILDFLAG(IS_OHOS)
   bool excludable_devices = base::CommandLine::ForCurrentProcess()
-      ->HasSwitch(switches::kDoubleTapSupportForPlatformEnabled); 
+      ->HasSwitch(switches::kDoubleTapSupportForPlatformEnabled);
   gesture_provider_.SetDoubleTapSupportForPlatformEnabled(excludable_devices);
 #endif
 }
@@ -748,6 +753,12 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   blink::WebTouchEvent touch_event = ui::CreateWebTouchEventFromMotionEvent(
       pointer_state_, result.moved_beyond_slop_region, false);
 
+  if (touch_event.GetType() == blink::WebInputEvent::Type::kTouchMove) {
+    web_touch_event_count_++;
+  }
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SendTouchEventList web_touch_event_count_:"
+                 << web_touch_event_count_;
+
   for (const auto& event : event_list) {
     pointer_state_.CleanupRemovedTouchPoints(event);
 
@@ -760,14 +771,15 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   if (!render_widget_host_)
     return;
 
-  ui::LatencyInfo latency_info = CreateLatencyInfo(touch_event);
-  if (ShouldRouteEvents()) {
-    render_widget_host_->delegate()->GetInputEventRouter()->RouteTouchEvent(
-        this, &touch_event, latency_info);
+#if defined(OHOS_PERFORMANCE_JITTER)
+  // Don't push the first three times so that will not affect touch delay
+  if (touch_event.GetType() == blink::WebInputEvent::Type::kTouchMove &&
+      web_touch_event_count_ > KFirstTouchRecordingTimes) {
+    web_touch_event_queue_.push_back(touch_event);
   } else {
-    render_widget_host_->ForwardTouchEventWithLatencyInfo(touch_event,
-                                                          latency_info);
+    SendTouchGestureEvent(touch_event);
   }
+#endif
 
   bool touch_end =
       touch_event.GetType() == blink::WebInputEvent::Type::kTouchEnd ||
@@ -778,6 +790,19 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
     parent_host_view_->forward_touch_to_popup_ = false;
   }
 }
+
+#if defined(OHOS_PERFORMANCE_JITTER)
+void CefRenderWidgetHostViewOSR::SendTouchGestureEvent(blink::WebTouchEvent& touch_event) {
+  ui::LatencyInfo latency_info = CreateLatencyInfo(touch_event);
+  if (ShouldRouteEvents()) {
+    render_widget_host_->delegate()->GetInputEventRouter()->RouteTouchEvent(
+        this, &touch_event, latency_info);
+  } else {
+    render_widget_host_->ForwardTouchEventWithLatencyInfo(touch_event,
+                                                          latency_info);
+  }
+}
+#endif
 
 void CefRenderWidgetHostViewOSR::EvictFrameBackBuffers(bool invisible) {
   TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::EvictFrameBackBuffers",
@@ -2045,6 +2070,16 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
       LOG(ERROR) << "compositor is null when send touch event";
     }
   }
+
+  if (event.type == CEF_TET_PRESSED || event.type == CEF_TET_RELEASED || event.type == CEF_TET_CANCELLED) {
+      web_touch_event_count_ = 0;
+
+      while(!web_touch_event_queue_.empty()) {
+        blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+        SendTouchGestureEvent(touchEvent);
+        web_touch_event_queue_.pop_front();
+      }
+  }
 #endif
 
   if (!IsPopupWidget() && popup_host_view_) {
@@ -2247,7 +2282,8 @@ void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
 void CefRenderWidgetHostViewOSR::OnVsync() {
-  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::OnVsync");
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsync",
+    "gesture_event_queue", gesture_event_queue_.size());
 
   if (gesture_event_queue_.size() > kMaxGestureQueueSize) {
     LOG(ERROR) << "gesture event queue size is error:"
@@ -2258,6 +2294,22 @@ void CefRenderWidgetHostViewOSR::OnVsync() {
   if (!gesture_event_queue_.empty()) {
     SendGestureEvent(std::move(gesture_event_queue_.front()));
     gesture_event_queue_.pop_front();
+  }
+}
+
+void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncReceived",
+    "web_touch_event_queue", web_touch_event_queue_.size());
+  if (web_touch_event_queue_.size() > kMaxGestureQueueSize) {
+    LOG(ERROR) << "web touch event queue size is error:"
+               << web_touch_event_queue_.size();
+    web_touch_event_queue_.clear();
+  }
+
+  if (!web_touch_event_queue_.empty()) {
+    blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+    SendTouchGestureEvent(touchEvent);
+    web_touch_event_queue_.pop_front();
   }
 }
 #endif
