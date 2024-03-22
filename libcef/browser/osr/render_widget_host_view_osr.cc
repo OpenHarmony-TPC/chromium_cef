@@ -534,8 +534,12 @@ void CefRenderWidgetHostViewOSR::Focus() {
 
 bool CefRenderWidgetHostViewOSR::HasFocus() {
 #if BUILDFLAG(IS_OHOS)
-  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
-    return text_input_manager_->GetActiveWidget()->is_focused();
+  content::RenderWidgetHostImpl* target_host = render_widget_host_;
+  if (render_widget_host_ && render_widget_host_->delegate()) {
+    target_host = render_widget_host_->delegate()->GetFocusedRenderWidgetHost(render_widget_host_);
+  }
+  if (target_host && target_host->GetView()) {
+    return target_host->is_focused();
   }
   return false;
 #else
