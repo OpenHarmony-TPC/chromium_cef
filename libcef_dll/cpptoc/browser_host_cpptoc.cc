@@ -1490,7 +1490,7 @@ void CEF_CALLBACK browser_host_get_root_browser_accessibility_manager(
 
 void CEF_CALLBACK
 browser_host_execute_java_script(struct _cef_browser_host_t* self,
-                                 const cef_string_t* code,
+                                 const char* code,
                                  cef_java_script_result_callback_t* callback,
                                  int extention) {
   shutdown_checker::AssertNotShutdown();
@@ -1501,7 +1501,7 @@ browser_host_execute_java_script(struct _cef_browser_host_t* self,
   if (!self) {
     return;
   }
-  // Verify param: code; type: string_byref_const
+  // Verify param: code; type: std_string_byref_const
   DCHECK(code);
   if (!code) {
     return;
@@ -1514,7 +1514,7 @@ browser_host_execute_java_script(struct _cef_browser_host_t* self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->ExecuteJavaScript(
-      CefString(code), CefJavaScriptResultCallbackCToCpp::Wrap(callback),
+      code, CefJavaScriptResultCallbackCToCpp::Wrap(callback),
       extention ? true : false);
 }
 

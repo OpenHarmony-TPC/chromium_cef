@@ -1198,7 +1198,7 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* execute_java_script)(
       struct _cef_browser_host_t* self,
-      const cef_string_t* code,
+      const char* code,
       struct _cef_java_script_result_callback_t* callback,
       int extention);
 
