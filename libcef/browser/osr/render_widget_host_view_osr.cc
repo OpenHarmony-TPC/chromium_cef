@@ -778,6 +778,18 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
     parent_host_view_->forward_touch_to_popup_ = false;
   }
 }
+
+void CefRenderWidgetHostViewOSR::EvictFrameBackBuffers(bool invisible) {
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::EvictFrameBackBuffers",
+               "invisible", invisible);
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+    ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+      browser_impl_->GetAcceleratedWidget());
+    if(compositor) {
+        compositor->EvictFrameBackBuffers(invisible);
+    }
+  }
+}
 #endif
 
 void CefRenderWidgetHostViewOSR::EnsureSurfaceSynchronizedForWebTest() {
