@@ -1298,7 +1298,7 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: code; type: string_byref_const
+  // Verify param: code; type: std_string_byref_const
   DCHECK(!code.empty());
   if (code.empty()) {
     return;
@@ -1309,11 +1309,10 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
     return;
   }
 
-  CefString jsCode(code);
   // Execute
   _struct->execute_java_script(
-      _struct, jsCode.GetStruct(),
-      CefJavaScriptResultCallbackCppToC::Wrap(callback), extention);
+      _struct, code.c_str(), CefJavaScriptResultCallbackCppToC::Wrap(callback),
+      extention);
 }
 
 NO_SANITIZE("cfi-icall")
