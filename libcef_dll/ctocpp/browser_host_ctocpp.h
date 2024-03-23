@@ -141,6 +141,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ExecuteJavaScript(const std::string &code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
+  void ExecuteJavaScriptExt(const int fd,
+                            const uint64 scriptLength,
+                            CefRefPtr<CefJavaScriptResultCallback> callback,
+                            bool extention) override;
   void SetNativeWindow(cef_native_window_t window) override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
