@@ -283,6 +283,10 @@ class CefRenderWidgetHostViewOSR
   void OnVsync();
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
+
+  void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
+
+  void OnVsyncReceived();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -588,6 +592,9 @@ class CefRenderWidgetHostViewOSR
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
 
   size_t gesture_update_count_ = 0;
+
+  base::circular_deque<blink::WebTouchEvent> web_touch_event_queue_;
+  size_t web_touch_event_count_ = 0;
 #endif
 #endif
 
