@@ -13,6 +13,8 @@
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_view.h"
 
+#include "ipc/ipc_platform_file_attachment_posix.h"
+
 #include "libcef/common/javascript/oh_gin_javascript_bridge_value.h"
 #include "libcef/renderer/javascript/oh_gin_javascript_bridge_value_converter.h"
 
@@ -125,6 +127,27 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
   base::Value::List result_wrapper;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error));
+  if (result_wrapper.empty()) {
+    return nullptr;
+  }
+  return base::Value::ToUniquePtrValue(result_wrapper[0].Clone());
+}
+
+std::unique_ptr<base::Value>
+OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
+    ObjectID object_id,
+    const std::string& method_name,
+    const base::Value::List& arguments,
+    int fd,
+    OhGinJavascriptBridgeError* error) {
+  std::string url;
+  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
+  url = frame->GetDocument().Url().GetString().Utf8();
+  base::Value::List result_wrapper;
+  IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
+      routing_id(), object_id, url, method_name, arguments, &result_wrapper, error);
+  msg->WriteAttachment(new IPC::internal::PlatformAttachment(fd));
+  render_frame()->Send(msg);
   if (result_wrapper.empty()) {
     return nullptr;
   }

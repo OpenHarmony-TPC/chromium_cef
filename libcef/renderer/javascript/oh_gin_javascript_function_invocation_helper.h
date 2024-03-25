@@ -32,6 +32,22 @@ class OhGinJavascriptFunctionInvocationHelper {
   v8::Local<v8::Value> Invoke(gin::Arguments* args);
 
  private:
+  std::unique_ptr<base::Value> InvokeJavascriptMethod(
+      base::Value::List& arguments,
+      OhGinJavascriptBridgeError& error,
+      gin::Arguments* args,
+      OhGinJavascriptBridgeObject* object);
+
+  std::unique_ptr<base::Value> InvokeJavascriptMethodFlowbuf(
+      base::Value::List& arguments,
+      OhGinJavascriptBridgeError& error,
+      gin::Arguments* args,
+      OhGinJavascriptBridgeObject* object);
+  
+  bool StoreString(int index, void* mem, const char* str);
+
+  static int32_t maxFdNum_;
+  static std::atomic<int32_t> usedFd_;
   std::string method_name_;
   base::WeakPtr<OhGinJavascriptBridgeDispatcher> dispatcher_;
   std::unique_ptr<OhGinJavascriptBridgeValueConverter> converter_;
