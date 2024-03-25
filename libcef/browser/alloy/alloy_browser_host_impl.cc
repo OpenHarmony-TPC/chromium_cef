@@ -1786,7 +1786,20 @@ void AlloyBrowserHostImpl::MediaStartedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStartedPlaying, is_video: " << video_type.has_video;
-
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_START, host->GetProcess().Pid());
+    }
+    ++video_stream_cnt_;
+  }
+#endif
   start_play_ = true;
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   if (client_.get() && client_->GetMediaHandler().get()) {
@@ -1803,6 +1816,22 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
   if (!start_play_) {
     return;
   }
+
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    --++video_stream_cnt_;;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_STOP, host->GetProcess().Pid());
+    }
+    video_stream_cnt_ = std::max(video_stream_cnt_, 0);
+  }
+#endif
 
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
@@ -2061,7 +2090,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  
+
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
@@ -2070,7 +2099,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
   using namespace OHOS::NWeb;
   if(pid != last_pid_ && last_pid_ != -1) {
-    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE, 
+    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE,
                                               last_pid_, window_id_, nweb_id_);
   }
   last_pid_ = pid;
