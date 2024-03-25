@@ -120,6 +120,7 @@ class CefRenderHandlerCToCpp
       CefRefPtr<CefBrowser> browser,
       const cef_native_embed_data_t& info) override;
   void NotifySelectAllClicked(bool select_all) override;
+  void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

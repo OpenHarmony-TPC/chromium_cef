@@ -3113,6 +3113,24 @@ void CEF_CALLBACK browser_host_set_nweb_id(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetNWebId(nWebId);
 }
 
+int CEF_CALLBACK
+browser_host_get_pending_size_status(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->GetPendingSizeStatus();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3291,6 +3309,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_last_javascript_proxy_calling_frame_url =
       browser_host_get_last_javascript_proxy_calling_frame_url;
   GetStruct()->set_nweb_id = browser_host_set_nweb_id;
+  GetStruct()->get_pending_size_status = browser_host_get_pending_size_status;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -1252,6 +1252,10 @@ void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
     compositor->SetDrawMode(mode);
   }
 }
+
+bool CefRenderWidgetHostViewOSR::GetPendingSizeStatus() {
+  return pending_resize_;
+}
 #endif
 
 #if !BUILDFLAG(IS_MAC)

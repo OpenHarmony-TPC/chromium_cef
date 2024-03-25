@@ -256,6 +256,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void CloseCamera() override;
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void SetNWebId(int nWebId) override;
+  bool GetPendingSizeStatus() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

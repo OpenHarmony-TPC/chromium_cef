@@ -112,6 +112,7 @@ class CefBrowserPlatformDelegateOsr
   void WasKeyboardResized() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT

@@ -1733,6 +1733,11 @@ typedef struct _cef_browser_host_t {
   ///  Set NWebID.
   ///
   void(CEF_CALLBACK* set_nweb_id)(struct _cef_browser_host_t* self, int nWebId);
+
+  ///
+  // get current pending_size_status.
+  ///
+  int(CEF_CALLBACK *get_pending_size_status)(struct _cef_browser_host_t *self);
 } cef_browser_host_t;
 
 ///
