@@ -2709,9 +2709,9 @@ void CefBrowserHostBase::ExecuteJavaScript(
     bool extention) {
   auto web_contents = GetWebContents();
   // enable inject javaScript
-  LOG(INFO) << "ExecuteJavaScript with callback enter";
+  LOG(DEBUG) << "ExecuteJavaScript with callback enter";
   if (web_contents && web_contents->GetPrimaryMainFrame()) {
-    LOG(INFO) << "ExecuteJavaScript with callback";
+    LOG(DEBUG) << "ExecuteJavaScript with callback";
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
