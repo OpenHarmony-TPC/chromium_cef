@@ -32,6 +32,7 @@
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
+#include "base/trace_event/trace_event.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "content/browser/gpu/compositor_util.h"
@@ -660,13 +661,46 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 }
 
 void AlloyBrowserHostImpl::OnWindowShow() {
-  ReportWindowStatus(true);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
+  is_hidden_ = false;
+  ReportRenderProcessStatus();
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
-  ReportWindowStatus(false);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
+  is_hidden_ = true;
+  ReportRenderProcessStatus();
 }
 
+void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
+  using namespace OHOS::NWeb;
+
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      return;
+    }
+
+    ResSchedStatusAdapter status = is_hidden_
+                                       ? ResSchedStatusAdapter::WEB_INACTIVE
+                                       : ResSchedStatusAdapter::WEB_ACTIVE;
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_hidden_: " << is_hidden_ << " process_id: " << process_id;
+  } else {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
+    return;
+  }
+}
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -2061,6 +2095,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
+  ReportRenderProcessStatus();
   
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
