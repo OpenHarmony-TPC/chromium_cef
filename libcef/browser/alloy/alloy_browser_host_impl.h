@@ -470,6 +470,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
+  void ReportRenderProcessStatus();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
