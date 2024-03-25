@@ -947,6 +947,12 @@ void CefFrameImpl::PostURL(const CefString& url,
   // todo(ohos) : impl this function then remove todo
 }
 
+#ifdef OHOS_NETWORK_LOAD
+void CefFrameImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
+  // todo(ohos) : impl this function then remove todo
+}
+#endif
+
 void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
 #if defined(OHOS_INPUT_EVENTS)
   if (element.IsNull() || is_update_) {
@@ -1328,8 +1334,6 @@ void CefFrameImpl::SetScrollable(bool enable) {
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 
-#endif  // BUILDFLAG(IS_OHOS)
-
 bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
                                             const CefString& request_method,
                                             bool user_gesture,
@@ -1347,6 +1351,7 @@ bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
   
   return override;
 }
+#endif  // BUILDFLAG(IS_OHOS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)

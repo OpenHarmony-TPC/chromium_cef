@@ -51,5 +51,6 @@ void OhJavascriptInjector::DoCallH5Function(
   javascript_bridge_dispatcher_host_->DoCallH5Function(routing_id, h5_object_id,
                                                        h5_method_name, args);
 }
+
 WEB_CONTENTS_USER_DATA_KEY_IMPL(OhJavascriptInjector);
 }  // namespace NWEB

@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2410769abb38cfa9f950991721e81c065de76e4f$
+// $hash=c8e1ae0e6b62d0b53b3f946ec9da3a2eae259c1e$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/callback_ctocpp.h"
+#include "libcef_dll/ctocpp/first_meaningful_paint_details_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
+#include "libcef_dll/ctocpp/largest_contentful_paint_details_ctocpp.h"
 #include "libcef_dll/ctocpp/load_committed_details_ctocpp.h"
 #include "libcef_dll/ctocpp/request_ctocpp.h"
 #include "libcef_dll/ctocpp/response_ctocpp.h"
@@ -317,6 +319,50 @@ load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
       navigationStartTick, firstContentfulPaintMs);
 }
 
+void CEF_CALLBACK load_handler_on_first_meaningful_paint(
+    struct _cef_load_handler_t* self,
+    cef_first_meaningful_paint_details_t* details) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: details; type: refptr_diff
+  DCHECK(details);
+  if (!details) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnFirstMeaningfulPaint(
+      CefFirstMeaningfulPaintDetailsCToCpp::Wrap(details));
+}
+
+void CEF_CALLBACK load_handler_on_largest_contentful_paint(
+    struct _cef_load_handler_t* self,
+    cef_largest_contentful_paint_details_t* details) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: details; type: refptr_diff
+  DCHECK(details);
+  if (!details) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnLargestContentfulPaint(
+      CefLargestContentfulPaintDetailsCToCpp::Wrap(details));
+}
+
 void CEF_CALLBACK load_handler_on_navigation_entry_committed(
     struct _cef_load_handler_t* self,
     cef_load_committed_details_t* details) {
@@ -355,6 +401,34 @@ load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
   CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
 }
 
+void CEF_CALLBACK load_handler_on_intelligent_tracking_prevention_result(
+    struct _cef_load_handler_t* self,
+    const cef_string_t* website_host,
+    const cef_string_t* tracker_host) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: website_host; type: string_byref_const
+  DCHECK(website_host);
+  if (!website_host) {
+    return;
+  }
+  // Verify param: tracker_host; type: string_byref_const
+  DCHECK(tracker_host);
+  if (!tracker_host) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnIntelligentTrackingPreventionResult(
+      CefString(website_host), CefString(tracker_host));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -373,10 +447,16 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
   GetStruct()->on_data_resubmission = load_handler_on_data_resubmission;
   GetStruct()->on_first_contentful_paint =
       load_handler_on_first_contentful_paint;
+  GetStruct()->on_first_meaningful_paint =
+      load_handler_on_first_meaningful_paint;
+  GetStruct()->on_largest_contentful_paint =
+      load_handler_on_largest_contentful_paint;
   GetStruct()->on_navigation_entry_committed =
       load_handler_on_navigation_entry_committed;
   GetStruct()->on_safe_browsing_check_result =
       load_handler_on_safe_browsing_check_result;
+  GetStruct()->on_intelligent_tracking_prevention_result =
+      load_handler_on_intelligent_tracking_prevention_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

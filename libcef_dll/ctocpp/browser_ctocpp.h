@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b19528ad423692cfb0dcd66203ce51f4529b6782$
+// $hash=2a60a0e44351d4de2760108273f0ebada949b3bc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -87,6 +87,8 @@ class CefBrowserCToCpp
   int GetSecurityLevel() override;
   void EnableSafeBrowsing(bool enable) override;
   bool IsSafeBrowsingEnabled() override;
+  void EnableIntelligentTrackingPrevention(bool enable) override;
+  bool IsIntelligentTrackingPreventionEnabled() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3708b18d6b0b537da2af4181345c751140e962ee$
+// $hash=900dd9bbe2064a0e0f4159422962af1d113d83b9$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
@@ -75,6 +75,7 @@ class CefFrameCToCpp
   void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
   void PostURL(const CefString& url,
                const std::vector<char>& post_data) override;
+  void LoadURLWithUserGesture(const CefString& url, bool user_gesture) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_

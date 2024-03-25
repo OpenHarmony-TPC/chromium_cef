@@ -165,14 +165,6 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
   CloseQuickMenu();
-#if defined(OHOS_EX_FREE_COPY)
-  if (base::CommandLine::ForCurrentProcess() &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    SelectionTextNotEmpty(false);
-  }
-#endif
-
 #ifdef OHOS_CLIPBOARD
   auto controller = rwhv_->selection_controller();
   if (controller) {
@@ -357,6 +349,14 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
     browser->web_contents()->SetShowingContextMenu(false);
   }
 #endif  // #ifdef OHOS_CLIPBOARD
+
+#if defined(OHOS_EX_FREE_COPY)
+  if (base::CommandLine::ForCurrentProcess() &&
+      base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    SelectionTextNotEmpty(false);
+  }
+#endif
 }
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {

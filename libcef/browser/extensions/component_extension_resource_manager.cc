@@ -15,7 +15,8 @@
 #include "extensions/common/constants.h"
 
 #if BUILDFLAG(IS_OHOS)
-#include "base/ohos/sys_info_utils.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
 #endif
 
 namespace extensions {
@@ -32,7 +33,8 @@ CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
   bool enable_printing = true;
 #if BUILDFLAG(IS_OHOS)
   // The printing service is temporarily not supported on mobile device.
-  enable_printing = !base::ohos::IsMobileDevice();
+  enable_printing = (*base::CommandLine::ForCurrentProcess()).HasSwitch(
+            switches::kEnablePrinting);
 #endif
 
   pdf_extension_util::AddAdditionalData(/*enable_printing=*/enable_printing,

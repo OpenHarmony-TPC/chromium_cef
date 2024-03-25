@@ -153,6 +153,12 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
                 '\n  if ('+arg_name+'.empty()) {'\
                 '\n    return'+retval_default+';'\
                 '\n  }'
+    elif arg_type == 'std_string_byref_const':
+      result += comment+\
+                '\n  DCHECK(!'+arg_name+'.empty());'\
+                '\n  if ('+arg_name+'.empty()) {'\
+                '\n    return'+retval_default+';'\
+                '\n  }'
 
     # check index params
     index_params = arg.parent.get_attrib_list('index_param')
@@ -205,6 +211,8 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
       params.append('&' + arg_name + 'Int')
     elif arg_type == 'string_byref_const':
       params.append(arg_name + '.GetStruct()')
+    elif arg_type == 'std_string_byref_const':
+      params.append(arg_name + '.c_str()')
     elif arg_type == 'string_byref':
       params.append(arg_name + '.GetWritableStruct()')
     elif arg_type == 'refptr_same':

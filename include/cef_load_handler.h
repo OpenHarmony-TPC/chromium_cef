@@ -45,6 +45,8 @@
 #if BUILDFLAG(IS_OHOS)
 #include "include/cef_callback.h"
 #include "include/cef_load_committed_details.h"
+#include "include/cef_first_meaningful_paint_details.h"
+#include "include/cef_largest_contentful_paint_details.h"
 #include "include/cef_response.h"
 #endif
 
@@ -173,6 +175,20 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
                                       int64_t firstContentfulPaintMs) {}
 
   ///
+  /// Called when the first meaningful paint rendering of web page.
+  ///
+  /*--cef()--*/
+  virtual void OnFirstMeaningfulPaint(
+      CefRefPtr<CefFirstMeaningfulPaintDetails> details) {}
+
+  ///
+  /// Called when the largest contentful paint rendering of web page.
+  ///
+  /*--cef()--*/
+  virtual void OnLargestContentfulPaint(
+      CefRefPtr<CefLargestContentfulPaintDetails> details) {}
+
+  ///
   /// Called when the navigation entry has been committed.
   ///
   /*--cef()--*/
@@ -185,6 +201,13 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnSafeBrowsingCheckResult(int threat_type) {}
+
+  ///
+  /// Called when tracker's cookie is prevented.
+  ///
+  /*--cef()--*/
+  virtual void OnIntelligentTrackingPreventionResult(
+      const CefString& website_host, const CefString& tracker_host) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

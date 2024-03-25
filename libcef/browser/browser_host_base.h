@@ -314,6 +314,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
+  void SetNWebId(int NWebID) override;
 
   /* ohos webview end */
 #endif
@@ -370,7 +371,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                     const CefString& mimeType,
                     const CefString& encoding) override;
 
-  void ExecuteJavaScript(const CefString& code,
+  void ExecuteJavaScript(const std::string& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
 
@@ -424,6 +425,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool ShouldShowFreeCopy() override;
   // #endif
   int GetNWebId() override;
+#ifdef OHOS_ITP
+  void EnableIntelligentTrackingPrevention(bool enable) override;
+  bool IsIntelligentTrackingPreventionEnabled() override;
+#endif
 #endif  // BUILDFLAG(IS_OHOS)
 
 #if defined(OHOS_MEDIA_POLICY)
@@ -627,6 +632,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool network_blocked_ = false;
   int cache_mode_ = 0;
 #endif
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
+#endif
 #endif  // IS_OHOS
 
  protected:
@@ -724,6 +733,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
   std::map<std::string, int> document_start_script_result_map_;
   std::map<std::string, int> document_end_script_result_map_;
+#ifdef OHOS_ITP
+  mutable base::Lock lock_;
+  bool intelligent_tracking_prevention_cookies_enabled_ GUARDED_BY(lock_) = false;
+#endif
 #endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
 };

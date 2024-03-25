@@ -44,8 +44,9 @@ IPC_SYNC_MESSAGE_ROUTED2_1(OhGinJavascriptBridgeHostMsg_HasMethod,
                            std::string /* method_name */,
                            bool /* result */)
 
-IPC_SYNC_MESSAGE_ROUTED3_2(OhGinJavascriptBridgeHostMsg_InvokeMethod,
+IPC_SYNC_MESSAGE_ROUTED4_2(OhGinJavascriptBridgeHostMsg_InvokeMethod,
                            int32_t /* object_id */,
+                           std::string /* document url */,
                            std::string /* method_name */,
                            base::Value::List /* arguments */,
                            base::Value::List /* result */,

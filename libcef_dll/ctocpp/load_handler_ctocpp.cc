@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a96ce6296b8608d703d2198c9c0f1ba17ee2b143$
+// $hash=55c4a854ec310901631baca8bffc29be77f57463$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
+#include "libcef_dll/cpptoc/first_meaningful_paint_details_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+#include "libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.h"
 #include "libcef_dll/cpptoc/load_committed_details_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
@@ -319,6 +321,52 @@ void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnFirstMeaningfulPaint(
+    CefRefPtr<CefFirstMeaningfulPaintDetails> details) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_first_meaningful_paint)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: details; type: refptr_diff
+  DCHECK(details.get());
+  if (!details.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_first_meaningful_paint(
+      _struct, CefFirstMeaningfulPaintDetailsCppToC::Wrap(details));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnLargestContentfulPaint(
+    CefRefPtr<CefLargestContentfulPaintDetails> details) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_largest_contentful_paint)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: details; type: refptr_diff
+  DCHECK(details.get());
+  if (!details.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_largest_contentful_paint(
+      _struct, CefLargestContentfulPaintDetailsCppToC::Wrap(details));
+}
+
+NO_SANITIZE("cfi-icall")
 void CefLoadHandlerCToCpp::OnNavigationEntryCommitted(
     CefRefPtr<CefLoadCommittedDetails> details) {
   shutdown_checker::AssertNotShutdown();
@@ -354,6 +402,35 @@ void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
 
   // Execute
   _struct->on_safe_browsing_check_result(_struct, threat_type);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnIntelligentTrackingPreventionResult(
+    const CefString& website_host,
+    const CefString& tracker_host) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_intelligent_tracking_prevention_result)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: website_host; type: string_byref_const
+  DCHECK(!website_host.empty());
+  if (website_host.empty()) {
+    return;
+  }
+  // Verify param: tracker_host; type: string_byref_const
+  DCHECK(!tracker_host.empty());
+  if (tracker_host.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_intelligent_tracking_prevention_result(
+      _struct, website_host.GetStruct(), tracker_host.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -162,10 +162,26 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
     const GURL& request_url,
     bool is_main_frame_request,
     bool strict_enforcement,
+#ifdef OHOS_NETWORK_LOAD
+    const GURL& origin_url,
+    const std::string& referrer,
+#endif
     base::OnceCallback<void(content::CertificateRequestResultType)> callback) {
+#ifdef OHOS_NETWORK_LOAD
+  auto returned_callback = certificate_query::AllowAllCertificateError(
+      web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
+      strict_enforcement, 
+      origin_url,
+      referrer,
+      std::move(callback), /*default_disallow=*/false
+      );
+#else
   auto returned_callback = certificate_query::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, std::move(callback), /*default_disallow=*/false);
+      strict_enforcement, 
+      std::move(callback), /*default_disallow=*/false
+      );
+#endif
   if (returned_callback.is_null()) {
     // The error was handled.
     return;
@@ -174,7 +190,12 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
   // Proceed with default handling.
   ChromeContentBrowserClient::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, std::move(returned_callback));
+      strict_enforcement,
+#ifdef OHOS_NETWORK_LOAD
+      origin_url,
+      referrer,
+#endif
+      std::move(returned_callback));
 }
 
 bool ChromeContentBrowserClientCef::CanCreateWindow(

@@ -11,6 +11,7 @@
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/web_contents.h"
 #include "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.h"
+#include "libcef/browser/javascript/oh_javascript_injector.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_messages.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_value.h"
 #include "libcef/common/values_impl.h"
@@ -520,7 +521,7 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(ValueConvertState* state, bas
     case base::Value::Type::STRING: {
       LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                     "ParseBaseValueTOCefValueHelper: STRING";
-      cefValue->SetString(CefString(*value->GetIfString()));
+      cefValue->SetString(*value->GetIfString());
       return cefValue;
     }
     case base::Value::Type::LIST: {
@@ -661,10 +662,16 @@ CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::Value::List* value) {
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     int routing_id,
     int32_t object_id,
+    const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  OhJavascriptInjector* javascriptInjector =
+     OhJavascriptInjector::FromWebContents(web_contents());
+  if (javascriptInjector) {
+    javascriptInjector->SetLastCallingFrameUrl(document_url);
+  }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
   CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);

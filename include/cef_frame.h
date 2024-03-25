@@ -293,6 +293,12 @@ class CefFrame : public virtual CefBaseRefCounted {
   /*--cef(optional_param=post_data)--*/
   virtual void PostURL(const CefString& url,
                        const std::vector<char>& post_data) = 0;
+
+  ///
+  /// LoadURLWithUserGesture
+  ///
+  /*--cef()--*/
+  virtual void LoadURLWithUserGesture(const CefString& url, bool user_gesture) = 0;
 #endif
 };
 #endif  // CEF_INCLUDE_CEF_FRAME_H_

@@ -683,7 +683,7 @@ typedef struct _cef_browser_settings_t {
   bool supports_double_tap_zoom;
   bool supports_multi_touch_zoom;
   cef_state_t initialize_at_minimum_page_scale;
-  bool viewport_meta_enabled;
+  std::optional<bool> viewport_meta_enabled;
   bool user_gesture_required;
   bool pinch_smooth_mode;
   cef_state_t hide_vertical_scrollbars;
@@ -697,6 +697,7 @@ typedef struct _cef_browser_settings_t {
   bool scroll_enabled;
   bool is_safe_browsing_enable;
   int draw_mode;
+  cef_state_t text_autosizing_enabled;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -714,6 +715,10 @@ typedef struct _cef_browser_settings_t {
 #if defined(OHOS_INCOGNITO_MODE)
   bool incognito_mode;
 #endif
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  bool custom_video_player_enable;
+  bool custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 } cef_browser_settings_t;
 
 ///
@@ -4105,6 +4110,8 @@ typedef struct _cef_native_embed_t {
   std::string url;
   std::string tag;
   std::map<std::string, std::string> params;
+  int32_t x;
+  int32_t y;
 } cef_native_embed_t;
 
 ///

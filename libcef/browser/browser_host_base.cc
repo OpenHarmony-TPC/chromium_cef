@@ -91,6 +91,10 @@
 #include "cc/input/browser_controls_state.h"
 #endif
 
+#ifdef OHOS_ITP
+#include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -843,6 +847,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   SETTINGS_STRING_SET(browser_settings.embed_tag_type,
                       settings_.embed_tag_type);
   settings_.draw_mode = browser_settings.draw_mode;
+  settings_.text_autosizing_enabled = browser_settings.text_autosizing_enabled;
 #endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
@@ -856,6 +861,12 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if defined(OHOS_CLIPBOARD)
   settings_.copy_option = browser_settings.copy_option;
 #endif  // defined(OHOS_CLIPBOARD)
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  settings_.custom_video_player_enable =
+      browser_settings.custom_video_player_enable;
+  settings_.custom_video_player_overlay =
+      browser_settings.custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -1878,11 +1889,21 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       web_contents->GetController().LoadURLWithParams(LoadURLParams);
     } else {
       web_contents->GetController().LoadURL(
-          gurl, params.referrer, params.transition, params.extra_headers);
+          gurl, params.referrer, params.transition, params.extra_headers
+#ifdef OHOS_NETWORK_LOAD
+          ,
+          params.user_gesture
+#endif
+          );
     }
 #else
     web_contents->GetController().LoadURL(
-        gurl, params.referrer, params.transition, params.extra_headers);
+        gurl, params.referrer, params.transition, params.extra_headers
+#ifdef OHOS_NETWORK_LOAD
+        ,
+        params.user_gesture
+#endif
+      );
 #endif
     return true;
   }
@@ -2683,7 +2704,7 @@ bool ValidateResultType(base::Value::Type type) {
 }
 
 void CefBrowserHostBase::ExecuteJavaScript(
-    const CefString& code,
+    const std::string& code,
     CefRefPtr<CefJavaScriptResultCallback> callback,
     bool extention) {
   auto web_contents = GetWebContents();
@@ -2694,7 +2715,7 @@ void CefBrowserHostBase::ExecuteJavaScript(
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
-          code.ToString16(),
+          base::UTF8ToUTF16(code),
           base::BindOnce(
               [](CefRefPtr<CefJavaScriptResultCallback> callback,
                  base::Value result) {
@@ -2710,7 +2731,7 @@ void CefBrowserHostBase::ExecuteJavaScript(
               callback));
     } else {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
-          code.ToString16(),
+          base::UTF8ToUTF16(code),
           base::BindOnce(
               [](CefRefPtr<CefJavaScriptResultCallback> callback,
                  base::Value result) {
@@ -3155,20 +3176,22 @@ void CefBrowserHostBase::CloseMedia() {
 
 void CefBrowserHostBase::ResumeMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession or webContents failed.";
     return;
   }
   mediaSession->Resume(content::MediaSession::SuspendType::kSystem);
+  GetWebContents()->SetHtmlPlayEnabled(true);
 }
 
 void CefBrowserHostBase::PauseMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession or webContents failed.";
     return;
   }
   mediaSession->Suspend(content::MediaSession::SuspendType::kSystem);
+  GetWebContents()->SetHtmlPlayEnabled(false);
 }
 
 void CefBrowserHostBase::StopMedia() {
@@ -3182,9 +3205,12 @@ void CefBrowserHostBase::StopMedia() {
 
 int CefBrowserHostBase::GetMediaPlaybackState() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession) {
-    LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession failed.";
+  if (!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession or webContents failed.";
     return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::NONE);
+  }
+  if (!GetWebContents()->IsHtmlPlayEnabled()) {
+    return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::PAUSED);
   }
   content::MediaSessionImpl::NWebPlaybackState playbackState = mediaSession->NWebGetState();
   return static_cast<int>(playbackState);
@@ -3343,7 +3369,7 @@ void CefBrowserHostBase::StartCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->StartCamera();
+  web_contents->StartCamera(web_contents->GetNWebId());
 #endif  // defined(OHOS_WEBRTC)
 }
 
@@ -3354,7 +3380,7 @@ void CefBrowserHostBase::StopCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->StopCamera();
+  web_contents->StopCamera(web_contents->GetNWebId());
 #endif  // defined(OHOS_WEBRTC)
 }
 
@@ -3365,6 +3391,40 @@ void CefBrowserHostBase::CloseCamera() {
     LOG(ERROR) << "GetWebContents null";
     return;
   }
-  web_contents->CloseCamera();
+  web_contents->CloseCamera(web_contents->GetNWebId());
+#endif  // defined(OHOS_WEBRTC)
+}
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+CefString CefBrowserHostBase::GetLastJavascriptProxyCallingFrameUrl() {
+  return base::EmptyString();
+}
+#endif
+
+#ifdef OHOS_ITP
+void CefBrowserHostBase::EnableIntelligentTrackingPrevention(bool enable) {
+  {
+    base::AutoLock locker(lock_);
+    intelligent_tracking_prevention_cookies_enabled_ = enable;
+  }
+  LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
+  ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()->
+      EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
+}
+
+bool CefBrowserHostBase::IsIntelligentTrackingPreventionEnabled() {
+  base::AutoLock locker(lock_);
+  return intelligent_tracking_prevention_cookies_enabled_;
+}
+#endif
+
+void CefBrowserHostBase::SetNWebId(int NWebID) {
+#if defined(OHOS_WEBRTC)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->SetNWebId(NWebID);
 #endif  // defined(OHOS_WEBRTC)
 }

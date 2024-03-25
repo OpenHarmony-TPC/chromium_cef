@@ -32,11 +32,6 @@
 #include "libcef/common/crash_reporter_client.h"
 #endif
 
-#if defined(OHOS_CRASH_DUMP)
-#include "components/crash/core/app/breakpad_linux.h"
-#include "v8/include/v8-wasm-trap-handler-posix.h"
-#endif
-
 namespace crash_reporting {
 
 namespace {
@@ -135,11 +130,7 @@ void InitCrashReporter(const base::CommandLine& command_line,
   if (process_type != switches::kZygoteProcess) {
     // Crash reporting for subprocesses created using the zygote will be
     // initialized in ZygoteForked.
-#if defined(OHOS_CRASH_DUMP)
-    breakpad::InitCrashReporter(process_type);
-#else
     crash_reporter::InitializeCrashpad(process_type.empty(), process_type);
-#endif
 
     g_crash_reporting_enabled = true;
   }
@@ -204,13 +195,8 @@ void BasicStartupComplete(base::CommandLine* command_line) {
   CefCrashReporterClient* crash_client = g_crash_reporter_client.Pointer();
   if (crash_client->ReadCrashConfigFile()) {
 #if !BUILDFLAG(IS_MAC)
-#if defined(OHOS_CRASH_DUMP)
-    // Breakpad requires this switch.
-    command_line->AppendSwitch(switches::kEnableCrashReporter);
-#else
     // Crashpad requires this switch on Linux.
     command_line->AppendSwitch(switches::kEnableCrashpad);
-#endif // OHOS_CRASH_DUMP
 #endif
   }
 }
@@ -243,13 +229,8 @@ void ZygoteForked(base::CommandLine* command_line,
                   const std::string& process_type) {
   CefCrashReporterClient* crash_client = g_crash_reporter_client.Pointer();
   if (crash_client->HasCrashConfigFile()) {
-#if defined(OHOS_CRASH_DUMP)
-    // Breakpad requires this switch.
-    command_line->AppendSwitch(switches::kEnableCrashReporter);
-#else
     // Crashpad requires this switch on Linux.
     command_line->AppendSwitch(switches::kEnableCrashpad);
-#endif // OHOS_CRASH_DUMP
   }
 
   InitCrashReporter(*command_line, process_type);

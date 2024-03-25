@@ -115,6 +115,7 @@ class CefRenderWidgetHostViewOSR
 
   ~CefRenderWidgetHostViewOSR() override;
 
+  using GestureEventCallbackTask = base::OnceCallback<void(bool)>;
   // RenderWidgetHostView implementation.
   void InitAsChild(gfx::NativeView parent_view) override;
   void SetSize(const gfx::Size& size) override;
@@ -133,6 +134,7 @@ class CefRenderWidgetHostViewOSR
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
+  void EvictFrameBackBuffers(bool invisible) override;
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
@@ -204,7 +206,7 @@ class CefRenderWidgetHostViewOSR
   void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
   ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
-  void DidNativeEmbedEvent(const blink::mojom::EmbedTouchEventPtr& touchEvent) override;
+  void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
   void SetScrollable(bool enable);
 #endif
@@ -281,6 +283,10 @@ class CefRenderWidgetHostViewOSR
   void OnVsync();
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
+
+  void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
+
+  void OnVsyncReceived();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -400,6 +406,7 @@ class CefRenderWidgetHostViewOSR
       const CefTouchHandleState& end_selection_handle,
       bool need_report);
   bool NeedPopupInsertTouchHandleQuickMenu();
+  void SetGestureEventResult(bool result);
 #endif
 
 #ifdef OHOS_CLIPBOARD
@@ -585,6 +592,9 @@ class CefRenderWidgetHostViewOSR
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
 
   size_t gesture_update_count_ = 0;
+
+  base::circular_deque<blink::WebTouchEvent> web_touch_event_queue_;
+  size_t web_touch_event_count_ = 0;
 #endif
 #endif
 

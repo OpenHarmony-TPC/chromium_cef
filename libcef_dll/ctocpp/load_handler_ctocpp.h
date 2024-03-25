@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ac48ade5db4b6e1ad55f91c244ef0a5770ad124b$
+// $hash=b2ae7a053685d0da760da107022a85283ba74d26$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -70,9 +70,16 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                           CefRefPtr<CefCallback> callback) override;
   void OnFirstContentfulPaint(int64_t navigationStartTick,
                               int64_t firstContentfulPaintMs) override;
+  void OnFirstMeaningfulPaint(
+      CefRefPtr<CefFirstMeaningfulPaintDetails> details) override;
+  void OnLargestContentfulPaint(
+      CefRefPtr<CefLargestContentfulPaintDetails> details) override;
   void OnNavigationEntryCommitted(
       CefRefPtr<CefLoadCommittedDetails> details) override;
   void OnSafeBrowsingCheckResult(int threat_type) override;
+  void OnIntelligentTrackingPreventionResult(
+      const CefString& website_host,
+      const CefString& tracker_host) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

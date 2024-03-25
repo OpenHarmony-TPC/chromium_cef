@@ -32,12 +32,15 @@ class OhJavascriptInjector
                         int32_t h5_object_id,
                         const std::string& h5_method_name,
                         const std::vector<CefRefPtr<CefValue>>& args);
+  void SetLastCallingFrameUrl(const std::string& url) { last_calling_frame_url_ = url; }
+  std::string GetLastCallingFrameUrl() { return last_calling_frame_url_; }
 
  private:
   friend class content::WebContentsUserData<OhJavascriptInjector>;
 
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost>
       javascript_bridge_dispatcher_host_;
+  std::string last_calling_frame_url_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };
 }  // namespace NWEB

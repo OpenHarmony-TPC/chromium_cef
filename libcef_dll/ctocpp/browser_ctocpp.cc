@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cdbc417c9eae19e3955d8e4ca88064ac39e433c6$
+// $hash=b199600eedae8a0c29bd2ff9e16e86fc88bf806c$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -851,6 +851,39 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsSafeBrowsingEnabled() {
 
   // Execute
   int _retval = _struct->is_safe_browsing_enabled(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::EnableIntelligentTrackingPrevention(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_intelligent_tracking_prevention)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_intelligent_tracking_prevention(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserCToCpp::IsIntelligentTrackingPreventionEnabled() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_intelligent_tracking_prevention_enabled)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_intelligent_tracking_prevention_enabled(_struct);
 
   // Return type: bool
   return _retval ? true : false;

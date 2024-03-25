@@ -451,10 +451,13 @@ source_set("libcef_test_support") {
 #
 
 source_set("libcef_static") {
+  defines = []
   if (gpu_switch == "off") {
-    defines = [ "DISABLE_GPU" ]
+    defines += [ "DISABLE_GPU" ]
   }
-
+  if (is_ohos) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
   sources = includes_common + gypi_paths.autogen_cpp_includes + [
               "libcef/browser/alloy/alloy_browser_context.cc",
               "libcef/browser/alloy/alloy_browser_context.h",
@@ -988,6 +991,10 @@ source_set("libcef_static") {
               "libcef/browser/javascript/oh_gin_javascript_bridge_object_deletion_message_filter.h",
               "libcef/browser/javascript/oh_javascript_injector.cc",
               "libcef/browser/javascript/oh_javascript_injector.h",
+              "libcef/browser/first_meaningful_paint_details_impl.h",
+              "libcef/browser/first_meaningful_paint_details_impl.cc",
+              "libcef/browser/largest_contentful_paint_details_impl.h",
+              "libcef/browser/largest_contentful_paint_details_impl.cc",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.cc",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.h",
               "libcef/common/javascript/oh_gin_javascript_bridge_message_generator.cc",
@@ -1029,6 +1036,18 @@ source_set("libcef_static") {
       "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h",
     ]
   }
+
+  #ifdef OHOS_ITP
+  if (defined(ohos_itp) && ohos_itp) {
+    if (!defined(ohos_nweb_ex) || !ohos_nweb_ex) {
+      sources += [ "libcef/browser/anti_tracking/anti_tracking_delegate_ohos.cc", ]
+    }
+    sources += [
+      "libcef/browser/anti_tracking/third_party_cookie_access_policy.cc",
+      "libcef/browser/anti_tracking/third_party_cookie_access_policy.h",
+    ]
+  }
+  #endif
 
   #ifdef OHOS_COOKIE
   if (defined(ohos_cookie) && ohos_cookie) {
@@ -1077,7 +1096,7 @@ source_set("libcef_static") {
       "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
       "libcef/browser/net_database/cef_incognito_data_base_impl.h",
       "libcef/browser/alloy/alloy_off_the_record_browser_context.cc",
-      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",      
+      "libcef/browser/alloy/alloy_off_the_record_browser_context.h",
     ]
   }
 #endif
@@ -1472,7 +1491,9 @@ static_library("libcef_dll_wrapper") {
   }
 
   defines = [ "WRAPPING_CEF_SHARED" ]
-
+  if (is_ohos) {
+    defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
   configs += [ ":libcef_dll_wrapper_config" ]
   public_configs = [ ":libcef_dll_wrapper_config" ]
 
@@ -1837,6 +1858,7 @@ if (is_mac) {
 
   shared_library("libweb_engine") {
     configs += [ "//build/config/sanitizers:cfi_config" ]
+    defines = [ "LOGGING_TAG=\"cef#\"" ]
     sources =
         includes_common + gypi_paths.autogen_cpp_includes +
         gypi_paths2.includes_capi + gypi_paths.autogen_capi_includes +

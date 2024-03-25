@@ -202,13 +202,6 @@
 
 constexpr int32_t APPLICATION_API_10 = 10;
 #endif
-#if defined(OHOS_CRASH_DUMP)
-#include "base/debug/leak_annotations.h"
-#include "chrome/common/chrome_paths.h"
-#include "components/crash/content/browser/crash_handler_host_linux.h"
-#include "components/crash/core/app/breakpad_linux.h"
-#include "content/public/common/content_descriptors.h"
-#endif // defined(OHOS_CRASH_DUMP)
 
 #ifdef OHOS_EDM_POLICY
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
@@ -275,6 +268,13 @@ using extensions::mojom::APIPermissionID;
 
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 
+#if defined(OHOS_CRASHPAD)
+#include "components/crash/content/browser/crash_handler_host_linux.h"
+#endif
+
+#if defined(OHOS_SITE_ISOLATION)
+bool g_siteIsolationMode = false;
+#endif
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -809,75 +809,23 @@ class CefSelectClientCertificateCallbackImpl
   IMPLEMENT_REFCOUNTING(CefSelectClientCertificateCallbackImpl);
 };
 
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC) && !defined(OHOS_CRASH_DUMP)
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
 int GetCrashSignalFD() {
   if (!crash_reporting::Enabled()) {
     return -1;
   }
 
+#if defined(OHOS_CRASHPAD)
+  // ohos don't use linux crash handler
+  int crash_signal_fd = crashpad::CrashHandlerHost::Get()->GetDeathSignalSocket();
+  return crash_signal_fd;
+#else
   int fd;
   pid_t pid;
   return crash_reporter::GetHandlerSocket(&fd, &pid) ? fd : -1;
+#endif
 }
 #endif  // BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
-
-#if defined(OHOS_CRASH_DUMP)
-breakpad::CrashHandlerHostLinux* CreateCrashHandlerHost(
-    const std::string& process_type) {
-  base::FilePath dumps_path;
-  base::PathService::Get(chrome::DIR_CRASH_DUMPS, &dumps_path);
-  {
-    ANNOTATE_SCOPED_MEMORY_LEAK;
-    // Uploads will only occur if a non-empty crash URL is specified in
-    // AlloyMainDelegate::InitCrashReporter.
-    breakpad::CrashHandlerHostLinux* crash_handler =
-        new breakpad::CrashHandlerHostLinux(process_type, dumps_path,
-                                            false /* upload */
-        );
-    crash_handler->StartUploaderThread();
-    return crash_handler;
-  }
-}
-
-int GetCrashSignalFD(const base::CommandLine& command_line) {
-  if (!breakpad::IsCrashReporterEnabled())
-    return -1;
-
-  // Extensions have the same process type as renderers.
-  if (command_line.HasSwitch(extensions::switches::kExtensionProcess)) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost("extension");
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  std::string process_type =
-      command_line.GetSwitchValueASCII(switches::kProcessType);
-
-  if (process_type == switches::kRendererProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  if (process_type == switches::kPpapiPluginProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  if (process_type == switches::kGpuProcess) {
-    static breakpad::CrashHandlerHostLinux* crash_handler = nullptr;
-    if (!crash_handler)
-      crash_handler = CreateCrashHandlerHost(process_type);
-    return crash_handler->GetDeathSignalSocket();
-  }
-
-  return -1;
-}
-#endif  // defined(OHOS_CRASH_DUMP)
 
 // From chrome/browser/plugins/chrome_content_browser_client_plugins_part.cc.
 void BindPluginInfoHost(
@@ -1471,10 +1419,26 @@ void AlloyContentBrowserClient::AllowCertificateError(
     const GURL& request_url,
     bool is_main_frame_request,
     bool strict_enforcement,
+#ifdef OHOS_NETWORK_LOAD
+    const GURL& origin_url,
+    const std::string& referrer,
+#endif
     base::OnceCallback<void(content::CertificateRequestResultType)> callback) {
+#ifdef OHOS_NETWORK_LOAD
+  auto returned_callback = certificate_query::AllowAllCertificateError(
+      web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
+      strict_enforcement,
+      origin_url,
+      referrer,
+      std::move(callback), /*default_disallow=*/true
+      );
+#else
   auto returned_callback = certificate_query::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, std::move(callback), /*default_disallow=*/true);
+      strict_enforcement,
+      std::move(callback), /*default_disallow=*/true
+      );
+#endif
   // Callback should not be returned.
   DCHECK(returned_callback.is_null());
 }
@@ -1906,11 +1870,7 @@ void AlloyContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     const base::CommandLine& command_line,
     int child_process_id,
     content::PosixFileDescriptorInfo* mappings) {
-#if defined(OHOS_CRASH_DUMP)
-  int crash_signal_fd = GetCrashSignalFD(command_line);
-#else
   int crash_signal_fd = GetCrashSignalFD();
-#endif
   if (crash_signal_fd >= 0) {
     mappings->Share(kCrashDumpSignal, crash_signal_fd);
   }
@@ -2697,7 +2657,8 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   // this is currently not the case and this was not required pre M84.
   network_context_params->require_network_isolation_key = false;
 #if defined(OHOS_CACHE)
-  if (base::ohos::IsMobileDevice()) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kHttpCacheMaxSize)) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kForBrowser)) {
       // In order to make better use of cache, we use the same strategy as
@@ -3046,26 +3007,15 @@ base::FilePath AlloyContentBrowserClient::GetGrShaderDiskCacheDirectory() {
   return cache_path.Append(FILE_PATH_LITERAL("GrShaderCache"));
 }
 
-static bool GetLockdownModeStatus() {
-  auto& system_properties_adapter = OHOS::NWeb::OhosAdapterHelper::GetInstance()
-                                      .GetSystemPropertiesInstance();
-  return system_properties_adapter.GetLockdownModeStatus();
-}
-
 bool AlloyContentBrowserClient::ShouldDisableSiteIsolation(
     content::SiteIsolationMode site_isolation_mode) {
-  if (base::ohos::IsPcDevice()) {
+#if defined(OHOS_SITE_ISOLATION)
+  if (g_siteIsolationMode) {
     return site_isolation::SiteIsolationPolicy::
         ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
-  } else {
-    bool isLockdownModeEnabled = GetLockdownModeStatus();
-    if(isLockdownModeEnabled) {
-      return site_isolation::SiteIsolationPolicy::
-          ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
-    } else {
-      return true;
-    }
   }
+#endif
+  return true;
 }
 
 bool AlloyContentBrowserClient::ShouldLockProcessToSite(
@@ -3125,12 +3075,7 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
 
 #endif
 
-#ifdef OHOS_USERAGENT
-void AlloyContentBrowserClient::SetTabletMode(bool is_tablet) {
-  embedder_support::SetTabletMode(is_tablet);
-}
-#endif
-
+#if BUILDFLAG(IS_OHOS)
 bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
     int frame_tree_node_id,
     bool browser_initiated,
@@ -3140,13 +3085,11 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
     bool is_redirect,
     bool is_outermost_main_frame,
     ui::PageTransition transition,
-    bool *ignore_navigation)
-{
+    bool *ignore_navigation) {
   *ignore_navigation = false;
 
   // Only GETs can be overridden.
-  if (request_method != "GET")
-  {
+  if (request_method != "GET") {
     return true;
   }
 
@@ -3154,8 +3097,7 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
       browser_initiated || transition & ui::PAGE_TRANSITION_FORWARD_BACK;
 
   // Don't offer application-initiated navigations unless it's a redirect.
-  if (application_initiated && !is_redirect)
-  {
+  if (application_initiated && !is_redirect) {
     return true;
   }
 
@@ -3173,29 +3115,24 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
   if (!is_outermost_main_frame &&
       (gurl.SchemeIs(url::kHttpScheme) || gurl.SchemeIs(url::kHttpsScheme) ||
        gurl.SchemeIs(url::kAboutScheme) ||
-       gurl.SchemeIs(url::kUuidInPackageScheme)))
-  {
+       gurl.SchemeIs(url::kUuidInPackageScheme))) {
     return true;
   }
 
   content::WebContents *web_contents =
       content::WebContents::FromFrameTreeNodeId(frame_tree_node_id);
-  if (web_contents == nullptr)
-  {
+  if (web_contents == nullptr) {
     return true;
   }
 
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
-  if (browser_host == nullptr)
-  {
+  if (browser_host == nullptr) {
     return true;
   }
 
-  if (auto client = browser_host->GetClient())
-  {
-    if (auto handler = client->GetRequestHandler())
-    {
+  if (auto client = browser_host->GetClient()) {
+    if (auto handler = client->GetRequestHandler()) {
       *ignore_navigation = handler->ShouldOverrideUrlLoading(browser_host.get(),
                                                              gurl.possibly_invalid_spec(),
                                                              request_method,
@@ -3208,3 +3145,4 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
 
   return true;
 }
+#endif

@@ -235,10 +235,30 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
                                         const CefString& method,
                                         bool user_gesture,
                                         bool is_redirect,
-                                        bool is_outermost_main_frame)
-  {
+                                        bool is_outermost_main_frame) {
     return false;
   }
+
+  ///
+  /// Called on the UI thread to handle requests for URLs with an invalid
+  /// SSL certificate. Return true and call CefCallback methods either in this
+  /// method or at a later time to continue or cancel the request. Return false
+  /// to cancel the request immediately. If
+  /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
+  /// will be accepted without calling this method.
+  ///
+  /*--cef()--*/
+  virtual bool OnAllCertificateError(CefRefPtr<CefBrowser> browser,
+                                     cef_errorcode_t cert_error,
+                                     const CefString& request_url,
+                                     const CefString& origin_url,
+                                     const CefString& referrer,
+                                     bool is_main_frame_request,
+                                     bool is_fatal_error,
+                                     CefRefPtr<CefSSLInfo> ssl_info,
+                                     CefRefPtr<CefCallback> callback) {
+    return false;
+}
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

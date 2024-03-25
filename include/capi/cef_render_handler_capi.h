@@ -357,7 +357,8 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_native_embed_gesture_event)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
-      const struct _cef_embed_touch_event_t* event);
+      const struct _cef_embed_touch_event_t* event,
+      struct _cef_gesture_event_callback_t* callback);
 
   ///
   /// Called when embed touch.

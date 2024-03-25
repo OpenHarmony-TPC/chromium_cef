@@ -652,17 +652,6 @@ void CefCrashReporterClient::GetProductNameAndVersion(std::string* product_name,
   *version = product_version_;
 }
 
-#if defined(OHOS_CRASH_DUMP)
-bool CefCrashReporterClient::EnableBreakpadForProcess(
-    const std::string& process_type) {
-  return process_type == switches::kRendererProcess ||
-         process_type == switches::kPpapiPluginProcess ||
-         process_type == switches::kZygoteProcess ||
-         process_type == switches::kGpuProcess;
-}
-
-#endif  // defined(OHOS_CRASH_DUMP)
-
 bool CefCrashReporterClient::GetCrashDumpLocation(base::FilePath* crash_dir) {
   // By setting the BREAKPAD_DUMP_LOCATION environment variable, an alternate
   // location to write breakpad crash dumps can be set.
@@ -673,7 +662,12 @@ bool CefCrashReporterClient::GetCrashDumpLocation(base::FilePath* crash_dir) {
         base::FilePath::FromUTF8Unsafe(alternate_crash_dump_location);
     base::PathService::Override(chrome::DIR_CRASH_DUMPS, crash_dumps_dir_path);
   }
+
+#if defined(OHOS_CRASHPAD)
+  return base::PathService::Get(base::DIR_OHOS_CRASHPAD, crash_dir);
+#else
   return base::PathService::Get(chrome::DIR_CRASH_DUMPS, crash_dir);
+#endif // defined(OHOS_CRASHPAD)
 }
 
 #endif  // !BUILDFLAG(IS_POSIX)

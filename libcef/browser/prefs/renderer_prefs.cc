@@ -420,6 +420,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.embed_tag = CefString(&cef.embed_tag);
   web.embed_tag_type = CefString(&cef.embed_tag_type);
   web.draw_mode = cef.draw_mode;
+  SET_STATE(cef.text_autosizing_enabled, web.text_autosizing_enabled);
 #if defined(OHOS_DARKMODE)
   if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
     web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
@@ -450,7 +451,8 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.blank_target_popup_intercept_enabled =
       cef.blank_target_popup_intercept_enabled;
 #endif
-  web.viewport_meta_enabled = cef.viewport_meta_enabled;
+  if (cef.viewport_meta_enabled.has_value())
+    web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   web.autoplay_policy =
       cef.user_gesture_required
           ? blink::mojom::AutoplayPolicy::kDocumentUserActivationRequired
@@ -460,6 +462,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_CLIPBOARD)
   SetCopyOptionToWeb(cef, web);
 #endif // defined(OHOS_CLIPBOARD)
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  web.custom_video_player_enable = cef.custom_video_player_enable;
+  web.custom_video_player_overlay = cef.custom_video_player_overlay;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

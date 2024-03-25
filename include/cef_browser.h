@@ -90,6 +90,20 @@ class CefStoreWebArchiveResultCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// Interface to implement to be notified of asynchronous completion via
+/// CefBrowserHostBase::SetGestureEventResult().
+///
+/*--cef(source=client)--*/
+class CefGestureEventCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void ContinueTask(bool result) = 0;
+};
+
+///
 /// Interface to implement to be notified of asynchronous web message channel.
 ///
 /*--cef(source=client)--*/
@@ -418,6 +432,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsSafeBrowsingEnabled() = 0;
+
+  ///
+  /// Enable the ability to intelligent tracking prevention, default disabled.
+  ///
+  /*--cef()--*/
+  virtual void EnableIntelligentTrackingPrevention(bool enable) = 0;
+
+  ///
+  /// Get whether intelligent tracking prevention is enabled.
+  ///
+  /*--cef()--*/
+  virtual bool IsIntelligentTrackingPreventionEnabled() = 0;
 
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
@@ -1207,7 +1233,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ExecuteJavaScript(
-      const CefString& code,
+      const std::string& code,
       CefRefPtr<CefJavaScriptResultCallback> callback,
       bool extention) = 0;
 
@@ -1731,6 +1757,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CloseCamera() = 0;
+
+  ///
+  /// Get the last javascript proxy calling frame url.
+  ///
+  /*--cef()--*/
+  virtual CefString GetLastJavascriptProxyCallingFrameUrl() = 0;
+
+  ///
+  ///  Set NWebID.
+  ///
+  /*--cef()--*/
+  virtual void SetNWebId(int nWebId) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

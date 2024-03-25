@@ -428,6 +428,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       zoom::ZoomController* zoom_controller) override {}
 #endif
 
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
+#endif
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 
@@ -478,10 +482,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
-
-#ifdef OHOS_USERAGENT
-  void SetTabletMode();
-#endif
 
   CefWindowHandle opener_;
   const bool is_windowless_;

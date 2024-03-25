@@ -90,6 +90,10 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       const GURL& request_url,
       bool is_main_frame_request,
       bool strict_enforcement,
+#ifdef OHOS_NETWORK_LOAD
+      const GURL& origin_url,
+      const std::string& referrer,
+#endif
       base::OnceCallback<void(content::CertificateRequestResultType)> callback)
       override;
   base::OnceClosure SelectClientCertificate(
@@ -385,10 +389,7 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
 CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
 
-#ifdef OHOS_USERAGENT
-void SetTabletMode(bool is_tablet) override;
-#endif
-
+#if BUILDFLAG(IS_OHOS)
   bool ShouldOverrideUrlLoading(int frame_tree_node_id,
                                 bool browser_initiated,
                                 const GURL& gurl,
@@ -398,6 +399,7 @@ void SetTabletMode(bool is_tablet) override;
                                 bool is_outermost_main_frame,
                                 ui::PageTransition transition,
                                 bool* ignore_navigation) override;
+#endif
 
  private:
   // Returns the extension or app associated with |site_instance| or NULL.

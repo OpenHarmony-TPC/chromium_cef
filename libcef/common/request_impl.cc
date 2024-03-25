@@ -229,6 +229,7 @@ std::unique_ptr<net::UploadDataStream> CreateUploadDataStream(
       if (element.read_only_once()) {
         upload_data_stream->EnableCache();
       }
+      body->elements_mutable()->clear();
       return upload_data_stream;
     }
   }

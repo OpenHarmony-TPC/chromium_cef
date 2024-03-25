@@ -35,6 +35,11 @@
 #include "base/win/registry.h"
 #endif
 
+#if defined(OHOS_CRASHPAD)
+#include "base/base_switches.h"
+#include "base/logging.h"
+#endif // defined(OHOS_CRASHPAD)
+
 namespace resource_util {
 
 namespace {
@@ -237,6 +242,19 @@ void OverrideUserDataDir(CefSettings* settings,
   base::PathService::Override(base::DIR_CACHE,
                               user_data_path.Append("cache/web"));
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
+#if defined(OHOS_CRASHPAD)
+  // log path need to get by interface
+  base::PathService::Override(base::DIR_OHOS_CRASHPAD, user_data_path.Append("../log/crashpad"));
+  base::FilePath bundle_dir;
+  if (command_line->HasSwitch(switches::kBundleInstallationDir)) {
+    bundle_dir = command_line->GetSwitchValuePath(switches::kBundleInstallationDir);
+  }
+  if (!bundle_dir.empty()) {
+    base::PathService::Override(base::DIR_OHOS_APP_INSTALLATION, bundle_dir);
+  } else {
+    LOG(ERROR) << "crashpad OverrideUserDataDir, get Bundle installation dir failed";
+  }
+#endif // defined(OHOS_CRASHPAD)
 #else
   base::PathService::Override(chrome::DIR_USER_DATA, user_data_path);
 

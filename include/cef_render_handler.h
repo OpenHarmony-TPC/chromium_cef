@@ -362,7 +362,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
-                                   const CefEmbedTouchEvent& event) {}
+                                   const CefEmbedTouchEvent& event,
+                                   CefRefPtr<CefGestureEventCallback> callback) {}
   ///
   /// Called when embed touch.
   ///

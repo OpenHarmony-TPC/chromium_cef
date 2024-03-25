@@ -95,17 +95,13 @@
 
 #include "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
 
-#ifdef OHOS_USERAGENT
-#include "ohos_adapter_helper.h"
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+#include "libcef/browser/javascript/oh_javascript_injector.h"
 #endif
 
 using content::KeyboardEventProcessingResult;
 
 namespace {
-
-#ifdef OHOS_USERAGENT
-constexpr int kMinWidthForTablet = 600;
-#endif
 
 class ShowDevToolsHelper {
  public:
@@ -718,10 +714,6 @@ void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
         base::BindOnce(&AlloyBrowserHostImpl::NotifyScreenInfoChanged, this));
     return;
   }
-
-#ifdef OHOS_USERAGENT
-  SetTabletMode();
-#endif
 
   if (platform_delegate_) {
     platform_delegate_->NotifyScreenInfoChanged();
@@ -1716,24 +1708,14 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   }
 
   CefRenderHandler::CefNativeEmbedData data_info;
-    switch(state) {
-        case content::NativeEmbedInfo::TAG_STATE_CREATE:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::CREATE;
-          break;
-        case content::NativeEmbedInfo::TAG_STATE_CHANGE:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::UPDATE;
-          break;
-        case content::NativeEmbedInfo::TAG_STATE_DESTROY:
-          data_info.status = CefRenderHandler::CefEmbedLifeStatus::DESTROY;
-          break;
-        default:
-          return;
-  }
+  data_info.status = static_cast<CefRenderHandler::CefEmbedLifeStatus>(state);
   data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
   data_info.info.id = native_embed_info.embed_element_id;
-  data_info.info.width = native_embed_info.size.width();
-  data_info.info.height = native_embed_info.size.height();
+  data_info.info.x = native_embed_info.rect.x();
+  data_info.info.y = native_embed_info.rect.y();
+  data_info.info.width = native_embed_info.rect.width();
+  data_info.info.height = native_embed_info.rect.height();
   data_info.info.type = native_embed_info.native_type;
   data_info.info.src = native_embed_info.native_source;
   data_info.info.url = native_embed_info.url.path();
@@ -2079,6 +2061,10 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
+  
+#if BUILDFLAG(IS_OHOS)
+  UpdateZoomSupportEnabled();
+#endif
 }
 
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
@@ -2404,29 +2390,17 @@ void AlloyBrowserHostImpl::OnZoomChanged(
 }
 #endif
 
-#ifdef OHOS_USERAGENT
-void AlloyBrowserHostImpl::SetTabletMode() {
-  if (!web_contents() || !client()) {
-    return;
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+CefString AlloyBrowserHostImpl::GetLastJavascriptProxyCallingFrameUrl() {
+  if (!web_contents()) {
+    return base::EmptyString();
   }
 
-  auto& system_properties_adapter =
-      OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetSystemPropertiesInstance();
-  OHOS::NWeb::ProductDeviceType deviceType =
-      system_properties_adapter.GetProductDeviceType();
-  if (deviceType != OHOS::NWeb::ProductDeviceType::DEVICE_TYPE_MOBILE) {
-    return;
+  NWEB::OhJavascriptInjector* javascriptInjector =
+     NWEB::OhJavascriptInjector::FromWebContents(web_contents());
+  if (!javascriptInjector) {
+    return base::EmptyString();
   }
-
-  CefRefPtr<CefRenderHandler> handler = client()->GetRenderHandler();
-  CHECK(handler);
-  CefScreenInfo screen_info(1.0, 0, 0, false, CefRect(), CefRect(), 0,
-                            cef_screen_orientation_type_t::UNDEFINED);
-  handler->GetScreenInfo(this, screen_info);
-  int smallest_width = screen_info.rect.width < screen_info.rect.height ?
-                       screen_info.rect.width : screen_info.rect.height;
-  bool is_tablet = smallest_width >= kMinWidthForTablet;
-  web_contents()->SetTabletMode(is_tablet);
+  return javascriptInjector->GetLastCallingFrameUrl();
 }
-#endif // OHOS_USERAGENT
+#endif

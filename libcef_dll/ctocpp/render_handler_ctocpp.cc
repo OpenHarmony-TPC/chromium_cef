@@ -16,6 +16,7 @@
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
 #include "libcef_dll/ctocpp/accessibility_handler_ctocpp.h"
+#include "libcef_dll/ctocpp/gesture_event_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
@@ -787,7 +788,8 @@ bool CefRenderHandlerCToCpp::FilterScrollEvent(CefRefPtr<CefBrowser> browser,
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
     CefRefPtr<CefBrowser> browser,
-    const CefEmbedTouchEvent& event) {
+    const CefEmbedTouchEvent& event,
+    CefRefPtr<CefGestureEventCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -802,10 +804,16 @@ void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
   if (!browser.get()) {
     return;
   }
+  // Verify param: callback; type: refptr_same
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
 
   // Execute
   _struct->on_native_embed_gesture_event(
-      _struct, CefBrowserCppToC::Wrap(browser), &event);
+      _struct, CefBrowserCppToC::Wrap(browser), &event,
+      CefGestureEventCallbackCToCpp::Unwrap(callback));
 }
 
 NO_SANITIZE("cfi-icall")

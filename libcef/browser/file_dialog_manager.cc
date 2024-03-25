@@ -131,6 +131,10 @@ FileChooserParams SelectFileToFileChooserParams(
     case ui::SelectFileDialog::Type::SELECT_OPEN_MULTI_FILE:
       mode = FileChooserParams::Mode::kOpenMultiple;
       break;
+ #if BUILDFLAG(IS_OHOS)
+    case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
+      mode = FileChooserParams::Mode::kUploadFolder;
+ #endif
     default:
       NOTIMPLEMENTED();
       return params;
@@ -454,7 +458,7 @@ void CefFileDialogManager::RunSelectFile(
 
 #if defined(OHOS_BUGFIX_CRASH)
   if (!dialog_) {
-    LOG(DEBUG) << "app hasn't onFileSelectShow event, return";
+    LOG(ERROR) << "app hasn't onFileSelectShow event, return";
     return;
   }
 #endif
@@ -584,7 +588,15 @@ void CefFileDialogManager::SelectFileDoneByListenerCallback(
   dialog_listener_ = nullptr;
   dialog_listener->Cancel(listener_destroyed);
 
+#if defined(OHOS_BUGFIX_CRASH)
+  if (dialog_ != nullptr) {
+    // There should be no further listener callbacks after this call.
+    dialog_->ListenerDestroyed();
+    dialog_ = nullptr;
+  }
+#else
   // There should be no further listener callbacks after this call.
   dialog_->ListenerDestroyed();
   dialog_ = nullptr;
+#endif
 }
