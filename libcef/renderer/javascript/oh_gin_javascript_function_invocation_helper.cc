@@ -63,14 +63,14 @@ bool OhGinJavascriptFunctionInvocationHelper::StoreString(int index, void* mem, 
     LOG(DEBUG) << "Flowbuf header is full, cannot store more strings. ";
     return false;
   }
-  
+
   char* dataMem = static_cast<char*>(mem) + 80;
   // Check for available space in data port
   if (dataPos + static_cast<int>(strlen(str) + 1) > MAX_FLOWBUF_DATA_SIZE) {
-     LOG(DEBUG) << "Flowbuf not enough space to store the string. ";
+     LOG(DEBUG) << "Flowbuf not enough space to store more strings. ";
      return false;
   }
-  
+
   int* newEntry = static_cast<int*>(mem) + (i * 2);
   *(newEntry) = index;
   *(newEntry + 1) = static_cast<int>(strlen(str) + 1);
@@ -200,7 +200,7 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
   auto ashmem = flowbufferAdapter->CreateAshmem(MAX_FLOWBUF_DATA_SIZE + HEADER_SIZE, PROT_READ | PROT_WRITE, fd);
   if (!ashmem) {
     usedFd_.fetch_sub(1);
-    return InvokeJavascriptMethod(arguments, error, args, object); 
+    return InvokeJavascriptMethod(arguments, error, args, object);
   }
 
   int index = -1;

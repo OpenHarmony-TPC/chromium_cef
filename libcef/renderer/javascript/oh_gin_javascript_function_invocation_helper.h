@@ -43,7 +43,7 @@ class OhGinJavascriptFunctionInvocationHelper {
       OhGinJavascriptBridgeError& error,
       gin::Arguments* args,
       OhGinJavascriptBridgeObject* object);
-  
+
   bool StoreString(int index, void* mem, const char* str);
 
   static int32_t maxFdNum_;
