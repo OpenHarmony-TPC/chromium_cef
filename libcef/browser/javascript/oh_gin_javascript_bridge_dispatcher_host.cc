@@ -521,7 +521,7 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(ValueConvertState* state, bas
     case base::Value::Type::STRING: {
       LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                     "ParseBaseValueTOCefValueHelper: STRING";
-      cefValue->SetString(*value->GetIfString());
+      cefValue->SetStdString(*value->GetIfString());
       return cefValue;
     }
     case base::Value::Type::LIST: {
