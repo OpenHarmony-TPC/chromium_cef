@@ -196,12 +196,11 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
   flowbufferAdapter->StartPerformanceBoost();
 
   int fd;
-  usedFd_.fetch_add(1);
   auto ashmem = flowbufferAdapter->CreateAshmem(MAX_FLOWBUF_DATA_SIZE + HEADER_SIZE, PROT_READ | PROT_WRITE, fd);
   if (!ashmem) {
-    usedFd_.fetch_sub(1);
     return InvokeJavascriptMethod(arguments, error, args, object);
   }
+  usedFd_.fetch_add(1);
 
   int index = -1;
   bool useFlowbuf = false;
