@@ -371,9 +371,20 @@ class CefBrowserHostBase : public CefBrowserHost,
                     const CefString& mimeType,
                     const CefString& encoding) override;
 
+  void ExecuteJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
+                         base::Value result);
+
+  void ExecuteExtensionJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
+                                  base::Value result);
+
   void ExecuteJavaScript(const std::string& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
+
+  void ExecuteJavaScriptExt(const int fd,
+                            const uint64 scriptLength,
+                            CefRefPtr<CefJavaScriptResultCallback> callback,
+                            bool extention) override;
 
   void ResumeDownload(const CefString& url,
                       const CefString& full_path,
