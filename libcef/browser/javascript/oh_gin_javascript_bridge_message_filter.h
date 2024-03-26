@@ -62,6 +62,8 @@ class OhGinJavascriptBridgeMessageFilter
 
   bool OnMessageReceivedThread(const IPC::Message& message);
 
+  bool OnMessageReceivedThreadFlowbuf(const IPC::Message& message);
+
   // Called on the background thread.
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost();
 

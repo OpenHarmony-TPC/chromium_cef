@@ -231,9 +231,9 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
     }
   }
 
-  std::unique_ptr<base::Value> result
+  std::unique_ptr<base::Value> result;
   if (useFlowbuf) {
-    result = dispatcher_->InvokeJavascriptMethodFlowbuf(object->object_id(), method_name_, arguments, &error);
+    result = dispatcher_->InvokeJavascriptMethodFlowbuf(object->object_id(), method_name_, arguments, fd, &error);
     LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
                   "InvokeJavascriptMethodFlowbuf end";
   } else {

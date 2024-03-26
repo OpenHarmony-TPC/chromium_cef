@@ -146,7 +146,7 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
   base::Value::List result_wrapper;
   IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error);
-  msg->WriteAttachment(new IPC::internal::PlatformAttachment(fd));
+  msg->WriteAttachment(new IPC::internal::PlatformFileAttachment(fd));
   render_frame()->Send(msg);
   if (result_wrapper.empty()) {
     return nullptr;
