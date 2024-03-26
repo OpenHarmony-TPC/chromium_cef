@@ -2862,6 +2862,24 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetNWebId(int nWebId) {
   _struct->set_nweb_id(_struct, nWebId);
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_pending_size_status)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_pending_size_status(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

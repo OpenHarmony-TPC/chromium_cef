@@ -1779,6 +1779,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetNWebId(int nWebId) = 0;
+
+  ///
+  // get pendingSizeStatus.
+  ///
+  /*--cef()--*/
+  virtual bool GetPendingSizeStatus() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

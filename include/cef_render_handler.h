@@ -376,6 +376,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void NotifySelectAllClicked(bool select_all) {}
+
+  ///
+  /// Called when scroll begin or end.
+  ///
+  /*--cef()--*/
+  virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

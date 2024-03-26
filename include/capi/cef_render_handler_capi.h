@@ -373,6 +373,12 @@ typedef struct _cef_render_handler_t {
   ///
   void (CEF_CALLBACK* notify_select_all_clicked)(struct _cef_render_handler_t* self,
                                                 int select_all);
+
+  ///
+  // Called when the RootLayer has changed.
+  ///
+  void(CEF_CALLBACK* release_resize_hold)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
