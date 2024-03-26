@@ -65,6 +65,14 @@ class OhGinJavascriptBridgeDispatcherHost
                       const base::Value::List& arguments,
                       base::Value::List* result,
                       OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodFlowbuf(int routing_id,
+                      int32_t object_id,
+                      const std::string& document_url,
+                      const std::string& method_name,
+                      const base::Value::List& arguments,
+                      int fd,
+                      base::Value::List* result,
+                      OhGinJavascriptBridgeError* error_code);
   void OnObjectWrapperDeleted(int routing_id, ObjectID object_id);
   void ClearMethodMap() {
     method_map_.clear();

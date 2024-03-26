@@ -50,6 +50,13 @@ class OhGinJavascriptBridgeDispatcher
       const base::Value::List& arguments,
       OhGinJavascriptBridgeError* error);
 
+  std::unique_ptr<base::Value> InvokeJavascriptMethodFlowbuf(
+      ObjectID object_id,
+      const std::string& method_name,
+      const base::Value::List& arguments,
+      int fd,
+      OhGinJavascriptBridgeError* error);
+
   OhGinJavascriptBridgeObject* GetObject(const ObjectID object_id);
   void OnOhGinJavascriptBridgeObjectDeleted(
       const OhGinJavascriptBridgeObject* object);
