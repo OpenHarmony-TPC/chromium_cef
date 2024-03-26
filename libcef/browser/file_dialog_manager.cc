@@ -134,6 +134,7 @@ FileChooserParams SelectFileToFileChooserParams(
  #if BUILDFLAG(IS_OHOS)
     case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
+      break;
  #endif
     default:
       NOTIMPLEMENTED();
