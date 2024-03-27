@@ -2095,7 +2095,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  
+  ReportRenderProcessStatus();
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
