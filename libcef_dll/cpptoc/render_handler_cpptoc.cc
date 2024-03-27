@@ -1009,6 +1009,26 @@ render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true : false);
 }
 
+void CEF_CALLBACK
+render_handler_release_resize_hold(struct _cef_render_handler_t* self,
+                                     cef_browser_t* browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(CefBrowserCToCpp::Wrap(browser));
+}
 
 }  // namespace
 
@@ -1059,6 +1079,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_native_embed_lifecycle_change =
       render_handler_on_native_embed_lifecycle_change;
   GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
+  GetStruct()->release_resize_hold = render_handler_release_resize_hold;
 }
 
 // DESTRUCTOR - Do not edit by hand.

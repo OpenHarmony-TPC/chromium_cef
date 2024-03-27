@@ -482,6 +482,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   CefWindowHandle opener_;

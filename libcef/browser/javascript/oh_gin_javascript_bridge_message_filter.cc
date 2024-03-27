@@ -17,6 +17,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "ipc/ipc_platform_file_attachment_posix.h"
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
 
 namespace {
@@ -55,6 +56,21 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   base::PickleIterator iter(message);
   int32_t routing_id = -1;
   int32_t object_id = -1;
+  if (message.HasAttachments()) {
+      if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+      object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
+        base::ThreadPool::PostTask(
+          FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
+            base::BindOnce(
+            base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf),
+            base::WrapRefCounted(this), message));
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(
+        base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf),
+        base::WrapRefCounted(this), message));
+    }
+  }
   if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
     object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
       base::ThreadPool::PostTask(
@@ -81,6 +97,35 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_HasMethod, OnHasMethod)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_InvokeMethod,
                         OnInvokeMethod)
+    IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
+                        OnObjectWrapperDeleted)
+    IPC_MESSAGE_UNHANDLED(handled = false)
+  IPC_END_MESSAGE_MAP()
+  return handled;
+}
+
+bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
+    const IPC::Message& message) {
+  base::AutoReset<int32_t> routing_id(&current_routing_id_,
+                                      message.routing_id());
+  bool handled = true;
+  base::PickleIterator iter(message);
+  scoped_refptr<base::Pickle::Attachment> attachment;
+  if (!iter.SkipBytes(message.payload_size() - sizeof(int))) {
+    LOG(ERROR) << "OnMessageReceivedThreadFlowbuf Failed to skip bytes for message iterator";
+    return handled;
+  }
+  if (!message.ReadAttachment(&iter, &attachment)) {
+    LOG(ERROR) << "OnMessageReceivedThreadFlowbuf Failed to read attachment for message pipe";
+    return handled;
+  }
+
+  int fd = static_cast<IPC::internal::PlatformFileAttachment*>(attachment.get())->file();
+  IPC_BEGIN_MESSAGE_MAP_WITH_PARAM(OhGinJavascriptBridgeMessageFilter, message, &fd)
+    IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_GetMethods, OnGetMethods)
+    IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_HasMethod, OnHasMethod)
+    IPC_MESSAGE_HANDLER_PARAM(OhGinJavascriptBridgeHostMsg_InvokeMethod,
+                        OnInvokeMethodFlowbuf)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
                         OnObjectWrapperDeleted)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -196,6 +241,24 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host) {
     host->OnInvokeMethod(current_routing_id_, object_id, document_url, method_name, arguments,
+                         wrapped_result, error_code);
+  } else {
+    wrapped_result->Append(base::Value());
+    *error_code = kOhGinJavascriptBridgeRenderFrameDeleted;
+  }
+}
+
+void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
+    int* fd,
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments,
+    base::Value::List* wrapped_result,
+    OhGinJavascriptBridgeError* error_code) {
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+  if (host) {
+    host->OnInvokeMethodFlowbuf(current_routing_id_, object_id, document_url, method_name, arguments, *fd,
                          wrapped_result, error_code);
   } else {
     wrapped_result->Append(base::Value());

@@ -2326,6 +2326,13 @@ void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
   if (platform_delegate_)
     platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
 }
+
+bool AlloyBrowserHostImpl::GetPendingSizeStatus() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPendingSizeStatus();
+  }
+  return false;
+}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #if BUILDFLAG(IS_OHOS)

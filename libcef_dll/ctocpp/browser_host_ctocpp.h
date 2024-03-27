@@ -141,6 +141,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ExecuteJavaScript(const std::string &code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
+  void ExecuteJavaScriptExt(const int fd,
+                            const uint64 scriptLength,
+                            CefRefPtr<CefJavaScriptResultCallback> callback,
+                            bool extention) override;
   void SetNativeWindow(cef_native_window_t window) override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
@@ -256,6 +260,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void CloseCamera() override;
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void SetNWebId(int nWebId) override;
+  bool GetPendingSizeStatus() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

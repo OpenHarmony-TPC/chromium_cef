@@ -1536,6 +1536,11 @@ void CefBrowserHostBase::SetDrawMode(int mode) {
   // todo(ohos):impl this function then remove todo
 }
 
+bool CefBrowserHostBase::GetPendingSizeStatus() {
+  // todo(ohos):impl this function then remove todo
+  return false;
+}
+
 void CefBrowserHostBase::SetZoomLevel(double zoomLevel) {
   // todo(ohos):impl this function then remove todo
 }
@@ -2703,6 +2708,127 @@ bool ValidateResultType(base::Value::Type type) {
   return false;
 }
 
+void CefBrowserHostBase::ExecuteJSCallback(
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    base::Value result) {
+  LOG(INFO) << "javascript result callback enter";
+  std::string json;
+  base::JSONWriter::Write(result, &json);
+  if (callback != nullptr) {
+    CefRefPtr<CefValue> data = CefValue::Create();
+    data->SetString(json);
+    callback->OnJavaScriptExeResult(data);
+  }
+}
+
+void CefBrowserHostBase::ExecuteExtensionJSCallback(
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    base::Value result) {
+  LOG(INFO) << "javascript result callback enter, type:"
+    << result.GetTypeName(result.type());
+  std::string json;
+  base::JSONWriter::Write(result, &json);
+  CefRefPtr<CefValue> data = CefValue::Create();
+  switch (result.type()) {
+    case base::Value::Type::STRING: {
+      data->SetString(json);
+      break;
+    }
+    case base::Value::Type::DOUBLE: {
+      data->SetDouble(result.GetDouble());
+      break;
+    }
+    case base::Value::Type::INTEGER: {
+      data->SetDouble(result.GetInt());
+      break;
+    }
+    case base::Value::Type::BOOLEAN: {
+      data->SetBool(result.GetBool());
+      break;
+    }
+    case base::Value::Type::BINARY: {
+      std::vector<uint8_t> vec = result.GetBlob();
+      CefRefPtr<CefBinaryValue> value =
+        CefBinaryValue::Create(vec.data(), vec.size());
+      data->SetBinary(value);
+      break;
+    }
+    case base::Value::Type::LIST: {
+      int len = result.GetList().size();
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      base::Value::Type typeFirst = base::Value::Type::NONE;
+      base::Value::Type typeCur = base::Value::Type::NONE;
+      bool support = true;
+      for (int i = 0; i < len; i++) {
+        base::Value list_ele = std::move(result.GetList()[i]);
+        typeCur = list_ele.type();
+        if (!ValidateResultType(typeCur)) {
+          data->SetString(
+            "This type not support, only string/number/boolean "
+            "is supported for array elements");
+          support = false;
+          break;
+        }
+        if (i == 0) {
+          typeFirst = typeCur;
+        }
+        if (typeCur != typeFirst) {
+          support = false;
+          data->SetString(
+            "This type not support, The elements in the array "
+            "must be the same.");
+          break;
+        }
+        switch (list_ele.type()) {
+          case base::Value::Type::STRING: {
+            CefString msgCef;
+            msgCef.FromString(list_ele.GetString());
+            value->SetString(i, msgCef);
+            break;
+          }
+          case base::Value::Type::DOUBLE: {
+            value->SetDouble(i, list_ele.GetDouble());
+            break;
+          }
+          case base::Value::Type::INTEGER: {
+            value->SetInt(i, list_ele.GetInt());
+            break;
+          }
+          case base::Value::Type::BOOLEAN: {
+            value->SetBool(i, list_ele.GetBool());
+            break;
+          }
+          default: {
+            LOG(ERROR) << "Not support type";
+            support = false;
+            data->SetString(
+              "This type not support, only "
+              "string/number/boolean is supported for array "
+              "elements");
+            break;
+          }
+        }
+      }
+      if (support) {
+        data->SetList(value);
+      }
+      break;
+    }
+    default: {
+      LOG(ERROR)
+        << "base::Value not support type:" << result.type();
+      data->SetString(
+        "This type not support, only "
+        "string/number/boolean/arraybuffer/array is supported");
+      break;
+    }
+  }
+
+  if (callback != nullptr) {
+    callback->OnJavaScriptExeResult(data);
+  }
+}
+
 void CefBrowserHostBase::ExecuteJavaScript(
     const std::string& code,
     CefRefPtr<CefJavaScriptResultCallback> callback,
@@ -2716,130 +2842,34 @@ void CefBrowserHostBase::ExecuteJavaScript(
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
           base::UTF8ToUTF16(code),
-          base::BindOnce(
-              [](CefRefPtr<CefJavaScriptResultCallback> callback,
-                 base::Value result) {
-                LOG(INFO) << "javascript result callback enter";
-                std::string json;
-                base::JSONWriter::Write(result, &json);
-                if (callback != nullptr) {
-                  CefRefPtr<CefValue> data = CefValue::Create();
-                  data->SetString(json);
-                  callback->OnJavaScriptExeResult(data);
-                }
-              },
-              callback));
+          base::BindOnce(&CefBrowserHostBase::ExecuteJSCallback, this, callback));
     } else {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
           base::UTF8ToUTF16(code),
-          base::BindOnce(
-              [](CefRefPtr<CefJavaScriptResultCallback> callback,
-                 base::Value result) {
-                LOG(INFO) << "javascript result callback enter, type:"
-                          << result.GetTypeName(result.type());
-                std::string json;
-                base::JSONWriter::Write(result, &json);
-                CefRefPtr<CefValue> data = CefValue::Create();
-                switch (result.type()) {
-                  case base::Value::Type::STRING: {
-                    data->SetString(json);
-                    break;
-                  }
-                  case base::Value::Type::DOUBLE: {
-                    data->SetDouble(result.GetDouble());
-                    break;
-                  }
-                  case base::Value::Type::INTEGER: {
-                    data->SetDouble(result.GetInt());
-                    break;
-                  }
-                  case base::Value::Type::BOOLEAN: {
-                    data->SetBool(result.GetBool());
-                    break;
-                  }
-                  case base::Value::Type::BINARY: {
-                    std::vector<uint8_t> vec = result.GetBlob();
-                    CefRefPtr<CefBinaryValue> value =
-                        CefBinaryValue::Create(vec.data(), vec.size());
-                    data->SetBinary(value);
-                    break;
-                  }
-                  case base::Value::Type::LIST: {
-                    int len = result.GetList().size();
-                    CefRefPtr<CefListValue> value = CefListValue::Create();
-                    base::Value::Type typeFirst = base::Value::Type::NONE;
-                    base::Value::Type typeCur = base::Value::Type::NONE;
-                    bool support = true;
-                    for (int i = 0; i < len; i++) {
-                      base::Value list_ele = std::move(result.GetList()[i]);
-                      typeCur = list_ele.type();
-                      if (!ValidateResultType(typeCur)) {
-                        data->SetString(
-                            "This type not support, only string/number/boolean "
-                            "is supported for array elements");
-                        support = false;
-                        break;
-                      }
-                      if (i == 0) {
-                        typeFirst = typeCur;
-                      }
-                      if (typeCur != typeFirst) {
-                        support = false;
-                        data->SetString(
-                            "This type not support, The elements in the array "
-                            "must be the same.");
-                        break;
-                      }
-                      switch (list_ele.type()) {
-                        case base::Value::Type::STRING: {
-                          CefString msgCef;
-                          msgCef.FromString(list_ele.GetString());
-                          value->SetString(i, msgCef);
-                          break;
-                        }
-                        case base::Value::Type::DOUBLE: {
-                          value->SetDouble(i, list_ele.GetDouble());
-                          break;
-                        }
-                        case base::Value::Type::INTEGER: {
-                          value->SetInt(i, list_ele.GetInt());
-                          break;
-                        }
-                        case base::Value::Type::BOOLEAN: {
-                          value->SetBool(i, list_ele.GetBool());
-                          break;
-                        }
-                        default: {
-                          LOG(ERROR) << "Not support type";
-                          support = false;
-                          data->SetString(
-                              "This type not support, only "
-                              "string/number/boolean is supported for array "
-                              "elements");
-                          break;
-                        }
-                      }
-                    }
-                    if (support) {
-                      data->SetList(value);
-                    }
-                    break;
-                  }
-                  default: {
-                    LOG(ERROR)
-                        << "base::Value not support type:" << result.type();
-                    data->SetString(
-                        "This type not support, only "
-                        "string/number/boolean/arraybuffer/array is supported");
-                    break;
-                  }
-                }
+          base::BindOnce(&CefBrowserHostBase::ExecuteExtensionJSCallback, this, callback));
+    }
+  }
+}
 
-                if (callback != nullptr) {
-                  callback->OnJavaScriptExeResult(data);
-                }
-              },
-              callback));
+void CefBrowserHostBase::ExecuteJavaScriptExt(
+    const int fd,
+    const uint64 scriptLength,
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
+  auto web_contents = GetWebContents();
+  // enable inject javaScript
+  LOG(INFO) << "ExecuteJavaScriptExt with callback enter";
+  if (web_contents && web_contents->GetPrimaryMainFrame()) {
+    LOG(INFO) << "ExecuteJavaScriptExt with callback";
+    web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
+    if (!extention) {
+      web_contents->GetPrimaryMainFrame()->ExecuteJavaScriptExt(
+          fd, scriptLength,
+          base::BindOnce(&CefBrowserHostBase::ExecuteJSCallback, this, callback));
+    } else {
+      web_contents->GetPrimaryMainFrame()->ExecuteJavaScriptExt(
+          fd, scriptLength,
+          base::BindOnce(&CefBrowserHostBase::ExecuteExtensionJSCallback, this, callback));
     }
   }
 }

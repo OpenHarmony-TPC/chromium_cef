@@ -521,7 +521,7 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(ValueConvertState* state, bas
     case base::Value::Type::STRING: {
       LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                     "ParseBaseValueTOCefValueHelper: STRING";
-      cefValue->SetString(*value->GetIfString());
+      cefValue->SetStdString(*value->GetIfString());
       return cefValue;
     }
     case base::Value::Type::LIST: {
@@ -696,6 +696,54 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   }
   // 为了兼容老版本webcotroller方式, classname可能为空
   int error = client_->NotifyJavaScriptResult(ceflistvalue, method, classname,
+                                              result, routing_id, object_id);
+  *error_code = static_cast<OhGinJavascriptBridgeError>(error);
+  if (error != 0) {
+    return;
+  }
+
+  wrapped_result->Append(
+      base::Value::FromUniquePtrValue(ParseCefValueTOBaseValue(result)));
+}
+
+void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
+    int routing_id,
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments,
+    int fd,
+    base::Value::List* wrapped_result,
+    OhGinJavascriptBridgeError* error_code) {
+  OhJavascriptInjector* javascriptInjector =
+     OhJavascriptInjector::FromWebContents(web_contents());
+  if (javascriptInjector) {
+    javascriptInjector->SetLastCallingFrameUrl(document_url);
+  }
+  base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
+
+  CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
+
+  std::string classname = "";
+  {
+    std::shared_lock<std::shared_mutex> lock(share_mutex_);
+    if (method_map_.find(object_id) != method_map_.end()) {
+      MethodPair object_pair = method_map_[object_id];
+      classname = object_pair.first;
+    }
+  }
+
+  std::string method = method_name;
+
+  CefRefPtr<CefListValue> result = CefListValue::Create();
+
+  if (!client_) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf: "
+                  "client_ is null";
+    return;
+  }
+  // 为了兼容老版本webcotroller方式, classname可能为空
+  int error = client_->NotifyJavaScriptResultFlowbuf(ceflistvalue, method, classname, fd,
                                               result, routing_id, object_id);
   *error_code = static_cast<OhGinJavascriptBridgeError>(error);
   if (error != 0) {
