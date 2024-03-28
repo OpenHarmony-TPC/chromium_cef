@@ -523,6 +523,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   int window_id_ = -1;
   int nweb_id_ = -1;
   base::ProcessId last_pid_ = -1;
+
+  int video_stream_cnt_ = 0;
 #endif
   bool start_play_ = false;
 
