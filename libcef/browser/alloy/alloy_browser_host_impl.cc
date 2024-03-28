@@ -1790,7 +1790,6 @@ void AlloyBrowserHostImpl::MediaStartedPlaying(
   content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
   content::RenderProcessHost* host = main_frame->GetProcess();
   if (host && video_type.has_video) {
-    std::lock_guard<std::mutex> lock(mutex_);
     LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
         << ", video_stream_cnt: " << video_stream_cnt_;
     if (video_stream_cnt_ == 0) {
@@ -1821,10 +1820,9 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
   content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
   content::RenderProcessHost* host = main_frame->GetProcess();
   if (host && video_type.has_video) {
-    std::lock_guard<std::mutex> lock(mutex_);
     LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
         << ", video_stream_cnt: " << video_stream_cnt_;
-    --++video_stream_cnt_;;
+    --++video_stream_cnt_;
     if (video_stream_cnt_ == 0) {
         OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
             OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_STOP, host->GetProcess().Pid());
