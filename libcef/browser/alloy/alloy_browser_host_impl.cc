@@ -695,6 +695,8 @@ void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
     ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
+               "process_id", process_id);
     LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_hidden_: " << is_hidden_ << " process_id: " << process_id;
   } else {
     LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
@@ -2122,6 +2124,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
+  ReportRenderProcessStatus();
 
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
