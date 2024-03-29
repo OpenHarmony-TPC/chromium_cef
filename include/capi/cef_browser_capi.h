@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=5ddd74ba3176c33389f119e8b03f06d3137bcb1d$
+// $hash=6d482598d8ba64eba41e2a81ab5e4c13d21a9c44$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -50,6 +50,7 @@
 #include "include/capi/cef_registration_capi.h"
 #include "include/capi/cef_request_context_capi.h"
 #include "include/capi/cef_task_capi.h"
+#include "include/internal/cef_string_map.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -130,6 +131,49 @@ typedef struct _cef_web_message_receiver_t {
   void(CEF_CALLBACK* on_message)(struct _cef_web_message_receiver_t* self,
                                  struct _cef_value_t* message);
 } cef_web_message_receiver_t;
+
+///
+/// Structure to implement to be notified of compiling javascript completion via
+/// cef_browser_host_tBase::precompile_java_script().
+///
+typedef struct _cef_precompile_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK *on_precompile_finished)(
+      struct _cef_precompile_callback_t *self, int32_t result);
+} cef_precompile_callback_t;
+
+///
+/// options and info of cef_browser_host_tBase::precompile_java_script().
+///
+typedef struct _cef_cache_options_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Return the response headers of javascript request.
+  ///
+  cef_string_map_t(CEF_CALLBACK *get_response_headers)(
+      struct _cef_cache_options_t *self);
+
+  ///
+  /// Return if the javascript is module script.
+  ///
+  int(CEF_CALLBACK *is_module)(struct _cef_cache_options_t *self);
+
+  ///
+  /// Return if use top-level to compile script.
+  ///
+  int(CEF_CALLBACK *is_top_level)(struct _cef_cache_options_t *self);
+} cef_cache_options_t;
 
 ///
 /// Structure used to represent a browser. When used in the browser process the
@@ -1748,6 +1792,14 @@ typedef struct _cef_browser_host_t {
   // get current pending_size_status.
   ///
   int(CEF_CALLBACK *get_pending_size_status)(struct _cef_browser_host_t *self);
+
+  ///
+  ///  precompile javascript and generate code cache.
+  ///
+  void(CEF_CALLBACK *precompile_java_script)(
+      struct _cef_browser_host_t *self, const char *url, const char *script,
+      struct _cef_cache_options_t *cacheOptions,
+      struct _cef_precompile_callback_t *callback);
 } cef_browser_host_t;
 
 ///

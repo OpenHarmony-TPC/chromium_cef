@@ -9,12 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fb2e2f02752b67354a1423269369872c8a591134$
+// $hash=ad855832b1382544fcc90872ff8700ce2aff51d7$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/cpptoc/cache_options_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
 #include "libcef_dll/cpptoc/extension_cpptoc.h"
@@ -28,6 +29,7 @@
 #include "libcef_dll/ctocpp/java_script_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/navigation_entry_visitor_ctocpp.h"
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/precompile_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
@@ -39,12 +41,10 @@
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
 CEF_EXPORT int cef_browser_host_create_browser(
-    const cef_window_info_t* windowInfo,
-    struct _cef_client_t* client,
-    const cef_string_t* url,
-    const struct _cef_browser_settings_t* settings,
-    struct _cef_dictionary_value_t* extra_info,
-    struct _cef_request_context_t* request_context) {
+    const cef_window_info_t *windowInfo, struct _cef_client_t *client,
+    const cef_string_t *url, const struct _cef_browser_settings_t *settings,
+    struct _cef_dictionary_value_t *extra_info,
+    struct _cef_request_context_t *request_context) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3157,7 +3157,45 @@ browser_host_get_pending_size_status(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
-}  // namespace
+void CEF_CALLBACK browser_host_precompile_java_script(
+    struct _cef_browser_host_t *self, const char *url, const char *script,
+    cef_cache_options_t *cacheOptions, cef_precompile_callback_t *callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: std_string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+  // Verify param: script; type: std_string_byref_const
+  DCHECK(script);
+  if (!script) {
+    return;
+  }
+  // Verify param: cacheOptions; type: refptr_same
+  DCHECK(cacheOptions);
+  if (!cacheOptions) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->PrecompileJavaScript(
+      url, script, CefCacheOptionsCppToC::Unwrap(cacheOptions),
+      CefPrecompileCallbackCToCpp::Wrap(callback));
+}
+
+} // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -3337,6 +3375,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_get_last_javascript_proxy_calling_frame_url;
   GetStruct()->set_nweb_id = browser_host_set_nweb_id;
   GetStruct()->get_pending_size_status = browser_host_get_pending_size_status;
+  GetStruct()->precompile_java_script = browser_host_precompile_java_script;
 }
 
 // DESTRUCTOR - Do not edit by hand.

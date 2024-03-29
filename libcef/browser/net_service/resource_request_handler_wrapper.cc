@@ -879,10 +879,14 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
     std::unique_ptr<ResourceResponse> resource_response;
+    auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(request->url.spec());
     if (resource_handler) {
       resource_response = CreateResourceResponse(request_id, resource_handler);
       DCHECK(resource_response);
       state->was_custom_handled_ = true;
+    } else if (response_cache != nullptr && response_cache->CanUseCache()) {
+      LOG(ERROR) << "Use intercept request with response cache. url: " << request->url;
+      resource_response = std::make_unique<oh_code_cache::ResourceResponse>(std::move(response_cache));
     } else {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in

@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=516fa3deab618215f57eec157dde9276b8ea16b5$
+# $hash=a9ed856c5a6fe3d0ab5287807ccbf3a85c31f2a7$
 #
 
 {
@@ -270,6 +270,8 @@
       'libcef_dll/cpptoc/views/button_cpptoc.h',
       'libcef_dll/ctocpp/views/button_delegate_ctocpp.cc',
       'libcef_dll/ctocpp/views/button_delegate_ctocpp.h',
+      'libcef_dll/cpptoc/cache_options_cpptoc.cc',
+      'libcef_dll/cpptoc/cache_options_cpptoc.h',
       'libcef_dll/cpptoc/callback_cpptoc.cc',
       'libcef_dll/cpptoc/callback_cpptoc.h',
       'libcef_dll/ctocpp/client_ctocpp.cc',
@@ -442,6 +444,8 @@
       'libcef_dll/cpptoc/post_data_stream_init_callback_cpptoc.h',
       'libcef_dll/cpptoc/post_data_stream_read_callback_cpptoc.cc',
       'libcef_dll/cpptoc/post_data_stream_read_callback_cpptoc.h',
+      'libcef_dll/ctocpp/precompile_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/precompile_callback_ctocpp.h',
       'libcef_dll/cpptoc/preference_manager_cpptoc.cc',
       'libcef_dll/cpptoc/preference_manager_cpptoc.h',
       'libcef_dll/cpptoc/preference_registrar_cpptoc.cc',
@@ -650,6 +654,8 @@
       'libcef_dll/ctocpp/views/button_ctocpp.h',
       'libcef_dll/cpptoc/views/button_delegate_cpptoc.cc',
       'libcef_dll/cpptoc/views/button_delegate_cpptoc.h',
+      'libcef_dll/ctocpp/cache_options_ctocpp.cc',
+      'libcef_dll/ctocpp/cache_options_ctocpp.h',
       'libcef_dll/ctocpp/callback_ctocpp.cc',
       'libcef_dll/ctocpp/callback_ctocpp.h',
       'libcef_dll/cpptoc/client_cpptoc.cc',
@@ -822,6 +828,8 @@
       'libcef_dll/ctocpp/post_data_stream_init_callback_ctocpp.h',
       'libcef_dll/ctocpp/post_data_stream_read_callback_ctocpp.cc',
       'libcef_dll/ctocpp/post_data_stream_read_callback_ctocpp.h',
+      'libcef_dll/cpptoc/precompile_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/precompile_callback_cpptoc.h',
       'libcef_dll/ctocpp/preference_manager_ctocpp.cc',
       'libcef_dll/ctocpp/preference_manager_ctocpp.h',
       'libcef_dll/ctocpp/preference_registrar_ctocpp.cc',

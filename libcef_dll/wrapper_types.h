@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cea7a7b4c3ef026f9d9893ed119392125b10979c$
+// $hash=ae82ea87f368f7d499db7ed877fe5a02bc041e56$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -35,6 +35,7 @@ enum CefWrapperType {
   WT_BROWSER_VIEW_DELEGATE,
   WT_BUTTON,
   WT_BUTTON_DELEGATE,
+  WT_CACHE_OPTIONS,
   WT_CALLBACK,
   WT_CLIENT,
   WT_COMMAND_HANDLER,
@@ -121,6 +122,7 @@ enum CefWrapperType {
   WT_POST_DATA_STREAM,
   WT_POST_DATA_STREAM_INIT_CALLBACK,
   WT_POST_DATA_STREAM_READ_CALLBACK,
+  WT_PRECOMPILE_CALLBACK,
   WT_PREFERENCE_MANAGER,
   WT_PREFERENCE_REGISTRAR,
   WT_PRINT_DIALOG_CALLBACK,

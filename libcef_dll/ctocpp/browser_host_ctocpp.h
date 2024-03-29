@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e647c582315d6b0e86ba6ad06f3e00af0b0f2150$
+// $hash=7e3a493389ffe67ffb43a183751fcff7fbdd0a66$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -261,6 +261,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void SetNWebId(int nWebId) override;
   bool GetPendingSizeStatus() override;
+  void PrecompileJavaScript(const std::string &url, const std::string &script,
+                            CefRefPtr<CefCacheOptions> cacheOptions,
+                            CefRefPtr<CefPrecompileCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
