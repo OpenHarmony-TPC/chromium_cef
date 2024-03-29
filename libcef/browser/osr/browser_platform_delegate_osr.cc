@@ -897,6 +897,14 @@ void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
   }
 }
 
+bool CefBrowserPlatformDelegateOsr::GetPendingSizeStatus() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    return view->GetPendingSizeStatus();
+  }
+  return false;
+}
+
 void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
     bool should) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();

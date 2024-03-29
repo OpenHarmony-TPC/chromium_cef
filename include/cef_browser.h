@@ -1238,6 +1238,16 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       bool extention) = 0;
 
   ///
+  /// Execute a string of JavaScript code, return result by callback
+  ///
+  /*--cef()--*/
+  virtual void ExecuteJavaScriptExt(
+      const int fd,
+      const uint64 scriptLength,
+      CefRefPtr<CefJavaScriptResultCallback> callback,
+      bool extention) = 0;
+
+  ///
   /// Set native window from ohos rs
   ///
   /*--cef()--*/
@@ -1769,6 +1779,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetNWebId(int nWebId) = 0;
+
+  ///
+  // get pendingSizeStatus.
+  ///
+  /*--cef()--*/
+  virtual bool GetPendingSizeStatus() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

@@ -1316,6 +1316,32 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ExecuteJavaScriptExt(
+    const int fd,
+    const uint64 scriptLength,
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, execute_java_script_ext)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->execute_java_script_ext(
+      _struct, fd, scriptLength, CefJavaScriptResultCallbackCppToC::Wrap(callback), extention);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetNativeWindow(cef_native_window_t window) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2834,6 +2860,24 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetNWebId(int nWebId) {
 
   // Execute
   _struct->set_nweb_id(_struct, nWebId);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_pending_size_status)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_pending_size_status(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

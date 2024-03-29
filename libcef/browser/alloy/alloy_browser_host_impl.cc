@@ -32,6 +32,7 @@
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
+#include "base/trace_event/trace_event.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "content/browser/gpu/compositor_util.h"
@@ -660,13 +661,48 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 }
 
 void AlloyBrowserHostImpl::OnWindowShow() {
-  ReportWindowStatus(true);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
+  is_hidden_ = false;
+  ReportRenderProcessStatus();
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
-  ReportWindowStatus(false);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
+  is_hidden_ = true;
+  ReportRenderProcessStatus();
 }
 
+void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
+  using namespace OHOS::NWeb;
+
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      return;
+    }
+
+    ResSchedStatusAdapter status = is_hidden_
+                                       ? ResSchedStatusAdapter::WEB_INACTIVE
+                                       : ResSchedStatusAdapter::WEB_ACTIVE;
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
+               "process_id", process_id);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_hidden_: " << is_hidden_ << " process_id: " << process_id;
+  } else {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
+    return;
+  }
+}
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -1786,7 +1822,19 @@ void AlloyBrowserHostImpl::MediaStartedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStartedPlaying, is_video: " << video_type.has_video;
-
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_START, host->GetProcess().Pid());
+    }
+    ++video_stream_cnt_;
+  }
+#endif
   start_play_ = true;
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   if (client_.get() && client_->GetMediaHandler().get()) {
@@ -1803,6 +1851,21 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
   if (!start_play_) {
     return;
   }
+
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    --++video_stream_cnt_;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_STOP, host->GetProcess().Pid());
+    }
+    video_stream_cnt_ = std::max(video_stream_cnt_, 0);
+  }
+#endif
 
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
@@ -2061,7 +2124,8 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  
+  ReportRenderProcessStatus();
+
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
@@ -2070,7 +2134,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
   using namespace OHOS::NWeb;
   if(pid != last_pid_ && last_pid_ != -1) {
-    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE, 
+    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE,
                                               last_pid_, window_id_, nweb_id_);
   }
   last_pid_ = pid;
@@ -2291,6 +2355,13 @@ void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
 
   if (platform_delegate_)
     platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
+}
+
+bool AlloyBrowserHostImpl::GetPendingSizeStatus() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPendingSizeStatus();
+  }
+  return false;
 }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 

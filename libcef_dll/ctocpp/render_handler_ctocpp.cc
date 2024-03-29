@@ -855,6 +855,27 @@ void CefRenderHandlerCToCpp::NotifySelectAllClicked(bool select_all) {
   _struct->notify_select_all_clicked(_struct, select_all);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, release_resize_hold)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->release_resize_hold(_struct, CefBrowserCppToC::Wrap(browser));
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}

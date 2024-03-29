@@ -1519,6 +1519,32 @@ browser_host_execute_java_script(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
+browser_host_execute_java_script_ext(struct _cef_browser_host_t* self,
+                                     const int fd,
+                                     const uint64 scriptLength,
+                                     cef_java_script_result_callback_t* callback,
+                                     int extention) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ExecuteJavaScriptExt(
+      fd, scriptLength, CefJavaScriptResultCallbackCToCpp::Wrap(callback),
+      extention ? true : false);
+}
+
+void CEF_CALLBACK
 browser_host_set_native_window(struct _cef_browser_host_t* self,
                                cef_native_window_t window) {
   shutdown_checker::AssertNotShutdown();
@@ -3113,6 +3139,24 @@ void CEF_CALLBACK browser_host_set_nweb_id(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetNWebId(nWebId);
 }
 
+int CEF_CALLBACK
+browser_host_get_pending_size_status(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->GetPendingSizeStatus();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3194,6 +3238,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_root_browser_accessibility_manager =
       browser_host_get_root_browser_accessibility_manager;
   GetStruct()->execute_java_script = browser_host_execute_java_script;
+  GetStruct()->execute_java_script_ext = browser_host_execute_java_script_ext;
   GetStruct()->set_native_window = browser_host_set_native_window;
   GetStruct()->set_web_debugging_access = browser_host_set_web_debugging_access;
   GetStruct()->get_web_debugging_access = browser_host_get_web_debugging_access;
@@ -3291,6 +3336,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_last_javascript_proxy_calling_frame_url =
       browser_host_get_last_javascript_proxy_calling_frame_url;
   GetStruct()->set_nweb_id = browser_host_set_nweb_id;
+  GetStruct()->get_pending_size_status = browser_host_get_pending_size_status;
 }
 
 // DESTRUCTOR - Do not edit by hand.

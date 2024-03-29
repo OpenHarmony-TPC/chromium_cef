@@ -470,6 +470,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
+  void ReportRenderProcessStatus();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -481,6 +482,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   CefWindowHandle opener_;
@@ -521,6 +523,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   int window_id_ = -1;
   int nweb_id_ = -1;
   base::ProcessId last_pid_ = -1;
+
+  int video_stream_cnt_ = 0;
 #endif
   bool start_play_ = false;
 

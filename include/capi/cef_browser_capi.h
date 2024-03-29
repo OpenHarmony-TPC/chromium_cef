@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4b51d720e252b3a95af38affcddd1a348ff2abf0$
+// $hash=5ddd74ba3176c33389f119e8b03f06d3137bcb1d$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1203,6 +1203,16 @@ typedef struct _cef_browser_host_t {
       int extention);
 
   ///
+  /// Execute a string of JavaScript code, return result by callback
+  ///
+  void(CEF_CALLBACK* execute_java_script_ext)(
+      struct _cef_browser_host_t* self,
+      const int fd,
+      const uint64 scriptLength,
+      struct _cef_java_script_result_callback_t* callback,
+      int extention);
+
+  ///
   /// Set native window from ohos rs
   ///
   void(CEF_CALLBACK* set_native_window)(struct _cef_browser_host_t* self,
@@ -1733,6 +1743,11 @@ typedef struct _cef_browser_host_t {
   ///  Set NWebID.
   ///
   void(CEF_CALLBACK* set_nweb_id)(struct _cef_browser_host_t* self, int nWebId);
+
+  ///
+  // get current pending_size_status.
+  ///
+  int(CEF_CALLBACK *get_pending_size_status)(struct _cef_browser_host_t *self);
 } cef_browser_host_t;
 
 ///

@@ -159,7 +159,8 @@ OhosPrintManager::OhosPrintManager(content::WebContents* contents)
       content::WebContentsUserData<OhosPrintManager>(*contents),
       task_runner_(base::ThreadPool::CreateTaskRunner(
           {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
-           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN})) {}
+           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN})),
+      weak_ptr_web_contents_(contents->GetWeakPtr()) {}
 
 OhosPrintManager::~OhosPrintManager() = default;
 
@@ -237,11 +238,17 @@ void OhosPrintManager::DidDispatchPrintEvent(bool isBefore) {
   }
   main_task_runner->PostTask(
       FROM_HERE, base::BindOnce(&OhosPrintManager::DidDispatchPrintEventImpl,
-                                base::Unretained(this), isBefore));
+                                base::Unretained(this),
+                                weak_ptr_web_contents_, isBefore));
 }
 
-void OhosPrintManager::DidDispatchPrintEventImpl(bool isBefore) {
-  auto* rfh = web_contents()->GetPrimaryMainFrame();
+void OhosPrintManager::DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> webcontents,
+                                                 bool isBefore) {
+  if (!webcontents) {
+    LOG(ERROR) << "DidDispatchPrintEventImpl webcontents is nullptr.";
+    return;
+  }
+  auto* rfh = webcontents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
     return;
@@ -260,11 +267,17 @@ void OhosPrintManager::PrintPage(bool isApplication) {
   }
   main_task_runner->PostTask(
       FROM_HERE, base::BindOnce(&OhosPrintManager::PrintPageImpl,
-                                base::Unretained(this), isApplication));
+                                base::Unretained(this),
+                                weak_ptr_web_contents_, isApplication));
 }
 
-void OhosPrintManager::PrintPageImpl(bool isApplication) {
-  auto* rfh = web_contents()->GetPrimaryMainFrame();
+void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
+                                     bool isApplication) {
+  if (!webcontents) {
+    LOG(ERROR) << "PrintPageImpl webcontents is nullptr.";
+    return;
+  }
+  auto* rfh = webcontents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
     if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
@@ -282,8 +295,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
     return;
   }
   if (isApplication) {
-    auto* contents = web_contents();
-    auto* app_rfh = GetRenderFrameHostToUse(contents);
+    auto* app_rfh = GetRenderFrameHostToUse(webcontents.get());
     if (app_rfh) {
       GetPrintRenderFrame(app_rfh)->ApplicationPrintRequestedPages();
     }
@@ -359,7 +371,9 @@ void OhosPrintManager::DidPrintDocument(
   const printing::mojom::DidPrintContentParams& content = *params->content;
   if (!content.metafile_data_region.IsValid()) {
     NOTREACHED() << "invalid memory handle";
-    web_contents()->Stop();
+    if (weak_ptr_web_contents_) {
+      weak_ptr_web_contents_->Stop();
+    }
     PdfWritingDone(0);
     std::move(callback).Run(false);
     return;
@@ -369,14 +383,18 @@ void OhosPrintManager::DidPrintDocument(
       content.metafile_data_region);
   if (!data) {
     NOTREACHED() << "couldn't map";
-    web_contents()->Stop();
+    if (weak_ptr_web_contents_) {
+      weak_ptr_web_contents_->Stop();
+    }
     PdfWritingDone(0);
     std::move(callback).Run(false);
     return;
   }
 
   if (number_pages() > printing::kMaxPageCount) {
-    web_contents()->Stop();
+    if (weak_ptr_web_contents_) {
+      weak_ptr_web_contents_->Stop();
+    }
     PdfWritingDone(0);
     std::move(callback).Run(false);
     return;
@@ -513,7 +531,9 @@ std::string OhosPrintManager::GetHtmlTitle() {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   std::u16string u16str = u"";
   std::string printJobName = "";
-  u16str = web_contents()->GetTitle();
+  if (weak_ptr_web_contents_) {
+    u16str = weak_ptr_web_contents_->GetTitle();
+  }
   printJobName = convert.to_bytes(u16str);
   printJobName = RemoveProtocol(printJobName);
   std::replace(printJobName.begin(), printJobName.end(), '/', '_');
