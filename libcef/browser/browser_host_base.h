@@ -316,7 +316,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StopCamera() override;
   void CloseCamera() override;
   void SetNWebId(int NWebID) override;
-
+  void PrecompileJavaScript(const std::string& url,
+                            const std::string& script,
+                            CefRefPtr<CefCacheOptions> cacheOptions,
+                            CefRefPtr<CefPrecompileCallback> callback) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION
@@ -715,6 +718,23 @@ class CefBrowserHostBase : public CefBrowserHost,
       uint32_t next_id);
 
   bool UseLegacyGeolocationPermissionAPI();
+
+  int32_t WriteResponseCache(const std::string& url,
+                             const std::string& script,
+                             std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
+
+  void OnDidWriteResponseCache(const std::string& url,
+                               const std::string& script,
+                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                               CefRefPtr<CefPrecompileCallback> callback,
+                               int32_t result);
+
+  void GenerateCodeCache(const std::string& url,
+                         const std::string& script,
+                         std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                         CefRefPtr<CefPrecompileCallback> callback);
+
+  void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.

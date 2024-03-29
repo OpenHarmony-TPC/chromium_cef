@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8796beaf9d316db55590c18115b40bc724aef4aa$
+// $hash=ae374a0fa37225888a44cbebd03f729d09649e78$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -19,12 +19,14 @@
 #include "libcef_dll/cpptoc/java_script_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/navigation_entry_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/precompile_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/store_web_archive_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
 #include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"
 #include "libcef_dll/ctocpp/binary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/cache_options_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/ctocpp/extension_ctocpp.h"
@@ -2878,6 +2880,47 @@ bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::PrecompileJavaScript(
+    const std::string &url, const std::string &script,
+    CefRefPtr<CefCacheOptions> cacheOptions,
+    CefRefPtr<CefPrecompileCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t *_struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, precompile_java_script)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: std_string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+  // Verify param: script; type: std_string_byref_const
+  DCHECK(!script.empty());
+  if (script.empty()) {
+    return;
+  }
+  // Verify param: cacheOptions; type: refptr_same
+  DCHECK(cacheOptions.get());
+  if (!cacheOptions.get()) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->precompile_java_script(_struct, url.c_str(), script.c_str(),
+                                  CefCacheOptionsCToCpp::Unwrap(cacheOptions),
+                                  CefPrecompileCallbackCppToC::Wrap(callback));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

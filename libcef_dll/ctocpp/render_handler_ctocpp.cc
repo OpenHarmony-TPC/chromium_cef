@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6bcee07cfbbe753e0cca9cf383b2dafae37b80e9$
+// $hash=e4f9ca4d23a010fdac7bc138367d159d545c7c23$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
