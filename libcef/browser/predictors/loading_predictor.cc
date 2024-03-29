@@ -132,13 +132,14 @@ LoadingPredictor::~LoadingPredictor() {
 
 void LoadingPredictor::PrepareForPageLoad(const GURL& url,
                                           HintOrigin origin,
-                                          bool preconnectable) {
+                                          bool preconnectable,
+                                          int num_sockets) {
   if (shutdown_)
     return;
 
   if (origin == HintOrigin::OMNIBOX) {
     // Omnibox hints are lightweight and need a special treatment.
-    HandleOmniboxHint(url, preconnectable);
+    HandleOmniboxHint(url, preconnectable, num_sockets);
     return;
   }
 
@@ -269,7 +270,9 @@ void LoadingPredictor::MaybeRemovePreconnect(const GURL& url) {
   preconnect_manager_->Stop(url);
 }
 
-void LoadingPredictor::HandleOmniboxHint(const GURL& url, bool preconnectable) {
+void LoadingPredictor::HandleOmniboxHint(const GURL& url,
+                                         bool preconnectable,
+                                         int num_sockets) {
   if (!url.is_valid() || !url.has_host() || !IsPreconnectAllowed(context_))
     return;
 
@@ -286,7 +289,7 @@ void LoadingPredictor::HandleOmniboxHint(const GURL& url, bool preconnectable) {
       last_omnibox_preconnect_time_ = now;
       if (preconnect_manager()) {
         preconnect_manager()->StartPreconnectUrl(
-            url, true, network_anonymization_key, num_sockets_);
+            url, true, network_anonymization_key, num_sockets);
       }
     }
     return;
