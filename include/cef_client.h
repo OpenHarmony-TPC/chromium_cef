@@ -234,12 +234,12 @@ class CefClient : public virtual CefBaseRefCounted {
 
   /*--cef()--*/
   virtual int NotifyJavaScriptResultFlowbuf(CefRefPtr<CefListValue> args,
-                                     const CefString& method,
-                                     const CefString& object_name,
-                                     int fd,
-                                     CefRefPtr<CefListValue> result,
-                                     int32_t routing_id,
-                                     int32_t object_id) {
+                                            const CefString& method,
+                                            const CefString& object_name,
+                                            int fd,
+                                            CefRefPtr<CefListValue> result,
+                                            int32_t routing_id,
+                                            int32_t object_id) {
     return 0;
   }
 
