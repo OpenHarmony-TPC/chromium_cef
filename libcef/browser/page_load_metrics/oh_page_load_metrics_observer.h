@@ -82,7 +82,6 @@ class OhPageLoadMetricsObserver
   void ReportBufferedMetrics(
       const page_load_metrics::mojom::PageLoadTiming& timing);
   void ReportPerformanceTiming();
-  int64_t GetCurrentTimestampMS();
 #endif
 
  private:

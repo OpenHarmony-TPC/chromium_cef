@@ -97,6 +97,7 @@ import("//base/allocator/allocator.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
 import("//build/config/ohos/config.gni")
+import("//ohos_nweb/src/nweb_sysevent.gni")
 import("//build/config/ozone.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
@@ -457,6 +458,9 @@ source_set("libcef_static") {
   }
   if (is_ohos) {
     defines += [ "LOGGING_TAG=\"cef#\"" ]
+  }
+  if (report_sys_event) {
+    defines += [ "REPORT_SYS_EVENT" ]
   }
   sources = includes_common + gypi_paths.autogen_cpp_includes + [
               "libcef/browser/alloy/alloy_browser_context.cc",

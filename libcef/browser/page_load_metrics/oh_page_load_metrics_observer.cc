@@ -355,7 +355,7 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
   }
 }
 
-int64_t OhPageLoadMetricsObserver::GetCurrentTimestampMS() {
+static int64_t GetCurrentTimestampMS() {
   auto currentTime = std::chrono::system_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
       .count();
