@@ -2634,6 +2634,12 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
                   base::BindOnce(&CefRenderWidgetHostViewOSR::WasResized,
                                  weak_ptr_factory_.GetWeakPtr()));
   }
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->ReleaseResizeHold(browser_impl_.get());
+  }
 }
 
 void CefRenderWidgetHostViewOSR::CancelWidget() {
