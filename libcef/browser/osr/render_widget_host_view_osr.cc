@@ -2210,7 +2210,8 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRenderHandler::TextInputType type = CEF_TEXT_INPUT_TYPE_NONE;
   bool show_keyboard = false;
 #if defined(OHOS_INPUT_EVENTS)
-  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN) {
+  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN &&
+      is_editable_node_) {
     LOG(INFO) << "The keyboard status is not updated when pressed";
     return;
   }
