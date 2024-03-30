@@ -2711,7 +2711,7 @@ bool ValidateResultType(base::Value::Type type) {
 void CefBrowserHostBase::ExecuteJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
     base::Value result) {
-  LOG(INFO) << "javascript result callback enter";
+  LOG(DEBUG) << "javascript result callback enter";
   std::string json;
   base::JSONWriter::Write(result, &json);
   if (callback != nullptr) {
@@ -2724,7 +2724,7 @@ void CefBrowserHostBase::ExecuteJSCallback(
 void CefBrowserHostBase::ExecuteExtensionJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
     base::Value result) {
-  LOG(INFO) << "javascript result callback enter, type:"
+  LOG(DEBUG) << "javascript result callback enter, type:"
     << result.GetTypeName(result.type());
   std::string json;
   base::JSONWriter::Write(result, &json);
@@ -2835,9 +2835,9 @@ void CefBrowserHostBase::ExecuteJavaScript(
     bool extention) {
   auto web_contents = GetWebContents();
   // enable inject javaScript
-  LOG(INFO) << "ExecuteJavaScript with callback enter";
+  LOG(DEBUG) << "ExecuteJavaScript with callback enter";
   if (web_contents && web_contents->GetPrimaryMainFrame()) {
-    LOG(INFO) << "ExecuteJavaScript with callback";
+    LOG(DEBUG) << "ExecuteJavaScript with callback";
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
@@ -2858,9 +2858,9 @@ void CefBrowserHostBase::ExecuteJavaScriptExt(
     bool extention) {
   auto web_contents = GetWebContents();
   // enable inject javaScript
-  LOG(INFO) << "ExecuteJavaScriptExt with callback enter";
+  LOG(DEBUG) << "ExecuteJavaScriptExt with callback enter";
   if (web_contents && web_contents->GetPrimaryMainFrame()) {
-    LOG(INFO) << "ExecuteJavaScriptExt with callback";
+    LOG(DEBUG) << "ExecuteJavaScriptExt with callback";
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScriptExt(
