@@ -23,7 +23,13 @@
 #include "libcef/renderer/browser_impl.h"
 #include "services/network/public/cpp/network_quality_tracker.h"
 #include "url/gurl.h"
+#if defined(REPORT_SYS_EVENT)
 #include "ohos_nweb/src/sysevent/event_reporter.h"
+#endif
+
+#if defined(REPORT_SYS_EVENT)
+int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
+#endif
 
 OhPageLoadMetricsObserver::OhPageLoadMetricsObserver() {
   network_quality_tracker_ = g_browser_process->network_quality_tracker();
@@ -35,7 +41,9 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
     const GURL& currently_committed_url,
     bool started_in_foreground) {
   navigation_id_ = navigation_handle->GetNavigationId();
+#if defined(REPORT_SYS_EVENT)
   web_performance_timing_.navigation_id = navigation_id_;
+#endif
 
   return CONTINUE_OBSERVING;
 }
@@ -60,7 +68,9 @@ OhPageLoadMetricsObserver::OnPrerenderStart(
 page_load_metrics::PageLoadMetricsObserver::ObservePolicy
 OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+#if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
+#endif
   // We continue observing after being backgrounded, in case we are foregrounded
   // again without being killed. In those cases we may still report non-buffered
   // metrics such as FCP after being re-foregrounded.
@@ -70,14 +80,18 @@ OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
 
 OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnHidden(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+#if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
+#endif
   ReportLargestContentfulPaint(timing);
   return CONTINUE_OBSERVING;
 }
 
 void OhPageLoadMetricsObserver::OnComplete(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
+#if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
+#endif
   ReportLargestContentfulPaint(timing);
 }
 
@@ -86,7 +100,9 @@ void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   int64_t first_contentful_paint_ms =
       timing.paint_timing->first_contentful_paint->InMilliseconds();
+#if defined(REPORT_SYS_EVENT)
   web_performance_timing_.first_contentful_paint = first_contentful_paint_ms;
+#endif
   ReportFirstContentfulPaint(
       (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds(),
       first_contentful_paint_ms);
@@ -223,6 +239,7 @@ void OhPageLoadMetricsObserver::ReportLargestContentfulPaint(
   load_handler->OnLargestContentfulPaint(details);
 }
 
+#if defined(REPORT_SYS_EVENT)
 page_load_metrics::PageLoadMetricsObserver::ObservePolicy
 OhPageLoadMetricsObserver::OnRedirect(
     content::NavigationHandle* navigation_handle) {
@@ -275,8 +292,6 @@ void OhPageLoadMetricsObserver::OnLoadedResource(
     did_dispatch_on_main_resourse_ = true;
 
     base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
-    web_performance_timing_.navigation_start =
-      navigation_start.is_null() ? -1 : navigation_start.since_origin().InMilliseconds();
 
     const net::LoadTimingInfo& timing =
       *extra_request_complelte_info.load_timing_info;
@@ -314,9 +329,7 @@ void OhPageLoadMetricsObserver::OnFirstPaintInPage(
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
-#if defined(REPORT_SYS_EVENT)
   ReportPageLoadTimeStats(web_performance_timing_);
-#endif
   web_performance_timing_.Reset();
 }
 
@@ -328,6 +341,7 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
 
   reported_buffered_metrics_ = true;
 
+  web_performance_timing_.navigation_start = navigation_start_timestamp_;
   web_performance_timing_.redirect_count = main_frame_request_redirect_count_;
   const page_load_metrics::ContentfulPaintTimingInfo& largest_contentful_paint =
     GetDelegate().GetLargestContentfulPaintHandler()
@@ -340,3 +354,14 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
     return;
   }
 }
+
+static int64_t GetCurrentTimestampMS() {
+  auto currentTime = std::chrono::system_clock::now().time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
+      .count();
+}
+
+void OhPageLoadMetricsObserver::OnNavigationStart() {
+  navigation_start_timestamp_ = GetCurrentTimestampMS();
+}
+#endif
