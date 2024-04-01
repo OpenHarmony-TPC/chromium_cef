@@ -471,6 +471,8 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
   void ReportRenderProcessStatus();
+  void SetLowerFrameRateWithVideo();
+  void ResetFrameRate();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -523,7 +525,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   int window_id_ = -1;
   int nweb_id_ = -1;
   base::ProcessId last_pid_ = -1;
-
+  bool has_video_playing_ = false;
+  bool has_touch_event_ = false;
+  bool set_lower_frame_rate_ = false;
+  static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000;
   int video_stream_cnt_ = 0;
 #endif
   bool start_play_ = false;
