@@ -92,6 +92,7 @@ const float kDefaultScaleFactor = 1.0;
 const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
 const size_t KFirstTouchRecordingTimes = 5;
+const size_t KTouchEventCachedThreaShold = 1;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -2300,6 +2301,12 @@ void CefRenderWidgetHostViewOSR::OnVsync() {
     gesture_event_queue_.clear();
   }
 
+  if (web_touch_event_queue_.size() > KTouchEventCachedThreaShold) {
+    blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+    SendTouchGestureEvent(touchEvent);
+    web_touch_event_queue_.pop_front();
+  }
+
   if (!gesture_event_queue_.empty()) {
     SendGestureEvent(std::move(gesture_event_queue_.front()));
     gesture_event_queue_.pop_front();
@@ -2310,12 +2317,11 @@ void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
   TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncReceived",
     "web_touch_event_queue", web_touch_event_queue_.size());
   if (web_touch_event_queue_.size() > kMaxGestureQueueSize) {
-    LOG(ERROR) << "web touch event queue size is error:"
+    LOG(WARNING) << "web touch event queue size is error:"
                << web_touch_event_queue_.size();
-    web_touch_event_queue_.clear();
   }
 
-  if (!web_touch_event_queue_.empty()) {
+  while (!web_touch_event_queue_.empty()) {
     blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
     SendTouchGestureEvent(touchEvent);
     web_touch_event_queue_.pop_front();
