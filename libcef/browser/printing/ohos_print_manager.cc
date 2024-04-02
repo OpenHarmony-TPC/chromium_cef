@@ -214,6 +214,10 @@ bool OhosPrintManager::PrintNow() {
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
   OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
 
+  if (!token_ && printTokenMap_.find(base::Process::Current().Pid()) !=
+      printTokenMap_.end()) {
+    token_ = printTokenMap_[base::Process::Current().Pid()];
+  }
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
                     .Print(printJobName, printDocumentAdapterImpl,
