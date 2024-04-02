@@ -2959,6 +2959,10 @@ void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+void CefBrowserHostBase::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
 #if defined(OHOS_PRINT)
 void CefBrowserHostBase::SetToken(void* token) {
   // TODO(ohos): please impl the function and remove this comment.

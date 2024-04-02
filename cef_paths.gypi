@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=a9ed856c5a6fe3d0ab5287807ccbf3a85c31f2a7$
+# $hash=d5a413ed33c3f809c97c7b7cf873c0564602d1c1$
 #
 
 {
@@ -522,6 +522,8 @@
       'libcef_dll/ctocpp/server_handler_ctocpp.h',
       'libcef_dll/ctocpp/set_cookie_callback_ctocpp.cc',
       'libcef_dll/ctocpp/set_cookie_callback_ctocpp.h',
+      'libcef_dll/ctocpp/set_lock_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/set_lock_callback_ctocpp.h',
       'libcef_dll/cpptoc/shared_memory_region_cpptoc.cc',
       'libcef_dll/cpptoc/shared_memory_region_cpptoc.h',
       'libcef_dll/cpptoc/shared_process_message_builder_cpptoc.cc',
@@ -906,6 +908,8 @@
       'libcef_dll/cpptoc/server_handler_cpptoc.h',
       'libcef_dll/cpptoc/set_cookie_callback_cpptoc.cc',
       'libcef_dll/cpptoc/set_cookie_callback_cpptoc.h',
+      'libcef_dll/cpptoc/set_lock_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/set_lock_callback_cpptoc.h',
       'libcef_dll/ctocpp/shared_memory_region_ctocpp.cc',
       'libcef_dll/ctocpp/shared_memory_region_ctocpp.h',
       'libcef_dll/ctocpp/shared_process_message_builder_ctocpp.cc',

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6d482598d8ba64eba41e2a81ab5e4c13d21a9c44$
+// $hash=ca8852c6dd32b64e3c088cffc3ae83abdcd2f73c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -174,6 +174,21 @@ typedef struct _cef_cache_options_t {
   ///
   int(CEF_CALLBACK *is_top_level)(struct _cef_cache_options_t *self);
 } cef_cache_options_t;
+
+///
+/// cef_set_lock_callback_t
+///
+typedef struct _cef_set_lock_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Handle.
+  ///
+  void(CEF_CALLBACK* handle)(struct _cef_set_lock_callback_t* self, int key);
+} cef_set_lock_callback_t;
 
 ///
 /// Structure used to represent a browser. When used in the browser process the
@@ -1800,6 +1815,14 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t *self, const char *url, const char *script,
       struct _cef_cache_options_t *cacheOptions,
       struct _cef_precompile_callback_t *callback);
+
+  ///
+  /// SetWakeLockHandler.
+  ///
+  void(CEF_CALLBACK* set_wake_lock_handler)(
+      struct _cef_browser_host_t* self,
+      int32_t windowId,
+      struct _cef_set_lock_callback_t* callback);
 } cef_browser_host_t;
 
 ///

@@ -156,6 +156,20 @@ class CefCacheOptions : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsTopLevel() = 0;
 };
+
+///
+/// CefSetLockCallback
+///
+/*--cef(source=client)--*/
+class CefSetLockCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Handle.
+  ///
+  /*--cef()--*/
+  virtual void Handle(bool key) = 0;
+};
+
 /* ---------- ohos webview add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -1834,6 +1848,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       const std::string& script,
       CefRefPtr<CefCacheOptions> cacheOptions,
       CefRefPtr<CefPrecompileCallback> callback) = 0;
+
+  ///
+  /// SetWakeLockHandler.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

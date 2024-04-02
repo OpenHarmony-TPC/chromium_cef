@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ae82ea87f368f7d499db7ed877fe5a02bc041e56$
+// $hash=f788070a49dd48c972e77a94f359e78a025e3c97$
 //
 
 #ifndef CEF_LIBCEF_DLL_WRAPPER_TYPES_H_
@@ -161,6 +161,7 @@ enum CefWrapperType {
   WT_SERVER,
   WT_SERVER_HANDLER,
   WT_SET_COOKIE_CALLBACK,
+  WT_SET_LOCK_CALLBACK,
   WT_SHARED_MEMORY_REGION,
   WT_SHARED_PROCESS_MESSAGE_BUILDER,
   WT_STORE_WEB_ARCHIVE_RESULT_CALLBACK,

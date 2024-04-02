@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7e3a493389ffe67ffb43a183751fcff7fbdd0a66$
+// $hash=3d4354c5577b6b330ee3d08bf51ee791b5591451$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -264,6 +264,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void PrecompileJavaScript(const std::string &url, const std::string &script,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
+  void SetWakeLockHandler(int32_t windowId,
+                          CefRefPtr<CefSetLockCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

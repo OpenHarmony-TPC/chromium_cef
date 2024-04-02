@@ -128,6 +128,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
+  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;

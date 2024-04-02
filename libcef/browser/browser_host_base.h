@@ -403,6 +403,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void OnWindowHide() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
+  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
 #if defined(OHOS_PRINT)
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
