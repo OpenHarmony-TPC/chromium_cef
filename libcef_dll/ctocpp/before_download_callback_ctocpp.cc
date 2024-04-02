@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f6a97318d81cb4d286fea0d679eae6c317a1b18$
+// $hash=d54d34d8cbd575067a0dc54bd966955b217b0aa9$
 //
 
 #include "libcef_dll/ctocpp/before_download_callback_ctocpp.h"
@@ -33,6 +33,48 @@ void CefBeforeDownloadCallbackCToCpp::Continue(const CefString& download_path,
 
   // Execute
   _struct->cont(_struct, download_path.GetStruct(), show_dialog);
+}
+
+NO_SANITIZE("cfi-icall") void CefBeforeDownloadCallbackCToCpp::Cancel() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_before_download_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, cancel)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->cancel(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBeforeDownloadCallbackCToCpp::Pause() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_before_download_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, pause)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->pause(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefBeforeDownloadCallbackCToCpp::Resume() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_before_download_callback_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, resume)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->resume(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

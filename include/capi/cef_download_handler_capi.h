@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=60a08a60be70e8fe5df17f18f8e5758e1830d5e1$
+// $hash=f64aea51bf0b911d562b3e238108223e625d1124$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DOWNLOAD_HANDLER_CAPI_H_
@@ -66,6 +66,21 @@ typedef struct _cef_before_download_callback_t {
   void(CEF_CALLBACK* cont)(struct _cef_before_download_callback_t* self,
                            const cef_string_t* download_path,
                            int show_dialog);
+
+  ///
+  /// Call to cancel the download.
+  ///
+  void(CEF_CALLBACK* cancel)(struct _cef_before_download_callback_t* self);
+
+  ///
+  /// Call to pause the download.
+  ///
+  void(CEF_CALLBACK* pause)(struct _cef_before_download_callback_t* self);
+
+  ///
+  /// Call to resume the download.
+  ///
+  void(CEF_CALLBACK* resume)(struct _cef_before_download_callback_t* self);
 } cef_before_download_callback_t;
 
 ///

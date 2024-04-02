@@ -84,6 +84,7 @@
 
 #if defined(OHOS_EX_DOWNLOAD)
 #include "components/download/public/common/download_item_impl.h"
+#include "libcef/browser/download_item_impl.h"
 #include "libcef/browser/received_slice_helper.h"
 #endif
 
@@ -554,6 +555,28 @@ void CefBrowserHostBase::ResumeDownloadWithId(
   }
 #endif  //  OHOS_EX_DOWNLOAD
 }
+
+#if defined(OHOS_EX_DOWNLOAD)
+CefRefPtr<CefDownloadItem> CefBrowserHostBase::GetDownloadItem(uint32 item_id) {
+  LOG(INFO) << "CefBrowserHostBase::GetDownloadItem item_id: " << item_id;
+  auto web_contents = GetWebContents();
+  if (!web_contents)
+    return nullptr;
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    return nullptr;
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager)
+    return nullptr;
+
+  download::DownloadItem* item = manager->GetDownload(item_id);
+  CefRefPtr<CefDownloadItemImpl> download_item(
+    new CefDownloadItemImpl(item));
+  return download_item.get();
+}
+#endif
 
 void CefBrowserHostBase::DownloadImage(
     const CefString& image_url,

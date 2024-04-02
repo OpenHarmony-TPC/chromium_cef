@@ -51,7 +51,11 @@ class CefBeforeDownloadCallbackImpl : public CefBeforeDownloadCallback {
       : manager_(manager),
         download_id_(download_id),
         suggested_name_(suggested_name),
-        callback_(std::move(callback)) {}
+        callback_(std::move(callback)) {
+#if defined(OHOS_EX_DOWNLOAD)
+    download_id_for_ohos_ = download_id;
+#endif
+  }
 
   CefBeforeDownloadCallbackImpl(const CefBeforeDownloadCallbackImpl&) = delete;
   CefBeforeDownloadCallbackImpl& operator=(
@@ -78,6 +82,35 @@ class CefBeforeDownloadCallbackImpl : public CefBeforeDownloadCallback {
                                    this, download_path, show_dialog));
     }
   }
+
+#if defined(OHOS_EX_DOWNLOAD)
+  void Cancel() override {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      DoCancel();
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefBeforeDownloadCallbackImpl::DoCancel, this));
+    }
+  }
+
+  void Pause() override {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      DoPause();
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefBeforeDownloadCallbackImpl::DoPause, this));
+    }
+  }
+
+  void Resume() override {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      DoResume();
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefBeforeDownloadCallbackImpl::DoResume, this));
+    }
+  }
+#endif
 
  private:
   static void GenerateFilename(base::WeakPtr<DownloadManager> manager,
@@ -187,8 +220,60 @@ class CefBeforeDownloadCallbackImpl : public CefBeforeDownloadCallback {
         download::DOWNLOAD_INTERRUPT_REASON_NONE);
   }
 
+#if defined(OHOS_EX_DOWNLOAD)
+  void DoCancel() {
+    if (download_id_for_ohos_ <= 0) {
+      return;
+    }
+
+    if (manager_) {
+      DownloadItem* item = manager_->GetDownload(download_id_for_ohos_);
+      if (item && item->GetState() == DownloadItem::IN_PROGRESS) {
+        item->Cancel(true);
+      }
+    }
+
+    download_id_for_ohos_ = 0;
+  }
+
+  void DoPause() {
+    if (download_id_for_ohos_ <= 0) {
+      return;
+    }
+
+    if (manager_) {
+      DownloadItem* item = manager_->GetDownload(download_id_for_ohos_);
+      if (item && item->GetState() == DownloadItem::IN_PROGRESS) {
+        item->Pause();
+      }
+    }
+  }
+
+  void DoResume() {
+    if (download_id_for_ohos_ <= 0) {
+      return;
+    }
+
+    if (manager_) {
+      DownloadItem* item = manager_->GetDownload(download_id_for_ohos_);
+      if (item) {
+        if (item->CanResume()) {
+          item->Resume(true);
+        } else {
+          LOG(WARNING) << "CefBeforeDownloadCallbackImpl::DoResume failed"
+            << " and will cancel this download_item";
+          item->Cancel(true);
+        }
+      }
+    }
+  }
+#endif
+
   base::WeakPtr<DownloadManager> manager_;
   uint32 download_id_;
+#if defined(OHOS_EX_DOWNLOAD)
+  uint32 download_id_for_ohos_;
+#endif
   base::FilePath suggested_name_;
   content::DownloadTargetCallback callback_;
 
