@@ -65,6 +65,13 @@
 #include "include/cef_permission_request.h"
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+#include "include/cef_custom_media_player_delegate.h"
+#include "include/cef_custom_media_info.h"
+
+class CefMediaPlayerListener;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
 ///
 /// Implement this interface to provide handler implementations.
 ///
@@ -298,6 +305,12 @@ class CefClient : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool DoBrowserControlsShrinkRendererSize() { return false; }
 #endif
+
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  virtual CefOwnPtr<CefCustomMediaPlayerDelegate> OnCreateCustomMediaPlayer(
+      CefOwnPtr<CefMediaPlayerListener> listener,
+      const CefCustomMediaInfo& media_info) { return nullptr; }
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_
