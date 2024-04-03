@@ -1510,6 +1510,18 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     top_controls_offset_ = top_controls_offset;
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
+
+  if (for_browser_) {
+    // Set parameters for adaptive handle orientation.
+    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
+    viewport_size.Scale(metadata.page_scale_factor);
+    gfx::RectF viewport_rect(0.0f,
+                             metadata.top_controls_height *
+                                 metadata.top_controls_shown_ratio /
+                                 metadata.device_scale_factor,
+                             viewport_size.width(), viewport_size.height());
+    selection_controller_->OnViewportChanged(viewport_rect);
+  }
 #endif
 
   gesture_provider_.SetDoubleTapSupportForPageEnabled(
@@ -1604,20 +1616,6 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
                                                               selection_end_);
   }
-
-#ifdef OHOS_EX_TOPCONTROLS
-  if (for_browser_) {
-    // Set parameters for adaptive handle orientation.
-    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
-    viewport_size.Scale(page_scale_factor_);
-    gfx::RectF viewport_rect(0.0f,
-                             metadata.top_controls_height *
-                                 metadata.top_controls_shown_ratio /
-                                 metadata.device_scale_factor,
-                             viewport_size.width(), viewport_size.height());
-    selection_controller_->OnViewportChanged(viewport_rect);
-  }
-#endif
 
 #ifdef OHOS_CLIPBOARD
   if (clipped_selection_bounds_ != metadata.clipped_selection_bounds) {
