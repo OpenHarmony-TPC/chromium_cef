@@ -20,6 +20,7 @@
 #define MAX_FLOWBUF_DATA_SIZE 52428800 /* 50 MB */
 #define MAX_ENTRIES 10
 #define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
+#define INDEX_SIZE 2
 
 namespace {
 
@@ -51,27 +52,27 @@ bool OhGinJavascriptFunctionInvocationHelper::StoreString(int index, void* mem, 
   // Find the next available header entry
   int i;
   int dataPos = 0;
-  for ( i = 0; i < MAX_ENTRIES; ++i) {
-    int* entry = static_cast<int*>(mem) + (i * 2);
+  for (i = 0; i < MAX_ENTRIES; ++i) {
+    int* entry = static_cast<int*>(mem) + (i * INDEX_SIZE);
     dataPos += *(entry + 1);
-    if (*(entry +1) == 0) { // Check if length is 0, indicating unused memory
+    if (*(entry + 1) == 0) { // Check if length is 0, indicating unused memory
       break;
     }
   }
   // Check if the header is full
   if (i == MAX_ENTRIES) {
-    LOG(DEBUG) << "Flowbuf header is full, cannot store more strings. ";
+    LOG(DEBUG) << "Flowbuf header is full, cannot store more strings";
     return false;
   }
 
-  char* dataMem = static_cast<char*>(mem) + 80;
+  char* dataMem = static_cast<char*>(mem) + HEADER_SIZE;
   // Check for available space in data port
   if (dataPos + static_cast<int>(strlen(str) + 1) > MAX_FLOWBUF_DATA_SIZE) {
-     LOG(DEBUG) << "Flowbuf not enough space to store more strings. ";
+     LOG(DEBUG) << "Flowbuf not enough space to store more strings";
      return false;
   }
 
-  int* newEntry = static_cast<int*>(mem) + (i * 2);
+  int* newEntry = static_cast<int*>(mem) + (i * INDEX_SIZE);
   *(newEntry) = index;
   *(newEntry + 1) = static_cast<int>(strlen(str) + 1);
   memcpy(dataMem + dataPos, str, strlen(str) + 1);

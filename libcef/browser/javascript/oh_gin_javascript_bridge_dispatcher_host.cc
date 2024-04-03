@@ -744,7 +744,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   }
   // 为了兼容老版本webcotroller方式, classname可能为空
   int error = client_->NotifyJavaScriptResultFlowbuf(ceflistvalue, method, classname, fd,
-                                              result, routing_id, object_id);
+                                                     result, routing_id, object_id);
   *error_code = static_cast<OhGinJavascriptBridgeError>(error);
   if (error != 0) {
     return;
