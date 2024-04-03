@@ -667,10 +667,12 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  OhJavascriptInjector* javascriptInjector =
-     OhJavascriptInjector::FromWebContents(web_contents());
-  if (javascriptInjector) {
-    javascriptInjector->SetLastCallingFrameUrl(document_url);
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+    if (javascriptInjector) {
+      javascriptInjector->SetLastCallingFrameUrl(document_url);
+    }
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
