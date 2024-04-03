@@ -2372,6 +2372,24 @@ void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
   OHOS::NWeb::ResSchedClientAdapter::ReportWindowId(static_cast<int32_t>(window_id), static_cast<int32_t>(nweb_id));
   ReportWindowStatus(false);
 }
+
+void AlloyBrowserHostImpl::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+#if defined(OHOS_SCREEN_LOCK)
+  if (!web_contents()) {
+    LOG(ERROR) << "set screen lock error, web_contents is nullptr";
+    return;
+  }
+  SetKeepScreenOn handler = nullptr;
+  if (callback) {
+    handler = [callback](bool key) {
+      if (callback) {
+        callback->Handle(key);
+      }
+    };
+  }
+  web_contents()->SetWakeLockHandler(windowId, std::move(handler));
+#endif
+}
 #endif
 
 #if defined(OHOS_PRINT)

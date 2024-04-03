@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ae374a0fa37225888a44cbebd03f729d09649e78$
+// $hash=3d553de7ef3106df07ef2f7a8a32839e5ca7034c$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -21,6 +21,7 @@
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/precompile_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/set_lock_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/store_web_archive_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
 #include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"
@@ -2864,8 +2865,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetNWebId(int nWebId) {
   _struct->set_nweb_id(_struct, nWebId);
 }
 
-NO_SANITIZE("cfi-icall")
-bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -2889,7 +2889,7 @@ void CefBrowserHostCToCpp::PrecompileJavaScript(
     CefRefPtr<CefPrecompileCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_browser_host_t *_struct = GetStruct();
+  cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, precompile_java_script)) {
     return;
   }
@@ -2921,6 +2921,25 @@ void CefBrowserHostCToCpp::PrecompileJavaScript(
   _struct->precompile_java_script(_struct, url.c_str(), script.c_str(),
                                   CefCacheOptionsCToCpp::Unwrap(cacheOptions),
                                   CefPrecompileCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetWakeLockHandler(
+    int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_wake_lock_handler)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  _struct->set_wake_lock_handler(_struct, windowId,
+                                 CefSetLockCallbackCppToC::Wrap(callback));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

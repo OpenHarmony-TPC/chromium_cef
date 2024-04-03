@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ad855832b1382544fcc90872ff8700ce2aff51d7$
+// $hash=adc0f3476b9f659554738983bc935f900f487064$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -31,6 +31,7 @@
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/precompile_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/set_lock_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
 #include "libcef_dll/ctocpp/web_message_receiver_ctocpp.h"
@@ -3195,6 +3196,25 @@ void CEF_CALLBACK browser_host_precompile_java_script(
       CefPrecompileCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK
+browser_host_set_wake_lock_handler(struct _cef_browser_host_t* self,
+                                   int32_t windowId,
+                                   cef_set_lock_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetWakeLockHandler(
+      windowId, CefSetLockCallbackCToCpp::Wrap(callback));
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3376,6 +3396,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_nweb_id = browser_host_set_nweb_id;
   GetStruct()->get_pending_size_status = browser_host_get_pending_size_status;
   GetStruct()->precompile_java_script = browser_host_precompile_java_script;
+  GetStruct()->set_wake_lock_handler = browser_host_set_wake_lock_handler;
 }
 
 // DESTRUCTOR - Do not edit by hand.
