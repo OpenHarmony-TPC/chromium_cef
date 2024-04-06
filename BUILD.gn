@@ -1105,6 +1105,16 @@ source_set("libcef_static") {
   }
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  if (defined(ohos_custom_video_player) && ohos_custom_video_player) {
+    sources += [
+      "include/cef_media_player_listener.h",
+      "libcef/browser/alloy/custom_media_player_proxy.cc",
+      "libcef/browser/alloy/custom_media_player_proxy.h",
+    ]
+  }
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",

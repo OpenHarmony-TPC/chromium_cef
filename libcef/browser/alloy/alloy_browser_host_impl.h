@@ -41,6 +41,10 @@
 #include "components/zoom/zoom_observer.h"
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+#include "include/cef_custom_media_player_delegate.h"
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
 class CefAudioCapturer;
 class CefBrowserInfo;
 class SiteInstance;
@@ -432,6 +436,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
 #endif
+
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  std::unique_ptr<content::CustomMediaPlayer> CreateCustomMediaPlayer(
+      std::unique_ptr<content::CustomMediaPlayerListener> listener,
+      const content::MediaInfo& media_info) override;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
 
  private:
   friend class CefBrowserPlatformDelegateAlloy;

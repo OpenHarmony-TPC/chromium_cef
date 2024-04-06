@@ -124,6 +124,9 @@
       'include/views/cef_view_delegate.h',
       'include/views/cef_window.h',
       'include/views/cef_window_delegate.h',
+
+      'include/cef_custom_media_info.h',
+      'include/cef_custom_media_player_delegate.h',
     ],
     'autogen_capi_includes': [
       'include/capi/cef_accessibility_handler_capi.h',
