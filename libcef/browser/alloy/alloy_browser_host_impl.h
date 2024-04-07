@@ -244,6 +244,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool ShouldVirtualKeyboardOverlay() override;
 #endif
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+void NotifyNeedsReload(bool needs_reload) override;
+bool NeedsReload() override;
+#endif
+
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
     DESTRUCTION_STATE_PENDING,
@@ -539,6 +544,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
   bool start_play_ = false;
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+  bool needs_reload_ = false;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

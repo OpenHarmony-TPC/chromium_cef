@@ -3241,7 +3241,41 @@ browser_host_get_download_item(struct _cef_browser_host_t* self,
   return CefDownloadItemCppToC::Wrap(_retval);
 }
 
-} // namespace
+void CEF_CALLBACK
+browser_host_notify_needs_reload(struct _cef_browser_host_t* self,
+                                 int needs_reload) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->NotifyNeedsReload(needs_reload ? true
+                                                                  : false);
+}
+
+int CEF_CALLBACK browser_host_needs_reload(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->NeedsReload();
+
+  // Return type: bool
+  return _retval;
+}
+
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -3424,6 +3458,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->precompile_java_script = browser_host_precompile_java_script;
   GetStruct()->set_wake_lock_handler = browser_host_set_wake_lock_handler;
   GetStruct()->get_download_item = browser_host_get_download_item;
+  GetStruct()->notify_needs_reload = browser_host_notify_needs_reload;
+  GetStruct()->needs_reload = browser_host_needs_reload;
 }
 
 // DESTRUCTOR - Do not edit by hand.

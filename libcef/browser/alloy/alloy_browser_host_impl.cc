@@ -2553,6 +2553,11 @@ bool AlloyBrowserHostImpl::Restore() {
   web_contents()->GetController().SetNeedsReload();
   web_contents()->GetController().LoadIfNecessary();
   web_contents()->Focus();
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+  needs_reload_ = false;
+#endif
+
   return true;
 }
 
@@ -2640,3 +2645,17 @@ AlloyBrowserHostImpl::CreateCustomMediaPlayer(
 
 }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void AlloyBrowserHostImpl::NotifyNeedsReload(bool needs_reload) {
+  if (is_hidden_ && needs_reload) {
+    web_contents()->GetController().SetNeedsReload();
+  }
+  LOG(INFO) << "NotifyNeedsReload set needs reload: " << needs_reload;
+  needs_reload_ = needs_reload;
+}
+
+bool AlloyBrowserHostImpl::NeedsReload() {
+  return needs_reload_;
+}
+#endif

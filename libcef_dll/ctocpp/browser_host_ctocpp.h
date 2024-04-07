@@ -268,6 +268,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetWakeLockHandler(int32_t windowId,
                           CefRefPtr<CefSetLockCallback> callback) override;
   CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
+  void NotifyNeedsReload(bool needs_reload) override;
+  bool NeedsReload() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

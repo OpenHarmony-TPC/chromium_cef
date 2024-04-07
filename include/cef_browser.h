@@ -1862,6 +1862,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
+
+  ///
+  ///  Notify browser host needs reload when the render process terminated.
+  ///
+  /*--cef()--*/
+  virtual void NotifyNeedsReload(bool needs_reload) = 0;
+
+  ///
+  ///  Return true if needs reload page, or false if nees not reload.
+  ///
+  /*--cef()--*/
+  virtual bool NeedsReload() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
