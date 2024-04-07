@@ -2928,7 +2928,8 @@ void CefBrowserHostCToCpp::PrecompileJavaScript(
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetWakeLockHandler(
-    int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+    int32_t windowId,
+    CefRefPtr<CefSetLockCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -2962,6 +2963,38 @@ CefRefPtr<CefDownloadItem> CefBrowserHostCToCpp::GetDownloadItem(
 
   // Return type: refptr_same
   return CefDownloadItemCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::NotifyNeedsReload(bool needs_reload) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, notify_needs_reload)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->notify_needs_reload(_struct, needs_reload);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::NeedsReload() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, needs_reload)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->needs_reload(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

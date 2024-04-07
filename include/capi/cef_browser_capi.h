@@ -1813,10 +1813,12 @@ typedef struct _cef_browser_host_t {
   ///
   ///  precompile javascript and generate code cache.
   ///
-  void(CEF_CALLBACK *precompile_java_script)(
-      struct _cef_browser_host_t *self, const char *url, const char *script,
-      struct _cef_cache_options_t *cacheOptions,
-      struct _cef_precompile_callback_t *callback);
+  void(CEF_CALLBACK* precompile_java_script)(
+      struct _cef_browser_host_t* self,
+      const char* url,
+      const char* script,
+      struct _cef_cache_options_t* cacheOptions,
+      struct _cef_precompile_callback_t* callback);
 
   ///
   /// SetWakeLockHandler.
@@ -1832,6 +1834,17 @@ typedef struct _cef_browser_host_t {
   struct _cef_download_item_t*(CEF_CALLBACK* get_download_item)(
       struct _cef_browser_host_t* self,
       uint32 item_id);
+
+  ///
+  ///  Notify browser host needs reload when the render process terminated.
+  ///
+  void(CEF_CALLBACK* notify_needs_reload)(struct _cef_browser_host_t* self,
+                                          int needs_reload);
+
+  ///
+  ///  Return true if needs reload page, or false if nees not reload.
+  ///
+  int(CEF_CALLBACK* needs_reload)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

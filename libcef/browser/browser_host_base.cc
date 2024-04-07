@@ -3566,3 +3566,14 @@ void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback>
   LOG(DEBUG) << "Get generate code cache result: " << result;
   callback->OnPrecompileFinished(result);
 }
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+bool CefBrowserHostBase::NeedsReload() {
+  // TODO(ohos): please impl the function and remove this comment.
+  return false;
+}
+#endif

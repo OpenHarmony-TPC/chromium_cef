@@ -327,6 +327,11 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
 #endif
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+void NotifyNeedsReload(bool needs_reload) override;
+bool NeedsReload() override;
+#endif
+
   // CefBrowser methods:
   bool IsValid() override;
   CefRefPtr<CefBrowserHost> GetHost() override;

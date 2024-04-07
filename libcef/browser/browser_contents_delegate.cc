@@ -671,6 +671,12 @@ void CefBrowserContentsDelegate::PrimaryMainFrameRenderProcessGone(
     ts = TS_PROCESS_CRASHED;
   } else if (status == base::TERMINATION_STATUS_OOM) {
     ts = TS_PROCESS_OOM;
+#ifdef OHOS_RENDER_PROCESS_MODE
+  } else if (status == base::TERMINATION_STATUS_NORMAL_TERMINATION) {
+    if (browser() && browser()->GetHost()) {
+      browser()->GetHost()->NotifyNeedsReload(true);
+    }
+#endif
   } else if (status != base::TERMINATION_STATUS_ABNORMAL_TERMINATION) {
     return;
   }
