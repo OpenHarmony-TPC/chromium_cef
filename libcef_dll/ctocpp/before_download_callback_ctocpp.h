@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=aaec02c1ceb359f58a3ff8819685ae22dbb1be1e$
+// $hash=f6598c0d6d45c8084ad88997afebdf891880ccd8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BEFORE_DOWNLOAD_CALLBACK_CTOCPP_H_
@@ -36,6 +36,9 @@ class CefBeforeDownloadCallbackCToCpp
 
   // CefBeforeDownloadCallback methods.
   void Continue(const CefString& download_path, bool show_dialog) override;
+  void Cancel() override;
+  void Pause() override;
+  void Resume() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BEFORE_DOWNLOAD_CALLBACK_CTOCPP_H_

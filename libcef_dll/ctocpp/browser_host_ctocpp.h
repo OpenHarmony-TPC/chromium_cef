@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3d4354c5577b6b330ee3d08bf51ee791b5591451$
+// $hash=50d08077bb99c951628cf43f33b14a633aae1163$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -138,7 +138,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
   void GetRootBrowserAccessibilityManager(void** manager) override;
-  void ExecuteJavaScript(const std::string &code,
+  void ExecuteJavaScript(const std::string& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
   void ExecuteJavaScriptExt(const int fd,
@@ -261,11 +261,13 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void SetNWebId(int nWebId) override;
   bool GetPendingSizeStatus() override;
-  void PrecompileJavaScript(const std::string &url, const std::string &script,
+  void PrecompileJavaScript(const std::string& url,
+                            const std::string& script,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
   void SetWakeLockHandler(int32_t windowId,
                           CefRefPtr<CefSetLockCallback> callback) override;
+  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

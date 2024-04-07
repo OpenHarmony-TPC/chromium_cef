@@ -51,6 +51,7 @@
 #if BUILDFLAG(IS_OHOS)
 #include "include/cef_permission_request.h"
 #include "include/cef_task.h"
+#include "include/cef_download_item.h"
 #include "include/internal/cef_string_map.h"
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -1835,11 +1836,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetNWebId(int nWebId) = 0;
 
   ///
-  // get pendingSizeStatus.
+  /// get pendingSizeStatus.
   ///
   /*--cef()--*/
   virtual bool GetPendingSizeStatus() = 0;
 
+  ///
   ///  precompile javascript and generate code cache.
   ///
   /*--cef()--*/
@@ -1854,6 +1856,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=callback)--*/
   virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
+
+  ///
+  /// Get CefDownloadItem by download_item_id.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

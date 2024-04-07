@@ -398,6 +398,9 @@ class CefBrowserHostBase : public CefBrowserHost,
                       const CefString& mime_type,
                       const CefString& last_modified,
                       const CefString& received_slices_string) override;
+#if defined(OHOS_EX_DOWNLOAD)
+  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
+#endif
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
