@@ -68,8 +68,7 @@
 #if defined(OHOS_CUSTOM_VIDEO_PLAYER)
 #include "include/cef_custom_media_player_delegate.h"
 #include "include/cef_custom_media_info.h"
-
-class CefMediaPlayerListener;
+#include "include/cef_media_player_listener.h"
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
 ///
