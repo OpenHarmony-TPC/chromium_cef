@@ -96,6 +96,10 @@
 #include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
 #endif
 
+#ifdef OHOS_I18N
+#include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -1477,6 +1481,17 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
     LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
+
+  // need to notify renderer preference to change accepted_language
+  if (!GetWebContents()) {
+    return;
+  }
+  auto prefs = GetWebContents()->GetMutableRendererPrefs();
+  if (prefs->accept_languages.compare(update_locale)) {
+    prefs->accept_languages = update_locale;
+    GetWebContents()->SyncRendererPrefs();
+  }
+
   std::string result =
       ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
           update_locale);
