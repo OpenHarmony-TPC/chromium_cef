@@ -1952,7 +1952,7 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
   if (host && video_type.has_video) {
     LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
         << ", video_stream_cnt: " << video_stream_cnt_;
-    --++video_stream_cnt_;
+    --video_stream_cnt_;
     if (video_stream_cnt_ == 0) {
         OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
             OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_STOP, host->GetProcess().Pid());
