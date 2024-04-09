@@ -376,6 +376,15 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void NotifySelectAllClicked(bool select_all) {}
+
+  ///
+  /// Called when select word.
+  ///
+  /*--cef()--*/
+  virtual void GetWordSelection(CefRefPtr<CefBrowser> browser,
+                                const CefString& text,
+                                int8_t offset,
+                                CefPoint& select) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

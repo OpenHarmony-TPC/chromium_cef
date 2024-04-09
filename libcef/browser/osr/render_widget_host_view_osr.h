@@ -414,6 +414,10 @@ class CefRenderWidgetHostViewOSR
   std::u16string GetText();
 #endif  // #ifdef OHOS_CLIPBOARD
 
+#ifdef OHOS_EX_FREE_COPY
+  std::vector<int8_t> GetWordSelection(const std::string& text, int8_t offset) override;
+#endif
+
  private:
   void SetFrameRate();
   bool SetScreenInfo();
