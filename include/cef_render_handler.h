@@ -383,6 +383,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
   
+  ///
   /// Called when select word.
   ///
   /*--cef()--*/

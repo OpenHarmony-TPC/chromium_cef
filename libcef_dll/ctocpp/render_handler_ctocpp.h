@@ -121,6 +121,10 @@ class CefRenderHandlerCToCpp
       const cef_native_embed_data_t& info) override;
   void NotifySelectAllClicked(bool select_all) override;
   void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) override;
+  void GetWordSelection(CefRefPtr<CefBrowser> browser,
+                        const CefString& text,
+                        int8_t offset,
+                        CefPoint& select) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
