@@ -186,7 +186,7 @@ interface BrowserFrame {
   [EnableIf=is_ohos]
   OnGetImageForContextNodeNull();
 
-  // Give the SDK a chance to decide whether to override loading the url.
+  // Give the application a chance to decide whether to override loading the url.
   [EnableIf=is_ohos, Sync]
   ShouldOverrideUrlLoading(string url,
                            string request_method,
