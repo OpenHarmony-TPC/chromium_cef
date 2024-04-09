@@ -378,6 +378,11 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void NotifySelectAllClicked(bool select_all) {}
 
   ///
+  /// Called when scroll begin or end.
+  ///
+  /*--cef()--*/
+  virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
+  
   /// Called when select word.
   ///
   /*--cef()--*/

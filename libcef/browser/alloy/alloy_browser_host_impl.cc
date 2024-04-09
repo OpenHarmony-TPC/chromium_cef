@@ -32,6 +32,7 @@
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
+#include "base/trace_event/trace_event.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "content/browser/gpu/compositor_util.h"
@@ -99,6 +100,13 @@
 #include "libcef/browser/javascript/oh_javascript_injector.h"
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+#include "libcef/browser/alloy/custom_media_player_proxy.h"
+#include "cef/include/cef_media_player_listener.h"
+#include "content/public/browser/custom_media_info.h"
+#include "content/public/browser/custom_media_player_listener.h"
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -150,6 +158,93 @@ class CefDateTimeChooserCallbackImpl : public CefDateTimeChooserCallback {
   IMPLEMENT_REFCOUNTING(CefDateTimeChooserCallbackImpl);
 };
 #endif
+
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+class CefMediaPlayerListenerImpl : public CefMediaPlayerListener {
+ public:
+  explicit CefMediaPlayerListenerImpl(
+      std::unique_ptr<content::CustomMediaPlayerListener> listener)
+      : listener_(std::move(listener)) {}
+  void OnStatusChanged(uint32_t status) override {
+    if (listener_) {
+      listener_->OnStatusChanged(status);
+    }
+  }
+  void OnVolumeChanged(double volume) override {
+    if (listener_) {
+      listener_->OnVolumeChanged(volume);
+    }
+  }
+  void OnMutedChanged(bool muted) override {
+    if (listener_) {
+      listener_->OnMutedChanged(muted);
+    }
+  }
+  void OnPlaybackRateChanged(double playback_rate) override {
+    if (listener_) {
+      listener_->OnPlaybackRateChanged(playback_rate);
+    }
+  }
+  void OnDurationChanged(double duration) override {
+    if (listener_) {
+      listener_->OnDurationChanged(duration);
+    }
+  }
+  void OnTimeUpdate(double current_time) override {
+    if (listener_) {
+      listener_->OnTimeUpdate(current_time);
+    }
+  }
+  void OnBufferedEndTimeChanged(double buffered_time) override {
+    if (listener_) {
+      listener_->OnBufferedEndTimeChanged(buffered_time);
+    }
+  }
+  void OnEnded() override {
+    if (listener_) {
+      listener_->OnEnded();
+    }
+  }
+  void OnNetworkStateChanged(uint32_t state) override {
+    if (listener_) {
+      listener_->OnNetworkStateChanged(state);
+    }
+  }
+  void OnReadyStateChanged(uint32_t state) override {
+    if (listener_) {
+      listener_->OnReadyStateChanged(state);
+    }
+  }
+  void OnFullscreenChanged(bool fullscreen) override {
+    if (listener_) {
+      listener_->OnFullscreenChanged(fullscreen);
+    }
+  }
+  void OnSeeking() override {
+    if (listener_) {
+      listener_->OnSeeking();
+    }
+  }
+  void OnSeekFinished() override {
+    if (listener_) {
+      listener_->OnSeekFinished();
+    }
+  }
+  void OnError(uint32_t error_code, const std::string& error_msg) override {
+    if (listener_) {
+      listener_->OnError(error_code, error_msg);
+    }
+  }
+  void OnVideoSizeChanged(int width, int height) override {
+    if (listener_) {
+      listener_->OnVideoSizeChanged(width, height);
+    }
+  }
+ private:
+  std::unique_ptr<content::CustomMediaPlayerListener> listener_;
+};
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
 }  // namespace
 
 // AlloyBrowserHostImpl static methods.
@@ -660,13 +755,48 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 }
 
 void AlloyBrowserHostImpl::OnWindowShow() {
-  ReportWindowStatus(true);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
+  is_hidden_ = false;
+  ReportRenderProcessStatus();
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
-  ReportWindowStatus(false);
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
+  is_hidden_ = true;
+  ReportRenderProcessStatus();
 }
 
+void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
+  using namespace OHOS::NWeb;
+
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      return;
+    }
+
+    ResSchedStatusAdapter status = is_hidden_
+                                       ? ResSchedStatusAdapter::WEB_INACTIVE
+                                       : ResSchedStatusAdapter::WEB_ACTIVE;
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
+               "process_id", process_id);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_hidden_: " << is_hidden_ << " process_id: " << process_id;
+  } else {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
+    return;
+  }
+}
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -1786,7 +1916,19 @@ void AlloyBrowserHostImpl::MediaStartedPlaying(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) {
   LOG(INFO) << "AlloyBrowserHostImpl::MediaStartedPlaying, is_video: " << video_type.has_video;
-
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_START, host->GetProcess().Pid());
+    }
+    ++video_stream_cnt_;
+  }
+#endif
   start_play_ = true;
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   if (client_.get() && client_->GetMediaHandler().get()) {
@@ -1803,6 +1945,21 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
   if (!start_play_) {
     return;
   }
+
+#if BUILDFLAG(IS_OHOS)
+  content::RenderFrameHost* main_frame = web_contents()->GetPrimaryMainFrame();
+  content::RenderProcessHost* host = main_frame->GetProcess();
+  if (host && video_type.has_video) {
+    LOG(DEBUG) << "AlloyBrowserHostImpl::MediaStartedPlaying, pid: " << host->GetProcess().Pid()
+        << ", video_stream_cnt: " << video_stream_cnt_;
+    --++video_stream_cnt_;
+    if (video_stream_cnt_ == 0) {
+        OHOS::NWeb::ResSchedClientAdapter::ReportVideoPlaying(
+            OHOS::NWeb::ResSchedStatusAdapter::VIDEO_PLAYING_STOP, host->GetProcess().Pid());
+    }
+    video_stream_cnt_ = std::max(video_stream_cnt_, 0);
+  }
+#endif
 
   cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
   cef_media_playing_state_t state;
@@ -2061,7 +2218,8 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  
+  ReportRenderProcessStatus();
+
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
@@ -2070,7 +2228,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
 void AlloyBrowserHostImpl::InactiveUnloadOldProcess(base::ProcessId pid) {
   using namespace OHOS::NWeb;
   if(pid != last_pid_ && last_pid_ != -1) {
-    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE, 
+    ResSchedClientAdapter::ReportWindowStatus(ResSchedStatusAdapter::WEB_INACTIVE,
                                               last_pid_, window_id_, nweb_id_);
   }
   last_pid_ = pid;
@@ -2292,6 +2450,13 @@ void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
   if (platform_delegate_)
     platform_delegate_->SetShouldFrameSubmissionBeforeDraw(should);
 }
+
+bool AlloyBrowserHostImpl::GetPendingSizeStatus() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPendingSizeStatus();
+  }
+  return false;
+}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #if BUILDFLAG(IS_OHOS)
@@ -2300,6 +2465,24 @@ void AlloyBrowserHostImpl::SetWindowId(int window_id, int nweb_id) {
   nweb_id_ = nweb_id;
   OHOS::NWeb::ResSchedClientAdapter::ReportWindowId(static_cast<int32_t>(window_id), static_cast<int32_t>(nweb_id));
   ReportWindowStatus(false);
+}
+
+void AlloyBrowserHostImpl::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+#if defined(OHOS_SCREEN_LOCK)
+  if (!web_contents()) {
+    LOG(ERROR) << "set screen lock error, web_contents is nullptr";
+    return;
+  }
+  SetKeepScreenOn handler = nullptr;
+  if (callback) {
+    handler = [callback](bool key) {
+      if (callback) {
+        callback->Handle(key);
+      }
+    };
+  }
+  web_contents()->SetWakeLockHandler(windowId, std::move(handler));
+#endif
 }
 #endif
 
@@ -2370,6 +2553,11 @@ bool AlloyBrowserHostImpl::Restore() {
   web_contents()->GetController().SetNeedsReload();
   web_contents()->GetController().LoadIfNecessary();
   web_contents()->Focus();
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+  needs_reload_ = false;
+#endif
+
   return true;
 }
 
@@ -2402,5 +2590,72 @@ CefString AlloyBrowserHostImpl::GetLastJavascriptProxyCallingFrameUrl() {
     return base::EmptyString();
   }
   return javascriptInjector->GetLastCallingFrameUrl();
+}
+#endif
+
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+std::unique_ptr<content::CustomMediaPlayer>
+AlloyBrowserHostImpl::CreateCustomMediaPlayer(
+    std::unique_ptr<content::CustomMediaPlayerListener> listener,
+    const content::MediaInfo& media_info) {
+  if (!client_) {
+    LOG(ERROR) << "CreateCustomMediaPlayer failed, client_ is null";
+    return nullptr;
+  }
+
+  CefOwnPtr<CefCustomMediaPlayerDelegate> delegate;
+  static_assert(sizeof(CefCustomMediaInfo) == sizeof(content::MediaInfo));
+  CefCustomMediaInfo cef_media_info;
+
+  cef_media_info.embed_id = media_info.embed_id;
+  cef_media_info.media_type = static_cast<uint32_t>(media_info.media_type);
+  cef_media_info.media_src_list.reserve(media_info.media_src_list.size());
+  for (const auto& info : media_info.media_src_list) {
+    cef_media_info.media_src_list.push_back({
+        static_cast<uint32_t>(info.source_type),
+        info.media_source, info.media_format});
+  }
+  cef_media_info.surface_info.id = media_info.surface_info.id;
+  cef_media_info.surface_info.x = media_info.surface_info.x;
+  cef_media_info.surface_info.y = media_info.surface_info.y;
+  cef_media_info.surface_info.width = media_info.surface_info.width;
+  cef_media_info.surface_info.height = media_info.surface_info.height;
+
+  cef_media_info.controls = media_info.controls;
+  cef_media_info.controlslist.reserve(media_info.controlslist.size());
+  for (const auto& item : media_info.controlslist) {
+    cef_media_info.controlslist.push_back(item);
+  }
+
+  cef_media_info.muted = media_info.muted;
+  cef_media_info.poster_url = media_info.poster_url;
+  cef_media_info.preload = static_cast<uint32_t>(media_info.preload);
+  cef_media_info.https_headers = media_info.https_headers;
+  cef_media_info.attributes = media_info.attributes;
+
+  delegate = client_->OnCreateCustomMediaPlayer(
+      CefOwnPtr<CefMediaPlayerListenerImpl>(
+          new CefMediaPlayerListenerImpl(std::move(listener))),
+      cef_media_info);
+  if (!delegate) {
+    LOG(ERROR) << "CreateCustomMediaPlayer, no media player";
+    return nullptr;
+  }
+  return std::make_unique<CustomMediaPlayerProxy>(std::move(delegate));
+
+}
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void AlloyBrowserHostImpl::NotifyNeedsReload(bool needs_reload) {
+  if (is_hidden_ && needs_reload) {
+    web_contents()->GetController().SetNeedsReload();
+  }
+  LOG(INFO) << "NotifyNeedsReload set needs reload: " << needs_reload;
+  needs_reload_ = needs_reload;
+}
+
+bool AlloyBrowserHostImpl::NeedsReload() {
+  return needs_reload_;
 }
 #endif

@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=516fa3deab618215f57eec157dde9276b8ea16b5$
+# $hash=d5a413ed33c3f809c97c7b7cf873c0564602d1c1$
 #
 
 {
@@ -124,6 +124,9 @@
       'include/views/cef_view_delegate.h',
       'include/views/cef_window.h',
       'include/views/cef_window_delegate.h',
+
+      'include/cef_custom_media_info.h',
+      'include/cef_custom_media_player_delegate.h',
     ],
     'autogen_capi_includes': [
       'include/capi/cef_accessibility_handler_capi.h',
@@ -270,6 +273,8 @@
       'libcef_dll/cpptoc/views/button_cpptoc.h',
       'libcef_dll/ctocpp/views/button_delegate_ctocpp.cc',
       'libcef_dll/ctocpp/views/button_delegate_ctocpp.h',
+      'libcef_dll/cpptoc/cache_options_cpptoc.cc',
+      'libcef_dll/cpptoc/cache_options_cpptoc.h',
       'libcef_dll/cpptoc/callback_cpptoc.cc',
       'libcef_dll/cpptoc/callback_cpptoc.h',
       'libcef_dll/ctocpp/client_ctocpp.cc',
@@ -442,6 +447,8 @@
       'libcef_dll/cpptoc/post_data_stream_init_callback_cpptoc.h',
       'libcef_dll/cpptoc/post_data_stream_read_callback_cpptoc.cc',
       'libcef_dll/cpptoc/post_data_stream_read_callback_cpptoc.h',
+      'libcef_dll/ctocpp/precompile_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/precompile_callback_ctocpp.h',
       'libcef_dll/cpptoc/preference_manager_cpptoc.cc',
       'libcef_dll/cpptoc/preference_manager_cpptoc.h',
       'libcef_dll/cpptoc/preference_registrar_cpptoc.cc',
@@ -518,6 +525,8 @@
       'libcef_dll/ctocpp/server_handler_ctocpp.h',
       'libcef_dll/ctocpp/set_cookie_callback_ctocpp.cc',
       'libcef_dll/ctocpp/set_cookie_callback_ctocpp.h',
+      'libcef_dll/ctocpp/set_lock_callback_ctocpp.cc',
+      'libcef_dll/ctocpp/set_lock_callback_ctocpp.h',
       'libcef_dll/cpptoc/shared_memory_region_cpptoc.cc',
       'libcef_dll/cpptoc/shared_memory_region_cpptoc.h',
       'libcef_dll/cpptoc/shared_process_message_builder_cpptoc.cc',
@@ -650,6 +659,8 @@
       'libcef_dll/ctocpp/views/button_ctocpp.h',
       'libcef_dll/cpptoc/views/button_delegate_cpptoc.cc',
       'libcef_dll/cpptoc/views/button_delegate_cpptoc.h',
+      'libcef_dll/ctocpp/cache_options_ctocpp.cc',
+      'libcef_dll/ctocpp/cache_options_ctocpp.h',
       'libcef_dll/ctocpp/callback_ctocpp.cc',
       'libcef_dll/ctocpp/callback_ctocpp.h',
       'libcef_dll/cpptoc/client_cpptoc.cc',
@@ -822,6 +833,8 @@
       'libcef_dll/ctocpp/post_data_stream_init_callback_ctocpp.h',
       'libcef_dll/ctocpp/post_data_stream_read_callback_ctocpp.cc',
       'libcef_dll/ctocpp/post_data_stream_read_callback_ctocpp.h',
+      'libcef_dll/cpptoc/precompile_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/precompile_callback_cpptoc.h',
       'libcef_dll/ctocpp/preference_manager_ctocpp.cc',
       'libcef_dll/ctocpp/preference_manager_ctocpp.h',
       'libcef_dll/ctocpp/preference_registrar_ctocpp.cc',
@@ -898,6 +911,8 @@
       'libcef_dll/cpptoc/server_handler_cpptoc.h',
       'libcef_dll/cpptoc/set_cookie_callback_cpptoc.cc',
       'libcef_dll/cpptoc/set_cookie_callback_cpptoc.h',
+      'libcef_dll/cpptoc/set_lock_callback_cpptoc.cc',
+      'libcef_dll/cpptoc/set_lock_callback_cpptoc.h',
       'libcef_dll/ctocpp/shared_memory_region_ctocpp.cc',
       'libcef_dll/ctocpp/shared_memory_region_ctocpp.h',
       'libcef_dll/ctocpp/shared_process_message_builder_ctocpp.cc',

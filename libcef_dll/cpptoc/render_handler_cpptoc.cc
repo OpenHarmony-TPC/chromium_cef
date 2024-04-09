@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fe16e48e84b52b93735d0d949c686f3975b50bb2$
+// $hash=e09a7f6bf280e041b0ea07d8786438f86486f9a5$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -1009,6 +1009,26 @@ render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true : false);
 }
 
+void CEF_CALLBACK
+render_handler_release_resize_hold(struct _cef_render_handler_t* self,
+                                     cef_browser_t* browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(CefBrowserCToCpp::Wrap(browser));
+}
 
 }  // namespace
 
@@ -1059,6 +1079,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_native_embed_lifecycle_change =
       render_handler_on_native_embed_lifecycle_change;
   GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
+  GetStruct()->release_resize_hold = render_handler_release_resize_hold;
 }
 
 // DESTRUCTOR - Do not edit by hand.

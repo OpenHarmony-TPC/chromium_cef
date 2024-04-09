@@ -66,9 +66,11 @@ class OhosPrintManager : public printing::PrintManager,
                    PdfWritingDoneCallback callback);
   bool PrintNow();
   void PrintPage(bool isApplication);
-  void PrintPageImpl(bool isApplication);
+  void PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
+                     bool isApplication);
   void DidDispatchPrintEvent(bool isBefore);
-  void DidDispatchPrintEventImpl(bool isBefore);
+  void DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> webcontents,
+                                 bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
@@ -136,6 +138,7 @@ class OhosPrintManager : public printing::PrintManager,
   static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
 
+  base::WeakPtr<content::WebContents> weak_ptr_web_contents_;
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };
 

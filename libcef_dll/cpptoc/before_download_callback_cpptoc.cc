@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=413df16faeb54035a8313957347188a958b4ee66$
+// $hash=75d912cc78d1535fdd73fb91230a8e19489f23f3$
 //
 
 #include "libcef_dll/cpptoc/before_download_callback_cpptoc.h"
@@ -38,12 +38,60 @@ before_download_callback_cont(struct _cef_before_download_callback_t* self,
       CefString(download_path), show_dialog ? true : false);
 }
 
+void CEF_CALLBACK
+before_download_callback_cancel(struct _cef_before_download_callback_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBeforeDownloadCallbackCppToC::Get(self)->Cancel();
+}
+
+void CEF_CALLBACK
+before_download_callback_pause(struct _cef_before_download_callback_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBeforeDownloadCallbackCppToC::Get(self)->Pause();
+}
+
+void CEF_CALLBACK
+before_download_callback_resume(struct _cef_before_download_callback_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBeforeDownloadCallbackCppToC::Get(self)->Resume();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBeforeDownloadCallbackCppToC::CefBeforeDownloadCallbackCppToC() {
   GetStruct()->cont = before_download_callback_cont;
+  GetStruct()->cancel = before_download_callback_cancel;
+  GetStruct()->pause = before_download_callback_pause;
+  GetStruct()->resume = before_download_callback_resume;
 }
 
 // DESTRUCTOR - Do not edit by hand.

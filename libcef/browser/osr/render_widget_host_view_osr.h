@@ -216,6 +216,7 @@ class CefRenderWidgetHostViewOSR
   void WasKeyboardResized();
   void SetDrawMode(int mode);
   void SetDrawRect(const gfx::Rect& rect);
+  bool GetPendingSizeStatus();
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   viz::SurfaceId GetCurrentSurfaceId() const override;

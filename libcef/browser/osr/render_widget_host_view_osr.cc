@@ -92,6 +92,7 @@ const float kDefaultScaleFactor = 1.0;
 const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
 const size_t KFirstTouchRecordingTimes = 5;
+const size_t KTouchEventCachedThreaShold = 1;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -539,8 +540,12 @@ void CefRenderWidgetHostViewOSR::Focus() {
 
 bool CefRenderWidgetHostViewOSR::HasFocus() {
 #if BUILDFLAG(IS_OHOS)
-  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
-    return text_input_manager_->GetActiveWidget()->is_focused();
+  content::RenderWidgetHostImpl* target_host = render_widget_host_;
+  if (render_widget_host_ && render_widget_host_->delegate()) {
+    target_host = render_widget_host_->delegate()->GetFocusedRenderWidgetHost(render_widget_host_);
+  }
+  if (target_host && target_host->GetView()) {
+    return target_host->is_focused();
   }
   return false;
 #else
@@ -1248,6 +1253,10 @@ void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
     compositor->SetDrawMode(mode);
   }
 }
+
+bool CefRenderWidgetHostViewOSR::GetPendingSizeStatus() {
+  return pending_resize_;
+}
 #endif
 
 #if !BUILDFLAG(IS_MAC)
@@ -1501,6 +1510,18 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     top_controls_offset_ = top_controls_offset;
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
+
+  if (for_browser_) {
+    // Set parameters for adaptive handle orientation.
+    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
+    viewport_size.Scale(metadata.page_scale_factor);
+    gfx::RectF viewport_rect(0.0f,
+                             metadata.top_controls_height *
+                                 metadata.top_controls_shown_ratio /
+                                 metadata.device_scale_factor,
+                             viewport_size.width(), viewport_size.height());
+    selection_controller_->OnViewportChanged(viewport_rect);
+  }
 #endif
 
   gesture_provider_.SetDoubleTapSupportForPageEnabled(
@@ -1595,20 +1616,6 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
                                                               selection_end_);
   }
-
-#ifdef OHOS_EX_TOPCONTROLS
-  if (for_browser_) {
-    // Set parameters for adaptive handle orientation.
-    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
-    viewport_size.Scale(page_scale_factor_);
-    gfx::RectF viewport_rect(0.0f,
-                             metadata.top_controls_height *
-                                 metadata.top_controls_shown_ratio /
-                                 metadata.device_scale_factor,
-                             viewport_size.width(), viewport_size.height());
-    selection_controller_->OnViewportChanged(viewport_rect);
-  }
-#endif
 
 #ifdef OHOS_CLIPBOARD
   if (clipped_selection_bounds_ != metadata.clipped_selection_bounds) {
@@ -2202,7 +2209,8 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRenderHandler::TextInputType type = CEF_TEXT_INPUT_TYPE_NONE;
   bool show_keyboard = false;
 #if defined(OHOS_INPUT_EVENTS)
-  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN) {
+  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN &&
+      is_editable_node_) {
     LOG(INFO) << "The keyboard status is not updated when pressed";
     return;
   }
@@ -2291,6 +2299,12 @@ void CefRenderWidgetHostViewOSR::OnVsync() {
     gesture_event_queue_.clear();
   }
 
+  if (web_touch_event_queue_.size() > KTouchEventCachedThreaShold) {
+    blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+    SendTouchGestureEvent(touchEvent);
+    web_touch_event_queue_.pop_front();
+  }
+
   if (!gesture_event_queue_.empty()) {
     SendGestureEvent(std::move(gesture_event_queue_.front()));
     gesture_event_queue_.pop_front();
@@ -2301,12 +2315,11 @@ void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
   TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncReceived",
     "web_touch_event_queue", web_touch_event_queue_.size());
   if (web_touch_event_queue_.size() > kMaxGestureQueueSize) {
-    LOG(ERROR) << "web touch event queue size is error:"
+    LOG(WARNING) << "web touch event queue size is error:"
                << web_touch_event_queue_.size();
-    web_touch_event_queue_.clear();
   }
 
-  if (!web_touch_event_queue_.empty()) {
+  while (!web_touch_event_queue_.empty()) {
     blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
     SendTouchGestureEvent(touchEvent);
     web_touch_event_queue_.pop_front();
@@ -2624,6 +2637,12 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefRenderWidgetHostViewOSR::WasResized,
                                  weak_ptr_factory_.GetWeakPtr()));
+  }
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->ReleaseResizeHold(browser_impl_.get());
   }
 }
 

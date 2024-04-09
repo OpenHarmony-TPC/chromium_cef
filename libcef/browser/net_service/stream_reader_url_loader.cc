@@ -692,6 +692,12 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
     pending_response->content_length = content_length;
   }
 
+#if defined(OHOS_NETWORK_LOAD)
+  if (mime_type.empty()) {
+    headers->GetMimeTypeAndCharset(&mime_type, &charset);
+  }
+#endif
+
   if (!mime_type.empty()) {
     pending_response->mime_type = mime_type;
     if (!charset.empty()) {

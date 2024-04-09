@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6f8e2fab993ded7fac4dcd377b80be075fae9a56$
+// $hash=55543d733b70e342619e3410b91acbaa9e799db5$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -373,6 +373,12 @@ typedef struct _cef_render_handler_t {
   ///
   void (CEF_CALLBACK* notify_select_all_clicked)(struct _cef_render_handler_t* self,
                                                 int select_all);
+
+  ///
+  // Called when the RootLayer has changed.
+  ///
+  void(CEF_CALLBACK* release_resize_hold)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

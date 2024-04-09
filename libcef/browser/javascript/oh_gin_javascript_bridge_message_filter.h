@@ -62,6 +62,8 @@ class OhGinJavascriptBridgeMessageFilter
 
   bool OnMessageReceivedThread(const IPC::Message& message);
 
+  bool OnMessageReceivedThreadFlowbuf(const IPC::Message& message);
+
   // Called on the background thread.
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> FindHost();
 
@@ -76,6 +78,13 @@ class OhGinJavascriptBridgeMessageFilter
                       const base::Value::List& arguments,
                       base::Value::List* result,
                       OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodFlowbuf(int* fd,
+                             int32_t object_id,
+                             const std::string& document_url,
+                             const std::string& method_name,
+                             const base::Value::List& arguments,
+                             base::Value::List* result,
+                             OhGinJavascriptBridgeError* error_code);
   void OnObjectWrapperDeleted(int object_id);
 
   // Accessed both from UI and background threads.

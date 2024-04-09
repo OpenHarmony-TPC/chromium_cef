@@ -415,6 +415,7 @@ class CefBrowserPlatformDelegate {
   virtual void WasKeyboardResized() {}
   virtual void SetDrawRect(int x, int y, int width, int height) {}
   virtual void SetDrawMode(int mode) {}
+  virtual bool GetPendingSizeStatus() { return false; }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT

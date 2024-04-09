@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "base/strings/stringprintf.h"
 #include "base/trace_event/trace_event.h"
 #include "content/public/browser/browser_thread.h"
 #include "libcef/browser/predictors/navigation_id.h"
@@ -322,9 +323,12 @@ void LoadingPredictor::PrefetchResource(
   auto resource_request = std::make_unique<network::ResourceRequest>();
   resource_request->url = request_info->url;
   resource_request->method = request_info->method;
-  for (auto it = request_headers.begin(); it != request_headers.end(); it++) {
-    resource_request->headers.SetHeader(it->first, it->second);
+  std::string output;
+  for (auto& header : request_headers) {
+    base::StringAppendF(&output, "%s: %s\r\n", header.first.c_str(), header.second.c_str());
   }
+  output.append("\r\n");
+  resource_request->headers.AddHeadersFromString(output);
   // Send resource request.
   auto loader = network::SimpleURLLoader::Create(std::move(resource_request),
                                                  MISSING_TRAFFIC_ANNOTATION);

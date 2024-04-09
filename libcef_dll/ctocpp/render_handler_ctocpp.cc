@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6bcee07cfbbe753e0cca9cf383b2dafae37b80e9$
+// $hash=e4f9ca4d23a010fdac7bc138367d159d545c7c23$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -853,6 +853,27 @@ void CefRenderHandlerCToCpp::NotifySelectAllClicked(bool select_all) {
 
   // Execute
   _struct->notify_select_all_clicked(_struct, select_all);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, release_resize_hold)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->release_resize_hold(_struct, CefBrowserCppToC::Wrap(browser));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

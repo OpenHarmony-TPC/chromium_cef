@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8796beaf9d316db55590c18115b40bc724aef4aa$
+// $hash=da97040e6dbe360795426dc03345119bc7413ec0$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -19,13 +19,17 @@
 #include "libcef_dll/cpptoc/java_script_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/navigation_entry_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/precompile_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/set_lock_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/store_web_archive_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
 #include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"
 #include "libcef_dll/ctocpp/binary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/cache_options_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
+#include "libcef_dll/ctocpp/download_item_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/ctocpp/extension_ctocpp.h"
 #include "libcef_dll/ctocpp/navigation_entry_ctocpp.h"
@@ -1286,7 +1290,7 @@ void CefBrowserHostCToCpp::GetRootBrowserAccessibilityManager(void** manager) {
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ExecuteJavaScript(
-    const std::string &code,
+    const std::string& code,
     CefRefPtr<CefJavaScriptResultCallback> callback,
     bool extention) {
   shutdown_checker::AssertNotShutdown();
@@ -1313,6 +1317,33 @@ void CefBrowserHostCToCpp::ExecuteJavaScript(
   _struct->execute_java_script(
       _struct, code.c_str(), CefJavaScriptResultCallbackCppToC::Wrap(callback),
       extention);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ExecuteJavaScriptExt(
+    const int fd,
+    const uint64 scriptLength,
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, execute_java_script_ext)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->execute_java_script_ext(
+      _struct, fd, scriptLength,
+      CefJavaScriptResultCallbackCppToC::Wrap(callback), extention);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -2834,6 +2865,136 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetNWebId(int nWebId) {
 
   // Execute
   _struct->set_nweb_id(_struct, nWebId);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPendingSizeStatus() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_pending_size_status)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_pending_size_status(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::PrecompileJavaScript(
+    const std::string& url,
+    const std::string& script,
+    CefRefPtr<CefCacheOptions> cacheOptions,
+    CefRefPtr<CefPrecompileCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, precompile_java_script)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: std_string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+  // Verify param: script; type: std_string_byref_const
+  DCHECK(!script.empty());
+  if (script.empty()) {
+    return;
+  }
+  // Verify param: cacheOptions; type: refptr_same
+  DCHECK(cacheOptions.get());
+  if (!cacheOptions.get()) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->precompile_java_script(_struct, url.c_str(), script.c_str(),
+                                  CefCacheOptionsCToCpp::Unwrap(cacheOptions),
+                                  CefPrecompileCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetWakeLockHandler(
+    int32_t windowId,
+    CefRefPtr<CefSetLockCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_wake_lock_handler)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  _struct->set_wake_lock_handler(_struct, windowId,
+                                 CefSetLockCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefDownloadItem> CefBrowserHostCToCpp::GetDownloadItem(
+    uint32 item_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_download_item)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_download_item_t* _retval = _struct->get_download_item(_struct, item_id);
+
+  // Return type: refptr_same
+  return CefDownloadItemCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::NotifyNeedsReload(bool needs_reload) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, notify_needs_reload)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->notify_needs_reload(_struct, needs_reload);
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::NeedsReload() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, needs_reload)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->needs_reload(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

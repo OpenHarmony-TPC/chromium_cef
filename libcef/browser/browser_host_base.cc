@@ -84,6 +84,7 @@
 
 #if defined(OHOS_EX_DOWNLOAD)
 #include "components/download/public/common/download_item_impl.h"
+#include "libcef/browser/download_item_impl.h"
 #include "libcef/browser/received_slice_helper.h"
 #endif
 
@@ -93,6 +94,10 @@
 
 #ifdef OHOS_ITP
 #include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
+#endif
+
+#ifdef OHOS_I18N
+#include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
 #endif
 
 namespace {
@@ -554,6 +559,28 @@ void CefBrowserHostBase::ResumeDownloadWithId(
   }
 #endif  //  OHOS_EX_DOWNLOAD
 }
+
+#if defined(OHOS_EX_DOWNLOAD)
+CefRefPtr<CefDownloadItem> CefBrowserHostBase::GetDownloadItem(uint32 item_id) {
+  LOG(INFO) << "CefBrowserHostBase::GetDownloadItem item_id: " << item_id;
+  auto web_contents = GetWebContents();
+  if (!web_contents)
+    return nullptr;
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    return nullptr;
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager)
+    return nullptr;
+
+  download::DownloadItem* item = manager->GetDownload(item_id);
+  CefRefPtr<CefDownloadItemImpl> download_item(
+    new CefDownloadItemImpl(item));
+  return download_item.get();
+}
+#endif
 
 void CefBrowserHostBase::DownloadImage(
     const CefString& image_url,
@@ -1454,6 +1481,17 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
     LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
+
+  // need to notify renderer preference to change accepted_language
+  if (!GetWebContents()) {
+    return;
+  }
+  auto prefs = GetWebContents()->GetMutableRendererPrefs();
+  if (prefs->accept_languages.compare(update_locale)) {
+    prefs->accept_languages = update_locale;
+    GetWebContents()->SyncRendererPrefs();
+  }
+
   std::string result =
       ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
           update_locale);
@@ -1534,6 +1572,11 @@ void CefBrowserHostBase::SetDrawRect(int x, int y, int width, int height) {
 
 void CefBrowserHostBase::SetDrawMode(int mode) {
   // todo(ohos):impl this function then remove todo
+}
+
+bool CefBrowserHostBase::GetPendingSizeStatus() {
+  // todo(ohos):impl this function then remove todo
+  return false;
 }
 
 void CefBrowserHostBase::SetZoomLevel(double zoomLevel) {
@@ -2703,143 +2746,168 @@ bool ValidateResultType(base::Value::Type type) {
   return false;
 }
 
+void CefBrowserHostBase::ExecuteJSCallback(
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    base::Value result) {
+  LOG(DEBUG) << "javascript result callback enter";
+  std::string json;
+  base::JSONWriter::Write(result, &json);
+  if (callback != nullptr) {
+    CefRefPtr<CefValue> data = CefValue::Create();
+    data->SetString(json);
+    callback->OnJavaScriptExeResult(data);
+  }
+}
+
+void CefBrowserHostBase::ExecuteExtensionJSCallback(
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    base::Value result) {
+  LOG(DEBUG) << "javascript result callback enter, type:"
+    << result.GetTypeName(result.type());
+  std::string json;
+  base::JSONWriter::Write(result, &json);
+  CefRefPtr<CefValue> data = CefValue::Create();
+  switch (result.type()) {
+    case base::Value::Type::STRING: {
+      data->SetString(json);
+      break;
+    }
+    case base::Value::Type::DOUBLE: {
+      data->SetDouble(result.GetDouble());
+      break;
+    }
+    case base::Value::Type::INTEGER: {
+      data->SetDouble(result.GetInt());
+      break;
+    }
+    case base::Value::Type::BOOLEAN: {
+      data->SetBool(result.GetBool());
+      break;
+    }
+    case base::Value::Type::BINARY: {
+      std::vector<uint8_t> vec = result.GetBlob();
+      CefRefPtr<CefBinaryValue> value =
+        CefBinaryValue::Create(vec.data(), vec.size());
+      data->SetBinary(value);
+      break;
+    }
+    case base::Value::Type::LIST: {
+      int len = result.GetList().size();
+      CefRefPtr<CefListValue> value = CefListValue::Create();
+      base::Value::Type typeFirst = base::Value::Type::NONE;
+      base::Value::Type typeCur = base::Value::Type::NONE;
+      bool support = true;
+      for (int i = 0; i < len; i++) {
+        base::Value list_ele = std::move(result.GetList()[i]);
+        typeCur = list_ele.type();
+        if (!ValidateResultType(typeCur)) {
+          data->SetString(
+            "This type not support, only string/number/boolean "
+            "is supported for array elements");
+          support = false;
+          break;
+        }
+        if (i == 0) {
+          typeFirst = typeCur;
+        }
+        if (typeCur != typeFirst) {
+          support = false;
+          data->SetString(
+            "This type not support, The elements in the array "
+            "must be the same.");
+          break;
+        }
+        switch (list_ele.type()) {
+          case base::Value::Type::STRING: {
+            CefString msgCef;
+            msgCef.FromString(list_ele.GetString());
+            value->SetString(i, msgCef);
+            break;
+          }
+          case base::Value::Type::DOUBLE: {
+            value->SetDouble(i, list_ele.GetDouble());
+            break;
+          }
+          case base::Value::Type::INTEGER: {
+            value->SetInt(i, list_ele.GetInt());
+            break;
+          }
+          case base::Value::Type::BOOLEAN: {
+            value->SetBool(i, list_ele.GetBool());
+            break;
+          }
+          default: {
+            LOG(ERROR) << "Not support type";
+            support = false;
+            data->SetString(
+              "This type not support, only "
+              "string/number/boolean is supported for array "
+              "elements");
+            break;
+          }
+        }
+      }
+      if (support) {
+        data->SetList(value);
+      }
+      break;
+    }
+    default: {
+      LOG(ERROR)
+        << "base::Value not support type:" << result.type();
+      data->SetString(
+        "This type not support, only "
+        "string/number/boolean/arraybuffer/array is supported");
+      break;
+    }
+  }
+
+  if (callback != nullptr) {
+    callback->OnJavaScriptExeResult(data);
+  }
+}
+
 void CefBrowserHostBase::ExecuteJavaScript(
     const std::string& code,
     CefRefPtr<CefJavaScriptResultCallback> callback,
     bool extention) {
   auto web_contents = GetWebContents();
   // enable inject javaScript
-  LOG(INFO) << "ExecuteJavaScript with callback enter";
+  LOG(DEBUG) << "ExecuteJavaScript with callback enter";
   if (web_contents && web_contents->GetPrimaryMainFrame()) {
-    LOG(INFO) << "ExecuteJavaScript with callback";
+    LOG(DEBUG) << "ExecuteJavaScript with callback";
     web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
     if (!extention) {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
           base::UTF8ToUTF16(code),
-          base::BindOnce(
-              [](CefRefPtr<CefJavaScriptResultCallback> callback,
-                 base::Value result) {
-                LOG(INFO) << "javascript result callback enter";
-                std::string json;
-                base::JSONWriter::Write(result, &json);
-                if (callback != nullptr) {
-                  CefRefPtr<CefValue> data = CefValue::Create();
-                  data->SetString(json);
-                  callback->OnJavaScriptExeResult(data);
-                }
-              },
-              callback));
+          base::BindOnce(&CefBrowserHostBase::ExecuteJSCallback, this, callback));
     } else {
       web_contents->GetPrimaryMainFrame()->ExecuteJavaScript(
           base::UTF8ToUTF16(code),
-          base::BindOnce(
-              [](CefRefPtr<CefJavaScriptResultCallback> callback,
-                 base::Value result) {
-                LOG(INFO) << "javascript result callback enter, type:"
-                          << result.GetTypeName(result.type());
-                std::string json;
-                base::JSONWriter::Write(result, &json);
-                CefRefPtr<CefValue> data = CefValue::Create();
-                switch (result.type()) {
-                  case base::Value::Type::STRING: {
-                    data->SetString(json);
-                    break;
-                  }
-                  case base::Value::Type::DOUBLE: {
-                    data->SetDouble(result.GetDouble());
-                    break;
-                  }
-                  case base::Value::Type::INTEGER: {
-                    data->SetDouble(result.GetInt());
-                    break;
-                  }
-                  case base::Value::Type::BOOLEAN: {
-                    data->SetBool(result.GetBool());
-                    break;
-                  }
-                  case base::Value::Type::BINARY: {
-                    std::vector<uint8_t> vec = result.GetBlob();
-                    CefRefPtr<CefBinaryValue> value =
-                        CefBinaryValue::Create(vec.data(), vec.size());
-                    data->SetBinary(value);
-                    break;
-                  }
-                  case base::Value::Type::LIST: {
-                    int len = result.GetList().size();
-                    CefRefPtr<CefListValue> value = CefListValue::Create();
-                    base::Value::Type typeFirst = base::Value::Type::NONE;
-                    base::Value::Type typeCur = base::Value::Type::NONE;
-                    bool support = true;
-                    for (int i = 0; i < len; i++) {
-                      base::Value list_ele = std::move(result.GetList()[i]);
-                      typeCur = list_ele.type();
-                      if (!ValidateResultType(typeCur)) {
-                        data->SetString(
-                            "This type not support, only string/number/boolean "
-                            "is supported for array elements");
-                        support = false;
-                        break;
-                      }
-                      if (i == 0) {
-                        typeFirst = typeCur;
-                      }
-                      if (typeCur != typeFirst) {
-                        support = false;
-                        data->SetString(
-                            "This type not support, The elements in the array "
-                            "must be the same.");
-                        break;
-                      }
-                      switch (list_ele.type()) {
-                        case base::Value::Type::STRING: {
-                          CefString msgCef;
-                          msgCef.FromString(list_ele.GetString());
-                          value->SetString(i, msgCef);
-                          break;
-                        }
-                        case base::Value::Type::DOUBLE: {
-                          value->SetDouble(i, list_ele.GetDouble());
-                          break;
-                        }
-                        case base::Value::Type::INTEGER: {
-                          value->SetInt(i, list_ele.GetInt());
-                          break;
-                        }
-                        case base::Value::Type::BOOLEAN: {
-                          value->SetBool(i, list_ele.GetBool());
-                          break;
-                        }
-                        default: {
-                          LOG(ERROR) << "Not support type";
-                          support = false;
-                          data->SetString(
-                              "This type not support, only "
-                              "string/number/boolean is supported for array "
-                              "elements");
-                          break;
-                        }
-                      }
-                    }
-                    if (support) {
-                      data->SetList(value);
-                    }
-                    break;
-                  }
-                  default: {
-                    LOG(ERROR)
-                        << "base::Value not support type:" << result.type();
-                    data->SetString(
-                        "This type not support, only "
-                        "string/number/boolean/arraybuffer/array is supported");
-                    break;
-                  }
-                }
+          base::BindOnce(&CefBrowserHostBase::ExecuteExtensionJSCallback, this, callback));
+    }
+  }
+}
 
-                if (callback != nullptr) {
-                  callback->OnJavaScriptExeResult(data);
-                }
-              },
-              callback));
+void CefBrowserHostBase::ExecuteJavaScriptExt(
+    const int fd,
+    const uint64 scriptLength,
+    CefRefPtr<CefJavaScriptResultCallback> callback,
+    bool extention) {
+  auto web_contents = GetWebContents();
+  // enable inject javaScript
+  LOG(DEBUG) << "ExecuteJavaScriptExt with callback enter";
+  if (web_contents && web_contents->GetPrimaryMainFrame()) {
+    LOG(DEBUG) << "ExecuteJavaScriptExt with callback";
+    web_contents->GetPrimaryMainFrame()->AllowInjectingJavaScript();
+    if (!extention) {
+      web_contents->GetPrimaryMainFrame()->ExecuteJavaScriptExt(
+          fd, scriptLength,
+          base::BindOnce(&CefBrowserHostBase::ExecuteJSCallback, this, callback));
+    } else {
+      web_contents->GetPrimaryMainFrame()->ExecuteJavaScriptExt(
+          fd, scriptLength,
+          base::BindOnce(&CefBrowserHostBase::ExecuteExtensionJSCallback, this, callback));
     }
   }
 }
@@ -2926,6 +2994,10 @@ void CefBrowserHostBase::WasKeyboardResized() {
 }
 
 void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+void CefBrowserHostBase::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
@@ -3428,3 +3500,95 @@ void CefBrowserHostBase::SetNWebId(int NWebID) {
   web_contents->SetNWebId(NWebID);
 #endif  // defined(OHOS_WEBRTC)
 }
+
+void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
+                                              const std::string& script,
+                                              CefRefPtr<CefCacheOptions> cacheOptions,
+                                              CefRefPtr<CefPrecompileCallback> callback) {
+  std::map<std::string, std::string> responseHeaders;
+
+  cef_string_map_t cefResponseHeaders = cacheOptions->GetResponseHeaders();
+  CefString key;
+  CefString value;
+  size_t size = cef_string_map_size(cefResponseHeaders);
+  for (size_t i = 0 ; i < size ; i ++) {
+    cef_string_map_key(cefResponseHeaders, i, key.GetWritableStruct());
+    cef_string_map_value(cefResponseHeaders, i, value.GetWritableStruct());
+    responseHeaders.emplace(key.ToString(), value.ToString());
+  }
+
+  auto options = std::make_shared<oh_code_cache::CacheOptions>(
+      responseHeaders, cacheOptions->IsModule(), cacheOptions->IsTopLevel());
+  
+  oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
+      FROM_HERE,
+      base::BindOnce(&CefBrowserHostBase::WriteResponseCache, this, url, script, options),
+      base::BindOnce(&CefBrowserHostBase::OnDidWriteResponseCache,
+          this, url, script, options, std::move(callback)));
+}
+
+int32_t CefBrowserHostBase::WriteResponseCache(const std::string& url,
+                                               const std::string& script,
+                                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions) {
+  auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(url);
+
+  if (!response_cache) {
+    LOG(ERROR) << "Internal error: create response cache error.";
+    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
+  }
+
+  if (!response_cache->Write(cacheOptions->response_headers_, script)) {
+    LOG(ERROR) << "Internal error: write into response cache error.";
+    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
+  }
+
+  LOG(DEBUG) << "Write into response cache successfully.";
+  return static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR);
+}
+
+void CefBrowserHostBase::OnDidWriteResponseCache(const std::string& url,
+                                                 const std::string& script,
+                                                 std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                                                 CefRefPtr<CefPrecompileCallback> callback,
+                                                 int32_t result) {
+  if (result != static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR)) {
+    LOG(ERROR) << "Internal error: get write response cache result is error.";
+    callback->OnPrecompileFinished(result);
+    return;
+  }
+
+  GenerateCodeCache(url, script, cacheOptions, std::move(callback));
+}
+  
+void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
+                                           const std::string& script,
+                                           std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                                           CefRefPtr<CefPrecompileCallback> callback) {
+  auto wc = GetWebContents();
+  if (wc == nullptr) {
+    LOG(ERROR) << "Internal error: WebContents has not initialized.";
+    callback->OnPrecompileFinished(
+        static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
+    return;
+  }
+
+  wc->GetPrimaryMainFrame()->GenerateCodeCache(url, script, cacheOptions,
+      base::BindOnce(&CefBrowserHostBase::OnDidGenerateCodeCache,
+      this, std::move(callback)));
+}
+
+void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result) {
+  LOG(DEBUG) << "Get generate code cache result: " << result;
+  callback->OnPrecompileFinished(result);
+}
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+bool CefBrowserHostBase::NeedsReload() {
+  // TODO(ohos): please impl the function and remove this comment.
+  return false;
+}
+#endif

@@ -303,6 +303,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void RemoveJavaScriptOnDocumentEnd() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
   void SetZoomLevel(double zoomLevel) override;
   double GetZoomLevel() override;
   void SetBrowserZoomLevel(double zoom_factor) override;
@@ -315,12 +316,20 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StopCamera() override;
   void CloseCamera() override;
   void SetNWebId(int NWebID) override;
-
+  void PrecompileJavaScript(const std::string& url,
+                            const std::string& script,
+                            CefRefPtr<CefCacheOptions> cacheOptions,
+                            CefRefPtr<CefPrecompileCallback> callback) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION
   CefRefPtr<CefBinaryValue> GetWebState() override;
   bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
+#endif
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void NotifyNeedsReload(bool needs_reload) override;
+bool NeedsReload() override;
 #endif
 
   // CefBrowser methods:
@@ -371,9 +380,20 @@ class CefBrowserHostBase : public CefBrowserHost,
                     const CefString& mimeType,
                     const CefString& encoding) override;
 
+  void ExecuteJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
+                         base::Value result);
+
+  void ExecuteExtensionJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
+                                  base::Value result);
+
   void ExecuteJavaScript(const std::string& code,
                          CefRefPtr<CefJavaScriptResultCallback> callback,
                          bool extention) override;
+
+  void ExecuteJavaScriptExt(const int fd,
+                            const uint64 scriptLength,
+                            CefRefPtr<CefJavaScriptResultCallback> callback,
+                            bool extention) override;
 
   void ResumeDownload(const CefString& url,
                       const CefString& full_path,
@@ -383,11 +403,15 @@ class CefBrowserHostBase : public CefBrowserHost,
                       const CefString& mime_type,
                       const CefString& last_modified,
                       const CefString& received_slices_string) override;
+#if defined(OHOS_EX_DOWNLOAD)
+  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
+#endif
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
+  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
 #if defined(OHOS_PRINT)
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
@@ -703,6 +727,23 @@ class CefBrowserHostBase : public CefBrowserHost,
       uint32_t next_id);
 
   bool UseLegacyGeolocationPermissionAPI();
+
+  int32_t WriteResponseCache(const std::string& url,
+                             const std::string& script,
+                             std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
+
+  void OnDidWriteResponseCache(const std::string& url,
+                               const std::string& script,
+                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                               CefRefPtr<CefPrecompileCallback> callback,
+                               int32_t result);
+
+  void GenerateCodeCache(const std::string& url,
+                         const std::string& script,
+                         std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
+                         CefRefPtr<CefPrecompileCallback> callback);
+
+  void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.

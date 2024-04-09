@@ -41,6 +41,10 @@
 #include "components/zoom/zoom_observer.h"
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+#include "include/cef_custom_media_player_delegate.h"
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
 class CefAudioCapturer;
 class CefBrowserInfo;
 class SiteInstance;
@@ -128,6 +132,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
+  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
@@ -237,6 +242,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if defined(OHOS_INPUT_EVENTS)
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+#endif
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void NotifyNeedsReload(bool needs_reload) override;
+bool NeedsReload() override;
 #endif
 
   enum DestructionState {
@@ -432,6 +442,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
 #endif
 
+#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  std::unique_ptr<content::CustomMediaPlayer> CreateCustomMediaPlayer(
+      std::unique_ptr<content::CustomMediaPlayerListener> listener,
+      const content::MediaInfo& media_info) override;
+#endif // OHOS_CUSTOM_VIDEO_PLAYER
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 
@@ -470,6 +486,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
+  void ReportRenderProcessStatus();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -481,6 +498,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
   CefWindowHandle opener_;
@@ -521,9 +539,14 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   int window_id_ = -1;
   int nweb_id_ = -1;
   base::ProcessId last_pid_ = -1;
+
+  int video_stream_cnt_ = 0;
 #endif
   bool start_play_ = false;
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+  bool needs_reload_ = false;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_
