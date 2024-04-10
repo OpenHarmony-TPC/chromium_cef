@@ -876,6 +876,36 @@ void CefRenderHandlerCToCpp::ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {
   _struct->release_resize_hold(_struct, CefBrowserCppToC::Wrap(browser));
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetWordSelection(CefRefPtr<CefBrowser> browser,
+                                              const CefString& text,
+                                              int8_t offset,
+                                              CefPoint& select) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_word_selection)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(!text.empty());
+  if (text.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_word_selection(_struct, CefBrowserCppToC::Wrap(browser),
+                              text.GetStruct(), offset, &select);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}

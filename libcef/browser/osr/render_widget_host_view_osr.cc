@@ -2802,6 +2802,20 @@ std::u16string CefRenderWidgetHostViewOSR::GetText() {
 }
 #endif  // #ifdef OHOS_CLIPBOARD
 
+#ifdef OHOS_EX_FREE_COPY
+std::vector<int8_t> CefRenderWidgetHostViewOSR::GetWordSelection(const std::string& text, int8_t offset) {
+  CefPoint temp(-1, -1);
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+        CHECK(handler);
+        handler->GetWordSelection(browser_impl_.get(), text, offset, temp);
+  }
+  std::vector<int8_t> select = { temp.x, temp.y };
+  return select;
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 bool CefRenderWidgetHostViewOSR::IsMouseLocked() {
   return is_mouse_locked_;
