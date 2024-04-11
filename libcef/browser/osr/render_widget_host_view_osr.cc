@@ -54,6 +54,7 @@
 #include "ui/gfx/geometry/dip_util.h"
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_selection_controller.h"
+#include "ohos_nweb/src/nweb_resize_helper.h"
 
 #ifdef OHOS_EX_TOPCONTROLS
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
@@ -85,6 +86,7 @@ namespace {
 // The maximum number of damage rects to cache for outstanding frame requests
 // (for OnAcceleratedPaint).
 const size_t kMaxDamageRects = 10;
+const int SOC_PERF_WEB_DRAG_RESIZE_ID = 10073;
 
 const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
@@ -2643,6 +2645,13 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
     handler->ReleaseResizeHold(browser_impl_.get());
+  }
+  bool isDragResized = OHOS::NWeb::NWebResizeHelper::GetInstance().IsDragResizeStart();
+  if (isDragResized) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
+    .CreateSocPerfClientAdapter()
+    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_DRAG_RESIZE_ID, false);
+    OHOS::NWeb::NWebResizeHelper::GetInstance().SetDragResizeStart(false);
   }
 }
 
