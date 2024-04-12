@@ -323,6 +323,9 @@ class CefRenderWidgetHostViewOSR
   void SendMouseEvent(const blink::WebMouseEvent& event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
+#ifdef OHOS_CLIPBOARD
+  void ResetGestureDetection(bool is_lost_focus);
+#endif
   bool ShouldRouteEvents() const;
   void SetFocus(bool focus);
   void UpdateFrameRate();

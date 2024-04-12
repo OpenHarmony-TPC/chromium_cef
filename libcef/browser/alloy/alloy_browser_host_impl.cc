@@ -2184,7 +2184,12 @@ bool AlloyBrowserHostImpl::HandleContextMenu(
     menu_manager_.reset(
         new CefMenuManager(this, platform_delegate_->CreateMenuRunner()));
   }
-  return menu_manager_->CreateContextMenu(params);
+
+  if (menu_manager_->CreateContextMenu(params)) {
+    view->ResetGestureDetection(true);
+    return true;
+  }
+  return false;
 }
 #endif  // #ifdef OHOS_CLIPBOARD
 
