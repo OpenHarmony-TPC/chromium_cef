@@ -164,6 +164,7 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 }
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
+  LOG(INFO) << "Close Quick Menu And Hide Hanles.";
   CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
   auto controller = rwhv_->selection_controller();
@@ -345,6 +346,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   }
 
 #ifdef OHOS_CLIPBOARD
+  LOG(INFO) << "Close Quick Menu Now.";
   if (browser->web_contents()) {
     browser->web_contents()->SetShowingContextMenu(false);
   }
@@ -384,7 +386,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
         quickmenuflags |= command;
       }
     }
-
+    LOG(INFO) << "Quick Menu Flags Is = " << quickmenuflags;
     CefRefPtr<CefRunQuickMenuCallbackImpl> callbackImpl(
         new CefRunQuickMenuCallbackImpl(base::BindOnce(
             &CefTouchSelectionControllerClientOSR::ExecuteCommand,
@@ -412,7 +414,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
     } else {
-      LOG(DEBUG) << "Show Handle Quick Menu Success";
+      LOG(INFO) << "Show Handle Quick Menu Success";
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
@@ -533,7 +535,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
 #ifdef OHOS_CLIPBOARD
-  LOG(DEBUG) << "Selection Event Value = " << static_cast<int32_t>(event);
+  LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
   SetTemporarilyHidden(false);
   auto browser = rwhv_->browser_impl();
   switch (event) {
@@ -580,7 +582,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::SELECTION_HANDLES_MOVED:
       if (!handle_drag_in_progress_) {
         if (!IsVaildSelectionHandleMove()) {
-          LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
+          LOG(INFO) << "Current Selection Handle Move Event Is Invalid";
           NotifyTouchSelectionChanged(true);
           return;
         }
