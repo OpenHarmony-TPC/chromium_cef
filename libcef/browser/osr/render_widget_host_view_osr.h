@@ -288,6 +288,8 @@ class CefRenderWidgetHostViewOSR
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
 
   void OnVsyncReceived();
+
+  void OnTouchDown();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
