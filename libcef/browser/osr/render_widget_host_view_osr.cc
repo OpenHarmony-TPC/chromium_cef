@@ -783,6 +783,12 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   if (touch_event.GetType() == blink::WebInputEvent::Type::kTouchMove &&
       web_touch_event_count_ > KFirstTouchRecordingTimes) {
     web_touch_event_queue_.push_back(touch_event);
+
+    if (web_touch_event_queue_.size() > KTouchEventCachedThreaShold) {
+      blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+      SendTouchGestureEvent(touchEvent);
+      web_touch_event_queue_.pop_front();
+    }
   } else {
     SendTouchGestureEvent(touch_event);
   }
