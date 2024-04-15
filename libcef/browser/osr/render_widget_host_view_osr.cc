@@ -95,6 +95,8 @@ const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
 const size_t KFirstTouchRecordingTimes = 5;
 const size_t KTouchEventCachedThreaShold = 1;
+const int SOC_PERF_WEB_GESTURE_ID = 10012;
+const int TOUCH_DOWN_DELAY_TIME = 200;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -2139,7 +2141,9 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   if (!result.succeeded) {
     pointer_state_.MarkUnchangedTouchPointsAsStationary(&touch_event, event);
   }
-
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+  OnTouchDown();
+#endif
   if (!render_widget_host_) {
     return;
   }
@@ -2190,6 +2194,23 @@ void CefRenderWidgetHostViewOSR::ResetGestureDetection(bool is_lost_focus) {
       host()->ForwardTouchEventWithLatencyInfo(web_event, latency_info);
     }
   }
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+void CefRenderWidgetHostViewOSR::OnTouchDown() {
+  if (pointer_state_.GetPointerCount() == 0) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
+      .CreateSocPerfClientAdapter()
+      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+    return;
+  }
+  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+      .CreateSocPerfClientAdapter()
+      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  CEF_POST_DELAYED_TASK(CEF_UIT,
+    base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
+      weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
 }
 #endif
 
