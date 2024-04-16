@@ -170,6 +170,39 @@ void OhGinJavascriptBridgeDispatcherHost::RenderViewHostChanged(
   }
 }
 
+void OhGinJavascriptBridgeDispatcherHost::PrimaryPageChanged(
+    content::Page& page) {
+  content::AgentSchedulingGroupHost& agent_scheduling_group =
+      static_cast<content::PageImpl&>(page)
+          .GetMainDocument()
+          .GetAgentSchedulingGroup();
+  scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter =
+      OhGinJavascriptBridgeMessageFilter::FromHost(
+          agent_scheduling_group,
+          /*create_if_not_exists=*/false);
+  if (!filter) {
+    InstallFilterAndRegisterAllRoutingIds();
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::RenderFrameHostChanged(
+    content::RenderFrameHost* old_host,
+    content::RenderFrameHost* new_host) {
+  if (!install_filter_when_render_process_gone_)
+    return;
+
+  if (new_host == old_host || !new_host)
+    return;
+
+  InstallFilterAndRegisterAllRoutingIds();
+  install_filter_when_render_process_gone_ = false;
+}
+
+void OhGinJavascriptBridgeDispatcherHost::PrimaryMainFrameRenderProcessGone(
+    base::TerminationStatus status) {
+  install_filter_when_render_process_gone_ = true;
+}
+
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::string& object_name,
     const std::vector<std::string>& method_list) {

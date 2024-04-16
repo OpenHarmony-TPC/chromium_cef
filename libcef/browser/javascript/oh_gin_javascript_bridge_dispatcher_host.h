@@ -51,6 +51,11 @@ class OhGinJavascriptBridgeDispatcherHost
   void WebContentsDestroyed() override;
   void RenderViewHostChanged(content::RenderViewHost* old_host,
                              content::RenderViewHost* new_host) override;
+  void PrimaryPageChanged(content::Page& page) override;
+  void RenderFrameHostChanged(content::RenderFrameHost* old_host,
+                              content::RenderFrameHost* new_host) override;
+  void PrimaryMainFrameRenderProcessGone(
+      base::TerminationStatus status) override;
 
   // Run on the background thread.
   void OnGetMethods(int32_t object_id,
@@ -111,6 +116,7 @@ class OhGinJavascriptBridgeDispatcherHost
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
 
   CefRefPtr<CefClient> client_;
+  bool install_filter_when_render_process_gone_ = false;
 };
 }  // namespace NWEB
 #endif
