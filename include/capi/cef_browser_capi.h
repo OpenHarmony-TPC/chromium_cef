@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6d482598d8ba64eba41e2a81ab5e4c13d21a9c44$
+// $hash=b1b831a129dcaee5603ce634144190da1bd73245$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -42,6 +42,7 @@
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_devtools_message_observer_capi.h"
+#include "include/capi/cef_download_item_capi.h"
 #include "include/capi/cef_drag_data_capi.h"
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_image_capi.h"
@@ -145,8 +146,9 @@ typedef struct _cef_precompile_callback_t {
   ///
   /// Method that will be called upon completion.
   ///
-  void(CEF_CALLBACK *on_precompile_finished)(
-      struct _cef_precompile_callback_t *self, int32_t result);
+  void(CEF_CALLBACK* on_precompile_finished)(
+      struct _cef_precompile_callback_t* self,
+      int32_t result);
 } cef_precompile_callback_t;
 
 ///
@@ -161,19 +163,34 @@ typedef struct _cef_cache_options_t {
   ///
   /// Return the response headers of javascript request.
   ///
-  cef_string_map_t(CEF_CALLBACK *get_response_headers)(
-      struct _cef_cache_options_t *self);
+  cef_string_map_t(CEF_CALLBACK* get_response_headers)(
+      struct _cef_cache_options_t* self);
 
   ///
   /// Return if the javascript is module script.
   ///
-  int(CEF_CALLBACK *is_module)(struct _cef_cache_options_t *self);
+  int(CEF_CALLBACK* is_module)(struct _cef_cache_options_t* self);
 
   ///
   /// Return if use top-level to compile script.
   ///
-  int(CEF_CALLBACK *is_top_level)(struct _cef_cache_options_t *self);
+  int(CEF_CALLBACK* is_top_level)(struct _cef_cache_options_t* self);
 } cef_cache_options_t;
+
+///
+/// cef_set_lock_callback_t
+///
+typedef struct _cef_set_lock_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Handle.
+  ///
+  void(CEF_CALLBACK* handle)(struct _cef_set_lock_callback_t* self, int key);
+} cef_set_lock_callback_t;
 
 ///
 /// Structure used to represent a browser. When used in the browser process the
@@ -1789,17 +1806,45 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_nweb_id)(struct _cef_browser_host_t* self, int nWebId);
 
   ///
-  // get current pending_size_status.
+  /// get pendingSizeStatus.
   ///
-  int(CEF_CALLBACK *get_pending_size_status)(struct _cef_browser_host_t *self);
+  int(CEF_CALLBACK* get_pending_size_status)(struct _cef_browser_host_t* self);
 
   ///
   ///  precompile javascript and generate code cache.
   ///
-  void(CEF_CALLBACK *precompile_java_script)(
-      struct _cef_browser_host_t *self, const char *url, const char *script,
-      struct _cef_cache_options_t *cacheOptions,
-      struct _cef_precompile_callback_t *callback);
+  void(CEF_CALLBACK* precompile_java_script)(
+      struct _cef_browser_host_t* self,
+      const char* url,
+      const char* script,
+      struct _cef_cache_options_t* cacheOptions,
+      struct _cef_precompile_callback_t* callback);
+
+  ///
+  /// SetWakeLockHandler.
+  ///
+  void(CEF_CALLBACK* set_wake_lock_handler)(
+      struct _cef_browser_host_t* self,
+      int32_t windowId,
+      struct _cef_set_lock_callback_t* callback);
+
+  ///
+  /// Get cef_download_item_t by download_item_id.
+  ///
+  struct _cef_download_item_t*(CEF_CALLBACK* get_download_item)(
+      struct _cef_browser_host_t* self,
+      uint32 item_id);
+
+  ///
+  ///  Notify browser host needs reload when the render process terminated.
+  ///
+  void(CEF_CALLBACK* notify_needs_reload)(struct _cef_browser_host_t* self,
+                                          int needs_reload);
+
+  ///
+  ///  Return true if needs reload page, or false if nees not reload.
+  ///
+  int(CEF_CALLBACK* needs_reload)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

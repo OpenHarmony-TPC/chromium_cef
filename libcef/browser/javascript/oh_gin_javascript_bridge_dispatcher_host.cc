@@ -667,10 +667,12 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  OhJavascriptInjector* javascriptInjector =
-     OhJavascriptInjector::FromWebContents(web_contents());
-  if (javascriptInjector) {
-    javascriptInjector->SetLastCallingFrameUrl(document_url);
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+    if (javascriptInjector) {
+      javascriptInjector->SetLastCallingFrameUrl(document_url);
+    }
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -744,7 +746,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   }
   // 为了兼容老版本webcotroller方式, classname可能为空
   int error = client_->NotifyJavaScriptResultFlowbuf(ceflistvalue, method, classname, fd,
-                                              result, routing_id, object_id);
+                                                     result, routing_id, object_id);
   *error_code = static_cast<OhGinJavascriptBridgeError>(error);
   if (error != 0) {
     return;

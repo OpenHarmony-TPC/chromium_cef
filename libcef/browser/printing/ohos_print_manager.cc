@@ -140,6 +140,10 @@ class ApplicationPrintDocumentAdapterImpl
 
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "Application OhosPrintManager onJobStateChanged.";
+    if (ohosPrintManager_) {
+      ohosPrintManager_->SetPrintStatus(false);
+    }
+
     state_ = state;
     if (ohosPrintManager_ && !isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
@@ -214,6 +218,10 @@ bool OhosPrintManager::PrintNow() {
       printDocumentAdapterImpl(new PrintDocumentAdapterImpl(this));
   OHOS::NWeb::PrintAttributesAdapter printAttributesAdapter;
 
+  if (!token_ && printTokenMap_.find(base::Process::Current().Pid()) !=
+      printTokenMap_.end()) {
+    token_ = printTokenMap_[base::Process::Current().Pid()];
+  }
   int32_t ret = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                     .GetPrintManagerInstance()
                     .Print(printJobName, printDocumentAdapterImpl,
@@ -559,9 +567,18 @@ void OhosPrintManager::SetToken(void* token) {
   token_ = token;
 }
 
+void OhosPrintManager::SetPrintStatus(bool is_print_now) {
+  is_print_now_ = is_print_now;
+}
+
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
+  if (is_print_now_) {
+    LOG(ERROR) << "Application printing in progress.";
+    *webPrintDocumentAdapter = nullptr;
+    return;
+  }
   cancel_ = false;
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));

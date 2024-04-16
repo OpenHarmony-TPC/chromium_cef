@@ -290,6 +290,8 @@ class CefRenderWidgetHostViewOSR
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
 
   void OnVsyncReceived();
+
+  void OnTouchDown();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -325,6 +327,9 @@ class CefRenderWidgetHostViewOSR
   void SendMouseEvent(const blink::WebMouseEvent& event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
+#ifdef OHOS_CLIPBOARD
+  void ResetGestureDetection(bool is_lost_focus);
+#endif
   bool ShouldRouteEvents() const;
   void SetFocus(bool focus);
   void UpdateFrameRate();
@@ -416,6 +421,10 @@ class CefRenderWidgetHostViewOSR
   std::u16string GetSelectedText() override;
   std::u16string GetText();
 #endif  // #ifdef OHOS_CLIPBOARD
+
+#ifdef OHOS_EX_FREE_COPY
+  std::vector<int8_t> GetWordSelection(const std::string& text, int8_t offset) override;
+#endif
 
  private:
   void SetFrameRate();

@@ -1030,6 +1030,49 @@ render_handler_release_resize_hold(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(CefBrowserCToCpp::Wrap(browser));
 }
 
+void CEF_CALLBACK
+render_handler_get_word_selection(struct _cef_render_handler_t* self,
+                                  cef_browser_t* browser,
+                                  const cef_string_t* text,
+                                  int8_t offset,
+                                  cef_point_t* select) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(text);
+  if (!text) {
+    return;
+  }
+  // Verify param: select; type: simple_byref
+  DCHECK(select);
+  if (!select) {
+    return;
+  }
+
+  // Translate param: select; type: simple_byref
+  CefPoint selectVal = select ? *select : CefPoint();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetWordSelection(
+      CefBrowserCToCpp::Wrap(browser), CefString(text), offset, selectVal);
+
+  // Restore param: select; type: simple_byref
+  if (select) {
+    *select = selectVal;
+  }
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1080,6 +1123,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_native_embed_lifecycle_change;
   GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
   GetStruct()->release_resize_hold = render_handler_release_resize_hold;
+  GetStruct()->get_word_selection = render_handler_get_word_selection;
 }
 
 // DESTRUCTOR - Do not edit by hand.

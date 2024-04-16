@@ -51,6 +51,7 @@
 #if BUILDFLAG(IS_OHOS)
 #include "include/cef_permission_request.h"
 #include "include/cef_task.h"
+#include "include/cef_download_item.h"
 #include "include/internal/cef_string_map.h"
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -156,6 +157,20 @@ class CefCacheOptions : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsTopLevel() = 0;
 };
+
+///
+/// CefSetLockCallback
+///
+/*--cef(source=client)--*/
+class CefSetLockCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Handle.
+  ///
+  /*--cef()--*/
+  virtual void Handle(bool key) = 0;
+};
+
 /* ---------- ohos webview add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -1821,11 +1836,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetNWebId(int nWebId) = 0;
 
   ///
-  // get pendingSizeStatus.
+  /// get pendingSizeStatus.
   ///
   /*--cef()--*/
   virtual bool GetPendingSizeStatus() = 0;
 
+  ///
   ///  precompile javascript and generate code cache.
   ///
   /*--cef()--*/
@@ -1834,6 +1850,30 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       const std::string& script,
       CefRefPtr<CefCacheOptions> cacheOptions,
       CefRefPtr<CefPrecompileCallback> callback) = 0;
+
+  ///
+  /// SetWakeLockHandler.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
+
+  ///
+  /// Get CefDownloadItem by download_item_id.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
+
+  ///
+  ///  Notify browser host needs reload when the render process terminated.
+  ///
+  /*--cef()--*/
+  virtual void NotifyNeedsReload(bool needs_reload) = 0;
+
+  ///
+  ///  Return true if needs reload page, or false if nees not reload.
+  ///
+  /*--cef()--*/
+  virtual bool NeedsReload() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

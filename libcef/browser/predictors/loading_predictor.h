@@ -73,6 +73,8 @@ class LoadingPredictor : public KeyedService,
       const std::string& cache_key,
       const uint32_t& cache_valid_time);
 
+  void ClearPrefetchedResource(const std::vector<std::string>& cache_key_list);
+
   CefRefPtr<CefResourceHandler> GetResourceHandler(
       const GURL& url,
       const std::string& cache_key);

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ad855832b1382544fcc90872ff8700ce2aff51d7$
+// $hash=29b9c3b402e26cf88e70503a58788de786bf51c0$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -17,6 +17,7 @@
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/cache_options_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
+#include "libcef_dll/cpptoc/download_item_cpptoc.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
 #include "libcef_dll/cpptoc/extension_cpptoc.h"
 #include "libcef_dll/cpptoc/navigation_entry_cpptoc.h"
@@ -31,6 +32,7 @@
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/precompile_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/set_lock_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
 #include "libcef_dll/ctocpp/web_message_receiver_ctocpp.h"
@@ -41,10 +43,12 @@
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
 CEF_EXPORT int cef_browser_host_create_browser(
-    const cef_window_info_t *windowInfo, struct _cef_client_t *client,
-    const cef_string_t *url, const struct _cef_browser_settings_t *settings,
-    struct _cef_dictionary_value_t *extra_info,
-    struct _cef_request_context_t *request_context) {
+    const cef_window_info_t* windowInfo,
+    struct _cef_client_t* client,
+    const cef_string_t* url,
+    const struct _cef_browser_settings_t* settings,
+    struct _cef_dictionary_value_t* extra_info,
+    struct _cef_request_context_t* request_context) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1518,12 +1522,12 @@ browser_host_execute_java_script(struct _cef_browser_host_t* self,
       extention ? true : false);
 }
 
-void CEF_CALLBACK
-browser_host_execute_java_script_ext(struct _cef_browser_host_t* self,
-                                     const int fd,
-                                     const uint64 scriptLength,
-                                     cef_java_script_result_callback_t* callback,
-                                     int extention) {
+void CEF_CALLBACK browser_host_execute_java_script_ext(
+    struct _cef_browser_host_t* self,
+    const int fd,
+    const uint64 scriptLength,
+    cef_java_script_result_callback_t* callback,
+    int extention) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3157,9 +3161,12 @@ browser_host_get_pending_size_status(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
-void CEF_CALLBACK browser_host_precompile_java_script(
-    struct _cef_browser_host_t *self, const char *url, const char *script,
-    cef_cache_options_t *cacheOptions, cef_precompile_callback_t *callback) {
+void CEF_CALLBACK
+browser_host_precompile_java_script(struct _cef_browser_host_t* self,
+                                    const char* url,
+                                    const char* script,
+                                    cef_cache_options_t* cacheOptions,
+                                    cef_precompile_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3195,7 +3202,80 @@ void CEF_CALLBACK browser_host_precompile_java_script(
       CefPrecompileCallbackCToCpp::Wrap(callback));
 }
 
-} // namespace
+void CEF_CALLBACK
+browser_host_set_wake_lock_handler(struct _cef_browser_host_t* self,
+                                   int32_t windowId,
+                                   cef_set_lock_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetWakeLockHandler(
+      windowId, CefSetLockCallbackCToCpp::Wrap(callback));
+}
+
+struct _cef_download_item_t* CEF_CALLBACK
+browser_host_get_download_item(struct _cef_browser_host_t* self,
+                               uint32 item_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefDownloadItem> _retval =
+      CefBrowserHostCppToC::Get(self)->GetDownloadItem(item_id);
+
+  // Return type: refptr_same
+  return CefDownloadItemCppToC::Wrap(_retval);
+}
+
+void CEF_CALLBACK
+browser_host_notify_needs_reload(struct _cef_browser_host_t* self,
+                                 int needs_reload) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->NotifyNeedsReload(needs_reload ? true
+                                                                  : false);
+}
+
+int CEF_CALLBACK browser_host_needs_reload(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->NeedsReload();
+
+  // Return type: bool
+  return _retval;
+}
+
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -3376,6 +3456,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_nweb_id = browser_host_set_nweb_id;
   GetStruct()->get_pending_size_status = browser_host_get_pending_size_status;
   GetStruct()->precompile_java_script = browser_host_precompile_java_script;
+  GetStruct()->set_wake_lock_handler = browser_host_set_wake_lock_handler;
+  GetStruct()->get_download_item = browser_host_get_download_item;
+  GetStruct()->notify_needs_reload = browser_host_notify_needs_reload;
+  GetStruct()->needs_reload = browser_host_needs_reload;
 }
 
 // DESTRUCTOR - Do not edit by hand.

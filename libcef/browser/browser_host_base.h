@@ -327,6 +327,11 @@ class CefBrowserHostBase : public CefBrowserHost,
   bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
 #endif
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+void NotifyNeedsReload(bool needs_reload) override;
+bool NeedsReload() override;
+#endif
+
   // CefBrowser methods:
   bool IsValid() override;
   CefRefPtr<CefBrowserHost> GetHost() override;
@@ -398,11 +403,15 @@ class CefBrowserHostBase : public CefBrowserHost,
                       const CefString& mime_type,
                       const CefString& last_modified,
                       const CefString& received_slices_string) override;
+#if defined(OHOS_EX_DOWNLOAD)
+  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
+#endif
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
+  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
 #if defined(OHOS_PRINT)
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,

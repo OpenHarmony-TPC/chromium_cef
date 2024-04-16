@@ -885,7 +885,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       DCHECK(resource_response);
       state->was_custom_handled_ = true;
     } else if (response_cache != nullptr && response_cache->CanUseCache()) {
-      LOG(ERROR) << "Use intercept request with response cache. url: " << request->url;
+      LOG(DEBUG) << "Use intercept request with response cache. url: " << request->url;
       resource_response = std::make_unique<oh_code_cache::ResourceResponse>(std::move(response_cache));
     } else {
       // The request will be handled by the NetworkService. Remove the

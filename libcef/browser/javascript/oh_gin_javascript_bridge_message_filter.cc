@@ -57,7 +57,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   int32_t routing_id = -1;
   int32_t object_id = -1;
   if (message.HasAttachments()) {
-      if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+    if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
       object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
         base::ThreadPool::PostTask(
           FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
@@ -70,19 +70,20 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
         base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf),
         base::WrapRefCounted(this), message));
     }
-  }
-  if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
-    object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
-      base::ThreadPool::PostTask(
-        FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
-          base::BindOnce(
-          base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
-          base::WrapRefCounted(this), message));
   } else {
-    CEF_POST_TASK(CEF_UIT,
-      base::BindOnce(
-      base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
-      base::WrapRefCounted(this), message));
+    if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+      object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
+        base::ThreadPool::PostTask(
+          FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
+            base::BindOnce(
+            base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+            base::WrapRefCounted(this), message));
+    } else {
+      CEF_POST_TASK(CEF_UIT,
+        base::BindOnce(
+        base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
+        base::WrapRefCounted(this), message));
+    }
   }
   return true;
 }
@@ -125,7 +126,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_GetMethods, OnGetMethods)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_HasMethod, OnHasMethod)
     IPC_MESSAGE_HANDLER_PARAM(OhGinJavascriptBridgeHostMsg_InvokeMethod,
-                        OnInvokeMethodFlowbuf)
+                              OnInvokeMethodFlowbuf)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
                         OnObjectWrapperDeleted)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -259,7 +260,7 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
   if (host) {
     host->OnInvokeMethodFlowbuf(current_routing_id_, object_id, document_url, method_name, arguments, *fd,
-                         wrapped_result, error_code);
+                                wrapped_result, error_code);
   } else {
     wrapped_result->Append(base::Value());
     *error_code = kOhGinJavascriptBridgeRenderFrameDeleted;

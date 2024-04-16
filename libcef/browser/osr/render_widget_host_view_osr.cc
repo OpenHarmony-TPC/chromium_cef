@@ -54,6 +54,7 @@
 #include "ui/gfx/geometry/dip_util.h"
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_selection_controller.h"
+#include "ohos_nweb/src/nweb_resize_helper.h"
 
 #ifdef OHOS_EX_TOPCONTROLS
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
@@ -85,6 +86,7 @@ namespace {
 // The maximum number of damage rects to cache for outstanding frame requests
 // (for OnAcceleratedPaint).
 const size_t kMaxDamageRects = 10;
+const int SOC_PERF_WEB_DRAG_RESIZE_ID = 10073;
 
 const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
@@ -93,6 +95,8 @@ const size_t kMaxGestureQueueSize = 10;
 const size_t KFirstRecordingTimes = 3;
 const size_t KFirstTouchRecordingTimes = 5;
 const size_t KTouchEventCachedThreaShold = 1;
+const int SOC_PERF_WEB_GESTURE_ID = 10012;
+const int TOUCH_DOWN_DELAY_TIME = 200;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -801,6 +805,12 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   if (touch_event.GetType() == blink::WebInputEvent::Type::kTouchMove &&
       web_touch_event_count_ > KFirstTouchRecordingTimes) {
     web_touch_event_queue_.push_back(touch_event);
+
+    if (web_touch_event_queue_.size() > KTouchEventCachedThreaShold) {
+      blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
+      SendTouchGestureEvent(touchEvent);
+      web_touch_event_queue_.pop_front();
+    }
   } else {
     SendTouchGestureEvent(touch_event);
   }
@@ -1530,6 +1540,18 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     top_controls_offset_ = top_controls_offset;
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
+
+  if (for_browser_) {
+    // Set parameters for adaptive handle orientation.
+    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
+    viewport_size.Scale(metadata.page_scale_factor);
+    gfx::RectF viewport_rect(0.0f,
+                             metadata.top_controls_height *
+                                 metadata.top_controls_shown_ratio /
+                                 metadata.device_scale_factor,
+                             viewport_size.width(), viewport_size.height());
+    selection_controller_->OnViewportChanged(viewport_rect);
+  }
 #endif
 
   gesture_provider_.SetDoubleTapSupportForPageEnabled(
@@ -1624,20 +1646,6 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
                                                               selection_end_);
   }
-
-#ifdef OHOS_EX_TOPCONTROLS
-  if (for_browser_) {
-    // Set parameters for adaptive handle orientation.
-    gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
-    viewport_size.Scale(page_scale_factor_);
-    gfx::RectF viewport_rect(0.0f,
-                             metadata.top_controls_height *
-                                 metadata.top_controls_shown_ratio /
-                                 metadata.device_scale_factor,
-                             viewport_size.width(), viewport_size.height());
-    selection_controller_->OnViewportChanged(viewport_rect);
-  }
-#endif
 
 #ifdef OHOS_CLIPBOARD
   if (clipped_selection_bounds_ != metadata.clipped_selection_bounds) {
@@ -2153,7 +2161,9 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   if (!result.succeeded) {
     pointer_state_.MarkUnchangedTouchPointsAsStationary(&touch_event, event);
   }
-
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+  OnTouchDown();
+#endif
   if (!render_widget_host_) {
     return;
   }
@@ -2176,6 +2186,53 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
     parent_host_view_->forward_touch_to_popup_ = false;
   }
 }
+
+#ifdef OHOS_CLIPBOARD
+void CefRenderWidgetHostViewOSR::ResetGestureDetection(bool is_lost_focus) {
+  const ui::MotionEvent* current_down_event =
+      gesture_provider_.GetCurrentDownEvent();
+  if (!current_down_event) {
+    // A hard reset ensures prevention of any timer-based events that might fire
+    // after a touch sequence has ended.
+    gesture_provider_.ResetDetection();
+    return;
+  }
+
+  std::unique_ptr<ui::MotionEvent> cancel_event = current_down_event->Cancel();
+  cancel_event->SetCancelByLostFocus(is_lost_focus);
+  if (gesture_provider_.OnTouchEvent(*cancel_event).succeeded) {
+    bool causes_scrolling = false;
+    ui::LatencyInfo latency_info(ui::SourceEventType::TOUCH);
+    latency_info.AddLatencyNumber(ui::INPUT_EVENT_LATENCY_UI_COMPONENT);
+    blink::WebTouchEvent web_event = ui::CreateWebTouchEventFromMotionEvent(
+        *cancel_event, causes_scrolling /* may_cause_scrolling */,
+        false /* hovering */);
+    if (ShouldRouteEvents()) {
+      host()->delegate()->GetInputEventRouter()->RouteTouchEvent(
+          this, &web_event, latency_info);
+    } else {
+      host()->ForwardTouchEventWithLatencyInfo(web_event, latency_info);
+    }
+  }
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+void CefRenderWidgetHostViewOSR::OnTouchDown() {
+  if (pointer_state_.GetPointerCount() == 0) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
+      .CreateSocPerfClientAdapter()
+      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+    return;
+  }
+  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+      .CreateSocPerfClientAdapter()
+      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  CEF_POST_DELAYED_TASK(CEF_UIT,
+    base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
+      weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+}
+#endif
 
 bool CefRenderWidgetHostViewOSR::ShouldRouteEvents() const {
   if (!render_widget_host_->delegate()) {
@@ -2666,6 +2723,13 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
     CHECK(handler);
     handler->ReleaseResizeHold(browser_impl_.get());
   }
+  bool isDragResized = OHOS::NWeb::NWebResizeHelper::GetInstance().IsDragResizeStart();
+  if (isDragResized) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
+    .CreateSocPerfClientAdapter()
+    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_DRAG_RESIZE_ID, false);
+    OHOS::NWeb::NWebResizeHelper::GetInstance().SetDragResizeStart(false);
+  }
 }
 
 void CefRenderWidgetHostViewOSR::CancelWidget() {
@@ -2823,6 +2887,20 @@ std::u16string CefRenderWidgetHostViewOSR::GetText() {
   return std::u16string();
 }
 #endif  // #ifdef OHOS_CLIPBOARD
+
+#ifdef OHOS_EX_FREE_COPY
+std::vector<int8_t> CefRenderWidgetHostViewOSR::GetWordSelection(const std::string& text, int8_t offset) {
+  CefPoint temp(-1, -1);
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+        CHECK(handler);
+        handler->GetWordSelection(browser_impl_.get(), text, offset, temp);
+  }
+  std::vector<int8_t> select = { temp.x, temp.y };
+  return select;
+}
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 bool CefRenderWidgetHostViewOSR::IsMouseLocked() {

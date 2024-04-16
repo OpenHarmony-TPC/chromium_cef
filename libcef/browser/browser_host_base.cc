@@ -84,6 +84,7 @@
 
 #if defined(OHOS_EX_DOWNLOAD)
 #include "components/download/public/common/download_item_impl.h"
+#include "libcef/browser/download_item_impl.h"
 #include "libcef/browser/received_slice_helper.h"
 #endif
 
@@ -93,6 +94,10 @@
 
 #ifdef OHOS_ITP
 #include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
+#endif
+
+#ifdef OHOS_I18N
+#include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
 #endif
 
 namespace {
@@ -554,6 +559,28 @@ void CefBrowserHostBase::ResumeDownloadWithId(
   }
 #endif  //  OHOS_EX_DOWNLOAD
 }
+
+#if defined(OHOS_EX_DOWNLOAD)
+CefRefPtr<CefDownloadItem> CefBrowserHostBase::GetDownloadItem(uint32 item_id) {
+  LOG(INFO) << "CefBrowserHostBase::GetDownloadItem item_id: " << item_id;
+  auto web_contents = GetWebContents();
+  if (!web_contents)
+    return nullptr;
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    return nullptr;
+
+  content::DownloadManager* manager = browser_context->GetDownloadManager();
+  if (!manager)
+    return nullptr;
+
+  download::DownloadItem* item = manager->GetDownload(item_id);
+  CefRefPtr<CefDownloadItemImpl> download_item(
+    new CefDownloadItemImpl(item));
+  return download_item.get();
+}
+#endif
 
 void CefBrowserHostBase::DownloadImage(
     const CefString& image_url,
@@ -1454,6 +1481,17 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
     LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
+
+  // need to notify renderer preference to change accepted_language
+  if (!GetWebContents()) {
+    return;
+  }
+  auto prefs = GetWebContents()->GetMutableRendererPrefs();
+  if (prefs->accept_languages.compare(update_locale)) {
+    prefs->accept_languages = update_locale;
+    GetWebContents()->SyncRendererPrefs();
+  }
+
   std::string result =
       ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
           update_locale);
@@ -2959,6 +2997,10 @@ void CefBrowserHostBase::SetWindowId(int window_id, int nweb_id) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+void CefBrowserHostBase::SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
 #if defined(OHOS_PRINT)
 void CefBrowserHostBase::SetToken(void* token) {
   // TODO(ohos): please impl the function and remove this comment.
@@ -3539,3 +3581,14 @@ void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback>
   LOG(DEBUG) << "Get generate code cache result: " << result;
   callback->OnPrecompileFinished(result);
 }
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+bool CefBrowserHostBase::NeedsReload() {
+  // TODO(ohos): please impl the function and remove this comment.
+  return false;
+}
+#endif

@@ -886,15 +886,22 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 #if defined(OHOS_COMPOSITE_RENDER)
 void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view)
+  if (view) {
+    if (isNeedReDrawMode_) {
+      view->SetDrawMode(drawMode_);
+    }
+    isNeedReDrawMode_ = false;
     view->SetDrawRect(gfx::Rect(x, y, width, height));
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->SetDrawMode(mode);
+  if (drawMode_ == mode) {
+    isNeedReDrawMode_ = false;
+    return;
   }
+  drawMode_ = mode;
+  isNeedReDrawMode_ = true;
 }
 
 bool CefBrowserPlatformDelegateOsr::GetPendingSizeStatus() {

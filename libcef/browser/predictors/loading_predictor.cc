@@ -349,6 +349,18 @@ void LoadingPredictor::PrefetchResource(
   loader_map_.emplace(next_request_id_++, std::move(loader));
 }
 
+void LoadingPredictor::ClearPrefetchedResource(const std::vector<std::string>& cache_key_list) {
+  for (auto& cache_key : cache_key_list) {
+    for (auto it = g_predictor_post_cache_.begin(); it != g_predictor_post_cache_.end(); it++) {
+      if ((*it)->cache_key == cache_key) {
+        TRACE_EVENT1("net", "clear prefetched post cache", "cache_key", cache_key);
+        g_predictor_post_cache_.erase(it);
+        break;
+      }
+    }
+  }
+}
+
 void LoadingPredictor::OnSimpleURLLoaderComplete(
     network::SimpleURLLoader* url_loader,
     const std::string& cache_key,
