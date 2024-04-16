@@ -705,22 +705,22 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
   }
 }
 
-void CefRenderWidgetHostViewOSR::SetLowerFrameRateWithVideo() {
-  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+void CefRenderWidgetHostViewOSR::UpdateVSyncFrequency() {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
         browser_impl_->GetAcceleratedWidget());
     if (compositor) {
-      compositor->SetLowerFrameRateWithVideo();
+      compositor->UpdateVSyncFrequency();
     }
   }
 }
 
-void CefRenderWidgetHostViewOSR::ResetFrameRate() {
-  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+void CefRenderWidgetHostViewOSR::ResetVSyncFrequency() {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
         browser_impl_->GetAcceleratedWidget());
     if (compositor) {
-      compositor->ResetFrameRate();
+      compositor->ResetVSyncFrequency();
     }
   }
 }

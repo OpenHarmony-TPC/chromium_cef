@@ -902,19 +902,21 @@ void AlloyBrowserHostImpl::SendTouchEvent(const CefTouchEvent& event) {
     platform_delegate_->SendTouchEvent(event);
   }
 
+#if BUILDFLAG(IS_OHOS)
   if (event.type == CEF_TET_PRESSED) {
     has_touch_event_ = true;
     if (set_lower_frame_rate_) {
-      ResetFrameRate();
+      ResetVSyncFrequency();
     }
   }
 
   if (event.type == CEF_TET_RELEASED) {
     if (has_video_playing_ && !set_lower_frame_rate_) {
-      CEF_POST_DELAYED_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetLowerFrameRateWithVideo,
+      CEF_POST_DELAYED_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::UpdateVSyncFrequency,
                                                     this), WAIT_TOUCH_EVENT_DELAY_TIME);
     }
   }
+#endif
 }
 
 void AlloyBrowserHostImpl::SendCaptureLostEvent() {
@@ -1949,12 +1951,15 @@ void AlloyBrowserHostImpl::MediaStartedPlaying(
   if (client_.get() && client_->GetMediaHandler().get()) {
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, cef_media_playing_state_t::PLAYING);
   }
+
+#if BUILDFLAG(IS_OHOS)
   if (type == cef_media_type_t::VIDEO && !set_lower_frame_rate_) {
     has_video_playing_ = true;
     has_touch_event_ = false;
-    CEF_POST_DELAYED_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::SetLowerFrameRateWithVideo,
+    CEF_POST_DELAYED_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::UpdateVSyncFrequency,
                                                     this), WAIT_TOUCH_EVENT_DELAY_TIME);
   }
+#endif
 }
 
 void AlloyBrowserHostImpl::MediaStoppedPlaying(
@@ -1999,27 +2004,30 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, state);
   }
 
+#if BUILDFLAG(IS_OHOS) 
   if (type == cef_media_type_t::VIDEO) {
     has_video_playing_ = false;
     if (set_lower_frame_rate_) {
-      ResetFrameRate();
+      ResetVSyncFrequency();
     }
   }
+#endif
 }
 
 #if BUILDFLAG(IS_OHOS)
-void AlloyBrowserHostImpl::SetLowerFrameRateWithVideo() {
+void AlloyBrowserHostImpl::UpdateVSyncFrequency() {
   if (!base::ohos::IsMobileDevice()) {
+    LOG(DEBUG) << " VSync adjustment is only available for mobile deive";
     return;
   }
 
   if (!has_video_playing_) {
-    LOG(INFO) << "SetLowerFrameRateWithVideo Fail due to no video playing";
+    LOG(DEBUG) << "UpdateVSyncFrequency Fail due to no video playing";
     return;
   }
   
   if (has_touch_event_) {
-    LOG(INFO) << "SetLowerFrameRateWithVideo Fail due to touch event";
+    LOG(DEBUG) << "UpdateVSyncFrequency Fail due to touch event";
     has_touch_event_ = false;
     return;
   }
@@ -2029,15 +2037,16 @@ void AlloyBrowserHostImpl::SetLowerFrameRateWithVideo() {
     CefRenderWidgetHostViewOSR* view =
         static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
     if (view) {
-      LOG(INFO) << "AlloyBrowserHostImpl::SetLowerFrameRateWithVideo";
-      view->SetLowerFrameRateWithVideo();
+      LOG(INFO) << "AlloyBrowserHostImpl::UpdateVSyncFrequency";
+      view->UpdateVSyncFrequency();
       set_lower_frame_rate_ = true;
     }
   }
 }
 
-void AlloyBrowserHostImpl::ResetFrameRate() {
+void AlloyBrowserHostImpl::ResetVSyncFrequency() {
   if (!base::ohos::IsMobileDevice()) {
+    LOG(DEBUG) << "VSync adjustment is only available for mobile deive";
     return;
   }
   
@@ -2046,8 +2055,8 @@ void AlloyBrowserHostImpl::ResetFrameRate() {
     CefRenderWidgetHostViewOSR* view =
         static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
     if (view) {
-      LOG(INFO) << "AlloyBrowserHostImpl::ResetFrameRate";
-      view->ResetFrameRate();
+      LOG(INFO) << "AlloyBrowserHostImpl::ResetVSyncFrequency";
+      view->ResetVSyncFrequency();
       has_touch_event_ = false;
       set_lower_frame_rate_ = false;
     }

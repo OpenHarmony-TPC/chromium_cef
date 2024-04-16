@@ -135,8 +135,8 @@ class CefRenderWidgetHostViewOSR
   void SetEnableLowerFrameRate(bool enabled);
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
   void EvictFrameBackBuffers(bool invisible) override;
-  void SetLowerFrameRateWithVideo();
-  void ResetFrameRate();
+  void UpdateVSyncFrequency();
+  void ResetVSyncFrequency();
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
