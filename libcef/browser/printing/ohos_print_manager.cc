@@ -579,6 +579,7 @@ void OhosPrintManager::CreateWebPrintDocumentAdapter(
     *webPrintDocumentAdapter = nullptr;
     return;
   }
+  is_print_now_ = true;
   cancel_ = false;
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
