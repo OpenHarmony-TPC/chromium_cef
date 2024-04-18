@@ -32,7 +32,7 @@
 #include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 #endif
 
-#ifdef OHOS_EX_PASSWORD
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 #include "components/autofill/core/browser/ui/suggestion.h"
 #endif
 
@@ -424,6 +424,9 @@ bool NeedsReload() override;
 
 #if defined(OHOS_EX_PASSWORD)
   void ShowPasswordDialog(bool is_update, const std::string& url) override;
+#endif
+
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
   void OnShowAutofillPopup(
       const gfx::RectF& element_bounds,
       bool is_rtl,

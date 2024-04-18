@@ -342,7 +342,7 @@ void OhAutofillClient::UpdatePopup(
 
 void OhAutofillClient::HideAutofillPopup(autofill::PopupHidingReason reason) {
   delegate_.reset();
-#if defined(OHOS_EX_PASSWORD)
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
   GetWebContents().HideAutofillPopup();
 #endif
 }
@@ -445,6 +445,10 @@ void OhAutofillClient::ShowAutofillPopupImpl(
     const gfx::RectF& element_bounds,
     bool is_rtl,
     const std::vector<autofill::Suggestion>& suggestions) {
+#if defined(OHOS_DATALIST)
+  GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions);
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {

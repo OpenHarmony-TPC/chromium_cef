@@ -72,7 +72,7 @@
 #include <chrono>
 #endif  // defined(OHOS_INPUT_EVENTS)
 
-#if defined(OHOS_EX_PASSWORD)
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 #include "libcef/browser/autofill/oh_autofill_client.h"
 #endif  // defined(OHOS_EX_PASSWORD)
 
@@ -3369,7 +3369,7 @@ void CefBrowserHostBase::SetSavePassword(bool enable) {
 }
 
 void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
-#if defined(OHOS_EX_PASSWORD)
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
   if (!GetWebContents()) {
     return;
   }
