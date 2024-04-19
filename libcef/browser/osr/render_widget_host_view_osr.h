@@ -195,6 +195,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
   ui::Compositor* GetCompositor() override;
+  void UpdateDrawMode();
 #endif
 
 #if !BUILDFLAG(IS_MAC)

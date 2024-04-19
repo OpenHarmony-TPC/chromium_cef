@@ -2439,8 +2439,16 @@ void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
 }
 
 void AlloyBrowserHostImpl::SetDrawMode(int mode) {
-  if (platform_delegate_)
-    platform_delegate_->SetDrawMode(mode);
+  if (drawMode_ != mode) {
+    drawMode_ = mode;
+
+    if (platform_delegate_)
+      platform_delegate_->SetDrawMode(drawMode_);
+  }
+}
+
+int AlloyBrowserHostImpl::GetDrawMode() {
+  return drawMode_;
 }
 
 void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
