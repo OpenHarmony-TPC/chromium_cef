@@ -1469,6 +1469,16 @@ void CefBrowserHostBase::SetBrowserUserAgentString(
 #if defined(OHOS_I18N)
 void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string update_locale = locale.ToString();
+  // need to notify renderer preference to change accepted_language.
+  if (!GetWebContents()) {
+    return;
+  }
+  auto prefs = GetWebContents()->GetMutableRendererPrefs();
+  if (prefs->accept_languages.compare(update_locale)) {
+    prefs->accept_languages = update_locale;
+    GetWebContents()->SyncRendererPrefs();
+  }
+
   if (!ui::ResourceBundle::HasSharedInstance() ||
       !ui::ResourceBundle::LocaleDataPakExists(update_locale)) {
     LOG(ERROR) << "CefBrowserHostBase::UpdateLocale !HasSharedInstance";
@@ -1480,16 +1490,6 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   if (origin_locale == update_locale) {
     LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
-  }
-
-  // need to notify renderer preference to change accepted_language
-  if (!GetWebContents()) {
-    return;
-  }
-  auto prefs = GetWebContents()->GetMutableRendererPrefs();
-  if (prefs->accept_languages.compare(update_locale)) {
-    prefs->accept_languages = update_locale;
-    GetWebContents()->SyncRendererPrefs();
   }
 
   std::string result =
