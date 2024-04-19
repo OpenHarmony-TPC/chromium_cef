@@ -33,6 +33,9 @@ int UpdateCacheLoadFlags(int load_flags, int cache_control_flags) {
 }
 }  // namespace
 
+static const std::string APP_READ_ONLY_PATH =
+    "/data/storage/el1/bundle/entry/resources/resfile";
+
 bool NetHelpers::allow_content_access = false;
 bool NetHelpers::allow_file_access = false;
 bool NetHelpers::is_network_blocked = false;
@@ -111,24 +114,8 @@ bool IsSpecialFileUrl(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
     return false;
   }
-  base::FilePath app_data_path;
-  if (!base::PathService::Get(base::DIR_OHOS_APP_DATA, &app_data_path)) {
-    return false;
-  }
-  base::FilePath app_bundle_path;
-  if (!base::PathService::Get(base::DIR_OHOS_APP_INSTALLATION,
-                              &app_bundle_path)) {
-    return false;
-  }
-  LOG(INFO) << "app_data_path:" << app_data_path.value()
-            << ", app_bundle_path:" << app_bundle_path.value();
 
-  if (base::StartsWith(url.path(), app_data_path.value(),
-                       base::CompareCase::SENSITIVE)) {
-    return true;
-  }
-
-  if (base::StartsWith(url.path(), app_bundle_path.value(),
+  if (base::StartsWith(url.path(), APP_READ_ONLY_PATH,
                        base::CompareCase::SENSITIVE)) {
     return true;
   }
