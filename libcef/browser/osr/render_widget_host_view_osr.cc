@@ -1310,8 +1310,15 @@ void CefRenderWidgetHostViewOSR::ImeSetComposition(
   // Start Monitoring for composition updates before we set.
   RequestImeCompositionUpdate(true);
 
+#if defined(OHOS_INPUT_EVENTS)
+  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
+    text_input_manager_->GetActiveWidget()->ImeSetComposition(
+      text, web_underlines, range, selection_range.from, selection_range.to);
+  }
+#else
   render_widget_host_->ImeSetComposition(
       text, web_underlines, range, selection_range.from, selection_range.to);
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::ImeCommitText(
@@ -1361,9 +1368,13 @@ void CefRenderWidgetHostViewOSR::ImeCancelComposition() {
   if (!render_widget_host_) {
     return;
   }
-
+#if defined(OHOS_INPUT_EVENTS)
+  if (text_input_manager_ && text_input_manager_->GetActiveWidget()) {
+    text_input_manager_->GetActiveWidget()->ImeCancelComposition();
+  }
+#else
   render_widget_host_->ImeCancelComposition();
-
+#endif
   // Stop Monitoring for composition updates after we are done.
   RequestImeCompositionUpdate(false);
 }
