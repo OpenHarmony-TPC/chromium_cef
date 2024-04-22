@@ -384,6 +384,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
     compositor->SetAcceleratedWidget(browser_impl_->GetAcceleratedWidget());
     CefRenderWidgetHostViewOSR::AddCompositor(
         browser_impl_->GetAcceleratedWidget(), compositor);
+    UpdateDrawMode();
   }
 #endif  // IS_OHOS
 #endif
@@ -1258,6 +1259,14 @@ void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
 }
 
 void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
+  if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+            browser_impl_->GetAcceleratedWidget())) {
+    compositor->SetDrawMode(mode);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::UpdateDrawMode() {
+  int mode = browser_impl_->GetDrawMode();
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
             browser_impl_->GetAcceleratedWidget())) {
     compositor->SetDrawMode(mode);

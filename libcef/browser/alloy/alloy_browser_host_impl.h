@@ -395,6 +395,7 @@ bool NeedsReload() override;
   void SetBackgroundColor(int color) override;
   SkColor GetBackgroundColor() const;
   void GetZoomLevelCallback();
+  int GetDrawMode();
 
   void SetTouchInsertHandleMenuShow(bool show) {
     web_contents()->SetTouchInsertHandleMenuShow(show);
@@ -541,6 +542,8 @@ bool NeedsReload() override;
   base::ProcessId last_pid_ = -1;
 
   int video_stream_cnt_ = 0;
+
+  int drawMode_ = 0;
 #endif
   bool start_play_ = false;
 
