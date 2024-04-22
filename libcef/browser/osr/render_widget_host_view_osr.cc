@@ -706,6 +706,26 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::UpdateVSyncFrequency() {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
+    ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+    if (compositor) {
+      compositor->UpdateVSyncFrequency();
+    }
+  }
+}
+
+void CefRenderWidgetHostViewOSR::ResetVSyncFrequency() {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
+    ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget());
+    if (compositor) {
+      compositor->ResetVSyncFrequency();
+    }
+  }
+}
+
 void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::SendTouchEventList");
 
