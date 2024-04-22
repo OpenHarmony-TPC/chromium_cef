@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b8afe313a8028b0ee08f01fd94d28cbf8217b399$
+// $hash=b4593fab0fae90e9b9ff4658ab94055a465f2b3d$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -181,7 +181,17 @@ typedef struct _cef_context_menu_handler_t {
       const cef_size_t* size,
       const cef_rect_t* select_bounds,
       cef_quick_menu_edit_state_flags_t edit_state_flags,
-      struct _cef_run_quick_menu_callback_t* callback);
+      struct _cef_run_quick_menu_callback_t* callback,
+      int is_mouse_trigger);
+
+  ///
+  /// UpdateClippedSelectionBounds.
+  ///
+  int(CEF_CALLBACK* update_clipped_selection_bounds)(
+      struct _cef_context_menu_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_rect_t* select_bounds);
 
   ///
   /// Called to execute a command selected from the quick menu for a windowless
@@ -203,7 +213,8 @@ typedef struct _cef_context_menu_handler_t {
   void(CEF_CALLBACK* on_quick_menu_dismissed)(
       struct _cef_context_menu_handler_t* self,
       struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame);
+      struct _cef_frame_t* frame,
+      int is_mouse_trigger);
 
   ///
   /// Called when GetImageForContextNode function get image for context menu.

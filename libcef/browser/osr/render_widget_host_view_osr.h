@@ -142,6 +142,9 @@ class CefRenderWidgetHostViewOSR
   int GetTopControlsOffset() const override;
   void OnTopControlsHeightChanged();
 #endif
+#if defined(OHOS_CLIPBOARD)
+  void MouseSelectMenuShow(bool show);
+#endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*

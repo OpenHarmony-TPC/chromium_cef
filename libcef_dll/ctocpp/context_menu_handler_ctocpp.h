@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=425950e0728d41ffcaeb6db850a4fb7198fbfee4$
+// $hash=daa7f5e7ef35f3b104fc5d8a1990aa44dbd8c0a6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -57,13 +57,18 @@ class CefContextMenuHandlerCToCpp
                     const CefSize& size,
                     const CefRect& select_bounds,
                     QuickMenuEditStateFlags edit_state_flags,
-                    CefRefPtr<CefRunQuickMenuCallback> callback) override;
+                    CefRefPtr<CefRunQuickMenuCallback> callback,
+                    bool is_mouse_trigger) override;
+  bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
+                                    CefRefPtr<CefFrame> frame,
+                                    const CefRect& select_bounds) override;
   bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,
                           CefRefPtr<CefFrame> frame,
                           int command_id,
                           EventFlags event_flags) override;
   void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame) override;
+                            CefRefPtr<CefFrame> frame,
+                            bool is_mouse_trigger) override;
   void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefImage> image) override;
   void OnGetImageFromCache(CefRefPtr<CefImage> image) override;

@@ -170,7 +170,18 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
                             const CefSize& size,
                             const CefRect& select_bounds,
                             QuickMenuEditStateFlags edit_state_flags,
-                            CefRefPtr<CefRunQuickMenuCallback> callback) {
+                            CefRefPtr<CefRunQuickMenuCallback> callback,
+                            bool is_mouse_trigger) {
+    return false;
+  }
+
+  ///
+  /// UpdateClippedSelectionBounds.
+  ///
+  /*--cef()--*/
+  virtual bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
+                                            CefRefPtr<CefFrame> frame,
+                                            const CefRect& select_bounds) {
     return false;
   }
 
@@ -194,7 +205,8 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
-                                    CefRefPtr<CefFrame> frame) {}
+                                    CefRefPtr<CefFrame> frame,
+                                    bool is_mouse_trigger) {}
 
 #if BUILDFLAG(IS_OHOS)
   ///

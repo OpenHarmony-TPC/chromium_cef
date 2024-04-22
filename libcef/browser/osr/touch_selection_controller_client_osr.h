@@ -95,8 +95,16 @@ class CefTouchSelectionControllerClientOSR
   bool NeedPopupInsertTouchHandleQuickMenu();
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if defined(OHOS_CLIPBOARD)
+  void MouseSelectMenuShow(bool show);
+#endif
  private:
   class EnvEventObserver;
+
+#if defined(OHOS_CLIPBOARD)
+  void ExecuteCommandMouse(int command_id, int event_flags);
+  void MouseMayUpdateClientClippedSelectionBounds(const gfx::Rect& clipped_selection_bounds);
+#endif
 
   bool IsQuickMenuAvailable() const;
   void CloseQuickMenu();
@@ -171,6 +179,7 @@ class CefTouchSelectionControllerClientOSR
 #ifdef OHOS_CLIPBOARD
   base::TimeTicks select_handle_move_timer_;
   gfx::Rect clipped_selection_bounds_;
+  bool mouse_quick_menu_running_ = false;
 #endif
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;
 };

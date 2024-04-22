@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8e1aee78aede2108692f6d1408631f3f5b13c645$
+// $hash=99e06c226ae9d3f395e491860ccc367f9f0f6d84$
 //
 
 #include "libcef_dll/cpptoc/context_menu_handler_cpptoc.h"
@@ -195,7 +195,8 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
     const cef_size_t* size,
     const cef_rect_t* select_bounds,
     cef_quick_menu_edit_state_flags_t edit_state_flags,
-    cef_run_quick_menu_callback_t* callback) {
+    cef_run_quick_menu_callback_t* callback,
+    int is_mouse_trigger) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -246,7 +247,50 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->RunQuickMenu(
       CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), locationVal,
       sizeVal, select_boundsVal, edit_state_flags,
-      CefRunQuickMenuCallbackCToCpp::Wrap(callback));
+      CefRunQuickMenuCallbackCToCpp::Wrap(callback),
+      is_mouse_trigger ? true : false);
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK context_menu_handler_update_clipped_selection_bounds(
+    struct _cef_context_menu_handler_t* self,
+    cef_browser_t* browser,
+    struct _cef_frame_t* frame,
+    const cef_rect_t* select_bounds) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return 0;
+  }
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame);
+  if (!frame) {
+    return 0;
+  }
+  // Verify param: select_bounds; type: simple_byref_const
+  DCHECK(select_bounds);
+  if (!select_bounds) {
+    return 0;
+  }
+
+  // Translate param: select_bounds; type: simple_byref_const
+  CefRect select_boundsVal = select_bounds ? *select_bounds : CefRect();
+
+  // Execute
+  bool _retval =
+      CefContextMenuHandlerCppToC::Get(self)->UpdateClippedSelectionBounds(
+          CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
+          select_boundsVal);
 
   // Return type: bool
   return _retval;
@@ -289,7 +333,8 @@ int CEF_CALLBACK context_menu_handler_on_quick_menu_command(
 void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
     struct _cef_context_menu_handler_t* self,
     cef_browser_t* browser,
-    struct _cef_frame_t* frame) {
+    struct _cef_frame_t* frame,
+    int is_mouse_trigger) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -311,7 +356,8 @@ void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnQuickMenuDismissed(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame));
+      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
+      is_mouse_trigger ? true : false);
 }
 
 void CEF_CALLBACK context_menu_handler_on_get_image_for_context_node(
@@ -377,6 +423,8 @@ CefContextMenuHandlerCppToC::CefContextMenuHandlerCppToC() {
   GetStruct()->on_context_menu_dismissed =
       context_menu_handler_on_context_menu_dismissed;
   GetStruct()->run_quick_menu = context_menu_handler_run_quick_menu;
+  GetStruct()->update_clipped_selection_bounds =
+      context_menu_handler_update_clipped_selection_bounds;
   GetStruct()->on_quick_menu_command =
       context_menu_handler_on_quick_menu_command;
   GetStruct()->on_quick_menu_dismissed =
