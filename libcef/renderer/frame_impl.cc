@@ -1062,7 +1062,7 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
   auto scroll_offset = webview->GetScrollOffset();
   float dy;
   if (is_up) {
-    dy = is_half ? -view_height : -scroll_offset.y();
+    dy = is_half ? (-view_height / 2) : -scroll_offset.y();
   } else {
     if (!is_half) {
       float bottom_y = webview->GetScrollBottom();
@@ -1072,7 +1072,7 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
       }
       dy = bottom_y - scroll_offset.y();
     } else {
-      dy = view_height;
+      dy = view_height / 2;
     }
   }
   webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
