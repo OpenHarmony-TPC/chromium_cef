@@ -2591,6 +2591,14 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
     loading_predictor->PrepareForPageLoad(
         GURL(url), ohos_predictors::HintOrigin::OMNIBOX, true);
   }
+
+  std::vector<predictor::PreconnectUrlInfo> preconnect_url_infos =
+      std::move(predictor::PredictorDatabase::preconnect_url_info_list);
+  for(auto& preconnect_url_info : preconnect_url_infos) {
+    loading_predictor->PrepareForPageLoad(
+      GURL(preconnect_url_info.url), ohos_predictors::HintOrigin::OMNIBOX, preconnect_url_info.is_preconnectable,
+      preconnect_url_info.num_sockets);
+  }
 #endif
 
 #ifdef OHOS_EX_NETWORK_CONNECTION

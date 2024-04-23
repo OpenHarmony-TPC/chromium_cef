@@ -57,7 +57,8 @@ class LoadingPredictor : public KeyedService,
   // given |origin|. May trigger actions, such as prefetch and/or preconnect.
   void PrepareForPageLoad(const GURL& url,
                           HintOrigin origin,
-                          bool preconnectable = false);
+                          bool preconnectable = false,
+                          int num_sockets = 1);
 
   // Indicates that a page load hint is no longer active.
   void CancelPageLoadHint(const GURL& url);
@@ -94,8 +95,6 @@ class LoadingPredictor : public KeyedService,
   // PreconnectManager::Delegate:
   void PreconnectFinished(std::unique_ptr<PreconnectStats> stats) override;
 
-  int num_sockets_ = 1;
-
  private:
   // Cancels an active hint, from its iterator inside |active_hints_|. If the
   // iterator is .end(), does nothing. Returns the iterator after deletion of
@@ -114,7 +113,9 @@ class LoadingPredictor : public KeyedService,
 
   // May start a preconnect or a preresolve for |url|. |preconnectable|
   // indicates if preconnect is possible.
-  void HandleOmniboxHint(const GURL& url, bool preconnectable);
+  void HandleOmniboxHint(const GURL& url,
+                         bool preconnectable,
+                         int num_sockets = 1);
 
   void OnSimpleURLLoaderComplete(network::SimpleURLLoader* url_loader,
                                  const std::string& cache_key,
