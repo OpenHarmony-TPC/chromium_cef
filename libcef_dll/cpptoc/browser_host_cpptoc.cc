@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=29b9c3b402e26cf88e70503a58788de786bf51c0$
+// $hash=344263acb9b08d8d2e6b9bab7ba26279a47eab23$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3275,6 +3275,24 @@ int CEF_CALLBACK browser_host_needs_reload(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK
+browser_host_terminate_render_process(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->TerminateRenderProcess();
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3460,6 +3478,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_download_item = browser_host_get_download_item;
   GetStruct()->notify_needs_reload = browser_host_notify_needs_reload;
   GetStruct()->needs_reload = browser_host_needs_reload;
+  GetStruct()->terminate_render_process = browser_host_terminate_render_process;
 }
 
 // DESTRUCTOR - Do not edit by hand.

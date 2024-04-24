@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=da97040e6dbe360795426dc03345119bc7413ec0$
+// $hash=4a1cc573f6d9bd0c3823ee5dfcd8aa6739de46ea$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2992,6 +2992,23 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::NeedsReload() {
 
   // Execute
   int _retval = _struct->needs_reload(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::TerminateRenderProcess() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, terminate_render_process)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->terminate_render_process(_struct);
 
   // Return type: bool
   return _retval ? true : false;

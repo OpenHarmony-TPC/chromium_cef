@@ -526,6 +526,15 @@ void CefFrameHostImpl::MaybeSendDidStopLoading() {
                     }));
 }
 
+void CefFrameHostImpl::TerminateRenderProcess(bool& result) {
+  LOG(INFO) << "TerminateRenderProcess in CefFrameHostImpl start, getpid:" << getpid();
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](const RenderFrameType& render_frame) {
+                      render_frame->TerminateRenderProcess();
+                    }));
+  result = true;
+}
+
 void CefFrameHostImpl::ExecuteJavaScriptWithUserGestureForTests(
     const CefString& javascript) {
   if (!CEF_CURRENTLY_ON_UIT()) {

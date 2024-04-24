@@ -105,6 +105,10 @@ class CefFrameImpl
   void OnFocusedNodeChanged(const blink::WebElement& element);
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(IS_OHOS)
+  void TerminateRenderProcess() override;
+#endif  // BUILDFLAG(IS_OHOS)
+
 #ifdef OHOS_POST_URL
   void PostURL(const CefString& url,
                const std::vector<char>& post_data) override;

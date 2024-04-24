@@ -17,6 +17,10 @@
 #endif
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include <signal.h>
+#endif
+
 #include "include/cef_urlrequest.h"
 #include "libcef/common/app_manager.h"
 #include "libcef/common/frame_util.h"
@@ -31,6 +35,10 @@
 #include "libcef/renderer/render_frame_util.h"
 #include "libcef/renderer/thread_util.h"
 #include "libcef/renderer/v8_impl.h"
+
+#if BUILDFLAG(IS_OHOS)
+#include "base/process/process.h"
+#endif
 
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
@@ -921,6 +929,24 @@ void CefFrameImpl::ContextLifecycleStateChanged(
 std::string CefFrameImpl::GetDebugString() const {
   return "frame " + frame_util::GetFrameDebugString(frame_id_);
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefFrameImpl::TerminateRenderProcess() {
+  LOG(INFO) << "TerminateRenderProcess start in render side, pid: "
+    << getpid() <<", propid: " << getprocpid();
+  // try to kill render process by pid
+  if (kill(getpid(), SIGTERM) != 0) {
+    LOG(ERROR) << "Unable to terminate pid: " << getpid();
+    return;
+  }
+  // if not, kill by procpid
+  if (kill(getprocpid(), SIGTERM) != 0) {
+    LOG(ERROR) << "Unable to terminate getprocpid: " << getprocpid();
+    return;
+  }
+  LOG(INFO) << "TerminateRenderProcess end in render side";
+}
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 void CefFrameImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
