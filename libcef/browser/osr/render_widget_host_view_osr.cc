@@ -1579,6 +1579,14 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
 }
 #endif
 
+#if defined(OHOS_CLIPBOARD)
+void CefRenderWidgetHostViewOSR::MouseSelectMenuShow(bool show) {
+  if (selection_controller_client_) {
+    selection_controller_client_->MouseSelectMenuShow(show);
+  }
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     base::TimeTicks activation_time) {
   auto metadata =

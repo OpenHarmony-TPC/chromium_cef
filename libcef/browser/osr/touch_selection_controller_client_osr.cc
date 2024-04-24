@@ -342,7 +342,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
 
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
-    handler->OnQuickMenuDismissed(browser.get(), browser->GetFocusedFrame());
+    handler->OnQuickMenuDismissed(browser.get(), browser->GetFocusedFrame(), false);
   }
 
 #ifdef OHOS_CLIPBOARD
@@ -360,6 +360,134 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   }
 #endif
 }
+
+#if defined(OHOS_CLIPBOARD)
+void CefTouchSelectionControllerClientOSR::ExecuteCommandMouse(int command_id,
+                                                               int event_flags) {
+  SetSelectAllClicked(command_id);
+
+  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
+      command_id != QM_EDITFLAG_CAN_SELECT_ALL) {
+    rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
+  }
+  content::RenderWidgetHostDelegate* host_delegate = rwhv_->host()->delegate();
+  if (!host_delegate) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (browser && browser->client()) {
+    auto handler = browser->client()->GetContextMenuHandler();
+    if (handler && handler->OnQuickMenuCommand(
+          browser.get(), browser->GetFocusedFrame(), command_id,
+          static_cast<cef_event_flags_t>(event_flags))) {
+      return;
+    }
+  }
+
+  absl::optional<std::u16string> value;
+  LOG(INFO) << "mouse quick menu command id = " << command_id;
+  switch (command_id) {
+    case QM_EDITFLAG_CAN_CUT:
+      host_delegate->Cut();
+      MouseSelectMenuShow(false);
+      break;
+    case QM_EDITFLAG_CAN_COPY:
+      host_delegate->Copy();
+      browser->web_contents()->CollapseSelection();
+      MouseSelectMenuShow(false);
+      break;
+    case QM_EDITFLAG_CAN_PASTE:
+      host_delegate->Paste();
+      MouseSelectMenuShow(false);
+      break;
+    case QM_EDITFLAG_CAN_SELECT_ALL:
+      host_delegate->SelectAll();
+      MouseSelectMenuShow(false);
+      MouseSelectMenuShow(true);
+      break;
+    case QM_EDITFLAG_CAN_ELLIPSIS:
+      MouseSelectMenuShow(false);
+      RunContextMenu();
+      host_delegate->ExecuteEditCommand("Unselect", value);
+      break;
+    default:
+      MouseSelectMenuShow(false);
+      host_delegate->ExecuteEditCommand("Unselect", value);
+      break;
+  }
+}
+
+void CefTouchSelectionControllerClientOSR::MouseMayUpdateClientClippedSelectionBounds(
+    const gfx::Rect& clipped_selection_bounds) {
+  if (!mouse_quick_menu_running_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return;
+  }
+  handler->UpdateClippedSelectionBounds(browser, browser->GetFocusedFrame(),
+      {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
+       clipped_selection_bounds_.width(), clipped_selection_bounds_.height()});
+}
+
+void CefTouchSelectionControllerClientOSR::MouseSelectMenuShow(bool show) {
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return;
+  }
+  if (!show) {
+    if (mouse_quick_menu_running_) {
+      mouse_quick_menu_running_ = false;
+      handler->OnQuickMenuDismissed(browser, browser->GetFocusedFrame(), true);
+      if (browser->web_contents()) {
+        browser->web_contents()->SetShowingContextMenu(false);
+      }
+    }
+    return;
+  }
+
+  int quickmenuflags = 0;
+  if (active_menu_client_) {
+    for (const auto& command : kMenuCommands) {
+      if (active_menu_client_->IsCommandIdEnabled(command)) {
+        quickmenuflags |= command;
+      }
+    }
+  }
+  LOG(INFO) << "Mouse Quit Menu Flags Is = " << quickmenuflags;
+  CefRefPtr<CefRunQuickMenuCallbackImpl> callbackImpl(
+        new CefRunQuickMenuCallbackImpl(base::BindOnce(
+            &CefTouchSelectionControllerClientOSR::ExecuteCommandMouse,
+            weak_ptr_factory_.GetWeakPtr())));
+  if (!handler->RunQuickMenu(
+        browser, browser->GetFocusedFrame(), {0, 0}, {0, 0},
+        {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
+          clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
+        static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(quickmenuflags),
+        callbackImpl, true)) {
+    callbackImpl->Disconnect();
+    auto render = browser->client()->GetRenderHandler();
+    if (render) {
+      render->NotifySelectAllClicked(false);
+    }
+    return;
+  }
+  LOG(INFO) << "Show Mouse Handle Quick Menu Success";
+  mouse_quick_menu_running_ = true;
+  if (browser->web_contents()) {
+    browser->web_contents()->SetShowingContextMenu(true);
+  }
+}
+#endif
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
   auto browser = rwhv_->browser_impl();
@@ -402,7 +530,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
              clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
             static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(
                 quickmenuflags),
-            callbackImpl)) {
+            callbackImpl, false)) {
       callbackImpl->Disconnect();
       if (browser) {
         if (auto client = browser->client()) {
@@ -519,8 +647,10 @@ bool CefTouchSelectionControllerClientOSR::IsVaildSelectionHandleMove() {
 void CefTouchSelectionControllerClientOSR::UpdateClientClippedSelectionBounds(
   const gfx::Rect& clipped_selection_bounds) {
   clipped_selection_bounds_ = clipped_selection_bounds;
+  MouseMayUpdateClientClippedSelectionBounds(clipped_selection_bounds);
 }
 #endif  // #ifdef OHOS_CLIPBOARD
+
 void CefTouchSelectionControllerClientOSR::InternalClient::
     SelectBetweenCoordinates(const gfx::PointF& base,
                              const gfx::PointF& extent) {

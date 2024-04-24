@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f49e5780f0fc37dacaeabbab80463724d2f6c8cd$
+// $hash=a74c5b939b0e9b587206cdd2e6c30d50127b3858$
 //
 
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -197,7 +197,8 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
     const CefSize& size,
     const CefRect& select_bounds,
     QuickMenuEditStateFlags edit_state_flags,
-    CefRefPtr<CefRunQuickMenuCallback> callback) {
+    CefRefPtr<CefRunQuickMenuCallback> callback,
+    bool is_mouse_trigger) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -227,7 +228,41 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
   int _retval = _struct->run_quick_menu(
       _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
       &location, &size, &select_bounds, edit_state_flags,
-      CefRunQuickMenuCallbackCppToC::Wrap(callback));
+      CefRunQuickMenuCallbackCppToC::Wrap(callback), is_mouse_trigger);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefContextMenuHandlerCToCpp::UpdateClippedSelectionBounds(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefFrame> frame,
+    const CefRect& select_bounds) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_context_menu_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_clipped_selection_bounds)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return false;
+  }
+  // Verify param: frame; type: refptr_diff
+  DCHECK(frame.get());
+  if (!frame.get()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->update_clipped_selection_bounds(
+      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
+      &select_bounds);
 
   // Return type: bool
   return _retval ? true : false;
@@ -271,7 +306,8 @@ bool CefContextMenuHandlerCToCpp::OnQuickMenuCommand(
 NO_SANITIZE("cfi-icall")
 void CefContextMenuHandlerCToCpp::OnQuickMenuDismissed(
     CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame) {
+    CefRefPtr<CefFrame> frame,
+    bool is_mouse_trigger) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -294,7 +330,7 @@ void CefContextMenuHandlerCToCpp::OnQuickMenuDismissed(
 
   // Execute
   _struct->on_quick_menu_dismissed(_struct, CefBrowserCppToC::Wrap(browser),
-                                   CefFrameCppToC::Wrap(frame));
+                                   CefFrameCppToC::Wrap(frame), is_mouse_trigger);
 }
 
 NO_SANITIZE("cfi-icall")

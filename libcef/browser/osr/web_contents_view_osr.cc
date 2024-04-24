@@ -189,6 +189,15 @@ void CefWebContentsViewOSR::ShowContextMenu(
   }
 }
 
+#if defined(OHOS_CLIPBOARD)
+void CefWebContentsViewOSR::MouseSelectMenuShow(bool show) {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->MouseSelectMenuShow(show);
+  }
+}
+#endif
+
 void CefWebContentsViewOSR::StartDragging(
     const content::DropData& drop_data,
     blink::DragOperationsMask allowed_ops,

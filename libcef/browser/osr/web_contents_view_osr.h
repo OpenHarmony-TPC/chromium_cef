@@ -70,6 +70,9 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   // RenderViewHostDelegateView methods.
   void ShowContextMenu(content::RenderFrameHost& render_frame_host,
                        const content::ContextMenuParams& params) override;
+#if defined(OHOS_CLIPBOARD)
+  void MouseSelectMenuShow(bool show) override;
+#endif
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
                      const gfx::ImageSkia& image,
