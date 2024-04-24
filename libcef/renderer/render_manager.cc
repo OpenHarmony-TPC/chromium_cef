@@ -45,6 +45,11 @@
 #include "third_party/blink/public/web/web_view.h"
 #include "third_party/blink/public/web/web_view_observer.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "base/logging.h"
+#include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
+#endif
+
 namespace {
 
 CefRenderManager* g_manager = nullptr;
@@ -246,6 +251,12 @@ void CefRenderManager::WebKitInitialized() {
       if (info.is_fetch_enabled) {
         blink_glue::RegisterURLSchemeAsSupportingFetchAPI(scheme);
       }
+#if BUILDFLAG(IS_OHOS)
+      if (info.is_code_cache_enabled) {
+        LOG(DEBUG) << "Render manager register the scheme supported code cache.";
+        blink::SchemeRegistry::RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(String(info.scheme_name));
+      }
+#endif
     }
   }
 

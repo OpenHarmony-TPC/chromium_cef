@@ -33,6 +33,9 @@ void AddInternalSchemes(content::ContentClient::Schemes* schemes) {
           true,                               /* is_secure */
           true,                               /* is_cors_enabled */
           true,                               /* is_csp_bypassing */
+#if BUILDFLAG(IS_OHOS)
+          false, /* is_code_cache_enabled */
+#endif
       },
   };
 
@@ -107,4 +110,9 @@ bool IsCorsEnabledScheme(const std::string& scheme) {
   return base::Contains(url::GetCorsEnabledSchemes(), scheme);
 }
 
+#if BUILDFLAG(IS_OHOS)
+void AddSchemesSupportCodeCache(const std::string& scheme) {
+  url::AddCodeCacheEnabledScheme(scheme.c_str());
+}
+#endif
 }  // namespace scheme

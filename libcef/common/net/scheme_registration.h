@@ -25,6 +25,11 @@ bool IsStandardScheme(const std::string& scheme);
 // Returns true if the specified |scheme| is a registered CORS enabled scheme.
 bool IsCorsEnabledScheme(const std::string& scheme);
 
+#if BUILDFLAG(IS_OHOS)
+// Add schemes that support code cache.
+void AddSchemesSupportCodeCache(const std::string& scheme);
+#endif
+
 }  // namespace scheme
 
 #endif  // CEF_LIBCEF_COMMON_NET_SCHEME_REGISTRATION_H_
