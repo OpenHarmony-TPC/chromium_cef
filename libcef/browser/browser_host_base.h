@@ -506,6 +506,10 @@ bool NeedsReload() override;
   // #endif // defined(OHOS_NWEB_EX)
 
 #if BUILDFLAG(IS_OHOS)
+bool TerminateRenderProcess() override;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
 #endif

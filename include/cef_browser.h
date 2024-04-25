@@ -1874,6 +1874,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool NeedsReload() = 0;
+
+  ///
+  /// Terminate render process
+  ///
+  /*--cef()--*/
+  virtual bool TerminateRenderProcess() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

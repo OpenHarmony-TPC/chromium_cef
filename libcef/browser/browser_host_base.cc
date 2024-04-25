@@ -1215,6 +1215,18 @@ void CefBrowserHostBase::GoBack() {
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+bool CefBrowserHostBase::TerminateRenderProcess() {
+  bool result = false;
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->TerminateRenderProcess(result);
+    LOG(INFO) << "TerminateRenderProcess result:" << result;
+  }
+  return result;
+}
+#endif
+
 #ifdef OHOS_NETWORK_CONNINFO
 CefString CefBrowserHostBase::GetOriginalUrl() {
   auto web_contents = GetWebContents();

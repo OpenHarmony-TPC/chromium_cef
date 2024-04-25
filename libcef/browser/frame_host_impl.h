@@ -130,6 +130,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // Called from CefBrowserHostBase::DidStopLoading.
   void MaybeSendDidStopLoading();
 
+#if BUILDFLAG(IS_OHOS)
+  void TerminateRenderProcess(bool& result);
+#endif
+
   void ExecuteJavaScriptWithUserGestureForTests(const CefString& javascript);
 
   // Returns the RFH associated with this frame. Must be called on the UI

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b1b831a129dcaee5603ce634144190da1bd73245$
+// $hash=4fda16f765119b1e4b97ce891721f6e07fd35f86$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1845,6 +1845,11 @@ typedef struct _cef_browser_host_t {
   ///  Return true if needs reload page, or false if nees not reload.
   ///
   int(CEF_CALLBACK* needs_reload)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Terminate render process
+  ///
+  int(CEF_CALLBACK* terminate_render_process)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

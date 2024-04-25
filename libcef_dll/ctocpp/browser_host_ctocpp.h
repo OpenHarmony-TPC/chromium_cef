@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=50d08077bb99c951628cf43f33b14a633aae1163$
+// $hash=471cc26c2223243dcb5cc3e699af4c8433a45701$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -270,6 +270,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
   void NotifyNeedsReload(bool needs_reload) override;
   bool NeedsReload() override;
+  bool TerminateRenderProcess() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
