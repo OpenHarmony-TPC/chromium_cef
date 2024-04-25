@@ -351,6 +351,12 @@ class CefPostDataStream : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsInMemory() = 0;
+
+  ///
+  /// Reset();
+  ///
+  /*--cef()--*/
+  virtual void Reset() = 0;
 };
 #endif  // defined(OHOS_SCHEME_HANDLER)
 

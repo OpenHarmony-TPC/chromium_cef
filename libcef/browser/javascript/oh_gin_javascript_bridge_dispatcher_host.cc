@@ -206,19 +206,9 @@ void OhGinJavascriptBridgeDispatcherHost::PrimaryMainFrameRenderProcessGone(
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::string& object_name,
     const std::vector<std::string>& method_list) {
+  RemoveNamedObject(object_name, method_list);
   {
     std::unique_lock<std::shared_mutex> lock(share_mutex_);
-    ObjectMethodMap::iterator it;
-    for (it = method_map_.begin(); it != method_map_.end(); ++it) {
-      if (it->second.first == object_name) {
-        std::unordered_set<std::string> method_set = it->second.second;
-        for (std::string method : method_list) {
-          method_set.emplace(method);
-        }
-        it->second.second = method_set;
-        return;
-      }
-    }
     object_id_++;
 
     MethodPair object_pair;

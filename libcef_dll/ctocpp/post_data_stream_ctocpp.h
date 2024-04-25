@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f56fbff9a852f4a83251803f4719d5f57d042978$
+// $hash=1c13cd8efe646e9a8137614ba6870d32dbddacd6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_
@@ -27,10 +27,9 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPostDataStreamCToCpp
-    : public CefCToCppRefCounted<CefPostDataStreamCToCpp,
-                                 CefPostDataStream,
+    : public CefCToCppRefCounted<CefPostDataStreamCToCpp, CefPostDataStream,
                                  cef_post_data_stream_t> {
- public:
+public:
   CefPostDataStreamCToCpp();
   virtual ~CefPostDataStreamCToCpp();
 
@@ -38,8 +37,7 @@ class CefPostDataStreamCToCpp
   void SetReadCallback(
       CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
   void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
-  void Read(void* buffer,
-            int buf_len,
+  void Read(void *buffer, int buf_len,
             CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
   uint64 GetSize() override;
   uint64 GetPosition() override;
@@ -47,6 +45,7 @@ class CefPostDataStreamCToCpp
   bool HasNullSource() override;
   bool IsEOF() override;
   bool IsInMemory() override;
+  void Reset() override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_

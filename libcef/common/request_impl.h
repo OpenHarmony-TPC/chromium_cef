@@ -209,6 +209,7 @@ class CefRequestImpl : public CefRequest {
 class CefPostDataStreamImpl : public CefPostDataStream {
  public:
   CefPostDataStreamImpl();
+  ~CefPostDataStreamImpl();
 
   void SetReadCallback(
       CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
@@ -224,6 +225,7 @@ class CefPostDataStreamImpl : public CefPostDataStream {
   bool IsEOF() override;
   bool IsInMemory() override;
   void Set(network::ResourceRequestBody* body);
+  void Reset() override;
 
  private:
   void OnStreamInitialized(int rv);

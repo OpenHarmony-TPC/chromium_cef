@@ -1051,6 +1051,14 @@ CefPostDataStreamImpl::CefPostDataStreamImpl() {
 
 }
 
+CefPostDataStreamImpl::~CefPostDataStreamImpl() {
+}
+
+void CefPostDataStreamImpl::Reset() {
+  read_callback_ = nullptr;
+  init_callback_ = nullptr;
+}
+
 void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
   std::vector<base::File> open_files;
   if (body) {
