@@ -32,6 +32,7 @@
 #include "services/network/public/mojom/early_hints.mojom.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "libcef/browser/res_reporter.h"
 #include "libcef/common/request_impl.h"
 #include "net/base/load_flags.h"
 #endif
@@ -264,6 +265,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
       network::mojom::URLResponseHeadPtr head,
       mojo::ScopedDataPipeConsumerHandle body,
       absl::optional<mojo_base::BigBuffer> cached_metadata) override;
+#if BUILDFLAG(IS_OHOS)
+  void OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region, uint64_t buffer_size) override;
+#endif
   void OnReceiveRedirect(const net::RedirectInfo& redirect_info,
                          network::mojom::URLResponseHeadPtr head) override;
   void OnUploadProgress(int64_t current_position,
@@ -434,6 +438,20 @@ class InterceptDelegate : public StreamReaderURLLoader::Delegate {
                                   extra_headers);
   }
 
+#if BUILDFLAG(IS_OHOS)
+  const std::string& GetResponseData() override {
+    return response_->GetResponseData();
+  }
+
+  size_t GetResponseDataBuffer(char* data) override {
+    return response_->GetResponseDataBuffer(data);
+  }
+
+  size_t GetResponseDataBufferSize() override {
+    return response_->GetResponseDataBufferSize();
+  }
+#endif
+
  private:
   std::unique_ptr<ResourceResponse> response_;
   base::WeakPtr<InterceptedRequest> request_;
@@ -483,6 +501,7 @@ InterceptedRequest::~InterceptedRequest() {
 
 #if BUILDFLAG(IS_OHOS)
 void InterceptedRequest::Restart(bool is_redirect) {
+  ResReporter::GetInstance().FetchBegin();
 #else
 void InterceptedRequest::Restart() {
 #endif
@@ -678,6 +697,12 @@ void InterceptedRequest::OnReceiveResponse(
                        weak_factory_.GetWeakPtr()));
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void InterceptedRequest::OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region, uint64_t buffer_size) {
+  target_client_->OnTransferDataWithSharedMemory(std::move(region), buffer_size);
+}
+#endif
 
 void InterceptedRequest::OnReceiveRedirect(
     const net::RedirectInfo& redirect_info,
@@ -1198,6 +1223,9 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
 }
 
 void InterceptedRequest::OnDestroy() {
+#if BUILDFLAG(IS_OHOS)
+  ResReporter::GetInstance().FetchEnd();
+#endif
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
@@ -1395,6 +1423,12 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
     : request_handler_(std::move(request_handler)), weak_factory_(this) {
   CEF_REQUIRE_IOT();
   DCHECK(request_handler_);
+
+#if BUILDFLAG(IS_OHOS)
+  std::vector<int> tids;
+  tids.push_back(gettid());
+  ResReporter::GetInstance().AddRtg(tids);
+#endif
 
   // Actual creation of the factory.
   if (target_factory_remote) {

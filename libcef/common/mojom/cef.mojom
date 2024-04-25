@@ -231,3 +231,11 @@ interface RenderManager {
   ModifyCrossOriginWhitelistEntry(bool add, CrossOriginWhiteListEntry entry);
   ClearCrossOriginWhitelist();
 };
+
+[EnableIf=is_ohos]
+interface ReportManager {
+  ReportKeyThread(int32 status, int32 process_id, int32 thread_id, int32 role);
+  AddRtg(array<int32> tids);
+  FetchBegin();
+  FetchEnd();
+};

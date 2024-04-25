@@ -717,6 +717,42 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
+  size_t bufferSize = response_delegate_->GetResponseDataBufferSize();
+  if (bufferSize <= 0) {
+    LOG(DEBUG) << "shared-memory buffer size <= 0";
+    return false;
+  }
+
+  auto buffer = mojo::SharedBufferHandle::Create(bufferSize);
+  if (!buffer.is_valid()) {
+    LOG(ERROR) << "shared-memory create buffer err";
+    return false;
+  }
+  base::WritableSharedMemoryRegion writable_region = mojo::UnwrapWritableSharedMemoryRegion(std::move(buffer));
+  base::WritableSharedMemoryMapping shared_memory_mapping = writable_region.Map();
+  if (!shared_memory_mapping.IsValid()) {
+    LOG(ERROR) << "shared-memory mapping err";
+    return false;
+  }
+
+  char* memory = shared_memory_mapping.GetMemoryAs<char>();
+
+  size_t size = response_delegate_->GetResponseDataBuffer(memory);
+  LOG(DEBUG) << "shared-memory GetResponseDataBuffer buffer size=" << size;
+
+  base::ReadOnlySharedMemoryRegion read_only_region = base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
+  if (!read_only_region.IsValid()) {
+    LOG(ERROR) << "shared-memory: convert to read only err";
+    return false;
+  }
+  client_->OnTransferDataWithSharedMemory(std::move(read_only_region), bufferSize);
+
+  return true;
+}
+#endif
+
 void StreamReaderURLLoader::ContinueWithResponseHeaders(
     network::mojom::URLResponseHeadPtr pending_response,
     int32_t result,
@@ -782,7 +818,14 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
     client_->OnReceiveResponse(std::move(pending_response),
                                std::move(consumer_handle),
                                std::move(cached_metadata_));
+    
+#if BUILDFLAG(IS_OHOS)
+    if (!TryTransferDataWithSharedMemory()) {
+      ReadMore();
+    }
+#else
     ReadMore();
+#endif
   }
 }
 

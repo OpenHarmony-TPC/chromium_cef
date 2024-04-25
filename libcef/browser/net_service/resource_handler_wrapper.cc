@@ -505,6 +505,33 @@ class ResourceResponseWrapper : public ResourceResponse {
     }
   }
 
+#if BUILDFLAG(IS_OHOS)
+  const std::string& GetResponseData() override {
+    auto handler = handler_provider_->handler();
+    if (!handler) {
+      static const std::string data;
+      return data;
+    }
+    return handler->GetResponseData();
+  }
+
+  size_t GetResponseDataBuffer(char* data) override {
+    auto handler = handler_provider_->handler();
+    if (!handler) {
+      return 0;
+    }
+    return handler->GetResponseDataBuffer(data);
+  }
+
+  size_t GetResponseDataBufferSize() override {
+    auto handler = handler_provider_->handler();
+    if (!handler) {
+      return 0;
+    }
+    return handler->GetResponseDataBufferSize();
+  }
+#endif
+
  private:
   const int32_t request_id_;
 

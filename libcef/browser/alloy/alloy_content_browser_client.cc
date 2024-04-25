@@ -190,6 +190,7 @@
 #include "libcef/browser/net_service/restrict_cookie_manager.h"
 #include "libcef/browser/printing/ohos_print_manager.h"
 #include "third_party/boringssl/src/include/openssl/evp.h"
+#include "libcef/browser/report_manager.h"
 #endif
 
 #ifdef OHOS_NETWORK_PROXY
@@ -1908,6 +1909,10 @@ void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
 
   CefBrowserManager::ExposeInterfacesToRenderer(registry, associated_registry,
                                                 host);
+
+#if BUILDFLAG(IS_OHOS)
+  CefReportManager::ExposeInterfacesToRenderer(registry, associated_registry, host);
+#endif
 }
 
 #if !BUILDFLAG(IS_OHOS)
