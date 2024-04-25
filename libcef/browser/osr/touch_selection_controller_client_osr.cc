@@ -668,6 +668,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
   SetTemporarilyHidden(false);
   auto browser = rwhv_->browser_impl();
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
   switch (event) {
     case ui::SELECTION_HANDLES_SHOWN:
       quick_menu_requested_ = true;
@@ -693,6 +694,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
     case ui::SELECTION_HANDLE_DRAG_STARTED:
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
+      if (controller && controller->IsLongPressDragSelectionActive()) {
+        LOG(INFO) << "Selection Event Long Press Drag Selection Is Active.";
+        UpdateQuickMenu();
+      }
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
@@ -731,6 +736,13 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
         CloseQuickMenu();
         NotifyTouchSelectionChanged(true);
       }
+      break;
+    case ui::SELECTION_HANDLES_UPDATEMENU:
+      if (browser && !browser->web_contents()->IsShowingContextMenu()) {
+        LOG(INFO) << "Current Quick Menu IS Not Showing";
+        UpdateQuickMenu();
+      }
+      NotifyTouchSelectionChanged(true);
       break;
   }
 #else
