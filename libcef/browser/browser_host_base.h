@@ -728,15 +728,16 @@ bool NeedsReload() override;
 
   bool UseLegacyGeolocationPermissionAPI();
 
-  int32_t WriteResponseCache(const std::string& url,
-                             const std::string& script,
-                             std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
+  oh_code_cache::NextOp WriteResponseCache(
+      const std::string& url,
+      const std::string& script,
+      std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
 
   void OnDidWriteResponseCache(const std::string& url,
                                const std::string& script,
                                std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                CefRefPtr<CefPrecompileCallback> callback,
-                               int32_t result);
+                               oh_code_cache::NextOp nextOp);
 
   void GenerateCodeCache(const std::string& url,
                          const std::string& script,
