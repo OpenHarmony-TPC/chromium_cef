@@ -3558,8 +3558,7 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
     responseHeaders.emplace(key.ToString(), value.ToString());
   }
 
-  auto options = std::make_shared<oh_code_cache::CacheOptions>(
-      responseHeaders, cacheOptions->IsModule(), cacheOptions->IsTopLevel());
+  auto options = std::make_shared<oh_code_cache::CacheOptions>(responseHeaders);
   
   oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,

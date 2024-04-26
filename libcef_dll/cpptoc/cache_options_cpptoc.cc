@@ -38,48 +38,12 @@ cache_options_get_response_headers(struct _cef_cache_options_t *self) {
   return _retval;
 }
 
-int CEF_CALLBACK cache_options_is_module(struct _cef_cache_options_t *self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefCacheOptionsCppToC::Get(self)->IsModule();
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK cache_options_is_top_level(struct _cef_cache_options_t *self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefCacheOptionsCppToC::Get(self)->IsTopLevel();
-
-  // Return type: bool
-  return _retval;
-}
-
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefCacheOptionsCppToC::CefCacheOptionsCppToC() {
   GetStruct()->get_response_headers = cache_options_get_response_headers;
-  GetStruct()->is_module = cache_options_is_module;
-  GetStruct()->is_top_level = cache_options_is_top_level;
 }
 
 // DESTRUCTOR - Do not edit by hand.

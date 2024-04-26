@@ -144,18 +144,6 @@ class CefCacheOptions : public virtual CefBaseRefCounted {
   ///
   /*--cef(default_retval=nullptr)--*/
   virtual cef_string_map_t GetResponseHeaders() = 0;
-
-  ///
-  /// Return if the javascript is module script.
-  ///
-  /*--cef()--*/
-  virtual bool IsModule() = 0;
-
-  ///
-  /// Return if use top-level to compile script.
-  ///
-  /*--cef()--*/
-  virtual bool IsTopLevel() = 0;
 };
 
 ///
