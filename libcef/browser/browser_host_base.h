@@ -259,8 +259,13 @@ class CefBrowserHostBase : public CefBrowserHost,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void UpdateBrowserSettings(const CefBrowserSettings& browser_settings);
+  void RegisterNativeJSProxy(const CefString& object_name,
+                             const std::vector<CefString>& method_list,
+                             const int32_t object_id,
+                             bool is_async) override;
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
+                             const std::vector<CefString>& async_method_list,
                              const int32_t object_id) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,

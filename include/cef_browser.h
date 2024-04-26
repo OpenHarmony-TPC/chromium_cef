@@ -1413,6 +1413,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void RegisterArkJSfunction(const CefString& object_name,
                                      const std::vector<CefString>& method_list,
+                                     const std::vector<CefString>& async_method_list,
                                      const int32_t object_id) = 0;
 
   ///
@@ -1880,6 +1881,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool TerminateRenderProcess() = 0;
+
+  ///
+  /// RegisterNativeJSProxy
+  ///
+  /*--cef()--*/
+  virtual void RegisterNativeJSProxy(const CefString& object_name,
+                                     const std::vector<CefString>& method_list,
+                                     const int32_t object_id,
+                                     bool is_async) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

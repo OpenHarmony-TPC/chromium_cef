@@ -238,6 +238,9 @@ class CefClient : public virtual CefBaseRefCounted {
     return 0;
   }
 
+  ///
+  /// Returns the list of arguments NotifyJavaScriptResultFlowbuf.
+  ///
   /*--cef()--*/
   virtual int NotifyJavaScriptResultFlowbuf(CefRefPtr<CefListValue> args,
                                             const CefString& method,

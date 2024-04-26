@@ -1381,10 +1381,12 @@ typedef struct _cef_browser_host_t {
   ///
   /// RegisterArkJSfunction
   ///
-  void(CEF_CALLBACK* register_ark_jsfunction)(struct _cef_browser_host_t* self,
-                                              const cef_string_t* object_name,
-                                              cef_string_list_t method_list,
-                                              int32_t object_id);
+  void(CEF_CALLBACK* register_ark_jsfunction)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* object_name,
+      cef_string_list_t method_list,
+      cef_string_list_t async_method_list,
+      int32_t object_id);
 
   ///
   /// UnregisterArkJSfunction
@@ -1850,6 +1852,15 @@ typedef struct _cef_browser_host_t {
   /// Terminate render process
   ///
   int(CEF_CALLBACK* terminate_render_process)(struct _cef_browser_host_t* self);
+
+  ///
+  /// RegisterNativeJSProxy
+  ///
+  void(CEF_CALLBACK* register_native_jsproxy)(struct _cef_browser_host_t* self,
+                                              const cef_string_t* object_name,
+                                              cef_string_list_t method_list,
+                                              int32_t object_id,
+                                              int is_async);
 } cef_browser_host_t;
 
 ///

@@ -84,8 +84,34 @@ void OhGinJavascriptBridgeDispatcher::DidClearWindowObject() {
 }
 
 void OhGinJavascriptBridgeDispatcher::OnAddNamedObject(const std::string& name,
-                                                       ObjectID object_id) {
-  named_objects_.insert(std::make_pair(name, object_id));
+                                                       ObjectID object_id,
+                                                       const base::Value::List& async_method_list,
+                                                       bool need_update) {
+  int size = async_method_list.size();
+  if (need_update && size > 0) {
+    // update async_methods_map_ to new methods
+    std::unordered_set<std::string> async_method_set;
+    for (int i = 0; i < size; ++i) {
+      const base::Value& method_value = async_method_list[i];
+      if (method_value.is_string()) {
+        async_method_set.emplace(*method_value.GetIfString());
+      } else {
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcher::OnAddNamedObject "
+                      "method name is not a string";
+      }
+    }
+    async_methods_map_[object_id] = async_method_set;
+  } else if (need_update) {
+    // remove this obj in async_methods_map_ methods
+    auto it = async_methods_map_.find(object_id);
+    if (it != async_methods_map_.end()) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::OnAddNamedObject "
+                    "clear obj's async methods, object_id = "
+                 << object_id;
+      async_methods_map_.erase(it);
+    }
+  }
+  named_objects_[name] = object_id;
 }
 
 void OhGinJavascriptBridgeDispatcher::OnRemoveNamedObject(
@@ -95,6 +121,14 @@ void OhGinJavascriptBridgeDispatcher::OnRemoveNamedObject(
   NamedObjectMap::iterator iter = named_objects_.find(name);
   if (iter == named_objects_.end()) {
     return;
+  }
+  auto object_id = iter->second;
+  auto it = async_methods_map_.find(object_id);
+  if (it != async_methods_map_.end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::OnAddNamedObject "
+                  "clear obj's async methods, object_id = "
+               << object_id;
+    async_methods_map_.erase(it);
   }
   named_objects_.erase(iter);
 }
@@ -124,6 +158,16 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
   std::string url;
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   url = frame->GetDocument().Url().GetString().Utf8();
+  auto it = async_methods_map_.find(object_id);
+  if (it != async_methods_map_.end()) {
+    auto async_methods = it->second;
+    if (async_methods.find(method_name) != async_methods.end()) {
+      render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
+          routing_id(), object_id, url, method_name, arguments));
+      TRACE_EVENT_END0("cef", "frame_->Send");
+      return base::Value::ToUniquePtrValue(base::Value(0).Clone());
+    }
+  }
   base::Value::List result_wrapper;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error));
@@ -143,6 +187,16 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
   std::string url;
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   url = frame->GetDocument().Url().GetString().Utf8();
+  auto it = async_methods_map_.find(object_id);
+  if (it != async_methods_map_.end()) {
+    auto async_methods = it->second;
+    if (async_methods.find(method_name) != async_methods.end()) {
+      render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
+          routing_id(), object_id, url, method_name, arguments));
+      TRACE_EVENT_END0("cef", "frame_->Send");
+      return base::Value::ToUniquePtrValue(base::Value(0).Clone());
+    }
+  }
   base::Value::List result_wrapper;
   IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error);

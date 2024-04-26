@@ -23,8 +23,13 @@ class OhJavascriptInjector
   OhJavascriptInjector& operator=(const OhJavascriptInjector&) = delete;
   ~OhJavascriptInjector();
 
+  void AddNativeInterface(const std::string& object_name,
+                    const std::vector<std::string> method_list,
+                    const int32_t object_id,
+                    bool is_async);
   void AddInterface(const std::string& object_name,
                     const std::vector<std::string> method_list,
+                    const std::vector<std::string> async_method_list,
                     const int32_t object_id);
   void RemoveInterface(const std::string& object_name,
                        const std::vector<std::string> method_list);

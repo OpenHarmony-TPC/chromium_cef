@@ -75,7 +75,8 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
                 "OhGinJavascriptBridgeDispatcherHost called";
   client_.reset();
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
-  method_map_.clear();
+  sync_method_map_.clear();
+  async_method_map_.clear();
 }
 
 // Run on the UI thread.
@@ -84,7 +85,7 @@ void OhGinJavascriptBridgeDispatcherHost::
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   {
     std::shared_lock<std::shared_mutex> lock(share_mutex_);
-    if (method_map_.empty() ||
+    if (sync_method_map_.empty() ||
         !web_contents()->GetPrimaryMainFrame()->GetProcess()->GetChannel()) {
       return;
     }
@@ -132,10 +133,22 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
     InstallFilterAndRegisterAllRoutingIds();
   }
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  for (ObjectMethodMap::const_iterator iter = method_map_.begin();
-       iter != method_map_.end(); ++iter) {
+
+  for (ObjectMethodMap::const_iterator iter = async_method_map_.begin();
+       iter != async_method_map_.end(); ++iter) {
+    base::Value::List async_method_list;
+    for (auto async_method : iter->second.second) {
+      async_method_list.Append(async_method);
+    }
     render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-        render_frame_host->GetRoutingID(), iter->second.first, iter->first));
+        render_frame_host->GetRoutingID(), iter->second.first, iter->first, async_method_list, true));
+  }
+  for (ObjectMethodMap::const_iterator iter = sync_method_map_.begin();
+       iter != sync_method_map_.end(); ++iter) {
+    // sync_method_map_ has no async method infomation, so send an empty list.
+    base::Value::List empty_list;
+    render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
+        render_frame_host->GetRoutingID(), iter->second.first, iter->first, empty_list, false));
   }
 }
 
@@ -205,12 +218,15 @@ void OhGinJavascriptBridgeDispatcherHost::PrimaryMainFrameRenderProcessGone(
 
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::string& object_name,
-    const std::vector<std::string>& method_list) {
+    const std::vector<std::string>& method_list,
+    const std::vector<std::string>& async_method_list) {
   RemoveNamedObject(object_name, method_list);
+  base::Value::List async_method_for_render;
   {
     std::unique_lock<std::shared_mutex> lock(share_mutex_);
     object_id_++;
 
+    // add sync method
     MethodPair object_pair;
     std::unordered_set<std::string> method_set;
     for (std::string s : method_list) {
@@ -218,7 +234,18 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     }
     object_pair.first = object_name;
     object_pair.second = method_set;
-    method_map_[object_id_] = object_pair;
+    sync_method_map_[object_id_] = object_pair;
+
+    // add async method
+    MethodPair async_object_pair;
+    std::unordered_set<std::string> async_method_set;
+    for (std::string s : async_method_list) {
+      async_method_set.emplace(s);
+      async_method_for_render.Append(s);
+    }
+    async_object_pair.first = object_name;
+    async_object_pair.second = async_method_set;
+    async_method_map_[object_id_] = async_object_pair;
   }
 
   InstallFilterAndRegisterAllRoutingIds();
@@ -226,17 +253,18 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
   web_contents()
       ->GetPrimaryMainFrame()
       ->ForEachRenderFrameHostIncludingSpeculative(
-          [&object_name,
+          [&object_name, &async_method_for_render,
            this](content::RenderFrameHostImpl* render_frame_host) {
             render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
                 render_frame_host->GetRoutingID(), object_name,
-                this->object_id_));
+                this->object_id_, async_method_for_render, true));
           });
 }
 
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
+    const std::vector<std::string>& async_method_list,
     const ObjectID object_id) {
   if (object_id <= 0) {
     LOG(ERROR) << "AddNamedObject:" << object_name
@@ -244,8 +272,10 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     return;
   }
   RemoveNamedObject(object_name, method_list);
+    base::Value::List async_method_for_render;
   {
     std::unique_lock<std::shared_mutex> lock(share_mutex_);
+    // add sync method
     MethodPair object_pair;
     std::unordered_set<std::string> method_set;
     for (std::string s : method_list) {
@@ -253,7 +283,18 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     }
     object_pair.first = object_name;
     object_pair.second = method_set;
-    method_map_[object_id] = object_pair;
+    sync_method_map_[object_id] = object_pair;
+
+    // add async method
+    MethodPair async_object_pair;
+    std::unordered_set<std::string> async_method_set;
+    for (std::string s : async_method_list) {
+      async_method_set.emplace(s);
+      async_method_for_render.Append(s);
+    }
+    async_object_pair.first = object_name;
+    async_object_pair.second = async_method_set;
+    async_method_map_[object_id] = async_object_pair;
   }
 
   InstallFilterAndRegisterAllRoutingIds();
@@ -261,16 +302,17 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
   web_contents()
       ->GetPrimaryMainFrame()
       ->ForEachRenderFrameHostIncludingSpeculative(
-          [&object_name,
+          [&object_name, &async_method_for_render,
            object_id](content::RenderFrameHostImpl* render_frame_host) {
             render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-                render_frame_host->GetRoutingID(), object_name, object_id));
+                render_frame_host->GetRoutingID(), object_name, object_id, async_method_for_render, true));
           });
 }
 
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
+    const std::vector<std::string>& async_method_list,
     const ObjectID object_id) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   // In order to be compatible with older webcotroller,
@@ -280,9 +322,81 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
   // object_id
   if (object_id ==
       static_cast<ObjectID>(JavaScriptObjIdErrorCode::WEBCONTROLLERERROR)) {
-    AddNamedObjectForWebController(object_name, method_list);
+    AddNamedObjectForWebController(object_name, method_list, async_method_list);
   } else {
-    AddNamedObjectForWebViewController(object_name, method_list, object_id);
+    AddNamedObjectForWebViewController(object_name, method_list, async_method_list, object_id);
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebController(
+    const std::string& object_name,
+    const std::vector<std::string>& method_list,
+    bool is_async) {
+  ObjectMethodMap& other_method_map = is_async ? sync_method_map_ : async_method_map_;
+  std::vector<std::string> other_method_list;
+  {
+    std::unique_lock<std::shared_mutex> lock(share_mutex_);
+    ObjectMethodMap::iterator it;
+    for (it = other_method_map.begin(); it != other_method_map.end(); ++it) {
+      if (it->second.first == object_name) {
+        std::unordered_set<std::string> method_set = it->second.second;
+        for (std::string method : method_set) {
+          other_method_list.emplace_back(method);
+        }
+        break;
+      }
+    }
+  }
+  if (is_async) {
+    AddNamedObjectForWebController(object_name, other_method_list, method_list);
+  } else {
+    AddNamedObjectForWebController(object_name, method_list, other_method_list);
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebViewController(
+    const std::string& object_name,
+    const std::vector<std::string>& method_list,
+    const ObjectID object_id,
+    bool is_async) {
+  ObjectMethodMap& other_method_map = is_async ? sync_method_map_ : async_method_map_;
+  std::vector<std::string> other_method_list;
+  {
+    ObjectMethodMap::iterator it;
+    for (it = other_method_map.begin(); it != other_method_map.end(); ++it) {
+      if (it->second.first == object_name) {
+        std::unordered_set<std::string> method_set = it->second.second;
+        for (std::string method : method_list) {
+          other_method_list.emplace_back(method);
+        }
+        break;
+      }
+    }
+  }
+  if (is_async) {
+    AddNamedObjectForWebViewController(object_name, other_method_list, method_list, object_id);
+  } else {
+    AddNamedObjectForWebViewController(object_name, method_list, other_method_list, object_id);
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObject(
+    const std::string& object_name,
+    const std::vector<std::string>& method_list,
+    const ObjectID object_id,
+    bool is_async) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  // In order to be compatible with older webcotroller,
+  // Currently, the webcontroller save the object_id on the core side, get
+  // object from ace side by object_name the webviewcontroller save the
+  // object_id on the web_webview side, get object from web_webview side by
+  // object_id
+  std::vector<std::string> empty_sync_method_list;
+  if (object_id ==
+      static_cast<ObjectID>(JavaScriptObjIdErrorCode::WEBCONTROLLERERROR)) {
+    AddNativeNamedObjectForWebController(object_name, method_list, is_async);
+  } else {
+    AddNativeNamedObjectForWebViewController(object_name, method_list, object_id, is_async);
   }
 }
 
@@ -290,28 +404,16 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  std::unique_lock<std::shared_mutex> lock(share_mutex_);
-  if (method_map_.empty()) {
+  if (sync_method_map_.empty() && async_method_map_.empty()) {
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                   "is empty!";
     return;
   }
-  {
-    ObjectMethodMap::iterator it;
-    for (it = method_map_.begin(); it != method_map_.end(); ++it) {
-      if (!(object_name == it->second.first) &&
-          std::next(it) == method_map_.end()) {
-        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:"
-                      "object_name:"
-                   << object_name << " is not exist!";
-        return;
-      }
-      if (!(object_name == it->second.first)) {
-        continue;
-      }
-      method_map_.erase(it);
-      break;
-    }
+  bool found_in_sync = RemoveNamedObjectInternal(object_name, false);
+  bool found_in_async = RemoveNamedObjectInternal(object_name, true);
+
+  if (!found_in_sync && !found_in_async) {
+    return;
   }
 
   // |name| may come from |named_objects_|. Make a copy of name so that if
@@ -328,12 +430,36 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
           });
 }
 
+bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
+    const std::string& object_name, bool is_async) {
+  auto& map = is_async ? async_method_map_ : sync_method_map_;
+  if (map.empty()) {
+    return false;
+  }
+  std::unique_lock<std::shared_mutex> lock(share_mutex_);
+  for (auto it = map.begin(); it != map.end(); ++it) {
+    if (!(object_name == it->second.first) &&
+        std::next(it) == map.end()) {
+          LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:"
+                        "object_name:"
+                    << object_name << " is not exist.";
+      break;
+    }
+    if (!(object_name == it->second.first)) {
+      continue;
+    }
+    map.erase(it);
+    return true;
+  }
+  return false;
+}
+
 void OhGinJavascriptBridgeDispatcherHost::OnGetMethods(
     int32_t object_id,
     std::set<std::string>* returned_method_names) {
   // get from web_webview side
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  if (method_map_.find(object_id) == method_map_.end()) {
+  if (sync_method_map_.find(object_id) == sync_method_map_.end()) {
     if (!client_) {
       LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
                     "OnGetMethods: client_ is null";
@@ -353,7 +479,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnGetMethods(
     }
     return;
   }
-  MethodPair p = method_map_[object_id];
+  MethodPair p = sync_method_map_[object_id];
   for (auto iter = p.second.begin(); iter != p.second.end(); ++iter) {
     returned_method_names->emplace(*iter);
   }
@@ -365,8 +491,19 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasMethod(
     bool* result) {
   *result = false;
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  if (method_map_.find(object_id) != method_map_.end()) {
-    MethodPair p = method_map_[object_id];
+  
+  // find in sync methods
+  if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+    MethodPair p = sync_method_map_[object_id];
+    if (p.second.find(method_name) != p.second.end()) {
+      *result = true;
+      return;
+    }
+  }
+
+  // find in async methods
+  if (async_method_map_.find(object_id) != async_method_map_.end()) {
+    MethodPair p = async_method_map_[object_id];
     if (p.second.find(method_name) != p.second.end()) {
       *result = true;
       return;
@@ -704,8 +841,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   std::string classname = "";
   {
     std::shared_lock<std::shared_mutex> lock(share_mutex_);
-    if (method_map_.find(object_id) != method_map_.end()) {
-      MethodPair object_pair = method_map_[object_id];
+    if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+      MethodPair object_pair = sync_method_map_[object_id];
+      classname = object_pair.first;
+    } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
+      MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
     }
   }
@@ -731,6 +871,49 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
       base::Value::FromUniquePtrValue(ParseCefValueTOBaseValue(result)));
 }
 
+void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
+    int routing_id,
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+    if (javascriptInjector) {
+      javascriptInjector->SetLastCallingFrameUrl(document_url);
+    }
+  }
+  base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
+
+  CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
+
+  std::string classname = "";
+  {
+    std::shared_lock<std::shared_mutex> lock(share_mutex_);
+    if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+      MethodPair object_pair = sync_method_map_[object_id];
+      classname = object_pair.first;
+    } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
+      MethodPair object_pair = async_method_map_[object_id];
+      classname = object_pair.first;
+    }
+  }
+
+  std::string method = method_name;
+
+  CefRefPtr<CefListValue> result = CefListValue::Create();
+
+  if (!client_) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync: "
+                  "client_ is null";
+    return;
+  }
+  // 为了兼容老版本webcotroller方式, classname可能为空
+  client_->NotifyJavaScriptResult(ceflistvalue, method, classname,
+                                  result, routing_id, object_id);
+}
+
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     int routing_id,
     int32_t object_id,
@@ -740,10 +923,12 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     int fd,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  OhJavascriptInjector* javascriptInjector =
-     OhJavascriptInjector::FromWebContents(web_contents());
-  if (javascriptInjector) {
-    javascriptInjector->SetLastCallingFrameUrl(document_url);
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+    if (javascriptInjector) {
+      javascriptInjector->SetLastCallingFrameUrl(document_url);
+    }
   }
   base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
 
@@ -752,8 +937,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   std::string classname = "";
   {
     std::shared_lock<std::shared_mutex> lock(share_mutex_);
-    if (method_map_.find(object_id) != method_map_.end()) {
-      MethodPair object_pair = method_map_[object_id];
+    if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+      MethodPair object_pair = sync_method_map_[object_id];
+      classname = object_pair.first;
+    } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
+      MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
     }
   }
@@ -777,6 +965,50 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
 
   wrapped_result->Append(
       base::Value::FromUniquePtrValue(ParseCefValueTOBaseValue(result)));
+}
+
+void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
+    int routing_id,
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments,
+    int fd) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(web_contents());
+    if (javascriptInjector) {
+      javascriptInjector->SetLastCallingFrameUrl(document_url);
+    }
+  }
+  base::Value::List* argument = const_cast<base::Value::List*>(&arguments);
+
+  CefRefPtr<CefListValue> ceflistvalue = ParseBaseValueTOCefValue(argument);
+
+  std::string classname = "";
+  {
+    std::shared_lock<std::shared_mutex> lock(share_mutex_);
+    if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+      MethodPair object_pair = sync_method_map_[object_id];
+      classname = object_pair.first;
+    } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
+      MethodPair object_pair = async_method_map_[object_id];
+      classname = object_pair.first;
+    }
+  }
+
+  std::string method = method_name;
+
+  CefRefPtr<CefListValue> result = CefListValue::Create();
+
+  if (!client_) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync: "
+                  "client_ is null";
+    return;
+  }
+  // 为了兼容老版本webcotroller方式, classname可能为空
+  client_->NotifyJavaScriptResultFlowbuf(ceflistvalue, method, classname, fd,
+                                                     result, routing_id, object_id);
 }
 
 void OhGinJavascriptBridgeDispatcherHost::OnObjectWrapperDeleted(

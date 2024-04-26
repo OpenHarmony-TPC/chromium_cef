@@ -1640,6 +1640,7 @@ NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::RegisterArkJSfunction(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
+    const std::vector<CefString>& async_method_list,
     const int32_t object_id) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1662,14 +1663,25 @@ void CefBrowserHostCToCpp::RegisterArkJSfunction(
   if (method_listList) {
     transfer_string_list_contents(method_list, method_listList);
   }
+  // Translate param: async_method_list; type: string_vec_byref_const
+  cef_string_list_t async_method_listList = cef_string_list_alloc();
+  DCHECK(async_method_listList);
+  if (async_method_listList) {
+    transfer_string_list_contents(async_method_list, async_method_listList);
+  }
 
   // Execute
   _struct->register_ark_jsfunction(_struct, object_name.GetStruct(),
-                                   method_listList, object_id);
+                                   method_listList, async_method_listList,
+                                   object_id);
 
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList) {
     cef_string_list_free(method_listList);
+  }
+  // Restore param:async_method_list; type: string_vec_byref_const
+  if (async_method_listList) {
+    cef_string_list_free(async_method_listList);
   }
 }
 
@@ -3012,6 +3024,44 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::TerminateRenderProcess() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::RegisterNativeJSProxy(
+    const CefString& object_name,
+    const std::vector<CefString>& method_list,
+    const int32_t object_id,
+    bool is_async) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, register_native_jsproxy)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: object_name; type: string_byref_const
+  DCHECK(!object_name.empty());
+  if (object_name.empty()) {
+    return;
+  }
+
+  // Translate param: method_list; type: string_vec_byref_const
+  cef_string_list_t method_listList = cef_string_list_alloc();
+  DCHECK(method_listList);
+  if (method_listList) {
+    transfer_string_list_contents(method_list, method_listList);
+  }
+
+  // Execute
+  _struct->register_native_jsproxy(_struct, object_name.GetStruct(),
+                                   method_listList, object_id, is_async);
+
+  // Restore param:method_list; type: string_vec_byref_const
+  if (method_listList) {
+    cef_string_list_free(method_listList);
+  }
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -936,23 +936,48 @@ CefString CefBrowserHostBase::DefaultUserAgent() {
   return embedder_support::GetUserAgent();
 }
 
-void CefBrowserHostBase::RegisterArkJSfunction(
+void CefBrowserHostBase::RegisterNativeJSProxy(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
-    const int32_t object_id) {
+    const int32_t object_id,
+    bool is_async) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
-  std::vector<std::string> method_vector;
-  for (CefString method : method_list) {
-    method_vector.push_back(method.ToString());
-  }
   if (!javascriptInjector) {
     LOG(ERROR) << "CefBrowserHostBase::RegisterArkJSfunction "
                   "javascriptInjector is null";
     return;
   }
+  std::vector<std::string> method_vector;
+  for (CefString method : method_list) {
+    method_vector.push_back(method.ToString());
+  }
+  javascriptInjector->AddNativeInterface(object_name.ToString(), method_vector,
+                                   object_id, is_async);
+}
+
+void CefBrowserHostBase::RegisterArkJSfunction(
+    const CefString& object_name,
+    const std::vector<CefString>& method_list,
+    const std::vector<CefString>& async_method_list,
+    const int32_t object_id) {
+  OhJavascriptInjector* javascriptInjector =
+      OhJavascriptInjector::FromWebContents(GetWebContents());
+  if (!javascriptInjector) {
+    LOG(ERROR) << "CefBrowserHostBase::RegisterArkJSfunction "
+                  "javascriptInjector is null";
+    return;
+  }
+  std::vector<std::string> method_vector;
+  for (CefString method : method_list) {
+    method_vector.push_back(method.ToString());
+  }
+  std::vector<std::string> async_method_vector;
+  for (CefString async_method : async_method_list) {
+    async_method_vector.push_back(async_method.ToString());
+  }
   javascriptInjector->AddInterface(object_name.ToString(), method_vector,
-                                   object_id);
+                                   async_method_vector, object_id);
 }
 
 void CefBrowserHostBase::UnregisterArkJSfunction(

@@ -20,9 +20,11 @@ IPC_ENUM_TRAITS_MAX_VALUE(NWEB::OhGinJavascriptBridgeError,
 // Sent from browser to renderer to add a Javascript object with the given
 // name.
 
-IPC_MESSAGE_ROUTED2(OhGinJavascriptBridgeMsg_AddNamedObject,
+IPC_MESSAGE_ROUTED4(OhGinJavascriptBridgeMsg_AddNamedObject,
                     std::string /* name */,
-                    int32_t /* object_id */)
+                    int32_t /* object_id */,
+                    base::Value::List /* async_method_list */,
+                    bool /* update_method*/)
 
 IPC_MESSAGE_ROUTED1(OhGinJavascriptBridgeMsg_RemoveNamedObject,
                     std::string /* name */)
@@ -51,6 +53,18 @@ IPC_SYNC_MESSAGE_ROUTED4_2(OhGinJavascriptBridgeHostMsg_InvokeMethod,
                            base::Value::List /* arguments */,
                            base::Value::List /* result */,
                            NWEB::OhGinJavascriptBridgeError /* error_code */)
+
+#define IPC_ASYNC_MESSAGE_ROUTED(msg_class, in) \
+  IPC_MESSAGE_DECL(msg_class, ROUTED, IPC_TUPLE in, void)
+
+#define IPC_ASYNC_MESSAGE_ROUTED4_0(msg, a, b, c, d) \
+  IPC_ASYNC_MESSAGE_ROUTED(msg, (a, b, c, d))
+
+IPC_ASYNC_MESSAGE_ROUTED4_0(OhGinJavascriptBridgeHostMsg_InvokeMethod_Async,
+                            int32_t /* object_id */,
+                            std::string /* document url */,
+                            std::string /* method_name */,
+                            base::Value::List /* arguments */)
 
 IPC_MESSAGE_ROUTED1(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
                     int32_t /* object_id */)
