@@ -3542,6 +3542,7 @@ void CefBrowserHostBase::SetNWebId(int NWebID) {
 #endif  // defined(OHOS_WEBRTC)
 }
 
+#if BUILDFLAG(IS_OHOS)
 void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
                                               const std::string& script,
                                               CefRefPtr<CefCacheOptions> cacheOptions,
@@ -3567,46 +3568,45 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
           this, url, script, options, std::move(callback)));
 }
 
-int32_t CefBrowserHostBase::WriteResponseCache(const std::string& url,
-                                               const std::string& script,
-                                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions) {
+oh_code_cache::NextOp CefBrowserHostBase::WriteResponseCache(
+    const std::string& url,
+    const std::string& script,
+    std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions) {
   auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(url);
 
   if (!response_cache) {
-    LOG(ERROR) << "Internal error: create response cache error.";
-    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
+    LOG(ERROR) << "Create response cache error.";
+    return oh_code_cache::NextOp::THROW_ERROR;
   }
 
-  if (!response_cache->Write(cacheOptions->response_headers_, script)) {
-    LOG(ERROR) << "Internal error: write into response cache error.";
-    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
-  }
-
-  LOG(DEBUG) << "Write into response cache successfully.";
-  return static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR);
+  return response_cache->Write(cacheOptions->response_headers_, script);
 }
 
 void CefBrowserHostBase::OnDidWriteResponseCache(const std::string& url,
                                                  const std::string& script,
                                                  std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                                  CefRefPtr<CefPrecompileCallback> callback,
-                                                 int32_t result) {
-  if (result != static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR)) {
-    LOG(ERROR) << "Internal error: get write response cache result is error.";
-    callback->OnPrecompileFinished(result);
-    return;
+                                                 oh_code_cache::NextOp nextOp) {
+  switch (nextOp) {
+    case oh_code_cache::NextOp::WRITE_CODE_CACHE:
+      GenerateCodeCache(url, script, cacheOptions, std::move(callback));
+      break;
+    case oh_code_cache::NextOp::THROW_ERROR:
+      callback->OnPrecompileFinished(static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
+      break;
+    default:
+      callback->OnPrecompileFinished(static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR));
+      break;
   }
-
-  GenerateCodeCache(url, script, cacheOptions, std::move(callback));
 }
-  
+
 void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
                                            const std::string& script,
                                            std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                            CefRefPtr<CefPrecompileCallback> callback) {
   auto wc = GetWebContents();
   if (wc == nullptr) {
-    LOG(ERROR) << "Internal error: WebContents has not initialized.";
+    LOG(ERROR) << "WebContents has not initialized.";
     callback->OnPrecompileFinished(
         static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
     return;
@@ -3621,6 +3621,7 @@ void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback>
   LOG(DEBUG) << "Get generate code cache result: " << result;
   callback->OnPrecompileFinished(result);
 }
+#endif
 
 #ifdef OHOS_RENDER_PROCESS_MODE
 void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
