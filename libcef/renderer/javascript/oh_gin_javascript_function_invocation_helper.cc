@@ -53,9 +53,9 @@ bool OhGinJavascriptFunctionInvocationHelper::StoreString(int index, void* mem, 
   int i;
   int dataPos = 0;
 
-  if (strlen(str) == 0)(
+  if (strlen(str) == 0) {
     return false;
-  )
+  }
 
   for (i = 0; i < MAX_ENTRIES; ++i) {
     int* entry = static_cast<int*>(mem) + (i * INDEX_SIZE);
