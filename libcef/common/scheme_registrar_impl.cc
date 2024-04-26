@@ -43,6 +43,10 @@ bool CefSchemeRegistrarImpl::AddCustomScheme(const CefString& scheme_name,
   const bool is_cors_enabled = options & CEF_SCHEME_OPTION_CORS_ENABLED;
   const bool is_csp_bypassing = options & CEF_SCHEME_OPTION_CSP_BYPASSING;
   const bool is_fetch_enabled = options & CEF_SCHEME_OPTION_FETCH_ENABLED;
+#if BUILDFLAG(IS_OHOS)
+  const bool is_code_cache_enabled =
+      options & CEF_SCHEME_OPTION_CODE_CACHE_ENABLED;
+#endif
 
   // The |is_display_isolated| value is excluded here because it's registered
   // with Blink only.
@@ -66,8 +70,19 @@ bool CefSchemeRegistrarImpl::AddCustomScheme(const CefString& scheme_name,
 #endif
 
   CefSchemeInfo scheme_info = {
-      scheme,    is_standard,     is_local,         is_display_isolated,
-      is_secure, is_cors_enabled, is_csp_bypassing, is_fetch_enabled};
+    scheme,
+    is_standard,
+    is_local,
+    is_display_isolated,
+    is_secure,
+    is_cors_enabled,
+    is_csp_bypassing,
+    is_fetch_enabled
+#if BUILDFLAG(IS_OHOS)
+    ,
+    is_code_cache_enabled
+#endif
+  };
   CefAppManager::Get()->AddCustomScheme(&scheme_info);
 
   return true;

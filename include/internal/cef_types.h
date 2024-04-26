@@ -3131,6 +3131,13 @@ typedef enum {
   /// requests.
   ///
   CEF_SCHEME_OPTION_FETCH_ENABLED = 1 << 6,
+
+#if BUILDFLAG(IS_OHOS)
+  ///
+  /// If CEF_SCHEME_OPTION_CODE_CACHE_ENABLED is set the js of the scheme can generate code cache.
+  ///
+  CEF_SCHEME_OPTION_CODE_CACHE_ENABLED = 1 << 7,
+#endif
 } cef_scheme_options_t;
 
 ///
