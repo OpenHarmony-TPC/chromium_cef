@@ -300,7 +300,7 @@ void CefRenderWidgetHostViewOSR::CreateSelectionController() {
       ui::GestureConfiguration::GetInstance()->long_press_time_in_ms());
   tsc_config.tap_slop = ui::GestureConfiguration::GetInstance()
                             ->max_touch_move_in_pixels_for_click();
-  tsc_config.enable_longpress_drag_selection = false;
+  tsc_config.enable_longpress_drag_selection = true;
   selection_controller_ = std::make_unique<ui::TouchSelectionController>(
       selection_controller_client_.get(), tsc_config);
 }
@@ -2471,6 +2471,22 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
   if (web_event.GetType() == blink::WebInputEvent::Type::kUndefined) {
     return;
   }
+
+#ifdef OHOS_CLIPBOARD
+  // We let the touch selection controller see gesture events here, since they
+  // may be routed and not make it to FilterInputEvent().
+  if (selection_controller_ &&
+      web_event.SourceDevice() == blink::WebGestureDevice::kTouchscreen) {
+    switch (web_event.GetType()) {
+      case blink::WebInputEvent::Type::kGestureLongPress:
+        selection_controller_->HandleLongPressEvent(
+            web_event.TimeStamp(), web_event.PositionInWidget());
+        break;
+      default:
+        break;
+    }
+  }
+#endif
 
   ui::LatencyInfo latency_info = CreateLatencyInfo(web_event);
   if (ShouldRouteEvents()) {
