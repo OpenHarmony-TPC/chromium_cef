@@ -683,6 +683,8 @@ source_set("libcef_static") {
               "libcef/browser/net/scheme_handler.h",
               "libcef/browser/net/throttle_handler.cc",
               "libcef/browser/net/throttle_handler.h",
+              "libcef/browser/net/ohos_applink_throttle.cc",
+              "libcef/browser/net/ohos_applink_throttle.h",
               "libcef/browser/net_database/cef_data_base_impl.cc",
               "libcef/browser/net_database/cef_data_base_impl.h",
               "libcef/browser/net_service/browser_urlrequest_impl.cc",

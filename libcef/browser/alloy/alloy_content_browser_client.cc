@@ -272,6 +272,10 @@ using extensions::mojom::APIPermissionID;
 #include "components/crash/content/browser/crash_handler_host_linux.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "libcef/browser/net/ohos_applink_throttle.h"
+#endif
+
 #if defined(OHOS_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -1843,6 +1847,26 @@ AlloyContentBrowserClient::CreateURLLoaderThrottles(
   }
 #endif  // defined(OHOS_NO_STATE_PREFETCH)
 
+#if BUILDFLAG(IS_OHOS)
+  if (request.destination == network::mojom::RequestDestination::kDocument &&
+      request.url.SchemeIs(url::kHttpsScheme) &&
+      request.transition_type != static_cast<int32_t>(ui::PAGE_TRANSITION_RELOAD) &&
+      (request.transition_type & ui::PAGE_TRANSITION_FROM_ADDRESS_BAR) == 0 &&
+      (request.transition_type & ui::PAGE_TRANSITION_FORWARD_BACK) == 0) {
+    bool is_same_host = true;
+    if (request.request_initiator.has_value()) {
+      if (request.request_initiator.value().host() != request.url.host()) {
+        is_same_host = false;
+      }
+    } else {
+      is_same_host = false;
+    }
+
+    if (!is_same_host) {
+      result.push_back(std::make_unique<throttle::OhosAppLinkThrottle>(frame_tree_node_id));
+    }
+  }
+#endif
   return result;
 }
 
