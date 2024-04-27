@@ -62,7 +62,8 @@ void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
 
 #if BUILDFLAG(IS_OHOS)
   if (scheme_info->is_code_cache_enabled) {
-    LOG(DEBUG) << "App manager register the scheme supported code cache.";
+    LOG(DEBUG) << "App manager register the scheme:"
+               << scheme_info->scheme_name.c_str() << " supported code cache.";
     scheme::AddSchemesSupportCodeCache(scheme_info->scheme_name);
   }
 #endif
