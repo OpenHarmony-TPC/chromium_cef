@@ -49,6 +49,10 @@ int NetHelpers::doh_mode = -1;
 std::string NetHelpers::doh_config = "";
 #endif  // defined(OHOS_HTTP_DNS)
 
+#if defined(OHOS_CUSTOM_DNS)
+std::map<std::string, struct CustomDnsEntry> NetHelpers::custom_dns = {};
+#endif // defined(OHOS_CUSTOM_DNS)
+
 bool NetHelpers::ShouldBlockContentUrls() {
   return !allow_content_access;
 }
@@ -109,6 +113,49 @@ bool NetHelpers::HasValidDnsOverHttpConfig() {
   return true;
 }
 #endif  // defined(OHOS_HTTP_DNS)
+
+#if defined(OHOS_CUSTOM_DNS)
+void NetHelpers::SetHostIP(const std::string host_name, const std::string address, int32_t ttl) {
+  if (host_name != "" && address != "") {
+    auto it = NetHelpers::custom_dns.find(host_name);
+    if (it != NetHelpers::custom_dns.end()) {
+      it->second.address.push_back(address);
+      it->second.ttl = ttl;
+    }
+    else {
+      CustomDnsEntry node;
+      node.address.push_back(address);
+      node.ttl = ttl;
+      NetHelpers::custom_dns.insert(std::pair<std::string, CustomDnsEntry>(host_name, node));
+    }
+  }
+}
+
+std::map<std::string, struct CustomDnsEntry> NetHelpers::GetHostIP() {
+  return NetHelpers::custom_dns;
+}
+
+std::vector<std::string> NetHelpers::GetHostIP(const std::string host_name) {
+  std::vector<std::string> dns = {};
+  if (host_name != "") {
+    auto it = NetHelpers::custom_dns.find(host_name);
+    if (it != NetHelpers::custom_dns.end()) {
+      return it->second.address;
+    }
+  }
+  return dns;
+}
+
+void NetHelpers::ClearHostIP(const std::string host_name) {
+  if (host_name != "") {
+    NetHelpers::custom_dns.erase(host_name);
+  }
+}
+
+void NetHelpers::ClearHostIP() {
+  NetHelpers::custom_dns.clear();
+}
+#endif // defined(OHOS_CUSTOM_DNS)
 
 bool IsSpecialFileUrl(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
