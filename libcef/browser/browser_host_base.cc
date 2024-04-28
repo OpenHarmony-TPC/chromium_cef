@@ -456,7 +456,7 @@ void CefBrowserHostBase::ResumeDownload(
     const CefString& last_modified,
     const CefString& received_slices_string) {
 #if defined(OHOS_EX_DOWNLOAD)
-  LOG(INFO) << "CefBrowserHostBase::ResumeDownload";
+  LOG(DEBUG) << "CefBrowserHostBase::ResumeDownload";
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
@@ -504,7 +504,7 @@ void CefBrowserHostBase::ResumeDownloadWithId(
     std::vector<download::DownloadItem::ReceivedSlice> received_slices,
     uint32_t next_id) {
 #if defined(OHOS_EX_DOWNLOAD)
-  LOG(INFO) << "CefBrowserHostBase::ResumeDownloadWithId url:" << gurl.spec();
+  LOG(DEBUG) << "CefBrowserHostBase::ResumeDownloadWithId url:" << gurl.spec();
   auto web_contents = GetWebContents();
   if (!web_contents)
     return;
@@ -562,7 +562,7 @@ void CefBrowserHostBase::ResumeDownloadWithId(
 
 #if defined(OHOS_EX_DOWNLOAD)
 CefRefPtr<CefDownloadItem> CefBrowserHostBase::GetDownloadItem(uint32 item_id) {
-  LOG(INFO) << "CefBrowserHostBase::GetDownloadItem item_id: " << item_id;
+  LOG(DEBUG) << "CefBrowserHostBase::GetDownloadItem item_id: " << item_id;
   auto web_contents = GetWebContents();
   if (!web_contents)
     return nullptr;
@@ -1221,7 +1221,7 @@ bool CefBrowserHostBase::TerminateRenderProcess() {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())->TerminateRenderProcess(result);
-    LOG(INFO) << "TerminateRenderProcess result:" << result;
+    LOG(DEBUG) << "TerminateRenderProcess result:" << result;
   }
   return result;
 }
@@ -2252,7 +2252,7 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
   // find the WebMessagePort by port_handle, and send to html5
   std::vector<blink::WebMessagePort> sendPorts;
   for (CefString port : port_handles) {
-    LOG(INFO) << "PostWebMessage port:" << port.ToString();
+    LOG(DEBUG) << "PostWebMessage port:" << port.ToString();
     for (auto iter = portMap_.begin(); iter != portMap_.end(); ++iter) {
       if (port.ToString().compare(std::to_string(iter->first.first)) == 0) {
         postedPorts_.insert(port.ToString());
@@ -2275,7 +2275,7 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::ClosePort(CefString& portHandle) {
-  LOG(INFO) << "ClosePort ClosePort";
+  LOG(DEBUG) << "ClosePort ClosePort";
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "ClosePort GetWebContents null";
@@ -2312,13 +2312,13 @@ void CefBrowserHostBase::ClosePort(CefString& portHandle) {
     }
   }
   postedPorts_.erase(portHandle.ToString());
-  LOG(INFO) << "ClosePort end";
+  LOG(DEBUG) << "ClosePort end";
 }
 
 bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
     CefRefPtr<CefValue>& original,
     blink::WebMessagePort::Message& message) {
-  LOG(INFO) << "ConvertCefValueToBlinkMsg type:" << (int)original->GetType();
+  LOG(DEBUG) << "ConvertCefValueToBlinkMsg type:" << (int)original->GetType();
   switch (original->GetType()) {
     case VTYPE_STRING: {
       message = blink::WebMessagePort::Message(
@@ -2522,7 +2522,7 @@ void CefBrowserHostBase::SetPortMessageCallback(
 }
 
 void CefBrowserHostBase::DestroyAllWebMessagePorts() {
-  LOG(INFO) << "clear all message ports";
+  LOG(DEBUG) << "clear all message ports";
   portMap_.clear();
   runnerMap_.clear();
   receiverMap_.clear();
@@ -2531,12 +2531,12 @@ void CefBrowserHostBase::DestroyAllWebMessagePorts() {
 #endif  // defined(OHOS_MSGPORT)
 
 WebMessageReceiverImpl::~WebMessageReceiverImpl() {
-  LOG(INFO) << "WebMessageReceiverImpl destrory";
+  LOG(DEBUG) << "WebMessageReceiverImpl destrory";
 }
 
 void WebMessageReceiverImpl::SetOnMessageCallback(
     CefRefPtr<CefWebMessageReceiver> callback) {
-  LOG(INFO) << "WebMessageReceiverImpl::SetOnMessageCallback ";
+  LOG(DEBUG) << "WebMessageReceiverImpl::SetOnMessageCallback ";
   callback_ = callback;
 }
 
@@ -2615,7 +2615,7 @@ void WebMessageReceiverImpl::ConvertBlinkMsgToCefValue(
 
 // this will receive message from html5
 bool WebMessageReceiverImpl::OnMessage(blink::WebMessagePort::Message message) {
-  LOG(INFO) << "OnMessage start";
+  LOG(DEBUG) << "OnMessage start";
   // Pass the message on to the receiver.
   if (callback_) {
     CefRefPtr<CefValue> data = CefValue::Create();
@@ -2715,7 +2715,7 @@ void CefBrowserHostBase::LoadWithDataAndBaseUrl(const CefString& baseUrl,
   loadUrlParams.can_load_local_resources = true;
   auto web_contents = GetWebContents();
   if (web_contents) {
-    LOG(INFO) << "load data with BaseUrl";
+    LOG(DEBUG) << "load data with BaseUrl";
     web_contents->GetController().LoadURLWithParams(loadUrlParams);
   }
 }
@@ -2743,7 +2743,7 @@ void CefBrowserHostBase::LoadWithData(const CefString& data,
 
   auto web_contents = GetWebContents();
   if (web_contents) {
-    LOG(INFO) << "load data";
+    LOG(DEBUG) << "load data";
     web_contents->GetController().LoadURLWithParams(loadUrlParams);
   }
 }
@@ -3118,7 +3118,7 @@ void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
 }
 
 void CefBrowserHostBase::SetScrollable(bool enable) {
-  LOG(INFO) << "set scrollable: " << enable;
+  LOG(DEBUG) << "set scrollable: " << enable;
   if (platform_delegate_) {
     platform_delegate_->SetScrollable(enable);
   }
@@ -3193,7 +3193,7 @@ void CefBrowserHostBase::SelectAndCopy() {
   if (!GetWebContents()) {
     return;
   }
-  LOG(INFO) << "select and copy invoke";
+  LOG(DEBUG) << "select and copy invoke";
   GetWebContents()->SelectAndCopy();
 #endif
 }
@@ -3375,7 +3375,7 @@ void CefBrowserHostBase::SetSavePassword(bool enable) {
   if (!GetWebContents()) {
     return;
   }
-  LOG(INFO) << "set save password " << enable;
+  LOG(DEBUG) << "set save password " << enable;
   GetWebContents()->SetSavePassword(enable);
 #endif
 }

@@ -164,7 +164,7 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 }
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
-  LOG(INFO) << "Close Quick Menu And Hide Hanles.";
+  LOG(DEBUG) << "Close Quick Menu And Hide Hanles.";
   CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
   auto controller = rwhv_->selection_controller();
