@@ -52,8 +52,14 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   base::PickleIterator iter(message);
   int32_t routing_id = -1;
   int32_t object_id = -1;
+  bool msg_correct = false;
+  if (message.is_sync()) {
+    msg_correct = iter.ReadInt(&routing_id) && iter.ReadInt(&object_id);
+  } else {
+    msg_correct = iter.ReadInt(&object_id);
+  }
   if (message.HasAttachments()) {
-    if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+    if (msg_correct && !message.is_sync() &&
       object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
         base::ThreadPool::PostTask(
           FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
@@ -67,7 +73,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
         base::WrapRefCounted(this), message));
     }
   } else {
-    if (iter.ReadInt(&routing_id) && iter.ReadInt(&object_id) &&
+    if (msg_correct && !message.is_sync() &&
       object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
         base::ThreadPool::PostTask(
           FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
@@ -94,6 +100,8 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread(
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_HasMethod, OnHasMethod)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_InvokeMethod,
                         OnInvokeMethod)
+    IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_InvokeMethod_Async,
+                        OnInvokeMethodAsync)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
                         OnObjectWrapperDeleted)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -123,6 +131,8 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf(
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_HasMethod, OnHasMethod)
     IPC_MESSAGE_HANDLER_PARAM(OhGinJavascriptBridgeHostMsg_InvokeMethod,
                               OnInvokeMethodFlowbuf)
+    IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_InvokeMethod_Async,
+                              OnInvokeMethodFlowbufAsync)
     IPC_MESSAGE_HANDLER(OhGinJavascriptBridgeHostMsg_ObjectWrapperDeleted,
                         OnObjectWrapperDeleted)
     IPC_MESSAGE_UNHANDLED(handled = false)
@@ -245,6 +255,18 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
   }
 }
 
+void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodAsync(
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments) {
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+  if (host) {
+    host->OnInvokeMethodAsync(current_routing_id_, object_id, document_url,
+                         method_name, arguments);
+  }
+}
+
 void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
     int* fd,
     int32_t object_id,
@@ -260,6 +282,19 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
   } else {
     wrapped_result->Append(base::Value());
     *error_code = kOhGinJavascriptBridgeRenderFrameDeleted;
+  }
+}
+
+void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
+    int* fd,
+    int32_t object_id,
+    const std::string& document_url,
+    const std::string& method_name,
+    const base::Value::List& arguments) {
+  scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+  if (host) {
+    host->OnInvokeMethodFlowbufAsync(current_routing_id_, object_id, document_url,
+                                method_name, arguments, *fd);
   }
 }
 

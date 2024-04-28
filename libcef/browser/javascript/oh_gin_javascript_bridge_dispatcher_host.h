@@ -40,11 +40,17 @@ class OhGinJavascriptBridgeDispatcherHost
   OhGinJavascriptBridgeDispatcherHost& operator=(
       const OhGinJavascriptBridgeDispatcherHost&) = delete;
 
-  void AddNamedObject(const std::string& classname,
+  void AddNamedObject(const std::string& object_name,
                       const std::vector<std::string>& method_list,
+                      const std::vector<std::string>& async_method_list,
                       const ObjectID object_id);
-  void RemoveNamedObject(const std::string& classname,
+  void AddNativeNamedObject(const std::string& object_name,
+                      const std::vector<std::string>& method_list,
+                      const ObjectID object_id,
+                      bool is_async);
+  void RemoveNamedObject(const std::string& object_name,
                          const std::vector<std::string>& method_list);
+  bool RemoveNamedObjectInternal(const std::string& object_name, bool is_async);
 
   // WebContentsObserver
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
@@ -70,6 +76,11 @@ class OhGinJavascriptBridgeDispatcherHost
                       const base::Value::List& arguments,
                       base::Value::List* result,
                       OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodAsync(int routing_id,
+                           int32_t object_id,
+                           const std::string& document_url,
+                           const std::string& method_name,
+                           const base::Value::List& arguments);
   void OnInvokeMethodFlowbuf(int routing_id,
                              int32_t object_id,
                              const std::string& document_url,
@@ -78,9 +89,16 @@ class OhGinJavascriptBridgeDispatcherHost
                              int fd,
                              base::Value::List* result,
                              OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodFlowbufAsync(int routing_id,
+                                  int32_t object_id,
+                                  const std::string& document_url,
+                                  const std::string& method_name,
+                                  const base::Value::List& arguments,
+                                  int fd);
   void OnObjectWrapperDeleted(int routing_id, ObjectID object_id);
   void ClearMethodMap() {
-    method_map_.clear();
+    sync_method_map_.clear();
+    async_method_map_.clear();
   }
 
   void DoCallH5Function(int32_t routing_id,
@@ -98,20 +116,38 @@ class OhGinJavascriptBridgeDispatcherHost
 
   // Run on the UI thread.
   void InstallFilterAndRegisterAllRoutingIds();
+
+  // When registering an Arkts object, all the registered methods will be cleared.
   void AddNamedObjectForWebController(
-      const std::string& classname,
-      const std::vector<std::string>& method_list);
+      const std::string& object_name,
+      const std::vector<std::string>& method_list,
+      const std::vector<std::string>& async_method_list);
 
   void AddNamedObjectForWebViewController(
-      const std::string& classname,
+      const std::string& object_name,
       const std::vector<std::string>& method_list,
+      const std::vector<std::string>& async_method_list,
       const ObjectID object_id);
+
+  // When registering a native object, only the registered methods
+  // of the same type (sync/async) as the registration methods will be cleared.
+  void AddNativeNamedObjectForWebController(
+      const std::string& object_name,
+      const std::vector<std::string>& method_list,
+      bool is_async);
+
+  void AddNativeNamedObjectForWebViewController(
+      const std::string& object_name,
+      const std::vector<std::string>& method_list,
+      const ObjectID object_id,
+      bool is_async);
   content::WebContentsImpl* web_contents() const;
 
   // js property name and object id
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
-  ObjectMethodMap method_map_;
+  ObjectMethodMap sync_method_map_;
+  ObjectMethodMap async_method_map_;
   std::shared_mutex share_mutex_;
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
 

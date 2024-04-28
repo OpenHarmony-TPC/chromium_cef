@@ -73,7 +73,10 @@ class OhGinJavascriptBridgeDispatcher
  private:
   // RenderFrameObserver implementation.
   void OnDestruct() override;
-  void OnAddNamedObject(const std::string& name, ObjectID object_id);
+  void OnAddNamedObject(const std::string& name,
+                        ObjectID object_id,
+                        const base::Value::List& async_method_list,
+                        bool need_update);
   void OnRemoveNamedObject(const std::string& name);
 
   bool HasH5ObjectMethod(int h5_object_id, const std::string& method_name);
@@ -90,6 +93,8 @@ class OhGinJavascriptBridgeDispatcher
                           const base::Value::List& args);
 
   typedef std::map<std::string, ObjectID> NamedObjectMap;
+  typedef std::map<ObjectID, std::unordered_set<std::string>> MethodsMap;
+  MethodsMap async_methods_map_;
   NamedObjectMap named_objects_;
   ObjectMap objects_;
   bool inside_did_clear_window_object_;

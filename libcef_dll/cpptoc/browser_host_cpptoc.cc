@@ -1865,6 +1865,7 @@ void CEF_CALLBACK
 browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
                                      cef_string_list_t method_list,
+                                     cef_string_list_t async_method_list,
                                      int32_t object_id) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1884,14 +1885,23 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
   if (!method_list) {
     return;
   }
+  // Verify param: async_method_list; type: string_vec_byref_const
+  DCHECK(async_method_list);
+  if (!async_method_list) {
+    return;
+  }
 
   // Translate param: method_list; type: string_vec_byref_const
   std::vector<CefString> method_listList;
   transfer_string_list_contents(method_list, method_listList);
+  // Translate param: async_method_list; type: string_vec_byref_const
+  std::vector<CefString> async_method_listList;
+  transfer_string_list_contents(async_method_list, async_method_listList);
 
   // Execute
   CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(
-      CefString(object_name), method_listList, object_id);
+      CefString(object_name), method_listList, async_method_listList,
+      object_id);
 }
 
 void CEF_CALLBACK
@@ -3293,6 +3303,41 @@ browser_host_terminate_render_process(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK
+browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
+                                     const cef_string_t* object_name,
+                                     cef_string_list_t method_list,
+                                     int32_t object_id,
+                                     int is_async) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: object_name; type: string_byref_const
+  DCHECK(object_name);
+  if (!object_name) {
+    return;
+  }
+  // Verify param: method_list; type: string_vec_byref_const
+  DCHECK(method_list);
+  if (!method_list) {
+    return;
+  }
+
+  // Translate param: method_list; type: string_vec_byref_const
+  std::vector<CefString> method_listList;
+  transfer_string_list_contents(method_list, method_listList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RegisterNativeJSProxy(
+      CefString(object_name), method_listList, object_id,
+      is_async ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3479,6 +3524,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->notify_needs_reload = browser_host_notify_needs_reload;
   GetStruct()->needs_reload = browser_host_needs_reload;
   GetStruct()->terminate_render_process = browser_host_terminate_render_process;
+  GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -164,6 +164,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetBackgroundColor(int color) override;
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
+                             const std::vector<CefString>& async_method_list,
                              const int32_t object_id) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
@@ -271,6 +272,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void NotifyNeedsReload(bool needs_reload) override;
   bool NeedsReload() override;
   bool TerminateRenderProcess() override;
+  void RegisterNativeJSProxy(const CefString& object_name,
+                             const std::vector<CefString>& method_list,
+                             const int32_t object_id,
+                             bool is_async) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

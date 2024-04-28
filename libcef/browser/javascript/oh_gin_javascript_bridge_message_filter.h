@@ -78,6 +78,10 @@ class OhGinJavascriptBridgeMessageFilter
                       const base::Value::List& arguments,
                       base::Value::List* result,
                       OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodAsync(int32_t object_id,
+                           const std::string& document_url,
+                           const std::string& method_name,
+                           const base::Value::List& arguments);
   void OnInvokeMethodFlowbuf(int* fd,
                              int32_t object_id,
                              const std::string& document_url,
@@ -85,6 +89,11 @@ class OhGinJavascriptBridgeMessageFilter
                              const base::Value::List& arguments,
                              base::Value::List* result,
                              OhGinJavascriptBridgeError* error_code);
+  void OnInvokeMethodFlowbufAsync(int* fd,
+                                  int32_t object_id,
+                                  const std::string& document_url,
+                                  const std::string& method_name,
+                                  const base::Value::List& arguments);
   void OnObjectWrapperDeleted(int object_id);
 
   // Accessed both from UI and background threads.
