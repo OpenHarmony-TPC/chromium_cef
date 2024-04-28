@@ -139,6 +139,12 @@ class CefResourceHandler : public virtual CefBaseRefCounted {
                                   int64& response_length,
                                   CefString& redirectUrl) = 0;
 
+#if BUILDFLAG(IS_OHOS)
+  virtual const std::string& GetResponseData() {static const std::string data; return data;}
+  virtual size_t GetResponseDataBuffer(char* data) {return 0;}
+  virtual size_t GetResponseDataBufferSize() {return 0;}
+#endif
+
   ///
   /// Skip response data when requested by a Range header. Skip over and discard
   /// |bytes_to_skip| bytes of response data. If data is available immediately

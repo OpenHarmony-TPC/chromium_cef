@@ -96,6 +96,12 @@ class ResourceResponse {
                                   std::string* charset,
                                   int64_t* content_length,
                                   HeaderMap* extra_headers) = 0;
+
+#if BUILDFLAG(IS_OHOS)
+  virtual const std::string& GetResponseData() = 0;
+  virtual size_t GetResponseDataBuffer(char* data) = 0;
+  virtual size_t GetResponseDataBufferSize() = 0;
+#endif
 };
 
 // Custom URLLoader implementation for loading network responses from stream.
@@ -151,6 +157,9 @@ class StreamReaderURLLoader : public network::mojom::URLLoader {
 
   void OnReaderSkipCompleted(int64_t bytes_skipped);
   void HeadersComplete(int status_code, int64_t expected_content_length);
+#if BUILDFLAG(IS_OHOS)
+  bool TryTransferDataWithSharedMemory();
+#endif
   void ContinueWithResponseHeaders(
       network::mojom::URLResponseHeadPtr pending_response,
       int32_t result,

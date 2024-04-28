@@ -1021,6 +1021,10 @@ source_set("libcef_static") {
             ]
   if (is_ohos) {
     sources += [
+      "libcef/browser/report_manager.h",
+      "libcef/browser/report_manager.cc",
+      "libcef/browser/res_reporter.h",
+      "libcef/browser/res_reporter.cc",
       "libcef/browser/autofill/oh_autofill_client.cc",
       "libcef/browser/autofill/oh_autofill_client.h",
       "libcef/browser/autofill/oh_autofill_manager.cc",
