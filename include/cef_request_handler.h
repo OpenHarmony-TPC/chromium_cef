@@ -51,6 +51,25 @@
 #include "include/cef_x509_certificate.h"
 
 ///
+/// Callback interface for asynchronous continuation of app link event.
+///
+/*--cef(source=library)--*/
+class CefOpenAppLinkCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Continue load in web.
+  ///
+  /*--cef()--*/
+  virtual void Continue() = 0;
+
+  ///
+  /// Cancel load in web.
+  ///
+  /*--cef()--*/
+  virtual void Cancel() = 0;
+};
+
+///
 /// Implement this interface to handle events related to browser requests. The
 /// methods of this class will be called on the thread indicated.
 ///
@@ -258,7 +277,16 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
                                      CefRefPtr<CefSSLInfo> ssl_info,
                                      CefRefPtr<CefCallback> callback) {
     return false;
-}
+  }
+
+  ///
+  /// Called to open app link.
+  ///
+  /*--cef()--*/
+  virtual bool OnOpenAppLink(const CefString &url,
+                             CefRefPtr<CefOpenAppLinkCallback> callback) {
+    return false;
+  } 
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

@@ -48,6 +48,11 @@ struct CefSchemeInfo {
 
   // A scheme that can perform fetch request.
   bool is_fetch_enabled;
+
+#if BUILDFLAG(IS_OHOS)
+  // A js of this scheme that can generate code cache.
+  bool is_code_cache_enabled;
+#endif
 };
 
 #endif  // CEF_LIBCEF_COMMON_NET_SCHEME_INFO_H_

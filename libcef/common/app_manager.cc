@@ -59,6 +59,14 @@ void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
       policy->RegisterWebSafeScheme(scheme_info->scheme_name);
     }
   }
+
+#if BUILDFLAG(IS_OHOS)
+  if (scheme_info->is_code_cache_enabled) {
+    LOG(DEBUG) << "App manager register the scheme:"
+               << scheme_info->scheme_name.c_str() << " supported code cache.";
+    scheme::AddSchemesSupportCodeCache(scheme_info->scheme_name);
+  }
+#endif
 }
 
 bool CefAppManager::HasCustomScheme(const std::string& scheme_name) {
@@ -129,8 +137,20 @@ void CefAppManager::AddAdditionalSchemes(
         if (scheme.size() != 3) {
           break;
         }
-        CefSchemeInfo regScheme = {"",    false, false, false,
-                                   false, false, false, false};
+        CefSchemeInfo regScheme = {
+          "",
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+#if BUILDFLAG(IS_OHOS)
+          ,
+          false
+#endif
+        };
         regScheme.scheme_name = scheme[0];
         if (scheme[1] == std::string("1")) {
           regScheme.is_cors_enabled = true;
