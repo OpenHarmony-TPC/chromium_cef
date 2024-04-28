@@ -39,7 +39,7 @@ void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
   menu_item.has_text_direction_override = menu_ptr->has_text_direction_override;
 }
 
-#if defined(OHOS_EX_PASSWORD)
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 void ConvertAutofillPopupItem(const autofill::Suggestion& suggestion,
                               CefAutofillPopupItem& menu_item) {
   CefString label = CefString(base::UTF16ToUTF8(suggestion.main_text.value));
@@ -718,6 +718,17 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
 }
 
 #if defined(OHOS_EX_PASSWORD)
+void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
+                                                       const std::string& url) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    handler->ShowPasswordDialog(is_update, url);
+  }
+}
+#endif
+
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
     const gfx::RectF& element_bounds,
     bool is_rtl,
@@ -748,15 +759,6 @@ void CefBrowserPlatformDelegateOsr::OnHideAutofillPopup() {
       browser_->GetClient()->GetDialogHandler();
   if (handler.get()) {
     handler->OnHideAutofillPopup();
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
-                                                       const std::string& url) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->ShowPasswordDialog(is_update, url);
   }
 }
 #endif

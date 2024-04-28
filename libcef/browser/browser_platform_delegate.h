@@ -27,7 +27,7 @@
 #include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 #endif  // #endif OHOS_HTML_SELECT
 
-#ifdef OHOS_EX_PASSWORD
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 #include "components/autofill/core/browser/ui/suggestion.h"
 #include "ui/gfx/geometry/rect_f.h"
 #endif
@@ -431,13 +431,16 @@ class CefBrowserPlatformDelegate {
 #endif  // #ifdef OHOS_HTML_SELECT
 
 #if defined(OHOS_EX_PASSWORD)
+  virtual void ShowPasswordDialog(bool is_update, const std::string& url);
+#endif  // OHOS_EX_PASSWORD
+
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
   virtual void OnShowAutofillPopup(
       const gfx::RectF& element_bounds,
       bool is_rtl,
       const std::vector<autofill::Suggestion>& suggestions);
   virtual void OnHideAutofillPopup();
-  virtual void ShowPasswordDialog(bool is_update, const std::string& url);
-#endif  // OHOS_EX_PASSWORD
+#endif
 
 #if defined(OHOS_PRINT)
   virtual void SetToken(void* token) {}

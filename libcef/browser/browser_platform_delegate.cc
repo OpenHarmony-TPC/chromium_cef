@@ -442,6 +442,13 @@ void CefBrowserPlatformDelegate::ShowPopupMenu(
 #endif  // OHOS_HTML_SELECT
 
 #if defined(OHOS_EX_PASSWORD)
+void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
+                                                    const std::string& url) {
+  NOTIMPLEMENTED();
+}
+#endif
+
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 void CefBrowserPlatformDelegate::OnShowAutofillPopup(
     const gfx::RectF& element_bounds,
     bool is_rtl,
@@ -450,11 +457,6 @@ void CefBrowserPlatformDelegate::OnShowAutofillPopup(
 }
 
 void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
-  NOTIMPLEMENTED();
-}
-
-void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
-                                                    const std::string& url) {
   NOTIMPLEMENTED();
 }
 #endif

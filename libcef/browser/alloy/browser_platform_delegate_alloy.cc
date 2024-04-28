@@ -240,6 +240,10 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   if (autofill::ContentAutofillDriverFactory::FromWebContents(web_contents_)) {
     return;
   }
+  
+#if defined(OHOS_DATALIST)
+  autofill::OhAutofillClient::CreateForWebContents(web_contents_, false);
+#endif
 
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(

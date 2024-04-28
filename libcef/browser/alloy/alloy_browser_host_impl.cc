@@ -2499,8 +2499,10 @@ void AlloyBrowserHostImpl::ShowPasswordDialog(bool is_update,
     platform_delegate_->ShowPasswordDialog(is_update, url);
   }
 }
+#endif
 
-void AlloyBrowserHostImpl::OnShowAutofillPopup(
+#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
+  void AlloyBrowserHostImpl::OnShowAutofillPopup(
     const gfx::RectF& element_bounds,
     bool is_rtl,
     const std::vector<autofill::Suggestion>& suggestions) {
