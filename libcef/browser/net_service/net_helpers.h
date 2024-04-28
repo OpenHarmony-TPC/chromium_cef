@@ -5,6 +5,10 @@
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 
+#ifdef OHOS_CUSTOM_DNS
+#include <map>
+#include <vector>
+#endif
 #include "net/dns/public/secure_dns_mode.h"
 class GURL;
 
@@ -19,6 +23,13 @@ struct NetHelperSetting {
   int cache_mode;
 };
 #endif
+
+#ifdef OHOS_CUSTOM_DNS
+struct CustomDnsEntry {
+  std::vector<std::string> address;
+  int32_t ttl;
+};
+#endif // defined(OHOS_CUSTOM_DNS)
 
 class NETHELPERS_EXPORT NetHelpers {
  public:
@@ -35,6 +46,15 @@ class NETHELPERS_EXPORT NetHelpers {
   static std::string DnsOverHttpServerConfig();
   static bool HasValidDnsOverHttpConfig();
 #endif  // defined(OHOS_HTTP_DNS)
+
+#if defined(OHOS_CUSTOM_DNS)
+  static void SetHostIP(const std::string host_name, const std::string address, int32_t ttl);
+  static std::map<std::string, struct CustomDnsEntry> GetHostIP();
+  static std::vector<std::string> GetHostIP(const std::string host_name);
+  static void ClearHostIP(const std::string host_name);
+  static void ClearHostIP();
+  static std::map<std::string, struct CustomDnsEntry> custom_dns; 
+#endif // defined(OHOS_CUSTOM_DNS)
 
   static bool allow_content_access;
   static bool allow_file_access;
