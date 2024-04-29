@@ -103,7 +103,6 @@
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
-static uint64_t DEFAULT_ZOOM_TIME_INTERNAL = 250;
 static float DEFAULT_MIN_ZOOM_FACTOR = 0.01f;
 static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
 #endif  // defined(OHOS_INPUT_EVENTS)
@@ -3085,12 +3084,6 @@ void CefBrowserHostBase::ZoomBy(float delta, float width, float height) {
     LOG(ERROR) << "invalid zommby delta";
     return;
   }
-  uint64_t cur_zoom_time = GetCurrentTimestamp();
-  if (cur_zoom_time - last_zoom_time_ <= DEFAULT_ZOOM_TIME_INTERNAL) {
-    LOG(ERROR) << "zoomby ignore";
-    return;
-  }
-  last_zoom_time_ = cur_zoom_time;
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())->ZoomBy(delta, width, height);
