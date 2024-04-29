@@ -39,6 +39,10 @@
 #include "ui/base/page_transition_types.h"
 #include "url/origin.h"
 
+#ifdef OHOS_NETWORK_LOAD
+#include "services/network/sec_header_helpers.h"
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 #include "net_helpers.h"
 #endif
@@ -938,6 +942,22 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   void GetOhosResourceHandler(int32_t request_id,
                               network::ResourceRequest* request,
                               ShouldInterceptRequestResultCallback callback) {
+  #ifdef OHOS_NETWORK_LOAD
+    RequestState* state = GetState(request_id);
+    if (state && request) {
+      // Add fetch meta data headers.
+      bool old_flag = state->pending_request_->IsReadOnly();
+      state->pending_request_->SetReadOnly(false);
+      std::map<std::string, std::string> headers =
+          network::GetFetchMetadataHeaders(
+                  request->url, request->mode, request->has_user_gesture,
+                  request->destination, request->request_initiator);
+      for (auto& entry : headers) {
+        state->pending_request_->SetHeaderByName(entry.first, entry.second, false);
+      }
+      state->pending_request_->SetReadOnly(old_flag);
+    }
+  #endif
     CEF_POST_TASK(
         CEF_UIT,
         base::BindOnce(

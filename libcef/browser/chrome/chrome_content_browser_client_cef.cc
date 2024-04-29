@@ -329,9 +329,15 @@ bool ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
       type == URLLoaderFactoryType::kNavigation,
       type == URLLoaderFactoryType::kDownload, request_initiator);
 
+#ifdef OHOS_NETWORK_LOAD
+  net_service::ProxyURLLoaderFactory::CreateProxy(
+      browser_context, factory_receiver, header_client,
+      std::move(request_handler), factory_override);
+#else
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_receiver, header_client,
       std::move(request_handler));
+#endif
 
   return true;
 }
