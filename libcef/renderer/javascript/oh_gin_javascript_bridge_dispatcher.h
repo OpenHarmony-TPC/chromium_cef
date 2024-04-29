@@ -50,6 +50,11 @@ class OhGinJavascriptBridgeDispatcher
       const base::Value::List& arguments,
       OhGinJavascriptBridgeError* error);
 
+  std::unique_ptr<base::Value> InvokeJavascriptMethodAsync(
+      ObjectID object_id,
+      const std::string& method_name,
+      const base::Value::List& arguments);
+
   std::unique_ptr<base::Value> InvokeJavascriptMethodFlowbuf(
       ObjectID object_id,
       const std::string& method_name,
@@ -69,6 +74,8 @@ class OhGinJavascriptBridgeDispatcher
       v8::Local<v8::Object> object,
       int h5_object_id,
       bool is_promise);
+
+  bool IsAsyncMethod(ObjectID object_id, const std::string& method_name);
 
  private:
   // RenderFrameObserver implementation.
