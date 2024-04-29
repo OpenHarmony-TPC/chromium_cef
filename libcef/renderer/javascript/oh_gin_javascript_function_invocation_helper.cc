@@ -182,11 +182,20 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethod(
     }
   }
 
-  std::unique_ptr<base::Value> result = dispatcher_->InvokeJavascriptMethod(
-      object->object_id(), method_name_, arguments, &error);
-  LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
-                "InvokeJavascriptMethod end";
-  return result;
+  std::unique_ptr<base::Value> result;
+  if(dispatcher_->IsAsyncMethod(object->object_id(), method_name_)) {
+    result = dispatcher_->InvokeJavascriptMethodAsync(
+        object->object_id(), method_name_, arguments);
+    LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
+                  "InvokeJavascriptMethodAsync end";
+    return result;
+  } else {
+    result = dispatcher_->InvokeJavascriptMethod(
+        object->object_id(), method_name_, arguments, &error);
+    LOG(DEBUG) << "OhGinJavascriptFunctionInvocationHelper::Invoke call "
+                  "InvokeJavascriptMethod end";
+    return result;
+  }
 }
 
 std::unique_ptr<base::Value>
@@ -195,6 +204,10 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
     OhGinJavascriptBridgeError& error,
     gin::Arguments* args,
     OhGinJavascriptBridgeObject* object) {
+  if (dispatcher_->IsAsyncMethod(object->object_id(), method_name_)) {
+    return dispatcher_->InvokeJavascriptMethodAsync(object->object_id(), method_name_, arguments);
+  }
+
   auto flowbufferAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateFlowbufferAdapter();
   if (!flowbufferAdapter) {
     return InvokeJavascriptMethod(arguments, error, args, object);

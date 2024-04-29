@@ -158,16 +158,6 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
   std::string url;
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   url = frame->GetDocument().Url().GetString().Utf8();
-  auto it = async_methods_map_.find(object_id);
-  if (it != async_methods_map_.end()) {
-    auto async_methods = it->second;
-    if (async_methods.find(method_name) != async_methods.end()) {
-      render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
-          routing_id(), object_id, url, method_name, arguments));
-      TRACE_EVENT_END0("cef", "frame_->Send");
-      return base::Value::ToUniquePtrValue(base::Value(0).Clone());
-    }
-  }
   base::Value::List result_wrapper;
   render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error));
@@ -175,6 +165,19 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethod(
     return nullptr;
   }
   return base::Value::ToUniquePtrValue(result_wrapper[0].Clone());
+}
+
+std::unique_ptr<base::Value>
+OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodAsync(
+    ObjectID object_id,
+    const std::string& method_name,
+    const base::Value::List& arguments) {
+  std::string url;
+  blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
+  url = frame->GetDocument().Url().GetString().Utf8();
+  render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
+      routing_id(), object_id, url, method_name, arguments));
+  return base::Value::ToUniquePtrValue(base::Value(0).Clone());
 }
 
 std::unique_ptr<base::Value>
@@ -187,16 +190,6 @@ OhGinJavascriptBridgeDispatcher::InvokeJavascriptMethodFlowbuf(
   std::string url;
   blink::WebLocalFrame* frame = render_frame()->GetWebFrame();
   url = frame->GetDocument().Url().GetString().Utf8();
-  auto it = async_methods_map_.find(object_id);
-  if (it != async_methods_map_.end()) {
-    auto async_methods = it->second;
-    if (async_methods.find(method_name) != async_methods.end()) {
-      render_frame()->Send(new OhGinJavascriptBridgeHostMsg_InvokeMethod_Async(
-          routing_id(), object_id, url, method_name, arguments));
-      TRACE_EVENT_END0("cef", "frame_->Send");
-      return base::Value::ToUniquePtrValue(base::Value(0).Clone());
-    }
-  }
   base::Value::List result_wrapper;
   IPC::Message* msg = new OhGinJavascriptBridgeHostMsg_InvokeMethod(
       routing_id(), object_id, url, method_name, arguments, &result_wrapper, error);
@@ -692,6 +685,19 @@ void OhGinJavascriptBridgeDispatcher::OnDoCallH5Function(
   if (v8_args != nullptr) {
     delete[] v8_args;
   }
+}
+
+bool OhGinJavascriptBridgeDispatcher::IsAsyncMethod(
+    ObjectID object_id,
+    const std::string& method_name) {
+  auto it = async_methods_map_.find(object_id);
+  if (it != async_methods_map_.end()) {
+    auto async_methods = it->second;
+    if (async_methods.find(method_name) != async_methods.end()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace NWEB
