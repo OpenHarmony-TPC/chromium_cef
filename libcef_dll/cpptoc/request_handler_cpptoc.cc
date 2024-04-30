@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2a9e27516ca71f15e3e029fc29108ccb398b8d5a$
+// $hash=d62fbf1af312a46028926e2367f4e097043c6fc0$
 //
 
 #include "libcef_dll/cpptoc/request_handler_cpptoc.h"
@@ -512,6 +512,58 @@ request_handler_on_all_certificate_error(struct _cef_request_handler_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK request_handler_on_render_process_not_responding(
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser,
+    const cef_string_t* referrer,
+    int pid,
+    int reason) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: referrer; type: string_byref_const
+  DCHECK(referrer);
+  if (!referrer) {
+    return;
+  }
+
+  // Execute
+  CefRequestHandlerCppToC::Get(self)->OnRenderProcessNotResponding(
+      CefBrowserCToCpp::Wrap(browser), CefString(referrer), pid, reason);
+}
+
+void CEF_CALLBACK request_handler_on_render_process_responding(
+    struct _cef_request_handler_t* self,
+    cef_browser_t* browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefRequestHandlerCppToC::Get(self)->OnRenderProcessResponding(
+      CefBrowserCToCpp::Wrap(browser));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -534,6 +586,10 @@ CefRequestHandlerCppToC::CefRequestHandlerCppToC() {
       request_handler_should_override_url_loading;
   GetStruct()->on_all_certificate_error =
       request_handler_on_all_certificate_error;
+  GetStruct()->on_render_process_not_responding =
+      request_handler_on_render_process_not_responding;
+  GetStruct()->on_render_process_responding =
+      request_handler_on_render_process_responding;
 }
 
 // DESTRUCTOR - Do not edit by hand.

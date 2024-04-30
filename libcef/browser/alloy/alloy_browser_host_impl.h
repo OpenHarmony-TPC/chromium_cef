@@ -506,6 +506,11 @@ bool NeedsReload() override;
   void SetDrawMode(int mode) override;
   bool GetPendingSizeStatus() override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
+#if defined(OHOS_RENDERER_ANR_DUMP)
+  void OnDumpJavaScriptStackCallback(int pid,
+		  content::RenderProcessNotRespondingReason reason,
+                                     const std::string& stack);
+#endif
 
   CefWindowHandle opener_;
   const bool is_windowless_;

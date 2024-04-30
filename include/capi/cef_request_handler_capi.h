@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=edb0bd501ae389682218a058aef153c191f5f8d3$
+// $hash=b94100cfe1feea0a2b66e806163f1d5081299d1c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
@@ -255,6 +255,23 @@ typedef struct _cef_request_handler_t {
       int is_fatal_error,
       struct _cef_sslinfo_t* ssl_info,
       struct _cef_callback_t* callback);
+
+  ///
+  /// Called when render process not responding
+  ///
+  void(CEF_CALLBACK* on_render_process_not_responding)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* referrer,
+      int pid,
+      int reason);
+
+  ///
+  /// Called when render process responding again
+  ///
+  void(CEF_CALLBACK* on_render_process_responding)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser);
 } cef_request_handler_t;
 
 #ifdef __cplusplus

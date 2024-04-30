@@ -1,20 +1,10 @@
 diff a/include/cef_browser.h b/include/cef_browser.h	(rejected hunks)
-@@ -871,6 +871,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
-   /*--cef()--*/
-   virtual void WasOccluded(bool occluded) = 0;
+@@ -1866,7 +1866,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
+   virtual void SetNWebId(int nWebId) = 0;
  
-+  ///
-+  /// Running and do something when the window show
-+  ///
-+  /*--cef()--*/
-+  virtual void OnWindowShow() = 0;
-+
-+  ///
-+  /// Running and do something when the window hide
-+  ///
-+  /*--cef()--*/
-+  virtual void OnWindowHide() = 0;
-+
    ///
-   /// Send touch event list to the browser for a windowless browser.
+-  // get pendingSizeStatus.
++  /// get pendingSizeStatus.
    ///
+   /*--cef()--*/
+   virtual bool GetPendingSizeStatus() = 0;
