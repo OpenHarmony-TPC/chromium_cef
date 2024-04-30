@@ -287,6 +287,22 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
                              CefRefPtr<CefOpenAppLinkCallback> callback) {
     return false;
   } 
+
+  ///
+  /// Called when render process not responding
+  ///
+  /*--cef()--*/
+  virtual void OnRenderProcessNotResponding(CefRefPtr<CefBrowser> browser,
+                                          const CefString& referrer,
+                                          int pid,
+                                          int reason) {}
+
+  ///
+  /// Called when render process responding again
+  ///
+  /*--cef()--*/
+  virtual void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) {}
+
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

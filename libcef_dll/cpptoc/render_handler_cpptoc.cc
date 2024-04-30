@@ -1011,7 +1011,7 @@ render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
 
 void CEF_CALLBACK
 render_handler_release_resize_hold(struct _cef_render_handler_t* self,
-                                     cef_browser_t* browser) {
+                                   cef_browser_t* browser) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1027,7 +1027,8 @@ render_handler_release_resize_hold(struct _cef_render_handler_t* self,
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(CefBrowserCToCpp::Wrap(browser));
+  CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(
+      CefBrowserCToCpp::Wrap(browser));
 }
 
 void CEF_CALLBACK

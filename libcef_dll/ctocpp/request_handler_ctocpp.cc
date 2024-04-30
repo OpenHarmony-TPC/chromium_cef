@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d70f46e6216858e5ff0f866380922c61fed6ec11$
+// $hash=ba3f1cba485d1c29dca30290c91eb83516e1b820$
 //
 
 #include "libcef_dll/ctocpp/request_handler_ctocpp.h"
@@ -511,6 +511,61 @@ bool CefRequestHandlerCToCpp::OnAllCertificateError(
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRequestHandlerCToCpp::OnRenderProcessNotResponding(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& referrer,
+    int pid,
+    int reason) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_render_process_not_responding)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: referrer; type: string_byref_const
+  DCHECK(!referrer.empty());
+  if (referrer.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_render_process_not_responding(_struct,
+                                            CefBrowserCppToC::Wrap(browser),
+                                            referrer.GetStruct(), pid, reason);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRequestHandlerCToCpp::OnRenderProcessResponding(
+    CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_render_process_responding)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_render_process_responding(_struct,
+                                        CefBrowserCppToC::Wrap(browser));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4127fb7b8ba4705385ffde994afcfd54d9ab6377$
+// $hash=95f4e2e58fed7cc14c52f8c7164f4a0f7a63c6f4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_
@@ -95,6 +95,11 @@ class CefRequestHandlerCToCpp
                              bool is_fatal_error,
                              CefRefPtr<CefSSLInfo> ssl_info,
                              CefRefPtr<CefCallback> callback) override;
+  void OnRenderProcessNotResponding(CefRefPtr<CefBrowser> browser,
+                                    const CefString& referrer,
+                                    int pid,
+                                    int reason) override;
+  void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_
