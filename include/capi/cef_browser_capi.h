@@ -1861,6 +1861,11 @@ typedef struct _cef_browser_host_t {
                                               cef_string_list_t method_list,
                                               int32_t object_id,
                                               int is_async);
+
+  ///
+  /// Set the fit content mode
+  ///
+  void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self, int mode);
 } cef_browser_host_t;
 
 ///

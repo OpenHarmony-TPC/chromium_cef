@@ -505,6 +505,7 @@ bool NeedsReload() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
   bool GetPendingSizeStatus() override;
+  void SetFitContentMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 #if defined(OHOS_RENDERER_ANR_DUMP)
   void OnDumpJavaScriptStackCallback(int pid,

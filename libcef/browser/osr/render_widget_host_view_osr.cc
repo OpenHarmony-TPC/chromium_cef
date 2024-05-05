@@ -1285,6 +1285,10 @@ void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::SetFitContentMode(int mode) {
+  is_fit_content_ = mode;
+}
+
 void CefRenderWidgetHostViewOSR::UpdateDrawMode() {
   int mode = browser_impl_->GetDrawMode();
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
@@ -2180,7 +2184,11 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
       gesture_provider_.OnTouchEvent(pointer_state_);
 
   blink::WebTouchEvent touch_event = ui::CreateWebTouchEventFromMotionEvent(
-      pointer_state_, result.moved_beyond_slop_region, false);
+      pointer_state_, result.moved_beyond_slop_region, false
+#if BUILDFLAG(IS_OHOS)
+      , is_fit_content_
+#endif
+  );
 
   pointer_state_.CleanupRemovedTouchPoints(event);
 

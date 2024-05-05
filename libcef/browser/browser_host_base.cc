@@ -1611,6 +1611,10 @@ void CefBrowserHostBase::SetDrawMode(int mode) {
   // todo(ohos):impl this function then remove todo
 }
 
+void CefBrowserHostBase::SetFitContentMode(int mode) {
+  // todo(ohos):impl this function then remove todo
+}
+
 bool CefBrowserHostBase::GetPendingSizeStatus() {
   // todo(ohos):impl this function then remove todo
   return false;
