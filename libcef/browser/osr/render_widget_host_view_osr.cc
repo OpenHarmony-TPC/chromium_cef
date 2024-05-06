@@ -1671,6 +1671,15 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
       metadata.selection.end != selection_end_) {
     selection_start_ = metadata.selection.start;
     selection_end_ = metadata.selection.end;
+#ifdef OHOS_CLIPBOARD
+    // When all is selected, the right handle coordinates are in front of the left handle.
+    if (metadata.selection.start.edge_end().y() > metadata.selection.end.edge_end().y()) {
+      selection_end_.SetEdgeEnd(gfx::PointF(metadata.clipped_selection_bounds.x() +
+        metadata.clipped_selection_bounds.width(),
+        metadata.clipped_selection_bounds.y() +
+        metadata.clipped_selection_bounds.height()));
+    }
+#endif
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
                                                               selection_end_);
   }
