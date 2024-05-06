@@ -20,7 +20,6 @@ base::Time SocPerUtil::last_time_boost_timestamp;
 
 namespace {
 const int SOC_PERF_CONFIG_ID = 10020;
-const int SOC_PERF_SLIDE_NORMAL_CONFIG_ID = 10025;
 const int SOC_PERF_WEB_GUSTURE_ID = 10012;
 const int MIN_LAYER_NUM = 50;
 const int MIN_VIDEO_LAYOUT_NUM = 1;
@@ -34,11 +33,7 @@ void SocPerUtil::EnableFlingBoost() {
                video_layout_num, "layer_num", layer_num);
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GUSTURE_ID, false);
-
-  OHOS::NWeb::OhosAdapterHelper::GetInstance()
-      .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_SLIDE_NORMAL_CONFIG_ID, true);
+      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GUSTURE_ID, true);
 
   if (video_layout_num >= MIN_VIDEO_LAYOUT_NUM || layer_num >= MIN_LAYER_NUM) {
     OHOS::NWeb::OhosAdapterHelper::GetInstance()
@@ -49,11 +44,6 @@ void SocPerUtil::EnableFlingBoost() {
 
 void SocPerUtil::DisableFlingBoost() {
   TRACE_EVENT0("power", "SocPerUtil::DisableFlingBoost");
-
-  OHOS::NWeb::OhosAdapterHelper::GetInstance()
-      .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_SLIDE_NORMAL_CONFIG_ID, false);
-
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_CONFIG_ID, false);

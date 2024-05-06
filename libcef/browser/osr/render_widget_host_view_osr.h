@@ -639,6 +639,10 @@ class CefRenderWidgetHostViewOSR
   bool for_browser_ = false;
 #endif
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+  bool isBoosting_ = false;
+#endif
+
 #ifdef OHOS_CLIPBOARD
   gfx::Rect clipped_selection_bounds_;
 #endif  // OHOS_CLIPBOARD
