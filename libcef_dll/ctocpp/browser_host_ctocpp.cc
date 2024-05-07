@@ -3064,6 +3064,20 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
   }
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_fit_content_mode)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_fit_content_mode(_struct, mode);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

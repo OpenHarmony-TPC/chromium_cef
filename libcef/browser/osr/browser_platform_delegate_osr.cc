@@ -364,6 +364,10 @@ void CefBrowserPlatformDelegateOsr::SendTouchEventList(const std::vector<CefTouc
   }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  view->SetFitContentMode(fit_content_mode_);
+#endif
+
   view->SendTouchEventList(event_adjust_list);
 
   for (auto& event_adjust : event_adjust_list) {
@@ -904,6 +908,14 @@ void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
   }
   drawMode_ = mode;
   isNeedReDrawMode_ = true;
+}
+
+void CefBrowserPlatformDelegateOsr::SetFitContentMode(int mode) {
+  fit_content_mode_ = mode;
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetFitContentMode(mode);
+  }
 }
 
 bool CefBrowserPlatformDelegateOsr::GetPendingSizeStatus() {

@@ -276,6 +276,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
                              bool is_async) override;
+  void SetFitContentMode(int mode) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

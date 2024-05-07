@@ -113,8 +113,10 @@ class CefBrowserPlatformDelegateOsr
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
   bool GetPendingSizeStatus() override;
+  void SetFitContentMode(int mode) override;
   int drawMode_ = -1;
   bool isNeedReDrawMode_ = false;
+  int fit_content_mode_ = 0;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT

@@ -416,6 +416,7 @@ class CefBrowserPlatformDelegate {
   virtual void SetDrawRect(int x, int y, int width, int height) {}
   virtual void SetDrawMode(int mode) {}
   virtual bool GetPendingSizeStatus() { return false; }
+  virtual void SetFitContentMode(int mode) {}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT

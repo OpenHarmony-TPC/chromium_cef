@@ -2534,6 +2534,11 @@ void AlloyBrowserHostImpl::SetDrawMode(int mode) {
   }
 }
 
+void AlloyBrowserHostImpl::SetFitContentMode(int mode) {
+  if (platform_delegate_)
+    platform_delegate_->SetFitContentMode(mode);
+}
+
 int AlloyBrowserHostImpl::GetDrawMode() {
   return drawMode_;
 }

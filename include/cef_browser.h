@@ -1890,6 +1890,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                      const std::vector<CefString>& method_list,
                                      const int32_t object_id,
                                      bool is_async) = 0;
+
+  ///
+  /// Set the fit content mode
+  ///
+  /*--cef()--*/
+  virtual void SetFitContentMode(int mode) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

@@ -308,6 +308,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void RemoveJavaScriptOnDocumentEnd() override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  void SetFitContentMode(int mode) override;
   bool GetPendingSizeStatus() override;
   void SetZoomLevel(double zoomLevel) override;
   double GetZoomLevel() override;
