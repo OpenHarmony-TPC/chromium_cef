@@ -2265,14 +2265,18 @@ void CefRenderWidgetHostViewOSR::ResetGestureDetection(bool is_lost_focus) {
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
 void CefRenderWidgetHostViewOSR::OnTouchDown() {
   if (pointer_state_.GetPointerCount() == 0) {
-    OHOS::NWeb::OhosAdapterHelper::GetInstance()
-      .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+    if (isBoosting_) {
+      OHOS::NWeb::OhosAdapterHelper::GetInstance()
+          .CreateSocPerfClientAdapter()
+          ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+      isBoosting_ = false;
+    }
     return;
   }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  isBoosting_ = true;
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
       weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
