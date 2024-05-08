@@ -1124,6 +1124,14 @@ void CefFrameHostImpl::GetHitData(int& type, CefString& extra_data) {
                         &type, &temp_extra_data));
   extra_data = temp_extra_data;
 }
+
+void CefFrameHostImpl::UpdateDrawRect() {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](const RenderFrameType& render_frame) {
+                          render_frame->UpdateDrawRect();
+                        }));
+}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)
