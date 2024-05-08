@@ -466,6 +466,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.custom_video_player_enable = cef.custom_video_player_enable;
   web.custom_video_player_overlay = cef.custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+  web.record_whole_document = cef.record_whole_document;
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

@@ -859,6 +859,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
   settings_.user_gesture_required = browser_settings.user_gesture_required;
   settings_.pinch_smooth_mode = browser_settings.pinch_smooth_mode;
+  settings_.record_whole_document = browser_settings.record_whole_document;
 #if defined(OHOS_INPUT_EVENTS)
   settings_.hide_vertical_scrollbars =
       browser_settings.hide_vertical_scrollbars;

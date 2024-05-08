@@ -698,6 +698,7 @@ typedef struct _cef_browser_settings_t {
   bool is_safe_browsing_enable;
   int draw_mode;
   cef_state_t text_autosizing_enabled;
+  bool record_whole_document;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
