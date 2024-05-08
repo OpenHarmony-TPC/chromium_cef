@@ -919,28 +919,14 @@ const extensions::Extension* GetEnabledExtensionFromSiteURL(
 }
 
 #if defined(OHOS_MULTI_WINDOW)
-static constexpr base::TimeDelta kPopupWindowCallbackTimeout =
-    base::Milliseconds(500);
 class PopupWindowCallbackImpl : public CefCallback {
  public:
   explicit PopupWindowCallbackImpl(
       content::mojom::FrameHost::GetCreateNewWindowCallback callback)
       : callback_(std::move(callback)),
-        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {
-    timeout_timer_ = std::make_unique<base::OneShotTimer>();
-    if (timeout_timer_) {
-      timeout_timer_->Start(
-          FROM_HERE, kPopupWindowCallbackTimeout,
-          base::BindOnce(&PopupWindowCallbackImpl::Cancel, this));
-    }
-  }
+        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {}
 
-  ~PopupWindowCallbackImpl() override {
-    if (timeout_timer_) {
-      timeout_timer_->Stop();
-      timeout_timer_.reset();
-    }
-  }
+  ~PopupWindowCallbackImpl() override {}
 
   void Continue() override {
     if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
@@ -969,7 +955,6 @@ class PopupWindowCallbackImpl : public CefCallback {
  private:
   content::mojom::FrameHost::GetCreateNewWindowCallback callback_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
-  std::unique_ptr<base::OneShotTimer> timeout_timer_;
 
   IMPLEMENT_REFCOUNTING(PopupWindowCallbackImpl);
 };
