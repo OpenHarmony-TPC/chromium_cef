@@ -738,6 +738,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
+      if (controller->GetInsertHandle() && controller->GetInsertHandle()->alpha()) {
+        LOG(INFO) << "Selection handles is show";
+        return;
+      }
       if (browser && !browser->web_contents()->IsShowingContextMenu()) {
         LOG(INFO) << "Current Quick Menu IS Not Showing";
         UpdateQuickMenu();
