@@ -1896,6 +1896,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetFitContentMode(int mode) = 0;
+
+  ///
+  /// update draw_rect state.
+  ///
+  /*--cef()--*/
+  virtual void UpdateDrawRect() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

@@ -441,6 +441,7 @@ bool NeedsReload() override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable) override;
+  void UpdateDrawRect() override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;

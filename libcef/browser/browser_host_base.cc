@@ -3163,6 +3163,13 @@ uint64_t CefBrowserHostBase::GetCurrentTimestamp() {
              now.time_since_epoch())
       .count();
 }
+
+void CefBrowserHostBase::UpdateDrawRect() {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->UpdateDrawRect();
+  }
+}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_NETWORK_CONNINFO

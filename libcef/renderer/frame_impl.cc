@@ -1358,6 +1358,17 @@ void CefFrameImpl::SetOverscrollMode(int mode) {
 void CefFrameImpl::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
 }
+
+void CefFrameImpl::UpdateDrawRect() {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "UpdateDrawRect get webview failed";
+    return;
+  }
+  webview->UpdateDrawRect();
+}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,

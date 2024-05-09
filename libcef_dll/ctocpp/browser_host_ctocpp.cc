@@ -3078,6 +3078,20 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) 
   _struct->set_fit_content_mode(_struct, mode);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::UpdateDrawRect() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_draw_rect)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->update_draw_rect(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

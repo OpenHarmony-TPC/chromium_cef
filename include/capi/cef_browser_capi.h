@@ -1866,6 +1866,11 @@ typedef struct _cef_browser_host_t {
   /// Set the fit content mode
   ///
   void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self, int mode);
+
+  ///
+  ///  update draw_rect state.
+  ///
+  void(CEF_CALLBACK* update_draw_rect)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///
