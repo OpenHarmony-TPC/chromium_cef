@@ -3064,6 +3064,23 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
   }
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                  double vx,
+                                                  double vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, send_touchpad_fling_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->send_touchpad_fling_event(_struct, &event, vx, vy);
+}
+
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) {
   shutdown_checker::AssertNotShutdown();
 

@@ -2045,6 +2045,24 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
   }
 }
 
+void CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent(
+    blink::WebGestureEvent event) {
+  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent");
+
+  if (render_widget_host_ && render_widget_host_->GetView()) {
+    if (ShouldRouteEvents()) {
+      render_widget_host_->delegate()
+          ->GetInputEventRouter()
+          ->RouteGestureEvent(
+              this, const_cast<blink::WebGestureEvent*>(&event),
+              ui::LatencyInfo(ui::SourceEventType::WHEEL));
+    } else {
+      render_widget_host_->GetView()->ProcessGestureEvent(
+          event, ui::LatencyInfo(ui::SourceEventType::WHEEL));
+    }
+  }
+}
+
 void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
     const blink::WebMouseWheelEvent& event) {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendMouseWheelEvent");

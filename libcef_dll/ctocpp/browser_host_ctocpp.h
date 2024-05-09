@@ -276,6 +276,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
                              bool is_async) override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event,
+                              double vx,
+                              double vy) override;
   void SetFitContentMode(int mode) override;
   void UpdateDrawRect() override;
 };

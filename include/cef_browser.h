@@ -1892,6 +1892,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                      bool is_async) = 0;
 
   ///
+  /// SendTouchpadFlingEvent
+  ///
+  /*--cef()--*/
+  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) = 0;
+
+  ///
   /// Set the fit content mode
   ///
   /*--cef()--*/

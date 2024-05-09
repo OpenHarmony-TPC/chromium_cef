@@ -242,6 +242,7 @@ class CefBrowserPlatformDelegate {
                                    bool mouseUp,
                                    int clickCount);
   virtual void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave);
+  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy);
   virtual void SendMouseWheelEvent(const CefMouseEvent& event,
                                    int deltaX,
                                    int deltaY);
