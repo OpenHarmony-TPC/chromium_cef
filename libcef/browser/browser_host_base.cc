@@ -1180,6 +1180,24 @@ void CefBrowserHostBase::SendMouseMoveEvent(const CefMouseEvent& event,
   }
 }
 
+void CefBrowserHostBase::SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) {
+  if (vx == 0 && vy == 0) {
+    // Nothing to do.
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHostBase::SendTouchpadFlingEvent, this,
+                                 event, vx, vy));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->SendTouchpadFlingEvent(event, vx, vy);
+  }
+}
+
 void CefBrowserHostBase::SendMouseWheelEvent(const CefMouseEvent& event,
                                              int deltaX,
                                              int deltaY) {

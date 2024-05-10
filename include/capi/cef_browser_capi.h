@@ -1863,6 +1863,15 @@ typedef struct _cef_browser_host_t {
                                               int is_async);
 
   ///
+  /// Send a touchpad fling event to the browser.
+  ///
+  void(CEF_CALLBACK* send_touchpad_fling_event)(
+      struct _cef_browser_host_t* self,
+      const cef_mouse_event_t* event,
+      double vx,
+      double vy);
+
+  ///
   /// Set the fit content mode
   ///
   void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self, int mode);

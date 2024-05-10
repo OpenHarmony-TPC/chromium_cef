@@ -46,6 +46,9 @@ class CefBrowserPlatformDelegateOsr
                            bool mouseUp,
                            int clickCount) override;
   void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event,
+                              double vx,
+                              double vy) override;
   void SendMouseWheelEvent(const CefMouseEvent& event,
                            int deltaX,
                            int deltaY) override;

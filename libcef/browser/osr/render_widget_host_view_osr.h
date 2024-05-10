@@ -331,6 +331,7 @@ class CefRenderWidgetHostViewOSR
   void SendExternalBeginFrame();
   void SendKeyEvent(const content::NativeWebKeyboardEvent& event);
   void SendMouseEvent(const blink::WebMouseEvent& event);
+  void SendTouchpadFlingEvent(blink::WebGestureEvent event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
 #ifdef OHOS_CLIPBOARD

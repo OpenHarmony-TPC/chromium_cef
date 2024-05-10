@@ -207,6 +207,25 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
   view->SendMouseEvent(web_event);
 }
 
+void CefBrowserPlatformDelegateOsr::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                           double vx,
+                                                           double vy) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+
+  blink::WebGestureEvent fling_start =
+      native_delegate_->TranslateTouchpadFlingEvent(event);
+  fling_start.SetType(blink::WebInputEvent::Type::kGestureFlingStart);
+  fling_start.data.fling_start.velocity_x = vx;
+  fling_start.data.fling_start.velocity_y = vy;
+  fling_start.data.fling_start.target_viewport = false;
+  fling_start.SetSourceDevice(blink::mojom::GestureDevice::kTouchpad);
+
+  view->SendTouchpadFlingEvent(fling_start);
+}
+
 void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     const CefMouseEvent& event,
     int deltaX,

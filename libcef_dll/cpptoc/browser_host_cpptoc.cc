@@ -3338,6 +3338,32 @@ browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
       is_async ? true : false);
 }
 
+void CEF_CALLBACK
+browser_host_send_touchpad_fling_event(struct _cef_browser_host_t* self,
+                                       const cef_mouse_event_t* event,
+                                       double vx,
+                                       double vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: event; type: simple_byref_const
+  DCHECK(event);
+  if (!event) {
+    return;
+  }
+
+  // Translate param: event; type: simple_byref_const
+  CefMouseEvent eventVal = event ? *event : CefMouseEvent();
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SendTouchpadFlingEvent(eventVal, vx, vy);
+}
+
 void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* self,
                                              int mode) {
   shutdown_checker::AssertNotShutdown();
@@ -3540,6 +3566,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->needs_reload = browser_host_needs_reload;
   GetStruct()->terminate_render_process = browser_host_terminate_render_process;
   GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
+  GetStruct()->send_touchpad_fling_event = browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
 }
 

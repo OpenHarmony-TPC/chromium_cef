@@ -175,6 +175,12 @@ void CefBrowserPlatformDelegate::SendMouseMoveEvent(const CefMouseEvent& event,
   NOTIMPLEMENTED();
 }
 
+void CefBrowserPlatformDelegate::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                        double vx,
+                                                        double vy) {
+  NOTIMPLEMENTED();
+}
+
 void CefBrowserPlatformDelegate::SendMouseWheelEvent(const CefMouseEvent& event,
                                                      int deltaX,
                                                      int deltaY) {
