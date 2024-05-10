@@ -467,6 +467,15 @@ int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
 }
 #endif
 
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
+                                                    int top,
+                                                    int right,
+                                                    int bottom) {
+  NOTIMPLEMENTED();
+}
+#endif
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {

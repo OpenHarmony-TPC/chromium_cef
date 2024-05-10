@@ -167,6 +167,15 @@ typedef struct _cef_display_handler_t {
       int has_audio_access);
 
   ///
+  /// Called when the viewport-fit meta is detected for web page.
+  /// changed.
+  ///
+  void(CEF_CALLBACK* on_viewport_fit_change)(
+      struct _cef_display_handler_t* self,
+      struct _cef_browser_t* browser,
+      int viewport_fit);
+
+  ///
   /// onReceivedTouchIconUrl.
   ///
   void(CEF_CALLBACK* on_received_touch_icon_url)(

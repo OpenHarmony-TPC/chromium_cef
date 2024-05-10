@@ -161,6 +161,13 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                                    bool has_video_access,
                                    bool has_audio_access) {}
 
+  ///
+  /// Called when the viewport-fit meta is detected for web page.
+  ///
+  /*--cef()--*/
+  virtual void OnViewportFitChange(CefRefPtr<CefBrowser> browser,
+                                   int viewport_fit) {}
+
 #if BUILDFLAG(IS_OHOS)
   ///
   /// onReceivedTouchIconUrl.
