@@ -738,7 +738,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
-      if (controller->GetInsertHandle() && controller->GetInsertHandle()->alpha()) {
+      if (controller && controller->GetInsertHandle() && controller->GetInsertHandle()->alpha()) {
         LOG(INFO) << "Selection handles is show";
         return;
       }
