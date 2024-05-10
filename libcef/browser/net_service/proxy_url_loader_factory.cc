@@ -860,6 +860,14 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
   intercept_request_ = intercept_request;
   intercept_only_ = intercept_only;
 
+  // We donn't create a urlloader for redirect, so should not intercept the redirect.
+#if BUILDFLAG(IS_OHOS)
+  if (target_loader_) {
+    InterceptResponseReceived(original_url, nullptr);
+    return;
+  }
+#endif
+
   if (input_stream_previously_failed_ || !intercept_request_) {
     // Equivalent to no interception.
     InterceptResponseReceived(original_url, nullptr);
@@ -1231,8 +1239,17 @@ void InterceptedRequest::OnDestroy() {
 
   factory_->request_handler_->OnRequestComplete(id_, request_, status_);
 
+#ifdef OHOS_NETWORK_LOAD
+  if (request_.method == "OPTIONS") {
+    delete this;
+  } else {
+    // Destroys |this|.
+    factory_->RemoveRequest(this);
+  }
+#else
   // Destroys |this|.
   factory_->RemoveRequest(this);
+#endif
 }
 
 void InterceptedRequest::OnProcessRequestHeaders(
@@ -1472,6 +1489,59 @@ void ProxyURLLoaderFactory::SetDisconnectCallback(
   on_disconnect_ = std::move(on_disconnect);
 }
 
+#ifdef OHOS_NETWORK_LOAD
+// static
+void ProxyURLLoaderFactory::CreateProxy(
+    content::BrowserContext* browser_context,
+    mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+    mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
+        header_client,
+    std::unique_ptr<InterceptedRequestHandler> request_handler,
+    network::mojom::URLLoaderFactoryOverridePtr* factory_override) {
+  CEF_REQUIRE_UIT();
+  DCHECK(request_handler);
+
+  mojo::PendingReceiver<network::mojom::URLLoaderFactory> proxied_receiver;
+  mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote;
+  
+  if (factory_override) {
+    // We are interested in factories "inside" of CORS, so use
+    // |factory_override|.
+    *factory_override = network::mojom::URLLoaderFactoryOverride::New();
+    proxied_receiver = 
+        (*factory_override)
+            ->overriding_factory.InitWithNewPipeAndPassReceiver();
+    (*factory_override)->overridden_factory_receiver = 
+        target_factory_remote.InitWithNewPipeAndPassReceiver();
+    (*factory_override)->skip_cors_enabled_scheme_check = true;
+  } else {
+    // In this case, |factory_override| is not given. But all callers of
+    // ContentBrowserClient::WillCreateURLLoaderFactory guarantee that
+    // |factory_override| is null only when the security features on the network
+    // service is no-op for requests coming to the URLLoaderFactory. Hence we
+    // can use |factory_receiver| here.
+    proxied_receiver = std::move(*factory_receiver);
+    *factory_receiver = target_factory_remote.InitWithNewPipeAndPassReceiver();
+  }
+
+  mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
+      header_client_receiver;
+  if (header_client) {
+    header_client_receiver = header_client->InitWithNewPipeAndPassReceiver();
+  }
+
+  content::ResourceContext* resource_context =
+      browser_context->GetResourceContext();
+  DCHECK(resource_context);
+
+  CEF_POST_TASK(
+      CEF_IOT,
+      base::BindOnce(
+          &ProxyURLLoaderFactory::CreateOnIOThread, std::move(proxied_receiver),
+          std::move(target_factory_remote), std::move(header_client_receiver),
+          base::Unretained(resource_context), std::move(request_handler)));
+}
+#else
 // static
 void ProxyURLLoaderFactory::CreateProxy(
     content::BrowserContext* browser_context,
@@ -1503,6 +1573,7 @@ void ProxyURLLoaderFactory::CreateProxy(
           std::move(target_factory_remote), std::move(header_client_receiver),
           base::Unretained(resource_context), std::move(request_handler)));
 }
+#endif
 
 // static
 void ProxyURLLoaderFactory::CreateProxy(
@@ -1574,7 +1645,14 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
+#ifdef OHOS_NETWORK_LOAD
+  // Donn't track options request, because the request id for options always 0.
+  if (request.method != "OPTIONS") {
+    requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
+  }
+#else
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
+#endif
 #if BUILDFLAG(IS_OHOS)
   req->Restart(false);
 #else
