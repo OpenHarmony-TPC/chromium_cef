@@ -432,6 +432,10 @@ class CefRenderWidgetHostViewOSR
   std::vector<int8_t> GetWordSelection(const std::string& text, int8_t offset) override;
 #endif
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom);
+#endif
+
  private:
   void SetFrameRate();
   bool SetScreenInfo();

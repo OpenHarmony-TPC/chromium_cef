@@ -171,6 +171,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
       const content::LoadCommittedDetails& load_details) override;
 #endif  // defined(OHOS_NAVIGATION)
 
+#if defined(OHOS_DISPLAY_CUTOUT)
+  void ViewportFitChanged(blink::mojom::ViewportFit value) override;
+#endif
+
   // NotificationObserver methods.
   void Observe(int type,
                const content::NotificationSource& source,

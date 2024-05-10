@@ -413,7 +413,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
   content::Referrer referrer = content::Referrer::SanitizeForRequest(
-      gurl, content::Referrer(web_contents->GetLastCommittedURL(), 
+      gurl, content::Referrer(web_contents->GetLastCommittedURL(),
                               network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
   manager->DownloadUrl(std::move(params));
@@ -3560,7 +3560,7 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
 
   auto options = std::make_shared<oh_code_cache::CacheOptions>(
       responseHeaders, cacheOptions->IsModule(), cacheOptions->IsTopLevel());
-  
+
   oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,
       base::BindOnce(&CefBrowserHostBase::WriteResponseCache, this, url, script, options),
@@ -3600,7 +3600,7 @@ void CefBrowserHostBase::OnDidWriteResponseCache(const std::string& url,
 
   GenerateCodeCache(url, script, cacheOptions, std::move(callback));
 }
-  
+
 void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
                                            const std::string& script,
                                            std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
@@ -3631,5 +3631,28 @@ void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
 bool CefBrowserHostBase::NeedsReload() {
   // TODO(ohos): please impl the function and remove this comment.
   return false;
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserHostBase::OnSafeInsetsChange(int left,
+                                            int top,
+                                            int right,
+                                            int bottom) {
+  if (left == 0 && top == 0 && right == 0 && bottom == 0) {
+    // Nothing to do.
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHostBase::OnSafeInsetsChange, this,
+                                 left, top, right, bottom));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->OnSafeInsetsChange(left, top, right, bottom);
+  }
 }
 #endif
