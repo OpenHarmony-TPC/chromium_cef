@@ -738,6 +738,20 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnWindowHide() {
   _struct->on_window_hide(_struct);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnOnlineRenderToForeground() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_online_render_to_foreground)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_online_render_to_foreground(_struct);
+}
+
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SendTouchEventList(
     const std::vector<CefTouchEvent>& event_list) {

@@ -767,6 +767,31 @@ void AlloyBrowserHostImpl::OnWindowHide() {
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
   is_hidden_ = true;
   ReportRenderProcessStatus();
+  SetFrameRateLinkerEnable(false);
+}
+
+void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnOnlineRenderToForeground");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnOnlineRenderToForeground";
+  SetFrameRateLinkerEnable(true);
+}
+
+void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
+{
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      return;
+    }
+    OHOS::NWeb::OhosAdapterHelper::GetInstance().GetVSyncAdapter().SetFrameRateLinkerEnable(enable);
+  }
 }
 
 void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
@@ -2004,7 +2029,7 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, state);
   }
 
-#if BUILDFLAG(IS_OHOS) 
+#if BUILDFLAG(IS_OHOS)
   if (type == cef_media_type_t::VIDEO) {
     has_video_playing_ = false;
     if (set_lower_frame_rate_) {
@@ -2025,7 +2050,7 @@ void AlloyBrowserHostImpl::UpdateVSyncFrequency() {
     LOG(DEBUG) << "UpdateVSyncFrequency Fail due to no video playing";
     return;
   }
-  
+
   if (has_touch_event_) {
     LOG(DEBUG) << "UpdateVSyncFrequency Fail due to touch event";
     has_touch_event_ = false;
@@ -2049,7 +2074,7 @@ void AlloyBrowserHostImpl::ResetVSyncFrequency() {
     LOG(DEBUG) << "VSync adjustment is only available for mobile deive";
     return;
   }
-  
+
   auto rvh = web_contents()->GetRenderViewHost();
   if (rvh && rvh->GetWidget()) {
     CefRenderWidgetHostViewOSR* view =
@@ -2309,7 +2334,8 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   }
   ReportWindowStatus(true);
   ReportRenderProcessStatus();
-
+  LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
+  SetFrameRateLinkerEnable(!is_hidden_);
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif

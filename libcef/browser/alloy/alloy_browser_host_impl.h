@@ -128,6 +128,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
@@ -493,6 +494,7 @@ bool NeedsReload() override;
   void ReportRenderProcessStatus();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
+  void SetFrameRateLinkerEnable(bool enable);
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

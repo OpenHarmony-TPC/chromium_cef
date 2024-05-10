@@ -829,6 +829,21 @@ browser_host_on_window_hide(struct _cef_browser_host_t* self) {
 }
 
 void CEF_CALLBACK
+browser_host_on_online_render_to_foreground(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnOnlineRenderToForeground();
+}
+
+void CEF_CALLBACK
 browser_host_send_touch_event_list(struct _cef_browser_host_t* self,
                                    size_t event_listCount,
                                    cef_touch_event_t const* event_list) {
@@ -3419,6 +3434,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_occluded = browser_host_was_occluded;
   GetStruct()->on_window_show = browser_host_on_window_show;
   GetStruct()->on_window_hide = browser_host_on_window_hide;
+  GetStruct()->on_online_render_to_foreground = browser_host_on_online_render_to_foreground;
   GetStruct()->send_touch_event_list = browser_host_send_touch_event_list;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;

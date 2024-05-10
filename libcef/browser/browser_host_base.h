@@ -416,6 +416,7 @@ bool NeedsReload() override;
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;

@@ -413,7 +413,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
   content::Referrer referrer = content::Referrer::SanitizeForRequest(
-      gurl, content::Referrer(web_contents->GetLastCommittedURL(), 
+      gurl, content::Referrer(web_contents->GetLastCommittedURL(),
                               network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
   manager->DownloadUrl(std::move(params));
@@ -3042,6 +3042,10 @@ void CefBrowserHostBase::OnWindowHide() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+void CefBrowserHostBase::OnOnlineRenderToForeground() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
 void CefBrowserHostBase::SendTouchEventList(
     const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.
@@ -3578,7 +3582,7 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
 
   auto options = std::make_shared<oh_code_cache::CacheOptions>(
       responseHeaders, cacheOptions->IsModule(), cacheOptions->IsTopLevel());
-  
+
   oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,
       base::BindOnce(&CefBrowserHostBase::WriteResponseCache, this, url, script, options),
@@ -3618,7 +3622,7 @@ void CefBrowserHostBase::OnDidWriteResponseCache(const std::string& url,
 
   GenerateCodeCache(url, script, cacheOptions, std::move(callback));
 }
-  
+
 void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
                                            const std::string& script,
                                            std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,

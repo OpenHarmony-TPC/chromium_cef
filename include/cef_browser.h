@@ -965,6 +965,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void OnWindowHide() = 0;
 
   ///
+  /// Running and do something when the render visible
+  ///
+  /*--cef()--*/
+  virtual void OnOnlineRenderToForeground() = 0;
+
+  ///
   /// Send touch event list to the browser for a windowless browser.
   ///
   /*--cef()--*/

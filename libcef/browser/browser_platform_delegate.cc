@@ -285,6 +285,10 @@ void CefBrowserPlatformDelegate::OnWindowHide() {
   NOTREACHED();
 }
 
+void CefBrowserPlatformDelegate::OnOnlineRenderToForeground() {
+  NOTREACHED();
+}
+
 void CefBrowserPlatformDelegate::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   NOTREACHED();
 }
