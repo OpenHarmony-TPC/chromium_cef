@@ -3042,6 +3042,10 @@ void CefBrowserHostBase::OnWindowHide() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+void CefBrowserHostBase::OnOnlineRenderToForeground() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
 void CefBrowserHostBase::SendTouchEventList(
     const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.

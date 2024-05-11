@@ -91,6 +91,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void SendTouchEventList(
       const std::vector<CefTouchEvent>& event_list) override;
   void NotifyScreenInfoChanged() override;

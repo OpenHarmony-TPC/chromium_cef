@@ -333,6 +333,8 @@ class CefBrowserPlatformDelegate {
 
   virtual void OnWindowHide();
 
+  virtual void OnOnlineRenderToForeground();
+
   // Send touch event list to the browser for a windowless browser.
   virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 #endif

@@ -934,6 +934,11 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* on_window_hide)(struct _cef_browser_host_t* self);
 
   ///
+  /// Running and do something when the render visible
+  ///
+  void(CEF_CALLBACK* on_online_render_to_foreground)(struct _cef_browser_host_t* self);
+
+  ///
   /// Send touch event list to the browser for a windowless browser.
   ///
   void(CEF_CALLBACK* send_touch_event_list)(
