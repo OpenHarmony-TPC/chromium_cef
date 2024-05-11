@@ -77,6 +77,7 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
   sync_method_map_.clear();
   async_method_map_.clear();
+  object_id_map_.clear();
 }
 
 // Run on the UI thread.
@@ -143,12 +144,14 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
     render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
         render_frame_host->GetRoutingID(), iter->second.first, iter->first, async_method_list, true));
   }
-  for (ObjectMethodMap::const_iterator iter = sync_method_map_.begin();
-       iter != sync_method_map_.end(); ++iter) {
-    // sync_method_map_ has no async method infomation, so send an empty list.
-    base::Value::List empty_list;
-    render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-        render_frame_host->GetRoutingID(), iter->second.first, iter->first, empty_list, false));
+  for (const auto& [object_id, object_name_set] : object_id_map_) {
+    for (const auto& object_name : object_name_set) {
+      // sync_method_map_ has no async method infomation, so send an empty list.
+      base::Value::List empty_list;
+      render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
+          render_frame_host->GetRoutingID(), object_name, object_id, empty_list,
+          false));
+    }
   }
 }
 
@@ -235,6 +238,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id_] = object_pair;
+    object_id_map_[object_id_].insert(object_name);
 
     // add async method
     MethodPair async_object_pair;
@@ -284,6 +288,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id] = object_pair;
+    object_id_map_[object_id].insert(object_name);
 
     // add async method
     MethodPair async_object_pair;
@@ -409,49 +414,47 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
                   "is empty!";
     return;
   }
-  bool found_in_sync = RemoveNamedObjectInternal(object_name, false);
-  bool found_in_async = RemoveNamedObjectInternal(object_name, true);
-
-  if (!found_in_sync && !found_in_async) {
-    return;
-  }
-
-  // |name| may come from |named_objects_|. Make a copy of name so that if
-  // |name| is from |named_objects_| it'll be valid after the remove below.
-  const std::string copied_name(object_name);
-
-  web_contents()
-      ->GetPrimaryMainFrame()
-      ->ForEachRenderFrameHostIncludingSpeculative(
-          [&copied_name](content::RenderFrameHostImpl* render_frame_host) {
-            render_frame_host->Send(
-                new OhGinJavascriptBridgeMsg_RemoveNamedObject(
-                    render_frame_host->GetRoutingID(), copied_name));
-          });
+  RemoveNamedObjectInternal(object_name, false);
+  RemoveNamedObjectInternal(object_name, true);
 }
 
 bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
-    const std::string& object_name, bool is_async) {
+    const std::string& object_name,
+    bool is_async) {
+  bool ret = false;
   auto& map = is_async ? async_method_map_ : sync_method_map_;
   if (map.empty()) {
-    return false;
+    return ret = false;
   }
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
-  for (auto it = map.begin(); it != map.end(); ++it) {
-    if (!(object_name == it->second.first) &&
-        std::next(it) == map.end()) {
-          LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:"
-                        "object_name:"
-                    << object_name << " is not exist.";
-      break;
+  for (auto& [object_id, object_name_set] : object_id_map_) {
+    for (const std::string& now_object_name : object_name_set) {
+      if (now_object_name == object_name) {
+        object_name_set.erase(object_name);
+        if (object_name_set.size() == 0) {
+          object_id_map_.erase(object_id);
+          map.erase(object_id);
+        }
+
+        ret = true;
+        // |name| may come from |named_objects_|. Make a copy of name so that if
+        // |name| is from |named_objects_| it'll be valid after the remove
+        // below.
+        const std::string copied_name(object_name);
+
+        web_contents()
+            ->GetPrimaryMainFrame()
+            ->ForEachRenderFrameHostIncludingSpeculative(
+                [&copied_name](
+                    content::RenderFrameHostImpl* render_frame_host) {
+                  render_frame_host->Send(
+                      new OhGinJavascriptBridgeMsg_RemoveNamedObject(
+                          render_frame_host->GetRoutingID(), copied_name));
+                });
+      }
     }
-    if (!(object_name == it->second.first)) {
-      continue;
-    }
-    map.erase(it);
-    return true;
   }
-  return false;
+  return ret;
 }
 
 void OhGinJavascriptBridgeDispatcherHost::OnGetMethods(
@@ -491,7 +494,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasMethod(
     bool* result) {
   *result = false;
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  
+
   // find in sync methods
   if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
     MethodPair p = sync_method_map_[object_id];
