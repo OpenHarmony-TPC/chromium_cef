@@ -616,7 +616,6 @@ struct CefBrowserSettingsTraits {
     target->scroll_enabled = src->scroll_enabled;
     target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->draw_mode = src->draw_mode;
-    target->record_whole_document = src->record_whole_document;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -627,6 +626,10 @@ struct CefBrowserSettingsTraits {
     target->custom_video_player_enable = src->custom_video_player_enable;
     target->custom_video_player_overlay = src->custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+    target->record_whole_document = src->record_whole_document;
+#endif
   }
 };
 
