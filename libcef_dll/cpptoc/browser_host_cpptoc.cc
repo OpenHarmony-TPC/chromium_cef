@@ -3379,6 +3379,25 @@ void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* 
   CefBrowserHostCppToC::Get(self)->SetFitContentMode(mode);
 }
 
+void CEF_CALLBACK
+browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
+                                   int left,
+                                   int top,
+                                   int right,
+                                   int bottom) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3568,6 +3587,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
   GetStruct()->send_touchpad_fling_event = browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
+  GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
 }
 
 // DESTRUCTOR - Do not edit by hand.

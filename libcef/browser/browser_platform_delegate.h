@@ -327,10 +327,10 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual void WasOccluded(bool occluded);
 
-  
+
   virtual void OnWindowShow();
 
-  
+
   virtual void OnWindowHide();
 
   // Send touch event list to the browser for a windowless browser.
@@ -464,6 +464,10 @@ class CefBrowserPlatformDelegate {
 
 #ifdef OHOS_EX_TOPCONTROLS
   virtual int GetShrinkViewportHeight();
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
 #endif
 
  protected:

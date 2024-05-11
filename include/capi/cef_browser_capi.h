@@ -1880,6 +1880,15 @@ typedef struct _cef_browser_host_t {
   ///  update draw_rect state.
   ///
   void(CEF_CALLBACK* update_draw_rect)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Notify that safe insets change.
+  ///
+  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
+                                            int left,
+                                            int top,
+                                            int right,
+                                            int bottom);
 } cef_browser_host_t;
 
 ///

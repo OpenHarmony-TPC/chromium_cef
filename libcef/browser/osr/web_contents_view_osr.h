@@ -109,6 +109,10 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   void UpdateBrowserControlsHeight(int height, bool animate) override;
 #endif
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+#endif
+
  private:
   CefRenderWidgetHostViewOSR* GetView() const;
   AlloyBrowserHostImpl* GetBrowser() const;

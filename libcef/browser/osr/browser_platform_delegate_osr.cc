@@ -1026,3 +1026,16 @@ int CefBrowserPlatformDelegateOsr::GetShrinkViewportHeight() {
   return 0;
 }
 #endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserPlatformDelegateOsr::OnSafeInsetsChange(int left,
+                                                       int top,
+                                                       int right,
+                                                       int bottom) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+  view->OnSafeInsetsChange(left, top, right, bottom);
+}
+#endif

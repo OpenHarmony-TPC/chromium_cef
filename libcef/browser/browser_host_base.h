@@ -674,6 +674,10 @@ bool TerminateRenderProcess() override;
 #endif
 #endif  // IS_OHOS
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+#endif
+
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

@@ -327,6 +327,29 @@ void CefDisplayHandlerCToCpp::OnMediaAccessChange(CefRefPtr<CefBrowser> browser,
 }
 
 NO_SANITIZE("cfi-icall")
+void CefDisplayHandlerCToCpp::OnViewportFitChange(CefRefPtr<CefBrowser> browser,
+                                                  int viewport_fit) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_display_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_viewport_fit_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_viewport_fit_change(_struct, CefBrowserCppToC::Wrap(browser),
+                                  viewport_fit);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefDisplayHandlerCToCpp::OnReceivedTouchIconUrl(
     CefRefPtr<CefBrowser> browser,
     const CefString& icon_url,

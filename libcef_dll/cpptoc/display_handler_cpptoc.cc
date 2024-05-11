@@ -347,6 +347,29 @@ display_handler_on_media_access_change(struct _cef_display_handler_t* self,
 }
 
 void CEF_CALLBACK
+display_handler_on_viewport_fit_change(struct _cef_display_handler_t* self,
+                                       cef_browser_t* browser,
+                                       int viewport_fit) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefDisplayHandlerCppToC::Get(self)->OnViewportFitChange(
+      CefBrowserCToCpp::Wrap(browser), viewport_fit);
+}
+
+void CEF_CALLBACK
 display_handler_on_received_touch_icon_url(struct _cef_display_handler_t* self,
                                            cef_browser_t* browser,
                                            const cef_string_t* icon_url,
@@ -495,6 +518,7 @@ CefDisplayHandlerCppToC::CefDisplayHandlerCppToC() {
       display_handler_on_loading_progress_change;
   GetStruct()->on_cursor_change = display_handler_on_cursor_change;
   GetStruct()->on_media_access_change = display_handler_on_media_access_change;
+  GetStruct()->on_viewport_fit_change = display_handler_on_viewport_fit_change;
   GetStruct()->on_received_touch_icon_url =
       display_handler_on_received_touch_icon_url;
   GetStruct()->on_received_icon = display_handler_on_received_icon;

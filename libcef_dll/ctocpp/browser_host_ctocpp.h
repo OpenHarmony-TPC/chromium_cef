@@ -281,6 +281,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                               double vy) override;
   void SetFitContentMode(int mode) override;
   void UpdateDrawRect() override;
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
