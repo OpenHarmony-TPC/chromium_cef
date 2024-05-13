@@ -57,6 +57,7 @@
 #if BUILDFLAG(IS_OHOS)
 #include "base/logging.h"
 #include "base/ohos/sys_info_utils.h"
+#include "content/browser/gpu/gpu_process_host.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -1881,7 +1882,8 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
 
   CefRenderHandler::CefNativeEmbedData data_info;
   data_info.status = static_cast<CefRenderHandler::CefEmbedLifeStatus>(state);
-  data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
+  content::GpuProcessHost* host = content::GpuProcessHost::Get();
+  data_info.surfaceId = host->gpu_host()->GetSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
   data_info.info.id = native_embed_info.embed_element_id;
   data_info.info.x = native_embed_info.rect.x();
