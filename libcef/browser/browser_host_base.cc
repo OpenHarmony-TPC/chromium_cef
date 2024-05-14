@@ -3661,11 +3661,6 @@ void CefBrowserHostBase::OnSafeInsetsChange(int left,
                                             int top,
                                             int right,
                                             int bottom) {
-  if (left == 0 && top == 0 && right == 0 && bottom == 0) {
-    // Nothing to do.
-    return;
-  }
-
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefBrowserHostBase::OnSafeInsetsChange, this,
