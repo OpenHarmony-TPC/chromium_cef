@@ -718,9 +718,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     CEF_REQUIRE_IOT();
     if (!cookie_helper::IsCookieableScheme(request->url,
                                            init_state_->cookieable_schemes_)
-#if BUILDFLAG(IS_OHOS)
-        || !net_service::NetHelpers::IsThirdPartyCookieAllowed()
-#endif
     ) {
       // The scheme does not support cookies.
       std::move(callback).Run();
@@ -1341,9 +1338,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (!cookie_helper::IsCookieableScheme(request->url,
                                            init_state_->cookieable_schemes_)
-#if BUILDFLAG(IS_OHOS)
-        || !net_service::NetHelpers::IsThirdPartyCookieAllowed()
-#endif
     ) {
       // The scheme does not support cookies.
       std::move(callback).Run();
