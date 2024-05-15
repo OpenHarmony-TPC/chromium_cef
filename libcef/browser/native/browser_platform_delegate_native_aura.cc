@@ -206,8 +206,9 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiMoveEvent(
 
 ui::GestureEvent CefBrowserPlatformDelegateNativeAura::TranslateUiTouchpadEvent(
     const CefMouseEvent& mouse_event) const {
-  return ui::GestureEvent(mouse_event.x, mouse_event.y, 0, base::TimeTicks(),
-                          ui::GestureEventDetails(ui::ET_SCROLL_FLING_START));
+  ui::GestureEventDetails details(ui::ET_SCROLL_FLING_START);
+  details.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHPAD);
+  return ui::GestureEvent(mouse_event.x, mouse_event.y, 0, base::TimeTicks(), details);
 }
 
 ui::MouseWheelEvent CefBrowserPlatformDelegateNativeAura::TranslateUiWheelEvent(
