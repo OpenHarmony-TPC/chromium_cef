@@ -880,7 +880,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
     if (javascriptInjector) {
@@ -926,7 +926,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     int fd,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
     if (javascriptInjector) {
@@ -977,7 +977,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
     const std::string& method_name,
     const base::Value::List& arguments,
     int fd) {
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
     if (javascriptInjector) {
