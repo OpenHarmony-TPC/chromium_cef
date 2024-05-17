@@ -384,13 +384,30 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
   
   ///
-  /// Called when select word.
+  /// Called when selecting word.
   ///
   /*--cef()--*/
   virtual void GetWordSelection(CefRefPtr<CefBrowser> browser,
                                 const CefString& text,
                                 int8_t offset,
                                 CefPoint& select) {}
+  
+  ///
+  /// Called when creating overlay.
+  ///
+  /*--cef()--*/
+  virtual void CreateOverlay(CefRefPtr<CefBrowser> browser,
+                             CefRefPtr<CefImage> cef_image,
+                             const CefRect& cef_image_rect,
+                             const CefPoint& cef_touch_point,
+                             const CefRect& cef_screen_rect) {}
+  
+  ///
+  /// Called when overlay state is changed.
+  ///
+  /*--cef()--*/
+  virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
+                                     const CefRect& cef_screen_rect) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
