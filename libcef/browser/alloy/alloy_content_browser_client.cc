@@ -1549,6 +1549,11 @@ bool AlloyContentBrowserClient::CanCreateWindow(
     std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
     return false;
   }
+  if (!browser_host->settings().supports_multiple_windows) {
+    LOG(INFO) << "supports_multiple_windows is false";
+    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
+    return false;
+  }
   CefRefPtr<PopupWindowCallbackImpl> callbackImpl =
       new PopupWindowCallbackImpl(std::move(callback));
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
@@ -1573,18 +1578,26 @@ bool AlloyContentBrowserClient::CanCreateWindow(
   CEF_REQUIRE_UIT();
   *no_javascript_access = false;
 
-#if BUILDFLAG(IS_OHOS)
+#if defined(OHOS_MULTI_WINDOW)
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
-
+  if (!browser_host->settings().supports_multiple_windows) {
+    if (browser_host->settings().javascript_can_open_windows_automatically ||
+        user_gesture) {
+      LOG(INFO) << "allow load url";
+      return true;
+    }
+    LOG(INFO) << "supports_multiple_windows is false";
+    return false;
+  }
   if (!browser_host->settings().javascript_can_open_windows_automatically &&
       !user_gesture) {
     LOG(INFO) << "javascript_can_open_windows_automatically false";
     return false;
   }
-#endif
+#endif  // defined(OHOS_MULTI_WINDOW)
 
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
       opener, target_url, referrer, frame_name, disposition, features,

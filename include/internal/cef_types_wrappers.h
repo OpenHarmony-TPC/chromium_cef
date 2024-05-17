@@ -626,6 +626,9 @@ struct CefBrowserSettingsTraits {
     target->custom_video_player_enable = src->custom_video_player_enable;
     target->custom_video_player_overlay = src->custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+    target->supports_multiple_windows = src->supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
   }
 };
 

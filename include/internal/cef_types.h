@@ -719,6 +719,9 @@ typedef struct _cef_browser_settings_t {
   bool custom_video_player_enable;
   bool custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+  bool supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 } cef_browser_settings_t;
 
 ///

@@ -893,6 +893,9 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.custom_video_player_overlay =
       browser_settings.custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+  settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 }
 
 void CefBrowserHostBase::SetWebPreferences(
