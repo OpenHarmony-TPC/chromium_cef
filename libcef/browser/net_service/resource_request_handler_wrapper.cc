@@ -16,6 +16,7 @@
 #include "libcef/browser/prefs/browser_prefs.h"
 #include "libcef/browser/thread_util.h"
 #include "libcef/common/app_manager.h"
+#include "libcef/common/frame_util.h"
 #include "libcef/common/net/scheme_registration.h"
 #include "libcef/common/net_service/net_service_util.h"
 #include "libcef/common/request_impl.h"
@@ -310,6 +311,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     void Initialize(content::BrowserContext* browser_context,
                     CefRefPtr<CefBrowserHostBase> browser,
                     CefRefPtr<CefFrame> frame,
+#ifdef OHOS_NETWORK_LOAD
+                    CefRefPtr<CefFrame> real_frame,
+#endif
                     const content::GlobalRenderFrameHostId& global_id,
                     bool is_navigation,
                     bool is_download,
@@ -334,6 +338,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         // These references will be released in OnDestroyed().
         browser_ = browser;
         frame_ = frame;
+#ifdef OHOS_NETWORK_LOAD
+        real_frame_ = real_frame;
+#endif
       }
 
       global_id_ = global_id;
@@ -369,6 +376,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     CefRefPtr<CefBrowserHostBase> browser_;
     CefRefPtr<CefFrame> frame_;
+#ifdef OHOS_NETWORK_LOAD
+    CefRefPtr<CefFrame> real_frame_;
+#endif
     scoped_refptr<CefIOThreadState> iothread_state_;
     CefBrowserContext::CookieableSchemes cookieable_schemes_;
     content::GlobalRenderFrameHostId global_id_;
@@ -954,6 +964,16 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // Add fetch meta data headers.
       bool old_flag = state->pending_request_->IsReadOnly();
       state->pending_request_->SetReadOnly(false);
+      if (request->request_initiator.has_value()) {
+        CefString frame_url = init_state_->real_frame_ ? init_state_->real_frame_->GetURL() : "";
+        state->pending_request_->SetFrameUrl(frame_url);
+      }
+
+      if (state->pending_request_->GetResourceType() == RT_SUB_FRAME) {
+        CefString frame_url = init_state_->real_frame_->GetParent() ?
+            init_state_->real_frame_->GetParent()->GetURL() : "";
+        state->pending_request_->SetFrameUrl(frame_url);
+      }
       std::map<std::string, std::string> headers =
           network::GetFetchMetadataHeaders(
                   request->url, request->mode, request->has_user_gesture,
@@ -1680,6 +1700,10 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   CefRefPtr<CefBrowserHostBase> browserPtr;
   CefRefPtr<CefFrame> framePtr;
+#ifdef OHOS_NETWORK_LOAD
+  // Maybe speculative RFH.
+  CefRefPtr<CefFrame> realFramePtr;
+#endif
 
   // Default to handlers for the same process in case |frame| doesn't have an
   // associated CefBrowserHost.
@@ -1692,6 +1716,13 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
     if (browserPtr) {
       framePtr = browserPtr->GetFrameForHost(frame);
+#ifdef OHOS_NETWORK_LOAD
+      bool is_guest_view = false;
+      if (browserPtr->browser_info()) {
+        realFramePtr =
+            browserPtr->browser_info()->GetFrameForHost(frame, &is_guest_view, true);
+      }
+#endif
 #if defined(OHOS_BUGFIX_CRASH)
       if (!framePtr) {
         LOG(WARNING) << "cef frame ptr is null";
@@ -1705,7 +1736,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   auto init_state =
       std::make_unique<InterceptedRequestHandlerWrapper::InitState>();
+#ifdef OHOS_NETWORK_LOAD
+  init_state->Initialize(browser_context, browserPtr, framePtr, realFramePtr, global_id,
+#else
   init_state->Initialize(browser_context, browserPtr, framePtr, global_id,
+#endif
                          is_navigation, is_download, request_initiator,
                          base::RepeatingClosure());
 
@@ -1757,6 +1792,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   CefRefPtr<CefBrowserHostBase> browserPtr;
   CefRefPtr<CefFrame> framePtr;
+#ifdef OHOS_NETWORK_LOAD
+  CefRefPtr<CefFrame> realFramePtr;
+#endif
 
   // Default to handlers for the same process in case |frame| doesn't have an
   // associated CefBrowserHost.
@@ -1765,6 +1803,13 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   // May return nullptr for requests originating from guest views.
   browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
+#ifdef OHOS_NETWORK_LOAD
+  bool is_guest_view = false;
+  if (browserPtr->browser_info()) {
+    realFramePtr =
+        browserPtr->browser_info()->GetFrameForHost(frame, &is_guest_view, true);
+  }
+#endif
   if (browserPtr) {
     framePtr = browserPtr->GetFrameForHost(frame);
     DCHECK(framePtr);
@@ -1782,7 +1827,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 
   auto init_state =
       std::make_unique<InterceptedRequestHandlerWrapper::InitState>();
+#ifdef OHOS_NETWORK_LOAD
+  init_state->Initialize(browser_context, browserPtr, framePtr, realFramePtr, global_id,
+#else
   init_state->Initialize(browser_context, browserPtr, framePtr, global_id,
+#endif
                          is_navigation, is_download, request_initiator,
                          unhandled_request_callback);
 
