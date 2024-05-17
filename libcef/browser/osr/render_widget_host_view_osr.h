@@ -437,6 +437,11 @@ class CefRenderWidgetHostViewOSR
   void OnSafeInsetsChange(int left, int top, int right, int bottom);
 #endif
 
+#ifdef OHOS_AI
+  void OnTextSelected(bool flag);
+  float GetPageScaleFactor();
+#endif
+
  private:
   void SetFrameRate();
   bool SetScreenInfo();

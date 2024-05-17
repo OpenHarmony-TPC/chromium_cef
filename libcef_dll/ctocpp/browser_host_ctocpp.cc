@@ -3141,6 +3141,34 @@ void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
   _struct->on_safe_insets_change(_struct, left, top, right, bottom);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnTextSelected(bool flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_text_selected)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_text_selected(_struct, flag);
+}
+
+NO_SANITIZE("cfi-icall") float CefBrowserHostCToCpp::GetPageScaleFactor() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_page_scale_factor)) {
+    return 1;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  return _struct->get_page_scale_factor(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

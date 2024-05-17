@@ -2790,3 +2790,27 @@ bool AlloyBrowserHostImpl::NeedsReload() {
   return needs_reload_;
 }
 #endif
+
+#ifdef OHOS_AI
+void AlloyBrowserHostImpl::CreateOverlay(const gfx::ImageSkia& image,
+                                         const gfx::Rect& image_rect,
+                                         const gfx::Point& touch_point,
+                                         const gfx::Rect& screen_rect) {
+  if (platform_delegate_) {
+    platform_delegate_->CreateOverlay(image, image_rect, touch_point, screen_rect);
+  }
+}
+
+void AlloyBrowserHostImpl::OnTextSelected(bool flag) {
+  if (platform_delegate_) {
+    platform_delegate_->OnTextSelected(flag);
+  }
+}
+
+float AlloyBrowserHostImpl::GetPageScaleFactor() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPageScaleFactor();
+  }
+  return 1;
+}
+#endif
