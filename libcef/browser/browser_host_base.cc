@@ -45,6 +45,7 @@
 #include "components/security_state/content/content_utils.h"
 #include "components/security_state/core/security_state.h"
 #include "content/browser/web_contents/web_contents_impl.h"
+#include "gpu/ipc/common/nweb_native_window_tracker.h"
 #include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
 #include "content/public/common/url_constants.h"
@@ -57,7 +58,6 @@
 #include "ohos_adapter_helper.h"
 #include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
-#include "ui/gl/nweb_native_window_tracker.h"
 #endif
 
 #if defined(OHOS_MEDIA_POLICY)
@@ -2974,7 +2974,7 @@ void CefBrowserHostBase::ExecuteJavaScriptExt(
 }
 
 void CefBrowserHostBase::SetNativeWindow(cef_native_window_t window) {
-  widget_ = NWebNativeWindowTracker::Instance().AddNativeWindow(window);
+  widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
 
 cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget() {
