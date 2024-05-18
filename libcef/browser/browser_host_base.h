@@ -679,6 +679,11 @@ bool TerminateRenderProcess() override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
 #endif
 
+#ifdef OHOS_AI
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
+#endif
+
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

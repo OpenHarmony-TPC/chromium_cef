@@ -1894,6 +1894,16 @@ typedef struct _cef_browser_host_t {
                                             int top,
                                             int right,
                                             int bottom);
+
+  ///
+  ///  Called when text is selected.
+  ///
+  void(CEF_CALLBACK* on_text_selected)(struct _cef_browser_host_t* self, bool flag);
+
+  ///
+  ///  Get page scale factor.
+  ///
+  float(CEF_CALLBACK* get_page_scale_factor)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

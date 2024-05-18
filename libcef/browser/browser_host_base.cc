@@ -3676,3 +3676,16 @@ void CefBrowserHostBase::OnSafeInsetsChange(int left,
   }
 }
 #endif
+
+#ifdef OHOS_AI
+void CefBrowserHostBase::OnTextSelected(bool flag) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+float CefBrowserHostBase::GetPageScaleFactor() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPageScaleFactor();
+  }
+  return 1;
+}
+#endif

@@ -486,6 +486,23 @@ void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
 }
 #endif
 
+#ifdef OHOS_AI
+void CefBrowserPlatformDelegate::CreateOverlay(const gfx::ImageSkia& image,
+                                               const gfx::Rect& image_rect,
+                                               const gfx::Point& touch_point,
+                                               const gfx::Rect& screen_rect) {
+  DCHECK(false);
+}
+
+void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
+  DCHECK(false);
+}
+
+float CefBrowserPlatformDelegate::GetPageScaleFactor() {
+  return 1;
+}
+#endif
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {

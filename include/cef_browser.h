@@ -1902,6 +1902,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void UpdateDrawRect() = 0;
+
+  ///
+  /// Called when text is selected.
+  ///
+  /*--cef()--*/
+  virtual void OnTextSelected(bool flag) = 0;
+
+  ///
+  /// Get page scale factor.
+  ///
+  /*--cef()--*/
+  virtual float GetPageScaleFactor() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 
   ///

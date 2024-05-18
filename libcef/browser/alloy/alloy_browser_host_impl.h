@@ -453,6 +453,15 @@ bool NeedsReload() override;
       const content::MediaInfo& media_info) override;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#ifdef OHOS_AI
+  void CreateOverlay(const gfx::ImageSkia& image,
+                     const gfx::Rect& image_rect,
+                     const gfx::Point& touch_point,
+                     const gfx::Rect& screen_rect);
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
+#endif
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 

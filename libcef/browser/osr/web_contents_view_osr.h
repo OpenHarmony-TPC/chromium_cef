@@ -113,6 +113,13 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
 #endif
 
+#ifdef OHOS_AI
+  void CreateOverlay(const gfx::ImageSkia& image,
+                     const gfx::Rect& image_rect,
+                     const gfx::Point& touch_point,
+                     const gfx::Rect& screen_rect) override;
+#endif
+
  private:
   CefRenderWidgetHostViewOSR* GetView() const;
   AlloyBrowserHostImpl* GetBrowser() const;

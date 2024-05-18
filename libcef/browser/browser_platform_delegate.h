@@ -472,6 +472,15 @@ class CefBrowserPlatformDelegate {
   virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
 #endif
 
+#ifdef OHOS_AI
+  virtual void CreateOverlay(const gfx::ImageSkia& image,
+                             const gfx::Rect& image_rect,
+                             const gfx::Point& touch_point,
+                             const gfx::Rect& screen_rect);
+  virtual void OnTextSelected(bool flag);
+  virtual float GetPageScaleFactor();
+#endif
+
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

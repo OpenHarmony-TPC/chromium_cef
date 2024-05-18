@@ -3198,6 +3198,13 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
+#ifdef OHOS_AI
+      if (render_widget_host_) {
+        gfx::Rect screen_rect = render_widget_host_->GetScreenRect();
+        CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
+        handler->OnOverlayStateChanged(browser_impl_.get(), cef_screen_rect);
+      }
+#endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
                is_mouse_wheel_scroll_) {
@@ -3394,5 +3401,17 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(int left,
     rvh_delegate_view->OnSafeInsetsChange(left / ratio, top / ratio,
                                           right / ratio, bottom / ratio);
   }
+}
+#endif
+
+#ifdef OHOS_AI
+void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
+  if (render_widget_host_) {
+    render_widget_host_->OnTextSelected(flag);
+  }
+}
+
+float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
+  return page_scale_factor_;
 }
 #endif

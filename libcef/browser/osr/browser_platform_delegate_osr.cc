@@ -1039,3 +1039,35 @@ void CefBrowserPlatformDelegateOsr::OnSafeInsetsChange(int left,
   view->OnSafeInsetsChange(left, top, right, bottom);
 }
 #endif
+
+#ifdef OHOS_AI
+void CefBrowserPlatformDelegateOsr::CreateOverlay(const gfx::ImageSkia& image,
+                                                  const gfx::Rect& image_rect,
+                                                  const gfx::Point& touch_point,
+                                                  const gfx::Rect& screen_rect) {
+  CefRefPtr<CefRenderHandler> handler = 
+      browser_->GetClient()->GetRenderHandler();
+
+  if(handler.get()) {
+    CefRefPtr<CefImage> cef_image(new CefImageImpl(image));
+    CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
+    CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
+    CefPoint cef_touch_point(touch_point.x(), touch_point.y());
+    LOG(INFO) << "CefBrowserPlatformDelegateOsr::CreateOverlay";
+    handler->CreateOverlay(browser_, cef_image, cef_image_rect, cef_touch_point, cef_screen_rect);
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnTextSelected(flag);
+  }
+}
+
+float CefBrowserPlatformDelegateOsr::GetPageScaleFactor() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    return view->GetPageScaleFactor();
+  }
+  return 1;
+}
+#endif

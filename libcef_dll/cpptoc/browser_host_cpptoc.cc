@@ -3413,6 +3413,34 @@ browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
 }
 
+void CEF_CALLBACK browser_host_on_text_selected(struct _cef_browser_host_t* self, bool flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnTextSelected(flag);
+}
+
+float CEF_CALLBACK browser_host_get_page_scale_factor(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 1;
+  }
+
+  // Execute
+  return CefBrowserHostCppToC::Get(self)->GetPageScaleFactor();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3604,6 +3632,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->send_touchpad_fling_event = browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
+  GetStruct()->on_text_selected = browser_host_on_text_selected;
+  GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
 }
 
 // DESTRUCTOR - Do not edit by hand.
