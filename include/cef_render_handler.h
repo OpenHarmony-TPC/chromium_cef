@@ -259,7 +259,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                           TextInputMode input_mode,
                                           TextInputType input_type,
-                                          bool show_keyboard) {}
+                                          bool show_keyboard,
+                                          bool is_need_reset_listener) {}
 
   ///
   /// Called when touch selection is updated. The client is responsible for
@@ -382,7 +383,16 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
-  
+
+  ///
+  /// Called when text input state has changed for the specified |browser|.
+  ///
+  /*--cef()--*/
+  virtual void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
+                                            const CefString& text,
+                                            const CefRange& selected_range,
+                                            const CefRange& compositon_range) {}
+
   ///
   /// Called when selecting word.
   ///

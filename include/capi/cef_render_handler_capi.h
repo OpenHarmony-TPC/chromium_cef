@@ -254,7 +254,8 @@ typedef struct _cef_render_handler_t {
       struct _cef_browser_t* browser,
       cef_text_input_mode_t input_mode,
       cef_text_input_type_t input_type,
-      int show_keyboard);
+      int show_keyboard,
+      int is_need_reset_listener);
 
   ///
   /// Called when touch selection is updated. The client is responsible for
@@ -387,6 +388,16 @@ typedef struct _cef_render_handler_t {
                                          const cef_string_t* text,
                                          int8_t offset,
                                          cef_point_t* select);
+
+  ///
+  /// Called when text input state has changed for the specified |browser|.
+  ///
+  void(CEF_CALLBACK* on_update_text_input_state_called)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* text,
+      const cef_range_t* selected_range,
+      const cef_range_t* compositon_range);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e4f9ca4d23a010fdac7bc138367d159d545c7c23$
+// $hash=4b22d24aa5cb43fc88c7efdda9cc789aa7d899cd$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -495,7 +495,8 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
     TextInputMode input_mode,
     TextInputType input_type,
-    bool show_keyboard) {
+    bool show_keyboard,
+    bool is_need_reset_listener) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -514,7 +515,8 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
   // Execute
   _struct->on_virtual_keyboard_requested(_struct,
                                          CefBrowserCppToC::Wrap(browser),
-                                         input_mode, input_type, show_keyboard);
+                                         input_mode, input_type, show_keyboard,
+                                         is_need_reset_listener);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -904,6 +906,38 @@ void CefRenderHandlerCToCpp::GetWordSelection(CefRefPtr<CefBrowser> browser,
   // Execute
   _struct->get_word_selection(_struct, CefBrowserCppToC::Wrap(browser),
                               text.GetStruct(), offset, &select);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnUpdateTextInputStateCalled(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& text,
+    const CefRange& selected_range,
+    const CefRange& compositon_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_update_text_input_state_called)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(!text.empty());
+  if (text.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_update_text_input_state_called(
+      _struct, CefBrowserCppToC::Wrap(browser), text.GetStruct(),
+      &selected_range, &compositon_range);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

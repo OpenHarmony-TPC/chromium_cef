@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=941737c9f19c28f171457c985cae1510877671f2$
+// $hash=385c5eab6a273e67905fde190023629cf03f65f0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -81,7 +81,8 @@ class CefRenderHandlerCToCpp
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
                                   TextInputType input_type,
-                                  bool show_keyboard) override;
+                                  bool show_keyboard,
+                                  bool is_need_reset_listener) override;
   void OnTouchSelectionChanged(
       const CefTouchHandleState& insert_handle,
       const CefTouchHandleState& start_selection_handle,
@@ -125,6 +126,10 @@ class CefRenderHandlerCToCpp
                         const CefString& text,
                         int8_t offset,
                         CefPoint& select) override;
+  void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
+                                    const CefString& text,
+                                    const CefRange& selected_range,
+                                    const CefRange& compositon_range) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

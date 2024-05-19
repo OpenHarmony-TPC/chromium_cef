@@ -586,7 +586,8 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              cef_text_input_mode_t input_mode,
                                              cef_text_input_type_t input_type,
-                                             int show_keyboard) {
+                                             int show_keyboard,
+                                             int is_need_reset_listener) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -604,7 +605,8 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
       CefBrowserCToCpp::Wrap(browser), input_mode, input_type,
-      show_keyboard ? true : false);
+      show_keyboard ? true : false,
+      is_need_reset_listener ? true : false);
 }
 
 void CEF_CALLBACK render_handler_on_touch_selection_changed(
@@ -1074,6 +1076,52 @@ render_handler_get_word_selection(struct _cef_render_handler_t* self,
   }
 }
 
+void CEF_CALLBACK render_handler_on_update_text_input_state_called(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    const cef_string_t* text,
+    const cef_range_t* selected_range,
+    const cef_range_t* compositon_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(text);
+  if (!text) {
+    return;
+  }
+  // Verify param: selected_range; type: simple_byref_const
+  DCHECK(selected_range);
+  if (!selected_range) {
+    return;
+  }
+  // Verify param: compositon_range; type: simple_byref_const
+  DCHECK(compositon_range);
+  if (!compositon_range) {
+    return;
+  }
+
+  // Translate param: selected_range; type: simple_byref_const
+  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
+  // Translate param: compositon_range; type: simple_byref_const
+  CefRange compositon_rangeVal =
+      compositon_range ? *compositon_range : CefRange();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnUpdateTextInputStateCalled(
+      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal,
+      compositon_rangeVal);
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1125,6 +1173,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
   GetStruct()->release_resize_hold = render_handler_release_resize_hold;
   GetStruct()->get_word_selection = render_handler_get_word_selection;
+  GetStruct()->on_update_text_input_state_called =
+      render_handler_on_update_text_input_state_called;
 }
 
 // DESTRUCTOR - Do not edit by hand.
