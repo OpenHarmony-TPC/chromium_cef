@@ -298,7 +298,7 @@ void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcont
     return;
   }
 
-  if (is_pdf_print_) {
+  if (is_pdf_print_ && pdf_rfh_) {
     GetPrintRenderFrame(pdf_rfh_)->ApplicationPrintRequestedPages();
     return;
   }
