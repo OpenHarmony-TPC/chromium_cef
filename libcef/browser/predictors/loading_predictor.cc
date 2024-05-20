@@ -395,6 +395,7 @@ void LoadingPredictor::OnSimpleURLLoaderComplete(
     if ((*it)->cache_key == cache_key) {
       TRACE_EVENT0("net", "update the old same post cache");
       g_predictor_post_cache_.erase(it);
+      break;
     }
   }
 
