@@ -313,6 +313,9 @@ class CefRenderWidgetHostViewOSR
   void DidStopFlinging() override;
   blink::mojom::InputEventResultState FilterInputEvent(
       const blink::WebInputEvent& input_event) override;
+  void OnUpdateTextInputStateCalledInner(
+    const ui::mojom::TextInputState* state);
+
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   bool InstallTransparency();
@@ -643,6 +646,7 @@ class CefRenderWidgetHostViewOSR
   bool is_mouse_wheel_scroll_ = false;
   float device_scale_factor_ = 1.0f;
   bool scroll_enabled_ = true;
+  int32_t node_id_ = -1;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
