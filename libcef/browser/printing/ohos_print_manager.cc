@@ -531,7 +531,6 @@ void OhosPrintManager::PrintPdfRequested() {
       printTokenMap_.end()) {
     token_ = printTokenMap_[base::Process::Current().Pid()];
   }
-  pdf_rfh_ = rfh_;
   cancel_ = false;
   if (!PrintNow()) {
     is_pdf_print_ = false;
