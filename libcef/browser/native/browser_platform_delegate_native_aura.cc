@@ -125,6 +125,12 @@ CefBrowserPlatformDelegateNativeAura::TranslateWebMoveEvent(
   return ui::MakeWebMouseEvent(TranslateUiMoveEvent(mouse_event, mouseLeave));
 }
 
+blink::WebGestureEvent
+CefBrowserPlatformDelegateNativeAura::TranslateTouchpadFlingEvent(
+    const CefMouseEvent& mouse_event) const {
+  return ui::MakeWebGestureEvent(TranslateUiTouchpadEvent(mouse_event));
+}
+
 blink::WebMouseWheelEvent
 CefBrowserPlatformDelegateNativeAura::TranslateWebWheelEvent(
     const CefMouseEvent& mouse_event,
@@ -196,6 +202,13 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiMoveEvent(
 
   return ui::MouseEvent(event_type, location, root_location, time_stamp, flags,
                         changed_button_flags);
+}
+
+ui::GestureEvent CefBrowserPlatformDelegateNativeAura::TranslateUiTouchpadEvent(
+    const CefMouseEvent& mouse_event) const {
+  ui::GestureEventDetails details(ui::ET_SCROLL_FLING_START);
+  details.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHPAD);
+  return ui::GestureEvent(mouse_event.x, mouse_event.y, 0, base::TimeTicks(), details);
 }
 
 ui::MouseWheelEvent CefBrowserPlatformDelegateNativeAura::TranslateUiWheelEvent(

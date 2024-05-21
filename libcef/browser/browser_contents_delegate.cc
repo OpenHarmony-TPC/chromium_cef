@@ -1203,3 +1203,14 @@ void CefBrowserContentsDelegate::OnRefreshAccessedHistory(
   handler->OnRefreshAccessedHistory(browser(), frame, url.spec(), isReload);
 }
 #endif
+
+#if defined(OHOS_DISPLAY_CUTOUT)
+void CefBrowserContentsDelegate::ViewportFitChanged(
+    blink::mojom::ViewportFit value) {
+  if (auto c = client()) {
+    if (auto handler = c->GetDisplayHandler()) {
+      handler->OnViewportFitChange(browser(), static_cast<int>(value));
+    }
+  }
+}
+#endif

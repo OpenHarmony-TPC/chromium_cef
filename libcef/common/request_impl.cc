@@ -342,6 +342,20 @@ void CefRequestImpl::SetURL(const CefString& url) {
   }
 }
 
+void CefRequestImpl::SetFrameUrl(const CefString& frame_url) {
+  base::AutoLock lock_scope(lock_);
+  CHECK_READONLY_RETURN_VOID();
+  const GURL& frame_gurl = GURL(frame_url.ToString());
+  if (frame_url_ != frame_gurl) {
+    frame_url_ = frame_gurl;
+  }
+}
+
+CefString CefRequestImpl::GetFrameUrl() {
+  base::AutoLock lock_scope(lock_);
+  return frame_url_.spec();
+}
+
 CefString CefRequestImpl::GetMethod() {
   base::AutoLock lock_scope(lock_);
   return method_;

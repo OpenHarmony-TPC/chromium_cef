@@ -919,28 +919,14 @@ const extensions::Extension* GetEnabledExtensionFromSiteURL(
 }
 
 #if defined(OHOS_MULTI_WINDOW)
-static constexpr base::TimeDelta kPopupWindowCallbackTimeout =
-    base::Milliseconds(500);
 class PopupWindowCallbackImpl : public CefCallback {
  public:
   explicit PopupWindowCallbackImpl(
       content::mojom::FrameHost::GetCreateNewWindowCallback callback)
       : callback_(std::move(callback)),
-        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {
-    timeout_timer_ = std::make_unique<base::OneShotTimer>();
-    if (timeout_timer_) {
-      timeout_timer_->Start(
-          FROM_HERE, kPopupWindowCallbackTimeout,
-          base::BindOnce(&PopupWindowCallbackImpl::Cancel, this));
-    }
-  }
+        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {}
 
-  ~PopupWindowCallbackImpl() override {
-    if (timeout_timer_) {
-      timeout_timer_->Stop();
-      timeout_timer_.reset();
-    }
-  }
+  ~PopupWindowCallbackImpl() override {}
 
   void Continue() override {
     if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
@@ -969,7 +955,6 @@ class PopupWindowCallbackImpl : public CefCallback {
  private:
   content::mojom::FrameHost::GetCreateNewWindowCallback callback_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
-  std::unique_ptr<base::OneShotTimer> timeout_timer_;
 
   IMPLEMENT_REFCOUNTING(PopupWindowCallbackImpl);
 };
@@ -1564,6 +1549,11 @@ bool AlloyContentBrowserClient::CanCreateWindow(
     std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
     return false;
   }
+  if (!browser_host->settings().supports_multiple_windows) {
+    LOG(INFO) << "supports_multiple_windows is false";
+    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
+    return false;
+  }
   CefRefPtr<PopupWindowCallbackImpl> callbackImpl =
       new PopupWindowCallbackImpl(std::move(callback));
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
@@ -1588,18 +1578,26 @@ bool AlloyContentBrowserClient::CanCreateWindow(
   CEF_REQUIRE_UIT();
   *no_javascript_access = false;
 
-#if BUILDFLAG(IS_OHOS)
+#if defined(OHOS_MULTI_WINDOW)
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
-
+  if (!browser_host->settings().supports_multiple_windows) {
+    if (browser_host->settings().javascript_can_open_windows_automatically ||
+        user_gesture) {
+      LOG(INFO) << "allow load url";
+      return true;
+    }
+    LOG(INFO) << "supports_multiple_windows is false";
+    return false;
+  }
   if (!browser_host->settings().javascript_can_open_windows_automatically &&
       !user_gesture) {
     LOG(INFO) << "javascript_can_open_windows_automatically false";
     return false;
   }
-#endif
+#endif  // defined(OHOS_MULTI_WINDOW)
 
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
       opener, target_url, referrer, frame_name, disposition, features,
@@ -2178,9 +2176,16 @@ bool AlloyContentBrowserClient::WillCreateURLLoaderFactory(
   }
 #endif
 
+#ifdef OHOS_NETWORK_LOAD
+  net_service::ProxyURLLoaderFactory::CreateProxy(
+      browser_context, factory_receiver, header_client,
+      std::move(request_handler), factory_override);
+#else
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_receiver, header_client,
       std::move(request_handler));
+#endif
+
   return true;
 }
 

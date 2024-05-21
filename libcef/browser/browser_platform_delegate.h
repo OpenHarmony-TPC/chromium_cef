@@ -242,6 +242,7 @@ class CefBrowserPlatformDelegate {
                                    bool mouseUp,
                                    int clickCount);
   virtual void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave);
+  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy);
   virtual void SendMouseWheelEvent(const CefMouseEvent& event,
                                    int deltaX,
                                    int deltaY);
@@ -326,11 +327,13 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual void WasOccluded(bool occluded);
 
-  
+
   virtual void OnWindowShow();
 
-  
+
   virtual void OnWindowHide();
+
+  virtual void OnOnlineRenderToForeground();
 
   // Send touch event list to the browser for a windowless browser.
   virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
@@ -463,6 +466,19 @@ class CefBrowserPlatformDelegate {
 
 #ifdef OHOS_EX_TOPCONTROLS
   virtual int GetShrinkViewportHeight();
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
+#endif
+
+#ifdef OHOS_AI
+  virtual void CreateOverlay(const gfx::ImageSkia& image,
+                             const gfx::Rect& image_rect,
+                             const gfx::Point& touch_point,
+                             const gfx::Rect& screen_rect);
+  virtual void OnTextSelected(bool flag);
+  virtual float GetPageScaleFactor();
 #endif
 
  protected:

@@ -313,6 +313,9 @@ class CefRenderWidgetHostViewOSR
   void DidStopFlinging() override;
   blink::mojom::InputEventResultState FilterInputEvent(
       const blink::WebInputEvent& input_event) override;
+  void OnUpdateTextInputStateCalledInner(
+    const ui::mojom::TextInputState* state);
+
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   bool InstallTransparency();
@@ -331,6 +334,7 @@ class CefRenderWidgetHostViewOSR
   void SendExternalBeginFrame();
   void SendKeyEvent(const content::NativeWebKeyboardEvent& event);
   void SendMouseEvent(const blink::WebMouseEvent& event);
+  void SendTouchpadFlingEvent(blink::WebGestureEvent event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
 #ifdef OHOS_CLIPBOARD
@@ -430,6 +434,15 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_EX_FREE_COPY
   std::vector<int8_t> GetWordSelection(const std::string& text, int8_t offset) override;
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom);
+#endif
+
+#ifdef OHOS_AI
+  void OnTextSelected(bool flag);
+  float GetPageScaleFactor();
 #endif
 
  private:
@@ -633,6 +646,7 @@ class CefRenderWidgetHostViewOSR
   bool is_mouse_wheel_scroll_ = false;
   float device_scale_factor_ = 1.0f;
   bool scroll_enabled_ = true;
+  int32_t node_id_ = -1;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS

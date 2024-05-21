@@ -470,6 +470,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   web.record_whole_document = cef.record_whole_document;
 #endif
+
+#if defined(OHOS_MULTI_WINDOW)
+  web.supports_multiple_windows = cef.supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

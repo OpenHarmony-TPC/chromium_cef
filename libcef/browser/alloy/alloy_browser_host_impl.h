@@ -128,6 +128,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
@@ -452,6 +453,15 @@ bool NeedsReload() override;
       const content::MediaInfo& media_info) override;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#ifdef OHOS_AI
+  void CreateOverlay(const gfx::ImageSkia& image,
+                     const gfx::Rect& image_rect,
+                     const gfx::Point& touch_point,
+                     const gfx::Rect& screen_rect);
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
+#endif
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 
@@ -493,6 +503,7 @@ bool NeedsReload() override;
   void ReportRenderProcessStatus();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
+  void SetFrameRateLinkerEnable(bool enable);
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

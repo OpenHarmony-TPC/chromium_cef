@@ -65,6 +65,8 @@ class CefDisplayHandlerCToCpp
   void OnMediaAccessChange(CefRefPtr<CefBrowser> browser,
                            bool has_video_access,
                            bool has_audio_access) override;
+  void OnViewportFitChange(CefRefPtr<CefBrowser> browser,
+                           int viewport_fit) override;
   void OnReceivedTouchIconUrl(CefRefPtr<CefBrowser> browser,
                               const CefString& icon_url,
                               bool precomposed) override;

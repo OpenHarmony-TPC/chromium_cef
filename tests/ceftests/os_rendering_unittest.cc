@@ -1206,7 +1206,8 @@ class OSRTestHandler : public RoutingTestHandler,
                                   TextInputMode input_mode
 #if BUILDFLAG(IS_OHOS)
                                   ,
-                                  bool show_keyboard
+                                  bool show_keyboard,
+                                  is_need_reset_listener
 #endif
                                   ) override {
     if (test_type_ == OSR_TEST_VIRTUAL_KEYBOARD && started()) {

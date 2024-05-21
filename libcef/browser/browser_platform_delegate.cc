@@ -175,6 +175,12 @@ void CefBrowserPlatformDelegate::SendMouseMoveEvent(const CefMouseEvent& event,
   NOTIMPLEMENTED();
 }
 
+void CefBrowserPlatformDelegate::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                        double vx,
+                                                        double vy) {
+  NOTIMPLEMENTED();
+}
+
 void CefBrowserPlatformDelegate::SendMouseWheelEvent(const CefMouseEvent& event,
                                                      int deltaX,
                                                      int deltaY) {
@@ -276,6 +282,10 @@ void CefBrowserPlatformDelegate::OnWindowShow() {
 }
 
 void CefBrowserPlatformDelegate::OnWindowHide() {
+  NOTREACHED();
+}
+
+void CefBrowserPlatformDelegate::OnOnlineRenderToForeground() {
   NOTREACHED();
 }
 
@@ -464,6 +474,32 @@ void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
 #ifdef OHOS_EX_TOPCONTROLS
 int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
   return 0;
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
+                                                    int top,
+                                                    int right,
+                                                    int bottom) {
+  NOTIMPLEMENTED();
+}
+#endif
+
+#ifdef OHOS_AI
+void CefBrowserPlatformDelegate::CreateOverlay(const gfx::ImageSkia& image,
+                                               const gfx::Rect& image_rect,
+                                               const gfx::Point& touch_point,
+                                               const gfx::Rect& screen_rect) {
+  DCHECK(false);
+}
+
+void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
+  DCHECK(false);
+}
+
+float CefBrowserPlatformDelegate::GetPageScaleFactor() {
+  return 1;
 }
 #endif
 

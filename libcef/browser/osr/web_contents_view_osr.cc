@@ -321,3 +321,31 @@ void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
   }
 }
 #endif  // OHOS_EX_TOPCONTROLS
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefWebContentsViewOSR::OnSafeInsetsChange(int left,
+                                               int top,
+                                               int right,
+                                               int bottom) {
+  if (web_contents_) {
+    content::WebContentsImpl* web_contents_impl =
+        static_cast<content::WebContentsImpl*>(web_contents_);
+    if (web_contents_impl) {
+      web_contents_impl->SetDisplayCutoutSafeArea(
+          gfx::Insets::TLBR(top, left, bottom, right));
+    }
+  }
+}
+#endif
+
+#ifdef OHOS_AI
+void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
+                                          const gfx::Rect& image_rect,
+                                          const gfx::Point& touch_point,
+                                          const gfx::Rect& screen_rect) {
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get()) {
+    browser->CreateOverlay(image, image_rect, touch_point, screen_rect);
+  }
+}
+#endif

@@ -150,6 +150,7 @@ class OhGinJavascriptBridgeDispatcherHost
   ObjectMethodMap async_method_map_;
   std::shared_mutex share_mutex_;
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
+  std::unordered_map<int32_t, std::unordered_set<std::string>> object_id_map_;
 
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;

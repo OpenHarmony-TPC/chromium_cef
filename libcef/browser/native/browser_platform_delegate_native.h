@@ -47,6 +47,8 @@ class CefBrowserPlatformDelegateNative
       const CefMouseEvent& mouse_event,
       int deltaX,
       int deltaY) const = 0;
+  virtual blink::WebGestureEvent TranslateTouchpadFlingEvent(
+      const CefMouseEvent& mouse_event) const = 0;
 
   const CefWindowInfo& window_info() const { return window_info_; }
 

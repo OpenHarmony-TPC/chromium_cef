@@ -207,6 +207,25 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
   view->SendMouseEvent(web_event);
 }
 
+void CefBrowserPlatformDelegateOsr::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                           double vx,
+                                                           double vy) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+
+  blink::WebGestureEvent fling_start =
+      native_delegate_->TranslateTouchpadFlingEvent(event);
+  fling_start.SetType(blink::WebInputEvent::Type::kGestureFlingStart);
+  fling_start.data.fling_start.velocity_x = vx;
+  fling_start.data.fling_start.velocity_y = vy;
+  fling_start.data.fling_start.target_viewport = false;
+  fling_start.SetSourceDevice(blink::mojom::GestureDevice::kTouchpad);
+
+  view->SendTouchpadFlingEvent(fling_start);
+}
+
 void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     const CefMouseEvent& event,
     int deltaX,
@@ -1005,5 +1024,50 @@ int CefBrowserPlatformDelegateOsr::GetShrinkViewportHeight() {
     return view->GetShrinkViewportHeight();
   }
   return 0;
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserPlatformDelegateOsr::OnSafeInsetsChange(int left,
+                                                       int top,
+                                                       int right,
+                                                       int bottom) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    return;
+  }
+  view->OnSafeInsetsChange(left, top, right, bottom);
+}
+#endif
+
+#ifdef OHOS_AI
+void CefBrowserPlatformDelegateOsr::CreateOverlay(const gfx::ImageSkia& image,
+                                                  const gfx::Rect& image_rect,
+                                                  const gfx::Point& touch_point,
+                                                  const gfx::Rect& screen_rect) {
+  CefRefPtr<CefRenderHandler> handler = 
+      browser_->GetClient()->GetRenderHandler();
+
+  if(handler.get()) {
+    CefRefPtr<CefImage> cef_image(new CefImageImpl(image));
+    CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
+    CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
+    CefPoint cef_touch_point(touch_point.x(), touch_point.y());
+    LOG(INFO) << "CefBrowserPlatformDelegateOsr::CreateOverlay";
+    handler->CreateOverlay(browser_, cef_image, cef_image_rect, cef_touch_point, cef_screen_rect);
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnTextSelected(flag);
+  }
+}
+
+float CefBrowserPlatformDelegateOsr::GetPageScaleFactor() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    return view->GetPageScaleFactor();
+  }
+  return 1;
 }
 #endif

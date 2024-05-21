@@ -222,6 +222,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void GetHitData(int& type, CefString& extra_data);
   void SetOverscrollMode(int mode);
   void SetScrollable(bool enable);
+  void UpdateDrawRect();
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)

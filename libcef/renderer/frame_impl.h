@@ -229,6 +229,7 @@ class CefFrameImpl
       cef::mojom::RenderFrame::GetHitDataCallback callback) override;
   void SetOverscrollMode(int mode) override;
   void SetScrollable(bool enable) override;
+  void UpdateDrawRect() override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,

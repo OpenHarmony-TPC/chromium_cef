@@ -630,6 +630,10 @@ struct CefBrowserSettingsTraits {
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
     target->record_whole_document = src->record_whole_document;
 #endif
+
+#if defined(OHOS_MULTI_WINDOW)
+    target->supports_multiple_windows = src->supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
   }
 };
 

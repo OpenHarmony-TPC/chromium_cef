@@ -91,6 +91,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void SendTouchEventList(
       const std::vector<CefTouchEvent>& event_list) override;
   void NotifyScreenInfoChanged() override;
@@ -276,7 +277,14 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
                              bool is_async) override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event,
+                              double vx,
+                              double vy) override;
   void SetFitContentMode(int mode) override;
+  void UpdateDrawRect() override;
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

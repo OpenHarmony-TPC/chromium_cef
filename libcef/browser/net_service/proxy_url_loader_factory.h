@@ -164,6 +164,16 @@ class ProxyURLLoaderFactory
 
   ~ProxyURLLoaderFactory() override;
 
+#ifdef OHOS_NETWORK_LOAD
+  // Create a proxy object on the UI thread.
+  static void CreateProxy(
+      content::BrowserContext* browser_context,
+      mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+      mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
+          header_client,
+      std::unique_ptr<InterceptedRequestHandler> request_handler,
+      network::mojom::URLLoaderFactoryOverridePtr* factory_override);
+#else
   // Create a proxy object on the UI thread.
   static void CreateProxy(
       content::BrowserContext* browser_context,
@@ -171,6 +181,7 @@ class ProxyURLLoaderFactory
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
       std::unique_ptr<InterceptedRequestHandler> request_handler);
+#endif
 
   // Create a proxy object on the IO thread.
   static void CreateProxy(

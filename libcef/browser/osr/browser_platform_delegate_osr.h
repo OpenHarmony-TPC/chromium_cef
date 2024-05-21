@@ -46,10 +46,14 @@ class CefBrowserPlatformDelegateOsr
                            bool mouseUp,
                            int clickCount) override;
   void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event,
+                              double vx,
+                              double vy) override;
   void SendMouseWheelEvent(const CefMouseEvent& event,
                            int deltaX,
                            int deltaY) override;
   void SendTouchEvent(const CefTouchEvent& event) override;
+
   void SetFocus(bool setFocus) override;
   gfx::Point GetScreenPoint(const gfx::Point& view,
                             bool want_dip_coords) const override;
@@ -154,10 +158,23 @@ class CefBrowserPlatformDelegateOsr
   int GetShrinkViewportHeight() override;
 #endif
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+#endif
+
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
   gfx::Point GetParentScreenPoint(const gfx::Point& view,
                                   bool want_dip_coords) const override;
+
+#ifdef OHOS_AI
+  void CreateOverlay(const gfx::ImageSkia& image,
+                     const gfx::Rect& image_rect,
+                     const gfx::Point& touch_point,
+                     const gfx::Rect& screen_rect) override;
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
+#endif
 
  protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.

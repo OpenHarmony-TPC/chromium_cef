@@ -177,6 +177,7 @@ void OhosPrintManager::BindPrintManagerHost(
     mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost> receiver,
     content::RenderFrameHost* rfh) {
   LOG(INFO) << "OhosPrintManager::BindPrintManagerHost";
+  rfh_ = rfh;
   auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!web_contents) {
     LOG(ERROR) << "web_contents is nullptr.";
@@ -188,7 +189,6 @@ void OhosPrintManager::BindPrintManagerHost(
     LOG(ERROR) << "print_manager is nullptr.";
     return;
   }
-  rfh_ = rfh;
   print_manager->BindReceiver(std::move(receiver), rfh);
 }
 
@@ -296,6 +296,10 @@ void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcont
       }
     }
     return;
+  }
+
+  if (!pdf_rfh_) {
+    pdf_rfh_ = rfh_;
   }
 
   if (is_pdf_print_) {
@@ -527,7 +531,6 @@ void OhosPrintManager::PrintPdfRequested() {
       printTokenMap_.end()) {
     token_ = printTokenMap_[base::Process::Current().Pid()];
   }
-  pdf_rfh_ = rfh_;
   cancel_ = false;
   if (!PrintNow()) {
     is_pdf_print_ = false;

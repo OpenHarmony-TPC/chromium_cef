@@ -57,6 +57,7 @@
 #if BUILDFLAG(IS_OHOS)
 #include "base/logging.h"
 #include "base/ohos/sys_info_utils.h"
+#include "content/browser/gpu/gpu_process_host.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -767,6 +768,31 @@ void AlloyBrowserHostImpl::OnWindowHide() {
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
   is_hidden_ = true;
   ReportRenderProcessStatus();
+  SetFrameRateLinkerEnable(false);
+}
+
+void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnOnlineRenderToForeground");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::OnOnlineRenderToForeground";
+  SetFrameRateLinkerEnable(true);
+}
+
+void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
+{
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      return;
+    }
+    OHOS::NWeb::OhosAdapterHelper::GetInstance().GetVSyncAdapter().SetFrameRateLinkerEnable(enable);
+  }
 }
 
 void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
@@ -1856,7 +1882,8 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
 
   CefRenderHandler::CefNativeEmbedData data_info;
   data_info.status = static_cast<CefRenderHandler::CefEmbedLifeStatus>(state);
-  data_info.surfaceId = gpu::GpuSurfaceIdTracker::Get()->AcquireNativeImageSurfaceId(native_embed_info.native_embed_id);
+  content::GpuProcessHost* host = content::GpuProcessHost::Get();
+  data_info.surfaceId = host->gpu_host()->GetSurfaceId(native_embed_info.native_embed_id);
   data_info.embedId = std::to_string(native_embed_info.native_embed_id);
   data_info.info.id = native_embed_info.embed_element_id;
   data_info.info.x = native_embed_info.rect.x();
@@ -2004,7 +2031,7 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
     client_->GetMediaHandler()->OnMediaStateChanged(this, type, state);
   }
 
-#if BUILDFLAG(IS_OHOS) 
+#if BUILDFLAG(IS_OHOS)
   if (type == cef_media_type_t::VIDEO) {
     has_video_playing_ = false;
     if (set_lower_frame_rate_) {
@@ -2025,7 +2052,7 @@ void AlloyBrowserHostImpl::UpdateVSyncFrequency() {
     LOG(DEBUG) << "UpdateVSyncFrequency Fail due to no video playing";
     return;
   }
-  
+
   if (has_touch_event_) {
     LOG(DEBUG) << "UpdateVSyncFrequency Fail due to touch event";
     has_touch_event_ = false;
@@ -2049,7 +2076,7 @@ void AlloyBrowserHostImpl::ResetVSyncFrequency() {
     LOG(DEBUG) << "VSync adjustment is only available for mobile deive";
     return;
   }
-  
+
   auto rvh = web_contents()->GetRenderViewHost();
   if (rvh && rvh->GetWidget()) {
     CefRenderWidgetHostViewOSR* view =
@@ -2309,7 +2336,8 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   }
   ReportWindowStatus(true);
   ReportRenderProcessStatus();
-
+  LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
+  SetFrameRateLinkerEnable(!is_hidden_);
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
@@ -2762,5 +2790,29 @@ void AlloyBrowserHostImpl::NotifyNeedsReload(bool needs_reload) {
 
 bool AlloyBrowserHostImpl::NeedsReload() {
   return needs_reload_;
+}
+#endif
+
+#ifdef OHOS_AI
+void AlloyBrowserHostImpl::CreateOverlay(const gfx::ImageSkia& image,
+                                         const gfx::Rect& image_rect,
+                                         const gfx::Point& touch_point,
+                                         const gfx::Rect& screen_rect) {
+  if (platform_delegate_) {
+    platform_delegate_->CreateOverlay(image, image_rect, touch_point, screen_rect);
+  }
+}
+
+void AlloyBrowserHostImpl::OnTextSelected(bool flag) {
+  if (platform_delegate_) {
+    platform_delegate_->OnTextSelected(flag);
+  }
+}
+
+float AlloyBrowserHostImpl::GetPageScaleFactor() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPageScaleFactor();
+  }
+  return 1;
 }
 #endif

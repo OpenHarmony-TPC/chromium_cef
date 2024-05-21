@@ -934,6 +934,11 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* on_window_hide)(struct _cef_browser_host_t* self);
 
   ///
+  /// Running and do something when the render visible
+  ///
+  void(CEF_CALLBACK* on_online_render_to_foreground)(struct _cef_browser_host_t* self);
+
+  ///
   /// Send touch event list to the browser for a windowless browser.
   ///
   void(CEF_CALLBACK* send_touch_event_list)(
@@ -1863,9 +1868,42 @@ typedef struct _cef_browser_host_t {
                                               int is_async);
 
   ///
+  /// Send a touchpad fling event to the browser.
+  ///
+  void(CEF_CALLBACK* send_touchpad_fling_event)(
+      struct _cef_browser_host_t* self,
+      const cef_mouse_event_t* event,
+      double vx,
+      double vy);
+
+  ///
   /// Set the fit content mode
   ///
   void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self, int mode);
+
+  ///
+  ///  update draw_rect state.
+  ///
+  void(CEF_CALLBACK* update_draw_rect)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Notify that safe insets change.
+  ///
+  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
+                                            int left,
+                                            int top,
+                                            int right,
+                                            int bottom);
+
+  ///
+  ///  Called when text is selected.
+  ///
+  void(CEF_CALLBACK* on_text_selected)(struct _cef_browser_host_t* self, bool flag);
+
+  ///
+  ///  Get page scale factor.
+  ///
+  float(CEF_CALLBACK* get_page_scale_factor)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

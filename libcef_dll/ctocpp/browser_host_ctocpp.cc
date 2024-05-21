@@ -738,6 +738,20 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnWindowHide() {
   _struct->on_window_hide(_struct);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnOnlineRenderToForeground() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_online_render_to_foreground)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_online_render_to_foreground(_struct);
+}
+
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SendTouchEventList(
     const std::vector<CefTouchEvent>& event_list) {
@@ -3064,6 +3078,23 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
   }
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SendTouchpadFlingEvent(const CefMouseEvent& event,
+                                                  double vx,
+                                                  double vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, send_touchpad_fling_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->send_touchpad_fling_event(_struct, &event, vx, vy);
+}
+
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3076,6 +3107,66 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) 
 
   // Execute
   _struct->set_fit_content_mode(_struct, mode);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::UpdateDrawRect() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_draw_rect)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->update_draw_rect(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
+                                              int top,
+                                              int right,
+                                              int bottom) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_safe_insets_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_safe_insets_change(_struct, left, top, right, bottom);
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnTextSelected(bool flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_text_selected)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_text_selected(_struct, flag);
+}
+
+NO_SANITIZE("cfi-icall") float CefBrowserHostCToCpp::GetPageScaleFactor() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_page_scale_factor)) {
+    return 1;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  return _struct->get_page_scale_factor(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

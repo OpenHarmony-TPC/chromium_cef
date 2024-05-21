@@ -238,6 +238,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                            bool mouseUp,
                            int clickCount) override;
   void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) override;
   void SendMouseWheelEvent(const CefMouseEvent& event,
                            int deltaX,
                            int deltaY) override;
@@ -415,6 +416,7 @@ bool NeedsReload() override;
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;
   void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
@@ -441,6 +443,7 @@ bool NeedsReload() override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable) override;
+  void UpdateDrawRect() override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;
@@ -672,6 +675,15 @@ bool TerminateRenderProcess() override;
 #endif
 #endif  // IS_OHOS
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+#endif
+
+#ifdef OHOS_AI
+  void OnTextSelected(bool flag) override;
+  float GetPageScaleFactor() override;
+#endif
+
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
@@ -738,15 +750,16 @@ bool TerminateRenderProcess() override;
 
   bool UseLegacyGeolocationPermissionAPI();
 
-  int32_t WriteResponseCache(const std::string& url,
-                             const std::string& script,
-                             std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
+  oh_code_cache::NextOp WriteResponseCache(
+      const std::string& url,
+      const std::string& script,
+      std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
 
   void OnDidWriteResponseCache(const std::string& url,
                                const std::string& script,
                                std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                CefRefPtr<CefPrecompileCallback> callback,
-                               int32_t result);
+                               oh_code_cache::NextOp nextOp);
 
   void GenerateCodeCache(const std::string& url,
                          const std::string& script,

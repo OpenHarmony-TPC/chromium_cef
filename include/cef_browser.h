@@ -144,18 +144,6 @@ class CefCacheOptions : public virtual CefBaseRefCounted {
   ///
   /*--cef(default_retval=nullptr)--*/
   virtual cef_string_map_t GetResponseHeaders() = 0;
-
-  ///
-  /// Return if the javascript is module script.
-  ///
-  /*--cef()--*/
-  virtual bool IsModule() = 0;
-
-  ///
-  /// Return if use top-level to compile script.
-  ///
-  /*--cef()--*/
-  virtual bool IsTopLevel() = 0;
 };
 
 ///
@@ -963,6 +951,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnWindowHide() = 0;
+
+  ///
+  /// Running and do something when the render visible
+  ///
+  /*--cef()--*/
+  virtual void OnOnlineRenderToForeground() = 0;
 
   ///
   /// Send touch event list to the browser for a windowless browser.
@@ -1892,10 +1886,40 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                      bool is_async) = 0;
 
   ///
+  /// SendTouchpadFlingEvent
+  ///
+  /*--cef()--*/
+  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) = 0;
+
+  ///
   /// Set the fit content mode
   ///
   /*--cef()--*/
   virtual void SetFitContentMode(int mode) = 0;
+
+  ///
+  /// update draw_rect state.
+  ///
+  /*--cef()--*/
+  virtual void UpdateDrawRect() = 0;
+
+  ///
+  /// Called when text is selected.
+  ///
+  /*--cef()--*/
+  virtual void OnTextSelected(bool flag) = 0;
+
+  ///
+  /// Get page scale factor.
+  ///
+  /*--cef()--*/
+  virtual float GetPageScaleFactor() = 0;
 #endif  // BUILDFLAG(IS_OHOS)
+
+  ///
+  /// OnSafeInsetsChange
+  ///
+  /*--cef()--*/
+  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

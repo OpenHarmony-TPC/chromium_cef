@@ -45,6 +45,7 @@
 #include "components/security_state/content/content_utils.h"
 #include "components/security_state/core/security_state.h"
 #include "content/browser/web_contents/web_contents_impl.h"
+#include "gpu/ipc/common/nweb_native_window_tracker.h"
 #include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
 #include "content/public/common/url_constants.h"
@@ -57,7 +58,6 @@
 #include "ohos_adapter_helper.h"
 #include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
-#include "ui/gl/nweb_native_window_tracker.h"
 #endif
 
 #if defined(OHOS_MEDIA_POLICY)
@@ -413,7 +413,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
   content::Referrer referrer = content::Referrer::SanitizeForRequest(
-      gurl, content::Referrer(web_contents->GetLastCommittedURL(), 
+      gurl, content::Referrer(web_contents->GetLastCommittedURL(),
                               network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
   manager->DownloadUrl(std::move(params));
@@ -897,6 +897,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   settings_.record_whole_document = browser_settings.record_whole_document;
 #endif
+
+#if defined(OHOS_MULTI_WINDOW)
+  settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -1181,6 +1185,24 @@ void CefBrowserHostBase::SendMouseMoveEvent(const CefMouseEvent& event,
 
   if (platform_delegate_) {
     platform_delegate_->SendMouseMoveEvent(event, mouseLeave);
+  }
+}
+
+void CefBrowserHostBase::SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) {
+  if (vx == 0 && vy == 0) {
+    // Nothing to do.
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHostBase::SendTouchpadFlingEvent, this,
+                                 event, vx, vy));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->SendTouchpadFlingEvent(event, vx, vy);
   }
 }
 
@@ -2957,7 +2979,7 @@ void CefBrowserHostBase::ExecuteJavaScriptExt(
 }
 
 void CefBrowserHostBase::SetNativeWindow(cef_native_window_t window) {
-  widget_ = NWebNativeWindowTracker::Instance().AddNativeWindow(window);
+  widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
 
 cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget() {
@@ -3025,6 +3047,10 @@ void CefBrowserHostBase::OnWindowShow() {
 }
 
 void CefBrowserHostBase::OnWindowHide() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+void CefBrowserHostBase::OnOnlineRenderToForeground() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
@@ -3166,6 +3192,13 @@ uint64_t CefBrowserHostBase::GetCurrentTimestamp() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(
              now.time_since_epoch())
       .count();
+}
+
+void CefBrowserHostBase::UpdateDrawRect() {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->UpdateDrawRect();
+  }
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 
@@ -3539,6 +3572,7 @@ void CefBrowserHostBase::SetNWebId(int NWebID) {
 #endif  // defined(OHOS_WEBRTC)
 }
 
+#if BUILDFLAG(IS_OHOS)
 void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
                                               const std::string& script,
                                               CefRefPtr<CefCacheOptions> cacheOptions,
@@ -3555,8 +3589,7 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
     responseHeaders.emplace(key.ToString(), value.ToString());
   }
 
-  auto options = std::make_shared<oh_code_cache::CacheOptions>(
-      responseHeaders, cacheOptions->IsModule(), cacheOptions->IsTopLevel());
+  auto options = std::make_shared<oh_code_cache::CacheOptions>(responseHeaders);
   
   oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,
@@ -3565,46 +3598,45 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
           this, url, script, options, std::move(callback)));
 }
 
-int32_t CefBrowserHostBase::WriteResponseCache(const std::string& url,
-                                               const std::string& script,
-                                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions) {
+oh_code_cache::NextOp CefBrowserHostBase::WriteResponseCache(
+    const std::string& url,
+    const std::string& script,
+    std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions) {
   auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(url);
 
   if (!response_cache) {
-    LOG(ERROR) << "Internal error: create response cache error.";
-    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
+    LOG(ERROR) << "Create response cache error.";
+    return oh_code_cache::NextOp::THROW_ERROR;
   }
 
-  if (!response_cache->Write(cacheOptions->response_headers_, script)) {
-    LOG(ERROR) << "Internal error: write into response cache error.";
-    return static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR);
-  }
-
-  LOG(DEBUG) << "Write into response cache successfully.";
-  return static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR);
+  return response_cache->Write(cacheOptions->response_headers_, script);
 }
 
 void CefBrowserHostBase::OnDidWriteResponseCache(const std::string& url,
                                                  const std::string& script,
                                                  std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                                  CefRefPtr<CefPrecompileCallback> callback,
-                                                 int32_t result) {
-  if (result != static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR)) {
-    LOG(ERROR) << "Internal error: get write response cache result is error.";
-    callback->OnPrecompileFinished(result);
-    return;
+                                                 oh_code_cache::NextOp nextOp) {
+  switch (nextOp) {
+    case oh_code_cache::NextOp::WRITE_CODE_CACHE:
+      GenerateCodeCache(url, script, cacheOptions, std::move(callback));
+      break;
+    case oh_code_cache::NextOp::THROW_ERROR:
+      callback->OnPrecompileFinished(static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
+      break;
+    default:
+      callback->OnPrecompileFinished(static_cast<int32_t>(oh_code_cache::CacheError::NO_ERROR));
+      break;
   }
-
-  GenerateCodeCache(url, script, cacheOptions, std::move(callback));
 }
-  
+
 void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
                                            const std::string& script,
                                            std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
                                            CefRefPtr<CefPrecompileCallback> callback) {
   auto wc = GetWebContents();
   if (wc == nullptr) {
-    LOG(ERROR) << "Internal error: WebContents has not initialized.";
+    LOG(ERROR) << "WebContents has not initialized.";
     callback->OnPrecompileFinished(
         static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
     return;
@@ -3619,6 +3651,7 @@ void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback>
   LOG(DEBUG) << "Get generate code cache result: " << result;
   callback->OnPrecompileFinished(result);
 }
+#endif
 
 #ifdef OHOS_RENDER_PROCESS_MODE
 void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
@@ -3628,5 +3661,36 @@ void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
 bool CefBrowserHostBase::NeedsReload() {
   // TODO(ohos): please impl the function and remove this comment.
   return false;
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserHostBase::OnSafeInsetsChange(int left,
+                                            int top,
+                                            int right,
+                                            int bottom) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHostBase::OnSafeInsetsChange, this,
+                                 left, top, right, bottom));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->OnSafeInsetsChange(left, top, right, bottom);
+  }
+}
+#endif
+
+#ifdef OHOS_AI
+void CefBrowserHostBase::OnTextSelected(bool flag) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+
+float CefBrowserHostBase::GetPageScaleFactor() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPageScaleFactor();
+  }
+  return 1;
 }
 #endif

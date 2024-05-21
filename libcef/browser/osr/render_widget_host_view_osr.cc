@@ -1416,11 +1416,9 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
                                                   size_t offset,
                                                   const gfx::Range& range) {
   RenderWidgetHostViewBase::SelectionChanged(text, offset, range);
-
   if (!browser_impl_.get()) {
     return;
   }
-
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
@@ -1431,12 +1429,6 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
   handler->OnSelectionChanged(browser_impl_.get(), text, cef_range);
 #endif  // defined(OHOS_INPUT_EVENTS)
 
-#if BUILDFLAG(IS_OHOS)
-  if (text.empty() && range.is_empty()) {
-    //add protection to avoid crash in IMFAdapter::OnSelectionChange
-    return;
-  }
-#endif
   CefString selected_text;
   if (!range.is_empty() && !text.empty()) {
     size_t pos = range.GetMin() - offset;
@@ -1448,7 +1440,7 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     is_select_text_ = n - pos > 0;
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
-
+ 
   handler->OnTextSelectionChanged(browser_impl_.get(), selected_text,
                                   cef_range);
 }
@@ -2045,6 +2037,24 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
   }
 }
 
+void CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent(
+    blink::WebGestureEvent event) {
+  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent");
+
+  if (render_widget_host_ && render_widget_host_->GetView()) {
+    if (ShouldRouteEvents()) {
+      render_widget_host_->delegate()
+          ->GetInputEventRouter()
+          ->RouteGestureEvent(
+              this, const_cast<blink::WebGestureEvent*>(&event),
+              ui::LatencyInfo(ui::SourceEventType::WHEEL));
+    } else {
+      render_widget_host_->GetView()->ProcessGestureEvent(
+          event, ui::LatencyInfo(ui::SourceEventType::WHEEL));
+    }
+  }
+}
+
 void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
     const blink::WebMouseWheelEvent& event) {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendMouseWheelEvent");
@@ -2329,10 +2339,31 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalledInner(const ui::mojom::TextInputState* state) {
+  CefRefPtr<CefRenderHandler> handler =
+    browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  if (state != nullptr) {
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: state->show_ime_if_needed " << state->show_ime_if_needed;
+    std::u16string whole_text = state->value.value_or(std::u16string());
+    CefRange selection_range(state->selection.start(), state->selection.end());
+    CefRange compositon_range = CefRange::InvalidRange();
+    if (state->composition) {
+      gfx::Range range = state->composition.value();
+      compositon_range.Set(range.start(), range.end());
+    }
+    handler->OnUpdateTextInputStateCalled(browser_impl_.get(), whole_text, selection_range, compositon_range);
+  } else {
+    ImeFinishComposingText(false);
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: status is nullptr, finish compositon";
+  }
+}
+
 void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     content::TextInputManager* text_input_manager,
     content::RenderWidgetHostViewBase* updated_view,
     bool did_update_state) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled ";
   CefRenderHandler::TextInputMode mode = CEF_TEXT_INPUT_MODE_NONE;
   CefRenderHandler::TextInputType type = CEF_TEXT_INPUT_TYPE_NONE;
   bool show_keyboard = false;
@@ -2342,11 +2373,21 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     LOG(INFO) << "The keyboard status is not updated when pressed";
     return;
   }
+
   const auto state = text_input_manager->GetTextInputState();
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-
+  bool is_need_reset_ime_listener = false;
+  if (state) {
+    int32_t current_node_id = state->node_id;
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: node->ID " << state->node_id <<
+      ", node_id_ " << node_id_;
+    if (current_node_id != node_id_) {
+      is_need_reset_ime_listener = true;
+      node_id_ = current_node_id;
+    }
+  }
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
         static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
@@ -2362,28 +2403,31 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     LOG(INFO) << "Autofocus requires a keyboard to be bound, "
                  "but there is no need to pull up the keyboard";
     // TODO(OHOS) Specific implementation needs to be completed
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested update state";
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
-                                        state->show_ime_if_needed);
+                                        state->show_ime_if_needed,
+                                        is_need_reset_ime_listener);
+    OnUpdateTextInputStateCalledInner(state);
     return;
   }
   if (!show_keyboard) {
     last_key_code_ = -1;
   }
 
-  if (!HasFocus()) {
-    show_keyboard = false;
-    mode = CEF_TEXT_INPUT_MODE_NONE;
-  }
-
   if (state && state->show_ime_if_needed) {
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested show_ime_if_needed";
     // TODO(OHOS) Specific implementation needs to be completed
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
-                                        show_keyboard);
+                                        show_keyboard,
+                                        is_need_reset_ime_listener);
   } else if ((!state || mode == CEF_TEXT_INPUT_MODE_NONE) && !is_editable_node_) {
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested not editable";
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
                                         CEF_TEXT_INPUT_MODE_NONE,
-                                        CEF_TEXT_INPUT_TYPE_NONE, false);
+                                        CEF_TEXT_INPUT_TYPE_NONE, false,
+                                        is_need_reset_ime_listener);
   }
+  OnUpdateTextInputStateCalledInner(state);
 #else
   const auto state = text_input_manager->GetTextInputState();
   if (state && !state->show_ime_if_needed)
@@ -3157,11 +3201,11 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
-  if (input_event.IsGestureScroll()) {
-    if (!scroll_enabled_) {
-      LOG(DEBUG) << "can not GestureScroll, scroll is disabled";
-      return blink::mojom::InputEventResultState::kConsumed;
-    }
+  if (!scroll_enabled_ &&
+      input_event.GetType() ==
+          blink::WebInputEvent::Type::kGestureScrollUpdate) {
+    LOG(DEBUG) << "can not GestureScroll, scroll is disabled";
+    return blink::mojom::InputEventResultState::kConsumed;
   }
 
   if (input_event.GetType() ==
@@ -3185,6 +3229,13 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
+#ifdef OHOS_AI
+      if (render_widget_host_) {
+        gfx::Rect screen_rect = render_widget_host_->GetScreenRect();
+        CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
+        handler->OnOverlayStateChanged(browser_impl_.get(), cef_screen_rect);
+      }
+#endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
                is_mouse_wheel_scroll_) {
@@ -3364,5 +3415,34 @@ ui::Compositor* CefRenderWidgetHostViewOSR::GetCompositor() {
   }
   return nullptr;
 #endif
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(int left,
+                                                    int top,
+                                                    int right,
+                                                    int bottom) {
+  float ratio = 1.f;
+  auto browser = browser_impl_->GetBrowser();
+  if (browser != nullptr && browser->GetHost() != nullptr) {
+    ratio = browser->GetHost()->GetVirtualPixelRatio();
+  }
+  if (auto rvh_delegate_view = host()->delegate()->GetDelegateView()) {
+    rvh_delegate_view->OnSafeInsetsChange(left / ratio, top / ratio,
+                                          right / ratio, bottom / ratio);
+  }
+}
+#endif
+
+#ifdef OHOS_AI
+void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
+  if (render_widget_host_) {
+    render_widget_host_->OnTextSelected(flag);
+  }
+}
+
+float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
+  return page_scale_factor_;
 }
 #endif

@@ -829,6 +829,21 @@ browser_host_on_window_hide(struct _cef_browser_host_t* self) {
 }
 
 void CEF_CALLBACK
+browser_host_on_online_render_to_foreground(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnOnlineRenderToForeground();
+}
+
+void CEF_CALLBACK
 browser_host_send_touch_event_list(struct _cef_browser_host_t* self,
                                    size_t event_listCount,
                                    cef_touch_event_t const* event_list) {
@@ -3338,6 +3353,32 @@ browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
       is_async ? true : false);
 }
 
+void CEF_CALLBACK
+browser_host_send_touchpad_fling_event(struct _cef_browser_host_t* self,
+                                       const cef_mouse_event_t* event,
+                                       double vx,
+                                       double vy) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: event; type: simple_byref_const
+  DCHECK(event);
+  if (!event) {
+    return;
+  }
+
+  // Translate param: event; type: simple_byref_const
+  CefMouseEvent eventVal = event ? *event : CefMouseEvent();
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SendTouchpadFlingEvent(eventVal, vx, vy);
+}
+
 void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* self,
                                              int mode) {
   shutdown_checker::AssertNotShutdown();
@@ -3351,6 +3392,53 @@ void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* 
 
   // Execute
   CefBrowserHostCppToC::Get(self)->SetFitContentMode(mode);
+}
+
+void CEF_CALLBACK
+browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
+                                   int left,
+                                   int top,
+                                   int right,
+                                   int bottom) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
+}
+
+void CEF_CALLBACK browser_host_on_text_selected(struct _cef_browser_host_t* self, bool flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnTextSelected(flag);
+}
+
+float CEF_CALLBACK browser_host_get_page_scale_factor(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 1;
+  }
+
+  // Execute
+  return CefBrowserHostCppToC::Get(self)->GetPageScaleFactor();
 }
 
 }  // namespace
@@ -3393,6 +3481,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_occluded = browser_host_was_occluded;
   GetStruct()->on_window_show = browser_host_on_window_show;
   GetStruct()->on_window_hide = browser_host_on_window_hide;
+  GetStruct()->on_online_render_to_foreground = browser_host_on_online_render_to_foreground;
   GetStruct()->send_touch_event_list = browser_host_send_touch_event_list;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;
@@ -3540,7 +3629,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->needs_reload = browser_host_needs_reload;
   GetStruct()->terminate_render_process = browser_host_terminate_render_process;
   GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
+  GetStruct()->send_touchpad_fling_event = browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
+  GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
+  GetStruct()->on_text_selected = browser_host_on_text_selected;
+  GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
 }
 
 // DESTRUCTOR - Do not edit by hand.
