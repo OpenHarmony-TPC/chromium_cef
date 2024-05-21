@@ -215,6 +215,7 @@ class CefRenderWidgetHostViewOSR
   void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
   void SetScrollable(bool enable);
+  void OnDidNavigateMainFrameToNewPage() override;
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)

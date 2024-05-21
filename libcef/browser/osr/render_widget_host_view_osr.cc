@@ -3402,6 +3402,10 @@ void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
 }
+
+void CefRenderWidgetHostViewOSR::OnDidNavigateMainFrameToNewPage() {
+  ResetGestureDetection(false);
+}
 #endif
 
 #if BUILDFLAG(IS_OHOS)
