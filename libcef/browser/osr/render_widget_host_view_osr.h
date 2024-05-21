@@ -54,6 +54,10 @@
 #include <unordered_map>
 #endif
 
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+#include "content/browser/ohos/software_compositor_host_ohos.h"
+#endif
+
 namespace ui {
 class TouchSelectionController;
 }  // namespace ui
@@ -254,6 +258,9 @@ class CefRenderWidgetHostViewOSR
 
   void OnFrameComplete(const viz::BeginFrameAck& ack);
 
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+  void OnRendererWidgetCreated() override;
+#endif
   // RenderFrameMetadataProvider::Observer implementation.
 
 #if BUILDFLAG(IS_OHOS)
@@ -531,6 +538,10 @@ class CefRenderWidgetHostViewOSR
   SkColor background_color_;
 
   int frame_rate_threshold_us_ = 0;
+
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+  std::unique_ptr<content::SoftwareCompositorHostOhos> software_compositor_;
+#endif
 
   std::unique_ptr<ui::Compositor> compositor_;
   std::unique_ptr<content::DelegatedFrameHost> delegated_frame_host_;

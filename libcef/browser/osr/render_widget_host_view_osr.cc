@@ -1539,6 +1539,13 @@ void CefRenderWidgetHostViewOSR::OnFrameComplete(
   begin_frame_pending_ = false;
 }
 
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+void CefRenderWidgetHostViewOSR::OnRendererWidgetCreated() {
+  software_compositor_ = std::make_unique<content::SoftwareCompositorHostOhos>(
+      render_widget_host_);
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     const cc::RenderFrameMetadata& metadata) {
