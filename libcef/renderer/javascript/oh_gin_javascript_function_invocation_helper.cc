@@ -209,7 +209,7 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
   }
 
   auto flowbufferAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateFlowbufferAdapter();
-  if (!flowbufferAdapter) {
+  if (!flowbufferAdapter || (object->object_id() == 1073741824)) {
     return InvokeJavascriptMethod(arguments, error, args, object);
   }
   flowbufferAdapter->StartPerformanceBoost();
