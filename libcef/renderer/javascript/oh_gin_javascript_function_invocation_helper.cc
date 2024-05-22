@@ -21,6 +21,7 @@
 #define MAX_ENTRIES 10
 #define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
 #define INDEX_SIZE 2
+#define DEFAULT_ID 1073741824
 
 namespace {
 
@@ -209,7 +210,7 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
   }
 
   auto flowbufferAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateFlowbufferAdapter();
-  if (!flowbufferAdapter) {
+  if (!flowbufferAdapter || (object->object_id() == DEFAULT_ID)) {
     return InvokeJavascriptMethod(arguments, error, args, object);
   }
   flowbufferAdapter->StartPerformanceBoost();
