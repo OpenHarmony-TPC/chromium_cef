@@ -647,6 +647,13 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                          &status_text, &mime_type, &charset,
                                          &content_length, &extra_headers);
 
+  LOG(DEBUG) << "intercept StreamReaderURLLoader::HeadersComplete"
+              << " request_id=" << request_id_
+              << " status_code=" << status_code
+              << " status_text=" << status_text
+              << " mime_type=" << mime_type
+              << " charset=" << charset
+              << " content_length=" << content_length;
   if (status_code < 0) {
     // Early exit if the handler reported an error.
     RequestComplete(status_code);
@@ -740,7 +747,7 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
   char* memory = shared_memory_mapping.GetMemoryAs<char>();
 
   size_t size = response_delegate_->GetResponseDataBuffer(memory);
-  LOG(DEBUG) << "shared-memory GetResponseDataBuffer buffer size=" << size;
+  LOG(DEBUG) << "shared-memory+++ GetResponseDataBuffer buffer size=" << size;
 
   base::ReadOnlySharedMemoryRegion read_only_region = base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
   if (!read_only_region.IsValid()) {
@@ -748,6 +755,7 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
     return false;
   }
   client_->OnTransferDataWithSharedMemory(std::move(read_only_region), bufferSize);
+  LOG(DEBUG) << "shared-memory--- GetResponseDataBuffer buffer size=" << bufferSize;
 
   return true;
 }
@@ -820,7 +828,10 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
                                std::move(cached_metadata_));
     
 #if BUILDFLAG(IS_OHOS)
-    if (!TryTransferDataWithSharedMemory()) {
+    bool is_sync_mode = request_id_ & 1;
+    LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders request_id_=" << request_id_
+                << ", is_sync_mode=" << is_sync_mode;
+    if (!is_sync_mode || !TryTransferDataWithSharedMemory()) {
       ReadMore();
     }
 #else

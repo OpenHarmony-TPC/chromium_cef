@@ -700,6 +700,7 @@ void InterceptedRequest::OnReceiveResponse(
 
 #if BUILDFLAG(IS_OHOS)
 void InterceptedRequest::OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region, uint64_t buffer_size) {
+  LOG(DEBUG) << "shared-memory InterceptedRequest::OnTransferDataWithSharedMemory buffer_size=" << buffer_size;
   target_client_->OnTransferDataWithSharedMemory(std::move(region), buffer_size);
 }
 #endif
