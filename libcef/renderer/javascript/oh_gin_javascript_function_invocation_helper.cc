@@ -21,7 +21,7 @@
 #define MAX_ENTRIES 10
 #define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
 #define INDEX_SIZE 2
-#define DEFAULT_ID (2^30)
+#define DEFAULT_ID 1073741824
 
 namespace {
 
