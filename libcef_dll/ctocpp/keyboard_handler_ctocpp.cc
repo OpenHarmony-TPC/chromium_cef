@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1f77e5ba9943c185ba4386869716694140c1916c$
+// $hash=08b4e8be7a1e7b465a3f9484a6d43f047b1d6601$
 //
 
 #include "libcef_dll/ctocpp/keyboard_handler_ctocpp.h"
@@ -86,6 +86,22 @@ bool CefKeyboardHandlerCToCpp::OnKeyEvent(CefRefPtr<CefBrowser> browser,
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefKeyboardHandlerCToCpp::KeyboardReDispatch(const CefKeyEvent& event,
+                                                  bool isUsed) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_keyboard_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, keyboard_re_dispatch)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->keyboard_re_dispatch(_struct, &event, isUsed);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

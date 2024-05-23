@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=848f814c0f2aa5d22c3a09a4109ebe960190874e$
+// $hash=ca358ee4938f50e44c518bf6030d50baaf5699a4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_KEYBOARD_HANDLER_CTOCPP_H_
@@ -42,6 +42,7 @@ class CefKeyboardHandlerCToCpp
   bool OnKeyEvent(CefRefPtr<CefBrowser> browser,
                   const CefKeyEvent& event,
                   CefEventHandle os_event) override;
+  void KeyboardReDispatch(const CefKeyEvent& event, bool isUsed) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_KEYBOARD_HANDLER_CTOCPP_H_

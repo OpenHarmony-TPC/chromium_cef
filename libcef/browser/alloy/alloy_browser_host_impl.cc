@@ -90,6 +90,7 @@
 
 #if defined(OHOS_INPUT_EVENTS)
 #include "ohos_nweb/src/nweb_inputmethod_handler.h"
+#include "libcef/browser/browser_util.h"
 #endif
 
 #if defined(OHOS_INCOGNITO_MODE)
@@ -1593,9 +1594,8 @@ bool AlloyBrowserHostImpl::IsNeedZoomChange(
   }
   return false;
 }
-#endif
 
-bool AlloyBrowserHostImpl::HandleKeyboardEvent(
+bool AlloyBrowserHostImpl::WebHandleKeyboardEvent(
     content::WebContents* source,
     const content::NativeWebKeyboardEvent& event) {
   // Check to see if event should be ignored.
@@ -1607,7 +1607,6 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     return true;
   }
 
-#if defined(OHOS_INPUT_EVENTS)
   if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
     return true;
   }
@@ -1616,9 +1615,42 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
   if (IsNeedZoomChange(event, zoom_in)) {
     LOG(DEBUG) << "ContentsZoomChange when HandleKeyboardEvent";
     ContentsZoomChange(zoom_in);
+    return true;
   }
-#endif
   return false;
+}
+#endif
+
+bool AlloyBrowserHostImpl::HandleKeyboardEvent(
+    content::WebContents* source,
+    const content::NativeWebKeyboardEvent& event) {
+#if defined(OHOS_INPUT_EVENTS)
+  bool isUsed = WebHandleKeyboardEvent(source, event);
+  CefRefPtr<CefKeyboardHandler> handler;
+  CefKeyEvent cef_event;
+  browser_util::GetCefKeyEvent(event, cef_event);
+  if (client_) {
+    handler = client_->GetKeyboardHandler();
+  }
+  if (handler) {
+    handler->KeyboardReDispatch(cef_event, isUsed);
+  }
+  return isUsed;
+#else
+  // Check to see if event should be ignored.
+  if (event.skip_in_browser) {
+    return false;
+  }
+
+  if (contents_delegate_->HandleKeyboardEvent(source, event)) {
+    return true;
+  }
+
+  if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
+    return true;
+  }
+  return false;
+#endif
 }
 
 bool AlloyBrowserHostImpl::PreHandleGestureEvent(

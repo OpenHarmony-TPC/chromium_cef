@@ -509,6 +509,9 @@ bool NeedsReload() override;
 #if defined(OHOS_INPUT_EVENTS)
   bool IsNeedZoomChange(const content::NativeWebKeyboardEvent& event,
     bool& zoom_in);
+  bool WebHandleKeyboardEvent(
+      content::WebContents* source,
+      const content::NativeWebKeyboardEvent& event);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)

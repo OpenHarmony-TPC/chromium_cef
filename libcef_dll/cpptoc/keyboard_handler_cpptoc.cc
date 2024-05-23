@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4d7915109b97e7cda6b232032d2905c8a68313d2$
+// $hash=512af2fc43b6e067e8da97be513fe1afb7da1960$
 //
 
 #include "libcef_dll/cpptoc/keyboard_handler_cpptoc.h"
@@ -105,6 +105,32 @@ keyboard_handler_on_key_event(struct _cef_keyboard_handler_t* self,
   return _retval;
 }
 
+void CEF_CALLBACK
+keyboard_handler_keyboard_re_dispatch(struct _cef_keyboard_handler_t* self,
+                                      const cef_key_event_t* event,
+                                      int isUsed) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: event; type: simple_byref_const
+  DCHECK(event);
+  if (!event) {
+    return;
+  }
+
+  // Translate param: event; type: simple_byref_const
+  CefKeyEvent eventVal = event ? *event : CefKeyEvent();
+
+  // Execute
+  CefKeyboardHandlerCppToC::Get(self)->KeyboardReDispatch(
+      eventVal, isUsed ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -112,6 +138,7 @@ keyboard_handler_on_key_event(struct _cef_keyboard_handler_t* self,
 CefKeyboardHandlerCppToC::CefKeyboardHandlerCppToC() {
   GetStruct()->on_pre_key_event = keyboard_handler_on_pre_key_event;
   GetStruct()->on_key_event = keyboard_handler_on_key_event;
+  GetStruct()->keyboard_re_dispatch = keyboard_handler_keyboard_re_dispatch;
 }
 
 // DESTRUCTOR - Do not edit by hand.
