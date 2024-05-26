@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4b22d24aa5cb43fc88c7efdda9cc789aa7d899cd$
+// $hash=bff15239c1e02d17f966bca0c76c1de3bff97f77$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -18,6 +18,7 @@
 #include "libcef_dll/ctocpp/accessibility_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/gesture_event_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
+#include "libcef_dll/transfer_util.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
@@ -496,7 +497,8 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     TextInputMode input_mode,
     TextInputType input_type,
     bool show_keyboard,
-    bool is_need_reset_listener) {
+    bool is_need_reset_listener,
+    const AttributesMap &attributes) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -512,11 +514,23 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     return;
   }
 
+  // Translate param: attributes; type: string_map_single_byref_const
+  cef_string_map_t attributesMap = cef_string_map_alloc();
+  DCHECK(attributesMap);
+  if (attributesMap) {
+    transfer_string_map_contents(attributes, attributesMap);
+  }
+
   // Execute
   _struct->on_virtual_keyboard_requested(_struct,
                                          CefBrowserCppToC::Wrap(browser),
                                          input_mode, input_type, show_keyboard,
-                                         is_need_reset_listener);
+                                         is_need_reset_listener, attributesMap);
+
+  // Restore param:attributes; type: string_map_single_byref_const
+  if (attributesMap) {
+    cef_string_map_free(attributesMap);
+  }
 }
 
 NO_SANITIZE("cfi-icall")

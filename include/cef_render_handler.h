@@ -63,6 +63,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef cef_embed_touch_event_t CefEmbedTouchEvent;
   typedef cef_embed_life_change_t CefEmbedLifeStatus;
   typedef cef_embed_touch_type_t CefEmbedTouchType;
+  typedef std::map<CefString, CefString> AttributesMap;
 #endif
 
   ///
@@ -260,7 +261,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                           TextInputMode input_mode,
                                           TextInputType input_type,
                                           bool show_keyboard,
-                                          bool is_need_reset_listener) {}
+                                          bool is_need_reset_listener,
+                                          const AttributesMap& attributes) {}
 
   ///
   /// Called when touch selection is updated. The client is responsible for

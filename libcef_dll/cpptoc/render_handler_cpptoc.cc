@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e09a7f6bf280e041b0ea07d8786438f86486f9a5$
+// $hash=2832c8a1653ebef528f4072febc164ea1ec3f114$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -19,6 +19,7 @@
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/template_util.h"
+#include "libcef_dll/transfer_util.h"
 
 namespace {
 
@@ -587,7 +588,8 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_text_input_mode_t input_mode,
                                              cef_text_input_type_t input_type,
                                              int show_keyboard,
-                                             int is_need_reset_listener) {
+                                             int is_need_reset_listener,
+                                             cef_string_map_t attributes) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -601,12 +603,22 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
   if (!browser) {
     return;
   }
+  // Verify param: attributes; type: string_map_single_byref_const
+  DCHECK(attributes);
+  if (!attributes) {
+    return;
+  }
+
+  // Translate param: attributes; type: string_map_single_byref_const
+  std::map<CefString, CefString> attributesMap;
+  transfer_string_map_contents(attributes, attributesMap);
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
       CefBrowserCToCpp::Wrap(browser), input_mode, input_type,
       show_keyboard ? true : false,
-      is_need_reset_listener ? true : false);
+      is_need_reset_listener ? true : false,
+      attributesMap);
 }
 
 void CEF_CALLBACK render_handler_on_touch_selection_changed(

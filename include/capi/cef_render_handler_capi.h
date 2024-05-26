@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b12c98d0c481b6f32fb97f9b5c726e7d05a85871$
+// $hash=a881b390064ffc1f6930241250f6f985f78bd6eb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -255,7 +255,8 @@ typedef struct _cef_render_handler_t {
       cef_text_input_mode_t input_mode,
       cef_text_input_type_t input_type,
       int show_keyboard,
-      int is_need_reset_listener);
+      int is_need_reset_listener,
+      cef_string_map_t attributes);
 
   ///
   /// Called when touch selection is updated. The client is responsible for

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=385c5eab6a273e67905fde190023629cf03f65f0$
+// $hash=f5570c331c62bd1254ea3dac2d58d0a389bbcd86$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -82,7 +82,8 @@ class CefRenderHandlerCToCpp
                                   TextInputMode input_mode,
                                   TextInputType input_type,
                                   bool show_keyboard,
-                                  bool is_need_reset_listener) override;
+                                  bool is_need_reset_listener,
+                                  const AttributesMap &attributes) override;
   void OnTouchSelectionChanged(
       const CefTouchHandleState& insert_handle,
       const CefTouchHandleState& start_selection_handle,
