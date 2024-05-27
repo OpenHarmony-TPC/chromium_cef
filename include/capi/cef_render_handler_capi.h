@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a881b390064ffc1f6930241250f6f985f78bd6eb$
+// $hash=6790eb27cf4fa0278d85df604c6fa807c89c51d2$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -254,6 +254,8 @@ typedef struct _cef_render_handler_t {
       struct _cef_browser_t* browser,
       cef_text_input_mode_t input_mode,
       cef_text_input_type_t input_type,
+      cef_text_input_action_t input_action,
+      cef_text_input_flags_t input_flags,
       int show_keyboard,
       int is_need_reset_listener,
       cef_string_map_t attributes);
@@ -373,22 +375,15 @@ typedef struct _cef_render_handler_t {
   ///
   /// Called when select all is clicked.
   ///
-  void (CEF_CALLBACK* notify_select_all_clicked)(struct _cef_render_handler_t* self,
-                                                int select_all);
+  void(CEF_CALLBACK* notify_select_all_clicked)(
+      struct _cef_render_handler_t* self,
+      int select_all);
 
   ///
-  // Called when the RootLayer has changed.
+  /// Called when scroll begin or end.
   ///
   void(CEF_CALLBACK* release_resize_hold)(struct _cef_render_handler_t* self,
-                                            struct _cef_browser_t* browser);
-  ///
-  /// Called when select word.
-  ///
-  void(CEF_CALLBACK* get_word_selection)(struct _cef_render_handler_t* self,
-                                         struct _cef_browser_t* browser,
-                                         const cef_string_t* text,
-                                         int8_t offset,
-                                         cef_point_t* select);
+                                          struct _cef_browser_t* browser);
 
   ///
   /// Called when text input state has changed for the specified |browser|.
@@ -399,6 +394,33 @@ typedef struct _cef_render_handler_t {
       const cef_string_t* text,
       const cef_range_t* selected_range,
       const cef_range_t* compositon_range);
+
+  ///
+  /// Called when selecting word.
+  ///
+  void(CEF_CALLBACK* get_word_selection)(struct _cef_render_handler_t* self,
+                                         struct _cef_browser_t* browser,
+                                         const cef_string_t* text,
+                                         int8_t offset,
+                                         cef_point_t* select);
+
+  ///
+  /// Called when creating overlay.
+  ///
+  void(CEF_CALLBACK* create_overlay)(struct _cef_render_handler_t* self,
+                                     struct _cef_browser_t* browser,
+                                     struct _cef_image_t* cef_image,
+                                     const cef_rect_t* cef_image_rect,
+                                     const cef_point_t* cef_touch_point,
+                                     const cef_rect_t* cef_screen_rect);
+
+  ///
+  /// Called when overlay state is changed.
+  ///
+  void(CEF_CALLBACK* on_overlay_state_changed)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_rect_t* cef_screen_rect);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

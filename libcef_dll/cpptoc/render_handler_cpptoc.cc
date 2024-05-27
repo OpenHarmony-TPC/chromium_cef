@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2832c8a1653ebef528f4072febc164ea1ec3f114$
+// $hash=526e2af2c9a3ae55e20ebae0d85e4a2b3cbe3ce2$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -17,6 +17,7 @@
 #include "libcef_dll/cpptoc/gesture_event_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
+#include "libcef_dll/ctocpp/image_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/template_util.h"
 #include "libcef_dll/transfer_util.h"
@@ -582,14 +583,16 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
       selected_rangeVal);
 }
 
-void CEF_CALLBACK
-render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
-                                             cef_browser_t* browser,
-                                             cef_text_input_mode_t input_mode,
-                                             cef_text_input_type_t input_type,
-                                             int show_keyboard,
-                                             int is_need_reset_listener,
-                                             cef_string_map_t attributes) {
+void CEF_CALLBACK render_handler_on_virtual_keyboard_requested(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    cef_text_input_mode_t input_mode,
+    cef_text_input_type_t input_type,
+    cef_text_input_action_t input_action,
+    cef_text_input_flags_t input_flags,
+    int show_keyboard,
+    int is_need_reset_listener,
+    cef_string_map_t attributes) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -615,10 +618,9 @@ render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode, input_type,
-      show_keyboard ? true : false,
-      is_need_reset_listener ? true : false,
-      attributesMap);
+      CefBrowserCToCpp::Wrap(browser), input_mode, input_type, input_action,
+      input_flags, show_keyboard ? true : false,
+      is_need_reset_listener ? true : false, attributesMap);
 }
 
 void CEF_CALLBACK render_handler_on_touch_selection_changed(
@@ -1011,16 +1013,19 @@ void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
 
 void CEF_CALLBACK
 render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
-                                        int select_all) {
+                                         int select_all) {
   shutdown_checker::AssertNotShutdown();
+
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
   DCHECK(self);
   if (!self) {
     return;
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true : false);
+  CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true
+                                                                       : false);
 }
 
 void CEF_CALLBACK
@@ -1043,49 +1048,6 @@ render_handler_release_resize_hold(struct _cef_render_handler_t* self,
   // Execute
   CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(
       CefBrowserCToCpp::Wrap(browser));
-}
-
-void CEF_CALLBACK
-render_handler_get_word_selection(struct _cef_render_handler_t* self,
-                                  cef_browser_t* browser,
-                                  const cef_string_t* text,
-                                  int8_t offset,
-                                  cef_point_t* select) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(text);
-  if (!text) {
-    return;
-  }
-  // Verify param: select; type: simple_byref
-  DCHECK(select);
-  if (!select) {
-    return;
-  }
-
-  // Translate param: select; type: simple_byref
-  CefPoint selectVal = select ? *select : CefPoint();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->GetWordSelection(
-      CefBrowserCToCpp::Wrap(browser), CefString(text), offset, selectVal);
-
-  // Restore param: select; type: simple_byref
-  if (select) {
-    *select = selectVal;
-  }
 }
 
 void CEF_CALLBACK render_handler_on_update_text_input_state_called(
@@ -1134,6 +1096,135 @@ void CEF_CALLBACK render_handler_on_update_text_input_state_called(
       CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal,
       compositon_rangeVal);
 }
+
+void CEF_CALLBACK
+render_handler_get_word_selection(struct _cef_render_handler_t* self,
+                                  cef_browser_t* browser,
+                                  const cef_string_t* text,
+                                  int8_t offset,
+                                  cef_point_t* select) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(text);
+  if (!text) {
+    return;
+  }
+  // Verify param: select; type: simple_byref
+  DCHECK(select);
+  if (!select) {
+    return;
+  }
+
+  // Translate param: select; type: simple_byref
+  CefPoint selectVal = select ? *select : CefPoint();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetWordSelection(
+      CefBrowserCToCpp::Wrap(browser), CefString(text), offset, selectVal);
+
+  // Restore param: select; type: simple_byref
+  if (select) {
+    *select = selectVal;
+  }
+}
+
+void CEF_CALLBACK
+render_handler_create_overlay(struct _cef_render_handler_t* self,
+                              cef_browser_t* browser,
+                              cef_image_t* cef_image,
+                              const cef_rect_t* cef_image_rect,
+                              const cef_point_t* cef_touch_point,
+                              const cef_rect_t* cef_screen_rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: cef_image; type: refptr_diff
+  DCHECK(cef_image);
+  if (!cef_image) {
+    return;
+  }
+  // Verify param: cef_image_rect; type: simple_byref_const
+  DCHECK(cef_image_rect);
+  if (!cef_image_rect) {
+    return;
+  }
+  // Verify param: cef_touch_point; type: simple_byref_const
+  DCHECK(cef_touch_point);
+  if (!cef_touch_point) {
+    return;
+  }
+  // Verify param: cef_screen_rect; type: simple_byref_const
+  DCHECK(cef_screen_rect);
+  if (!cef_screen_rect) {
+    return;
+  }
+
+  // Translate param: cef_image_rect; type: simple_byref_const
+  CefRect cef_image_rectVal = cef_image_rect ? *cef_image_rect : CefRect();
+  // Translate param: cef_touch_point; type: simple_byref_const
+  CefPoint cef_touch_pointVal = cef_touch_point ? *cef_touch_point : CefPoint();
+  // Translate param: cef_screen_rect; type: simple_byref_const
+  CefRect cef_screen_rectVal = cef_screen_rect ? *cef_screen_rect : CefRect();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->CreateOverlay(
+      CefBrowserCToCpp::Wrap(browser), CefImageCToCpp::Wrap(cef_image),
+      cef_image_rectVal, cef_touch_pointVal, cef_screen_rectVal);
+}
+
+void CEF_CALLBACK
+render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
+                                        cef_browser_t* browser,
+                                        const cef_rect_t* cef_screen_rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: cef_screen_rect; type: simple_byref_const
+  DCHECK(cef_screen_rect);
+  if (!cef_screen_rect) {
+    return;
+  }
+
+  // Translate param: cef_screen_rect; type: simple_byref_const
+  CefRect cef_screen_rectVal = cef_screen_rect ? *cef_screen_rect : CefRect();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnOverlayStateChanged(
+      CefBrowserCToCpp::Wrap(browser), cef_screen_rectVal);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1182,11 +1273,15 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_native_embed_gesture_event;
   GetStruct()->on_native_embed_lifecycle_change =
       render_handler_on_native_embed_lifecycle_change;
-  GetStruct()->notify_select_all_clicked = render_handler_notify_select_all_clicked;
+  GetStruct()->notify_select_all_clicked =
+      render_handler_notify_select_all_clicked;
   GetStruct()->release_resize_hold = render_handler_release_resize_hold;
-  GetStruct()->get_word_selection = render_handler_get_word_selection;
   GetStruct()->on_update_text_input_state_called =
       render_handler_on_update_text_input_state_called;
+  GetStruct()->get_word_selection = render_handler_get_word_selection;
+  GetStruct()->create_overlay = render_handler_create_overlay;
+  GetStruct()->on_overlay_state_changed =
+      render_handler_on_overlay_state_changed;
 }
 
 // DESTRUCTOR - Do not edit by hand.
