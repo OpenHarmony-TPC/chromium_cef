@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4fda16f765119b1e4b97ce891721f6e07fd35f86$
+// $hash=11bd5e1e0445d7f4acd1edffba1eb65a70678bfa$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1904,6 +1904,15 @@ typedef struct _cef_browser_host_t {
   ///  Get page scale factor.
   ///
   float(CEF_CALLBACK* get_page_scale_factor)(struct _cef_browser_host_t* self);
+
+  ///
+  /// WebPageSnapshot, return result by callback
+  ///
+  int(CEF_CALLBACK* web_page_snapshot)(struct _cef_browser_host_t* self,
+                                       const char* id,
+                                       int width,
+                                       int height,
+                                       cef_web_snapshot_callback_t callback);
 } cef_browser_host_t;
 
 ///

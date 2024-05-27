@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4a1cc573f6d9bd0c3823ee5dfcd8aa6739de46ea$
+// $hash=7da307fe1dbd383df1534c5adbadea3719400e46$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -3167,6 +3167,35 @@ NO_SANITIZE("cfi-icall") float CefBrowserHostCToCpp::GetPageScaleFactor() {
 
   // Execute
   return _struct->get_page_scale_factor(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::WebPageSnapshot(
+    const char* id,
+    int width,
+    int height,
+    cef_web_snapshot_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, web_page_snapshot)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: id; type: simple_byaddr
+  DCHECK(id);
+  if (!id) {
+    return false;
+  }
+
+  // Execute
+  int _retval =
+      _struct->web_page_snapshot(_struct, id, width, height, std::move(callback));
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.

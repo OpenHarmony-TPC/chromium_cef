@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=471cc26c2223243dcb5cc3e699af4c8433a45701$
+// $hash=a08a07aaa754f9363e44a951e8c56334f5df3670$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -285,6 +285,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void OnTextSelected(bool flag) override;
   float GetPageScaleFactor() override;
+  bool WebPageSnapshot(const char* id,
+                       int width,
+                       int height,
+                       cef_web_snapshot_callback_t callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

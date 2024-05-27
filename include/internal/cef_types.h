@@ -61,6 +61,10 @@ typedef uint32 cef_color_t;
 // Permission request callback.
 typedef base::RepeatingCallback<void(bool)> cef_permission_callback_t;
 
+// Web snapshot callback.
+typedef base::OnceCallback<void(const char*, bool, void*, int, int)>
+    cef_web_snapshot_callback_t;
+
 // cef accelerated widget type
 typedef uint32_t cef_accelerated_widget_t;
 
