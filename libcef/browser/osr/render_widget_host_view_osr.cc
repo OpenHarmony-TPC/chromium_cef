@@ -2374,6 +2374,15 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRenderHandler::TextInputMode mode = CEF_TEXT_INPUT_MODE_NONE;
   CefRenderHandler::TextInputType type = CEF_TEXT_INPUT_TYPE_NONE;
   bool show_keyboard = false;
+  std::map<CefString, CefString> text_input_attributes;
+  const auto state = text_input_manager->GetTextInputState();
+  if (state) {
+    for (const auto& atrribute : state->input_element_attributes) {
+      text_input_attributes.insert(std::make_pair<CefString, CefString>(CefString(atrribute.first),
+        CefString(atrribute.second)));
+    }
+  }
+
 #if defined(OHOS_INPUT_EVENTS)
   if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN &&
       is_editable_node_) {
@@ -2381,7 +2390,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     return;
   }
 
-  const auto state = text_input_manager->GetTextInputState();
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
@@ -2413,7 +2421,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested update state";
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
                                         state->show_ime_if_needed,
-                                        is_need_reset_ime_listener);
+                                        is_need_reset_ime_listener, text_input_attributes);
     OnUpdateTextInputStateCalledInner(state);
     return;
   }
@@ -2426,13 +2434,13 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     // TODO(OHOS) Specific implementation needs to be completed
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
                                         show_keyboard,
-                                        is_need_reset_ime_listener);
+                                        is_need_reset_ime_listener, text_input_attributes);
   } else if ((!state || mode == CEF_TEXT_INPUT_MODE_NONE) && !is_editable_node_) {
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested not editable";
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
                                         CEF_TEXT_INPUT_MODE_NONE,
                                         CEF_TEXT_INPUT_TYPE_NONE, false,
-                                        is_need_reset_ime_listener);
+                                        is_need_reset_ime_listener, text_input_attributes);
   }
   OnUpdateTextInputStateCalledInner(state);
 #else
