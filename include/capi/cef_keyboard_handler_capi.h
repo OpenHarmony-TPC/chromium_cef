@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=0bfe161c51cc6378b2e8e2e2b2c017b750b46864$
+// $hash=ff98aa63503337d5ff7840082a00686f578d78bd$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_KEYBOARD_HANDLER_CAPI_H_
@@ -81,6 +81,14 @@ typedef struct _cef_keyboard_handler_t {
                                   struct _cef_browser_t* browser,
                                   const cef_key_event_t* event,
                                   cef_event_handle_t os_event);
+
+  ///
+  /// This structure is invoked to notify the upper-layer application whether
+  /// the key is used
+  ///
+  void(CEF_CALLBACK* keyboard_re_dispatch)(struct _cef_keyboard_handler_t* self,
+                                           const cef_key_event_t* event,
+                                           int isUsed);
 } cef_keyboard_handler_t;
 
 #ifdef __cplusplus
