@@ -64,6 +64,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef cef_embed_life_change_t CefEmbedLifeStatus;
   typedef cef_embed_touch_type_t CefEmbedTouchType;
   typedef std::map<CefString, CefString> AttributesMap;
+  typedef cef_text_input_action_t TextInputAction;
+  typedef cef_text_input_flags_t TextInputFlags;
 #endif
 
   ///
@@ -260,6 +262,8 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                           TextInputMode input_mode,
                                           TextInputType input_type,
+                                          TextInputAction input_action,
+                                          TextInputFlags input_flags,
                                           bool show_keyboard,
                                           bool is_need_reset_listener,
                                           const AttributesMap& attributes) {}
@@ -403,7 +407,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                 const CefString& text,
                                 int8_t offset,
                                 CefPoint& select) {}
-  
+
   ///
   /// Called when creating overlay.
   ///
@@ -413,7 +417,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                              const CefRect& cef_image_rect,
                              const CefPoint& cef_touch_point,
                              const CefRect& cef_screen_rect) {}
-  
+
   ///
   /// Called when overlay state is changed.
   ///
