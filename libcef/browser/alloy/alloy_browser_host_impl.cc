@@ -2091,7 +2091,13 @@ void AlloyBrowserHostImpl::UpdateVSyncFrequency() {
     return;
   }
 
-  auto rvh = web_contents()->GetRenderViewHost();
+  auto wc = web_contents();
+  if (!wc) {
+    LOG(ERROR) << "UpdateVSyncFrequency Fail due to no WebContents";
+    return;
+  }
+
+  auto rvh = wc->GetRenderViewHost();
   if (rvh && rvh->GetWidget()) {
     CefRenderWidgetHostViewOSR* view =
         static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
@@ -2109,7 +2115,13 @@ void AlloyBrowserHostImpl::ResetVSyncFrequency() {
     return;
   }
 
-  auto rvh = web_contents()->GetRenderViewHost();
+  auto wc = web_contents();
+  if (!wc) {
+    LOG(ERROR) << "ResetVSyncFrequency Fail due to no WebContents";
+    return;
+  }
+
+  auto rvh = wc->GetRenderViewHost();
   if (rvh && rvh->GetWidget()) {
     CefRenderWidgetHostViewOSR* view =
         static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
