@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f5570c331c62bd1254ea3dac2d58d0a389bbcd86$
+// $hash=3a8be84838a0840ab7c78f56725c8f0cd073f441$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -81,9 +81,11 @@ class CefRenderHandlerCToCpp
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                   TextInputMode input_mode,
                                   TextInputType input_type,
+                                  TextInputAction input_action,
+                                  TextInputFlags input_flags,
                                   bool show_keyboard,
                                   bool is_need_reset_listener,
-                                  const AttributesMap &attributes) override;
+                                  const AttributesMap& attributes) override;
   void OnTouchSelectionChanged(
       const CefTouchHandleState& insert_handle,
       const CefTouchHandleState& start_selection_handle,
@@ -115,22 +117,29 @@ class CefRenderHandlerCToCpp
                          const float y,
                          const float fling_x,
                          const float fling_y) override;
-  void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
-                                 const cef_embed_touch_event_t& event,
-                                 CefRefPtr<CefGestureEventCallback> callback) override;
-  void OnNativeEmbedLifecycleChange(
+  void OnNativeEmbedGestureEvent(
       CefRefPtr<CefBrowser> browser,
-      const cef_native_embed_data_t& info) override;
+      const CefEmbedTouchEvent& event,
+      CefRefPtr<CefGestureEventCallback> callback) override;
+  void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
+                                    const CefNativeEmbedData& info) override;
   void NotifySelectAllClicked(bool select_all) override;
   void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) override;
-  void GetWordSelection(CefRefPtr<CefBrowser> browser,
-                        const CefString& text,
-                        int8_t offset,
-                        CefPoint& select) override;
   void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
                                     const CefString& text,
                                     const CefRange& selected_range,
                                     const CefRange& compositon_range) override;
+  void GetWordSelection(CefRefPtr<CefBrowser> browser,
+                        const CefString& text,
+                        int8_t offset,
+                        CefPoint& select) override;
+  void CreateOverlay(CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefImage> cef_image,
+                     const CefRect& cef_image_rect,
+                     const CefPoint& cef_touch_point,
+                     const CefRect& cef_screen_rect) override;
+  void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
+                             const CefRect& cef_screen_rect) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
