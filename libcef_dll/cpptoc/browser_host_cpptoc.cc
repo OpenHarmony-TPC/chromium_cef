@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=344263acb9b08d8d2e6b9bab7ba26279a47eab23$
+// $hash=16dc8cb653ea3ce595d4dfc5f141d51a52adb205$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3427,6 +3427,34 @@ void CEF_CALLBACK browser_host_on_text_selected(struct _cef_browser_host_t* self
   CefBrowserHostCppToC::Get(self)->OnTextSelected(flag);
 }
 
+int CEF_CALLBACK
+browser_host_web_page_snapshot(struct _cef_browser_host_t* self,
+                               const char* id,
+                               int width,
+                               int height,
+                               cef_web_snapshot_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: id; type: simple_byaddr
+  DCHECK(id);
+  if (!id) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->WebPageSnapshot(
+      id, width, height, std::move(callback));
+
+  // Return type: bool
+  return _retval;
+}
+
 float CEF_CALLBACK browser_host_get_page_scale_factor(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3634,6 +3662,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
   GetStruct()->on_text_selected = browser_host_on_text_selected;
   GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
+  GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
 }
 
 // DESTRUCTOR - Do not edit by hand.

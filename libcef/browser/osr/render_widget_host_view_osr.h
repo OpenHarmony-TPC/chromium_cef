@@ -261,6 +261,11 @@ class CefRenderWidgetHostViewOSR
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   void OnRendererWidgetCreated() override;
+
+  bool WebPageSnapshot(const char* id,
+                       int width,
+                       int  height,
+                       cef_web_snapshot_callback_t callback);
 #endif
   // RenderFrameMetadataProvider::Observer implementation.
 

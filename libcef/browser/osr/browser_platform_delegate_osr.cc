@@ -1071,3 +1071,17 @@ float CefBrowserPlatformDelegateOsr::GetPageScaleFactor() {
   return 1;
 }
 #endif
+
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+bool CefBrowserPlatformDelegateOsr::WebPageSnapshot(
+    const char* id,
+    int width,
+    int height,
+    cef_web_snapshot_callback_t callback) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    return view->WebPageSnapshot(id, width, height, std::move(callback));
+  }
+  return false;
+}
+#endif

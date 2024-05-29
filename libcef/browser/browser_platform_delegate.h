@@ -481,6 +481,13 @@ class CefBrowserPlatformDelegate {
   virtual float GetPageScaleFactor();
 #endif
 
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+  virtual bool WebPageSnapshot(const char* id,
+                               int width,
+                               int height,
+                               cef_web_snapshot_callback_t callback);
+#endif
+
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

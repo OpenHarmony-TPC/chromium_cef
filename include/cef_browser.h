@@ -1914,6 +1914,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual float GetPageScaleFactor() = 0;
+
+  ///
+  /// WebPageSnapshot, return result by callback
+  ///
+  /*--cef()--*/
+  virtual bool WebPageSnapshot(const char* id,
+                               int width,
+                               int height,
+                               cef_web_snapshot_callback_t callback) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 
   ///

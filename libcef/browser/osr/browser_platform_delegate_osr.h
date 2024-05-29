@@ -176,6 +176,13 @@ class CefBrowserPlatformDelegateOsr
   float GetPageScaleFactor() override;
 #endif
 
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+bool WebPageSnapshot(const char* id,
+                     int width,
+                     int height,
+                     cef_web_snapshot_callback_t callback) override;
+#endif
+
  protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsr(

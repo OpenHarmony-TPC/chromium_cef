@@ -1544,6 +1544,21 @@ void CefRenderWidgetHostViewOSR::OnRendererWidgetCreated() {
   software_compositor_ = std::make_unique<content::SoftwareCompositorHostOhos>(
       render_widget_host_);
 }
+
+bool CefRenderWidgetHostViewOSR::WebPageSnapshot(
+    const char* id,
+    int width,
+    int height,
+    cef_web_snapshot_callback_t callback) {
+  if (software_compositor_) {
+    software_compositor_->DemandDrawSwAsync(id, width, height, root_layer_size_,
+                                            last_scroll_offset_,
+                                            std::move(callback));
+    return true;
+  }
+  LOG(ERROR) << "software compositor is null when get snapshot";
+  return false;
+}
 #endif
 
 #if BUILDFLAG(IS_OHOS)

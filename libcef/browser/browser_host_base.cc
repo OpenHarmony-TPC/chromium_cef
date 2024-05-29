@@ -3694,3 +3694,16 @@ float CefBrowserHostBase::GetPageScaleFactor() {
   return 1;
 }
 #endif
+
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+bool CefBrowserHostBase::WebPageSnapshot(
+    const char* id,
+    int width,
+    int height,
+    cef_web_snapshot_callback_t callback) {
+  if (platform_delegate_) {
+    return platform_delegate_->WebPageSnapshot(id, width, height, std::move(callback));
+  }
+  return false;
+}
+#endif
