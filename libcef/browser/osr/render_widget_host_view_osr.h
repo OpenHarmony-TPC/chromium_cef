@@ -679,6 +679,10 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_CLIPBOARD
   gfx::Rect clipped_selection_bounds_;
 #endif  // OHOS_CLIPBOARD
+
+#ifdef OHOS_AI
+  bool overlay_in_progress_ = false;
+#endif
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
 
