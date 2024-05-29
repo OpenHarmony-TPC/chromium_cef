@@ -327,6 +327,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                             const std::string& script,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
+  void AdvanceFocusForIME(int focusType) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7da307fe1dbd383df1534c5adbadea3719400e46$
+// $hash=cac4c7faca3328c2b222621d0a8c1c3a90ec024e$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -738,7 +738,8 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnWindowHide() {
   _struct->on_window_hide(_struct);
 }
 
-NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnOnlineRenderToForeground() {
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnOnlineRenderToForeground() {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -3095,7 +3096,8 @@ void CefBrowserHostCToCpp::SendTouchpadFlingEvent(const CefMouseEvent& event,
   _struct->send_touchpad_fling_event(_struct, &event, vx, vy);
 }
 
-NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetFitContentMode(int mode) {
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetFitContentMode(int mode) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -3123,24 +3125,6 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::UpdateDrawRect() {
   _struct->update_draw_rect(_struct);
 }
 
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
-                                              int top,
-                                              int right,
-                                              int bottom) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_safe_insets_change)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_safe_insets_change(_struct, left, top, right, bottom);
-}
-
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::OnTextSelected(bool flag) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3160,13 +3144,16 @@ NO_SANITIZE("cfi-icall") float CefBrowserHostCToCpp::GetPageScaleFactor() {
 
   cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_page_scale_factor)) {
-    return 1;
+    return 0;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  return _struct->get_page_scale_factor(_struct);
+  float _retval = _struct->get_page_scale_factor(_struct);
+
+  // Return type: simple
+  return _retval;
 }
 
 NO_SANITIZE("cfi-icall")
@@ -3196,6 +3183,39 @@ bool CefBrowserHostCToCpp::WebPageSnapshot(
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::AdvanceFocusForIME(int focusType) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, advance_focus_for_ime)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->advance_focus_for_ime(_struct, focusType);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
+                                              int top,
+                                              int right,
+                                              int bottom) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_safe_insets_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_safe_insets_change(_struct, left, top, right, bottom);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

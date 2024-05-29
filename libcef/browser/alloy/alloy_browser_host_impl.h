@@ -243,6 +243,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #if defined(OHOS_INPUT_EVENTS)
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+  void AdvanceFocusForIME(int focusType) override;
 #endif
 
 #ifdef OHOS_RENDER_PROCESS_MODE

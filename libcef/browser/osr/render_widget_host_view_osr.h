@@ -220,6 +220,7 @@ class CefRenderWidgetHostViewOSR
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
   void SetScrollable(bool enable);
   void OnDidNavigateMainFrameToNewPage() override;
+  void AdvanceFocusForIME(int focusType);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)

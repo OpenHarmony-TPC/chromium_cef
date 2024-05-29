@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=11bd5e1e0445d7f4acd1edffba1eb65a70678bfa$
+// $hash=ed6ec0c735cc8f568860d1fde92ad1327000a21c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -165,16 +165,6 @@ typedef struct _cef_cache_options_t {
   ///
   cef_string_map_t(CEF_CALLBACK* get_response_headers)(
       struct _cef_cache_options_t* self);
-
-  ///
-  /// Return if the javascript is module script.
-  ///
-  int(CEF_CALLBACK* is_module)(struct _cef_cache_options_t* self);
-
-  ///
-  /// Return if use top-level to compile script.
-  ///
-  int(CEF_CALLBACK* is_top_level)(struct _cef_cache_options_t* self);
 } cef_cache_options_t;
 
 ///
@@ -936,7 +926,8 @@ typedef struct _cef_browser_host_t {
   ///
   /// Running and do something when the render visible
   ///
-  void(CEF_CALLBACK* on_online_render_to_foreground)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK* on_online_render_to_foreground)(
+      struct _cef_browser_host_t* self);
 
   ///
   /// Send touch event list to the browser for a windowless browser.
@@ -1868,7 +1859,7 @@ typedef struct _cef_browser_host_t {
                                               int is_async);
 
   ///
-  /// Send a touchpad fling event to the browser.
+  /// SendTouchpadFlingEvent
   ///
   void(CEF_CALLBACK* send_touchpad_fling_event)(
       struct _cef_browser_host_t* self,
@@ -1879,29 +1870,22 @@ typedef struct _cef_browser_host_t {
   ///
   /// Set the fit content mode
   ///
-  void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self, int mode);
+  void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self,
+                                           int mode);
 
   ///
-  ///  update draw_rect state.
+  /// update draw_rect state.
   ///
   void(CEF_CALLBACK* update_draw_rect)(struct _cef_browser_host_t* self);
 
   ///
-  /// Notify that safe insets change.
+  /// Called when text is selected.
   ///
-  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
-                                            int left,
-                                            int top,
-                                            int right,
-                                            int bottom);
+  void(CEF_CALLBACK* on_text_selected)(struct _cef_browser_host_t* self,
+                                       int flag);
 
   ///
-  ///  Called when text is selected.
-  ///
-  void(CEF_CALLBACK* on_text_selected)(struct _cef_browser_host_t* self, bool flag);
-
-  ///
-  ///  Get page scale factor.
+  /// Get page scale factor.
   ///
   float(CEF_CALLBACK* get_page_scale_factor)(struct _cef_browser_host_t* self);
 
@@ -1913,6 +1897,21 @@ typedef struct _cef_browser_host_t {
                                        int width,
                                        int height,
                                        cef_web_snapshot_callback_t callback);
+
+  ///
+  /// Advance focus for IME to the browser.
+  ///
+  void(CEF_CALLBACK* advance_focus_for_ime)(struct _cef_browser_host_t* self,
+                                            int focusType);
+
+  ///
+  /// OnSafeInsetsChange
+  ///
+  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
+                                            int left,
+                                            int top,
+                                            int right,
+                                            int bottom);
 } cef_browser_host_t;
 
 ///

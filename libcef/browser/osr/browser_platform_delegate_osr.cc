@@ -1016,6 +1016,12 @@ void CefBrowserPlatformDelegateOsr::SetScrollable(bool enable) {
   if (view)
     view->SetScrollable(enable);
 }
+
+void CefBrowserPlatformDelegateOsr::AdvanceFocusForIME(int focusType) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->AdvanceFocusForIME(focusType);
+}
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS
