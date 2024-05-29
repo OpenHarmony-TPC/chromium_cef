@@ -3266,7 +3266,7 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
 #ifdef OHOS_AI
-      if (render_widget_host_) {
+      if (render_widget_host_ && overlay_in_progress_) {
         gfx::Rect screen_rect = render_widget_host_->GetScreenRect();
         CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
         handler->OnOverlayStateChanged(browser_impl_.get(), cef_screen_rect);
@@ -3479,6 +3479,7 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(int left,
 void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
   if (render_widget_host_) {
     render_widget_host_->OnTextSelected(flag);
+    overlay_in_progress_ = flag;
   }
 }
 
