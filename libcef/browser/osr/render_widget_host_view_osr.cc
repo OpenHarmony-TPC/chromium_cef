@@ -578,14 +578,6 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
 
   is_showing_ = true;
 
-  // If the viz::LocalSurfaceId is invalid, we may have been evicted,
-  // and no other visual properties have since been changed. Allocate a new id
-  // and start synchronizing.
-  if (!GetLocalSurfaceId().is_valid()) {
-    AllocateLocalSurfaceId();
-    SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
-                                GetLocalSurfaceId());
-  }
 #ifndef DISABLE_GPU
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
       browser_impl_->GetAcceleratedWidget());
@@ -633,7 +625,16 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
 #endif
                                     /*record_tab_switch_time_request=*/{});
   }
-
+  
+  // If the viz::LocalSurfaceId is invalid, we may have been evicted,
+  // and no other visual properties have since been changed. Allocate a new id
+  // and start synchronizing.
+  if (!GetLocalSurfaceId().is_valid()) {
+    AllocateLocalSurfaceId();
+    SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
+                                GetLocalSurfaceId());
+  }
+  
   if (!content::GpuDataManagerImpl::GetInstance()->IsGpuCompositingDisabled()) {
     // Start generating frames when we're visible and at the correct size.
     if (!video_consumer_) {
