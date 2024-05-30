@@ -8,13 +8,14 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=d5a413ed33c3f809c97c7b7cf873c0564602d1c1$
+# $hash=c1b8ac822713f57ce24a7a854fa47b402cd084f3$
 #
 
 {
   'variables': {
     'autogen_cpp_includes': [
       'include/cef_accessibility_handler.h',
+      'include/cef_adsblock_manager.h',
       'include/cef_app.h',
       'include/cef_audio_handler.h',
       'include/cef_auth_callback.h',
@@ -130,6 +131,7 @@
     ],
     'autogen_capi_includes': [
       'include/capi/cef_accessibility_handler_capi.h',
+      'include/capi/cef_adsblock_manager_capi.h',
       'include/capi/cef_app_capi.h',
       'include/capi/cef_audio_handler_capi.h',
       'include/capi/cef_auth_callback_capi.h',
@@ -245,6 +247,8 @@
       'libcef_dll/cpptoc/access_request_cpptoc.h',
       'libcef_dll/ctocpp/accessibility_handler_ctocpp.cc',
       'libcef_dll/ctocpp/accessibility_handler_ctocpp.h',
+      'libcef_dll/cpptoc/ads_block_manager_cpptoc.cc',
+      'libcef_dll/cpptoc/ads_block_manager_cpptoc.h',
       'libcef_dll/ctocpp/app_ctocpp.cc',
       'libcef_dll/ctocpp/app_ctocpp.h',
       'libcef_dll/ctocpp/audio_handler_ctocpp.cc',
@@ -631,6 +635,8 @@
       'libcef_dll/ctocpp/access_request_ctocpp.h',
       'libcef_dll/cpptoc/accessibility_handler_cpptoc.cc',
       'libcef_dll/cpptoc/accessibility_handler_cpptoc.h',
+      'libcef_dll/ctocpp/ads_block_manager_ctocpp.cc',
+      'libcef_dll/ctocpp/ads_block_manager_ctocpp.h',
       'libcef_dll/cpptoc/app_cpptoc.cc',
       'libcef_dll/cpptoc/app_cpptoc.h',
       'libcef_dll/cpptoc/audio_handler_cpptoc.cc',

@@ -36,6 +36,18 @@
 #include "services/network/public/cpp/network_switches.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "components/subresource_filter/content/browser/ohos_adblock_config.h"
+#include "components/subresource_filter/core/browser/subresource_filter_constants.h"
+#include "components/subresource_filter/core/browser/user_subresource_filter_constants.h"
+#include "components/subresource_filter/core/browser/subresource_filter_features.h"
+#include "libcef/browser/subresource_filter/adblock_ruleset_manager.h"
+#include "libcef/browser/subresource_filter/user_adblock_ruleset_manager.h"
+#include "base/files/file_util.h"
+#include "base/path_service.h"
+#include "base/logging.h"
+#endif
+
 ChromeBrowserProcessAlloy::ChromeBrowserProcessAlloy()
     : initialized_(false),
       context_initialized_(false),
@@ -182,15 +194,38 @@ PrefService* ChromeBrowserProcessAlloy::local_state() {
   if (!local_state_) {
     // Use a location that is shared by all request contexts.
     const CefSettings& settings = CefContext::Get()->settings();
+#ifdef OHOS_ARKWEB_ADBLOCK
+    base::FilePath root_cache_path =
+        base::FilePath(CefString(&settings.root_cache_path));
+#else
     const base::FilePath& root_cache_path =
         base::FilePath(CefString(&settings.root_cache_path));
+#endif
 
     // Used for very early NetworkService initialization.
     // Always persist preferences for this PrefService if possible because it
     // contains the cookie encryption key on Windows.
+#ifdef OHOS_ARKWEB_ADBLOCK
+    if (root_cache_path.empty()) {
+      base::PathService::Get(base::DIR_CACHE, &root_cache_path);
+      root_cache_path = root_cache_path.AppendASCII("global");
+      if (!base::PathExists(root_cache_path)) {
+        if (!base::CreateDirectory(root_cache_path)) {
+          LOG(ERROR) << "Create directory failed:" << root_cache_path.value();
+          return nullptr;
+        }
+      }
+    }
+    LOG(DEBUG) << "[adblock] CreatePrefService path:"
+               << root_cache_path.value();
+#endif
     local_state_ =
         browser_prefs::CreatePrefService(nullptr /* profile */, root_cache_path,
                                          true /* persist_user_preferences */);
+#ifdef OHOS_ARKWEB_ADBLOCK
+    OHOS::adblock::AdBlockConfig::GetInstance()->SetPrefService(
+        local_state_.get());
+#endif
   }
   return local_state_.get();
 }
@@ -344,9 +379,108 @@ ChromeBrowserProcessAlloy::safe_browsing_service() {
 
 subresource_filter::RulesetService*
 ChromeBrowserProcessAlloy::subresource_filter_ruleset_service() {
+#ifdef OHOS_ARKWEB_ADBLOCK
+  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+  if (!created_subresource_filter_ruleset_service_) {
+    CreateSubresourceFilterRulesetService();
+  }
+
+  return subresource_filter_ruleset_service_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif
 }
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void ChromeBrowserProcessAlloy::CreateSubresourceFilterRulesetService() {
+  DCHECK(!subresource_filter_ruleset_service_);
+  created_subresource_filter_ruleset_service_ = true;
+
+  if (!base::FeatureList::IsEnabled(
+          ::subresource_filter::kSafeBrowsingSubresourceFilter)) {
+    return;
+  }
+
+  // Runner for tasks critical for user experience.
+  scoped_refptr<base::SequencedTaskRunner> blocking_task_runner(
+      base::ThreadPool ::CreateSequencedTaskRunner(
+          {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}));
+
+  // Runner for tasks that do not influence user experience.
+  scoped_refptr<base::SequencedTaskRunner> background_task_runner(
+      base::ThreadPool::CreateSequencedTaskRunner(
+          {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
+           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}));
+
+  base::FilePath user_data_dir;
+  base::PathService::Get(base::DIR_CACHE, &user_data_dir);
+  base::FilePath indexed_ruleset_base_dir =
+      user_data_dir.Append(::subresource_filter::kTopLevelDirectoryName)
+          .Append(::subresource_filter::kIndexedRulesetBaseDirectoryName);
+  base::FilePath unindexed_ruleset_base_dir =
+      user_data_dir.Append(::subresource_filter::kTopLevelDirectoryName)
+          .Append(::subresource_filter::kUnindexedRulesetBaseDirectoryName);
+  LOG(INFO) << "[AdBlock] Create subresource filter ruleset service";
+  subresource_filter_ruleset_service_ =
+      std::make_unique<::subresource_filter::RulesetService>(
+          local_state(), background_task_runner, indexed_ruleset_base_dir,
+          unindexed_ruleset_base_dir,
+          subresource_filter::AdblockRulesetManager::GetInstance(),
+          blocking_task_runner);
+}
+
+::subresource_filter::UserRulesetService*
+ChromeBrowserProcessAlloy::subresource_filter_user_ruleset_service() {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(user_sequence_checker_);
+  if (!created_subresource_filter_user_ruleset_service_) {
+    CreateSubresourceFilterUserRulesetService();
+  }
+
+  return subresource_filter_user_ruleset_service_.get();
+}
+
+void ChromeBrowserProcessAlloy::CreateSubresourceFilterUserRulesetService() {
+  DCHECK(!subresource_filter_ruleset_service_);
+  created_subresource_filter_user_ruleset_service_ = true;
+
+  if (!base::FeatureList::IsEnabled(
+          ::subresource_filter::kSafeBrowsingSubresourceFilter)) {
+    return;
+  }
+
+  // Runner for tasks critical for user experience.
+  scoped_refptr<base::SequencedTaskRunner> blocking_task_runner(
+      base::ThreadPool ::CreateSequencedTaskRunner(
+          {base::MayBlock(), base::TaskPriority::USER_BLOCKING,
+           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}));
+
+  // Runner for tasks that do not influence user experience.
+  scoped_refptr<base::SequencedTaskRunner> background_task_runner(
+      base::ThreadPool::CreateSequencedTaskRunner(
+          {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
+           base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN}));
+
+  base::FilePath user_data_dir;
+  base::PathService::Get(base::DIR_CACHE, &user_data_dir);
+  base::FilePath user_indexed_ruleset_base_dir =
+      user_data_dir.Append(::subresource_filter::kUserTopLevelDirectoryName)
+          .Append(::subresource_filter::kUserIndexedRulesetBaseDirectoryName);
+  base::FilePath user_unindexed_ruleset_base_dir =
+      user_data_dir.Append(::subresource_filter::kUserTopLevelDirectoryName)
+          .Append(::subresource_filter::kUserUnindexedRulesetBaseDirectoryName);
+
+  LOG(INFO) << "[AdBlock] Create user subresource filter ruleset service";
+
+  subresource_filter_user_ruleset_service_ =
+      std::make_unique<::subresource_filter::UserRulesetService>(
+          local_state(), background_task_runner, user_indexed_ruleset_base_dir,
+          user_unindexed_ruleset_base_dir,
+          subresource_filter::UserAdblockRulesetManager::GetInstance(),
+          blocking_task_runner);
+}
+#endif
 
 StartupData* ChromeBrowserProcessAlloy::startup_data() {
   DCHECK(false);

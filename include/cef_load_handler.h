@@ -207,7 +207,9 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnIntelligentTrackingPreventionResult(
-      const CefString& website_host, const CefString& tracker_host) {}
+      const CefString& website_host,
+      const CefString& tracker_host) {}
+
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

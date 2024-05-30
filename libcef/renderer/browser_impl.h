@@ -102,6 +102,12 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
       override;
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  void EnableAdsBlock(bool enable) override {}
+  bool IsAdsBlockEnabled() override { return false; }
+  bool IsAdsBlockEnabledForCurPage() override { return false; }
+#endif
+
   // #ifdefined(OHOS_EX_PASSWORD)
   void SetSavePasswordAutomatically(bool enable) override{}
   bool GetSavePasswordAutomatically() override { return false; }

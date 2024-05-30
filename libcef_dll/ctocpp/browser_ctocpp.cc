@@ -889,6 +889,54 @@ bool CefBrowserCToCpp::IsIntelligentTrackingPreventionEnabled() {
   return _retval ? true : false;
 }
 
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsAdsBlockEnabled() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_ads_block_enabled)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_ads_block_enabled(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsAdsBlockEnabledForCurPage() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_ads_block_enabled_for_cur_page)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_ads_block_enabled_for_cur_page(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::EnableAdsBlock(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_ads_block)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_ads_block(_struct, enable);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

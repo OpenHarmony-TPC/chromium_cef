@@ -106,11 +106,13 @@
 #include "base/strings/sys_string_conversions.h"
 #endif
 
-#ifdef OHOS_FCP
+#if defined(OHOS_FCP) || defined(OHOS_ARKWEB_ADBLOCK)
 #include "components/page_load_metrics/renderer/metrics_render_frame_observer.h"
 #include "components/subresource_filter/content/renderer/subresource_filter_agent.h"
 #include "components/subresource_filter/content/renderer/unverified_ruleset_dealer.h"
 #include "components/subresource_filter/core/common/common_features.h"
+#include "components/subresource_filter/content/renderer/user_subresource_filter_agent.h"
+#include "components/subresource_filter/content/renderer/user_unverified_ruleset_dealer.h"
 #endif
 
 #if BUILDFLAG(IS_OHOS)
@@ -209,7 +211,7 @@ void AlloyContentRendererClient::RunSingleProcessCleanup() {
 
 void AlloyContentRendererClient::PostIOThreadCreated(
     base::SingleThreadTaskRunner*) {
-  // TODO(cef): Enable these once the implementation supports it.
+  // TODO(cef):Enable these once the implementation supports it.
   blink::WebRuntimeFeatures::EnableNotifications(false);
   blink::WebRuntimeFeatures::EnablePushMessaging(false);
 }
@@ -240,13 +242,21 @@ void AlloyContentRendererClient::RenderThreadStarted() {
   }
 
   thread->AddObserver(observer_.get());
+#if defined(OHOS_FCP) || defined(OHOS_ARKWEB_ADBLOCK)
+  subresource_filter_ruleset_dealer_ =
+      std::make_unique<subresource_filter::UnverifiedRulesetDealer>();
+  thread->AddObserver(subresource_filter_ruleset_dealer_.get());
 
+  subresource_filter_user_ruleset_dealer_.reset(
+      new subresource_filter::UserUnverifiedRulesetDealer());
+  thread->AddObserver(subresource_filter_user_ruleset_dealer_.get());
+#endif
   if (!command_line->HasSwitch(switches::kDisableSpellChecking)) {
     spellcheck_ = std::make_unique<SpellCheck>(this);
   }
 
   if (content::RenderProcessHost::run_renderer_in_process()) {
-    // When running in single-process mode register as a destruction observer
+    // When running_in single-process mode register as a destruction observer
     // on the render thread's MessageLoop.
     base::CurrentThread::Get()->AddDestructionObserver(this);
   }
@@ -268,12 +278,6 @@ void AlloyContentRendererClient::RenderThreadStarted() {
     CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
   }
 #endif  // BUILDFLAG(IS_MAC)
-
-#ifdef OHOS_FCP
-  subresource_filter_ruleset_dealer_ =
-      std::make_unique<subresource_filter::UnverifiedRulesetDealer>();
-  thread->AddObserver(subresource_filter_ruleset_dealer_.get());
-#endif
 
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RenderThreadStarted();
@@ -351,6 +355,43 @@ void AlloyContentRendererClient::PrepareErrorPage(
 
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
+#if defined(OHOS_FCP) || defined(OHOS_ARKWEB_ADBLOCK)
+  // Owned by |render_frame|.
+  page_load_metrics::MetricsRenderFrameObserver* metrics_render_frame_observer =
+      new page_load_metrics::MetricsRenderFrameObserver(render_frame);
+  // There is no render thread, thus no UnverifiedRulesetDealer in
+  // ChromeRenderViewTests.
+  if (subresource_filter_ruleset_dealer_) {
+    // Create AdResourceTracker to tracker ad resource loads at the chrome
+    // layer.
+    auto ad_resource_tracker =
+        std::make_unique<subresource_filter::AdResourceTracker>();
+    metrics_render_frame_observer->SetAdResourceTracker(
+        ad_resource_tracker.get());
+
+    auto* subresource_filter_agent =
+        new subresource_filter::SubresourceFilterAgent(
+            render_frame, subresource_filter_ruleset_dealer_.get(),
+            std::move(ad_resource_tracker));
+    subresource_filter_agent->Initialize();
+  }
+
+  page_load_metrics::MetricsRenderFrameObserver*
+      user_metrics_render_frame_observer =
+          new page_load_metrics::MetricsRenderFrameObserver(render_frame);
+  if (subresource_filter_user_ruleset_dealer_) {
+    auto user_ad_resource_tracker =
+        std::make_unique<subresource_filter::AdResourceTracker>();
+    user_metrics_render_frame_observer->SetAdResourceTracker(
+        user_ad_resource_tracker.get());
+    auto* user_subresource_filter_agent =
+        new subresource_filter::UserSubresourceFilterAgent(
+            render_frame, subresource_filter_user_ruleset_dealer_.get(),
+            std::move(user_ad_resource_tracker));
+    user_subresource_filter_agent->Initialize();
+  }
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   new js_injection::JsCommunication(render_frame);
   new AlloyContentSettingsClient(render_frame);
@@ -413,26 +454,6 @@ void AlloyContentRendererClient::RenderFrameCreated(
   }
 #endif
 
-#ifdef OHOS_FCP
-  // Owned by |render_frame|.
-  page_load_metrics::MetricsRenderFrameObserver* metrics_render_frame_observer =
-      new page_load_metrics::MetricsRenderFrameObserver(render_frame);
-  // There is no render thread, thus no UnverifiedRulesetDealer in
-  // ChromeRenderViewTests.
-  if (subresource_filter_ruleset_dealer_) {
-    // Create AdResourceTracker to tracker ad resource loads at the chrome
-    // layer.
-    auto ad_resource_tracker =
-        std::make_unique<subresource_filter::AdResourceTracker>();
-    metrics_render_frame_observer->SetAdResourceTracker(
-        ad_resource_tracker.get());
-    auto* subresource_filter_agent =
-        new subresource_filter::SubresourceFilterAgent(
-            render_frame, subresource_filter_ruleset_dealer_.get(),
-            std::move(ad_resource_tracker));
-    subresource_filter_agent->Initialize();
-  }
-#endif
 #if BUILDFLAG(IS_OHOS)
   blink::AssociatedInterfaceRegistry* associated_interfaces =
       render_frame_observer->associated_interfaces();
@@ -595,6 +616,23 @@ void AlloyContentRendererClient::RunScriptsAtDocumentStart(
   if (extensions::ExtensionsEnabled()) {
     extensions_renderer_client_->RunScriptsAtDocumentStart(render_frame);
   }
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  auto routing_id = render_frame->GetRoutingID();
+  render_frame->GetTaskRunner(blink::TaskType::kDOMManipulation)
+      ->PostTask(FROM_HERE,
+                 base::BindOnce(
+                     &AlloyContentRendererClient::TriggerElementHidingInFrame,
+                     base::Unretained(this), routing_id));
+
+  render_frame->GetTaskRunner(blink::TaskType::kDOMManipulation)
+      ->PostTask(
+          FROM_HERE,
+          base::BindOnce(
+              &AlloyContentRendererClient::TriggerUserElementHidingInFrame,
+              base::Unretained(this), routing_id));
+#endif  // OHOS_ARKWEB_ADBLOCK
+
 #if BUILDFLAG(IS_OHOS)
   js_injection::JsCommunication* communication =
       js_injection::JsCommunication::Get(render_frame);
@@ -938,6 +976,115 @@ bool AlloyContentRendererClient::HandleNavigation(
       gurl.possibly_invalid_spec(), request.HttpMethod().Utf8(), has_user_gesture, is_redirect, is_outermost_main_frame);
 
   return ignore_navigation;
+}
+#endif
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
+  // |render_frame| might be dead by now.
+  auto* render_frame = content::RenderFrame::FromRoutingID(routing_id);
+  if (!render_frame) {
+    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame render_frame null";
+    return;
+  }
+
+  blink::WebLocalFrame* web_frame = render_frame->GetWebFrame();
+  if (!web_frame) {
+    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame web_frame null";
+    return;
+  }
+
+  blink::WebDocument document = web_frame->GetDocument();
+  if (!document.Url().ProtocolIs("https") &&
+      !document.Url().ProtocolIs("http")) {
+    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
+    return;
+  }
+
+  blink::WebDocumentSubresourceFilter* filter =
+      web_frame->GetDocumentLoader()->GetWebSubresourceFilter();
+  if (!filter) {
+    LOG(DEBUG) << "[AdBlock] TriggerElementHidingInFrame filter null";
+    return;
+  }
+
+  if (web_frame->GetHasDocumentTypeOption()) {
+    LOG(WARNING) << "[AdBlock] Match $document for "
+                 << document.Url().GetString().Utf8();
+    return;
+  }
+
+  if (web_frame->GetHasElemHideTypeOption()) {
+    LOG(WARNING) << "[AdBlock] Match selemhide for "
+                 << document.Url().GetString().Utf8();
+    return;
+  }
+
+  bool has_generichide = web_frame->GetHasGenericHideTypeOption();
+  if (has_generichide) {
+    LOG(WARNING) << "[AdBlock] Match sgenerichide for "
+                 << document.Url().GetString().Utf8();
+  }
+
+  base::TimeTicks start = base::TimeTicks::Now();
+  std::unique_ptr<std::string> selectors;
+  selectors =
+      filter->GetElementHidingSelectors(document.Url(), !has_generichide);
+
+  if (!selectors->empty()) {
+    document.InsertStyleSheet(blink::WebString::FromUTF8(*selectors), nullptr,
+                              blink::WebCssOrigin::kAuthor,
+                              blink::BackForwardCacheAware::kAllow,
+                              blink::WebDocument::StyleSheetType::kAdBlock);
+    base::TimeDelta duration = base::TimeTicks::Now() - start;
+    LOG(WARNING) << "[AdBlock] Element hiding for "
+                 << document.Url().GetString().Utf8() << "assumming "
+                 << duration.InMicroseconds() << "microseconds";
+    return;
+  }
+
+  selectors.reset();
+}
+
+void AlloyContentRendererClient::TriggerUserElementHidingInFrame(
+    int routing_id) {
+  // |render_frame| might be dead by now.
+  auto* render_frame = content::RenderFrame::FromRoutingID(routing_id);
+  if (!render_frame) {
+    LOG(ERROR) << "[AdBlock] TriggerUserElementHidingInFrame render_frame null";
+    return;
+  }
+
+  blink::WebLocalFrame* web_frame = render_frame->GetWebFrame();
+  if (!web_frame) {
+    return;
+  }
+
+  blink::WebDocument document = web_frame->GetDocument();
+  if (!document.Url().ProtocolIs("https") &&
+      !document.Url().ProtocolIs("http")) {
+    return;
+  }
+  blink::WebDocumentSubresourceFilter* filter =
+      web_frame->GetDocumentLoader()->GetWebUserSubresourceFilter();
+  if (!filter) {
+    return;
+  }
+  base::TimeTicks start = base::TimeTicks::Now();
+  std::unique_ptr<std::string> selectors;
+  selectors = filter->GetElementHidingSelectors(document.Url(), true);
+  if (!selectors->empty()) {
+    document.InsertStyleSheet(blink::WebString::FromUTF8(*selectors), nullptr,
+                              blink::WebCssOrigin::kAuthor,
+                              blink::BackForwardCacheAware::kAllow,
+                              blink::WebDocument::StyleSheetType::kUserAdBlock);
+    base::TimeDelta duration = base::TimeTicks::Now() - start;
+    LOG(WARNING) << "[User AdBlock] Element hiding for "
+                 << document.Url().GetString().Utf8() << " assumming "
+                 << duration.InMicroseconds() << " microseconds";
+    return;
+  }
+  selectors.reset();
 }
 #endif
 

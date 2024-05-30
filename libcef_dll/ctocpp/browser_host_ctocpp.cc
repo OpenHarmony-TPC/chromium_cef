@@ -1652,6 +1652,22 @@ void CefBrowserHostCToCpp::SetBackgroundColor(int color) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::UpdateAdblockEasyListRules(
+    long adBlockEasyListVersion) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_adblock_easy_list_rules)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->update_adblock_easy_list_rules(_struct, adBlockEasyListVersion);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::RegisterArkJSfunction(
     const CefString& object_name,
     const std::vector<CefString>& method_list,

@@ -170,6 +170,16 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   virtual void OnHideAutofillPopup() {}
 
   ///
+  /// Show adblock num.
+  ///
+  /*--cef()--*/
+  virtual void OnAdsBlocked(
+      CefRefPtr<CefBrowser> browser,
+      const CefString& main_frame_url,
+      const std::map<CefString, CefString>& subresource_blocked,
+      bool is_site_first_report) {}
+
+  ///
   /// Show password Autofill popup menu.
   ///
   /*--cef()--*/

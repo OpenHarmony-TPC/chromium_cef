@@ -5,6 +5,10 @@
 #ifndef CEF_LIBCEF_BROWSER_PREFS_BROWSER_PREFS_H_
 #define CEF_LIBCEF_BROWSER_PREFS_BROWSER_PREFS_H_
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "components/prefs/pref_name_set.h"
+#endif
+
 #include <memory>
 
 namespace base {
@@ -39,6 +43,11 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 std::string GetAcceptLanguageList(CefBrowserContext* browser_context,
                                   CefBrowserHostBase* browser,
                                   bool expand);
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void RegisterSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set);
+void RegisterUserSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set);
+#endif
 
 }  // namespace browser_prefs
 

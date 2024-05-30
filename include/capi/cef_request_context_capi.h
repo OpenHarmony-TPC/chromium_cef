@@ -33,13 +33,14 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3cb1476ba7f7e1d7eb8a4856f8b8303e49326a05$
+// $hash=11dccd26014f62d554480900e11ec2c6024f710c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
 #pragma once
 
+#include "include/capi/cef_adsblock_manager_capi.h"
 #include "include/capi/cef_callback_capi.h"
 #include "include/capi/cef_cookie_capi.h"
 #include "include/capi/cef_data_base_capi.h"
@@ -326,6 +327,13 @@ typedef struct _cef_request_context_t {
   /// completion.
   ///
   void(CEF_CALLBACK* clear_client_authentication_cache)(
+      struct _cef_request_context_t* self,
+      struct _cef_completion_callback_t* callback);
+
+  ///
+  /// Returns the adsblock manager for this object.
+  ///
+  struct _cef_ads_block_manager_t*(CEF_CALLBACK* get_ads_block_manager)(
       struct _cef_request_context_t* self,
       struct _cef_completion_callback_t* callback);
 } cef_request_context_t;

@@ -451,6 +451,15 @@ void CefBrowserPlatformDelegate::ShowPopupMenu(
 }
 #endif  // OHOS_HTML_SELECT
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+void CefBrowserPlatformDelegate::OnAdsBlocked(
+    const std::string& main_frame_url,
+    const std::map<std::string, int32_t>& subresource_blocked,
+    bool is_site_first_report) {
+  NOTIMPLEMENTED();
+}
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
 void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
                                                     const std::string& url) {

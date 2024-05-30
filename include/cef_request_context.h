@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "include/cef_callback.h"
+#include "include/cef_adsblock_manager.h"
 #include "include/cef_cookie.h"
 #include "include/cef_extension.h"
 #include "include/cef_extension_handler.h"
@@ -352,6 +353,14 @@ class CefRequestContext : public CefPreferenceManager {
   virtual void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) = 0;
 #endif
+
+  ///
+  /// Returns the adsblock manager for this object.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
+      CefRefPtr<CefCompletionCallback> callback) = 0;
+
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_CONTEXT_H_

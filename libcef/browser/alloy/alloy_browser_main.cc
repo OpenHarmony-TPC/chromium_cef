@@ -381,6 +381,13 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
   }
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  if (g_browser_process) {
+    g_browser_process->subresource_filter_ruleset_service();
+    g_browser_process->subresource_filter_user_ruleset_service();
+  }
+#endif
+
   return content::RESULT_CODE_NORMAL_EXIT;
 }
 

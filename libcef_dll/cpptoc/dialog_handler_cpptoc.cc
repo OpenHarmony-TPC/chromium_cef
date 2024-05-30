@@ -141,6 +141,46 @@ dialog_handler_on_hide_autofill_popup(struct _cef_dialog_handler_t* self) {
   CefDialogHandlerCppToC::Get(self)->OnHideAutofillPopup();
 }
 
+void CEF_CALLBACK
+dialog_handler_on_ads_blocked(struct _cef_dialog_handler_t* self,
+                              cef_browser_t* browser,
+                              const cef_string_t* main_frame_url,
+                              cef_string_map_t subresource_blocked,
+                              int is_site_first_report) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: main_frame_url; type: string_byref_const
+  DCHECK(main_frame_url);
+  if (!main_frame_url) {
+    return;
+  }
+  // Verify param: subresource_blocked; type: string_map_single_byref_const
+  DCHECK(subresource_blocked);
+  if (!subresource_blocked) {
+    return;
+  }
+
+  // Translate param: subresource_blocked; type: string_map_single_byref_const
+  std::map<CefString, CefString> subresource_blockedMap;
+  transfer_string_map_contents(subresource_blocked, subresource_blockedMap);
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnAdsBlocked(
+      CefBrowserCToCpp::Wrap(browser), CefString(main_frame_url),
+      subresource_blockedMap, is_site_first_report ? true : false);
+}
+
 void CEF_CALLBACK dialog_handler_on_show_autofill_popup(
     struct _cef_dialog_handler_t* self,
     cef_browser_t* browser,
@@ -220,6 +260,7 @@ CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_file_dialog = dialog_handler_on_file_dialog;
   GetStruct()->on_select_popup_menu = dialog_handler_on_select_popup_menu;
   GetStruct()->on_hide_autofill_popup = dialog_handler_on_hide_autofill_popup;
+  GetStruct()->on_ads_blocked = dialog_handler_on_ads_blocked;
   GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
   GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
 }

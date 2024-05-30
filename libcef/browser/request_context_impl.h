@@ -7,6 +7,7 @@
 #pragma once
 
 #include "include/cef_request_context.h"
+#include "libcef/browser/adsblock_manager_impl.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/media_router/media_router_impl.h"
 #include "libcef/browser/net_service/cookie_manager_impl.h"
@@ -90,6 +91,8 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
   CefRefPtr<CefRequestContextHandler> GetHandler() override;
   CefString GetCachePath() override;
   CefRefPtr<CefCookieManager> GetCookieManager(
+      CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
       CefRefPtr<CefCompletionCallback> callback) override;
   bool RegisterSchemeHandlerFactory(
       const CefString& scheme_name,
@@ -202,6 +205,9 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
 
   void InitializeCookieManagerInternal(
       CefRefPtr<CefCookieManagerImpl> cookie_manager,
+      CefRefPtr<CefCompletionCallback> callback);
+  void InitializeAdsBlockManagerInternal(
+      CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
       CefRefPtr<CefCompletionCallback> callback);
   void InitializeMediaRouterInternal(CefRefPtr<CefMediaRouterImpl> media_router,
                                      CefRefPtr<CefCompletionCallback> callback);

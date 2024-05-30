@@ -390,6 +390,27 @@ CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
 #endif // defined(OHOS_COOKIE)
 }
 
+CefRefPtr<CefAdsBlockManager> CefRequestContextImpl::GetAdsBlockManager(
+  CefRefPtr<CefCompletionCallback> callback) {
+  CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager =
+      CefAdsBlockManagerImpl::GetInstance();
+  InitializeAdsBlockManagerInternal(adsblock_manager, callback);
+  return adsblock_manager;
+}
+
+void CefRequestContextImpl::InitializeAdsBlockManagerInternal(
+    CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
+    CefRefPtr<CefCompletionCallback> callback) {
+  GetBrowserContext(content::GetUIThreadTaskRunner({}),
+                    base::BindOnce(
+                        [](CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
+                           CefRefPtr<CefCompletionCallback> callback,
+                           CefBrowserContext::Getter browser_context_getter) {
+                          adsblock_manager->Initialize(browser_context_getter, callback);
+                        },
+                        adsblock_manager, callback));
+}
+
 bool CefRequestContextImpl::RegisterSchemeHandlerFactory(
     const CefString& scheme_name,
     const CefString& domain_name,

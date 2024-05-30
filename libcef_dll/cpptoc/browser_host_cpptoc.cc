@@ -1877,6 +1877,23 @@ browser_host_set_background_color(struct _cef_browser_host_t* self, int color) {
 }
 
 void CEF_CALLBACK
+browser_host_update_adblock_easy_list_rules(struct _cef_browser_host_t* self,
+                                            long adBlockEasyListVersion) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->UpdateAdblockEasyListRules(
+      adBlockEasyListVersion);
+}
+
+void CEF_CALLBACK
 browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
                                      cef_string_list_t method_list,
@@ -3607,6 +3624,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->put_user_agent = browser_host_put_user_agent;
   GetStruct()->default_user_agent = browser_host_default_user_agent;
   GetStruct()->set_background_color = browser_host_set_background_color;
+  GetStruct()->update_adblock_easy_list_rules =
+      browser_host_update_adblock_easy_list_rules;
   GetStruct()->register_ark_jsfunction = browser_host_register_ark_jsfunction;
   GetStruct()->unregister_ark_jsfunction =
       browser_host_unregister_ark_jsfunction;

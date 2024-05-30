@@ -488,6 +488,23 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsIntelligentTrackingPreventionEnabled() = 0;
 
+  ///
+  /// Get whether Ads block is enabled.
+  ///
+  /*--cef()--*/
+  virtual bool IsAdsBlockEnabled() = 0;
+
+  ///
+  /// Get whether Ads block is enabled for current page.
+  ///
+  /*--cef()--*/
+  virtual bool IsAdsBlockEnabledForCurPage() = 0;
+
+  ///
+  /// Set enable to allow automatically save password
+  ///
+  /*--cef()--*/
+  virtual void EnableAdsBlock(bool enable) = 0;
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
@@ -1400,6 +1417,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetBackgroundColor(int color) = 0;
+
+  ///
+  /// UpdateEasyListRules
+  ///
+  /*--cef()--*/
+  virtual void UpdateAdblockEasyListRules(long adBlockEasyListVersion) = 0;
 
   ///
   /// RegisterArkJSfunction

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=528c14136b505ce7a139863db4a22f038a3f400c$
+// $hash=9764aceccf59006b32d3cee6ea419518893474d4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_
@@ -72,6 +72,8 @@ class CefRequestContextCToCpp
   CefRefPtr<CefWebStorage> GetWebStorage(
       CefRefPtr<CefCompletionCallback> callback) override;
   void ClearClientAuthenticationCache(
+      CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
       CefRefPtr<CefCompletionCallback> callback) override;
 
   // CefPreferenceManager methods.

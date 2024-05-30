@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8c7603bea909b007ce45af2e11a76ead6bf31cbb$
+// $hash=c04b10c774d236f2ab7aff2601535418df4597c8$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -918,6 +918,56 @@ int CEF_CALLBACK browser_is_intelligent_tracking_prevention_enabled(
   return _retval;
 }
 
+int CEF_CALLBACK browser_is_ads_block_enabled(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->IsAdsBlockEnabled();
+
+  // Return type: bool
+  return _retval;
+}
+
+int CEF_CALLBACK
+browser_is_ads_block_enabled_for_cur_page(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->IsAdsBlockEnabledForCurPage();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK browser_enable_ads_block(struct _cef_browser_t* self,
+                                           int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->EnableAdsBlock(enable ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -984,6 +1034,10 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_enable_intelligent_tracking_prevention;
   GetStruct()->is_intelligent_tracking_prevention_enabled =
       browser_is_intelligent_tracking_prevention_enabled;
+  GetStruct()->is_ads_block_enabled = browser_is_ads_block_enabled;
+  GetStruct()->is_ads_block_enabled_for_cur_page =
+      browser_is_ads_block_enabled_for_cur_page;
+  GetStruct()->enable_ads_block = browser_enable_ads_block;
 }
 
 // DESTRUCTOR - Do not edit by hand.

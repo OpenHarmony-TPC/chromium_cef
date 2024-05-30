@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d100b232fd09b12a5a9a35008dcd8e3998f3910a$
+// $hash=629bcc872425bb45693b56b5f7c9f4370b3470c2$
 //
 
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
+#include "libcef_dll/cpptoc/ads_block_manager_cpptoc.h"
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
 #include "libcef_dll/cpptoc/data_base_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
@@ -536,6 +537,26 @@ void CEF_CALLBACK request_context_clear_client_authentication_cache(
       CefCompletionCallbackCToCpp::Wrap(callback));
 }
 
+cef_ads_block_manager_t* CEF_CALLBACK
+request_context_get_ads_block_manager(struct _cef_request_context_t* self,
+                                      cef_completion_callback_t* callback) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+  // Unverified params: callback
+
+  // Execute
+  CefRefPtr<CefAdsBlockManager> _retval =
+      CefRequestContextCppToC::Get(self)->GetAdsBlockManager(
+          CefCompletionCallbackCToCpp::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefAdsBlockManagerCppToC::Wrap(_retval);
+}
+
 int CEF_CALLBACK
 request_context_has_preference(struct _cef_preference_manager_t* self,
                                const cef_string_t* name) {
@@ -696,6 +717,7 @@ CefRequestContextCppToC::CefRequestContextCppToC() {
   GetStruct()->get_web_storage = request_context_get_web_storage;
   GetStruct()->clear_client_authentication_cache =
       request_context_clear_client_authentication_cache;
+  GetStruct()->get_ads_block_manager = request_context_get_ads_block_manager;
   GetStruct()->base.has_preference = request_context_has_preference;
   GetStruct()->base.get_preference = request_context_get_preference;
   GetStruct()->base.get_all_preferences = request_context_get_all_preferences;
