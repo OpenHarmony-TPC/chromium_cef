@@ -462,6 +462,7 @@ class CefBrowserPlatformDelegate {
   virtual void OnNativeEmbedLifecycleChange(
       const CefRenderHandler::CefNativeEmbedData& info) {}
   virtual void SetScrollable(bool enable) {}
+  virtual void AdvanceFocusForIME(int focusType) {}
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS

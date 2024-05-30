@@ -1923,6 +1923,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                int width,
                                int height,
                                cef_web_snapshot_callback_t callback) = 0;
+
+  ///
+  /// Advance focus for IME to the browser.
+  ///
+  /*--cef()--*/
+  virtual void AdvanceFocusForIME(int focusType) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 
   ///

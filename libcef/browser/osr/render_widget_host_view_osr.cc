@@ -3443,6 +3443,24 @@ void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
 void CefRenderWidgetHostViewOSR::OnDidNavigateMainFrameToNewPage() {
   ResetGestureDetection(false);
 }
+
+void CefRenderWidgetHostViewOSR::AdvanceFocusForIME(int focusType) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::AdvanceFocusForIME focusType = "
+            << focusType;
+  content::RenderFrameHostImpl* frame_host = nullptr;
+  if (render_widget_host() && render_widget_host()->frame_tree() &&
+      render_widget_host()->frame_tree()->GetFocusedFrame()) {
+    frame_host = render_widget_host()
+                     ->frame_tree()
+                     ->GetFocusedFrame()
+                     ->current_frame_host();
+  }
+
+  if (frame_host && frame_host->GetAssociatedLocalFrame()) {
+    frame_host->GetAssociatedLocalFrame()->AdvanceFocusForIME(
+        static_cast<blink::mojom::FocusType>(focusType));
+  }
+}
 #endif
 
 #if BUILDFLAG(IS_OHOS)

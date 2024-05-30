@@ -1656,6 +1656,10 @@ double CefBrowserHostBase::GetZoomLevel() {
 void CefBrowserHostBase::SetBrowserZoomLevel(double zoom_factor) {
   // todo(ohos):impl this function then remove todo
 }
+
+void CefBrowserHostBase::AdvanceFocusForIME(int focusType) {
+  // todo(ohos):impl this function then remove todo
+}
 #endif  // IS_OHOS
 
 void CefBrowserHostBase::StopLoad() {

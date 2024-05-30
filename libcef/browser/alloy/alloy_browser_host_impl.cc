@@ -2491,6 +2491,12 @@ bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
   }
   return false;
 }
+
+void AlloyBrowserHostImpl::AdvanceFocusForIME(int focusType) {
+  if (platform_delegate_) {
+    platform_delegate_->AdvanceFocusForIME(focusType);
+  }
+}
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

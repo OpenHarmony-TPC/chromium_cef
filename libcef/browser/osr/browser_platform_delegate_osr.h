@@ -140,6 +140,7 @@ class CefBrowserPlatformDelegateOsr
   bool ShouldVirtualKeyboardOverlay() override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) override;
   void SetScrollable(bool enable) override;
+  void AdvanceFocusForIME(int focusType) override;
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

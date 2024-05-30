@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=16dc8cb653ea3ce595d4dfc5f141d51a52adb205$
+// $hash=13b0fff5312d7cafda773e4661e85124aa4b423e$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3379,8 +3379,8 @@ browser_host_send_touchpad_fling_event(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SendTouchpadFlingEvent(eventVal, vx, vy);
 }
 
-void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* self,
-                                             int mode) {
+void CEF_CALLBACK
+browser_host_set_fit_content_mode(struct _cef_browser_host_t* self, int mode) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3395,11 +3395,7 @@ void CEF_CALLBACK browser_host_set_fit_content_mode(struct _cef_browser_host_t* 
 }
 
 void CEF_CALLBACK
-browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
-                                   int left,
-                                   int top,
-                                   int right,
-                                   int bottom) {
+browser_host_update_draw_rect(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3410,10 +3406,11 @@ browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
+  CefBrowserHostCppToC::Get(self)->UpdateDrawRect();
 }
 
-void CEF_CALLBACK browser_host_on_text_selected(struct _cef_browser_host_t* self, bool flag) {
+void CEF_CALLBACK
+browser_host_on_text_selected(struct _cef_browser_host_t* self, int flag) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3424,7 +3421,25 @@ void CEF_CALLBACK browser_host_on_text_selected(struct _cef_browser_host_t* self
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->OnTextSelected(flag);
+  CefBrowserHostCppToC::Get(self)->OnTextSelected(flag ? true : false);
+}
+
+float CEF_CALLBACK
+browser_host_get_page_scale_factor(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  float _retval = CefBrowserHostCppToC::Get(self)->GetPageScaleFactor();
+
+  // Return type: simple
+  return _retval;
 }
 
 int CEF_CALLBACK
@@ -3455,18 +3470,39 @@ browser_host_web_page_snapshot(struct _cef_browser_host_t* self,
   return _retval;
 }
 
-float CEF_CALLBACK browser_host_get_page_scale_factor(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK
+browser_host_advance_focus_for_ime(struct _cef_browser_host_t* self,
+                                   int focusType) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
   if (!self) {
-    return 1;
+    return;
   }
 
   // Execute
-  return CefBrowserHostCppToC::Get(self)->GetPageScaleFactor();
+  CefBrowserHostCppToC::Get(self)->AdvanceFocusForIME(focusType);
+}
+
+void CEF_CALLBACK
+browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
+                                   int left,
+                                   int top,
+                                   int right,
+                                   int bottom) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
 }
 
 }  // namespace
@@ -3509,7 +3545,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_occluded = browser_host_was_occluded;
   GetStruct()->on_window_show = browser_host_on_window_show;
   GetStruct()->on_window_hide = browser_host_on_window_hide;
-  GetStruct()->on_online_render_to_foreground = browser_host_on_online_render_to_foreground;
+  GetStruct()->on_online_render_to_foreground =
+      browser_host_on_online_render_to_foreground;
   GetStruct()->send_touch_event_list = browser_host_send_touch_event_list;
   GetStruct()->notify_screen_info_changed =
       browser_host_notify_screen_info_changed;
@@ -3657,12 +3694,15 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->needs_reload = browser_host_needs_reload;
   GetStruct()->terminate_render_process = browser_host_terminate_render_process;
   GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
-  GetStruct()->send_touchpad_fling_event = browser_host_send_touchpad_fling_event;
+  GetStruct()->send_touchpad_fling_event =
+      browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
-  GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
+  GetStruct()->update_draw_rect = browser_host_update_draw_rect;
   GetStruct()->on_text_selected = browser_host_on_text_selected;
   GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
   GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
+  GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
+  GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
 }
 
 // DESTRUCTOR - Do not edit by hand.
