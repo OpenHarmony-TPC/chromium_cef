@@ -511,6 +511,7 @@ bool NeedsReload() override;
   void SetSavePassword(bool enable) override;
   // #endif // defined(OHOS_EX_PASSWORD)
   // if defined(OHOS_EX_TOPCONTROLS)
+  int GetTopControlsOffset() override;
   int GetShrinkViewportHeight() override;
   // #endif
   // #endif // defined(OHOS_NWEB_EX)

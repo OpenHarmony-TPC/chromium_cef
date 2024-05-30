@@ -1753,6 +1753,12 @@ typedef struct _cef_browser_host_t {
                                              double zoomFactor);
 
   ///
+  /// Get the top controls offset.
+  ///
+  int(CEF_CALLBACK* get_top_controls_offset)(
+      struct _cef_browser_host_t* self);
+
+  ///
   /// Get the shrink viewport height.
   ///
   int(CEF_CALLBACK* get_shrink_viewport_height)(

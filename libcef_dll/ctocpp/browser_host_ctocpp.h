@@ -253,6 +253,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool Discard() override;
   bool Restore() override;
   void SetBrowserZoomLevel(double zoomFactor) override;
+  int GetTopControlsOffset() override;
   int GetShrinkViewportHeight() override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;

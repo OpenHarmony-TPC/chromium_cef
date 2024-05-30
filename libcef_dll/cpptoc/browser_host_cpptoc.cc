@@ -3025,6 +3025,24 @@ browser_host_set_browser_zoom_level(struct _cef_browser_host_t* self,
 }
 
 int CEF_CALLBACK
+browser_host_get_top_controls_offset(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  int _retval = CefBrowserHostCppToC::Get(self)->GetTopControlsOffset();
+
+  // Return type: simple
+  return _retval;
+}
+
+int CEF_CALLBACK
 browser_host_get_shrink_viewport_height(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3675,6 +3693,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->discard = browser_host_discard;
   GetStruct()->restore = browser_host_restore;
   GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;
+  GetStruct()->get_top_controls_offset =
+      browser_host_get_top_controls_offset;
   GetStruct()->get_shrink_viewport_height =
       browser_host_get_shrink_viewport_height;
   GetStruct()->set_print_background = browser_host_set_print_background;

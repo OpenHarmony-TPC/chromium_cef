@@ -156,6 +156,7 @@ class CefBrowserPlatformDelegateOsr
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS
+  int GetTopControlsOffset() override;
   int GetShrinkViewportHeight() override;
 #endif
 
