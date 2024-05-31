@@ -290,6 +290,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+  void NotifyForNextTouchEvent() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

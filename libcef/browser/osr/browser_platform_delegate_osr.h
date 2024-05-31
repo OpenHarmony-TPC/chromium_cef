@@ -71,6 +71,7 @@ class CefBrowserPlatformDelegateOsr
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
+  void NotifyForNextTouchEvent() override;
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;
