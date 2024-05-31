@@ -2753,6 +2753,23 @@ void CefBrowserHostCToCpp::SetBrowserZoomLevel(double zoomFactor) {
   _struct->set_browser_zoom_level(_struct, zoomFactor);
 }
 
+NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetTopControlsOffset() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_top_controls_offset)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_top_controls_offset(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
 NO_SANITIZE("cfi-icall") int CefBrowserHostCToCpp::GetShrinkViewportHeight() {
   shutdown_checker::AssertNotShutdown();
 

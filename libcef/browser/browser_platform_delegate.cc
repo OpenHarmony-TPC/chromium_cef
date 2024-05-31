@@ -472,6 +472,10 @@ void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS
+int CefBrowserPlatformDelegate::GetTopControlsOffset() {
+  return 0;
+}
+
 int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
   return 0;
 }

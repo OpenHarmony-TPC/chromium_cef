@@ -1025,6 +1025,13 @@ void CefBrowserPlatformDelegateOsr::AdvanceFocusForIME(int focusType) {
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS
+int CefBrowserPlatformDelegateOsr::GetTopControlsOffset() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    return view->GetTopControlsOffset();
+  }
+  return 0;
+}
+
 int CefBrowserPlatformDelegateOsr::GetShrinkViewportHeight() {
   if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
     return view->GetShrinkViewportHeight();

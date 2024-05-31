@@ -1777,6 +1777,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
 
   ///
+  /// Get the top controls offset.
+  ///
+  /*--cef()--*/
+  virtual int GetTopControlsOffset() = 0;
+
+  ///
   /// Get the shrink viewport height.
   ///
   /*--cef()--*/

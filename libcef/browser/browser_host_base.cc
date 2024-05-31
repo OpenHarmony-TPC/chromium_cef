@@ -3498,6 +3498,17 @@ int CefBrowserHostBase::GetSecurityLevel() {
 }
 #endif  // BUILDFLAG(IS_OHOS)
 
+int CefBrowserHostBase::GetTopControlsOffset() {
+#if defined(OHOS_EX_TOPCONTROLS)
+  if (platform_delegate_) {
+    return platform_delegate_->GetTopControlsOffset();
+  }
+  return 0;
+#else
+  return 0;
+#endif
+}
+
 int CefBrowserHostBase::GetShrinkViewportHeight() {
 #if defined(OHOS_EX_TOPCONTROLS)
   if (platform_delegate_) {
