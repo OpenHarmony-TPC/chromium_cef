@@ -970,8 +970,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       }
 
       if (state->pending_request_->GetResourceType() == RT_SUB_FRAME) {
-        CefString frame_url = init_state_->real_frame_->GetParent() ?
-            init_state_->real_frame_->GetParent()->GetURL() : "";
+        CefRefPtr<CefFrame> parent_frame = init_state_->real_frame_ ? init_state_->real_frame_->GetParent() : nullptr;
+        CefString frame_url = "";
+        if (parent_frame) {
+          frame_url = parent_frame->GetURL();
+        }
         state->pending_request_->SetFrameUrl(frame_url);
       }
       std::map<std::string, std::string> headers =
