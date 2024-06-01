@@ -760,15 +760,13 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
-  is_hidden_ = false;
-  ReportRenderProcessStatus();
+  ReportRenderProcessStatus(false);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
-  is_hidden_ = true;
-  ReportRenderProcessStatus();
+  ReportRenderProcessStatus(true);
   SetFrameRateLinkerEnable(false);
 }
 
@@ -814,7 +812,7 @@ void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
   }
 }
 
-void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
+void AlloyBrowserHostImpl::ReportRenderProcessStatus(bool is_web_hidden) {
   using namespace OHOS::NWeb;
 
   content::WebContents* contents = web_contents();
@@ -830,14 +828,14 @@ void AlloyBrowserHostImpl::ReportRenderProcessStatus() {
       return;
     }
 
-    ResSchedStatusAdapter status = is_hidden_
+    ResSchedStatusAdapter status = is_web_hidden
                                        ? ResSchedStatusAdapter::WEB_INACTIVE
                                        : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
     ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
     TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
                "process_id", process_id);
-    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_hidden_: " << is_hidden_ << " process_id: " << process_id;
+    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_web_hidden: " << is_web_hidden << " process_id: " << process_id;
   } else {
     LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
     return;
@@ -2397,7 +2395,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  ReportRenderProcessStatus();
+  ReportRenderProcessStatus(false);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetFrameRateLinkerEnable(!is_hidden_);
 #if BUILDFLAG(IS_OHOS)
