@@ -337,6 +337,8 @@ class CefBrowserPlatformDelegate {
 
   // Send touch event list to the browser for a windowless browser.
   virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
+
+  virtual void NotifyForNextTouchEvent();
 #endif
 
   // Notify the browser that screen information has changed. Only used with

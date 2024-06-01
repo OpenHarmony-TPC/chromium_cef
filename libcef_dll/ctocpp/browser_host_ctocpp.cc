@@ -3235,6 +3235,20 @@ void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
   _struct->on_safe_insets_change(_struct, left, top, right, bottom);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::NotifyForNextTouchEvent() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, notify_for_next_touch_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->notify_for_next_touch_event(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

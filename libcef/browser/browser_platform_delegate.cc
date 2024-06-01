@@ -286,11 +286,15 @@ void CefBrowserPlatformDelegate::OnWindowHide() {
 }
 
 void CefBrowserPlatformDelegate::OnOnlineRenderToForeground() {
-  NOTREACHED();
+  DCHECK(false);
 }
 
 void CefBrowserPlatformDelegate::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
-  NOTREACHED();
+  DCHECK(false);
+}
+
+void CefBrowserPlatformDelegate::NotifyForNextTouchEvent() {
+  DCHECK(false);
 }
 
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {

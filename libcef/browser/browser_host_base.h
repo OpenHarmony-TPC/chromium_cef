@@ -432,6 +432,7 @@ bool NeedsReload() override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
+  void NotifyForNextTouchEvent() override;
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
 #endif  // OHOS_PAGE_UP_DOWN

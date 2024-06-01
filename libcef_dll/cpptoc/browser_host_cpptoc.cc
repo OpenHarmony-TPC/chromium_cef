@@ -3523,6 +3523,21 @@ browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->OnSafeInsetsChange(left, top, right, bottom);
 }
 
+void CEF_CALLBACK
+browser_host_notify_for_next_touch_event(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->NotifyForNextTouchEvent();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3723,6 +3738,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
   GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
+  GetStruct()->notify_for_next_touch_event = browser_host_notify_for_next_touch_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.

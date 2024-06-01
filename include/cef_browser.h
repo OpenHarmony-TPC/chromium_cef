@@ -1942,5 +1942,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnSafeInsetsChange(int left, int top, int right, int bottom) = 0;
+
+  ///
+  /// Notify for next touch move event.
+  ///
+  /*--cef()--*/
+  virtual void NotifyForNextTouchEvent() = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

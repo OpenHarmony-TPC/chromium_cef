@@ -395,6 +395,13 @@ void CefBrowserPlatformDelegateOsr::SendTouchEventList(const std::vector<CefTouc
     }
   }
 }
+
+void CefBrowserPlatformDelegateOsr::NotifyForNextTouchEvent() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view)
+    return;
+  view->NotifyForNextTouchEvent();
+}
 #endif
 
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
@@ -1058,7 +1065,7 @@ void CefBrowserPlatformDelegateOsr::CreateOverlay(const gfx::ImageSkia& image,
                                                   const gfx::Rect& image_rect,
                                                   const gfx::Point& touch_point,
                                                   const gfx::Rect& screen_rect) {
-  CefRefPtr<CefRenderHandler> handler = 
+  CefRefPtr<CefRenderHandler> handler =
       browser_->GetClient()->GetRenderHandler();
 
   if(handler.get()) {

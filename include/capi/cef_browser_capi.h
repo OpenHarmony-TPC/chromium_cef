@@ -1918,6 +1918,11 @@ typedef struct _cef_browser_host_t {
                                             int top,
                                             int right,
                                             int bottom);
+
+  ///
+  /// Notify for next touch move event.
+  ///
+  void(CEF_CALLBACK* notify_for_next_touch_event)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

@@ -141,6 +141,8 @@ class CefRenderWidgetHostViewOSR
   void EvictFrameBackBuffers(bool invisible) override;
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
+  void NotifyForNextTouchEvent(bool need_wait_for_touch_move = true);
+  void TriggerVsync();
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();

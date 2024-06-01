@@ -3605,7 +3605,7 @@ void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
   }
 
   auto options = std::make_shared<oh_code_cache::CacheOptions>(responseHeaders);
-  
+
   oh_code_cache::TaskRunner::GetTaskRunner()->PostTaskAndReplyWithResult(
       FROM_HERE,
       base::BindOnce(&CefBrowserHostBase::WriteResponseCache, this, url, script, options),
@@ -3694,6 +3694,10 @@ void CefBrowserHostBase::OnSafeInsetsChange(int left,
   if (platform_delegate_) {
     platform_delegate_->OnSafeInsetsChange(left, top, right, bottom);
   }
+}
+
+void CefBrowserHostBase::NotifyForNextTouchEvent() {
+  // TODO(ohos): please impl the function and remove this comment.
 }
 #endif
 

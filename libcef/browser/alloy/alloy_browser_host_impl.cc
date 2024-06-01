@@ -778,6 +778,24 @@ void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
   SetFrameRateLinkerEnable(true);
 }
 
+void AlloyBrowserHostImpl::NotifyForNextTouchEvent() {
+  TRACE_EVENT0("base", "AlloyBrowserHostImpl::NotifyForNextTouchEvent");
+  LOG(DEBUG) << "AlloyBrowserHostImpl::NotifyForNextTouchEvent";
+  if (!IsWindowless()) {
+    DCHECK(false) << "Window rendering is not disabled";
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::NotifyForNextTouchEvent,
+                                          this));
+    return;
+  }
+
+  if (platform_delegate_)
+    platform_delegate_->NotifyForNextTouchEvent();
+}
+
 void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
 {
   content::WebContents* contents = web_contents();

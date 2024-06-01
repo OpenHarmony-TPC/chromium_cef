@@ -92,8 +92,7 @@ const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
 #if defined(OHOS_PERFORMANCE_JITTER)
 const size_t kMaxGestureQueueSize = 10;
-const size_t KFirstRecordingTimes = 3;
-const size_t KFirstTouchRecordingTimes = 5;
+
 const size_t KTouchEventCachedThreaShold = 1;
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
 const int TOUCH_DOWN_DELAY_TIME = 200;
@@ -625,7 +624,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
 #endif
                                     /*record_tab_switch_time_request=*/{});
   }
-  
+
   // If the viz::LocalSurfaceId is invalid, we may have been evicted,
   // and no other visual properties have since been changed. Allocate a new id
   // and start synchronizing.
@@ -634,7 +633,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
     SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
                                 GetLocalSurfaceId());
   }
-  
+
   if (!content::GpuDataManagerImpl::GetInstance()->IsGpuCompositingDisabled()) {
     // Start generating frames when we're visible and at the correct size.
     if (!video_consumer_) {
@@ -802,21 +801,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   if (!render_widget_host_)
     return;
 
-#if defined(OHOS_PERFORMANCE_JITTER)
-  // Don't push the first three times so that will not affect touch delay
-  if (touch_event.GetType() == blink::WebInputEvent::Type::kTouchMove &&
-      web_touch_event_count_ > KFirstTouchRecordingTimes) {
-    web_touch_event_queue_.push_back(touch_event);
-
-    if (web_touch_event_queue_.size() > KTouchEventCachedThreaShold) {
-      blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
-      SendTouchGestureEvent(touchEvent);
-      web_touch_event_queue_.pop_front();
-    }
-  } else {
-    SendTouchGestureEvent(touch_event);
-  }
-#endif
+  SendTouchGestureEvent(touch_event);
 
   bool touch_end =
       touch_event.GetType() == blink::WebInputEvent::Type::kTouchEnd ||
@@ -851,6 +836,24 @@ void CefRenderWidgetHostViewOSR::EvictFrameBackBuffers(bool invisible) {
         compositor->EvictFrameBackBuffers(invisible);
     }
   }
+}
+
+void CefRenderWidgetHostViewOSR::NotifyForNextTouchEvent(bool need_wait_for_touch_move) {
+  if (pointer_state_.GetPointerCount() == 0) {
+    LOG(DEBUG) << "CefRenderWidgetHostViewOSR::NotifyForNextTouchEventdo not has touch event:";
+    return;
+  }
+
+  viz::FrameSinkId id = GetRootFrameSinkId();
+  auto host_frame_sink_manager = content::BrowserMainLoop::GetInstance()->host_frame_sink_manager();
+  host_frame_sink_manager->SetNeedWaitForInput(id, need_wait_for_touch_move);
+}
+
+void CefRenderWidgetHostViewOSR::TriggerVsync() {
+  viz::FrameSinkId id = GetRootFrameSinkId();
+  auto host_frame_sink_manager = content::BrowserMainLoop::GetInstance()->host_frame_sink_manager();
+  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::TriggerVsync");
+  host_frame_sink_manager->TriggerVsync(id);
 }
 #endif
 
@@ -2553,13 +2556,8 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
   } else if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE) {
     gesture_update_count_++;
   }
-  // Don't push the first three times so that will not affect touch delay
-  if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE &&
-      gesture_update_count_ > KFirstRecordingTimes) {
-    gesture_event_queue_.push_back(gesture);
-  } else {
-    SendGestureEvent(gesture);
-  }
+
+  SendGestureEvent(gesture);
 }
 
 void CefRenderWidgetHostViewOSR::SendGestureEvent(
