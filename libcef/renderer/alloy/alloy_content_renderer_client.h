@@ -41,9 +41,13 @@ namespace web_cache {
 class WebCacheImpl;
 }
 
-#ifdef OHOS_FCP
+#if defined(OHOS_FCP) || defined(OHOS_ARKWEB_ADBLOCK)
 namespace subresource_filter {
 class UnverifiedRulesetDealer;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+class UserUnverifiedRulesetDealer;
+#endif
 }
 #endif
 
@@ -209,7 +213,14 @@ class AlloyContentRendererClient
       bool is_redirect) override;
 #endif
 
-private:
+#ifdef OHOS_ARKWEB_ADBLOCK
+ private:
+  void TriggerElementHidingInFrame(int routing_id) override;
+
+  void TriggerUserElementHidingInFrame(int routing_id) override;
+#endif
+
+ private:
   void OnBrowserCreated(blink::WebView* web_view,
                         absl::optional<bool> is_windowless);
 
@@ -228,7 +239,7 @@ private:
   std::unique_ptr<SpellCheck> spellcheck_;
   std::unique_ptr<visitedlink::VisitedLinkReader> visited_link_slave_;
 
-#ifdef OHOS_FCP
+#if defined(OHOS_FCP) || defined(OHOS_ARKWEB_ADBLOCK)
   std::unique_ptr<subresource_filter::UnverifiedRulesetDealer>
       subresource_filter_ruleset_dealer_;
 #endif
@@ -236,6 +247,11 @@ private:
   std::unique_ptr<extensions::ExtensionsClient> extensions_client_;
   std::unique_ptr<extensions::CefExtensionsRendererClient>
       extensions_renderer_client_;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  std::unique_ptr<subresource_filter::UserUnverifiedRulesetDealer>
+      subresource_filter_user_ruleset_dealer_;
+#endif
 
   // Used in single-process mode to test when cleanup is complete.
   // Access must be protected by |single_process_cleanup_lock_|.

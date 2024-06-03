@@ -13,6 +13,9 @@
 #include <string>
 
 #include "base/metrics/field_trial.h"
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "base/sequence_checker.h"
+#endif
 #include "chrome/browser/browser_process.h"
 #include "chrome/browser/extensions/event_router_forwarder.h"
 #include "media/media_buildflags.h"
@@ -95,6 +98,11 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
 #endif
   subresource_filter::RulesetService* subresource_filter_ruleset_service()
       override;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  void CreateSubresourceFilterRulesetService();
+#endif
+
   StartupData* startup_data() override;
 
 #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
@@ -113,6 +121,13 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
   SerialPolicyAllowedPorts* serial_policy_allowed_ports() override;
   HidPolicyAllowedDevices* hid_policy_allowed_devices() override;
   HidSystemTrayIcon* hid_system_tray_icon() override;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  ::subresource_filter::UserRulesetService*
+  subresource_filter_user_ruleset_service() override;
+
+  void CreateSubresourceFilterUserRulesetService();
+#endif
 
  private:
   bool initialized_;
@@ -139,6 +154,18 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
   std::unique_ptr<base::FieldTrialList> field_trial_list_;
 
   std::unique_ptr<component_updater::ComponentUpdateService> component_updater_;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  bool created_subresource_filter_ruleset_service_ = false;
+  std::unique_ptr<::subresource_filter::RulesetService>
+      subresource_filter_ruleset_service_;
+  SEQUENCE_CHECKER(sequence_checker_);
+
+  bool created_subresource_filter_user_ruleset_service_ = false;
+  std::unique_ptr<::subresource_filter::UserRulesetService>
+      subresource_filter_user_ruleset_service_;
+  SEQUENCE_CHECKER(user_sequence_checker_);
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_CHROME_BROWSER_PROCESS_ALLOY_H_

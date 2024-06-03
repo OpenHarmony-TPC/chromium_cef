@@ -327,9 +327,7 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual void WasOccluded(bool occluded);
 
-
   virtual void OnWindowShow();
-
 
   virtual void OnWindowHide();
 
@@ -435,6 +433,13 @@ class CefBrowserPlatformDelegate {
       bool right_aligned,
       bool allow_multiple_selection);
 #endif  // #ifdef OHOS_HTML_SELECT
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  virtual void OnAdsBlocked(
+      const std::string& main_frame_url,
+      const std::map<std::string, int32_t>& subresource_blocked,
+      bool is_site_first_report);
+#endif
 
 #if defined(OHOS_EX_PASSWORD)
   virtual void ShowPasswordDialog(bool is_update, const std::string& url);

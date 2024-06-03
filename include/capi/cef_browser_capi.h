@@ -492,6 +492,22 @@ typedef struct _cef_browser_t {
   ///
   int(CEF_CALLBACK* is_intelligent_tracking_prevention_enabled)(
       struct _cef_browser_t* self);
+
+  ///
+  /// Get whether Ads block is enabled.
+  ///
+  int(CEF_CALLBACK* is_ads_block_enabled)(struct _cef_browser_t* self);
+
+  ///
+  /// Get whether Ads block is enabled for current page.
+  ///
+  int(CEF_CALLBACK* is_ads_block_enabled_for_cur_page)(
+      struct _cef_browser_t* self);
+
+  ///
+  /// Set enable to allow automatically save password
+  ///
+  void(CEF_CALLBACK* enable_ads_block)(struct _cef_browser_t* self, int enable);
 } cef_browser_t;
 
 ///
@@ -1373,6 +1389,13 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_background_color)(struct _cef_browser_host_t* self,
                                            int color);
+
+  ///
+  /// UpdateEasyListRules
+  ///
+  void(CEF_CALLBACK* update_adblock_easy_list_rules)(
+      struct _cef_browser_host_t* self,
+      long adBlockEasyListVersion);
 
   ///
   /// RegisterArkJSfunction

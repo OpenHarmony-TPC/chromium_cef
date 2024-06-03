@@ -102,6 +102,11 @@
 
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "components/subresource_filter/content/browser/ruleset_version.h"
+#include "components/subresource_filter/content/browser/user_ruleset_version.h"
+#endif
+
 namespace browser_prefs {
 
 namespace {
@@ -198,6 +203,7 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   if (store_on_disk) {
     const base::FilePath& pref_path = cache_path.AppendASCII(
         profile ? kUserPrefsFileName : kLocalPrefsFileName);
+
     scoped_refptr<JsonPrefStore> json_pref_store = new JsonPrefStore(
         pref_path, std::unique_ptr<PrefFilter>(), sequenced_task_runner);
     factory.set_user_prefs(json_pref_store.get());
@@ -213,6 +219,10 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
         base::MakeRefCounted<CefPrefStore>(),
         base::MakeRefCounted<JsonPrefStore>(pref_path),
         std::move(persistent_prefs)));
+#ifdef OHOS_ARKWEB_ADBLOCK
+    RegisterSubresourceFilterPersistentPrefs(persistent_prefs);
+    RegisterUserSubresourceFilterPersistentPrefs(persistent_prefs);
+#endif
 #else
     scoped_refptr<CefPrefStore> cef_pref_store = new CefPrefStore();
     cef_pref_store->SetInitializationCompleted();
@@ -251,6 +261,11 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   predictor::PredictorDatabase::RegisterPrefs(registry.get());
 #endif  // IS_OHOS
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  subresource_filter::IndexedRulesetVersion::RegisterPrefs(registry.get());
+  subresource_filter::UserIndexedRulesetVersion::RegisterPrefs(registry.get());
+#endif
+
   // Some preferences are specific to CEF and others are defined in Chromium.
   // The preferred approach for registering preferences defined in Chromium is
   // as follows:
@@ -284,6 +299,12 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     SystemNetworkContextManager::RegisterPrefs(registry.get());
 #if BUILDFLAG(IS_WIN)
     OSCrypt::RegisterLocalPrefs(registry.get());
+#endif
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+    subresource_filter::IndexedRulesetVersion::RegisterPrefs(registry.get());
+    subresource_filter::UserIndexedRulesetVersion::RegisterPrefs(
+        registry.get());
 #endif
   }
 
@@ -441,5 +462,27 @@ std::string GetAcceptLanguageList(CefBrowserContext* browser_context,
   }
   return std::string();
 }
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void RegisterSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set) {
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterRulesetContentVersion);
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterRulesetFormatVersion);
+  pref_name_set.insert(subresource_filter::kSubresourceFilterRulesetChecksum);
+}
+
+void RegisterUserSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set) {
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterUserRulesetContentVersion);
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterUserRulesetFormatVersion);
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterUserRulesetChecksum);
+  pref_name_set.insert(subresource_filter::kSubresourceFilterUserEasylistPath);
+  pref_name_set.insert(
+      subresource_filter::kSubresourceFilterUserEasylistReplace);
+}
+#endif
 
 }  // namespace browser_prefs

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a3a1c979db85f56f3a9c6ecfc44736c0b265689a$
+// $hash=a2c4d2ecd4063bc48474200dfa324348a15089fd$
 //
 
 #include "libcef_dll/ctocpp/request_context_ctocpp.h"
@@ -18,6 +18,7 @@
 #include "libcef_dll/cpptoc/request_context_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/resolve_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/scheme_handler_factory_cpptoc.h"
+#include "libcef_dll/ctocpp/ads_block_manager_ctocpp.h"
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
 #include "libcef_dll/ctocpp/data_base_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
@@ -523,6 +524,26 @@ void CefRequestContextCToCpp::ClearClientAuthenticationCache(
   // Execute
   _struct->clear_client_authentication_cache(
       _struct, CefCompletionCallbackCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefAdsBlockManager> CefRequestContextCToCpp::GetAdsBlockManager(
+    CefRefPtr<CefCompletionCallback> callback) {
+  cef_request_context_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_ads_block_manager)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: callback
+
+  // Execute
+  cef_ads_block_manager_t* _retval = _struct->get_ads_block_manager(
+      _struct, CefCompletionCallbackCppToC::Wrap(callback));
+
+  // Return type: refptr_same
+  return CefAdsBlockManagerCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall")

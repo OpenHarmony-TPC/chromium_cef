@@ -747,6 +747,28 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
   }
 }
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+void CefBrowserPlatformDelegateOsr::OnAdsBlocked(
+    const std::string& main_frame_url,
+    const std::map<std::string, int32_t>& subresource_blocked,
+    bool is_site_first_report) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+
+  if (handler.get()) {
+    std::map<CefString, CefString> adsBlocked_str;
+    for (auto item : subresource_blocked) {
+      adsBlocked_str.insert(
+          {CefString(item.first), base::NumberToString(item.second)});
+    }
+
+    handler->OnAdsBlocked(browser_, CefString(main_frame_url), adsBlocked_str,
+                          is_site_first_report);
+  }
+}
+
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
 void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
                                                        const std::string& url) {

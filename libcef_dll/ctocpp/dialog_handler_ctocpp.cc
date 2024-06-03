@@ -145,6 +145,50 @@ NO_SANITIZE("cfi-icall") void CefDialogHandlerCToCpp::OnHideAutofillPopup() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::OnAdsBlocked(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& main_frame_url,
+    const std::map<CefString, CefString>& subresource_blocked,
+    bool is_site_first_report) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_ads_blocked)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: main_frame_url; type: string_byref_const
+  DCHECK(!main_frame_url.empty());
+  if (main_frame_url.empty()) {
+    return;
+  }
+
+  // Translate param: subresource_blocked; type: string_map_single_byref_const
+  cef_string_map_t subresource_blockedMap = cef_string_map_alloc();
+  DCHECK(subresource_blockedMap);
+  if (subresource_blockedMap) {
+    transfer_string_map_contents(subresource_blocked, subresource_blockedMap);
+  }
+
+  // Execute
+  _struct->on_ads_blocked(_struct, CefBrowserCppToC::Wrap(browser),
+                          main_frame_url.GetStruct(), subresource_blockedMap,
+                          is_site_first_report);
+
+  // Restore param:subresource_blocked; type: string_map_single_byref_const
+  if (subresource_blockedMap) {
+    cef_string_map_free(subresource_blockedMap);
+  }
+}
+
+NO_SANITIZE("cfi-icall")
 void CefDialogHandlerCToCpp::OnShowAutofillPopup(
     CefRefPtr<CefBrowser> browser,
     const CefRect& bounds,

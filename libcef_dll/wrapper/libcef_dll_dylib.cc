@@ -9,13 +9,14 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7aee9e2ca84db433968f2816cb0fdf22895fd904$
+// $hash=1bbaa71edec8b097e49b0fbd5dc79e95fddab2d4$
 //
 
 #include <dlfcn.h>
 #include <stdio.h>
 
 #include "include/base/cef_compiler_specific.h"
+#include "include/capi/cef_adsblock_manager_capi.h"
 #include "include/capi/cef_app_capi.h"
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_command_line_capi.h"
@@ -150,6 +151,7 @@ struct libcef_pointers {
   decltype(&cef_execute_java_script_with_user_gesture_for_tests)
       cef_execute_java_script_with_user_gesture_for_tests;
   decltype(&cef_set_data_directory_for_tests) cef_set_data_directory_for_tests;
+  decltype(&cef_ads_block_manager_get_global) cef_ads_block_manager_get_global;
   decltype(&cef_browser_host_create_browser) cef_browser_host_create_browser;
   decltype(&cef_browser_host_create_browser_sync)
       cef_browser_host_create_browser_sync;
@@ -405,6 +407,7 @@ int libcef_init_pointers(const char* path) {
   INIT_ENTRY(cef_register_extension);
   INIT_ENTRY(cef_execute_java_script_with_user_gesture_for_tests);
   INIT_ENTRY(cef_set_data_directory_for_tests);
+  INIT_ENTRY(cef_ads_block_manager_get_global);
   INIT_ENTRY(cef_browser_host_create_browser);
   INIT_ENTRY(cef_browser_host_create_browser_sync);
   INIT_ENTRY(cef_command_line_create);
@@ -907,6 +910,12 @@ void cef_execute_java_script_with_user_gesture_for_tests(
 NO_SANITIZE("cfi-icall")
 void cef_set_data_directory_for_tests(const cef_string_t* dir) {
   g_libcef_pointers.cef_set_data_directory_for_tests(dir);
+}
+
+NO_SANITIZE("cfi-icall")
+struct _cef_ads_block_manager_t* cef_ads_block_manager_get_global(
+    struct _cef_completion_callback_t* callback) {
+  return g_libcef_pointers.cef_ads_block_manager_get_global(callback);
 }
 
 NO_SANITIZE("cfi-icall")

@@ -2586,6 +2586,19 @@ void AlloyBrowserHostImpl::CloseDateTimeChooser() {
 #endif  // #ifdef OHOS_CSS_INPUT_TIME
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+void AlloyBrowserHostImpl::OnAdsBlocked(
+    const std::string& main_frame_url,
+    const std::map<std::string, int32_t>& subresource_blocked,
+    bool is_site_first_report) {
+  if (platform_delegate_) {
+    platform_delegate_->OnAdsBlocked(main_frame_url, subresource_blocked,
+                                     is_site_first_report);
+  }
+}
+
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
 void AlloyBrowserHostImpl::ShowPasswordDialog(bool is_update,
                                               const std::string& url) {

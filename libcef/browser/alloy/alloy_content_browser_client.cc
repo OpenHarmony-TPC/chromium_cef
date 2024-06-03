@@ -277,6 +277,11 @@ using extensions::mojom::APIPermissionID;
 #include "libcef/browser/net/ohos_applink_throttle.h"
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "components/subresource_filter/content/browser/content_subresource_filter_throttle_manager.h"
+#include "libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h"
+#endif  // OHOS_ARKWEB_ADBLOCK
+
 #if defined(OHOS_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -1670,6 +1675,28 @@ void AlloyContentBrowserClient::
           &render_frame_host));
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  associated_registry.AddInterface<
+      subresource_filter::mojom::SubresourceFilterHost>(base::BindRepeating(
+      [](content::RenderFrameHost* render_frame_host,
+         mojo::PendingAssociatedReceiver<
+             subresource_filter::mojom::SubresourceFilterHost> receiver) {
+        subresource_filter::ContentSubresourceFilterThrottleManager::
+            BindReceiver(std::move(receiver), render_frame_host);
+      },
+      &render_frame_host));
+
+  associated_registry.AddInterface<
+      subresource_filter::mojom::UserSubresourceFilterHost>(base::BindRepeating(
+      [](content::RenderFrameHost* render_frame_host,
+         mojo::PendingAssociatedReceiver<
+             subresource_filter::mojom::UserSubresourceFilterHost> receiver) {
+        subresource_filter::ContentSubresourceFilterThrottleManager::
+            BindUserReceiver(std::move(receiver), render_frame_host);
+      },
+      &render_frame_host));
+#endif
+
   associated_registry.AddInterface<extensions::mojom::LocalFrameHost>(
       base::BindRepeating(
           [](content::RenderFrameHost* render_frame_host,
@@ -1792,6 +1819,16 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
 #endif
 
   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  CreateSubresourceFilterWebContentsHelper(navigation_handle);
+  if (auto* throttle_manager =
+          subresource_filter::ContentSubresourceFilterThrottleManager::
+              FromNavigationHandle(*navigation_handle)) {
+    throttle_manager->MaybeAppendNavigationThrottles(navigation_handle,
+                                                     &throttles);
+  }
+#endif  // OHOS_ARKWEB_ADBLOCK
 
   return throttles;
 }

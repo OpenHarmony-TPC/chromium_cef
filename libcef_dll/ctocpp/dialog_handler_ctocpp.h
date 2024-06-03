@@ -20,6 +20,7 @@
 #error This file can be included DLL-side only
 #endif
 
+#include <map>
 #include <vector>
 #include "include/capi/cef_dialog_handler_capi.h"
 #include "include/cef_dialog_handler.h"
@@ -53,6 +54,10 @@ class CefDialogHandlerCToCpp
                          bool allow_multiple_selection,
                          CefRefPtr<CefSelectPopupCallback> callback) override;
   void OnHideAutofillPopup() override;
+  void OnAdsBlocked(CefRefPtr<CefBrowser> browser,
+                    const CefString& main_frame_url,
+                    const std::map<CefString, CefString>& subresource_blocked,
+                    bool is_site_first_report) override;
   void OnShowAutofillPopup(
       CefRefPtr<CefBrowser> browser,
       const CefRect& bounds,

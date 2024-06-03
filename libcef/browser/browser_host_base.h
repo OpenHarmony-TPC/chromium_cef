@@ -264,6 +264,19 @@ class CefBrowserHostBase : public CefBrowserHost,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
                              bool is_async) override;
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+  void UpdateAdblockEasyListRules(
+      long adBlockEasyListVersion) override;
+
+  bool IsAdsBlockEnabled() override;
+
+  bool IsAdsBlockEnabledForCurPage() override;
+
+  void EnableAdsBlock(bool enable) override;
+
+#endif
+
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const std::vector<CefString>& async_method_list,

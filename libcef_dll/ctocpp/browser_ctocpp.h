@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2a60a0e44351d4de2760108273f0ebada949b3bc$
+// $hash=da196100d36d415612b7717213958ed79b58ff3d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -89,6 +89,9 @@ class CefBrowserCToCpp
   bool IsSafeBrowsingEnabled() override;
   void EnableIntelligentTrackingPrevention(bool enable) override;
   bool IsIntelligentTrackingPreventionEnabled() override;
+  bool IsAdsBlockEnabled() override;
+  bool IsAdsBlockEnabledForCurPage() override;
+  void EnableAdsBlock(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

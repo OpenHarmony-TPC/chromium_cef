@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=4681829f490c2dc5649668cdf3e187e80d288765$
+// $hash=a5c69bd82e92e1699b3e41dd067a4a64995f56bc$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -166,6 +166,15 @@ typedef struct _cef_dialog_handler_t {
   ///
   void(CEF_CALLBACK* on_hide_autofill_popup)(
       struct _cef_dialog_handler_t* self);
+
+  ///
+  /// Show adblock num.
+  ///
+  void(CEF_CALLBACK* on_ads_blocked)(struct _cef_dialog_handler_t* self,
+                                     struct _cef_browser_t* browser,
+                                     const cef_string_t* main_frame_url,
+                                     cef_string_map_t subresource_blocked,
+                                     int is_site_first_report);
 
   ///
   /// Show password Autofill popup menu.

@@ -144,6 +144,12 @@ class CefBrowserPlatformDelegateOsr
   void AdvanceFocusForIME(int focusType) override;
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  void OnAdsBlocked(const std::string& main_frame_url,
+                    const std::map<std::string, int32_t>& subresource_blocked,
+                    bool is_site_first_report) override;
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
   void ShowPasswordDialog(bool is_update, const std::string& url) override;
 #endif

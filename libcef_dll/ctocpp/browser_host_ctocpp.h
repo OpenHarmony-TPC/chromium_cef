@@ -163,6 +163,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void SetBackgroundColor(int color) override;
+  void UpdateAdblockEasyListRules(long adBlockEasyListVersion) override;
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const std::vector<CefString>& async_method_list,

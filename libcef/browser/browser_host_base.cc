@@ -100,6 +100,12 @@
 #include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "libcef/browser/subresource_filter/adblock_list.h"
+#include "cef/libcef/browser/adblock/adblock_config_bridge.h"
+#include "components/subresource_filter/content/browser/ohos_adblock_config.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -3412,6 +3418,49 @@ void CefBrowserHostBase::SaveOrUpdatePassword(bool is_update) {
   GetWebContents()->SaveOrUpdatePassword(is_update);
 #endif
 }
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void CefBrowserHostBase::UpdateAdblockEasyListRules(
+    long adBlockEasyListVersion) {
+  adblock::UpdateAdblockEasyListRules(adBlockEasyListVersion);
+}
+
+void CefBrowserHostBase::EnableAdsBlock(bool enable) {
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->EnableAdsBlock(enable);
+  LOG(INFO) << "web adblock enabled : " << enable;
+
+  OHOS::adblock::AdBlockConfig::GetInstance()->ReadFromPrefService();
+  if (!OHOS::adblock::AdBlockConfig::GetInstance()
+           ->GetUserEasylistReplaceSwitch() &&
+      enable) {
+    LOG(INFO) << "[Adblock] enable cloud control for easylist";
+    ohos_adblock::AdblockConfigBridge::GetInstance()->EnableAdsBlock(
+        GetBrowserContext(), true);
+  } else {
+    ohos_adblock::AdblockConfigBridge::GetInstance()->EnableAdsBlock(
+        GetBrowserContext(), false);
+  }
+}
+
+bool CefBrowserHostBase::IsAdsBlockEnabled() {
+  if (!GetWebContents()) {
+    return false;
+  }
+
+  return GetWebContents()->IsAdsBlockEnabled();
+}
+
+bool CefBrowserHostBase::IsAdsBlockEnabledForCurPage() {
+  if (!GetWebContents()) {
+    return false;
+  }
+
+  return GetWebContents()->IsAdsBlockEnabledForCurPage();
+}
+#endif
 
 void CefBrowserHostBase::SetSavePasswordAutomatically(bool enable) {
 #if defined(OHOS_EX_PASSWORD)
