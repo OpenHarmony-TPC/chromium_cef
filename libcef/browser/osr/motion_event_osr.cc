@@ -73,12 +73,23 @@ bool CefMotionEventOSR::OnTouch(const CefTouchEvent& touch) {
       break;
 
     case CEF_TET_MOVED: {
+#ifdef OHOS_CLIPBOARD
+      if (!from_overlay_) {
+        // Discard if touch is stationary.
+        int index = FindPointerIndexOfId(id);
+        if (IsValidIndex(index) &&
+            (touch.x == GetX(index) && touch.y == GetY(index))) {
+          return false;
+        }
+      }
+#else
       // Discard if touch is stationary.
       int index = FindPointerIndexOfId(id);
       if (IsValidIndex(index) &&
           (touch.x == GetX(index) && touch.y == GetY(index))) {
         return false;
       }
+#endif
     }
       [[fallthrough]];
     // No break.
