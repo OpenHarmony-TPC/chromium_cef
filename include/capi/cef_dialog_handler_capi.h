@@ -185,7 +185,8 @@ typedef struct _cef_dialog_handler_t {
       const cef_rect_t* bounds,
       int right_aligned,
       size_t menu_itemsCount,
-      cef_autofill_popup_item_t const* menu_items);
+      cef_autofill_popup_item_t const* menu_items,
+      int is_password_popup_type);
 
   ///
   /// Called when notify ui to show password dialog to query user to save

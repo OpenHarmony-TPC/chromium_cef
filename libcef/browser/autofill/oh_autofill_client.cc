@@ -307,7 +307,7 @@ void OhAutofillClient::ShowAutofillPopup(
             << element_bounds_in_screen_space.ToString();
   ShowAutofillPopupImpl(element_bounds_in_screen_space,
                         open_args.text_direction == base::i18n::RIGHT_TO_LEFT,
-                        open_args.suggestions);
+                        open_args.suggestions, delegate->GetPopupType());
 }
 
 void OhAutofillClient::UpdateAutofillPopupDataListValues(
@@ -444,15 +444,19 @@ OhAutofillClient::OhAutofillClient(WebContents* contents,
 void OhAutofillClient::ShowAutofillPopupImpl(
     const gfx::RectF& element_bounds,
     bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions) {
+    const std::vector<autofill::Suggestion>& suggestions,
+    autofill::PopupType popup_type) {
 #if defined(OHOS_DATALIST)
-  GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions);
+  if(popup_type != autofill::PopupType::kPasswords) {
+    GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions, false);
+    return;
+  }
 #endif
 
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions);
+          switches::kForBrowser) && popup_type == autofill::PopupType::kPasswords) {
+    GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions, true);
   }
 #endif
 }

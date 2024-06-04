@@ -187,7 +187,8 @@ void CEF_CALLBACK dialog_handler_on_show_autofill_popup(
     const cef_rect_t* bounds,
     int right_aligned,
     size_t menu_itemsCount,
-    cef_autofill_popup_item_t const* menu_items) {
+    cef_autofill_popup_item_t const* menu_items,
+    int is_password_popup_type) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -226,7 +227,7 @@ void CEF_CALLBACK dialog_handler_on_show_autofill_popup(
   // Execute
   CefDialogHandlerCppToC::Get(self)->OnShowAutofillPopup(
       CefBrowserCToCpp::Wrap(browser), boundsVal, right_aligned ? true : false,
-      menu_itemsList);
+      menu_itemsList, is_password_popup_type ? true : false);
 }
 
 void CEF_CALLBACK

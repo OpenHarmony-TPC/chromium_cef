@@ -784,7 +784,8 @@ void CefBrowserPlatformDelegateOsr::ShowPasswordDialog(bool is_update,
 void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
     const gfx::RectF& element_bounds,
     bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions) {
+    const std::vector<autofill::Suggestion>& suggestions,
+    bool is_password_popup_type) {
   CefRefPtr<CefDialogHandler> handler =
       browser_->GetClient()->GetDialogHandler();
   if (handler.get()) {
@@ -802,7 +803,7 @@ void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
         browser_,
         CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
                 element_bounds.height()),
-        is_rtl, item_list);
+        is_rtl, item_list, is_password_popup_type);
   }
 }
 
