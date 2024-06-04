@@ -853,7 +853,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(request->url.spec());
     if (response_cache != nullptr && response_cache->CanUseCache()) {
       TRACE_EVENT1("net", "Response Cache InterceptRequest", "url", request->url.spec().c_str());
-      resource_response = std::make_unique<oh_code_cache::ResourceResponse>(std::move(response_cache));
+      auto resource_response = std::make_unique<oh_code_cache::ResourceResponse>(std::move(response_cache));
       std::move(callback).Run(std::move(resource_response));
       return;
     }
