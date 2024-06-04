@@ -508,6 +508,12 @@ typedef struct _cef_browser_t {
   /// Set enable to allow automatically save password
   ///
   void(CEF_CALLBACK* enable_ads_block)(struct _cef_browser_t* self, int enable);
+
+  ///
+  /// Set url trust list.
+  ///
+  int(CEF_CALLBACK* set_url_trust_list)(
+      struct _cef_browser_t* self, const cef_string_t* urlTrustList);
 } cef_browser_t;
 
 ///

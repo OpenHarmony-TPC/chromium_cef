@@ -700,6 +700,10 @@ bool TerminateRenderProcess() override;
   float GetPageScaleFactor() override;
 #endif
 
+#ifdef OHOS_URL_TRUST_LIST
+  int SetUrlTrustList(const CefString& urlTrustList) override;
+#endif
+
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   bool WebPageSnapshot(const char* id,
                        int width,

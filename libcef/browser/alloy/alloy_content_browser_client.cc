@@ -217,6 +217,10 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "libcef/browser/page_load_metrics/page_load_metrics_initialize.h"
 #endif
 
+#if OHOS_URL_TRUST_LIST
+#include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h"
+#endif
+
 #ifdef OHOS_EX_PASSWORD
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #endif //OHOS_EX_PASSWORD
@@ -1806,6 +1810,11 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
     throttles.push_back(page_load_metrics::MetricsNavigationThrottle::Create(
         navigation_handle));
   }
+#endif
+
+#if OHOS_URL_TRUST_LIST
+  throttles.push_back(ohos_safe_browsing::OhosUrlTrustListNavigationThrottle::Create(
+    navigation_handle));
 #endif
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)

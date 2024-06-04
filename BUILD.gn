@@ -97,7 +97,6 @@ import("//base/allocator/allocator.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
 import("//build/config/ohos/config.gni")
-import("//ohos_nweb/src/nweb_sysevent.gni")
 import("//build/config/ozone.gni")
 import("//build/config/sanitizers/sanitizers.gni")
 import("//build/config/ui.gni")
@@ -106,6 +105,7 @@ import("//content/public/app/mac_helpers.gni")
 import("//extensions/buildflags/buildflags.gni")
 import("//media/media_options.gni")
 import("//mojo/public/tools/bindings/mojom.gni")
+import("//ohos_nweb/src/nweb_sysevent.gni")
 import("//ppapi/buildflags/buildflags.gni")
 import("//printing/buildflags/buildflags.gni")
 import("//rlz/buildflags/buildflags.gni")
@@ -1021,21 +1021,15 @@ source_set("libcef_static") {
             ]
   if (is_ohos) {
     sources += [
-      "libcef/browser/report_manager.h",
-      "libcef/browser/report_manager.cc",
-      "libcef/browser/res_reporter.h",
-      "libcef/browser/res_reporter.cc",
       "libcef/browser/autofill/oh_autofill_client.cc",
       "libcef/browser/autofill/oh_autofill_client.h",
       "libcef/browser/autofill/oh_autofill_manager.cc",
       "libcef/browser/autofill/oh_autofill_manager.h",
       "libcef/browser/autofill/oh_autofill_provider.cc",
       "libcef/browser/autofill/oh_autofill_provider.h",
-      "libcef/renderer/alloy/alloy_content_settings_client.cc",
-      "libcef/renderer/alloy/alloy_content_settings_client.h",
+      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_response.h",
       "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.cc",
       "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h",
-      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_response.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_client.cc",
@@ -1044,31 +1038,45 @@ source_set("libcef_static") {
       "libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.cc",
       "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h",
+      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_interface.h",
+      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h",
+      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.cc",
+      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h",
+      "libcef/browser/report_manager.cc",
+      "libcef/browser/report_manager.h",
+      "libcef/browser/res_reporter.cc",
+      "libcef/browser/res_reporter.h",
+      "libcef/renderer/alloy/alloy_content_settings_client.cc",
+      "libcef/renderer/alloy/alloy_content_settings_client.h",
     ]
   }
 
   #ifdef OHOS_ITP
   if (defined(ohos_itp) && ohos_itp) {
     if (!defined(ohos_nweb_ex) || !ohos_nweb_ex) {
-      sources += [ "libcef/browser/anti_tracking/anti_tracking_delegate_ohos.cc", ]
+      sources +=
+          [ "libcef/browser/anti_tracking/anti_tracking_delegate_ohos.cc" ]
     }
     sources += [
       "libcef/browser/anti_tracking/third_party_cookie_access_policy.cc",
       "libcef/browser/anti_tracking/third_party_cookie_access_policy.h",
     ]
   }
+
   #endif
 
   #ifdef OHOS_ARKWEB_ADBLOCK
   if (defined(ohos_arkweb_adblock) && ohos_arkweb_adblock) {
     if (!defined(ohos_nweb_ex) || !ohos_nweb_ex) {
-      sources += [ "libcef/browser/adblock/adblock_delegate_ohos.cc", ]
+      sources += [ "libcef/browser/adblock/adblock_delegate_ohos.cc" ]
     }
     sources += [
       "libcef/browser/adblock/adblock_config_bridge.cc",
       "libcef/browser/adblock/adblock_config_bridge.h",
     ]
   }
+
   #endif
 
   #ifdef OHOS_COOKIE
@@ -1083,6 +1091,7 @@ source_set("libcef_static") {
       "libcef/browser/net_service/cookie_manager_impl.h",
     ]
   }
+
   #endif
 
   #ifdef OHOS_EX_PASSWORD
@@ -1106,24 +1115,26 @@ source_set("libcef_static") {
       "libcef/browser/load_committed_details_impl.h",
     ]
   }
+
   #endif
 
-#ifdef OHOS_INCOGNITO_MODE
+  #ifdef OHOS_INCOGNITO_MODE
   if (defined(ohos_incognito_mode) && ohos_incognito_mode) {
     sources += [
-      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.cc",
-      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.h",
-      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.cc",
-      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.h",
-      "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
-      "libcef/browser/net_database/cef_incognito_data_base_impl.h",
       "libcef/browser/alloy/alloy_off_the_record_browser_context.cc",
       "libcef/browser/alloy/alloy_off_the_record_browser_context.h",
+      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.cc",
+      "libcef/browser/alloy/chrome_off_the_record_profile_alloy.h",
+      "libcef/browser/net_database/cef_incognito_data_base_impl.cc",
+      "libcef/browser/net_database/cef_incognito_data_base_impl.h",
+      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.cc",
+      "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.h",
     ]
   }
-#endif
 
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+  #endif
+
+  #if defined(OHOS_CUSTOM_VIDEO_PLAYER)
   if (defined(ohos_custom_video_player) && ohos_custom_video_player) {
     sources += [
       "include/cef_media_player_listener.h",
@@ -1131,14 +1142,16 @@ source_set("libcef_static") {
       "libcef/browser/alloy/custom_media_player_proxy.h",
     ]
   }
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
 
-#if defined(OHOS_ADSBLOCK)
+  #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+  #if defined(OHOS_ADSBLOCK)
   sources += [
     "libcef/browser/adsblock_manager_impl.cc",
     "libcef/browser/adsblock_manager_impl.h",
   ]
-#endif
+
+  #endif
 
   configs += [
     "libcef/features:config",
@@ -1282,10 +1295,10 @@ source_set("libcef_static") {
       "libcef/browser/subresource_filter/adblock_list.h",
       "libcef/browser/subresource_filter/adblock_ruleset_manager.cc",
       "libcef/browser/subresource_filter/adblock_ruleset_manager.h",
-      "libcef/browser/subresource_filter/user_adblock_ruleset_manager.cc",
-      "libcef/browser/subresource_filter/user_adblock_ruleset_manager.h",
       "libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.cc",
       "libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.h",
+      "libcef/browser/subresource_filter/user_adblock_ruleset_manager.cc",
+      "libcef/browser/subresource_filter/user_adblock_ruleset_manager.h",
     ]
 
     deps += [
@@ -1309,6 +1322,7 @@ source_set("libcef_static") {
     ]
     deps += [ "//third_party/pdfium" ]
   }
+
   #endif // defined(OHOS_PRINT)
 
   #if defined(OHOS_NO_STATE_PREFETCH)
@@ -1453,10 +1467,10 @@ source_set("libcef_static") {
     deps += [
       "//components/js_injection/browser",
       "//components/js_injection/renderer",
+      "//components/safe_browsing/core/common:safe_browsing_prefs",
       "//components/security_interstitials/content:proto",
       "//components/security_interstitials/content:security_interstitial_page",
       "//components/security_interstitials/core",
-      "//components/safe_browsing/core/common:safe_browsing_prefs",
       "//ui/events",
       "//ui/strings",
       "//ui/views",

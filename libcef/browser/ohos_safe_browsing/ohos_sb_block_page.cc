@@ -93,7 +93,8 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
   load_time_data.Set("title",
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TITLE));
   if (block_type_ == OHSBThreatType::THREAT_ILLEGAL ||
-      block_type_ == OHSBThreatType::THREAT_RISK) {
+      block_type_ == OHSBThreatType::THREAT_RISK ||
+      block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST) {
     load_time_data.Set("block_info_title", l10n_util::GetStringUTF8(
                                                IDS_OHOS_BLOCK_PAGE_INFO_TITLE));
   } else {
@@ -110,6 +111,10 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
     load_time_data.Set(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_BODY));
+  } else if (block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST) {
+    load_time_data.Set(
+        "block_info_body",
+        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TRUST_LIST_INFO_BODY));
   } else {
     load_time_data.Set(
         "block_info_body",
