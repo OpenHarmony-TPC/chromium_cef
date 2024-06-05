@@ -90,6 +90,9 @@ void OhGinJavascriptBridgeDispatcher::OnAddNamedObject(const std::string& name,
   int size = async_method_list.size();
   if (need_update && size > 0) {
     // update async_methods_map_ to new methods
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::OnAddNamedObject "
+                  "register async methods, object_id = "
+               << object_id;
     std::unordered_set<std::string> async_method_set;
     for (int i = 0; i < size; ++i) {
       const base::Value& method_value = async_method_list[i];
