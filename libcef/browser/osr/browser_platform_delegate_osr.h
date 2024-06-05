@@ -155,10 +155,10 @@ class CefBrowserPlatformDelegateOsr
 #endif
 
 #if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
-  void OnShowAutofillPopup(
-      const gfx::RectF& element_bounds,
-      bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions) override;
+  void OnShowAutofillPopup(const gfx::RectF& element_bounds,
+                           bool is_rtl,
+                           const std::vector<autofill::Suggestion>& suggestions,
+                           bool is_password_popup_type) override;
   void OnHideAutofillPopup() override;
 #endif
 

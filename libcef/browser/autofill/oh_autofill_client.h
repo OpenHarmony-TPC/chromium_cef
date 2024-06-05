@@ -203,7 +203,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   void ShowAutofillPopupImpl(
       const gfx::RectF& element_bounds,
       bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions);
+      const std::vector<autofill::Suggestion>& suggestions,
+      autofill::PopupType popup_type);
   content::WebContents& GetWebContents() const;
 
   bool save_form_data_ = false;

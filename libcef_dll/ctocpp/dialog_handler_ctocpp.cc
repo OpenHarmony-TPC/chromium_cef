@@ -193,7 +193,8 @@ void CefDialogHandlerCToCpp::OnShowAutofillPopup(
     CefRefPtr<CefBrowser> browser,
     const CefRect& bounds,
     bool right_aligned,
-    const std::vector<CefAutofillPopupItem>& menu_items) {
+    const std::vector<CefAutofillPopupItem>& menu_items,
+    bool is_password_popup_type) {
   shutdown_checker::AssertNotShutdown();
 
   cef_dialog_handler_t* _struct = GetStruct();
@@ -225,7 +226,7 @@ void CefDialogHandlerCToCpp::OnShowAutofillPopup(
   // Execute
   _struct->on_show_autofill_popup(_struct, CefBrowserCppToC::Wrap(browser),
                                   &bounds, right_aligned, menu_itemsCount,
-                                  menu_itemsList);
+                                  menu_itemsList, is_password_popup_type);
 
   // Restore param:menu_items; type: simple_vec_byref_const
   if (menu_itemsList) {

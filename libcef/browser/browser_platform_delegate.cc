@@ -475,7 +475,8 @@ void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
 void CefBrowserPlatformDelegate::OnShowAutofillPopup(
     const gfx::RectF& element_bounds,
     bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions) {
+    const std::vector<autofill::Suggestion>& suggestions,
+    bool is_password_popup_type) {
   NOTIMPLEMENTED();
 }
 

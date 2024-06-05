@@ -187,7 +187,8 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
       CefRefPtr<CefBrowser> browser,
       const CefRect& bounds,
       bool right_aligned,
-      const std::vector<CefAutofillPopupItem>& menu_items) {}
+      const std::vector<CefAutofillPopupItem>& menu_items,
+      bool is_password_popup_type) {}
 
   ///
   /// Called when notify ui to show password dialog to query user to save

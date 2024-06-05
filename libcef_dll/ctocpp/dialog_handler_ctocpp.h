@@ -58,11 +58,11 @@ class CefDialogHandlerCToCpp
                     const CefString& main_frame_url,
                     const std::map<CefString, CefString>& subresource_blocked,
                     bool is_site_first_report) override;
-  void OnShowAutofillPopup(
-      CefRefPtr<CefBrowser> browser,
-      const CefRect& bounds,
-      bool right_aligned,
-      const std::vector<CefAutofillPopupItem>& menu_items) override;
+  void OnShowAutofillPopup(CefRefPtr<CefBrowser> browser,
+                           const CefRect& bounds,
+                           bool right_aligned,
+                           const std::vector<CefAutofillPopupItem>& menu_items,
+                           bool is_password_popup_type) override;
   void ShowPasswordDialog(bool is_update, const CefString& url) override;
 };
 
