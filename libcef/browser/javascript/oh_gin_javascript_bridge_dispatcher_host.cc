@@ -830,6 +830,8 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod: "
+                "method name: " << method_name;
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -880,6 +882,8 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync: "
+                "async method name: " << method_name;
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
