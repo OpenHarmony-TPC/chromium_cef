@@ -35,40 +35,6 @@ cef_string_map_t CefCacheOptionsCToCpp::GetResponseHeaders() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") bool CefCacheOptionsCToCpp::IsModule() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_cache_options_t *_struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_module)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_module(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") bool CefCacheOptionsCToCpp::IsTopLevel() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_cache_options_t *_struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_top_level)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_top_level(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
 // CONSTRUCTOR - Do not edit by hand.
 
 CefCacheOptionsCToCpp::CefCacheOptionsCToCpp() {}

@@ -37,8 +37,6 @@ public:
 
   // CefCacheOptions methods.
   cef_string_map_t GetResponseHeaders() override;
-  bool IsModule() override;
-  bool IsTopLevel() override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_CACHE_OPTIONS_CTOCPP_H_
