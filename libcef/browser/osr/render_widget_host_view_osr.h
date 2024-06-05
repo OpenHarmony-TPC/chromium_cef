@@ -549,6 +549,8 @@ class CefRenderWidgetHostViewOSR
   int frame_rate_threshold_us_ = 0;
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
+  gfx::SizeF scrollable_viewport_size_;
+
   std::unique_ptr<content::SoftwareCompositorHostOhos> software_compositor_;
 #endif
 

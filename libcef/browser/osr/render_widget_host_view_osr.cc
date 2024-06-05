@@ -1554,14 +1554,35 @@ bool CefRenderWidgetHostViewOSR::WebPageSnapshot(
     int width,
     int height,
     cef_web_snapshot_callback_t callback) {
-  if (software_compositor_) {
-    software_compositor_->DemandDrawSwAsync(id, width, height, root_layer_size_,
-                                            last_scroll_offset_,
-                                            std::move(callback));
-    return true;
+  if (!software_compositor_) {
+    LOG(ERROR) << "software compositor is null when get snapshot";
+    return false;
   }
-  LOG(ERROR) << "software compositor is null when get snapshot";
-  return false;
+
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser is null when get snapshot";
+    return false;
+  }
+
+  gfx::SizeF pageSize{0.0f, 0.0f};
+  gfx::PointF pageOffsize{0.0f, 0.0f};
+  if (browser_impl_->settings().record_whole_document) {
+    pageSize = root_layer_size_;
+    pageOffsize = last_scroll_offset_;
+  } else {
+    pageSize = scrollable_viewport_size_;
+  }
+
+  if (width < 0) {
+    width = (std::abs(width) * pageSize.width()) / 100;
+  }
+  if (height < 0) {
+    height = (std::abs(height) * pageSize.height()) / 100;
+  }
+
+  software_compositor_->DemandDrawSwAsync(id, width, height, pageSize,
+                                          pageOffsize, std::move(callback));
+  return true;
 }
 #endif
 
@@ -1655,6 +1676,13 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
                                 weak_ptr_factory_.GetWeakPtr()));
 #endif
   }
+
+#if defined(OHOS_SOFTWARE_COMPOSITOR)
+  gfx::SizeF scrollable_viewport_size = metadata.scrollable_viewport_size;
+  if (scrollable_viewport_size != scrollable_viewport_size_) {
+    scrollable_viewport_size_ = scrollable_viewport_size;
+  }
+#endif
 
   gfx::Size viewport_size_in_pixels = metadata.viewport_size_in_pixels;
   float device_scale_factor = metadata.device_scale_factor;
