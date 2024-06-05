@@ -72,6 +72,8 @@ class CefRequestImpl : public CefRequest {
   CefRefPtr<CefPostDataStream> GetUploadStream() override;
   bool IsRedirect() override;
   bool HasUserGesture() override;
+  void SetFrameUrl(const CefString& frame_url);
+  CefString GetFrameUrl();
 #endif  // defined(OHOS_SCHEME_HANDLER)
   void SetPostData(CefRefPtr<CefPostData> postData) override;
   void GetHeaderMap(HeaderMap& headerMap) override;
@@ -167,6 +169,7 @@ class CefRequestImpl : public CefRequest {
   bool is_redirect_{false};
   bool has_user_gesture_{false};
   CefRefPtr<CefPostDataStream> postdata_stream_;
+  GURL frame_url_;
 #endif
   // The below members are used by CefURLRequest.
   int flags_;
