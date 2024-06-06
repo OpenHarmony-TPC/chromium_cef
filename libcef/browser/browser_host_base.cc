@@ -106,6 +106,10 @@
 #include "components/subresource_filter/content/browser/ohos_adblock_config.h"
 #endif
 
+#ifdef OHOS_URL_TRUST_LIST
+#include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -3773,5 +3777,32 @@ bool CefBrowserHostBase::WebPageSnapshot(
     return platform_delegate_->WebPageSnapshot(id, width, height, std::move(callback));
   }
   return false;
+}
+#endif
+
+#if OHOS_URL_TRUST_LIST
+int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList) {
+  std::string urlTrustListUpdated = urlTrustList.ToString();
+  content::WebContents* webContents = GetWebContents();
+  if (!webContents) {
+    LOG(ERROR) << "SetUrlTrustList failed, web contents is error.";
+    return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
+  }
+  ohos_safe_browsing::OhosUrlTrustListManager* manager =
+    reinterpret_cast<ohos_safe_browsing::OhosUrlTrustListManager *>(
+    webContents->GetUserData(
+      &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey));
+  if (!manager) {
+    manager = new ohos_safe_browsing::OhosUrlTrustListManager();
+    if (!manager) {
+      LOG(ERROR) << "SetUrlTrustList failed, new UrlTrustListManager failed.";
+      return static_cast<int>(
+        ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
+    }
+    webContents->SetUserData(
+      &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey,
+      std::unique_ptr<base::SupportsUserData::Data>(manager));
+  }
+  return static_cast<int>(manager->SetUrlTrustList(urlTrustListUpdated));
 }
 #endif

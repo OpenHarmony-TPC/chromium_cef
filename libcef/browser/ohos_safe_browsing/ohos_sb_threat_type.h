@@ -25,6 +25,7 @@ enum OHSBThreatType {
   THREAT_FRAUD = 1,
   THREAT_RISK = 2,
   THREAT_WARNING = 3,
+  THREAT_URL_TRUST_LIST = 4,
 };
 
 enum OHSBPolicyType {

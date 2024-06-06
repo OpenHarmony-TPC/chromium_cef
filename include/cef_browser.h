@@ -505,6 +505,13 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void EnableAdsBlock(bool enable) = 0;
+
+  ///
+  /// Set url trust list.
+  ///
+  /*--cef()--*/
+  virtual int SetUrlTrustList(const CefString& urlTrustList) = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
