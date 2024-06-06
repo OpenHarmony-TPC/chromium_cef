@@ -50,6 +50,7 @@ class CefBrowserPlatformDelegateOsr
                            int deltaX,
                            int deltaY) override;
   void SendTouchEvent(const CefTouchEvent& event) override;
+
   void SetFocus(bool setFocus) override;
   gfx::Point GetScreenPoint(const gfx::Point& view,
                             bool want_dip_coords) const override;
@@ -152,6 +153,10 @@ class CefBrowserPlatformDelegateOsr
 
 #ifdef OHOS_EX_TOPCONTROLS
   int GetShrinkViewportHeight() override;
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
 #endif
 
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
