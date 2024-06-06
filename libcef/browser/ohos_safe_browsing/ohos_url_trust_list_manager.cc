@@ -90,6 +90,9 @@ UrlTrustCheckResult OhosUrlTrustListManager::CheckUrlTrustList(
   if (ruleMap_.size() == 0) {
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
+  if (!url.SchemeIsHTTPOrHTTPS()) {
+    return UrlTrustCheckResult::RESULT_ALLOW;
+  }
 
   auto range = ruleMap_.equal_range(url.host());
   std::string realPath = GetUrlRealPath(url.path());
