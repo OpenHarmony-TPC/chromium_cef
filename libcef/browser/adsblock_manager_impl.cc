@@ -4,8 +4,11 @@
 
 #include "libcef/browser/adsblock_manager_impl.h"
 
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
+#include "base/path_service.h"
 #include "content/public/browser/browser_context.h"
 
 #ifdef OHOS_ARKWEB_ADBLOCK
@@ -84,6 +87,11 @@ void CefAdsBlockManagerImpl::SetAdsBlockRules(const CefString &rulesFile, bool r
 
 void CefAdsBlockManagerImpl::SetAdsBlockRulesInternal(const CefString &rulesFile, bool replace) {
   DCHECK(ValidContext());
+
+  if (!base::PathExists(base::FilePath(rulesFile))) {
+    LOG(ERROR) << "[AdBlock] User Easylist file does not exist:" << rulesFile.ToString();
+    return;
+  }
 
   OHOS::adblock::AdBlockConfig::GetInstance()->SetAdsBlockRules(rulesFile,
                                                                 replace);
