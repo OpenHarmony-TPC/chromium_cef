@@ -37,8 +37,7 @@ OhosUrlTrustListNavigationThrottle::~OhosUrlTrustListNavigationThrottle() = defa
 content::NavigationThrottle::ThrottleCheckResult
 OhosUrlTrustListNavigationThrottle::WillStartRequest() {
   content::NavigationHandle *handle = navigation_handle();
-  if (!handle || !handle->IsInMainFrame() ||
-    handle->GetNetErrorCode() == net::ERR_BLOCKED_BY_CLIENT) {
+  if (!handle || handle->GetNetErrorCode() == net::ERR_BLOCKED_BY_CLIENT) {
     return PROCEED;
   }
   content::WebContents* webContents = handle->GetWebContents();
