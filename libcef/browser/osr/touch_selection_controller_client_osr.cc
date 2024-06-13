@@ -667,6 +667,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
 #ifdef OHOS_CLIPBOARD
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
   SetTemporarilyHidden(false);
+  if (!rwhv_) {
+    LOG(ERROR) << "Fatal error: rwhv_ is null";
+    return;
+  }
   auto browser = rwhv_->browser_impl();
   ui::TouchSelectionController* controller = GetTouchSelectionController();
   switch (event) {
@@ -674,9 +678,10 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       quick_menu_requested_ = true;
       NotifyTouchSelectionChanged(false);
       UpdateQuickMenu();
+      rwhv_->ResetGestureDetection(false);
       break;
     case ui::INSERTION_HANDLE_SHOWN:
-      if (rwhv_ && rwhv_->browser_impl()) {
+      if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
             rwhv_->browser_impl()->GetTouchInsertHandleMenuShow();
       }
@@ -684,6 +689,7 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       if (quick_menu_requested_) {
         ShowQuickMenu();
       }
+      rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
     case ui::INSERTION_HANDLE_CLEARED:
