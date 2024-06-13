@@ -832,7 +832,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     OhGinJavascriptBridgeError* error_code) {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod: "
                 "method name: " << method_name;
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
     if (javascriptInjector) {
