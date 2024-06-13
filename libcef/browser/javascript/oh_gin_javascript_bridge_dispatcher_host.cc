@@ -827,7 +827,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
     if (javascriptInjector) {
