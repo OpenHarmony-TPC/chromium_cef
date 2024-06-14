@@ -48,6 +48,10 @@ namespace {
 
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 0;
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 1;
+
+constexpr int PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 5;
+constexpr int LIMITED_PRINT_RANGE = 5;
+constexpr int LIMITED_PRINT_DURATION = 10000;
 const std::string PROTOCOL_PATH = "://";
 
 uint32_t SaveDataToFd(int fd,
@@ -97,6 +101,9 @@ class PrintDocumentAdapterImpl
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "OhosPrintManager onJobStateChanged.";
     state_ = state;
+    if (ohosPrintManager_) {
+      ohosPrintManager_->SetPrintStatus(false, state);
+    }
     if (ohosPrintManager_ && !isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
       ohosPrintManager_->RunPrintRequestedCallback(jobId);
@@ -141,7 +148,7 @@ class ApplicationPrintDocumentAdapterImpl
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "Application OhosPrintManager onJobStateChanged.";
     if (ohosPrintManager_) {
-      ohosPrintManager_->SetPrintStatus(false);
+      ohosPrintManager_->SetPrintStatus(false, state);
     }
 
     state_ = state;
@@ -210,6 +217,10 @@ void OhosPrintManager::PdfWritingDone(int page_count) {
 }
 
 bool OhosPrintManager::PrintNow() {
+  if (is_print_now_) {
+    LOG(ERROR) << "printing in progress.";
+    return false;
+  }
   LOG(INFO) << "OhosPrintManager::PrintNow";
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
@@ -570,7 +581,33 @@ void OhosPrintManager::SetToken(void* token) {
   token_ = token;
 }
 
-void OhosPrintManager::SetPrintStatus(bool is_print_now) {
+void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
+  if (!is_print_disable_) {
+    is_print_now_ = is_print_now;
+  }
+
+  if (state == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED) {
+    auto curCancePrintTime = std::chrono::high_resolution_clock::now();
+    cancelPrintTimeQueue_.push(curCancePrintTime);
+  }
+
+  int qSize = cancelPrintTimeQueue_.size();
+  for (int i = 0; i < qSize; i++) {
+    auto nowTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> diff =
+      std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - cancelPrintTimeQueue_.front());
+    if (diff.count() >= LIMITED_PRINT_DURATION) {
+      cancelPrintTimeQueue_.pop();
+    } else {
+      break;
+    }
+  }
+
+  if (cancelPrintTimeQueue_.size() >= LIMITED_PRINT_RANGE) {
+    LOG(WARNING) << "Printing is frequent, printing on the current page is prohibited.";
+    is_print_now_ = true;
+    is_print_disable_ = true;
+  }
   is_print_now_ = is_print_now;
 }
 
