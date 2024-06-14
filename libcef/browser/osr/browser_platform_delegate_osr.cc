@@ -116,6 +116,12 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
   if (view_osr_) {
     view_osr_->RenderViewCreated();
   }
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnSafeInsetsChange(safe_insets_);
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::BrowserCreated(
@@ -1075,11 +1081,15 @@ void CefBrowserPlatformDelegateOsr::OnSafeInsetsChange(int left,
                                                        int top,
                                                        int right,
                                                        int bottom) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view) {
+  gfx::Insets safe_insets = gfx::Insets::TLBR(top, left, bottom, right);
+  if (safe_insets_ == safe_insets) {
     return;
   }
-  view->OnSafeInsetsChange(left, top, right, bottom);
+  safe_insets_ = safe_insets;
+
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnSafeInsetsChange(safe_insets_);
+  }
 }
 #endif
 

@@ -110,7 +110,7 @@ class CefWebContentsViewOSR : public content::WebContentsView,
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT
-  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+  void OnSafeInsetsChange(const gfx::Insets& safe_insets) override;
 #endif
 
 #ifdef OHOS_AI

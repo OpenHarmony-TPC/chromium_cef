@@ -323,16 +323,12 @@ void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
 #endif  // OHOS_EX_TOPCONTROLS
 
 #ifdef OHOS_DISPLAY_CUTOUT
-void CefWebContentsViewOSR::OnSafeInsetsChange(int left,
-                                               int top,
-                                               int right,
-                                               int bottom) {
+void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
   if (web_contents_) {
     content::WebContentsImpl* web_contents_impl =
         static_cast<content::WebContentsImpl*>(web_contents_);
     if (web_contents_impl) {
-      web_contents_impl->SetDisplayCutoutSafeArea(
-          gfx::Insets::TLBR(top, left, bottom, right));
+      web_contents_impl->SetDisplayCutoutSafeArea(safe_insets);
     }
   }
 }

@@ -227,6 +227,10 @@ bool WebPageSnapshot(const char* id,
   int shrink_viewport_height_ = 0;
 #endif
 
+#ifdef OHOS_DISPLAY_CUTOUT
+  gfx::Insets safe_insets_;
+#endif
+
   // We keep track of the RenderWidgetHost from which the current drag started,
   // in order to properly route the drag end message to it.
   base::WeakPtr<content::RenderWidgetHostImpl> drag_start_rwh_;

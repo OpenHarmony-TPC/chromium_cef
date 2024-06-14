@@ -453,7 +453,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT
-  void OnSafeInsetsChange(int left, int top, int right, int bottom);
+  void OnSafeInsetsChange(const gfx::Insets& safe_insets);
 #endif
 
 #ifdef OHOS_AI
