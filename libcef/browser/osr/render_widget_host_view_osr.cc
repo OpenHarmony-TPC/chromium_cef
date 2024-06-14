@@ -3504,18 +3504,20 @@ ui::Compositor* CefRenderWidgetHostViewOSR::GetCompositor() {
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT
-void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(int left,
-                                                    int top,
-                                                    int right,
-                                                    int bottom) {
+void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(
+    const gfx::Insets& safe_insets) {
   float ratio = 1.f;
   auto browser = browser_impl_->GetBrowser();
   if (browser != nullptr && browser->GetHost() != nullptr) {
     ratio = browser->GetHost()->GetVirtualPixelRatio();
+    if (ratio <= 0) {
+      LOG(ERROR) << __func__ << " get ratio invalid: " << ratio;
+      return;
+    }
   }
   if (auto rvh_delegate_view = host()->delegate()->GetDelegateView()) {
-    rvh_delegate_view->OnSafeInsetsChange(left / ratio, top / ratio,
-                                          right / ratio, bottom / ratio);
+    rvh_delegate_view->OnSafeInsetsChange(
+        gfx::ScaleToCeiledInsets(safe_insets, 1.f / ratio));
   }
 }
 #endif
