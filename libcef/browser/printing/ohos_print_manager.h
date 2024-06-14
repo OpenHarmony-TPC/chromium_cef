@@ -75,7 +75,7 @@ class OhosPrintManager : public printing::PrintManager,
   void RunPrintRequestedCallback(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
-  void SetPrintStatus(bool is_print_now);
+  void SetPrintStatus(bool is_print_now, uint32_t status);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
   void CheckForCancel(int32_t preview_ui_id,
@@ -128,11 +128,13 @@ class OhosPrintManager : public printing::PrintManager,
   uint32_t width_ = 8270;
   uint32_t height_ = 11690;
   int dpi_ = 300;  // DPI (Dots Per Inch)
+  std::queue<std::chrono::high_resolution_clock::time_point> cancelPrintTimeQueue_;
   void* token_ = nullptr;
   bool cancel_ = false;
   bool is_pdf_print_ = false;
   bool should_print_background_ = true;
   bool is_print_now_ = false;
+  bool is_print_disable_ = false;
   content::RenderFrameHost* pdf_rfh_ = nullptr;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string print_job_id_;
