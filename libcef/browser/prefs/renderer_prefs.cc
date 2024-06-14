@@ -474,6 +474,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #if defined(OHOS_MULTI_WINDOW)
   web.supports_multiple_windows = cef.supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
+
+#ifdef OHOS_NETWORK_LOAD
+  SET_STATE(cef.universal_access_from_file_urls, web.allow_universal_access_from_file_urls);
+#endif
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

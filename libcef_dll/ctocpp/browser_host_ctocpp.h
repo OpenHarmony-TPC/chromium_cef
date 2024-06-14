@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8666e5d5e47e5c2ef273d7a436136afb8bdb23b2$
+// $hash=22f3870f82b3cfe87454886ce2a3540374d2bf6d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -293,6 +293,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void AdvanceFocusForIME(int focusType) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
+  void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

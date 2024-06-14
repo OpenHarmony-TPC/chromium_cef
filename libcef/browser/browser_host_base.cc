@@ -911,6 +911,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if defined(OHOS_MULTI_WINDOW)
   settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
+
+#ifdef OHOS_NETWORK_LOAD
+  settings_.universal_access_from_file_urls = browser_settings.universal_access_from_file_urls;
+#endif
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -3241,6 +3245,12 @@ void CefBrowserHostBase::SetCacheMode(int flag) {
   cache_mode_ = flag;
 }
 
+void CefBrowserHostBase::SetGrantFileAccessDirs(
+    const std::vector<CefString>& dir_list) {
+  base::AutoLock lock_scope(state_lock_);
+  file_access_dirs_list_ = dir_list;
+}
+
 bool CefBrowserHostBase::GetFileAccess() {
   base::AutoLock lock_scope(state_lock_);
   return file_access_;
@@ -3254,6 +3264,15 @@ bool CefBrowserHostBase::GetBlockNetwork() {
 int CefBrowserHostBase::GetCacheMode() {
   base::AutoLock lock_scope(state_lock_);
   return cache_mode_;
+}
+
+std::vector<std::string> CefBrowserHostBase::GetGrantFileAccessDirs() {
+  base::AutoLock lock_scope(state_lock_);
+  std::vector<std::string> dir_list;
+  for (auto& dir: file_access_dirs_list_) {
+    dir_list.emplace_back(dir.ToString());
+  }
+  return dir_list;
 }
 #endif
 

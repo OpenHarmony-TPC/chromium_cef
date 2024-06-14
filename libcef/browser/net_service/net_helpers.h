@@ -21,6 +21,7 @@ struct NetHelperSetting {
   bool file_access;
   bool block_network;
   int cache_mode;
+  std::vector<std::string> file_access_dirs_list;
 };
 #endif
 
