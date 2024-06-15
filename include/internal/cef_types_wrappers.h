@@ -634,6 +634,10 @@ struct CefBrowserSettingsTraits {
 #if defined(OHOS_MULTI_WINDOW)
     target->supports_multiple_windows = src->supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
+
+#ifdef OHOS_NETWORK_LOAD
+    target->universal_access_from_file_urls = src->universal_access_from_file_urls;
+#endif
   }
 };
 

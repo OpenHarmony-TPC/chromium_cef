@@ -464,6 +464,7 @@ bool NeedsReload() override;
   void SetFileAccess(bool falg) override;
   void SetBlockNetwork(bool falg) override;
   void SetCacheMode(int falg) override;
+  void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
 #endif
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
   bool Discard() override { return false; }
@@ -538,6 +539,7 @@ bool TerminateRenderProcess() override;
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
 #endif
+  
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
@@ -681,9 +683,11 @@ bool TerminateRenderProcess() override;
   bool GetFileAccess();
   bool GetBlockNetwork();
   int GetCacheMode();
+  std::vector<std::string> GetGrantFileAccessDirs();
   bool file_access_ = false;
   bool network_blocked_ = false;
   int cache_mode_ = 0;
+  std::vector<CefString> file_access_dirs_list_{};
 #endif
 
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)

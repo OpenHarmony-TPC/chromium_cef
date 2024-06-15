@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=13b0fff5312d7cafda773e4661e85124aa4b423e$
+// $hash=c7dfebc0681b2c2ceac0546c81eb7cf3056ec6ea$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3555,6 +3555,31 @@ browser_host_notify_for_next_touch_event(struct _cef_browser_host_t* self) {
   CefBrowserHostCppToC::Get(self)->NotifyForNextTouchEvent();
 }
 
+void CEF_CALLBACK
+browser_host_set_grant_file_access_dirs(struct _cef_browser_host_t* self,
+                                        cef_string_list_t dir_list) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: dir_list; type: string_vec_byref_const
+  DCHECK(dir_list);
+  if (!dir_list) {
+    return;
+  }
+
+  // Translate param: dir_list; type: string_vec_byref_const
+  std::vector<CefString> dir_listList;
+  transfer_string_list_contents(dir_list, dir_listList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetGrantFileAccessDirs(dir_listList);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3727,8 +3752,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->discard = browser_host_discard;
   GetStruct()->restore = browser_host_restore;
   GetStruct()->set_browser_zoom_level = browser_host_set_browser_zoom_level;
-  GetStruct()->get_top_controls_offset =
-      browser_host_get_top_controls_offset;
+  GetStruct()->get_top_controls_offset = browser_host_get_top_controls_offset;
   GetStruct()->get_shrink_viewport_height =
       browser_host_get_shrink_viewport_height;
   GetStruct()->set_print_background = browser_host_set_print_background;
@@ -3757,7 +3781,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
   GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
-  GetStruct()->notify_for_next_touch_event = browser_host_notify_for_next_touch_event;
+  GetStruct()->notify_for_next_touch_event =
+      browser_host_notify_for_next_touch_event;
+  GetStruct()->set_grant_file_access_dirs =
+      browser_host_set_grant_file_access_dirs;
 }
 
 // DESTRUCTOR - Do not edit by hand.

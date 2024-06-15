@@ -1978,5 +1978,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void NotifyForNextTouchEvent() = 0;
+
+  ///
+  /// Set grant file access dirs.
+  ///
+  /*--cef()--*/
+  virtual void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

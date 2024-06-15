@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cac4c7faca3328c2b222621d0a8c1c3a90ec024e$
+// $hash=a1d15ef11e4cf4498a6694469f4a915a777becbc$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -3263,6 +3263,34 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::NotifyForNextTouchEvent() {
 
   // Execute
   _struct->notify_for_next_touch_event(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetGrantFileAccessDirs(
+    const std::vector<CefString>& dir_list) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: dir_list; type: string_vec_byref_const
+  cef_string_list_t dir_listList = cef_string_list_alloc();
+  DCHECK(dir_listList);
+  if (dir_listList) {
+    transfer_string_list_contents(dir_list, dir_listList);
+  }
+
+  // Execute
+  _struct->set_grant_file_access_dirs(_struct, dir_listList);
+
+  // Restore param:dir_list; type: string_vec_byref_const
+  if (dir_listList) {
+    cef_string_list_free(dir_listList);
+  }
 }
 
 // CONSTRUCTOR - Do not edit by hand.

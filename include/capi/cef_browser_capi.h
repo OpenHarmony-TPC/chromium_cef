@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=ed6ec0c735cc8f568860d1fde92ad1327000a21c$
+// $hash=7512c0f1ef4291a15546369cb137531ed1bd8529$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -512,8 +512,8 @@ typedef struct _cef_browser_t {
   ///
   /// Set url trust list.
   ///
-  int(CEF_CALLBACK* set_url_trust_list)(
-      struct _cef_browser_t* self, const cef_string_t* urlTrustList);
+  int(CEF_CALLBACK* set_url_trust_list)(struct _cef_browser_t* self,
+                                        const cef_string_t* urlTrustList);
 } cef_browser_t;
 
 ///
@@ -1784,8 +1784,7 @@ typedef struct _cef_browser_host_t {
   ///
   /// Get the top controls offset.
   ///
-  int(CEF_CALLBACK* get_top_controls_offset)(
-      struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK* get_top_controls_offset)(struct _cef_browser_host_t* self);
 
   ///
   /// Get the shrink viewport height.
@@ -1951,7 +1950,15 @@ typedef struct _cef_browser_host_t {
   ///
   /// Notify for next touch move event.
   ///
-  void(CEF_CALLBACK* notify_for_next_touch_event)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK* notify_for_next_touch_event)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// Set grant file access dirs.
+  ///
+  void(CEF_CALLBACK* set_grant_file_access_dirs)(
+      struct _cef_browser_host_t* self,
+      cef_string_list_t dir_list);
 } cef_browser_host_t;
 
 ///

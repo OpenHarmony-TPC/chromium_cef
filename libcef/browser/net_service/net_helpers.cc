@@ -169,6 +169,21 @@ bool IsSpecialFileUrl(const GURL& url) {
   return false;
 }
 
+bool IsInFileAccessList(const GURL& url, const std::vector<std::string>& pass_dir) {
+  if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
+    return false;
+  }
+
+  for (auto& path: pass_dir) {
+    LOG(ERROR) << "IsInFileAccessList url path:" << url.path();
+    LOG(ERROR) << "IsInFileAccessList pass path:" << path;
+    if (base::StartsWith(url.path(), path, base::CompareCase::SENSITIVE)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool IsURLBlocked(const GURL& url
 #ifdef OHOS_NETWORK_CONNINFO
                   ,
@@ -179,6 +194,15 @@ bool IsURLBlocked(const GURL& url
   if (url.SchemeIs(url::kContentScheme) &&
       NetHelpers::ShouldBlockContentUrls()) {
     return true;
+  }
+
+  if (url.SchemeIsFile() && !setting.file_access_dirs_list.empty()) {
+    bool result = IsInFileAccessList(url, setting.file_access_dirs_list);
+    LOG(ERROR) << "IsInFileAccessList url result:" << result;
+    if (!result) {
+      LOG(ERROR) << "Blocked by file access list";
+    }
+    return !result;
   }
 
   // Part of implementation of NWebPreference.allowFileAccess.

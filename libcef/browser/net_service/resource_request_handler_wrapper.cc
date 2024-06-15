@@ -1468,6 +1468,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       setting.file_access = false;
       setting.block_network = false;
       setting.cache_mode = 0;
+      setting.file_access_dirs_list = std::vector<std::string>();
       return;
     }
     if (!init_state_->browser_) {
@@ -1475,11 +1476,13 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       setting.file_access = false;
       setting.block_network = false;
       setting.cache_mode = 0;
+      setting.file_access_dirs_list = std::vector<std::string>();
       return;
     }
     setting.file_access = init_state_->browser_->GetFileAccess();
     setting.block_network = init_state_->browser_->GetBlockNetwork();
     setting.cache_mode = init_state_->browser_->GetCacheMode();
+    setting.file_access_dirs_list = init_state_->browser_->GetGrantFileAccessDirs();
   }
 #endif
 
