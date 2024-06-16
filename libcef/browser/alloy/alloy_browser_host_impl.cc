@@ -2509,6 +2509,12 @@ bool AlloyBrowserHostImpl::ShouldVirtualKeyboardOverlay() {
 }
 
 void AlloyBrowserHostImpl::AdvanceFocusForIME(int focusType) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::AdvanceFocusForIME,
+                                          this, focusType));
+    return;
+  }
+
   if (platform_delegate_) {
     platform_delegate_->AdvanceFocusForIME(focusType);
   }
