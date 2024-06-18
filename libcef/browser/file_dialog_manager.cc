@@ -135,6 +135,9 @@ FileChooserParams SelectFileToFileChooserParams(
     case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
       break;
+    case ui::SelectFileDialog::Type::SELECT_FOLDER:
+      mode = FileChooserParams::Mode::kUploadFolder;
+      break;
  #endif
     default:
       NOTIMPLEMENTED();
