@@ -1714,11 +1714,18 @@ make_pack_header("resources") {
     "//extensions:extensions_resources_grd",
     "//mojo/public/js:resources",
     "//net:net_resources",
+    "//net/prp_preload:prp_preload",
     "//third_party/blink/public:resources",
     "//ui/resources:ui_resources_grd",
     "//ui/resources:webui_resources_grd",
     "//ui/views/resources:resources_grd",
   ]
+
+  if (is_ohos) {
+    deps += [
+      "//net/prp_preload:prp_preload",
+    ]
+  }
 }
 
 # Generate cef_pack_strings.h.

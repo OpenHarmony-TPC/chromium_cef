@@ -2716,6 +2716,13 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
       cef_context->AsProfile()->ShouldRestoreOldSessionCookies();
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  network::mojom::NetworkContext* network_context = GetSystemNetworkContext();
+  if (network_context != nullptr) {
+    network_context->InitPRParallelPreloadMgr();
+  }
+#endif
+
   if (!SystemNetworkContextManager::GetInstance()) {
     // Cancel NetworkContext creation in
     // StoragePartitionImpl::InitNetworkContext.
