@@ -166,6 +166,18 @@ blink::WebString DumpDocumentText(blink::WebLocalFrame* frame) {
   return blink::WebString(web_element->innerText());
 }
 
+#if BUILDFLAG(IS_OHOS)
+gfx::Size GetContentSize(blink::WebLocalFrame* frame) {
+  blink::WebElement body_element = frame->GetDocument().Body();
+  if (body_element.IsNull()) {
+    return gfx::Size();
+  }
+
+  blink::Element* body = body_element.Unwrap<blink::Element>();
+  return gfx::Size(body->scrollWidth(), body->scrollHeight());
+}
+#endif
+
 blink::WebString DumpDocumentMarkup(blink::WebLocalFrame* frame) {
   return blink::CreateMarkup(
       blink::To<blink::WebLocalFrameImpl>(frame)->GetFrame()->GetDocument());
