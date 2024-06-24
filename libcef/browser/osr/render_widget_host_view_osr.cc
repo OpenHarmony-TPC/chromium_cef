@@ -3119,8 +3119,6 @@ void CefRenderWidgetHostViewOSR::OnRootLayerChanged() {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-    handler->OnRootLayerChanged(browser_impl_.get(), root_layer_size_.height(),
-                                root_layer_size_.width());
   }
 }
 

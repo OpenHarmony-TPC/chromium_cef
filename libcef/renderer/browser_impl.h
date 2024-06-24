@@ -92,6 +92,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void OnEnterBFCache();
 
 #if BUILDFLAG(IS_OHOS)
+  void DidCommitCompositorFrame() override;
+  void DidUpdateMainFrameLayout() override;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
   void DeleteHistory() override;
@@ -197,6 +202,12 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
     bool can_go_forward_;
   };
   std::unique_ptr<LoadingState> last_loading_state_;
+
+#if BUILDFLAG(IS_OHOS)
+  int content_width_ = 0;
+  int content_height_ = 0;
+  bool needs_contents_size_update_ = true;
+#endif
 
   IMPLEMENT_REFCOUNTING(CefBrowserImpl);
 };

@@ -29,6 +29,9 @@
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
 
+#if BUILDFLAG(IS_OHOS)
+const char* CONTENT_SIZE_MESSAGE = "ContentSize.Message";
+#endif
 // CefBrowserImpl static methods.
 // -----------------------------------------------------------------------------
 
@@ -484,3 +487,33 @@ bool CefBrowserImpl::ShouldShowLoadingUI() {
   return false;
 }
 // #endif  // defined(OHOS_NWEB_EX)
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserImpl::DidUpdateMainFrameLayout() {
+  needs_contents_size_update_ = true;
+}
+
+void CefBrowserImpl::DidCommitCompositorFrame() {
+
+  if (!needs_contents_size_update_)
+    return;
+  needs_contents_size_update_ = false;
+
+  blink::WebFrame* main_frame = GetWebView()->MainFrame();
+  blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();
+
+  gfx::Size contents_size = blink_glue::GetContentSize(web_local_frame);
+  int content_width = contents_size.width();
+  int content_height = contents_size.height();
+
+  if (content_width != content_width_ || content_height != content_height_) {
+    content_width_ = content_width;
+    content_height_ = content_height;
+    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(CONTENT_SIZE_MESSAGE);
+    message->GetArgumentList()->SetInt(0, content_width_);
+    message->GetArgumentList()->SetInt(1, content_height_);
+    auto web_frame = GetMainFrame();
+    web_frame->SendProcessMessage(PID_BROWSER, message);
+  }
+}
+#endif
