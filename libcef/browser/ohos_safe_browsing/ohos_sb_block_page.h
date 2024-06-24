@@ -56,6 +56,10 @@ class OhosSbBlockPage : public SecurityInterstitialPage {
 
   void PopulateInterstitialStrings(base::Value::Dict& load_time_data) override;
  
+  void PopulateUrlTrustListInterstitialStrings(base::Value::Dict& load_time_data);
+
+  std::string GetUrlTrustListErrorHTMLContents();
+
  private:
   static std::unique_ptr<MetricsHelper> GetMetricsHelper(const GURL& url);
 
