@@ -9,8 +9,6 @@
 #include "base/time/time.h"
 
 namespace soc_perf {
-extern int video_layout_num;
-extern int layer_num;
 
 class SocPerUtil {
  public:
