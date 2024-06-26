@@ -15,6 +15,11 @@
 #include "base/logging.h"
 #include "components/javascript_dialogs/tab_modal_dialog_manager.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/strings/grit/components_strings.h"
+#include "ui/base/l10n/l10n_util.h"
+#endif
+
 namespace {
 
 class CefJSDialogCallbackImpl : public CefJSDialogCallback {
@@ -169,7 +174,13 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
     return;
   }
 
+#if BUILDFLAG(IS_OHOS)
+  const std::u16string& message_text =
+      l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
+#else
   const std::u16string& message_text = u"Is it OK to leave/reload this page?";
+#endif
+
   std::string url = web_contents ? web_contents->GetURL().spec() : "";
 
   // Always call DialogClosed().
