@@ -513,7 +513,8 @@ typedef struct _cef_browser_t {
   /// Set url trust list.
   ///
   int(CEF_CALLBACK* set_url_trust_list)(struct _cef_browser_t* self,
-                                        const cef_string_t* urlTrustList);
+                                        const cef_string_t* urlTrustList,
+					cef_string_t* detailErrMsg);
 } cef_browser_t;
 
 ///

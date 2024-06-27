@@ -76,7 +76,7 @@ public:
   OhosUrlTrustListManager();
   virtual ~OhosUrlTrustListManager() = default;
   UrlTrustCheckResult CheckUrlTrustList(const GURL& url) override;
-  UrlListSetResult SetUrlTrustList(const std::string& urlTrustList);
+  UrlListSetResult SetUrlTrustList(const std::string& urlTrustList, std::string& detailErrMsg);
 
 private:
   std::multimap<std::string, UrlTrustRule> ruleMap_;

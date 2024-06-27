@@ -705,7 +705,7 @@ bool TerminateRenderProcess() override;
 #endif
 
 #ifdef OHOS_URL_TRUST_LIST
-  int SetUrlTrustList(const CefString& urlTrustList) override;
+  int SetUrlTrustList(const CefString& urlTrustList, CefString& detailErrMsg) override;
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)

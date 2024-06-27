@@ -969,7 +969,8 @@ void CEF_CALLBACK browser_enable_ads_block(struct _cef_browser_t* self,
 }
 
 int CEF_CALLBACK browser_set_url_trustList(struct _cef_browser_t* self,
-                                           const cef_string_t* urlTrustList) {
+                                           const cef_string_t* urlTrustList,
+                                           cef_string_t* detailErrMsg) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -979,11 +980,18 @@ int CEF_CALLBACK browser_set_url_trustList(struct _cef_browser_t* self,
     return 0;
   }
 
-  // Execute
-  int _retval = CefBrowserCppToC::Get(self)->SetUrlTrustList(CefString(urlTrustList));
+  DCHECK(urlTrustList);
+  if (!urlTrustList) {
+    return 0;
+  }
 
-  // Return type: simple
-  return _retval;
+  DCHECK(detailErrMsg);
+  if (!detailErrMsg) {
+    return 0;
+  }
+  // Execute
+  CefString cefStrMsg(detailErrMsg);
+  return CefBrowserCppToC::Get(self)->SetUrlTrustList(CefString(urlTrustList), cefStrMsg);
 }
 }  // namespace
 

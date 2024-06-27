@@ -25,10 +25,67 @@ char OhosUrlTrustListInterface::interfaceKey;
 
 OhosUrlTrustListManager::OhosUrlTrustListManager() {}
 
-UrlListSetResult OhosUrlTrustListManager::SetUrlTrustList(
-  const std::string& urlTrustList)
+static bool FormatUrlRule(UrlTrustRule& urlRule)
 {
+  std::string scheme = urlRule.scheme.empty() ? "http" : urlRule.scheme;
+  std::string path = urlRule.path.empty() ? "" : urlRule.path;
+  std::string port = urlRule.port > 0 ?  ":" + std::to_string(urlRule.port) : "";
+
+  std::string combine = scheme + "://" + urlRule.host + port + "/" + path;
+  GURL gurlRule(combine);
+  if (!gurlRule.is_valid()) {
+    LOG(ERROR) << "parse: url format is invalid, combine url is " << combine;
+    return false;
+  }
+  LOG(DEBUG) << "parse: combine url is " << combine;
+  if (gurlRule.host().empty()) {
+    LOG(ERROR) << "parse: format url host is invalid.";
+    return false;
+  }
+  urlRule.host = gurlRule.host();
+  if (!path.empty()) {
+    if (gurlRule.path().empty()) {
+      LOG(ERROR) << "parse: format url path is invalid";
+      return false;
+    }
+    urlRule.path = gurlRule.path();
+  }
+  return true;
+}
+
+static bool CheckUrlRuleValid(UrlTrustRule& urlRule)
+{
+  if (!urlRule.scheme.empty()) {
+    if (urlRule.scheme != "http" && urlRule.scheme != "https") {
+      LOG(ERROR) << "parse: host " << urlRule.host << " scheme is invalid.";
+    }
+  }
+
+  if (urlRule.host.empty()) {
+    LOG(ERROR) << "parse: empty host.";
+    return false;
+  }
+  if (urlRule.port <= -1) {
+    LOG(ERROR) << "parse: host " << urlRule.host << " port is invalid";
+    return false;
+  }
+  if (urlRule.path.size() > MAX_PATH_SIZE) {
+      LOG(ERROR) << "parse: host " << urlRule.host << " path len too long.";
+      return false;
+  }
+  if (!FormatUrlRule(urlRule)) {
+    return false;
+  }
+  LOG(DEBUG) << "parse: url host " << urlRule.host << " path " << urlRule.path;
+  return true;
+}
+
+UrlListSetResult OhosUrlTrustListManager::SetUrlTrustList(
+  const std::string& urlTrustList, std::string& detailErrMsg)
+{
+  detailErrMsg = "reached";
   if (urlTrustList.empty()) {
+    LOG(INFO) << "parse: list is empty, disable url trust list.";
     ruleMap_.clear();
     return UrlListSetResult::SET_OK;
   }
@@ -55,33 +112,14 @@ UrlListSetResult OhosUrlTrustListManager::SetUrlTrustList(
     UrlTrustRule rule;
     base::JSONValueConverter<UrlTrustRule> converter;
     converter.Convert(ruleJson, &rule);
-    if (rule.host.empty()) {
-      LOG(ERROR) << "parse: empty host.";
+    if (!CheckUrlRuleValid(rule)) {
       return UrlListSetResult::PARAM_ERROR;
     }
-    if (rule.port == -1) {
-      LOG(ERROR) << "parse: host " << rule.host << " port invalid.";
-      return UrlListSetResult::PARAM_ERROR;
-    }
-    if (rule.path.size() > MAX_PATH_SIZE) {
-      LOG(ERROR) << "parse: host " << rule.host << " path len too long.";
-      return UrlListSetResult::PARAM_ERROR;
-    }
+
     map.insert(std::make_pair(rule.host, rule));
   }
   ruleMap_ = map;
   return UrlListSetResult::SET_OK;
-}
-
-static std::string GetUrlRealPath(std::string path)
-{
-  if (path.empty()) {
-    return path;
-  }
-  if (path[0] == '/') {
-    path.erase(0, 1);
-  }
-  return path;
 }
 
 UrlTrustCheckResult OhosUrlTrustListManager::CheckUrlTrustList(
@@ -95,7 +133,7 @@ UrlTrustCheckResult OhosUrlTrustListManager::CheckUrlTrustList(
   }
 
   auto range = ruleMap_.equal_range(url.host());
-  std::string realPath = GetUrlRealPath(url.path());
+  const std::string& path = url.path();
   for (auto itr = range.first; itr != range.second; ++itr) {
     auto& rule = itr->second;
     if (!rule.scheme.empty() && (rule.scheme != url.scheme())) {
@@ -105,11 +143,11 @@ UrlTrustCheckResult OhosUrlTrustListManager::CheckUrlTrustList(
       continue;
     }
     if (!rule.path.empty()) {
-      if (realPath.find(rule.path) != 0) {
+      if (path.find(rule.path) != 0) {
         continue;
       }
       size_t next = rule.path.size();
-      if (next < realPath.size() && realPath[next] != '/') {
+      if (next < path.size() && !rule.path.ends_with('/') && path[next] != '/') {
         continue;
       }
     }

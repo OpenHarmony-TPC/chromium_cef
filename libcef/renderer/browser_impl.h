@@ -153,7 +153,9 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 #endif
 
 #ifdef OHOS_URL_TRUST_LIST
-  int SetUrlTrustList(const CefString& urlTrustList) override { return 0; }
+  int SetUrlTrustList(const CefString& urlTrustList, CefString& detailErrMsg) override {
+    return 0;
+  }
 #endif
 
   // #if defined(OHOS_NWEB_EX)
