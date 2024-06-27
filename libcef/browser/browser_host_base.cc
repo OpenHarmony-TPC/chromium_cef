@@ -3800,12 +3800,13 @@ bool CefBrowserHostBase::WebPageSnapshot(
 #endif
 
 #if OHOS_URL_TRUST_LIST
-int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList, CefString& detailErrMsg) {
+int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
+  const CefString& urlTrustList, CefString& detailErrMsg) {
   std::string urlTrustListUpdated = urlTrustList.ToString();
   content::WebContents* webContents = GetWebContents();
   std::string detailErrMsgUpdated;
   if (!webContents) {
-    LOG(ERROR) << "SetUrlTrustList failed, web contents is error.";
+    LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
     return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
   }
   ohos_safe_browsing::OhosUrlTrustListManager* manager =
@@ -3815,7 +3816,7 @@ int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList, CefString
   if (!manager) {
     manager = new ohos_safe_browsing::OhosUrlTrustListManager();
     if (!manager) {
-      LOG(ERROR) << "SetUrlTrustList failed, new UrlTrustListManager failed.";
+      LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager failed.";
       return static_cast<int>(
         ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
     }
@@ -3823,7 +3824,8 @@ int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList, CefString
       &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey,
       std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
-  int res = static_cast<int>(manager->SetUrlTrustList(urlTrustListUpdated, detailErrMsgUpdated));
+  int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
+    urlTrustListUpdated, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
 }

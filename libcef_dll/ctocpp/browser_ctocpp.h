@@ -92,7 +92,8 @@ class CefBrowserCToCpp
   bool IsAdsBlockEnabled() override;
   bool IsAdsBlockEnabledForCurPage() override;
   void EnableAdsBlock(bool enable) override;
-  int SetUrlTrustList(const CefString& urlTrustList, CefString& detailErrMsg) override;
+  int SetUrlTrustListWithErrMsg(
+    const CefString& urlTrustList, CefString& detailErrMsg) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
