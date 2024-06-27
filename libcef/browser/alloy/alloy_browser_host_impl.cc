@@ -1875,6 +1875,13 @@ void AlloyBrowserHostImpl::ExitPictureInPicture() {
 }
 
 bool AlloyBrowserHostImpl::IsBackForwardCacheSupported() {
+#ifdef OHOS_BFCACHE
+  if (CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableBFCache)) {
+    return true;
+  }
+  return false;
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   // Turn this switch on and see if there's anything wrong,
   // issue #3237 not reproduced, maybe had been fixed.

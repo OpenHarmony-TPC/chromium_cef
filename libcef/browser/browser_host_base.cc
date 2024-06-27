@@ -3825,3 +3825,20 @@ int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList) {
   return static_cast<int>(manager->SetUrlTrustList(urlTrustListUpdated));
 }
 #endif
+
+#ifdef OHOS_BFCACHE
+void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) {
+  LOG(INFO) << "CefBrowserHostBase::" << __func__ << " start to change back forward cache options size: " << size
+            << " timeToLive: " << timeToLive;
+
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "CefBrowserHostBase::" << __func__ << " failed to get web contents.";
+    return;
+  }
+
+  content::NavigationController& controller = web_contents->GetController();
+  controller.GetBackForwardCache().SetCacheSize(size);
+  controller.GetBackForwardCache().SetTimeToLive(timeToLive);
+}
+#endif

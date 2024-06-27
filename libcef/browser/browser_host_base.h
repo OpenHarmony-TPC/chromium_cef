@@ -539,7 +539,10 @@ bool TerminateRenderProcess() override;
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
 #endif
-  
+
+#ifdef OHOS_BFCACHE
+  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
+#endif
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
