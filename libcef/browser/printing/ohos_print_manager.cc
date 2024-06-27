@@ -576,7 +576,6 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
 }
 
 void OhosPrintManager::SetToken(void* token) {
-  LOG(INFO) << "OhosPrintManager::SetToken token = " << token;
   printTokenMap_[base::Process::Current().Pid()] = token;
   token_ = token;
 }
