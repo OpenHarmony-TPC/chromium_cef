@@ -109,7 +109,10 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
 
   content::WebContents::CreateParams wc_create_params(browser_context,
                                                       site_instance);
-
+#if defined(OHOS_RENDER_PROCESS_SHARE)
+  wc_create_params.shared_render_process_token =
+      CefString(&create_params.settings.shared_render_process_token);
+#endif
   if (IsWindowless()) {
     // Create the OSR view for the WebContents.
     CreateViewForWebContents(&wc_create_params.view,
