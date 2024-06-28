@@ -1302,7 +1302,7 @@ void CefRenderWidgetHostViewOSR::UpdateDrawMode() {
 }
 
 bool CefRenderWidgetHostViewOSR::GetPendingSizeStatus() {
-  return pending_resize_;
+  return false;
 }
 #endif
 
