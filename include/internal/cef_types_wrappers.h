@@ -638,6 +638,9 @@ struct CefBrowserSettingsTraits {
 #ifdef OHOS_NETWORK_LOAD
     target->universal_access_from_file_urls = src->universal_access_from_file_urls;
 #endif
+#if defined(OHOS_RENDER_PROCESS_SHARE)
+    target->shared_render_process_token = src->shared_render_process_token;
+#endif
   }
 };
 
