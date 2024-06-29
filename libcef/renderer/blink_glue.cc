@@ -28,6 +28,7 @@
 #include "third_party/blink/renderer/core/frame/local_dom_window.h"
 #include "third_party/blink/renderer/core/frame/local_frame.h"
 #include "third_party/blink/renderer/core/frame/settings.h"
+#include "third_party/blink/renderer/core/frame/visual_viewport.h"
 #include "third_party/blink/renderer/core/frame/web_local_frame_impl.h"
 #include "third_party/blink/renderer/core/loader/frame_load_request.h"
 #include "third_party/blink/renderer/core/page/page.h"
@@ -175,6 +176,13 @@ gfx::Size GetContentSize(blink::WebLocalFrame* frame) {
 
   blink::Element* body = body_element.Unwrap<blink::Element>();
   return gfx::Size(body->scrollWidth(), body->scrollHeight());
+}
+
+gfx::Size GetVisualViewportSize(blink::WebLocalFrame* frame) {
+  blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*frame);
+  return blink::To<blink::LocalFrame>(core_frame)
+      ->GetPage()
+      ->GetVisualViewport().Size();
 }
 #endif
 
