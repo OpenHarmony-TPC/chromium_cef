@@ -10,6 +10,7 @@
 #include <shared_mutex>
 #include <unordered_set>
 #include "base/memory/ref_counted.h"
+#include "base/json/json_reader.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "include/cef_client.h"
 #include "libcef/browser/browser_info.h"
@@ -20,6 +21,19 @@ class WebContentsImpl;
 }
 
 namespace NWEB {
+struct JsProxyPermissionConfigData {
+  JsProxyPermissionConfigData() = default;
+  JsProxyPermissionConfigData(const JsProxyPermissionConfigData& other) = default;
+  JsProxyPermissionConfigData& operator=(const JsProxyPermissionConfigData& other) = default;
+  ~JsProxyPermissionConfigData() = default;
+
+  std::string scheme;
+  std::string host;
+  std::string port;
+  std::string path;
+  std::string method_name;
+};
+
 class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
       public content::WebContentsObserver {
@@ -43,11 +57,13 @@ class OhGinJavascriptBridgeDispatcherHost
   void AddNamedObject(const std::string& object_name,
                       const std::vector<std::string>& method_list,
                       const std::vector<std::string>& async_method_list,
-                      const ObjectID object_id);
+                      const ObjectID object_id,
+                      const std::string& permission);
   void AddNativeNamedObject(const std::string& object_name,
                       const std::vector<std::string>& method_list,
                       const ObjectID object_id,
-                      bool is_async);
+                      bool is_async,
+                      const std::string& permission);
   void RemoveNamedObject(const std::string& object_name,
                          const std::vector<std::string>& method_list);
   bool RemoveNamedObjectInternal(const std::string& object_name, bool is_async);
@@ -99,6 +115,9 @@ class OhGinJavascriptBridgeDispatcherHost
   void ClearMethodMap() {
     sync_method_map_.clear();
     async_method_map_.clear();
+    javascript_sync_permission_map_.clear();
+    javascript_async_permission_map_.clear();
+    object_id_map_.clear();
   }
 
   void DoCallH5Function(int32_t routing_id,
@@ -121,33 +140,60 @@ class OhGinJavascriptBridgeDispatcherHost
   void AddNamedObjectForWebController(
       const std::string& object_name,
       const std::vector<std::string>& method_list,
-      const std::vector<std::string>& async_method_list);
+      const std::vector<std::string>& async_method_list,
+      const std::string& permission);
 
   void AddNamedObjectForWebViewController(
       const std::string& object_name,
       const std::vector<std::string>& method_list,
       const std::vector<std::string>& async_method_list,
-      const ObjectID object_id);
+      const ObjectID object_id,
+      const std::string& permission);
 
   // When registering a native object, only the registered methods
   // of the same type (sync/async) as the registration methods will be cleared.
   void AddNativeNamedObjectForWebController(
       const std::string& object_name,
       const std::vector<std::string>& method_list,
-      bool is_async);
+      bool is_async,
+      const std::string& permission);
 
   void AddNativeNamedObjectForWebViewController(
       const std::string& object_name,
       const std::vector<std::string>& method_list,
       const ObjectID object_id,
-      bool is_async);
+      bool is_async,
+      const std::string& permission);
   content::WebContentsImpl* web_contents() const;
+
+  void ParseJson(
+      const std::string& json_data,
+      const int32_t& object_id,
+      bool is_async);
+
+  void ParseJsProxyPermissionJson(
+      absl::optional<base::Value>& root,
+      const std::string& path,
+      std::map<std::string, std::map<std::string, JsProxyPermissionConfigData>>*
+          data_ptr);
+
+  void ParseJsProxyPermissionJsonConfigMap(
+      const base::Value::Dict* dict_val,
+      std::map<std::string, JsProxyPermissionConfigData*>* config_ptr,
+      JsProxyPermissionConfigData* data_ptr);
+
+  bool CheckIsInJsPermission(const std::string& document_url,
+      const std::string& method_name, int32_t object_id, bool is_async);
 
   // js property name and object id
   using MethodPair = std::pair<std::string, std::unordered_set<std::string>>;
   using ObjectMethodMap = std::map<ObjectID, MethodPair>;
+  using PermissionMap = std::map<int32_t, std::map<std::string, std::map<std::string,
+        JsProxyPermissionConfigData>>>;
   ObjectMethodMap sync_method_map_;
   ObjectMethodMap async_method_map_;
+  PermissionMap javascript_sync_permission_map_;
+  PermissionMap javascript_async_permission_map_;
   std::shared_mutex share_mutex_;
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
   std::unordered_map<int32_t, std::unordered_set<std::string>> object_id_map_;

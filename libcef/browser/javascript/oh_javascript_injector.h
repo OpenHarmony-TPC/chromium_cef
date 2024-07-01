@@ -26,11 +26,13 @@ class OhJavascriptInjector
   void AddNativeInterface(const std::string& object_name,
                     const std::vector<std::string> method_list,
                     const int32_t object_id,
-                    bool is_async);
+                    bool is_async,
+                    const std::string& permission);
   void AddInterface(const std::string& object_name,
                     const std::vector<std::string> method_list,
                     const std::vector<std::string> async_method_list,
-                    const int32_t object_id);
+                    const int32_t object_id,
+                    const std::string& permission);
   void RemoveInterface(const std::string& object_name,
                        const std::vector<std::string> method_list);
   void DoCallH5Function(int32_t routing_id,

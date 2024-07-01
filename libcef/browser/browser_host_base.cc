@@ -961,7 +961,8 @@ void CefBrowserHostBase::RegisterNativeJSProxy(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const int32_t object_id,
-    bool is_async) {
+    bool is_async,
+    const CefString& permission) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   if (!javascriptInjector) {
@@ -974,14 +975,15 @@ void CefBrowserHostBase::RegisterNativeJSProxy(
     method_vector.push_back(method.ToString());
   }
   javascriptInjector->AddNativeInterface(object_name.ToString(), method_vector,
-                                   object_id, is_async);
+                                   object_id, is_async, permission.ToString());
 }
 
 void CefBrowserHostBase::RegisterArkJSfunction(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const std::vector<CefString>& async_method_list,
-    const int32_t object_id) {
+    const int32_t object_id,
+    const CefString& permission) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   if (!javascriptInjector) {
@@ -998,7 +1000,7 @@ void CefBrowserHostBase::RegisterArkJSfunction(
     async_method_vector.push_back(async_method.ToString());
   }
   javascriptInjector->AddInterface(object_name.ToString(), method_vector,
-                                   async_method_vector, object_id);
+                                   async_method_vector, object_id, permission.ToString());
 }
 
 void CefBrowserHostBase::UnregisterArkJSfunction(
