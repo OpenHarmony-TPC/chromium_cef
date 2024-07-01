@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f3061907ebf40c958d22bb3f094bda44fcf1df34$
+// $hash=37f91e8c7c612a8205bb4c824173acb2a5aae1b2$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -1011,6 +1011,30 @@ void CefRenderHandlerCToCpp::OnOverlayStateChanged(
   // Execute
   _struct->on_overlay_state_changed(_struct, CefBrowserCppToC::Wrap(browser),
                                     &cef_screen_rect);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetVisibleViewportRect(
+    CefRefPtr<CefBrowser> browser,
+    CefRect& rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_visible_viewport_rect)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_visible_viewport_rect(_struct, CefBrowserCppToC::Wrap(browser),
+                                     &rect);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

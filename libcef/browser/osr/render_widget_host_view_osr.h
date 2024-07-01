@@ -158,6 +158,10 @@ class CefRenderWidgetHostViewOSR
   content::TouchSelectionControllerClientManager*
   GetTouchSelectionControllerClientManager() override;
   gfx::Rect GetViewBounds() override;
+#if defined(OHOS_INPUT_EVENTS)
+  gfx::Size GetPhysicalVisibleViewportSize();
+  gfx::Size GetVisibleViewportSize() override;
+#endif
   void SetBackgroundColor(SkColor color) override;
   absl::optional<SkColor> GetBackgroundColor() override;
   void UpdateBackgroundColor() override;
@@ -465,10 +469,21 @@ class CefRenderWidgetHostViewOSR
   void SetFrameRate();
   bool SetScreenInfo();
   bool SetViewBounds();
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetVisibleViewportSize();
+#endif
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetRootLayerSize(bool force, bool* visible_changed = nullptr);
+#else
   bool SetRootLayerSize(bool force);
+#endif
 
   // Manages resizing so that only one resize request is in-flight at a time.
+#if defined(OHOS_INPUT_EVENTS)
+  bool ResizeRootLayer(bool isKeyboard, bool& visible_changed);
+#else
   bool ResizeRootLayer();
+#endif
   void ReleaseResizeHold();
 
   void CancelWidget();
@@ -581,6 +596,9 @@ class CefRenderWidgetHostViewOSR
 
   bool hold_resize_ = false;
   bool pending_resize_ = false;
+#if defined(OHOS_COMPOSITE_RENDER)
+  bool isKeyboardResized_ = false;
+#endif
 
   float cached_scale_factor_ = 0.0f;
 
@@ -604,6 +622,9 @@ class CefRenderWidgetHostViewOSR
   bool is_destroyed_ = false;
   bool is_first_navigation_ = true;
   gfx::Rect current_view_bounds_;
+#if defined(OHOS_INPUT_EVENTS)
+  gfx::Size current_visible_view_bounds_ = {0, 0};
+#endif
   gfx::Rect popup_position_;
   base::Lock damage_rect_lock_;
   std::map<uint32_t, gfx::Rect> damage_rects_;
