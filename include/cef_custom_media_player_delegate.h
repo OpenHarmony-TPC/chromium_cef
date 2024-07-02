@@ -19,6 +19,8 @@ class CefCustomMediaPlayerDelegate {
   virtual void Release() = 0;
   virtual void EnterFullscreen() = 0;
   virtual void ExitFullscreen() = 0;
+  virtual void ResumeMediaPlayer() = 0;
+  virtual void SuspendMediaPlayer(int suspend_type) = 0;
 };
 
 #endif // CEF_INCLUDE_CEF_CUSTOM_MEDIA_PLAYER_DELEGATE_H_
