@@ -77,6 +77,8 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
   sync_method_map_.clear();
   async_method_map_.clear();
+  javascript_sync_permission_map_.clear();
+  javascript_async_permission_map_.clear();
   object_id_map_.clear();
 }
 
@@ -219,10 +221,129 @@ void OhGinJavascriptBridgeDispatcherHost::PrimaryMainFrameRenderProcessGone(
   install_filter_when_render_process_gone_ = true;
 }
 
+void OhGinJavascriptBridgeDispatcherHost::ParseJson(const std::string& json_data, const int32_t& object_id, bool is_async) {
+  if (json_data.empty()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJson: permission string is empty";
+    return;
+  }
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJson: permission string:"
+             << json_data << ", object_id:" << object_id << ", is_async" << is_async;
+  absl::optional<base::Value> root = base::JSONReader::Read(json_data);
+  if (root && root->is_dict()) {
+    std::map<std::string, std::map<std::string, JsProxyPermissionConfigData>> config;
+    ParseJsProxyPermissionJson(root,
+                               "javascriptProxyPermission.urlPermissionList", &config);
+    ParseJsProxyPermissionJson(root,
+                               "javascriptProxyPermission.methodList", &config);
+    for (auto it : config) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJson: method_name =" <<it.first;
+      for (auto item : it.second) {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJson: host =" << item.first
+                   << " scheme = " << item.second.scheme
+                   << " host = " << item.second.host
+                   << " port = " << item.second.port
+                   << " path = " << item.second.path
+                   << " method_name = "<< item.second.method_name;
+      }
+    }
+    if (is_async) {
+      javascript_async_permission_map_[object_id] = config;
+    } else {
+      javascript_sync_permission_map_[object_id] = config;
+    }
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson(
+    absl::optional<base::Value>& root, const std::string& path,
+    std::map<std::string, std::map<std::string, JsProxyPermissionConfigData>>* data_ptr) {
+  if (root && root->is_dict()) {
+    base::Value* config_data = root->FindPath(path);
+    if (!config_data || !config_data->is_list()) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson: config_data null or not list";
+      return;
+    }
+    for (const auto& it : config_data->GetList()) {
+      const base::Value::Dict* dict_val = it.GetIfDict();
+      if (!dict_val) {
+        continue;
+      }
+      const std::string* method_name = dict_val->FindString("methodName");
+      if (method_name) {
+          if ((*method_name).empty()) {
+            continue;
+          }
+        const base::Value::List* List_val = dict_val->FindList("urlPermissionList");
+        for (const auto& val : *List_val) {
+          JsProxyPermissionConfigData data;
+          std::map<std::string, JsProxyPermissionConfigData*> config_map_tmp;
+          data.method_name = *method_name;
+          const base::Value::Dict* dict_val_tmp = val.GetIfDict();
+          if (!dict_val_tmp) {
+            LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson: not dict";
+            continue;
+          }
+          ParseJsProxyPermissionJsonConfigMap(dict_val_tmp, &config_map_tmp, &data);
+          for (const auto& item : config_map_tmp) {
+            LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson: host: " << item.first;
+            (*data_ptr)[*method_name][item.first] = *item.second;
+          }
+        }
+      } else {
+        JsProxyPermissionConfigData data;
+        std::map<std::string, JsProxyPermissionConfigData*> config_map_tmp;
+        ParseJsProxyPermissionJsonConfigMap(dict_val, &config_map_tmp, &data);
+        for (const auto& item : config_map_tmp) {
+          LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson: host: " << item.first;
+          (*data_ptr)[""][item.first] = *item.second;
+        }
+      }
+    }
+  }
+}
+
+void OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap(
+    const base::Value::Dict* dict_val, std::map<std::string, JsProxyPermissionConfigData*>* config_ptr,
+    JsProxyPermissionConfigData* data_ptr) {
+  if (!dict_val || !config_ptr || !data_ptr) {
+    return;
+  }
+  const std::string* scheme = dict_val->FindString("scheme");
+  if (!scheme) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap: no scheme";
+    return;
+  }
+  const std::string* host = dict_val->FindString("host");
+  if (!host) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap: no host";
+    return;
+  }
+  const std::string* port = dict_val->FindString("port");
+  if (!port) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap: no port";
+    return;
+  }
+  const std::string* path = dict_val->FindString("path");
+  if (!path) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap: no path";
+    return;
+  }
+  if ((*scheme).empty() || (*host).empty()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJsonConfigMap: scheme or host empty";
+    return;
+  }
+  data_ptr->scheme = *scheme;
+  data_ptr->host = *host;
+  data_ptr->port = *port;
+  data_ptr->path = *path;
+  (*config_ptr)[*host] = data_ptr;
+}
+
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
-    const std::vector<std::string>& async_method_list) {
+    const std::vector<std::string>& async_method_list,
+    const std::string& permission) {
   RemoveNamedObject(object_name, method_list);
   base::Value::List async_method_for_render;
   {
@@ -238,6 +359,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id_] = object_pair;
+    ParseJson(permission, object_id_, false);
     object_id_map_[object_id_].insert(object_name);
 
     // add async method
@@ -250,6 +372,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     async_object_pair.first = object_name;
     async_object_pair.second = async_method_set;
     async_method_map_[object_id_] = async_object_pair;
+    ParseJson(permission, object_id_, true);
   }
 
   InstallFilterAndRegisterAllRoutingIds();
@@ -269,7 +392,8 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
     const std::vector<std::string>& async_method_list,
-    const ObjectID object_id) {
+    const ObjectID object_id,
+    const std::string& permission) {
   if (object_id <= 0) {
     LOG(ERROR) << "AddNamedObject:" << object_name
                << " failed due to object_id == " << object_id;
@@ -288,6 +412,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id] = object_pair;
+    ParseJson(permission, object_id, false);
     object_id_map_[object_id].insert(object_name);
 
     // add async method
@@ -300,6 +425,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     async_object_pair.first = object_name;
     async_object_pair.second = async_method_set;
     async_method_map_[object_id] = async_object_pair;
+    ParseJson(permission, object_id, true);
   }
 
   InstallFilterAndRegisterAllRoutingIds();
@@ -318,7 +444,8 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
     const std::vector<std::string>& async_method_list,
-    const ObjectID object_id) {
+    const ObjectID object_id,
+    const std::string& permission) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   // In order to be compatible with older webcotroller,
   // Currently, the webcontroller save the object_id on the core side, get
@@ -327,16 +454,17 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
   // object_id
   if (object_id ==
       static_cast<ObjectID>(JavaScriptObjIdErrorCode::WEBCONTROLLERERROR)) {
-    AddNamedObjectForWebController(object_name, method_list, async_method_list);
+    AddNamedObjectForWebController(object_name, method_list, async_method_list, permission);
   } else {
-    AddNamedObjectForWebViewController(object_name, method_list, async_method_list, object_id);
+    AddNamedObjectForWebViewController(object_name, method_list, async_method_list, object_id, permission);
   }
 }
 
 void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebController(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
-    bool is_async) {
+    bool is_async,
+    const std::string& permission) {
   ObjectMethodMap& other_method_map = is_async ? sync_method_map_ : async_method_map_;
   std::vector<std::string> other_method_list;
   {
@@ -353,9 +481,9 @@ void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebController(
     }
   }
   if (is_async) {
-    AddNamedObjectForWebController(object_name, other_method_list, method_list);
+    AddNamedObjectForWebController(object_name, other_method_list, method_list, permission);
   } else {
-    AddNamedObjectForWebController(object_name, method_list, other_method_list);
+    AddNamedObjectForWebController(object_name, method_list, other_method_list, permission);
   }
 }
 
@@ -363,7 +491,8 @@ void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebViewControll
     const std::string& object_name,
     const std::vector<std::string>& method_list,
     const ObjectID object_id,
-    bool is_async) {
+    bool is_async,
+    const std::string& permission) {
   ObjectMethodMap& other_method_map = is_async ? sync_method_map_ : async_method_map_;
   std::vector<std::string> other_method_list;
   {
@@ -379,9 +508,9 @@ void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObjectForWebViewControll
     }
   }
   if (is_async) {
-    AddNamedObjectForWebViewController(object_name, other_method_list, method_list, object_id);
+    AddNamedObjectForWebViewController(object_name, other_method_list, method_list, object_id, permission);
   } else {
-    AddNamedObjectForWebViewController(object_name, method_list, other_method_list, object_id);
+    AddNamedObjectForWebViewController(object_name, method_list, other_method_list, object_id, permission);
   }
 }
 
@@ -389,7 +518,8 @@ void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObject(
     const std::string& object_name,
     const std::vector<std::string>& method_list,
     const ObjectID object_id,
-    bool is_async) {
+    bool is_async,
+    const std::string& permission) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   // In order to be compatible with older webcotroller,
   // Currently, the webcontroller save the object_id on the core side, get
@@ -399,9 +529,9 @@ void OhGinJavascriptBridgeDispatcherHost::AddNativeNamedObject(
   std::vector<std::string> empty_sync_method_list;
   if (object_id ==
       static_cast<ObjectID>(JavaScriptObjIdErrorCode::WEBCONTROLLERERROR)) {
-    AddNativeNamedObjectForWebController(object_name, method_list, is_async);
+    AddNativeNamedObjectForWebController(object_name, method_list, is_async, permission);
   } else {
-    AddNativeNamedObjectForWebViewController(object_name, method_list, object_id, is_async);
+    AddNativeNamedObjectForWebViewController(object_name, method_list, object_id, is_async, permission);
   }
 }
 
@@ -423,6 +553,7 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
     bool is_async) {
   bool ret = false;
   auto& map = is_async ? async_method_map_ : sync_method_map_;
+  auto& permission_map = is_async ? javascript_async_permission_map_ : javascript_sync_permission_map_;
   if (map.empty()) {
     return ret = false;
   }
@@ -434,6 +565,7 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
         if (object_name_set.size() == 0) {
           object_id_map_.erase(object_id);
           map.erase(object_id);
+          permission_map.erase(object_id);
         }
 
         ret = true;
@@ -751,7 +883,7 @@ CefRefPtr<CefValue> ParseBaseValueTOCefValueHelper(ValueConvertState* state, bas
           if (gin_value->GetAsObjectIDWithMdNames(&h5_object_id_with_names)) {
             LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
                           "ParseBaseValueTOCefValueHelper: TYPE_H5_OBJECT_ID "
-                          "h5_object_id_with_names .empty()= "
+                          "h5_object_id_with_names.empty()= "
                        << h5_object_id_with_names.empty();
             std::string bin = std::string("TYPE_H5_OBJECT_ID") +
                               std::string(";") + h5_object_id_with_names;
@@ -822,6 +954,89 @@ CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::Value::List* value) {
   return cefList;
 }
 
+bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::string& document_url,
+    const std::string& method_name, int32_t object_id, bool is_async) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: "
+             << "document_url: " << document_url
+             << ", method_name: " << method_name
+             << ", object_id: " << object_id
+             << ", is_async: " << is_async;
+  GURL gurl(document_url);
+  PermissionMap map_tmp = is_async ? javascript_async_permission_map_ : javascript_sync_permission_map_;
+  if (map_tmp.empty() || map_tmp.find(object_id) == map_tmp.end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: permission map is empty or no object_id("
+               << object_id << ") key";
+    return true;
+  }
+
+  if (map_tmp[object_id].find("") == map_tmp[object_id].end() ||
+      map_tmp[object_id][""].find(gurl.host()) == map_tmp[object_id][""].end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: object level, permission map no host("
+               << gurl.host() << ") key";
+    return false;
+  }
+  JsProxyPermissionConfigData obj_permission = javascript_sync_permission_map_[object_id][""][gurl.host()];
+  if (gurl.scheme().empty() || gurl.scheme() != obj_permission.scheme) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: object level, url scheme("
+               << gurl.scheme() << ") mismatch permission scheme("
+               << obj_permission.scheme << ")";
+    return false;
+  }
+  if (gurl.host().empty() || gurl.host() != obj_permission.host) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: object level, url host("
+               << gurl.host() << ") mismatch permission host("
+               << obj_permission.host << ")";
+    return false;
+  }
+  if (!obj_permission.port.empty() && gurl.port() != obj_permission.port) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: object level, url port("
+               << gurl.port() << ") mismatch permission port("
+               << obj_permission.port << ")";
+    return false;
+  }
+  if (!obj_permission.path.empty() && gurl.path().compare(0, obj_permission.path.size(), obj_permission.path)) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: object level, url path("
+               << gurl.path() << ") mismatch permission path("
+               << obj_permission.path << ")";
+    return false;
+  }
+
+  if (map_tmp[object_id].find(method_name) == map_tmp[object_id].end() ||
+      map_tmp[object_id][method_name].find(gurl.host()) == map_tmp[object_id][method_name].end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, permission map no host("
+               << gurl.host() << ") key or no method name("
+               << method_name << ")";
+    return false;
+  }
+  JsProxyPermissionConfigData method_permission = javascript_sync_permission_map_[object_id][method_name][gurl.host()];
+  if (gurl.scheme().empty() || gurl.scheme() != method_permission.scheme) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, url scheme("
+               << gurl.scheme() << ") mismatch permission scheme("
+               << method_permission.scheme << ")";
+    return false;
+  }
+  if (gurl.host().empty() || gurl.host() != method_permission.host) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, url host("
+               << gurl.host() << ") mismatch permission host("
+               << method_permission.host << ")";
+    return false;
+  }
+  if (!method_permission.port.empty() && gurl.port() != method_permission.port) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, url port("
+               << gurl.port() << ") mismatch permission port("
+               << method_permission.port << ")";
+    return false;
+  }
+  if (!method_permission.path.empty() && gurl.path().compare(0, method_permission.path.size(), method_permission.path)) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, url path("
+               << gurl.path() << ") mismatch permission path("
+               << method_permission.path << ")";
+    return false;
+  }
+
+  return true;
+}
+
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     int routing_id,
     int32_t object_id,
@@ -849,9 +1064,17 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
+        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+        return;
+      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+        return;
+      }
     }
   }
 
@@ -901,9 +1124,15 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
+        return;
+      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+        return;
+      }
     }
   }
 
@@ -947,9 +1176,17 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
+        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+        return;
+      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+        return;
+      }
     }
   }
 
@@ -998,9 +1235,15 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
+        return;
+      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
+      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+        return;
+      }
     }
   }
 

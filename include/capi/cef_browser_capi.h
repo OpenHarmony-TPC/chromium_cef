@@ -1411,7 +1411,8 @@ typedef struct _cef_browser_host_t {
       const cef_string_t* object_name,
       cef_string_list_t method_list,
       cef_string_list_t async_method_list,
-      int32_t object_id);
+      int32_t object_id,
+      const cef_string_t* permission);
 
   ///
   /// UnregisterArkJSfunction
@@ -1890,7 +1891,8 @@ typedef struct _cef_browser_host_t {
                                               const cef_string_t* object_name,
                                               cef_string_list_t method_list,
                                               int32_t object_id,
-                                              int is_async);
+                                              int is_async,
+                                              const cef_string_t* permission);
 
   ///
   /// SendTouchpadFlingEvent

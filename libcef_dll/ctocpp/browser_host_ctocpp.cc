@@ -1672,7 +1672,8 @@ void CefBrowserHostCToCpp::RegisterArkJSfunction(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const std::vector<CefString>& async_method_list,
-    const int32_t object_id) {
+    const int32_t object_id,
+    const CefString& permission) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -1685,6 +1686,11 @@ void CefBrowserHostCToCpp::RegisterArkJSfunction(
   // Verify param: object_name; type: string_byref_const
   DCHECK(!object_name.empty());
   if (object_name.empty()) {
+    return;
+  }
+  // Verify param: permission; type: string_byref_const
+  DCHECK(!permission.empty());
+  if (permission.empty()) {
     return;
   }
 
@@ -1704,7 +1710,7 @@ void CefBrowserHostCToCpp::RegisterArkJSfunction(
   // Execute
   _struct->register_ark_jsfunction(_struct, object_name.GetStruct(),
                                    method_listList, async_method_listList,
-                                   object_id);
+                                   object_id, permission.GetStruct());
 
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList) {
@@ -3079,7 +3085,8 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const int32_t object_id,
-    bool is_async) {
+    bool is_async,
+    const CefString& permission) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -3094,6 +3101,11 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
   if (object_name.empty()) {
     return;
   }
+  // Verify param: permission; type: string_byref_const
+  DCHECK(!permission.empty());
+  if (permission.empty()) {
+    return;
+  }
 
   // Translate param: method_list; type: string_vec_byref_const
   cef_string_list_t method_listList = cef_string_list_alloc();
@@ -3104,7 +3116,8 @@ void CefBrowserHostCToCpp::RegisterNativeJSProxy(
 
   // Execute
   _struct->register_native_jsproxy(_struct, object_name.GetStruct(),
-                                   method_listList, object_id, is_async);
+                                   method_listList, object_id, is_async,
+                                   permission.GetStruct());
 
   // Restore param:method_list; type: string_vec_byref_const
   if (method_listList) {
