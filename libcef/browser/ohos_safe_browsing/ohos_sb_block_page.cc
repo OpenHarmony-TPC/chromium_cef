@@ -93,8 +93,7 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
   load_time_data.Set("title",
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TITLE));
   if (block_type_ == OHSBThreatType::THREAT_ILLEGAL ||
-      block_type_ == OHSBThreatType::THREAT_RISK ||
-      block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST) {
+      block_type_ == OHSBThreatType::THREAT_RISK) {
     load_time_data.Set("block_info_title", l10n_util::GetStringUTF8(
                                                IDS_OHOS_BLOCK_PAGE_INFO_TITLE));
   } else {
@@ -111,10 +110,6 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
     load_time_data.Set(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_BODY));
-  } else if (block_type_ == OHSBThreatType::THREAT_URL_TRUST_LIST) {
-    load_time_data.Set(
-        "block_info_body",
-        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TRUST_LIST_INFO_BODY));
   } else {
     load_time_data.Set(
         "block_info_body",
@@ -133,4 +128,33 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_PROCEED));
 }
 
+void OhosSbBlockPage::PopulateUrlTrustListInterstitialStrings(
+    base::Value::Dict& load_time_data) {
+  load_time_data.Set("title",
+    l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TITLE));
+  load_time_data.Set("block_info_title", l10n_util::GetStringUTF8(
+    IDS_OHOS_BLOCK_PAGE_URL_TRUST_LIST_TITLE));
+
+  if (base::i18n::IsRTL()) {
+    load_time_data.Set("page_direction", "rtl");
+  } else {
+    load_time_data.Set("page_direction", "ltr");
+  }
+
+  load_time_data.Set("dontproceed", l10n_util::GetStringUTF8(
+    IDS_OHOS_BLOCK_PAGE_DONT_PROCEED));
+}
+
+std::string OhosSbBlockPage::GetUrlTrustListErrorHTMLContents() {
+  base::Value::Dict load_time_data;
+  PopulateUrlTrustListInterstitialStrings(load_time_data);
+  webui::SetLoadTimeDataDefaults(controller()->GetApplicationLocale(),
+                                 &load_time_data);
+  std::string html =
+      ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
+          URL_TRUST_LIST_ERROR_OHOS_HTML);
+
+  webui::AppendWebUiCssTextDefaults(&html);
+  return webui::GetI18nTemplateHtml(html, load_time_data);
+}
 }  // namespace ohos_safe_browsing

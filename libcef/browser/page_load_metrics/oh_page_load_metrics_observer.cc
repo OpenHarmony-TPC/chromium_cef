@@ -95,6 +95,19 @@ void OhPageLoadMetricsObserver::OnComplete(
   ReportLargestContentfulPaint(timing);
 }
 
+int64_t OhPageLoadMetricsObserver::GetNavigationStartTime() {
+  base::Time reference_wall_time = base::Time::Now();
+  base::TimeTicks reference_monotonic_time = base::TimeTicks().Now();
+  base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
+  base::TimeDelta elapsed_time = navigation_start - reference_monotonic_time;
+  base::Time navigation_start_wall_time = reference_wall_time + elapsed_time;
+  double navigation_start_wall_time_double_t =
+      navigation_start_wall_time.ToDoubleT();
+  int64_t navigation_start_time = navigation_start_wall_time_double_t *
+                                  base::Time::kMicrosecondsPerMillisecond;
+  return navigation_start_time;
+}
+
 void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -103,9 +116,8 @@ void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
 #if defined(REPORT_SYS_EVENT)
   web_performance_timing_.first_contentful_paint = first_contentful_paint_ms;
 #endif
-  ReportFirstContentfulPaint(
-      (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds(),
-      first_contentful_paint_ms);
+  int64_t navigation_start_time = GetNavigationStartTime();
+  ReportFirstContentfulPaint(navigation_start_time, first_contentful_paint_ms);
 }
 
 void OhPageLoadMetricsObserver::ReportFirstContentfulPaint(
@@ -139,8 +151,7 @@ void OhPageLoadMetricsObserver::OnFirstMeaningfulPaintInMainFrameDocument(
         timing.paint_timing->first_meaningful_paint->InMilliseconds();
   }
 
-  int64_t navigation_start_time =
-      (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds();
+  int64_t navigation_start_time = GetNavigationStartTime();
   ReportFirstMeaningfulPaint(navigation_start_time,
                              first_meaningful_paint_time);
 }
@@ -189,8 +200,7 @@ void OhPageLoadMetricsObserver::ReportLargestContentfulPaint(
     return;
   }
 
-  int64_t navigation_start_time =
-      (GetDelegate().GetNavigationStart() - base::TimeTicks()).InMicroseconds();
+  int64_t navigation_start_time = GetNavigationStartTime();
   int64_t largest_image_paint_time = 0;
   if (timing.paint_timing->largest_contentful_paint->largest_image_paint
           .has_value() &&

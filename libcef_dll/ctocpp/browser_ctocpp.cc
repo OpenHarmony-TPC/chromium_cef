@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=02b1a88a873104afe836c2eecfd48ffdfea7e5f0$
+// $hash=e4857340f5dbf8d395dc910816182a61f1b4658c$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -937,16 +937,18 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::EnableAdsBlock(bool enable) {
 }
 
 NO_SANITIZE("cfi-icall")
-int CefBrowserCToCpp::SetUrlTrustList(const CefString &urlTrustList) {
+int CefBrowserCToCpp::SetUrlTrustListWithErrMsg(const CefString &urlTrustList,
+                                                CefString &detailErrMsg) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_t *_struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_url_trust_list)) {
+  if (CEF_MEMBER_MISSING(_struct, set_url_trust_list_with_err_msg)) {
     return -1;
   }
 
   // Execute
-  return _struct->set_url_trust_list(_struct, urlTrustList.GetStruct());
+  return _struct->set_url_trust_list_with_err_msg(
+      _struct, urlTrustList.GetStruct(), detailErrMsg.GetWritableStruct());
 }
 
 NO_SANITIZE("cfi-icall")

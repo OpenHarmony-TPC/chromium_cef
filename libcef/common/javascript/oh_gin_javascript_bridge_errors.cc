@@ -27,6 +27,8 @@ const char* OhGinJavascriptBridgeErrorToString(
              "with the type of method's argument";
     case kOhGinJavascriptBridgeRenderFrameDeleted:
       return "RenderFrame has been deleted";
+    case kOhGinJavascriptBridgePermissionDenied:
+      return "Jsb Permission Denied";
   }
   NOTREACHED();
   return "Unknown error";

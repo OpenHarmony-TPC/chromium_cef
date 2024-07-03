@@ -58,9 +58,9 @@ OhosUrlTrustListNavigationThrottle::WillStartRequest() {
       webContents, nullptr, gurl, locale, false);
     std::unique_ptr<OhosSbBlockPage> blocking_page =
       std::make_unique<OhosSbBlockPage>(
-      webContents, gurl, OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS,
+      webContents, gurl, OHSBPolicyType::POLICY_URL_TRUST_LIST,
       OHSBThreatType::THREAT_URL_TRUST_LIST, std::move(controller));
-    std::string html = blocking_page->GetHTMLContents();
+    std::string html = blocking_page->GetUrlTrustListErrorHTMLContents();
     security_interstitials::SecurityInterstitialTabHelper::
       AssociateBlockingPage(handle, std::move(blocking_page));
     return { BLOCK_REQUEST, net::ERR_BLOCKED_BY_CLIENT, html };

@@ -961,7 +961,8 @@ void CefBrowserHostBase::RegisterNativeJSProxy(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const int32_t object_id,
-    bool is_async) {
+    bool is_async,
+    const CefString& permission) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   if (!javascriptInjector) {
@@ -974,14 +975,15 @@ void CefBrowserHostBase::RegisterNativeJSProxy(
     method_vector.push_back(method.ToString());
   }
   javascriptInjector->AddNativeInterface(object_name.ToString(), method_vector,
-                                   object_id, is_async);
+                                   object_id, is_async, permission.ToString());
 }
 
 void CefBrowserHostBase::RegisterArkJSfunction(
     const CefString& object_name,
     const std::vector<CefString>& method_list,
     const std::vector<CefString>& async_method_list,
-    const int32_t object_id) {
+    const int32_t object_id,
+    const CefString& permission) {
   OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(GetWebContents());
   if (!javascriptInjector) {
@@ -998,7 +1000,7 @@ void CefBrowserHostBase::RegisterArkJSfunction(
     async_method_vector.push_back(async_method.ToString());
   }
   javascriptInjector->AddInterface(object_name.ToString(), method_vector,
-                                   async_method_vector, object_id);
+                                   async_method_vector, object_id, permission.ToString());
 }
 
 void CefBrowserHostBase::UnregisterArkJSfunction(
@@ -3800,11 +3802,13 @@ bool CefBrowserHostBase::WebPageSnapshot(
 #endif
 
 #if OHOS_URL_TRUST_LIST
-int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList) {
+int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
+  const CefString& urlTrustList, CefString& detailErrMsg) {
   std::string urlTrustListUpdated = urlTrustList.ToString();
   content::WebContents* webContents = GetWebContents();
+  std::string detailErrMsgUpdated;
   if (!webContents) {
-    LOG(ERROR) << "SetUrlTrustList failed, web contents is error.";
+    LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
     return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
   }
   ohos_safe_browsing::OhosUrlTrustListManager* manager =
@@ -3814,7 +3818,7 @@ int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList) {
   if (!manager) {
     manager = new ohos_safe_browsing::OhosUrlTrustListManager();
     if (!manager) {
-      LOG(ERROR) << "SetUrlTrustList failed, new UrlTrustListManager failed.";
+      LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager failed.";
       return static_cast<int>(
         ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
     }
@@ -3822,18 +3826,18 @@ int CefBrowserHostBase::SetUrlTrustList(const CefString& urlTrustList) {
       &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey,
       std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
-  return static_cast<int>(manager->SetUrlTrustList(urlTrustListUpdated));
+  int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
+    urlTrustListUpdated, detailErrMsgUpdated));
+  detailErrMsg.FromString(detailErrMsgUpdated);
+  return res;
 }
 #endif
 
 #ifdef OHOS_BFCACHE
 void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) {
-  LOG(INFO) << "CefBrowserHostBase::" << __func__ << " start to change back forward cache options size: " << size
-            << " timeToLive: " << timeToLive;
-
   auto web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "CefBrowserHostBase::" << __func__ << " failed to get web contents.";
+    LOG(ERROR) << "SetBackForwardCacheOptions failed to get web contents in CefBrowserHostBase.";
     return;
   }
 

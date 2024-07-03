@@ -83,6 +83,7 @@ class OhPageLoadMetricsObserver
       const page_load_metrics::mojom::PageLoadTiming& timing);
   void ReportPerformanceTiming();
 #endif
+  int64_t GetNavigationStartTime();
 
  private:
   int64_t navigation_id_ = -1;

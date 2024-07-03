@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=58589fe064be5887ba230d0b99aa11fe144ec0d2$
+// $hash=8a0b504f15221d41e27692fe04e9dd8126a42bb5$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -91,7 +91,8 @@ public:
   bool IsAdsBlockEnabled() override;
   bool IsAdsBlockEnabledForCurPage() override;
   void EnableAdsBlock(bool enable) override;
-  int SetUrlTrustList(const CefString &urlTrustList) override;
+  int SetUrlTrustListWithErrMsg(const CefString &urlTrustList,
+                                CefString &detailErrMsg) override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 };
 

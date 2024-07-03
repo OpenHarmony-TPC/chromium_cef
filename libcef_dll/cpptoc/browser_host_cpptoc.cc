@@ -1898,7 +1898,8 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
                                      cef_string_list_t method_list,
                                      cef_string_list_t async_method_list,
-                                     int32_t object_id) {
+                                     int32_t object_id,
+                                     const cef_string_t* permission) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1922,6 +1923,11 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
   if (!async_method_list) {
     return;
   }
+  // Verify param: permission; type: string_byref_const
+  DCHECK(permission);
+  if (!permission) {
+    return;
+  }
 
   // Translate param: method_list; type: string_vec_byref_const
   std::vector<CefString> method_listList;
@@ -1932,8 +1938,8 @@ browser_host_register_ark_jsfunction(struct _cef_browser_host_t* self,
 
   // Execute
   CefBrowserHostCppToC::Get(self)->RegisterArkJSfunction(
-      CefString(object_name), method_listList, async_method_listList,
-      object_id);
+      CefString(object_name), method_listList, async_method_listList, object_id,
+      CefString(permission));
 }
 
 void CEF_CALLBACK
@@ -3358,7 +3364,8 @@ browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
                                      cef_string_list_t method_list,
                                      int32_t object_id,
-                                     int is_async) {
+                                     int is_async,
+                                     const cef_string_t* permission) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3377,6 +3384,11 @@ browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
   if (!method_list) {
     return;
   }
+  // Verify param: permission; type: string_byref_const
+  DCHECK(permission);
+  if (!permission) {
+    return;
+  }
 
   // Translate param: method_list; type: string_vec_byref_const
   std::vector<CefString> method_listList;
@@ -3385,7 +3397,7 @@ browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->RegisterNativeJSProxy(
       CefString(object_name), method_listList, object_id,
-      is_async ? true : false);
+      is_async ? true : false, CefString(permission));
 }
 
 void CEF_CALLBACK

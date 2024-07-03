@@ -506,13 +506,21 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
   int content_width = contents_size.width();
   int content_height = contents_size.height();
 
+  gfx::Size viewport_size = blink_glue::GetVisualViewportSize(web_local_frame);
+
   if (content_width != content_width_ || content_height != content_height_) {
     content_width_ = content_width;
     content_height_ = content_height;
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(CONTENT_SIZE_MESSAGE);
     message->GetArgumentList()->SetInt(0, content_width_);
     message->GetArgumentList()->SetInt(1, content_height_);
+    message->GetArgumentList()->SetInt(2, viewport_size.width());
+    message->GetArgumentList()->SetInt(3, viewport_size.height());
     auto web_frame = GetMainFrame();
+    LOG(DEBUG) << "Fit content SendProcessMessage Content width: "
+               << content_width << ",height: " << content_height
+               << ". Viewport width:" << viewport_size.width()
+               << ",height:" << viewport_size.height();
     web_frame->SendProcessMessage(PID_BROWSER, message);
   }
 }

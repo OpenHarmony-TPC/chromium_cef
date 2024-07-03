@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e4ce072f98453c0b2cb4640cfab545a77c043ca1$
+// $hash=d25cbbd3db1ccc61b7eeff707b4d9866c67f5d98$
 //
 
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
@@ -958,8 +958,9 @@ void CEF_CALLBACK browser_enable_ads_block(struct _cef_browser_t *self,
   CefBrowserCppToC::Get(self)->EnableAdsBlock(enable ? true : false);
 }
 
-int CEF_CALLBACK browser_set_url_trust_list(struct _cef_browser_t *self,
-                                            const cef_string_t *urlTrustList) {
+int CEF_CALLBACK browser_set_url_trust_list_with_err_msg(
+    struct _cef_browser_t *self, const cef_string_t *urlTrustList,
+    cef_string_t *detailErrMsg) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -973,10 +974,18 @@ int CEF_CALLBACK browser_set_url_trust_list(struct _cef_browser_t *self,
   if (!urlTrustList) {
     return 0;
   }
+  // Verify param: detailErrMsg; type: string_byref
+  DCHECK(detailErrMsg);
+  if (!detailErrMsg) {
+    return 0;
+  }
+
+  // Translate param: detailErrMsg; type: string_byref
+  CefString detailErrMsgStr(detailErrMsg);
 
   // Execute
-  int _retval =
-      CefBrowserCppToC::Get(self)->SetUrlTrustList(CefString(urlTrustList));
+  int _retval = CefBrowserCppToC::Get(self)->SetUrlTrustListWithErrMsg(
+      CefString(urlTrustList), detailErrMsgStr);
 
   // Return type: simple
   return _retval;
@@ -1067,7 +1076,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->is_ads_block_enabled_for_cur_page =
       browser_is_ads_block_enabled_for_cur_page;
   GetStruct()->enable_ads_block = browser_enable_ads_block;
-  GetStruct()->set_url_trust_list = browser_set_url_trust_list;
+  GetStruct()->set_url_trust_list_with_err_msg =
+      browser_set_url_trust_list_with_err_msg;
   GetStruct()->set_back_forward_cache_options =
       browser_set_back_forward_cache_options;
 }

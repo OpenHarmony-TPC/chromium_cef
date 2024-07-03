@@ -51,6 +51,8 @@ BLINK_EXPORT blink::WebString DumpDocumentMarkup(blink::WebLocalFrame* frame);
 
 #if BUILDFLAG(IS_OHOS)
 BLINK_EXPORT gfx::Size GetContentSize(blink::WebLocalFrame* frame);
+
+BLINK_EXPORT gfx::Size GetVisualViewportSize(blink::WebLocalFrame* frame);
 #endif
 
 // Expose additional actions on WebNode.

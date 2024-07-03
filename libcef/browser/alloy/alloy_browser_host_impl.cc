@@ -110,6 +110,10 @@
 #include "content/public/browser/custom_media_player_listener.h"
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#ifdef OHOS_BFCACHE
+#include "content/public/common/content_switches.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -1875,17 +1879,18 @@ void AlloyBrowserHostImpl::ExitPictureInPicture() {
 }
 
 bool AlloyBrowserHostImpl::IsBackForwardCacheSupported() {
-#ifdef OHOS_BFCACHE
-  if (CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableBFCache)) {
-    return true;
-  }
-  return false;
-#endif
-
 #if BUILDFLAG(IS_OHOS)
   // Turn this switch on and see if there's anything wrong,
   // issue #3237 not reproduced, maybe had been fixed.
-  return true;
+#ifdef OHOS_BFCACHE
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableBFCache))
+#endif
+    return true;
+
+#ifdef OHOS_BFCACHE
+  return false;
+#endif
+
 #else
   // Disabled due to issue #3237.
   return false;

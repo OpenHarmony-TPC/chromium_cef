@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=26ab56d2d35ae589e3f131b54f924e882125429e$
+// $hash=25a703b8d536577f1775d2261bdb5e4192edac1c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -503,8 +503,9 @@ typedef struct _cef_browser_t {
   ///
   /// Set url trust list.
   ///
-  int(CEF_CALLBACK *set_url_trust_list)(struct _cef_browser_t *self,
-                                        const cef_string_t *urlTrustList);
+  int(CEF_CALLBACK *set_url_trust_list_with_err_msg)(
+      struct _cef_browser_t *self, const cef_string_t *urlTrustList,
+      cef_string_t *detailErrMsg);
 
   ///
   /// Set url trust list.
@@ -1369,7 +1370,7 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK *register_ark_jsfunction)(
       struct _cef_browser_host_t *self, const cef_string_t *object_name,
       cef_string_list_t method_list, cef_string_list_t async_method_list,
-      int32_t object_id);
+      int32_t object_id, const cef_string_t *permission);
 
   ///
   /// UnregisterArkJSfunction
@@ -1812,7 +1813,8 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK *register_native_jsproxy)(struct _cef_browser_host_t *self,
                                               const cef_string_t *object_name,
                                               cef_string_list_t method_list,
-                                              int32_t object_id, int is_async);
+                                              int32_t object_id, int is_async,
+                                              const cef_string_t *permission);
 
   ///
   /// SendTouchpadFlingEvent
