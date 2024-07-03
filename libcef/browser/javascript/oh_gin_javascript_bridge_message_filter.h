@@ -107,6 +107,8 @@ class OhGinJavascriptBridgeMessageFilter
   // The routing id of the RenderFrameHost whose request we are processing.
   // Used on the background thread.
   int32_t current_routing_id_;
+
+  scoped_refptr<base::SingleThreadTaskRunner> async_task_runner_;
 };
 }  // namespace NWEB
 #endif
