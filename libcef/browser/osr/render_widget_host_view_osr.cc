@@ -61,6 +61,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #include "res_sched_client_adapter.h"
@@ -186,6 +187,10 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   void OnVsync() override { view_->OnVsync(); }
 
   void OnVsyncReceived() override { view_->OnVsyncReceived(); }
+
+  void OnVsyncEnabled(bool enabled) override { view_->OnVsyncEnabled(enabled); }
+
+  void ReportVideoFrameRate(int32_t frameRate) override { view_->ReportVideoFrameRate(frameRate); }
 #endif
 
  private:
@@ -2334,6 +2339,9 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
           .CreateSocPerfClientAdapter()
           ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
       isBoosting_ = false;
+      // maintaince 120fps for 3s
+      base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(false);
+      base::ohos::DynamicFrameRateDecision::GetInstance().SetMaxFrameRateThreeSec();
     }
     return;
   }
@@ -2341,6 +2349,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
   isBoosting_ = true;
+  base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(true);
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
       weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
@@ -2564,6 +2573,20 @@ void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
     SendTouchGestureEvent(touchEvent);
     web_touch_event_queue_.pop_front();
   }
+}
+
+void CefRenderWidgetHostViewOSR::OnVsyncEnabled(bool enabled)
+{
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncEnabled",
+    "enabled", enabled);
+  base::ohos::DynamicFrameRateDecision::GetInstance().SetVsyncEnabled(enabled);
+}
+
+void CefRenderWidgetHostViewOSR::ReportVideoFrameRate(int32_t frameRate)
+{
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::ReportVideoFrameRate",
+    "frameRate", frameRate);
+  base::ohos::DynamicFrameRateDecision::GetInstance().ReportVideoFrameRate(frameRate);
 }
 #endif
 
