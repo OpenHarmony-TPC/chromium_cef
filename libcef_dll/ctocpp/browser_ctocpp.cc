@@ -938,16 +938,18 @@ NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::EnableAdsBlock(bool enable) {
 }
 
 NO_SANITIZE("cfi-icall")
-int CefBrowserCToCpp::SetUrlTrustList(const CefString& urlTrustList) {
+int CefBrowserCToCpp::SetUrlTrustListWithErrMsg(
+  const CefString& urlTrustList, CefString& detailErrMsg) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_url_trust_list)) {
+  if (CEF_MEMBER_MISSING(_struct, set_url_trust_list_with_err_msg)) {
     return -1;
   }
 
   // Execute
-  return _struct->set_url_trust_list(_struct, urlTrustList.GetStruct());
+  return _struct->set_url_trust_list_with_err_msg(_struct, urlTrustList.GetStruct(),
+    detailErrMsg.GetWritableStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

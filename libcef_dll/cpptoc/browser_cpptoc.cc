@@ -968,8 +968,9 @@ void CEF_CALLBACK browser_enable_ads_block(struct _cef_browser_t* self,
   CefBrowserCppToC::Get(self)->EnableAdsBlock(enable ? true : false);
 }
 
-int CEF_CALLBACK browser_set_url_trustList(struct _cef_browser_t* self,
-                                           const cef_string_t* urlTrustList) {
+int CEF_CALLBACK browser_set_url_trustList_with_err_msg(
+  struct _cef_browser_t* self, const cef_string_t* urlTrustList,
+  cef_string_t* detailErrMsg) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -979,11 +980,19 @@ int CEF_CALLBACK browser_set_url_trustList(struct _cef_browser_t* self,
     return 0;
   }
 
-  // Execute
-  int _retval = CefBrowserCppToC::Get(self)->SetUrlTrustList(CefString(urlTrustList));
+  DCHECK(urlTrustList);
+  if (!urlTrustList) {
+    return 0;
+  }
 
-  // Return type: simple
-  return _retval;
+  DCHECK(detailErrMsg);
+  if (!detailErrMsg) {
+    return 0;
+  }
+  // Execute
+  CefString cefStrMsg(detailErrMsg);
+  return CefBrowserCppToC::Get(self)->SetUrlTrustListWithErrMsg(
+    CefString(urlTrustList), cefStrMsg);
 }
 }  // namespace
 
@@ -1055,7 +1064,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->is_ads_block_enabled_for_cur_page =
       browser_is_ads_block_enabled_for_cur_page;
   GetStruct()->enable_ads_block = browser_enable_ads_block;
-  GetStruct()->set_url_trust_list = browser_set_url_trustList;
+  GetStruct()->set_url_trust_list_with_err_msg =
+    browser_set_url_trustList_with_err_msg;
 }
 
 // DESTRUCTOR - Do not edit by hand.

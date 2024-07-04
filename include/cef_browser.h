@@ -510,7 +510,8 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /// Set url trust list.
   ///
   /*--cef()--*/
-  virtual int SetUrlTrustList(const CefString& urlTrustList) = 0;
+  virtual int SetUrlTrustListWithErrMsg(
+    const CefString& urlTrustList, CefString& detailErrMsg) = 0;
 
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
@@ -1438,7 +1439,8 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void RegisterArkJSfunction(const CefString& object_name,
                                      const std::vector<CefString>& method_list,
                                      const std::vector<CefString>& async_method_list,
-                                     const int32_t object_id) = 0;
+                                     const int32_t object_id,
+                                     const CefString& permission) = 0;
 
   ///
   /// UnregisterArkJSfunction
@@ -1919,7 +1921,8 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void RegisterNativeJSProxy(const CefString& object_name,
                                      const std::vector<CefString>& method_list,
                                      const int32_t object_id,
-                                     bool is_async) = 0;
+                                     bool is_async,
+                                     const CefString& permission) = 0;
 
   ///
   /// SendTouchpadFlingEvent

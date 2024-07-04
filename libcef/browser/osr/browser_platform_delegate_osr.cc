@@ -177,6 +177,17 @@ void CefBrowserPlatformDelegateOsr::WasResized() {
 void CefBrowserPlatformDelegateOsr::SendKeyEvent(const CefKeyEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+#if defined(OHOS_INPUT_EVENTS)
+    // If the url content is empty when loadurl is loaded,
+    // the key information is thrown to other components.
+    CefRefPtr<CefKeyboardHandler> handler;
+    if (browser_ && browser_->client()) {
+      handler = browser_->client()->GetKeyboardHandler();
+    }
+    if (handler) {
+      handler->KeyboardReDispatch(event, false);
+    }
+#endif
     return;
   }
 

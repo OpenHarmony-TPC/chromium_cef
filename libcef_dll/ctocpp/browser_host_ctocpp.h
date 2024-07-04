@@ -167,7 +167,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const std::vector<CefString>& async_method_list,
-                             const int32_t object_id) override;
+                             const int32_t object_id,
+                             const CefString& permission) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
@@ -278,7 +279,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void RegisterNativeJSProxy(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
-                             bool is_async) override;
+                             bool is_async,
+                             const CefString& permission) override;
   void SendTouchpadFlingEvent(const CefMouseEvent& event,
                               double vx,
                               double vy) override;

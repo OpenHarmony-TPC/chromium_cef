@@ -455,6 +455,9 @@ typedef struct _cef_settings_t {
 #if defined(OHOS_INCOGNITO_MODE)
   bool incognito_mode;
 #endif
+#if defined(OHOS_RENDER_PROCESS_SHARE)
+  std::string shared_render_process_token;
+#endif
 } cef_settings_t;
 
 ///
@@ -732,6 +735,9 @@ typedef struct _cef_browser_settings_t {
 #if defined(OHOS_MULTI_WINDOW)
   bool supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
+#if defined(OHOS_RENDER_PROCESS_SHARE)
+  cef_string_t shared_render_process_token;
+#endif
 } cef_browser_settings_t;
 
 ///

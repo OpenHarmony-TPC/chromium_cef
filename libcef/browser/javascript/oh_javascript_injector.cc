@@ -20,26 +20,28 @@ void OhJavascriptInjector::AddNativeInterface(
     const std::string& object_name,
     const std::vector<std::string> method_list,
     const int32_t object_id,
-    bool is_async) {
+    bool is_async,
+    const std::string& permission) {
   if (!javascript_bridge_dispatcher_host_) {
     return;
   }
 
   javascript_bridge_dispatcher_host_->AddNativeNamedObject(object_name, method_list,
-                                                     object_id, is_async);
+                                                     object_id, is_async, permission);
 }
 
 void OhJavascriptInjector::AddInterface(
     const std::string& object_name,
     const std::vector<std::string> method_list,
     const std::vector<std::string> async_method_list,
-    const int32_t object_id) {
+    const int32_t object_id,
+    const std::string& permission) {
   if (!javascript_bridge_dispatcher_host_) {
     return;
   }
 
   javascript_bridge_dispatcher_host_->AddNamedObject(object_name, method_list,
-                                                     async_method_list, object_id);
+                                                     async_method_list, object_id, permission);
 }
 
 void OhJavascriptInjector::RemoveInterface(

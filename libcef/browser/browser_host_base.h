@@ -263,7 +263,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void RegisterNativeJSProxy(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
-                             bool is_async) override;
+                             bool is_async,
+                             const CefString& permission) override;
 
 #ifdef OHOS_ARKWEB_ADBLOCK
   void UpdateAdblockEasyListRules(
@@ -280,7 +281,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void RegisterArkJSfunction(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const std::vector<CefString>& async_method_list,
-                             const int32_t object_id) override;
+                             const int32_t object_id,
+                             const CefString& permission) override;
   void UnregisterArkJSfunction(
       const CefString& object_name,
       const std::vector<CefString>& method_list) override;
@@ -709,7 +711,8 @@ bool TerminateRenderProcess() override;
 #endif
 
 #ifdef OHOS_URL_TRUST_LIST
-  int SetUrlTrustList(const CefString& urlTrustList) override;
+  int SetUrlTrustListWithErrMsg(
+    const CefString& urlTrustList, CefString& detailErrMsg) override;
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)

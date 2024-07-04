@@ -33,7 +33,10 @@ OhGinJavascriptBridgeMessageFilter::OhGinJavascriptBridgeMessageFilter(
     content::AgentSchedulingGroupHost& agent_scheduling_group)
     : BrowserMessageFilter(OhGinJavascriptBridgeMsgStart),
       agent_scheduling_group_(agent_scheduling_group),
-      current_routing_id_(MSG_ROUTING_NONE) {}
+      current_routing_id_(MSG_ROUTING_NONE) {
+  async_task_runner_ = base::ThreadPool::CreateSingleThreadTaskRunner(
+      {base::TaskPriority::USER_BLOCKING}, base::SingleThreadTaskRunnerThreadMode::DEDICATED);
+}
 
 OhGinJavascriptBridgeMessageFilter::~OhGinJavascriptBridgeMessageFilter() {
   LOG(INFO) << "OhGinJavascriptBridgeMessageFilter dtor";
@@ -58,12 +61,16 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   } else {
     msg_correct = iter.ReadInt(&object_id);
   }
+
+  if (!async_task_runner_) {
+    async_task_runner_ = base::ThreadPool::CreateSingleThreadTaskRunner(
+      {base::TaskPriority::USER_BLOCKING}, base::SingleThreadTaskRunnerThreadMode::DEDICATED);
+  }
   if (message.HasAttachments()) {
     if (msg_correct && !message.is_sync() &&
       object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
-        base::ThreadPool::PostTask(
-          FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
-            base::BindOnce(
+        async_task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(
             base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThreadFlowbuf),
             base::WrapRefCounted(this), message));
     } else {
@@ -75,9 +82,8 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   } else {
     if (msg_correct && !message.is_sync() &&
       object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
-        base::ThreadPool::PostTask(
-          FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_BLOCKING},
-            base::BindOnce(
+        async_task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(
             base::IgnoreResult(&OhGinJavascriptBridgeMessageFilter::OnMessageReceivedThread),
             base::WrapRefCounted(this), message));
     } else {
