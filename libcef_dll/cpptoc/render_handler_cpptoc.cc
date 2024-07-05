@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=526e2af2c9a3ae55e20ebae0d85e4a2b3cbe3ce2$
+// $hash=c968bc55d029453636aa2cafbaae8e02270b5050$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -1097,12 +1097,9 @@ void CEF_CALLBACK render_handler_on_update_text_input_state_called(
       compositon_rangeVal);
 }
 
-void CEF_CALLBACK
-render_handler_get_word_selection(struct _cef_render_handler_t* self,
-                                  cef_browser_t* browser,
-                                  const cef_string_t* text,
-                                  int8_t offset,
-                                  cef_point_t* select) {
+void CEF_CALLBACK render_handler_get_word_selection(
+    struct _cef_render_handler_t *self, cef_browser_t *browser,
+    const cef_string_t *text, int8_t offset, cef_point_t *select) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1225,7 +1222,43 @@ render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), cef_screen_rectVal);
 }
 
-}  // namespace
+void CEF_CALLBACK
+render_handler_get_visible_viewport_rect(struct _cef_render_handler_t* self,
+                                         cef_browser_t* browser,
+                                         cef_rect_t* rect) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: rect; type: simple_byref
+  DCHECK(rect);
+  if (!rect) {
+    return;
+  }
+
+  // Translate param: rect; type: simple_byref
+  CefRect rectVal = rect ? *rect : CefRect();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetVisibleViewportRect(
+      CefBrowserCToCpp::Wrap(browser), rectVal);
+
+  // Restore param: rect; type: simple_byref
+  if (rect) {
+    *rect = rectVal;
+  }
+}
+
+} // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -1282,6 +1315,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->create_overlay = render_handler_create_overlay;
   GetStruct()->on_overlay_state_changed =
       render_handler_on_overlay_state_changed;
+  GetStruct()->get_visible_viewport_rect =
+      render_handler_get_visible_viewport_rect;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3a8be84838a0840ab7c78f56725c8f0cd073f441$
+// $hash=bc8d8abbf44e820bf70ea88100fb354f12c62bb1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -140,6 +140,8 @@ class CefRenderHandlerCToCpp
                      const CefRect& cef_screen_rect) override;
   void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
                              const CefRect& cef_screen_rect) override;
+  void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
+                              CefRect& rect) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
