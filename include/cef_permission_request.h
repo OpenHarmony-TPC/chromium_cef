@@ -127,6 +127,19 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AbortAskGeolocationPermission(const CefString& origin) = 0;
+#if defined(OHOS_SENSOR)
+  ///
+  /// Handle the Sensors permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskSensorsPermission(const CefString& origin,
+                                        cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Sensors permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskSensorsPermission(const CefString& origin) = 0;
+#endif // defined(OHOS_SENSOR)
   ///
   /// Handle the Protected Media Identifier permission requests.
   ///

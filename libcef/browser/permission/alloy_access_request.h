@@ -31,6 +31,7 @@ class AlloyAccessRequest : public CefAccessRequest {
     PROTECTED_MEDIA_ID = 1 << 3,
     MIDI_SYSEX = 1 << 4,
     CLIPBOARD_READ_WRITE = 1 << 5,
+    SENSORS = 1 << 7,
   };
 
   AlloyAccessRequest(const CefString& origin,
@@ -51,6 +52,31 @@ class AlloyAccessRequest : public CefAccessRequest {
 
   IMPLEMENT_REFCOUNTING(AlloyAccessRequest);
 };
+
+#if defined(OHOS_SENSOR)
+class AlloySensorAccessRequest : public CefAccessRequest {
+public:
+  AlloySensorAccessRequest(CefBrowserHostBase* const browser,
+                          const CefString& origin,
+                          cef_permission_callback_t callback);
+
+  AlloySensorAccessRequest(const AlloySensorAccessRequest&) = delete;
+  AlloySensorAccessRequest& operator=(const AlloySensorAccessRequest&) = delete;
+
+  ~AlloySensorAccessRequest() override;
+
+  // CefAccessRequest implementation.
+  CefString Origin() override;
+  int ResourceAcessId() override;
+  void ReportRequestResult(bool allowed) override;
+
+private:
+  CefRefPtr<CefBrowserHostBase> browser_;
+  CefString origin_;
+  cef_permission_callback_t callback_;
+  IMPLEMENT_REFCOUNTING(AlloySensorAccessRequest);
+};
+#endif // defined(OHOS_SENSOR)
 
 #if defined(OHOS_WEBRTC)
 class AlloyMediaAccessRequest : public CefAccessRequest {

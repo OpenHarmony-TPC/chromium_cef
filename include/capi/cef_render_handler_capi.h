@@ -421,6 +421,15 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       const cef_rect_t* cef_screen_rect);
+
+  ///
+  /// Called to retrieve the visible view rectangle in screen DIP coordinates.
+  /// This function must always provide a non-NULL rectangle.
+  ///
+  void(CEF_CALLBACK *get_visible_viewport_rect)(
+      struct _cef_render_handler_t *self,
+      struct _cef_browser_t *browser,
+      cef_rect_t *rect);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

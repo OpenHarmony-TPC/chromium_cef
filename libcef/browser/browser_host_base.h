@@ -542,10 +542,6 @@ bool TerminateRenderProcess() override;
   void EnableSafeBrowsing(bool enable) override;
 #endif
 
-#ifdef OHOS_BFCACHE
-  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
-#endif
-
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
   void OnWebContentsDestroyed(content::WebContents* web_contents) override;
@@ -657,6 +653,11 @@ bool TerminateRenderProcess() override;
   void AbortAskGeolocationPermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
                                    const CefString& origin) override;
+#if defined(OHOS_SENSOR)
+  void AskSensorsPermission(const CefString& origin,
+                                cef_permission_callback_t callback) override;
+  void AbortAskSensorsPermission(const CefString& origin) override;
+#endif // defined(OHOS_SENSOR)
   void AskProtectedMediaIdentifierPermission(
       const CefString& origin,
       cef_permission_callback_t callback) override;
@@ -719,6 +720,10 @@ bool TerminateRenderProcess() override;
                        int width,
                        int height,
                        cef_web_snapshot_callback_t callback)override;
+#endif
+
+#ifdef OHOS_BFCACHE
+  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 #endif
 
  protected:

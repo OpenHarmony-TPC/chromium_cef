@@ -424,6 +424,14 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
                                      const CefRect& cef_screen_rect) {}
+
+  ///
+  /// Called to retrieve the visible view rectangle in screen DIP coordinates. This
+  /// method must always provide a non-empty rectangle.
+  ///
+  /*--cef()--*/
+  virtual void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
+                                      CefRect& rect) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

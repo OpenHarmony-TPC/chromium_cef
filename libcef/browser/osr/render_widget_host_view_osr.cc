@@ -61,6 +61,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
 #include "res_sched_client_adapter.h"
@@ -186,6 +187,10 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   void OnVsync() override { view_->OnVsync(); }
 
   void OnVsyncReceived() override { view_->OnVsyncReceived(); }
+
+  void OnVsyncEnabled(bool enabled) override { view_->OnVsyncEnabled(enabled); }
+
+  void ReportVideoFrameRate(int32_t frameRate) override { view_->ReportVideoFrameRate(frameRate); }
 #endif
 
  private:
@@ -272,6 +277,25 @@ gfx::Rect GetViewBounds(AlloyBrowserHostImpl* browser) {
 
   return gfx::Rect(rc.x, rc.y, rc.width, rc.height);
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+gfx::Size GetVisibleViewportSize(AlloyBrowserHostImpl* browser) {
+  if (!browser) {
+    return gfx::Size(0, 0);
+  }
+
+  CefRect rc;
+  CefRefPtr<CefRenderHandler> handler =
+      browser->GetClient()->GetRenderHandler();
+  CHECK(handler);
+
+  handler->GetVisibleViewportRect(browser, rc);
+  CHECK_GT(rc.width, 0);
+  CHECK_GT(rc.height, 0);
+
+  return gfx::Size(rc.width, rc.height);
+}
+#endif
 
 ui::ImeTextSpan::UnderlineStyle GetImeUnderlineStyle(
     cef_composition_underline_style_t style) {
@@ -893,6 +917,31 @@ gfx::Rect CefRenderWidgetHostViewOSR::GetViewBounds() {
   }
 
   return current_view_bounds_;
+}
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+gfx::Size CefRenderWidgetHostViewOSR::GetPhysicalVisibleViewportSize() {
+  if (current_visible_view_bounds_.width() == 0 && current_visible_view_bounds_.height() == 0) {
+#ifdef OHOS_EX_TOPCONTROLS
+    return GetPhysicalViewBounds().size();
+#else
+    return GetViewBounds().size();
+#endif
+  }
+
+  if (IsPopupWidget()) {
+    return popup_position_.size();
+  }
+  return current_visible_view_bounds_;
+}
+
+gfx::Size CefRenderWidgetHostViewOSR::GetVisibleViewportSize() {
+  gfx::Size bounds = GetPhysicalVisibleViewportSize();
+#ifdef OHOS_EX_TOPCONTROLS
+  bounds.set_height(bounds.height() - GetShrinkViewportHeight());
+#endif
+  return bounds;
 }
 #endif
 
@@ -1789,6 +1838,9 @@ void CefRenderWidgetHostViewOSR::WasResized() {
 #endif  // defined(OHOS_INPUT_EVENTS)
   // Only one resize will be in-flight at a time.
   if (hold_resize_) {
+#if defined(OHOS_COMPOSITE_RENDER)
+    isKeyboardResized_ = false;
+#endif
     if (!pending_resize_) {
       pending_resize_ = true;
     }
@@ -1821,6 +1873,7 @@ void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
   }
   // Only one resize will be in-flight at a time.
   if (hold_resize_) {
+    isKeyboardResized_ = true;
     if (!pending_resize_)
       pending_resize_ = true;
     return;
@@ -1841,8 +1894,16 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
     const absl::optional<viz::LocalSurfaceId>& child_local_surface_id) {
 #endif  // defined(OHOS_COMPOSITE_RENDER)
   SetFrameRate();
-
+#if defined(OHOS_INPUT_EVENTS)
+  bool visible_changed = false;
+  bool resized = ResizeRootLayer(isKeyboard, visible_changed);
+  if (!resized) {
+    resized = visible_changed;
+  }
+#else
   const bool resized = ResizeRootLayer();
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   if (resized) {
     OHOS::NWeb::ResSchedClientAdapter::ReportScene(
@@ -2334,6 +2395,9 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
           .CreateSocPerfClientAdapter()
           ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
       isBoosting_ = false;
+      // maintaince 120fps for 3s
+      base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(false);
+      base::ohos::DynamicFrameRateDecision::GetInstance().SetMaxFrameRateThreeSec();
     }
     return;
   }
@@ -2341,6 +2405,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
   isBoosting_ = true;
+  base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(true);
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
       weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
@@ -2564,6 +2629,20 @@ void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
     SendTouchGestureEvent(touchEvent);
     web_touch_event_queue_.pop_front();
   }
+}
+
+void CefRenderWidgetHostViewOSR::OnVsyncEnabled(bool enabled)
+{
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncEnabled",
+    "enabled", enabled);
+  base::ohos::DynamicFrameRateDecision::GetInstance().SetVsyncEnabled(enabled);
+}
+
+void CefRenderWidgetHostViewOSR::ReportVideoFrameRate(int32_t frameRate)
+{
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::ReportVideoFrameRate",
+    "frameRate", frameRate);
+  base::ohos::DynamicFrameRateDecision::GetInstance().ReportVideoFrameRate(frameRate);
 }
 #endif
 
@@ -2824,10 +2903,44 @@ bool CefRenderWidgetHostViewOSR::SetViewBounds() {
   return true;
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+bool CefRenderWidgetHostViewOSR::SetVisibleViewportSize() {
+  // This method should not be called while the resize hold is active.
+  DCHECK(!hold_resize_);
+
+  // Popup bounds are set in InitAsPopup.
+  if (IsPopupWidget()) {
+    return false;
+  }
+
+  const gfx::Size& visible_view_bounds = ::GetVisibleViewportSize(browser_impl_.get());
+  if (visible_view_bounds == current_visible_view_bounds_) {
+    return false;
+  }
+
+  current_visible_view_bounds_ = visible_view_bounds;
+  return true;
+}
+#endif
+
+#if defined(OHOS_INPUT_EVENTS)
+bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force, bool* visible_changed) {
+#else
 bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
+#endif
   const bool screen_info_changed = SetScreenInfo();
   const bool view_bounds_changed = SetViewBounds();
-  if (!force && !screen_info_changed && !view_bounds_changed) {
+#if defined(OHOS_INPUT_EVENTS)
+  const bool visible_view_bounds_changed = SetVisibleViewportSize();
+  if (visible_changed) {
+    *visible_changed = visible_view_bounds_changed;
+  }
+#endif
+  if (!force && !screen_info_changed && !view_bounds_changed
+#if defined(OHOS_INPUT_EVENTS)
+      && !visible_view_bounds_changed
+#endif
+  ) {
     return false;
   }
 
@@ -2861,10 +2974,18 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
 #endif
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+bool CefRenderWidgetHostViewOSR::ResizeRootLayer(bool isKeyboard, bool& visible_changed) {
+#else
 bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
+#endif
   if (!hold_resize_) {
     // The resize hold is not currently active.
+#if defined(OHOS_INPUT_EVENTS)
+    if (SetRootLayerSize(false /* force */, &visible_changed)) {
+#else
     if (SetRootLayerSize(false /* force */)) {
+#endif
       // The size has changed. Avoid resizing again until ReleaseResizeHold() is
       // called.
       hold_resize_ = true;
@@ -2874,6 +2995,9 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
   } else if (!pending_resize_) {
     // The resize hold is currently active. Another resize will be triggered
     // from ReleaseResizeHold().
+#if defined(OHOS_COMPOSITE_RENDER)
+    isKeyboardResized_ = isKeyboard;
+#endif
     pending_resize_ = true;
   }
   return false;
@@ -2885,9 +3009,20 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
   cached_scale_factor_ = -1;
   if (pending_resize_) {
     pending_resize_ = false;
-    CEF_POST_TASK(CEF_UIT,
-                  base::BindOnce(&CefRenderWidgetHostViewOSR::WasResized,
-                                 weak_ptr_factory_.GetWeakPtr()));
+#if defined(OHOS_COMPOSITE_RENDER)
+    if (isKeyboardResized_) {
+      isKeyboardResized_ = false;
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefRenderWidgetHostViewOSR::WasKeyboardResized,
+                                  weak_ptr_factory_.GetWeakPtr()));
+    } else {
+#endif
+      CEF_POST_TASK(CEF_UIT,
+                    base::BindOnce(&CefRenderWidgetHostViewOSR::WasResized,
+                                  weak_ptr_factory_.GetWeakPtr()));
+#if defined(OHOS_COMPOSITE_RENDER)
+    }
+#endif
   }
   if (browser_impl_.get()) {
     CefRefPtr<CefRenderHandler> handler =

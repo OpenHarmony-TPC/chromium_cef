@@ -249,6 +249,17 @@ void AlloyPermissionManager::RequestPermissionByType(
             &AlloyPermissionManager::OnRequestResponseCallBack,
             weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
       break;
+    case PermissionType::SENSORS:
+#if defined(OHOS_SENSOR)
+      if (browser) {
+        browser->AskSensorsPermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }
+      break;
+#endif // defined(OHOS_SENSOR)
     case PermissionType::AUDIO_CAPTURE:
     case PermissionType::VIDEO_CAPTURE:
     case PermissionType::NOTIFICATIONS:
@@ -268,7 +279,6 @@ void AlloyPermissionManager::RequestPermissionByType(
     case PermissionType::LOCAL_FONTS:
     case PermissionType::DISPLAY_CAPTURE:
     case PermissionType::MIDI:
-    case PermissionType::SENSORS:
     case PermissionType::WAKE_LOCK_SYSTEM:
     default:
       LOG(ERROR) << "Invalid PermissionType.";
@@ -332,6 +342,10 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
   if (permission == PermissionType::CLIPBOARD_READ_WRITE ||
       permission == PermissionType::CLIPBOARD_SANITIZED_WRITE) {
     return PermissionStatus::GRANTED;
+#if defined(OHOS_SENSOR)
+  } else if (permission == PermissionType::SENSORS) {
+    return PermissionStatus::ASK;
+#endif // defined(OHOS_SENSOR)
   }
   return PermissionStatus::DENIED;
 }
@@ -493,6 +507,12 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
       if (browser)
         browser->AbortAskClipboardReadWritePermission(requesting_origin.spec());
       break;
+    case PermissionType::SENSORS:
+#if defined(OHOS_SENSOR)
+      if (browser)
+        browser->AbortAskSensorsPermission(requesting_origin.spec());
+      break;
+#endif // defined(OHOS_SENSOR)
     case PermissionType::NOTIFICATIONS:
     case PermissionType::DURABLE_STORAGE:
     case PermissionType::AUDIO_CAPTURE:
@@ -513,7 +533,6 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
     case PermissionType::LOCAL_FONTS:
     case PermissionType::DISPLAY_CAPTURE:
     case PermissionType::MIDI:
-    case PermissionType::SENSORS:
     case PermissionType::WAKE_LOCK_SCREEN:
     case PermissionType::WAKE_LOCK_SYSTEM:
     default:
