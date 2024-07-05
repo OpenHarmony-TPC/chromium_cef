@@ -14,12 +14,38 @@
  */
 #include "libcef/browser/autofill/oh_autofill_manager.h"
 
+#include <codecvt>
+#include <locale>
+
 #include "base/containers/contains.h"
+#include "base/json/json_reader.h"
+#include "base/json/json_writer.h"
 #include "base/memory/ptr_util.h"
 #include "components/android_autofill/browser/autofill_provider.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
+#include "components/autofill/content/renderer/autofill_agent.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
+#include "libcef/browser/autofill/oh_autofill_client.h"
+#include "libcef/browser/browser_host_base.h"
+
+namespace {
+const std::string EVENT = "event";
+const std::string EVENT_SAVE = "save";
+const std::string EVENT_FILL = "fill";
+const std::string EVENT_UPDATE = "update";
+const std::string EVENT_CLOSE = "close";
+
+const std::string KEY_FOUCS = "focus";
+const std::string KEY_RECT_X = "x";
+const std::string KEY_RECT_Y = "y";
+const std::string KEY_RECT_W = "width";
+const std::string KEY_RECT_H = "height";
+const std::string KEY_VALUE = "value";
+
+const std::vector<std::string> ATTRIBUTE_WHITE_LIST = {"name", "nickname", "email",
+  "street-address", "id-card-number", "tel-national"};
+} // namespace
 
 namespace autofill {
 
@@ -50,6 +76,121 @@ CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
   return nullptr;
 }
 
+absl::optional<std::string> OhAutofillManager::FormDataToJson(
+    const FormData& form,
+    const FormFieldData& field,
+    const std::string& event) {
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto browser = CefBrowserHostBase::GetBrowserForHost(rfh);
+  if (!browser) {
+    return absl::nullopt;
+  }
+
+  float ratio = browser->GetVirtualPixelRatio();
+  auto offset = content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
+
+  base::Value::List view_data_list;
+  view_data_list.Append(base::Value::Dict().Set(EVENT, event));
+
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  for (const FormFieldData& field_data : form.fields) {
+    base::Value::List list;
+    list.Append(base::Value::Dict().Set(
+        KEY_FOUCS,
+        field_data.autocomplete_attribute == field.autocomplete_attribute ? 1 : 0));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_X,
+        static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_Y,
+        static_cast<int32_t>((field_data.bounds.y() + offset.y()) * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_W, static_cast<int32_t>(field_data.bounds.width() * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_H, static_cast<int32_t>(field_data.bounds.height() * ratio)));
+    list.Append(
+        base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
+
+    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    view_data_list.Append(std::move(dict));
+  }
+
+  return base::WriteJson(view_data_list);
+}
+
+absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormData& form) {
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto browser = CefBrowserHostBase::GetBrowserForHost(rfh);
+  if (!browser) {
+    return absl::nullopt;
+  }
+
+  // Chromium does not assign values to FormFieldData.bounds in save scenario,
+  // but oh-autofill-system requires valid bounds to pass code check,
+  // so using the cached FormFieldData.bounds
+  if (form.fields.size() != form_->fields.size()) {
+    return absl::nullopt;
+  }
+
+  float ratio = browser->GetVirtualPixelRatio();
+  auto offset = content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
+
+  base::Value::List view_data_list;
+  view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_SAVE));
+
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  int32_t index = 0;
+  for (const FormFieldData& field_data : form.fields) {
+    base::Value::List list;
+    list.Append(base::Value::Dict().Set(KEY_FOUCS, 0));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_X,
+        static_cast<int32_t>((form_->fields[index].bounds.x() + offset.x()) * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_Y,
+        static_cast<int32_t>((form_->fields[index].bounds.y() + offset.y()) * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_W, static_cast<int32_t>(form_->fields[index].bounds.width() * ratio)));
+    list.Append(base::Value::Dict().Set(
+        KEY_RECT_H, static_cast<int32_t>(form_->fields[index].bounds.height() * ratio)));
+    list.Append(
+        base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
+
+    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    view_data_list.Append(std::move(dict));
+    index++;
+  }
+
+  return base::WriteJson(view_data_list);
+}
+
+void OhAutofillManager::FillData(const std::string& json_str) {
+  absl::optional<base::Value> root = base::JSONReader::Read(json_str);
+  if (!root.has_value()) {
+    return;
+  }
+
+  const base::Value::Dict* root_dict = root->GetIfDict();
+  if (!root_dict) {
+    return;
+  }
+
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  for (const FormFieldData& field_data : form_->fields) {
+    auto it = std::find(ATTRIBUTE_WHITE_LIST.begin(), ATTRIBUTE_WHITE_LIST.end(),
+                        field_data.autocomplete_attribute);
+    if (it != ATTRIBUTE_WHITE_LIST.end()) {
+      const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
+      if (!value) {
+        continue;
+      }
+      driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
+                                                 convert.from_bytes(*value));
+      is_show_ = false;
+    }
+  }
+}
+
 bool OhAutofillManager::ShouldClearPreviewedForm() {
   return false;
 }
@@ -75,6 +216,25 @@ void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
                                             bool known_success,
                                             mojom::SubmissionSource source) {
   LOG(INFO) << "OnFormSubmittedImpl";
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    return;
+  }
+
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    return;
+  }
+
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    return;
+  }
+
+  auto json_str = FormDataToJsonForSave(form);
+  if (json_str.has_value()) {
+    autofill_client->OnAutofillEvent(json_str.value());
+  }
 }
 
 void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
@@ -82,6 +242,25 @@ void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
                                                  const gfx::RectF& bounding_box,
                                                  const TimeTicks timestamp) {
   LOG(INFO) << "OnTextFieldDidChangeImpl";
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    return;
+  }
+
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    return;
+  }
+
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    return;
+  }
+
+  auto json_str = FormDataToJson(form, field, EVENT_UPDATE);
+  if (json_str.has_value()) {
+    autofill_client->OnAutofillEvent(json_str.value());
+  }
 }
 
 void OhAutofillManager::OnTextFieldDidScrollImpl(
@@ -98,6 +277,34 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
     AutoselectFirstSuggestion autoselect_first_suggestion,
     FormElementWasClicked form_element_was_clicked) {
   LOG(INFO) << "OnAskForValuesToFillImpl";
+
+  if (is_show_) {
+    // Handle this event in OnTextFieldDidChangeImpl
+    return;
+  } else {
+    form_ = std::make_unique<FormData>(form);
+  }
+
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    return;
+  }
+
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    return;
+  }
+
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    return;
+  }
+
+  auto json_str = FormDataToJson(form, field, EVENT_FILL);
+  if (json_str.has_value()) {
+    is_show_ = true;
+    autofill_client->OnAutofillEvent(json_str.value());
+  }
 }
 
 void OhAutofillManager::OnFocusOnFormFieldImpl(const FormData& form,
@@ -130,6 +337,33 @@ void OhAutofillManager::OnDidFillAutofillFormDataImpl(
 
 void OhAutofillManager::OnHidePopupImpl() {
   LOG(INFO) << "OnHidePopupImpl";
+
+  if (!is_show_) {
+    return;
+  }
+
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    return;
+  }
+
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    return;
+  }
+
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    return;
+  }
+
+  base::Value::List view_data_list;
+  view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_CLOSE));
+  absl::optional<std::string> json_str = base::WriteJson(view_data_list);
+  if (json_str.has_value()) {
+    autofill_client->OnAutofillEvent(json_str.value());
+  }
+  is_show_ = false;
 }
 
 void OhAutofillManager::PropagateAutofillPredictions(
@@ -150,7 +384,10 @@ void OhAutofillManager::OnServerRequestError(
 }
 
 void OhAutofillManager::Reset() {
+  LOG(INFO) << "Reset";
   AutofillManager::Reset();
+  is_show_ = false;
+  form_.reset(nullptr);
   has_server_prediction_ = false;
 }
 

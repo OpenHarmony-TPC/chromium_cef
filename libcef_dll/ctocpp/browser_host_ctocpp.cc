@@ -3306,6 +3306,50 @@ void CefBrowserHostCToCpp::SetGrantFileAccessDirs(
   }
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetAutofillCallback(
+    CefRefPtr<CefWebMessageReceiver> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->set_autofill_callback(_struct,
+                                 CefWebMessageReceiverCppToC::Wrap(callback));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::FillAutofillData(CefRefPtr<CefValue> message) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: message; type: refptr_same
+  DCHECK(message.get());
+  if (!message.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->fill_autofill_data(_struct, CefValueCToCpp::Unwrap(message));
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

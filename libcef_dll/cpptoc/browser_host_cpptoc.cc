@@ -3592,6 +3592,50 @@ browser_host_set_grant_file_access_dirs(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetGrantFileAccessDirs(dir_listList);
 }
 
+void CEF_CALLBACK
+browser_host_set_autofill_callback(struct _cef_browser_host_t* self,
+                                   cef_web_message_receiver_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetAutofillCallback(
+      CefWebMessageReceiverCToCpp::Wrap(callback));
+}
+
+void CEF_CALLBACK
+browser_host_fill_autofill_data(struct _cef_browser_host_t* self,
+                                struct _cef_value_t* message) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: message; type: refptr_same
+  DCHECK(message);
+  if (!message) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->FillAutofillData(
+      CefValueCppToC::Unwrap(message));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3797,6 +3841,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_notify_for_next_touch_event;
   GetStruct()->set_grant_file_access_dirs =
       browser_host_set_grant_file_access_dirs;
+  GetStruct()->set_autofill_callback = browser_host_set_autofill_callback;
+  GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
 }
 
 // DESTRUCTOR - Do not edit by hand.

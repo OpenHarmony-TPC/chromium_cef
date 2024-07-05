@@ -510,6 +510,9 @@ bool NeedsReload() override;
   void DestroyAllWebMessagePorts() override;
 #endif  // defined(OHOS_MSGPORT)
 
+  void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
+  void FillAutofillData(CefRefPtr<CefValue> message) override;
+
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;
@@ -541,7 +544,6 @@ bool TerminateRenderProcess() override;
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
 #endif
-  
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;

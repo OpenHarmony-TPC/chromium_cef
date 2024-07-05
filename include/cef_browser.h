@@ -1987,5 +1987,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) = 0;
+
+  ///
+  /// Set the callback of the autofill event.
+  ///
+  /*--cef()--*/
+  virtual void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) = 0;
+
+  ///
+  /// Fill autofill data.
+  ///
+  /*--cef()--*/
+  virtual void FillAutofillData(CefRefPtr<CefValue> message) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

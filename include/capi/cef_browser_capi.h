@@ -1961,6 +1961,19 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_grant_file_access_dirs)(
       struct _cef_browser_host_t* self,
       cef_string_list_t dir_list);
+
+  ///
+  /// Set the callback of the autofill event.
+  ///
+  void(CEF_CALLBACK* set_autofill_callback)(
+      struct _cef_browser_host_t* self,
+      struct _cef_web_message_receiver_t* callback);
+
+  ///
+  /// Fill autofill data.
+  ///
+  void(CEF_CALLBACK* fill_autofill_data)(struct _cef_browser_host_t* self,
+                                         struct _cef_value_t* message);
 } cef_browser_host_t;
 
 ///
