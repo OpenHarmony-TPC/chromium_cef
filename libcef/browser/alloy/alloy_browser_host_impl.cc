@@ -56,6 +56,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "base/logging.h"
+#include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
@@ -767,13 +768,13 @@ void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
   ReportRenderProcessStatus(true);
-  SetFrameRateLinkerEnable(false);
+  SetVisible(false);
 }
 
 void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnOnlineRenderToForeground");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnOnlineRenderToForeground";
-  SetFrameRateLinkerEnable(true);
+  SetVisible(true);
 }
 
 void AlloyBrowserHostImpl::NotifyForNextTouchEvent() {
@@ -794,7 +795,7 @@ void AlloyBrowserHostImpl::NotifyForNextTouchEvent() {
     platform_delegate_->NotifyForNextTouchEvent();
 }
 
-void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
+void AlloyBrowserHostImpl::SetVisible(bool visible)
 {
   content::WebContents* contents = web_contents();
   if (!contents) {
@@ -808,7 +809,7 @@ void AlloyBrowserHostImpl::SetFrameRateLinkerEnable(bool enable)
       LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
       return;
     }
-    OHOS::NWeb::OhosAdapterHelper::GetInstance().GetVSyncAdapter().SetFrameRateLinkerEnable(enable);
+    base::ohos::DynamicFrameRateDecision::GetInstance().SetVisible(visible);
   }
 }
 
@@ -1633,6 +1634,7 @@ bool AlloyBrowserHostImpl::WebHandleKeyboardEvent(
     ContentsZoomChange(zoom_in);
     return true;
   }
+
   return false;
 }
 #endif
@@ -2397,7 +2399,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   ReportWindowStatus(true);
   ReportRenderProcessStatus(false);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
-  SetFrameRateLinkerEnable(!is_hidden_);
+  SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif

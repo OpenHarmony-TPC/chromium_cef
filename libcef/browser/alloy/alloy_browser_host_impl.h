@@ -511,7 +511,7 @@ bool NeedsReload() override;
   void ReportRenderProcessStatus(bool is_web_hidden);
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
-  void SetFrameRateLinkerEnable(bool enable);
+  void SetVisible(bool visible);
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

@@ -318,6 +318,10 @@ class CefRenderWidgetHostViewOSR
   void OnVsyncReceived();
 
   void OnTouchDown();
+
+  void OnVsyncEnabled(bool enabled);
+
+  void ReportVideoFrameRate(int32_t frameRate);
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
