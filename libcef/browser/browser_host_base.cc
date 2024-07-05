@@ -1914,6 +1914,29 @@ void CefBrowserHostBase::RemoveGeolocationPrompt(std::string origin) {
   }
 }
 
+#if defined(OHOS_SENSOR)
+void CefBrowserHostBase::AskSensorsPermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  if (permission_request_handler_) {
+    permission_request_handler_->SendRequest(new AlloySensorAccessRequest(
+        this, origin, std::move(callback)));
+  } else {
+    LOG(ERROR) << "AskSensorsPermission, handler is null.";
+  }
+}
+
+void CefBrowserHostBase::AbortAskSensorsPermission(
+    const CefString& origin) {
+  if (permission_request_handler_) {
+    permission_request_handler_->CancelRequest(
+        origin, AlloyAccessRequest::Resources::SENSORS);
+  } else {
+    LOG(ERROR) << "AbortAskSensorsPermission, handler is null.";
+  }
+}
+#endif // defined(OHOS_SENSOR)
+
 void CefBrowserHostBase::AskProtectedMediaIdentifierPermission(
     const CefString& origin,
     cef_permission_callback_t callback) {

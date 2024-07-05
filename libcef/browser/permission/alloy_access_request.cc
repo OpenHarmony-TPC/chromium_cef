@@ -44,6 +44,52 @@ void AlloyAccessRequest::ReportRequestResult(bool allowed) {
 #endif
 }
 
+#if defined(OHOS_SENSOR)
+AlloySensorAccessRequest::AlloySensorAccessRequest(CefBrowserHostBase* const browser,
+                                                   const CefString& origin,
+                                                   cef_permission_callback_t callback)
+    : browser_(browser), origin_(origin), callback_(std::move(callback)) {}
+
+AlloySensorAccessRequest::~AlloySensorAccessRequest() {
+  if (!callback_.is_null()) {
+    std::move(callback_).Run(false);
+  }
+}
+
+CefString AlloySensorAccessRequest::Origin() {
+  return origin_;
+}
+
+int AlloySensorAccessRequest::ResourceAcessId() {
+  return AlloyAccessRequest::Resources::SENSORS;
+}
+
+void AlloySensorAccessRequest::ReportRequestResult(bool allowed) {
+  if (!allowed) {
+    LOG(INFO) << "ReportRequestResult, permission is not allowed.";
+    if (!callback_.is_null()) {
+      std::move(callback_).Run(allowed);
+    }
+    return;
+  }
+
+  if (callback_.is_null()) {
+    LOG(ERROR) << "ReportRequestResult callback is null.";
+    return;
+  }
+  LOG(INFO) << "ReportRequestResult, permission is allowed: " << allowed;
+  if (browser_) {
+    AlloyPermissionRequestHandler* permission_handler =
+        browser_->GetPermissionRequestHandler();
+    if (permission_handler) {
+      permission_handler->PreauthorizePermission(origin_,
+          AlloyAccessRequest::Resources::SENSORS);
+    }
+  }
+  std::move(callback_).Run(allowed);
+}
+#endif // defined(OHOS_SENSOR)
+
 #if defined(OHOS_WEBRTC)
 AlloyMediaAccessRequest::AlloyMediaAccessRequest(CefBrowserHostBase* const browser,
                                                  const content::MediaStreamRequest& request,

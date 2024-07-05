@@ -62,6 +62,52 @@ void CefBrowserPermissionRequestDelegateCToCpp::AbortAskGeolocationPermission(
   _struct->abort_ask_geolocation_permission(_struct, origin.GetStruct());
 }
 
+#if defined(OHOS_SENSOR)
+void CefBrowserPermissionRequestDelegateCToCpp::AskSensorsPermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_sensors_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_sensors_permission(_struct, origin.GetStruct(), callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AbortAskSensorsPermission(
+    const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, abort_ask_sensors_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_sensors_permission(_struct, origin.GetStruct());
+}
+#endif // defined(OHOS_SENSOR)
+
 NO_SANITIZE("cfi-icall")
 void CefBrowserPermissionRequestDelegateCToCpp::
     AskProtectedMediaIdentifierPermission(const CefString& origin,

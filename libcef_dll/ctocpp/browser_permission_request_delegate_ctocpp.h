@@ -38,6 +38,11 @@ class CefBrowserPermissionRequestDelegateCToCpp
   void AskGeolocationPermission(const CefString& origin,
                                 cef_permission_callback_t callback) override;
   void AbortAskGeolocationPermission(const CefString& origin) override;
+#if defined(OHOS_SENSOR)
+  void AskSensorsPermission(const CefString& origin,
+                                cef_permission_callback_t callback) override;
+  void AbortAskSensorsPermission(const CefString& origin) override;
+#endif // defined(OHOS_SENSOR)
   void AskProtectedMediaIdentifierPermission(
       const CefString& origin,
       cef_permission_callback_t callback) override;

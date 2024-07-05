@@ -66,6 +66,55 @@ browser_permission_request_delegate_abort_ask_geolocation_permission(
       ->AbortAskGeolocationPermission(CefString(origin));
 }
 
+#if defined(OHOS_SENSOR)
+void CEF_CALLBACK
+browser_permission_request_delegate_ask_sensors_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskSensorsPermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_sensors_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskSensorsPermission(CefString(origin));
+}
+#endif // defined(OHOS_SENSOR)
+
 void CEF_CALLBACK
 browser_permission_request_delegate_ask_protected_media_identifier_permission(
     struct _cef_browser_permission_request_delegate_t* self,
@@ -254,6 +303,12 @@ CefBrowserPermissionRequestDelegateCppToC::
       browser_permission_request_delegate_abort_ask_clipboard_read_write_permission;
   GetStruct()->notify_geolocation_permission =
       browser_permission_request_delegate_notify_geolocation_permission;
+#if defined(OHOS_SENSOR)
+  GetStruct()->ask_sensors_permission =
+      browser_permission_request_delegate_ask_sensors_permission;
+  GetStruct()->abort_ask_sensors_permission =
+      browser_permission_request_delegate_abort_ask_sensors_permission;
+#endif // defined(OHOS_SENSOR)
 }
 
 // DESTRUCTOR - Do not edit by hand.
