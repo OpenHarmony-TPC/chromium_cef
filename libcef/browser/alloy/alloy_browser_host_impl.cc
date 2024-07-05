@@ -2770,6 +2770,11 @@ bool AlloyBrowserHostImpl::Discard() {
     web_contents()->SetWasDiscarded(true);
   }
 
+#ifdef OHOS_BFCACHE
+  content::NavigationController& controller = web_contents()->GetController();
+  controller.GetBackForwardCache().Flush();
+#endif
+
   return fast_shutdown_success;
 }
 
