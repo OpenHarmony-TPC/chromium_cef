@@ -722,10 +722,6 @@ bool TerminateRenderProcess() override;
                        cef_web_snapshot_callback_t callback)override;
 #endif
 
-#ifdef OHOS_BFCACHE
-  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
-#endif
-
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
