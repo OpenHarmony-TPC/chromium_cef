@@ -22,6 +22,8 @@ class CustomMediaPlayerProxy : public content::CustomMediaPlayer {
   void Release() override;
   void EnterFullscreen() override;
   void ExitFullscreen() override;
+  void ResumeMediaPlayer() override;
+  void SuspendMediaPlayer(int suspend_type) override;
 
  private:
   CefOwnPtr<CefCustomMediaPlayerDelegate> delegate_;
