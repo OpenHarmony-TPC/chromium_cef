@@ -169,10 +169,6 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void UpdateBrowserControlsHeight(int height, bool animate) override {}
   // #endif  // defined(OHOS_NWEB_EX)
 
-#ifdef OHOS_BFCACHE
-  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override {}
-#endif
-
  private:
   // ID of the browser that this RenderView is associated with. During loading
   // of cross-origin requests multiple RenderViews may be associated with the

@@ -274,12 +274,6 @@ absl::optional<int> AlloyMainDelegate::BasicStartupComplete() {
     }
 #endif  // BUILDFLAG(IS_WIN)
 
-#ifdef OHOS_BFCACHE
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableBFCache)) {
-    disable_features.push_back(features::kBackForwardCache.name);
-  }
-#endif
-
 #if !BUILDFLAG(IS_OHOS)
     if (features::kBackForwardCache.default_state ==
         base::FEATURE_ENABLED_BY_DEFAULT) {
