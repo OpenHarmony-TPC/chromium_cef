@@ -513,6 +513,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual int SetUrlTrustListWithErrMsg(
     const CefString& urlTrustList, CefString& detailErrMsg) = 0;
 
+  ///
+  /// Set url trust list.
+  ///
+  /*--cef()--*/
+  virtual void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };

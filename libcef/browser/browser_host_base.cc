@@ -3855,3 +3855,17 @@ int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
   return res;
 }
 #endif
+
+#ifdef OHOS_BFCACHE
+void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "SetBackForwardCacheOptions failed to get web contents in CefBrowserHostBase.";
+    return;
+  }
+
+  content::NavigationController& controller = web_contents->GetController();
+  controller.GetBackForwardCache().SetCacheSize(size);
+  controller.GetBackForwardCache().SetTimeToLive(timeToLive);
+}
+#endif
