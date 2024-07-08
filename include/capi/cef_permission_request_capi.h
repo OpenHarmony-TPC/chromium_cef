@@ -190,7 +190,22 @@ typedef struct _cef_browser_permission_request_delegate_t {
   void(CEF_CALLBACK* abort_ask_geolocation_permission)(
       struct _cef_browser_permission_request_delegate_t* self,
       const cef_string_t* origin);
+#if defined(OHOS_SENSOR)
+  ///
+  /// Handle the Sensors permission requests.
+  ///
+  void(CEF_CALLBACK* ask_sensors_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
 
+  ///
+  /// Cancel the Sensors permission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_sensors_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
+#endif // defined(OHOS_SENSOR)
   ///
   /// Handle the Protected Media Identifier permission requests.
   ///

@@ -57,3 +57,13 @@ void CustomMediaPlayerProxy::ExitFullscreen() {
     delegate_->ExitFullscreen();
   }
 }
+void CustomMediaPlayerProxy::ResumeMediaPlayer() {
+  if (delegate_) {
+    delegate_->ResumeMediaPlayer();
+  }
+}
+void CustomMediaPlayerProxy::SuspendMediaPlayer(int suspend_type) {
+  if (delegate_) {
+    delegate_->SuspendMediaPlayer(suspend_type);
+  }
+}

@@ -932,16 +932,17 @@ std::string CefFrameImpl::GetDebugString() const {
 
 #if BUILDFLAG(IS_OHOS)
 void CefFrameImpl::TerminateRenderProcess() {
+  base::ProcessId realPid = base::GetCurrentRealPid();
   LOG(INFO) << "TerminateRenderProcess start in render side, pid: "
-    << getpid() <<", propid: " << getprocpid();
+    << getpid() <<", propid: " << realPid;
   // try to kill render process by pid
   if (kill(getpid(), SIGTERM) != 0) {
     LOG(ERROR) << "Unable to terminate pid: " << getpid();
     return;
   }
   // if not, kill by procpid
-  if (kill(getprocpid(), SIGTERM) != 0) {
-    LOG(ERROR) << "Unable to terminate getprocpid: " << getprocpid();
+  if (kill(realPid, SIGTERM) != 0) {
+    LOG(ERROR) << "Unable to terminate getprocpid: " << realPid;
     return;
   }
   LOG(INFO) << "TerminateRenderProcess end in render side";
