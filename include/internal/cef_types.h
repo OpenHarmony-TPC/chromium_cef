@@ -4124,6 +4124,8 @@ typedef enum {
   CREATE = 0,
   UPDATE = 1,
   DESTROY = 2,
+  ENTER_BFCACHE = 3,
+  LEAVE_BFCACHE = 4,
 } cef_embed_life_change_t;
 
 ///
