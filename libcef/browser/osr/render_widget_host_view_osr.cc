@@ -2397,7 +2397,6 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
       isBoosting_ = false;
       // maintaince 120fps for 3s
       base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(false);
-      base::ohos::DynamicFrameRateDecision::GetInstance().SetMaxFrameRateThreeSec();
     }
     return;
   }
