@@ -461,6 +461,8 @@ bool NeedsReload() override;
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable) override;
   void UpdateDrawRect() override;
+  void ScrollToWithAnime(float x, float y, int32_t duration) override;
+  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;

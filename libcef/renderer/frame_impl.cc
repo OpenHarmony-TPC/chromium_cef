@@ -1370,6 +1370,31 @@ void CefFrameImpl::UpdateDrawRect() {
   }
   webview->UpdateDrawRect();
 }
+
+void CefFrameImpl::ScrollToWithAnime(float x, float y, int32_t duration) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scrolltowithanime get webview failed";
+    return;
+  }
+  webview->SmoothScroll(x, y, base::Milliseconds(duration));
+}
+
+void CefFrameImpl::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scrollbywithanime get webview failed";
+    return;
+  }
+  auto scroll_offset = webview->GetScrollOffset();
+  webview->SmoothScroll(delta_x + scroll_offset.x(),
+                        delta_y + scroll_offset.y(),
+                        base::Milliseconds(duration));
+}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,

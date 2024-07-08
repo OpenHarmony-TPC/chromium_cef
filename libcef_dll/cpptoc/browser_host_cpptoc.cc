@@ -3592,6 +3592,40 @@ browser_host_set_grant_file_access_dirs(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetGrantFileAccessDirs(dir_listList);
 }
 
+void CEF_CALLBACK browser_host_scroll_to_with_anime(struct _cef_browser_host_t* self,
+                                                    float x,
+                                                    float y,
+                                                    int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollToWithAnime(x, y, duration);
+}
+
+void CEF_CALLBACK browser_host_scroll_by_with_anime(struct _cef_browser_host_t* self,
+                                                    float delta_x,
+                                                    float delta_y,
+                                                    int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y, duration);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3797,6 +3831,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_notify_for_next_touch_event;
   GetStruct()->set_grant_file_access_dirs =
       browser_host_set_grant_file_access_dirs;
+  GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
+  GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
 }
 
 // DESTRUCTOR - Do not edit by hand.
