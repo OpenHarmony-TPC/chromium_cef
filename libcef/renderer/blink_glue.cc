@@ -169,13 +169,13 @@ blink::WebString DumpDocumentText(blink::WebLocalFrame* frame) {
 
 #if BUILDFLAG(IS_OHOS)
 gfx::Size GetContentSize(blink::WebLocalFrame* frame) {
-  blink::WebElement body_element = frame->GetDocument().Body();
-  if (body_element.IsNull()) {
+  blink::WebElement document_element = frame->GetDocument().DocumentElement();
+  if (document_element.IsNull()) {
     return gfx::Size();
   }
 
-  blink::Element* body = body_element.Unwrap<blink::Element>();
-  return gfx::Size(body->scrollWidth(), body->scrollHeight());
+  blink::Element* web_element = document_element.Unwrap<blink::Element>();
+  return gfx::Size(web_element->OffsetWidth(), web_element->OffsetHeight());
 }
 
 gfx::Size GetVisualViewportSize(blink::WebLocalFrame* frame) {
