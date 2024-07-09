@@ -296,6 +296,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
+  void ScrollToWithAnime(float x, float y, int32_t duration) override;
+  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
