@@ -60,7 +60,9 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
   autofill::ContentAutofillDriver* driver =
       autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
   auto mgr = static_cast<OhAutofillManager*>(driver->autofill_manager());
-  mgr->FillData(json_str);
+  if (mgr) {
+    mgr->FillData(json_str);
+  }
 }
 
 void OhAutofillClient::OnAutofillEvent(const std::string& json_str) {

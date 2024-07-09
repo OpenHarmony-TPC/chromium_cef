@@ -41,10 +41,8 @@ const std::string KEY_RECT_X = "x";
 const std::string KEY_RECT_Y = "y";
 const std::string KEY_RECT_W = "width";
 const std::string KEY_RECT_H = "height";
+const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
-
-const std::vector<std::string> ATTRIBUTE_WHITE_LIST = {"name", "nickname", "email",
-  "street-address", "id-card-number", "tel-national"};
 } // namespace
 
 namespace autofill {
@@ -109,6 +107,8 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(field_data.bounds.height() * ratio)));
     list.Append(
+        base::Value::Dict().Set(KEY_PLACEHOLDER, convert.to_bytes(field_data.placeholder)));
+    list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
     auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
@@ -154,6 +154,8 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(form_->fields[index].bounds.height() * ratio)));
     list.Append(
+        base::Value::Dict().Set(KEY_PLACEHOLDER, convert.to_bytes(field_data.placeholder)));
+    list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
     auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
@@ -177,18 +179,14 @@ void OhAutofillManager::FillData(const std::string& json_str) {
 
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
-    auto it = std::find(ATTRIBUTE_WHITE_LIST.begin(), ATTRIBUTE_WHITE_LIST.end(),
-                        field_data.autocomplete_attribute);
-    if (it != ATTRIBUTE_WHITE_LIST.end()) {
-      const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-      if (!value) {
-        continue;
-      }
-      driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
-                                                 convert.from_bytes(*value));
-      is_show_ = false;
+    const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
+    if (!value) {
+      continue;
     }
+    driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
+                                               convert.from_bytes(*value));
   }
+  is_show_ = false;
 }
 
 bool OhAutofillManager::ShouldClearPreviewedForm() {

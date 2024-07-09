@@ -1874,8 +1874,20 @@ typedef struct _cef_browser_host_t {
   ///
   /// Set grant file access dirs.
   ///
-  void(CEF_CALLBACK* set_grant_file_access_dirs)(
-      struct _cef_browser_host_t* self, cef_string_list_t dir_list);
+  void(CEF_CALLBACK *set_grant_file_access_dirs)(
+      struct _cef_browser_host_t *self, cef_string_list_t dir_list);
+
+  ///
+  /// Scroll to the position with anime.
+  ///
+  void(CEF_CALLBACK *scroll_to_with_anime)(struct _cef_browser_host_t *self,
+                                           float x, float y, int32_t duration);
+
+  ///
+  /// Scroll by the delta with anime.
+  ///
+  void(CEF_CALLBACK *scroll_by_with_anime)(struct _cef_browser_host_t *self,
+                                           float delta_x, float delta_y, int32_t duration);
 
   ///
   /// Set the callback of the autofill event.
