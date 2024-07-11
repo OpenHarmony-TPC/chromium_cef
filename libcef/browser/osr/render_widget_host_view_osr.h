@@ -322,6 +322,8 @@ class CefRenderWidgetHostViewOSR
   void OnVsyncEnabled(bool enabled);
 
   void ReportVideoFrameRate(int32_t frameRate);
+
+  void StopBoosting();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

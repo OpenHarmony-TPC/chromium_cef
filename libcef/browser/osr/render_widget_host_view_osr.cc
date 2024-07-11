@@ -97,6 +97,7 @@ const size_t kMaxGestureQueueSize = 10;
 const size_t KTouchEventCachedThreaShold = 1;
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
 const int TOUCH_DOWN_DELAY_TIME = 200;
+const int TOUCH_UP_DURATION_TIME = 100;
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -2388,12 +2389,18 @@ void CefRenderWidgetHostViewOSR::ResetGestureDetection(bool is_lost_focus) {
 #endif
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+void CefRenderWidgetHostViewOSR::StopBoosting() {
+  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+    .CreateSocPerfClientAdapter()
+    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+}
+
 void CefRenderWidgetHostViewOSR::OnTouchDown() {
   if (pointer_state_.GetPointerCount() == 0) {
     if (isBoosting_) {
-      OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .CreateSocPerfClientAdapter()
-          ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+      CEF_POST_DELAYED_TASK(CEF_UIT,
+        base::BindOnce(&CefRenderWidgetHostViewOSR::StopBoosting,
+          weak_ptr_factory_.GetWeakPtr()), TOUCH_UP_DURATION_TIME);
       isBoosting_ = false;
       // maintaince 120fps for 3s
       base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(false);
