@@ -1258,6 +1258,35 @@ render_handler_get_visible_viewport_rect(struct _cef_render_handler_t* self,
   }
 }
 
+void CEF_CALLBACK
+render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
+                                             cef_browser_t* browser,
+                                             const cef_string_t* sceneId,
+                                             bool isStart) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: cef_screen_rect; type: simple_byref_const
+  DCHECK(sceneId);
+  if (!sceneId) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->SendDynamicFrameLossEvent(
+      CefBrowserCToCpp::Wrap(browser), CefString(sceneId), isStart);
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1317,6 +1346,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_overlay_state_changed;
   GetStruct()->get_visible_viewport_rect =
       render_handler_get_visible_viewport_rect;
+  GetStruct()->send_dynamic_frame_loss_event =
+      render_handler_send_dynamic_frame_loss_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -430,6 +430,14 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t *self,
       struct _cef_browser_t *browser,
       cef_rect_t *rect);
+
+  ///
+  /// Called when loss frame.
+  ///
+  void(CEF_CALLBACK* send_dynamic_frame_loss_event)(struct _cef_render_handler_t* self,
+                                                    struct _cef_browser_t* browser,
+                                                    const cef_string_t* sceneId,
+                                                    bool isStart);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
