@@ -1329,7 +1329,17 @@ void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
             browser_impl_->GetAcceleratedWidget())) {
     compositor->SetDrawRect(rect);
+    UpdateDrawRect(rect);
   }
+}
+
+void CefRenderWidgetHostViewOSR::UpdateDrawRect(const gfx::Rect &rect)
+{
+  if (!software_compositor_)
+  {
+    LOG(ERROR) << "software compositor is null when DrawRect";
+  }
+  software_compositor_->DrawRect(rect);
 }
 
 void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
