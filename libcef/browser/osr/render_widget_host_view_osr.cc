@@ -2310,6 +2310,10 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
     return;
   }
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+  OnTouchDown();
+#endif
+
   if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
     pointer_state_.CleanupRemovedTouchPoints(event);
     return;
