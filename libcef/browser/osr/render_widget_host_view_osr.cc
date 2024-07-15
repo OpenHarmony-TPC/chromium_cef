@@ -1335,9 +1335,9 @@ void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
 
 void CefRenderWidgetHostViewOSR::UpdateDrawRect(const gfx::Rect &rect)
 {
-  if (!software_compositor_)
-  {
+  if (!software_compositor_) {
     LOG(ERROR) << "software compositor is null when DrawRect";
+    return;
   }
   software_compositor_->DrawRect(rect);
 }
