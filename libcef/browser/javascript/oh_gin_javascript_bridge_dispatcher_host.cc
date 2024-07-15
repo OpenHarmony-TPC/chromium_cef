@@ -1001,11 +1001,16 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::strin
     return false;
   }
 
-  if (map_tmp[object_id].find(method_name) == map_tmp[object_id].end() ||
-      map_tmp[object_id][method_name].find(gurl.host()) == map_tmp[object_id][method_name].end()) {
-    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, permission map no host("
-               << gurl.host() << ") key or no method name("
+  if (map_tmp[object_id].find(method_name) == map_tmp[object_id].end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level,"
+                  " permission map no method name("
                << method_name << ")";
+    return true;
+  }
+
+  if (map_tmp[object_id][method_name].find(gurl.host()) == map_tmp[object_id][method_name].end()) {
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: method level, permission map no host("
+               << gurl.host() << ") key";
     return false;
   }
   JsProxyPermissionConfigData method_permission = javascript_sync_permission_map_[object_id][method_name][gurl.host()];
