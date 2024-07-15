@@ -143,6 +143,7 @@ class CefRenderWidgetHostViewOSR
   void ResetVSyncFrequency();
   void NotifyForNextTouchEvent(bool need_wait_for_touch_move = true);
   void TriggerVsync();
+  void UpdateDrawRect(const gfx::Rect &rect);
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
