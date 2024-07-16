@@ -129,6 +129,10 @@ void CefBrowserPlatformDelegateOsr::BrowserCreated(
   CefBrowserPlatformDelegateAlloy::BrowserCreated(browser);
 
   if (browser->IsPopup()) {
+    if (!web_contents_) {
+      return;
+    }
+
     // Associate the RenderWidget host view with the browser now because the
     // browser wasn't known at the time that the host view was created.
     content::RenderViewHost* host = web_contents_->GetRenderViewHost();
@@ -143,6 +147,9 @@ void CefBrowserPlatformDelegateOsr::BrowserCreated(
 }
 
 void CefBrowserPlatformDelegateOsr::NotifyBrowserDestroyed() {
+  if (!web_contents_) {
+    return;
+  }
   content::RenderViewHost* host = web_contents_->GetRenderViewHost();
   if (host) {
     CefRenderWidgetHostViewOSR* view =
@@ -644,6 +651,9 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
 }
 
 void CefBrowserPlatformDelegateOsr::DragTargetDragLeave() {
+  if (!web_contents_) {
+    return;
+  }
   if (current_rvh_for_drag_ != web_contents_->GetRenderViewHost() ||
       !drag_data_) {
     return;
@@ -946,6 +956,9 @@ gfx::Point CefBrowserPlatformDelegateOsr::GetParentScreenPoint(
 
 CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
     const {
+  if (!web_contents_) {
+    return nullptr;
+  }
   content::RenderViewHost* host = web_contents_->GetRenderViewHost();
   if (host) {
     return static_cast<CefRenderWidgetHostViewOSR*>(
