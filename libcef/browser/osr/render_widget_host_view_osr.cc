@@ -3048,7 +3048,6 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
-    handler->ReleaseResizeHold(browser_impl_.get());
   }
   bool isDragResized = OHOS::NWeb::NWebResizeHelper::GetInstance().IsDragResizeStart();
   if (isDragResized) {
