@@ -3568,6 +3568,34 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
 }
 
 #if BUILDFLAG(IS_OHOS)
+  void CefBrowserHostBase::SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) {
+    auto web_contents = GetWebContents();
+    if (!web_contents) {
+      LOG(ERROR) << "GetWebContents null";
+      return;
+    }
+
+    autofill::OhAutofillClient* autofill_client =
+      autofill::OhAutofillClient::FromWebContents(web_contents);
+    if (autofill_client) {
+      autofill_client->SetOnMessageCallback(callback);
+    }
+  }
+
+  void CefBrowserHostBase::FillAutofillData(CefRefPtr<CefValue> message) {
+    auto web_contents = GetWebContents();
+    if (!web_contents) {
+      LOG(ERROR) << "GetWebContents null";
+      return;
+    }
+
+    autofill::OhAutofillClient* autofill_client =
+      autofill::OhAutofillClient::FromWebContents(web_contents);
+    if (autofill_client) {
+      autofill_client->FillData(message);
+    }
+  }
+
   bool CefBrowserHostBase::IsSafeBrowsingEnabled() {
     return settings_.is_safe_browsing_enable;
   }

@@ -512,6 +512,9 @@ bool NeedsReload() override;
   void DestroyAllWebMessagePorts() override;
 #endif  // defined(OHOS_MSGPORT)
 
+  void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
+  void FillAutofillData(CefRefPtr<CefValue> message) override;
+
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;

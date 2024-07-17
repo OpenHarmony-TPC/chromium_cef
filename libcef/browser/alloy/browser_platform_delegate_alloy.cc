@@ -243,16 +243,16 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   if (autofill::ContentAutofillDriverFactory::FromWebContents(web_contents_)) {
     return;
   }
-  
+
 #if defined(OHOS_DATALIST)
-  autofill::OhAutofillClient::CreateForWebContents(web_contents_, false);
+  autofill::OhAutofillClient::CreateForWebContents(web_contents_, true);
 #endif
 
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kForBrowser)) {
     // need use components/autofill/core/browser/ module impl save password
-    autofill::OhAutofillClient::CreateForWebContents(web_contents_, false);
+    autofill::OhAutofillClient::CreateForWebContents(web_contents_, true);
     OhPasswordManagerClient::CreateForWebContentsWithAutofillClient(
         web_contents_,
         autofill::OhAutofillClient::FromWebContents(web_contents_));

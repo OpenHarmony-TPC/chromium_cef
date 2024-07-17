@@ -54,6 +54,25 @@ OhAutofillClient::~OhAutofillClient() {
   HideAutofillPopup(autofill::PopupHidingReason::kTabGone);
 }
 
+void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
+  std::string json_str = data->GetStdString();
+  content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
+  autofill::ContentAutofillDriver* driver =
+      autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
+  auto mgr = static_cast<OhAutofillManager*>(driver->autofill_manager());
+  if (mgr) {
+    mgr->FillData(json_str);
+  }
+}
+
+void OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
+  if (callback_) {
+    CefRefPtr<CefValue> data = CefValue::Create();
+    data->SetStdString(json_str);
+    callback_->OnMessage(data);
+  }
+}
+
 void OhAutofillClient::SetSaveFormData(bool enabled) {
   save_form_data_ = enabled;
 }

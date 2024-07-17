@@ -1888,6 +1888,19 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *scroll_by_with_anime)(struct _cef_browser_host_t *self,
                                            float delta_x, float delta_y, int32_t duration);
+
+  ///
+  /// Set the callback of the autofill event.
+  ///
+  void(CEF_CALLBACK* set_autofill_callback)(
+      struct _cef_browser_host_t* self,
+      struct _cef_web_message_receiver_t* callback);
+
+  ///
+  /// Fill autofill data.
+  ///
+  void(CEF_CALLBACK* fill_autofill_data)(struct _cef_browser_host_t* self,
+                                         struct _cef_value_t* message);
 } cef_browser_host_t;
 
 ///

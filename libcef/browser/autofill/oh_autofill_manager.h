@@ -89,6 +89,12 @@ class OhAutofillManager : public AutofillManager {
                          const FieldTypeGroup field_type_group,
                          const url::Origin& triggered_origin);
 
+  absl::optional<std::string> FormDataToJson(const FormData& form,
+                                             const FormFieldData& field,
+                                             const std::string& event);
+  absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
+  void FillData(const std::string& json_str);
+
  protected:
   friend void OhDriverInitHook(AutofillClient* client,
                                ContentAutofillDriver* driver);
@@ -158,6 +164,8 @@ class OhAutofillManager : public AutofillManager {
   void StartNewLoggingSession();
   bool has_server_prediction_ = false;
   base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
+  bool is_show_ = false;
+  std::unique_ptr<FormData> form_;
 };
 
 }  // namespace autofill

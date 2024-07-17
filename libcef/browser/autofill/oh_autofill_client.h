@@ -18,6 +18,7 @@
 #include "components/autofill/core/browser/payments/legal_message_line.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "include/cef_browser.h"
 
 namespace autofill {
 class AutocompleteHistoryManager;
@@ -77,6 +78,11 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   bool GetSaveFormData() const;
 
   // AutofillClient:
+  void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback) {
+    callback_ = callback;
+  }
+  void FillData(CefRefPtr<CefValue> data);
+  void OnAutofillEvent(const std::string& json_str);
   bool IsOffTheRecord() override;
   scoped_refptr<network::SharedURLLoaderFactory> GetURLLoaderFactory() override;
   autofill::AutofillDownloadManager* GetDownloadManager() override;
@@ -214,6 +220,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   std::unique_ptr<autofill::PersonalDataManager> personaldata_manager_;
   std::unique_ptr<autofill::AutocompleteHistoryManager>
       autocomplete_history_manager_;
+  CefRefPtr<CefWebMessageReceiver> callback_;
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;
 #endif
