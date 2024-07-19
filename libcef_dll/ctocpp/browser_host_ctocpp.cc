@@ -3380,6 +3380,21 @@ void CefBrowserHostCToCpp::FillAutofillData(CefRefPtr<CefValue> message) {
   _struct->fill_autofill_data(_struct, CefValueCToCpp::Unwrap(message));
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollFocusedEditableNodeIntoView() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_focused_editable_node_into_view)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_focused_editable_node_into_view(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

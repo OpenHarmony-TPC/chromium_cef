@@ -387,6 +387,24 @@ void CefBrowserPlatformDelegateOsr::WasOccluded(bool occluded) {
   }
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+void CefBrowserPlatformDelegateOsr::ScrollFocusedEditableNodeIntoView() {
+  content::WebContentsImpl* contents =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+  if (!contents) {
+    LOG(ERROR) << "CefBrowserPlatformDelegateOsr::ScrollFocusedEditableNodeIntoView web_contents is null";
+    return;
+  }
+
+  auto* input_handler = contents->GetFocusedFrameWidgetInputHandler();
+  if (!input_handler) {
+    LOG(ERROR) << "CefBrowserPlatformDelegateOsr::ScrollFocusedEditableNodeIntoView input_handler is null";
+    return;
+  }
+  input_handler->ScrollFocusedEditableNodeIntoView();
+}
+#endif
+
 void CefBrowserPlatformDelegateOsr::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view)

@@ -124,6 +124,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
+#if defined(OHOS_INPUT_EVENTS)
+  void ScrollFocusedEditableNodeIntoView() override;
+#endif
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded(bool occluded) override;
   void OnWindowShow() override;

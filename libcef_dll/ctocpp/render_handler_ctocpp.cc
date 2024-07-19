@@ -1065,6 +1065,28 @@ void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> bro
   _struct->send_dynamic_frame_loss_event(_struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnResizeScrollableViewport(
+    CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_resize_scrollable_viewport)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_resize_scrollable_viewport(_struct, CefBrowserCppToC::Wrap(browser));
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}

@@ -73,6 +73,9 @@ class CefBrowserPlatformDelegateOsr
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
   void NotifyForNextTouchEvent() override;
 #endif
+#if defined(OHOS_INPUT_EVENTS)
+  void ScrollFocusedEditableNodeIntoView() override;
+#endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(cef_paint_element_type_t type) override;
   void SendExternalBeginFrame() override;

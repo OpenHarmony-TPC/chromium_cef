@@ -1287,6 +1287,28 @@ render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), CefString(sceneId), isStart);
 }
 
+void CEF_CALLBACK
+render_handler_on_resize_scrollable_viewport(struct _cef_render_handler_t* self,
+                                             cef_browser_t* browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnResizeScrollableViewport(
+      CefBrowserCToCpp::Wrap(browser));
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1348,6 +1370,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_get_visible_viewport_rect;
   GetStruct()->send_dynamic_frame_loss_event =
       render_handler_send_dynamic_frame_loss_event;
+  GetStruct()->on_resize_scrollable_viewport =
+  render_handler_on_resize_scrollable_viewport;
 }
 
 // DESTRUCTOR - Do not edit by hand.

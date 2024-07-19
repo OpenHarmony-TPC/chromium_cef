@@ -3911,3 +3911,9 @@ void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeTo
   controller.GetBackForwardCache().SetTimeToLive(timeToLive);
 }
 #endif
+
+#if defined(OHOS_INPUT_EVENTS)
+void CefBrowserHostBase::ScrollFocusedEditableNodeIntoView() {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+#endif

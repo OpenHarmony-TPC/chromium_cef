@@ -300,6 +300,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
+  void ScrollFocusedEditableNodeIntoView() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

@@ -1736,11 +1736,12 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
                                 weak_ptr_factory_.GetWeakPtr()));
 #endif
   }
-
+  bool size_changed = false;
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   gfx::SizeF scrollable_viewport_size = metadata.scrollable_viewport_size;
   if (scrollable_viewport_size != scrollable_viewport_size_) {
     scrollable_viewport_size_ = scrollable_viewport_size;
+    size_changed = true;
   }
 #endif
 
@@ -1800,6 +1801,16 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientClippedSelectionBounds(clipped_selection_bounds_);
   }
 #endif  // OHOS_CLIPBOARD
+
+#if defined(OHOS_INPUT_EVENTS)
+  if (size_changed) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    if (handler) {
+      handler->OnResizeScrollableViewport(browser_impl_->GetBrowser());
+    }
+  }
+#endif
 }
 
 std::unique_ptr<viz::HostDisplayClient>

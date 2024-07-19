@@ -531,6 +531,12 @@ bool CefBrowserPlatformDelegate::WebPageSnapshot(
 }
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+void CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView() {
+  NOTREACHED();
+}
+#endif
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {
