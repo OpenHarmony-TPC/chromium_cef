@@ -708,6 +708,20 @@ bool AlloyBrowserHostImpl::IsWindowRenderingDisabled() {
   return IsWindowless();
 }
 
+#if defined(OHOS_INPUT_EVENTS)
+void AlloyBrowserHostImpl::ScrollFocusedEditableNodeIntoView() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&AlloyBrowserHostImpl::ScrollFocusedEditableNodeIntoView, this));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->ScrollFocusedEditableNodeIntoView();
+  }
+}
+#endif
+
 void AlloyBrowserHostImpl::WasResized() {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,

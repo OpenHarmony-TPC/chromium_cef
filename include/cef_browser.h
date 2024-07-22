@@ -2017,5 +2017,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void FillAutofillData(CefRefPtr<CefValue> message) = 0;
+
+  ///
+  /// ScrollFocusedEditableNodeIntoView.
+  ///
+  /*--cef()--*/
+  virtual void ScrollFocusedEditableNodeIntoView() = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

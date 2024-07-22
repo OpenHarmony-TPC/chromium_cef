@@ -3670,6 +3670,21 @@ browser_host_fill_autofill_data(struct _cef_browser_host_t* self,
       CefValueCppToC::Unwrap(message));
 }
 
+void CEF_CALLBACK
+browser_host_scroll_focused_editable_node_into_view(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollFocusedEditableNodeIntoView();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3879,6 +3894,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->set_autofill_callback = browser_host_set_autofill_callback;
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
+  GetStruct()->scroll_focused_editable_node_into_view =
+      browser_host_scroll_focused_editable_node_into_view;
 }
 
 // DESTRUCTOR - Do not edit by hand.

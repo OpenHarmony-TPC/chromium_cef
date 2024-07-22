@@ -448,6 +448,9 @@ bool NeedsReload() override;
   void SetAudioExclusive(bool audioExclusive) override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
   void NotifyForNextTouchEvent() override;
+#if defined(OHOS_INPUT_EVENTS)
+  void ScrollFocusedEditableNodeIntoView() override;
+#endif
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
 #endif  // OHOS_PAGE_UP_DOWN

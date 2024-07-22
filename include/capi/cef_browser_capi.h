@@ -1901,6 +1901,11 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* fill_autofill_data)(struct _cef_browser_host_t* self,
                                          struct _cef_value_t* message);
+
+  ///
+  /// ScrollFocusedEditableNodeIntoView.
+  ///
+  void(CEF_CALLBACK* scroll_focused_editable_node_into_view)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

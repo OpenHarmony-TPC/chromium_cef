@@ -498,6 +498,10 @@ class CefBrowserPlatformDelegate {
                                cef_web_snapshot_callback_t callback);
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+  virtual void ScrollFocusedEditableNodeIntoView();
+#endif
+
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;

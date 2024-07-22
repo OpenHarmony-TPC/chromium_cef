@@ -145,6 +145,7 @@ class CefRenderHandlerCToCpp
   void SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
                                  const CefString& sceneId,
                                  bool isStart) override;
+  void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

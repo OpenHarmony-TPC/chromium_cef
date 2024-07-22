@@ -438,6 +438,13 @@ typedef struct _cef_render_handler_t {
                                                     struct _cef_browser_t* browser,
                                                     const cef_string_t* sceneId,
                                                     bool isStart);
+
+  ///
+  /// OnResizeScrollableViewport.
+  ///
+  void(CEF_CALLBACK *on_resize_scrollable_viewport)(
+      struct _cef_render_handler_t *self,
+      struct _cef_browser_t *browser);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
