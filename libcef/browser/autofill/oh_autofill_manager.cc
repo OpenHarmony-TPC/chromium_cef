@@ -125,6 +125,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
     return absl::nullopt;
   }
 
+  if (form_ == nullptr) {
+    return absl::nullopt;
+  }
+
   // Chromium does not assign values to FormFieldData.bounds in save scenario,
   // but oh-autofill-system requires valid bounds to pass code check,
   // so using the cached FormFieldData.bounds
@@ -167,6 +171,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
 }
 
 void OhAutofillManager::FillData(const std::string& json_str) {
+  if (form_ == nullptr) {
+    return;
+  }
+
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
     return;
@@ -385,7 +393,9 @@ void OhAutofillManager::Reset() {
   LOG(INFO) << "Reset";
   AutofillManager::Reset();
   is_show_ = false;
-  form_.reset(nullptr);
+  if (form_) {
+    form_.reset(nullptr);
+  }
   has_server_prediction_ = false;
 }
 
