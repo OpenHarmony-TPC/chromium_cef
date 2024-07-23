@@ -827,7 +827,11 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
       LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
       return;
     }
-    base::ohos::DynamicFrameRateDecision::GetInstance().SetVisible(visible);
+    if (auto* host = content::GpuProcessHost::Get()) {
+      if (auto* host_impl = host->gpu_host()) {
+        host_impl->SetVisible(visible);
+      }
+    }
   }
 }
 

@@ -61,6 +61,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include "content/browser/gpu/gpu_process_host.h"
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
@@ -68,7 +69,8 @@
 #include "services/device/public/mojom/screen_orientation.mojom.h"
 #include "third_party/blink/renderer/platform/widget/input/input_handler_proxy.h"
 #include "content/browser/browser_main_loop.h"
-
+#include "ohos_adapter_helper.h"
+#include "ui/events/gesture_detection/gesture_configuration.h"
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -189,9 +191,9 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
 
   void OnVsyncReceived() override { view_->OnVsyncReceived(); }
 
-  void OnVsyncEnabled(bool enabled) override { view_->OnVsyncEnabled(enabled); }
-
-  void ReportVideoFrameRate(int32_t frameRate) override { view_->ReportVideoFrameRate(frameRate); }
+  // std::vector<OHOS::NWeb::FrameRateSetting> GetLTPOConfig(const std::string& settingName) {
+  //   return view_->GetLTPOConfig(settingName);
+  // }
 #endif
 
  private:
@@ -2357,9 +2359,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   if (!result.succeeded) {
     pointer_state_.MarkUnchangedTouchPointsAsStationary(&touch_event, event);
   }
-#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
-  OnTouchDown();
-#endif
+
   if (!render_widget_host_) {
     return;
   }
@@ -2428,15 +2428,25 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
           weak_ptr_factory_.GetWeakPtr()), TOUCH_UP_DURATION_TIME);
       isBoosting_ = false;
       // maintaince 120fps for 3s
-      base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(false);
+      if (auto* host = content::GpuProcessHost::Get()) {
+        if (auto* host_impl = host->gpu_host()) {
+          host_impl->SetHasTouchPoint(false);
+        }
+      }
     }
     return;
   }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  if (!isBoosting_) {
+    if (auto* host = content::GpuProcessHost::Get()) {
+     if (auto* host_impl = host->gpu_host()) {
+        host_impl->SetHasTouchPoint(true);
+      }
+    }
+  }
   isBoosting_ = true;
-  base::ohos::DynamicFrameRateDecision::GetInstance().SetHasTouchPoint(true);
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
       weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
@@ -2628,7 +2638,6 @@ void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
 void CefRenderWidgetHostViewOSR::OnVsync() {
   TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsync",
     "gesture_event_queue", gesture_event_queue_.size());
-
   if (gesture_event_queue_.size() > kMaxGestureQueueSize) {
     LOG(ERROR) << "gesture event queue size is error:"
                << gesture_event_queue_.size();
@@ -2660,20 +2669,6 @@ void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
     SendTouchGestureEvent(touchEvent);
     web_touch_event_queue_.pop_front();
   }
-}
-
-void CefRenderWidgetHostViewOSR::OnVsyncEnabled(bool enabled)
-{
-  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncEnabled",
-    "enabled", enabled);
-  base::ohos::DynamicFrameRateDecision::GetInstance().SetVsyncEnabled(enabled);
-}
-
-void CefRenderWidgetHostViewOSR::ReportVideoFrameRate(int32_t frameRate)
-{
-  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::ReportVideoFrameRate",
-    "frameRate", frameRate);
-  base::ohos::DynamicFrameRateDecision::GetInstance().ReportVideoFrameRate(frameRate);
 }
 #endif
 

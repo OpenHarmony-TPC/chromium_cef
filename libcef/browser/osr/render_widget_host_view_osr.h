@@ -52,6 +52,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include <unordered_map>
+#include "third_party/ohos_ndk/includes/ohos_adapter/adapter_base.h"
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
@@ -320,9 +321,9 @@ class CefRenderWidgetHostViewOSR
 
   void OnTouchDown();
 
-  void OnVsyncEnabled(bool enabled);
+  // std::vector<OHOS::NWeb::FrameRateSetting> GetLTPOConfig(const std::string& settingName);
 
-  void ReportVideoFrameRate(int32_t frameRate);
+  // void ReportVideoFrameRate(int32_t frameRate);
 
   void StopBoosting();
 #endif
