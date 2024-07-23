@@ -190,10 +190,6 @@ class CefDelegatedFrameHostClient : public content::DelegatedFrameHostClient {
   void OnVsync() override { view_->OnVsync(); }
 
   void OnVsyncReceived() override { view_->OnVsyncReceived(); }
-
-  // std::vector<OHOS::NWeb::FrameRateSetting> GetLTPOConfig(const std::string& settingName) {
-  //   return view_->GetLTPOConfig(settingName);
-  // }
 #endif
 
  private:

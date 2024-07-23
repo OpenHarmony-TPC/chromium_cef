@@ -321,10 +321,6 @@ class CefRenderWidgetHostViewOSR
 
   void OnTouchDown();
 
-  // std::vector<OHOS::NWeb::FrameRateSetting> GetLTPOConfig(const std::string& settingName);
-
-  // void ReportVideoFrameRate(int32_t frameRate);
-
   void StopBoosting();
 #endif
 
