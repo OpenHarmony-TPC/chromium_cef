@@ -182,6 +182,24 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
 #endif  // #ifdef OHOS_CLIPBOARD
 }
 
+#ifdef OHOS_DRAG_DROP
+void CefRenderWidgetHostViewOSR::HideHandleAndQuickMenuIfNecessary(bool hide_handles) {
+  if (handles_hidden_by_selection_ui_ == hide_handles) {
+    return;
+  }
+  handles_hidden_by_selection_ui_ = hide_handles;
+  if (rwhv_) {
+    auto browser = rwhv_->browser_impl();
+    if (browser && browser->client()) {
+      auto handler = browser->client()->GetContextMenuHandler();
+      if (handler) {
+        handler->HideHandleAndQuickMenuIfNecessary(hide_handles);
+      }
+    }
+  }
+}
+#endif
+
 #ifdef OHOS_CLIPBOARD
 void CefTouchSelectionControllerClientOSR::SetTemporarilyHidden(bool hidden) {
   if (rwhv_ && rwhv_->selection_controller()) {
@@ -343,6 +361,10 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
     handler->OnQuickMenuDismissed(browser.get(), browser->GetFocusedFrame(), false);
+#ifdef OHOS_DRAG_DROP
+    handles_hidden_by_selection_ui_ = false;
+    NotifyTouchSelectionChanged(false);
+#endif
   }
 
 #ifdef OHOS_CLIPBOARD
@@ -520,6 +542,9 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
             &CefTouchSelectionControllerClientOSR::ExecuteCommand,
             weak_ptr_factory_.GetWeakPtr())));
     quick_menu_running_ = true;
+#ifdef OHOS_DRAG_DROP
+    handles_hidden_by_selection_ui_ = false;
+#endif
     if (!handler->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
             {static_cast<int>(std::round(origin.x())),
@@ -665,7 +690,12 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
   // This function (implicitly) uses active_menu_client_, so we don't go to the
   // active view for this.
 #ifdef OHOS_CLIPBOARD
+#ifdef OHOS_DRAG_DROP
+  LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event)
+            << ", handles_hidden_by_selection_ui = " << handles_hidden_by_selection_ui_;
+#else
   LOG(INFO) << "Selection Event Value = " << static_cast<int32_t>(event);
+#endif
   SetTemporarilyHidden(false);
   if (!rwhv_) {
     LOG(ERROR) << "Fatal error: rwhv_ is null";
@@ -717,10 +747,24 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       break;
     case ui::INSERTION_HANDLE_MOVED:
+    #ifdef OHOS_DRAG_DROP
+      if (handles_hidden_by_selection_ui_) {
+        LOG(INFO) << "Current Selection Handle Menu Hidden";
+        NotifyTouchSelectionChanged(true);
+        return;
+      }
+    #endif
       if (quick_menu_requested_) {
         quick_menu_requested_ = false;
       }
     case ui::SELECTION_HANDLES_MOVED:
+    #ifdef OHOS_DRAG_DROP
+      if (handles_hidden_by_selection_ui_) {
+        LOG(INFO) << "Current Selection Handle Menu Hidden";
+        NotifyTouchSelectionChanged(true);
+        return;
+      }
+    #endif
       if (!handle_drag_in_progress_) {
         if (!IsVaildSelectionHandleMove()) {
           LOG(INFO) << "Current Selection Handle Move Event Is Invalid";
@@ -744,6 +788,12 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
+    #ifdef OHOS_DRAG_DROP
+      if (handles_hidden_by_selection_ui_) {
+        LOG(INFO) << "Current Selection Handle Menu Hidden";
+        return;
+      }
+    #endif
       if (controller && controller->GetInsertHandle() && controller->GetInsertHandle()->alpha()) {
         LOG(INFO) << "Selection handles is show";
         return;

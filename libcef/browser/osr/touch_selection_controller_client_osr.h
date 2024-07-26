@@ -42,6 +42,9 @@ class CefTouchSelectionControllerClientOSR
   ~CefTouchSelectionControllerClientOSR() override;
 
   void CloseQuickMenuAndHideHandles();
+#ifdef OHOS_DRAG_DROP
+  void HideHandleAndQuickMenuIfNecessary(bool hide_handles);
+#endif
 #ifdef OHOS_CLIPBOARD
   void SetTemporarilyHidden(bool hidden);
   void NotifyTouchSelectionChanged(bool need_report);
@@ -180,6 +183,9 @@ class CefTouchSelectionControllerClientOSR
   base::TimeTicks select_handle_move_timer_;
   gfx::Rect clipped_selection_bounds_;
   bool mouse_quick_menu_running_ = false;
+#endif
+#ifdef OHOS_DRAG_DROP
+  bool handles_hidden_by_selection_ui_ = false;
 #endif
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;
 };

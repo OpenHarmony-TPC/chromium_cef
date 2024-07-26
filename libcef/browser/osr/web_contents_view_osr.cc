@@ -210,6 +210,12 @@ void CefWebContentsViewOSR::StartDragging(
   if (browser.get()) {
     browser->StartDragging(drop_data, allowed_ops, image, cursor_offset,
                            event_info, source_rwh);
+#ifdef OHOS_DRAG_DROP
+    CefRenderWidgetHostViewOSR* view = GetView();
+    if (view) {
+      view->SetTextHandlesTemporarilyHiddenByDrag(true, true);
+    }
+#endif
   } else if (web_contents_) {
     static_cast<content::WebContentsImpl*>(web_contents_)
         ->SystemDragEnded(source_rwh);

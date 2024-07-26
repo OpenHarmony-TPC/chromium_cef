@@ -3270,6 +3270,19 @@ bool CefRenderWidgetHostViewOSR::NeedPopupInsertTouchHandleQuickMenu() {
   return false;
 }
 
+#ifdef OHOS_DRAG_DROP
+void CefRenderWidgetHostViewOSR::SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging) {
+  LOG(INFO) << "SetTextHandlesTemporarilyHiddenByDrag hide_handles:" << hide_handles << ", dragging:" << dragging;
+  if (!dragging && selection_controller_) {
+    selection_controller_->ResetResponsePendingInputEvent();
+  }
+
+  if (selection_controller_client_) {
+    selection_controller_client_->HideHandleAndQuickMenuIfNecessary(hide_handles);
+  }
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnRootLayerChanged() {
   if (browser_impl_.get()) {
     CefRefPtr<CefRenderHandler> handler =

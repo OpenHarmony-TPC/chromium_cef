@@ -223,6 +223,12 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnGetImageFromCache(CefRefPtr<CefImage> image) {}
+
+  ///
+  /// Called when you need to temporarily hide/restore the handle menu.
+  ///
+  /*--cef()--*/
+  virtual void HideHandleAndQuickMenuIfNecessary(bool hide) {}
 #endif
 };
 
