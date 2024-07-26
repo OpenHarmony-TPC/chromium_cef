@@ -784,6 +784,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   }
 
   bool had_no_pointer = true;
+  std::vector<CefTouchEvent> filtered_event_list;
   for (const auto& event : event_list) {
     // Update the touch event first.
 #ifdef OHOS_CLIPBOARD
@@ -791,13 +792,17 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
     pointer_state_.SetFromOverlay(event.from_overlay);
 #endif  // #ifdef OHOS_CLIPBOARD
     if (!pointer_state_.OnTouch(event)) {
-      return;
+      continue;
     }
 
     if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
       pointer_state_.CleanupRemovedTouchPoints(event);
-      return;
+      continue;
     }
+    filtered_event_list.emplace_back(event);
+  }
+  if (filtered_event_list.empty()) {
+    return;
   }
 
   ui::FilteredGestureProvider::TouchHandlingResult result =
@@ -812,7 +817,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SendTouchEventList web_touch_event_count_:"
                  << web_touch_event_count_;
 
-  for (const auto& event : event_list) {
+  for (const auto& event : filtered_event_list) {
     pointer_state_.CleanupRemovedTouchPoints(event);
 
     // Set unchanged touch point to StateStationary for touchmove and
