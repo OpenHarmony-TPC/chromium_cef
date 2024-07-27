@@ -828,8 +828,6 @@ bool TerminateRenderProcess() override;
   using PortHandle = std::pair<uint64_t, uint64_t>;
   std::map<PortHandle, MessagePipe> portMap_;
   std::set<std::string> postedPorts_;
-  std::unordered_map<std::string, scoped_refptr<base::SequencedTaskRunner>>
-      runnerMap_;
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
       receiverMap_;
 
