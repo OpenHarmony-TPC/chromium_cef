@@ -183,7 +183,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
 }
 
 #ifdef OHOS_DRAG_DROP
-void CefRenderWidgetHostViewOSR::HideHandleAndQuickMenuIfNecessary(bool hide_handles) {
+void CefTouchSelectionControllerClientOSR::HideHandleAndQuickMenuIfNecessary(bool hide_handles) {
   if (handles_hidden_by_selection_ui_ == hide_handles) {
     return;
   }
