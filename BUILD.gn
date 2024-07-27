@@ -1028,8 +1028,6 @@ source_set("libcef_static") {
       "libcef/browser/autofill/oh_autofill_provider.cc",
       "libcef/browser/autofill/oh_autofill_provider.h",
       "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_response.h",
-      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.cc",
-      "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_client.cc",
