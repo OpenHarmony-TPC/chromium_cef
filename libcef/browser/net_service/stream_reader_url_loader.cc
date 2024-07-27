@@ -828,10 +828,9 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
                                std::move(cached_metadata_));
     
 #if BUILDFLAG(IS_OHOS)
-    bool is_sync_mode = request_id_ & 1;
     LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders request_id_=" << request_id_
-                << ", is_sync_mode=" << is_sync_mode;
-    if (!is_sync_mode || !TryTransferDataWithSharedMemory()) {
+                << ", request_.is_sync_mode=" << request_.is_sync_mode;
+    if (!request_.is_sync_mode || !TryTransferDataWithSharedMemory()) {
       ReadMore();
     }
 #else
