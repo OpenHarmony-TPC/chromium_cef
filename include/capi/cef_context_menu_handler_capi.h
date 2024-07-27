@@ -230,6 +230,13 @@ typedef struct _cef_context_menu_handler_t {
   void(CEF_CALLBACK* on_get_image_from_cache)(
       struct _cef_context_menu_handler_t* self,
       struct _cef_image_t* image);
+
+  ///
+  /// Called when you need to temporarily hide/restore the handle menu.
+  ///
+  void(CEF_CALLBACK* hide_handle_and_quick_menu_if_necessary)(
+      struct _cef_context_menu_handler_t* self,
+      int hide);
 } cef_context_menu_handler_t;
 
 ///

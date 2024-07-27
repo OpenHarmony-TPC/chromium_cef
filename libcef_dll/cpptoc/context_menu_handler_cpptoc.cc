@@ -410,6 +410,23 @@ void CEF_CALLBACK context_menu_handler_on_get_image_from_cache(
       CefImageCToCpp::Wrap(image));
 }
 
+void CEF_CALLBACK context_menu_handler_hide_handle_and_quick_menu_if_necessary(
+    struct _cef_context_menu_handler_t* self,
+    int hide) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefContextMenuHandlerCppToC::Get(self)->HideHandleAndQuickMenuIfNecessary(
+      hide ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -433,6 +450,8 @@ CefContextMenuHandlerCppToC::CefContextMenuHandlerCppToC() {
       context_menu_handler_on_get_image_for_context_node;
   GetStruct()->on_get_image_from_cache =
       context_menu_handler_on_get_image_from_cache;
+  GetStruct()->hide_handle_and_quick_menu_if_necessary =
+      context_menu_handler_hide_handle_and_quick_menu_if_necessary;
 }
 
 // DESTRUCTOR - Do not edit by hand.

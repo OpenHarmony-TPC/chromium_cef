@@ -384,6 +384,22 @@ void CefContextMenuHandlerCToCpp::OnGetImageFromCache(
   _struct->on_get_image_from_cache(_struct, CefImageCppToC::Wrap(image));
 }
 
+NO_SANITIZE("cfi-icall")
+void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(
+    bool hide) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_context_menu_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, hide_handle_and_quick_menu_if_necessary)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->hide_handle_and_quick_menu_if_necessary(_struct, hide);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefContextMenuHandlerCToCpp::CefContextMenuHandlerCToCpp() {}

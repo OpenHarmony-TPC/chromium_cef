@@ -72,6 +72,7 @@ class CefContextMenuHandlerCToCpp
   void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefImage> image) override;
   void OnGetImageFromCache(CefRefPtr<CefImage> image) override;
+  void HideHandleAndQuickMenuIfNecessary(bool hide) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_

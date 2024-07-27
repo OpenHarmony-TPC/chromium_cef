@@ -470,6 +470,10 @@ class CefRenderWidgetHostViewOSR
   float GetPageScaleFactor();
 #endif
 
+#ifdef OHOS_DRAG_DROP
+  void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
+#endif
+
  private:
   void SetFrameRate();
   bool SetScreenInfo();

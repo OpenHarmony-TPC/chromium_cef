@@ -932,6 +932,13 @@ void CefBrowserPlatformDelegateOsr::DragSourceSystemDragEnded() {
   web_contents->SystemDragEnded(drag_start_rwh_.get());
 
   drag_start_rwh_ = nullptr;
+
+#ifdef OHOS_DRAG_DROP
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetTextHandlesTemporarilyHiddenByDrag(false, false);
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::AccessibilityEventReceived(
