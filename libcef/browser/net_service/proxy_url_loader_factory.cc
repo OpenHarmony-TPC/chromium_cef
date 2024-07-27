@@ -941,9 +941,7 @@ void InterceptedRequest::InterceptResponseReceived(
   if (response) {
     // Non-null response: make sure to use it as an override for the
     // normal network data.
-    if (request_) {
-      TRACE_EVENT1("net", "InterceptedRequest::InterceptResponseReceived", "url", request_.url.spec());
-    }
+    TRACE_EVENT1("net", "InterceptedRequest::InterceptResponseReceived", "url", request_.url.spec());
     ContinueAfterInterceptWithOverride(std::move(response));
   } else {
     // Request was not intercepted/overridden. Proceed with loading
