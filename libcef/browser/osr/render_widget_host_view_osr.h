@@ -709,6 +709,7 @@ class CefRenderWidgetHostViewOSR
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   bool isBoosting_ = false;
+  bool is_fling_ = false;
 #endif
 
 #ifdef OHOS_CLIPBOARD
