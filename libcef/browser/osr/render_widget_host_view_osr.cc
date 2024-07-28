@@ -2416,6 +2416,9 @@ void CefRenderWidgetHostViewOSR::ResetGestureDetection(bool is_lost_focus) {
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
 void CefRenderWidgetHostViewOSR::StopBoosting() {
+  if (is_fling_) {
+    return;
+  }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
     .CreateSocPerfClientAdapter()
     ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
@@ -3436,6 +3439,7 @@ void CefRenderWidgetHostViewOSR::DidStopFlinging() {
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
     handler->OnOverScrollFlingEnd(browser_impl_.get());
+    is_fling_ = false;
   }
 }
 
@@ -3521,6 +3525,7 @@ void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
       handler->FilterScrollEvent(browser_impl_.get(),
                                   0, 0, web_event.data.fling_start.velocity_x,
                                   web_event.data.fling_start.velocity_y);
+    is_fling_ = true;
   }
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
