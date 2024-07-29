@@ -223,6 +223,11 @@ void OhGinJavascriptBridgeDispatcherHost::PrimaryMainFrameRenderProcessGone(
 
 void OhGinJavascriptBridgeDispatcherHost::ParseJson(const std::string& json_data, const int32_t& object_id, bool is_async) {
   if (json_data.empty()) {
+    if (is_async) {
+      javascript_async_permission_map_.erase(object_id);
+    } else {
+      javascript_sync_permission_map_.erase(object_id);
+    }
     LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::ParseJson: permission string is empty";
     return;
   }
@@ -553,7 +558,6 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
     bool is_async) {
   bool ret = false;
   auto& map = is_async ? async_method_map_ : sync_method_map_;
-  auto& permission_map = is_async ? javascript_async_permission_map_ : javascript_sync_permission_map_;
   if (map.empty()) {
     return ret = false;
   }
@@ -565,7 +569,6 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
         if (object_name_set.size() == 0) {
           object_id_map_.erase(object_id);
           map.erase(object_id);
-          permission_map.erase(object_id);
         }
 
         ret = true;
@@ -1052,6 +1055,12 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     OhGinJavascriptBridgeError* error_code) {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod: "
                 "method name: " << method_name;
+  if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
+        !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+    *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+    return;
+  }
+
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -1069,17 +1078,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
-        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
-        return;
-      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
-        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
-        return;
-      }
     }
   }
 
@@ -1112,6 +1113,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     const base::Value::List& arguments) {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync: "
                 "async method name: " << method_name;
+  if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
+        !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync: jsb permission denied";
+    return;
+  }
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -1129,15 +1135,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
-        return;
-      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
-        return;
-      }
     }
   }
 
@@ -1164,6 +1164,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     int fd,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
+        !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+    *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
+    return;
+  }
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -1181,17 +1186,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
-        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
-        return;
-      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
-        *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
-        return;
-      }
     }
   }
 
@@ -1223,6 +1220,11 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
     const std::string& method_name,
     const base::Value::List& arguments,
     int fd) {
+  if (!CheckIsInJsPermission(document_url, method_name, object_id, false) ||
+        !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
+    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync: jsb permission denied";
+    return;
+  }
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -1240,15 +1242,9 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbufAsync(
     if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
       MethodPair object_pair = sync_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, false)) {
-        return;
-      }
     } else if (async_method_map_.find(object_id) != async_method_map_.end()) {
       MethodPair object_pair = async_method_map_[object_id];
       classname = object_pair.first;
-      if (!CheckIsInJsPermission(document_url, method_name, object_id, true)) {
-        return;
-      }
     }
   }
 
