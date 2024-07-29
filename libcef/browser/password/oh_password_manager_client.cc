@@ -682,6 +682,45 @@ OhPasswordManagerClient::GetURLLoaderFactory() {
       ->GetURLLoaderFactoryForBrowserProcess();
 }
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+void OhPasswordManagerClient::FillAccountSuggestion(
+    const GURL& page_url,
+    const std::u16string& username,
+    const std::u16string& password) {
+  password_manager::ContentPasswordManagerDriver* driver =
+      driver_factory_->GetDriverForFrame(web_contents()->GetFocusedFrame());
+  if (!driver) {
+    return;
+  }
+
+  driver->FillAccountSuggestion(page_url, username, password);
+}
+
+void OhPasswordManagerClient::OnRequestAutofill(
+    PasswordManagerDriver* driver,
+    const GURL& page_url,
+    autofill::FormRendererId form_id,
+    const autofill::mojom::OhosPasswordFormAutofillState state,
+    const autofill::InputFillRequestData& username_data,
+    const autofill::InputFillRequestData& password_data) {
+  LOG(INFO) << "On request autofill, state=" << static_cast<int>(state)
+            << ", username.bounds=" << username_data.bounds.ToString()
+            << ", username.is_focus=" << username_data.is_focused
+            << ", username.type=" << username_data.type
+            << ", username.placeholder=" << username_data.placeholder
+            << ", username.autocomplete_attr="
+            << username_data.autocomplete_attr
+            << ", password.bounds=" << password_data.bounds.ToString()
+            << ", password.is_focus=" << password_data.is_focused
+            << ", password.type=" << password_data.type
+            << ", password.placeholder=" << password_data.placeholder
+            << ", password.autocomplete_attr="
+            << password_data.autocomplete_attr;
+
+
+}
+#endif
+
 void OhPasswordManagerClient::UpdateFormManagers() {
   password_manager_.UpdateFormManagers();
 }
