@@ -221,7 +221,7 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h"
 #endif
 
-#ifdef OHOS_EX_PASSWORD
+#if defined(OHOS_EX_PASSWORD) || defined(OHOS_PASSWORD_AUTOFILL)
 #include "components/password_manager/content/browser/content_password_manager_driver_factory.h"
 #endif //OHOS_EX_PASSWORD
 
@@ -1722,23 +1722,20 @@ void AlloyContentBrowserClient::
           },
           &render_frame_host));
 
-#ifdef OHOS_EX_PASSWORD
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    associated_registry.AddInterface<autofill::mojom::PasswordManagerDriver>(
-        base::BindRepeating(
-            [](content::RenderFrameHost* render_frame_host,
-               mojo::PendingAssociatedReceiver<
-                   autofill::mojom::PasswordManagerDriver> receiver) {
-              password_manager::ContentPasswordManagerDriverFactory::
-                  BindPasswordManagerDriver(std::move(receiver),
-                                            render_frame_host);
-            },
-            &render_frame_host));
+#if defined(OHOS_EX_PASSWORD) || defined(OHOS_PASSWORD_AUTOFILL)
+  associated_registry.AddInterface<autofill::mojom::PasswordManagerDriver>(
+      base::BindRepeating(
+          [](content::RenderFrameHost* render_frame_host,
+              mojo::PendingAssociatedReceiver<
+                  autofill::mojom::PasswordManagerDriver> receiver) {
+            password_manager::ContentPasswordManagerDriverFactory::
+                BindPasswordManagerDriver(std::move(receiver),
+                                          render_frame_host);
+          },
+          &render_frame_host));
 
-    LOG(INFO) << "PASSWORD bind associated receiver from frame";
-  }
-#endif  // defined(OHOS_EX_PASSWORD)
+  LOG(INFO) << "PASSWORD bind associated receiver from frame";
+#endif  // defined(OHOS_EX_PASSWORD) || defined(OHOS_PASSWORD_AUTOFILL)
 #endif  // BUILDFLAG(IS_OHOS)
   associated_registry.AddInterface<pdf::mojom::PdfService>(base::BindRepeating(
       [](content::RenderFrameHost* render_frame_host,

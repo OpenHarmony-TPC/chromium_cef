@@ -163,6 +163,22 @@ class OhPasswordManagerClient
       password_manager::ManagePasswordsReferrer referrer) override;
   bool IsNewTabPage() const override;
 
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  void FillAccountSuggestion(
+      const GURL& page_url,
+      const std::u16string& username,
+      const std::u16string& password) override;
+
+  void OnRequestAutofill(
+      password_manager::PasswordManagerDriver* driver,
+      const GURL& page_url,
+      autofill::FormRendererId form_id,
+      const autofill::mojom::OhosPasswordFormAutofillState state,
+      const autofill::InputFillRequestData& username_data,
+      const autofill::InputFillRequestData& password_data) override;
+#endif
+
   // autofill::mojom::PasswordGenerationDriver overrides.
   void AutomaticGenerationAvailable(
       const autofill::password_generation::PasswordGenerationUIData& ui_data)

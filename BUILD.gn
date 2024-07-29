@@ -1092,8 +1092,9 @@ source_set("libcef_static") {
 
   #endif
 
-  #ifdef OHOS_EX_PASSWORD
-  if (defined(ohos_ex_password) && ohos_ex_password) {
+  #ifdef OHOS_EX_PASSWORD || OHOS_PASSWORD_AUTOFILL
+  if ((defined(ohos_ex_password) && ohos_ex_password) ||
+      (defined(ohos_password_autofill) && ohos_password_autofill)) {
     sources += [
       "libcef/browser/password/oh_password_manager_client.cc",
       "libcef/browser/password/oh_password_manager_client.h",

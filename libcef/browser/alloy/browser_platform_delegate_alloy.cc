@@ -42,7 +42,7 @@
 #include "libcef/browser/autofill/oh_autofill_provider.h"
 #endif
 
-#ifdef OHOS_EX_PASSWORD
+#if defined(OHOS_EX_PASSWORD) || defined(OHOS_PASSWORD_AUTOFILL)
 #include "libcef/browser/password/oh_password_manager_client.h"
 #endif
 
@@ -248,9 +248,7 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   autofill::OhAutofillClient::CreateForWebContents(web_contents_, true);
 #endif
 
-#if defined(OHOS_EX_PASSWORD)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+#if defined(OHOS_EX_PASSWORD) || defined(OHOS_DATALIST) || defined(OHOS_PASSWORD_AUTOFILL)
     // need use components/autofill/core/browser/ module impl save password
     autofill::OhAutofillClient::CreateForWebContents(web_contents_, true);
     OhPasswordManagerClient::CreateForWebContentsWithAutofillClient(
@@ -258,6 +256,8 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
         autofill::OhAutofillClient::FromWebContents(web_contents_));
 
 #ifdef OHOS_EX_GET_ZOOM_LEVEL
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
     // Add observer for zoomcontroller.
     AlloyBrowserHostImpl* delegate = static_cast<AlloyBrowserHostImpl*>(browser);
     zoom::ZoomController* zoom_controller =
@@ -265,9 +265,10 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
     if (zoom_controller && delegate) {
       zoom_controller->AddObserver(delegate);
     }
-#endif
   }
-#endif  // OHOS_EX_PASSWORD
+#endif
+
+#endif  // OHOS_EX_PASSWORD || OHOS_DATALIST || OHOS_PASSWORD_AUTOFILL
 #endif
   javascript_dialogs::TabModalDialogManager::CreateForWebContents(
       web_contents_,
