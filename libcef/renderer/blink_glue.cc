@@ -191,17 +191,15 @@ gfx::Size GetContentSize(blink::WebLocalFrame* frame) {
     width = document_element->scrollWidth();
     height = document_element->scrollHeight();
   } else {
-    int body_width = 0;
     int body_height = 0;
     blink::WebElement web_body = web_document.Body();
     if (!web_body.IsNull()) {
       blink::Element* body = web_body.Unwrap<blink::Element>();
       blink::DOMRect* body_dom_rect = body->getBoundingClientRect();
       gfx::Rect body_rect = body_dom_rect->ToEnclosingRect();
-      body_width = body->scrollWidth() + body_rect.x();
       body_height = body->scrollHeight() + body_rect.y();
     }
-    width = std::max({document_element->OffsetWidth(), body_width});
+    width = document_element->OffsetWidth();
     height = std::max({document_element->OffsetHeight(), body_height});
   }
 
