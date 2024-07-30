@@ -37,6 +37,11 @@ class AlloyPermissionRequestHandler : public content::WebContentsObserver {
   // Allow |origin| to access the |resources|.
   void PreauthorizePermission(const CefString& origin, int resources);
 
+#if defined(OHOS_SENSOR)
+  void SendSensorRequest(CefRefPtr<CefAccessRequest> request);
+  void SetSensorPermission(const CefString& origin, bool allowed);
+#endif // defined(OHOS_SENSOR)
+
 #if defined(OHOS_WEBRTC)
   void SendScreenCaptureRequest(CefRefPtr<CefScreenCaptureAccessRequest> request);
 #endif // defined(OHOS_WEBRTC)
@@ -62,12 +67,20 @@ class AlloyPermissionRequestHandler : public content::WebContentsObserver {
   // Return true if |origin| were preauthorized to access |resources|.
   bool Preauthorized(const CefString& origin, int resources);
 
+#if defined(OHOS_SENSOR)
+  bool GetSensorPermission(const CefString& origin, bool& is_exist);
+#endif // defined(OHOS_SENSOR)
+
   CefRefPtr<CefPermissionRequest> client_;
 
   // A list of ongoing requests.
   std::vector<CefRefPtr<CefAccessRequest>> requests_;
 
   std::map<CefString, int> preauthorized_permission_;
+
+#if defined(OHOS_SENSOR)
+  std::map<CefString, bool> sensor_permission_;
+#endif // defined(OHOS_SENSOR)
 
   // The unique id of the active NavigationEntry of the WebContents that we were
   // opened for. Used to help expire on requests.
