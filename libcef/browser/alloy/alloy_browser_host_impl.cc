@@ -2420,7 +2420,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  ReportRenderProcessStatus(false);
+  ReportRenderProcessStatus(is_hidden_);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
