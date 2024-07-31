@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c968bc55d029453636aa2cafbaae8e02270b5050$
+// $hash=b1d7d47349a7b507f118dad1960b2f6fab6eb280$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -586,11 +586,7 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
 void CEF_CALLBACK render_handler_on_virtual_keyboard_requested(
     struct _cef_render_handler_t* self,
     cef_browser_t* browser,
-    cef_text_input_mode_t input_mode,
-    cef_text_input_type_t input_type,
-    cef_text_input_action_t input_action,
-    cef_text_input_flags_t input_flags,
-    int show_keyboard,
+    cef_text_input_info_t text_input_info,
     int is_need_reset_listener,
     cef_string_map_t attributes) {
   shutdown_checker::AssertNotShutdown();
@@ -618,8 +614,7 @@ void CEF_CALLBACK render_handler_on_virtual_keyboard_requested(
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), input_mode, input_type, input_action,
-      input_flags, show_keyboard ? true : false,
+      CefBrowserCToCpp::Wrap(browser), text_input_info,
       is_need_reset_listener ? true : false, attributesMap);
 }
 
@@ -1309,7 +1304,28 @@ render_handler_on_resize_scrollable_viewport(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser));
 }
 
-} // namespace
+void CEF_CALLBACK
+render_handler_set_fill_content(struct _cef_render_handler_t* self,
+                                const char* content) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: content; type: std_string_byref_const
+  DCHECK(content);
+  if (!content) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->SetFillContent(content);
+}
+
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -1371,7 +1387,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->send_dynamic_frame_loss_event =
       render_handler_send_dynamic_frame_loss_event;
   GetStruct()->on_resize_scrollable_viewport =
-  render_handler_on_resize_scrollable_viewport;
+      render_handler_on_resize_scrollable_viewport;
+  GetStruct()->set_fill_content = render_handler_set_fill_content;
 }
 
 // DESTRUCTOR - Do not edit by hand.

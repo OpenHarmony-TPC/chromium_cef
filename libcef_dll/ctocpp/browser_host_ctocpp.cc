@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a1d15ef11e4cf4498a6694469f4a915a777becbc$
+// $hash=8e01fb9e7e62314e7a74e50edbe9ddbc210914b9$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -3393,6 +3393,53 @@ void CefBrowserHostCToCpp::ScrollFocusedEditableNodeIntoView() {
 
   // Execute
   _struct->scroll_focused_editable_node_into_view(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ProcessAutofillCancel(
+    const std::string& fillContent) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, process_autofill_cancel)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: fillContent; type: std_string_byref_const
+  DCHECK(!fillContent.empty());
+  if (fillContent.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->process_autofill_cancel(_struct, fillContent.c_str());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::AutoFillWithIMFEvent(bool is_username,
+                                                bool is_other_account,
+                                                bool is_new_password,
+                                                const std::string& content) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, auto_fill_with_imfevent)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: content; type: std_string_byref_const
+  DCHECK(!content.empty());
+  if (content.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->auto_fill_with_imfevent(_struct, is_username, is_other_account,
+                                   is_new_password, content.c_str());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

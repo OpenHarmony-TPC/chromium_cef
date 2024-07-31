@@ -2023,5 +2023,20 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ScrollFocusedEditableNodeIntoView() = 0;
+
+  ///
+  /// Process autofill cancel content.
+  ///
+  /*--cef()--*/
+  virtual void ProcessAutofillCancel(const std::string& fillContent) = 0;
+
+  ///
+  /// request autofill from IMF event.
+  ///
+  /*--cef()--*/
+  virtual void AutoFillWithIMFEvent(bool is_username,
+                                    bool is_other_account,
+                                    bool is_new_password,
+                                    const std::string& content) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

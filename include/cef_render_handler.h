@@ -66,6 +66,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef std::map<CefString, CefString> AttributesMap;
   typedef cef_text_input_action_t TextInputAction;
   typedef cef_text_input_flags_t TextInputFlags;
+  typedef cef_text_input_info_t TextInputInfo;
 #endif
 
   ///
@@ -260,11 +261,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                          TextInputMode input_mode,
-                                          TextInputType input_type,
-                                          TextInputAction input_action,
-                                          TextInputFlags input_flags,
-                                          bool show_keyboard,
+                                          TextInputInfo text_input_info,
                                           bool is_need_reset_listener,
                                           const AttributesMap& attributes) {}
 
@@ -446,6 +443,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) {}
+
+  ///
+  /// SetFillContent
+  ///
+  /*--cef()--*/
+  virtual void SetFillContent(const std::string& content) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

@@ -95,6 +95,15 @@ class OhAutofillManager : public AutofillManager {
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
   void FillData(const std::string& json_str);
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  void ForwardDataToPasswordManager(const std::string& page_url,
+                                    const std::string& username,
+                                    const std::string& password);
+
+  bool IsUsernamePasswordFormField(FormRendererId form_id,
+                                   FieldRendererId field_id);
+#endif
+
  protected:
   friend void OhDriverInitHook(AutofillClient* client,
                                ContentAutofillDriver* driver);

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=25a703b8d536577f1775d2261bdb5e4192edac1c$
+// $hash=8d712ec9183206266dbdf83e324ef4332889bae7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -1905,7 +1905,23 @@ typedef struct _cef_browser_host_t {
   ///
   /// ScrollFocusedEditableNodeIntoView.
   ///
-  void(CEF_CALLBACK* scroll_focused_editable_node_into_view)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK* scroll_focused_editable_node_into_view)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// Process autofill cancel content.
+  ///
+  void(CEF_CALLBACK* process_autofill_cancel)(struct _cef_browser_host_t* self,
+                                              const char* fillContent);
+
+  ///
+  /// request autofill from IMF event.
+  ///
+  void(CEF_CALLBACK* auto_fill_with_imfevent)(struct _cef_browser_host_t* self,
+                                              int is_username,
+                                              int is_other_account,
+                                              int is_new_password,
+                                              const char* content);
 } cef_browser_host_t;
 
 ///

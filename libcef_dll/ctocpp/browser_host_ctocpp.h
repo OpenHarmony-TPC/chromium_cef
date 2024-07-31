@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=22f3870f82b3cfe87454886ce2a3540374d2bf6d$
+// $hash=1226c94fcbb06fb654cc597f5cd6793951cef504$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -301,6 +301,11 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
   void ScrollFocusedEditableNodeIntoView() override;
+  void ProcessAutofillCancel(const std::string& fillContent) override;
+  void AutoFillWithIMFEvent(bool is_username,
+                            bool is_other_account,
+                            bool is_new_password,
+                            const std::string& content) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

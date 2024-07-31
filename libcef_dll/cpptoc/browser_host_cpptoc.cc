@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c7dfebc0681b2c2ceac0546c81eb7cf3056ec6ea$
+// $hash=c65f621ede0901406dcd1c82e1bbd1e326e7094f$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3685,6 +3685,53 @@ browser_host_scroll_focused_editable_node_into_view(struct _cef_browser_host_t* 
   CefBrowserHostCppToC::Get(self)->ScrollFocusedEditableNodeIntoView();
 }
 
+void CEF_CALLBACK
+browser_host_process_autofill_cancel(struct _cef_browser_host_t* self,
+                                     const char* fillContent) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: fillContent; type: std_string_byref_const
+  DCHECK(fillContent);
+  if (!fillContent) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ProcessAutofillCancel(fillContent);
+}
+
+void CEF_CALLBACK
+browser_host_auto_fill_with_imfevent(struct _cef_browser_host_t* self,
+                                     int is_username,
+                                     int is_other_account,
+                                     int is_new_password,
+                                     const char* content) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: content; type: std_string_byref_const
+  DCHECK(content);
+  if (!content) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->AutoFillWithIMFEvent(
+      is_username ? true : false, is_other_account ? true : false,
+      is_new_password ? true : false, content);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3896,6 +3943,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
   GetStruct()->scroll_focused_editable_node_into_view =
       browser_host_scroll_focused_editable_node_into_view;
+  GetStruct()->process_autofill_cancel = browser_host_process_autofill_cancel;
+  GetStruct()->auto_fill_with_imfevent = browser_host_auto_fill_with_imfevent;
 }
 
 // DESTRUCTOR - Do not edit by hand.

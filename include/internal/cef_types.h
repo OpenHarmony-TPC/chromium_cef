@@ -4232,6 +4232,19 @@ typedef enum {
   CEF_TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD = 1 << 12,
   CEF_TEXT_INPUT_FLAG_VERTICAL = 1 << 13
 } cef_text_input_flags_t;
+
+///
+// Structure text input state info.
+///
+typedef struct _cef_text_input_info_t {
+  int node_id = 0;
+  bool show_keyboard = false;
+  cef_text_input_mode_t input_mode = CEF_TEXT_INPUT_MODE_NONE;
+  cef_text_input_type_t input_type = CEF_TEXT_INPUT_TYPE_NONE;
+  cef_text_input_action_t input_action = CEF_TEXT_INPUT_ACTION_DEFAULT;
+  cef_text_input_flags_t input_flags = CEF_TEXT_INPUT_FLAG_NONE;
+  bool always_hide_ime = false;
+} cef_text_input_info_t;
 #endif  // BUILDFLAG(IS_OHOS)
 
 #ifdef __cplusplus

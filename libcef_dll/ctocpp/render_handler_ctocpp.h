@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc8d8abbf44e820bf70ea88100fb354f12c62bb1$
+// $hash=8f65b4436a0c28a5a9f716e45d2c0a19a9ac5bc3$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -79,11 +79,7 @@ class CefRenderHandlerCToCpp
                               const CefString& selected_text,
                               const CefRange& selected_range) override;
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                  TextInputMode input_mode,
-                                  TextInputType input_type,
-                                  TextInputAction input_action,
-                                  TextInputFlags input_flags,
-                                  bool show_keyboard,
+                                  TextInputInfo text_input_info,
                                   bool is_need_reset_listener,
                                   const AttributesMap& attributes) override;
   void OnTouchSelectionChanged(
@@ -146,6 +142,7 @@ class CefRenderHandlerCToCpp
                                  const CefString& sceneId,
                                  bool isStart) override;
   void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
+  void SetFillContent(const std::string& content) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
