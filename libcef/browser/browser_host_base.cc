@@ -2307,8 +2307,16 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
         return;
       }
       uint64_t pointer0 = base::RandUint64();
-      uint64_t pointer1 = base::RandUint64();
-      auto iter = portMap_.find(std::make_pair(pointer0, pointer1));
+      if (pointer0 == ULLONG_MAX) {
+        retry_times++;
+        continue;
+      }
+      uint64_t pointer1 = pointer0 + 1;
+      auto iter = std::find_if(portMap_.begin(), portMap_.end(), [&pointer0, &pointer1](auto& cc){
+        std::pair<uint64_t, uint64_t> rnd = cc.first;
+        return (rnd.first == pointer0 || rnd.second == pointer0 || rnd.first == pointer1);
+      });
+
       if (iter == portMap_.end()) {
         portMap_[std::make_pair(pointer0, pointer1)] =
             std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
@@ -2402,12 +2410,6 @@ void CefBrowserHostBase::ClosePort(CefString& portHandle) {
     }
   }
 
-  for (auto iter = runnerMap_.begin(); iter != runnerMap_.end(); ++iter) {
-    if (portHandle.ToString().compare(iter->first) == 0) {
-      runnerMap_.erase(iter);
-      break;
-    }
-  }
   postedPorts_.erase(portHandle.ToString());
   LOG(DEBUG) << "ClosePort end";
 }
@@ -2573,14 +2575,13 @@ void CefBrowserHostBase::SetPortMessageCallback(
 
   // get sequenced task runner
   std::string pointer0 = portHandle.ToString();
-  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_;
-  auto runner_it = runnerMap_.find(pointer0);
-  if (runner_it != runnerMap_.end()) {
-    sequenced_task_runner_ = runner_it->second;
-  } else {
-    sequenced_task_runner_ =
-        base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()});
+  if (!base::SequencedTaskRunner::HasCurrentDefault())
+  {
+    LOG(ERROR) << "not in SequencedTaskRunner";
+    return;
   }
+
+  auto sequenced_task_runner_ = base::SequencedTaskRunner::GetCurrentDefault();
 
   // get web message receiver instance
   std::shared_ptr<WebMessageReceiverImpl> webMsgReceiver;
@@ -2614,14 +2615,12 @@ void CefBrowserHostBase::SetPortMessageCallback(
   }
 
   // save in map
-  runnerMap_[pointer0] = sequenced_task_runner_;
   receiverMap_[pointer0] = webMsgReceiver;
 }
 
 void CefBrowserHostBase::DestroyAllWebMessagePorts() {
   LOG(DEBUG) << "clear all message ports";
   portMap_.clear();
-  runnerMap_.clear();
   receiverMap_.clear();
   postedPorts_.clear();
 }
