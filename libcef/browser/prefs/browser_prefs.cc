@@ -341,6 +341,7 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     extensions::PermissionsManager::RegisterProfilePrefs(registry.get());
     ExtensionWebUI::RegisterProfilePrefs(registry.get());
     preinstalled_apps::RegisterProfilePrefs(registry.get());
+    registry->RegisterStringPref(prefs::kPreinstalledApps, "install");
 #endif
 #if BUILDFLAG(IS_OHOS)
     ohos_safe_browsing::RegisterProfilePrefs(registry.get());
