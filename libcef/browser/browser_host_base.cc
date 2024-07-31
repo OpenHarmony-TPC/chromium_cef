@@ -1919,7 +1919,7 @@ void CefBrowserHostBase::AskSensorsPermission(
     const CefString& origin,
     cef_permission_callback_t callback) {
   if (permission_request_handler_) {
-    permission_request_handler_->SendRequest(new AlloySensorAccessRequest(
+    permission_request_handler_->SendSensorRequest(new AlloySensorAccessRequest(
         this, origin, std::move(callback)));
   } else {
     LOG(ERROR) << "AskSensorsPermission, handler is null.";

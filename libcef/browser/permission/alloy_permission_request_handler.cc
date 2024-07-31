@@ -132,3 +132,43 @@ void AlloyPermissionRequestHandler::SendScreenCaptureRequest(
 }
 #endif // defined(OHOS_WEBRTC)
 
+#if defined(OHOS_SENSOR)
+void AlloyPermissionRequestHandler::SendSensorRequest(
+    CefRefPtr<CefAccessRequest> request) {
+  bool is_exist = false;
+  bool allowed = GetSensorPermission(request->Origin(), is_exist);
+  if (is_exist) {
+    LOG(INFO) << "SendSensorRequest Exist, allowed: " << allowed;
+    request->ReportRequestResult(allowed);
+    return;
+  }
+
+  requests_.push_back(request);
+  client_->OnPermissionRequest(request);
+  PruneRequests();
+}
+
+void AlloyPermissionRequestHandler::SetSensorPermission(
+    const CefString& origin,
+    bool allowed) {
+  if (origin.empty()) {
+    LOG(ERROR) << "The origin of sensor permission is empty, ignore it.";
+    return;
+  }
+  LOG(INFO) << "SetSensorPermission, allowed: " << allowed;
+  sensor_permission_[origin] = allowed;
+}
+
+bool AlloyPermissionRequestHandler::GetSensorPermission(
+    const CefString& origin,
+    bool& is_exist) {
+  is_exist = false;
+  std::map<CefString, bool>::iterator i = sensor_permission_.find(origin);
+  if (i != sensor_permission_.end()) {
+    is_exist = true;
+    return i->second;
+  } else {
+    return false;
+  }
+}
+#endif // defined(OHOS_SENSOR)

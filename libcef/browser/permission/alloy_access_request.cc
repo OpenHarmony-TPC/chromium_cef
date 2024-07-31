@@ -65,25 +65,16 @@ int AlloySensorAccessRequest::ResourceAcessId() {
 }
 
 void AlloySensorAccessRequest::ReportRequestResult(bool allowed) {
-  if (!allowed) {
-    LOG(INFO) << "ReportRequestResult, permission is not allowed.";
-    if (!callback_.is_null()) {
-      std::move(callback_).Run(allowed);
-    }
-    return;
-  }
-
   if (callback_.is_null()) {
     LOG(ERROR) << "ReportRequestResult callback is null.";
     return;
   }
-  LOG(INFO) << "ReportRequestResult, permission is allowed: " << allowed;
+  LOG(INFO) << "ReportRequestResult, permission status: " << allowed;
   if (browser_) {
     AlloyPermissionRequestHandler* permission_handler =
         browser_->GetPermissionRequestHandler();
     if (permission_handler) {
-      permission_handler->PreauthorizePermission(origin_,
-          AlloyAccessRequest::Resources::SENSORS);
+      permission_handler->SetSensorPermission(origin_, allowed);
     }
   }
   std::move(callback_).Run(allowed);
