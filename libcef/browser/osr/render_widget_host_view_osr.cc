@@ -1748,6 +1748,17 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   }
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+  if (size_changed && needFocusViewport_ > 0) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    if (handler) {
+      needFocusViewport_--;
+      handler->OnResizeScrollableViewport(browser_impl_->GetBrowser());
+    }
+  }
+#endif
+
   gfx::Size viewport_size_in_pixels = metadata.viewport_size_in_pixels;
   float device_scale_factor = metadata.device_scale_factor;
   if (viewport_size_in_pixels != viewport_size_in_pixels_ ||
@@ -1804,16 +1815,6 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     selection_controller_client_->UpdateClientClippedSelectionBounds(clipped_selection_bounds_);
   }
 #endif  // OHOS_CLIPBOARD
-
-#if defined(OHOS_INPUT_EVENTS)
-  if (size_changed) {
-    CefRefPtr<CefRenderHandler> handler =
-        browser_impl_->GetClient()->GetRenderHandler();
-    if (handler) {
-      handler->OnResizeScrollableViewport(browser_impl_->GetBrowser());
-    }
-  }
-#endif
 }
 
 std::unique_ptr<viz::HostDisplayClient>
@@ -1976,9 +1977,7 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
     if (render_widget_host_) {
 #if defined(OHOS_COMPOSITE_RENDER)
       if (isKeyboard) {
-        LOG(INFO) << "scroll focused node into view";
-        render_widget_host_->SynchronizeVisualProperties(isKeyboard);
-        return;
+        needFocusViewport_++;
       }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
       render_widget_host_->SynchronizeVisualProperties();
