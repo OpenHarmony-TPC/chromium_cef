@@ -719,6 +719,7 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_AI
   bool overlay_in_progress_ = false;
 #endif
+  int32_t needFocusViewport_ = 0;
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
 
