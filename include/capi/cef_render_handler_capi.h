@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6790eb27cf4fa0278d85df604c6fa807c89c51d2$
+// $hash=898a08a55883581483a35459d60c09c1553fc3ec$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -252,11 +252,7 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_virtual_keyboard_requested)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
-      cef_text_input_mode_t input_mode,
-      cef_text_input_type_t input_type,
-      cef_text_input_action_t input_action,
-      cef_text_input_flags_t input_flags,
-      int show_keyboard,
+      cef_text_input_info_t text_input_info,
       int is_need_reset_listener,
       cef_string_map_t attributes);
 
@@ -442,9 +438,15 @@ typedef struct _cef_render_handler_t {
   ///
   /// OnResizeScrollableViewport.
   ///
-  void(CEF_CALLBACK *on_resize_scrollable_viewport)(
-      struct _cef_render_handler_t *self,
-      struct _cef_browser_t *browser);
+  void(CEF_CALLBACK* on_resize_scrollable_viewport)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser);
+
+  ///
+  /// SetFillContent
+  ///
+  void(CEF_CALLBACK* set_fill_content)(struct _cef_render_handler_t* self,
+                                       const char* content);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

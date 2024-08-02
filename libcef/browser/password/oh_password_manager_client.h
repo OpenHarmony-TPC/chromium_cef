@@ -163,8 +163,45 @@ class OhPasswordManagerClient
       password_manager::ManagePasswordsReferrer referrer) override;
   bool IsNewTabPage() const override;
 
-
 #if defined(OHOS_PASSWORD_AUTOFILL)
+  struct AutofillIMFInfo {
+    bool is_username = false;
+    bool is_other_account = false;
+    bool is_new_password = false;
+  };
+
+  absl::optional<std::string> PasswordFormToJsonForRequest(
+      const std::string& event,
+      const GURL& page_url,
+      const autofill::InputFillRequestData& username_data,
+      const autofill::InputFillRequestData& password_data,
+      AutofillIMFInfo* imf_info = nullptr);
+
+  absl::optional<std::string> PasswordFormToJsonForSave(
+      const password_manager::PasswordForm& form);
+
+  void ProcessAutofillCancel(const std::string& fillContent);
+
+  void AutoFillWithIMFEvent(bool is_username,
+                            bool is_other_account,
+                            bool is_new_password,
+                            const std::string& content);
+
+  void SetShouldSuppressKeyboard(bool suppress);
+
+  void UpdateLastRequestFilledItems(
+      const autofill::InputFillRequestData& username_data,
+      const autofill::InputFillRequestData& password_data,
+      autofill::FormRendererId form_id);
+
+  bool IsUsernamePasswordForm(autofill::FormRendererId form_id) {
+    return form_id == last_filled_form_id_;
+  }
+
+  bool IsUsernamePasswordField(autofill::FieldRendererId field_id) {
+    return field_id == last_fill_focus_renderer_id_;
+  }
+
   void FillAccountSuggestion(
       const GURL& page_url,
       const std::u16string& username,
@@ -334,6 +371,20 @@ class OhPasswordManagerClient
 
   // Whether OnPaste() was called from this ChromePasswordManagerClient
   bool was_on_paste_called_ = false;
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  GURL form_to_request_url_;
+
+  autofill::FormRendererId last_filled_form_id_;
+  autofill::FieldRendererId last_fill_focus_renderer_id_;
+
+  std::set<autofill::FieldRendererId> auto_filled_forms_;
+
+  autofill::InputFillRequestData last_request_fill_username_;
+  autofill::InputFillRequestData last_request_fill_password_;
+
+  bool is_keyboard_supressed_ = false;
+#endif
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 };

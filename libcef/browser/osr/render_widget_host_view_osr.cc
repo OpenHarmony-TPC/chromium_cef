@@ -2580,9 +2580,17 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
                  "but there is no need to pull up the keyboard";
     // TODO(OHOS) Specific implementation needs to be completed
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested update state";
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
-                                        action, flags, state->show_ime_if_needed,
-                                        is_need_reset_ime_listener, text_input_attributes);
+    CefRenderHandler::TextInputInfo input_info = {
+        .node_id = state->node_id,
+        .show_keyboard = state->show_ime_if_needed,
+        .input_mode = mode,
+        .input_type = type,
+        .input_action = action,
+        .input_flags = flags,
+        .always_hide_ime = state->always_hide_ime};
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), input_info,
+                                        is_need_reset_ime_listener,
+                                        text_input_attributes);
     OnUpdateTextInputStateCalledInner(state);
     return;
   }
@@ -2593,15 +2601,21 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   if (state && state->show_ime_if_needed) {
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested show_ime_if_needed";
     // TODO(OHOS) Specific implementation needs to be completed
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), mode, type,
-                                        action, flags, show_keyboard,
-                                        is_need_reset_ime_listener, text_input_attributes);
+    CefRenderHandler::TextInputInfo input_info = {
+        .node_id = state->node_id,
+        .show_keyboard = show_keyboard,
+        .input_mode = mode,
+        .input_type = type,
+        .input_action = action,
+        .input_flags = flags,
+        .always_hide_ime = state->always_hide_ime};
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), input_info,
+                                        is_need_reset_ime_listener,
+                                        text_input_attributes);
   } else if (!state || mode == CEF_TEXT_INPUT_MODE_NONE) {
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested not editable";
-    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(),
-                                        CEF_TEXT_INPUT_MODE_NONE,
-                                        CEF_TEXT_INPUT_TYPE_NONE,
-                                        action, flags, false,
+    CefRenderHandler::TextInputInfo input_info;
+    handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), input_info,
                                         is_need_reset_ime_listener,
                                         text_input_attributes);
   }

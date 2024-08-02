@@ -28,6 +28,9 @@
 #include "content/public/browser/web_contents.h"
 #include "libcef/browser/autofill/oh_autofill_client.h"
 #include "libcef/browser/browser_host_base.h"
+#if defined(OHOS_PASSWORD_AUTOFILL)
+#include "libcef/browser/password/oh_password_manager_client.h"
+#endif
 
 namespace {
 const std::string EVENT = "event";
@@ -43,6 +46,12 @@ const std::string KEY_RECT_W = "width";
 const std::string KEY_RECT_H = "height";
 const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+const std::string KEY_PAGE_URL = "pageUrl";
+const std::string KEY_USERNAME = "username";
+const std::string KEY_PASSWORD = "password";
+#endif
 } // namespace
 
 namespace autofill {
@@ -83,6 +92,13 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   if (!browser) {
     return absl::nullopt;
   }
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  if (IsUsernamePasswordFormField(form.unique_renderer_id,
+                                  field.unique_renderer_id)) {
+    return absl::nullopt;
+  }
+#endif
 
   float ratio = browser->GetVirtualPixelRatio();
   auto offset = content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
@@ -185,6 +201,18 @@ void OhAutofillManager::FillData(const std::string& json_str) {
     return;
   }
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  const std::string* page_url = root_dict->FindString(KEY_PAGE_URL);
+  const std::string* username = root_dict->FindString(KEY_USERNAME);
+  const std::string* password = root_dict->FindString(KEY_PASSWORD);
+  if (username || password) {
+    ForwardDataToPasswordManager(page_url ? *page_url : std::string(),
+                                 username ? *username : std::string(),
+                                 password ? *password : std::string());
+    return;
+  }
+#endif
+
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
@@ -196,6 +224,62 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   }
   is_show_ = false;
 }
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+void OhAutofillManager::ForwardDataToPasswordManager(
+    const std::string& page_url,
+    const std::string& username,
+    const std::string& password) {
+  LOG(INFO) << "autofill save, forward to password_manager";
+  auto* rfh =
+      static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
+    return;
+  }
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
+    return;
+  }
+  auto* password_manager = OhPasswordManagerClient::FromWebContents(contents);
+  if (!password_manager) {
+    LOG(ERROR) << "password_manager is nullptr";
+    return;
+  }
+
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  password_manager->FillAccountSuggestion(GURL(page_url),
+                                          convert.from_bytes(username),
+                                          convert.from_bytes(password));
+}
+
+bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
+                                                    FieldRendererId field_id) {
+  auto* rfh =
+      static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
+    return false;
+  }
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
+    return false;
+  }
+  auto* password_manager = OhPasswordManagerClient::FromWebContents(contents);
+  if (!password_manager) {
+    LOG(ERROR) << "password_manager is nullptr";
+    return false;
+  }
+
+  if (!form_id.is_null()) {
+    return password_manager->IsUsernamePasswordForm(form_id);
+  } else {
+    return password_manager->IsUsernamePasswordField(field_id);
+  }
+}
+#endif
 
 bool OhAutofillManager::ShouldClearPreviewedForm() {
   return false;

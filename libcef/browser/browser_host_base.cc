@@ -72,6 +72,10 @@
 #include <chrono>
 #endif  // defined(OHOS_INPUT_EVENTS)
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+#include "libcef/browser/password/oh_password_manager_client.h"
+#endif
+
 #if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
 #include "libcef/browser/autofill/oh_autofill_client.h"
 #endif  // defined(OHOS_EX_PASSWORD)
@@ -3605,6 +3609,41 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
       settings_.is_safe_browsing_enable = enable;
     }
   }
+#endif
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+void CefBrowserHostBase::ProcessAutofillCancel(
+    const std::string& fillContent) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+
+  OhPasswordManagerClient* password_manager_client =
+      OhPasswordManagerClient::FromWebContents(web_contents);
+  if (password_manager_client) {
+    password_manager_client->ProcessAutofillCancel(fillContent);
+  }
+}
+
+void CefBrowserHostBase::AutoFillWithIMFEvent(bool is_username,
+                                              bool is_other_account,
+                                              bool is_new_password,
+                                              const std::string& content) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+
+  OhPasswordManagerClient* password_manager_client =
+      OhPasswordManagerClient::FromWebContents(web_contents);
+  if (password_manager_client) {
+    password_manager_client->AutoFillWithIMFEvent(
+        is_username, is_other_account, is_new_password, content);
+  }
+}
 #endif
 
 bool CefBrowserHostBase::GetSavePassword() {

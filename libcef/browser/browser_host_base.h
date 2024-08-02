@@ -518,6 +518,14 @@ bool NeedsReload() override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  void ProcessAutofillCancel(const std::string& fillContent) override;
+  void AutoFillWithIMFEvent(bool is_username,
+                            bool is_other_account,
+                            bool is_new_password,
+                            const std::string& content) override;
+#endif
+
   // #if defined(OHOS_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;

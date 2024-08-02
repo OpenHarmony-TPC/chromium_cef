@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=37f91e8c7c612a8205bb4c824173acb2a5aae1b2$
+// $hash=4ff2fb2de475a091839858d008c7babd10266501$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -495,11 +495,7 @@ void CefRenderHandlerCToCpp::OnTextSelectionChanged(
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
-    TextInputMode input_mode,
-    TextInputType input_type,
-    TextInputAction input_action,
-    TextInputFlags input_flags,
-    bool show_keyboard,
+    TextInputInfo text_input_info,
     bool is_need_reset_listener,
     const AttributesMap& attributes) {
   shutdown_checker::AssertNotShutdown();
@@ -526,9 +522,8 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
 
   // Execute
   _struct->on_virtual_keyboard_requested(
-      _struct, CefBrowserCppToC::Wrap(browser), input_mode, input_type,
-      input_action, input_flags, show_keyboard, is_need_reset_listener,
-      attributesMap);
+      _struct, CefBrowserCppToC::Wrap(browser), text_input_info,
+      is_need_reset_listener, attributesMap);
 
   // Restore param:attributes; type: string_map_single_byref_const
   if (attributesMap) {
@@ -1085,6 +1080,27 @@ void CefRenderHandlerCToCpp::OnResizeScrollableViewport(
 
   // Execute
   _struct->on_resize_scrollable_viewport(_struct, CefBrowserCppToC::Wrap(browser));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::SetFillContent(const std::string& content) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_fill_content)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: content; type: std_string_byref_const
+  DCHECK(!content.empty());
+  if (content.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->set_fill_content(_struct, content.c_str());
 }
 
 // CONSTRUCTOR - Do not edit by hand.
