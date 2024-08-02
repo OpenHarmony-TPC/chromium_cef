@@ -1053,6 +1053,18 @@ void CefFrameHostImpl::ScrollPageUpDown(bool is_up,
                         },
                         is_up, is_half, view_height));
 }
+
+void CefFrameHostImpl::GetScrollOffset(float* offset_x,
+                                       float* offset_y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float* offset_x, float* offset_y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->GetScrollOffset(offset_x,
+                                                        offset_y);
+                        },
+                        offset_x, offset_y));
+}
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -1151,6 +1163,18 @@ void CefFrameHostImpl::ScrollByWithAnime(float delta_x, float delta_y, int32_t d
                                                                duration);
                                       },
                                       delta_x, delta_y, duration));
+}
+
+void CefFrameHostImpl::GetOverScrollOffset(float* offset_x,
+                                           float* offset_y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float* offset_x, float* offset_y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->GetOverScrollOffset(offset_x,
+                                                            offset_y);
+                        },
+                        offset_x, offset_y));
 }
 #endif  // defined(OHOS_INPUT_EVENTS)
 

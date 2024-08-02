@@ -3442,6 +3442,36 @@ void CefBrowserHostCToCpp::AutoFillWithIMFEvent(bool is_username,
                                    is_new_password, content.c_str());
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetScrollOffset(float* offset_x, float* offset_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_scroll_offset)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->get_scroll_offset(_struct, offset_x, offset_y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
+                                               float* offset_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_overscroll_offset)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->get_overscroll_offset(_struct, offset_x, offset_y);
+}
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

@@ -212,6 +212,8 @@ class CefFrameImpl
   void RemoveCache() override;
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+  void GetScrollOffset(
+      cef::mojom::RenderFrame::GetScrollOffsetCallback callback) override;
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -232,6 +234,8 @@ class CefFrameImpl
   void UpdateDrawRect() override;
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
+  void GetOverScrollOffset(
+      cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,
