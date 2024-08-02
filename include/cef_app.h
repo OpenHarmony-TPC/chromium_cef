@@ -147,6 +147,11 @@ void CefResumeDownload(const CefString& guid,
                        const CefString& mime_type,
                        const CefString& last_modified,
                        const CefString& received_slices_string);
+///
+/// This function should be called on the main application thread.
+///
+/*--cef()--*/
+CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid);
 #endif  // BUILDFLAG(IS_OHOS)
 
 ///
