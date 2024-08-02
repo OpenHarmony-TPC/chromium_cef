@@ -3153,6 +3153,17 @@ void CefBrowserHostBase::ScrollPageUpDown(bool is_up,
         ->ScrollPageUpDown(is_up, is_half, view_height);
   }
 }
+
+#ifdef OHOS_GET_SCROLL_OFFSET
+void CefBrowserHostBase::GetScrollOffset(float* offset_x,
+                                         float* offset_y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->GetScrollOffset(offset_x, offset_y);
+  }
+}
+#endif
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 CefRefPtr<CefBinaryValue> CefBrowserHostBase::GetWebState() {
@@ -3260,6 +3271,17 @@ void CefBrowserHostBase::ScrollByWithAnime(float delta_x, float delta_y, int32_t
     static_cast<CefFrameHostImpl*>(frame.get())->ScrollByWithAnime(delta_x, delta_y, duration);
   }
 }
+
+#ifdef OHOS_GET_SCROLL_OFFSET
+void CefBrowserHostBase::GetOverScrollOffset(float* offset_x,
+                                             float* offset_y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->GetOverScrollOffset(offset_x, offset_y);
+  }
+}
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_NETWORK_CONNINFO

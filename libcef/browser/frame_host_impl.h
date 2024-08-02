@@ -213,6 +213,9 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void RemoveCache(bool include_disk_files);
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height);
+#ifdef OHOS_GET_SCROLL_OFFSET
+  void GetScrollOffset(float* offset_x, float* offset_y);
+#endif
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 #if defined(OHOS_INPUT_EVENTS)
   void ScrollTo(float x, float y);
@@ -225,6 +228,9 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void UpdateDrawRect();
   void ScrollToWithAnime(float x, float y, int32_t duration);
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration);
+#if defined(OHOS_GET_SCROLL_OFFSET)
+  void GetOverScrollOffset(float* offset_x, float* offset_y);
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)

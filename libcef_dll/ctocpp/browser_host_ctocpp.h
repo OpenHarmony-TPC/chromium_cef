@@ -306,6 +306,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                             bool is_other_account,
                             bool is_new_password,
                             const std::string& content) override;
+#ifdef OHOS_GET_SCROLL_OFFSET
+  void GetScrollOffset(float* offset_x, float* offset_y) override;
+  void GetOverScrollOffset(float* offset_x, float* offset_y) override;
+#endif
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
