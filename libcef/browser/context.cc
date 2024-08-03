@@ -43,6 +43,7 @@
 #include "libcef/browser/download_resume_util.h"
 #include "libcef/browser/received_slice_helper.h"
 #include "services/network/public/mojom/network_service.mojom.h"
+#include "libcef/browser/download_item_impl.h"
 
 namespace {
 
@@ -483,6 +484,23 @@ void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
     }
   }
 #endif  //  OHOS_EX_DOWNLOAD
+}
+
+CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid){
+  LOG(DEBUG) << "get download item for " << guid;
+  for(auto& context: CefBrowserContext::GetAll()){
+    content::DownloadManager* manager = context->AsBrowserContext()->GetDownloadManager();
+    if(!manager){
+      continue;
+    }
+    download::DownloadItem* item = manager->GetDownloadByGuid(guid);
+    if(item){
+      CefRefPtr<CefDownloadItemImpl> download_item(
+            new CefDownloadItemImpl(item));
+      return download_item;
+    }
+  }
+  return nullptr;
 }
 
 void CefResumeDownload(const CefString& guid,
