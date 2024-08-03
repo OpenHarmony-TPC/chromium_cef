@@ -3272,7 +3272,7 @@ void CefBrowserHostBase::ScrollByWithAnime(float delta_x, float delta_y, int32_t
   }
 }
 
-#ifdef OHOS_GET_SCROLL_OFFSET
+#if defined(OHOS_GET_SCROLL_OFFSET)
 void CefBrowserHostBase::GetOverScrollOffset(float* offset_x,
                                              float* offset_y) {
   auto frame = GetMainFrame();
