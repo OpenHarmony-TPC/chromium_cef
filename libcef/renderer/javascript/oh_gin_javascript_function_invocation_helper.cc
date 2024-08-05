@@ -206,7 +206,7 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
     gin::Arguments* args,
     OhGinJavascriptBridgeObject* object) {
   if (dispatcher_->IsAsyncMethod(object->object_id(), method_name_)) {
-    return dispatcher_->InvokeJavascriptMethodAsync(object->object_id(), method_name_, arguments);
+    return InvokeJavascriptMethod(arguments, error, args, object);
   }
 
   auto flowbufferAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateFlowbufferAdapter();
