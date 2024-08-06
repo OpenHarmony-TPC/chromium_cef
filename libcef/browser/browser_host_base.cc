@@ -1043,8 +1043,7 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
     js_injection::JsCommunicationHost::AddScriptResult result =
         host->AddDocumentStartJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_start_script_result_map_.emplace(
-          std::make_pair(stdScript, result.script_id.value()));
+      document_start_script_result_map_[stdScript] = result.script_id.value();
     }
   }
 }
@@ -1073,8 +1072,7 @@ void CefBrowserHostBase::JavaScriptOnDocumentEnd(
     js_injection::JsCommunicationHost::AddScriptResult result =
         host->AddDocumentEndJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_end_script_result_map_.emplace(
-          std::make_pair(stdScript, result.script_id.value()));
+      document_end_script_result_map_[stdScript] = result.script_id.value();
     }
   }
 }
