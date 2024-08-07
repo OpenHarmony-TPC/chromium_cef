@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8d712ec9183206266dbdf83e324ef4332889bae7$
+// $hash=0a8a6563a986e32573581c424baf1cbbbc4858d3$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
@@ -131,6 +131,13 @@ typedef struct _cef_web_message_receiver_t {
   ///
   void(CEF_CALLBACK *on_message)(struct _cef_web_message_receiver_t *self,
                                  struct _cef_value_t *message);
+
+  ///
+  /// The same as OnMessage, the result of the execution will be returned.
+  ///
+  int(CEF_CALLBACK* on_message_with_bool_result)(
+      struct _cef_web_message_receiver_t* self,
+      struct _cef_value_t* message);
 } cef_web_message_receiver_t;
 
 ///

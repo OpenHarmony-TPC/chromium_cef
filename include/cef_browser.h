@@ -117,6 +117,12 @@ class CefWebMessageReceiver : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnMessage(CefRefPtr<CefValue> message) = 0;
+
+  ///
+  /// The same as OnMessage, the result of the execution will be returned.
+  ///
+  /*--cef()--*/
+  virtual bool OnMessageWithBoolResult(CefRefPtr<CefValue> message) = 0;
 };
 
 ///

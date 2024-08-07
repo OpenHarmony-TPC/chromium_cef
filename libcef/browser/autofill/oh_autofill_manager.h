@@ -98,7 +98,8 @@ class OhAutofillManager : public AutofillManager {
 #if defined(OHOS_PASSWORD_AUTOFILL)
   void ForwardDataToPasswordManager(const std::string& page_url,
                                     const std::string& username,
-                                    const std::string& password);
+                                    const std::string& password,
+                                    bool is_other_account);
 
   bool IsUsernamePasswordFormField(FormRendererId form_id,
                                    FieldRendererId field_id);

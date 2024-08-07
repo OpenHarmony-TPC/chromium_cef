@@ -281,11 +281,14 @@ bool OhPasswordManagerClient::PromptUserToSaveOrUpdatePassword(
     return false;
   }
 
+  // If the information used when the user logs in is current site filled in and
+  // not modified, then do not prompt the user to save.
   auto autofill_id =
       form_to_save->GetPendingCredentials().password_element_renderer_id;
-  if (auto_filled_forms_.find(autofill_id) != auto_filled_forms_.end()) {
+  auto it = auto_filled_forms_.find(*autofill_id);
+  if (it != auto_filled_forms_.end() && it->second == false) {
     LOG(INFO) << "auto filled password, not save on login";
-    auto_filled_forms_.erase(autofill_id);
+    auto_filled_forms_.erase(it);
     return false;
   }
 
@@ -299,7 +302,11 @@ bool OhPasswordManagerClient::PromptUserToSaveOrUpdatePassword(
       PasswordFormToJsonForSave(form_to_save->GetPendingCredentials());
   if (json_str.has_value()) {
     LOG(INFO) << "call autofill for save from system.";
-    autofill_client->OnAutofillEvent(json_str.value());
+    bool result = autofill_client->OnAutofillEvent(json_str.value());
+    if (!result) {
+      LOG(ERROR) << "failed to call autofill for save";
+      return false;
+    }
   }
 #endif
   return false;
@@ -720,6 +727,8 @@ OhPasswordManagerClient::GetURLLoaderFactory() {
 }
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
+using autofill::mojom::OhosPasswordFormAutofillState;
+
 absl::optional<std::string>
 OhPasswordManagerClient::PasswordFormToJsonForRequest(
     const std::string& event,
@@ -806,10 +815,15 @@ absl::optional<std::string> OhPasswordManagerClient::PasswordFormToJsonForSave(
 
 void OhPasswordManagerClient::ProcessAutofillCancel(
     const std::string& fillContent) {
-  LOG(INFO) << "autofill process fill cancel";
-  if (is_keyboard_supressed_) {
-    SetShouldSuppressKeyboard(false);
+  // If it is on the PC platform, or if the request is not sent by me, I will
+  // not handle the fill cancle event.
+  if (!is_keyboard_supressed_) {
+    LOG(INFO) << "don't need to handle the fill cancle event";
+    return;
   }
+
+  LOG(INFO) << "autofill handle fill cancel event";
+  SetShouldSuppressKeyboard(false);
 
   if (!web_contents()) {
     LOG(ERROR) << "web_contents is nullptr";
@@ -864,10 +878,31 @@ void OhPasswordManagerClient::AutoFillWithIMFEvent(bool is_username,
   auto json_str = PasswordFormToJsonForRequest(EVENT_FILL, form_to_request_url_,
                                                username, password, &imf_info);
   if (json_str.has_value()) {
-    LOG(INFO) << "call autofill for save from IMF";
+    LOG(INFO) << "call autofill for request from IMF";
+    bool result = autofill_client->OnAutofillEvent(json_str.value());
+    if (!result) {
+      LOG(ERROR) << "failed to call autofill for request";
+      return;
+    }
     SetShouldSuppressKeyboard(true);
-    autofill_client->OnAutofillEvent(json_str.value());
   }
+}
+
+void OhPasswordManagerClient::FillData(const std::string& page_url,
+                                       const std::string& username,
+                                       const std::string& password,
+                                       bool is_other_account) {
+  if (is_keyboard_supressed_) {
+    SetShouldSuppressKeyboard(false);
+  }
+  if (!last_request_fill_password_.field_renderer_id.is_null()) {
+    auto_filled_forms_[*(last_request_fill_password_.field_renderer_id)] =
+        is_other_account;
+  }
+
+  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+  FillAccountSuggestion(GURL(page_url), convert.from_bytes(username),
+                        convert.from_bytes(password));
 }
 
 void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
@@ -886,7 +921,7 @@ void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
     LOG(ERROR) << "autofill_driver is nullptr";
     return;
   }
-  LOG(INFO) << "SetShouldSuppressKeyboard=" << (suppress ? "true" : "false");
+  LOG(INFO) << "set the keyboard suppressd=" << (suppress ? "true" : "false");
   autofill_driver->SetShouldSuppressKeyboardCallback(suppress);
   is_keyboard_supressed_ = suppress;
 }
@@ -911,18 +946,12 @@ void OhPasswordManagerClient::FillAccountSuggestion(
     const GURL& page_url,
     const std::u16string& username,
     const std::u16string& password) {
-  if (is_keyboard_supressed_) {
-    SetShouldSuppressKeyboard(false);
-  }
   password_manager::ContentPasswordManagerDriver* driver =
       driver_factory_->GetDriverForFrame(web_contents()->GetFocusedFrame());
   if (!driver) {
     return;
   }
 
-  if (!last_request_fill_password_.field_renderer_id.is_null()) {
-    auto_filled_forms_.insert(last_request_fill_password_.field_renderer_id);
-  }
   driver->FillAccountSuggestion(page_url, username, password);
 }
 
@@ -951,21 +980,25 @@ void OhPasswordManagerClient::OnRequestAutofill(
     LOG(ERROR) << "autofill_client is nullptr";
     return;
   }
-  if (state == autofill::mojom::OhosPasswordFormAutofillState::kTextChanged) {
-    auto_filled_forms_.erase(password_data.field_renderer_id);
+  if (state == OhosPasswordFormAutofillState::kTextChanged &&
+      password_data.field_renderer_id) {
+    auto_filled_forms_.erase(*password_data.field_renderer_id);
   }
   form_to_request_url_ = page_url;
 
   if (!base::ohos::IsPcDevice()) {
-    if (state ==
-        autofill::mojom::OhosPasswordFormAutofillState::kNotRequested) {
+    if (state == OhosPasswordFormAutofillState::kNotRequested) {
       auto json_str = PasswordFormToJsonForRequest(
           EVENT_FILL, page_url, username_data, password_data);
       if (json_str.has_value()) {
-        SetShouldSuppressKeyboard(true);
         LOG(INFO) << "call autofill for request from system, form_id="
                   << form_id;
-        autofill_client->OnAutofillEvent(json_str.value());
+        bool result = autofill_client->OnAutofillEvent(json_str.value());
+        if (!result) {
+          LOG(ERROR) << "failed to call autofill for request";
+          return;
+        }
+        SetShouldSuppressKeyboard(true);
         UpdateLastRequestFilledItems(username_data, password_data, form_id);
       }
     }
@@ -974,21 +1007,23 @@ void OhPasswordManagerClient::OnRequestAutofill(
     // trigger a filling request when it is clicked for the first time. After
     // the PC mode is fully supported, it requests filling every time it is
     // clicked.
-    if (state ==
-        autofill::mojom::OhosPasswordFormAutofillState::kHasBeenRequested) {
+    if (state == OhosPasswordFormAutofillState::kHasBeenRequested) {
       return;
     }
 
-    auto event =
-        state == autofill::mojom::OhosPasswordFormAutofillState::kTextChanged
-            ? EVENT_UPDATE
-            : EVENT_FILL;
+    auto event = (state == OhosPasswordFormAutofillState::kTextChanged)
+                     ? EVENT_UPDATE
+                     : EVENT_FILL;
     auto json_str = PasswordFormToJsonForRequest(event, page_url, username_data,
                                                  password_data);
     if (json_str.has_value()) {
       LOG(INFO) << "call autofill for request from system, state="
                 << static_cast<int32_t>(state);
-      autofill_client->OnAutofillEvent(json_str.value());
+      bool result = autofill_client->OnAutofillEvent(json_str.value());
+      if (!result) {
+        LOG(ERROR) << "failed to call autofill for request";
+        return;
+      }
       UpdateLastRequestFilledItems(username_data, password_data, form_id);
     }
   }

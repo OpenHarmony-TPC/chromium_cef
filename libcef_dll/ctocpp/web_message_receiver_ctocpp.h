@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3b5e9726c583668eb1ab69c7a7337c7f8993b002$
+// $hash=32d8a2d5e6e5880fdbdda1cd513ad77021a58803$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_WEB_MESSAGE_RECEIVER_CTOCPP_H_
@@ -38,6 +38,7 @@ class CefWebMessageReceiverCToCpp
 
   // CefWebMessageReceiver methods.
   void OnMessage(CefRefPtr<CefValue> message) override;
+  bool OnMessageWithBoolResult(CefRefPtr<CefValue> message) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WEB_MESSAGE_RECEIVER_CTOCPP_H_
