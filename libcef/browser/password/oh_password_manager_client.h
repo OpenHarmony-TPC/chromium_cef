@@ -187,6 +187,11 @@ class OhPasswordManagerClient
                             bool is_new_password,
                             const std::string& content);
 
+  void FillData(const std::string& page_url,
+                const std::string& username,
+                const std::string& password,
+                bool is_other_account);
+
   void SetShouldSuppressKeyboard(bool suppress);
 
   void UpdateLastRequestFilledItems(
@@ -378,7 +383,7 @@ class OhPasswordManagerClient
   autofill::FormRendererId last_filled_form_id_;
   autofill::FieldRendererId last_fill_focus_renderer_id_;
 
-  std::set<autofill::FieldRendererId> auto_filled_forms_;
+  std::unordered_map<std::uint64_t, bool> auto_filled_forms_;
 
   autofill::InputFillRequestData last_request_fill_username_;
   autofill::InputFillRequestData last_request_fill_password_;

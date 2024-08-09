@@ -48,9 +48,10 @@ const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
-const std::string KEY_PAGE_URL = "pageUrl";
 const std::string KEY_USERNAME = "username";
 const std::string KEY_PASSWORD = "password";
+const std::string KEY_RETURN_PAGE_URL = "autofill_viewdata_origin_pageurl";
+const std::string KEY_RETURN_OTHER_ACCOUNT = "autofill_viewdata_other_account";
 #endif
 } // namespace
 
@@ -202,13 +203,15 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   }
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
-  const std::string* page_url = root_dict->FindString(KEY_PAGE_URL);
   const std::string* username = root_dict->FindString(KEY_USERNAME);
   const std::string* password = root_dict->FindString(KEY_PASSWORD);
+  const std::string* page_url = root_dict->FindString(KEY_RETURN_PAGE_URL);
+  bool is_other_account = root_dict->FindBool(KEY_RETURN_OTHER_ACCOUNT).value_or(false);
   if (username || password) {
     ForwardDataToPasswordManager(page_url ? *page_url : std::string(),
                                  username ? *username : std::string(),
-                                 password ? *password : std::string());
+                                 password ? *password : std::string(),
+                                 is_other_account);
     return;
   }
 #endif
@@ -229,7 +232,8 @@ void OhAutofillManager::FillData(const std::string& json_str) {
 void OhAutofillManager::ForwardDataToPasswordManager(
     const std::string& page_url,
     const std::string& username,
-    const std::string& password) {
+    const std::string& password,
+    bool is_other_account) {
   LOG(INFO) << "autofill save, forward to password_manager";
   auto* rfh =
       static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
@@ -248,10 +252,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     return;
   }
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-  password_manager->FillAccountSuggestion(GURL(page_url),
-                                          convert.from_bytes(username),
-                                          convert.from_bytes(password));
+  password_manager->FillData(page_url, username, password, is_other_account);
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,

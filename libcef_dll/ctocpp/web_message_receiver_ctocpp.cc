@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7b86f31130ffff682546303df29d3fd46ded8b9d$
+// $hash=b7374d8ff6c27458586d4ab064947b2bbb353ed7$
 //
 
 #include "libcef_dll/ctocpp/web_message_receiver_ctocpp.h"
@@ -37,6 +37,32 @@ void CefWebMessageReceiverCToCpp::OnMessage(CefRefPtr<CefValue> message) {
 
   // Execute
   _struct->on_message(_struct, CefValueCppToC::Wrap(message));
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefWebMessageReceiverCToCpp::OnMessageWithBoolResult(
+    CefRefPtr<CefValue> message) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_web_message_receiver_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_message_with_bool_result)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: message; type: refptr_diff
+  DCHECK(message.get());
+  if (!message.get()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->on_message_with_bool_result(
+      _struct, CefValueCppToC::Wrap(message));
+
+  // Return type: bool
+  return _retval ? true : false;
 }
 
 // CONSTRUCTOR - Do not edit by hand.
