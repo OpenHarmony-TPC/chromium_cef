@@ -32,6 +32,10 @@
 #include "third_party/skia/include/core/SkImage.h"
 #endif  // BUILDFLAG(IS_OHOS)
 
+#ifdef OHOS_CLIPBOARD
+#include "skia/ext/image_operations.h"
+#endif
+
 namespace {
 
 void StringVisitCallback(CefRefPtr<CefStringVisitor> visitor,
@@ -77,6 +81,48 @@ void ExecWebContentsCommand(CefFrameHostImpl* fh,
   }
   fh->SendCommand(command);
 }
+
+#ifdef OHOS_CLIPBOARD
+const int kMaxContextImageNodeSizeIfDownScale = 1024;
+
+bool NeedsDownScale(const gfx::Size& original_image_size) {
+  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
+      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
+    return false;
+  }
+  LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
+             << ", height: " << original_image_size.height();
+  return true;
+}
+
+SkBitmap DownScale(const SkBitmap& image) {
+  if (image.isNull()) {
+    return SkBitmap();
+  }
+
+  gfx::Size image_size(image.width(), image.height());
+  if (!NeedsDownScale(image_size)) {
+    return image;
+  }
+
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+
+  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.width());
+  }
+
+  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.height());
+  }
+
+  return skia::ImageOperations::Resize(image,
+                                       skia::ImageOperations::RESIZE_GOOD,
+                                       static_cast<int>(scaled_size.width()),
+                                       static_cast<int>(scaled_size.height()));
+}
+#endif
 
 #define EXEC_WEBCONTENTS_COMMAND(name)                  \
   ExecWebContentsCommand(this, &CefFrameHostImpl::name, \
@@ -887,7 +933,12 @@ void CefFrameHostImpl::OnGetImageFromCache(
     if (sk_image) {
       SkBitmap bitmap;
       sk_image->asLegacyBitmap(&bitmap);
+#ifdef OHOS_CLIPBOARD
+      SkBitmap resize_image = DownScale(bitmap);
+      image_impl->AddBitmap(1.0, resize_image);
+#else
       image_impl->AddBitmap(1.0, bitmap);
+#endif
     }
   }
   handler->OnGetImageFromCache(image_impl);
