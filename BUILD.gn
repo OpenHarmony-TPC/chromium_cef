@@ -1934,7 +1934,7 @@ if (is_mac) {
     }
   }
 
-  shared_library("libweb_engine") {
+  shared_library("libarkweb_engine") {
     configs += [ "//build/config/sanitizers:cfi_config" ]
     defines = [ "LOGGING_TAG=\"cef#\"" ]
     sources =
@@ -2388,7 +2388,7 @@ if (is_mac) {
 
     deps = [
       ":libcef_dll_wrapper",
-      ":libweb_engine",
+      ":libarkweb_engine",
     ]
 
     defines = [ "CEF_USE_SANDBOX" ]
@@ -2467,7 +2467,7 @@ if (is_mac) {
 
     deps = [
       ":libcef_dll_wrapper",
-      ":libweb_engine",
+      ":libarkweb_engine",
     ]
 
     defines = [ "CEF_USE_SANDBOX" ]
@@ -2528,7 +2528,7 @@ if (is_mac) {
     deps = [
       ":gtest_teamcity",
       ":libcef_dll_wrapper",
-      ":libweb_engine",
+      ":libarkweb_engine",
       "//testing/gtest",
     ]
 
