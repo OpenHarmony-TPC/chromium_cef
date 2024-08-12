@@ -4126,6 +4126,8 @@ typedef enum {
   DESTROY = 2,
   ENTER_BFCACHE = 3,
   LEAVE_BFCACHE = 4,
+  VISIBLE_CEF = 5,
+  HIDDEN_CEF = 6,
 } cef_embed_life_change_t;
 
 ///
