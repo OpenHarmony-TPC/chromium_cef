@@ -117,7 +117,8 @@ class OhGinJavascriptBridgeDispatcherHost
     async_method_map_.clear();
     javascript_sync_permission_map_.clear();
     javascript_async_permission_map_.clear();
-    object_id_map_.clear();
+    sync_object_id_map_.clear();
+    async_object_id_map_.clear();
   }
 
   void DoCallH5Function(int32_t routing_id,
@@ -197,10 +198,18 @@ class OhGinJavascriptBridgeDispatcherHost
   std::shared_mutex share_mutex_;
   int32_t object_id_ = MIN_NATIVE_OBJ_ID;
 
-  std::unordered_map<int32_t, std::unordered_set<std::string>> object_id_map_;
+  std::unordered_map<int32_t, std::unordered_set<std::string>> sync_object_id_map_;
   std::unordered_map<int32_t, std::unordered_set<std::string>> async_object_id_map_;
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;
+  struct JsProperty {
+    ObjectID obj_id;
+    std::string obj_name;
+    std::unordered_set<std::string> methods;
+  };
+  using ObjectMethodList = std::vector<JsProperty>;
+  ObjectMethodList sync_js_obj_list_;
+  ObjectMethodList async_js_obj_list_;
 };
 }  // namespace NWEB
 #endif
