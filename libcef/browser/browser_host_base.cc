@@ -680,6 +680,18 @@ void CefBrowserHostBase::PrintToPDF(const CefString& path,
   print_util::PrintToPDF(web_contents, path, settings, callback);
 }
 
+void CefBrowserHostBase::CreateToPDF(const CefPdfPrintSettings& settings,
+                                     CefRefPtr<CefPdfValueCallback> callback) {
+  auto web_contents = GetWebContents();
+  if (!web_contents || !callback) {
+    LOG(ERROR) << "CefBrowserHostBase::CreateToPDF "
+                  "callback is nullptr or web_contents is null";
+    return;
+  }
+
+  print_util::CreateToPDF(web_contents, settings, callback);
+}
+
 bool CefBrowserHostBase::SendDevToolsMessage(const void* message,
                                              size_t message_size) {
   if (!message || message_size == 0) {
