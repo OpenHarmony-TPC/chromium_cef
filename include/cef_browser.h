@@ -603,6 +603,22 @@ class CefDownloadImageCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// Callback interface for CefBrowserHost::CreateToPDF. The methods of this
+/// class will be called on the browser process UI thread.
+///
+/*--cef(source=client)--*/
+class CefPdfValueCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be executed when the PDF create has completed. |value|
+  /// is the output pdf data stream.
+  /// successfully or false otherwise.
+  ///
+  /*--cef()--*/
+  virtual void OnReceiveValue(const char* value, const long size) = 0;
+};
+
+///
 /// Class used to represent the browser process aspects of a browser. The
 /// methods of this class can only be called in the browser process. They may be
 /// called on any thread in that process unless otherwise indicated in the
@@ -2058,5 +2074,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                     bool is_other_account,
                                     bool is_new_password,
                                     const std::string& content) = 0;
+
+  ///
+  /// Create pdf data stream.
+  ///
+  /*--cef()--*/
+  virtual void CreateToPDF(const CefPdfPrintSettings& settings,
+                           CefRefPtr<CefPdfValueCallback> callback) = 0;                                    
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

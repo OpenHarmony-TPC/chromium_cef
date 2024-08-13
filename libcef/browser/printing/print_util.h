@@ -1,4 +1,4 @@
-// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2022-2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
@@ -22,6 +22,10 @@ void PrintToPDF(content::WebContents* web_contents,
                 const CefString& path,
                 const CefPdfPrintSettings& settings,
                 CefRefPtr<CefPdfPrintCallback> callback);
+
+void CreateToPDF(content::WebContents* web_contents,
+                 const CefPdfPrintSettings& settings,
+                 CefRefPtr<CefPdfValueCallback> callback);
 
 }  // namespace print_util
 

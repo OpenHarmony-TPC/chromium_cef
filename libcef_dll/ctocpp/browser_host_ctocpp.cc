@@ -19,6 +19,7 @@
 #include "libcef_dll/cpptoc/java_script_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/navigation_entry_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/pdf_value_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/precompile_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/set_lock_callback_cpptoc.h"
@@ -3472,6 +3473,30 @@ void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
 
   // Execute
   _struct->get_overscroll_offset(_struct, offset_x, offset_y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::CreateToPDF(
+    const CefPdfPrintSettings& settings,
+    CefRefPtr<CefPdfValueCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, create_to_pdf)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->create_to_pdf(_struct, &settings,
+                         CefPdfValueCallbackCppToC::Wrap(callback));
 }
 #endif
 // CONSTRUCTOR - Do not edit by hand.

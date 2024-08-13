@@ -605,6 +605,25 @@ typedef struct _cef_download_image_callback_t {
 } cef_download_image_callback_t;
 
 ///
+/// Callback structure for cef_browser_host_t::CreateToPDF. The functions of
+/// this structure will be called on the browser process UI thread.
+///
+typedef struct _cef_pdf_value_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Method that will be executed when the PDF create has completed. |value| is
+  /// the output pdf data stream. successfully or false (0) otherwise.
+  ///
+  void(CEF_CALLBACK* on_receive_value)(struct _cef_pdf_value_callback_t* self,
+                                       const char* value,
+                                       const long size);
+} cef_pdf_value_callback_t;
+
+///
 /// Structure used to represent the browser process aspects of a browser. The
 /// functions of this structure can only be called in the browser process. They
 /// may be called on any thread in that process unless otherwise indicated in
@@ -1941,6 +1960,14 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *get_overscroll_offset)(struct _cef_browser_host_t *self,
                                             float* offset_x, float* offset_y);
+
+  ///
+  /// Create pdf data stream.
+  ///
+  void(CEF_CALLBACK* create_to_pdf)(
+      struct _cef_browser_host_t* self,
+      const struct _cef_pdf_print_settings_t* settings,
+      struct _cef_pdf_value_callback_t* callback);
 } cef_browser_host_t;
 
 ///
