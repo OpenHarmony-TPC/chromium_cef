@@ -196,6 +196,13 @@ void CefWebContentsViewOSR::MouseSelectMenuShow(bool show) {
     rwhv->MouseSelectMenuShow(show);
   }
 }
+
+void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->ChangeVisibilityOfQuickMenu();
+  }
+}
 #endif
 
 void CefWebContentsViewOSR::StartDragging(

@@ -509,6 +509,21 @@ void CefTouchSelectionControllerClientOSR::MouseSelectMenuShow(bool show) {
     browser->web_contents()->SetShowingContextMenu(true);
   }
 }
+
+void CefTouchSelectionControllerClientOSR::ChangeVisibilityOfQuickMenu() {
+  if (!rwhv_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return;
+  }
+  handler->ChangeVisibilityOfQuickMenu();
+}
 #endif
 
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
