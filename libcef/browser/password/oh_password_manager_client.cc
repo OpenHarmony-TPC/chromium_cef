@@ -928,18 +928,9 @@ void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
 
 void OhPasswordManagerClient::UpdateLastRequestFilledItems(
     const autofill::InputFillRequestData& username_data,
-    const autofill::InputFillRequestData& password_data,
-    autofill::FormRendererId form_id) {
+    const autofill::InputFillRequestData& password_data) {
   last_request_fill_username_ = username_data;
   last_request_fill_password_ = password_data;
-  last_filled_form_id_ = form_id;
-  if (last_request_fill_username_.is_focused) {
-    last_fill_focus_renderer_id_ =
-        last_request_fill_username_.field_renderer_id;
-  } else if (last_request_fill_password_.is_focused) {
-    last_fill_focus_renderer_id_ =
-        last_request_fill_password_.field_renderer_id;
-  }
 }
 
 void OhPasswordManagerClient::FillAccountSuggestion(
@@ -985,6 +976,10 @@ void OhPasswordManagerClient::OnRequestAutofill(
     auto_filled_forms_.erase(*password_data.field_renderer_id);
   }
   form_to_request_url_ = page_url;
+  last_fill_form_id_ = form_id;
+  last_fill_focus_renderer_id_ = username_data.is_focused
+                                     ? username_data.field_renderer_id
+                                     : password_data.field_renderer_id;
 
   if (!base::ohos::IsPcDevice()) {
     if (state == OhosPasswordFormAutofillState::kNotRequested) {
@@ -999,7 +994,7 @@ void OhPasswordManagerClient::OnRequestAutofill(
           return;
         }
         SetShouldSuppressKeyboard(true);
-        UpdateLastRequestFilledItems(username_data, password_data, form_id);
+        UpdateLastRequestFilledItems(username_data, password_data);
       }
     }
   } else {
@@ -1024,7 +1019,7 @@ void OhPasswordManagerClient::OnRequestAutofill(
         LOG(ERROR) << "failed to call autofill for request";
         return;
       }
-      UpdateLastRequestFilledItems(username_data, password_data, form_id);
+      UpdateLastRequestFilledItems(username_data, password_data);
     }
   }
 }
