@@ -234,6 +234,8 @@ class CefBrowserHostBase : public CefBrowserHost,
   void PrintToPDF(const CefString& path,
                   const CefPdfPrintSettings& settings,
                   CefRefPtr<CefPdfPrintCallback> callback) override;
+  void CreateToPDF(const CefPdfPrintSettings& settings,
+                   CefRefPtr<CefPdfValueCallback> callback) override;
   void ReplaceMisspelling(const CefString& word) override;
   void AddWordToDictionary(const CefString& word) override;
   void SendKeyEvent(const CefKeyEvent& event) override;

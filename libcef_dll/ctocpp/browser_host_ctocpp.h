@@ -319,6 +319,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                             bool is_other_account,
                             bool is_new_password,
                             const std::string& content) override;
+  void CreateToPDF(const CefPdfPrintSettings& settings,
+                   CefRefPtr<CefPdfValueCallback> callback) override;
 #ifdef OHOS_GET_SCROLL_OFFSET
   void GetScrollOffset(float* offset_x, float* offset_y) override;
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
