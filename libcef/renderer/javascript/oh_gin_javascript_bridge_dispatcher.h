@@ -75,6 +75,7 @@ class OhGinJavascriptBridgeDispatcher
       int h5_object_id,
       bool is_promise);
 
+  bool IsSyncMethod(ObjectID object_id, const std::string& method_name);
   bool IsAsyncMethod(ObjectID object_id, const std::string& method_name);
 
  private:
@@ -82,8 +83,8 @@ class OhGinJavascriptBridgeDispatcher
   void OnDestruct() override;
   void OnAddNamedObject(const std::string& name,
                         ObjectID object_id,
-                        const base::Value::List& async_method_list,
-                        bool need_update);
+                        const base::Value::List& sync_method_list,
+                        const base::Value::List& async_method_list);
   void OnRemoveNamedObject(const std::string& name);
 
   bool HasH5ObjectMethod(int h5_object_id, const std::string& method_name);
@@ -101,7 +102,9 @@ class OhGinJavascriptBridgeDispatcher
 
   typedef std::map<std::string, ObjectID> NamedObjectMap;
   typedef std::map<ObjectID, std::unordered_set<std::string>> MethodsMap;
+  MethodsMap sync_methods_map_;
   MethodsMap async_methods_map_;
+  void UpdateMethodsMap(ObjectID object_id, const base::Value::List& method_list, MethodsMap& methods_map);
   NamedObjectMap named_objects_;
   ObjectMap objects_;
   bool inside_did_clear_window_object_;

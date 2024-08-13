@@ -196,11 +196,10 @@ class OhPasswordManagerClient
 
   void UpdateLastRequestFilledItems(
       const autofill::InputFillRequestData& username_data,
-      const autofill::InputFillRequestData& password_data,
-      autofill::FormRendererId form_id);
+      const autofill::InputFillRequestData& password_data);
 
   bool IsUsernamePasswordForm(autofill::FormRendererId form_id) {
-    return form_id == last_filled_form_id_;
+    return form_id == last_fill_form_id_;
   }
 
   bool IsUsernamePasswordField(autofill::FieldRendererId field_id) {
@@ -380,7 +379,7 @@ class OhPasswordManagerClient
 #if defined(OHOS_PASSWORD_AUTOFILL)
   GURL form_to_request_url_;
 
-  autofill::FormRendererId last_filled_form_id_;
+  autofill::FormRendererId last_fill_form_id_;
   autofill::FieldRendererId last_fill_focus_renderer_id_;
 
   std::unordered_map<std::uint64_t, bool> auto_filled_forms_;

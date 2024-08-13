@@ -32,7 +32,12 @@
 namespace {
 
 // Delay before showing the quick menu, in milliseconds.
+#ifdef OHOS_DRAG_DROP
+constexpr int kQuickMenuDelayInMs = 0;
+#else
 constexpr int kQuickMenuDelayInMs = 100;
+#endif
+
 #ifdef OHOS_CLIPBOARD
 constexpr int kSelectHandleMoveDelayMixInMs = 400;
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
