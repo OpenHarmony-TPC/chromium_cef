@@ -1568,7 +1568,7 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string origin_locale =
       ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
   if (origin_locale == update_locale) {
-    LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
+    LOG(WARNING) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
 
