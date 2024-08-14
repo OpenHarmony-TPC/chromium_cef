@@ -1325,6 +1325,21 @@ render_handler_set_fill_content(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->SetFillContent(content);
 }
 
+void CEF_CALLBACK
+render_handler_set_gesture_event_result(struct _cef_render_handler_t* self,
+                                const bool result) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->SetGestureEventResult(result);
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1389,6 +1404,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_resize_scrollable_viewport =
       render_handler_on_resize_scrollable_viewport;
   GetStruct()->set_fill_content = render_handler_set_fill_content;
+  GetStruct()->set_gesture_event_result = render_handler_set_gesture_event_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

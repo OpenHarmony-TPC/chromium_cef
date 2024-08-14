@@ -449,6 +449,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetFillContent(const std::string& content) {}
+
+  ///
+  /// SetGestureEventResult
+  ///
+  /*--cef()--*/
+  virtual void SetGestureEventResult(const bool result) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

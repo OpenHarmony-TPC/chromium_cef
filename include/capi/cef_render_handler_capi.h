@@ -447,6 +447,11 @@ typedef struct _cef_render_handler_t {
   ///
   void(CEF_CALLBACK* set_fill_content)(struct _cef_render_handler_t* self,
                                        const char* content);
+  ///
+  /// SetGestureEventResult
+  ///
+  void(CEF_CALLBACK* set_gesture_event_result)(struct _cef_render_handler_t* self,
+                                       bool result);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
