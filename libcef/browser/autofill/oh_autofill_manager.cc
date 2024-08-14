@@ -188,10 +188,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
 }
 
 void OhAutofillManager::FillData(const std::string& json_str) {
-  if (form_ == nullptr) {
-    return;
-  }
-
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
     return;
@@ -215,6 +211,10 @@ void OhAutofillManager::FillData(const std::string& json_str) {
     return;
   }
 #endif
+
+  if (form_ == nullptr) {
+    return;
+  }
 
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
