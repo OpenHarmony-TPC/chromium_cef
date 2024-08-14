@@ -422,11 +422,11 @@ void CefFrameHostImpl::LoadRequest(cef::mojom::RequestParamsPtr params) {
 void CefFrameHostImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
   LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit, std::string()
 #ifdef OHOS_POST_URL
-                    ,
+,
                     std::string(),
                     std::vector<char>()
 #endif
-                    ,
+,
                     user_gesture);
 }
 #endif
@@ -436,12 +436,12 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
                                          ui::PageTransition transition,
                                          const std::string& extra_headers
 #ifdef OHOS_POST_URL
-                                         ,
+,
                                          const std::string& method,
                                          const std::vector<char>& post_data
 #endif
 #ifdef OHOS_NETWORK_LOAD
-                                         ,
+,
                                          bool user_gesture
  #endif
                                         ) {
