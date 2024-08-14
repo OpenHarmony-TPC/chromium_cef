@@ -230,6 +230,14 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void HideHandleAndQuickMenuIfNecessary(bool hide) {}
 #endif
+
+#if defined(OHOS_CLIPBOARD)
+  ///
+  /// Called when you click on the selected area.
+  ///
+  /*--cef()--*/
+  virtual void ChangeVisibilityOfQuickMenu() {}
+#endif
 };
 
 ///

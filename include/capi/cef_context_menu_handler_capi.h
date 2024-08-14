@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b4593fab0fae90e9b9ff4658ab94055a465f2b3d$
+// $hash=ee64b4aa6e77fb09f64e448d335424a6877fc2d7$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -237,6 +237,12 @@ typedef struct _cef_context_menu_handler_t {
   void(CEF_CALLBACK* hide_handle_and_quick_menu_if_necessary)(
       struct _cef_context_menu_handler_t* self,
       int hide);
+
+  ///
+  /// Called when you click on the selected area.
+  ///
+  void(CEF_CALLBACK* change_visibility_of_quick_menu)(
+      struct _cef_context_menu_handler_t* self);
 } cef_context_menu_handler_t;
 
 ///

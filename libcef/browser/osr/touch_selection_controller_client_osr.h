@@ -100,6 +100,7 @@ class CefTouchSelectionControllerClientOSR
 
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
+  void ChangeVisibilityOfQuickMenu();
 #endif
  private:
   class EnvEventObserver;
