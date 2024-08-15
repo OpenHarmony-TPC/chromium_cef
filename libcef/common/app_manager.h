@@ -75,6 +75,7 @@ class CefAppManager {
 #ifdef OHOS_NETWORK_LOAD
   std::vector<std::string> CustomSchemeCmdLineSplit(std::string str,
                                                     const char split);
+  void RenderAddCustomSchemes();
 #endif
 
   // Custom schemes handled by the client.
