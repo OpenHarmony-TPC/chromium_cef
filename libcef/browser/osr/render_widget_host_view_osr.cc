@@ -3664,6 +3664,11 @@ void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
     gesture_provider_.SetNativeEmbedEnabled(false);
   }
   render_widget_host_->input_router()->SetGestureEventResult(result);
+  CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+  if (handler) {
+    handler->SetGestureEventResult(result);
+  }
 }
 
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {

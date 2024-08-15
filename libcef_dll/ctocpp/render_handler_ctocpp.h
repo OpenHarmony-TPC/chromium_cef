@@ -143,6 +143,7 @@ class CefRenderHandlerCToCpp
                                  bool isStart) override;
   void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
   void SetFillContent(const std::string& content) override;
+  void SetGestureEventResult(bool result) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
