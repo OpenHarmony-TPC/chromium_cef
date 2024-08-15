@@ -2321,16 +2321,13 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
         return;
       }
       uint64_t pointer0 = base::RandUint64();
-      if (pointer0 == ULLONG_MAX) {
+      if (pointer0 == ULLONG_MAX || ((pointer0 + 1) == ULLONG_MAX)) {
         retry_times++;
         continue;
       }
+      pointer0 = ((pointer0 % 2) == 0) ? (pointer0 + 1) : pointer0;
       uint64_t pointer1 = pointer0 + 1;
-      auto iter = std::find_if(portMap_.begin(), portMap_.end(), [&pointer0, &pointer1](auto& cc){
-        std::pair<uint64_t, uint64_t> rnd = cc.first;
-        return (rnd.first == pointer0 || rnd.second == pointer0 || rnd.first == pointer1);
-      });
-
+      auto iter = portMap_.find(std::make_pair(pointer0, pointer1));
       if (iter == portMap_.end()) {
         portMap_[std::make_pair(pointer0, pointer1)] =
             std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
