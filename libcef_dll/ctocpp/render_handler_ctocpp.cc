@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4ff2fb2de475a091839858d008c7babd10266501$
+// $hash=1342d3dc9ce2016e6792d06fe6541e9d0bc9e8c6$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -1033,9 +1033,10 @@ void CefRenderHandlerCToCpp::GetVisibleViewportRect(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
-                                                       const CefString& sceneId,
-                                                       bool isStart) {
+void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& sceneId,
+    bool isStart) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -1045,19 +1046,20 @@ void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> bro
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: text; type: string_byref_const
-  DCHECK(!sceneId.empty());
-  if (sceneId.empty()) {
-    return;
-  }
   // Verify param: browser; type: refptr_diff
   DCHECK(browser.get());
   if (!browser.get()) {
     return;
   }
+  // Verify param: sceneId; type: string_byref_const
+  DCHECK(!sceneId.empty());
+  if (sceneId.empty()) {
+    return;
+  }
 
   // Execute
-  _struct->send_dynamic_frame_loss_event(_struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
+  _struct->send_dynamic_frame_loss_event(
+      _struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1079,7 +1081,8 @@ void CefRenderHandlerCToCpp::OnResizeScrollableViewport(
   }
 
   // Execute
-  _struct->on_resize_scrollable_viewport(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_resize_scrollable_viewport(_struct,
+                                         CefBrowserCppToC::Wrap(browser));
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1104,7 +1107,7 @@ void CefRenderHandlerCToCpp::SetFillContent(const std::string& content) {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SetGestureEventResult(bool result) {
+void CefRenderHandlerCToCpp::SetGestureEventResult(const bool result) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -1116,6 +1119,28 @@ void CefRenderHandlerCToCpp::SetGestureEventResult(bool result) {
 
   // Execute
   _struct->set_gesture_event_result(_struct, result);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::StartVibraFeedback(
+    const std::string& vibratorType) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, start_vibra_feedback)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: vibratorType; type: std_string_byref_const
+  DCHECK(!vibratorType.empty());
+  if (vibratorType.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->start_vibra_feedback(_struct, vibratorType.c_str());
 }
 
 // CONSTRUCTOR - Do not edit by hand.
