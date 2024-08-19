@@ -840,10 +840,13 @@ bool TerminateRenderProcess() override;
 
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
   using PortHandle = std::pair<uint64_t, uint64_t>;
-  std::map<PortHandle, MessagePipe> portMap_;
-  std::set<std::string> postedPorts_;
+  base::Lock web_message_lock_;
+  std::map<PortHandle, MessagePipe> portMap_ GUARDED_BY(web_message_lock_);
+  std::set<std::string> postedPorts_ GUARDED_BY(web_message_lock_);
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
-      receiverMap_;
+      receiverMap_ GUARDED_BY(web_message_lock_);
+  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
+      base::ThreadPool::CreateSequencedTaskRunner({});
 
 #if defined(OHOS_INPUT_EVENTS)
   uint64_t last_zoom_time_ = 0;
