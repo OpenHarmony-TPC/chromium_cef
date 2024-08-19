@@ -485,6 +485,8 @@ source_set("libcef_static") {
               "libcef/browser/alloy/chrome_profile_alloy.h",
               "libcef/browser/alloy/chrome_profile_manager_alloy.cc",
               "libcef/browser/alloy/chrome_profile_manager_alloy.h",
+              "libcef/browser/alloy/render_process_state_handler.cc",
+              "libcef/browser/alloy/render_process_state_handler.h",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.cc",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.h",
               "libcef/browser/alloy/dialogs/alloy_javascript_dialog_manager_delegate.cc",

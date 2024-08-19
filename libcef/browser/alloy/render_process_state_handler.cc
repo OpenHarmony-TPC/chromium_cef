@@ -1,0 +1,123 @@
+#include "base/logging.h"
+#include "base/trace_event/trace_event.h"
+#include "cef/libcef/browser/alloy/render_process_state_handler.h"
+#include "res_sched_client_adapter.h"
+
+RenderProcessStateHandler *RenderProcessStateHandler::instance = nullptr;
+
+RenderProcessStateHandler::RenderProcessStateHandler() {}
+
+RenderProcessStateHandler *RenderProcessStateHandler::GetInstance()
+{
+	if (instance == nullptr)
+	{
+		instance = new RenderProcessStateHandler();
+	}
+	return instance;
+}
+
+RenderProcessStateHandler::~RenderProcessStateHandler()
+{
+	instance = nullptr;
+}
+
+RenderProcessStateHandler::UpdateRenderProcessState(
+		uint32_t render_process_id,
+		int nweb_id,
+		bool is_to_background)
+{
+	using namespace OHOS::NWeb;
+
+	if (render_process_id == 0)
+	{
+		LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: render process has not init, nweb_id: " << nweb_id
+							 << " is_to_background: " << is_to_background;
+		WebComponentState initial_web_component = {nweb_id, is_to_background};
+		initial_web_component_list_.push_back(initial_web_component);
+		return;
+	}
+
+	LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: render_id:" << render_process_id
+						 << " nweb_id: " << nweb_id << " is_to_background: " << is_to_background;
+	bool report_background_state = is_to_background;
+	bool is_render_init = true;
+	for (RenderProcessStateMap &item : render_process_map_list)
+	{
+		LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: for_render_id:" << item.render_process_id;
+		if (item.render_process_id != render_process_id)
+		{
+			continue;
+		}
+		is_render_init = false;
+
+		bool is_web_init = true;
+		for (WebComponentState &web_component_state : item.web_component_list)
+		{
+			LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: item.nweb_id: " << web_component_state.nweb_id
+								 << " state: " << web_component_state.state;
+			if (web_component_state.nweb_id != nweb_id)
+			{
+				if (report_background_state && !web_component_state.state)
+				{
+					report_background_state = false;
+				}
+				continue;
+			}
+			is_web_init = false;
+			web_component_state.state = is_to_background;
+		}
+
+		if (is_web_init)
+		{
+			LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: add new web: " << nweb_id
+								 << " state: " << is_to_background;
+
+			WebComponentState new_web_component = {nweb_id, is_to_background};
+			item.web_component_list.push_back(new_web_component);
+		}
+	}
+
+	if (is_render_init)
+	{
+		LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: add new render: " << render_process_id
+							 << " nweb_id: " << nweb_id << " state: " << is_to_background;
+		WebComponentState new_web_component = {nweb_id, is_to_background};
+		std::vector<WebComponentState> web_component_list;
+		web_component_list.push_back(new_web_component);
+		RenderProcessStateMap new_render_process_state_map = {render_process_id, web_component_list};
+		render_process_map_list_.push_back(new_render_process_state_map);
+	}
+
+	LOG(INFO) << "RenderProcessStateHandler::UpdateRenderProcessState: ReportRenderProcessStatus render_id: " << render_process_id
+						<< " report_background_state: " << report_background_state;
+	ResSchedStatusAdapter status = report_background_state
+																		 ? ResSchedStatusAdapter::WEB_INACTIVE
+																		 : ResSchedStatusAdapter::WEB_ACTIVE;
+	base::ProcessId process_id = render_process_host->GetProcess().Pid();
+	ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+	TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "render_process_id", render_process_id,
+							 "status", static_cast<int32_t>(status));
+}
+
+void RenderProcessStateHandler::InitRenderProcessState(
+		uint32_t render_process_id,
+		int nweb_id)
+{
+	if (initial_web_component_list_.size() == 0)
+	{
+		LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: No task";
+		return;
+	}
+
+	for (auto item = initial_web_component_list_.begin(); item != initial_web_component_list_.end(); ++item)
+	{
+		if (item->nweb_id == nweb_id)
+		{
+			LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: initial render_id: " << render_process_id
+								 << " nweb_id: " << nweb_id;
+			UpdateRenderProcessState(render_process_id, nweb_id);
+			item = initial_web_component_list_.erase(item);
+			LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: size: " << initial_web_component_list_.size();
+		}
+	}
+}

@@ -59,6 +59,7 @@
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
+#include "libcef/browser/alloy/render_process_state_handler.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -777,13 +778,13 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
-  ReportRenderProcessStatus(false);
+  UpdateRenderProcessState(false);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
-  ReportRenderProcessStatus(true);
+  UpdateRenderProcessState(true);
   SetVisible(false);
 }
 
@@ -833,32 +834,49 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
   }
 }
 
-void AlloyBrowserHostImpl::ReportRenderProcessStatus(bool is_web_hidden) {
-  using namespace OHOS::NWeb;
-
+void AlloyBrowserHostImpl::UpdateRenderProcessState(bool is_to_background) {
   content::WebContents* contents = web_contents();
   if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
+    LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState web_contents is null";
     return;
   }
 
   if (auto render_view_host = contents->GetRenderViewHost()) {
     auto render_process_host = render_view_host->GetProcess();
     if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
+      LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState render_process_host is null";
       return;
     }
 
-    ResSchedStatusAdapter status = is_web_hidden
-                                       ? ResSchedStatusAdapter::WEB_INACTIVE
-                                       : ResSchedStatusAdapter::WEB_ACTIVE;
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
-    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
-               "process_id", process_id);
-    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_web_hidden: " << is_web_hidden << " process_id: " << process_id;
+    RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(process_id, nweb_id_, is_to_background);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::UpdateRenderProcessState process_id: " << process_id
+               << " nweb_id_: " << nweb_id_ << " is_to_background: " << is_to_background;
   } else {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
+    LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState render_view_host is null";
+    return;
+  }
+}
+
+void AlloyBrowserHostImpl::InitRenderProcessState() {
+  content::WebContents* contents = web_contents();
+  if (!contents) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::initRenderProcessState web_contents is null";
+    return;
+  }
+
+  if (auto render_view_host = contents->GetRenderViewHost()) {
+    auto render_process_host = render_view_host->GetProcess();
+    if (!render_process_host) {
+      LOG(ERROR) << "AlloyBrowserHostImpl::initRenderProcessState render_process_host is null";
+      return;
+    }
+
+    base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    RenderProcessStateHandler::GetInstance()->InitRenderProcessState(process_id, nweb_id_);
+    LOG(DEBUG) << "AlloyBrowserHostImpl::initRenderProcessState process_id: " << process_id << " nweb_id_: " << nweb_id_ <<;
+  } else {
+    LOG(ERROR) << "AlloyBrowserHostImpl::InitRenderProcessState render_view_host is null";
     return;
   }
 }
@@ -2417,10 +2435,13 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     CEF_POST_TASK(
         CEF_UIT,
         base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatus, this, true));
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::InitRenderProcessState, this));
     return;
   }
   ReportWindowStatus(true);
-  ReportRenderProcessStatus(is_hidden_);
+  InitRenderProcessState();
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
