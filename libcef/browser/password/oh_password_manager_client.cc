@@ -154,6 +154,8 @@ typedef autofill::SavePasswordProgressLogger Logger;
 
 namespace {
 #if defined(OHOS_PASSWORD_AUTOFILL)
+const std::string SOURCE = "source";
+const std::string SOURCE_LOGIN = "login";
 const std::string EVENT = "event";
 const std::string EVENT_SAVE = "save";
 const std::string EVENT_FILL = "fill";
@@ -754,6 +756,7 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
 
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, event));
+  view_data_list.Append(base::Value::Dict().Set(SOURCE, SOURCE_LOGIN));
   view_data_list.Append(base::Value::Dict().Set(KEY_PAGE_URL, page_url.spec()));
   if (imf_info) {
     view_data_list.Append(
@@ -793,6 +796,7 @@ absl::optional<std::string> OhPasswordManagerClient::PasswordFormToJsonForSave(
     const password_manager::PasswordForm& form) {
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_SAVE));
+  view_data_list.Append(base::Value::Dict().Set(SOURCE, SOURCE_LOGIN));
   view_data_list.Append(base::Value::Dict().Set(
       KEY_PAGE_URL, url::Origin::Create(form.url).GetURL().spec()));
 
@@ -1012,14 +1016,6 @@ void OhPasswordManagerClient::OnRequestAutofill(
       }
     }
   } else {
-    // The current password coffer does not have a PC UI interface. It can only
-    // trigger a filling request when it is clicked for the first time. After
-    // the PC mode is fully supported, it requests filling every time it is
-    // clicked.
-    if (state == OhosPasswordFormAutofillState::kHasBeenRequested) {
-      return;
-    }
-
     auto event = (state == OhosPasswordFormAutofillState::kTextChanged)
                      ? EVENT_UPDATE
                      : EVENT_FILL;
