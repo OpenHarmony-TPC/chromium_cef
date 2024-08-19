@@ -849,9 +849,9 @@ void AlloyBrowserHostImpl::UpdateRenderProcessState(bool is_to_background) {
     }
 
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(process_id, nweb_id_, is_to_background);
     LOG(DEBUG) << "AlloyBrowserHostImpl::UpdateRenderProcessState process_id: " << process_id
                << " nweb_id_: " << nweb_id_ << " is_to_background: " << is_to_background;
+    RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(process_id, nweb_id_, is_to_background);
   } else {
     LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState render_view_host is null";
     return;
@@ -873,8 +873,8 @@ void AlloyBrowserHostImpl::InitRenderProcessState() {
     }
 
     base::ProcessId process_id = render_process_host->GetProcess().Pid();
+    LOG(DEBUG) << "AlloyBrowserHostImpl::initRenderProcessState process_id: " << process_id << " nweb_id_: " << nweb_id_;
     RenderProcessStateHandler::GetInstance()->InitRenderProcessState(process_id, nweb_id_);
-    LOG(DEBUG) << "AlloyBrowserHostImpl::initRenderProcessState process_id: " << process_id << " nweb_id_: " << nweb_id_ <<;
   } else {
     LOG(ERROR) << "AlloyBrowserHostImpl::InitRenderProcessState render_view_host is null";
     return;

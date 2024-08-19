@@ -42,3 +42,5 @@ public:
       uint32_t render_process_id,
       int nweb_id);
 };
+
+#endif // CEF_LIBCEF_BROWSER_ALLOY_RENDER_PROCESS_STATE_HANDLER_H_
