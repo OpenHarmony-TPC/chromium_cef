@@ -34,6 +34,10 @@ namespace net_service {
 
 namespace {
 
+#if defined(OHOS_NETWORK_LOAD)
+constexpr int32_t NET_STATUS_CODE_400 = 400;
+#endif
+
 using OnInputStreamOpenedCallback =
     base::OnceCallback<void(std::unique_ptr<StreamReaderURLLoader::Delegate>,
                             std::unique_ptr<InputStream>)>;
@@ -687,7 +691,7 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
 #if defined(OHOS_NETWORK_LOAD)
-  if (status_code >= 400) {
+  if (status_code >= NET_STATUS_CODE_400) {
     if (!mime_type.empty()) {
       headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
     }
