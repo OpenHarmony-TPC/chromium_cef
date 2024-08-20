@@ -1084,12 +1084,13 @@ void CefFrameImpl::GetImageForContextNode() {
 
   cef::mojom::GetImageForContextNodeParamsPtr params =
       cef::mojom::GetImageForContextNodeParams::New();
-  blink::WebNode context_node = frame_->ContextMenuImageNode();
+  blink::WebNode context_node = frame_->ContextMenuNode();
   std::vector<uint8_t> image_data;
   gfx::Size original_size;
   std::string image_extension;
 
   if (context_node.IsNull() || !context_node.IsElementNode()) {
+    LOG(WARNING) << "Context node is null or is not element node";
     SendToBrowserFrame(__FUNCTION__,
                        base::BindOnce(
                            [](cef::mojom::GetImageForContextNodeParamsPtr data,
@@ -1110,6 +1111,8 @@ void CefFrameImpl::GetImageForContextNode() {
   params->height = resize_image.height();
   params->image = resize_image;
   params->image_extension = image_extension;
+  LOG(DEBUG) << "GetImageForContextNode, image width: " << resize_image.width()
+             << ", height: " << resize_image.height();
   SendToBrowserFrame(
       __FUNCTION__,
       base::BindOnce(
