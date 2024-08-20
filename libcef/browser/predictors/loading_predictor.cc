@@ -152,6 +152,7 @@ void LoadingPredictor::PrepareForPageLoad(const GURL& url,
   PreconnectPrediction prediction;
   has_preconnect_prediction =
       AddInitialUrlToPreconnectPrediction(url, &prediction);
+
   if (!has_preconnect_prediction) {
     return;
   }

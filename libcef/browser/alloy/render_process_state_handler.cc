@@ -117,6 +117,7 @@ void RenderProcessStateHandler::InitRenderProcessState(
 			UpdateRenderProcessState(render_process_id, nweb_id, item->state);
 			item = initial_web_component_list_.erase(item);
 			LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: size: " << initial_web_component_list_.size();
+			return;
 		}
 	}
 }
