@@ -60,12 +60,15 @@ namespace autofill {
 using base::TimeTicks;
 
 void OhDriverInitHook(AutofillClient* client, ContentAutofillDriver* driver) {
+#if defined(OHOS_AUTOFILL)
+  driver->set_oh_autofill_manager(
+      base::WrapUnique(new OhAutofillManager(driver, client)));
+#else
   driver->set_autofill_manager(
       base::WrapUnique(new OhAutofillManager(driver, client)));
+#endif
   driver->GetAutofillAgent()->SetUserGestureRequired(false);
-  driver->GetAutofillAgent()->SetSecureContextRequired(true);
   driver->GetAutofillAgent()->SetFocusRequiresScroll(false);
-  driver->GetAutofillAgent()->SetQueryPasswordSuggestion(true);
 }
 
 OhAutofillManager::OhAutofillManager(AutofillDriver* driver,

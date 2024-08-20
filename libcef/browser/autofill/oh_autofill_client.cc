@@ -55,14 +55,16 @@ OhAutofillClient::~OhAutofillClient() {
 }
 
 void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
+#if defined(OHOS_AUTOFILL)
   std::string json_str = data->GetStdString();
   content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
   autofill::ContentAutofillDriver* driver =
       autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
-  auto mgr = static_cast<OhAutofillManager*>(driver->autofill_manager());
+  auto mgr = static_cast<OhAutofillManager*>(driver->oh_autofill_manager());
   if (mgr) {
     mgr->FillData(json_str);
   }
+#endif
 }
 
 bool OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
@@ -441,6 +443,14 @@ void OhAutofillClient::SuggestionSelected(int position) {
   }
 }
 
+void DriverInit(AutofillClient* client, const std::string& app_locale,
+                ContentAutofillDriver* driver) {
+  autofill::BrowserDriverInitHook(client, app_locale, driver);
+#if defined(OHOS_AUTOFILL)
+  autofill::OhDriverInitHook(client, driver);
+#endif
+}
+
 // Ownership: The native object is created (if autofill enabled) and owned by
 // AwContents. The native object creates the java peer which handles most
 // autofill functionality at the java side. The java peer is owned by Java
@@ -451,7 +461,7 @@ OhAutofillClient::OhAutofillClient(WebContents* contents,
           contents,
           use_autofill_manager
               ? base::BindRepeating(&autofill::OhDriverInitHook, this)
-              : base::BindRepeating(&autofill::BrowserDriverInitHook,
+              : base::BindRepeating(&autofill::DriverInit,
                                     this,
                                     g_browser_process->GetApplicationLocale()))
 #if DCHECK_IS_ON()
