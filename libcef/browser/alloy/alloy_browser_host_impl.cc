@@ -2431,17 +2431,14 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
 }
 
 void AlloyBrowserHostImpl::RenderViewReady() {
+  InitRenderProcessState();
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
         base::BindOnce(&AlloyBrowserHostImpl::ReportWindowStatus, this, true));
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(&AlloyBrowserHostImpl::InitRenderProcessState, this));
     return;
   }
   ReportWindowStatus(true);
-  InitRenderProcessState();
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
