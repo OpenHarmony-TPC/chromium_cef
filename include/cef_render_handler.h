@@ -455,6 +455,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetGestureEventResult(const bool result) {}
+
+  ///
+  /// Called when you need to start vibrator.
+  ///
+  /*--cef()--*/
+  virtual void StartVibraFeedback(const std::string& vibratorType) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

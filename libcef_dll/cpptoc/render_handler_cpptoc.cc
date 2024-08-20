@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b1d7d47349a7b507f118dad1960b2f6fab6eb280$
+// $hash=20b366e5920d32479114e6a5d57f5eae0deeb7d6$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -1092,9 +1092,12 @@ void CEF_CALLBACK render_handler_on_update_text_input_state_called(
       compositon_rangeVal);
 }
 
-void CEF_CALLBACK render_handler_get_word_selection(
-    struct _cef_render_handler_t *self, cef_browser_t *browser,
-    const cef_string_t *text, int8_t offset, cef_point_t *select) {
+void CEF_CALLBACK
+render_handler_get_word_selection(struct _cef_render_handler_t* self,
+                                  cef_browser_t* browser,
+                                  const cef_string_t* text,
+                                  int8_t offset,
+                                  cef_point_t* select) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1257,7 +1260,7 @@ void CEF_CALLBACK
 render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              const cef_string_t* sceneId,
-                                             bool isStart) {
+                                             int isStart) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1271,7 +1274,7 @@ render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
   if (!browser) {
     return;
   }
-  // Verify param: cef_screen_rect; type: simple_byref_const
+  // Verify param: sceneId; type: string_byref_const
   DCHECK(sceneId);
   if (!sceneId) {
     return;
@@ -1279,7 +1282,8 @@ render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->SendDynamicFrameLossEvent(
-      CefBrowserCToCpp::Wrap(browser), CefString(sceneId), isStart);
+      CefBrowserCToCpp::Wrap(browser), CefString(sceneId),
+      isStart ? true : false);
 }
 
 void CEF_CALLBACK
@@ -1327,7 +1331,7 @@ render_handler_set_fill_content(struct _cef_render_handler_t* self,
 
 void CEF_CALLBACK
 render_handler_set_gesture_event_result(struct _cef_render_handler_t* self,
-                                const bool result) {
+                                        const int result) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1338,8 +1342,31 @@ render_handler_set_gesture_event_result(struct _cef_render_handler_t* self,
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->SetGestureEventResult(result);
+  CefRenderHandlerCppToC::Get(self)->SetGestureEventResult(result ? true
+                                                                  : false);
 }
+
+void CEF_CALLBACK
+render_handler_start_vibra_feedback(struct _cef_render_handler_t* self,
+                                    const char* vibratorType) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: vibratorType; type: std_string_byref_const
+  DCHECK(vibratorType);
+  if (!vibratorType) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->StartVibraFeedback(vibratorType);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1404,7 +1431,9 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_resize_scrollable_viewport =
       render_handler_on_resize_scrollable_viewport;
   GetStruct()->set_fill_content = render_handler_set_fill_content;
-  GetStruct()->set_gesture_event_result = render_handler_set_gesture_event_result;
+  GetStruct()->set_gesture_event_result =
+      render_handler_set_gesture_event_result;
+  GetStruct()->start_vibra_feedback = render_handler_start_vibra_feedback;
 }
 
 // DESTRUCTOR - Do not edit by hand.
