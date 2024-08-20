@@ -21,7 +21,7 @@ RenderProcessStateHandler::~RenderProcessStateHandler()
 	instance = nullptr;
 }
 
-RenderProcessStateHandler::UpdateRenderProcessState(
+void RenderProcessStateHandler::UpdateRenderProcessState(
 		uint32_t render_process_id,
 		int nweb_id,
 		bool is_to_background)
@@ -41,7 +41,7 @@ RenderProcessStateHandler::UpdateRenderProcessState(
 						 << " nweb_id: " << nweb_id << " is_to_background: " << is_to_background;
 	bool report_background_state = is_to_background;
 	bool is_render_init = true;
-	for (RenderProcessStateMap &item : render_process_map_list)
+	for (RenderProcessStateMap &item : render_process_map_list_)
 	{
 		LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: for_render_id:" << item.render_process_id;
 		if (item.render_process_id != render_process_id)
@@ -93,8 +93,7 @@ RenderProcessStateHandler::UpdateRenderProcessState(
 	ResSchedStatusAdapter status = report_background_state
 																		 ? ResSchedStatusAdapter::WEB_INACTIVE
 																		 : ResSchedStatusAdapter::WEB_ACTIVE;
-	base::ProcessId process_id = render_process_host->GetProcess().Pid();
-	ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
+	ResSchedClientAdapter::ReportRenderProcessStatus(status, render_process_id);
 	TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "render_process_id", render_process_id,
 							 "status", static_cast<int32_t>(status));
 }
@@ -115,7 +114,7 @@ void RenderProcessStateHandler::InitRenderProcessState(
 		{
 			LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: initial render_id: " << render_process_id
 								 << " nweb_id: " << nweb_id;
-			UpdateRenderProcessState(render_process_id, nweb_id);
+			UpdateRenderProcessState(render_process_id, nweb_id, item->state);
 			item = initial_web_component_list_.erase(item);
 			LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: size: " << initial_web_component_list_.size();
 		}
