@@ -113,6 +113,7 @@
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/content_switches.h"
+#include "crypto/sha2.h"
 #include "extensions/buildflags/buildflags.h"
 #include "net/base/url_util.h"
 #include "net/cert/cert_status_flags.h"
@@ -283,12 +284,8 @@ bool OhPasswordManagerClient::PromptUserToSaveOrUpdatePassword(
 
   // If the information used when the user logs in is current site filled in and
   // not modified, then do not prompt the user to save.
-  auto autofill_id =
-      form_to_save->GetPendingCredentials().password_element_renderer_id;
-  auto it = auto_filled_forms_.find(*autofill_id);
-  if (it != auto_filled_forms_.end() && it->second == false) {
+  if (IsLoginInfoConsistentWithFilled(form_to_save->GetPendingCredentials())) {
     LOG(INFO) << "auto filled password, not save on login";
-    auto_filled_forms_.erase(it);
     return false;
   }
 
@@ -895,10 +892,12 @@ void OhPasswordManagerClient::FillData(const std::string& page_url,
   if (is_keyboard_supressed_) {
     SetShouldSuppressKeyboard(false);
   }
-  if (!last_request_fill_password_.field_renderer_id.is_null()) {
-    auto_filled_forms_[*(last_request_fill_password_.field_renderer_id)] =
-        is_other_account;
-  }
+  auto autofill_id = last_request_fill_password_.field_renderer_id;
+  auto_filled_forms_[*autofill_id] =
+      is_other_account
+          ? std::string()
+          : crypto::SHA256HashString(username + std::to_string(*autofill_id) +
+                                     password);
 
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   FillAccountSuggestion(GURL(page_url), convert.from_bytes(username),
@@ -924,6 +923,23 @@ void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
   LOG(INFO) << "set the keyboard suppressd=" << (suppress ? "true" : "false");
   autofill_driver->SetShouldSuppressKeyboardCallback(suppress);
   is_keyboard_supressed_ = suppress;
+}
+
+bool OhPasswordManagerClient::IsLoginInfoConsistentWithFilled(
+    const password_manager::PasswordForm& info) {
+  auto autofill_id = info.password_element_renderer_id;
+  auto it = auto_filled_forms_.find(*autofill_id);
+  if (it != auto_filled_forms_.end() && !it->second.empty()) {
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
+    std::string login_digest = crypto::SHA256HashString(
+        convert.to_bytes(info.username_value) + std::to_string(*autofill_id) +
+        convert.to_bytes(info.password_value));
+    if (it->second == login_digest) {
+      auto_filled_forms_.erase(it);
+      return true;
+    }
+  }
+  return false;
 }
 
 void OhPasswordManagerClient::UpdateLastRequestFilledItems(
@@ -970,10 +986,6 @@ void OhPasswordManagerClient::OnRequestAutofill(
   if (!autofill_client) {
     LOG(ERROR) << "autofill_client is nullptr";
     return;
-  }
-  if (state == OhosPasswordFormAutofillState::kTextChanged &&
-      password_data.field_renderer_id) {
-    auto_filled_forms_.erase(*password_data.field_renderer_id);
   }
   form_to_request_url_ = page_url;
   last_fill_form_id_ = form_id;
