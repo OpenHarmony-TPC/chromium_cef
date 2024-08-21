@@ -467,7 +467,7 @@ bool NeedsReload() override;
   void GetHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
-  void SetScrollable(bool enable) override;
+  void SetScrollable(bool enable, int scrollType) override;
   void UpdateDrawRect() override;
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
