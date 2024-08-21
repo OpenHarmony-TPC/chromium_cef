@@ -2405,7 +2405,7 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
 }
 
 void AlloyBrowserHostImpl::RenderViewReady() {
-  RenderProcessStateHandler::GetInstance()->InitRenderProcessState(process_id, nweb_id_);
+  RenderProcessStateHandler::GetInstance()->InitRenderProcessState(GetRenderProcessId(), nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
