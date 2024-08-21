@@ -778,13 +778,13 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
-  UpdateRenderProcessState(false);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, false);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
-  UpdateRenderProcessState(true);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, true);
   SetVisible(false);
 }
 
@@ -834,52 +834,26 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
   }
 }
 
-void AlloyBrowserHostImpl::UpdateRenderProcessState(bool is_to_background) {
+base::ProcessId AlloyBrowserHostImpl::GetRenderProcessId() {
   content::WebContents* contents = web_contents();
   if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState web_contents is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId web_contents is null";
+    return 0;
   }
 
   if (auto render_view_host = contents->GetRenderViewHost()) {
     auto render_process_host = render_view_host->GetProcess();
     if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState render_process_host is null";
-      return;
+      LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_process_host is null";
+      return 0;
     }
-
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    LOG(DEBUG) << "AlloyBrowserHostImpl::UpdateRenderProcessState process_id: " << process_id
-               << " nweb_id_: " << nweb_id_ << " is_to_background: " << is_to_background;
-    RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(process_id, nweb_id_, is_to_background);
+    return render_process_host->GetProcess().Pid();
   } else {
-    LOG(ERROR) << "AlloyBrowserHostImpl::UpdateRenderProcessState render_view_host is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_view_host is null";
+    return 0;
   }
 }
 
-void AlloyBrowserHostImpl::InitRenderProcessState() {
-  content::WebContents* contents = web_contents();
-  if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::initRenderProcessState web_contents is null";
-    return;
-  }
-
-  if (auto render_view_host = contents->GetRenderViewHost()) {
-    auto render_process_host = render_view_host->GetProcess();
-    if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::initRenderProcessState render_process_host is null";
-      return;
-    }
-
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    LOG(DEBUG) << "AlloyBrowserHostImpl::initRenderProcessState process_id: " << process_id << " nweb_id_: " << nweb_id_;
-    RenderProcessStateHandler::GetInstance()->InitRenderProcessState(process_id, nweb_id_);
-  } else {
-    LOG(ERROR) << "AlloyBrowserHostImpl::InitRenderProcessState render_view_host is null";
-    return;
-  }
-}
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -2431,7 +2405,7 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
 }
 
 void AlloyBrowserHostImpl::RenderViewReady() {
-  InitRenderProcessState();
+  RenderProcessStateHandler::GetInstance()->InitRenderProcessState(process_id, nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
