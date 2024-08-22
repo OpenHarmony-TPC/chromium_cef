@@ -3043,8 +3043,11 @@ void CefBrowserHostBase::SetNativeWindow(cef_native_window_t window) {
   widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
 
-cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget() {
-  return widget_;
+cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget(bool isPopup) {
+  if (!isPopup) {
+    return widget_;
+  }
+  return popup_widget_;
 }
 
 void CefBrowserHostBase::SetWebDebuggingAccess(bool isEnableDebug) {
@@ -3992,3 +3995,8 @@ void CefBrowserHostBase::ScrollFocusedEditableNodeIntoView() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 #endif
+
+void CefBrowserHostBase::SetPopupWindow(cef_native_window_t window)
+{
+  popup_widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
+}

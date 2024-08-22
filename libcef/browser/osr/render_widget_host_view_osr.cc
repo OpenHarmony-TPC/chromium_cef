@@ -353,6 +353,9 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
   if (parent_host_view_) {
     browser_impl_ = parent_host_view_->browser_impl();
     DCHECK(browser_impl_);
+#if BUILDFLAG(IS_OHOS)
+    is_popup_ = true;
+#endif
   } else if (content::RenderViewHost::From(render_widget_host_)) {
     // AlloyBrowserHostImpl might not be created at this time for popups.
     browser_impl_ = AlloyBrowserHostImpl::GetBrowserForHost(
@@ -394,18 +397,18 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 #else
 #if BUILDFLAG(IS_OHOS)
   LOG(INFO) << "compositor construct, widget = "
-            << static_cast<uint32_t>(browser_impl_->GetAcceleratedWidget());
+            << static_cast<uint32_t>(browser_impl_->GetAcceleratedWidget(is_popup_));
   ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
-  accelerate_widget_map_[browser_impl_->GetAcceleratedWidget()]++;
+      browser_impl_->GetAcceleratedWidget(is_popup_));
+  accelerate_widget_map_[browser_impl_->GetAcceleratedWidget(is_popup_)]++;
   if (!compositor) {
     compositor = new ui::Compositor(
         context_factory->AllocateFrameSinkId(), context_factory,
         base::SingleThreadTaskRunner::GetCurrentDefault(),
         false /* enable_pixel_canvas */, use_external_begin_frame);
-    compositor->SetAcceleratedWidget(browser_impl_->GetAcceleratedWidget());
+    compositor->SetAcceleratedWidget(browser_impl_->GetAcceleratedWidget(is_popup_));
     CefRenderWidgetHostViewOSR::AddCompositor(
-        browser_impl_->GetAcceleratedWidget(), compositor);
+        browser_impl_->GetAcceleratedWidget(is_popup_), compositor);
     UpdateDrawMode();
   }
 #endif  // IS_OHOS
@@ -473,7 +476,7 @@ void CefRenderWidgetHostViewOSR::ReleaseCompositor() {
   if (!browser_impl_) {
     return;
   }
-  auto it1 = accelerate_widget_map_.find(browser_impl_->GetAcceleratedWidget());
+  auto it1 = accelerate_widget_map_.find(browser_impl_->GetAcceleratedWidget(is_popup_));
   if (it1 == accelerate_widget_map_.end()) {
     return;
   }
@@ -496,20 +499,20 @@ void CefRenderWidgetHostViewOSR::ReleaseCompositor() {
 #else
 #ifdef BUILDFLAG(IS_OHOS)
   LOG(INFO) << "ReleaseCompositor";
-  auto com = compositor_map_.find(browser_impl_->GetAcceleratedWidget());
-  if (--accelerate_widget_map_[browser_impl_->GetAcceleratedWidget()] == 0) {
+  auto com = compositor_map_.find(browser_impl_->GetAcceleratedWidget(is_popup_));
+  if (--accelerate_widget_map_[browser_impl_->GetAcceleratedWidget(is_popup_)] == 0) {
     if (!browser_impl_) {
       return;
     }
     LOG(INFO) << "ReleaseCompositor, widget = "
-              << static_cast<uint32_t>(browser_impl_->GetAcceleratedWidget());
+              << static_cast<uint32_t>(browser_impl_->GetAcceleratedWidget(is_popup_));
     if (com != compositor_map_.end()) {
       if (com->second != nullptr) {
         delete com->second;
       }
       compositor_map_.erase(com);
     }
-    accelerate_widget_map_.erase(browser_impl_->GetAcceleratedWidget());
+    accelerate_widget_map_.erase(browser_impl_->GetAcceleratedWidget(is_popup_));
   } else {
     if (com != compositor_map_.end()) {
       if (com->second->delegate() == this) {
@@ -602,7 +605,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
 
 #ifndef DISABLE_GPU
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
   compositor->SetDelegate(this);
   compositor->SetRootLayer(root_layer_.get());
 #if !BUILDFLAG(IS_OHOS)
@@ -720,9 +723,9 @@ void CefRenderWidgetHostViewOSR::WasOccluded() {
 }
 
 void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
-  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->SetEnableLowerFrameRate(enabled);
     }
@@ -730,9 +733,9 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
 }
 
 void CefRenderWidgetHostViewOSR::UpdateVSyncFrequency() {
-  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->UpdateVSyncFrequency();
     }
@@ -740,9 +743,9 @@ void CefRenderWidgetHostViewOSR::UpdateVSyncFrequency() {
 }
 
 void CefRenderWidgetHostViewOSR::ResetVSyncFrequency() {
-  if (browser_impl_ && browser_impl_->GetAcceleratedWidget()) {
+  if (browser_impl_ && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->ResetVSyncFrequency();
     }
@@ -757,7 +760,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
     if (event.type == CEF_TET_PRESSED) {
       is_editable_node_ = false;
       auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-          browser_impl_->GetAcceleratedWidget());
+          browser_impl_->GetAcceleratedWidget(is_popup_));
       if (compositor) {
         compositor->SetCurrentFrameSinkId(GetFrameSinkId());
       } else {
@@ -857,9 +860,9 @@ void CefRenderWidgetHostViewOSR::SendTouchGestureEvent(blink::WebTouchEvent& tou
 void CefRenderWidgetHostViewOSR::EvictFrameBackBuffers(bool invisible) {
   TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::EvictFrameBackBuffers",
                "invisible", invisible);
-  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget()) {
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
     if(compositor) {
         compositor->EvictFrameBackBuffers(invisible);
     }
@@ -972,7 +975,7 @@ void CefRenderWidgetHostViewOSR::UpdateBackgroundColor() {
     }
 #else
     auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->SetBackgroundColor(background_color_);
     }
@@ -1125,40 +1128,46 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
     content::RenderWidgetHostView* parent_host_view,
     const gfx::Rect& bounds,
     const gfx::Rect& anchor_rect) {
-  DCHECK_EQ(parent_host_view_, parent_host_view);
-  DCHECK(browser_impl_);
+    #if BUILDFLAG(IS_OHOS)
+    if (base::ohos::IsPcDevice()) {
+    #endif
+    DCHECK_EQ(parent_host_view_, parent_host_view);
+    DCHECK(browser_impl_);
 
-  if (parent_host_view_->popup_host_view_) {
-    // Cancel the previous popup widget.
-    parent_host_view_->popup_host_view_->CancelWidget();
+    if (parent_host_view_->popup_host_view_) {
+      // Cancel the previous popup widget.
+      parent_host_view_->popup_host_view_->CancelWidget();
+    }
+
+    parent_host_view_->set_popup_host_view(this);
+
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    CHECK(handler);
+
+    handler->OnPopupShow(browser_impl_.get(), true);
+
+    CefRect view_rect;
+    handler->GetViewRect(browser_impl_.get(), view_rect);
+    gfx::Rect client_pos(bounds.x() - view_rect.x, bounds.y() - view_rect.y,
+                         bounds.width(), bounds.height());
+
+    popup_position_ = client_pos;
+
+    CefRect widget_pos(client_pos.x(), client_pos.y(), client_pos.width(),
+                       client_pos.height());
+
+    if (handler.get()) {
+      handler->OnPopupSize(browser_impl_.get(), widget_pos);
+    }
+
+    // The size doesn't change for popups so we need to force the
+    // initialization.
+    SetRootLayerSize(true /* force */);
+    Show();
+  #if BUILDFLAG(IS_OHOS)
   }
-
-  parent_host_view_->set_popup_host_view(this);
-
-  CefRefPtr<CefRenderHandler> handler =
-      browser_impl_->GetClient()->GetRenderHandler();
-  CHECK(handler);
-
-  handler->OnPopupShow(browser_impl_.get(), true);
-
-  CefRect view_rect;
-  handler->GetViewRect(browser_impl_.get(), view_rect);
-  gfx::Rect client_pos(bounds.x() - view_rect.x, bounds.y() - view_rect.y,
-                       bounds.width(), bounds.height());
-
-  popup_position_ = client_pos;
-
-  CefRect widget_pos(client_pos.x(), client_pos.y(), client_pos.width(),
-                     client_pos.height());
-
-  if (handler.get()) {
-    handler->OnPopupSize(browser_impl_.get(), widget_pos);
-  }
-
-  // The size doesn't change for popups so we need to force the
-  // initialization.
-  SetRootLayerSize(true /* force */);
-  Show();
+  #endif
 }
 
 void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {}
@@ -1322,7 +1331,7 @@ gfx::Rect CefRenderWidgetHostViewOSR::GetBoundsInRootWindow() {
 #if BUILDFLAG(IS_OHOS)
 void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-    browser_impl_->GetAcceleratedWidget());
+    browser_impl_->GetAcceleratedWidget(is_popup_));
   if (compositor) {
     compositor->SendInternalBeginFrame();
   }
@@ -1330,7 +1339,7 @@ void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
 
 void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-            browser_impl_->GetAcceleratedWidget())) {
+            browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->SetDrawRect(rect);
     UpdateDrawRect(rect);
   }
@@ -1347,7 +1356,7 @@ void CefRenderWidgetHostViewOSR::UpdateDrawRect(const gfx::Rect &rect)
 
 void CefRenderWidgetHostViewOSR::SetDrawMode(int mode) {
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-            browser_impl_->GetAcceleratedWidget())) {
+            browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->SetDrawMode(mode);
   }
 }
@@ -1359,7 +1368,7 @@ void CefRenderWidgetHostViewOSR::SetFitContentMode(int mode) {
 void CefRenderWidgetHostViewOSR::UpdateDrawMode() {
   int mode = browser_impl_->GetDrawMode();
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-            browser_impl_->GetAcceleratedWidget())) {
+            browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->SetDrawMode(mode);
   }
 }
@@ -1529,7 +1538,7 @@ viz::FrameSinkId CefRenderWidgetHostViewOSR::GetRootFrameSinkId() {
   return compositor_ ? compositor_->frame_sink_id() : viz::FrameSinkId();
 #else
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
   return compositor ? compositor->frame_sink_id() : viz::FrameSinkId();
 #endif
 }
@@ -1844,7 +1853,7 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
     }
 #else
     auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->SetBackgroundColor(background_color_);
     }
@@ -1947,7 +1956,7 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
 #if defined(OHOS_COMPOSITE_RENDER)
   if (resized && should_wait_) {
     if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-            browser_impl_->GetAcceleratedWidget())) {
+            browser_impl_->GetAcceleratedWidget(is_popup_))) {
       compositor->SetShouldFrameSubmissionBeforeDraw(true);
     }
   }
@@ -2059,7 +2068,7 @@ void CefRenderWidgetHostViewOSR::SendExternalBeginFrame() {
     compositor_->IssueExternalBeginFrame(
 #else
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
   if (compositor) {
     compositor->IssueExternalBeginFrame(
 #endif
@@ -2296,7 +2305,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
   if (event.type == CEF_TET_PRESSED) {
     is_editable_node_ = false;
     auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
     if (compositor) {
       compositor->SetCurrentFrameSinkId(GetFrameSinkId());
     } else {
@@ -2893,7 +2902,7 @@ void CefRenderWidgetHostViewOSR::SetFrameRate() {
         base::TimeTicks::Now(), base::Microseconds(frame_rate_threshold_us_));
 #else
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
   if (compositor) {
     compositor->SetDisplayVSyncParameters(
         base::TimeTicks::Now(), base::Microseconds(frame_rate_threshold_us_));
@@ -3005,7 +3014,7 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
     compositor_->SetScaleAndSize(
 #else
   auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
-      browser_impl_->GetAcceleratedWidget());
+      browser_impl_->GetAcceleratedWidget(is_popup_));
   if (compositor) {
     compositor_local_surface_id_allocator_.GenerateId();
     compositor->SetScaleAndSize(
@@ -3705,7 +3714,7 @@ ui::Compositor* CefRenderWidgetHostViewOSR::GetCompositor() {
 #else
   if (browser_impl_) {
     return CefRenderWidgetHostViewOSR::GetCompositor(
-        browser_impl_->GetAcceleratedWidget());
+        browser_impl_->GetAcceleratedWidget(is_popup_));
   }
   return nullptr;
 #endif

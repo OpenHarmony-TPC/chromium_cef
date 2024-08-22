@@ -704,7 +704,7 @@ bool TerminateRenderProcess() override;
   std::string GetDataURI(const std::string& data);
 
   void SetNativeWindow(cef_native_window_t window) override;
-  cef_accelerated_widget_t GetAcceleratedWidget();
+  cef_accelerated_widget_t GetAcceleratedWidget(bool isPopup);
 
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
@@ -750,6 +750,7 @@ bool TerminateRenderProcess() override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 #endif
 
+  void SetPopupWindow(cef_native_window_t popupWindow) override;
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
@@ -858,6 +859,7 @@ bool TerminateRenderProcess() override;
   std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
 
   cef_accelerated_widget_t widget_;
+  cef_accelerated_widget_t popup_widget_;
   bool is_web_debugging_access_ = false;
   float virtual_pixel_ratio_ = 2.0;
   base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;

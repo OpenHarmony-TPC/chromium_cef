@@ -661,6 +661,7 @@ class CefRenderWidgetHostViewOSR
   bool forward_touch_to_popup_ = false;
 
 #if BUILDFLAG(IS_OHOS)
+  bool is_popup_ = false;
   gfx::SizeF root_layer_size_;
   static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
       compositor_map_;

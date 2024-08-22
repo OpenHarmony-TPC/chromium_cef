@@ -3771,6 +3771,21 @@ browser_host_create_to_pdf(struct _cef_browser_host_t* self,
       settingsObj, CefPdfValueCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK
+browser_host_set_popup_window(struct _cef_browser_host_t* self,
+                               cef_native_window_t window) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetPopupWindow(window);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -3985,6 +4000,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->process_autofill_cancel = browser_host_process_autofill_cancel;
   GetStruct()->auto_fill_with_imfevent = browser_host_auto_fill_with_imfevent;
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
+  GetStruct()->set_popup_window = browser_host_set_popup_window;
 }
 
 // DESTRUCTOR - Do not edit by hand.

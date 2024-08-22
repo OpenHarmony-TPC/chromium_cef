@@ -1968,6 +1968,13 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const struct _cef_pdf_print_settings_t* settings,
       struct _cef_pdf_value_callback_t* callback);
+
+  ///
+  /// Set popup window from ohos rs
+  ///
+  void(CEF_CALLBACK *set_popup_window)(struct _cef_browser_host_t *self,
+                                        cef_native_window_t popupwindow);
+
 } cef_browser_host_t;
 
 ///
