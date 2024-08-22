@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7460fa1f38e0e6d4296dba0deadc50a7ca5ef639$
+// $hash=e4359ad07b108653e62ec907b034b9dd4db907de$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -27,27 +27,23 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieManagerCToCpp
-    : public CefCToCppRefCounted<CefCookieManagerCToCpp,
-                                 CefCookieManager,
+    : public CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager,
                                  cef_cookie_manager_t> {
- public:
+public:
   CefCookieManagerCToCpp();
   virtual ~CefCookieManagerCToCpp();
 
   // CefCookieManager methods.
   bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor,
                        bool is_sync) override;
-  bool VisitUrlCookies(const CefString& url,
-                       bool includeHttpOnly,
+  bool VisitUrlCookies(const CefString &url, bool includeHttpOnly,
                        CefRefPtr<CefCookieVisitor> visitor,
-                       bool is_sync) override;
-  bool SetCookie(const CefString& url,
-                 const CefCookie& cookie,
-                 CefRefPtr<CefSetCookieCallback> callback,
-                 bool is_sync,
-                 const CefString& str_cookie) override;
-  bool DeleteCookies(const CefString& url,
-                     const CefString& cookie_name,
+                       bool is_sync,
+                       bool is_from_ndk) override;
+  bool SetCookie(const CefString &url, const CefCookie &cookie,
+                 CefRefPtr<CefSetCookieCallback> callback, bool is_sync,
+                 const CefString &str_cookie, bool includeHttpOnly) override;
+  bool DeleteCookies(const CefString &url, const CefString &cookie_name,
                      bool is_session,
                      CefRefPtr<CefDeleteCookiesCallback> callback,
                      bool is_sync) override;
@@ -60,4 +56,4 @@ class CefCookieManagerCToCpp
   void PutAcceptFileURLSchemeCookiesEnabled(bool allow) override;
 };
 
-#endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
+#endif // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
