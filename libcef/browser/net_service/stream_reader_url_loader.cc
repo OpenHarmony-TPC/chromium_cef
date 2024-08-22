@@ -19,15 +19,11 @@
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
 #include "content/public/browser/browser_thread.h"
-// #if defined(OHOS_API_PER)
 #include "net/base/features.h"
-// #endif
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
-// #if defined(OHOS_API_PER)
 #include "services/network/public/cpp/features.h"
-// #endif
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
 namespace net_service {
@@ -753,7 +749,8 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
   size_t size = response_delegate_->GetResponseDataBuffer(memory);
   LOG(DEBUG) << "shared-memory+++ GetResponseDataBuffer buffer size=" << size;
 
-  base::ReadOnlySharedMemoryRegion read_only_region = base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
+  base::ReadOnlySharedMemoryRegion read_only_region =
+      base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
   if (!read_only_region.IsValid()) {
     LOG(ERROR) << "shared-memory: convert to read only err";
     return false;
