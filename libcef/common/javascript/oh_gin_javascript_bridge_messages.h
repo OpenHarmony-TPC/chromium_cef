@@ -23,8 +23,8 @@ IPC_ENUM_TRAITS_MAX_VALUE(NWEB::OhGinJavascriptBridgeError,
 IPC_MESSAGE_ROUTED4(OhGinJavascriptBridgeMsg_AddNamedObject,
                     std::string /* name */,
                     int32_t /* object_id */,
-                    base::Value::List /* sync_method_list */,
-                    base::Value::List /* async_method_list */)
+                    base::Value::List /* async_method_list */,
+                    bool /* update_method*/)
 
 IPC_MESSAGE_ROUTED1(OhGinJavascriptBridgeMsg_RemoveNamedObject,
                     std::string /* name */)
