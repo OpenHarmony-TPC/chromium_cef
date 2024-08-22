@@ -312,6 +312,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void GetScrollOffset(float* offset_x, float* offset_y) override;
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
 #endif
+  void SetPopupWindow(cef_native_window_t window) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

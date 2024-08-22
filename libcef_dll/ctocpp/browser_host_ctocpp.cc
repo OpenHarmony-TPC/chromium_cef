@@ -3499,6 +3499,21 @@ void CefBrowserHostCToCpp::CreateToPDF(
                          CefPdfValueCallbackCppToC::Wrap(callback));
 }
 #endif
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetPopupWindow(cef_native_window_t window) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_popup_window)) {
+        return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_popup_window(_struct, window);
+}
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

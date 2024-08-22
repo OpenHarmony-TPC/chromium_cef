@@ -2081,5 +2081,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void CreateToPDF(const CefPdfPrintSettings& settings,
                            CefRefPtr<CefPdfValueCallback> callback) = 0;                                    
+  ///
+  /// SetPopupWindow.
+  ///
+  /*--cef()--*/
+  virtual void SetPopupWindow(cef_native_window_t window) = 0;
+
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
