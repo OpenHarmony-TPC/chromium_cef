@@ -994,17 +994,17 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
     return;
   }
 
-  blink::WebDocument document = web_frame->GetDocument();
-  if (!document.Url().ProtocolIs("https") &&
-      !document.Url().ProtocolIs("http")) {
-    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
-    return;
-  }
-
   blink::WebDocumentSubresourceFilter* filter =
       web_frame->GetDocumentLoader()->GetWebSubresourceFilter();
   if (!filter) {
     LOG(DEBUG) << "[AdBlock] TriggerElementHidingInFrame filter null";
+    return;
+  }
+
+  blink::WebDocument document = web_frame->GetDocument();
+  if (!document.Url().ProtocolIs("https") &&
+      !document.Url().ProtocolIs("http")) {
+    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
     return;
   }
 

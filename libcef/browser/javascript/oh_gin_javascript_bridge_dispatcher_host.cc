@@ -571,7 +571,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     const std::vector<std::string>& method_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (sync_method_map_.empty() && async_method_map_.empty()) {
-    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                   "is empty!";
     return;
   }
