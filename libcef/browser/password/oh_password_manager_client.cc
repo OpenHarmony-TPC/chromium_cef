@@ -959,6 +959,7 @@ void OhPasswordManagerClient::FillAccountSuggestion(
     return;
   }
 
+  LOG(INFO) << "[Autofill] Try to fill account suggestion.";
   driver->FillAccountSuggestion(page_url, username, password);
 }
 
@@ -969,7 +970,8 @@ void OhPasswordManagerClient::OnRequestAutofill(
     const autofill::mojom::OhosPasswordFormAutofillState state,
     const autofill::InputFillRequestData& username_data,
     const autofill::InputFillRequestData& password_data) {
-  LOG(INFO) << "On request autofill, state=" << static_cast<int>(state)
+  LOG(INFO) << "[Autofill] On request autofill"
+            << ", state=" << static_cast<int>(state)
             << ", username.bounds=" << username_data.bounds.ToString()
             << ", username.is_focus=" << username_data.is_focused
             << ", username.type=" << username_data.type
