@@ -25,7 +25,6 @@ void CefReportManager::ExposeInterfacesToRenderer(
     service_manager::BinderRegistry* registry,
     blink::AssociatedInterfaceRegistry*associated_registry,
     content::RenderProcessHost* host) {
-
   registry->AddInterface(base::BindRepeating(
       [](int render_process_id,
         mojo::PendingReceiver<cef::mojom::ReportManager> receiver) {
@@ -37,7 +36,9 @@ void CefReportManager::ExposeInterfacesToRenderer(
 }
 
 void CefReportManager::ReportKeyThread(int status, int process_id, int thread_id, int role) {
-  LOG(DEBUG) << "ReportKeyThread process_id:" << process_id << ", thread_id:" << thread_id << ", render_process_id:" << render_process_id_;
+  LOG(DEBUG) << "ReportKeyThread process_id:" << process_id
+             << ", thread_id:" << thread_id
+             << ", render_process_id:" << render_process_id_;
 
   OHOS::NWeb::ResSchedClientAdapter::ReportKeyThread(
     static_cast<OHOS::NWeb::ResSchedStatusAdapter>(status),
