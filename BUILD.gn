@@ -410,17 +410,25 @@ test("libcef_static_unittests") {
   sources = [
     "libcef/browser/devtools/devtools_util_unittest.cc",
     "libcef/browser/geometry_util_unittest.cc",
+    "libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
   ]
 
   deps = [
+    ":libcef_static",
     ":libcef_static_unittested",
     "//base/test:run_all_unittests",
     "//testing/gtest",
+    "libcef/common/mojom",
   ]
 
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
+  ]
+
+  include_dirs = [
+    "//third_party/skia",
+    "//third_party/boringssl/src/include"
   ]
 }
 
@@ -1170,6 +1178,9 @@ source_set("libcef_static") {
 
     # Support relative include paths.
     "//third_party/abseil-cpp:absl",
+
+    # Support ohos_nweb include paths.
+    "//ohos_nweb:nweb_sources",
   ]
 
   deps = [
