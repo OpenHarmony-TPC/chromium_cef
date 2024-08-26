@@ -1842,7 +1842,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// set Scrollable
   ///
   /*--cef()--*/
-  virtual void SetScrollable(bool enable) = 0;
+  virtual void SetScrollable(bool enable, int scrollType) = 0;
 
   ///
   ///  Start current camera.

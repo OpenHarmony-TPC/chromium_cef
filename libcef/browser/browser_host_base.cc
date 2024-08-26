@@ -119,6 +119,12 @@ namespace {
 #if defined(OHOS_INPUT_EVENTS)
 static float DEFAULT_MIN_ZOOM_FACTOR = 0.01f;
 static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
+
+enum class WebScrollType : int {
+    UNKNOWN = -1,
+    EVENT = 0,
+    POSITION
+};
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #if defined(OHOS_EX_DOWNLOAD)
@@ -3215,14 +3221,20 @@ void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
   }
 }
 
-void CefBrowserHostBase::SetScrollable(bool enable) {
+void CefBrowserHostBase::SetScrollable(bool enable, int scrollType) {
   LOG(DEBUG) << "set scrollable: " << enable;
+
   if (platform_delegate_) {
     platform_delegate_->SetScrollable(enable);
   }
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
+
+  if (scrollType == static_cast<int>(WebScrollType::UNKNOWN) ||
+      scrollType == static_cast<int>(WebScrollType::POSITION) ||
+      enable) {
+    auto frame = GetMainFrame();
+    if (frame && frame->IsValid()) {
+      static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
+    }
   }
 }
 
