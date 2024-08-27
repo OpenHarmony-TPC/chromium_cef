@@ -1526,7 +1526,7 @@ typedef struct _cef_browser_host_t {
   /// Post a message to the port.
   ///
   void(CEF_CALLBACK* post_port_message)(struct _cef_browser_host_t* self,
-                                        cef_string_t* port_handle,
+                                        const cef_string_t* port_handle,
                                         struct _cef_value_t* message);
 
   ///
@@ -1534,7 +1534,7 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_port_message_callback)(
       struct _cef_browser_host_t* self,
-      cef_string_t* port_handle,
+      const cef_string_t* port_handle,
       struct _cef_web_message_receiver_t* callback);
 
   ///

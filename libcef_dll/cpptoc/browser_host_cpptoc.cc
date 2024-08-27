@@ -2206,7 +2206,7 @@ browser_host_destroy_all_web_message_ports(struct _cef_browser_host_t* self) {
 
 void CEF_CALLBACK
 browser_host_post_port_message(struct _cef_browser_host_t* self,
-                               cef_string_t* port_handle,
+                               const cef_string_t* port_handle,
                                struct _cef_value_t* message) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2237,7 +2237,7 @@ browser_host_post_port_message(struct _cef_browser_host_t* self,
 
 void CEF_CALLBACK
 browser_host_set_port_message_callback(struct _cef_browser_host_t* self,
-                                       cef_string_t* port_handle,
+                                       const cef_string_t* port_handle,
                                        cef_web_message_receiver_t* callback) {
   shutdown_checker::AssertNotShutdown();
 

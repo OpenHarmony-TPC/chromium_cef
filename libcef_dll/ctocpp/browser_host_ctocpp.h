@@ -189,10 +189,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                       CefString& targetUri) override;
   void ClosePort(CefString& port_handle) override;
   void DestroyAllWebMessagePorts() override;
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void GetHitData(int& type, CefString& extra_data) override;
   void SetInitialScale(float scale) override;
