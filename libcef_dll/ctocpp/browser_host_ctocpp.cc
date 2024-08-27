@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8e01fb9e7e62314e7a74e50edbe9ddbc210914b9$
+// $hash=35d7e55964c4ab84e2945b5abc122d806d90741b$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -2841,7 +2841,8 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPrintBackground() {
   return _retval ? true : false;
 }
 
-NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetScrollable(bool enable, int scrollType) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -2852,7 +2853,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_scrollable(_struct, enable);
+  _struct->set_scrollable(_struct, enable, scrollType);
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StartCamera() {
@@ -3247,6 +3248,40 @@ void CefBrowserHostCToCpp::AdvanceFocusForIME(int focusType) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollToWithAnime(float x,
+                                             float y,
+                                             int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_to_with_anime)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_to_with_anime(_struct, x, y, duration);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollByWithAnime(float delta_x,
+                                             float delta_y,
+                                             int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_by_with_anime)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_by_with_anime(_struct, delta_x, delta_y, duration);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
                                               int top,
                                               int right,
@@ -3306,43 +3341,13 @@ void CefBrowserHostCToCpp::SetGrantFileAccessDirs(
   }
 }
 
-NO_SANITIZE("cfi-icall") 
-void CefBrowserHostCToCpp::ScrollToWithAnime(float x, float y, int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, scroll_to)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->scroll_to_with_anime(_struct, x, y, duration);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, scroll_by)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->scroll_by_with_anime(_struct, delta_x, delta_y, duration);
-}
-
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetAutofillCallback(
     CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+  if (CEF_MEMBER_MISSING(_struct, set_autofill_callback)) {
     return;
   }
 
@@ -3364,7 +3369,7 @@ void CefBrowserHostCToCpp::FillAutofillData(CefRefPtr<CefValue> message) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+  if (CEF_MEMBER_MISSING(_struct, fill_autofill_data)) {
     return;
   }
 

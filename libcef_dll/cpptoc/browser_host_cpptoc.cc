@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c65f621ede0901406dcd1c82e1bbd1e326e7094f$
+// $hash=3f75d50f1404831fa66091bb96597abd111f3ce9$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -3118,7 +3118,8 @@ browser_host_get_print_background(struct _cef_browser_host_t* self) {
 }
 
 void CEF_CALLBACK browser_host_set_scrollable(struct _cef_browser_host_t* self,
-                                              int enable) {
+                                              int enable,
+                                              int scrollType) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3129,7 +3130,8 @@ void CEF_CALLBACK browser_host_set_scrollable(struct _cef_browser_host_t* self,
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->SetScrollable(enable ? true : false);
+  CefBrowserHostCppToC::Get(self)->SetScrollable(enable ? true : false,
+                                                 scrollType);
 }
 
 void CEF_CALLBACK browser_host_start_camera(struct _cef_browser_host_t* self) {
@@ -3534,6 +3536,43 @@ browser_host_advance_focus_for_ime(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
+browser_host_scroll_to_with_anime(struct _cef_browser_host_t* self,
+                                  float x,
+                                  float y,
+                                  int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollToWithAnime(x, y, duration);
+}
+
+void CEF_CALLBACK
+browser_host_scroll_by_with_anime(struct _cef_browser_host_t* self,
+                                  float delta_x,
+                                  float delta_y,
+                                  int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y,
+                                                     duration);
+}
+
+void CEF_CALLBACK
 browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
                                    int left,
                                    int top,
@@ -3592,40 +3631,6 @@ browser_host_set_grant_file_access_dirs(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetGrantFileAccessDirs(dir_listList);
 }
 
-void CEF_CALLBACK browser_host_scroll_to_with_anime(struct _cef_browser_host_t* self,
-                                                    float x,
-                                                    float y,
-                                                    int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ScrollToWithAnime(x, y, duration);
-}
-
-void CEF_CALLBACK browser_host_scroll_by_with_anime(struct _cef_browser_host_t* self,
-                                                    float delta_x,
-                                                    float delta_y,
-                                                    int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y, duration);
-}
-
 void CEF_CALLBACK
 browser_host_set_autofill_callback(struct _cef_browser_host_t* self,
                                    cef_web_message_receiver_t* callback) {
@@ -3670,8 +3675,8 @@ browser_host_fill_autofill_data(struct _cef_browser_host_t* self,
       CefValueCppToC::Unwrap(message));
 }
 
-void CEF_CALLBACK
-browser_host_scroll_focused_editable_node_into_view(struct _cef_browser_host_t* self) {
+void CEF_CALLBACK browser_host_scroll_focused_editable_node_into_view(
+    struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -3932,13 +3937,13 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
   GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
   GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
+  GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
+  GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
   GetStruct()->notify_for_next_touch_event =
       browser_host_notify_for_next_touch_event;
   GetStruct()->set_grant_file_access_dirs =
       browser_host_set_grant_file_access_dirs;
-  GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
-  GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->set_autofill_callback = browser_host_set_autofill_callback;
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
   GetStruct()->scroll_focused_editable_node_into_view =

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1226c94fcbb06fb654cc597f5cd6793951cef504$
+// $hash=90a4f565796337a6d7f4a72eec97e3fb91db8f2d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -259,7 +259,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   int GetShrinkViewportHeight() override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
-  void SetScrollable(bool enable) override;
+  void SetScrollable(bool enable, int scrollType) override;
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
@@ -293,11 +293,13 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        int height,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
+  void ScrollToWithAnime(float x, float y, int32_t duration) override;
+  void ScrollByWithAnime(float delta_x,
+                         float delta_y,
+                         int32_t duration) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
   void ScrollFocusedEditableNodeIntoView() override;

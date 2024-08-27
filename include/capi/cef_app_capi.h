@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=f70d48ba4a8bd1fc8bcc7b3d6fb92d811e929498$
+// $hash=eadf7b3b90074e9b8a67aea85be1c85321fb5430$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
@@ -206,6 +206,11 @@ CEF_EXPORT void cef_resume_download(const cef_string_t* guid,
                                     const cef_string_t* mime_type,
                                     const cef_string_t* last_modified,
                                     const cef_string_t* received_slices_string);
+
+///
+/// This function should be called on the main application thread.
+///
+CEF_EXPORT struct _cef_download_item_t* cef_get_download_item(const char* guid);
 
 #ifdef __cplusplus
 }
