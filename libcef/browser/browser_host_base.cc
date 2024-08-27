@@ -2316,10 +2316,7 @@ CefString CefBrowserHostBase::Title() {
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
   if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(&CefBrowserHostBase::CreateWebMessagePorts, this,
-                       std::ref(ports)));
+    DCHECK(false) << "called on invalid thread";
     return;
   }
   base::AutoLock msg_lock(web_message_lock_);
@@ -2363,10 +2360,7 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
                                         std::vector<CefString>& port_handles,
                                         CefString& targetUri) {
   if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(&CefBrowserHostBase::PostWebMessage, this,
-                       std::ref(message), std::ref(port_handles), std::ref(targetUri)));
+    DCHECK(false) << "called on invalid thread";
     return;
   }
   base::AutoLock msg_lock(web_message_lock_);
@@ -2414,10 +2408,7 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::ClosePort(CefString& portHandle) {
   if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(&CefBrowserHostBase::ClosePort, this,
-                       std::ref(portHandle)));
+    DCHECK(false) << "called on invalid thread";
     return;
   }
   base::AutoLock msg_lock(web_message_lock_);
@@ -2566,8 +2557,10 @@ bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
   return true;
 }
 
-void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
+void CefBrowserHostBase::PostPortMessageInternal(const CefString& portHandle,
                                          CefRefPtr<CefValue> data) {
+  base::ScopedAllowBlocking scoped_allow_blocking;
+  base::AutoLock msg_lock(web_message_lock_);
   // construct blink message
   blink::WebMessagePort::Message message;
   if (!ConvertCefValueToBlinkMsg(data, message)) {
@@ -2575,7 +2568,6 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
     return;
   }
 
-  base::AutoLock msg_lock(web_message_lock_);
   // find the WebMessagePort in map
   for (auto iter = portMap_.begin(); iter != portMap_.end(); ++iter) {
     if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0) {
@@ -2597,14 +2589,18 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
   }
 }
 
-// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
-// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
-// WebMessagePort of the pipe.
-void CefBrowserHostBase::SetPortMessageCallback(
-    CefString& portHandle,
+void CefBrowserHostBase::PostPortMessage(const CefString& portHandle,
+                                         CefRefPtr<CefValue> data) {
+    sequenced_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&CefBrowserHostBase::PostPortMessageInternal,
+                                  this, portHandle, data));
+}
+
+void CefBrowserHostBase::SetPortMessageCallbackInternal(
+    const CefString& portHandle,
     CefRefPtr<CefWebMessageReceiver> callback) {
+  base::ScopedAllowBlocking scoped_allow_blocking;
   base::AutoLock msg_lock(web_message_lock_);
-  // get sequenced task runner
   std::string pointer0 = portHandle.ToString();
 
   // get web message receiver instance
@@ -2640,6 +2636,17 @@ void CefBrowserHostBase::SetPortMessageCallback(
 
   // save in map
   receiverMap_[pointer0] = webMsgReceiver;
+}
+
+// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
+// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
+// WebMessagePort of the pipe.
+void CefBrowserHostBase::SetPortMessageCallback(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback) {
+  sequenced_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&CefBrowserHostBase::SetPortMessageCallbackInternal,
+                                this, portHandle, callback));
 }
 
 void CefBrowserHostBase::DestroyAllWebMessagePorts() {

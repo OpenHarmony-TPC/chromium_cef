@@ -515,10 +515,10 @@ bool NeedsReload() override;
   void ClosePort(CefString& port_handle) override;
   bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
                                  blink::WebMessagePort::Message& message);
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void DestroyAllWebMessagePorts() override;
 #endif  // defined(OHOS_MSGPORT)
@@ -834,6 +834,13 @@ bool TerminateRenderProcess() override;
                          CefRefPtr<CefPrecompileCallback> callback);
 
   void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
+
+  void SetPortMessageCallbackInternal(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback);
+  void PostPortMessageInternal(const CefString& portHandle,
+                                          CefRefPtr<CefValue> data);
+
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.
@@ -849,7 +856,7 @@ bool TerminateRenderProcess() override;
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
       receiverMap_ GUARDED_BY(web_message_lock_);
   scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
-      base::ThreadPool::CreateSequencedTaskRunner({});
+          base::ThreadPool::CreateSequencedTaskRunner({});
 
 #if defined(OHOS_INPUT_EVENTS)
   uint64_t last_zoom_time_ = 0;

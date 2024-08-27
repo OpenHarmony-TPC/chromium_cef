@@ -1546,7 +1546,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// Post a message to the port.
   ///
   /*--cef()--*/
-  virtual void PostPortMessage(CefString& port_handle,
+  virtual void PostPortMessage(const CefString& port_handle,
                                CefRefPtr<CefValue> message) = 0;
 
   ///
@@ -1554,7 +1554,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) = 0;
 
   ///

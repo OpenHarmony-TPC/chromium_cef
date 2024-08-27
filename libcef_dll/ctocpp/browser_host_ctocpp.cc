@@ -1976,7 +1976,7 @@ void CefBrowserHostCToCpp::DestroyAllWebMessagePorts() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
+void CefBrowserHostCToCpp::PostPortMessage(const CefString& port_handle,
                                            CefRefPtr<CefValue> message) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1994,13 +1994,13 @@ void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
   }
 
   // Execute
-  _struct->post_port_message(_struct, port_handle.GetWritableStruct(),
+  _struct->post_port_message(_struct, port_handle.GetStruct(),
                              CefValueCToCpp::Unwrap(message));
 }
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetPortMessageCallback(
-    CefString& port_handle,
+    const CefString& port_handle,
     CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2019,7 +2019,7 @@ void CefBrowserHostCToCpp::SetPortMessageCallback(
 
   // Execute
   _struct->set_port_message_callback(
-      _struct, port_handle.GetWritableStruct(),
+      _struct, port_handle.GetStruct(),
       CefWebMessageReceiverCppToC::Wrap(callback));
 }
 
