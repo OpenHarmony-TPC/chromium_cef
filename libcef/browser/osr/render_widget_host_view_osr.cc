@@ -1652,6 +1652,9 @@ bool CefRenderWidgetHostViewOSR::WebPageSnapshot(
     height = (std::abs(height) * pageSize.height()) / 100;
   }
 
+  pageSize.Scale(page_scale_factor_);
+  pageOffsize.Scale(page_scale_factor_);
+
   software_compositor_->DemandDrawSwAsync(id, width, height, pageSize,
                                           pageOffsize, std::move(callback));
   return true;
