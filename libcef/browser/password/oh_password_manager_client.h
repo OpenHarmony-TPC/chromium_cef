@@ -340,6 +340,8 @@ class OhPasswordManagerClient
   void UpdateLastRequestFilledItems(
       const autofill::InputFillRequestData& username_data,
       const autofill::InputFillRequestData& password_data);
+
+  void NotifyAutofillPopupShow(bool is_show);
 #endif
 
   content::BrowserContext* const context_;

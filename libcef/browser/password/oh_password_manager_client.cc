@@ -128,6 +128,7 @@
 #include "libcef/browser/alloy/alloy_browser_context.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "libcef/browser/autofill/oh_autofill_client.h"
+#include "libcef/browser/autofill/oh_autofill_manager.h"
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/password/oh_password_store_factory.h"
@@ -953,6 +954,22 @@ void OhPasswordManagerClient::UpdateLastRequestFilledItems(
   last_request_fill_password_ = password_data;
 }
 
+void OhPasswordManagerClient::NotifyAutofillPopupShow(bool is_show) {
+  content::RenderFrameHost* rfh = web_contents()->GetFocusedFrame();
+  auto driver = autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
+  if (!driver) {
+    LOG(ERROR) << "autofill_driver is nullptr";
+    return;
+  }
+  auto autofill_manager =
+      static_cast<autofill::OhAutofillManager*>(driver->oh_autofill_manager());
+  if (!autofill_manager) {
+    LOG(ERROR) << "autofill_manager is nullptr";
+    return;
+  }
+  autofill_manager->SetPasswordPopupShow(is_show);
+}
+
 void OhPasswordManagerClient::FillAccountSuggestion(
     const GURL& page_url,
     const std::u16string& username,
@@ -1029,6 +1046,7 @@ void OhPasswordManagerClient::OnRequestAutofill(
         LOG(ERROR) << "failed to call autofill for request";
         return;
       }
+      NotifyAutofillPopupShow(true);
       UpdateLastRequestFilledItems(username_data, password_data);
     }
   }

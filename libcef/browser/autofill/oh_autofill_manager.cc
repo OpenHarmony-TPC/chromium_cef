@@ -264,7 +264,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     const std::string& username,
     const std::string& password,
     bool is_other_account) {
-  LOG(INFO) << "autofill save, forward to password_manager";
+  LOG(INFO) << "autofill fill data, forward to password_manager";
   auto* rfh =
       static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
   if (!rfh || !rfh->IsActive()) {
@@ -283,6 +283,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
   }
 
   password_manager->FillData(page_url, username, password, is_other_account);
+  is_password_popup_show_ = false;
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
@@ -459,7 +460,7 @@ void OhAutofillManager::OnDidFillAutofillFormDataImpl(
 void OhAutofillManager::OnHidePopupImpl() {
   LOG(INFO) << "OnHidePopupImpl";
 
-  if (!is_show_) {
+  if (!is_show_ && !is_password_popup_show_) {
     return;
   }
 
@@ -485,6 +486,7 @@ void OhAutofillManager::OnHidePopupImpl() {
     autofill_client->OnAutofillEvent(json_str.value());
   }
   is_show_ = false;
+  is_password_popup_show_ = false;
 }
 
 void OhAutofillManager::PropagateAutofillPredictions(
@@ -508,6 +510,7 @@ void OhAutofillManager::Reset() {
   LOG(INFO) << "Reset";
   AutofillManager::Reset();
   is_show_ = false;
+  is_password_popup_show_ = false;
   if (form_) {
     form_.reset(nullptr);
   }
