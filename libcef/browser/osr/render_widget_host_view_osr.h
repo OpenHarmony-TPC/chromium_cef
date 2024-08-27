@@ -226,6 +226,7 @@ class CefRenderWidgetHostViewOSR
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
+  void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility);
   void SetScrollable(bool enable);
   void OnDidNavigateMainFrameToNewPage() override;
   void AdvanceFocusForIME(int focusType);

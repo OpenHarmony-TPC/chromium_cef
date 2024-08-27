@@ -374,6 +374,13 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
                                       const CefNativeEmbedData& info) {}
+  
+  ///
+  /// Called when embed visibility.
+  ///
+  /*--cef()--*/
+  virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
+                                      bool visibility) {}
 
   ///
   /// Called when select all is clicked.
