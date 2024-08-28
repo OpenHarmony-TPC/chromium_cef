@@ -706,6 +706,7 @@ typedef struct _cef_browser_settings_t {
   int draw_mode;
   cef_state_t text_autosizing_enabled;
   cef_state_t universal_access_from_file_urls;
+  bool force_zero_layout_height;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
