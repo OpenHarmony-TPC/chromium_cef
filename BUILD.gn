@@ -523,8 +523,6 @@ source_set("libcef_static") {
               "libcef/browser/browser_util.h",
               "libcef/browser/certificate_query.cc",
               "libcef/browser/certificate_query.h",
-              "libcef/browser/received_slice_helper.h",
-              "libcef/browser/received_slice_helper.cc",
               "libcef/browser/chrome/browser_delegate.h",
               "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
               "libcef/browser/chrome/browser_platform_delegate_chrome.h",
@@ -681,12 +679,12 @@ source_set("libcef_static") {
               "libcef/browser/net/devtools_scheme_handler.h",
               "libcef/browser/net/internal_scheme_handler.cc",
               "libcef/browser/net/internal_scheme_handler.h",
+              "libcef/browser/net/ohos_applink_throttle.cc",
+              "libcef/browser/net/ohos_applink_throttle.h",
               "libcef/browser/net/scheme_handler.cc",
               "libcef/browser/net/scheme_handler.h",
               "libcef/browser/net/throttle_handler.cc",
               "libcef/browser/net/throttle_handler.h",
-              "libcef/browser/net/ohos_applink_throttle.cc",
-              "libcef/browser/net/ohos_applink_throttle.h",
               "libcef/browser/net_database/cef_data_base_impl.cc",
               "libcef/browser/net_database/cef_data_base_impl.h",
               "libcef/browser/net_service/browser_urlrequest_impl.cc",
@@ -769,6 +767,8 @@ source_set("libcef_static") {
               "libcef/browser/printing/print_util.cc",
               "libcef/browser/printing/print_util.h",
               "libcef/browser/process_util_impl.cc",
+              "libcef/browser/received_slice_helper.cc",
+              "libcef/browser/received_slice_helper.h",
               "libcef/browser/request_context_handler_map.cc",
               "libcef/browser/request_context_handler_map.h",
               "libcef/browser/request_context_impl.cc",
@@ -991,6 +991,8 @@ source_set("libcef_static") {
               "//chrome/app/chrome_main_delegate.h",
 
               # For Javascript
+              "libcef/browser/first_meaningful_paint_details_impl.cc",
+              "libcef/browser/first_meaningful_paint_details_impl.h",
               "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.cc",
               "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.h",
               "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.cc",
@@ -999,10 +1001,8 @@ source_set("libcef_static") {
               "libcef/browser/javascript/oh_gin_javascript_bridge_object_deletion_message_filter.h",
               "libcef/browser/javascript/oh_javascript_injector.cc",
               "libcef/browser/javascript/oh_javascript_injector.h",
-              "libcef/browser/first_meaningful_paint_details_impl.h",
-              "libcef/browser/first_meaningful_paint_details_impl.cc",
-              "libcef/browser/largest_contentful_paint_details_impl.h",
               "libcef/browser/largest_contentful_paint_details_impl.cc",
+              "libcef/browser/largest_contentful_paint_details_impl.h",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.cc",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.h",
               "libcef/common/javascript/oh_gin_javascript_bridge_message_generator.cc",
@@ -1622,6 +1622,13 @@ grit("cef_strings") {
   source = "libcef/resources/cef_strings.grd"
   outputs = [ "grit/cef_strings.h" ]
   all_locales = platform_pak_locales + [ "fake-bidi" ]
+
+  #ifdef ohos_i18n
+  if (is_ohos && ohos_i18n) {
+    all_locales += extra_locales
+  }
+
+  #endif
   foreach(locale, all_locales) {
     outputs += [ "cef_strings_${locale}.pak" ]
   }
@@ -1739,6 +1746,7 @@ make_pack_header("strings") {
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_accessibility_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_strings.h",
     "$root_gen_dir/ui/strings/grit/ui_strings.h",
+    "$root_gen_dir/ohos_resources/components/string/grit/ohos_components_strings.h",
   ]
 
   deps = [
@@ -1752,6 +1760,7 @@ make_pack_header("strings") {
     "//components/strings:components_locale_settings",
     "//components/strings:components_strings",
     "//extensions/strings",
+    "//ohos_resources/components/string:ohos_components_strings",
     "//services/strings",
     "//third_party/blink/public/strings",
     "//third_party/blink/public/strings:accessibility_strings",
