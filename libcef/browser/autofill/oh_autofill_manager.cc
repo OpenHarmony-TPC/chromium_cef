@@ -222,11 +222,27 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value) {
+    if (!value || value->empty()) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
                                                convert.from_bytes(*value));
+  }
+  for (auto it = root_dict->begin(); it != root_dict->end(); it++) {
+    const base::Value::Dict* sub_dict = root_dict->FindDict(it->first);
+    if (sub_dict) {
+      const std::string* str = sub_dict->FindString(KEY_VALUE);
+      if (!str) {
+        continue;
+      }
+      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
+      if (!index.has_value() || index.value() <= 0 || index.value() > form_->fields.size()) {
+        continue;
+      }
+      uint32_t i = static_cast<uint32_t>(index.value()) - 1;
+      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
+                                                 convert.from_bytes(*str));
+    }
   }
   is_show_ = false;
 }
