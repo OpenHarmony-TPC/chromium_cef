@@ -1637,6 +1637,13 @@ grit("cef_strings") {
   source = "libcef/resources/cef_strings.grd"
   outputs = [ "grit/cef_strings.h" ]
   all_locales = platform_pak_locales + [ "fake-bidi" ]
+
+  #ifdef ohos_i18n
+  if (is_ohos && ohos_i18n) {
+    all_locales += extra_locales
+  }
+
+  #endif
   foreach(locale, all_locales) {
     outputs += [ "cef_strings_${locale}.pak" ]
   }
@@ -1754,6 +1761,7 @@ make_pack_header("strings") {
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_accessibility_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_strings.h",
     "$root_gen_dir/ui/strings/grit/ui_strings.h",
+    "$root_gen_dir/ohos_resources/components/string/grit/ohos_components_strings.h",
   ]
 
   deps = [
@@ -1767,6 +1775,7 @@ make_pack_header("strings") {
     "//components/strings:components_locale_settings",
     "//components/strings:components_strings",
     "//extensions/strings",
+    "//ohos_resources/components/string:ohos_components_strings",
     "//services/strings",
     "//third_party/blink/public/strings",
     "//third_party/blink/public/strings:accessibility_strings",
