@@ -533,7 +533,9 @@ void OhosPrintManager::RunPrintRequestedCallbackImpl(const std::string& jobId) {
     is_pdf_print_ = false;
     return;
   }
-  std::move(printRequestedCallback_).Run();
+  if(printRequestedCallback_){
+    std::move(printRequestedCallback_).Run();
+  }
 }
 
 void OhosPrintManager::PrintPdfRequested() {
