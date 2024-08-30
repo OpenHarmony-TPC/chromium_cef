@@ -2560,11 +2560,6 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   }
 
 #if defined(OHOS_INPUT_EVENTS)
-  if (pointer_state_.GetAction() == ui::MotionEvent::Action::DOWN &&
-      is_editable_node_) {
-    LOG(INFO) << "The keyboard status is not updated when pressed";
-    return;
-  }
 
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
