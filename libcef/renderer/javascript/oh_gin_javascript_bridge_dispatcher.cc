@@ -485,6 +485,7 @@ void OhGinJavascriptBridgeDispatcher::convertToV8Value(
   for (int i = 0; i < size; ++i) {
     const base::Value& base_arg = base_value[i];
     if (!base_arg.is_blob()) {
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::convertToV8Value not blob";
       v8_value[i] = converter_->ToV8Value(&base_arg, context);
       continue;
     }
@@ -496,14 +497,17 @@ void OhGinJavascriptBridgeDispatcher::convertToV8Value(
       OhGinJavascriptBridgeObject* object_result = NULL;
       OhGinJavascriptBridgeDispatcher::ObjectID object_id;
       if (gin_value->GetAsObjectID(&object_id)) {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::convertToV8Value blob";
         object_result = GetObject(object_id);
       }
       if (!object_result) {
         continue;
       }
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::convertToV8Value object_result ok";
       gin::Handle<OhGinJavascriptBridgeObject> controller =
           gin::CreateHandle(isolate, object_result);
       if (controller.IsEmpty()) {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::convertToV8Value controller empty";
         continue;
       }
       v8_value[i] = controller.ToV8();
