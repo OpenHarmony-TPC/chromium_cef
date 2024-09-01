@@ -87,6 +87,15 @@ CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
   return nullptr;
 }
 
+std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
+  auto attribute = field.autocomplete_attribute;
+  if (!attribute.empty()) {
+    return attribute;
+  }
+  auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
+  return unique_renderer_id;
+}
+
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
     const FormData& form,
     const FormFieldData& field,
@@ -113,9 +122,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
-        field_data.autocomplete_attribute == field.autocomplete_attribute ? 1 : 0));
+        key == GetAttributeOrUniqueId(field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
@@ -131,7 +141,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
     list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
   }
 
@@ -166,6 +176,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   int32_t index = 0;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(KEY_FOUCS, 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
@@ -182,7 +193,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
     list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
     index++;
   }
