@@ -251,8 +251,10 @@ void AlloyBrowserMainParts::PostCreateMainMessageLoop() {
   // OSCrypt can be disabled in a special settings file.
   config->should_use_preference =
       command_line->HasSwitch(switches::kEnableEncryptionSelection);
+#if !BUILDFLAG(IS_OHOS)
   base::PathService::Get(chrome::DIR_USER_DATA, &config->user_data_path);
   DCHECK(!config->user_data_path.empty());
+#endif //!BUILDFLAG(IS_OHOS)
   OSCrypt::SetConfig(std::move(config));
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 }
