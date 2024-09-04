@@ -176,6 +176,8 @@ const std::string KEY_IS_OTHER_ACCOUNT = "isOtherAccount";
 
 const std::string KEY_USERNAME = "username";
 const std::string KEY_PASSWORD = "password";
+
+const std::string HASH_SALT = "OHOS@PASSWORD@AUTOFILL";
 #endif
 } // namespace
 
@@ -754,6 +756,10 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
   float ratio = browser->GetVirtualPixelRatio();
   auto offset =
       content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
+  int32_t viewport_height = 0;
+  if (browser->GetHost()) {
+    viewport_height = browser->GetHost()->GetShrinkViewportHeight();
+  }
 
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, event));
@@ -778,11 +784,15 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
         static_cast<int32_t>((item.second.bounds.x() + offset.x()) * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_Y,
-        static_cast<int32_t>((item.second.bounds.y() + offset.y()) * ratio)));
+        static_cast<int32_t>((item.second.bounds.y() + offset.y() + viewport_height) * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_W, static_cast<int32_t>(item.second.bounds.width() * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(item.second.bounds.height() * ratio)));
+    if (base::ohos::IsPcDevice() && item.second.is_focused) {
+      LOG(INFO) << "autofill request toJson, rect:"
+                << base::WriteJson(list).value_or("null");
+    }
     list.Append(base::Value::Dict().Set(KEY_VALUE,
                                         convert.to_bytes(item.second.value)));
 
@@ -897,12 +907,17 @@ void OhPasswordManagerClient::FillData(const std::string& page_url,
   if (is_keyboard_supressed_) {
     SetShouldSuppressKeyboard(false);
   }
-  auto autofill_id = last_request_fill_password_.field_renderer_id;
-  auto_filled_forms_[*autofill_id] =
-      is_other_account
-          ? std::string()
-          : crypto::SHA256HashString(username + std::to_string(*autofill_id) +
-                                     password);
+  auto username_id = last_request_fill_username_.field_renderer_id;
+  auto password_id = last_request_fill_password_.field_renderer_id;
+  auto digest = is_other_account
+                    ? std::string()
+                    : crypto::SHA256HashString(username + HASH_SALT + password);
+  if (username_id) {
+    auto_filled_forms_username_[*username_id] = digest;
+  }
+  if (password_id) {
+    auto_filled_forms_password_[*password_id] = digest;
+  }
 
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   FillAccountSuggestion(GURL(page_url), convert.from_bytes(username),
@@ -932,15 +947,28 @@ void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
 
 bool OhPasswordManagerClient::IsLoginInfoConsistentWithFilled(
     const password_manager::PasswordForm& info) {
-  auto autofill_id = info.password_element_renderer_id;
-  auto it = auto_filled_forms_.find(*autofill_id);
-  if (it != auto_filled_forms_.end() && !it->second.empty()) {
+  auto username_id = info.username_element_renderer_id;
+  auto password_id = info.password_element_renderer_id;
+  AutofilledMap::iterator it;
+  AutofilledMap* auto_filled_forms = nullptr;
+  LOG(INFO) << "login autosave, username renderer_id:" << username_id
+            << ", password renderer_id:" << password_id;
+  if (password_id) {
+    auto_filled_forms = &auto_filled_forms_password_;
+    it = auto_filled_forms->find(*password_id);
+  } else if (username_id) {
+    auto_filled_forms = &auto_filled_forms_username_;
+    it = auto_filled_forms->find(*username_id);
+  }
+
+  if (auto_filled_forms && it != auto_filled_forms->end() &&
+      !it->second.empty()) {
     std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
     std::string login_digest = crypto::SHA256HashString(
-        convert.to_bytes(info.username_value) + std::to_string(*autofill_id) +
+        convert.to_bytes(info.username_value) + HASH_SALT +
         convert.to_bytes(info.password_value));
     if (it->second == login_digest) {
-      auto_filled_forms_.erase(it);
+      auto_filled_forms->erase(it);
       return true;
     }
   }
@@ -993,11 +1021,13 @@ void OhPasswordManagerClient::OnRequestAutofill(
     const autofill::InputFillRequestData& password_data) {
   LOG(INFO) << "[Autofill] On request autofill"
             << ", state=" << static_cast<int>(state)
+            << ", username.field_renderer_id=" << username_data.field_renderer_id
             << ", username.bounds=" << username_data.bounds.ToString()
             << ", username.is_focus=" << username_data.is_focused
             << ", username.type=" << username_data.type
             << ", username.autocomplete_attr="
             << username_data.autocomplete_attr
+            << ", password.field_renderer_id=" << password_data.field_renderer_id
             << ", password.bounds=" << password_data.bounds.ToString()
             << ", password.is_focus=" << password_data.is_focused
             << ", password.type=" << password_data.type
