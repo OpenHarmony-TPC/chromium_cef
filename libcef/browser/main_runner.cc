@@ -301,7 +301,8 @@ int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
 #else
   command_line.InitFromArgv(args.argc, args.argv);
 #endif
-
+  command_line.AppendSwitch("--single-process");
+  command_line.AppendSwitch("--in-process-gpu");
   // Wait for the debugger as early in process initialization as possible.
   if (command_line.HasSwitch(switches::kWaitForDebugger)) {
     base::debug::WaitForDebugger(60, true);
