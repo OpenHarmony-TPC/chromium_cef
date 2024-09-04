@@ -230,6 +230,12 @@ bool WebPageSnapshot(const char* id,
   int shrink_viewport_height_ = 0;
 #endif
 
+#ifdef OHOS_FOCUS
+  // We keep track of the view's focus-capturing logic, and if the view hasn't been created yet,
+  // we temporarily store the focus-capturing event until RenderViewCreated is created and then re-focus-capturing.
+  bool is_view_focus_failed_ = false;
+#endif
+
 #ifdef OHOS_DISPLAY_CUTOUT
   gfx::Insets safe_insets_;
 #endif
