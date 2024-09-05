@@ -116,11 +116,19 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
   if (view_osr_) {
     view_osr_->RenderViewCreated();
   }
-
+#if BUILDFLAG(IS_OHOS)
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
 #ifdef OHOS_DISPLAY_CUTOUT
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+  if (view) {
     view->OnSafeInsetsChange(safe_insets_);
   }
+#endif
+#ifdef OHOS_FOCUS
+  if (is_view_focus_failed_ && view) {
+    view->SetFocus(focus_status_);
+    is_view_focus_failed_ = false;
+  }
+#endif
 #endif
 }
 
@@ -295,9 +303,20 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
 
 void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+#ifdef OHOS_FOCUS
+  focus_status_ = setFocus;
+  if (view) {
+    view->SetFocus(setFocus);
+    is_view_focus_failed_ = false;
+  } else {
+    LOG(DEBUG) << "CefBrowserPlatformDelegateOsr::SetFocus failed.";
+    is_view_focus_failed_ = true;
+  }
+#else
   if (view) {
     view->SetFocus(setFocus);
   }
+#endif
 }
 
 gfx::Point CefBrowserPlatformDelegateOsr::GetScreenPoint(
