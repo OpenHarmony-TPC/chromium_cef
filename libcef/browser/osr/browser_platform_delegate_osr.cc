@@ -125,7 +125,7 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
 #endif
 #ifdef OHOS_FOCUS
   if (is_view_focus_failed_ && view) {
-    view->SetFocus(true);
+    view->SetFocus(focus_status_);
     is_view_focus_failed_ = false;
   }
 #endif
@@ -304,6 +304,7 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
 void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
 #ifdef OHOS_FOCUS
+  focus_status_ = setFocus;
   if (view) {
     view->SetFocus(setFocus);
     is_view_focus_failed_ = false;
