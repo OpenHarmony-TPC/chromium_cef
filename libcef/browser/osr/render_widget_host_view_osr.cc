@@ -2736,6 +2736,9 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
         selection_controller_->HandleLongPressEvent(
             web_event.TimeStamp(), web_event.PositionInWidget());
         break;
+      case blink::WebInputEvent::Type::kGestureScrollBegin:
+        selection_controller_->OnScrollBeginEvent();
+        break;
       default:
         break;
     }
