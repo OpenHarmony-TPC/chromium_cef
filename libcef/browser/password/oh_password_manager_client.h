@@ -340,6 +340,8 @@ class OhPasswordManagerClient
   void UpdateLastRequestFilledItems(
       const autofill::InputFillRequestData& username_data,
       const autofill::InputFillRequestData& password_data);
+
+  void NotifyAutofillPopupShow(bool is_show);
 #endif
 
   content::BrowserContext* const context_;
@@ -382,12 +384,15 @@ class OhPasswordManagerClient
   bool was_on_paste_called_ = false;
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
+  using AutofilledMap = std::unordered_map<std::uint64_t, std::string>;
+
   GURL form_to_request_url_;
 
   autofill::FormRendererId last_fill_form_id_;
   autofill::FieldRendererId last_fill_focus_renderer_id_;
 
-  std::unordered_map<std::uint64_t, std::string> auto_filled_forms_;
+  AutofilledMap auto_filled_forms_username_;
+  AutofilledMap auto_filled_forms_password_;
 
   autofill::InputFillRequestData last_request_fill_username_;
   autofill::InputFillRequestData last_request_fill_password_;
