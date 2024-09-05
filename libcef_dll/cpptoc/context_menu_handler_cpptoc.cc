@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=99e06c226ae9d3f395e491860ccc367f9f0f6d84$
+// $hash=712ad34ae5f0261d1701516832b15493b4b3213c$
 //
 
 #include "libcef_dll/cpptoc/context_menu_handler_cpptoc.h"
@@ -427,6 +427,21 @@ void CEF_CALLBACK context_menu_handler_hide_handle_and_quick_menu_if_necessary(
       hide ? true : false);
 }
 
+void CEF_CALLBACK context_menu_handler_change_visibility_of_quick_menu(
+    struct _cef_context_menu_handler_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefContextMenuHandlerCppToC::Get(self)->ChangeVisibilityOfQuickMenu();
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -452,6 +467,8 @@ CefContextMenuHandlerCppToC::CefContextMenuHandlerCppToC() {
       context_menu_handler_on_get_image_from_cache;
   GetStruct()->hide_handle_and_quick_menu_if_necessary =
       context_menu_handler_hide_handle_and_quick_menu_if_necessary;
+  GetStruct()->change_visibility_of_quick_menu =
+      context_menu_handler_change_visibility_of_quick_menu;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a74c5b939b0e9b587206cdd2e6c30d50127b3858$
+// $hash=1c1560e569d453c573beb6379f76aff05a31bed9$
 //
 
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -330,7 +330,8 @@ void CefContextMenuHandlerCToCpp::OnQuickMenuDismissed(
 
   // Execute
   _struct->on_quick_menu_dismissed(_struct, CefBrowserCppToC::Wrap(browser),
-                                   CefFrameCppToC::Wrap(frame), is_mouse_trigger);
+                                   CefFrameCppToC::Wrap(frame),
+                                   is_mouse_trigger);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -385,8 +386,7 @@ void CefContextMenuHandlerCToCpp::OnGetImageFromCache(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(
-    bool hide) {
+void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(bool hide) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -398,6 +398,21 @@ void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(
 
   // Execute
   _struct->hide_handle_and_quick_menu_if_necessary(_struct, hide);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefContextMenuHandlerCToCpp::ChangeVisibilityOfQuickMenu() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_context_menu_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, change_visibility_of_quick_menu)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->change_visibility_of_quick_menu(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

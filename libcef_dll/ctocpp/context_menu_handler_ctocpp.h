@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=daa7f5e7ef35f3b104fc5d8a1990aa44dbd8c0a6$
+// $hash=12b01516d5e4cf877063602d4ab0779d7b8fbf41$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -73,6 +73,7 @@ class CefContextMenuHandlerCToCpp
                                 CefRefPtr<CefImage> image) override;
   void OnGetImageFromCache(CefRefPtr<CefImage> image) override;
   void HideHandleAndQuickMenuIfNecessary(bool hide) override;
+  void ChangeVisibilityOfQuickMenu() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
