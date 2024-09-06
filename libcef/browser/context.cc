@@ -45,6 +45,9 @@
 #include "services/network/public/mojom/network_service.mojom.h"
 #include "libcef/browser/download_item_impl.h"
 
+#include "base/posix/global_descriptors.h"
+#include "content/public/common/content_descriptors.h"
+
 namespace {
 
 CefContext* g_context = nullptr;
@@ -301,7 +304,49 @@ int CefExecuteProcess(const CefMainArgs& args,
   InitInstallDetails();
   InitCrashReporter();
 #endif
+  if (windows_sandbox_info == nullptr) {
+    LOG(ERROR) << __func__ << "no fds data";
+    return -1;
+  }
 
+  std::string fdStr = *static_cast<std::string*>(windows_sandbox_info);
+  int32_t ipcFd, sharedFd, crashFd;
+  sscanf(fdStr.c_str(), "%d-%d-%d", &ipcFd, &sharedFd, &crashFd);
+
+  base::GlobalDescriptors* g_fds = base::GlobalDescriptors::GetInstance();
+  if (g_fds == nullptr) {
+    LOG(ERROR) << __func__ << "GlobalDescriptors is null";
+    return -1;
+  }
+
+  int new_ipc_fd;
+  if ((new_ipc_fd = dup(ipcFd)) < 0) {
+    LOG(ERROR) << "ipcFd duplicate error";
+    g_fds->Set(kMojoIPCChannel, ipcFd);
+  } else {
+    g_fds->Set(kMojoIPCChannel, new_ipc_fd);
+    close(ipcFd);
+  }
+
+  int new_shared_fd;
+  if ((new_shared_fd = dup(sharedFd)) < 0) {
+    LOG(ERROR) << "sharedFd duplicate error";
+    g_fds->Set(kFieldTrialDescriptor, sharedFd);
+  } else {
+    g_fds->Set(kFieldTrialDescriptor, new_shared_fd);
+    close(sharedFd);
+  }
+
+  int new_crash_id;
+  if ((new_crash_id = dup(crashFd)) < 0) {
+    LOG(ERROR) << "crashFd duplicate error";
+    g_fds->Set(kCrashDumpSignal, crashFd);
+  } else {
+    g_fds->Set(kCrashDumpSignal, new_crash_id);
+    close(crashFd);
+  }
+
+  windows_sandbox_info = nullptr;
   return CefMainRunner::RunAsHelperProcess(args, application,
                                            windows_sandbox_info);
 }
