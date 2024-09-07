@@ -469,6 +469,8 @@ class CefBrowserPlatformDelegate {
   virtual bool ShouldVirtualKeyboardOverlay() { return false; }
   virtual void OnNativeEmbedLifecycleChange(
       const CefRenderHandler::CefNativeEmbedData& info) {}
+  virtual void OnNativeEmbedVisibilityChange(
+      const std::string& embed_id, bool visibility) {}
   virtual void SetScrollable(bool enable) {}
   virtual void AdvanceFocusForIME(int focusType) {}
 #endif
