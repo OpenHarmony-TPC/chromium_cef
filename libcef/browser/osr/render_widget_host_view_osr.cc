@@ -3650,6 +3650,16 @@ void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHan
   }
 }
 
+void CefRenderWidgetHostViewOSR::OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility) {
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnNativeEmbedVisibilityChange(embed_id, visibility);
+
+  }
+}
+
 void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
   if (!render_widget_host_) {
     return;
