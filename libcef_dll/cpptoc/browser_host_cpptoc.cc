@@ -3536,43 +3536,6 @@ browser_host_advance_focus_for_ime(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
-browser_host_scroll_to_with_anime(struct _cef_browser_host_t* self,
-                                  float x,
-                                  float y,
-                                  int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ScrollToWithAnime(x, y, duration);
-}
-
-void CEF_CALLBACK
-browser_host_scroll_by_with_anime(struct _cef_browser_host_t* self,
-                                  float delta_x,
-                                  float delta_y,
-                                  int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y,
-                                                     duration);
-}
-
-void CEF_CALLBACK
 browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
                                    int left,
                                    int top,
@@ -3937,8 +3900,6 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
   GetStruct()->web_page_snapshot = browser_host_web_page_snapshot;
   GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
-  GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
-  GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
   GetStruct()->notify_for_next_touch_event =
       browser_host_notify_for_next_touch_event;

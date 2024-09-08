@@ -230,8 +230,6 @@ class CefFrameImpl
   void SetOverscrollMode(int mode) override;
   void SetScrollable(bool enable) override;
   void UpdateDrawRect() override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,
