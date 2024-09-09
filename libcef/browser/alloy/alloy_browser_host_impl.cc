@@ -1975,6 +1975,14 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
 
   platform_delegate_->OnNativeEmbedLifecycleChange(data_info);
 }
+
+void AlloyBrowserHostImpl::OnLayerRectVisibilityChange(const std::string& embed_id, bool visibility) {
+  if (!platform_delegate_) {
+    return;
+  }
+
+  platform_delegate_->OnNativeEmbedVisibilityChange(embed_id, visibility);
+}
 #endif
 // content::WebContentsObserver methods.
 // -----------------------------------------------------------------------------

@@ -143,6 +143,7 @@ class CefBrowserPlatformDelegateOsr
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) override;
+  void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility) override;
   void SetScrollable(bool enable) override;
   void AdvanceFocusForIME(int focusType) override;
 #endif

@@ -1115,6 +1115,13 @@ void CefBrowserPlatformDelegateOsr::OnNativeEmbedLifecycleChange(
     view->OnNativeEmbedLifecycleChange(info);
 }
 
+void CefBrowserPlatformDelegateOsr::OnNativeEmbedVisibilityChange(
+  const std::string& embed_id, bool visibility){
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->OnNativeEmbedVisibilityChange(embed_id, visibility);
+}
+
 void CefBrowserPlatformDelegateOsr::SetScrollable(bool enable) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)

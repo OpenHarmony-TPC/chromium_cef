@@ -374,6 +374,8 @@ bool NeedsReload() override;
   void OnNativeEmbedStatusUpdate(
       const content::NativeEmbedInfo& native_embed_info,
       content::NativeEmbedInfo::TagState state) override;
+  
+  void OnLayerRectVisibilityChange(const std::string& embed_id, bool visibility) override;
 #endif
 
   // content::WebContentsObserver methods.
