@@ -17,12 +17,6 @@
 #include "ohos_adapter_helper.h"
 #include "v8/include/v8-exception.h"
 
-#define MAX_FLOWBUF_DATA_SIZE 52428800 /* 50 MB */
-#define MAX_ENTRIES 10
-#define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
-#define INDEX_SIZE 2
-#define DEFAULT_ID 1073741824
-
 namespace {
 
 const char kMethodInvocationAsConstructorDisallowed[] =
@@ -37,6 +31,11 @@ const char kMethodInvocationErrorMessage[] =
 namespace NWEB {
 int32_t OhGinJavascriptFunctionInvocationHelper::maxFdNum_ = -1;
 std::atomic<int32_t> OhGinJavascriptFunctionInvocationHelper::usedFd_ {0};
+const int MAX_FLOWBUF_DATA_SIZE = 52428800; /* 50 MB */
+const int MAX_ENTRIES = 10;
+const int HEADER_SIZE = (MAX_ENTRIES * 8); /* 10 * (int position + int length) */
+const int INDEX_SIZE = 2;
+const int DEFAULT_ID = 1073741824;
 
 OhGinJavascriptFunctionInvocationHelper::
     OhGinJavascriptFunctionInvocationHelper(

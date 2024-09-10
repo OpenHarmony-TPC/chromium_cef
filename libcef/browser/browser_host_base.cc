@@ -119,6 +119,12 @@ namespace {
 #if defined(OHOS_INPUT_EVENTS)
 static float DEFAULT_MIN_ZOOM_FACTOR = 0.01f;
 static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
+
+enum class WebScrollType : int {
+    UNKNOWN = -1,
+    EVENT = 0,
+    POSITION
+};
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #if defined(OHOS_EX_DOWNLOAD)
@@ -900,6 +906,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
                       settings_.embed_tag_type);
   settings_.draw_mode = browser_settings.draw_mode;
   settings_.text_autosizing_enabled = browser_settings.text_autosizing_enabled;
+  settings_.force_zero_layout_height = browser_settings.force_zero_layout_height;
 #endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
@@ -1580,7 +1587,7 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string origin_locale =
       ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
   if (origin_locale == update_locale) {
-    LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
+    LOG(WARNING) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
 
@@ -2309,6 +2316,11 @@ CefString CefBrowserHostBase::Title() {
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    DCHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   auto web_contents = GetWebContents();
   if (web_contents) {
     int retry_times = 0;
@@ -2321,16 +2333,13 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
         return;
       }
       uint64_t pointer0 = base::RandUint64();
-      if (pointer0 == ULLONG_MAX) {
+      if (pointer0 == ULLONG_MAX || ((pointer0 + 1) == ULLONG_MAX)) {
         retry_times++;
         continue;
       }
+      pointer0 = ((pointer0 % 2) == 0) ? (pointer0 + 1) : pointer0;
       uint64_t pointer1 = pointer0 + 1;
-      auto iter = std::find_if(portMap_.begin(), portMap_.end(), [&pointer0, &pointer1](auto& cc){
-        std::pair<uint64_t, uint64_t> rnd = cc.first;
-        return (rnd.first == pointer0 || rnd.second == pointer0 || rnd.first == pointer1);
-      });
-
+      auto iter = portMap_.find(std::make_pair(pointer0, pointer1));
       if (iter == portMap_.end()) {
         portMap_[std::make_pair(pointer0, pointer1)] =
             std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
@@ -2351,6 +2360,11 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
 void CefBrowserHostBase::PostWebMessage(CefString& message,
                                         std::vector<CefString>& port_handles,
                                         CefString& targetUri) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    DCHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "PostWebMessage web_contents its null";
@@ -2394,6 +2408,11 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::ClosePort(CefString& portHandle) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    DCHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   LOG(DEBUG) << "ClosePort ClosePort";
   auto web_contents = GetWebContents();
   if (!web_contents) {
@@ -2539,14 +2558,10 @@ bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
   return true;
 }
 
-void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
+void CefBrowserHostBase::PostPortMessageInternal(const CefString& portHandle,
                                          CefRefPtr<CefValue> data) {
-  auto web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "GetWebContents null";
-    return;
-  }
-
+  base::ScopedAllowBlocking scoped_allow_blocking;
+  base::AutoLock msg_lock(web_message_lock_);
   // construct blink message
   blink::WebMessagePort::Message message;
   if (!ConvertCefValueToBlinkMsg(data, message)) {
@@ -2575,27 +2590,19 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
   }
 }
 
-// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
-// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
-// WebMessagePort of the pipe.
-void CefBrowserHostBase::SetPortMessageCallback(
-    CefString& portHandle,
+void CefBrowserHostBase::PostPortMessage(const CefString& portHandle,
+                                         CefRefPtr<CefValue> data) {
+    sequenced_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&CefBrowserHostBase::PostPortMessageInternal,
+                                  this, portHandle, data));
+}
+
+void CefBrowserHostBase::SetPortMessageCallbackInternal(
+    const CefString& portHandle,
     CefRefPtr<CefWebMessageReceiver> callback) {
-  auto web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "GetWebContents null";
-    return;
-  }
-
-  // get sequenced task runner
+  base::ScopedAllowBlocking scoped_allow_blocking;
+  base::AutoLock msg_lock(web_message_lock_);
   std::string pointer0 = portHandle.ToString();
-  if (!base::SequencedTaskRunner::HasCurrentDefault())
-  {
-    LOG(ERROR) << "not in SequencedTaskRunner";
-    return;
-  }
-
-  auto sequenced_task_runner_ = base::SequencedTaskRunner::GetCurrentDefault();
 
   // get web message receiver instance
   std::shared_ptr<WebMessageReceiverImpl> webMsgReceiver;
@@ -2632,7 +2639,19 @@ void CefBrowserHostBase::SetPortMessageCallback(
   receiverMap_[pointer0] = webMsgReceiver;
 }
 
+// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
+// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
+// WebMessagePort of the pipe.
+void CefBrowserHostBase::SetPortMessageCallback(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback) {
+  sequenced_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&CefBrowserHostBase::SetPortMessageCallbackInternal,
+                                this, portHandle, callback));
+}
+
 void CefBrowserHostBase::DestroyAllWebMessagePorts() {
+  base::AutoLock msg_lock(web_message_lock_);
   LOG(DEBUG) << "clear all message ports";
   portMap_.clear();
   receiverMap_.clear();
@@ -3038,8 +3057,11 @@ void CefBrowserHostBase::SetNativeWindow(cef_native_window_t window) {
   widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
 
-cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget() {
-  return widget_;
+cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget(bool isPopup) {
+  if (!isPopup) {
+    return widget_;
+  }
+  return popup_widget_;
 }
 
 void CefBrowserHostBase::SetWebDebuggingAccess(bool isEnableDebug) {
@@ -3236,14 +3258,20 @@ void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
   }
 }
 
-void CefBrowserHostBase::SetScrollable(bool enable) {
+void CefBrowserHostBase::SetScrollable(bool enable, int scrollType) {
   LOG(DEBUG) << "set scrollable: " << enable;
+
   if (platform_delegate_) {
     platform_delegate_->SetScrollable(enable);
   }
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
+
+  if (scrollType == static_cast<int>(WebScrollType::UNKNOWN) ||
+      scrollType == static_cast<int>(WebScrollType::POSITION) ||
+      enable) {
+    auto frame = GetMainFrame();
+    if (frame && frame->IsValid()) {
+      static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
+    }
   }
 }
 
@@ -3987,3 +4015,8 @@ void CefBrowserHostBase::ScrollFocusedEditableNodeIntoView() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 #endif
+
+void CefBrowserHostBase::SetPopupWindow(cef_native_window_t window)
+{
+  popup_widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
+}

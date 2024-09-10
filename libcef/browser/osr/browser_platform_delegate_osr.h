@@ -143,6 +143,7 @@ class CefBrowserPlatformDelegateOsr
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info) override;
+  void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility) override;
   void SetScrollable(bool enable) override;
   void AdvanceFocusForIME(int focusType) override;
 #endif
@@ -228,6 +229,13 @@ bool WebPageSnapshot(const char* id,
 
 #ifdef OHOS_EX_TOPCONTROLS
   int shrink_viewport_height_ = 0;
+#endif
+
+#ifdef OHOS_FOCUS
+  // We keep track of the view's focus-capturing logic, and if the view hasn't been created yet,
+  // we temporarily store the focus-capturing event until RenderViewCreated is created and then re-focus-capturing.
+  bool is_view_focus_failed_ = false;
+  bool focus_status_ = false;
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT

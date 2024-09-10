@@ -38,12 +38,14 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool VisitUrlCookies(const CefString& url,
                        bool includeHttpOnly,
                        CefRefPtr<CefCookieVisitor> visitor,
-                       bool is_sync) override;
+                       bool is_sync,
+                       bool is_from_ndk) override;
   bool SetCookie(const CefString& url,
                  const CefCookie& cookie,
                  CefRefPtr<CefSetCookieCallback> callback,
                  bool is_sync,
-                 const CefString& str_cookie) override;
+                 const CefString& str_cookie,
+                 bool includeHttpOnly) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
 #if BUILDFLAG(IS_OHOS)
@@ -67,12 +69,13 @@ class CefCookieManagerImpl : public CefCookieManager {
   bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor, bool sync);
   bool VisitUrlCookiesInternal(const GURL& url,
                                bool includeHttpOnly,
-                               CefRefPtr<CefCookieVisitor> visitor, bool sync);
+                               CefRefPtr<CefCookieVisitor> visitor, bool sync, bool is_from_ndk);
   bool SetCookieInternal(const GURL& url,
                          const CefCookie& cookie,
                          CefRefPtr<CefSetCookieCallback> callback,
                          bool sync,
-                         const CefString& str_cookie);
+                         const CefString& str_cookie
+                         bool includeHttpOnly);
   bool DeleteCookiesInternal(const GURL& url,
                              const CefString& cookie_name,
                              bool is_session,

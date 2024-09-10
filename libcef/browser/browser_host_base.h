@@ -467,7 +467,7 @@ bool NeedsReload() override;
   void GetHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
-  void SetScrollable(bool enable) override;
+  void SetScrollable(bool enable, int scrollType) override;
   void UpdateDrawRect() override;
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
@@ -515,10 +515,10 @@ bool NeedsReload() override;
   void ClosePort(CefString& port_handle) override;
   bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
                                  blink::WebMessagePort::Message& message);
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void DestroyAllWebMessagePorts() override;
 #endif  // defined(OHOS_MSGPORT)
@@ -704,7 +704,7 @@ bool TerminateRenderProcess() override;
   std::string GetDataURI(const std::string& data);
 
   void SetNativeWindow(cef_native_window_t window) override;
-  cef_accelerated_widget_t GetAcceleratedWidget();
+  cef_accelerated_widget_t GetAcceleratedWidget(bool isPopup);
 
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
@@ -750,6 +750,7 @@ bool TerminateRenderProcess() override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 #endif
 
+  void SetPopupWindow(cef_native_window_t popupWindow) override;
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
@@ -833,6 +834,13 @@ bool TerminateRenderProcess() override;
                          CefRefPtr<CefPrecompileCallback> callback);
 
   void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
+
+  void SetPortMessageCallbackInternal(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback);
+  void PostPortMessageInternal(const CefString& portHandle,
+                                          CefRefPtr<CefValue> data);
+
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.
@@ -842,10 +850,13 @@ bool TerminateRenderProcess() override;
 
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
   using PortHandle = std::pair<uint64_t, uint64_t>;
-  std::map<PortHandle, MessagePipe> portMap_;
-  std::set<std::string> postedPorts_;
+  base::Lock web_message_lock_;
+  std::map<PortHandle, MessagePipe> portMap_ GUARDED_BY(web_message_lock_);
+  std::set<std::string> postedPorts_ GUARDED_BY(web_message_lock_);
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
-      receiverMap_;
+      receiverMap_ GUARDED_BY(web_message_lock_);
+  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
+          base::ThreadPool::CreateSequencedTaskRunner({});
 
 #if defined(OHOS_INPUT_EVENTS)
   uint64_t last_zoom_time_ = 0;
@@ -855,6 +866,7 @@ bool TerminateRenderProcess() override;
   std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
 
   cef_accelerated_widget_t widget_;
+  cef_accelerated_widget_t popup_widget_;
   bool is_web_debugging_access_ = false;
   float virtual_pixel_ratio_ = 2.0;
   base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;

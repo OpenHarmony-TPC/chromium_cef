@@ -2758,7 +2758,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
       // Determined by DiskCache itself.
        network_context_params->http_cache_max_size = 0;
     } else {
-      network_context_params->http_cache_max_size = 20 * 1024 * 1024;
+      network_context_params->http_cache_max_size = 100 * 1024 * 1024;
     }
   }
 #endif  // defined(OHOS_CACHE)

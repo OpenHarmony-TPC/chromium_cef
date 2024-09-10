@@ -932,13 +932,14 @@ void CefFrameHostImpl::OnGetImageFromCache(
     sk_sp<SkImage> sk_image = SkImages::DeferredFromEncodedData(sk_data);
     if (sk_image) {
       SkBitmap bitmap;
-      sk_image->asLegacyBitmap(&bitmap);
+      if (sk_image->asLegacyBitmap(&bitmap)) {
 #ifdef OHOS_CLIPBOARD
-      SkBitmap resize_image = DownScale(bitmap);
-      image_impl->AddBitmap(1.0, resize_image);
+        SkBitmap resize_image = DownScale(bitmap);
+        image_impl->AddBitmap(1.0, resize_image);
 #else
-      image_impl->AddBitmap(1.0, bitmap);
+        image_impl->AddBitmap(1.0, bitmap);
 #endif
+      }
     }
   }
   handler->OnGetImageFromCache(image_impl);

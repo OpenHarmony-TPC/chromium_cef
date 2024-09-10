@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=898a08a55883581483a35459d60c09c1553fc3ec$
+// $hash=93eb46d8f54c452312b03c0b1c291a27ec5714fb$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -422,18 +422,19 @@ typedef struct _cef_render_handler_t {
   /// Called to retrieve the visible view rectangle in screen DIP coordinates.
   /// This function must always provide a non-NULL rectangle.
   ///
-  void(CEF_CALLBACK *get_visible_viewport_rect)(
-      struct _cef_render_handler_t *self,
-      struct _cef_browser_t *browser,
-      cef_rect_t *rect);
+  void(CEF_CALLBACK* get_visible_viewport_rect)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_rect_t* rect);
 
   ///
-  /// Called when loss frame.
+  /// SendDynamicFrameLossEvent
   ///
-  void(CEF_CALLBACK* send_dynamic_frame_loss_event)(struct _cef_render_handler_t* self,
-                                                    struct _cef_browser_t* browser,
-                                                    const cef_string_t* sceneId,
-                                                    bool isStart);
+  void(CEF_CALLBACK* send_dynamic_frame_loss_event)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* sceneId,
+      int isStart);
 
   ///
   /// OnResizeScrollableViewport.
@@ -447,6 +448,19 @@ typedef struct _cef_render_handler_t {
   ///
   void(CEF_CALLBACK* set_fill_content)(struct _cef_render_handler_t* self,
                                        const char* content);
+
+  ///
+  /// SetGestureEventResult
+  ///
+  void(CEF_CALLBACK* set_gesture_event_result)(
+      struct _cef_render_handler_t* self,
+      const int result);
+
+  ///
+  /// Called when you need to start vibrator.
+  ///
+  void(CEF_CALLBACK* start_vibra_feedback)(struct _cef_render_handler_t* self,
+                                           const char* vibratorType);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

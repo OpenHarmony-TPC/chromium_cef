@@ -374,6 +374,8 @@ bool NeedsReload() override;
   void OnNativeEmbedStatusUpdate(
       const content::NativeEmbedInfo& native_embed_info,
       content::NativeEmbedInfo::TagState state) override;
+
+  void OnLayerRectVisibilityChange(const std::string& embed_id, bool visibility) override;
 #endif
 
   // content::WebContentsObserver methods.
@@ -511,7 +513,7 @@ bool NeedsReload() override;
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
-  void ReportRenderProcessStatus(bool is_web_hidden);
+  base::ProcessId GetRenderProcessId();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
   void SetVisible(bool visible);

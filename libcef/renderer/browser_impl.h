@@ -214,6 +214,8 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   int content_width_ = 0;
   int content_height_ = 0;
   bool needs_contents_size_update_ = true;
+  int viewport_width_ = 0;
+  int viewport_height_ = 0;
 #endif
 
   IMPLEMENT_REFCOUNTING(CefBrowserImpl);

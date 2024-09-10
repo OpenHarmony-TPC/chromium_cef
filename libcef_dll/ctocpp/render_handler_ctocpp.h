@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8f65b4436a0c28a5a9f716e45d2c0a19a9ac5bc3$
+// $hash=2f396ebe673e7b5cdf869cba023fabea354eb9ba$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -143,6 +143,8 @@ class CefRenderHandlerCToCpp
                                  bool isStart) override;
   void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
   void SetFillContent(const std::string& content) override;
+  void SetGestureEventResult(const bool result) override;
+  void StartVibraFeedback(const std::string& vibratorType) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

@@ -1546,7 +1546,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// Post a message to the port.
   ///
   /*--cef()--*/
-  virtual void PostPortMessage(CefString& port_handle,
+  virtual void PostPortMessage(const CefString& port_handle,
                                CefRefPtr<CefValue> message) = 0;
 
   ///
@@ -1554,7 +1554,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) = 0;
 
   ///
@@ -1864,7 +1864,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// set Scrollable
   ///
   /*--cef()--*/
-  virtual void SetScrollable(bool enable) = 0;
+  virtual void SetScrollable(bool enable, int scrollType) = 0;
 
   ///
   ///  Start current camera.
@@ -2080,6 +2080,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CreateToPDF(const CefPdfPrintSettings& settings,
-                           CefRefPtr<CefPdfValueCallback> callback) = 0;                                    
+                           CefRefPtr<CefPdfValueCallback> callback) = 0;
+  ///
+  /// SetPopupWindow.
+  ///
+  /*--cef()--*/
+  virtual void SetPopupWindow(cef_native_window_t window) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

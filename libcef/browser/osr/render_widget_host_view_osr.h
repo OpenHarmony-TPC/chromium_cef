@@ -154,6 +154,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
+  void ChangeVisibilityOfQuickMenu();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -226,6 +227,7 @@ class CefRenderWidgetHostViewOSR
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
   void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
+  void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility);
   void SetScrollable(bool enable);
   void OnDidNavigateMainFrameToNewPage() override;
   void AdvanceFocusForIME(int focusType);
@@ -660,6 +662,7 @@ class CefRenderWidgetHostViewOSR
   bool forward_touch_to_popup_ = false;
 
 #if BUILDFLAG(IS_OHOS)
+  bool is_popup_ = false;
   gfx::SizeF root_layer_size_;
   static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
       compositor_map_;

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=cb6483fc6c0cda8419cd2be92b97f98392a417b9$
+// $hash=5945af881beaaf6a79dd46fa0aa7ee8b31a4deef$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -66,8 +66,8 @@ typedef struct _cef_cookie_manager_t {
   /// longest path, then by earliest creation date. Returns false (0) if cookies
   /// cannot be accessed.
   ///
-  int(CEF_CALLBACK* visit_all_cookies)(struct _cef_cookie_manager_t* self,
-                                       struct _cef_cookie_visitor_t* visitor,
+  int(CEF_CALLBACK *visit_all_cookies)(struct _cef_cookie_manager_t *self,
+                                       struct _cef_cookie_visitor_t *visitor,
                                        int is_sync);
 
   ///
@@ -77,11 +77,12 @@ typedef struct _cef_cookie_manager_t {
   /// cookies are ordered by longest path, then by earliest creation date.
   /// Returns false (0) if cookies cannot be accessed.
   ///
-  int(CEF_CALLBACK* visit_url_cookies)(struct _cef_cookie_manager_t* self,
-                                       const cef_string_t* url,
+  int(CEF_CALLBACK *visit_url_cookies)(struct _cef_cookie_manager_t *self,
+                                       const cef_string_t *url,
                                        int includeHttpOnly,
-                                       struct _cef_cookie_visitor_t* visitor,
-                                       int is_sync);
+                                       struct _cef_cookie_visitor_t *visitor,
+                                       int is_sync,
+                                       int is_from_ndk);
 
   ///
   /// Sets a cookie given a valid URL and explicit user-provided cookie
@@ -92,12 +93,12 @@ typedef struct _cef_cookie_manager_t {
   /// asnychronously on the UI thread after the cookie has been set. Returns
   /// false (0) if an invalid URL is specified or if cookies cannot be accessed.
   ///
-  int(CEF_CALLBACK* set_cookie)(struct _cef_cookie_manager_t* self,
-                                const cef_string_t* url,
-                                const struct _cef_cookie_t* cookie,
-                                struct _cef_set_cookie_callback_t* callback,
-                                int is_sync,
-                                const cef_string_t* str_cookie);
+  int(CEF_CALLBACK *set_cookie)(struct _cef_cookie_manager_t *self,
+                                const cef_string_t *url,
+                                const struct _cef_cookie_t *cookie,
+                                struct _cef_set_cookie_callback_t *callback,
+                                int is_sync, const cef_string_t *str_cookie,
+                                int includeHttpOnly);
 
   ///
   /// Delete all cookies that match the specified parameters. If both |url| and
@@ -110,64 +111,58 @@ typedef struct _cef_cookie_manager_t {
   /// specified or if cookies cannot be accessed. Cookies can alternately be
   /// deleted using the Visit*Cookies() functions.
   ///
-  int(CEF_CALLBACK* delete_cookies)(
-      struct _cef_cookie_manager_t* self,
-      const cef_string_t* url,
-      const cef_string_t* cookie_name,
-      int is_session,
-      struct _cef_delete_cookies_callback_t* callback,
-      int is_sync);
+  int(CEF_CALLBACK *delete_cookies)(
+      struct _cef_cookie_manager_t *self, const cef_string_t *url,
+      const cef_string_t *cookie_name, int is_session,
+      struct _cef_delete_cookies_callback_t *callback, int is_sync);
 
   ///
   /// Flush the backing store (if any) to disk. If |callback| is non-NULL it
   /// will be executed asnychronously on the UI thread after the flush is
   /// complete. Returns false (0) if cookies cannot be accessed.
   ///
-  int(CEF_CALLBACK* flush_store)(struct _cef_cookie_manager_t* self,
-                                 struct _cef_completion_callback_t* callback);
+  int(CEF_CALLBACK *flush_store)(struct _cef_cookie_manager_t *self,
+                                 struct _cef_completion_callback_t *callback);
 
   ///
   /// Get whether this cookie manager can accpet and send cookies. Returns false
   /// (0) if can't.
   ///
-  int(CEF_CALLBACK* is_accept_cookie_allowed)(
-      struct _cef_cookie_manager_t* self);
+  int(CEF_CALLBACK *is_accept_cookie_allowed)(
+      struct _cef_cookie_manager_t *self);
 
   ///
   /// Set whether this cookie manager can accpet and send cookies.
   ///
-  void(CEF_CALLBACK* put_accept_cookie_enabled)(
-      struct _cef_cookie_manager_t* self,
-      int accept);
+  void(CEF_CALLBACK *put_accept_cookie_enabled)(
+      struct _cef_cookie_manager_t *self, int accept);
 
   ///
   /// Gets whether cookies of third parties are allowed to be set. Returns false
   /// (0) if can't.
   ///
-  int(CEF_CALLBACK* is_third_party_cookie_allowed)(
-      struct _cef_cookie_manager_t* self);
+  int(CEF_CALLBACK *is_third_party_cookie_allowed)(
+      struct _cef_cookie_manager_t *self);
 
   ///
   /// Set whether cookies of third parties are allowed to be set.
   ///
-  void(CEF_CALLBACK* put_accept_third_party_cookie_enabled)(
-      struct _cef_cookie_manager_t* self,
-      int accept);
+  void(CEF_CALLBACK *put_accept_third_party_cookie_enabled)(
+      struct _cef_cookie_manager_t *self, int accept);
 
   ///
   /// Get whether this cookie manager can accpet and send cookies for file
   /// scheme URL. Returns false (0) if can't.
   ///
-  int(CEF_CALLBACK* is_file_urlscheme_cookies_allowed)(
-      struct _cef_cookie_manager_t* self);
+  int(CEF_CALLBACK *is_file_urlscheme_cookies_allowed)(
+      struct _cef_cookie_manager_t *self);
 
   ///
   /// Set whether this cookie manager can accpet and send cookies for file
   /// scheme URL.
   ///
-  void(CEF_CALLBACK* put_accept_file_urlscheme_cookies_enabled)(
-      struct _cef_cookie_manager_t* self,
-      int allow);
+  void(CEF_CALLBACK *put_accept_file_urlscheme_cookies_enabled)(
+      struct _cef_cookie_manager_t *self, int allow);
 } cef_cookie_manager_t;
 
 ///
@@ -178,8 +173,8 @@ typedef struct _cef_cookie_manager_t {
 /// calling cef_request_context_t::cef_request_context_get_global_context()->Get
 /// DefaultCookieManager().
 ///
-CEF_EXPORT cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
-    struct _cef_completion_callback_t* callback);
+CEF_EXPORT cef_cookie_manager_t *cef_cookie_manager_get_global_manager(
+    struct _cef_completion_callback_t *callback);
 
 ///
 /// Returns the global cookie manager in incognito mode. By default data will be
@@ -188,18 +183,18 @@ CEF_EXPORT cef_cookie_manager_t* cef_cookie_manager_get_global_manager(
 /// initialized. Using this function is equivalent to calling cef_request_contex
 /// t_t::cef_request_context_get_global_otrcontext()->GetDefaultCookieManager().
 ///
-CEF_EXPORT cef_cookie_manager_t*
+CEF_EXPORT cef_cookie_manager_t *
 cef_cookie_manager_get_global_incognito_manager(
-    struct _cef_completion_callback_t* callback);
+    struct _cef_completion_callback_t *callback);
 
 ///
 /// Convert string cookie to CefCookie. The function will return true (1) when
 /// excuted success, otherwise return false (0).
 ///
-CEF_EXPORT int cef_cookie_manager_create_cef_cookie(
-    const cef_string_t* url,
-    const cef_string_t* value,
-    struct _cef_cookie_t* cef_cookie);
+CEF_EXPORT int
+cef_cookie_manager_create_cef_cookie(const cef_string_t *url,
+                                     const cef_string_t *value,
+                                     struct _cef_cookie_t *cef_cookie);
 
 ///
 /// Structure to implement for visiting cookie values. The functions of this
@@ -218,19 +213,17 @@ typedef struct _cef_cookie_visitor_t {
   /// Return false (0) to stop visiting cookies. This function may never be
   /// called if no cookies are found.
   ///
-  int(CEF_CALLBACK* visit)(struct _cef_cookie_visitor_t* self,
-                           const struct _cef_cookie_t* cookie,
-                           int count,
-                           int total,
-                           int* deleteCookie);
+  int(CEF_CALLBACK *visit)(struct _cef_cookie_visitor_t *self,
+                           const struct _cef_cookie_t *cookie, int count,
+                           int total, int *deleteCookie);
 
   ///
   /// Method that will be called when all cookies have been visited, contenate
   /// them into one string line. The string cookie line will be passed into this
   /// function.
   ///
-  void(CEF_CALLBACK* set_cookie_line)(struct _cef_cookie_visitor_t* self,
-                                      const cef_string_t* cookieLine);
+  void(CEF_CALLBACK *set_cookie_line)(struct _cef_cookie_visitor_t *self,
+                                      const cef_string_t *cookieLine);
 } cef_cookie_visitor_t;
 
 ///
@@ -247,7 +240,7 @@ typedef struct _cef_set_cookie_callback_t {
   /// Method that will be called upon completion. |success| will be true (1) if
   /// the cookie was set successfully.
   ///
-  void(CEF_CALLBACK* on_complete)(struct _cef_set_cookie_callback_t* self,
+  void(CEF_CALLBACK *on_complete)(struct _cef_set_cookie_callback_t *self,
                                   int success);
 } cef_set_cookie_callback_t;
 
@@ -265,7 +258,7 @@ typedef struct _cef_delete_cookies_callback_t {
   /// Method that will be called upon completion. |num_deleted| will be the
   /// number of cookies that were deleted.
   ///
-  void(CEF_CALLBACK* on_complete)(struct _cef_delete_cookies_callback_t* self,
+  void(CEF_CALLBACK *on_complete)(struct _cef_delete_cookies_callback_t *self,
                                   int num_deleted);
 } cef_delete_cookies_callback_t;
 
@@ -273,4 +266,4 @@ typedef struct _cef_delete_cookies_callback_t {
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
+#endif // CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_

@@ -502,15 +502,22 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
   blink::WebFrame* main_frame = GetWebView()->MainFrame();
   blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();
 
-  gfx::Size contents_size = blink_glue::GetContentSize(web_local_frame);
+  gfx::Size contents_size = main_frame->ToWebLocalFrame()->DocumentSize();
+
+  if (contents_size.IsEmpty()) {
+    contents_size = GetWebView()->ContentsPreferredMinimumSize();
+  }
+
   int content_width = contents_size.width();
   int content_height = contents_size.height();
 
   gfx::Size viewport_size = blink_glue::GetVisualViewportSize(web_local_frame);
 
-  if (content_width != content_width_ || content_height != content_height_) {
+  if (content_width != content_width_ || content_height != content_height_ || viewport_size.width() != viewport_width_ || viewport_size.height() != viewport_height_) {
     content_width_ = content_width;
     content_height_ = content_height;
+    viewport_width_ = viewport_size.width();
+    viewport_height_ = viewport_size.height();
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(CONTENT_SIZE_MESSAGE);
     message->GetArgumentList()->SetInt(0, content_width_);
     message->GetArgumentList()->SetInt(1, content_height_);

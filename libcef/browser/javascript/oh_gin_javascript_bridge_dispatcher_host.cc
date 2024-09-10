@@ -79,10 +79,8 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
   async_method_map_.clear();
   javascript_sync_permission_map_.clear();
   javascript_async_permission_map_.clear();
-  sync_object_id_map_.clear();
+  object_id_map_.clear();
   async_object_id_map_.clear();
-  sync_js_obj_list_.clear();
-  async_js_obj_list_.clear();
 }
 
 // Run on the UI thread.
@@ -140,35 +138,22 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
   }
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
 
-  std::set<std::pair<ObjectID, std::string>> object_id_set;
-  for (const auto &item: sync_js_obj_list_) {
-    object_id_set.emplace(std::make_pair(item.obj_id, item.obj_name));
-  }
-  for (const auto &item: async_js_obj_list_) {
-    object_id_set.emplace(std::make_pair(item.obj_id, item.obj_name));
-  }
-
-  for (const auto& [object_id, object_name] : object_id_set) {
-    base::Value::List sync_method_list;
-    for (const auto& item : sync_js_obj_list_) {
-      if (item.obj_id == object_id && item.obj_name == object_name) {
-        for (const auto& method : item.methods) {
-          sync_method_list.Append(method);
-        }
-      }
-    }
+  for (ObjectMethodMap::const_iterator iter = async_method_map_.begin();
+       iter != async_method_map_.end(); ++iter) {
     base::Value::List async_method_list;
-    for (const auto& item : async_js_obj_list_) {
-      if (item.obj_id == object_id && item.obj_name == object_name) {
-        for (const auto& method : item.methods) {
-          async_method_list.Append(method);
-        }
-      }
+    for (auto async_method : iter->second.second) {
+      async_method_list.Append(async_method);
     }
-
     render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-        render_frame_host->GetRoutingID(), object_name, object_id,
-        sync_method_list, async_method_list));
+        render_frame_host->GetRoutingID(), iter->second.first, iter->first, async_method_list, true));
+  }
+  for (const auto& [object_id, object_name_set] : object_id_map_) {
+    for (const auto& object_name : object_name_set) {
+      // sync_method_map_ has no async method infomation, so send an empty list.
+      base::Value::List empty_list;
+      render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
+          render_frame_host->GetRoutingID(), object_name, object_id, empty_list, false));
+    }
   }
 }
 
@@ -365,7 +350,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     const std::vector<std::string>& async_method_list,
     const std::string& permission) {
   RemoveNamedObject(object_name, method_list);
-  base::Value::List sync_method_for_render;
   base::Value::List async_method_for_render;
   {
     std::unique_lock<std::shared_mutex> lock(share_mutex_);
@@ -376,14 +360,12 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     std::unordered_set<std::string> method_set;
     for (std::string s : method_list) {
       method_set.emplace(s);
-      sync_method_for_render.Append(s);
     }
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id_] = object_pair;
     ParseJson(permission, object_id_, false);
-    sync_object_id_map_[object_id_].insert(object_name);
-    sync_js_obj_list_.push_back({object_id_, object_name, method_set});
+    object_id_map_[object_id_].insert(object_name);
 
     // add async method
     MethodPair async_object_pair;
@@ -396,7 +378,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     async_object_pair.second = async_method_set;
     async_method_map_[object_id_] = async_object_pair;
     async_object_id_map_[object_id_].insert(object_name);
-    async_js_obj_list_.push_back({object_id_, object_name, async_method_set});
     ParseJson(permission, object_id_, true);
   }
 
@@ -405,11 +386,11 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
   web_contents()
       ->GetPrimaryMainFrame()
       ->ForEachRenderFrameHostIncludingSpeculative(
-          [&object_name, &sync_method_for_render, &async_method_for_render,
+          [&object_name, &async_method_for_render,
            this](content::RenderFrameHostImpl* render_frame_host) {
             render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
                 render_frame_host->GetRoutingID(), object_name,
-                this->object_id_, sync_method_for_render, async_method_for_render));
+                this->object_id_, async_method_for_render, true));
           });
 }
 
@@ -425,7 +406,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     return;
   }
   RemoveNamedObject(object_name, method_list);
-    base::Value::List sync_method_for_render;
     base::Value::List async_method_for_render;
   {
     std::unique_lock<std::shared_mutex> lock(share_mutex_);
@@ -434,14 +414,12 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     std::unordered_set<std::string> method_set;
     for (std::string s : method_list) {
       method_set.emplace(s);
-      sync_method_for_render.Append(s);
     }
     object_pair.first = object_name;
     object_pair.second = method_set;
     sync_method_map_[object_id] = object_pair;
     ParseJson(permission, object_id, false);
-    sync_object_id_map_[object_id].insert(object_name);
-    sync_js_obj_list_.push_back({object_id, object_name, method_set});
+    object_id_map_[object_id].insert(object_name);
 
     // add async method
     MethodPair async_object_pair;
@@ -454,7 +432,6 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     async_object_pair.second = async_method_set;
     async_method_map_[object_id] = async_object_pair;
     async_object_id_map_[object_id].insert(object_name);
-    async_js_obj_list_.push_back({object_id, object_name, async_method_set});
     ParseJson(permission, object_id, true);
   }
 
@@ -463,11 +440,10 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
   web_contents()
       ->GetPrimaryMainFrame()
       ->ForEachRenderFrameHostIncludingSpeculative(
-          [&object_name, &sync_method_for_render, &async_method_for_render,
+          [&object_name, &async_method_for_render,
            object_id](content::RenderFrameHostImpl* render_frame_host) {
             render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-                render_frame_host->GetRoutingID(), object_name, object_id,
-                sync_method_for_render, async_method_for_render));
+                render_frame_host->GetRoutingID(), object_name, object_id, async_method_for_render, true));
           });
 }
 
@@ -571,7 +547,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     const std::vector<std::string>& method_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (sync_method_map_.empty() && async_method_map_.empty()) {
-    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                   "is empty!";
     return;
   }
@@ -588,7 +564,7 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
   if (method_map.empty()) {
     return ret;
   }
-  auto& id_map = is_async ? async_object_id_map_ : sync_object_id_map_;
+  auto& id_map = is_async ? async_object_id_map_ : object_id_map_;
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
   for (auto& [object_id, object_name_set] : id_map) {
     for (const std::string& now_object_name : object_name_set) {

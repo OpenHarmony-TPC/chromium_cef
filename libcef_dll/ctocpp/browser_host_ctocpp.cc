@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8e01fb9e7e62314e7a74e50edbe9ddbc210914b9$
+// $hash=223c76e1d9f6cdf0e9620d77d091626920516617$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
@@ -1976,7 +1976,7 @@ void CefBrowserHostCToCpp::DestroyAllWebMessagePorts() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
+void CefBrowserHostCToCpp::PostPortMessage(const CefString& port_handle,
                                            CefRefPtr<CefValue> message) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1994,13 +1994,13 @@ void CefBrowserHostCToCpp::PostPortMessage(CefString& port_handle,
   }
 
   // Execute
-  _struct->post_port_message(_struct, port_handle.GetWritableStruct(),
+  _struct->post_port_message(_struct, port_handle.GetStruct(),
                              CefValueCToCpp::Unwrap(message));
 }
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetPortMessageCallback(
-    CefString& port_handle,
+    const CefString& port_handle,
     CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -2019,7 +2019,7 @@ void CefBrowserHostCToCpp::SetPortMessageCallback(
 
   // Execute
   _struct->set_port_message_callback(
-      _struct, port_handle.GetWritableStruct(),
+      _struct, port_handle.GetStruct(),
       CefWebMessageReceiverCppToC::Wrap(callback));
 }
 
@@ -2842,7 +2842,8 @@ NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::GetPrintBackground() {
   return _retval ? true : false;
 }
 
-NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetScrollable(bool enable, int scrollType) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -2853,7 +2854,7 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetScrollable(bool enable) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->set_scrollable(_struct, enable);
+  _struct->set_scrollable(_struct, enable, scrollType);
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::StartCamera() {
@@ -3248,6 +3249,93 @@ void CefBrowserHostCToCpp::AdvanceFocusForIME(int focusType) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollToWithAnime(float x,
+                                             float y,
+                                             int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_to_with_anime)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_to_with_anime(_struct, x, y, duration);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollByWithAnime(float delta_x,
+                                             float delta_y,
+                                             int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_by_with_anime)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_by_with_anime(_struct, delta_x, delta_y, duration);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetScrollOffset(float* offset_x, float* offset_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_scroll_offset)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: offset_x; type: simple_byaddr
+  DCHECK(offset_x);
+  if (!offset_x) {
+    return;
+  }
+  // Verify param: offset_y; type: simple_byaddr
+  DCHECK(offset_y);
+  if (!offset_y) {
+    return;
+  }
+
+  // Execute
+  _struct->get_scroll_offset(_struct, offset_x, offset_y);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
+                                               float* offset_y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_over_scroll_offset)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: offset_x; type: simple_byaddr
+  DCHECK(offset_x);
+  if (!offset_x) {
+    return;
+  }
+  // Verify param: offset_y; type: simple_byaddr
+  DCHECK(offset_y);
+  if (!offset_y) {
+    return;
+  }
+
+  // Execute
+  _struct->get_over_scroll_offset(_struct, offset_x, offset_y);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
                                               int top,
                                               int right,
@@ -3307,43 +3395,13 @@ void CefBrowserHostCToCpp::SetGrantFileAccessDirs(
   }
 }
 
-NO_SANITIZE("cfi-icall") 
-void CefBrowserHostCToCpp::ScrollToWithAnime(float x, float y, int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, scroll_to)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->scroll_to_with_anime(_struct, x, y, duration);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, scroll_by)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->scroll_by_with_anime(_struct, delta_x, delta_y, duration);
-}
-
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetAutofillCallback(
     CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+  if (CEF_MEMBER_MISSING(_struct, set_autofill_callback)) {
     return;
   }
 
@@ -3365,7 +3423,7 @@ void CefBrowserHostCToCpp::FillAutofillData(CefRefPtr<CefValue> message) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_grant_file_access_dirs)) {
+  if (CEF_MEMBER_MISSING(_struct, fill_autofill_data)) {
     return;
   }
 
@@ -3443,38 +3501,6 @@ void CefBrowserHostCToCpp::AutoFillWithIMFEvent(bool is_username,
                                    is_new_password, content.c_str());
 }
 
-#ifdef OHOS_GET_SCROLL_OFFSET
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetScrollOffset(float* offset_x, float* offset_y) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_scroll_offset)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->get_scroll_offset(_struct, offset_x, offset_y);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
-                                               float* offset_y) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_overscroll_offset)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->get_overscroll_offset(_struct, offset_x, offset_y);
-}
-
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::CreateToPDF(
     const CefPdfPrintSettings& settings,
@@ -3498,7 +3524,22 @@ void CefBrowserHostCToCpp::CreateToPDF(
   _struct->create_to_pdf(_struct, &settings,
                          CefPdfValueCallbackCppToC::Wrap(callback));
 }
-#endif
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetPopupWindow(cef_native_window_t window) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_popup_window)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_popup_window(_struct, window);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

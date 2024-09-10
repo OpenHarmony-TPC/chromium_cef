@@ -19,20 +19,20 @@
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
 #include "content/public/browser/browser_thread.h"
-// #if defined(OHOS_API_PER)
 #include "net/base/features.h"
-// #endif
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
-// #if defined(OHOS_API_PER)
 #include "services/network/public/cpp/features.h"
-// #endif
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
 namespace net_service {
 
 namespace {
+
+#if defined(OHOS_NETWORK_LOAD)
+constexpr int32_t NET_STATUS_CODE_400 = 400;
+#endif
 
 using OnInputStreamOpenedCallback =
     base::OnceCallback<void(std::unique_ptr<StreamReaderURLLoader::Delegate>,
@@ -687,7 +687,7 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
 #if defined(OHOS_NETWORK_LOAD)
-  if (status_code >= 400) {
+  if (status_code >= NET_STATUS_CODE_400) {
     if (!mime_type.empty()) {
       headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
     }
@@ -749,7 +749,8 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
   size_t size = response_delegate_->GetResponseDataBuffer(memory);
   LOG(DEBUG) << "shared-memory+++ GetResponseDataBuffer buffer size=" << size;
 
-  base::ReadOnlySharedMemoryRegion read_only_region = base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
+  base::ReadOnlySharedMemoryRegion read_only_region =
+      base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
   if (!read_only_region.IsValid()) {
     LOG(ERROR) << "shared-memory: convert to read only err";
     return false;

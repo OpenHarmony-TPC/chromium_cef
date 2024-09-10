@@ -94,6 +94,7 @@ class OhAutofillManager : public AutofillManager {
                                              const std::string& event);
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
   void FillData(const std::string& json_str);
+  std::string GetAttributeOrUniqueId(const FormFieldData& field);
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
   void ForwardDataToPasswordManager(const std::string& page_url,
@@ -103,6 +104,7 @@ class OhAutofillManager : public AutofillManager {
 
   bool IsUsernamePasswordFormField(FormRendererId form_id,
                                    FieldRendererId field_id);
+  void SetPasswordPopupShow(bool is_show) { is_password_popup_show_ = is_show; }
 #endif
 
  protected:
@@ -175,6 +177,7 @@ class OhAutofillManager : public AutofillManager {
   bool has_server_prediction_ = false;
   base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
   bool is_show_ = false;
+  bool is_password_popup_show_ = false;
   std::unique_ptr<FormData> form_;
 };
 

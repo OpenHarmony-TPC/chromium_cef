@@ -60,12 +60,15 @@ namespace autofill {
 using base::TimeTicks;
 
 void OhDriverInitHook(AutofillClient* client, ContentAutofillDriver* driver) {
+#if defined(OHOS_AUTOFILL)
+  driver->set_oh_autofill_manager(
+      base::WrapUnique(new OhAutofillManager(driver, client)));
+#else
   driver->set_autofill_manager(
       base::WrapUnique(new OhAutofillManager(driver, client)));
+#endif
   driver->GetAutofillAgent()->SetUserGestureRequired(false);
-  driver->GetAutofillAgent()->SetSecureContextRequired(true);
   driver->GetAutofillAgent()->SetFocusRequiresScroll(false);
-  driver->GetAutofillAgent()->SetQueryPasswordSuggestion(true);
 }
 
 OhAutofillManager::OhAutofillManager(AutofillDriver* driver,
@@ -82,6 +85,15 @@ base::WeakPtr<AutofillManager> OhAutofillManager::GetWeakPtr() {
 
 CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
   return nullptr;
+}
+
+std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
+  auto attribute = field.autocomplete_attribute;
+  if (!attribute.empty()) {
+    return attribute;
+  }
+  auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
+  return unique_renderer_id;
 }
 
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
@@ -110,9 +122,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
-        field_data.autocomplete_attribute == field.autocomplete_attribute ? 1 : 0));
+        key == GetAttributeOrUniqueId(field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
@@ -128,7 +141,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
     list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
   }
 
@@ -163,6 +176,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   int32_t index = 0;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(KEY_FOUCS, 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
@@ -179,7 +193,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
     list.Append(
         base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
     index++;
   }
@@ -188,10 +202,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
 }
 
 void OhAutofillManager::FillData(const std::string& json_str) {
-  if (form_ == nullptr) {
-    return;
-  }
-
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
     return;
@@ -216,14 +226,34 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   }
 #endif
 
+  if (form_ == nullptr) {
+    return;
+  }
+
   std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value) {
+    if (!value || value->empty()) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
                                                convert.from_bytes(*value));
+  }
+  for (auto it = root_dict->begin(); it != root_dict->end(); it++) {
+    const base::Value::Dict* sub_dict = root_dict->FindDict(it->first);
+    if (sub_dict) {
+      const std::string* str = sub_dict->FindString(KEY_VALUE);
+      if (!str) {
+        continue;
+      }
+      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
+      if (!index.has_value() || index.value() <= 0 || index.value() > form_->fields.size()) {
+        continue;
+      }
+      uint32_t i = static_cast<uint32_t>(index.value()) - 1;
+      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
+                                                 convert.from_bytes(*str));
+    }
   }
   is_show_ = false;
 }
@@ -234,7 +264,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     const std::string& username,
     const std::string& password,
     bool is_other_account) {
-  LOG(INFO) << "autofill save, forward to password_manager";
+  LOG(INFO) << "autofill fill data, forward to password_manager";
   auto* rfh =
       static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
   if (!rfh || !rfh->IsActive()) {
@@ -253,6 +283,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
   }
 
   password_manager->FillData(page_url, username, password, is_other_account);
+  is_password_popup_show_ = false;
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
@@ -429,7 +460,7 @@ void OhAutofillManager::OnDidFillAutofillFormDataImpl(
 void OhAutofillManager::OnHidePopupImpl() {
   LOG(INFO) << "OnHidePopupImpl";
 
-  if (!is_show_) {
+  if (!is_show_ && !is_password_popup_show_) {
     return;
   }
 
@@ -455,6 +486,7 @@ void OhAutofillManager::OnHidePopupImpl() {
     autofill_client->OnAutofillEvent(json_str.value());
   }
   is_show_ = false;
+  is_password_popup_show_ = false;
 }
 
 void OhAutofillManager::PropagateAutofillPredictions(
@@ -478,6 +510,7 @@ void OhAutofillManager::Reset() {
   LOG(INFO) << "Reset";
   AutofillManager::Reset();
   is_show_ = false;
+  is_password_popup_show_ = false;
   if (form_) {
     form_.reset(nullptr);
   }

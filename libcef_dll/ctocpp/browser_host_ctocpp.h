@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1226c94fcbb06fb654cc597f5cd6793951cef504$
+// $hash=2d8db2d91b19b596ac6cb2045ba01b41769d85d1$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -189,10 +189,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                       CefString& targetUri) override;
   void ClosePort(CefString& port_handle) override;
   void DestroyAllWebMessagePorts() override;
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void GetHitData(int& type, CefString& extra_data) override;
   void SetInitialScale(float scale) override;
@@ -259,7 +259,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   int GetShrinkViewportHeight() override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
-  void SetScrollable(bool enable) override;
+  void SetScrollable(bool enable, int scrollType) override;
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
@@ -293,11 +293,15 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        int height,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
+  void ScrollToWithAnime(float x, float y, int32_t duration) override;
+  void ScrollByWithAnime(float delta_x,
+                         float delta_y,
+                         int32_t duration) override;
+  void GetScrollOffset(float* offset_x, float* offset_y) override;
+  void GetOverScrollOffset(float* offset_x, float* offset_y) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
   void ScrollFocusedEditableNodeIntoView() override;
@@ -308,10 +312,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                             const std::string& content) override;
   void CreateToPDF(const CefPdfPrintSettings& settings,
                    CefRefPtr<CefPdfValueCallback> callback) override;
-#ifdef OHOS_GET_SCROLL_OFFSET
-  void GetScrollOffset(float* offset_x, float* offset_y) override;
-  void GetOverScrollOffset(float* offset_x, float* offset_y) override;
-#endif
+  void SetPopupWindow(cef_native_window_t window) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
