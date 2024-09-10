@@ -3636,8 +3636,8 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
   }
 
   void CefBrowserHostBase::EnableSafeBrowsing(bool enable) {
-    LOG(INFO) << "enable safe browsing" << enable;
     if (settings_.is_safe_browsing_enable != enable) {
+      LOG(INFO) << "enable safe browsing" << enable;
       settings_.is_safe_browsing_enable = enable;
     }
   }
