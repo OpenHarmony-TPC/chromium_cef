@@ -3258,20 +3258,6 @@ void CefBrowserHostBase::UpdateDrawRect() {
     static_cast<CefFrameHostImpl*>(frame.get())->UpdateDrawRect();
   }
 }
-
-void CefBrowserHostBase::ScrollToWithAnime(float x, float y, int32_t duration) {
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->ScrollToWithAnime(x, y, duration);
-  }
-}
-
-void CefBrowserHostBase::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->ScrollByWithAnime(delta_x, delta_y, duration);
-  }
-}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_NETWORK_CONNINFO

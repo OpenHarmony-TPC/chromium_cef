@@ -1952,22 +1952,6 @@ typedef struct _cef_browser_host_t {
                                             int focusType);
 
   ///
-  /// Scroll to the position with anime.
-  ///
-  void(CEF_CALLBACK* scroll_to_with_anime)(struct _cef_browser_host_t* self,
-                                           float x,
-                                           float y,
-                                           int32_t duration);
-
-  ///
-  /// Scroll by the delta with anime.
-  ///
-  void(CEF_CALLBACK* scroll_by_with_anime)(struct _cef_browser_host_t* self,
-                                           float delta_x,
-                                           float delta_y,
-                                           int32_t duration);
-
-  ///
   /// OnSafeInsetsChange
   ///
   void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,

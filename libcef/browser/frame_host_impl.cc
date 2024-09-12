@@ -1132,26 +1132,6 @@ void CefFrameHostImpl::UpdateDrawRect() {
                           render_frame->UpdateDrawRect();
                         }));
 }
-
-void CefFrameHostImpl::ScrollToWithAnime(float x, float y, int32_t duration) {
-  SendToRenderFrame(__FUNCTION__, base::BindOnce(
-                                      [](float x, float y, int32_t duration,
-                                         const RenderFrameType& render_frame) {
-                                        render_frame->ScrollToWithAnime(x, y, duration);
-                                      },
-                                      x, y, duration));
-}
-
-void CefFrameHostImpl::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
-  SendToRenderFrame(__FUNCTION__, base::BindOnce(
-                                      [](float delta_x, float delta_y, int32_t duration,
-                                         const RenderFrameType& render_frame) {
-                                        render_frame->ScrollByWithAnime(delta_x,
-                                                               delta_y,
-                                                               duration);
-                                      },
-                                      delta_x, delta_y, duration));
-}
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)

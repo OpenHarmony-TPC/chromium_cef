@@ -293,10 +293,6 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        int height,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x,
-                         float delta_y,
-                         int32_t duration) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
