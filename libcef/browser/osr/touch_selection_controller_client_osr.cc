@@ -435,11 +435,11 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommandMouse(int command_id,
     case QM_EDITFLAG_CAN_ELLIPSIS:
       MouseSelectMenuShow(false);
       RunContextMenu();
-      host_delegate->ExecuteEditCommand("Unselect", value);
+      browser->web_contents()->CollapseSelection();
       break;
     default:
       MouseSelectMenuShow(false);
-      host_delegate->ExecuteEditCommand("Unselect", value);
+      browser->web_contents()->CollapseSelection();
       break;
   }
 }
@@ -1022,14 +1022,14 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
       CloseQuickMenu();
       RunContextMenu();
 #ifdef OHOS_CLIPBOARD
-      host_delegate->ExecuteEditCommand("Unselect", value);
+      browser->web_contents()->CollapseSelection();
 #endif  // #ifdef OHOS_CLIPBOARD
       break;
     default:
       // Invalid command, do nothing.
       // Also reached when callback is destroyed/cancelled.
 #ifdef OHOS_CLIPBOARD
-      host_delegate->ExecuteEditCommand("Unselect", value);
+      browser->web_contents()->CollapseSelection();
 #endif  // #ifdef OHOS_CLIPBOARD
       break;
   }
