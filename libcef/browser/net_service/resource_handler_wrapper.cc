@@ -515,12 +515,12 @@ class ResourceResponseWrapper : public ResourceResponse {
     return handler->GetResponseData();
   }
 
-  size_t GetResponseDataBuffer(char* data) override {
+  size_t GetResponseDataBuffer(char* data, size_t dest_size) override {
     auto handler = handler_provider_->handler();
     if (!handler) {
       return 0;
     }
-    return handler->GetResponseDataBuffer(data);
+    return handler->GetResponseDataBuffer(data, dest_size);
   }
 
   size_t GetResponseDataBufferSize() override {
