@@ -99,7 +99,7 @@ class ResourceResponse {
 
 #if BUILDFLAG(IS_OHOS)
   virtual const std::string& GetResponseData() = 0;
-  virtual size_t GetResponseDataBuffer(char* data) = 0;
+  virtual size_t GetResponseDataBuffer(char* data, size_t dest_size) = 0;
   virtual size_t GetResponseDataBufferSize() = 0;
 #endif
 };
