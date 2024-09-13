@@ -599,6 +599,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
         if (auto client = browser->client()) {
           if (auto render = client->GetRenderHandler()) {
             render->StartVibraFeedback("longPress.light");
+            controller->ResetLongPressEvent();
           }
         }
       }
