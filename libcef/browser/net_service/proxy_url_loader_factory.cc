@@ -517,8 +517,17 @@ void InterceptedRequest::Restart() {
     }
   }
 
+#if BUILDFLAG(IS_OHOS)
+  if (request_.method == "OPTIONS") {
+    current_request_uses_header_client_ = false;
+  } else {
+    current_request_uses_header_client_ =
+        factory_->url_loader_header_client_receiver_.is_bound();
+  }
+#else
   current_request_uses_header_client_ =
       factory_->url_loader_header_client_receiver_.is_bound();
+#endif
 
   if (request_.request_initiator &&
       network::cors::ShouldCheckCors(request_.url, request_.request_initiator,
@@ -971,6 +980,27 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
     std::unique_ptr<ResourceResponse> response) {
   // StreamReaderURLLoader will synthesize TrustedHeaderClient callbacks to
   // avoid having Set-Cookie headers stripped by the IPC layer.
+#if BUILDFLAG(IS_OHOS)
+  if (request_.method == "OPTIONS") {
+    current_request_uses_header_client_ = false;
+
+    stream_loader_ = new StreamReaderURLLoader(
+        id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
+        mojo::NullRemote(), traffic_annotation_,
+        std::move(current_cached_metadata_),
+        std::make_unique<InterceptDelegate>(std::move(response),
+                                            weak_factory_.GetWeakPtr()));
+  } else {
+    current_request_uses_header_client_ = true;
+
+    stream_loader_ = new StreamReaderURLLoader(
+        id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
+        header_client_receiver_.BindNewPipeAndPassRemote(), traffic_annotation_,
+        std::move(current_cached_metadata_),
+        std::make_unique<InterceptDelegate>(std::move(response),
+                                            weak_factory_.GetWeakPtr()));
+  }
+#else
   current_request_uses_header_client_ = true;
 
   stream_loader_ = new StreamReaderURLLoader(
@@ -979,6 +1009,7 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
       std::move(current_cached_metadata_),
       std::make_unique<InterceptDelegate>(std::move(response),
                                           weak_factory_.GetWeakPtr()));
+#endif
   stream_loader_->Start();
 }
 
@@ -1242,17 +1273,8 @@ void InterceptedRequest::OnDestroy() {
 
   factory_->request_handler_->OnRequestComplete(id_, request_, status_);
 
-#ifdef OHOS_NETWORK_LOAD
-  if (request_.method == "OPTIONS") {
-    delete this;
-  } else {
-    // Destroys |this|.
-    factory_->RemoveRequest(this);
-  }
-#else
   // Destroys |this|.
   factory_->RemoveRequest(this);
-#endif
 }
 
 void InterceptedRequest::OnProcessRequestHeaders(
@@ -1648,14 +1670,7 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
-#ifdef OHOS_NETWORK_LOAD
-  // Donn't track options request, because the request id for options always 0.
-  if (request.method != "OPTIONS") {
-    requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-  }
-#else
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-#endif
 #if BUILDFLAG(IS_OHOS)
   req->Restart(false);
 #else
