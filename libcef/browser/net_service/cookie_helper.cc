@@ -180,7 +180,7 @@ void SaveCookiesOnUIThread(
   if (!browser_context) {
 #if BUILDFLAG(IS_OHOS)
     CEF_POST_TASK(CEF_IOT,
-                  base::BindOnce(std::move(progress->done_callback),
+                  base::BindOnce(std::move(done_callback),
                                  0,
                                  net::CookieList())));
 #else
