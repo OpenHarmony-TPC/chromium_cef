@@ -911,6 +911,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in
       // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
+      #if defined(OHOS_SCHEME_HANDLER)
+      // Get the chunked data pipe remote back.
+      if (state->pending_request_) {
+        CefRefPtr<CefPostDataStream> post_data_stream = state->pending_request_->GetUploadStream();
+        if (post_data_stream && post_data_stream->IsChunked()) {
+          LOG(INFO) << "scheme_handler get the chunked stream back.";
+          static_cast<CefPostDataStreamImpl*>(post_data_stream.get())
+              ->GetChunkedDataPipeGetter(request->request_body.get());
+        }
+      }
+#endif
     }
 
     // Continue the request.
@@ -977,13 +988,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         }
         state->pending_request_->SetFrameUrl(frame_url);
       }
-      bool has_user_activation = false;
-      if (request->trusted_params) {
-        has_user_activation = request->trusted_params->has_user_activation;
-      }
       std::map<std::string, std::string> headers =
           network::GetFetchMetadataHeaders(
-                  request->url, request->mode, has_user_activation,
+                  request->url, request->mode, request->has_user_gesture,
                   request->destination, request->request_initiator);
       for (auto& entry : headers) {
         state->pending_request_->SetHeaderByName(entry.first, entry.second, false);
@@ -1214,8 +1221,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       std::move(exec_callback).Run();
       return;
     }
-    // Clear the cookie  first. we will get cookie for this redirect.
-    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
+    // Clear the headers first. we will get cookie for this redirect.
+    request->headers.Clear();
     // Get cookies for redirect url.
     request->url = new_url;
     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));

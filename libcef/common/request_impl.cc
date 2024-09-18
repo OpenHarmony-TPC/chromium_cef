@@ -225,7 +225,7 @@ std::unique_ptr<net::UploadDataStream> CreateUploadDataStream(
       const bool has_null_source = element.read_only_once().value();
       auto upload_data_stream =
           std::make_unique<network::ChunkedDataPipeUploadDataStream>(
-              body, element.ReleaseChunkedDataPipeGetter(), has_null_source);
+              body, element.ReleaseChunkedDataPipeGetter(), has_null_source, true);
       if (element.read_only_once()) {
         upload_data_stream->EnableCache();
       }
@@ -1073,6 +1073,17 @@ void CefPostDataStreamImpl::Reset() {
   init_callback_ = nullptr;
 }
 
+void CefPostDataStreamImpl::GetChunkedDataPipeGetter(
+        network::ResourceRequestBody* body) {
+  LOG(INFO) << "scheme_handler get chunked data pip getter initialated_: " << initialated_;
+  if (body && upload_stream_ && !initialated_) {
+    body->SetToChunkedDataPipe(
+            static_cast<network::ChunkedDataPipeUploadDataStream*>(upload_stream_.get())
+                ->ReleaseChunkedDataPipeGetter(),
+            network::ResourceRequestBody::ReadOnlyOnce(HasNullSource()));
+  }
+}
+
 void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
   std::vector<base::File> open_files;
   if (body) {
@@ -1105,6 +1116,7 @@ void CefPostDataStreamImpl::OnStreamInitialized(int rv) {
 }
 
 void CefPostDataStreamImpl::Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) {
+  initialated_ = true;
   init_callback_ = init_callback;
   if (upload_stream_) {
     int rv = upload_stream_->Init(

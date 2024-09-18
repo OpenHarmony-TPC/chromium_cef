@@ -21,6 +21,8 @@
 #if defined(OHOS_SCHEME_HANDLER)
 #include "net/base/io_buffer.h"
 #include "net/base/upload_data_stream.h"
+#include "services/network/chunked_data_pipe_upload_data_stream.h"
+#include "services/network/public/mojom/chunked_data_pipe_getter.mojom.h"
 #endif
 
 namespace blink {
@@ -230,6 +232,8 @@ class CefPostDataStreamImpl : public CefPostDataStream {
   void Set(network::ResourceRequestBody* body);
   void Reset() override;
 
+  void GetChunkedDataPipeGetter(network::ResourceRequestBody* body);
+
  private:
   void OnStreamInitialized(int rv);
   void OnStreamRead(scoped_refptr<net::WrappedIOBuffer> buffer,
@@ -240,6 +244,7 @@ class CefPostDataStreamImpl : public CefPostDataStream {
   CefRefPtr<CefPostDataStreamInitCallback> init_callback_;
 
   std::unique_ptr<net::UploadDataStream> upload_stream_;
+  bool initialated_{false};
 
   mutable base::Lock lock_;
   IMPLEMENT_REFCOUNTING(CefPostDataStreamImpl);
