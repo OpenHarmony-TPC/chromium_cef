@@ -182,7 +182,7 @@ void SaveCookiesOnUIThread(
     CEF_POST_TASK(CEF_IOT,
                   base::BindOnce(std::move(done_callback),
                                  0,
-                                 net::CookieList())));
+                                 net::CookieList()));
 #else
     std::move(done_callback).Run(0, net::CookieList());
 #endif
