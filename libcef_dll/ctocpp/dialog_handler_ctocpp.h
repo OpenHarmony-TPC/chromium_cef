@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef0e2e93340e25211668b8a3391a2aee735d2727$
+// $hash=c9ff26bd8d5ad1ae484d1a63b1275ab441c51a52$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
@@ -64,6 +64,8 @@ class CefDialogHandlerCToCpp
                            const std::vector<CefAutofillPopupItem>& menu_items,
                            bool is_password_popup_type) override;
   void ShowPasswordDialog(bool is_update, const CefString& url) override;
+  void OnColorChooserShow(uint32_t initial_color,
+                          CefRefPtr<CefColorChooserCallback> callback) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

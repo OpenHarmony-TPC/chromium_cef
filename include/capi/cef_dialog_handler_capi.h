@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a5c69bd82e92e1699b3e41dd067a4a64995f56bc$
+// $hash=766cff48b79b55b49253b8ae3c57f097363c1287$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -110,6 +110,27 @@ typedef struct _cef_date_time_chooser_callback_t {
                            int success,
                            double dialog_value);
 } cef_date_time_chooser_callback_t;
+
+///
+/// Callback structure for color chooser
+///
+typedef struct _cef_color_chooser_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Choose color to continue
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_color_chooser_callback_t* self,
+                           uint32_t color);
+
+  ///
+  /// Cancel color picker.
+  ///
+  void(CEF_CALLBACK* cancel)(struct _cef_color_chooser_callback_t* self);
+} cef_color_chooser_callback_t;
 
 ///
 /// Implement this structure to handle dialog events. The functions of this
@@ -195,6 +216,14 @@ typedef struct _cef_dialog_handler_t {
   void(CEF_CALLBACK* show_password_dialog)(struct _cef_dialog_handler_t* self,
                                            int is_update,
                                            const cef_string_t* url);
+
+  ///
+  /// Called to show color picker
+  ///
+  void(CEF_CALLBACK* on_color_chooser_show)(
+      struct _cef_dialog_handler_t* self,
+      uint32_t initial_color,
+      struct _cef_color_chooser_callback_t* callback);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

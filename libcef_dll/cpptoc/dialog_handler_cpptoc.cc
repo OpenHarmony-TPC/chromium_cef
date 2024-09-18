@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f0e356eb55325a2f897bd2909f87db4537d8673$
+// $hash=25df5eb42655c02f9b29464360512e7d4a591c1e$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
+#include "libcef_dll/ctocpp/color_chooser_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/file_dialog_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/select_popup_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -253,6 +254,29 @@ dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
       is_update ? true : false, CefString(url));
 }
 
+void CEF_CALLBACK
+dialog_handler_on_color_chooser_show(struct _cef_dialog_handler_t* self,
+                                     uint32_t initial_color,
+                                     cef_color_chooser_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnColorChooserShow(
+      initial_color, CefColorChooserCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -264,6 +288,7 @@ CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_ads_blocked = dialog_handler_on_ads_blocked;
   GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
   GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
+  GetStruct()->on_color_chooser_show = dialog_handler_on_color_chooser_show;
 }
 
 // DESTRUCTOR - Do not edit by hand.

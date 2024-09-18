@@ -521,6 +521,8 @@ source_set("libcef_static") {
               "libcef/browser/browser_util.h",
               "libcef/browser/certificate_query.cc",
               "libcef/browser/certificate_query.h",
+              "libcef/browser/color_chooser/color_chooser_ohos.cc",
+              "libcef/browser/color_chooser/color_chooser_ohos.h",
               "libcef/browser/received_slice_helper.h",
               "libcef/browser/received_slice_helper.cc",
               "libcef/browser/chrome/browser_delegate.h",

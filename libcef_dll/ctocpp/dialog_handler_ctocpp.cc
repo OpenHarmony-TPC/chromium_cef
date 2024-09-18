@@ -9,11 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f141018cb91f13b379e6bc51e714ae6059fda99e$
+// $hash=d6cd36f12903ef8fa0f9bf3d7c552ce6fb963bbc$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
+#include "libcef_dll/cpptoc/color_chooser_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/file_dialog_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/select_popup_callback_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -254,6 +255,30 @@ void CefDialogHandlerCToCpp::ShowPasswordDialog(bool is_update,
 
   // Execute
   _struct->show_password_dialog(_struct, is_update, url.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::OnColorChooserShow(
+    uint32_t initial_color,
+    CefRefPtr<CefColorChooserCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_color_chooser_show)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_color_chooser_show(_struct, initial_color,
+                                 CefColorChooserCallbackCppToC::Wrap(callback));
 }
 
 // CONSTRUCTOR - Do not edit by hand.
