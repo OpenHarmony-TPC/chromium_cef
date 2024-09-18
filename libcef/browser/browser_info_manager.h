@@ -245,6 +245,12 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
       const content::GlobalRenderFrameHostId& global_id,
       int timeout_id);
 
+#if defined(OHOS_NO_STATE_PREFETCH)
+  static bool IsPrerendering(const content::GlobalRenderFrameHostId& global_id);
+  static void CancelForPrerendering(
+          const content::GlobalRenderFrameHostId& global_id, int timeout_id);
+#endif
+
   mutable base::Lock browser_info_lock_;
 
   // Access to the below members must be protected by |browser_info_lock_|.
