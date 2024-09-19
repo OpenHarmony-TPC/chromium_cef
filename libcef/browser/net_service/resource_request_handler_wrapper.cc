@@ -977,9 +977,13 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         }
         state->pending_request_->SetFrameUrl(frame_url);
       }
+      bool has_user_activation = false;
+      if (request->trusted_params) {
+        has_user_activation = request->trusted_params->has_user_activation;
+      }
       std::map<std::string, std::string> headers =
           network::GetFetchMetadataHeaders(
-                  request->url, request->mode, request->has_user_gesture,
+                  request->url, request->mode, has_user_activation,
                   request->destination, request->request_initiator);
       for (auto& entry : headers) {
         state->pending_request_->SetHeaderByName(entry.first, entry.second, false);
@@ -1210,8 +1214,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       std::move(exec_callback).Run();
       return;
     }
-    // Clear the headers first. we will get cookie for this redirect.
-    request->headers.Clear();
+    // Clear the cookie  first. we will get cookie for this redirect.
+    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
     // Get cookies for redirect url.
     request->url = new_url;
     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
