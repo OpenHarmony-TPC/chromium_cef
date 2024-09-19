@@ -19,11 +19,8 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "libcef/browser/net_database/cef_data_base_impl.h"
-#endif
-
-#ifdef OHOS_CA
 #include "third_party/bounds_checking_function/include/securec.h"
-#endif  // OHOS_CA
+#endif
 
 namespace net_service {
 
