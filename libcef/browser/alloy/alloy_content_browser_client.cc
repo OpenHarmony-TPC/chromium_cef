@@ -310,7 +310,7 @@ void TransferVector(const std::vector<std::string>& source,
 constexpr int64_t LARGE_CAPACITY_DEVICE_THRESHOLD = static_cast<int64_t>(100) * 1024 * 1024 * 1024;
 constexpr int64_t LARGE_CAPACITY_DEVICE_CACHE_SIZE = 100 * 1024 * 1024;
 constexpr int64_t SMALL_CAPACITY_DEVICE_CACHE_SIZE = 20 * 1024 * 1024;
-constexpr char WEB_CACHEPATH[] = "/data/storage/e12/base/cache/web";
+constexpr char WEB_CACHE_PATH[] = "/data/storage/e12/base/cache/web";
 #endif // defined(OHOS_CACHE)
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
@@ -2766,7 +2766,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
        network_context_params->http_cache_max_size = 0;
     } else {
       int64_t tatalDiskSpace =
-        base::Sysinfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
+        base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
       if (tatalDiskSpace >= LARGE_CAPACITY_DEVICE_THRESHOLD) {
         LOG(DEBUG) << "Set http cache max size to 100MB for large capacity device";
         network_context_params->http_cache_max_size = LARGE_CAPACITY_DEVICE_CACHE_SIZE;
