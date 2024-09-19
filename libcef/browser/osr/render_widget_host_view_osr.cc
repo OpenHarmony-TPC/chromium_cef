@@ -1691,6 +1691,12 @@ void CefRenderWidgetHostViewOSR::MouseSelectMenuShow(bool show) {
     selection_controller_client_->MouseSelectMenuShow(show);
   }
 }
+
+void CefRenderWidgetHostViewOSR::ChangeVisibilityOfQuickMenu() {
+  if (selection_controller_client_) {
+    selection_controller_client_->ChangeVisibilityOfQuickMenu();
+  }
+}
 #endif
 
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(

@@ -154,6 +154,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
+  void ChangeVisibilityOfQuickMenu();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
