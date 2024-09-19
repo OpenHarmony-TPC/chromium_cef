@@ -178,7 +178,14 @@ void SaveCookiesOnUIThread(
   auto browser_context =
       cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
   if (!browser_context) {
+#if BUILDFLAG(IS_OHOS)
+    CEF_POST_TASK(CEF_IOT,
+                  base::BindOnce(std::move(done_callback),
+                                 0,
+                                 net::CookieList()));
+#else
     std::move(done_callback).Run(0, net::CookieList());
+#endif
     return;
   }
 
