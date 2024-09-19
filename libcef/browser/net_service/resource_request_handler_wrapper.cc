@@ -911,7 +911,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in
       // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
-      #if defined(OHOS_SCHEME_HANDLER)
+#if defined(OHOS_SCHEME_HANDLER)
       // Get the chunked data pipe remote back.
       if (state->pending_request_) {
         CefRefPtr<CefPostDataStream> post_data_stream = state->pending_request_->GetUploadStream();
@@ -988,9 +988,13 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         }
         state->pending_request_->SetFrameUrl(frame_url);
       }
+      bool has_user_activation = false;
+      if (request->trusted_params) {
+        has_user_activation = request->trusted_params->has_user_activation;
+      }
       std::map<std::string, std::string> headers =
           network::GetFetchMetadataHeaders(
-                  request->url, request->mode, request->has_user_gesture,
+                  request->url, request->mode, has_user_activation,
                   request->destination, request->request_initiator);
       for (auto& entry : headers) {
         state->pending_request_->SetHeaderByName(entry.first, entry.second, false);
