@@ -2585,7 +2585,10 @@ if (is_mac) {
         }
       }
 
-      deps += [ ":copy_ceftests_files" ]
+      deps += [
+        ":copy_ceftests_files",
+        "//third_party:huawei_securec",
+      ]
     }
 
     if (is_linux && !is_component_build) {

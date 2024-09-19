@@ -21,6 +21,8 @@
 #include "libcef/browser/net_database/cef_data_base_impl.h"
 #endif
 
+#include "third_party/bounds_checking_function/include/securec.h"
+
 namespace net_service {
 
 namespace {
@@ -97,11 +99,15 @@ class AuthCallbackImpl : public CefAuthCallback {
     dataBase->GetHttpAuthCredentials(host_, realm_, username, password,
                                      MAX_PWD_LENGTH + 1);
     if (username.empty() || strlen(password) == 0) {
-      memset(password, 0, MAX_PWD_LENGTH + 1);
+      if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) == EOK) {
+        return false;
+      }
       return false;
     }
     CefString passwordCef(password, strlen(password));
-    memset(password, 0, MAX_PWD_LENGTH + 1);
+    if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) == EOK) {
+      return false;
+    }
     if (!task_runner_->RunsTasksInCurrentSequence()) {
       task_runner_->PostTask(
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
