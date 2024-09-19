@@ -182,7 +182,8 @@ typedef struct _cef_context_menu_handler_t {
       const cef_rect_t* select_bounds,
       cef_quick_menu_edit_state_flags_t edit_state_flags,
       struct _cef_run_quick_menu_callback_t* callback,
-      int is_mouse_trigger);
+      int is_mouse_trigger,
+      int is_long_press_actived);
 
   ///
   /// UpdateClippedSelectionBounds.
