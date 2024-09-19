@@ -286,7 +286,9 @@ using extensions::mojom::APIPermissionID;
 #include "libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h"
 #endif  // OHOS_ARKWEB_ADBLOCK
 
+#ifdef OHOS_CA
 #include "third_party/bounds_checking_function/include/securec.h"
+#endif  // OHOS_CA
 
 #if defined(OHOS_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
@@ -674,7 +676,7 @@ class CefSelectClientCertificateCallbackImpl
         return;
       }
 
-      if (memset_s(certData, certMaxSize, 0, certMaxSize) == EOK) {
+      if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
         return;
       }
       uint32_t len = 0;

@@ -21,7 +21,9 @@
 #include "libcef/browser/net_database/cef_data_base_impl.h"
 #endif
 
+#ifdef OHOS_CA
 #include "third_party/bounds_checking_function/include/securec.h"
+#endif  // OHOS_CA
 
 namespace net_service {
 
@@ -99,13 +101,13 @@ class AuthCallbackImpl : public CefAuthCallback {
     dataBase->GetHttpAuthCredentials(host_, realm_, username, password,
                                      MAX_PWD_LENGTH + 1);
     if (username.empty() || strlen(password) == 0) {
-      if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) == EOK) {
+      if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) != EOK) {
         return false;
       }
       return false;
     }
     CefString passwordCef(password, strlen(password));
-    if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) == EOK) {
+    if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) != EOK) {
       return false;
     }
     if (!task_runner_->RunsTasksInCurrentSequence()) {
