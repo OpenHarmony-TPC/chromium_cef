@@ -1221,8 +1221,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       std::move(exec_callback).Run();
       return;
     }
-    // Clear the headers first. we will get cookie for this redirect.
-    request->headers.Clear();
+    // Clear the cookie  first. we will get cookie for this redirect.
+    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
     // Get cookies for redirect url.
     request->url = new_url;
     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
