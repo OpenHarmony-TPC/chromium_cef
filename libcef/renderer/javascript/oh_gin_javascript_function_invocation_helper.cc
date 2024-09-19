@@ -17,6 +17,8 @@
 #include "ohos_adapter_helper.h"
 #include "v8/include/v8-exception.h"
 
+#include "third_party/bounds_checking_function/include/securec.h"
+
 namespace {
 
 const char kMethodInvocationAsConstructorDisallowed[] =
@@ -80,7 +82,10 @@ bool OhGinJavascriptFunctionInvocationHelper::StoreString(int index, void* mem, 
   int* newEntry = static_cast<int*>(mem) + (i * INDEX_SIZE);
   *(newEntry) = index;
   *(newEntry + 1) = static_cast<int>(strlen(str) + 1);
-  memcpy(dataMem + dataPos, str, strlen(str) + 1);
+  if (memcpy_s(dataMem + dataPos, MAX_FLOWBUF_DATA_SIZE - dataPos, str, strlen(str) + 1) != EOK) {
+    LOG(DEBUG) << "Flowbuf memcpy fail, cannot store more strings";
+    return false;
+  }
   return true;
 }
 
