@@ -911,6 +911,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in
       // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
+#if defined(OHOS_SCHEME_HANDLER)
+      // Get the chunked data pipe remote back.
+      if (state->pending_request_) {
+        CefRefPtr<CefPostDataStream> post_data_stream = state->pending_request_->GetUploadStream();
+        if (post_data_stream && post_data_stream->IsChunked()) {
+          LOG(INFO) << "scheme_handler get the chunked stream back.";
+          static_cast<CefPostDataStreamImpl*>(post_data_stream.get())
+              ->GetChunkedDataPipeGetter(request->request_body.get());
+        }
+      }
+#endif
     }
 
     // Continue the request.
