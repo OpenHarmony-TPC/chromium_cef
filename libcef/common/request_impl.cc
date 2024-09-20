@@ -1066,6 +1066,9 @@ CefPostDataStreamImpl::CefPostDataStreamImpl() {
 }
 
 CefPostDataStreamImpl::~CefPostDataStreamImpl() {
+  if (is_data_pipe_ && upload_stream_) {
+    content::GetIOThreadTaskRunner({})->DeleteSoon(FROM_HERE, std::move(upload_stream_));
+  }
 }
 
 void CefPostDataStreamImpl::Reset() {
@@ -1093,6 +1096,11 @@ void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
         std::string real_path = base::GetRealPath(base::FilePath(file_element.path()));
         LOG(INFO) << "scheme_handler file path: " << file_element.path() << " real path: " << real_path;
         open_files.push_back(base::File(base::FilePath(real_path), base::File::FLAG_OPEN | base::File::FLAG_READ));
+      }
+
+      if (element.type() == network::DataElement::Tag::kDataPipe ||
+              element.type() == network::DataElement::Tag::kChunkedDataPipe) {
+        is_data_pipe_ = true;
       }
     }
     scoped_refptr<base::SequencedTaskRunner> task_runner =
