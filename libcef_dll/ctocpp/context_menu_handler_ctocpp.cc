@@ -198,7 +198,8 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
     const CefRect& select_bounds,
     QuickMenuEditStateFlags edit_state_flags,
     CefRefPtr<CefRunQuickMenuCallback> callback,
-    bool is_mouse_trigger) {
+    bool is_mouse_trigger,
+    bool is_long_press_actived) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -228,7 +229,7 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
   int _retval = _struct->run_quick_menu(
       _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
       &location, &size, &select_bounds, edit_state_flags,
-      CefRunQuickMenuCallbackCppToC::Wrap(callback), is_mouse_trigger);
+      CefRunQuickMenuCallbackCppToC::Wrap(callback), is_mouse_trigger, is_long_press_actived);
 
   // Return type: bool
   return _retval ? true : false;

@@ -196,7 +196,8 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
     const cef_rect_t* select_bounds,
     cef_quick_menu_edit_state_flags_t edit_state_flags,
     cef_run_quick_menu_callback_t* callback,
-    int is_mouse_trigger) {
+    int is_mouse_trigger,
+    int is_long_press_actived) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -248,7 +249,8 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
       CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), locationVal,
       sizeVal, select_boundsVal, edit_state_flags,
       CefRunQuickMenuCallbackCToCpp::Wrap(callback),
-      is_mouse_trigger ? true : false);
+      is_mouse_trigger ? true : false,
+      is_long_press_actived ? true : false);
 
   // Return type: bool
   return _retval;

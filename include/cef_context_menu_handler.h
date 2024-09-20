@@ -171,7 +171,8 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
                             const CefRect& select_bounds,
                             QuickMenuEditStateFlags edit_state_flags,
                             CefRefPtr<CefRunQuickMenuCallback> callback,
-                            bool is_mouse_trigger) {
+                            bool is_mouse_trigger,
+                            bool is_long_press_actived) {
     return false;
   }
 
