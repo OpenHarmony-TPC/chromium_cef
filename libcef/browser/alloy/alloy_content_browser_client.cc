@@ -310,6 +310,13 @@ void TransferVector(const std::vector<std::string>& source,
 }
 #endif
 
+#if defined(OHOS_CACHE)
+constexpr int64_t LARGE_CAPACITY_DEVICE_THRESHOLD = static_cast<int64_t>(100) * 1024 * 1024 * 1024;
+constexpr int64_t LARGE_CAPACITY_DEVICE_CACHE_SIZE = 100 * 1024 * 1024;
+constexpr int64_t SMALL_CAPACITY_DEVICE_CACHE_SIZE = 20 * 1024 * 1024;
+constexpr char WEB_CACHE_PATH[] = "/data/storage/e12/base/cache/web";
+#endif // defined(OHOS_CACHE)
+
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 // The SpecialAccessFileURLLoaderFactory provided to the extension background
 // pages.  Checks with the ChildProcessSecurityPolicy to validate the file
@@ -2764,7 +2771,15 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
       // Determined by DiskCache itself.
        network_context_params->http_cache_max_size = 0;
     } else {
-      network_context_params->http_cache_max_size = 100 * 1024 * 1024;
+      int64_t tatalDiskSpace =
+        base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
+      if (tatalDiskSpace >= LARGE_CAPACITY_DEVICE_THRESHOLD) {
+        LOG(DEBUG) << "Set http cache max size to 100MB for large capacity device";
+        network_context_params->http_cache_max_size = LARGE_CAPACITY_DEVICE_CACHE_SIZE;
+      } else {
+        LOG(DEBUG) << "Set http cache max size to 20MB for small capacity device";
+        network_context_params->http_cache_max_size = SMALL_CAPACITY_DEVICE_CACHE_SIZE;
+      }
     }
   }
 #endif  // defined(OHOS_CACHE)
