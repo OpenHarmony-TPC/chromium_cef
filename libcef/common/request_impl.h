@@ -237,8 +237,17 @@ class CefPostDataStreamImpl : public CefPostDataStream {
  private:
   void OnStreamInitialized(int rv);
   void OnStreamRead(scoped_refptr<net::WrappedIOBuffer> buffer,
-                    CefRefPtr<CefPostDataStreamReadCallback> read_callback,
+                    base::WaitableEvent* event,
                     int rv);
+  void ReadAsync(void* buffer,
+            int buf_len,
+            CefRefPtr<CefPostDataStreamReadCallback> read_callback);
+  void OnStreamReadAsync(scoped_refptr<net::WrappedIOBuffer> buffer,
+                         CefRefPtr<CefPostDataStreamReadCallback> read_callback,
+                         int rv);
+  void ReadOnTaskRunner(void* buffer,
+            int buf_len,
+            base::WaitableEvent* event);
 
   CefRefPtr<CefPostDataStreamReadCallback> read_callback_;
   CefRefPtr<CefPostDataStreamInitCallback> init_callback_;
@@ -246,7 +255,9 @@ class CefPostDataStreamImpl : public CefPostDataStream {
   std::unique_ptr<net::UploadDataStream> upload_stream_;
   bool initialated_{false};
   bool is_data_pipe_{false};
-
+  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
+      base::ThreadPool::CreateSequencedTaskRunner({});
+  int last_read_rv_ = -2;
   mutable base::Lock lock_;
   IMPLEMENT_REFCOUNTING(CefPostDataStreamImpl);
 };
