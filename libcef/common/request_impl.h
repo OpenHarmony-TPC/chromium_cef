@@ -245,6 +245,7 @@ class CefPostDataStreamImpl : public CefPostDataStream {
 
   std::unique_ptr<net::UploadDataStream> upload_stream_;
   bool initialated_{false};
+  bool is_data_pipe_{false};
 
   mutable base::Lock lock_;
   IMPLEMENT_REFCOUNTING(CefPostDataStreamImpl);
