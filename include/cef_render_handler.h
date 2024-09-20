@@ -374,7 +374,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
                                       const CefNativeEmbedData& info) {}
-  
+
   ///
   /// Called when embed visibility.
   ///
@@ -456,6 +456,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetFillContent(const std::string& content) {}
+
+  ///
+  /// Called when you need to start vibrator.
+  ///
+  /*--cef()--*/
+  virtual void StartVibraFeedback(const std::string& vibratorType) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

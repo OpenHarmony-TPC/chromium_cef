@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4ff2fb2de475a091839858d008c7babd10266501$
+// $hash=0807c5faafefc7b75c0212a7d352ae6e476bfae1$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
@@ -855,6 +855,30 @@ void CefRenderHandlerCToCpp::OnNativeEmbedLifecycleChange(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnNativeEmbedVisibilityChange(
+    const std::string& embed_id,
+    bool visibility) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_native_embed_visibility_change)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: embed_id; type: std_string_byref_const
+  DCHECK(!embed_id.empty());
+  if (embed_id.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_native_embed_visibility_change(_struct, embed_id.c_str(),
+                                             visibility);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::NotifySelectAllClicked(bool select_all) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1033,9 +1057,10 @@ void CefRenderHandlerCToCpp::GetVisibleViewportRect(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
-                                                       const CefString& sceneId,
-                                                       bool isStart) {
+void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& sceneId,
+    bool isStart) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -1045,19 +1070,20 @@ void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> bro
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: text; type: string_byref_const
-  DCHECK(!sceneId.empty());
-  if (sceneId.empty()) {
-    return;
-  }
   // Verify param: browser; type: refptr_diff
   DCHECK(browser.get());
   if (!browser.get()) {
     return;
   }
+  // Verify param: sceneId; type: string_byref_const
+  DCHECK(!sceneId.empty());
+  if (sceneId.empty()) {
+    return;
+  }
 
   // Execute
-  _struct->send_dynamic_frame_loss_event(_struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
+  _struct->send_dynamic_frame_loss_event(
+      _struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1079,7 +1105,8 @@ void CefRenderHandlerCToCpp::OnResizeScrollableViewport(
   }
 
   // Execute
-  _struct->on_resize_scrollable_viewport(_struct, CefBrowserCppToC::Wrap(browser));
+  _struct->on_resize_scrollable_viewport(_struct,
+                                         CefBrowserCppToC::Wrap(browser));
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1101,6 +1128,28 @@ void CefRenderHandlerCToCpp::SetFillContent(const std::string& content) {
 
   // Execute
   _struct->set_fill_content(_struct, content.c_str());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::StartVibraFeedback(
+    const std::string& vibratorType) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, start_vibra_feedback)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: vibratorType; type: std_string_byref_const
+  DCHECK(!vibratorType.empty());
+  if (vibratorType.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->start_vibra_feedback(_struct, vibratorType.c_str());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

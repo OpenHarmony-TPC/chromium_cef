@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b1d7d47349a7b507f118dad1960b2f6fab6eb280$
+// $hash=5203dbf8932fc7583bba9fa4aab13ece53a09f45$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -1006,6 +1006,29 @@ void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
       CefBrowserCToCpp::Wrap(browser), infoObj);
 }
 
+void CEF_CALLBACK render_handler_on_native_embed_visibility_change(
+    struct _cef_render_handler_t* self,
+    const char* embed_id,
+    int visibility) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: embed_id; type: std_string_byref_const
+  DCHECK(embed_id);
+  if (!embed_id) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnNativeEmbedVisibilityChange(
+      embed_id, visibility ? true : false);
+}
+
 void CEF_CALLBACK
 render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
                                          int select_all) {
@@ -1092,9 +1115,12 @@ void CEF_CALLBACK render_handler_on_update_text_input_state_called(
       compositon_rangeVal);
 }
 
-void CEF_CALLBACK render_handler_get_word_selection(
-    struct _cef_render_handler_t *self, cef_browser_t *browser,
-    const cef_string_t *text, int8_t offset, cef_point_t *select) {
+void CEF_CALLBACK
+render_handler_get_word_selection(struct _cef_render_handler_t* self,
+                                  cef_browser_t* browser,
+                                  const cef_string_t* text,
+                                  int8_t offset,
+                                  cef_point_t* select) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1257,7 +1283,7 @@ void CEF_CALLBACK
 render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
                                              const cef_string_t* sceneId,
-                                             bool isStart) {
+                                             int isStart) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1271,7 +1297,7 @@ render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
   if (!browser) {
     return;
   }
-  // Verify param: cef_screen_rect; type: simple_byref_const
+  // Verify param: sceneId; type: string_byref_const
   DCHECK(sceneId);
   if (!sceneId) {
     return;
@@ -1279,7 +1305,8 @@ render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->SendDynamicFrameLossEvent(
-      CefBrowserCToCpp::Wrap(browser), CefString(sceneId), isStart);
+      CefBrowserCToCpp::Wrap(browser), CefString(sceneId),
+      isStart ? true : false);
 }
 
 void CEF_CALLBACK
@@ -1323,6 +1350,27 @@ render_handler_set_fill_content(struct _cef_render_handler_t* self,
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->SetFillContent(content);
+}
+
+void CEF_CALLBACK
+render_handler_start_vibra_feedback(struct _cef_render_handler_t* self,
+                                    const char* vibratorType) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: vibratorType; type: std_string_byref_const
+  DCHECK(vibratorType);
+  if (!vibratorType) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->StartVibraFeedback(vibratorType);
 }
 
 }  // namespace
@@ -1373,6 +1421,8 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_native_embed_gesture_event;
   GetStruct()->on_native_embed_lifecycle_change =
       render_handler_on_native_embed_lifecycle_change;
+  GetStruct()->on_native_embed_visibility_change =
+      render_handler_on_native_embed_visibility_change;
   GetStruct()->notify_select_all_clicked =
       render_handler_notify_select_all_clicked;
   GetStruct()->release_resize_hold = render_handler_release_resize_hold;
@@ -1389,6 +1439,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_resize_scrollable_viewport =
       render_handler_on_resize_scrollable_viewport;
   GetStruct()->set_fill_content = render_handler_set_fill_content;
+  GetStruct()->start_vibra_feedback = render_handler_start_vibra_feedback;
 }
 
 // DESTRUCTOR - Do not edit by hand.
