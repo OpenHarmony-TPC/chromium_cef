@@ -299,7 +299,11 @@ bool OhPasswordManagerClient::PromptUserToSaveOrUpdatePassword(
       PasswordFormToJsonForSave(form_to_save->GetPendingCredentials());
   if (json_str.has_value()) {
     LOG(INFO) << "call autofill for save from system.";
-    autofill_client->OnAutofillEvent(json_str.value());
+    bool result = autofill_client->OnAutofillEvent(json_str.value());
+    if (!result) {
+      LOG(ERROR) << "failed to call autofill for save";
+      return false;
+    }
   }
 #endif
   return false;
@@ -806,10 +810,15 @@ absl::optional<std::string> OhPasswordManagerClient::PasswordFormToJsonForSave(
 
 void OhPasswordManagerClient::ProcessAutofillCancel(
     const std::string& fillContent) {
-  LOG(INFO) << "autofill process fill cancel";
-  if (is_keyboard_supressed_) {
-    SetShouldSuppressKeyboard(false);
+  // If it is on the PC platform, or if the request is not sent by me, I will
+  // not handle the fill cancle event.
+  if (!is_keyboard_supressed_) {
+    LOG(INFO) << "don't need to handle the fill cancle event";
+    return;
   }
+
+  LOG(INFO) << "autofill handle fill cancel event";
+  SetShouldSuppressKeyboard(false);
 
   if (!web_contents()) {
     LOG(ERROR) << "web_contents is nullptr";
@@ -864,9 +873,13 @@ void OhPasswordManagerClient::AutoFillWithIMFEvent(bool is_username,
   auto json_str = PasswordFormToJsonForRequest(EVENT_FILL, form_to_request_url_,
                                                username, password, &imf_info);
   if (json_str.has_value()) {
-    LOG(INFO) << "call autofill for save from IMF";
+    LOG(INFO) << "call autofill for request from IMF";
+    bool result = autofill_client->OnAutofillEvent(json_str.value());
+    if (!result) {
+      LOG(ERROR) << "failed to call autofill for request";
+      return;
+    }
     SetShouldSuppressKeyboard(true);
-    autofill_client->OnAutofillEvent(json_str.value());
   }
 }
 
@@ -962,10 +975,14 @@ void OhPasswordManagerClient::OnRequestAutofill(
       auto json_str = PasswordFormToJsonForRequest(
           EVENT_FILL, page_url, username_data, password_data);
       if (json_str.has_value()) {
-        SetShouldSuppressKeyboard(true);
         LOG(INFO) << "call autofill for request from system, form_id="
                   << form_id;
-        autofill_client->OnAutofillEvent(json_str.value());
+        bool result = autofill_client->OnAutofillEvent(json_str.value());
+        if (!result) {
+          LOG(ERROR) << "failed to call autofill for request";
+          return;
+        }
+        SetShouldSuppressKeyboard(true);
         UpdateLastRequestFilledItems(username_data, password_data, form_id);
       }
     }
@@ -988,7 +1005,11 @@ void OhPasswordManagerClient::OnRequestAutofill(
     if (json_str.has_value()) {
       LOG(INFO) << "call autofill for request from system, state="
                 << static_cast<int32_t>(state);
-      autofill_client->OnAutofillEvent(json_str.value());
+      bool result = autofill_client->OnAutofillEvent(json_str.value());
+      if (!result) {
+        LOG(ERROR) << "failed to call autofill for request";
+        return;
+      }
       UpdateLastRequestFilledItems(username_data, password_data, form_id);
     }
   }
