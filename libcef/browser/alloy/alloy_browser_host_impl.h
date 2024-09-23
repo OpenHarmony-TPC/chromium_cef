@@ -357,6 +357,12 @@ bool NeedsReload() override;
   bool IsBackForwardCacheSupported() override;
   content::PreloadingEligibility IsPrerender2Supported(
       content::WebContents& web_contents) override;
+#if BUILDFLAG(IS_OHOS)
+  std::unique_ptr<content::ColorChooser> OpenColorChooser(
+      content::WebContents* web_contents,
+      SkColor color,
+      const std::vector<blink::mojom::ColorSuggestionPtr>& suggestions) override;
+#endif
 
 #ifdef OHOS_FOCUS
   void ActivateContents(content::WebContents* contents) override;

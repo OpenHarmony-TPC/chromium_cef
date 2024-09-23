@@ -113,6 +113,10 @@
 #include "content/public/common/content_switches.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "libcef/browser/color_chooser/color_chooser_ohos.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -1918,6 +1922,20 @@ content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
   return content::PreloadingEligibility::kEligible;
 }
+
+#if BUILDFLAG(IS_OHOS)
+std::unique_ptr<content::ColorChooser> AlloyBrowserHostImpl::OpenColorChooser(
+    content::WebContents* web_contents,
+    SkColor color,
+    const std::vector<blink::mojom::ColorSuggestionPtr>& suggestions) {
+  if (client_) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::OpenColorChooser 1";
+    return std::make_unique<ColorChooserOhos>(
+      client_, web_contents, color, suggestions);
+  }
+  return nullptr;
+}
+#endif
 
 #ifdef OHOS_FOCUS
 void AlloyBrowserHostImpl::ActivateContents(content::WebContents* contents) {
