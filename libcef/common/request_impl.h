@@ -19,6 +19,8 @@
 #include "url/gurl.h"
 
 #if defined(OHOS_SCHEME_HANDLER)
+#include "base/synchronization/waitable_event.h"
+#include "base/task/thread_pool.h"
 #include "net/base/io_buffer.h"
 #include "net/base/upload_data_stream.h"
 #include "services/network/chunked_data_pipe_upload_data_stream.h"
