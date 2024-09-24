@@ -595,6 +595,15 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
           }
         }
       }
+      if (controller && controller->IsLongPressEvent() &&
+          isLongPressSelectionActive) {
+        if (auto client = browser->client()) {
+          if (auto render = client->GetRenderHandler()) {
+            render->StartVibraFeedback("longPress.light");
+            controller->ResetLongPressEvent();
+          }
+        }
+      }
       CloseQuickMenu();
 #ifdef OHOS_CLIPBOARD
     } else {
@@ -605,7 +614,8 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
-      if (controller && controller->IsLongPressEvent()) {
+      if (controller && controller->IsLongPressEvent() &&
+          !isLongPressSelectionActive) {
         if (auto client = browser->client()) {
           if (auto render = client->GetRenderHandler()) {
             render->StartVibraFeedback("longPress.light");
