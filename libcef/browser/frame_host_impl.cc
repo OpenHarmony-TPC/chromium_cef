@@ -32,6 +32,10 @@
 #include "third_party/skia/include/core/SkImage.h"
 #endif  // BUILDFLAG(IS_OHOS)
 
+#ifdef OHOS_NETWORK_LOAD
+#include "base/strings/escape.h"
+#endif
+
 namespace {
 
 void StringVisitCallback(CefRefPtr<CefStringVisitor> visitor,
@@ -408,6 +412,11 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
   // Any necessary fixup will occur in LoadRequest.
 #ifdef OHOS_NETWORK_LOAD
   GURL gurl = url_util::FixupGURL(url);
+  if (!base::StartsWith(url, "file:/") && gurl.SchemeIsFile()) {
+    std::string unscaped_url_str = base::UnescapeURLComponent(gurl.spec(),
+      base::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS);
+    gurl = GURL(unscaped_url_str);
+  }
 #else
   GURL gurl = url_util::MakeGURL(url, /*fixup=*/false);
 #endif
