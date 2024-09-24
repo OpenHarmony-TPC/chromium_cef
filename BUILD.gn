@@ -1372,7 +1372,10 @@ source_set("libcef_static") {
       "libcef/browser/predictors/resource_prefetch_predictor.cc",
       "libcef/browser/predictors/resource_prefetch_predictor.h",
     ]
-    deps += [ "//components/no_state_prefetch/renderer" ]
+    deps += [
+      "//components/no_state_prefetch/renderer",
+      "//third_party:huawei_securec",
+    ]
   }  #endif  // defined(OHOS_NO_STATE_PREFETCH)
 
   if (safe_browsing_mode != 0) {

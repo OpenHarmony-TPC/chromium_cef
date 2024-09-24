@@ -17,6 +17,7 @@
 #include "services/network/public/cpp/resource_request.h"
 #include "services/network/public/cpp/shared_url_loader_factory.h"
 #include "services/network/public/mojom/url_response_head.mojom.h"
+#include "third_party/bounds_checking_function/include/securec.h"
 #include "url/gurl.h"
 #include "url/origin.h"
 
@@ -74,7 +75,9 @@ class PredictorResourceHandler : public CefResourceHandler {
       // Copy the next block of data info the buffer.
       int transfer_size =
           std::min(bytes_to_read, static_cast<int>(data_.length() - offset_));
-      memcpy(data_out, data_.c_str() + offset_, transfer_size);
+      if (memcpy_s(data_out, bytes_to_read, data_.c_str() + offset_, transfer_size) != EOK) {
+        return false;
+      }
       offset_ += transfer_size;
 
       bytes_read = transfer_size;
