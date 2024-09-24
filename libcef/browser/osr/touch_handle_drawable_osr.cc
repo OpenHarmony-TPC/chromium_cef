@@ -158,13 +158,13 @@ void CefTouchHandleDrawableOSR::UpdateVisiableBounds() {
   int handle_width = image_size.width() + 2 * kSelectionHandlePadding;
   int handle_height = image_size.height() + 2 * kSelectionHandlePadding;
   if (orientation_ != ui::TouchHandleOrientation::LEFT) {
-    relative_bounds_ = gfx::RectF(-handle_width / 2.0, 0,
-                                  handle_width, handle_height);
+    relative_bounds_ = gfx::RectF(-handle_width / 2.0, -edge_height_,
+                                  handle_width, handle_height + edge_height_);
   } else {
     relative_bounds_ =
         gfx::RectF(-handle_width / 2.0,
                    -edge_height_ - handle_height,
-                   handle_width, handle_height);
+                   handle_width, handle_height + edge_height_);
   }
 }
 #endif  // #ifdef OHOS_CLIPBOARD
