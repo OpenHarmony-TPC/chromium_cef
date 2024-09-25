@@ -453,6 +453,9 @@ bool NeedsReload() override;
 #endif
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+#ifdef OHOS_GET_SCROLL_OFFSET
+  void GetScrollOffset(float* offset_x, float* offset_y) override;
+#endif
 #endif  // OHOS_PAGE_UP_DOWN
 #if defined(OHOS_INPUT_EVENTS)
   void ScrollTo(float x, float y) override;
@@ -466,6 +469,9 @@ bool NeedsReload() override;
   void UpdateDrawRect() override;
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
+#if defined(OHOS_GET_SCROLL_OFFSET)
+  void GetOverScrollOffset(float* offset_x, float* offset_y) override;
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;
