@@ -244,13 +244,14 @@ bool UpdatePreferredColorScheme(blink::web_pref::WebPreferences* web_prefs,
 void SetCefSpecialPrefs(content::RenderViewHost* rvh,
                         CefRefPtr<AlloyBrowserHostImpl> browser,
                         blink::web_pref::WebPreferences& web) {
-  auto frame = browser->GetMainFrame();
-  if (frame && frame->IsValid() &&
-      (browser->settings().text_size_percent > 0)) {
+  if (browser->settings().text_size_percent > 0) {
     web.force_enable_zoom = false;
-    static_cast<CefFrameHostImpl*>(frame.get())
-        ->PutZoomingForTextFactor(browser->settings().text_size_percent /
-                                  100.0f);
+    web.text_zoom_factor = browser->settings().text_size_percent / 100.0f;
+    auto frame = browser->GetMainFrame();
+    if (frame && frame->IsValid()) {
+      static_cast<CefFrameHostImpl*>(frame.get())
+          ->PutZoomingForTextFactor(web.text_zoom_factor);
+    }
   }
   if (!rvh) {
     return;
