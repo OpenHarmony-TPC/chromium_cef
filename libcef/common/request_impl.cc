@@ -46,7 +46,6 @@
 
 #if defined(OHOS_SCHEME_HANDLER)
 #include "base/datashare_uri_utils.h"
-#include "base/task/thread_pool.h"
 #include "base/files/file.h"
 #include "net/base/io_buffer.h"
 #include "services/network/chunked_data_pipe_upload_data_stream.h"
