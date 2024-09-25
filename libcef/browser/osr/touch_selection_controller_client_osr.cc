@@ -568,8 +568,20 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
 #ifdef OHOS_CLIPBOARD
     } else {
       LOG(INFO) << "Show Handle Quick Menu Success";
+      if (!browser) {
+        return;
+      }
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
+      }
+      ui::TouchSelectionController* controller = GetTouchSelectionController();
+      if (controller && controller->IsLongPressEvent()) {
+        if (auto client = browser->client()) {
+          if (auto render = client->GetRenderHandler()) {
+            render->StartVibraFeedback("longPress.light");
+            controller->ResetLongPressEvent();
+          }
+        }
       }
       browser->SetTouchInsertHandleMenuShow(false);
 #endif  // #ifdef OHOS_CLIPBOARD
@@ -789,6 +801,9 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
     #ifdef OHOS_DRAG_DROP
+      if (controller) {
+        controller->ResetLongPressEvent();
+      }
       if (handles_hidden_by_selection_ui_) {
         LOG(INFO) << "Current Selection Handle Menu Hidden";
         return;
