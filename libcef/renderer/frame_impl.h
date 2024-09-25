@@ -212,6 +212,10 @@ class CefFrameImpl
   void RemoveCache() override;
 #ifdef OHOS_PAGE_UP_DOWN
   void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+#ifdef OHOS_GET_SCROLL_OFFSET
+  void GetScrollOffset(
+      cef::mojom::RenderFrame::GetScrollOffsetCallback callback) override;
+#endif
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -230,6 +234,10 @@ class CefFrameImpl
   void SetOverscrollMode(int mode) override;
   void SetScrollable(bool enable) override;
   void UpdateDrawRect() override;
+#if defined(OHOS_GET_SCROLL_OFFSET)
+  void GetOverScrollOffset(
+      cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) override;
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   GURL GetAbsoluteUrl(const blink::WebNode& node,
