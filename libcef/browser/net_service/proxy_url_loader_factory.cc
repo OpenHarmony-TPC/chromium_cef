@@ -36,6 +36,10 @@
 #include "libcef/browser/res_reporter.h"
 #include "libcef/common/request_impl.h"
 #include "net/base/load_flags.h"
+#if defined(OHOS_EX_DOWNLOAD)
+#include "content/public/browser/download_utils.h"
+#include "third_party/blink/public/common/mime_util/mime_util.h"
+#endif
 #endif
 
 namespace net_service {
@@ -407,6 +411,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   StreamReaderURLLoader* stream_loader_ = nullptr;
 
+#if defined(OHOS_EX_DOWNLOAD)
+  bool is_download_{ false };
+#endif
+
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
 };
 
@@ -672,6 +680,17 @@ void InterceptedRequest::OnReceiveResponse(
   current_response_ = std::move(head);
   current_body_ = std::move(body);
   current_cached_metadata_ = std::move(cached_metadata);
+
+#if defined(OHOS_EX_DOWNLOAD)
+  bool must_download =
+      content::download_utils::MustDownload(
+              request_.url, current_response_->headers.get(), current_response_->mime_type);
+  bool known_mime_type =
+      blink::IsSupportedMimeType(current_response_->mime_type);
+  is_download_ =
+     !current_response_->intercepted_by_plugin &&
+     (must_download || !known_mime_type);
+#endif
 
 #if BUILDFLAG(IS_OHOS)
   if (current_response_->headers &&
@@ -1350,12 +1369,14 @@ void InterceptedRequest::CallOnComplete(
 
 #if defined(OHOS_EX_DOWNLOAD)
 void InterceptedRequest::CancelRequest(int error_code) {
-  // network::URLLoaderCompletionStatus status(error_code);
-  // status.abort_due_to_cef_browser_destroyed = true;
-  // SendErrorStatusAndCompleteImmediately(status);
   // Donn't cancel network requests. Network requests should be canceled by the holder
   // instead of following the tab, such as serviceworker download, etc. Although the
   // tab is destroyed, the request still needs to be maintained.
+  if (!is_download_) {
+    network::URLLoaderCompletionStatus status(error_code);
+    status.abort_due_to_cef_browser_destroyed = true;
+    SendErrorStatusAndCompleteImmediately(status);
+  }
 }
 #endif  //  OHOS_EX_DOWNLOAD
 
