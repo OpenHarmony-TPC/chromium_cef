@@ -1148,7 +1148,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // Donn't cancel network requests. Network requests should be canceled by the holder
       // instead of following the tab, such as serviceworker download, etc. Although the
       // tab is destroyed, the request still needs to be maintained.
-      std::move(callback).Run(ResponseMode::CONTINUE, NULL, GURL());
+      std::move(callback).Run(ResponseMode::CONTINUE, nullptr, GURL());
   #endif
       return;
     }
