@@ -458,14 +458,21 @@ void OhAutofillManager::OnDidFillAutofillFormDataImpl(
 }
 
 void OhAutofillManager::OnHidePopupImpl() {
-  LOG(INFO) << "OnHidePopupImpl";
-
-  if (!is_show_ && !is_password_popup_show_) {
+  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
 
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
-  if (!rfh || !rfh->IsActive()) {
+  bool is_focused = false;
+  auto browser = CefBrowserHostBase::GetBrowserForHost(rfh);
+  if (browser) {
+    is_focused = browser->IsFocused();
+  }
+  LOG(INFO) << "OnHidePopupImpl, is_show=" << is_show_
+            << ", is_password_popup_show=" << is_password_popup_show_
+            << ", is_focused=" << is_focused;
+  if (!is_show_ && !(is_password_popup_show_ && is_focused)) {
     return;
   }
 
@@ -483,6 +490,7 @@ void OhAutofillManager::OnHidePopupImpl() {
   view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_CLOSE));
   absl::optional<std::string> json_str = base::WriteJson(view_data_list);
   if (json_str.has_value()) {
+    LOG(INFO) << "send event to hide autofill popup";
     autofill_client->OnAutofillEvent(json_str.value());
   }
   is_show_ = false;
