@@ -134,6 +134,14 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
     filter->AddRoutingIdForHost(this, render_frame_host);
   } else {
     InstallFilterAndRegisterAllRoutingIds();
+    // if filter not created, it will be re-created.
+    // During application startup and loading, JS pre-registers ifream-related hosts.
+    if (!OhGinJavascriptBridgeMessageFilter::FromHost(agent_scheduling_group, false)) {
+	scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter_new =
+            OhGinJavascriptBridgeMessageFilter::FromHost(
+            agent_scheduling_group, /*create_if_not_exists=*/true);
+	filter_new->AddRoutingIdForHost(this, render_frame_host);
+    }
   }
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
 
