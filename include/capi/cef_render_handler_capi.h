@@ -461,6 +461,13 @@ typedef struct _cef_render_handler_t {
   ///
   void(CEF_CALLBACK* start_vibra_feedback)(struct _cef_render_handler_t* self,
                                            const char* vibratorType);
+
+  ///
+  /// Get Device pixel size.
+  ///
+  void(CEF_CALLBACK* get_device_pixel_size)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser,
+                                            cef_size_t* size);
 } cef_render_handler_t;
 
 #ifdef __cplusplus
