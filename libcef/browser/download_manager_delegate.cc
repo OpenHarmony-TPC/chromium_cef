@@ -362,10 +362,12 @@ void CefDownloadManagerDelegate::OnDownloadCreated(DownloadManager* manager,
     // associated WebContents and consequently no associated CEF browser. In
     // that case DetermineDownloadTarget will be called before this method.
     // TODO(cef): Figure out how to expose this via a client callback.
+#if !defined(OHOS_EX_DOWNLOAD)
     const std::vector<GURL>& url_chain = item->GetUrlChain();
     if (!url_chain.empty()) {
       LOG(INFO) << "Rejected download of " << url_chain.back().spec();
     }
+#endif
 #if BUILDFLAG(IS_OHOS)
     // When download item not has associated browser, do not cancel the download item.
 #else
