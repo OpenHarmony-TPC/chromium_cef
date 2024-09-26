@@ -568,7 +568,14 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (shutting_down_) {
       // Abort immediately.
+  #if BUILDFLAG(IS_OHOS)
+      // Donn't cancel network requests. Network requests should be canceled by the holder
+      // instead of following the tab, such as serviceworker download, etc. Although the
+      // tab is destroyed, the request still needs to be maintained.
+      std::move(callback).Run(false, false);
+  #else
       std::move(cancel_callback).Run(net::ERR_ABORTED);
+  #endif
       return;
     }
 
@@ -1137,6 +1144,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     RequestState* state = GetState(request_id);
     if (!state) {
       // The request may have been canceled during destruction.
+  #if BUILDFLAG(IS_OHOS)
+      // Donn't cancel network requests. Network requests should be canceled by the holder
+      // instead of following the tab, such as serviceworker download, etc. Although the
+      // tab is destroyed, the request still needs to be maintained.
+      std::move(callback).Run(ResponseMode::CONTINUE, NULL, GURL());
+  #endif
       return;
     }
 
