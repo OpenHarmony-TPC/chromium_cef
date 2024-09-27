@@ -335,7 +335,6 @@ class CefRenderWidgetHostViewOSR
   void FocusedNodeChanged(bool is_editable_node,
                           const gfx::Rect& node_bounds_in_screen) override;
   void DidOverscroll(const ui::DidOverscrollParams& params) override;
-  void DynamicFrameLossEvent(const std::string& sceneId, bool isStart) override;
   void DidStopFlinging() override;
   blink::mojom::InputEventResultState FilterInputEvent(
       const blink::WebInputEvent& input_event) override;

@@ -3410,14 +3410,6 @@ std::pair<int, int> CefRenderWidgetHostViewOSR::HandleCursorOffset() {
   return std::make_pair(x, y);
 }
 
-void CefRenderWidgetHostViewOSR::DynamicFrameLossEvent(const std::string& sceneId, bool isStart) {
-  if (browser_impl_.get()) {
-    CefRefPtr<CefRenderHandler> handler = browser_impl_->client()->GetRenderHandler();
-    CHECK(handler);
-    handler->SendDynamicFrameLossEvent(browser_impl_.get(), sceneId, isStart);
-  }
-}
-
 void CefRenderWidgetHostViewOSR::DidOverscroll(
     const ui::DidOverscrollParams& params) {
   if (browser_impl_.get()) {

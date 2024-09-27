@@ -436,15 +436,6 @@ typedef struct _cef_render_handler_t {
       cef_rect_t* rect);
 
   ///
-  /// SendDynamicFrameLossEvent
-  ///
-  void(CEF_CALLBACK* send_dynamic_frame_loss_event)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* sceneId,
-      int isStart);
-
-  ///
   /// OnResizeScrollableViewport.
   ///
   void(CEF_CALLBACK* on_resize_scrollable_viewport)(
