@@ -438,14 +438,6 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                       CefRect& rect) {}
 
   ///
-  /// SendDynamicFrameLossEvent
-  ///
-  /*--cef()--*/
-  virtual void SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
-                                         const CefString& sceneId,
-                                         bool isStart) {}
-
-  ///
   /// OnResizeScrollableViewport.
   ///
   /*--cef()--*/
