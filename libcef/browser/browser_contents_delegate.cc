@@ -858,6 +858,15 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
       OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
       if (navigation_handle->IsServedFromBackForwardCache()) {
         // We won't get an OnLoadEnd notification from anywhere else.
+#ifdef OHOS_BFCACHE
+        LOG(INFO) << "[Favicon] page load form bfcache.";
+        if (auto c = client()) {
+          if (auto handler = c->GetLoadHandler()) {
+            auto navigation_lock = browser_info_->CreateNavigationLock();
+            handler->UpdateFavicon(browser());
+          }
+        }
+#endif // OHOS_BFCACHE
         OnLoadEnd(frame.get(), navigation_handle->GetURL(), 0);
       }
     }

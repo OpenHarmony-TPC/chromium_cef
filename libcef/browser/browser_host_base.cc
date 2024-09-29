@@ -4004,6 +4004,8 @@ void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeTo
     return;
   }
 
+  LOG(INFO) << "SetBackForwardCacheOptions param size: " << size
+            << " timeToLive: " << timeToLive;
   content::NavigationController& controller = web_contents->GetController();
   controller.GetBackForwardCache().SetCacheSize(size);
   controller.GetBackForwardCache().SetTimeToLive(timeToLive);

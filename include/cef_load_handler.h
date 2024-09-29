@@ -210,6 +210,14 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
       const CefString& website_host,
       const CefString& tracker_host) {}
 
+#ifdef OHOS_BFCACHE
+  ///
+  /// Called when page load from bfcache.
+  ///
+  /*--cef()--*/
+  virtual void UpdateFavicon(CefRefPtr<CefBrowser> browser) {}
+#endif
+
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
