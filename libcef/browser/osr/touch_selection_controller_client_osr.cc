@@ -490,12 +490,17 @@ void CefTouchSelectionControllerClientOSR::MouseSelectMenuShow(bool show) {
         new CefRunQuickMenuCallbackImpl(base::BindOnce(
             &CefTouchSelectionControllerClientOSR::ExecuteCommandMouse,
             weak_ptr_factory_.GetWeakPtr())));
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
+  bool isLongPressSelectionActive = false;
+  if (controller) {
+    isLongPressSelectionActive = controller->IsLongPressDragSelectionActive();
+  }
   if (!handler->RunQuickMenu(
         browser, browser->GetFocusedFrame(), {0, 0}, {0, 0},
         {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
           clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
         static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(quickmenuflags),
-        callbackImpl, true)) {
+        callbackImpl, true, isLongPressSelectionActive)) {
     callbackImpl->Disconnect();
     auto render = browser->client()->GetRenderHandler();
     if (render) {
@@ -545,6 +550,12 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
 #ifdef OHOS_DRAG_DROP
     handles_hidden_by_selection_ui_ = false;
 #endif
+    ui::TouchSelectionController* controller = GetTouchSelectionController();
+    bool isLongPressSelectionActive = false;
+    if (controller) {
+      isLongPressSelectionActive = controller->IsLongPressDragSelectionActive();
+      LOG(DEBUG)<<"The selection long press active is "<<isLongPressSelectionActive;
+    }
     if (!handler->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
             {static_cast<int>(std::round(origin.x())),
@@ -555,7 +566,7 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
              clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
             static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(
                 quickmenuflags),
-            callbackImpl, false)) {
+            callbackImpl, false, isLongPressSelectionActive)) {
       callbackImpl->Disconnect();
       if (browser) {
         if (auto client = browser->client()) {
@@ -574,7 +585,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
-      ui::TouchSelectionController* controller = GetTouchSelectionController();
       if (controller && controller->IsLongPressEvent()) {
         if (auto client = browser->client()) {
           if (auto render = client->GetRenderHandler()) {

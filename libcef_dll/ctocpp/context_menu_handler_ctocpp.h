@@ -58,7 +58,8 @@ class CefContextMenuHandlerCToCpp
                     const CefRect& select_bounds,
                     QuickMenuEditStateFlags edit_state_flags,
                     CefRefPtr<CefRunQuickMenuCallback> callback,
-                    bool is_mouse_trigger) override;
+                    bool is_mouse_trigger,
+                    bool is_long_press_actived) override;
   bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame,
                                     const CefRect& select_bounds) override;
