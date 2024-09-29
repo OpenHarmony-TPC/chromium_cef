@@ -1106,6 +1106,11 @@ void CefFrameImpl::GetImageForContextNode() {
 
   SkBitmap image = web_element.ImageContents();
   SkBitmap resize_image = Downscale(image, total_mem_);
+  if (resize_image.isNull() || resize_image.empty()) {
+    LOG(DEBUG) << "GetImageForContextNode fail, image is null or image is empty";
+    return;
+  }
+
   image_extension = "." + web_element.ImageExtension();
   params->width = resize_image.width();
   params->height = resize_image.height();
