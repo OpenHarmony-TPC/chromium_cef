@@ -468,6 +468,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void StartVibraFeedback(const std::string& vibratorType) {}
+
+  ///
+  /// Get Device pixel size.
+  ///
+  /*--cef()--*/
+  virtual void GetDevicePixelSize(CefRefPtr<CefBrowser> browser, CefSize& size) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

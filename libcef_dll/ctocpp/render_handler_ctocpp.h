@@ -145,6 +145,8 @@ class CefRenderHandlerCToCpp
   void SetFillContent(const std::string& content) override;
   void SetGestureEventResult(const bool result) override;
   void StartVibraFeedback(const std::string& vibratorType) override;
+  void GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
+                          CefSize& size) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
