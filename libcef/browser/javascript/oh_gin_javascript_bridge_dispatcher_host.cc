@@ -973,7 +973,6 @@ CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::Value::List* value) {
 bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::string& document_url,
     const std::string& method_name, int32_t object_id, bool is_async) {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: "
-             << "document_url: " << document_url
              << ", method_name: " << method_name
              << ", object_id: " << object_id
              << ", is_async: " << is_async;
