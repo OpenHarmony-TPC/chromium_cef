@@ -145,20 +145,13 @@ bool CefMenuManager::IsCommandIdEnabled(
     case CM_EDITFLAG_CAN_COPY:
       return !!(params.edit_flags & CM_EDITFLAG_CAN_COPY);
     case CM_EDITFLAG_CAN_PASTE: {
-      std::u16string result;
       bool can_paste = false;
-      ui::DataTransferEndpoint data_dst =
-          ui::DataTransferEndpoint(ui::EndpointType::kDefault, false);
-      ui::Clipboard::GetForCurrentThread()->ReadText(
-          ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
-
-      if (result.empty()) {
-        can_paste = ui::Clipboard::GetForCurrentThread()->IsFormatAvailable(
-            ui::ClipboardFormatType::BitmapType(),
-            ui::ClipboardBuffer::kCopyPaste, &data_dst);
+      if (!editable) {
+        LOG(INFO) << "This area is not editable.";
+        return can_paste;
       }
-      can_paste = can_paste ? can_paste : !result.empty();
-      return editable && can_paste;
+      can_paste = ui::Clipboard::GetForCurrentThread()->HasPasteData();
+      return can_paste;
     }
     case CM_EDITFLAG_CAN_SELECT_ALL:
       return !!(params.edit_flags & CM_EDITFLAG_CAN_SELECT_ALL);
