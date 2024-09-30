@@ -1062,6 +1062,20 @@ void CefFrameHostImpl::ScrollPageUpDown(bool is_up,
                         },
                         is_up, is_half, view_height));
 }
+
+#ifdef OHOS_GET_SCROLL_OFFSET
+void CefFrameHostImpl::GetScrollOffset(float* offset_x,
+                                       float* offset_y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float* offset_x, float* offset_y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->GetScrollOffset(offset_x,
+                                                        offset_y);
+                        },
+                        offset_x, offset_y));
+}
+#endif
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -1141,6 +1155,20 @@ void CefFrameHostImpl::UpdateDrawRect() {
                           render_frame->UpdateDrawRect();
                         }));
 }
+
+#if defined(OHOS_GET_SCROLL_OFFSET)
+void CefFrameHostImpl::GetOverScrollOffset(float* offset_x,
+                                           float* offset_y) {
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](float* offset_x, float* offset_y,
+                           const RenderFrameType& render_frame) {
+                          render_frame->GetOverScrollOffset(offset_x,
+                                                            offset_y);
+                        },
+                        offset_x, offset_y));
+}
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)

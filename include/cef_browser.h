@@ -1974,6 +1974,20 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AdvanceFocusForIME(int focusType) = 0;
+
+#if defined(OHOS_GET_SCROLL_OFFSET)
+  ///
+  /// Get the current scroll offset of the webpage.
+  ///
+  /*--cef()--*/
+  virtual void GetScrollOffset(float* offset_x, float* offset_y) = 0;
+
+  ///
+  /// Get the current overscroll offset of the webpage.
+  ///
+  /*--cef()--*/
+  virtual void GetOverScrollOffset(float* offset_x, float* offset_y) = 0;
+#endif
 #endif  // BUILDFLAG(IS_OHOS)
 
   ///

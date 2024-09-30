@@ -142,6 +142,9 @@ interface RenderFrame {
   ScrollPageUpDown(bool is_up, bool move_half, float view_height);
   // #endif OHOS_PAGE_UP_DOWN
 
+  [EnableIf=ohos_get_scroll_offset, Sync]
+  GetScrollOffset() => (float offset_x, float offset_y);
+
   // #if defined(OHOS_INPUT_EVENTS)
   [EnableIf=ohos_input_events]
   ScrollTo(float x, float y);
@@ -163,6 +166,9 @@ interface RenderFrame {
 
   [EnableIf=ohos_input_events]
   SetOverscrollMode(int32 mode);
+
+  [EnableIf=ohos_get_scroll_offset, Sync]
+  GetOverScrollOffset() => (float offset_x, float offset_y);
 
   [EnableIf=is_ohos]
   TerminateRenderProcess();

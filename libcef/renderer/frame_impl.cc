@@ -1289,6 +1289,21 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
   webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
                         base::Milliseconds(computeDurationInMilliSec(0, dy)));
 }
+
+#ifdef OHOS_GET_SCROLL_OFFSET
+void CefFrameImpl::GetScrollOffset(
+    cef::mojom::RenderFrame::GetScrollOffsetCallback callback) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webView = render_frame->GetWebView();
+  if (!webView) {
+    LOG(ERROR) << "GetScrollOffset get webView failed";
+    return;
+  }
+  auto scroll_offset = webView->GetScrollOffset();
+  std::move(callback).Run(scroll_offset.x(), scroll_offset.y());
+}
+#endif
 #endif  // #ifdef OHOS_PAGE_UP_DOWN
 
 
@@ -1370,6 +1385,17 @@ void CefFrameImpl::UpdateDrawRect() {
   }
   webview->UpdateDrawRect();
 }
+
+#if defined(OHOS_GET_SCROLL_OFFSET)
+void CefFrameImpl::GetOverScrollOffset(
+    cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+
+  auto overScroll_offset = render_frame->GetOverScrollOffset();
+  std::move(callback).Run(overScroll_offset.x(), overScroll_offset.y());
+}
+#endif
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
