@@ -237,10 +237,17 @@ void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line) {
   const base::FilePath& user_data_path =
       GetUserDataPath(settings, command_line);
+  
+  base::FilePath user_cache_path = 
+      command_line->GetSwitchValuePath(switches::kUserCacheDir);
 
 #if BUILDFLAG(IS_OHOS)
-  base::PathService::Override(base::DIR_CACHE,
+  if (!user_cache_path.empty()) {
+    base::PathService::Override(base::DIR_CACHE, user_cache_path);
+  } else {
+    base::PathService::Override(base::DIR_CACHE,
                               user_data_path.Append("cache/web"));
+  }
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
 #if defined(OHOS_CRASHPAD)
   // log path need to get by interface
