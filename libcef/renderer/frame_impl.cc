@@ -1089,8 +1089,9 @@ void CefFrameImpl::GetImageForContextNode() {
   gfx::Size original_size;
   std::string image_extension;
 
-  if (context_node.IsNull() || !context_node.IsElementNode()) {
-    LOG(WARNING) << "Context node is null or is not element node";
+  if (context_node.IsNull() || !context_node.IsElementNode() ||
+      context_node.To<blink::WebElement>().ImageContents().drawsNothing()) {
+    LOG(WARNING) << "Context node is null or is not element node, or image draws nothing";
     SendToBrowserFrame(__FUNCTION__,
                        base::BindOnce(
                            [](cef::mojom::GetImageForContextNodeParamsPtr data,
