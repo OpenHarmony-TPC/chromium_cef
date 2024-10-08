@@ -30,7 +30,7 @@ CefRefPtr<CefDataBase> CefDataBase::GetGlobalDataBase() {
   return context ? context->GetDataBase() : nullptr;
 }
 
-void CefDataBaseImpl::CefDataBaseImpl() {
+CefDataBaseImpl::CefDataBaseImpl() {
   const base::CommandLine* command_line =
       base::CommandLine::ForCurrentProcess();
   user_cache_path_ = 
