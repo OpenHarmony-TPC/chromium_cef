@@ -1264,7 +1264,6 @@ source_set("libcef_static") {
     "//third_party/widevine/cdm",
     "//third_party/widevine/cdm:headers",
     "//third_party/zlib:minizip",
-    "//third_party:huawei_securec",
     "//ui/base",
     "//ui/base/ime",
     "//ui/events",

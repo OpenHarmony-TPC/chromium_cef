@@ -143,6 +143,8 @@ class CefRenderHandlerCToCpp
   void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
   void SetFillContent(const std::string& content) override;
   void StartVibraFeedback(const std::string& vibratorType) override;
+  void GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
+                          CefSize& size) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
