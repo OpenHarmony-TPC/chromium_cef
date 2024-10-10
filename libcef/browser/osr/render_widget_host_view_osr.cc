@@ -3691,6 +3691,13 @@ void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::SetNativeEmbedMode(bool flag) {
+  if (!render_widget_host_) {
+    return;
+  }
+  render_widget_host_->input_router()->SetNativeEmbedMode(flag);
+}
+
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
 }

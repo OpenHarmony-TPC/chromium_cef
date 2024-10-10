@@ -517,6 +517,7 @@ bool NeedsReload() override;
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
   void SetVisible(bool visible);
+  void SetNativeEmbedMode(bool flag) override;
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

@@ -2486,6 +2486,12 @@ void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
   }
 }
 
+void AlloyBrowserHostImpl::SetNativeEmbedMode(bool flag) {
+    if (platform_delegate_) {
+    platform_delegate_->SetNativeEmbedMode(flag);
+  }
+}
+
 #ifdef OHOS_HTML_SELECT
 void AlloyBrowserHostImpl::ShowPopupMenu(
     mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
