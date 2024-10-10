@@ -291,6 +291,7 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
     shrink_viewport_height_ = 0;
   }
 #endif
+  view->SetNativeEmbedMode(native_embed_mode_);
 
   view->SendTouchEvent(event_adjust);
   if (event.type == CEF_TET_PRESSED) {
@@ -462,6 +463,9 @@ void CefBrowserPlatformDelegateOsr::NotifyForNextTouchEvent() {
   if (!view)
     return;
   view->NotifyForNextTouchEvent();
+}
+void CefBrowserPlatformDelegateOsr::SetNativeEmbedMode(bool flag) {
+  native_embed_mode_ = flag;
 }
 #endif
 
