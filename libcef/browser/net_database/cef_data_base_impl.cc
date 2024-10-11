@@ -8,7 +8,7 @@
 #include "base/logging.h"
 #include "ohos_adapter_helper.h"
 #include "base/files/file_util.h"
-#include "base/command_line.h"
+#include "base/path_service.h"
 #include "chrome/common/chrome_switches.h"
 
 void TransferVector(const std::vector<std::string>& source,
@@ -31,10 +31,7 @@ CefRefPtr<CefDataBase> CefDataBase::GetGlobalDataBase() {
 }
 
 CefDataBaseImpl::CefDataBaseImpl() {
-  const base::CommandLine* command_line =
-      base::CommandLine::ForCurrentProcess();
-  user_cache_path_ = 
-      command_line->GetSwitchValuePath(switches::kUserCacheDir); 
+  base::PathService::Get(base::DIR_CACHE, &user_cache_path_);
 }
 
 bool CefDataBaseImpl::ExistHttpAuthCredentials() {

@@ -56,6 +56,6 @@ class CefDataBaseImpl : public CefDataBase {
 
  private:
   IMPLEMENT_REFCOUNTING(CefDataBaseImpl);
-  base::FilePath user_cache_path_;
+  base::FilePath user_cache_path_ = base::FilePath("");
 };
 #endif  // CEF_LIBCEF_BROWSER_NET_DATA_BASE_IMPL_H_
