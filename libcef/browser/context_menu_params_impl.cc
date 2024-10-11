@@ -168,3 +168,12 @@ CefContextMenuParamsImpl::SourceType CefContextMenuParamsImpl::GetSourceType() {
   return static_cast<SourceType>(const_value().source_type);
 }
 #endif  // #ifdef OHOS_CLIPBOARD
+
+#ifdef OHOS_DRAG_DROP
+void CefContextMenuParamsImpl::GetImageRect(int& x, int& y, int& w, int& h) {
+  x = (int32_t)const_value().image_rect.x();
+  y = (int32_t)const_value().image_rect.y();
+  w = (int32_t)const_value().image_rect.width();
+  h = (int32_t)const_value().image_rect.height();
+}
+#endif
