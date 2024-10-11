@@ -41,6 +41,13 @@ void RenderProcessStateHandler::UpdateRenderProcessState(
     LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: render "
                   "process has not init, nweb_id: "
                << nweb_id << " is_to_background: " << is_to_background;
+    for (WebComponentState& web_item : initial_web_component_list_) {
+      if (web_item.nweb_id == nweb_id) {
+        web_item.state = is_to_background;
+        return;
+      }
+    }
+
     WebComponentState initial_web_component = {nweb_id, is_to_background};
     initial_web_component_list_.push_back(initial_web_component);
     return;
