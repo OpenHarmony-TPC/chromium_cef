@@ -7,9 +7,7 @@
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "ohos_adapter_helper.h"
-#include "base/files/file_util.h"
 #include "base/path_service.h"
-#include "chrome/common/chrome_switches.h"
 
 void TransferVector(const std::vector<std::string>& source,
                     std::vector<CefString>& target) {
