@@ -1089,7 +1089,8 @@ void CefFrameImpl::GetImageForContextNode() {
   gfx::Size original_size;
   std::string image_extension;
 
-  if (context_node.IsNull() || !context_node.IsElementNode()) {
+  if (context_node.IsNull() || !context_node.IsElementNode() ||
+      context_node.To<blink::WebElement>().ImageContents().drawsNothing()) {
     SendToBrowserFrame(__FUNCTION__,
                        base::BindOnce(
                            [](cef::mojom::GetImageForContextNodeParamsPtr data,
