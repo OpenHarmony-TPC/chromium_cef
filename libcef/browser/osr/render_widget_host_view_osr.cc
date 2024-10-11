@@ -2117,11 +2117,15 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
         event.button != blink::WebPointerProperties::Button::kRight) {
       browser_impl_->CancelContextMenu();
     }
-
+#ifdef OHOS_CLIPBOARD
+    if (selection_controller_client_ && event.GetType() == blink::WebMouseEvent::Type::kMouseDown) {
+      selection_controller_client_->CloseQuickMenuAndHideHandles();
+    }
+#else
     if (selection_controller_client_) {
       selection_controller_client_->CloseQuickMenuAndHideHandles();
     }
-
+#endif
     if (popup_host_view_) {
       if (popup_host_view_->popup_position_.Contains(
               event.PositionInWidget().x(), event.PositionInWidget().y())) {
@@ -2202,11 +2206,11 @@ void CefRenderWidgetHostViewOSR::SendMouseWheelEvent(
     if (browser_impl_) {
       browser_impl_->CancelContextMenu();
     }
-
+#ifndef OHOS_CLIPBOARD
     if (selection_controller_client_) {
       selection_controller_client_->CloseQuickMenuAndHideHandles();
     }
-
+#endif
     if (popup_host_view_) {
       if (popup_host_view_->popup_position_.Contains(
               event.PositionInWidget().x(), event.PositionInWidget().y())) {
