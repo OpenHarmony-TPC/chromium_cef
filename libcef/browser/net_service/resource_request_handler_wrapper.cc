@@ -1680,12 +1680,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
   void ReportITPResult(const network::ResourceRequest& request) {
     CEF_REQUIRE_IOT();
-    LOG(DEBUG) << "ReportITPResult, url: " << request.url.spec();
     if (!init_state_ || !request.request_initiator || !request.url.has_host()) {
       LOG(ERROR) << "ReportITPResult failed for param error";
       return;
     }
 
+    LOG(DEBUG) << "ReportITPResult";
     CEF_POST_TASK(
         CEF_UIT, base::BindOnce(&ReportITPResultInUiTask, init_state_->browser_,
                                 CefString(request.url.host()),
