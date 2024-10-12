@@ -746,8 +746,12 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
 
   char* memory = shared_memory_mapping.GetMemoryAs<char>();
 
-  size_t size = response_delegate_->GetResponseDataBuffer(memory);
+  size_t size = response_delegate_->GetResponseDataBuffer(memory, bufferSize);
   LOG(DEBUG) << "shared-memory+++ GetResponseDataBuffer buffer size=" << size;
+  if (size <= 0) {
+    LOG(ERROR) << "shared-memory GetResponseDataBuffer size <= 0";
+    return false;
+  }
 
   base::ReadOnlySharedMemoryRegion read_only_region =
       base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
