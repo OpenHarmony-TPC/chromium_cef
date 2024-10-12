@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e09e9bcd5575c1878e9439e8d3932b4c37bd32ca$
+// $hash=78adaf2cb74f85760d331e10ad4311a1c4d16ad9$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_PERMISSION_REQUEST_CAPI_H_
@@ -257,6 +257,51 @@ typedef struct _cef_browser_permission_request_delegate_t {
   void(CEF_CALLBACK* notify_geolocation_permission)(
       struct _cef_browser_permission_request_delegate_t* self,
       int value,
+      const cef_string_t* origin);
+
+  ///
+  /// Handle the Audio Capture permission requests.
+  ///
+  void(CEF_CALLBACK* ask_audio_capture_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
+
+  ///
+  /// Cancel the Audio Capturepermission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_audio_capture_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
+
+  ///
+  /// Handle the Video Capture permission requests.
+  ///
+  void(CEF_CALLBACK* ask_video_capture_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
+
+  ///
+  /// Cancel the Video Capturepermission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_video_capture_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
+
+  ///
+  /// Handle the Clipboard Sanitized permission requests.
+  ///
+  void(CEF_CALLBACK* ask_clipboard_sanitized_write_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
+
+  ///
+  /// Cancel the Clipboard Read Sanitezed permission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_clipboard_sanitized_write_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
       const cef_string_t* origin);
 } cef_browser_permission_request_delegate_t;
 

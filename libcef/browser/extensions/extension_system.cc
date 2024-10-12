@@ -54,6 +54,7 @@
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "base/base_switches.h"
 #include "base/command_line.h"
+#include "cef/libcef/common/app_manager.h"
 #include "chrome/browser/extensions/chrome_app_sorting.h"
 #include "chrome/browser/extensions/chrome_content_verifier_delegate.h"
 #include "chrome/browser/extensions/component_loader.h"
@@ -201,6 +202,9 @@ CefExtensionSystem::CefExtensionSystem(BrowserContext* browser_context)
       renderer_helper_(
           extensions::RendererStartupHelperFactory::GetForBrowserContext(
               browser_context)),
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      global_request_context_(nullptr),
+#endif
       weak_ptr_factory_(this) {
   InitPrefs();
 }
@@ -217,7 +221,7 @@ void CefExtensionSystem::Init() {
       profile, base::CommandLine::ForCurrentProcess(),
       profile->GetPath().AppendASCII(extensions::kInstallDirectoryName),
       profile->GetPath().AppendASCII(extensions::kUnpackedInstallDirectoryName),
-      ExtensionPrefs::Get(profile), Blocklist::Get(profile), false, true,
+      ExtensionPrefs::Get(profile), Blocklist::Get(profile), true, true,
       &ready_);
 #endif
   // There's complexity here related to the ordering of message delivery. For
@@ -780,6 +784,63 @@ void CefExtensionSystem::UnloadExtension(const std::string& extension_id,
 }
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefExtensionSystem::SetGlobalRequestContext(CefRequestContext* context) {
+  if (!global_request_context_) {
+    global_request_context_ = context;
+  }
+}
+
+// Originally, Cef only supported loading Extensions through cef' api interfaces
+// and creating CefExtension. Now it supports loading extensions from internal
+// enterprise policies and extension management interfaces. This type of loading
+// is not loaded through Cef's LoadExtension interface, so CefExtension is not
+// created, resulting in no background script running environment.
+void CefExtensionSystem::NotifyExtensionLoadedFromInternal(
+    const Extension* extension) {
+  if (!extension || GetExtension(extension->id())) {
+    // Extension invalid or CefExtension already added.
+    return;
+  }
+
+  CefRefPtr<CefRequestContext> context = CefRequestContext::GetGlobalContext();
+  if (!context) {
+    // CefRequestContext::GetGlobalContext will be null at startup during
+    //  CefRequestContextImpl::CreateGlobalRequestContext
+    //  -> CefRequestContextImpl::Initialize()
+    //  -> AlloyMainDelegate::CreateNewBrowserContext()
+    //  -> AlloyBrowserContext::Initialize()
+    //  -> ExtensionSystem::Init()
+    //  -> ExtensionService::Init()
+    //    -> component_loader_->LoadAll()/
+    //    -> InstalledLoader(this).LoadAllExtensions()
+    // But the CefRequestContext is an essential member in
+    // CefBrowserCreateParams during
+    // CefExtensionsBrowserClient::CreateBackgroundExtensionHost().
+    context = global_request_context_;
+  }
+
+  CefRefPtr<CefExtensionImpl> cef_extension =
+      new CefExtensionImpl(
+          extension, context ? context.get() : nullptr, nullptr);
+  extension_map_.insert(std::make_pair(extension->id(), cef_extension));
+}
+
+void CefExtensionSystem::NotifyExtensionUnLoadedFromInternal(
+    const Extension* extension) {
+  if (!extension || !GetExtension(extension->id())) {
+    // Extension invalid or CefExtension already removed.
+    return;
+  }
+
+  ExtensionMap::iterator it = extension_map_.find(extension->id());
+  if (it == extension_map_.end()) {
+    // No CEF representation so we've already unloaded it.
+    return;
+  }
+
+  extension_map_.erase(it);
+}
+
 void CefExtensionSystem::MaybeSpinUpLazyContext(const Extension* extension,
                                                 bool is_newly_added) {
   DCHECK(BackgroundInfo::HasLazyContext(extension));

@@ -177,7 +177,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   }
 
   ///
-  /// UpdateClippedSelectionBounds.
+  /// UpdateClippedSelectionBounds
   ///
   /*--cef()--*/
   virtual bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
@@ -216,20 +216,28 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
-                                        CefRefPtr<CefImage> image) {}
+                                        CefRefPtr<CefImage> image, int command_id) {}
 
   ///
   /// Called when GetImageFromCache function to get image from
   /// memory cache.
   ///
   /*--cef()--*/
-  virtual void OnGetImageFromCache(CefRefPtr<CefImage> image) {}
+  virtual void OnGetImageFromCache(CefRefPtr<CefImage> image, int command_id) {}
 
   ///
   /// Called when you need to temporarily hide/restore the handle menu.
   ///
   /*--cef()--*/
   virtual void HideHandleAndQuickMenuIfNecessary(bool hide) {}
+#endif
+
+#if defined(OHOS_CLIPBOARD)
+  ///
+  /// Called when you click on the selected area.
+  ///
+  /*--cef()--*/
+  virtual void ChangeVisibilityOfQuickMenu() {}
 #endif
 };
 

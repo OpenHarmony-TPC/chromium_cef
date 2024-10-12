@@ -170,16 +170,6 @@ class OhPasswordManagerClient
     bool is_new_password = false;
   };
 
-  absl::optional<std::string> PasswordFormToJsonForRequest(
-      const std::string& event,
-      const GURL& page_url,
-      const autofill::InputFillRequestData& username_data,
-      const autofill::InputFillRequestData& password_data,
-      AutofillIMFInfo* imf_info = nullptr);
-
-  absl::optional<std::string> PasswordFormToJsonForSave(
-      const password_manager::PasswordForm& form);
-
   void ProcessAutofillCancel(const std::string& fillContent);
 
   void AutoFillWithIMFEvent(bool is_username,
@@ -187,15 +177,13 @@ class OhPasswordManagerClient
                             bool is_new_password,
                             const std::string& content);
 
-  void SetShouldSuppressKeyboard(bool suppress);
-
-  void UpdateLastRequestFilledItems(
-      const autofill::InputFillRequestData& username_data,
-      const autofill::InputFillRequestData& password_data,
-      autofill::FormRendererId form_id);
+  void FillData(const std::string& page_url,
+                const std::string& username,
+                const std::string& password,
+                bool is_other_account);
 
   bool IsUsernamePasswordForm(autofill::FormRendererId form_id) {
-    return form_id == last_filled_form_id_;
+    return form_id == last_fill_form_id_;
   }
 
   bool IsUsernamePasswordField(autofill::FieldRendererId field_id) {
@@ -333,6 +321,27 @@ class OhPasswordManagerClient
       content::RenderFrameHost* frame_host,
       const gfx::RectF& bounds_in_frame_coordinates);
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  absl::optional<std::string> PasswordFormToJsonForRequest(
+      const std::string& event,
+      const GURL& page_url,
+      const autofill::InputFillRequestData& username_data,
+      const autofill::InputFillRequestData& password_data,
+      AutofillIMFInfo* imf_info = nullptr);
+
+  absl::optional<std::string> PasswordFormToJsonForSave(
+      const password_manager::PasswordForm& form);
+
+  void SetShouldSuppressKeyboard(bool suppress);
+
+  bool IsLoginInfoConsistentWithFilled(
+      const password_manager::PasswordForm& info);
+
+  void UpdateLastRequestFilledItems(
+      const autofill::InputFillRequestData& username_data,
+      const autofill::InputFillRequestData& password_data);
+#endif
+
   content::BrowserContext* const context_;
 
   password_manager::PasswordManager password_manager_;
@@ -373,12 +382,15 @@ class OhPasswordManagerClient
   bool was_on_paste_called_ = false;
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
+  using AutofilledMap = std::unordered_map<std::uint64_t, std::string>;
+
   GURL form_to_request_url_;
 
-  autofill::FormRendererId last_filled_form_id_;
+  autofill::FormRendererId last_fill_form_id_;
   autofill::FieldRendererId last_fill_focus_renderer_id_;
 
-  std::set<autofill::FieldRendererId> auto_filled_forms_;
+  AutofilledMap auto_filled_forms_username_;
+  AutofilledMap auto_filled_forms_passsword_;
 
   autofill::InputFillRequestData last_request_fill_username_;
   autofill::InputFillRequestData last_request_fill_password_;

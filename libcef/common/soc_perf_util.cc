@@ -23,7 +23,6 @@ const int MAX_BOOST_RUN_TIME_IN_SECOND = 10;
 const int REST_TIME_IN_SECOND = 2;
 }  // namespace
 
-// #if defined(OHOS_PERFORMANCE_INC_FREQ)
 void SocPerUtil::EnableFlingBoost() {
   TRACE_EVENT0("power", "SocPerUtil::EnableFlingBoost");
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
@@ -36,7 +35,6 @@ void SocPerUtil::DisableFlingBoost() {
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GUSTURE_ID, false);
 }
-// #endif OHOS_PERFORMANCE_INC_FREQ
 
 void SocPerUtil::TryRunSocPerf() {
   if ((base::Time().Now() - first_time_boost_timestamp).InSeconds() >=

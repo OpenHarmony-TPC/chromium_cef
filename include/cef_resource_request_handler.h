@@ -47,7 +47,22 @@
 #include "include/cef_response.h"
 #include "include/cef_response_filter.h"
 
+#include "include/cef_scheme.h"
+
 class CefCookieAccessFilter;
+
+///
+/// CefInterceptCallback
+///
+/*--cef(source=library)--*/
+class CefInterceptCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Continue.
+  ///
+  /*--cef(capi_name=cont)--*/
+  virtual void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) {}
+};
 
 ///
 /// Implement this interface to handle events related to browser requests. The
@@ -195,7 +210,7 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
   /// of the request, and may be NULL for requests originating from service
   /// workers or CefURLRequest. |request| cannot be modified in this callback.
   /// Set |allow_os_execution| to true to attempt execution via the registered
-  /// OS protocol handler, if any. SECURITY WARNING: YOU SHOULD USE THIS METHOD
+  /// OS protocol handler, if any. SECURITY WARNING: YOU SHOULD USE THIS MET
   /// TO ENFORCE RESTRICTIONS BASED ON SCHEME, HOST OR OTHER URL ANALYSIS BEFORE
   /// ALLOWING OS EXECUTION.
   ///
@@ -204,6 +219,18 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
                                    CefRefPtr<CefFrame> frame,
                                    CefRefPtr<CefRequest> request,
                                    bool& allow_os_execution) {}
+  
+  ///
+  /// GetResourceHandlerByIO.
+  ///
+  /*--cef(optional_param=browser,optional_param=frame)--*/
+  virtual void GetResourceHandlerByIO(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request,
+      CefRefPtr<CefInterceptCallback> callback,
+      CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
+      const CefString& scheme) {}
 };
 
 ///

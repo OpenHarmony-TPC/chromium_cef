@@ -486,15 +486,15 @@ void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
 #endif  //  OHOS_EX_DOWNLOAD
 }
 
-CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid){
+CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid) {
   LOG(DEBUG) << "get download item for " << guid;
-  for(auto& context: CefBrowserContext::GetAll()){
+  for (auto& context: CefBrowserContext::GetAll()) {
     content::DownloadManager* manager = context->AsBrowserContext()->GetDownloadManager();
-    if(!manager){
+    if (!manager) {
       continue;
     }
     download::DownloadItem* item = manager->GetDownloadByGuid(guid);
-    if(item){
+    if (item) {
       CefRefPtr<CefDownloadItemImpl> download_item(
             new CefDownloadItemImpl(item));
       return download_item;
@@ -688,6 +688,10 @@ void CefContext::PopulateGlobalRequestContextSettings(
 #if defined(OHOS_INCOGNITO_MODE)
   settings->incognito_mode = false;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
+#endif
 }
 
 #if defined(OHOS_INCOGNITO_MODE)
@@ -704,6 +708,10 @@ void CefContext::PopulateGlobalOTRRequestContextSettings(
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
   settings->incognito_mode = true;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
+#endif
 }
 #endif
 

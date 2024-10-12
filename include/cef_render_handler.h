@@ -380,7 +380,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
-                                      bool visibility) {}
+                                          bool visibility) {}
 
   ///
   /// Called when select all is clicked.
@@ -393,16 +393,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
-
-  ///
-  /// Called when text input state has changed for the specified |browser|.
-  ///
-  /*--cef()--*/
-  virtual void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
-                                            const CefString& text,
-                                            const CefRange& selected_range,
-                                            const CefRange& compositon_range) {}
-
+  
   ///
   /// Called when selecting word.
   ///
@@ -411,7 +402,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                                 const CefString& text,
                                 int8_t offset,
                                 CefPoint& select) {}
-
+  
   ///
   /// Called when creating overlay.
   ///
@@ -421,13 +412,22 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
                              const CefRect& cef_image_rect,
                              const CefPoint& cef_touch_point,
                              const CefRect& cef_screen_rect) {}
-
+  
   ///
   /// Called when overlay state is changed.
   ///
   /*--cef()--*/
   virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
                                      const CefRect& cef_screen_rect) {}
+
+  ///
+  /// Called when text input state has changed for the specified |browser|.
+  ///
+  /*--cef()--*/
+  virtual void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
+                                            const CefString& text,
+                                            const CefRange& selected_range,
+                                            const CefRange& compositon_range) {}
 
   ///
   /// Called to retrieve the visible view rectangle in screen DIP coordinates. This
@@ -448,6 +448,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetFillContent(const std::string& content) {}
+
+  ///
+  /// SetGestureEventResult
+  ///
+  /*--cef()--*/
+  virtual void SetGestureEventResult(const bool result) {}
 
   ///
   /// Called when you need to start vibrator.

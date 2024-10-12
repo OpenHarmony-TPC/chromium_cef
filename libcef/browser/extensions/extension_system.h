@@ -120,6 +120,10 @@ class CefExtensionSystem : public ExtensionSystem {
 
   bool initialized() const { return initialized_; }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void SetGlobalRequestContext(CefRequestContext* context);
+#endif
+
  private:
   virtual void InitPrefs();
 
@@ -161,6 +165,10 @@ class CefExtensionSystem : public ExtensionSystem {
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   void InitInstallGates();
   void MaybeSpinUpLazyContext(const Extension* extension, bool is_newly_added);
+  void NotifyExtensionLoadedFromInternal(
+      const Extension* extension) override;
+  void NotifyExtensionUnLoadedFromInternal(
+      const Extension* extension) override;
 #endif
 
   content::BrowserContext* browser_context_;  // Not owned.
@@ -200,6 +208,8 @@ class CefExtensionSystem : public ExtensionSystem {
   // For verifying the contents of extensions read from disk.
   scoped_refptr<ContentVerifier> content_verifier_;
   std::unique_ptr<UninstallPingSender> uninstall_ping_sender_;
+
+  CefRefPtr<CefRequestContext> global_request_context_;
 #endif
 
   // Must be the last member.

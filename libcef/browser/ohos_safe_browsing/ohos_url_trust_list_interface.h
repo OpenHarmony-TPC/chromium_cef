@@ -32,10 +32,10 @@ enum class UrlListSetResult : int {
   SET_OK = 0,
 };
 
-class OhosUrlTrustListInterface : public base::SupportsUserData::Data {
+class UrlTrustListInterface : public base::SupportsUserData::Data {
 public:
   static char interfaceKey;
-  virtual ~OhosUrlTrustListInterface() = default;
+  virtual ~UrlTrustListInterface() = default;
   virtual UrlTrustCheckResult CheckUrlTrustList(const GURL& url) {
     return UrlTrustCheckResult::RESULT_ALLOW;
   }

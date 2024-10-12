@@ -94,11 +94,13 @@ class OhAutofillManager : public AutofillManager {
                                              const std::string& event);
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
   void FillData(const std::string& json_str);
+  std::string GetAttributeOrUniqueId(const FormFieldData& field);
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
   void ForwardDataToPasswordManager(const std::string& page_url,
                                     const std::string& username,
-                                    const std::string& password);
+                                    const std::string& password,
+                                    bool is_other_account);
 
   bool IsUsernamePasswordFormField(FormRendererId form_id,
                                    FieldRendererId field_id);
@@ -168,8 +170,9 @@ class OhAutofillManager : public AutofillManager {
 #endif  // UNIT_TEST
 
  private:
+#ifndef OHOS_FUZZ_COMPILE_ERROR_FIX
   AutofillProvider* GetAutofillProvider();
-
+#endif
   void StartNewLoggingSession();
   bool has_server_prediction_ = false;
   base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};

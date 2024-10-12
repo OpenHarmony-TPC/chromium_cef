@@ -8,7 +8,7 @@
 # by hand. See the translator.README.txt file in the tools directory for
 # more information.
 #
-# $hash=c1b8ac822713f57ce24a7a854fa47b402cd084f3$
+# $hash=a9ed856c5a6fe3d0ab5287807ccbf3a85c31f2a7$
 #
 
 {
@@ -97,6 +97,7 @@
       'include/cef_v8.h',
       'include/cef_values.h',
       'include/cef_waitable_event.h',
+      'include/cef_web_extension_api_handler.h',
       'include/cef_web_storage.h',
       'include/cef_x509_certificate.h',
       'include/cef_xml_reader.h',
@@ -213,6 +214,7 @@
       'include/capi/cef_v8_capi.h',
       'include/capi/cef_values_capi.h',
       'include/capi/cef_waitable_event_capi.h',
+      'include/capi/cef_web_extension_api_handler_capi.h',
       'include/capi/cef_web_storage_capi.h',
       'include/capi/cef_x509_certificate_capi.h',
       'include/capi/cef_xml_reader_capi.h',
@@ -611,6 +613,8 @@
       'libcef_dll/ctocpp/views/view_delegate_ctocpp.h',
       'libcef_dll/cpptoc/waitable_event_cpptoc.cc',
       'libcef_dll/cpptoc/waitable_event_cpptoc.h',
+      'libcef_dll/ctocpp/web_extension_api_handler_ctocpp.cc',
+      'libcef_dll/ctocpp/web_extension_api_handler_ctocpp.h',
       'libcef_dll/ctocpp/web_message_receiver_ctocpp.cc',
       'libcef_dll/ctocpp/web_message_receiver_ctocpp.h',
       'libcef_dll/cpptoc/web_storage_cpptoc.cc',
@@ -999,6 +1003,8 @@
       'libcef_dll/cpptoc/views/view_delegate_cpptoc.h',
       'libcef_dll/ctocpp/waitable_event_ctocpp.cc',
       'libcef_dll/ctocpp/waitable_event_ctocpp.h',
+      'libcef_dll/cpptoc/web_extension_api_handler_cpptoc.cc',
+      'libcef_dll/cpptoc/web_extension_api_handler_cpptoc.h',
       'libcef_dll/cpptoc/web_message_receiver_cpptoc.cc',
       'libcef_dll/cpptoc/web_message_receiver_cpptoc.h',
       'libcef_dll/ctocpp/web_storage_ctocpp.cc',

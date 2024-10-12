@@ -319,6 +319,22 @@ load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
       navigationStartTick, firstContentfulPaintMs);
 }
 
+void CEF_CALLBACK
+load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
+                                           int threat_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
+}
+
 void CEF_CALLBACK load_handler_on_first_meaningful_paint(
     struct _cef_load_handler_t* self,
     cef_first_meaningful_paint_details_t* details) {
@@ -385,22 +401,6 @@ void CEF_CALLBACK load_handler_on_navigation_entry_committed(
       CefLoadCommittedDetailsCToCpp::Wrap(details));
 }
 
-void CEF_CALLBACK
-load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
-                                           int threat_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
-}
-
 void CEF_CALLBACK load_handler_on_intelligent_tracking_prevention_result(
     struct _cef_load_handler_t* self,
     const cef_string_t* website_host,
@@ -451,10 +451,10 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
       load_handler_on_first_meaningful_paint;
   GetStruct()->on_largest_contentful_paint =
       load_handler_on_largest_contentful_paint;
-  GetStruct()->on_navigation_entry_committed =
-      load_handler_on_navigation_entry_committed;
   GetStruct()->on_safe_browsing_check_result =
       load_handler_on_safe_browsing_check_result;
+  GetStruct()->on_navigation_entry_committed =
+      load_handler_on_navigation_entry_committed;
   GetStruct()->on_intelligent_tracking_prevention_result =
       load_handler_on_intelligent_tracking_prevention_result;
 }

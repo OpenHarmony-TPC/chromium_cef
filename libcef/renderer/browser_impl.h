@@ -96,6 +96,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void DidUpdateMainFrameLayout() override;
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void SetTabId(int32_t tab_id) override;
+  int32_t GetTabId() override;
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
@@ -122,12 +127,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void PasswordSuggestionSelected(int list_index) override{}
   // #endif
   // #ifdefined(OHOS_EX_FREE_COPY)
-  void SelectAndCopy() override{}
-  bool ShouldShowFreeCopy() override { return false; }
+  void ShowFreeCopyMenu() override{}
+  bool ShouldShowFreeCopyMenu() override { return false; }
   // #endif
   int GetNWebId() override { return -1; }
-  void SetEnableBlankTargetPopupIntercept(
-      bool enableBlankTargetPopup) override {}
 #if defined(OHOS_NO_STATE_PREFETCH)
   void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override {
   }
@@ -140,6 +143,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   // #if defined(OHOS_SECURITY_STATE)
   int GetSecurityLevel() override{ return 0; }
   // #endif
+
 #endif
 
 #if BUILDFLAG(IS_OHOS)
@@ -168,6 +172,14 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
                                   bool animate) override {}
   void UpdateBrowserControlsHeight(int height, bool animate) override {}
   // #endif  // defined(OHOS_NWEB_EX)
+
+#if defined(OHOS_EX_NAVIGATION)
+  int InsertBackForwardEntry(int index, const CefString& url) override;
+
+  int UpdateNavigationEntryUrl(int index, const CefString& url) override;
+
+  void ClearForwardList() override;
+#endif
 
 #ifdef OHOS_BFCACHE
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override {}
@@ -214,6 +226,12 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   int content_width_ = 0;
   int content_height_ = 0;
   bool needs_contents_size_update_ = true;
+  int viewport_width_ = 0;
+  int viewport_height_ = 0;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int tab_id_;
 #endif
 
   IMPLEMENT_REFCOUNTING(CefBrowserImpl);

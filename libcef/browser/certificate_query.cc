@@ -209,7 +209,6 @@ CertificateErrorCallback AllowAllCertificateError(
             new CefAllowCertificateErrorCallbackImpl(std::move(callback)));
   result = OnCertificateError(web_contents, cert_error, sslInfo, request_url, is_main_frame_request,
                      strict_enforcement, origin_url, referrer, mainCallbackImpl, true);
-
   if (!result) {
     callback = mainCallbackImpl->Disconnect();
     LOG_IF(ERROR, callback.is_null()) << "Should return true from OnCertificateError when executing the callback";

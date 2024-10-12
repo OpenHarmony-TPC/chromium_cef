@@ -70,13 +70,13 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                           CefRefPtr<CefCallback> callback) override;
   void OnFirstContentfulPaint(int64_t navigationStartTick,
                               int64_t firstContentfulPaintMs) override;
+  void OnSafeBrowsingCheckResult(int threat_type) override;
   void OnFirstMeaningfulPaint(
       CefRefPtr<CefFirstMeaningfulPaintDetails> details) override;
   void OnLargestContentfulPaint(
       CefRefPtr<CefLargestContentfulPaintDetails> details) override;
   void OnNavigationEntryCommitted(
       CefRefPtr<CefLoadCommittedDetails> details) override;
-  void OnSafeBrowsingCheckResult(int threat_type) override;
   void OnIntelligentTrackingPreventionResult(
       const CefString& website_host,
       const CefString& tracker_host) override;

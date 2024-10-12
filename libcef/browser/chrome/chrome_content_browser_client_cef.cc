@@ -170,7 +170,7 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
 #ifdef OHOS_NETWORK_LOAD
   auto returned_callback = certificate_query::AllowAllCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, 
+      strict_enforcement,
       origin_url,
       referrer,
       std::move(callback), /*default_disallow=*/false
@@ -178,7 +178,7 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
 #else
   auto returned_callback = certificate_query::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, 
+      strict_enforcement,
       std::move(callback), /*default_disallow=*/false
       );
 #endif

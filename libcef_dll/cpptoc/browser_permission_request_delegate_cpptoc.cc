@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2482785cf70906646697caf085a3d8cd434042ce$
+// $hash=f912dd3fd7e5d22d1e418da5159aae541a147d7d$
 //
 
 #include "libcef_dll/cpptoc/browser_permission_request_delegate_cpptoc.h"
@@ -279,6 +279,147 @@ browser_permission_request_delegate_notify_geolocation_permission(
       ->NotifyGeolocationPermission(value ? true : false, CefString(origin));
 }
 
+void CEF_CALLBACK
+browser_permission_request_delegate_ask_audio_capture_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskAudioCapturePermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_audio_capture_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskAudioCapturePermission(CefString(origin));
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_ask_video_capture_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskVideoCapturePermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_video_capture_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskVideoCapturePermission(CefString(origin));
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_ask_clipboard_sanitized_write_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskClipboardSanitizedWritePermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_clipboard_sanitized_write_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskClipboardSanitizedWritePermission(CefString(origin));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -303,6 +444,18 @@ CefBrowserPermissionRequestDelegateCppToC::
       browser_permission_request_delegate_abort_ask_clipboard_read_write_permission;
   GetStruct()->notify_geolocation_permission =
       browser_permission_request_delegate_notify_geolocation_permission;
+  GetStruct()->ask_audio_capture_permission =
+      browser_permission_request_delegate_ask_audio_capture_permission;
+  GetStruct()->abort_ask_audio_capture_permission =
+      browser_permission_request_delegate_abort_ask_audio_capture_permission;
+  GetStruct()->ask_video_capture_permission =
+      browser_permission_request_delegate_ask_video_capture_permission;
+  GetStruct()->abort_ask_video_capture_permission =
+      browser_permission_request_delegate_abort_ask_video_capture_permission;
+  GetStruct()->ask_clipboard_sanitized_write_permission =
+      browser_permission_request_delegate_ask_clipboard_sanitized_write_permission;
+  GetStruct()->abort_ask_clipboard_sanitized_write_permission =
+      browser_permission_request_delegate_abort_ask_clipboard_sanitized_write_permission;
 #if defined(OHOS_SENSOR)
   GetStruct()->ask_sensors_permission =
       browser_permission_request_delegate_ask_sensors_permission;

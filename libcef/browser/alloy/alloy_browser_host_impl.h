@@ -251,8 +251,20 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
 
 #ifdef OHOS_RENDER_PROCESS_MODE
-void NotifyNeedsReload(bool needs_reload) override;
-bool NeedsReload() override;
+  void SetNeedsReload(bool needs_reload) override;
+  bool NeedsReload() override;
+#endif
+
+#if defined(OHOS_RENDERER_ANR_DUMP)
+  void RendererUnresponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter,
+      content::RenderProcessNotRespondingReason reason) override;
+
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
 #endif
 
   enum DestructionState {
@@ -403,7 +415,6 @@ bool NeedsReload() override;
   void SetBackgroundColor(int color) override;
   SkColor GetBackgroundColor() const;
   void GetZoomLevelCallback();
-  int GetDrawMode();
 
   void SetTouchInsertHandleMenuShow(bool show) {
     web_contents()->SetTouchInsertHandleMenuShow(show);
@@ -435,6 +446,12 @@ bool NeedsReload() override;
   void OnAdsBlocked(const std::string& main_frame_url,
                     const std::map<std::string, int32_t>& subresource_blocked,
                     bool is_site_first_report) override;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+  void SetTabId(int32_t tab_id) override;
+  int32_t GetTabId() override;
 #endif
 
 #if defined(OHOS_EX_PASSWORD)
@@ -472,6 +489,7 @@ bool NeedsReload() override;
                      const gfx::Point& touch_point,
                      const gfx::Rect& screen_rect);
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
 #endif
 
@@ -513,7 +531,7 @@ bool NeedsReload() override;
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
-  void ReportRenderProcessStatus(bool is_web_hidden);
+  base::ProcessId GetRenderProcessId();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
   void SetVisible(bool visible);
@@ -535,9 +553,10 @@ bool NeedsReload() override;
   void SetFitContentMode(int mode) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 #if defined(OHOS_RENDERER_ANR_DUMP)
-  void OnDumpJavaScriptStackCallback(int pid,
-		  content::RenderProcessNotRespondingReason reason,
-                                     const std::string& stack);
+  void OnDumpJavaScriptStackCallback(
+      int pid,
+      content::RenderProcessNotRespondingReason reason,
+      const std::string& stack);
 #endif
 
   CefWindowHandle opener_;
@@ -578,19 +597,23 @@ bool NeedsReload() override;
   int window_id_ = -1;
   int nweb_id_ = -1;
   base::ProcessId last_pid_ = -1;
+
+  int video_stream_cnt_ = 0;
   bool has_video_playing_ = false;
   bool has_touch_event_ = false;
   bool set_lower_frame_rate_ = false;
   static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000/*ms*/;
-  int video_stream_cnt_ = 0;
+#endif
 
-  int drawMode_ = 0;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int tab_id_ = -1;
 #endif
   bool start_play_ = false;
 
 #ifdef OHOS_RENDER_PROCESS_MODE
   bool needs_reload_ = false;
 #endif
+
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

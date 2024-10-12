@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=8a0b504f15221d41e27692fe04e9dd8126a42bb5$
+// $hash=e470f6244c3cd890850dac33c1d971174a6218a0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
@@ -20,18 +20,18 @@
 #error This file can be included wrapper-side only
 #endif
 
+#include <vector>
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_client_capi.h"
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
-#include <vector>
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefBrowserCToCpp
     : public CefCToCppRefCounted<CefBrowserCToCpp, CefBrowser, cef_browser_t> {
-public:
+ public:
   CefBrowserCToCpp();
   virtual ~CefBrowserCToCpp();
 
@@ -53,47 +53,52 @@ public:
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
   CefRefPtr<CefFrame> GetFrame(int64 identifier) override;
-  CefRefPtr<CefFrame> GetFrame(const CefString &name) override;
+  CefRefPtr<CefFrame> GetFrame(const CefString& name) override;
   size_t GetFrameCount() override;
-  void GetFrameIdentifiers(std::vector<int64> &identifiers) override;
-  void GetFrameNames(std::vector<CefString> &names) override;
-  CefRefPtr<CefBrowserPermissionRequestDelegate>
-  GetPermissionRequestDelegate() override;
+  void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
+  void GetFrameNames(std::vector<CefString>& names) override;
+  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
+      override;
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
   void DeleteHistory() override;
-  void SelectAndCopy() override;
-  bool ShouldShowFreeCopy() override;
+  void ShowFreeCopyMenu() override;
+  bool ShouldShowFreeCopyMenu() override;
   void PasswordSuggestionSelected(int list_index) override;
-  void UpdateBrowserControlsState(int constraints, int current,
+  void UpdateBrowserControlsState(int constraints,
+                                  int current,
                                   bool animate) override;
   void UpdateBrowserControlsHeight(int height, bool animate) override;
-  void PrefetchPage(CefString &url, CefString &additionalHttpHeaders) override;
+  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
   void ReloadOriginalUrl() override;
   bool CanStoreWebArchive() override;
-  void SetBrowserUserAgentString(const CefString &user_agent) override;
+  void SetBrowserUserAgentString(const CefString& user_agent) override;
   bool ShouldShowLoadingUI() override;
   void SetForceEnableZoom(bool forceEnableZoom) override;
   bool GetForceEnableZoom() override;
   int GetNWebId() override;
-  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
+  bool IsAdsBlockEnabled() override;
+  bool IsAdsBlockEnabledForCurPage() override;
+  void EnableAdsBlock(bool enable) override;
   bool GetSavePasswordAutomatically() override;
   void SetSavePasswordAutomatically(bool enable) override;
   void SaveOrUpdatePassword(bool is_update) override;
   bool GetSavePassword() override;
   void SetSavePassword(bool enable) override;
-  int GetSecurityLevel() override;
   void EnableSafeBrowsing(bool enable) override;
   bool IsSafeBrowsingEnabled() override;
+  int GetSecurityLevel() override;
+  int InsertBackForwardEntry(int index, const CefString& url) override;
+  int UpdateNavigationEntryUrl(int index, const CefString& url) override;
+  void ClearForwardList() override;
   void EnableIntelligentTrackingPrevention(bool enable) override;
   bool IsIntelligentTrackingPreventionEnabled() override;
-  bool IsAdsBlockEnabled() override;
-  bool IsAdsBlockEnabledForCurPage() override;
-  void EnableAdsBlock(bool enable) override;
-  int SetUrlTrustListWithErrMsg(const CefString &urlTrustList,
-                                CefString &detailErrMsg) override;
+  int SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
+                                CefString& detailErrMsg) override;
+  void SetTabId(int tab_id) override;
+  int GetTabId() override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

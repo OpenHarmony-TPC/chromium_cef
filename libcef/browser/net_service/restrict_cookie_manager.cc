@@ -18,6 +18,11 @@
 #include "net_helpers.h"
 #include "url/gurl.h"
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 class ProxyingRestrictedCookieManagerListener
     : public network::mojom::CookieChangeListener {
  public:
@@ -74,6 +79,21 @@ void ProxyingRestrictedCookieManager::GetAllForUrl(
     GetAllForUrlCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (site_for_cookies.IsFirstParty(url) ||
+        AllowCookies(url, site_for_cookies)) {
+      underlying_restricted_cookie_manager_->GetAllForUrl(
+          url, site_for_cookies, top_frame_origin, has_storage_access,
+          std::move(options), std::move(callback));
+      return;
+    }
+    std::move(callback).Run(std::vector<net::CookieWithAccessResult>());
+    return;
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
+
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->GetAllForUrl(
         url, site_for_cookies, top_frame_origin, has_storage_access,
@@ -92,6 +112,21 @@ void ProxyingRestrictedCookieManager::SetCanonicalCookie(
     net::CookieInclusionStatus status,
     SetCanonicalCookieCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (site_for_cookies.IsFirstParty(url) ||
+        AllowCookies(url, site_for_cookies)) {
+      underlying_restricted_cookie_manager_->SetCanonicalCookie(
+          cookie, url, site_for_cookies, top_frame_origin, has_storage_access,
+          status, std::move(callback));
+      return;
+    }
+    std::move(callback).Run(false);
+    return;
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->SetCanonicalCookie(
@@ -151,6 +186,22 @@ void ProxyingRestrictedCookieManager::SetCookieFromString(
     SetCookieFromStringCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (site_for_cookies.IsFirstParty(url) ||
+        AllowCookies(url, site_for_cookies)) {
+      underlying_restricted_cookie_manager_->SetCookieFromString(
+        url, site_for_cookies, top_frame_origin, has_storage_access, cookie,
+        std::move(callback));
+      return;
+    }
+    std::move(callback).Run(/*site_for_cookies_ok=*/true,
+                            /*top_frame_origin_ok=*/true);
+    return;
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
+
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->SetCookieFromString(
         url, site_for_cookies, top_frame_origin, has_storage_access, cookie,
@@ -168,6 +219,21 @@ void ProxyingRestrictedCookieManager::GetCookiesString(
     bool has_storage_access,
     GetCookiesStringCallback callback) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (site_for_cookies.IsFirstParty(url) ||
+        AllowCookies(url, site_for_cookies)) {
+      underlying_restricted_cookie_manager_->GetCookiesString(
+        url, site_for_cookies, top_frame_origin, has_storage_access,
+        std::move(callback));
+      return;
+    }
+    std::move(callback).Run("");
+    return;
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 
   if (AllowCookies(url, site_for_cookies)) {
     underlying_restricted_cookie_manager_->GetCookiesString(

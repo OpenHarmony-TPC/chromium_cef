@@ -203,7 +203,7 @@ class CefFrameImpl
   void SetJsOnlineProperty(bool network_up) override;
 #endif
   void PutZoomingForTextFactor(float factor) override;
-  void GetImageForContextNode() override;
+  void GetImageForContextNode(int command_id) override;
 #ifdef OHOS_I18N
   void UpdateLocale(const std::string& locale) override;
 #endif  // #ifdef OHOS_I18N

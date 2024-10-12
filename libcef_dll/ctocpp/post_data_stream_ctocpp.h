@@ -27,9 +27,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefPostDataStreamCToCpp
-    : public CefCToCppRefCounted<CefPostDataStreamCToCpp, CefPostDataStream,
+    : public CefCToCppRefCounted<CefPostDataStreamCToCpp,
+                                 CefPostDataStream,
                                  cef_post_data_stream_t> {
-public:
+ public:
   CefPostDataStreamCToCpp();
   virtual ~CefPostDataStreamCToCpp();
 
@@ -37,7 +38,8 @@ public:
   void SetReadCallback(
       CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
   void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
-  void Read(void *buffer, int buf_len,
+  void Read(void* buffer,
+            int buf_len,
             CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
   uint64 GetSize() override;
   uint64 GetPosition() override;
@@ -48,4 +50,4 @@ public:
   void Reset() override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_POST_DATA_STREAM_CTOCPP_H_

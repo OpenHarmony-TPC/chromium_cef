@@ -39,6 +39,9 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <set>
+
 #include "include/cef_base.h"
 #include "include/cef_devtools_message_observer.h"
 #include "include/cef_drag_data.h"
@@ -117,6 +120,25 @@ class CefWebMessageReceiver : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnMessage(CefRefPtr<CefValue> message) = 0;
+
+  ///
+  /// The same as OnMessage, the result of the execution will be returned.
+  ///
+  /*--cef()--*/
+  virtual bool OnMessageWithBoolResult(CefRefPtr<CefValue> message) = 0;
+};
+
+///
+/// CefSetLockCallback.
+///
+/*--cef(source=client)--*/
+class CefSetLockCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Handle.
+  ///
+  /*--cef()--*/
+  virtual void Handle(bool key) = 0;
 };
 
 ///
@@ -145,20 +167,6 @@ class CefCacheOptions : public virtual CefBaseRefCounted {
   /*--cef(default_retval=nullptr)--*/
   virtual cef_string_map_t GetResponseHeaders() = 0;
 };
-
-///
-/// CefSetLockCallback
-///
-/*--cef(source=client)--*/
-class CefSetLockCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Handle.
-  ///
-  /*--cef()--*/
-  virtual void Handle(bool key) = 0;
-};
-
 /* ---------- ohos webview add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -343,13 +351,13 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /// display the selection control when click Free copy interface
   ///
   /*--cef()--*/
-  virtual void SelectAndCopy() = 0;
+  virtual void ShowFreeCopyMenu() = 0;
 
   ///
   /// should show free copy menu
   ///
   /*--cef()--*/
-  virtual bool ShouldShowFreeCopy() = 0;
+  virtual bool ShouldShowFreeCopyMenu() = 0;
 
   ///
   /// select password dialog to fill
@@ -422,11 +430,22 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual int GetNWebId() = 0;
 
   ///
-  /// Set whether the target_blank pop-up window is opened in the current tab.
+  /// Get whether Ads block is enabled.
   ///
   /*--cef()--*/
-  virtual void SetEnableBlankTargetPopupIntercept(
-      bool enableBlankTargetPopup) = 0;
+  virtual bool IsAdsBlockEnabled() = 0;
+
+  ///
+  /// Get whether Ads block is enabled for current page.
+  ///
+  /*--cef()--*/
+  virtual bool IsAdsBlockEnabledForCurPage() = 0;
+
+  ///
+  /// Set enable to allow automatically save password
+  ///
+  /*--cef()--*/
+  virtual void EnableAdsBlock(bool enable) = 0;
 
   ///
   /// Whether automatically saving password had been enabled.
@@ -459,12 +478,6 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void SetSavePassword(bool enable) = 0;
 
   ///
-  /// Get security level for current page.
-  ///
-  /*--cef()--*/
-  virtual int GetSecurityLevel() = 0;
-
-  ///
   /// Enable the ability to check website security risks.
   ///
   /*--cef()--*/
@@ -475,6 +488,30 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsSafeBrowsingEnabled() = 0;
+
+  ///
+  /// Get security level for current page.
+  ///
+  /*--cef()--*/
+  virtual int GetSecurityLevel() = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual int InsertBackForwardEntry(int index, const CefString& url) = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual int UpdateNavigationEntryUrl(int index, const CefString& url) = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual void ClearForwardList() = 0;
 
   ///
   /// Enable the ability to intelligent tracking prevention, default disabled.
@@ -489,24 +526,6 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual bool IsIntelligentTrackingPreventionEnabled() = 0;
 
   ///
-  /// Get whether Ads block is enabled.
-  ///
-  /*--cef()--*/
-  virtual bool IsAdsBlockEnabled() = 0;
-
-  ///
-  /// Get whether Ads block is enabled for current page.
-  ///
-  /*--cef()--*/
-  virtual bool IsAdsBlockEnabledForCurPage() = 0;
-
-  ///
-  /// Set enable to allow automatically save password
-  ///
-  /*--cef()--*/
-  virtual void EnableAdsBlock(bool enable) = 0;
-
-  ///
   /// Set url trust list.
   ///
   /*--cef()--*/
@@ -514,7 +533,19 @@ class CefBrowser : public virtual CefBaseRefCounted {
     const CefString& urlTrustList, CefString& detailErrMsg) = 0;
 
   ///
-  /// Set url trust list.
+  /// Set tabId.
+  ///
+  /*--cef()--*/
+  virtual void SetTabId(int tab_id) = 0;
+
+  ///
+  /// Get tabId.
+  ///
+  /*--cef()--*/
+  virtual int GetTabId() = 0;
+
+  ///
+  /// Set back forward cache options.
   ///
   /*--cef()--*/
   virtual void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) = 0;
@@ -1316,7 +1347,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       const std::string& code,
       CefRefPtr<CefJavaScriptResultCallback> callback,
       bool extention) = 0;
-
   ///
   /// Execute a string of JavaScript code, return result by callback
   ///
@@ -1349,13 +1379,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// GetImageForContextNode
   ///
   /*--cef()--*/
-  virtual void GetImageForContextNode() = 0;
+  virtual void GetImageForContextNode(int command_id) = 0;
 
   ///
   /// GetImageFromCache
   ///
   /*--cef()--*/
-  virtual void GetImageFromCache(const CefString& url) = 0;
+  virtual void GetImageFromCache(const CefString& url, int command_id) = 0;
 
   ///
   /// ExitFullScreen
@@ -1524,7 +1554,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// Post a message to the port.
   ///
   /*--cef()--*/
-  virtual void PostPortMessage(CefString& port_handle,
+  virtual void PostPortMessage(const CefString& port_handle,
                                CefRefPtr<CefValue> message) = 0;
 
   ///
@@ -1532,7 +1562,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) = 0;
 
   ///
@@ -1795,6 +1825,14 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
 
 
   ///
+  /// Change the zoom factor for browser zoom.
+  /// If called on the UI thread the change will be applied immediately.
+  /// Otherwise, the change will be applied asynchronously on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
+
+  ///
   /// Discard a webview window
   ///
   /*--cef()--*/
@@ -1807,14 +1845,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual bool Restore() = 0;
 
   ///
-  /// Change the zoom factor for browser zoom.
-  /// If called on the UI thread the change will be applied immediately.
-  /// Otherwise, the change will be applied asynchronously on the UI thread.
-  ///
-  /*--cef()--*/
-  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
-
-  ///
   /// Get the top controls offset.
   ///
   /*--cef()--*/
@@ -1825,6 +1855,24 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual int GetShrinkViewportHeight() = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual int InsertBackForwardEntry(int index, const CefString& url) = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual int UpdateNavigationEntryUrl(int index, const CefString& url) = 0;
+
+  ///
+  /// Get the shrink viewport height.
+  ///
+  /*--cef()--*/
+  virtual void ClearForwardList() = 0;
 
   ///
   /// Set background print enable.
@@ -1845,7 +1893,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetScrollable(bool enable, int scrollType) = 0;
 
   ///
-  ///  Start current camera.
+  /// Get the last javascript proxy calling frame url.
+  ///
+  /*--cef()--*/
+  virtual CefString GetLastJavascriptProxyCallingFrameUrl() = 0;
+
+  ///
+  /// Start current camera.
   ///
   /*--cef()--*/
   virtual void StartCamera() = 0;
@@ -1863,12 +1917,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void CloseCamera() = 0;
 
   ///
-  /// Get the last javascript proxy calling frame url.
-  ///
-  /*--cef()--*/
-  virtual CefString GetLastJavascriptProxyCallingFrameUrl() = 0;
-
-  ///
   ///  Set NWebID.
   ///
   /*--cef()--*/
@@ -1881,6 +1929,30 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual bool GetPendingSizeStatus() = 0;
 
   ///
+  /// Get CefDownloadItem by download_item_id.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
+
+  ///
+  /// SetWakeLockHandler.
+  ///
+  /*--cef(optional_param=callback)--*/
+  virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
+
+  ///
+  /// Notify browser host needs reoload when the render process terminated.
+  ///
+  /*--cef()--*/
+  virtual void SetNeedsReload(bool needs_reload) = 0;
+
+  ///
+  /// Return true if needs reload page, or false if needs not reload.
+  ///
+  /*--cef()--*/
+  virtual bool NeedsReload() = 0;
+
+  ///
   ///  precompile javascript and generate code cache.
   ///
   /*--cef()--*/
@@ -1891,28 +1963,22 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       CefRefPtr<CefPrecompileCallback> callback) = 0;
 
   ///
-  /// SetWakeLockHandler.
-  ///
-  /*--cef(optional_param=callback)--*/
-  virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
-
-  ///
-  /// Get CefDownloadItem by download_item_id.
+  ///  update DrawRect.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
+  virtual void UpdateDrawRect() = 0;
 
   ///
-  ///  Notify browser host needs reload when the render process terminated.
+  /// SendTouchpadFlingEvent
   ///
   /*--cef()--*/
-  virtual void NotifyNeedsReload(bool needs_reload) = 0;
+  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) = 0;
 
   ///
-  ///  Return true if needs reload page, or false if nees not reload.
+  /// Set the fit content mode
   ///
   /*--cef()--*/
-  virtual bool NeedsReload() = 0;
+  virtual void SetFitContentMode(int mode) = 0;
 
   ///
   /// Terminate render process
@@ -1929,24 +1995,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                      const int32_t object_id,
                                      bool is_async,
                                      const CefString& permission) = 0;
-
-  ///
-  /// SendTouchpadFlingEvent
-  ///
-  /*--cef()--*/
-  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) = 0;
-
-  ///
-  /// Set the fit content mode
-  ///
-  /*--cef()--*/
-  virtual void SetFitContentMode(int mode) = 0;
-
-  ///
-  /// update draw_rect state.
-  ///
-  /*--cef()--*/
-  virtual void UpdateDrawRect() = 0;
 
   ///
   /// Called when text is selected.
@@ -1974,6 +2022,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AdvanceFocusForIME(int focusType) = 0;
+
+  ///
+  /// Called when image analyzer overlay is destoryed.
+  ///
+  /*--cef()--*/
+  virtual void OnDestroyImageAnalyzerOverlay() = 0;
 
 #if defined(OHOS_GET_SCROLL_OFFSET)
   ///
@@ -2008,6 +2062,23 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) = 0;
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  ///
+  /// Receiving the tab updated notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) = 0;
+#endif
+
+  ///
+  /// ScrollFocusedEditableNodeIntoView.
+  ///
+  /*--cef()--*/
+  virtual void ScrollFocusedEditableNodeIntoView() = 0;
+
   ///
   /// Set the callback of the autofill event.
   ///
@@ -2019,12 +2090,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void FillAutofillData(CefRefPtr<CefValue> message) = 0;
-
-  ///
-  /// ScrollFocusedEditableNodeIntoView.
-  ///
-  /*--cef()--*/
-  virtual void ScrollFocusedEditableNodeIntoView() = 0;
 
   ///
   /// Process autofill cancel content.

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b94100cfe1feea0a2b66e806163f1d5081299d1c$
+// $hash=c28fc87fe1ab76d594610e0171fbced678728165$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
@@ -272,6 +272,13 @@ typedef struct _cef_request_handler_t {
   void(CEF_CALLBACK* on_render_process_responding)(
       struct _cef_request_handler_t* self,
       struct _cef_browser_t* browser);
+
+  ///
+  /// Called when mouse hovering the link
+  ///
+  void(CEF_CALLBACK* on_update_target_url)(struct _cef_request_handler_t* self,
+                                           struct _cef_browser_t* browser,
+                                           const cef_string_t* url);
 } cef_request_handler_t;
 
 #ifdef __cplusplus

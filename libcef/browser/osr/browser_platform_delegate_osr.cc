@@ -1003,6 +1003,7 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
   if (!web_contents_) {
     return nullptr;
   }
+
   content::RenderViewHost* host = web_contents_->GetRenderViewHost();
   if (host) {
     return static_cast<CefRenderWidgetHostViewOSR*>(
@@ -1189,6 +1190,12 @@ void CefBrowserPlatformDelegateOsr::CreateOverlay(const gfx::ImageSkia& image,
 void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
   if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
     view->OnTextSelected(flag);
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::OnDestroyImageAnalyzerOverlay() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnDestroyImageAnalyzerOverlay();
   }
 }
 

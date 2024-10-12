@@ -207,7 +207,8 @@ bool CefCookieManagerImpl::VisitUrlCookies(
     const CefString& url,
     bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor,
-    bool is_sync) {
+    bool is_sync,
+    bool is_from_ndk) {
   if (!visitor.get()) {
     return false;
   }
@@ -226,28 +227,29 @@ bool CefCookieManagerImpl::VisitUrlCookies(
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImpl::VisitUrlCookiesInternal),
-        this, gurl, includeHttpOnly, visitor, is_sync));
+        this, gurl, includeHttpOnly, visitor, is_sync, is_from_ndk));
     return true;
   }
 
-  return VisitUrlCookiesInternal(gurl, includeHttpOnly, visitor, is_sync);
+  return VisitUrlCookiesInternal(gurl, includeHttpOnly, visitor, is_sync, is_from_ndk);
 }
 
 bool CefCookieManagerImpl::SetCookie(const CefString& url,
                                      const CefCookie& cookie,
                                      CefRefPtr<CefSetCookieCallback> callback,
                                      bool is_sync,
-                                     const CefString& str_cookie) {
+                                     const CefString& str_cookie,
+                                     bool includeHttpOnly) {
   GURL gurl = GURL(url.ToString());
 
   if (!ValidContext()) {
     StoreOrTriggerInitCallback(base::BindOnce(
         base::IgnoreResult(&CefCookieManagerImpl::SetCookieInternal), this,
-        gurl, cookie, callback, is_sync, str_cookie));
+        gurl, cookie, callback, is_sync, str_cookie, includeHttpOnly));
     return true;
   }
 
-  return SetCookieInternal(gurl, cookie, callback, is_sync, str_cookie);
+  return SetCookieInternal(gurl, cookie, callback, is_sync, str_cookie, includeHttpOnly);
 }
 
 bool CefCookieManagerImpl::DeleteCookies(
@@ -329,13 +331,17 @@ bool CefCookieManagerImpl::VisitUrlCookiesInternal(
     const GURL& url,
     bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor,
-    bool is_sync) {
+    bool is_sync,
+    bool is_from_ndk) {
   DCHECK(ValidContext());
   DCHECK(visitor);
   DCHECK(url.is_valid());
 
 #ifdef OHOS_COOKIE
   net::CookieOptions options = net::CookieOptions::MakeAllInclusive();
+  if (is_from_ndk && !includeHttpOnly) {
+    options.set_exclude_httponly();
+  }
 #else
   net::CookieOptions options;
   if (includeHttpOnly) {
@@ -383,7 +389,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
     const GURL& url,
     const CefCookie& cookie,
     CefRefPtr<CefSetCookieCallback> callback,
-    bool is_sync, const CefString& str_cookie) {
+    bool is_sync, const CefString& str_cookie, bool includeHttpOnly) {
   DCHECK(ValidContext());
   DCHECK(url.is_valid());
 
@@ -426,7 +432,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
   }
 
   net::CookieOptions options;
-  if (cookie.httponly) {
+  if (includeHttpOnly || cookie.httponly) {
     options.set_include_httponly();
   }
   options.set_same_site_cookie_context(

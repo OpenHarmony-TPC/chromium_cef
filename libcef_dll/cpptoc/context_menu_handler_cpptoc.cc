@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=99e06c226ae9d3f395e491860ccc367f9f0f6d84$
+// $hash=8e7f27a697ae559208a79edbf59c3786c9fb0ff0$
 //
 
 #include "libcef_dll/cpptoc/context_menu_handler_cpptoc.h"
@@ -365,7 +365,8 @@ void CEF_CALLBACK context_menu_handler_on_quick_menu_dismissed(
 void CEF_CALLBACK context_menu_handler_on_get_image_for_context_node(
     struct _cef_context_menu_handler_t* self,
     cef_browser_t* browser,
-    struct _cef_image_t* image) {
+    struct _cef_image_t* image,
+    int command_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -387,12 +388,13 @@ void CEF_CALLBACK context_menu_handler_on_get_image_for_context_node(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnGetImageForContextNode(
-      CefBrowserCToCpp::Wrap(browser), CefImageCToCpp::Wrap(image));
+      CefBrowserCToCpp::Wrap(browser), CefImageCToCpp::Wrap(image), command_id);
 }
 
 void CEF_CALLBACK context_menu_handler_on_get_image_from_cache(
     struct _cef_context_menu_handler_t* self,
-    struct _cef_image_t* image) {
+    struct _cef_image_t* image,
+    int command_id) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -409,7 +411,7 @@ void CEF_CALLBACK context_menu_handler_on_get_image_from_cache(
 
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->OnGetImageFromCache(
-      CefImageCToCpp::Wrap(image));
+      CefImageCToCpp::Wrap(image), command_id);
 }
 
 void CEF_CALLBACK context_menu_handler_hide_handle_and_quick_menu_if_necessary(
@@ -427,6 +429,21 @@ void CEF_CALLBACK context_menu_handler_hide_handle_and_quick_menu_if_necessary(
   // Execute
   CefContextMenuHandlerCppToC::Get(self)->HideHandleAndQuickMenuIfNecessary(
       hide ? true : false);
+}
+
+void CEF_CALLBACK context_menu_handler_change_visibility_of_quick_menu(
+    struct _cef_context_menu_handler_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefContextMenuHandlerCppToC::Get(self)->ChangeVisibilityOfQuickMenu();
 }
 
 }  // namespace
@@ -454,6 +471,8 @@ CefContextMenuHandlerCppToC::CefContextMenuHandlerCppToC() {
       context_menu_handler_on_get_image_from_cache;
   GetStruct()->hide_handle_and_quick_menu_if_necessary =
       context_menu_handler_hide_handle_and_quick_menu_if_necessary;
+  GetStruct()->change_visibility_of_quick_menu =
+      context_menu_handler_change_visibility_of_quick_menu;
 }
 
 // DESTRUCTOR - Do not edit by hand.

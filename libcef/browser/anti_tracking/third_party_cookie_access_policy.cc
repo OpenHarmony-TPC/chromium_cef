@@ -123,7 +123,8 @@ bool ThirdPartyCookieAccessPolicy::IsHostInITPBypassingList(const std::string& h
   return bypassing_host_list_.find(host) != bypassing_host_list_.end();
 }
 
-bool ThirdPartyCookieAccessPolicy::AllowGetCookies(const network::ResourceRequest& request) {
+bool ThirdPartyCookieAccessPolicy::AllowGetCookies(
+    const network::ResourceRequest& request, const GURL& main_frame_url) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
   if (request.resource_type ==
       static_cast<int>(blink::mojom::ResourceType::kMainFrame)) {
@@ -136,7 +137,8 @@ bool ThirdPartyCookieAccessPolicy::AllowGetCookies(const network::ResourceReques
     return true;
   }
 
-  if (IsHostInITPBypassingList(request.url.host())) {
+  if (main_frame_url.is_valid() && main_frame_url.has_host() &&
+      IsHostInITPBypassingList(main_frame_url.host())) {
     return true;
   }
 
@@ -211,9 +213,7 @@ void ThirdPartyCookieAccessPolicy::AddITPBypassingListOnIOThread(
     const std::vector<std::string>& host_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
 
-  bypassing_host_list_.clear();
-  bypassing_host_list_ =
-      std::set<std::string>(host_list.begin(), host_list.end());
+  bypassing_host_list_.insert(host_list.begin(), host_list.end());
   LOG(INFO)
       << "AddITPBypassingListOnIOThread done, host_list size "
       << host_list.size() << ", block host allow list size "

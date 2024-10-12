@@ -70,11 +70,11 @@ OhPageLoadMetricsObserver::FlushMetricsOnAppEnterBackground(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
 #if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
+  ReportLargestContentfulPaint(timing);
 #endif
   // We continue observing after being backgrounded, in case we are foregrounded
   // again without being killed. In those cases we may still report non-buffered
   // metrics such as FCP after being re-foregrounded.
-  ReportLargestContentfulPaint(timing);
   return CONTINUE_OBSERVING;
 }
 
@@ -82,8 +82,8 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnHidden(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
 #if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
-#endif
   ReportLargestContentfulPaint(timing);
+#endif
   return CONTINUE_OBSERVING;
 }
 
@@ -91,8 +91,8 @@ void OhPageLoadMetricsObserver::OnComplete(
     const page_load_metrics::mojom::PageLoadTiming& timing) {
 #if defined(REPORT_SYS_EVENT)
   ReportBufferedMetrics(timing);
-#endif
   ReportLargestContentfulPaint(timing);
+#endif
 }
 
 int64_t OhPageLoadMetricsObserver::GetNavigationStartTime() {
@@ -107,6 +107,37 @@ int64_t OhPageLoadMetricsObserver::GetNavigationStartTime() {
                                   base::Time::kMicrosecondsPerMillisecond;
   return navigation_start_time;
 }
+
+#ifdef OHOS_BFCACHE
+void OhPageLoadMetricsObserver::OnRestoreFromBackForwardCache(
+    const page_load_metrics::mojom::PageLoadTiming& timing,
+    content::NavigationHandle* navigation_handle) {
+  back_forward_cache_navigation_ids_.push_back(
+      navigation_handle->GetNavigationId());
+}
+
+page_load_metrics::PageLoadMetricsObserver::ObservePolicy
+OhPageLoadMetricsObserver::OnEnterBackForwardCache(
+    const page_load_metrics::mojom::PageLoadTiming& timing) {
+  return CONTINUE_OBSERVING;
+}
+
+void OhPageLoadMetricsObserver::
+    OnFirstContentfulPaintAfterBackForwardCacheRestoreInPage(
+        const page_load_metrics::mojom::BackForwardCacheTiming& timing,
+        size_t index) {
+  if (index >= back_forward_cache_navigation_ids_.size())
+    return;
+
+  int64_t first_contentful_paint_ms =
+      timing.first_paint_after_back_forward_cache_restore.InMilliseconds();
+#if defined(REPORT_SYS_EVENT)
+  web_performance_timing_.first_contentful_paint = first_contentful_paint_ms;
+#endif
+  int64_t navigation_start_time = GetNavigationStartTime();
+  ReportFirstContentfulPaint(navigation_start_time, first_contentful_paint_ms);
+}
+#endif
 
 void OhPageLoadMetricsObserver::OnFirstContentfulPaintInPage(
     const page_load_metrics::mojom::PageLoadTiming& timing) {

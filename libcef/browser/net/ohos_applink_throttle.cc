@@ -39,6 +39,11 @@ class CefOpenAppLinkCallbackImpl : public CefOpenAppLinkCallback {
 OhosAppLinkThrottle::OhosAppLinkThrottle(int frame_tree_node_id)
   : frame_tree_node_id_(frame_tree_node_id) {}
 
+OhosAppLinkThrottle::OhosAppLinkThrottle(
+  int frame_tree_node_id, bool is_client_redirect)
+  : frame_tree_node_id_(frame_tree_node_id),
+    is_client_redirect_(is_client_redirect) {}
+
 OhosAppLinkThrottle::~OhosAppLinkThrottle() {}
 
 void OhosAppLinkThrottle::WillStartRequest(
@@ -87,7 +92,11 @@ void OhosAppLinkThrottle::ContinueLoad() {
 
 void OhosAppLinkThrottle::CancelLoad() {
   if (delegate_) {
-    delegate_->CancelWithError(net::ERR_ABORTED);
+    if (is_client_redirect_) {
+      delegate_->Resume();
+    } else {
+      delegate_->CancelWithError(net::ERR_ABORTED);
+    }
   }
 }
 }  // namespace throttle
