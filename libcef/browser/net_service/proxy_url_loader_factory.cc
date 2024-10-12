@@ -444,8 +444,8 @@ class InterceptDelegate : public StreamReaderURLLoader::Delegate {
     return response_->GetResponseData();
   }
 
-  size_t GetResponseDataBuffer(char* data) override {
-    return response_->GetResponseDataBuffer(data);
+  size_t GetResponseDataBuffer(char* data, size_t dest_size) override {
+    return response_->GetResponseDataBuffer(data, dest_size);
   }
 
   size_t GetResponseDataBufferSize() override {
