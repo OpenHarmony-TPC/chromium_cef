@@ -96,8 +96,9 @@ void MaybeSetUserAgentOverrideForMainFrame(
   std::string final_ua =
       nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
   LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
-             << ", user_gesture " << navigation->HasUserGesture() << ", url "
-             << url.spec();
+             << ", user_gesture " << navigation->HasUserGesture()
+             << ", is_main_frame " << navigation->IsInMainFrame()
+             << ", is_reload " << is_reload;
 
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
   if (!navigation->IsInMainFrame()) {
