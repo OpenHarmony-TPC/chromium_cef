@@ -513,7 +513,7 @@ bool NeedsReload() override;
   void UpdateZoomSupportEnabled();
   void ReportWindowStatus(bool first_view_ready);
   void InactiveUnloadOldProcess(base::ProcessId pid);
-  void ReportRenderProcessStatus(bool is_web_hidden);
+  base::ProcessId GetRenderProcessId();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
   void SetVisible(bool visible);

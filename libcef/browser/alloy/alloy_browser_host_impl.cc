@@ -59,6 +59,7 @@
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
+#include "libcef/browser/alloy/render_process_state_handler.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -777,13 +778,13 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
-  ReportRenderProcessStatus(false);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, false);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
-  ReportRenderProcessStatus(true);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, true);
   SetVisible(false);
 }
 
@@ -833,35 +834,26 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
   }
 }
 
-void AlloyBrowserHostImpl::ReportRenderProcessStatus(bool is_web_hidden) {
-  using namespace OHOS::NWeb;
-
+base::ProcessId AlloyBrowserHostImpl::GetRenderProcessId() {
   content::WebContents* contents = web_contents();
   if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId web_contents is null";
+    return 0;
   }
 
   if (auto render_view_host = contents->GetRenderViewHost()) {
     auto render_process_host = render_view_host->GetProcess();
     if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
-      return;
+      LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_process_host is null";
+      return 0;
     }
-
-    ResSchedStatusAdapter status = is_web_hidden
-                                       ? ResSchedStatusAdapter::WEB_INACTIVE
-                                       : ResSchedStatusAdapter::WEB_ACTIVE;
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
-    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
-               "process_id", process_id);
-    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_web_hidden: " << is_web_hidden << " process_id: " << process_id;
+    return render_process_host->GetProcess().Pid();
   } else {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_view_host is null";
+    return 0;
   }
 }
+
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -2421,6 +2413,7 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
 }
 
 void AlloyBrowserHostImpl::RenderViewReady() {
+  RenderProcessStateHandler::GetInstance()->InitRenderProcessState(GetRenderProcessId(), nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
@@ -2428,7 +2421,6 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  ReportRenderProcessStatus(is_hidden_);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
