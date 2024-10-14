@@ -19,12 +19,6 @@
 
 #include "third_party/bounds_checking_function/include/securec.h"
 
-#define MAX_FLOWBUF_DATA_SIZE 52428800 /* 50 MB */
-#define MAX_ENTRIES 10
-#define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
-#define INDEX_SIZE 2
-#define DEFAULT_ID 1073741824
-
 namespace {
 
 const char kMethodInvocationAsConstructorDisallowed[] =
