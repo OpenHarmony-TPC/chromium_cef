@@ -1915,7 +1915,11 @@ bool AlloyBrowserHostImpl::IsBackForwardCacheSupported() {
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
+#if BUILDFLAG(IS_OHOS)
+  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
+#else
   return content::PreloadingEligibility::kEligible;
+#endif
 }
 
 #ifdef OHOS_FOCUS
