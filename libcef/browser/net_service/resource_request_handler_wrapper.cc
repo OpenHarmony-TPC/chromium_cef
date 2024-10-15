@@ -103,6 +103,47 @@ class RequestCallbackWrapper : public CefCallback {
   IMPLEMENT_REFCOUNTING(RequestCallbackWrapper);
 };
 
+#ifdef OHOS_NETWORK_LOAD
+class OhosInterceptCallbackWrapper : public CefInterceptCallback {
+ public:
+  using ResourceCallback = base::OnceCallback<void(CefRefPtr<CefResourceHandler>)>;
+  explicit OhosInterceptCallbackWrapper(ResourceCallback callback)
+      : callback_(std::move(callback)),
+        work_thread_task_runner_(
+            base::SequencedTaskRunner::GetCurrentDefault()) {}
+
+  OhosInterceptCallbackWrapper(const OhosInterceptCallbackWrapper&) = delete;
+  OhosInterceptCallbackWrapper& operator=(const OhosInterceptCallbackWrapper&) = delete;
+
+  ~OhosInterceptCallbackWrapper() override {
+    if (!callback_.is_null()) {
+      // Make sure it executes on the correct thread.
+      work_thread_task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(std::move(callback_), nullptr));
+    }
+  }
+
+  void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) override {
+    if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
+      work_thread_task_runner_->PostTask(
+          FROM_HERE,
+          base::BindOnce(&OhosInterceptCallbackWrapper::ContinueLoad, this, resource_handler));
+      return;
+    }
+    if (!callback_.is_null()) {
+      std::move(callback_).Run(resource_handler);
+    }
+  }
+
+ private:
+  ResourceCallback callback_;
+
+  scoped_refptr<base::SequencedTaskRunner> work_thread_task_runner_;
+
+  IMPLEMENT_REFCOUNTING(OhosInterceptCallbackWrapper);
+};
+#endif
+
 #if OHOS_NETWORK_LOAD
 void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                             CefRefPtr<CefFrame> frame,
@@ -147,7 +188,7 @@ void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
     return;
   }
   CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
-  if (load_handler) {
+  if (!load_handler) {
     LOG(ERROR) << "ReportITPResultInUiTask for load_handler is nullptr";
     return;
   }
@@ -917,42 +958,64 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     std::move(callback).Run(std::move(resource_response));
   }
 
-  void GetOhosResourceHandlerInUiTask(
+  void GetOhosResourceHandlerResultInIO(int32_t request_id,
+      network::ResourceRequest* request,
+      ShouldInterceptRequestResultCallback callback,
+      CefRefPtr<CefResourceHandler> resource_handler) {
+    CEF_REQUIRE_IOT();
+    GetOhosResourceHandlerResult(request_id, request, resource_handler, std::move(callback));
+  }
+
+  void GetOhosResourceHandlerStillInIO(
       int32_t request_id,
       network::ResourceRequest* request,
       ShouldInterceptRequestResultCallback callback) {
-    CEF_REQUIRE_UIT();
+    CEF_REQUIRE_IOT();
     RequestState* state = GetState(request_id);
-    if (!state) {
+    if (!state || !request) {
       std::move(callback).Run(nullptr);
       return;
     }
-    CefRefPtr<CefResourceHandler> resource_handler;
-
+    CefRefPtr<OhosInterceptCallbackWrapper> callback_ptr =
+          new OhosInterceptCallbackWrapper(base::BindOnce(
+              &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResultInIO,
+              weak_ptr_factory_.GetWeakPtr(),
+              request_id, base::Unretained(request), std::move(callback)));
+ 
     if (state->handler_) {
       // Does the client want to handle the request?
       if (request) {
         state->pending_request_->SetDestination(request->destination);
       }
-      resource_handler = state->handler_->GetResourceHandler(
+      state->handler_->GetResourceHandlerByIO(
           init_state_->browser_, init_state_->frame_,
-          state->pending_request_.get());
+          state->pending_request_.get(), callback_ptr, state->scheme_factory_,
+          request->url.scheme());
+    } else {
+      GetOhosResourceHandlerFromETS(state->scheme_factory_, state->pending_request_.get(),
+              request->url.scheme(), callback_ptr);
+    }
+  }
+
+  void GetOhosResourceHandlerFromETS(CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
+                                     CefRefPtr<CefRequest> request,
+                                     const CefString& scheme,
+                                     CefRefPtr<CefInterceptCallback> callback) {
+    if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+      content::GetUIThreadTaskRunner({})->PostTask(FROM_HERE,
+        base::BindOnce(&InterceptedRequestHandlerWrapper::GetOhosResourceHandlerFromETS,
+                       weak_ptr_factory_.GetWeakPtr(),
+                       scheme_factory, request, scheme, callback));
+      return;
     }
 
-    // Try to get scheme handler from ets UI thread.
-    if (!resource_handler && state->scheme_factory_) {
+    CefRefPtr<CefResourceHandler> resource_handler = nullptr;
+    if (scheme_factory) {
       // Does the scheme factory want to handle the request?
-      resource_handler = state->scheme_factory_->Create(
-          init_state_->browser_, init_state_->frame_, request->url.scheme(),
-          state->pending_request_.get());
+      resource_handler = scheme_factory->Create(
+          init_state_->browser_, init_state_->frame_, scheme, request);
     }
-
-    CEF_POST_TASK(
-        CEF_IOT,
-        base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResult,
-            weak_ptr_factory_.GetWeakPtr(), request_id, request,
-            resource_handler, std::move(callback)));
+    callback->ContinueLoad(resource_handler);
   }
 
   void GetOhosResourceHandler(int32_t request_id,
@@ -987,12 +1050,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       state->pending_request_->SetReadOnly(old_flag);
     }
   #endif
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerInUiTask,
-            weak_ptr_factory_.GetWeakPtr(), request_id, request,
-            std::move(callback)));
+    GetOhosResourceHandlerStillInIO(request_id, request, std::move(callback));
   }
 #endif
 
