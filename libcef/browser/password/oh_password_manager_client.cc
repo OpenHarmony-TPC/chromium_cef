@@ -22,6 +22,7 @@
 #include "base/metrics/field_trial.h"
 #include "base/metrics/histogram_functions.h"
 #include "base/ohos/sys_info_utils.h"
+#include "base/strings/utf_string_conversions.h"
 #include "base/types/optional_util.h"
 #include "build/branding_buildflags.h"
 #include "build/build_config.h"
@@ -758,7 +759,6 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
 
   std::unordered_map<std::string, autofill::InputFillRequestData> fillItem = {
       {KEY_USERNAME, username_data}, {KEY_PASSWORD, password_data}};
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (auto item : fillItem) {
     base::Value::List list;
     list.Append(
@@ -774,7 +774,7 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(item.second.bounds.height() * ratio)));
     list.Append(base::Value::Dict().Set(KEY_VALUE,
-                                        convert.to_bytes(item.second.value)));
+                                        base::UTF16ToUTF8(item.second.value)));
 
     auto dict = base::Value::Dict().Set(item.first, std::move(list));
     view_data_list.Append(std::move(dict));
@@ -792,11 +792,10 @@ absl::optional<std::string> OhPasswordManagerClient::PasswordFormToJsonForSave(
 
   std::unordered_map<std::string, std::u16string> saveItem = {
       {KEY_USERNAME, form.username_value}, {KEY_PASSWORD, form.password_value}};
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (auto item : saveItem) {
     base::Value::List list;
     list.Append(
-        base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(item.second)));
+        base::Value::Dict().Set(KEY_VALUE, base::UTF16ToUTF8(item.second)));
     auto dict = base::Value::Dict().Set(item.first, std::move(list));
     view_data_list.Append(std::move(dict));
   }
@@ -853,8 +852,7 @@ void OhPasswordManagerClient::AutoFillWithIMFEvent(bool is_username,
   auto username = last_request_fill_username_;
   auto password = last_request_fill_password_;
   if (is_username) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-    username.value = convert.from_bytes(content);
+    username.value = base::UTF8ToUTF16(content);
   }
   AutofillIMFInfo imf_info = {
       is_username,

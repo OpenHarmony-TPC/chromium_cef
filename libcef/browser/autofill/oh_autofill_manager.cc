@@ -14,13 +14,13 @@
  */
 #include "libcef/browser/autofill/oh_autofill_manager.h"
 
-#include <codecvt>
 #include <locale>
 
 #include "base/containers/contains.h"
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/memory/ptr_util.h"
+#include "base/strings/utf_string_conversions.h"
 #include "components/android_autofill/browser/autofill_provider.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
@@ -109,7 +109,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, event));
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
     list.Append(base::Value::Dict().Set(
@@ -125,10 +124,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
         KEY_RECT_W, static_cast<int32_t>(field_data.bounds.width() * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(field_data.bounds.height() * ratio)));
-    list.Append(
-        base::Value::Dict().Set(KEY_PLACEHOLDER, convert.to_bytes(field_data.placeholder)));
-    list.Append(
-        base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
+    list.Append(base::Value::Dict().Set(
+        KEY_PLACEHOLDER, base::UTF16ToUTF8(base::StringPiece16(field_data.placeholder))));
+    list.Append(base::Value::Dict().Set(
+        KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
 
     auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
     view_data_list.Append(std::move(dict));
@@ -161,7 +160,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_SAVE));
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   int32_t index = 0;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
@@ -176,10 +174,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
         KEY_RECT_W, static_cast<int32_t>(form_->fields[index].bounds.width() * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_H, static_cast<int32_t>(form_->fields[index].bounds.height() * ratio)));
-    list.Append(
-        base::Value::Dict().Set(KEY_PLACEHOLDER, convert.to_bytes(field_data.placeholder)));
-    list.Append(
-        base::Value::Dict().Set(KEY_VALUE, convert.to_bytes(field_data.value)));
+    list.Append(base::Value::Dict().Set(
+        KEY_PLACEHOLDER, base::UTF16ToUTF8(base::StringPiece16(field_data.placeholder))));
+    list.Append(base::Value::Dict().Set(
+        KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
 
     auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
     view_data_list.Append(std::move(dict));
@@ -216,14 +214,13 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   }
 #endif
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
     if (!value) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
-                                               convert.from_bytes(*value));
+                                               base::UTF8ToUTF16(*value));
   }
   is_show_ = false;
 }
@@ -251,10 +248,9 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     return;
   }
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   password_manager->FillAccountSuggestion(GURL(page_url),
-                                          convert.from_bytes(username),
-                                          convert.from_bytes(password));
+                                          base::UTF8ToUTF16(username),
+                                          base::UTF8ToUTF16(password));
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
