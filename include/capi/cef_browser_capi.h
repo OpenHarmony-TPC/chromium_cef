@@ -1929,6 +1929,18 @@ typedef struct _cef_browser_host_t {
                                               int is_other_account,
                                               int is_new_password,
                                               const char* content);
+
+  ///
+  /// get scroll offset.
+  ///
+  void(CEF_CALLBACK *get_scroll_offset)(struct _cef_browser_host_t *self,
+                                        float* offset_x, float* offset_y);
+
+  ///
+  /// get overscroll offset.
+  ///
+  void(CEF_CALLBACK *get_overscroll_offset)(struct _cef_browser_host_t *self,
+                                            float* offset_x, float* offset_y);
 } cef_browser_host_t;
 
 ///
