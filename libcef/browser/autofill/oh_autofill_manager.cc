@@ -249,7 +249,7 @@ void OhAutofillManager::FillData(const std::string& json_str) {
       }
       uint32_t i = static_cast<uint32_t>(index.value()) - 1;
       driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
-                                                 convert.from_bytes(*str));
+                                                 base::UTF8ToUTF16(*str));
     }
   }
   is_show_ = false;
@@ -279,13 +279,9 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     return;
   }
 
-<<<<<<< HEAD
-  password_manager->FillData(page_url, username, password, is_other_account);
-=======
   password_manager->FillAccountSuggestion(GURL(page_url),
                                           base::UTF8ToUTF16(username),
                                           base::UTF8ToUTF16(password));
->>>>>>> c79a3ae87ca91addb5ac154e24ef263f33e63b22
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
