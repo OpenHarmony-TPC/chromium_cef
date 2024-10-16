@@ -279,9 +279,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     return;
   }
 
-  password_manager->FillAccountSuggestion(GURL(page_url),
-                                          base::UTF8ToUTF16(username),
-                                          base::UTF8ToUTF16(password));
+  password_manager->FillData(page_url, username, password, is_other_account);
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,

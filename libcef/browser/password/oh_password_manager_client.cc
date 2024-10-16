@@ -908,9 +908,8 @@ void OhPasswordManagerClient::FillData(const std::string& page_url,
     auto_filled_forms_passsword_[*password_id] = digest;
   }
 
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
-  FillAccountSuggestion(GURL(page_url), convert.from_bytes(username),
-                        convert.from_bytes(password));
+  FillAccountSuggestion(GURL(page_url), base::UTF8ToUTF16(username),
+                        base::UTF8ToUTF16(password));
 }
 
 void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
@@ -952,10 +951,9 @@ bool OhPasswordManagerClient::IsLoginInfoConsistentWithFilled(
 
   if (auto_filled_forms && it != auto_filled_forms->end() &&
       !it->second.empty()) {
-    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
     std::string login_digest = crypto::SHA256HashString(
-        convert.to_bytes(info.username_value) + HASH_SALT +
-        convert.to_bytes(info.password_value));
+        base::UTF16ToUTF8(info.username_value) + HASH_SALT +
+        base::UTF16ToUTF8(info.password_value));
     if (it->second == login_digest) {
       auto_filled_forms->erase(it);
       return true;
