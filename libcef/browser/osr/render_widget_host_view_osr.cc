@@ -1503,6 +1503,13 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
 
 #if defined(OHOS_INPUT_EVENTS)
   handler->OnSelectionChanged(browser_impl_.get(), text, cef_range);
+  if (selection_controller_client_ &&
+      selection_controller_client_->IsInsertHandleShow() &&
+      range.start() == range.end() &&
+      !is_tap_down_in_cursor_update_) {
+    handler->StartVibraFeedback("longPress.light");
+  }
+  is_tap_down_in_cursor_update_ = false;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   CefString selected_text;
@@ -1514,6 +1521,9 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     }
 #if defined(OHOS_INPUT_EVENTS)
     is_select_text_ = n - pos > 0;
+    if (n > 0) {
+      handler->StartVibraFeedback("longPress.light");
+    }
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
 
@@ -2735,6 +2745,7 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
   // may be routed and not make it to FilterInputEvent().
   if (selection_controller_ &&
       web_event.SourceDevice() == blink::WebGestureDevice::kTouchscreen) {
+    is_tap_down_in_cursor_update_ = false;
     switch (web_event.GetType()) {
       case blink::WebInputEvent::Type::kGestureLongPress:
         selection_controller_->HandleLongPressEvent(
@@ -2742,6 +2753,15 @@ void CefRenderWidgetHostViewOSR::SendGestureEvent(
         break;
       case blink::WebInputEvent::Type::kGestureScrollBegin:
         selection_controller_->OnScrollBeginEvent();
+        break;
+      case blink::WebInputEvent::Type::kGestureTapDown:
+        is_tap_down_in_cursor_update_ = true;
+        break;
+      case blink::WebInputEvent::Type::kGestureShowPress:
+        is_tap_down_in_cursor_update_ = true;
+        break;
+      case blink::WebInputEvent::Type::kGestureTap:
+        is_tap_down_in_cursor_update_ = true;
         break;
       default:
         break;
