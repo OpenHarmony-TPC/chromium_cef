@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=0814b0c8da2385498d0770cc58f5b5b9f1678958$
+// $hash=9157d7b0ec525fdca339a4a3c71ed09ec5d379a0$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
@@ -44,6 +44,8 @@
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_command_handler_capi.h"
 #include "include/capi/cef_context_menu_handler_capi.h"
+#include "include/capi/cef_custom_media_info_capi.h"
+#include "include/capi/cef_custom_media_player_delegate_capi.h"
 #include "include/capi/cef_dialog_handler_capi.h"
 #include "include/capi/cef_display_handler_capi.h"
 #include "include/capi/cef_download_handler_capi.h"
@@ -57,12 +59,14 @@
 #include "include/capi/cef_life_span_handler_capi.h"
 #include "include/capi/cef_load_handler_capi.h"
 #include "include/capi/cef_media_handler_capi.h"
+#include "include/capi/cef_media_player_listener_capi.h"
 #include "include/capi/cef_permission_handler_capi.h"
 #include "include/capi/cef_permission_request_capi.h"
 #include "include/capi/cef_print_handler_capi.h"
 #include "include/capi/cef_process_message_capi.h"
 #include "include/capi/cef_render_handler_capi.h"
 #include "include/capi/cef_request_handler_capi.h"
+#include "include/capi/cef_web_extension_api_handler_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -281,6 +285,13 @@ typedef struct _cef_client_t {
   ///
   int(CEF_CALLBACK* do_browser_controls_shrink_renderer_size)(
       struct _cef_client_t* self);
+
+  ///
+  /// Return the handler for web extension api. If no handler is provided the
+  /// default implementation will be used.
+  ///
+  struct _cef_web_extension_api_handler_t*(
+      CEF_CALLBACK* get_web_extension_api_handler)(struct _cef_client_t* self);
 } cef_client_t;
 
 #ifdef __cplusplus

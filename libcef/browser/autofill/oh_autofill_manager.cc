@@ -48,9 +48,10 @@ const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
-const std::string KEY_PAGE_URL = "pageUrl";
 const std::string KEY_USERNAME = "username";
 const std::string KEY_PASSWORD = "password";
+const std::string KEY_RETURN_PAGE_URL = "autofill_viewdata_origin_pageurl";
+const std::string KEY_RETURN_OTHER_ACCOUNT = "autofill_viewdata_other_account";
 #endif
 } // namespace
 
@@ -86,6 +87,15 @@ CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
   return nullptr;
 }
 
+std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
+  auto attribute = field.autocomplete_attribute;
+  if (!attribute.empty()) {
+    return attribute;
+  }
+  auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
+  return unique_renderer_id;
+}
+
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
     const FormData& form,
     const FormFieldData& field,
@@ -111,9 +121,10 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
 
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
-        field_data.autocomplete_attribute == field.autocomplete_attribute ? 1 : 0));
+        key == GetAttributeOrUniqueId(field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
@@ -129,7 +140,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
     list.Append(base::Value::Dict().Set(
         KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
   }
 
@@ -163,6 +174,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   int32_t index = 0;
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
+    auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(KEY_FOUCS, 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
@@ -179,7 +191,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
     list.Append(base::Value::Dict().Set(
         KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
 
-    auto dict = base::Value::Dict().Set(field_data.autocomplete_attribute, std::move(list));
+    auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
     index++;
   }
@@ -188,10 +200,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
 }
 
 void OhAutofillManager::FillData(const std::string& json_str) {
-  if (form_ == nullptr) {
-    return;
-  }
-
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
     return;
@@ -203,24 +211,46 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   }
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
-  const std::string* page_url = root_dict->FindString(KEY_PAGE_URL);
   const std::string* username = root_dict->FindString(KEY_USERNAME);
   const std::string* password = root_dict->FindString(KEY_PASSWORD);
+  const std::string* page_url = root_dict->FindString(KEY_RETURN_PAGE_URL);
+  bool is_other_account = root_dict->FindBool(KEY_RETURN_OTHER_ACCOUNT).value_or(false);
   if (username || password) {
     ForwardDataToPasswordManager(page_url ? *page_url : std::string(),
                                  username ? *username : std::string(),
-                                 password ? *password : std::string());
+                                 password ? *password : std::string(),
+                                 is_other_account);
     return;
   }
 #endif
 
+  if (form_ == nullptr) {
+    return;
+  }
+
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value) {
+    if (!value || value->empty()) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
                                                base::UTF8ToUTF16(*value));
+  }
+  for (auto it = root_dict->begin(); it != root_dict->end(); it++) {
+    const base::Value::Dict* sub_dict = root_dict->FindDict(it->first);
+    if (sub_dict) {
+      const std::string* str = sub_dict->FindString(KEY_VALUE);
+      if (!str) {
+        continue;
+      }
+      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
+      if (!index.has_value() || index.value() <= 0 || index.value() > form_->fields.size()) {
+        continue;
+      }
+      uint32_t i = static_cast<uint32_t>(index.value()) - 1;
+      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
+                                                 base::UTF8ToUTF16(*str));
+    }
   }
   is_show_ = false;
 }
@@ -229,8 +259,9 @@ void OhAutofillManager::FillData(const std::string& json_str) {
 void OhAutofillManager::ForwardDataToPasswordManager(
     const std::string& page_url,
     const std::string& username,
-    const std::string& password) {
-  LOG(INFO) << "autofill save, forward to password_manager";
+    const std::string& password,
+    bool is_other_account) {
+  LOG(INFO) << "autofill fill data, forward to password_manager";
   auto* rfh =
       static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
   if (!rfh || !rfh->IsActive()) {
@@ -248,9 +279,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     return;
   }
 
-  password_manager->FillAccountSuggestion(GURL(page_url),
-                                          base::UTF8ToUTF16(username),
-                                          base::UTF8ToUTF16(password));
+  password_manager->FillData(page_url, username, password, is_other_account);
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
@@ -489,6 +518,7 @@ void OhAutofillManager::OnContextMenuShownInField(
   NOTREACHED();
 }
 
+#ifndef OHOS_FUZZ_COMPILE_ERROR_FIX
 AutofillProvider* OhAutofillManager::GetAutofillProvider() {
   if (auto* rfh =
           static_cast<ContentAutofillDriver*>(driver())->render_frame_host()) {
@@ -500,7 +530,7 @@ AutofillProvider* OhAutofillManager::GetAutofillProvider() {
   }
   return nullptr;
 }
-
+#endif
 void OhAutofillManager::FillOrPreviewForm(mojom::RendererFormDataAction action,
                                           const FormData& form,
                                           FieldTypeGroup field_type_group,

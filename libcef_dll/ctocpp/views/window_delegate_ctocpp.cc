@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=becc11fabe2bfea798eb9bfff0d8b80b70aafc9b$
+// $hash=8998830c31f54e6e1199390c42a912033dabd6ad$
 //
 
 #include "libcef_dll/ctocpp/views/window_delegate_ctocpp.h"
@@ -208,8 +208,8 @@ CefRect CefWindowDelegateCToCpp::GetInitialBounds(CefRefPtr<CefWindow> window) {
 }
 
 NO_SANITIZE("cfi-icall")
-cef_show_state_t
-    CefWindowDelegateCToCpp::GetInitialShowState(CefRefPtr<CefWindow> window) {
+cef_show_state_t CefWindowDelegateCToCpp::GetInitialShowState(
+    CefRefPtr<CefWindow> window) {
   shutdown_checker::AssertNotShutdown();
 
   cef_window_delegate_t* _struct = GetStruct();

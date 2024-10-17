@@ -4,19 +4,25 @@
 
 #include "libcef/browser/net_service/net_helpers.h"
 
+#include "base/base_switches.h"
+#include "base/command_line.h"
 #include "base/base_paths_ohos.h"
 #include "base/files/file_path.h"
+#include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "include/base/cef_logging.h"
 #include "net/base/load_flags.h"
 #include "url/gurl.h"
+#include "content/public/common/content_switches.h"
 
 #if defined(OHOS_HTTP_DNS)
 #include <string>
 #include "build/build_config.h"
 #include "net/dns/public/secure_dns_mode.h"
 #endif  // defined(OHOS_HTTP_DNS)
+
+#include "libcef/common/command_line_impl.h"
 
 namespace net_service {
 
@@ -34,7 +40,7 @@ int UpdateCacheLoadFlags(int load_flags, int cache_control_flags) {
 }  // namespace
 
 static const std::string APP_READ_ONLY_PATH =
-    "/data/storage/el1/bundle/entry/resources/resfile";
+    "/data/storage/el1/bundle/entry/resources/resfile/";
 
 bool NetHelpers::allow_content_access = false;
 bool NetHelpers::allow_file_access = false;
@@ -43,11 +49,15 @@ bool NetHelpers::accept_cookies = true;
 bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
 int NetHelpers::connection_timeout = 30;
+constexpr int32_t APPLICATION_API_12 = 12;
 
 #if defined(OHOS_HTTP_DNS)
 int NetHelpers::doh_mode = -1;
 std::string NetHelpers::doh_config = "";
 #endif  // defined(OHOS_HTTP_DNS)
+#if defined(OHOS_EX_NETWORK_CONNECTION)
+int NetHelpers::network = -1;
+#endif
 
 #if defined(OHOS_CUSTOM_DNS)
 std::map<std::string, struct CustomDnsEntry> NetHelpers::custom_dns = {};
@@ -157,12 +167,54 @@ void NetHelpers::ClearHostIP() {
 }
 #endif // defined(OHOS_CUSTOM_DNS)
 
+int32_t GetApplicationApiVersion() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kOhosAppApiVersion)) {
+    LOG(ERROR) << "kOhosAppApiVersion not exist";
+    return -1;
+  }
+  std::string apiVersion =
+      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kOhosAppApiVersion);
+  if (apiVersion.empty()) {
+    return -1;
+  }
+  return std::stoi(apiVersion);
+}
+
 bool IsSpecialFileUrl(const GURL& url) {
   if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
     return false;
   }
 
-  if (base::StartsWith(url.path(), APP_READ_ONLY_PATH,
+  if (GetApplicationApiVersion() >= APPLICATION_API_12) {
+    if (base::StartsWith(url.path(), APP_READ_ONLY_PATH,
+                         base::CompareCase::SENSITIVE)) {
+      LOG(INFO) << "Is special file url, the path is in: " << APP_READ_ONLY_PATH;
+      return true;
+    }
+    LOG(INFO) << "Is not special file url, the path is not in: " << APP_READ_ONLY_PATH;
+    return false;
+  }
+
+  base::FilePath app_data_path;
+  if (!base::PathService::Get(base::DIR_OHOS_APP_DATA, &app_data_path)) {
+    return false;
+  }
+  base::FilePath app_bundle_path;
+  if (!base::PathService::Get(base::DIR_OHOS_APP_INSTALLATION,
+                              &app_bundle_path)) {
+    return false;
+  }
+  LOG(INFO) << "app_data_path:" << app_data_path.value()
+            << ", app_bundle_path:" << app_bundle_path.value();
+
+  if (base::StartsWith(url.path(), app_data_path.value(),
+                       base::CompareCase::SENSITIVE)) {
+    return true;
+  }
+
+  if (base::StartsWith(url.path(), app_bundle_path.value(),
                        base::CompareCase::SENSITIVE)) {
     return true;
   }
@@ -174,10 +226,25 @@ bool IsInFileAccessList(const GURL& url, const std::vector<std::string>& pass_di
     return false;
   }
 
+  auto url_path =
+      base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(url.path()))
+        .value_or(base::FilePath());
+  if (url_path.empty()) {
+    return false;
+  }
   for (auto& path: pass_dir) {
-    LOG(ERROR) << "IsInFileAccessList url path:" << url.path();
-    LOG(ERROR) << "IsInFileAccessList pass path:" << path;
-    if (base::StartsWith(url.path(), path, base::CompareCase::SENSITIVE)) {
+    auto pass_path = 
+      base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
+        .value_or(base::FilePath());
+    if (pass_path.empty()) {
+      return false;
+    }
+    if (!pass_path.IsParent(url_path)) {
+      if (pass_path == url_path) {
+        LOG(INFO) << "IsInFileAccessList equal";
+        return true;
+      }
+    } else {
       return true;
     }
   }
@@ -198,9 +265,8 @@ bool IsURLBlocked(const GURL& url
 
   if (url.SchemeIsFile() && !setting.file_access_dirs_list.empty()) {
     bool result = IsInFileAccessList(url, setting.file_access_dirs_list);
-    LOG(ERROR) << "IsInFileAccessList url result:" << result;
     if (!result) {
-      LOG(ERROR) << "Blocked by file access list";
+      LOG(WARNING) << "Blocked by file access list";
     }
     return !result;
   }

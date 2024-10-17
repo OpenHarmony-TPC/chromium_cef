@@ -22,31 +22,34 @@
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_threat_type.h"
 
+using NavigationThrottle = content::NavigationThrottle;
+using ThrottleCheckResult = content::NavigationThrottle::ThrottleCheckResult;
+
 namespace ohos_safe_browsing {
-std::unique_ptr<content::NavigationThrottle> OhosUrlTrustListNavigationThrottle::Create(
+std::unique_ptr<NavigationThrottle> UrlTrustListNavigationThrottle::Create(
   content::NavigationHandle* handle) {
-  return base::WrapUnique(new OhosUrlTrustListNavigationThrottle(handle));
+  return base::WrapUnique(new UrlTrustListNavigationThrottle(handle));
 }
 
-OhosUrlTrustListNavigationThrottle::OhosUrlTrustListNavigationThrottle(
-  content::NavigationHandle* navigation_handle)
-  : content::NavigationThrottle(navigation_handle) {}
+UrlTrustListNavigationThrottle::UrlTrustListNavigationThrottle(
+  content::NavigationHandle* navigation_handle) : NavigationThrottle(navigation_handle) {}
 
-OhosUrlTrustListNavigationThrottle::~OhosUrlTrustListNavigationThrottle() = default;
+UrlTrustListNavigationThrottle::~UrlTrustListNavigationThrottle() = default;
 
-content::NavigationThrottle::ThrottleCheckResult
-OhosUrlTrustListNavigationThrottle::WillStartRequest() {
+ThrottleCheckResult UrlTrustListNavigationThrottle::WillStartRequest() {
   content::NavigationHandle *handle = navigation_handle();
-  if (!handle || handle->GetNetErrorCode() == net::ERR_BLOCKED_BY_CLIENT) {
+  if (!handle || !handle->IsInMainFrame() ||
+    handle->GetNetErrorCode() == net::ERR_BLOCKED_BY_CLIENT) {
     return PROCEED;
   }
+
   content::WebContents* webContents = handle->GetWebContents();
   if (!webContents) {
     return PROCEED;
   }
   auto manager =
-    reinterpret_cast<OhosUrlTrustListInterface *>(
-      webContents->GetUserData(&OhosUrlTrustListInterface::interfaceKey));
+    reinterpret_cast<UrlTrustListInterface *>(
+    webContents->GetUserData(&UrlTrustListInterface::interfaceKey));
   if (!manager) {
     return PROCEED;
   }
@@ -54,10 +57,9 @@ OhosUrlTrustListNavigationThrottle::WillStartRequest() {
     UrlTrustCheckResult::RESULT_ALLOW) {
     auto gurl = handle->GetURL();
     auto locale = base::i18n::GetConfiguredLocale();
-    auto controller = std::make_unique<OhosSbControllerClient>(
+    auto controller = std::make_unique<SbControllerClient>(
       webContents, nullptr, gurl, locale, false);
-    std::unique_ptr<OhosSbBlockPage> blocking_page =
-      std::make_unique<OhosSbBlockPage>(
+    std::unique_ptr<SbBlockPage> blocking_page = std::make_unique<SbBlockPage>(
       webContents, gurl, OHSBPolicyType::POLICY_URL_TRUST_LIST,
       OHSBThreatType::THREAT_URL_TRUST_LIST, std::move(controller));
     std::string html = blocking_page->GetUrlTrustListErrorHTMLContents();
@@ -68,7 +70,7 @@ OhosUrlTrustListNavigationThrottle::WillStartRequest() {
   return PROCEED;
 }
 
-const char* OhosUrlTrustListNavigationThrottle::GetNameForLogging() {
-  return "OhosUrlTrustListNavigationThrottle";
+const char* UrlTrustListNavigationThrottle::GetNameForLogging() {
+  return "UrlTrustListNavigationThrottle";
 }
 } // namespace ohos_safe_browsing

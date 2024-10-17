@@ -212,6 +212,9 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
     return false;
   }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  web_contents_->WebExtensionUpdateTabUrl(tab_id, url);
+#else
   content::NavigationController::LoadURLParams load_params(url);
 
   // Treat extension-initiated navigations as renderer-initiated so that the URL
@@ -234,7 +237,7 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
 
   DCHECK_EQ(url,
             web_contents_->GetController().GetPendingEntry()->GetVirtualURL());
-
+#endif
   return true;
 }
 
@@ -544,6 +547,32 @@ ExtensionFunction::ResponseAction TabsGetZoomSettingsFunction::Run() {
   return RespondNow(
       ArgumentList(api::tabs::GetZoomSettings::Results::Create(zoom_settings)));
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+ExtensionFunction::ResponseAction TabsReloadFunction::Run() {
+  absl::optional<tabs::Reload::Params> params =
+      tabs::Reload::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+
+  bool bypass_cache = false;
+  if (params->reload_properties && params->reload_properties->bypass_cache) {
+    bypass_cache = *params->reload_properties->bypass_cache;
+  }
+
+  int tab_id = params->tab_id ? *params->tab_id : -1;
+  content::WebContents* web_contents = GetWebContents(tab_id);
+  if (!web_contents) {
+    return RespondNow(Error(std::move(error_)));
+  }
+
+  web_contents->GetController().Reload(
+      bypass_cache ? content::ReloadType::BYPASSING_CACHE
+                   : content::ReloadType::NORMAL,
+      true);
+
+  return RespondNow(NoArguments());
+}
+#endif
 
 }  // namespace cef
 }  // namespace extensions

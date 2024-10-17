@@ -56,7 +56,7 @@ class LoginDelegate : public content::LoginDelegate {
              const GURL& origin_url,
              scoped_refptr<net::HttpResponseHeaders> response_headers);
   void StartInternal(CefRefPtr<CefBrowserHostBase> browser,
-		     const net::AuthChallengeInfo& auth_info,
+                     const net::AuthChallengeInfo& auth_info,
                      const content::GlobalRequestID& request_id,
                      const GURL& origin_url);
   void ContinueBeforeCommit(

@@ -30,8 +30,8 @@
 #include "base/numerics/safe_conversions.h"
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
-#include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/browser/pdf/pdf_frame_util.h"
+#include "chrome/browser/printing/print_view_manager_common.h"
 #include "chrome/common/chrome_switches.h"
 #include "components/printing/browser/print_manager_utils.h"
 #include "components/printing/common/print.mojom.h"
@@ -50,6 +50,7 @@ constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 0;
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 1;
 
 constexpr int PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 5;
+
 constexpr int LIMITED_PRINT_RANGE = 5;
 constexpr int LIMITED_PRINT_DURATION = 10000;
 const std::string PROTOCOL_PATH = "://";
@@ -201,13 +202,13 @@ void OhosPrintManager::BindPrintManagerHost(
 
 // static
 content::RenderFrameHost* OhosPrintManager::GetRenderFrameHostToUse(
-  content::WebContents* contents) {
+    content::WebContents* contents) {
+  // Pick the plugin frame if `contents` is a PDF viewer guest.
   content::RenderFrameHost* full_page_plugin = GetFullPagePlugin(contents);
   content::RenderFrameHost* pdf_rfh = pdf_frame_util::FindPdfChildFrame(
       full_page_plugin ? full_page_plugin : contents->GetPrimaryMainFrame());
-  if (pdf_rfh) {
+  if (pdf_rfh)
     return pdf_rfh;
-  }
   return printing::GetFrameToPrint(contents);
 }
 
@@ -261,13 +262,13 @@ void OhosPrintManager::DidDispatchPrintEvent(bool isBefore) {
                                 weak_ptr_web_contents_, isBefore));
 }
 
-void OhosPrintManager::DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> webcontents,
-                                                 bool isBefore) {
-  if (!webcontents) {
-    LOG(ERROR) << "DidDispatchPrintEventImpl webcontents is nullptr.";
+void OhosPrintManager::DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> web_contents,
+                               bool isBefore) {
+  if (!web_contents) {
+    LOG(ERROR) << "DidDispatchPrintEventImpl webContents is nullptr.";
     return;
   }
-  auto* rfh = webcontents->GetPrimaryMainFrame();
+  auto* rfh = web_contents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
     return;
@@ -290,13 +291,13 @@ void OhosPrintManager::PrintPage(bool isApplication) {
                                 weak_ptr_web_contents_, isApplication));
 }
 
-void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
+void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> web_contents,
                                      bool isApplication) {
-  if (!webcontents) {
-    LOG(ERROR) << "PrintPageImpl webcontents is nullptr.";
+  if (!web_contents) {
+    LOG(ERROR) << "PrintPageImpl webContents is nullptr.";
     return;
   }
-  auto* rfh = webcontents->GetPrimaryMainFrame();
+  auto* rfh = web_contents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
     if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
@@ -317,8 +318,9 @@ void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcont
     GetPrintRenderFrame(pdf_rfh_)->ApplicationPrintRequestedPages();
     return;
   }
+
   if (isApplication) {
-    auto* app_rfh = GetRenderFrameHostToUse(webcontents.get());
+    auto* app_rfh = GetRenderFrameHostToUse(web_contents.get());
     if (app_rfh) {
       GetPrintRenderFrame(app_rfh)->ApplicationPrintRequestedPages();
     }
@@ -357,6 +359,7 @@ void OhosPrintManager::UpdateParam(
   DCHECK(callback);
   settings_ = std::move(settings);
   fd_ = file_descriptor;
+
   set_pdf_writing_done_callback(std::move(callback));
   // Set a valid dummy cookie value.
   set_cookie(1);
@@ -424,7 +427,6 @@ void OhosPrintManager::DidPrintDocument(
   }
 
   DCHECK(pdf_writing_done_callback());
-
   task_runner_->PostTaskAndReplyWithResult(
       FROM_HERE, base::BindOnce(&SaveDataToFd, fd_, number_pages(), data),
       base::BindOnce(&OhosPrintManager::OnDidPrintDocumentWritingDone,
@@ -533,9 +535,7 @@ void OhosPrintManager::RunPrintRequestedCallbackImpl(const std::string& jobId) {
     is_pdf_print_ = false;
     return;
   }
-  if (printRequestedCallback_) {
-    std::move(printRequestedCallback_).Run();
-  }
+  std::move(printRequestedCallback_).Run();
 }
 
 void OhosPrintManager::PrintPdfRequested() {
@@ -609,7 +609,6 @@ void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
     is_print_now_ = true;
     is_print_disable_ = true;
   }
-  is_print_now_ = is_print_now;
 }
 
 void OhosPrintManager::CreateWebPrintDocumentAdapter(
@@ -617,11 +616,10 @@ void OhosPrintManager::CreateWebPrintDocumentAdapter(
     void** webPrintDocumentAdapter) {
   if (is_print_now_) {
     LOG(ERROR) << "Application printing in progress.";
-    *webPrintDocumentAdapter = nullptr;
     return;
   }
-  is_print_now_ = true;
   cancel_ = false;
+  is_print_now_ = true;
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(this));
 }

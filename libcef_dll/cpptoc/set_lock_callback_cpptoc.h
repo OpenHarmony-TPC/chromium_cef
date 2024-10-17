@@ -29,11 +29,12 @@
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed wrapper-side only.
 class CefSetLockCallbackCppToC
-    : public CefCppToCRefCounted<CefSetLockCallbackCppToC, CefSetLockCallback,
+    : public CefCppToCRefCounted<CefSetLockCallbackCppToC,
+                                 CefSetLockCallback,
                                  cef_set_lock_callback_t> {
-public:
+ public:
   CefSetLockCallbackCppToC();
   virtual ~CefSetLockCallbackCppToC();
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_SET_LOCK_CALLBACK_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_SET_LOCK_CALLBACK_CPPTOC_H_

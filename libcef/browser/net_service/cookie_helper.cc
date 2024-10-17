@@ -17,6 +17,12 @@
 #include "services/network/cookie_manager.h"
 #include "services/network/public/cpp/resource_request.h"
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "base/ranges/algorithm.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#endif
+
 namespace net_service {
 namespace cookie_helper {
 
@@ -242,6 +248,43 @@ bool IsCookieableScheme(
   return url.SchemeIsHTTPOrHTTPS() || url.SchemeIsWSOrWSS();
 }
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+bool CanSaveOrLoadCookies(const CefBrowserContext::Getter& browser_context_getter,
+                          const network::ResourceRequest& request) {
+  auto cef_browser_context = GetBrowserContext(browser_context_getter);
+  auto browser_context =
+      cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
+  if (!browser_context) {
+    LOG(ERROR) << "Can not get browser_context.";
+    return true;
+  }
+
+  HostContentSettingsMap* host_content_settings_map =
+      HostContentSettingsMapFactory::GetForProfile(browser_context);
+  if (!host_content_settings_map) {
+    LOG(ERROR) << "Can not get host_content_settings_map.";
+    return true;
+  }
+
+  ContentSettingsForOneType cookie_settings;
+  host_content_settings_map->
+      GetSettingsForOneType(ContentSettingsType::COOKIES, &cookie_settings);
+
+  const auto& entry = base::ranges::find_if(
+      cookie_settings, [&](const ContentSettingPatternSource& entry) {
+        // The primary pattern is for the request URL; the secondary pattern
+        // is for the first-party URL (which is the top-frame origin [if
+        // available] or the site-for-cookies).
+        return !entry.IsExpired() &&
+               entry.primary_pattern.Matches(request.url) &&
+               entry.secondary_pattern.Matches(request.url);
+      });
+  const ContentSettingPatternSource* match =
+      (entry == cookie_settings.end() ? nullptr : &*entry);
+  return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
+}
+#endif
+
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
                  const AllowCookieCallback& allow_cookie_callback,
@@ -250,7 +293,11 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   if ((request.load_flags & net::LOAD_DO_NOT_SEND_COOKIES) ||
       request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
-      request.url.IsAboutBlank()) {
+      request.url.IsAboutBlank()
+#if defined(OHOS_EX_EXCEPTION_LIST)
+      || !CanSaveOrLoadCookies(browser_context_getter, request)
+#endif
+  ) {
     // Continue immediately without loading cookies.
     std::move(done_callback).Run(0, {});
     return;
@@ -303,6 +350,17 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
     if (!returned_status.IsInclude()) {
       continue;
     }
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+    if (cookie && !CanSaveOrLoadCookies(browser_context_getter, request)) {
+      returned_status.AddExclusionReason(
+          net::CookieInclusionStatus::EXCLUDE_USER_PREFERENCES);
+    }
+
+    if (!returned_status.IsInclude()) {
+      continue;
+    }
+#endif
 
     bool allow = false;
     allow_cookie_callback.Run(*cookie, &allow);

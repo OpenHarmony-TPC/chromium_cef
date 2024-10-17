@@ -179,6 +179,13 @@ typedef struct _cef_load_handler_t {
       int64_t firstContentfulPaintMs);
 
   ///
+  /// Called when received website security risk check result.
+  ///
+  void(CEF_CALLBACK* on_safe_browsing_check_result)(
+      struct _cef_load_handler_t* self,
+      int threat_type);
+
+  ///
   /// Called when the first meaningful paint rendering of web page.
   ///
   void(CEF_CALLBACK* on_first_meaningful_paint)(
@@ -198,13 +205,6 @@ typedef struct _cef_load_handler_t {
   void(CEF_CALLBACK* on_navigation_entry_committed)(
       struct _cef_load_handler_t* self,
       struct _cef_load_committed_details_t* details);
-
-  ///
-  /// Called when received website security risk check result.
-  ///
-  void(CEF_CALLBACK* on_safe_browsing_check_result)(
-      struct _cef_load_handler_t* self,
-      int threat_type);
 
   ///
   /// Called when tracker's cookie is prevented.

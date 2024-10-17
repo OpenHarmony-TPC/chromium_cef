@@ -32,6 +32,11 @@ class OhPageLoadMetricsObserver
   ObservePolicy OnStart(content::NavigationHandle* navigation_handle,
                         const GURL& currently_committed_url,
                         bool started_in_foreground) override;
+#ifdef OHOS_BFCACHE
+  page_load_metrics::PageLoadMetricsObserver::ObservePolicy
+  OnEnterBackForwardCache(
+      const page_load_metrics::mojom::PageLoadTiming& timing) override;
+#endif
   ObservePolicy OnFencedFramesStart(
       content::NavigationHandle* navigation_handle,
       const GURL& currently_committed_url) override;
@@ -51,6 +56,9 @@ class OhPageLoadMetricsObserver
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnFirstMeaningfulPaintInMainFrameDocument(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
+#if OHOS_BFCACHE
+  void OnFirstContentfulPaintAfterBackForwardCacheRestoreInPage(const page_load_metrics::mojom::BackForwardCacheTiming& timing, size_t index) override;
+#endif
 
 #if defined(REPORT_SYS_EVENT)
   ObservePolicy OnRedirect(
@@ -65,6 +73,11 @@ class OhPageLoadMetricsObserver
   void OnFirstPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   static void OnNavigationStart();
+#ifdef OHOS_BFCACHE
+  void OnRestoreFromBackForwardCache(
+      const page_load_metrics::mojom::PageLoadTiming& timing,
+      content::NavigationHandle* navigation_handle) override;
+#endif
 #endif
  protected:
   OhPageLoadMetricsObserver(
@@ -96,6 +109,12 @@ class OhPageLoadMetricsObserver
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;
   static int64_t navigation_start_timestamp_;
+#endif
+
+#ifdef OHOS_BFCACHE
+  // IDs for the navigations when the page is restored from the back-forward
+  // cache.
+  std::vector<ukm::SourceId> back_forward_cache_navigation_ids_;
 #endif
 };
 

@@ -56,7 +56,7 @@ ChromeBrowserProcessAlloy::ChromeBrowserProcessAlloy()
 
 ChromeBrowserProcessAlloy::~ChromeBrowserProcessAlloy() {
   DCHECK((!initialized_ && !context_initialized_) || shutdown_);
-
+  LOG(INFO) << "ChromeBrowserProcessAlloy::~ChromeBrowserProcessAlloy";
   if (extensions::ExtensionsEnabled()) {
     extensions::ExtensionsBrowserClient::Set(nullptr);
     extensions_browser_client_.reset();
@@ -212,7 +212,6 @@ PrefService* ChromeBrowserProcessAlloy::local_state() {
       if (!base::PathExists(root_cache_path)) {
         if (!base::CreateDirectory(root_cache_path)) {
           LOG(ERROR) << "Create directory failed:" << root_cache_path.value();
-          return nullptr;
         }
       }
     }

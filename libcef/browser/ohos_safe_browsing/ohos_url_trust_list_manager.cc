@@ -21,9 +21,9 @@
 namespace ohos_safe_browsing {
 static constexpr int MAX_PATH_SIZE = 0x10000;
 
-char OhosUrlTrustListInterface::interfaceKey;
+char UrlTrustListInterface::interfaceKey;
 
-OhosUrlTrustListManager::OhosUrlTrustListManager() {}
+UrlTrustListManager::UrlTrustListManager() {}
 
 static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err)
 {
@@ -88,7 +88,7 @@ static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err)
   return true;
 }
 
-UrlListSetResult OhosUrlTrustListManager::SetUrlTrustListWithErrMsg(
+UrlListSetResult UrlTrustListManager::SetUrlTrustListWithErrMsg(
   const std::string& urlTrustList, std::string& detailErrMsg)
 {
   if (urlTrustList.empty()) {
@@ -135,7 +135,7 @@ UrlListSetResult OhosUrlTrustListManager::SetUrlTrustListWithErrMsg(
   return UrlListSetResult::SET_OK;
 }
 
-UrlTrustCheckResult OhosUrlTrustListManager::CheckUrlTrustList(
+UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(
   const GURL& url)
 {
   if (ruleMap_.size() == 0) {

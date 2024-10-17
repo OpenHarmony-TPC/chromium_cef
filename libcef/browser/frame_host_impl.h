@@ -178,6 +178,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
                                 cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) override;
 
   void OnGetImageFromCache(std::string url,
+                           int command_id,
                            uint32_t buffer_size,
                            base::ReadOnlySharedMemoryRegion region);
 
@@ -185,8 +186,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void UpdateLocale(const CefString& locale);
 #endif  // #ifdef OHOS_I18N
   void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params) override;
-  void OnGetImageForContextNodeNull() override;
+      cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) override;
+  void OnGetImageForContextNodeNull(int command_id) override;
   void LoadHeaderUrl(const CefString& url,
                      const CefString& additionalHttpHeaders) override;
   // Send the touch point to the rederer to get hitdata.
@@ -198,7 +199,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SetJsOnlineProperty(bool network_up);
 #endif
 
-  void GetImageForContextNode();
+  void GetImageForContextNode(int command_id);
 
   // Sets the zoom factor for text only. Used in layout modes other than
   // Text Autosizing.

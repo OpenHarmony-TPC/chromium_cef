@@ -51,10 +51,8 @@ class OhosPrintManager : public printing::PrintManager,
       mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost>
           receiver,
       content::RenderFrameHost* rfh);
-
   static content::RenderFrameHost* GetRenderFrameHostToUse(
       content::WebContents* contents);
-
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
@@ -66,18 +64,20 @@ class OhosPrintManager : public printing::PrintManager,
                    PdfWritingDoneCallback callback);
   bool PrintNow();
   void PrintPage(bool isApplication);
-  void PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
+  void PrintPageImpl(base::WeakPtr<content::WebContents> web_contents,
                      bool isApplication);
   void DidDispatchPrintEvent(bool isBefore);
-  void DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> webcontents,
+  void DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> web_contents,
                                  bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
   void RunPrintRequestedCallback(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
-  void SetPrintStatus(bool is_print_now, uint32_t status);
+  void SetPrintStatus(bool is_print_now, uint32_t state);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
+  void SetPrintBackground(bool enable);
+  bool GetPrintBackground();
   void CheckForCancel(int32_t preview_ui_id,
                       int32_t request_id,
                       CheckForCancelCallback callback) override;
@@ -90,8 +90,6 @@ class OhosPrintManager : public printing::PrintManager,
   void ShowScriptedPrintPreview(bool source_is_modifiable) override;
   void UpdatePrintSettings(base::Value::Dict job_settings,
                            UpdatePrintSettingsCallback callback) override;
-  void SetPrintBackground(bool enable);
-  bool GetPrintBackground();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;

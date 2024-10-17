@@ -321,6 +321,21 @@ void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_load_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_safe_browsing_check_result)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_safe_browsing_check_result(_struct, threat_type);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefLoadHandlerCToCpp::OnFirstMeaningfulPaint(
     CefRefPtr<CefFirstMeaningfulPaintDetails> details) {
   shutdown_checker::AssertNotShutdown();
@@ -387,21 +402,6 @@ void CefLoadHandlerCToCpp::OnNavigationEntryCommitted(
   // Execute
   _struct->on_navigation_entry_committed(
       _struct, CefLoadCommittedDetailsCppToC::Wrap(details));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_safe_browsing_check_result)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_safe_browsing_check_result(_struct, threat_type);
 }
 
 NO_SANITIZE("cfi-icall")

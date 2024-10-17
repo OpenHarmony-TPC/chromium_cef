@@ -103,6 +103,47 @@ class RequestCallbackWrapper : public CefCallback {
   IMPLEMENT_REFCOUNTING(RequestCallbackWrapper);
 };
 
+#ifdef OHOS_NETWORK_LOAD
+class OhosInterceptCallbackWrapper : public CefInterceptCallback {
+ public:
+  using ResourceCallback = base::OnceCallback<void(CefRefPtr<CefResourceHandler>)>;
+  explicit OhosInterceptCallbackWrapper(ResourceCallback callback)
+      : callback_(std::move(callback)),
+        work_thread_task_runner_(
+            base::SequencedTaskRunner::GetCurrentDefault()) {}
+
+  OhosInterceptCallbackWrapper(const OhosInterceptCallbackWrapper&) = delete;
+  OhosInterceptCallbackWrapper& operator=(const OhosInterceptCallbackWrapper&) = delete;
+
+  ~OhosInterceptCallbackWrapper() override {
+    if (!callback_.is_null()) {
+      // Make sure it executes on the correct thread.
+      work_thread_task_runner_->PostTask(
+          FROM_HERE, base::BindOnce(std::move(callback_), nullptr));
+    }
+  }
+
+  void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) override {
+    if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
+      work_thread_task_runner_->PostTask(
+          FROM_HERE,
+          base::BindOnce(&OhosInterceptCallbackWrapper::ContinueLoad, this, resource_handler));
+      return;
+    }
+    if (!callback_.is_null()) {
+      std::move(callback_).Run(resource_handler);
+    }
+  }
+
+ private:
+  ResourceCallback callback_;
+
+  scoped_refptr<base::SequencedTaskRunner> work_thread_task_runner_;
+
+  IMPLEMENT_REFCOUNTING(OhosInterceptCallbackWrapper);
+};
+#endif
+
 #if OHOS_NETWORK_LOAD
 void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                             CefRefPtr<CefFrame> frame,
@@ -147,7 +188,7 @@ void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
     return;
   }
   CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
-  if (load_handler) {
+  if (!load_handler) {
     LOG(ERROR) << "ReportITPResultInUiTask for load_handler is nullptr";
     return;
   }
@@ -677,9 +718,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     CEF_REQUIRE_IOT();
     if (!cookie_helper::IsCookieableScheme(request->url,
                                            init_state_->cookieable_schemes_)
-#if BUILDFLAG(IS_OHOS)
-        || !net_service::NetHelpers::IsThirdPartyCookieAllowed()
-#endif
     ) {
       // The scheme does not support cookies.
       std::move(callback).Run();
@@ -724,26 +762,28 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     DCHECK(state->cookie_filter_);
 
-#ifdef OHOS_ITP
-    bool itp_cookies_enabled = IsIntelligentTrackingPreventionEnabled();
-    if (itp_cookies_enabled && request) {
-      bool third_party_cookie_access_policy =
-          ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
-              ->AllowGetCookies(*request);
-      if (!third_party_cookie_access_policy) {
-        ReportITPResult(*request);
-        *allow = false;
-        return;
-      }
-    }
-#endif  // OHOS_ITP
-
     CefCookie cef_cookie;
     if (net_service::MakeCefCookie(cookie, cef_cookie)) {
       *allow = state->cookie_filter_->CanSendCookie(
           init_state_->browser_, init_state_->frame_,
           state->pending_request_.get(), cef_cookie);
     }
+
+#ifdef OHOS_ITP
+    if (*allow == true) {
+      bool itp_cookies_enabled = IsIntelligentTrackingPreventionEnabled();
+      if (itp_cookies_enabled && request) {
+        bool third_party_cookie_access_policy =
+            ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
+                ->AllowGetCookies(*request, GetWebContentsLastCommittedURL());
+        if (!third_party_cookie_access_policy) {
+          ReportITPResult(*request);
+          *allow = false;
+          return;
+        }
+      }
+    }
+#endif
   }
 
   void ContinueWithLoadedCookies(int32_t request_id,
@@ -911,6 +951,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // The request will be handled by the NetworkService. Remove the
       // "Accept-Language" header here so that it can be re-added in
       // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
+#if defined(OHOS_SCHEME_HANDLER)
+      // Get the chunked data pipe remote back.
+      if (state->pending_request_) {
+        CefRefPtr<CefPostDataStream> post_data_stream = state->pending_request_->GetUploadStream();
+        if (post_data_stream && post_data_stream->IsChunked()) {
+          LOG(INFO) << "scheme_handler get the chunked stream back.";
+          static_cast<CefPostDataStreamImpl*>(post_data_stream.get())
+              ->GetChunkedDataPipeGetter(request->request_body.get());
+        }
+      }
+#endif
     }
 
     // Continue the request.
@@ -920,7 +971,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   void GetOhosResourceHandlerInUiTask(
       int32_t request_id,
       network::ResourceRequest* request,
-      ShouldInterceptRequestResultCallback callback) {
+      ShouldInterceptRequestResultCallback callback,
+      std::string url) {
     CEF_REQUIRE_UIT();
     RequestState* state = GetState(request_id);
     if (!state) {
@@ -942,9 +994,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     // Try to get scheme handler from ets UI thread.
     if (!resource_handler && state->scheme_factory_) {
       // Does the scheme factory want to handle the request?
-      resource_handler = state->scheme_factory_->Create(
+      if (!url.starts_with("hwweb")) {
+        resource_handler = state->scheme_factory_->Create(
           init_state_->browser_, init_state_->frame_, request->url.scheme(),
           state->pending_request_.get());
+      }
     }
 
     CEF_POST_TASK(
@@ -955,10 +1009,70 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
             resource_handler, std::move(callback)));
   }
 
+  void GetOhosResourceHandlerResultInIO(int32_t request_id,
+      network::ResourceRequest* request,
+      ShouldInterceptRequestResultCallback callback,
+      CefRefPtr<CefResourceHandler> resource_handler) {
+    CEF_REQUIRE_IOT();
+    GetOhosResourceHandlerResult(request_id, request, resource_handler, std::move(callback));
+  }
+
+  void GetOhosResourceHandlerStillInIO(
+      int32_t request_id,
+      network::ResourceRequest* request,
+      ShouldInterceptRequestResultCallback callback) {
+    CEF_REQUIRE_IOT();
+    RequestState* state = GetState(request_id);
+    if (!state || !request) {
+      std::move(callback).Run(nullptr);
+      return;
+    }
+    CefRefPtr<OhosInterceptCallbackWrapper> callback_ptr =
+          new OhosInterceptCallbackWrapper(base::BindOnce(
+              &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResultInIO,
+              weak_ptr_factory_.GetWeakPtr(),
+              request_id, base::Unretained(request), std::move(callback)));
+
+    if (state->handler_) {
+      // Does the client want to handle the request?
+      if (request) {
+        state->pending_request_->SetDestination(request->destination);
+      }
+      state->handler_->GetResourceHandlerByIO(
+          init_state_->browser_, init_state_->frame_,
+          state->pending_request_.get(), callback_ptr, state->scheme_factory_,
+          request->url.scheme());
+    } else {
+        GetOhosResourceHandlerFromETS(state->scheme_factory_, state->pending_request_.get(),
+                request->url.scheme(), callback_ptr);
+    }
+  }
+
+  void GetOhosResourceHandlerFromETS(CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
+                                     CefRefPtr<CefRequest> request,
+                                     const CefString& scheme,
+                                     CefRefPtr<CefInterceptCallback> callback) {
+    if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+      content::GetUIThreadTaskRunner({})->PostTask(FROM_HERE,
+        base::BindOnce(&InterceptedRequestHandlerWrapper::GetOhosResourceHandlerFromETS,
+                       weak_ptr_factory_.GetWeakPtr(),
+                       scheme_factory, request, scheme, callback));
+      return;
+    }
+
+    CefRefPtr<CefResourceHandler> resource_handler = nullptr;
+    if (scheme_factory) {
+      // Does the scheme factory want to handle the request?
+      resource_handler = scheme_factory->Create(
+          init_state_->browser_, init_state_->frame_, scheme, request);
+     }
+    callback->ContinueLoad(resource_handler);
+  }
+
   void GetOhosResourceHandler(int32_t request_id,
                               network::ResourceRequest* request,
                               ShouldInterceptRequestResultCallback callback) {
-  #ifdef OHOS_NETWORK_LOAD
+#ifdef OHOS_NETWORK_LOAD
     RequestState* state = GetState(request_id);
     if (state && request) {
       // Add fetch meta data headers.
@@ -977,22 +1091,23 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         }
         state->pending_request_->SetFrameUrl(frame_url);
       }
+      bool has_user_activation = false;
+      if (request->trusted_params) {
+        has_user_activation = request->trusted_params->has_user_activation;
+      }
       std::map<std::string, std::string> headers =
           network::GetFetchMetadataHeaders(
-                  request->url, request->mode, request->has_user_gesture,
+                  request->url, request->mode, has_user_activation,
                   request->destination, request->request_initiator);
       for (auto& entry : headers) {
         state->pending_request_->SetHeaderByName(entry.first, entry.second, false);
       }
       state->pending_request_->SetReadOnly(old_flag);
     }
-  #endif
-    CEF_POST_TASK(
-        CEF_UIT,
-        base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerInUiTask,
-            weak_ptr_factory_.GetWeakPtr(), request_id, request,
-            std::move(callback)));
+#endif
+
+    CEF_REQUIRE_IOT();
+    GetOhosResourceHandlerStillInIO(request_id, request, std::move(callback));
   }
 #endif
 
@@ -1210,10 +1325,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       std::move(exec_callback).Run();
       return;
     }
-    // Clear the headers first. we will get cookie for this redirect.
-    request->headers.Clear();
+    // Clear the cookie  first. we will get cookie for this redirect.
+    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
     // Get cookies for redirect url.
     request->url = new_url;
+
     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
   }
 #endif
@@ -1283,9 +1399,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (!cookie_helper::IsCookieableScheme(request->url,
                                            init_state_->cookieable_schemes_)
-#if BUILDFLAG(IS_OHOS)
-        || !net_service::NetHelpers::IsThirdPartyCookieAllowed()
-#endif
     ) {
       // The scheme does not support cookies.
       std::move(callback).Run();
@@ -1676,6 +1789,13 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                                 CefString(request.url.host()),
                                 CefString(request.request_initiator->host())));
   }
+
+  GURL GetWebContentsLastCommittedURL() {
+    if (!init_state_ || !init_state_->browser_) {
+      return GURL();
+    }
+    return init_state_->browser_->GetLastCommittedURL();
+  }
 #endif
 
   scoped_refptr<InitHelper> init_helper_;
@@ -1811,7 +1931,7 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
   browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
 #ifdef OHOS_NETWORK_LOAD
   bool is_guest_view = false;
-  if (browserPtr->browser_info()) {
+  if (browserPtr && browserPtr->browser_info()) {
     realFramePtr =
         browserPtr->browser_info()->GetFrameForHost(frame, &is_guest_view, true);
   }

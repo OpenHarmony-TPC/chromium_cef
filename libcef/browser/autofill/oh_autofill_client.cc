@@ -67,12 +67,13 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
 #endif
 }
 
-void OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
+bool OhAutofillClient::OnAutofillEvent(const std::string& json_str) {
   if (callback_) {
     CefRefPtr<CefValue> data = CefValue::Create();
     data->SetStdString(json_str);
-    callback_->OnMessage(data);
+    return callback_->OnMessageWithBoolResult(data);
   }
+  return false;
 }
 
 void OhAutofillClient::SetSaveFormData(bool enabled) {

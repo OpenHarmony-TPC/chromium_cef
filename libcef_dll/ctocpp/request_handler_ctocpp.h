@@ -100,6 +100,8 @@ class CefRequestHandlerCToCpp
                                     int pid,
                                     int reason) override;
   void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) override;
+  void OnUpdateTargetURL(CefRefPtr<CefBrowser> browser,
+                        const CefString& url) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_

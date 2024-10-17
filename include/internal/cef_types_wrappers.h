@@ -500,6 +500,10 @@ struct CefRequestContextSettingsTraits {
 #if defined(OHOS_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    target->global_request_context = src->global_request_context;
+#endif
   }
 };
 
@@ -605,17 +609,15 @@ struct CefBrowserSettingsTraits {
     target->contextmenu_customization_enabled =
         src->contextmenu_customization_enabled;
     target->scrollbar_color = src->scrollbar_color;
-    target->blank_target_popup_intercept_enabled =
-        src->blank_target_popup_intercept_enabled;
-    target->native_embed_mode_enabled =
-        src->native_embed_mode_enabled;
+    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
+    target->native_embed_mode_enabled = src->native_embed_mode_enabled;
     cef_string_set(src->embed_tag.str, src->embed_tag.length, &target->embed_tag,
                    copy);
     cef_string_set(src->embed_tag.str, src->embed_tag.length,
                    &target->embed_tag_type, copy);
     target->scroll_enabled = src->scroll_enabled;
-    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->draw_mode = src->draw_mode;
+    target->force_zero_layout_height = src->force_zero_layout_height;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -626,14 +628,13 @@ struct CefBrowserSettingsTraits {
     target->custom_video_player_enable = src->custom_video_player_enable;
     target->custom_video_player_overlay = src->custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+    target->supports_multiple_windows = src->supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
     target->record_whole_document = src->record_whole_document;
 #endif
-
-#if defined(OHOS_MULTI_WINDOW)
-    target->supports_multiple_windows = src->supports_multiple_windows;
-#endif // OHOS_MULTI_WINDOW
 
 #ifdef OHOS_NETWORK_LOAD
     target->universal_access_from_file_urls = src->universal_access_from_file_urls;

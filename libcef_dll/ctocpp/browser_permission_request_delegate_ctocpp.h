@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=6fe6a53ffc2d2fa20908b49862fea1a1c5fe9f2a$
+// $hash=7b02bac8fd24e69b831a73d8022f9c6b16802099$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_
@@ -57,6 +57,17 @@ class CefBrowserPermissionRequestDelegateCToCpp
   void AbortAskClipboardReadWritePermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
                                    const CefString& origin) override;
+  void AskAudioCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskAudioCapturePermission(const CefString& origin) override;
+  void AskVideoCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskVideoCapturePermission(const CefString& origin) override;
+  void AskClipboardSanitizedWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
+  void AbortAskClipboardSanitizedWritePermission(
+      const CefString& origin) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_

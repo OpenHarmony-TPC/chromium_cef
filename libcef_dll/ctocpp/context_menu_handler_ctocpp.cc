@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a74c5b939b0e9b587206cdd2e6c30d50127b3858$
+// $hash=43f566dcca4917092738d6b4b33a7886ba081955$
 //
 
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -331,13 +331,15 @@ void CefContextMenuHandlerCToCpp::OnQuickMenuDismissed(
 
   // Execute
   _struct->on_quick_menu_dismissed(_struct, CefBrowserCppToC::Wrap(browser),
-                                   CefFrameCppToC::Wrap(frame), is_mouse_trigger);
+                                   CefFrameCppToC::Wrap(frame),
+                                   is_mouse_trigger);
 }
 
 NO_SANITIZE("cfi-icall")
 void CefContextMenuHandlerCToCpp::OnGetImageForContextNode(
     CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefImage> image) {
+    CefRefPtr<CefImage> image,
+    int command_id) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -360,12 +362,13 @@ void CefContextMenuHandlerCToCpp::OnGetImageForContextNode(
 
   // Execute
   _struct->on_get_image_for_context_node(
-      _struct, CefBrowserCppToC::Wrap(browser), CefImageCppToC::Wrap(image));
+      _struct, CefBrowserCppToC::Wrap(browser), CefImageCppToC::Wrap(image),
+      command_id);
 }
 
 NO_SANITIZE("cfi-icall")
-void CefContextMenuHandlerCToCpp::OnGetImageFromCache(
-    CefRefPtr<CefImage> image) {
+void CefContextMenuHandlerCToCpp::OnGetImageFromCache(CefRefPtr<CefImage> image,
+                                                      int command_id) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -382,12 +385,12 @@ void CefContextMenuHandlerCToCpp::OnGetImageFromCache(
   }
 
   // Execute
-  _struct->on_get_image_from_cache(_struct, CefImageCppToC::Wrap(image));
+  _struct->on_get_image_from_cache(_struct, CefImageCppToC::Wrap(image),
+                                   command_id);
 }
 
 NO_SANITIZE("cfi-icall")
-void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(
-    bool hide) {
+void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(bool hide) {
   shutdown_checker::AssertNotShutdown();
 
   cef_context_menu_handler_t* _struct = GetStruct();
@@ -399,6 +402,21 @@ void CefContextMenuHandlerCToCpp::HideHandleAndQuickMenuIfNecessary(
 
   // Execute
   _struct->hide_handle_and_quick_menu_if_necessary(_struct, hide);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefContextMenuHandlerCToCpp::ChangeVisibilityOfQuickMenu() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_context_menu_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, change_visibility_of_quick_menu)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->change_visibility_of_quick_menu(_struct);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

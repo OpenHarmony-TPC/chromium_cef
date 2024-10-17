@@ -12,10 +12,8 @@ namespace soc_perf {
 
 class SocPerUtil {
  public:
-  // #if defined(OHOS_PERFORMANCE_INC_FREQ)
   static void EnableFlingBoost();
   static void DisableFlingBoost();
-  // #endif
   static void StartBoost();
 
  private:

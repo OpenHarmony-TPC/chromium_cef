@@ -1068,53 +1068,6 @@ render_handler_release_resize_hold(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser));
 }
 
-void CEF_CALLBACK render_handler_on_update_text_input_state_called(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const cef_string_t* text,
-    const cef_range_t* selected_range,
-    const cef_range_t* compositon_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(text);
-  if (!text) {
-    return;
-  }
-  // Verify param: selected_range; type: simple_byref_const
-  DCHECK(selected_range);
-  if (!selected_range) {
-    return;
-  }
-  // Verify param: compositon_range; type: simple_byref_const
-  DCHECK(compositon_range);
-  if (!compositon_range) {
-    return;
-  }
-
-  // Translate param: selected_range; type: simple_byref_const
-  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
-  // Translate param: compositon_range; type: simple_byref_const
-  CefRange compositon_rangeVal =
-      compositon_range ? *compositon_range : CefRange();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnUpdateTextInputStateCalled(
-      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal,
-      compositon_rangeVal);
-}
-
 void CEF_CALLBACK
 render_handler_get_word_selection(struct _cef_render_handler_t* self,
                                   cef_browser_t* browser,
@@ -1241,6 +1194,53 @@ render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnOverlayStateChanged(
       CefBrowserCToCpp::Wrap(browser), cef_screen_rectVal);
+}
+
+void CEF_CALLBACK render_handler_on_update_text_input_state_called(
+    struct _cef_render_handler_t* self,
+    cef_browser_t* browser,
+    const cef_string_t* text,
+    const cef_range_t* selected_range,
+    const cef_range_t* compositon_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(text);
+  if (!text) {
+    return;
+  }
+  // Verify param: selected_range; type: simple_byref_const
+  DCHECK(selected_range);
+  if (!selected_range) {
+    return;
+  }
+  // Verify param: compositon_range; type: simple_byref_const
+  DCHECK(compositon_range);
+  if (!compositon_range) {
+    return;
+  }
+
+  // Translate param: selected_range; type: simple_byref_const
+  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
+  // Translate param: compositon_range; type: simple_byref_const
+  CefRange compositon_rangeVal =
+      compositon_range ? *compositon_range : CefRange();
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnUpdateTextInputStateCalled(
+      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal,
+      compositon_rangeVal);
 }
 
 void CEF_CALLBACK
@@ -1432,12 +1432,12 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->notify_select_all_clicked =
       render_handler_notify_select_all_clicked;
   GetStruct()->release_resize_hold = render_handler_release_resize_hold;
-  GetStruct()->on_update_text_input_state_called =
-      render_handler_on_update_text_input_state_called;
   GetStruct()->get_word_selection = render_handler_get_word_selection;
   GetStruct()->create_overlay = render_handler_create_overlay;
   GetStruct()->on_overlay_state_changed =
       render_handler_on_overlay_state_changed;
+  GetStruct()->on_update_text_input_state_called =
+      render_handler_on_update_text_input_state_called;
   GetStruct()->get_visible_viewport_rect =
       render_handler_get_visible_viewport_rect;
   GetStruct()->on_resize_scrollable_viewport =

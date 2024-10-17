@@ -46,7 +46,6 @@
 
 #if defined(OHOS_SCHEME_HANDLER)
 #include "base/datashare_uri_utils.h"
-#include "base/task/thread_pool.h"
 #include "base/files/file.h"
 #include "net/base/io_buffer.h"
 #include "services/network/chunked_data_pipe_upload_data_stream.h"
@@ -225,7 +224,7 @@ std::unique_ptr<net::UploadDataStream> CreateUploadDataStream(
       const bool has_null_source = element.read_only_once().value();
       auto upload_data_stream =
           std::make_unique<network::ChunkedDataPipeUploadDataStream>(
-              body, element.ReleaseChunkedDataPipeGetter(), has_null_source);
+              body, element.ReleaseChunkedDataPipeGetter(), has_null_source, true);
       if (element.read_only_once()) {
         upload_data_stream->EnableCache();
       }
@@ -1062,15 +1061,28 @@ CefRefPtr<CefPostDataStream> CefPostDataStream::Create() {
 // CefPostDataStreamImpl ------------------------------------------------------
 
 CefPostDataStreamImpl::CefPostDataStreamImpl() {
-
 }
 
 CefPostDataStreamImpl::~CefPostDataStreamImpl() {
+  if (is_data_pipe_ && upload_stream_) {
+    content::GetIOThreadTaskRunner({})->DeleteSoon(FROM_HERE, std::move(upload_stream_));
+  }
 }
 
 void CefPostDataStreamImpl::Reset() {
   read_callback_ = nullptr;
   init_callback_ = nullptr;
+}
+
+void CefPostDataStreamImpl::GetChunkedDataPipeGetter(
+        network::ResourceRequestBody* body) {
+  LOG(INFO) << "scheme_handler get chunked data pip getter initialated_: " << initialated_;
+  if (body && upload_stream_ && !initialated_) {
+    body->SetToChunkedDataPipe(
+            static_cast<network::ChunkedDataPipeUploadDataStream*>(upload_stream_.get())
+                ->ReleaseChunkedDataPipeGetter(),
+            network::ResourceRequestBody::ReadOnlyOnce(HasNullSource()));
+  }
 }
 
 void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
@@ -1083,7 +1095,13 @@ void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
         LOG(INFO) << "scheme_handler file path: " << file_element.path() << " real path: " << real_path;
         open_files.push_back(base::File(base::FilePath(real_path), base::File::FLAG_OPEN | base::File::FLAG_READ));
       }
+
+      if (element.type() == network::DataElement::Tag::kDataPipe ||
+              element.type() == network::DataElement::Tag::kChunkedDataPipe) {
+        is_data_pipe_ = true;
+      }
     }
+
     scoped_refptr<base::SequencedTaskRunner> task_runner =
         base::ThreadPool::CreateSequencedTaskRunner(
             {base::MayBlock(), base::TaskPriority::USER_VISIBLE});
@@ -1105,6 +1123,7 @@ void CefPostDataStreamImpl::OnStreamInitialized(int rv) {
 }
 
 void CefPostDataStreamImpl::Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) {
+  initialated_ = true;
   init_callback_ = init_callback;
   if (upload_stream_) {
     int rv = upload_stream_->Init(
@@ -1120,7 +1139,31 @@ void CefPostDataStreamImpl::Init(CefRefPtr<CefPostDataStreamInitCallback> init_c
   }
 }
 
-void CefPostDataStreamImpl::Read(
+void CefPostDataStreamImpl::ReadOnTaskRunner(
+        void* buffer,
+        int buf_len,
+        base::WaitableEvent* event) {
+  scoped_refptr<net::WrappedIOBuffer> upload_buffer =
+      base::MakeRefCounted<net::WrappedIOBuffer>(
+          reinterpret_cast<char*>(buffer));
+  if (upload_stream_) {
+    int rv = upload_stream_->Read(
+        upload_buffer.get(),buf_len,
+        base::BindOnce(&CefPostDataStreamImpl::OnStreamRead,
+                       base::Unretained(this), upload_buffer, event));
+    if (rv == net::ERR_IO_PENDING) {
+      last_read_rv_ = rv;
+      return;
+    }
+    last_read_rv_ = rv;
+    event->Signal();
+  } else {
+    last_read_rv_ = -2;
+    event->Signal();
+  }
+}
+
+void CefPostDataStreamImpl::ReadAsync(
     void* buffer,
     int buf_len,
     CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
@@ -1130,23 +1173,54 @@ void CefPostDataStreamImpl::Read(
   if (upload_stream_) {
     int rv = upload_stream_->Read(
         upload_buffer.get(),buf_len,
-        base::BindOnce(&CefPostDataStreamImpl::OnStreamRead,
+        base::BindOnce(&CefPostDataStreamImpl::OnStreamReadAsync,
                        base::Unretained(this), upload_buffer, read_callback));
-    if (rv == net::ERR_IO_PENDING)
+    if (rv == net::ERR_IO_PENDING) {
       return;
-    OnStreamRead(upload_buffer, read_callback, rv);
+    }
+    OnStreamReadAsync(upload_buffer, read_callback, rv);
   } else {
-    OnStreamRead(upload_buffer, read_callback, -2);
+    OnStreamReadAsync(upload_buffer, read_callback, -2);
+  }
+}
+
+void CefPostDataStreamImpl::Read(
+    void* buffer,
+    int buf_len,
+    CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
+  if (base::SequencedTaskRunner::HasCurrentDefault() || IsInMemory() || IsChunked()) {
+    ReadAsync(buffer, buf_len, read_callback);
+  } else {
+    if (sequenced_task_runner_) {
+      base::WaitableEvent* completion = new base::WaitableEvent();
+      sequenced_task_runner_->PostTask(
+           FROM_HERE, base::BindOnce(&CefPostDataStreamImpl::ReadOnTaskRunner,
+                                     this, buffer, buf_len, completion));
+      completion->Wait();
+      delete completion;
+      read_callback->OnReadComplete((char*)buffer, last_read_rv_);
+    } else {
+      read_callback->OnReadComplete((char*)buffer, -2);
+    }
+  }
+}
+
+void CefPostDataStreamImpl::OnStreamReadAsync(
+    scoped_refptr<net::WrappedIOBuffer> buffer,
+    CefRefPtr<CefPostDataStreamReadCallback> read_callback,
+    int rv) {
+  if (read_callback) {
+   read_callback->OnReadComplete(buffer->data(), rv);
   }
 }
 
 void CefPostDataStreamImpl::OnStreamRead(
     scoped_refptr<net::WrappedIOBuffer> buffer,
-    CefRefPtr<CefPostDataStreamReadCallback> read_callback, int rv) {
-  LOG(INFO) << "scheme_handler CefPostDataStreamImpl::OnStreamRead rv: " << rv;
-
-  if (read_callback) {
-    read_callback->OnReadComplete(buffer->data(), rv);
+    base::WaitableEvent* event,
+    int rv) {
+  last_read_rv_ = rv;
+  if (event) {
+    event->Signal();
   }
 }
 

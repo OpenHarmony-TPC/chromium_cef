@@ -98,9 +98,19 @@
 #include "chrome/browser/extensions/preinstalled_apps.h"
 #include "chrome/browser/ui/webui/extensions/extensions_ui.h"
 #include "extensions/browser/permissions_manager.h"
+#include "extensions/browser/pref_names.h"
+#endif
+
+#if defined(OHOS_NWEB_EX)
+#include "chrome/common/pref_names.h"
+#include "content/public/common/content_switches.h"
 #endif
 
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
+
+#ifdef OHOS_EX_UA
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
 
 #ifdef OHOS_ARKWEB_ADBLOCK
 #include "components/subresource_filter/content/browser/ruleset_version.h"
@@ -215,6 +225,23 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
         profile ? kUserPrefsFileName : kLocalPrefsFileName);
     PrefNameSet persistent_prefs;
     persistent_prefs.insert(predictor::kVisitedUrls);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    RegisterExtensionPersistentPrefs(persistent_prefs);
+#endif
+    RegisterSubresourceFilterPersistentPrefs(persistent_prefs);
+
+#if defined(OHOS_NWEB_EX)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser)) {
+      persistent_prefs.insert(prefs::kPartitionDefaultZoomLevel);
+      persistent_prefs.insert(prefs::kPartitionPerHostZoomLevels);
+#ifdef OHOS_EX_UA
+      persistent_prefs.insert(nweb_ex::kUACloudConfigInfo);
+#endif  // OHOS_EX_UA
+    }
+#endif
+#ifdef OHOS_CLOUD_CONTROL
+    RegisterCloudControlPersistentPrefs(persistent_prefs);
+#endif
     factory.set_user_prefs(base::MakeRefCounted<SegregatedPrefStore>(
         base::MakeRefCounted<CefPrefStore>(),
         base::MakeRefCounted<JsonPrefStore>(pref_path),
@@ -293,6 +320,10 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
   SSLConfigServiceManager::RegisterPrefs(registry.get());
   update_client::RegisterPrefs(registry.get());
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  HostContentSettingsMap::RegisterProfilePrefs(registry.get());
+#endif
+
   if (!profile) {
     component_updater::RegisterComponentUpdateServicePrefs(registry.get());
     domain_reliability::RegisterPrefs(registry.get());
@@ -345,7 +376,16 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #endif
 #if BUILDFLAG(IS_OHOS)
     ohos_safe_browsing::RegisterProfilePrefs(registry.get());
- #endif
+#endif
+#ifdef OHOS_EX_UA
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kForBrowser)) {
+      nweb_ex::AlloyBrowserUAConfig::RegisterProfilePrefs(registry.get());
+    }
+#endif
+#ifdef OHOS_CLOUD_CONTROL
+    RegisterCloudControlProfilePrefs(registry.get());
+#endif
     HostContentSettingsMap::RegisterProfilePrefs(registry.get());
     language::LanguagePrefs::RegisterProfilePrefs(registry.get());
     media_router::RegisterProfilePrefs(registry.get());
@@ -399,6 +439,11 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     // Based on browser_prefs::RegisterProfilePrefs.
     registry->RegisterBooleanPref(prefs::kAccessibilityPdfOcrAlwaysActive,
                                   false);
+#if defined(OHOS_EDM_POLICY)
+    // Currently OriginAgentCluster is not enabled by default on OHOS.
+    registry->RegisterBooleanPref(prefs::kOriginAgentClusterDefaultEnabled,
+                                  false);
+#endif
 
     // Spell checking preferences.
     // Modify defaults from SpellcheckServiceFactory::RegisterProfilePrefs.
@@ -463,6 +508,71 @@ std::string GetAcceptLanguageList(CefBrowserContext* browser_context,
   }
   return std::string();
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void RegisterExtensionPersistentPrefs(PrefNameSet& pref_name_set) {
+  // See extensions::ExtensionPrefs::RegisterProfilePrefs
+  pref_name_set.insert(extensions::pref_names::kExtensions);
+  pref_name_set.insert(extensions::pref_names::kPinnedExtensions);
+  pref_name_set.insert(extensions::pref_names::kDeletedComponentExtensions);
+  pref_name_set.insert(extensions::pref_names::kExtensionsBlocklistUpdate);
+  pref_name_set.insert(extensions::pref_names::kInstallAllowList);
+  pref_name_set.insert(extensions::pref_names::kInstallDenyList);
+  pref_name_set.insert(extensions::pref_names::kInstallForceList);
+  pref_name_set.insert(extensions::pref_names::kAllowedTypes);
+  pref_name_set.insert(extensions::pref_names::kManifestV2Availability);
+  pref_name_set.insert(extensions::pref_names::kStorageGarbageCollect);
+  pref_name_set.insert(extensions::pref_names::kAllowedInstallSites);
+  pref_name_set.insert(extensions::pref_names::kLastChromeVersion);
+  pref_name_set.insert(extensions::pref_names::kInstallSignature);
+  pref_name_set.insert(extensions::pref_names::kExternalUninstalls);
+  pref_name_set.insert(extensions::pref_names::kExtendedBackgroundLifetimeForPortConnectionsToUrls);
+  pref_name_set.insert(extensions::pref_names::kChromeAppsWebViewPermissiveBehaviorAllowed);
+  pref_name_set.insert(extensions::pref_names::kNativeMessagingBlocklist);
+  pref_name_set.insert(extensions::pref_names::kNativeMessagingAllowlist);
+  pref_name_set.insert(extensions::pref_names::kNativeMessagingUserLevelHosts);
+  pref_name_set.insert(extensions::kCorruptedDisableCount.name);
+  pref_name_set.insert(extensions::pref_names::kAppFullscreenAllowed);
+  pref_name_set.insert(extensions::pref_names::kBlockExternalExtensions);
+  pref_name_set.insert(extensions::pref_names::kExtensionUnpublishedAvailability);
+
+  // See extensions::ExtensionsUI::RegisterProfilePrefs
+  pref_name_set.insert(prefs::kExtensionsUIDeveloperMode);
+
+  // See DevToolsWindow::RegisterProfilePrefs
+  pref_name_set.insert(prefs::kDevToolsEditedFiles);
+  pref_name_set.insert(prefs::kDevToolsFileSystemPaths);
+  pref_name_set.insert(prefs::kDevToolsAdbKey);
+  pref_name_set.insert(prefs::kDevToolsDiscoverUsbDevicesEnabled);
+  pref_name_set.insert(prefs::kDevToolsPortForwardingEnabled);
+  pref_name_set.insert(prefs::kDevToolsPortForwardingDefaultSet);
+  pref_name_set.insert(prefs::kDevToolsPortForwardingConfig);
+  pref_name_set.insert(prefs::kDevToolsDiscoverTCPTargetsEnabled);
+  pref_name_set.insert(prefs::kDevToolsTCPDiscoveryConfig);
+  pref_name_set.insert(prefs::kDevToolsPreferences);
+  pref_name_set.insert(prefs::kDevToolsSyncPreferences);
+  pref_name_set.insert(prefs::kDevToolsSyncedPreferencesSyncEnabled);
+  pref_name_set.insert(prefs::kDevToolsSyncedPreferencesSyncDisabled);
+
+  // See extensions::CommandService::RegisterProfilePrefs
+  pref_name_set.insert(prefs::kExtensionCommands);
+
+  // See extensions::PermissionsManager::RegisterProfilePrefs
+  pref_name_set.insert(extensions::kUserPermissions.name);
+
+  // See ExtensionWebUI::RegisterProfilePrefs
+  pref_name_set.insert(ExtensionWebUI::kExtensionURLOverrides);
+
+  // See preinstalled_apps::RegisterProfilePrefs
+  pref_name_set.insert(prefs::kPreinstalledAppsInstallState);
+}
+#endif
+
+#if defined(OHOS_CLOUD_CONTROL) && !defined(OHOS_NWEB_EX)
+  void RegisterCloudControlProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {}
+
+  void RegisterCloudControlPersistentPrefs(PrefNameSet& pref_name_set) {}
+#endif
 
 #ifdef OHOS_ARKWEB_ADBLOCK
 void RegisterSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set) {

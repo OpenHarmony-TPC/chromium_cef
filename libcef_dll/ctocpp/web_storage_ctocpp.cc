@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d6796203c24a7d2eaeda7a7cd8a2a5b465e47935$
+// $hash=4fee9cda8c46061cdba99dd8f66380547eead6e3$
 //
 
 #include "libcef_dll/ctocpp/web_storage_ctocpp.h"

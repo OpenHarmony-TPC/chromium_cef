@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f141018cb91f13b379e6bc51e714ae6059fda99e$
+// $hash=e4b272e7bc1871b41914120227dd6b96ee3844f4$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"

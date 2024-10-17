@@ -20,7 +20,7 @@ namespace {
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
 void CEF_CALLBACK
-set_lock_callback_handle(struct _cef_set_lock_callback_t *self, int key) {
+set_lock_callback_handle(struct _cef_set_lock_callback_t* self, int key) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -34,7 +34,7 @@ set_lock_callback_handle(struct _cef_set_lock_callback_t *self, int key) {
   CefSetLockCallbackCppToC::Get(self)->Handle(key ? true : false);
 }
 
-} // namespace
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -50,14 +50,16 @@ CefSetLockCallbackCppToC::~CefSetLockCallbackCppToC() {
 
 template <>
 CefRefPtr<CefSetLockCallback> CefCppToCRefCounted<
-    CefSetLockCallbackCppToC, CefSetLockCallback,
+    CefSetLockCallbackCppToC,
+    CefSetLockCallback,
     cef_set_lock_callback_t>::UnwrapDerived(CefWrapperType type,
-                                            cef_set_lock_callback_t *s) {
+                                            cef_set_lock_callback_t* s) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCppToCRefCounted<CefSetLockCallbackCppToC, CefSetLockCallback,
+CefWrapperType CefCppToCRefCounted<CefSetLockCallbackCppToC,
+                                   CefSetLockCallback,
                                    cef_set_lock_callback_t>::kWrapperType =
     WT_SET_LOCK_CALLBACK;

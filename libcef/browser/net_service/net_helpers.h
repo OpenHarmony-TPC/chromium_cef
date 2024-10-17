@@ -69,6 +69,9 @@ class NETHELPERS_EXPORT NetHelpers {
   static int doh_mode;
   static std::string doh_config;
 #endif  // defined(OHOS_HTTP_DNS)
+#if defined(OHOS_EX_NETWORK_CONNECTION)
+  static int network;
+#endif
 };
 
 bool IsSpecialFileUrl(const GURL& url);

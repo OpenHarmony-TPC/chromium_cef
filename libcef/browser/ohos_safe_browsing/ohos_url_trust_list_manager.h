@@ -71,10 +71,10 @@ public:
   }
 };
 
-class OhosUrlTrustListManager : public OhosUrlTrustListInterface {
+class UrlTrustListManager : public UrlTrustListInterface {
 public:
-  OhosUrlTrustListManager();
-  virtual ~OhosUrlTrustListManager() = default;
+  UrlTrustListManager();
+  virtual ~UrlTrustListManager() = default;
   UrlTrustCheckResult CheckUrlTrustList(const GURL& url) override;
   UrlListSetResult SetUrlTrustListWithErrMsg(
     const std::string& urlTrustList, std::string& detailErrMsg);

@@ -53,6 +53,16 @@ CefRefPtr<CefBrowserHostBase> GetOwnerBrowserForHost(
     content::RenderFrameHost* host,
     bool* is_guest_view);
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+/*
+ * Sometimes the extension function is called from background script, and it's
+ * windowless AlloyBrowser does not have a client or handler.
+ * Try to get an AlloyBrowserHostImpl with a non-null client, that means it has
+ * a nweb_handler can be used to interact with APP.
+ */
+CefRefPtr<AlloyBrowserHostImpl> GetClientAvailableBrowser(int tab_id);
+#endif
+
 // Returns the browser matching |tab_id| and |browser_context|. Returns false if
 // |tab_id| is < 0 or a matching browser cannot be found within
 // |browser_context|. Similar in concept to ExtensionTabUtil::GetTabById.

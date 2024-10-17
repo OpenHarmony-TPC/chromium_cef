@@ -621,7 +621,7 @@ CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalManager(
 // static
 CefRefPtr<CefWebStorage> CefWebStorage::GetGlobalIncognitoManager(
     CefRefPtr<CefCompletionCallback> callback) {
-  LOG(INFO) << "CefWebStorage::GetGlobalIncognitoManager.";
+  LOG(INFO) << "CefWebStorage::GetGlobalIncognitoManage.";
   CefRefPtr<CefRequestContext> context = CefRequestContext::GetGlobalOTRContext();
   return context ? context->GetWebStorage(callback) : nullptr;
 }

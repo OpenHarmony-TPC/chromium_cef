@@ -100,7 +100,6 @@ void CefAppManager::AddAdditionalSchemes(
     application->OnRegisterCustomSchemes(&schemeRegistrar);
     schemeRegistrar.GetSchemes(schemes);
   }
-
 #ifdef OHOS_SCHEME_HANDLER
   {
     CefSchemeRegistrarImpl schemeRegistrar;
@@ -108,7 +107,7 @@ void CefAppManager::AddAdditionalSchemes(
     if (cmdLine && cmdLine->HasSwitch(switches::kOhSchemeHandlerCustomScheme)) {
       std::string cmdlineSchemes =
           cmdLine->GetSwitchValueASCII(switches::kOhSchemeHandlerCustomScheme);
-      LOG(INFO) << "render scheme_handler cmdlineScheme:" << cmdlineSchemes;
+      LOG(INFO) << "scheme_handler cmdlineScheme:" << cmdlineSchemes;
       absl::optional<base::Value> schemeInfos = base::JSONReader::Read(cmdlineSchemes);
       if (schemeInfos && schemeInfos->is_dict()) {
         for (auto kv : schemeInfos->GetDict()) {
@@ -121,6 +120,48 @@ void CefAppManager::AddAdditionalSchemes(
 #endif
 
 #ifdef OHOS_NETWORK_LOAD
+  RenderAddCustomSchemes();
+#endif
+
+  scheme::AddInternalSchemes(schemes);
+  scheme_info_list_locked_ = true;
+}
+
+#if BUILDFLAG(IS_WIN)
+const wchar_t* CefAppManager::GetResourceDllName() {
+  static wchar_t file_path[MAX_PATH + 1] = {0};
+
+  if (file_path[0] == 0) {
+    // Retrieve the module path (usually libcef.dll).
+    base::FilePath module;
+    base::PathService::Get(base::FILE_MODULE, &module);
+    const std::wstring wstr = module.value();
+    size_t count = std::min(static_cast<size_t>(MAX_PATH), wstr.size());
+    wcsncpy(file_path, wstr.c_str(), count);
+    file_path[count] = 0;
+  }
+
+  return file_path;
+}
+#endif  // BUILDFLAG(IS_WIN)
+
+#ifdef OHOS_NETWORK_LOAD
+std::vector<std::string> CefAppManager::CustomSchemeCmdLineSplit(
+    std::string str,
+    const char split) {
+  std::istringstream inStream(str);
+  std::vector<std::string> ret;
+  std::string token;
+  while (getline(inStream, token, split)) {
+    if (!token.empty()) {
+      ret.push_back(token);
+      token.clear();
+    }
+  }
+  return ret;
+}
+
+void CefAppManager::RenderAddCustomSchemes() {
   CefRefPtr<CefCommandLine> cmdLine = CefCommandLine::GetGlobalCommandLine();
   if (cmdLine->HasSwitch(switches::kProcessType)) {
     LOG(INFO) << "render Add custom schemes";
@@ -165,44 +206,5 @@ void CefAppManager::AddAdditionalSchemes(
       }
     }
   }
-#endif
-
-  scheme::AddInternalSchemes(schemes);
-
-  scheme_info_list_locked_ = true;
-}
-
-#if BUILDFLAG(IS_WIN)
-const wchar_t* CefAppManager::GetResourceDllName() {
-  static wchar_t file_path[MAX_PATH + 1] = {0};
-
-  if (file_path[0] == 0) {
-    // Retrieve the module path (usually libcef.dll).
-    base::FilePath module;
-    base::PathService::Get(base::FILE_MODULE, &module);
-    const std::wstring wstr = module.value();
-    size_t count = std::min(static_cast<size_t>(MAX_PATH), wstr.size());
-    wcsncpy(file_path, wstr.c_str(), count);
-    file_path[count] = 0;
-  }
-
-  return file_path;
-}
-#endif  // BUILDFLAG(IS_WIN)
-
-#ifdef OHOS_NETWORK_LOAD
-std::vector<std::string> CefAppManager::CustomSchemeCmdLineSplit(
-    std::string str,
-    const char split) {
-  std::istringstream inStream(str);
-  std::vector<std::string> ret;
-  std::string token;
-  while (getline(inStream, token, split)) {
-    if (!token.empty()) {
-      ret.push_back(token);
-      token.clear();
-    }
-  }
-  return ret;
 }
 #endif
