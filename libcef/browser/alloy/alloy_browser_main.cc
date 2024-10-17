@@ -293,7 +293,7 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
 #endif
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_NETWORK_LOAD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExNetworkLoad)) {
     if (!network_quality_tracker_) {
       network_quality_tracker_ =
           std::make_unique<network::NetworkQualityTracker>(

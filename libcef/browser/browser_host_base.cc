@@ -959,7 +959,7 @@ void CefBrowserHostBase::PutUserAgent(const CefString& ua) {
   std::string user_agent = ua;
   const base::CommandLine& command_line =
       *base::CommandLine::ForCurrentProcess();
-  if (command_line.HasSwitch(switches::kForBrowser) &&
+  if (command_line.HasSwitch(switches::kEnableNwebExUa) &&
       (ua.empty() || ua.length() == 0)) {
     user_agent = DefaultUserAgent();
   }

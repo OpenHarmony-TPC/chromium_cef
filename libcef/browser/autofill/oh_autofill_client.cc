@@ -485,7 +485,7 @@ void OhAutofillClient::ShowAutofillPopupImpl(
 
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser) && popup_type == autofill::PopupType::kPasswords) {
+          switches::kEnableNwebExPassword) && popup_type == autofill::PopupType::kPasswords) {
     GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions, true);
   }
 #endif

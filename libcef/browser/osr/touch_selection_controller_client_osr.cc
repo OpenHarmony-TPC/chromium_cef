@@ -245,7 +245,7 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
 #if defined(OHOS_EX_FREE_COPY)
   bool is_browser =
       base::CommandLine::ForCurrentProcess() &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
+      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebExFreeCopy);
   bool has_select = !rwhv_->GetSelectedText().empty();
   if (is_browser && !has_select && params.selection_text.empty() &&
       !params.is_editable) {
@@ -382,7 +382,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
 #if defined(OHOS_EX_FREE_COPY)
   if (base::CommandLine::ForCurrentProcess() &&
       base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExFreeCopy)) {
     SelectionTextNotEmpty(false);
   }
 #endif
@@ -935,7 +935,7 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
 #endif  // OHOS_CLIPBOARD
 #if defined(OHOS_EX_FREE_COPY)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExFreeCopy)) {
     has_selection = has_selection || isSelectionTextNotEmpty_;
   }
 #endif

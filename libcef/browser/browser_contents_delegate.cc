@@ -60,7 +60,7 @@ constexpr base::TimeDelta kEffectiveUserEscapeDuration =
 void MaybeSetUserAgentOverrideForMainFrame(
     content::NavigationHandle* navigation) {
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser) ||
+          switches::kEnableNwebExUa) ||
       !navigation) {
     return;
   }

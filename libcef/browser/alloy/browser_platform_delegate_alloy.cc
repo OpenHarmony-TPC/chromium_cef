@@ -182,7 +182,7 @@ void CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(
 
 #if defined(OHOS_EX_GET_ZOOM_LEVEL)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExGetZoomLevel)) {
     if (!browser_) {
       return;
     }
@@ -257,7 +257,7 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
 
 #ifdef OHOS_EX_GET_ZOOM_LEVEL
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExGetZoomLevel)) {
     // Add observer for zoomcontroller.
     AlloyBrowserHostImpl* delegate = static_cast<AlloyBrowserHostImpl*>(browser);
     zoom::ZoomController* zoom_controller =

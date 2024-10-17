@@ -462,7 +462,7 @@ void AlloyContentRendererClient::RenderFrameCreated(
   autofill::PasswordGenerationAgent* password_generation_agent = nullptr;
 #if defined(OHOS_EX_PASSWORD)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExPassword)) {
     password_generation_agent = new autofill::PasswordGenerationAgent(
         render_frame, password_autofill_agent, associated_interfaces);
   }

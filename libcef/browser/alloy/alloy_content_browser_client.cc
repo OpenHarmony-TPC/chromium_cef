@@ -2765,7 +2765,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
             switches::kHttpCacheMaxSize)) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kForBrowser)) {
+            switches::kEnableNwebEx)) {
       // In order to make better use of cache, we use the same strategy as
       // chromium for httpcache.
       // Determined by DiskCache itself.
