@@ -1993,6 +1993,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) = 0;
 
+  ///
+  /// SetNativeEmbedMode.
+  ///
+  /*--cef()--*/
+  virtual void SetNativeEmbedMode(bool flag) = 0;
+
 #if defined(OHOS_GET_SCROLL_OFFSET)
   ///
   /// Get the current scroll offset of the webpage.
