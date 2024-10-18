@@ -450,6 +450,7 @@ class CefRenderWidgetHostViewOSR
       bool need_report);
   bool NeedPopupInsertTouchHandleQuickMenu();
   void SetGestureEventResult(bool result);
+  void SetNativeEmbedMode(bool flag);
 #endif
 
 #ifdef OHOS_CLIPBOARD
