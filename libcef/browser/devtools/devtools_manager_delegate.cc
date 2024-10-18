@@ -44,18 +44,25 @@
 namespace content {
 bool CanUserConnectToDevTools(
     const net::UnixDomainServerSocket::Credentials& credentials) {
+  if (credentials.group_id != credentials.user_id) {
+    LOG(WARNING) << "DevTools: credentials.group_id = "
+                 << credentials.group_id
+                 << " is not equal to credentials.user_id = "
+                 << credentials.user_id;
+    return false;
+  }
+  // From processes signed with the same key
+  if (credentials.user_id == getuid()) {
+    return true;
+  }
   struct passwd* creds = getpwuid(credentials.user_id);
   if (!creds || !creds->pw_name) {
     LOG(WARNING) << "DevTools: can't obtain creds for uid "
                  << credentials.user_id;
     return false;
   }
-  if (credentials.group_id == credentials.user_id &&
-      (strcmp("root", creds->pw_name) == 0 ||   // For rooted devices
-       strcmp("shell", creds->pw_name) == 0 ||  // For non-rooted devices
-
-       // From processes signed with the same key
-       credentials.user_id == getuid())) {
+  if (strcmp("root", creds->pw_name) == 0 ||   // For rooted devices
+      strcmp("shell", creds->pw_name) == 0) {  // For non-rooted devices
     return true;
   }
   LOG(WARNING) << "DevTools: connection attempt from " << creds->pw_name;
