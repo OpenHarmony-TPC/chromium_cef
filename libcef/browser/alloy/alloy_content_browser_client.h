@@ -399,6 +399,8 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
                                 bool is_outermost_main_frame,
                                 ui::PageTransition transition,
                                 bool* ignore_navigation) override;
+
+  bool AlloyContentBrowserClient::ShouldIsolateErrorPage(bool in_main_frame) override;
 #endif
 
  private:

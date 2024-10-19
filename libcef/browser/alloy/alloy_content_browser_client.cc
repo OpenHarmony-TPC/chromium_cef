@@ -3258,4 +3258,8 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
 
   return true;
 }
+
+bool AlloyContentBrowserClient::ShouldIsolateErrorPage(bool in_main_frame) {
+  return false;
+}
 #endif
