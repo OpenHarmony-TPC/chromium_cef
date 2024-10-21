@@ -400,7 +400,7 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
                                 ui::PageTransition transition,
                                 bool* ignore_navigation) override;
 
-  bool AlloyContentBrowserClient::ShouldIsolateErrorPage(bool in_main_frame) override;
+  bool ShouldIsolateErrorPage(bool in_main_frame) override;
 #endif
 
  private:
