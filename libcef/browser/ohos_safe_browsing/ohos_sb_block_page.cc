@@ -1,17 +1,6 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h"
 
@@ -27,7 +16,7 @@
 
 namespace ohos_safe_browsing {
 
-OhosSbBlockPage::OhosSbBlockPage(
+SbBlockPage::SbBlockPage(
     content::WebContents* web_contents,
     const GURL& request_url,
     int policy,
@@ -39,9 +28,9 @@ OhosSbBlockPage::OhosSbBlockPage(
       block_type_(block_type),
       policy_(policy) {}
 
-OhosSbBlockPage::~OhosSbBlockPage() = default;
+SbBlockPage::~SbBlockPage() = default;
 
-std::string OhosSbBlockPage::GetHTMLContents() {
+std::string SbBlockPage::GetHTMLContents() {
   base::Value::Dict load_time_data;
   PopulateInterstitialStrings(load_time_data);
   webui::SetLoadTimeDataDefaults(controller()->GetApplicationLocale(),
@@ -54,7 +43,7 @@ std::string OhosSbBlockPage::GetHTMLContents() {
   return webui::GetI18nTemplateHtml(html, load_time_data);
 }
 
-void OhosSbBlockPage::CommandReceived(const std::string& command) {
+void SbBlockPage::CommandReceived(const std::string& command) {
   if (command == "\"pageLoadComplete\"") {
     // content::WaitForRenderFrameReady sends this message when the page
     // load completes. Ignore it.
@@ -68,7 +57,7 @@ void OhosSbBlockPage::CommandReceived(const std::string& command) {
       static_cast<security_interstitials::SecurityInterstitialCommand>(cmd));
 }
 
-void OhosSbBlockPage::HandleCommand(
+void SbBlockPage::HandleCommand(
     security_interstitials::SecurityInterstitialCommand command) {
   // CMD_DONT_PROCEED
   if (command == security_interstitials::CMD_DONT_PROCEED) {
@@ -81,13 +70,13 @@ void OhosSbBlockPage::HandleCommand(
   }
 }
 
-void OhosSbBlockPage::OnInterstitialClosing() {}
+void SbBlockPage::OnInterstitialClosing() {}
 
-bool OhosSbBlockPage::ShouldDisplayURL() const {
+bool SbBlockPage::ShouldDisplayURL() const {
   return false;
 }
 
-void OhosSbBlockPage::PopulateInterstitialStrings(
+void SbBlockPage::PopulateInterstitialStrings(
     base::Value::Dict& load_time_data) {
   load_time_data.Set("policy", std::to_string(policy_));
   load_time_data.Set("title",
@@ -111,9 +100,8 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_BODY));
   } else {
-    load_time_data.Set(
-        "block_info_body",
-        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_FRAUD_INFO_BODY));
+    load_time_data.Set("block_info_body",
+                       l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_FRAUD_INFO_BODY));
   }
 
   if (base::i18n::IsRTL()) {
@@ -128,7 +116,7 @@ void OhosSbBlockPage::PopulateInterstitialStrings(
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_PROCEED));
 }
 
-void OhosSbBlockPage::PopulateUrlTrustListInterstitialStrings(
+void SbBlockPage::PopulateUrlTrustListInterstitialStrings(
     base::Value::Dict& load_time_data) {
   load_time_data.Set("title",
     l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TITLE));
@@ -145,7 +133,7 @@ void OhosSbBlockPage::PopulateUrlTrustListInterstitialStrings(
     IDS_OHOS_BLOCK_PAGE_DONT_PROCEED));
 }
 
-std::string OhosSbBlockPage::GetUrlTrustListErrorHTMLContents() {
+std::string SbBlockPage::GetUrlTrustListErrorHTMLContents() {
   base::Value::Dict load_time_data;
   PopulateUrlTrustListInterstitialStrings(load_time_data);
   webui::SetLoadTimeDataDefaults(controller()->GetApplicationLocale(),
@@ -153,8 +141,8 @@ std::string OhosSbBlockPage::GetUrlTrustListErrorHTMLContents() {
   std::string html =
       ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
           URL_TRUST_LIST_ERROR_OHOS_HTML);
-
   webui::AppendWebUiCssTextDefaults(&html);
   return webui::GetI18nTemplateHtml(html, load_time_data);
 }
+
 }  // namespace ohos_safe_browsing

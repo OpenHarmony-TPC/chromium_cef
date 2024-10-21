@@ -82,7 +82,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
     callback_ = callback;
   }
   void FillData(CefRefPtr<CefValue> data);
-  void OnAutofillEvent(const std::string& json_str);
+  bool OnAutofillEvent(const std::string& json_str);
   bool IsOffTheRecord() override;
   scoped_refptr<network::SharedURLLoaderFactory> GetURLLoaderFactory() override;
   autofill::AutofillDownloadManager* GetDownloadManager() override;

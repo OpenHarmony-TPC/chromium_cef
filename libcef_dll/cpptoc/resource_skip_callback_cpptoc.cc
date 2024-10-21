@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8c379b0e1038da0ee479aacbf82770fcfb168ef$
+// $hash=bff1a6490007bd43ac28f862bcc145e3b385b1ca$
 //
 
 #include "libcef_dll/cpptoc/resource_skip_callback_cpptoc.h"

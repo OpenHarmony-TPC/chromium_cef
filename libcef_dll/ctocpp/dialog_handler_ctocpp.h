@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef0e2e93340e25211668b8a3391a2aee735d2727$
+// $hash=4d9ff892b5e6683d3efef64bfdaad6a50513cddc$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

@@ -204,7 +204,6 @@ class CefValue : public virtual CefBaseRefCounted {
   /*--cef(optional_param=value)--*/
   virtual bool SetString(const CefString& value) = 0;
   virtual bool SetStdString(const std::string& value) = 0;
-
   ///
   /// Sets the underlying value as type binary. Returns true if the value was
   /// set successfully. This object keeps a reference to |value| and ownership

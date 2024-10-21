@@ -334,7 +334,7 @@ double CefValueImpl::GetDouble() {
   return ret_value;
 }
 
-CefString CefValueImpl::GetString() {
+std::string CefValueImpl::GetStdString() {
   base::AutoLock lock_scope(lock_);
 
   std::string ret_value;
@@ -344,7 +344,7 @@ CefString CefValueImpl::GetString() {
   return ret_value;
 }
 
-std::string CefValueImpl::GetStdString() {
+CefString CefValueImpl::GetString() {
   base::AutoLock lock_scope(lock_);
 
   std::string ret_value;

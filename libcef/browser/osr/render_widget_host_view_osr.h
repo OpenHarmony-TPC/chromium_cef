@@ -142,9 +142,9 @@ class CefRenderWidgetHostViewOSR
   void EvictFrameBackBuffers(bool invisible) override;
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
+  void UpdateDrawRect(const gfx::Rect &rect);
   void NotifyForNextTouchEvent(bool need_wait_for_touch_move = true);
   void TriggerVsync();
-  void UpdateDrawRect(const gfx::Rect &rect);
 #endif
 #ifdef OHOS_EX_TOPCONTROLS
   gfx::Rect GetPhysicalViewBounds();
@@ -154,6 +154,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
+  void ChangeVisibilityOfQuickMenu();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -212,7 +213,6 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
   ui::Compositor* GetCompositor() override;
-  void UpdateDrawMode();
 #endif
 
 #if !BUILDFLAG(IS_MAC)
@@ -362,10 +362,10 @@ class CefRenderWidgetHostViewOSR
   void SendTouchpadFlingEvent(blink::WebGestureEvent event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
+  bool ShouldRouteEvents() const;
 #ifdef OHOS_CLIPBOARD
   void ResetGestureDetection(bool is_lost_focus);
 #endif
-  bool ShouldRouteEvents() const;
   void SetFocus(bool focus);
   void UpdateFrameRate();
 
@@ -436,8 +436,8 @@ class CefRenderWidgetHostViewOSR
 
 #if BUILDFLAG(IS_OHOS)
   bool IsMouseLocked() override;
-  void SetDoubleTapSupportEnabled(bool enabled);
-  void SetMultiTouchZoomSupportEnabled(bool enabled);
+  void SetDoubleTapSupportEnabled(bool enabled) override;
+  void SetMultiTouchZoomSupportEnabled(bool enabled) override;
 
   static void AddCompositor(gfx::AcceleratedWidget widget,
                             ui::Compositor* compositor);
@@ -467,6 +467,7 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_AI
   void OnTextSelected(bool flag);
+  void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
 #endif
 

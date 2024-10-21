@@ -186,6 +186,7 @@ class CefBrowserPlatformDelegateOsr
                      const gfx::Point& touch_point,
                      const gfx::Rect& screen_rect) override;
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
 #endif
 

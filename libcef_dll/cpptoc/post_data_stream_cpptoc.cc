@@ -18,7 +18,7 @@
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
-CEF_EXPORT cef_post_data_stream_t *cef_post_data_stream_create() {
+CEF_EXPORT cef_post_data_stream_t* cef_post_data_stream_create() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
@@ -33,8 +33,8 @@ namespace {
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
 void CEF_CALLBACK post_data_stream_set_read_callback(
-    struct _cef_post_data_stream_t *self,
-    cef_post_data_stream_read_callback_t *read_callback) {
+    struct _cef_post_data_stream_t* self,
+    cef_post_data_stream_read_callback_t* read_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -53,8 +53,8 @@ void CEF_CALLBACK post_data_stream_set_read_callback(
 }
 
 void CEF_CALLBACK
-post_data_stream_init(struct _cef_post_data_stream_t *self,
-                      cef_post_data_stream_init_callback_t *init_callback) {
+post_data_stream_init(struct _cef_post_data_stream_t* self,
+                      cef_post_data_stream_init_callback_t* init_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -72,9 +72,11 @@ post_data_stream_init(struct _cef_post_data_stream_t *self,
       CefPostDataStreamInitCallbackCppToC::Unwrap(init_callback));
 }
 
-void CEF_CALLBACK post_data_stream_read(
-    struct _cef_post_data_stream_t *self, void *buffer, int buf_len,
-    cef_post_data_stream_read_callback_t *read_callback) {
+void CEF_CALLBACK
+post_data_stream_read(struct _cef_post_data_stream_t* self,
+                      void* buffer,
+                      int buf_len,
+                      cef_post_data_stream_read_callback_t* read_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -99,7 +101,7 @@ void CEF_CALLBACK post_data_stream_read(
 }
 
 uint64 CEF_CALLBACK
-post_data_stream_get_size(struct _cef_post_data_stream_t *self) {
+post_data_stream_get_size(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -115,7 +117,7 @@ post_data_stream_get_size(struct _cef_post_data_stream_t *self) {
 }
 
 uint64 CEF_CALLBACK
-post_data_stream_get_position(struct _cef_post_data_stream_t *self) {
+post_data_stream_get_position(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -131,7 +133,7 @@ post_data_stream_get_position(struct _cef_post_data_stream_t *self) {
 }
 
 int CEF_CALLBACK
-post_data_stream_is_chunked(struct _cef_post_data_stream_t *self) {
+post_data_stream_is_chunked(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -147,7 +149,7 @@ post_data_stream_is_chunked(struct _cef_post_data_stream_t *self) {
 }
 
 int CEF_CALLBACK
-post_data_stream_has_null_source(struct _cef_post_data_stream_t *self) {
+post_data_stream_has_null_source(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -162,7 +164,7 @@ post_data_stream_has_null_source(struct _cef_post_data_stream_t *self) {
   return _retval;
 }
 
-int CEF_CALLBACK post_data_stream_is_eof(struct _cef_post_data_stream_t *self) {
+int CEF_CALLBACK post_data_stream_is_eof(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -178,7 +180,7 @@ int CEF_CALLBACK post_data_stream_is_eof(struct _cef_post_data_stream_t *self) {
 }
 
 int CEF_CALLBACK
-post_data_stream_is_in_memory(struct _cef_post_data_stream_t *self) {
+post_data_stream_is_in_memory(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -193,7 +195,7 @@ post_data_stream_is_in_memory(struct _cef_post_data_stream_t *self) {
   return _retval;
 }
 
-void CEF_CALLBACK post_data_stream_reset(struct _cef_post_data_stream_t *self) {
+void CEF_CALLBACK post_data_stream_reset(struct _cef_post_data_stream_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -205,7 +207,7 @@ void CEF_CALLBACK post_data_stream_reset(struct _cef_post_data_stream_t *self) {
   CefPostDataStreamCppToC::Get(self)->Reset();
 }
 
-} // namespace
+}  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
@@ -228,14 +230,16 @@ CefPostDataStreamCppToC::~CefPostDataStreamCppToC() {}
 
 template <>
 CefRefPtr<CefPostDataStream> CefCppToCRefCounted<
-    CefPostDataStreamCppToC, CefPostDataStream,
+    CefPostDataStreamCppToC,
+    CefPostDataStream,
     cef_post_data_stream_t>::UnwrapDerived(CefWrapperType type,
-                                           cef_post_data_stream_t *s) {
+                                           cef_post_data_stream_t* s) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCppToCRefCounted<CefPostDataStreamCppToC, CefPostDataStream,
+CefWrapperType CefCppToCRefCounted<CefPostDataStreamCppToC,
+                                   CefPostDataStream,
                                    cef_post_data_stream_t>::kWrapperType =
     WT_POST_DATA_STREAM;

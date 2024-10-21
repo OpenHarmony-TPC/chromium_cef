@@ -222,6 +222,17 @@ CefExtensionFunctionDetails::GetBrowserForTabIdFirstTime(
 
   CefRefPtr<AlloyBrowserHostImpl> browser;
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // TODO: The mapping between tab_id and nweb_id should be supported.
+  //   tab_id <-> nweb_id <-> browser_id <-> web_contents
+  browser = GetClientAvailableBrowser(tab_id);
+  if (browser) {
+    LOG(INFO) << "Found a client available browser for " << function_->name()
+              << " interact with tab()" << tab_id << ")";
+    return browser;
+  }
+#endif
+
   if (tab_id >= 0) {
     // May be an invalid tabId or in the wrong BrowserContext.
     browser = GetBrowserForTabId(tab_id, function_->browser_context());

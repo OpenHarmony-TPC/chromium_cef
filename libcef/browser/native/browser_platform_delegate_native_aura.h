@@ -51,7 +51,7 @@ class CefBrowserPlatformDelegateNativeAura
   blink::WebMouseEvent TranslateWebMoveEvent(const CefMouseEvent& mouse_event,
                                              bool mouseLeave) const override;
   blink::WebGestureEvent TranslateTouchpadFlingEvent(
-    const CefMouseEvent& mouse_event) const override;
+      const CefMouseEvent& mouse_event) const override;
   blink::WebMouseWheelEvent TranslateWebWheelEvent(
       const CefMouseEvent& mouse_event,
       int deltaX,

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=fc1a9a7c33451ef149ba4131bd3859215189a492$
+// $hash=ee9e218c297f1b9a283ef530ded392f0754e5ee0$
 //
 
 #include "libcef_dll/ctocpp/form_handler_ctocpp.h"

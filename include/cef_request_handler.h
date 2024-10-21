@@ -286,16 +286,16 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   virtual bool OnOpenAppLink(const CefString &url,
                              CefRefPtr<CefOpenAppLinkCallback> callback) {
     return false;
-  } 
+  }
 
   ///
   /// Called when render process not responding
   ///
   /*--cef()--*/
   virtual void OnRenderProcessNotResponding(CefRefPtr<CefBrowser> browser,
-                                          const CefString& referrer,
-                                          int pid,
-                                          int reason) {}
+                                            const CefString& referrer,
+                                            int pid,
+                                            int reason) {}
 
   ///
   /// Called when render process responding again
@@ -303,6 +303,11 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) {}
 
+  ///
+  /// Called when mouse hovering the link
+  ///
+  /*--cef()--*/
+  virtual void OnUpdateTargetURL(CefRefPtr<CefBrowser> browser, const CefString& url) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

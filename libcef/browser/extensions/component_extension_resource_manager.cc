@@ -32,7 +32,7 @@ CefComponentExtensionResourceManager::CefComponentExtensionResourceManager() {
 
   bool enable_printing = true;
 #if BUILDFLAG(IS_OHOS)
-  // The printing service is temporarily not supported on mobile device.
+  // The printing service is temporarily supported on pc device.
   enable_printing = (*base::CommandLine::ForCurrentProcess()).HasSwitch(
             switches::kEnablePrinting);
 #endif

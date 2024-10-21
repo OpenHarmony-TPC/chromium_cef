@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ec39ac275cf279faf1056b8ec45fc17031663a0e$
+// $hash=3c8ad723d8efd0975398aa07f0f08171104fbe86$
 //
 
 #include "libcef_dll/cpptoc/web_message_receiver_cpptoc.h"
@@ -42,12 +42,40 @@ web_message_receiver_on_message(struct _cef_web_message_receiver_t* self,
       CefValueCToCpp::Wrap(message));
 }
 
+int CEF_CALLBACK web_message_receiver_on_message_with_bool_result(
+    struct _cef_web_message_receiver_t* self,
+    struct _cef_value_t* message) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: message; type: refptr_diff
+  DCHECK(message);
+  if (!message) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefWebMessageReceiverCppToC::Get(self)->OnMessageWithBoolResult(
+          CefValueCToCpp::Wrap(message));
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefWebMessageReceiverCppToC::CefWebMessageReceiverCppToC() {
   GetStruct()->on_message = web_message_receiver_on_message;
+  GetStruct()->on_message_with_bool_result =
+      web_message_receiver_on_message_with_bool_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

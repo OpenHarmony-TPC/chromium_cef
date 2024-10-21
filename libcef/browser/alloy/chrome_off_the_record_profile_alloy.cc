@@ -12,7 +12,6 @@
 #include "net/url_request/url_request_context.h"
 #include "chrome/browser/ui/zoom/chrome_zoom_level_prefs.h"
 #include "components/zoom/zoom_event_manager.h"
-
 namespace {
 
 class CefVariationsClient : public variations::VariationsClient {
@@ -187,9 +186,10 @@ void ChromeOffTheRecordProfileAlloy::TrackZoomLevelsFromParent() {
     // Also track changes to the parent profile's default zoom level.
     parent_default_zoom_level_subscription_ =
         original_profile_->GetZoomLevelPrefs()
-            ->RegisterDefaultZoomLevelCallback(base::BindRepeating(
-                &ChromeOffTheRecordProfileAlloy::UpdateDefaultZoomLevel,
-                base::Unretained(this)));
+            ->RegisterDefaultZoomLevelCallback(
+                base::BindRepeating(
+                    &ChromeOffTheRecordProfileAlloy::UpdateDefaultZoomLevel,
+                    base::Unretained(this)));
 }
 
 void ChromeOffTheRecordProfileAlloy::OnParentZoomLevelChanged(
@@ -211,7 +211,7 @@ void ChromeOffTheRecordProfileAlloy::OnParentZoomLevelChanged(
 
 void ChromeOffTheRecordProfileAlloy::UpdateDefaultZoomLevel() {
   if (!original_profile_->GetZoomLevelPrefs()) {
-      return;
+    return;
   }
   content::HostZoomMap* host_zoom_map =
       content::HostZoomMap::GetDefaultForBrowserContext(this);

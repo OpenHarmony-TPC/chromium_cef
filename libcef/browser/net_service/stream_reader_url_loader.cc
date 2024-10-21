@@ -19,20 +19,20 @@
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
 #include "content/public/browser/browser_thread.h"
-// #if defined(OHOS_API_PER)
 #include "net/base/features.h"
-// #endif
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
-// #if defined(OHOS_API_PER)
 #include "services/network/public/cpp/features.h"
-// #endif
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
 namespace net_service {
 
 namespace {
+
+#if defined(OHOS_NETWORK_LOAD)
+constexpr int32_t NET_STATUS_CODE_400 = 400;
+#endif
 
 using OnInputStreamOpenedCallback =
     base::OnceCallback<void(std::unique_ptr<StreamReaderURLLoader::Delegate>,
@@ -648,12 +648,12 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                          &content_length, &extra_headers);
 
   LOG(DEBUG) << "intercept StreamReaderURLLoader::HeadersComplete"
-              << " request_id=" << request_id_
-              << " status_code=" << status_code
-              << " status_text=" << status_text
-              << " mime_type=" << mime_type
-              << " charset=" << charset
-              << " content_length=" << content_length;
+                << " request_id_=" << request_id_
+                << " status_code=" << status_code
+                << " status_text=" << status_text
+                << " mime_type=" << mime_type
+                << " charset=" << charset
+                << " content_length=" << content_length;
   if (status_code < 0) {
     // Early exit if the handler reported an error.
     RequestComplete(status_code);
@@ -687,7 +687,7 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
 #if defined(OHOS_NETWORK_LOAD)
-  if (status_code >= 400) {
+  if (status_code >= NET_STATUS_CODE_400) {
     if (!mime_type.empty()) {
       headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
     }
@@ -753,7 +753,8 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
     return false;
   }
 
-  base::ReadOnlySharedMemoryRegion read_only_region = base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
+  base::ReadOnlySharedMemoryRegion read_only_region =
+      base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
   if (!read_only_region.IsValid()) {
     LOG(ERROR) << "shared-memory: convert to read only err";
     return false;
@@ -830,10 +831,10 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
     client_->OnReceiveResponse(std::move(pending_response),
                                std::move(consumer_handle),
                                std::move(cached_metadata_));
-    
+
 #if BUILDFLAG(IS_OHOS)
     LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders request_id_=" << request_id_
-                << ", request_.is_sync_mode=" << request_.is_sync_mode;
+      << ", request_.is_sync_mode=" << request_.is_sync_mode;
     if (!request_.is_sync_mode || !TryTransferDataWithSharedMemory()) {
       ReadMore();
     }

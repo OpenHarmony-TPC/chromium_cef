@@ -134,9 +134,16 @@ class AlloyBrowserContext : public ChromeProfileAlloy,
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   ExtensionSpecialStoragePolicy* GetExtensionSpecialStoragePolicy() override;
 #endif
+
+#if defined(OHOS_CLOUD_CONTROL)
+  void OnWebViewShow();
+  void OnContextInitialized();
+#endif
  private:
   ~AlloyBrowserContext() override;
-
+#if defined(OHOS_CLOUD_CONTROL)
+  void ScheduleUpdateCloudControl(content::BrowserContext* context);
+#endif
   std::unique_ptr<PrefService> pref_service_;
   std::unique_ptr<PrefProxyConfigTracker> pref_proxy_config_tracker_;
 

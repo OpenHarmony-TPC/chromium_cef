@@ -37,6 +37,13 @@
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
+
 using network::mojom::CookieManager;
 
 namespace {
@@ -287,7 +294,7 @@ void CefCookieManagerImpl::Initialize(
     CefBrowserContext::Getter browser_context_getter,
     CefRefPtr<CefCompletionCallback> callback) {
   CEF_REQUIRE_UIT();
-  (void)browser_context_getter;
+  browser_context_getter_ = browser_context_getter;
   RunAsyncCompletionOnUIThread(callback);
 }
 
@@ -297,6 +304,25 @@ bool CefCookieManagerImpl::IsAcceptCookieAllowed() {
 
 void CefCookieManagerImpl::PutAcceptCookieEnabled(bool accept) {
   net_service::NetHelpers::accept_cookies = accept;
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser)) {
+    if (browser_context_getter_) {
+      auto cef_browser_context = browser_context_getter_.Run();
+      if (cef_browser_context) {
+        HostContentSettingsMap* host_content_settings_map =
+            HostContentSettingsMapFactory::GetForProfile(
+                cef_browser_context->AsBrowserContext());
+        if (host_content_settings_map) {
+          host_content_settings_map->SetDefaultContentSetting(
+              ContentSettingsType::COOKIES,
+              net_service::NetHelpers::IsAllowAcceptCookies() ? ContentSetting::CONTENT_SETTING_ALLOW
+                                                              : ContentSetting::CONTENT_SETTING_BLOCK);
+        }
+      }
+    }
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 }
 
 bool CefCookieManagerImpl::IsThirdPartyCookieAllowed() {
@@ -331,7 +357,8 @@ bool CefCookieManagerImpl::VisitUrlCookies(
     const CefString& url,
     bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor,
-    bool is_sync) {
+    bool is_sync,
+    bool is_from_ndk) {
   if (!visitor.get()) {
     return false;
   }
@@ -341,16 +368,17 @@ bool CefCookieManagerImpl::VisitUrlCookies(
     return false;
   }
   LOG(DEBUG) << "CefCookieManagerImpl::VisitUrlCookies is_sync: " << is_sync;
-  return VisitUrlCookiesInternal(gurl, includeHttpOnly, visitor, is_sync);
+  return VisitUrlCookiesInternal(gurl, includeHttpOnly, visitor, is_sync, is_from_ndk);
 }
 
 bool CefCookieManagerImpl::SetCookie(const CefString& url,
                                      const CefCookie& cookie,
                                      CefRefPtr<CefSetCookieCallback> callback,
-                                     bool is_sync, const CefString& str_cookie) {
+                                     bool is_sync, const CefString& str_cookie,
+                                     bool includeHttpOnly) {
   GURL gurl = GURL(url.ToString());
   LOG(DEBUG) << "CefCookieManagerImpl::SetCookie is_sync: " << is_sync;
-  return SetCookieInternal(gurl, cookie, callback, is_sync, str_cookie);
+  return SetCookieInternal(gurl, cookie, callback, is_sync, str_cookie, includeHttpOnly);
 }
 
 bool CefCookieManagerImpl::DeleteCookies(
@@ -491,11 +519,15 @@ bool CefCookieManagerImpl::VisitUrlCookiesInternal(
     const GURL& url,
     bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor,
-    bool is_sync) {
+    bool is_sync,
+    bool is_from_ndk) {
   DCHECK(visitor);
   DCHECK(url.is_valid());
 
   net::CookieOptions options = net::CookieOptions::MakeAllInclusive();
+  if (is_from_ndk && !includeHttpOnly) {
+    options.set_exclude_httponly();
+  }
   LOG(DEBUG) << "CefCookieManagerImpl::VisitUrlCookiesInternal is_sync : " << is_sync;
   if (is_sync) {
     RunCookieTaskSync(base::BindOnce(&CefCookieManagerImpl::GetCookieListCookieTask,
@@ -538,7 +570,8 @@ bool CefCookieManagerImpl::SetCookieInternal(
     const CefCookie& cookie,
     CefRefPtr<CefSetCookieCallback> callback,
     bool is_sync,
-    const CefString& str_cookie) {
+    const CefString& str_cookie,
+    bool includeHttpOnly) {
   DCHECK(url.is_valid());
 
   std::unique_ptr<net::CanonicalCookie> canonical_cookie(net::CanonicalCookie::Create(
@@ -551,7 +584,7 @@ bool CefCookieManagerImpl::SetCookieInternal(
   }
 
   net::CookieOptions options;
-  if (cookie.httponly) {
+  if (includeHttpOnly || cookie.httponly) {
     options.set_include_httponly();
   }
   options.set_same_site_cookie_context(

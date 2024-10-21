@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=90a4f565796337a6d7f4a72eec97e3fb91db8f2d$
+// $hash=9982ef3843a2cd20051896a48c751f0a921e5f08$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -149,8 +149,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetNativeWindow(cef_native_window_t window) override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
-  void GetImageForContextNode() override;
-  void GetImageFromCache(const CefString& url) override;
+  void GetImageForContextNode(int command_id) override;
+  void GetImageFromCache(const CefString& url, int command_id) override;
   void ExitFullScreen() override;
   void UpdateLocale(const CefString& locale) override;
   CefString GetOriginalUrl() override;
@@ -189,10 +189,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                       CefString& targetUri) override;
   void ClosePort(CefString& port_handle) override;
   void DestroyAllWebMessagePorts() override;
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void GetHitData(int& type, CefString& extra_data) override;
   void SetInitialScale(float scale) override;
@@ -252,40 +252,43 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
   void SetOverscrollMode(int mode) override;
+  void SetBrowserZoomLevel(double zoomFactor) override;
   bool Discard() override;
   bool Restore() override;
-  void SetBrowserZoomLevel(double zoomFactor) override;
   int GetTopControlsOffset() override;
   int GetShrinkViewportHeight() override;
+  int InsertBackForwardEntry(int index, const CefString& url) override;
+  int UpdateNavigationEntryUrl(int index, const CefString& url) override;
+  void ClearForwardList() override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
   void SetScrollable(bool enable, int scrollType) override;
+  CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
-  CefString GetLastJavascriptProxyCallingFrameUrl() override;
   void SetNWebId(int nWebId) override;
   bool GetPendingSizeStatus() override;
+  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
+  void SetWakeLockHandler(int32_t windowId,
+                          CefRefPtr<CefSetLockCallback> callback) override;
+  void SetNeedsReload(bool needs_reload) override;
+  bool NeedsReload() override;
   void PrecompileJavaScript(const std::string& url,
                             const std::string& script,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
-  void SetWakeLockHandler(int32_t windowId,
-                          CefRefPtr<CefSetLockCallback> callback) override;
-  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
-  void NotifyNeedsReload(bool needs_reload) override;
-  bool NeedsReload() override;
+  void UpdateDrawRect() override;
+  void SendTouchpadFlingEvent(const CefMouseEvent& event,
+                              double vx,
+                              double vy) override;
+  void SetFitContentMode(int mode) override;
   bool TerminateRenderProcess() override;
   void RegisterNativeJSProxy(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
                              bool is_async,
                              const CefString& permission) override;
-  void SendTouchpadFlingEvent(const CefMouseEvent& event,
-                              double vx,
-                              double vy) override;
-  void SetFitContentMode(int mode) override;
-  void UpdateDrawRect() override;
   void OnTextSelected(bool flag) override;
   float GetPageScaleFactor() override;
   bool WebPageSnapshot(const char* id,
@@ -293,12 +296,17 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        int height,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override;
+  void ScrollFocusedEditableNodeIntoView() override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
-  void ScrollFocusedEditableNodeIntoView() override;
   void ProcessAutofillCancel(const std::string& fillContent) override;
   void AutoFillWithIMFEvent(bool is_username,
                             bool is_other_account,

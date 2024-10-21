@@ -526,6 +526,11 @@ typedef struct _cef_request_context_settings_t {
 #if defined(OHOS_INCOGNITO_MODE)
     bool incognito_mode;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  /// Only used by Extensions's background script initialization during startup.
+  void* global_request_context;
+#endif
 } cef_request_context_settings_t;
 
 ///
@@ -697,15 +702,15 @@ typedef struct _cef_browser_settings_t {
   cef_state_t hide_horizontal_scrollbars;
   bool contextmenu_customization_enabled;
   cef_color_t scrollbar_color;
-  bool blank_target_popup_intercept_enabled;
+  bool is_safe_browsing_enable;
   cef_state_t native_embed_mode_enabled;
   cef_string_t embed_tag;
   cef_string_t embed_tag_type;
   bool scroll_enabled;
-  bool is_safe_browsing_enable;
   int draw_mode;
   cef_state_t text_autosizing_enabled;
   cef_state_t universal_access_from_file_urls;
+  bool force_zero_layout_height;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -727,17 +732,20 @@ typedef struct _cef_browser_settings_t {
   bool custom_video_player_enable;
   bool custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+  bool supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   bool record_whole_document;
 #endif
 
-#if defined(OHOS_MULTI_WINDOW)
-  bool supports_multiple_windows;
-#endif // OHOS_MULTI_WINDOW
 #if defined(OHOS_RENDER_PROCESS_SHARE)
   cef_string_t shared_render_process_token;
 #endif
+#ifdef OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
+  bool enable_media_network_traffic_prompt;
+#endif // OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
 } cef_browser_settings_t;
 
 ///
@@ -1863,6 +1871,11 @@ typedef enum {
 #if BUILDFLAG(IS_OHOS)
   MENU_ID_IMAGE_COPY = 221,
 #endif  // BUILDFLAG(IS_OHOS)
+
+#if BUILDFLAG(IS_OHOS)
+  MENU_ID_IMAGE_SHARE = 222,
+  MENU_ID_FEED_SHARE = 223,
+#endif
   MENU_ID_CUSTOM_LAST = 250,
 
   // All user-defined menu IDs should come between MENU_ID_USER_FIRST and

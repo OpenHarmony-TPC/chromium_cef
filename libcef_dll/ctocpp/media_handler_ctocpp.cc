@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a323ce1896de4a02a42bb781742ffd2c614128da$
+// $hash=fd772c0574bb9267855186aec900946131ee33aa$
 //
 
 #include "libcef_dll/ctocpp/media_handler_ctocpp.h"

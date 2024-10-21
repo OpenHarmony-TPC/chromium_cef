@@ -1,20 +1,9 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#ifndef CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CONTROLLER_CLIENT_H_
-#define CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CONTROLLER_CLIENT_H_
+#ifndef CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CONTROLLER_CLIENT_H_
+#define CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CONTROLLER_CLIENT_H_
 
 #include <memory>
 #include <string>
@@ -38,15 +27,15 @@ class SettingsPageHelper;
 using security_interstitials::MetricsHelper;
 using security_interstitials::SecurityInterstitialControllerClient;
 
-class OhosSbControllerClient : public SecurityInterstitialControllerClient {
+class SbControllerClient : public SecurityInterstitialControllerClient {
  public:
-  OhosSbControllerClient(content::WebContents* web_contents,
+  SbControllerClient(content::WebContents* web_contents,
                      PrefService* prefs,
                      const GURL& url,
                      const std::string& app_locale,
                      bool incognito_mode);
 
-  ~OhosSbControllerClient() override;
+  ~SbControllerClient() override;
 
   void Proceed() override;
   void Reload() override;
@@ -67,4 +56,4 @@ private:
   bool incognito_mode_{false};
 };
 
-#endif  // CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CONTROLLER_CLIENT_H_
+#endif  // CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CONTROLLER_CLIENT_H_

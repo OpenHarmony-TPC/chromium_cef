@@ -10,6 +10,12 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/extension_service.h"
+#include "extensions/browser/extension_host.h"
+#include "extensions/browser/extension_system.h"
+#endif
+
 namespace extensions {
 
 CefExtensionHostDelegate::CefExtensionHostDelegate(
@@ -21,7 +27,15 @@ void CefExtensionHostDelegate::OnExtensionHostCreated(
     content::WebContents* web_contents) {}
 
 void CefExtensionHostDelegate::OnMainFrameCreatedForBackgroundPage(
-    ExtensionHost* host) {}
+    ExtensionHost* host) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // Start connect devtools
+  ExtensionService* service =
+      ExtensionSystem::Get(host->browser_context())->extension_service();
+  if (service)
+    service->DidCreateMainFrameForBackgroundPage(host);
+#endif
+}
 
 content::JavaScriptDialogManager*
 CefExtensionHostDelegate::GetJavaScriptDialogManager() {

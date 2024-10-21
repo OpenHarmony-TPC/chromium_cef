@@ -246,7 +246,6 @@ void AlloyContentRendererClient::RenderThreadStarted() {
   subresource_filter_ruleset_dealer_ =
       std::make_unique<subresource_filter::UnverifiedRulesetDealer>();
   thread->AddObserver(subresource_filter_ruleset_dealer_.get());
-
   subresource_filter_user_ruleset_dealer_.reset(
       new subresource_filter::UserUnverifiedRulesetDealer());
   thread->AddObserver(subresource_filter_user_ruleset_dealer_.get());
@@ -349,9 +348,10 @@ void AlloyContentRendererClient::PrepareErrorPage(
     alternative_error_page_info,
     std::string* error_html) {
   AlloySafeBrowsingErrorPageControllerDelegateImpl::Get(render_frame)
-     ->PrepareForErrorPage();
+       ->PrepareForErrorPage();
 }
 #endif
+
 
 void AlloyContentRendererClient::RenderFrameCreated(
     content::RenderFrame* render_frame) {
@@ -398,6 +398,17 @@ void AlloyContentRendererClient::RenderFrameCreated(
   new AlloySafeBrowsingErrorPageControllerDelegateImpl(render_frame);
 #endif
   auto render_frame_observer = new CefRenderFrameObserver(render_frame);
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_EX_EXCEPTION_LIST)
+  AlloyContentSettingsClient* alloy_content_settings_client =
+      new AlloyContentSettingsClient(render_frame);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser) &&
+      observer_.get() && alloy_content_settings_client) {
+    alloy_content_settings_client->SetContentSettingRules(
+        observer_->content_setting_rules());
+  }
+#endif
 
 #if defined(OHOS_NO_STATE_PREFETCH)
   new prerender::PrerenderRenderFrameObserver(render_frame);
@@ -994,13 +1005,6 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
     return;
   }
 
-  blink::WebDocument document = web_frame->GetDocument();
-  if (!document.Url().ProtocolIs("https") &&
-      !document.Url().ProtocolIs("http")) {
-    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
-    return;
-  }
-
   blink::WebDocumentSubresourceFilter* filter =
       web_frame->GetDocumentLoader()->GetWebSubresourceFilter();
   if (!filter) {
@@ -1008,22 +1012,29 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
     return;
   }
 
+  blink::WebDocument document = web_frame->GetDocument();
+  if (!document.Url().ProtocolIs("https") &&
+      !document.Url().ProtocolIs("http")) {
+    LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
+    return;
+  }
+
   if (web_frame->GetHasDocumentTypeOption()) {
     LOG(WARNING) << "[AdBlock] Match $document for "
-                 << document.Url().GetString().Utf8();
+                 << "***";
     return;
   }
 
   if (web_frame->GetHasElemHideTypeOption()) {
     LOG(WARNING) << "[AdBlock] Match selemhide for "
-                 << document.Url().GetString().Utf8();
+                 << "***";
     return;
   }
 
   bool has_generichide = web_frame->GetHasGenericHideTypeOption();
   if (has_generichide) {
     LOG(WARNING) << "[AdBlock] Match sgenerichide for "
-                 << document.Url().GetString().Utf8();
+                 << "***";
   }
 
   base::TimeTicks start = base::TimeTicks::Now();
@@ -1038,7 +1049,7 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
                               blink::WebDocument::StyleSheetType::kAdBlock);
     base::TimeDelta duration = base::TimeTicks::Now() - start;
     LOG(WARNING) << "[AdBlock] Element hiding for "
-                 << document.Url().GetString().Utf8() << "assumming "
+                 << "***" << "assumming "
                  << duration.InMicroseconds() << "microseconds";
     return;
   }
@@ -1080,7 +1091,7 @@ void AlloyContentRendererClient::TriggerUserElementHidingInFrame(
                               blink::WebDocument::StyleSheetType::kUserAdBlock);
     base::TimeDelta duration = base::TimeTicks::Now() - start;
     LOG(WARNING) << "[User AdBlock] Element hiding for "
-                 << document.Url().GetString().Utf8() << " assumming "
+                 << "***" << " assumming "
                  << duration.InMicroseconds() << " microseconds";
     return;
   }

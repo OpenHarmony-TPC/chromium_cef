@@ -20,7 +20,7 @@
 NO_SANITIZE("cfi-icall") void CefSetLockCallbackCToCpp::Handle(bool key) {
   shutdown_checker::AssertNotShutdown();
 
-  cef_set_lock_callback_t *_struct = GetStruct();
+  cef_set_lock_callback_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, handle)) {
     return;
   }
@@ -42,16 +42,17 @@ CefSetLockCallbackCToCpp::~CefSetLockCallbackCToCpp() {
 }
 
 template <>
-cef_set_lock_callback_t *
-CefCToCppRefCounted<CefSetLockCallbackCToCpp, CefSetLockCallback,
-                    cef_set_lock_callback_t>::UnwrapDerived(CefWrapperType type,
-                                                            CefSetLockCallback
-                                                                *c) {
+cef_set_lock_callback_t* CefCToCppRefCounted<
+    CefSetLockCallbackCToCpp,
+    CefSetLockCallback,
+    cef_set_lock_callback_t>::UnwrapDerived(CefWrapperType type,
+                                            CefSetLockCallback* c) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCToCppRefCounted<CefSetLockCallbackCToCpp, CefSetLockCallback,
+CefWrapperType CefCToCppRefCounted<CefSetLockCallbackCToCpp,
+                                   CefSetLockCallback,
                                    cef_set_lock_callback_t>::kWrapperType =
     WT_SET_LOCK_CALLBACK;

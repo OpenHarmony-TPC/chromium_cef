@@ -130,7 +130,7 @@ interface RenderFrame {
   PutZoomingForTextFactor(float factor);
 
   [EnableIf=is_ohos]
-  GetImageForContextNode();
+  GetImageForContextNode(int32 command_id);
 
   [EnableIf=is_ohos]
   GetImagesWithResponse() => (bool response);
@@ -170,11 +170,11 @@ interface RenderFrame {
   [EnableIf=ohos_get_scroll_offset, Sync]
   GetOverScrollOffset() => (float offset_x, float offset_y);
 
+  [EnableIf=ohos_input_events]
+  UpdateDrawRect();
+ 
   [EnableIf=is_ohos]
   TerminateRenderProcess();
-
-  [EnableIf=is_ohos]
-  UpdateDrawRect();
 };
 
 // Interface for communicating with a frame in the browser process.
@@ -193,10 +193,10 @@ interface BrowserFrame {
   UpdateDraggableRegions(array<DraggableRegionEntry>? regions);
 
   [EnableIf=is_ohos]
-  OnGetImageForContextNode(GetImageForContextNodeParams params);
+  OnGetImageForContextNode(GetImageForContextNodeParams params, int32 command_id);
 
   [EnableIf=is_ohos]
-  OnGetImageForContextNodeNull();
+  OnGetImageForContextNodeNull(int32 command_id);
 
   // Give the application a chance to decide whether to override loading the url.
   [EnableIf=is_ohos, Sync]

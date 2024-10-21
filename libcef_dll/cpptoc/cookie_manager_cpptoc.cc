@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4b0eca82f55ca385ac508407f7a23a509162fa5e$
+// $hash=aa8de45e7447269d9601f7924ca48621913fa316$
 //
 
 #include "libcef_dll/cpptoc/cookie_manager_cpptoc.h"
@@ -129,7 +129,8 @@ cookie_manager_visit_url_cookies(struct _cef_cookie_manager_t* self,
                                  const cef_string_t* url,
                                  int includeHttpOnly,
                                  struct _cef_cookie_visitor_t* visitor,
-                                 int is_sync) {
+                                 int is_sync,
+                                 int is_from_ndk) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -150,7 +151,8 @@ cookie_manager_visit_url_cookies(struct _cef_cookie_manager_t* self,
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->VisitUrlCookies(
       CefString(url), includeHttpOnly ? true : false,
-      CefCookieVisitorCToCpp::Wrap(visitor), is_sync ? true : false);
+      CefCookieVisitorCToCpp::Wrap(visitor), is_sync ? true : false,
+      is_from_ndk ? true : false);
 
   // Return type: bool
   return _retval;
@@ -162,7 +164,8 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
                           const struct _cef_cookie_t* cookie,
                           struct _cef_set_cookie_callback_t* callback,
                           int is_sync,
-                          const cef_string_t* str_cookie) {
+                          const cef_string_t* str_cookie,
+                          int includeHttpOnly) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -199,7 +202,8 @@ cookie_manager_set_cookie(struct _cef_cookie_manager_t* self,
   // Execute
   bool _retval = CefCookieManagerCppToC::Get(self)->SetCookie(
       CefString(url), cookieObj, CefSetCookieCallbackCToCpp::Wrap(callback),
-      is_sync ? true : false, CefString(str_cookie));
+      is_sync ? true : false, CefString(str_cookie),
+      includeHttpOnly ? true : false);
 
   // Return type: bool
   return _retval;

@@ -16,11 +16,37 @@
 #include "components/javascript_dialogs/tab_modal_dialog_manager.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include <string>
+
+#include "base/base_switches.h"
+#include "base/command_line.h"
 #include "components/strings/grit/components_strings.h"
+#include "content/public/common/content_switches.h"
 #include "ui/base/l10n/l10n_util.h"
 #endif
 
 namespace {
+
+#if BUILDFLAG(IS_OHOS)
+constexpr int32_t API_TARGET_VERSION_12 = 12;
+// Same as API_VERSION_MOD in js_ui_ability.cpp of ability_runtime
+constexpr int32_t API_VERSION_MOD = 100;
+
+int32_t GetApiTargetVersion() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kOhosAppApiVersion)) {
+    LOG(ERROR) << "kOhosAppApiVersion not exist";
+    return -1;
+  }
+  std::string apiVersion =
+      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kOhosAppApiVersion);
+  if (apiVersion.empty()) {
+    return -1;
+  }
+  return std::stoi(apiVersion) % API_VERSION_MOD;
+}
+#endif
 
 class CefJSDialogCallbackImpl : public CefJSDialogCallback {
  public:
@@ -175,8 +201,12 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
   }
 
 #if BUILDFLAG(IS_OHOS)
-  const std::u16string& message_text =
-      l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
+  static int32_t api_target_version = GetApiTargetVersion();
+  std::u16string message = u"Is it OK to leave/reload this page?";
+  if (api_target_version >= API_TARGET_VERSION_12) {
+    message = l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
+  }
+  const std::u16string& message_text = message;
 #else
   const std::u16string& message_text = u"Is it OK to leave/reload this page?";
 #endif

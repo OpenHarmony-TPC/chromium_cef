@@ -11,6 +11,13 @@
 
 #include <memory>
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "components/prefs/pref_name_set.h"
+#endif
+#ifdef OHOS_CLOUD_CONTROL
+#include "components/pref_registry/pref_registry_syncable.h"
+#endif
+
 namespace base {
 class FilePath;
 }
@@ -29,6 +36,20 @@ extern const char kUserPrefsFileName[];
 // Register preferences specific to CEF.
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry);
 void RegisterProfilePrefs(PrefRegistrySimple* registry);
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void RegisterExtensionPersistentPrefs(PrefNameSet& pref_name_set);
+#endif
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void RegisterSubresourceFilterPersistentPrefs(PrefNameSet& pref_name_set);
+#endif
+
+#ifdef OHOS_CLOUD_CONTROL
+void RegisterCloudControlProfilePrefs(user_prefs::PrefRegistrySyncable* registry);
+
+void RegisterCloudControlPersistentPrefs(PrefNameSet& pref_name_set);
+#endif
 
 // Create the PrefService used to manage pref registration and storage.
 // |profile| will be nullptr for the system-level PrefService. Used with the

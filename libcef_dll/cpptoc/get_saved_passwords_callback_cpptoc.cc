@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc86cefeae4b0a831604bcbd61e7a91fe4c233cc$
+// $hash=63596e7084c8b427d34d25ac957bdc286b76f10e$
 //
 
 #include "libcef_dll/cpptoc/get_saved_passwords_callback_cpptoc.h"

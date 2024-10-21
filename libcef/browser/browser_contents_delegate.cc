@@ -46,6 +46,11 @@
 #include "libcef/browser/load_committed_details_impl.h"
 #endif  // defined(OHOS_NAVIGATION)
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/tabs/tabs_constants.h"
+#include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -78,7 +83,12 @@ void MaybeSetUserAgentOverrideForMainFrame(
   }
 
   std::string host = url.host();
-  if (!navigation->HasUserGesture()) {
+  bool is_reload =
+      PageTransitionCoreTypeIs(navigation->GetPageTransition(),
+                                ui::PageTransition::PAGE_TRANSITION_RELOAD);
+  // Check whether the UA of referrer_url is used only when the main frame
+  // is not overloaded or triggered by user gestures.
+  if (navigation->IsInMainFrame() && !navigation->HasUserGesture() && !is_reload) {
     const GURL referrer_url = navigation->GetReferrer().url;
     if (referrer_url.is_valid() && !referrer_url.is_empty() &&
         referrer_url.has_host()) {
@@ -96,8 +106,9 @@ void MaybeSetUserAgentOverrideForMainFrame(
   std::string final_ua =
       nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
   LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
-             << ", user_gesture " << navigation->HasUserGesture() << ", url "
-             << url.spec();
+             << ", user_gesture " << navigation->HasUserGesture()
+             << ", is_main_frame " << navigation->IsInMainFrame()
+             << ", is_reload " << is_reload << ", url " << url.spec();
 
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
   if (!navigation->IsInMainFrame()) {
@@ -300,6 +311,17 @@ void CefBrowserContentsDelegate::LoadingStateChanged(
                                     can_go_forward);
     }
   }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int32_t tab_id = browser()->GetTabId();
+  if (tab_id >= 0) {
+    std::vector<std::string> changed_properties;
+    changed_properties.push_back(extensions::tabs_constants::kStatusKey);
+    extensions::cef::TabsWindowsAPI::Get(
+        source->GetBrowserContext())->TabUpdated(
+            tab_id, source, changed_properties, "");
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
@@ -309,7 +331,25 @@ void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
       handler->OnStatusMessage(browser(), url.spec());
     }
   }
+#ifdef OHOS_NWEB_EX
+  if (auto c = client()) {
+    if (auto handler = c->GetRequestHandler()) {
+      handler->OnUpdateTargetURL(browser(), url.spec());
+    }
+  }
+#endif
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserContentsDelegate::WebExtensionUpdateTabUrl(
+    int32_t tab_id, const GURL& url) {
+  if (auto c = client()) {
+    if (auto handler = c->GetWebExtensionApiHandler()) {
+      handler->OnUpdateTabUrl(tab_id, url.spec());
+    }
+  }
+}
+#endif
 
 bool CefBrowserContentsDelegate::DidAddMessageToConsole(
     content::WebContents* source,
@@ -674,7 +714,7 @@ void CefBrowserContentsDelegate::PrimaryMainFrameRenderProcessGone(
 #ifdef OHOS_RENDER_PROCESS_MODE
   } else if (status == base::TERMINATION_STATUS_NORMAL_TERMINATION) {
     if (browser() && browser()->GetHost()) {
-      browser()->GetHost()->NotifyNeedsReload(true);
+      browser()->GetHost()->SetNeedsReload(true);
     }
 #endif
   } else if (status != base::TERMINATION_STATUS_ABNORMAL_TERMINATION) {
@@ -858,6 +898,15 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
       OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
       if (navigation_handle->IsServedFromBackForwardCache()) {
         // We won't get an OnLoadEnd notification from anywhere else.
+#ifdef OHOS_BFCACHE
+        LOG(INFO) << "[Favicon] page load form bfcache.";
+        if (auto c = client()) {
+          if (auto handler = c->GetLoadHandler()) {
+            auto navigation_lock = browser_info_->CreateNavigationLock();
+            handler->UpdateFavicon(browser());
+          }
+        }
+#endif // OHOS_BFCACHE
         OnLoadEnd(frame.get(), navigation_handle->GetURL(), 0);
       }
     }
@@ -953,8 +1002,14 @@ void CefBrowserContentsDelegate::TitleWasSet(content::NavigationEntry* entry) {
   // navigated.
   if (entry) {
     OnTitleChange(entry->GetTitle());
+#ifdef OHOS_NETWORK_LOAD
+    observe_need_report_title_ = false;
+#endif
   } else if (web_contents()) {
     OnTitleChange(web_contents()->GetTitle());
+#ifdef OHOS_NETWORK_LOAD
+    observe_need_report_title_ = false;
+#endif
   }
 }
 
@@ -1003,15 +1058,28 @@ void CefBrowserContentsDelegate::WebContentsDestroyed() {
   }
 }
 
+#ifdef OHOS_NETWORK_LOAD
+void CefBrowserContentsDelegate::DidStartLoading() {
+  observe_need_report_title_ = true;
+}
+#endif
+
 void CefBrowserContentsDelegate::Observe(
     int type,
     const content::NotificationSource& source,
     const content::NotificationDetails& details) {
   DCHECK_EQ(type, content::NOTIFICATION_LOAD_STOP);
 
+#ifdef OHOS_NETWORK_LOAD
+  if (type == content::NOTIFICATION_LOAD_STOP && observe_need_report_title_) {
+    OnTitleChange(web_contents()->GetTitle());
+    observe_need_report_title_ = false;
+  }
+#else
   if (type == content::NOTIFICATION_LOAD_STOP) {
     OnTitleChange(web_contents()->GetTitle());
   }
+#endif
 }
 
 bool CefBrowserContentsDelegate::OnSetFocus(cef_focus_source_t source) {

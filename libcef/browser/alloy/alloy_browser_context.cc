@@ -72,6 +72,11 @@
 #include "extensions/browser/browser_context_keyed_service_factories.h"
 #endif
 
+#ifdef OHOS_EX_UA
+#include "content/public/common/content_switches.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
+
 using content::BrowserThread;
 
 // Creates and manages VisitedLinkEventListener objects for each
@@ -210,7 +215,12 @@ void AlloyBrowserContext::Initialize() {
 #endif
     extension_system_ = static_cast<extensions::CefExtensionSystem*>(
         extensions::ExtensionSystem::Get(this));
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    if (settings_.global_request_context) {
+      extension_system_->SetGlobalRequestContext(
+          static_cast<CefRequestContext*>(settings_.global_request_context));
+    }
+#endif
     extension_system_->InitForRegularProfile(true);
     // Make sure the ProcessManager is created so that it receives extension
     // load notifications. This is necessary for the proper initialization of
@@ -241,6 +251,22 @@ void AlloyBrowserContext::Initialize() {
   ChromePluginServiceFilter::GetInstance()->RegisterProfile(this);
 
   media_device_id_salt_ = new MediaDeviceIDSalt(pref_service);
+
+#ifdef OHOS_EX_UA
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    nweb_ex::AlloyBrowserUAConfig::GetInstance()->Init(pref_service);
+    std::string path;
+    uint64_t version = 0;
+    (void)nweb_ex::AlloyBrowserUAConfig::GetInstance()
+        ->ReadCloudConfigInfoFromPrefs(path, version);
+    nweb_ex::AlloyBrowserUAConfig::GetInstance()
+        ->UpdateCloudUAConfigAfterBrowserContextInit(path, version);
+  }
+#endif
+#if defined(OHOS_CLOUD_CONTROL)
+  OnContextInitialized();
+#endif
 }
 
 void AlloyBrowserContext::Shutdown() {
@@ -578,4 +604,18 @@ AlloyBrowserContext::GetExtensionSpecialStoragePolicy() {
   return NULL;
 #endif
 }
+#endif
+
+#if defined(OHOS_CLOUD_CONTROL)
+void AlloyBrowserContext::OnWebViewShow() {
+  ScheduleUpdateCloudControl(this);
+}
+
+void AlloyBrowserContext::OnContextInitialized() {
+  ScheduleUpdateCloudControl(this);
+}
+#endif
+
+#if defined(OHOS_CLOUD_CONTROL) && !defined(OHOS_NWEB_EX)
+void AlloyBrowserContext::ScheduleUpdateCloudControl(content::BrowserContext* context) {}
 #endif

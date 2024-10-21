@@ -75,6 +75,7 @@ class CefKeyboardHandler : public virtual CefBaseRefCounted {
                           CefEventHandle os_event) {
     return false;
   }
+
 #if defined(OHOS_INPUT_EVENTS)
   ///
   /// This interface is invoked to notify the upper-layer application whether the key is used

@@ -72,6 +72,7 @@ class CefWebContentsViewOSR : public content::WebContentsView,
                        const content::ContextMenuParams& params) override;
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show) override;
+  void ChangeVisibilityOfQuickMenu() override;
 #endif
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
