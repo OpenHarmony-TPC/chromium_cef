@@ -285,7 +285,7 @@ void CefWebContentsViewOSR::ShowPopupMenu(
 #ifdef OHOS_EX_TOPCONTROLS
 int CefWebContentsViewOSR::GetTopControlsHeight() {
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExTopControls)) {
     return 0;
   }
 
@@ -318,7 +318,7 @@ bool CefWebContentsViewOSR::DoBrowserControlsShrinkRendererSize() const {
 void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
                                                         bool animate) {
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser) ||
+          switches::kEnableNwebExTopControls) ||
       height == top_controls_height_) {
     return;
   }

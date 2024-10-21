@@ -344,7 +344,7 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
 
 #ifdef OHOS_EX_TOPCONTROLS
   for_browser_ =
-      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kForBrowser);
+      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebExTopControls);
 #endif
 
   if (parent_host_view_) {

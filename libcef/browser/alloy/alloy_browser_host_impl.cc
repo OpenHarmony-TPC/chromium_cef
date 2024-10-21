@@ -552,7 +552,7 @@ void AlloyBrowserHostImpl::SetBrowserZoomLevel(double zoom_factor) {
 #ifdef OHOS_EX_GET_ZOOM_LEVEL
   if (CEF_CURRENTLY_ON_UIT()) {
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kForBrowser) &&
+            switches::kEnableNwebExGetZoomLevel) &&
         web_contents()) {
       zoom::ZoomController* zoom_controller =
           zoom::ZoomController::FromWebContents(web_contents());
@@ -1077,7 +1077,7 @@ void AlloyBrowserHostImpl::DestroyBrowser() {
   if (web_contents()) {
 #if defined(OHOS_EX_GET_ZOOM_LEVEL)
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebExGetZoomLevel)) {
       auto* browser_context = CefBrowserContext::FromBrowserContext(
           web_contents()->GetBrowserContext());
       if (browser_context) {
@@ -2316,7 +2316,7 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
 
 #ifdef OHOS_EX_GET_ZOOM_LEVEL
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kForBrowser)) {
+            switches::kEnableNwebExGetZoomLevel)) {
     zoom::ZoomController::CreateForWebContents(web_contents);
   }
 #endif
@@ -2560,7 +2560,7 @@ void AlloyBrowserHostImpl::AdvanceFocusForIME(int focusType) {
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
 #ifdef OHOS_NWEB_EX
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
+          switches::kEnableNwebEx)) {
     content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN
                                          : content::PageZoom::PAGE_ZOOM_OUT;
     zoom::PageZoom::Zoom(web_contents(), zoomType);
