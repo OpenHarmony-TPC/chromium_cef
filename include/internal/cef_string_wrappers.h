@@ -13,14 +13,7 @@
 //    * Neither the name of Google Inc. nor the name Chromium Embedded
 // Framework nor the names of its contributors may be used to endorse
 // or promote products derived from this software without specific prior
-// written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// written permission.memset(string_->str, 0, string_->length)NOT
 // LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
@@ -39,6 +32,8 @@
 #if defined(USING_CHROMIUM_INCLUDES)
 #include "base/files/file_path.h"
 #endif
+
+#include "third_party/bounds_checking_function/include/securec.h"
 
 ///
 /// Traits implementation for wide character strings.
@@ -556,8 +551,9 @@ class CefStringBase {
     if (!string_) {
       return;
     }
-    if (string_->str != NULL) {
-      memset(string_->str, 0, string_->length);
+    if (string_->str != NULL ||
+        memset_s(string_->str, string_->length, 0, string_->length) != EOK) {
+      return;
     }
   }
   // #endif  // BUILDFLAG(IS_OHOS)
