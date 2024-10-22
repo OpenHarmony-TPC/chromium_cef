@@ -5,10 +5,11 @@
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h"
 
 #include "base/i18n/rtl.h"
+#include "base/ohos/sys_info_utils.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/values.h"
 #include "components/grit/components_resources.h"
-#include "components/strings/grit/components_strings.h"
+#include "ohos_resources/components/string/grit/ohos_components_strings.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "ui/base/webui/jstemplate_builder.h"
@@ -79,12 +80,23 @@ bool SbBlockPage::ShouldDisplayURL() const {
 void SbBlockPage::PopulateInterstitialStrings(
     base::Value::Dict& load_time_data) {
   load_time_data.Set("policy", std::to_string(policy_));
+  load_time_data.Set("is_tablet_device",
+                     std::to_string(base::ohos::IsTabletDevice()));
+  load_time_data.Set("is_pc_device", std::to_string(base::ohos::IsPcDevice()));
   load_time_data.Set("title",
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_TITLE));
-  if (block_type_ == OHSBThreatType::THREAT_ILLEGAL ||
-      block_type_ == OHSBThreatType::THREAT_RISK) {
+  if (block_type_ == OHSBThreatType::THREAT_ILLEGAL) {
     load_time_data.Set("block_info_title", l10n_util::GetStringUTF8(
                                                IDS_OHOS_BLOCK_PAGE_INFO_TITLE));
+  } else if (block_type_ == OHSBThreatType::THREAT_RISK) {
+    load_time_data.Set(
+        "block_info_title",
+        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_TITLE));
+  } else if (block_type_ == OHSBThreatType::THREAT_FRAUD &&
+             policy_ == OHSBPolicyType::POLICY_POPUP_AND_DANGER) {
+    load_time_data.Set(
+        "block_info_title",
+        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_TITLE));
   } else {
     load_time_data.Set(
         "block_info_title",
@@ -96,6 +108,11 @@ void SbBlockPage::PopulateInterstitialStrings(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_ILLEGAL_INFO_BODY));
   } else if (block_type_ == OHSBThreatType::THREAT_RISK) {
+    load_time_data.Set(
+        "block_info_body",
+        l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_BODY));
+  } else if (block_type_ == OHSBThreatType::THREAT_FRAUD &&
+             policy_ == OHSBPolicyType::POLICY_POPUP_AND_DANGER) {
     load_time_data.Set(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_RISK_INFO_BODY));
