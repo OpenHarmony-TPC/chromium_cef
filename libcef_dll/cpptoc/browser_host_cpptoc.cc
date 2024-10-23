@@ -3487,6 +3487,21 @@ browser_host_terminate_render_process(struct _cef_browser_host_t* self) {
 }
 
 void CEF_CALLBACK
+browser_host_set_native_embed_mode(struct _cef_browser_host_t* self, int flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetNativeEmbedMode(flag ? true : false);
+}
+
+void CEF_CALLBACK
 browser_host_register_native_jsproxy(struct _cef_browser_host_t* self,
                                      const cef_string_t* object_name,
                                      cef_string_list_t method_list,
@@ -4017,6 +4032,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->send_touchpad_fling_event =
       browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
+  GetStruct()->set_native_embed_mode = browser_host_set_native_embed_mode;
   GetStruct()->terminate_render_process = browser_host_terminate_render_process;
   GetStruct()->register_native_jsproxy = browser_host_register_native_jsproxy;
   GetStruct()->on_text_selected = browser_host_on_text_selected;

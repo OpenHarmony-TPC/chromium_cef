@@ -2029,6 +2029,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnDestroyImageAnalyzerOverlay() = 0;
 
+  ///
+  /// SetNativeEmbedMode.
+  ///
+  /*--cef()--*/
+  virtual void SetNativeEmbedMode(bool flag) = 0;
+
 #if defined(OHOS_GET_SCROLL_OFFSET)
   ///
   /// Get the current scroll offset of the webpage.

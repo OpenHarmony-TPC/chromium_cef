@@ -2018,6 +2018,12 @@ typedef struct _cef_browser_host_t {
                                             int bottom);
 
   ///
+  /// SetNativeEmbedMode.
+  ///
+  void(CEF_CALLBACK* set_native_embed_mode)(struct _cef_browser_host_t* self,
+                                            int flag);
+
+  ///
   /// Notify for next touch move event.
   ///
   void(CEF_CALLBACK* notify_for_next_touch_event)(
