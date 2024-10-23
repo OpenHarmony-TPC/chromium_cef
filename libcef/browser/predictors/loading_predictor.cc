@@ -76,6 +76,8 @@ class PredictorResourceHandler : public CefResourceHandler {
       int transfer_size =
           std::min(bytes_to_read, static_cast<int>(data_.length() - offset_));
       if (memcpy_s(data_out, bytes_to_read, data_.c_str() + offset_, transfer_size) != EOK) {
+        LOG(WARNING) << "loading predictor prefetch memcpy failed!";
+        bytes_read = net::ERR_FAILED;
         return false;
       }
       offset_ += transfer_size;
