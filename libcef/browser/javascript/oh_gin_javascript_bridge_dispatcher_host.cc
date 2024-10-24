@@ -579,8 +579,9 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
       if (now_object_name == object_name) {
         object_name_set.erase(object_name);
         if (object_name_set.size() == 0) {
-          id_map.erase(object_id);
-          method_map.erase(object_id);
+          int32_t object_id_n = object_id;
+          id_map.erase(object_id_n);
+          method_map.erase(object_id_n);
         }
 
         ret = true;
