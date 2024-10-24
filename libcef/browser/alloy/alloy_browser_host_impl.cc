@@ -66,6 +66,7 @@
 #include "res_sched_client_adapter.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 #include "gpu/ipc/common/gpu_surface_id_tracker.h"
+#include "ohos_adapter_helper.h"
 #endif
 
 #if defined(OHOS_MEDIA_POLICY)
@@ -115,6 +116,10 @@
 #endif
 
 using content::KeyboardEventProcessingResult;
+
+#if BUILDFLAG(IS_OHOS)
+int32_t AlloyBrowserHostImpl::ltpo_strategy_ = -1;
+#endif
 
 namespace {
 
@@ -826,9 +831,18 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
       LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
       return;
     }
+    auto strategy = -1;
+    if (visible && ltpo_strategy_ < 0) {
+      strategy = OHOS::NWeb::OhosAdapterHelper::GetInstance().
+        GetSystemPropertiesInstance().GetLTPOStrategy();
+      ltpo_strategy_ = strategy;
+    }
     if (auto* host = content::GpuProcessHost::Get()) {
       if (auto* host_impl = host->gpu_host()) {
         host_impl->SetVisible(visible);
+        if (strategy >= 0) {
+          host_impl->SetLTPOStrategy(ltpo_strategy_);
+        }
       }
     }
   }

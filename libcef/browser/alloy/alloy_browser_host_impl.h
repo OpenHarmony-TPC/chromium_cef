@@ -583,6 +583,7 @@ bool NeedsReload() override;
   bool has_touch_event_ = false;
   bool set_lower_frame_rate_ = false;
   static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000/*ms*/;
+  static int32_t ltpo_strategy_;
   int video_stream_cnt_ = 0;
 
   int drawMode_ = 0;
