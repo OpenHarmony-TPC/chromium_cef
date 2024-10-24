@@ -337,6 +337,8 @@ class CefBrowserPlatformDelegate {
   virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 
   virtual void NotifyForNextTouchEvent();
+
+  virtual void SetNativeEmbedMode(bool flag) {};
 #endif
 
   // Notify the browser that screen information has changed. Only used with

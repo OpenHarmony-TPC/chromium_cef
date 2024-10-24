@@ -3442,6 +3442,21 @@ browser_host_set_fit_content_mode(struct _cef_browser_host_t* self, int mode) {
 }
 
 void CEF_CALLBACK
+browser_host_set_native_embed_mode(struct _cef_browser_host_t* self, int flag) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetNativeEmbedMode(flag ? true : false);
+}
+
+void CEF_CALLBACK
 browser_host_update_draw_rect(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3927,6 +3942,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->send_touchpad_fling_event =
       browser_host_send_touchpad_fling_event;
   GetStruct()->set_fit_content_mode = browser_host_set_fit_content_mode;
+  GetStruct()->set_native_embed_mode = browser_host_set_native_embed_mode;
   GetStruct()->update_draw_rect = browser_host_update_draw_rect;
   GetStruct()->on_text_selected = browser_host_on_text_selected;
   GetStruct()->get_page_scale_factor = browser_host_get_page_scale_factor;
