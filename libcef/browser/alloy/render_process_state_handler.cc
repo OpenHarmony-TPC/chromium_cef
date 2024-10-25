@@ -41,6 +41,13 @@ void RenderProcessStateHandler::UpdateRenderProcessState(
     LOG(DEBUG) << "RenderProcessStateHandler::UpdateRenderProcessState: render "
                   "process has not init, nweb_id: "
                << nweb_id << " is_to_background: " << is_to_background;
+    for (WebComponentState& web_item : initial_web_component_list_) {
+      if (web_item.nweb_id == nweb_id) {
+        web_item.state = is_to_background;
+        return;
+      }
+    }
+
     WebComponentState initial_web_component = {nweb_id, is_to_background};
     initial_web_component_list_.push_back(initial_web_component);
     return;
@@ -110,6 +117,17 @@ void RenderProcessStateHandler::UpdateRenderProcessState(
   TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus",
                "render_process_id", render_process_id, "status",
                static_cast<int32_t>(status));
+
+  for (auto item = initial_web_component_list_.begin(); item != initial_web_component_list_.end();) {
+    if (item->nweb_id == nweb_id) {
+      LOG(DEBUG) << "UpdateRenderProcessState: delete from init list: "
+                 << " nweb_id: " << nweb_id
+                 << " state: " << item->state;
+      item = initial_web_component_list_.erase(item);
+    } else {
+      ++item;
+    }
+  }
 }
 
 void RenderProcessStateHandler::InitRenderProcessState(
@@ -126,7 +144,6 @@ void RenderProcessStateHandler::InitRenderProcessState(
        item != initial_web_component_list_.end(); ++item) {
     if (item->nweb_id == nweb_id) {
       UpdateRenderProcessState(render_process_id, nweb_id, item->state);
-      item = initial_web_component_list_.erase(item);
       LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: size: "
                  << initial_web_component_list_.size();
       return;
