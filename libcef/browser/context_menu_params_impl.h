@@ -46,6 +46,10 @@ class CefContextMenuParamsImpl
   InputFieldType GetInputFieldType() override;
   SourceType GetSourceType() override;
 #endif  // #ifdef OHOS_CLIPBOARD
+
+#ifdef OHOS_DRAG_DROP
+  void GetImageRect(int& x, int& y, int& w, int& h) override;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CONTEXT_MENU_PARAMS_IMPL_H_
