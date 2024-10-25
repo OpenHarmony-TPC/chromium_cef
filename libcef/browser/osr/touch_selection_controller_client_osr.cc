@@ -608,14 +608,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
-      if (controller && controller->IsLongPressEvent()) {
-        if (auto client = browser->client()) {
-          if (auto render = client->GetRenderHandler()) {
-            render->StartVibraFeedback("longPress.light");
-            controller->ResetLongPressEvent();
-          }
-        }
-      }
       browser->SetTouchInsertHandleMenuShow(false);
 #endif  // #ifdef OHOS_CLIPBOARD
     }
@@ -765,6 +757,14 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
+        if (controller && controller->IsLongPressEvent()) {
+          if (auto client = browser->client()) {
+            if (auto render = client->GetRenderHandler()) {
+              render->StartVibraFeedback("longPress.light");
+              controller->ResetLongPressEvent();
+            }
+          }
+        }
         ShowQuickMenu();
       }
       break;
@@ -1111,6 +1111,15 @@ bool CefTouchSelectionControllerClientOSR::
     NeedPopupInsertTouchHandleQuickMenu() {
   if (ShouldShowQuickMenu()) {
     ShowQuickMenu();
+    return true;
+  }
+  return false;
+}
+
+bool CefTouchSelectionControllerClientOSR::IsInsertHandleShow() {
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
+  if (controller && controller->GetInsertHandle() &&
+      controller->GetInsertHandle()->alpha()) {
     return true;
   }
   return false;

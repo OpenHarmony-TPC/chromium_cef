@@ -701,6 +701,7 @@ class CefRenderWidgetHostViewOSR
   float device_scale_factor_ = 1.0f;
   bool scroll_enabled_ = true;
   int32_t node_id_ = -1;
+  bool is_tap_down_in_cursor_update_ = false;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS

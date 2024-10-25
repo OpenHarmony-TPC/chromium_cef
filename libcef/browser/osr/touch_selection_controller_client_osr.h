@@ -96,6 +96,7 @@ class CefTouchSelectionControllerClientOSR
 
 #if BUILDFLAG(IS_OHOS)
   bool NeedPopupInsertTouchHandleQuickMenu();
+  bool IsInsertHandleShow();
 #endif  // BUILDFLAG(IS_OHOS)
 
 #if defined(OHOS_CLIPBOARD)
