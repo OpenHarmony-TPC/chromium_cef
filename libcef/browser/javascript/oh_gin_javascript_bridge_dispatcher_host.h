@@ -10,6 +10,7 @@
 #include <shared_mutex>
 #include <unordered_set>
 #include "base/memory/ref_counted.h"
+#include "base/synchronization/lock.h"
 #include "base/json/json_reader.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "include/cef_client.h"
@@ -33,6 +34,10 @@ struct JsProxyPermissionConfigData {
   std::string path;
   std::string method_name;
 };
+
+typedef struct LastCallingFrameUrlInfo {
+  std::string url;
+} LastCallingFrameUrlInfo;
 
 class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
@@ -201,6 +206,8 @@ class OhGinJavascriptBridgeDispatcherHost
   std::unordered_map<int32_t, std::unordered_set<std::string>> async_object_id_map_;
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;
+  static std::string GetLastCallingFrameUrlTLS();
+  base::Lock lock_;
 };
 }  // namespace NWEB
 #endif

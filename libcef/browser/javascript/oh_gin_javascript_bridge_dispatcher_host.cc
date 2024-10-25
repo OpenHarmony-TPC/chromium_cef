@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "base/threading/thread_local_storage.h"
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
 
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
@@ -1058,6 +1059,29 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::strin
   return true;
 }
 
+void LastCallingFrameUrlDestructorFunc(void* value)
+{
+  delete static_cast<std::string *>(value);
+}
+
+base::ThreadLocalStorage::Slot& LastCallingFrameUrlContentTLS()
+{
+  static base::NoDestructor<base::ThreadLocalStorage::Slot> last_calling_frame_url_tls(
+    &LastCallingFrameUrlDestructorFunc);
+  return *last_calling_frame_url_tls;
+}
+
+std::string OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
+{
+  void *value = LastCallingFrameUrlContentTLS().Get();
+  std::string last_calling_frame_url;
+  if (value) {
+    last_calling_frame_url = static_cast<LastCallingFrameUrlInfo*>(value)->url;
+  }
+
+  return last_calling_frame_url;
+}
+
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     int routing_id,
     int32_t object_id,
@@ -1072,6 +1096,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
         !CheckIsInJsPermission(document_url, method_name, object_id, true)) {
     *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
     return;
+  }
+
+  {
+    base::AutoLock scoped_lock(lock_);
+    LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
+    url_info->url = document_url;
+    LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
   }
 
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
@@ -1131,6 +1162,14 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync: jsb permission denied";
     return;
   }
+
+  {
+    base::AutoLock scoped_lock(lock_);
+    LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
+    url_info->url = document_url;
+    LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
+  }
+
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
@@ -1182,6 +1221,14 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     *error_code = OhGinJavascriptBridgeError::kOhGinJavascriptBridgePermissionDenied;
     return;
   }
+
+  {
+    base::AutoLock scoped_lock(lock_);
+    LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
+    url_info->url = document_url;
+    LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
+  }
+
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
       OhJavascriptInjector::FromWebContents(web_contents());
