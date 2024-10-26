@@ -10,7 +10,6 @@
 #include <shared_mutex>
 #include <unordered_set>
 #include "base/memory/ref_counted.h"
-#include "base/synchronization/lock.h"
 #include "base/json/json_reader.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "include/cef_client.h"
@@ -207,7 +206,6 @@ class OhGinJavascriptBridgeDispatcherHost
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;
   static std::string GetLastCallingFrameUrlTLS();
-  base::Lock lock_;
 };
 }  // namespace NWEB
 #endif

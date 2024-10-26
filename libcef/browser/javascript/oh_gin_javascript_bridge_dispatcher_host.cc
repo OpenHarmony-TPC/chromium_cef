@@ -1061,7 +1061,7 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::strin
 
 void LastCallingFrameUrlDestructorFunc(void* value)
 {
-  delete static_cast<std::string *>(value);
+  delete reinterpret_cast<LastCallingFrameUrlInfo*>(value);
 }
 
 base::ThreadLocalStorage::Slot& LastCallingFrameUrlContentTLS()
@@ -1099,7 +1099,6 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
   }
 
   {
-    base::AutoLock scoped_lock(lock_);
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
@@ -1164,7 +1163,6 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
   }
 
   {
-    base::AutoLock scoped_lock(lock_);
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
@@ -1223,7 +1221,6 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
   }
 
   {
-    base::AutoLock scoped_lock(lock_);
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
