@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ba3f1cba485d1c29dca30290c91eb83516e1b820$
+// $hash=9002e9e94cad0d5c3f50b77233a137ea9665b1fa$
 //
 
 #include "libcef_dll/ctocpp/request_handler_ctocpp.h"
@@ -566,6 +566,34 @@ void CefRequestHandlerCToCpp::OnRenderProcessResponding(
   // Execute
   _struct->on_render_process_responding(_struct,
                                         CefBrowserCppToC::Wrap(browser));
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRequestHandlerCToCpp::OnUpdateTargetURL(CefRefPtr<CefBrowser> browser,
+                                                const CefString& url) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_update_target_url)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_update_target_url(_struct, CefBrowserCppToC::Wrap(browser),
+                                url.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

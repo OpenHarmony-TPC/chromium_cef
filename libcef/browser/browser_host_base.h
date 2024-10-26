@@ -260,6 +260,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void PutUserAgent(const CefString& ua) override;
   CefString DefaultUserAgent() override;
   void UpdateBrowserSettings(const CefBrowserSettings& browser_settings);
+
   void RegisterNativeJSProxy(const CefString& object_name,
                              const std::vector<CefString>& method_list,
                              const int32_t object_id,
@@ -297,8 +298,8 @@ class CefBrowserHostBase : public CefBrowserHost,
       const CefString& base_name,
       bool auto_name,
       CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
-  void GetImageForContextNode() override;
-  void GetImageFromCache(const CefString& url) override;
+  void GetImageForContextNode(int command_id) override;
+  void GetImageFromCache(const CefString& url, int command_id) override;
   void SetBrowserUserAgentString(const CefString& user_agent) override;
   void ExitFullScreen() override;
   void GetRootBrowserAccessibilityManager(void** manager) override;
@@ -333,7 +334,6 @@ class CefBrowserHostBase : public CefBrowserHost,
                                   int current,
                                   bool animate) override;
   void UpdateBrowserControlsHeight(int height, bool animate) override;
-
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
@@ -343,6 +343,7 @@ class CefBrowserHostBase : public CefBrowserHost,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
   void AdvanceFocusForIME(int focusType) override;
+  void SetNativeEmbedMode(bool flag) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION
@@ -351,8 +352,8 @@ class CefBrowserHostBase : public CefBrowserHost,
 #endif
 
 #ifdef OHOS_RENDER_PROCESS_MODE
-void NotifyNeedsReload(bool needs_reload) override;
-bool NeedsReload() override;
+  void SetNeedsReload(bool needs_reload) override;
+  bool NeedsReload() override;
 #endif
 
   // CefBrowser methods:
@@ -436,6 +437,7 @@ bool NeedsReload() override;
   void WasKeyboardResized() override;
   void SetWindowId(int window_id, int nweb_id) override;
   void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
+
 #if defined(OHOS_PRINT)
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
@@ -481,13 +483,14 @@ bool NeedsReload() override;
   bool Discard() override { return false; }
   bool Restore() override { return false; }
   // #ifdef OHOS_EX_FREE_COPY
-  void SelectAndCopy() override;
-  bool ShouldShowFreeCopy() override;
+  void ShowFreeCopyMenu() override;
+  bool ShouldShowFreeCopyMenu() override;
   // #endif
   int GetNWebId() override;
 #ifdef OHOS_ITP
   void EnableIntelligentTrackingPrevention(bool enable) override;
   bool IsIntelligentTrackingPreventionEnabled() override;
+  GURL GetLastCommittedURL();
 #endif
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -511,10 +514,10 @@ bool NeedsReload() override;
   void ClosePort(CefString& port_handle) override;
   bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
                                  blink::WebMessagePort::Message& message);
-  void PostPortMessage(CefString& port_handle,
+  void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
   void SetPortMessageCallback(
-      CefString& port_handle,
+      const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void DestroyAllWebMessagePorts() override;
 #endif  // defined(OHOS_MSGPORT)
@@ -536,9 +539,7 @@ bool NeedsReload() override;
 
   void SetForceEnableZoom(bool forceEnableZoom) override;
   bool GetForceEnableZoom() override;
-  // #ifdef OHOS_EX_BLANK_TARGET_POPUP_INTERCEPT
-  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
-  // #endif
+
   // if defined(OHOS_EX_PASSWORD)
   void PasswordSuggestionSelected(int list_index) override;
   bool GetSavePasswordAutomatically() override;
@@ -690,6 +691,18 @@ bool TerminateRenderProcess() override;
   void AskClipboardReadWritePermission(const CefString& origin,
                               cef_permission_callback_t callback) override;
   void AbortAskClipboardReadWritePermission(const CefString& origin) override;
+
+  void AskClipboardSanitizedWritePermission(const CefString& origin,
+       cef_permission_callback_t callback) override;
+  void AbortAskClipboardSanitizedWritePermission(
+      const CefString& origin) override;
+
+  void AskAudioCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskAudioCapturePermission(const CefString& origin) override;
+  void AskVideoCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskVideoCapturePermission(const CefString& origin) override;
   // Geolocation API support
   void PopupGeolocationPrompt(std::string origin,
                               cef_permission_callback_t callback);
@@ -719,15 +732,22 @@ bool TerminateRenderProcess() override;
 #if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
   CefString GetLastJavascriptProxyCallingFrameUrl() override;
 #endif
-#endif  // IS_OHOS
 
-#ifdef OHOS_DISPLAY_CUTOUT
-  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
+#endif  // IS_OHOS
+#if defined(OHOS_EX_NAVIGATION)
+  int InsertBackForwardEntry(int index, const CefString& url) override;
+  int UpdateNavigationEntryUrl(int index, const CefString& url) override;
+  void ClearForwardList() override;
 #endif
 
 #ifdef OHOS_AI
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
 #endif
 
 #ifdef OHOS_URL_TRUST_LIST
@@ -740,6 +760,15 @@ bool TerminateRenderProcess() override;
                        int width,
                        int height,
                        cef_web_snapshot_callback_t callback)override;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override;
+  void SetTabId(int tab_id) override;
+  int GetTabId() override;
 #endif
 
 #ifdef OHOS_BFCACHE
@@ -829,6 +858,13 @@ bool TerminateRenderProcess() override;
                          CefRefPtr<CefPrecompileCallback> callback);
 
   void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
+
+  void SetPortMessageCallbackInternal(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback);
+  void PostPortMessageInternal(const CefString& portHandle,
+                                          CefRefPtr<CefValue> data);
+
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.
@@ -838,10 +874,13 @@ bool TerminateRenderProcess() override;
 
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
   using PortHandle = std::pair<uint64_t, uint64_t>;
-  std::map<PortHandle, MessagePipe> portMap_;
-  std::set<std::string> postedPorts_;
+  base::Lock web_message_lock_;
+  std::map<PortHandle, MessagePipe> portMap_ GUARDED_BY(web_message_lock_);
+  std::set<std::string> postedPorts_ GUARDED_BY(web_message_lock_);
   std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
-      receiverMap_;
+      receiverMap_ GUARDED_BY(web_message_lock_);
+  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
+          base::ThreadPool::CreateSequencedTaskRunner({});
 
 #if defined(OHOS_INPUT_EVENTS)
   uint64_t last_zoom_time_ = 0;

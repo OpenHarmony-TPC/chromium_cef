@@ -96,10 +96,12 @@ class CefTouchSelectionControllerClientOSR
 
 #if BUILDFLAG(IS_OHOS)
   bool NeedPopupInsertTouchHandleQuickMenu();
+  bool IsInsertHandleShow();
 #endif  // BUILDFLAG(IS_OHOS)
 
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
+  void ChangeVisibilityOfQuickMenu();
 #endif
  private:
   class EnvEventObserver;
@@ -113,6 +115,7 @@ class CefTouchSelectionControllerClientOSR
   void CloseQuickMenu();
   void ShowQuickMenu();
   void UpdateQuickMenu();
+  void TemporarilyCloseQuickMenu();
 #ifdef OHOS_DRAG_DROP
   void SetSelectAllClicked(int command_id);
 #endif

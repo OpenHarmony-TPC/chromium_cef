@@ -32,7 +32,7 @@ void ResReporter::Init()
 {
     int ret = LoadLibrary();
     if (!ret) {
-        LOG(WARNING) << "ResReporter:[Init] dlopen libframe_ui_intf.so failed!";
+        LOG(DEBUG) << "ResReporter:[Init] dlopen libframe_ui_intf.so failed!";
         return;
     }
     LOG(INFO) << "ResReporter::[Init] dlopen libframe_ui_intf.so success!";
@@ -47,7 +47,7 @@ bool ResReporter::LoadLibrary()
     if (!resSchedSoLoaded_) {
         resSchedHandle_ = dlopen(FRAME_AWARE_SO_PATH.c_str(), RTLD_LAZY);
         if (resSchedHandle_ == nullptr) {
-            LOG(WARNING) << "ResReporter:[LoadLibrary]dlopen libframe_ui_intf.so failed!";
+            LOG(DEBUG) << "ResReporter:[LoadLibrary]dlopen libframe_ui_intf.so failed!";
             return false;
         }
         resSchedSoLoaded_ = true;
@@ -59,7 +59,7 @@ bool ResReporter::LoadLibrary()
 void ResReporter::CloseLibrary()
 {
     if (dlclose(resSchedHandle_) != 0) {
-        LOG(WARNING) << "ResReporter:[CloseLibrary]dlclose libframe_ui_intf.so failed!";
+        LOG(DEBUG) << "ResReporter:[CloseLibrary]dlclose libframe_ui_intf.so failed!";
         return;
     }
     resSchedHandle_ = nullptr;
@@ -70,13 +70,13 @@ void ResReporter::CloseLibrary()
 void *ResReporter::LoadSymbol(const char *symName)
 {
     if (!resSchedSoLoaded_) {
-        LOG(WARNING) << "ResReporter:[LoadSymbol]libframe_ui_intf.so not loaded.";
+        LOG(DEBUG) << "ResReporter:[LoadSymbol]libframe_ui_intf.so not loaded.";
         return nullptr;
     }
 
     void *funcSym = dlsym(resSchedHandle_, symName);
     if (funcSym == nullptr) {
-        LOG(WARNING) << "ResReporter:[LoadSymbol]Get symbol failed: " << symName;
+        LOG(DEBUG) << "ResReporter:[LoadSymbol]Get symbol failed: " << symName;
         return nullptr;
     }
     return funcSym;
@@ -93,7 +93,7 @@ void ResReporter::AddRtg(std::vector<int> tids)
     if (resAddRtgFunc_ != nullptr) {
         return resAddRtgFunc_(tids);
     } else {
-        LOG(WARNING) << "ResReporter:[AddRtg]load WebviewAddRtg function failed!";
+        LOG(DEBUG) << "ResReporter:[AddRtg]load WebviewAddRtg function failed!";
         return;
     }
 }
@@ -109,7 +109,7 @@ void ResReporter::FetchBegin()
     if (resFetchBeginFunc_ != nullptr) {
         return resFetchBeginFunc_();
     } else {
-        LOG(WARNING) << "ResReporter:[FetchBegin]load WebResFetchBegin function failed!";
+        LOG(DEBUG) << "ResReporter:[FetchBegin]load WebResFetchBegin function failed!";
         return;
     }
 }
@@ -125,7 +125,7 @@ void ResReporter::FetchEnd()
     if (resFetchEndFunc_ != nullptr) {
         return resFetchEndFunc_();
     } else {
-        LOG(WARNING) << "ResReporter:[FetchEnd]load WebResFetchEnd function failed!";
+        LOG(DEBUG) << "ResReporter:[FetchEnd]load WebResFetchEnd function failed!";
         return;
     }
 }

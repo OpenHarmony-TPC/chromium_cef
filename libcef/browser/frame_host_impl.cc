@@ -22,6 +22,7 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_view_host.h"
 #include "services/service_manager/public/cpp/interface_provider.h"
+#include "base/strings/escape.h"
 
 #if BUILDFLAG(IS_OHOS)
 #include "content/public/browser/browsing_data_remover.h"
@@ -31,6 +32,10 @@
 #include "third_party/skia/include/core/SkData.h"
 #include "third_party/skia/include/core/SkImage.h"
 #endif  // BUILDFLAG(IS_OHOS)
+
+#ifdef OHOS_CLIPBOARD
+#include "skia/ext/image_operations.h"
+#endif
 
 #ifdef OHOS_NETWORK_LOAD
 #include "base/strings/escape.h"
@@ -81,6 +86,48 @@ void ExecWebContentsCommand(CefFrameHostImpl* fh,
   }
   fh->SendCommand(command);
 }
+
+#ifdef OHOS_CLIPBOARD
+const int kMaxContextImageNodeSizeIfDownScale = 1024;
+
+bool NeedsDownScale(const gfx::Size& original_image_size) {
+  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
+      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
+    return false;
+  }
+  LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
+             << ", height: " << original_image_size.height();
+  return true;
+}
+
+SkBitmap DownScale(const SkBitmap& image) {
+  if (image.isNull()) {
+    return SkBitmap();
+  }
+
+  gfx::Size image_size(image.width(), image.height());
+  if (!NeedsDownScale(image_size)) {
+    return image;
+  }
+
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+
+  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.width());
+  }
+
+  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.height());
+  }
+
+  return skia::ImageOperations::Resize(image,
+                                       skia::ImageOperations::RESIZE_GOOD,
+                                       static_cast<int>(scaled_size.width()),
+                                       static_cast<int>(scaled_size.height()));
+}
+#endif
 
 #define EXEC_WEBCONTENTS_COMMAND(name)                  \
   ExecWebContentsCommand(this, &CefFrameHostImpl::name, \
@@ -380,11 +427,11 @@ void CefFrameHostImpl::LoadRequest(cef::mojom::RequestParamsPtr params) {
 void CefFrameHostImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
   LoadURLWithExtras(url, content::Referrer(), kPageTransitionExplicit, std::string()
 #ifdef OHOS_POST_URL
-                    ,
+,
                     std::string(),
                     std::vector<char>()
 #endif
-                    ,
+,
                     user_gesture);
 }
 #endif
@@ -394,12 +441,12 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
                                          ui::PageTransition transition,
                                          const std::string& extra_headers
 #ifdef OHOS_POST_URL
-                                         ,
+,
                                          const std::string& method,
                                          const std::vector<char>& post_data
 #endif
 #ifdef OHOS_NETWORK_LOAD
-                                         ,
+,
                                          bool user_gesture
  #endif
                                         ) {
@@ -818,7 +865,7 @@ void CefFrameHostImpl::UpdateLocale(const CefString& locale) {
 #endif  // #ifdef OHOS_I18N
 
 void CefFrameHostImpl::OnGetImageForContextNode(
-    cef::mojom::GetImageForContextNodeParamsPtr params) {
+    cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) {
   CefImageImpl* image_impl = new (std::nothrow) CefImageImpl();
   if (image_impl != nullptr && params->image.width() > 0 &&
       params->image.height() > 0) {
@@ -837,11 +884,11 @@ void CefFrameHostImpl::OnGetImageForContextNode(
     handler = client->GetContextMenuHandler();
   }
   if (handler) {
-    handler->OnGetImageForContextNode(GetBrowser(), image);
+    handler->OnGetImageForContextNode(GetBrowser(), image, command_id);
   }
 }
 
-void CefFrameHostImpl::OnGetImageForContextNodeNull() {
+void CefFrameHostImpl::OnGetImageForContextNodeNull(int command_id) {
   CefRefPtr<CefImage> image(new CefImageImpl());
   CefRefPtr<CefContextMenuHandler> handler = nullptr;
   auto browser = GetBrowserHostBase();
@@ -853,12 +900,13 @@ void CefFrameHostImpl::OnGetImageForContextNodeNull() {
     handler = client->GetContextMenuHandler();
   }
   if (handler) {
-    handler->OnGetImageForContextNode(GetBrowser(), image);
+    handler->OnGetImageForContextNode(GetBrowser(), image, command_id);
   }
 }
 
 void CefFrameHostImpl::OnGetImageFromCache(
     std::string url,
+    int command_id,
     uint32_t buffer_size,
     base::ReadOnlySharedMemoryRegion region) {
   auto browser = GetBrowserHostBase();
@@ -879,27 +927,34 @@ void CefFrameHostImpl::OnGetImageFromCache(
   if (!region.IsValid()) {
     LOG(ERROR)
         << "OnGetImageFromCache: Read-only shared memory region is invalid";
-    handler->OnGetImageFromCache(image_impl);
+    handler->OnGetImageFromCache(image_impl, command_id);
     return;
   }
   base::ReadOnlySharedMemoryMapping mapping = region.MapAt(0, buffer_size);
   if (!mapping.IsValid()) {
     LOG(ERROR)
         << "OnGetImageFromCache: Read-only shared memory mapping is invalid";
-    handler->OnGetImageFromCache(image_impl);
+    handler->OnGetImageFromCache(image_impl, command_id);
     return;
   }
   uint8_t* buffer = (uint8_t*)(mapping.memory());
+
   sk_sp<SkData> sk_data = SkData::MakeWithoutCopy(buffer, buffer_size);
   if (sk_data) {
     sk_sp<SkImage> sk_image = SkImages::DeferredFromEncodedData(sk_data);
     if (sk_image) {
       SkBitmap bitmap;
-      sk_image->asLegacyBitmap(&bitmap);
-      image_impl->AddBitmap(1.0, bitmap);
+      if (sk_image->asLegacyBitmap(&bitmap)) {
+#ifdef OHOS_CLIPBOARD
+        SkBitmap resize_image = DownScale(bitmap);
+        image_impl->AddBitmap(1.0, resize_image);
+#else
+        image_impl->AddBitmap(1.0, bitmap);
+#endif
+      }
     }
   }
-  handler->OnGetImageFromCache(image_impl);
+  handler->OnGetImageFromCache(image_impl, command_id);
 }
 
 #ifdef OHOS_NETWORK_LOAD
@@ -976,11 +1031,12 @@ void CefFrameHostImpl::SetJsOnlineProperty(bool network_up) {
 }
 #endif
 
-void CefFrameHostImpl::GetImageForContextNode() {
+void CefFrameHostImpl::GetImageForContextNode(int command_id) {
   SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce([](const RenderFrameType& render_frame) {
-                      render_frame->GetImageForContextNode();
-                    }));
+                    base::BindOnce([](int command_id, const RenderFrameType& render_frame) {
+                      render_frame->GetImageForContextNode(command_id);
+                    },
+                    command_id));
 }
 
 void CefFrameHostImpl::PutZoomingForTextFactor(float factor) {
@@ -1138,22 +1194,27 @@ void CefFrameHostImpl::SetScrollable(bool enable) {
 
 void CefFrameHostImpl::GetHitData(int& type, CefString& extra_data) {
   std::string temp_extra_data;
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](int32_t* out_type, std::string* out_extra_data,
-                           const RenderFrameType& render_frame) {
-                          render_frame->GetHitData(out_type, out_extra_data);
-                        },
-                        &type, &temp_extra_data));
+  if (is_temporary()) {
+    extra_data = temp_extra_data;
+    return;
+  } else if (!render_frame_host_) {
+    extra_data = temp_extra_data;
+    return;
+  }
+
+  if (!render_frame_.is_bound()) {
+    extra_data = temp_extra_data;
+    return;
+  }
+  render_frame_->GetHitData(&type, &temp_extra_data);
   extra_data = temp_extra_data;
 }
 
 void CefFrameHostImpl::UpdateDrawRect() {
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](const RenderFrameType& render_frame) {
-                          render_frame->UpdateDrawRect();
-                        }));
+  SendToRenderFrame(__FUNCTION__, base::BindOnce(
+                                      [](const RenderFrameType& render_frame) {
+                                        render_frame->UpdateDrawRect();
+                                      }));
 }
 
 #if defined(OHOS_GET_SCROLL_OFFSET)

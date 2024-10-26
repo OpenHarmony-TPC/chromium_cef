@@ -253,11 +253,8 @@ void CefRenderManager::WebKitInitialized() {
       }
 #if BUILDFLAG(IS_OHOS)
       if (info.is_code_cache_enabled) {
-        LOG(DEBUG) << "Render manager register the scheme:"
-                   << info.scheme_name.c_str() << " supported code cache.";
-        blink::SchemeRegistry::
-            RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(
-                String(info.scheme_name));
+        LOG(DEBUG) << "Render manager register the scheme:" << info.scheme_name.c_str() << " supported code cache.";
+        blink::SchemeRegistry::RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(String(info.scheme_name));
       }
 #endif
     }

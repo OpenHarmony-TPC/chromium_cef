@@ -181,6 +181,15 @@ class TabsGetZoomSettingsFunction : public BaseAPIFunction {
   DECLARE_EXTENSION_FUNCTION("tabs.getZoomSettings", TABS_GETZOOMSETTINGS)
 };
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+class TabsReloadFunction : public BaseAPIFunction {
+private:
+  ~TabsReloadFunction() override {}
+  ResponseAction Run() override;
+  DECLARE_EXTENSION_FUNCTION("tabs.reload", TABS_RELOAD)
+};
+#endif
+
 }  // namespace cef
 }  // namespace extensions
 

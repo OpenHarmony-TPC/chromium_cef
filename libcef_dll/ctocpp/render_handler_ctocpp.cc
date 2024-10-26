@@ -915,38 +915,6 @@ void CefRenderHandlerCToCpp::ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnUpdateTextInputStateCalled(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& text,
-    const CefRange& selected_range,
-    const CefRange& compositon_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_update_text_input_state_called)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(!text.empty());
-  if (text.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_update_text_input_state_called(
-      _struct, CefBrowserCppToC::Wrap(browser), text.GetStruct(),
-      &selected_range, &compositon_range);
-}
-
-NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::GetWordSelection(CefRefPtr<CefBrowser> browser,
                                               const CefString& text,
                                               int8_t offset,
@@ -1030,6 +998,38 @@ void CefRenderHandlerCToCpp::OnOverlayStateChanged(
   // Execute
   _struct->on_overlay_state_changed(_struct, CefBrowserCppToC::Wrap(browser),
                                     &cef_screen_rect);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnUpdateTextInputStateCalled(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& text,
+    const CefRange& selected_range,
+    const CefRange& compositon_range) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_update_text_input_state_called)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+  // Verify param: text; type: string_byref_const
+  DCHECK(!text.empty());
+  if (text.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_update_text_input_state_called(
+      _struct, CefBrowserCppToC::Wrap(browser), text.GetStruct(),
+      &selected_range, &compositon_range);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1120,6 +1120,29 @@ void CefRenderHandlerCToCpp::StartVibraFeedback(
 
   // Execute
   _struct->start_vibra_feedback(_struct, vibratorType.c_str());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
+                                                CefSize& size) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_device_pixel_size)) {
+    return;
+  }
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+ 
+  // Execute
+  _struct->get_device_pixel_size(_struct, CefBrowserCppToC::Wrap(browser),
+                                 &size);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

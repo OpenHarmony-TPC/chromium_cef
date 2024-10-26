@@ -44,8 +44,17 @@
 #include "ui/native_theme/native_theme.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/ohos/sys_info_utils.h"
 #include "content/public/browser/render_widget_host.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
+#endif
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#include "components/content_settings/core/common/content_settings.h"
+#include "components/content_settings/core/common/content_settings_types.h"
+#include "content/public/common/content_switches.h"
 #endif
 
 namespace renderer_prefs {
@@ -262,12 +271,11 @@ void SetCefSpecialPrefs(content::RenderViewHost* rvh,
   if (rwhvb && rwhvb->IsRenderWidgetHostViewChildFrame()) {
     return;
   }
-  CefRenderWidgetHostViewOSR* view =
-      static_cast<CefRenderWidgetHostViewOSR*>(rwhvb);
-  if (view) {
-    view->SetDoubleTapSupportEnabled(
+
+  if (rwhvb) {
+    rwhvb->SetDoubleTapSupportEnabled(
         browser->settings().supports_double_tap_zoom);
-    view->SetMultiTouchZoomSupportEnabled(
+    rwhvb->SetMultiTouchZoomSupportEnabled(
         browser->settings().supports_multi_touch_zoom);
   }
 }
@@ -311,6 +319,27 @@ void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {
       command_line->HasSwitch(switches::kImageShrinkStandaloneToFit);
   web.text_areas_are_resizable =
       !command_line->HasSwitch(switches::kDisableTextAreaResize);
+
+#if BUILDFLAG(IS_OHOS)
+  // These OHOS default prefs defined in web_preferences.cc is only used for
+  // none PC device, PC device has different prefs as below.
+  if (base::ohos::IsPcDevice()) {
+    web.viewport_meta_enabled = false;
+    web.auto_zoom_focused_editable_to_legible_scale = false;
+    web.shrinks_viewport_contents_to_fit = false;
+    web.viewport_style = blink::mojom::ViewportStyle::kDefault;
+    web.always_show_context_menu_on_touch = true;
+    web.smooth_scroll_for_find_enabled = false;
+    web.main_frame_resizes_are_orientation_changes = false;
+
+    web.double_tap_to_zoom_enabled = false;
+
+    web.text_autosizing_enabled = false;
+
+    web.default_minimum_page_scale_factor = 1.f;
+    web.default_maximum_page_scale_factor = 4.f;
+  }
+#endif
 }
 
 // Helper macro for setting a WebPreferences variable based on the value of a
@@ -422,6 +451,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.embed_tag_type = CefString(&cef.embed_tag_type);
   web.draw_mode = cef.draw_mode;
   SET_STATE(cef.text_autosizing_enabled, web.text_autosizing_enabled);
+  web.force_zero_layout_height = cef.force_zero_layout_height;
 #if defined(OHOS_DARKMODE)
   if (cef.dark_prefer_color_scheme_enabled == STATE_ENABLED) {
     web.preferred_color_scheme = blink::mojom::PreferredColorScheme::kDark;
@@ -448,10 +478,6 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #ifdef OHOS_EX_FREE_COPY
   web.contextmenu_customization_enabled = cef.contextmenu_customization_enabled;
 #endif
-#ifdef OHOS_EX_BLANK_TARGET_POPUP_INTERCEPT
-  web.blank_target_popup_intercept_enabled =
-      cef.blank_target_popup_intercept_enabled;
-#endif
   if (cef.viewport_meta_enabled.has_value())
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   web.autoplay_policy =
@@ -467,18 +493,22 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.custom_video_player_enable = cef.custom_video_player_enable;
   web.custom_video_player_overlay = cef.custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+  web.supports_multiple_windows = cef.supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   web.record_whole_document = cef.record_whole_document;
 #endif
 
-#if defined(OHOS_MULTI_WINDOW)
-  web.supports_multiple_windows = cef.supports_multiple_windows;
-#endif // OHOS_MULTI_WINDOW
-
 #ifdef OHOS_NETWORK_LOAD
   SET_STATE(cef.universal_access_from_file_urls, web.allow_universal_access_from_file_urls);
 #endif
+
+#ifdef OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
+  web.enable_media_network_traffic_prompt =
+      cef.enable_media_network_traffic_prompt;
+#endif // OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,
@@ -569,6 +599,28 @@ void PopulateWebPreferences(content::RenderViewHost* rvh,
 #if BUILDFLAG(IS_OHOS)
     SetCefSpecialPrefs(rvh, browser, web);
 #endif
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+    const base::CommandLine* command_line =
+        base::CommandLine::ForCurrentProcess();
+    if (command_line->HasSwitch(switches::kForBrowser)) {
+      bool javascript_enabled = web.javascript_enabled;
+
+      // Update content setting default value
+      ContentSetting setting =
+          javascript_enabled ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK;
+      if (!web_contents)
+        return;
+      HostContentSettingsMap* host_content_settings_map =
+          HostContentSettingsMapFactory::GetForProfile(
+              web_contents->GetBrowserContext());
+      host_content_settings_map->SetDefaultContentSetting(
+          ContentSettingsType::JAVASCRIPT, setting);
+      DVLOG(0)
+          << "ExceptionList Update default content setting for JavaScript: "
+          << int(setting);
+    }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 
     web.picture_in_picture_enabled = browser->IsPictureInPictureSupported();
 

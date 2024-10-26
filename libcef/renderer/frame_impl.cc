@@ -988,7 +988,6 @@ void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
     return;
   }
 #endif  // defined(OHOS_INPUT_EVENTS)
-
   cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
   data->href = element.GetAttribute("href").Utf16();
   data->anchor_text = element.TextContent().Utf16();
@@ -1073,7 +1072,7 @@ void CefFrameImpl::PutZoomingForTextFactor(float factor) {
   render_frame->GetWebFrame()->FrameWidget()->SetTextZoomFactor(factor);
 }
 
-void CefFrameImpl::GetImageForContextNode() {
+void CefFrameImpl::GetImageForContextNode(int command_id) {
   if (!frame_) {
     LOG(ERROR) << "GetImageForContextNode frame is nullptr";
     return;
@@ -1084,19 +1083,20 @@ void CefFrameImpl::GetImageForContextNode() {
 
   cef::mojom::GetImageForContextNodeParamsPtr params =
       cef::mojom::GetImageForContextNodeParams::New();
-  blink::WebNode context_node = frame_->ContextMenuImageNode();
+  blink::WebNode context_node = frame_->ContextMenuNode();
   std::vector<uint8_t> image_data;
   gfx::Size original_size;
   std::string image_extension;
 
-  if (context_node.IsNull() || !context_node.IsElementNode()) {
+  if (context_node.IsNull() || !context_node.IsElementNode() ||
+      context_node.To<blink::WebElement>().ImageContents().drawsNothing()) {
     SendToBrowserFrame(__FUNCTION__,
                        base::BindOnce(
-                           [](cef::mojom::GetImageForContextNodeParamsPtr data,
+                           [](cef::mojom::GetImageForContextNodeParamsPtr data,int command_id,
                               const BrowserFrameType& browser_frame) {
-                             browser_frame->OnGetImageForContextNodeNull();
+                             browser_frame->OnGetImageForContextNodeNull(command_id);
                            },
-                           std::move(params)));
+                           std::move(params), command_id));
     return;
   }
 
@@ -1110,14 +1110,16 @@ void CefFrameImpl::GetImageForContextNode() {
   params->height = resize_image.height();
   params->image = resize_image;
   params->image_extension = image_extension;
+  LOG(DEBUG) << "GetImageForContextNode, image width: " << resize_image.width()
+             << ", height: " << resize_image.height();
   SendToBrowserFrame(
       __FUNCTION__,
       base::BindOnce(
-          [](cef::mojom::GetImageForContextNodeParamsPtr data,
+          [](cef::mojom::GetImageForContextNodeParamsPtr data,int command_id,
              const BrowserFrameType& browser_frame) {
-            browser_frame->OnGetImageForContextNode(std::move(data));
+            browser_frame->OnGetImageForContextNode(std::move(data), command_id);
           },
-          std::move(params)));
+          std::move(params), command_id));
 }
 
 GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
@@ -1380,7 +1382,7 @@ void CefFrameImpl::UpdateDrawRect() {
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
   if (!webview) {
-    LOG(ERROR) << "UpdateDrawRect get webview failed";
+    LOG(ERROR) << "SetDrawRect get webview failed";
     return;
   }
   webview->UpdateDrawRect();

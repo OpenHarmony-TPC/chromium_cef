@@ -43,8 +43,8 @@
     "contexts": ["blessed_extension"],
     "disallow_for_service_workers": false
   },
-    // OHOS_ARKWEB_EXTENSIONS
-    "developerPrivate": [{
+  // OHOS_ARKWEB_EXTENSIONS
+  "developerPrivate": [{
     "dependencies": ["permission:developerPrivate", "permission:management"],
     "contexts": ["blessed_extension"]
   }, {
@@ -54,5 +54,14 @@
        "chrome://extensions/*",
        "arkweb://extensions/*"
       ]
-  }]
+  }],
+  "extension": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app"],
+    "contexts": ["blessed_extension"]
+  },
+  "extension.getURL": {
+    "contexts": ["blessed_extension", "unblessed_extension", "content_script"],
+    "max_manifest_version": 2
+  }
 }

@@ -183,6 +183,42 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void NotifyGeolocationPermission(bool value,
                                            const CefString& origin) = 0;
+
+  ///
+  /// Handle the Audio Capture permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskAudioCapturePermission(const CefString& origin,
+                                         cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Audio Capturepermission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskAudioCapturePermission(const CefString& origin) = 0;
+
+  ///
+  /// Handle the Video Capture permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskVideoCapturePermission(const CefString& origin,
+                                         cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Video Capturepermission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskVideoCapturePermission(const CefString& origin) = 0;
+
+  ///
+  /// Handle the Clipboard Sanitized permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskClipboardSanitizedWritePermission(const CefString& origin,
+      cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Clipboard Read Sanitezed permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskClipboardSanitizedWritePermission(const CefString& origin) = 0;
 };
 
 ///

@@ -123,10 +123,6 @@ class CefRenderHandlerCToCpp
                                      bool visibility) override;
   void NotifySelectAllClicked(bool select_all) override;
   void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) override;
-  void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
-                                    const CefString& text,
-                                    const CefRange& selected_range,
-                                    const CefRange& compositon_range) override;
   void GetWordSelection(CefRefPtr<CefBrowser> browser,
                         const CefString& text,
                         int8_t offset,
@@ -138,11 +134,17 @@ class CefRenderHandlerCToCpp
                      const CefRect& cef_screen_rect) override;
   void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
                              const CefRect& cef_screen_rect) override;
+  void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
+                                    const CefString& text,
+                                    const CefRange& selected_range,
+                                    const CefRange& compositon_range) override;
   void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
                               CefRect& rect) override;
   void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
   void SetFillContent(const std::string& content) override;
   void StartVibraFeedback(const std::string& vibratorType) override;
+  void GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
+                          CefSize& size) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

@@ -20,6 +20,11 @@
 #include "libcef/browser/net_service/proxy_config_monitor.h"
 #endif
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "chrome/common/renderer_configuration.mojom.h"
+#include "mojo/public/cpp/bindings/associated_remote.h"
+#endif
+
 class AlloyBrowserMainParts;
 class CefDevToolsDelegate;
 
@@ -68,7 +73,6 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   bool IsWebUIAllowedToMakeNetworkRequests(const url::Origin& origin) override;
   bool IsHandledURL(const GURL& url) override;
   void SiteInstanceGotProcess(content::SiteInstance* site_instance) override;
-  void SiteInstanceDeleting(content::SiteInstance* site_instance) override;
   void BindHostReceiverForRenderer(
       content::RenderProcessHost* render_process_host,
       mojo::GenericPendingReceiver receiver) override;
@@ -275,6 +279,8 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   bool ShouldAllowInsecureLocalNetworkRequests(
       content::BrowserContext* browser_context,
       const url::Origin& origin) override;
+  bool ShouldDisableOriginAgentClusterDefault(
+      content::BrowserContext* browser_context) override;
 #endif
 
 #if BUILDFLAG(IS_OHOS)
@@ -418,6 +424,11 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
 
   AlloyBrowserMainParts* browser_main_parts_ = nullptr;
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+  GetRendererConfiguration(content::RenderProcessHost* render_process_host);
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_CONTENT_BROWSER_CLIENT_H_

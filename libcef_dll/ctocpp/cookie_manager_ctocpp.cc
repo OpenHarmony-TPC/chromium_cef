@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5c57059464bb94fa6aef835e9bfa26eaf6b53991$
+// $hash=71436c164c500fbd34fef8a5b1161df9a8c904a4$
 //
 
 #include "libcef_dll/ctocpp/cookie_manager_ctocpp.h"
@@ -108,7 +108,8 @@ bool CefCookieManagerCToCpp::VisitUrlCookies(
     const CefString& url,
     bool includeHttpOnly,
     CefRefPtr<CefCookieVisitor> visitor,
-    bool is_sync) {
+    bool is_sync,
+    bool is_from_ndk) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, visit_url_cookies)) {
     return false;
@@ -130,7 +131,7 @@ bool CefCookieManagerCToCpp::VisitUrlCookies(
   // Execute
   int _retval = _struct->visit_url_cookies(
       _struct, url.GetStruct(), includeHttpOnly,
-      CefCookieVisitorCppToC::Wrap(visitor), is_sync);
+      CefCookieVisitorCppToC::Wrap(visitor), is_sync, is_from_ndk);
 
   // Return type: bool
   return _retval ? true : false;
@@ -141,7 +142,8 @@ bool CefCookieManagerCToCpp::SetCookie(const CefString& url,
                                        const CefCookie& cookie,
                                        CefRefPtr<CefSetCookieCallback> callback,
                                        bool is_sync,
-                                       const CefString& str_cookie) {
+                                       const CefString& str_cookie,
+                                       bool includeHttpOnly) {
   cef_cookie_manager_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_cookie)) {
     return false;
@@ -162,9 +164,10 @@ bool CefCookieManagerCToCpp::SetCookie(const CefString& url,
   // Unverified params: callback
 
   // Execute
-  int _retval = _struct->set_cookie(_struct, url.GetStruct(), &cookie,
-                                    CefSetCookieCallbackCppToC::Wrap(callback),
-                                    is_sync, str_cookie.GetStruct());
+  int _retval =
+      _struct->set_cookie(_struct, url.GetStruct(), &cookie,
+                          CefSetCookieCallbackCppToC::Wrap(callback), is_sync,
+                          str_cookie.GetStruct(), includeHttpOnly);
 
   // Return type: bool
   return _retval ? true : false;

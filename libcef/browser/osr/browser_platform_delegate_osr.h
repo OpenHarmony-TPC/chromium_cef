@@ -72,6 +72,7 @@ class CefBrowserPlatformDelegateOsr
   void WasOccluded(bool occluded) override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
   void NotifyForNextTouchEvent() override;
+  void SetNativeEmbedMode(bool flag) override;
 #endif
 #if defined(OHOS_INPUT_EVENTS)
   void ScrollFocusedEditableNodeIntoView() override;
@@ -186,6 +187,7 @@ class CefBrowserPlatformDelegateOsr
                      const gfx::Point& touch_point,
                      const gfx::Rect& screen_rect) override;
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
 #endif
 
@@ -241,7 +243,7 @@ bool WebPageSnapshot(const char* id,
 #ifdef OHOS_DISPLAY_CUTOUT
   gfx::Insets safe_insets_;
 #endif
-
+  bool native_embed_mode_ = false;
   // We keep track of the RenderWidgetHost from which the current drag started,
   // in order to properly route the drag end message to it.
   base::WeakPtr<content::RenderWidgetHostImpl> drag_start_rwh_;

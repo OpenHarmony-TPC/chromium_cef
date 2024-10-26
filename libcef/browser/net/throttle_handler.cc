@@ -21,7 +21,6 @@
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "extensions/common/constants.h"
 #endif
-
 namespace throttle {
 
 namespace {

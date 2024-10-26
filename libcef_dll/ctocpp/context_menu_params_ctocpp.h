@@ -58,6 +58,7 @@ class CefContextMenuParamsCToCpp
   bool IsCustomMenu() override;
   InputFieldType GetInputFieldType() override;
   SourceType GetSourceType() override;
+  void GetImageRect(int& x, int& y, int& w, int& h) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_PARAMS_CTOCPP_H_

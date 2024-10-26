@@ -94,6 +94,9 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+#endif
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,
                               const std::u16string& message,
@@ -157,6 +160,9 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
       content::RenderWidgetHost* render_widget_host) override;
   void OnFocusChangedInPage(content::FocusedNodeDetails* details) override;
   void WebContentsDestroyed() override;
+#ifdef OHOS_NETWORK_LOAD
+  void DidStartLoading() override;
+#endif
 
 #if defined(OHOS_WPT)
   void DidStartNavigation(content::NavigationHandle* navigation) override;
@@ -291,6 +297,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   content::WebContents* tab_with_exclusive_access_ = nullptr;
 
   base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
+#endif
+
+#ifdef OHOS_NETWORK_LOAD
+  bool observe_need_report_title_ = false;
 #endif
 };
 

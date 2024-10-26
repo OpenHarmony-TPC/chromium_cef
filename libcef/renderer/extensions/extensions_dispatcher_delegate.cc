@@ -9,6 +9,10 @@
 #include "extensions/common/extension_features.h"
 #include "extensions/renderer/resource_bundle_source_map.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/renderer/extensions/api/extension_hooks_delegate.h"
+#endif
+
 namespace extensions {
 
 CefExtensionsDispatcherDelegate::CefExtensionsDispatcherDelegate() {}
@@ -17,5 +21,16 @@ CefExtensionsDispatcherDelegate::~CefExtensionsDispatcherDelegate() {}
 
 void CefExtensionsDispatcherDelegate::PopulateSourceMap(
     extensions::ResourceBundleSourceMap* source_map) {}
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefExtensionsDispatcherDelegate::InitializeBindingsSystem(
+    extensions::Dispatcher* dispatcher,
+    extensions::NativeExtensionBindingsSystem* bindings_system) {
+  extensions::APIBindingsSystem* bindings = bindings_system->api_system();
+  bindings->RegisterHooksDelegate(
+      "extension", std::make_unique<extensions::ExtensionHooksDelegate>(
+                       bindings_system->messaging_service()));
+}
+#endif
 
 }  // namespace extensions

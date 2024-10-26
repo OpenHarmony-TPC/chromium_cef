@@ -32,7 +32,12 @@
 namespace {
 
 // Delay before showing the quick menu, in milliseconds.
+#ifdef OHOS_DRAG_DROP
+constexpr int kQuickMenuDelayInMs = 0;
+#else
 constexpr int kQuickMenuDelayInMs = 100;
+#endif
+
 #ifdef OHOS_CLIPBOARD
 constexpr int kSelectHandleMoveDelayMixInMs = 400;
 constexpr cef_quick_menu_edit_state_flags_t kMenuCommands[] = {
@@ -351,7 +356,7 @@ bool CefTouchSelectionControllerClientOSR::IsQuickMenuAvailable() const {
                      is_enabled);
 }
 
-void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
+void CefTouchSelectionControllerClientOSR::TemporarilyCloseQuickMenu() {
   if (!quick_menu_running_) {
     return;
   }
@@ -373,7 +378,10 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
     browser->web_contents()->SetShowingContextMenu(false);
   }
 #endif  // #ifdef OHOS_CLIPBOARD
+}
 
+void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
+  TemporarilyCloseQuickMenu();
 #if defined(OHOS_EX_FREE_COPY)
   if (base::CommandLine::ForCurrentProcess() &&
       base::CommandLine::ForCurrentProcess()->HasSwitch(
@@ -485,22 +493,22 @@ void CefTouchSelectionControllerClientOSR::MouseSelectMenuShow(bool show) {
       }
     }
   }
-  LOG(INFO) << "Mouse Quit Menu Flags Is = " << quickmenuflags;
+  LOG(INFO) << "Mouse Quick Menu Flags Is = " << quickmenuflags;
   CefRefPtr<CefRunQuickMenuCallbackImpl> callbackImpl(
-        new CefRunQuickMenuCallbackImpl(base::BindOnce(
-            &CefTouchSelectionControllerClientOSR::ExecuteCommandMouse,
-            weak_ptr_factory_.GetWeakPtr())));
+      new CefRunQuickMenuCallbackImpl(base::BindOnce(
+          &CefTouchSelectionControllerClientOSR::ExecuteCommandMouse,
+          weak_ptr_factory_.GetWeakPtr())));
   ui::TouchSelectionController* controller = GetTouchSelectionController();
   bool isLongPressSelectionActive = false;
   if (controller) {
     isLongPressSelectionActive = controller->IsLongPressDragSelectionActive();
   }
   if (!handler->RunQuickMenu(
-        browser, browser->GetFocusedFrame(), {0, 0}, {0, 0},
-        {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
-          clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
-        static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(quickmenuflags),
-        callbackImpl, true, isLongPressSelectionActive)) {
+      browser, browser->GetFocusedFrame(), {0, 0}, {0, 0},
+      {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
+        clipped_selection_bounds_.width(), clipped_selection_bounds_.height()},
+      static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(quickmenuflags),
+      callbackImpl, true, isLongPressSelectionActive)) {
     callbackImpl->Disconnect();
     auto render = browser->client()->GetRenderHandler();
     if (render) {
@@ -513,6 +521,21 @@ void CefTouchSelectionControllerClientOSR::MouseSelectMenuShow(bool show) {
   if (browser->web_contents()) {
     browser->web_contents()->SetShowingContextMenu(true);
   }
+}
+
+void CefTouchSelectionControllerClientOSR::ChangeVisibilityOfQuickMenu() {
+  if (!rwhv_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return;
+  }
+  handler->ChangeVisibilityOfQuickMenu();
 }
 #endif
 
@@ -585,14 +608,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
       if (browser->web_contents()) {
         browser->web_contents()->SetShowingContextMenu(true);
       }
-      if (controller && controller->IsLongPressEvent()) {
-        if (auto client = browser->client()) {
-          if (auto render = client->GetRenderHandler()) {
-            render->StartVibraFeedback("longPress.light");
-            controller->ResetLongPressEvent();
-          }
-        }
-      }
       browser->SetTouchInsertHandleMenuShow(false);
 #endif  // #ifdef OHOS_CLIPBOARD
     }
@@ -603,7 +618,11 @@ void CefTouchSelectionControllerClientOSR::UpdateQuickMenu() {
   // Hide the quick menu if there is any. This should happen even if the menu
   // should be shown again, in order to update its location or content.
   if (quick_menu_running_) {
+#ifdef OHOS_CLIPBOARD
+    TemporarilyCloseQuickMenu();
+#else
     CloseQuickMenu();
+#endif
   } else {
     quick_menu_timer_.Stop();
   }
@@ -730,7 +749,6 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       quick_menu_requested_ = true;
       NotifyTouchSelectionChanged(false);
       UpdateQuickMenu();
-      rwhv_->ResetGestureDetection(false);
       break;
     case ui::INSERTION_HANDLE_SHOWN:
       if (rwhv_->browser_impl()) {
@@ -739,9 +757,16 @@ void CefTouchSelectionControllerClientOSR::OnSelectionEvent(
       }
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
+        if (controller && controller->IsLongPressEvent()) {
+          if (auto client = browser->client()) {
+            if (auto render = client->GetRenderHandler()) {
+              render->StartVibraFeedback("longPress.light");
+              controller->ResetLongPressEvent();
+            }
+          }
+        }
         ShowQuickMenu();
       }
-      rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
     case ui::INSERTION_HANDLE_CLEARED:
@@ -957,7 +982,7 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
 
 #ifndef OHOS_CLIPBOARD
   if (command_id == kInvalidCommandId) {
-    LOG(ERROR) << "Quick menu Command id is invaild";
+    LOG(ERROR) << "Quick menu command id is invaild";
     return;
   }
 #endif  // #ifndef OHOS_CLIPBOARD
@@ -987,7 +1012,7 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
 
 #ifdef OHOS_CLIPBOARD
   absl::optional<std::u16string> value;
-  LOG(INFO) << "Quick menu Command id = " << command_id;
+  LOG(INFO) << "Quick menu command id = " << command_id;
 #endif  // #ifdef OHOS_CLIPBOARD
   switch (command_id) {
     case QM_EDITFLAG_CAN_CUT:
@@ -1086,6 +1111,15 @@ bool CefTouchSelectionControllerClientOSR::
     NeedPopupInsertTouchHandleQuickMenu() {
   if (ShouldShowQuickMenu()) {
     ShowQuickMenu();
+    return true;
+  }
+  return false;
+}
+
+bool CefTouchSelectionControllerClientOSR::IsInsertHandleShow() {
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
+  if (controller && controller->GetInsertHandle() &&
+      controller->GetInsertHandle()->alpha()) {
     return true;
   }
   return false;

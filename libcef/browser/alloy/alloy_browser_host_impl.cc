@@ -59,6 +59,8 @@
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
+#include "content/public/common/content_switches.h"
+#include "libcef/browser/alloy/render_process_state_handler.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -713,7 +715,6 @@ void AlloyBrowserHostImpl::ScrollFocusedEditableNodeIntoView() {
                   base::BindOnce(&AlloyBrowserHostImpl::ScrollFocusedEditableNodeIntoView, this));
     return;
   }
-
   if (platform_delegate_) {
     platform_delegate_->ScrollFocusedEditableNodeIntoView();
   }
@@ -777,13 +778,13 @@ void AlloyBrowserHostImpl::WasOccluded(bool occluded) {
 void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
-  ReportRenderProcessStatus(false);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, false);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
-  ReportRenderProcessStatus(true);
+  RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, true);
   SetVisible(false);
 }
 
@@ -833,35 +834,26 @@ void AlloyBrowserHostImpl::SetVisible(bool visible)
   }
 }
 
-void AlloyBrowserHostImpl::ReportRenderProcessStatus(bool is_web_hidden) {
-  using namespace OHOS::NWeb;
-
+base::ProcessId AlloyBrowserHostImpl::GetRenderProcessId() {
   content::WebContents* contents = web_contents();
   if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId web_contents is null";
+    return 0;
   }
 
   if (auto render_view_host = contents->GetRenderViewHost()) {
     auto render_process_host = render_view_host->GetProcess();
     if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
-      return;
+      LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_process_host is null";
+      return 0;
     }
-
-    ResSchedStatusAdapter status = is_web_hidden
-                                       ? ResSchedStatusAdapter::WEB_INACTIVE
-                                       : ResSchedStatusAdapter::WEB_ACTIVE;
-    base::ProcessId process_id = render_process_host->GetProcess().Pid();
-    ResSchedClientAdapter::ReportRenderProcessStatus(status, process_id);
-    TRACE_EVENT2("base", "ResSchedClientAdapter::ReportRenderProcessStatus", "status", static_cast<int32_t>(status),
-               "process_id", process_id);
-    LOG(DEBUG) << "AlloyBrowserHostImpl::ReportRenderProcessStatus is_web_hidden: " << is_web_hidden << " process_id: " << process_id;
+    return render_process_host->GetProcess().Pid();
   } else {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_view_host is null";
-    return;
+    LOG(ERROR) << "AlloyBrowserHostImpl::GetRenderProcessId render_view_host is null";
+    return 0;
   }
 }
+
 void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   LOG(DEBUG) << "SetEnableLowerFrameRate:" << enabled;
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -1564,6 +1556,21 @@ void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
   contents_delegate_->UpdateTargetURL(source, url);
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void AlloyBrowserHostImpl::WebExtensionUpdateTabUrl(
+    int32_t tab_id, const GURL& url) {
+  contents_delegate_->WebExtensionUpdateTabUrl(tab_id, url);
+}
+
+void AlloyBrowserHostImpl::SetTabId(int32_t tab_id) {
+  tab_id_ = tab_id;
+}
+
+int32_t AlloyBrowserHostImpl::GetTabId() {
+  return tab_id_;
+}
+#endif
+
 bool AlloyBrowserHostImpl::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel level,
@@ -1654,7 +1661,6 @@ bool AlloyBrowserHostImpl::WebHandleKeyboardEvent(
     ContentsZoomChange(zoom_in);
     return true;
   }
-
   return false;
 }
 #endif
@@ -1897,17 +1903,10 @@ void AlloyBrowserHostImpl::ExitPictureInPicture() {
 }
 
 bool AlloyBrowserHostImpl::IsBackForwardCacheSupported() {
-#if BUILDFLAG(IS_OHOS)
-  // Turn this switch on and see if there's anything wrong,
-  // issue #3237 not reproduced, maybe had been fixed.
 #ifdef OHOS_BFCACHE
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableBFCache))
-#endif
     return true;
-
-#ifdef OHOS_BFCACHE
   return false;
-#endif
 #else
   // Disabled due to issue #3237.
   return false;
@@ -1916,7 +1915,11 @@ bool AlloyBrowserHostImpl::IsBackForwardCacheSupported() {
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
+#if BUILDFLAG(IS_OHOS)
+  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
+#else
   return content::PreloadingEligibility::kEligible;
+#endif
 }
 
 #ifdef OHOS_FOCUS
@@ -1974,6 +1977,7 @@ void AlloyBrowserHostImpl::OnNativeEmbedStatusUpdate(
   data_info.info.params = native_embed_info.params;
 
   platform_delegate_->OnNativeEmbedLifecycleChange(data_info);
+
 }
 
 void AlloyBrowserHostImpl::OnLayerRectVisibilityChange(const std::string& embed_id, bool visibility) {
@@ -1983,6 +1987,7 @@ void AlloyBrowserHostImpl::OnLayerRectVisibilityChange(const std::string& embed_
 
   platform_delegate_->OnNativeEmbedVisibilityChange(embed_id, visibility);
 }
+
 #endif
 // content::WebContentsObserver methods.
 // -----------------------------------------------------------------------------
@@ -1996,6 +2001,7 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
       return;
     }
 #endif
+
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
@@ -2274,6 +2280,7 @@ void AlloyBrowserHostImpl::AddVisitedLinks(const std::vector<CefString>& urls) {
       return;
     }
 #endif
+
     auto cef_browser_context =
         static_cast<AlloyBrowserContext*>(web_contents()->GetBrowserContext());
     if (cef_browser_context) {
@@ -2421,6 +2428,7 @@ void AlloyBrowserHostImpl::UpdateBackgroundColor(int color) {
 }
 
 void AlloyBrowserHostImpl::RenderViewReady() {
+  RenderProcessStateHandler::GetInstance()->InitRenderProcessState(GetRenderProcessId(), nweb_id_);
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(
         CEF_UIT,
@@ -2428,7 +2436,6 @@ void AlloyBrowserHostImpl::RenderViewReady() {
     return;
   }
   ReportWindowStatus(true);
-  ReportRenderProcessStatus(is_hidden_);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
   SetVisible(true);
 #if BUILDFLAG(IS_OHOS)
@@ -2485,12 +2492,16 @@ void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
 
 void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
   auto rvh = web_contents()->GetRenderViewHost();
-  CefRenderWidgetHostViewOSR* view =
-      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
-
+  auto view = rvh->GetWidget()->GetView();
   if (view) {
     view->SetDoubleTapSupportEnabled(settings_.supports_double_tap_zoom);
     view->SetMultiTouchZoomSupportEnabled(settings_.supports_multi_touch_zoom);
+  }
+}
+
+void AlloyBrowserHostImpl::SetNativeEmbedMode(bool flag) {
+    if (platform_delegate_) {
+    platform_delegate_->SetNativeEmbedMode(flag);
   }
 }
 
@@ -2673,21 +2684,13 @@ void AlloyBrowserHostImpl::SetDrawRect(int x, int y, int width, int height) {
 }
 
 void AlloyBrowserHostImpl::SetDrawMode(int mode) {
-  if (drawMode_ != mode) {
-    drawMode_ = mode;
-
-    if (platform_delegate_)
-      platform_delegate_->SetDrawMode(drawMode_);
-  }
+  if (platform_delegate_)
+    platform_delegate_->SetDrawMode(mode);
 }
 
 void AlloyBrowserHostImpl::SetFitContentMode(int mode) {
   if (platform_delegate_)
     platform_delegate_->SetFitContentMode(mode);
-}
-
-int AlloyBrowserHostImpl::GetDrawMode() {
-  return drawMode_;
 }
 
 void AlloyBrowserHostImpl::SetShouldFrameSubmissionBeforeDraw(bool should) {
@@ -2765,7 +2768,6 @@ bool AlloyBrowserHostImpl::GetPrintBackground() {
   return false;
 }
 #endif // defined(OHOS_PRINT)
-
 
 bool AlloyBrowserHostImpl::Discard() {
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -2850,6 +2852,20 @@ CefString AlloyBrowserHostImpl::GetLastJavascriptProxyCallingFrameUrl() {
 }
 #endif
 
+#ifdef OHOS_RENDER_PROCESS_MODE
+void AlloyBrowserHostImpl::SetNeedsReload(bool needs_reload) {
+  if (is_hidden_ && needs_reload) {
+    web_contents()->GetController().SetNeedsReload();
+  }
+  LOG(INFO) << "Set needs reload: " << needs_reload;
+  needs_reload_ = needs_reload;
+}
+
+bool AlloyBrowserHostImpl::NeedsReload() {
+  return needs_reload_;
+}
+#endif // OHOS_RENDER_PROCESS_MODE
+
 #if defined(OHOS_CUSTOM_VIDEO_PLAYER)
 std::unique_ptr<content::CustomMediaPlayer>
 AlloyBrowserHostImpl::CreateCustomMediaPlayer(
@@ -2903,17 +2919,41 @@ AlloyBrowserHostImpl::CreateCustomMediaPlayer(
 }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
-#ifdef OHOS_RENDER_PROCESS_MODE
-void AlloyBrowserHostImpl::NotifyNeedsReload(bool needs_reload) {
-  if (is_hidden_ && needs_reload) {
-    web_contents()->GetController().SetNeedsReload();
+#if defined(OHOS_RENDERER_ANR_DUMP)
+void AlloyBrowserHostImpl::RendererUnresponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host,
+    base::RepeatingClosure hang_monitor_restarter,
+    content::RenderProcessNotRespondingReason reason
+
+) {
+  content::RenderProcessHost* host =
+      source->GetPrimaryMainFrame()->GetProcess();
+  if (!host->IsReady() || !source->GetPrimaryMainFrame()->IsRenderFrameLive()) {
+    OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
+    return;
   }
-  LOG(INFO) << "NotifyNeedsReload set needs reload: " << needs_reload;
-  needs_reload_ = needs_reload;
+  host->dumpCurrentJavaScriptStackInMainThread(
+      base::BindOnce(&AlloyBrowserHostImpl::OnDumpJavaScriptStackCallback, this,
+                     host->GetProcess().Pid(), reason));
 }
 
-bool AlloyBrowserHostImpl::NeedsReload() {
-  return needs_reload_;
+void AlloyBrowserHostImpl::OnDumpJavaScriptStackCallback(
+    int pid,
+    content::RenderProcessNotRespondingReason reason,
+    const std::string& stack) {
+  if (auto handler = client_->GetRequestHandler()) {
+    handler->OnRenderProcessNotResponding(this, stack, pid,
+                                          static_cast<int>(reason));
+  }
+}
+
+void AlloyBrowserHostImpl::RendererResponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
+  if (auto handler = client_->GetRequestHandler()) {
+    handler->OnRenderProcessResponding(this);
+  }
 }
 #endif
 
@@ -2930,6 +2970,12 @@ void AlloyBrowserHostImpl::CreateOverlay(const gfx::ImageSkia& image,
 void AlloyBrowserHostImpl::OnTextSelected(bool flag) {
   if (platform_delegate_) {
     platform_delegate_->OnTextSelected(flag);
+  }
+}
+
+void AlloyBrowserHostImpl::OnDestroyImageAnalyzerOverlay() {
+  if (platform_delegate_) {
+    platform_delegate_->OnDestroyImageAnalyzerOverlay();
   }
 }
 

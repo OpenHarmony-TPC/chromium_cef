@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=cb6483fc6c0cda8419cd2be92b97f98392a417b9$
+// $hash=1a8af0e7a531b4b8768225572a3f18940fbbf276$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_COOKIE_CAPI_H_
@@ -81,7 +81,8 @@ typedef struct _cef_cookie_manager_t {
                                        const cef_string_t* url,
                                        int includeHttpOnly,
                                        struct _cef_cookie_visitor_t* visitor,
-                                       int is_sync);
+                                       int is_sync,
+                                       int is_from_ndk);
 
   ///
   /// Sets a cookie given a valid URL and explicit user-provided cookie
@@ -97,7 +98,8 @@ typedef struct _cef_cookie_manager_t {
                                 const struct _cef_cookie_t* cookie,
                                 struct _cef_set_cookie_callback_t* callback,
                                 int is_sync,
-                                const cef_string_t* str_cookie);
+                                const cef_string_t* str_cookie,
+                                int includeHttpOnly);
 
   ///
   /// Delete all cookies that match the specified parameters. If both |url| and

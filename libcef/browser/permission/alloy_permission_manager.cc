@@ -237,12 +237,13 @@ void AlloyPermissionManager::RequestPermissionByType(
               weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
       break;
     case PermissionType::CLIPBOARD_READ_WRITE:
-      if(GetApplicationApiVersion() <= APPLICATION_API_10){
+      if (GetApplicationApiVersion() <= APPLICATION_API_10){
         LOG(INFO) << "application version <= 10";
         pending_request_raw->SetPermissionStatus(permission_type,
-                                               PermissionStatus::GRANTED);
+                                                 PermissionStatus::GRANTED);
         break;
       }
+      LOG(INFO) << "application version > 10, ask clipboard readwrite permission.";
       browser->AskClipboardReadWritePermission(
         pending_request_raw->requesting_origin_.spec(),
         base::BindRepeating(
@@ -261,7 +262,19 @@ void AlloyPermissionManager::RequestPermissionByType(
       break;
 #endif // defined(OHOS_SENSOR)
     case PermissionType::AUDIO_CAPTURE:
+      browser->AskAudioCapturePermission(
+          pending_request_raw->requesting_origin_.spec(),
+          base::BindRepeating(
+              &AlloyPermissionManager::OnRequestResponseCallBack,
+              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      break;
     case PermissionType::VIDEO_CAPTURE:
+      browser->AskVideoCapturePermission(
+          pending_request_raw->requesting_origin_.spec(),
+          base::BindRepeating(
+              &AlloyPermissionManager::OnRequestResponseCallBack,
+              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      break;
     case PermissionType::NOTIFICATIONS:
     case PermissionType::DURABLE_STORAGE:
     case PermissionType::BACKGROUND_SYNC:
@@ -285,7 +298,23 @@ void AlloyPermissionManager::RequestPermissionByType(
       pending_request_raw->SetPermissionStatus(permission_type,
                                                PermissionStatus::DENIED);
       break;
+#ifdef OHOS_EX_PERMISSION
     case PermissionType::CLIPBOARD_SANITIZED_WRITE:
+      if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+          switches::kForBrowser)) {
+        browser->AskClipboardSanitizedWritePermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      } else {
+        pending_request_raw->SetPermissionStatus(permission_type,
+                                                 PermissionStatus::GRANTED);
+      }
+      break;
+#else
+     case PermissionType::CLIPBOARD_SANITIZED_WRITE:
+#endif
     case PermissionType::WAKE_LOCK_SCREEN:
       pending_request_raw->SetPermissionStatus(permission_type,
                                                PermissionStatus::GRANTED);
@@ -298,6 +327,8 @@ void AlloyPermissionManager::OnRequestResponseCallBack(
     int request_id,
     PermissionType permission,
     bool allowed) {
+  LOG(INFO) << "OnRequestResponseCallBack permission:" << (int)permission
+            << ", allowed:" << allowed;
   // All delegate functions should be cancelled when the manager runs
   // destructor. Therefore |manager| should be always valid here.
   DCHECK(manager);
@@ -507,6 +538,23 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
       if (browser)
         browser->AbortAskClipboardReadWritePermission(requesting_origin.spec());
       break;
+    case PermissionType::CLIPBOARD_SANITIZED_WRITE:
+      if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+          switches::kForBrowser) && browser) {
+        browser->AbortAskClipboardSanitizedWritePermission(
+            requesting_origin.spec());
+      } else {
+        NOTREACHED() << "Invalid PermissionType.";
+      }
+      break;
+    case PermissionType::AUDIO_CAPTURE:
+      if (browser)
+        browser->AbortAskAudioCapturePermission(requesting_origin.spec());
+      break;
+    case PermissionType::VIDEO_CAPTURE:
+      if (browser)
+        browser->AbortAskVideoCapturePermission(requesting_origin.spec());
+      break;
     case PermissionType::SENSORS:
 #if defined(OHOS_SENSOR)
       if (browser)
@@ -515,11 +563,8 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
 #endif // defined(OHOS_SENSOR)
     case PermissionType::NOTIFICATIONS:
     case PermissionType::DURABLE_STORAGE:
-    case PermissionType::AUDIO_CAPTURE:
-    case PermissionType::VIDEO_CAPTURE:
     case PermissionType::BACKGROUND_SYNC:
     case PermissionType::ACCESSIBILITY_EVENTS:
-    case PermissionType::CLIPBOARD_SANITIZED_WRITE:
     case PermissionType::PAYMENT_HANDLER:
     case PermissionType::BACKGROUND_FETCH:
     case PermissionType::IDLE_DETECTION:

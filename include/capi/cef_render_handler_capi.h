@@ -390,16 +390,6 @@ typedef struct _cef_render_handler_t {
                                           struct _cef_browser_t* browser);
 
   ///
-  /// Called when text input state has changed for the specified |browser|.
-  ///
-  void(CEF_CALLBACK* on_update_text_input_state_called)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* text,
-      const cef_range_t* selected_range,
-      const cef_range_t* compositon_range);
-
-  ///
   /// Called when selecting word.
   ///
   void(CEF_CALLBACK* get_word_selection)(struct _cef_render_handler_t* self,
@@ -427,6 +417,16 @@ typedef struct _cef_render_handler_t {
       const cef_rect_t* cef_screen_rect);
 
   ///
+  /// Called when text input state has changed for the specified |browser|.
+  ///
+  void(CEF_CALLBACK* on_update_text_input_state_called)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* text,
+      const cef_range_t* selected_range,
+      const cef_range_t* compositon_range);
+
+  ///
   /// Called to retrieve the visible view rectangle in screen DIP coordinates.
   /// This function must always provide a non-NULL rectangle.
   ///
@@ -449,10 +449,23 @@ typedef struct _cef_render_handler_t {
                                        const char* content);
 
   ///
+  /// SetGestureEventResult
+  ///
+  void(CEF_CALLBACK* set_gesture_event_result)(struct _cef_render_handler_t* self,
+                                       bool result);
+
+  ///
   /// Called when you need to start vibrator.
   ///
   void(CEF_CALLBACK* start_vibra_feedback)(struct _cef_render_handler_t* self,
                                            const char* vibratorType);
+
+  ///
+  /// Get Device pixel size.
+  ///
+  void(CEF_CALLBACK* get_device_pixel_size)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser,
+                                            cef_size_t* size);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

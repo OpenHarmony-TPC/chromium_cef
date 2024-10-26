@@ -28,6 +28,9 @@
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
+#if defined(OHOS_EX_NAVIGATION)
+#include "content/public/browser/navigation_controller.h"
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 const char* CONTENT_SIZE_MESSAGE = "ContentSize.Message";
@@ -488,6 +491,29 @@ bool CefBrowserImpl::ShouldShowLoadingUI() {
 }
 // #endif  // defined(OHOS_NWEB_EX)
 
+#if defined(OHOS_EX_NAVIGATION)
+int CefBrowserImpl::InsertBackForwardEntry(int index, const CefString& url) {
+  return static_cast<int>(
+      content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+}
+
+int CefBrowserImpl::UpdateNavigationEntryUrl(int index, const CefString& url) {
+  return static_cast<int>(
+      content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+}
+
+void CefBrowserImpl::ClearForwardList() {}
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserImpl::SetTabId(int32_t tab_id) {
+  tab_id_ = tab_id;
+}
+int32_t CefBrowserImpl::GetTabId() {
+  return tab_id_;
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 void CefBrowserImpl::DidUpdateMainFrameLayout() {
   needs_contents_size_update_ = true;
@@ -502,26 +528,35 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
   blink::WebFrame* main_frame = GetWebView()->MainFrame();
   blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();
 
-  gfx::Size contents_size = blink_glue::GetContentSize(web_local_frame);
+  gfx::Size contents_size = main_frame->ToWebLocalFrame()->DocumentSize();
+
+  if (contents_size.IsEmpty()) {
+    contents_size = GetWebView()->ContentsPreferredMinimumSize();
+  }
+
   int content_width = contents_size.width();
   int content_height = contents_size.height();
 
   gfx::Size viewport_size = blink_glue::GetVisualViewportSize(web_local_frame);
 
-  if (content_width != content_width_ || content_height != content_height_) {
+  if (content_width != content_width_ || content_height != content_height_ ||
+      viewport_size.width() != viewport_width_ ||
+      viewport_size.height() != viewport_height_) {
     content_width_ = content_width;
     content_height_ = content_height;
+    viewport_width_ = viewport_size.width();
+    viewport_height_ = viewport_size.height();
     CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(CONTENT_SIZE_MESSAGE);
     message->GetArgumentList()->SetInt(0, content_width_);
     message->GetArgumentList()->SetInt(1, content_height_);
     message->GetArgumentList()->SetInt(2, viewport_size.width());
     message->GetArgumentList()->SetInt(3, viewport_size.height());
     auto web_frame = GetMainFrame();
+    web_frame->SendProcessMessage(PID_BROWSER, message);
     LOG(DEBUG) << "Fit content SendProcessMessage Content width: "
                << content_width << ",height: " << content_height
                << ". Viewport width:" << viewport_size.width()
                << ",height:" << viewport_size.height();
-    web_frame->SendProcessMessage(PID_BROWSER, message);
   }
 }
 #endif

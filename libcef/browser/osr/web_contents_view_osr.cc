@@ -196,6 +196,13 @@ void CefWebContentsViewOSR::MouseSelectMenuShow(bool show) {
     rwhv->MouseSelectMenuShow(show);
   }
 }
+
+void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->ChangeVisibilityOfQuickMenu();
+  }
+}
 #endif
 
 void CefWebContentsViewOSR::StartDragging(
@@ -328,18 +335,6 @@ void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
 }
 #endif  // OHOS_EX_TOPCONTROLS
 
-#ifdef OHOS_DISPLAY_CUTOUT
-void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
-  if (web_contents_) {
-    content::WebContentsImpl* web_contents_impl =
-        static_cast<content::WebContentsImpl*>(web_contents_);
-    if (web_contents_impl) {
-      web_contents_impl->SetDisplayCutoutSafeArea(safe_insets);
-    }
-  }
-}
-#endif
-
 #ifdef OHOS_AI
 void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
                                           const gfx::Rect& image_rect,
@@ -348,6 +343,18 @@ void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
   if (browser.get()) {
     browser->CreateOverlay(image, image_rect, touch_point, screen_rect);
+  }
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
+  if (web_contents_) {
+    content::WebContentsImpl* web_contents_impl =
+        static_cast<content::WebContentsImpl*>(web_contents_);
+    if (web_contents_impl) {
+      web_contents_impl->SetDisplayCutoutSafeArea(safe_insets);
+    }
   }
 }
 #endif

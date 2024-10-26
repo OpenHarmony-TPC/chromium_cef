@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b77510df636c5b9c4ed124918ea3a348d5a59579$
+// $hash=ae79e0f4ec733e6005a53fd2b973a4227fcc59cb$
 //
 
 #include "libcef_dll/ctocpp/browser_permission_request_delegate_ctocpp.h"
@@ -269,6 +269,144 @@ void CefBrowserPermissionRequestDelegateCToCpp::NotifyGeolocationPermission(
 
   // Execute
   _struct->notify_geolocation_permission(_struct, value, origin.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AskAudioCapturePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_audio_capture_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_audio_capture_permission(_struct, origin.GetStruct(), callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AbortAskAudioCapturePermission(
+    const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, abort_ask_audio_capture_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_audio_capture_permission(_struct, origin.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AskVideoCapturePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_video_capture_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_video_capture_permission(_struct, origin.GetStruct(), callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AbortAskVideoCapturePermission(
+    const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, abort_ask_video_capture_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_video_capture_permission(_struct, origin.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::
+    AskClipboardSanitizedWritePermission(const CefString& origin,
+                                         cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_clipboard_sanitized_write_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_clipboard_sanitized_write_permission(_struct, origin.GetStruct(),
+                                                    callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::
+    AbortAskClipboardSanitizedWritePermission(const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct,
+                         abort_ask_clipboard_sanitized_write_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_clipboard_sanitized_write_permission(_struct,
+                                                          origin.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

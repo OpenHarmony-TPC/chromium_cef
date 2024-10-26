@@ -49,6 +49,7 @@
 #include "content/public/browser/message_port_provider.h"
 #include "content/public/common/mhtml_generation_params.h"
 #include "content/public/common/url_constants.h"
+#include "content/public/common/referrer.h"
 #include "libcef/browser/devtools/devtools_manager_delegate.h"
 #include "libcef/browser/javascript/oh_javascript_injector.h"
 #include "libcef/browser/navigation_state_serializer.h"
@@ -59,6 +60,10 @@
 #include "third_party/blink/public/common/messaging/web_message_port.h"
 #include "ui/base/resource/resource_bundle.h"
 #endif
+
+#if defined(OHOS_MEDIA_POLICY)
+#include "content/browser/media/session/media_session_impl.h"
+#endif // defined(OHOS_MEDIA_POLICY)
 
 #if defined(OHOS_MEDIA_POLICY)
 #include "content/browser/media/session/media_session_impl.h"
@@ -96,6 +101,10 @@
 #include "cc/input/browser_controls_state.h"
 #endif
 
+#if defined(OHOS_EX_NAVIGATION)
+#include "content/public/browser/navigation_controller.h"
+#endif
+
 #ifdef OHOS_ITP
 #include "cef/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
 #endif
@@ -114,6 +123,9 @@
 #include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h"
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#endif
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -332,8 +344,10 @@ CefBrowserHostBase::CefBrowserHostBase(
   contents_delegate_->AddObserver(this);
 #if BUILDFLAG(IS_OHOS)
   contents_delegate_->InitIconHelper();
-  permission_request_handler_.reset(new AlloyPermissionRequestHandler(
-      client_->GetPermissionRequest(), GetWebContents()));
+  if (client) {
+    permission_request_handler_.reset(new AlloyPermissionRequestHandler(
+      client->GetPermissionRequest(), GetWebContents()));
+  }
 #endif
 }
 
@@ -434,7 +448,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
   content::Referrer referrer = content::Referrer::SanitizeForRequest(
       gurl, content::Referrer(web_contents->GetLastCommittedURL(),
-                              network::mojom::ReferrerPolicy::kDefault));
+                             network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
   manager->DownloadUrl(std::move(params));
 }
@@ -894,6 +908,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
                       settings_.embed_tag_type);
   settings_.draw_mode = browser_settings.draw_mode;
   settings_.text_autosizing_enabled = browser_settings.text_autosizing_enabled;
+  settings_.force_zero_layout_height = browser_settings.force_zero_layout_height;
 #endif  // BUILDFLAG(IS_OHOS)
 #ifdef OHOS_SCROLLBAR
   settings_.scrollbar_color = browser_settings.scrollbar_color;
@@ -913,18 +928,22 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.custom_video_player_overlay =
       browser_settings.custom_video_player_overlay;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+#if defined(OHOS_MULTI_WINDOW)
+  settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
+#endif // OHOS_MULTI_WINDOW
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
   settings_.record_whole_document = browser_settings.record_whole_document;
 #endif
 
-#if defined(OHOS_MULTI_WINDOW)
-  settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
-#endif // OHOS_MULTI_WINDOW
-
 #ifdef OHOS_NETWORK_LOAD
   settings_.universal_access_from_file_urls = browser_settings.universal_access_from_file_urls;
 #endif
+
+#ifdef OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
+  settings_.enable_media_network_traffic_prompt =
+      browser_settings.enable_media_network_traffic_prompt;
+#endif // OHOS_MEDIA_NETWORK_TRAFFIC_PROMPT
 }
 
 void CefBrowserHostBase::SetWebPreferences(
@@ -1049,8 +1068,7 @@ void CefBrowserHostBase::JavaScriptOnDocumentStart(
     js_injection::JsCommunicationHost::AddScriptResult result =
         host->AddDocumentStartJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_start_script_result_map_.emplace(
-          std::make_pair(stdScript, result.script_id.value()));
+      document_start_script_result_map_[stdScript] = result.script_id.value();
     }
   }
 }
@@ -1079,8 +1097,7 @@ void CefBrowserHostBase::JavaScriptOnDocumentEnd(
     js_injection::JsCommunicationHost::AddScriptResult result =
         host->AddDocumentEndJavaScript(script, scriptRules);
     if (result.script_id.has_value()) {
-      document_end_script_result_map_.emplace(
-          std::make_pair(stdScript, result.script_id.value()));
+      document_end_script_result_map_[stdScript] = result.script_id.value();
     }
   }
 }
@@ -1297,7 +1314,7 @@ bool CefBrowserHostBase::TerminateRenderProcess() {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())->TerminateRenderProcess(result);
-    LOG(DEBUG) << "TerminateRenderProcess result:" << result;
+    LOG(INFO) << "TerminateRenderProcess result:" << result;
   }
   return result;
 }
@@ -1557,10 +1574,12 @@ void CefBrowserHostBase::SetBrowserUserAgentString(
 #if defined(OHOS_I18N)
 void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string update_locale = locale.ToString();
+
   // need to notify renderer preference to change accepted_language.
   if (!GetWebContents()) {
     return;
   }
+
   auto prefs = GetWebContents()->GetMutableRendererPrefs();
   if (prefs->accept_languages.compare(update_locale)) {
     prefs->accept_languages = update_locale;
@@ -1576,7 +1595,7 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string origin_locale =
       ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
   if (origin_locale == update_locale) {
-    LOG(ERROR) << "CefBrowserHostBase::UpdateLocale no need to update locale";
+    LOG(WARNING) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
 
@@ -1684,6 +1703,10 @@ void CefBrowserHostBase::SetBrowserZoomLevel(double zoom_factor) {
 }
 
 void CefBrowserHostBase::AdvanceFocusForIME(int focusType) {
+  // todo(ohos):impl this function then remove todo
+}
+
+void CefBrowserHostBase::SetNativeEmbedMode(bool flag) {
   // todo(ohos):impl this function then remove todo
 }
 #endif  // IS_OHOS
@@ -1985,6 +2008,48 @@ void CefBrowserHostBase::AbortAskClipboardReadWritePermission(
     const CefString& origin) {
   permission_request_handler_->CancelRequest(
       origin, AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE);
+}
+
+void CefBrowserHostBase::AskClipboardSanitizedWritePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  permission_request_handler_->SendRequest(new AlloyAccessRequest(
+      origin, AlloyAccessRequest::Resources::CLIPBOARD_SANITIZED_WRITE,
+      std::move(callback)));
+}
+
+void CefBrowserHostBase::AbortAskClipboardSanitizedWritePermission(
+    const CefString& origin) {
+  permission_request_handler_->CancelRequest(
+      origin, AlloyAccessRequest::Resources::CLIPBOARD_SANITIZED_WRITE);
+}
+
+void CefBrowserHostBase::AskAudioCapturePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  permission_request_handler_->SendRequest(new AlloyAccessRequest(
+      origin, AlloyAccessRequest::Resources::AUDIO_CAPTURE,
+      std::move(callback)));
+}
+
+void CefBrowserHostBase::AbortAskAudioCapturePermission(
+    const CefString& origin) {
+  permission_request_handler_->CancelRequest(
+      origin, AlloyAccessRequest::Resources::AUDIO_CAPTURE);
+}
+
+void CefBrowserHostBase::AskVideoCapturePermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  permission_request_handler_->SendRequest(new AlloyAccessRequest(
+      origin, AlloyAccessRequest::Resources::VIDEO_CAPTURE,
+      std::move(callback)));
+}
+
+void CefBrowserHostBase::AbortAskVideoCapturePermission(
+    const CefString& origin) {
+  permission_request_handler_->CancelRequest(
+      origin, AlloyAccessRequest::Resources::VIDEO_CAPTURE);
 }
 #endif
 
@@ -2305,6 +2370,11 @@ CefString CefBrowserHostBase::Title() {
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   auto web_contents = GetWebContents();
   if (web_contents) {
     int retry_times = 0;
@@ -2317,16 +2387,13 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
         return;
       }
       uint64_t pointer0 = base::RandUint64();
-      if (pointer0 == ULLONG_MAX) {
+      if (pointer0 == ULLONG_MAX || (pointer0 + 1) == ULLONG_MAX) {
         retry_times++;
         continue;
       }
+      pointer0 = ((pointer0 % 2) == 0) ? (pointer0 + 1) : pointer0;
       uint64_t pointer1 = pointer0 + 1;
-      auto iter = std::find_if(portMap_.begin(), portMap_.end(), [&pointer0, &pointer1](auto& cc){
-        std::pair<uint64_t, uint64_t> rnd = cc.first;
-        return (rnd.first == pointer0 || rnd.second == pointer0 || rnd.first == pointer1);
-      });
-
+      auto iter = portMap_.find(std::make_pair(pointer0, pointer1));
       if (iter == portMap_.end()) {
         portMap_[std::make_pair(pointer0, pointer1)] =
             std::make_pair(std::move(portArr[0]), std::move(portArr[1]));
@@ -2347,6 +2414,11 @@ void CefBrowserHostBase::CreateWebMessagePorts(std::vector<CefString>& ports) {
 void CefBrowserHostBase::PostWebMessage(CefString& message,
                                         std::vector<CefString>& port_handles,
                                         CefString& targetUri) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "PostWebMessage web_contents its null";
@@ -2390,6 +2462,11 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
 void CefBrowserHostBase::ClosePort(CefString& portHandle) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CHECK(false) << "called on invalid thread";
+    return;
+  }
+  base::AutoLock msg_lock(web_message_lock_);
   LOG(DEBUG) << "ClosePort ClosePort";
   auto web_contents = GetWebContents();
   if (!web_contents) {
@@ -2535,14 +2612,10 @@ bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
   return true;
 }
 
-void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
+void CefBrowserHostBase::PostPortMessageInternal(const CefString& portHandle,
                                          CefRefPtr<CefValue> data) {
-  auto web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "GetWebContents null";
-    return;
-  }
-
+  base::ScopedAllowBlocking scoped_allow_blocking;
+  base::AutoLock msg_lock(web_message_lock_);
   // construct blink message
   blink::WebMessagePort::Message message;
   if (!ConvertCefValueToBlinkMsg(data, message)) {
@@ -2571,27 +2644,19 @@ void CefBrowserHostBase::PostPortMessage(CefString& portHandle,
   }
 }
 
-// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
-// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
-// WebMessagePort of the pipe.
-void CefBrowserHostBase::SetPortMessageCallback(
-    CefString& portHandle,
+void CefBrowserHostBase::PostPortMessage(const CefString& portHandle,
+                                         CefRefPtr<CefValue> data) {
+    sequenced_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&CefBrowserHostBase::PostPortMessageInternal,
+                                  this, portHandle, data));
+}
+
+void CefBrowserHostBase::SetPortMessageCallbackInternal(
+    const CefString& portHandle,
     CefRefPtr<CefWebMessageReceiver> callback) {
-  auto web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "GetWebContents null";
-    return;
-  }
-
-  // get sequenced task runner
+  base::ScopedAllowBlocking scoped_allow_blocking;
+  base::AutoLock msg_lock(web_message_lock_);
   std::string pointer0 = portHandle.ToString();
-  if (!base::SequencedTaskRunner::HasCurrentDefault())
-  {
-    LOG(ERROR) << "not in SequencedTaskRunner";
-    return;
-  }
-
-  auto sequenced_task_runner_ = base::SequencedTaskRunner::GetCurrentDefault();
 
   // get web message receiver instance
   std::shared_ptr<WebMessageReceiverImpl> webMsgReceiver;
@@ -2628,7 +2693,19 @@ void CefBrowserHostBase::SetPortMessageCallback(
   receiverMap_[pointer0] = webMsgReceiver;
 }
 
+// in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
+// WebMessagePort>> portMap_; first is the paif of port_handles. second is the
+// WebMessagePort of the pipe.
+void CefBrowserHostBase::SetPortMessageCallback(
+    const CefString& portHandle,
+    CefRefPtr<CefWebMessageReceiver> callback) {
+  sequenced_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&CefBrowserHostBase::SetPortMessageCallbackInternal,
+                                this, portHandle, callback));
+}
+
 void CefBrowserHostBase::DestroyAllWebMessagePorts() {
+  base::AutoLock msg_lock(web_message_lock_);
   LOG(DEBUG) << "clear all message ports";
   portMap_.clear();
   receiverMap_.clear();
@@ -2804,10 +2881,16 @@ void CefBrowserHostBase::LoadWithDataAndBaseUrl(const CefString& baseUrl,
   }
   buildData.append(";base64");
   buildData.append(",");
+  std::string emtry_data_url = buildData;
   dataBase = GetDataURI(dataBase);
   buildData.append(dataBase);
   GURL data_url = GURL(buildData);
   content::NavigationController::LoadURLParams loadUrlParams(data_url);
+  if (data_url.spec().size() > url::kMaxURLChars) {
+    loadUrlParams.url = GURL(emtry_data_url);
+    loadUrlParams.data_url_as_string =
+      base::MakeRefCounted<base::RefCountedString>(std::move(buildData));
+  }
 
   if (!(url.find("data:") == 0)) {
     loadUrlParams.virtual_url_for_data_url = GURL(historyUrlBase);
@@ -2843,9 +2926,15 @@ void CefBrowserHostBase::LoadWithData(const CefString& data,
     buildData.append(";base64");
   }
   buildData.append(",");
+  std::string emtry_data_url = buildData;
   buildData.append(dataBase);
   GURL data_url = GURL(buildData);
   content::NavigationController::LoadURLParams loadUrlParams(data_url);
+  if (data_url.spec().size() > url::kMaxURLChars) {
+    loadUrlParams.url = GURL(emtry_data_url);
+    loadUrlParams.data_url_as_string =
+      base::MakeRefCounted<base::RefCountedString>(std::move(buildData));
+  }
 
   auto web_contents = GetWebContents();
   if (web_contents) {
@@ -3057,26 +3146,26 @@ bool CefBrowserHostBase::GetWebDebuggingAccess() {
   return is_web_debugging_access_;
 }
 
-void CefBrowserHostBase::GetImageForContextNode() {
+void CefBrowserHostBase::GetImageForContextNode(int command_id) {
   auto frame = GetMainFrame();
   if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->GetImageForContextNode();
+    static_cast<CefFrameHostImpl*>(frame.get())->GetImageForContextNode(command_id);
   }
 }
 
-void CefBrowserHostBase::GetImageFromCache(const CefString& url) {
-  LOG(ERROR) << "CefBrowserHostBase::GetImageFromCache";
+void CefBrowserHostBase::GetImageFromCache(const CefString& url, int command_id) {
+  LOG(INFO) << "CefBrowserHostBase::GetImageFromCache";
   auto web_contents = GetWebContents();
   auto frame = GetMainFrame();
   if (web_contents && frame && frame->IsValid()) {
     content::RenderFrameHost* rfh = web_contents->GetPrimaryMainFrame();
     if (rfh) {
-      LOG(ERROR) << "CefBrowserHostBase::GetImageFromCache";
+      LOG(INFO) << "CefBrowserHostBase::GetImageFromCache";
       rfh->GetImageFromCache(
           url.ToString(),
           base::BindOnce(&CefFrameHostImpl::OnGetImageFromCache,
                          static_cast<CefFrameHostImpl*>(frame.get()),
-                         url.ToString()));
+                         url.ToString(), command_id));
     }
   }
 }
@@ -3094,6 +3183,7 @@ void CefBrowserHostBase::WasOccluded(bool occluded) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
+ // TODO(ohos): please impl the function and remove this comment.
 void CefBrowserHostBase::OnWindowShow() {
   // TODO(ohos): please impl the function and remove this comment.
 }
@@ -3106,8 +3196,7 @@ void CefBrowserHostBase::OnOnlineRenderToForeground() {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
-void CefBrowserHostBase::SendTouchEventList(
-    const std::vector<CefTouchEvent>& event_list) {
+void CefBrowserHostBase::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
@@ -3342,22 +3431,22 @@ void CefBrowserHostBase::SetShouldFrameSubmissionBeforeDraw(bool should) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
-void CefBrowserHostBase::SelectAndCopy() {
+void CefBrowserHostBase::ShowFreeCopyMenu() {
 #if defined(OHOS_EX_FREE_COPY)
   if (!GetWebContents()) {
     return;
   }
   LOG(DEBUG) << "select and copy invoke";
-  GetWebContents()->SelectAndCopy();
+  GetWebContents()->ShowFreeCopyMenu();
 #endif
 }
 
-bool CefBrowserHostBase::ShouldShowFreeCopy() {
+bool CefBrowserHostBase::ShouldShowFreeCopyMenu() {
 #if defined(OHOS_EX_FREE_COPY)
   if (!GetWebContents()) {
     return false;
   }
-  return GetWebContents()->ShouldShowFreeCopy();
+  return GetWebContents()->ShouldShowFreeCopyMenu();
 #else
   return false;
 #endif
@@ -3485,16 +3574,6 @@ bool CefBrowserHostBase::GetForceEnableZoom() {
 #endif  // #if defined (OHOS_EX_FORCE_ZOOM)
 }
 
-void CefBrowserHostBase::SetEnableBlankTargetPopupIntercept(
-    bool enableBlankTargetPopup) {
-#ifdef OHOS_EX_BLANK_TARGET_POPUP_INTERCEPT
-  if (!GetWebContents()) {
-    return;
-  }
-  GetWebContents()->SetEnableBlankTargetPopupIntercept(enableBlankTargetPopup);
-#endif
-}
-
 void CefBrowserHostBase::SaveOrUpdatePassword(bool is_update) {
 #if defined(OHOS_EX_PASSWORD)
   if (!GetWebContents()) {
@@ -3515,6 +3594,7 @@ void CefBrowserHostBase::EnableAdsBlock(bool enable) {
     return;
   }
   GetWebContents()->EnableAdsBlock(enable);
+
   LOG(INFO) << "web adblock enabled : " << enable;
 
   OHOS::adblock::AdBlockConfig::GetInstance()->ReadFromPrefService();
@@ -3678,23 +3758,6 @@ bool CefBrowserHostBase::GetSavePassword() {
 }
 // #endif // defined(OHOS_NWEB_EX)
 
-#if BUILDFLAG(IS_OHOS)
-int CefBrowserHostBase::GetSecurityLevel() {
-  if (!GetWebContents()) {
-    return static_cast<int>(security_state::SecurityLevel::NONE);
-  }
-
-  auto web_contents = GetWebContents();
-  std::unique_ptr<security_state::VisibleSecurityState> state =
-      security_state::GetVisibleSecurityState(web_contents);
-  DCHECK(state);
-
-  security_state::SecurityLevel securityValue =
-      security_state::GetSecurityLevel(*state, false);
-  return static_cast<int>(securityValue);
-}
-#endif  // BUILDFLAG(IS_OHOS)
-
 int CefBrowserHostBase::GetTopControlsOffset() {
 #if defined(OHOS_EX_TOPCONTROLS)
   if (platform_delegate_) {
@@ -3716,6 +3779,94 @@ int CefBrowserHostBase::GetShrinkViewportHeight() {
   return 0;
 #endif
 }
+
+#if BUILDFLAG(IS_OHOS)
+int CefBrowserHostBase::GetSecurityLevel() {
+  if (!GetWebContents()) {
+    return static_cast<int>(security_state::SecurityLevel::NONE);
+  }
+
+  auto web_contents = GetWebContents();
+  std::unique_ptr<security_state::VisibleSecurityState> state =
+      security_state::GetVisibleSecurityState(web_contents);
+  DCHECK(state);
+
+  security_state::SecurityLevel securityValue =
+      security_state::GetSecurityLevel(*state, false);
+  return static_cast<int>(securityValue);
+}
+#endif  // BUILDFLAG(IS_OHOS)
+
+#if defined(OHOS_EX_NAVIGATION)
+int CefBrowserHostBase::InsertBackForwardEntry(int index,
+                                               const CefString& url) {
+  if (!GetWebContents()) {
+    return static_cast<int>(
+        content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+  }
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid()) {
+    return static_cast<int>(
+        content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+  }
+  return static_cast<int>(
+      GetWebContents()->GetController().InsertBackForwardEntry(index, gurl));
+}
+
+int CefBrowserHostBase::UpdateNavigationEntryUrl(int index,
+                                                 const CefString& url) {
+  if (!GetWebContents()) {
+    return static_cast<int>(
+        content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+  }
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid()) {
+    return static_cast<int>(
+        content::NavigationController::NavigationEntryUpdateError::ERR_OTHER);
+  }
+  return static_cast<int>(
+      GetWebContents()->GetController().UpdateNavigationEntryUrl(index, gurl));
+}
+void CefBrowserHostBase::ClearForwardList() {
+  if (!GetWebContents()) {
+    return;
+  }
+
+  GetWebContents()->GetController().PruneForwardEntries();
+}
+#endif
+
+#ifdef OHOS_ITP
+void CefBrowserHostBase::EnableIntelligentTrackingPrevention(bool enable) {
+  {
+    base::AutoLock locker(lock_);
+    intelligent_tracking_prevention_cookies_enabled_ = enable;
+  }
+  LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
+  ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()->
+      EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
+}
+
+bool CefBrowserHostBase::IsIntelligentTrackingPreventionEnabled() {
+  base::AutoLock locker(lock_);
+  return intelligent_tracking_prevention_cookies_enabled_;
+}
+
+GURL CefBrowserHostBase::GetLastCommittedURL() {
+  GURL url;
+  if (!GetWebContents()) {
+    return url;
+  }
+  url = GetWebContents()->GetLastCommittedURL();
+  return url;
+}
+#endif
+
+#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
+CefString CefBrowserHostBase::GetLastJavascriptProxyCallingFrameUrl() {
+  return base::EmptyString();
+}
+#endif
 
 void CefBrowserHostBase::StartCamera() {
 #if defined(OHOS_WEBRTC)
@@ -3750,29 +3901,6 @@ void CefBrowserHostBase::CloseCamera() {
 #endif  // defined(OHOS_WEBRTC)
 }
 
-#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
-CefString CefBrowserHostBase::GetLastJavascriptProxyCallingFrameUrl() {
-  return base::EmptyString();
-}
-#endif
-
-#ifdef OHOS_ITP
-void CefBrowserHostBase::EnableIntelligentTrackingPrevention(bool enable) {
-  {
-    base::AutoLock locker(lock_);
-    intelligent_tracking_prevention_cookies_enabled_ = enable;
-  }
-  LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
-  ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()->
-      EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
-}
-
-bool CefBrowserHostBase::IsIntelligentTrackingPreventionEnabled() {
-  base::AutoLock locker(lock_);
-  return intelligent_tracking_prevention_cookies_enabled_;
-}
-#endif
-
 void CefBrowserHostBase::SetNWebId(int NWebID) {
 #if defined(OHOS_WEBRTC)
   auto web_contents = GetWebContents();
@@ -3783,6 +3911,14 @@ void CefBrowserHostBase::SetNWebId(int NWebID) {
   web_contents->SetNWebId(NWebID);
 #endif  // defined(OHOS_WEBRTC)
 }
+
+#ifdef OHOS_RENDER_PROCESS_MODE
+void CefBrowserHostBase::SetNeedsReload(bool needs_reload) {}
+
+bool CefBrowserHostBase::NeedsReload() {
+  return false;
+}
+#endif
 
 #if BUILDFLAG(IS_OHOS)
 void CefBrowserHostBase::PrecompileJavaScript(const std::string& url,
@@ -3817,7 +3953,7 @@ oh_code_cache::NextOp CefBrowserHostBase::WriteResponseCache(
   auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(url);
 
   if (!response_cache) {
-    LOG(ERROR) << "Create response cache error.";
+    LOG(DEBUG) << "Create response cache error.";
     return oh_code_cache::NextOp::THROW_ERROR;
   }
 
@@ -3865,14 +4001,20 @@ void CefBrowserHostBase::OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback>
 }
 #endif
 
-#ifdef OHOS_RENDER_PROCESS_MODE
-void CefBrowserHostBase::NotifyNeedsReload(bool needs_reload) {
+#ifdef OHOS_AI
+void CefBrowserHostBase::OnTextSelected(bool flag) {
   // TODO(ohos): please impl the function and remove this comment.
 }
 
-bool CefBrowserHostBase::NeedsReload() {
+void CefBrowserHostBase::OnDestroyImageAnalyzerOverlay() {
   // TODO(ohos): please impl the function and remove this comment.
-  return false;
+}
+
+float CefBrowserHostBase::GetPageScaleFactor() {
+  if (platform_delegate_) {
+    return platform_delegate_->GetPageScaleFactor();
+  }
+  return 1;
 }
 #endif
 
@@ -3895,19 +4037,6 @@ void CefBrowserHostBase::OnSafeInsetsChange(int left,
 
 void CefBrowserHostBase::NotifyForNextTouchEvent() {
   // TODO(ohos): please impl the function and remove this comment.
-}
-#endif
-
-#ifdef OHOS_AI
-void CefBrowserHostBase::OnTextSelected(bool flag) {
-  // TODO(ohos): please impl the function and remove this comment.
-}
-
-float CefBrowserHostBase::GetPageScaleFactor() {
-  if (platform_delegate_) {
-    return platform_delegate_->GetPageScaleFactor();
-  }
-  return 1;
 }
 #endif
 
@@ -3934,25 +4063,55 @@ int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
     LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
     return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
   }
-  ohos_safe_browsing::OhosUrlTrustListManager* manager =
-    reinterpret_cast<ohos_safe_browsing::OhosUrlTrustListManager *>(
+  ohos_safe_browsing::UrlTrustListManager* manager =
+    reinterpret_cast<ohos_safe_browsing::UrlTrustListManager *>(
     webContents->GetUserData(
-      &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey));
+      &ohos_safe_browsing::UrlTrustListInterface::interfaceKey));
   if (!manager) {
-    manager = new ohos_safe_browsing::OhosUrlTrustListManager();
+    manager = new ohos_safe_browsing::UrlTrustListManager();
     if (!manager) {
       LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager failed.";
-      return static_cast<int>(
-        ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
+      return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
     }
     webContents->SetUserData(
-      &ohos_safe_browsing::OhosUrlTrustListInterface::interfaceKey,
+      &ohos_safe_browsing::UrlTrustListInterface::interfaceKey,
       std::unique_ptr<base::SupportsUserData::Data>(manager));
   }
   int res = static_cast<int>(manager->SetUrlTrustListWithErrMsg(
     urlTrustListUpdated, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
+}
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserHostBase::SetTabId(int tab_id) {}
+int CefBrowserHostBase::GetTabId() { return -1; }
+
+void CefBrowserHostBase::WebExtensionTabUpdated(
+    int tab_id,
+    const std::vector<CefString>& changed_property_names,
+    const CefString& url) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "TabUpdated get contents failed.";
+    return;
+  }
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "TabUpdated get browser context failed.";
+    return;
+  }
+
+  std::vector<std::string> changed_properties;
+  std::for_each(changed_property_names.begin(), changed_property_names.end(),
+      [&changed_properties] (const CefString& name) {
+    changed_properties.emplace_back(name.ToString());
+  });
+
+  extensions::cef::TabsWindowsAPI::Get(browser_context)->TabUpdated(
+      tab_id, web_contents, changed_properties, url.ToString());
 }
 #endif
 
@@ -3964,6 +4123,8 @@ void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeTo
     return;
   }
 
+  LOG(INFO) << "SetBackForwardCacheOptions size: " << size
+            << " timeToLive: " << timeToLive;
   content::NavigationController& controller = web_contents->GetController();
   controller.GetBackForwardCache().SetCacheSize(size);
   controller.GetBackForwardCache().SetTimeToLive(timeToLive);

@@ -20,14 +20,13 @@
 #include "content/public/browser/navigation_throttle.h"
 
 namespace ohos_safe_browsing {
-class OhosUrlTrustListNavigationThrottle : public content::NavigationThrottle {
+class UrlTrustListNavigationThrottle : public content::NavigationThrottle {
 public:
   static std::unique_ptr<content::NavigationThrottle> Create(
     content::NavigationHandle* handle);
 
-  OhosUrlTrustListNavigationThrottle(
-    content::NavigationHandle* navigation_handle);
-  ~OhosUrlTrustListNavigationThrottle() override;
+  UrlTrustListNavigationThrottle(content::NavigationHandle* navigation_handle);
+  ~UrlTrustListNavigationThrottle() override;
 
   ThrottleCheckResult WillStartRequest() override;
   const char* GetNameForLogging() override;

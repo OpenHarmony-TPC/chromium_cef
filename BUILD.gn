@@ -408,19 +408,30 @@ test("libcef_static_unittests") {
   testonly = true
 
   sources = [
+    "libcef/browser/browser_platform_delegate_unittest.cc",
     "libcef/browser/devtools/devtools_util_unittest.cc",
     "libcef/browser/geometry_util_unittest.cc",
+    "libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
   ]
 
   deps = [
+    ":libcef_static",
     ":libcef_static_unittested",
+    "libcef/common/mojom",
     "//base/test:run_all_unittests",
+    "//testing/gmock",
     "//testing/gtest",
+    "libcef/common/mojom",
   ]
 
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
+  ]
+
+  include_dirs = [
+    "//third_party/skia",
+    "//third_party/boringssl/src/include"
   ]
 }
 
@@ -485,6 +496,8 @@ source_set("libcef_static") {
               "libcef/browser/alloy/chrome_profile_alloy.h",
               "libcef/browser/alloy/chrome_profile_manager_alloy.cc",
               "libcef/browser/alloy/chrome_profile_manager_alloy.h",
+              "libcef/browser/alloy/render_process_state_handler.cc",
+              "libcef/browser/alloy/render_process_state_handler.h",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.cc",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.h",
               "libcef/browser/alloy/dialogs/alloy_javascript_dialog_manager_delegate.cc",
@@ -521,8 +534,6 @@ source_set("libcef_static") {
               "libcef/browser/browser_util.h",
               "libcef/browser/certificate_query.cc",
               "libcef/browser/certificate_query.h",
-              "libcef/browser/received_slice_helper.h",
-              "libcef/browser/received_slice_helper.cc",
               "libcef/browser/chrome/browser_delegate.h",
               "libcef/browser/chrome/browser_platform_delegate_chrome.cc",
               "libcef/browser/chrome/browser_platform_delegate_chrome.h",
@@ -679,12 +690,12 @@ source_set("libcef_static") {
               "libcef/browser/net/devtools_scheme_handler.h",
               "libcef/browser/net/internal_scheme_handler.cc",
               "libcef/browser/net/internal_scheme_handler.h",
+              "libcef/browser/net/ohos_applink_throttle.cc",
+              "libcef/browser/net/ohos_applink_throttle.h",
               "libcef/browser/net/scheme_handler.cc",
               "libcef/browser/net/scheme_handler.h",
               "libcef/browser/net/throttle_handler.cc",
               "libcef/browser/net/throttle_handler.h",
-              "libcef/browser/net/ohos_applink_throttle.cc",
-              "libcef/browser/net/ohos_applink_throttle.h",
               "libcef/browser/net_database/cef_data_base_impl.cc",
               "libcef/browser/net_database/cef_data_base_impl.h",
               "libcef/browser/net_service/browser_urlrequest_impl.cc",
@@ -767,6 +778,8 @@ source_set("libcef_static") {
               "libcef/browser/printing/print_util.cc",
               "libcef/browser/printing/print_util.h",
               "libcef/browser/process_util_impl.cc",
+              "libcef/browser/received_slice_helper.cc",
+              "libcef/browser/received_slice_helper.h",
               "libcef/browser/request_context_handler_map.cc",
               "libcef/browser/request_context_handler_map.h",
               "libcef/browser/request_context_impl.cc",
@@ -989,6 +1002,8 @@ source_set("libcef_static") {
               "//chrome/app/chrome_main_delegate.h",
 
               # For Javascript
+              "libcef/browser/first_meaningful_paint_details_impl.cc",
+              "libcef/browser/first_meaningful_paint_details_impl.h",
               "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.cc",
               "libcef/browser/javascript/oh_gin_javascript_bridge_dispatcher_host.h",
               "libcef/browser/javascript/oh_gin_javascript_bridge_message_filter.cc",
@@ -997,10 +1012,8 @@ source_set("libcef_static") {
               "libcef/browser/javascript/oh_gin_javascript_bridge_object_deletion_message_filter.h",
               "libcef/browser/javascript/oh_javascript_injector.cc",
               "libcef/browser/javascript/oh_javascript_injector.h",
-              "libcef/browser/first_meaningful_paint_details_impl.h",
-              "libcef/browser/first_meaningful_paint_details_impl.cc",
-              "libcef/browser/largest_contentful_paint_details_impl.h",
               "libcef/browser/largest_contentful_paint_details_impl.cc",
+              "libcef/browser/largest_contentful_paint_details_impl.h",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.cc",
               "libcef/common/javascript/oh_gin_javascript_bridge_errors.h",
               "libcef/common/javascript/oh_gin_javascript_bridge_message_generator.cc",
@@ -1027,6 +1040,10 @@ source_set("libcef_static") {
       "libcef/browser/autofill/oh_autofill_manager.h",
       "libcef/browser/autofill/oh_autofill_provider.cc",
       "libcef/browser/autofill/oh_autofill_provider.h",
+      "libcef/browser/report_manager.cc",
+      "libcef/browser/report_manager.h",
+      "libcef/browser/res_reporter.cc",
+      "libcef/browser/res_reporter.h",
       "libcef/browser/ohos_safe_browsing/ohos_safe_browsing_response.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
       "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h",
@@ -1036,18 +1053,20 @@ source_set("libcef_static") {
       "libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.h",
       "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.cc",
       "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h",
-      "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_interface.h",
+      "libcef/browser/ohos_safe_browsing/url_trust_list_interface.h",
       "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.cc",
       "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h",
       "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.cc",
       "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h",
-      "libcef/browser/report_manager.cc",
-      "libcef/browser/report_manager.h",
-      "libcef/browser/res_reporter.cc",
-      "libcef/browser/res_reporter.h",
       "libcef/renderer/alloy/alloy_content_settings_client.cc",
       "libcef/renderer/alloy/alloy_content_settings_client.h",
     ]
+  }
+
+  if (use_libfuzzer) {
+    configs -= [ "//build/config/gcc:symbol_visibility_hidden" ]
+    configs += [ "//build/config/gcc:symbol_visibility_default" ] 
+    cflags = [ "-DOHOS_FUZZ_COMPILE_ERROR_FIX" ]
   }
 
   #ifdef OHOS_ITP
@@ -1107,16 +1126,6 @@ source_set("libcef_static") {
 
   #endif
 
-  #ifdef OHOS_NAVIGATION
-  if (defined(ohos_navigation) && ohos_navigation) {
-    sources += [
-      "libcef/browser/load_committed_details_impl.cc",
-      "libcef/browser/load_committed_details_impl.h",
-    ]
-  }
-
-  #endif
-
   #ifdef OHOS_INCOGNITO_MODE
   if (defined(ohos_incognito_mode) && ohos_incognito_mode) {
     sources += [
@@ -1133,6 +1142,16 @@ source_set("libcef_static") {
 
   #endif
 
+  #ifdef OHOS_NAVIGATION
+  if (defined(ohos_navigation) && ohos_navigation) {
+    sources += [
+      "libcef/browser/load_committed_details_impl.cc",
+      "libcef/browser/load_committed_details_impl.h",
+    ]
+  }
+
+  #endif
+
   #if defined(OHOS_CUSTOM_VIDEO_PLAYER)
   if (defined(ohos_custom_video_player) && ohos_custom_video_player) {
     sources += [
@@ -1144,7 +1163,7 @@ source_set("libcef_static") {
 
   #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
-  #if defined(OHOS_ADSBLOCK)
+  #if defined(OHOS_ARKWEB_ADBLOCK)
   sources += [
     "libcef/browser/adsblock_manager_impl.cc",
     "libcef/browser/adsblock_manager_impl.h",
@@ -1169,7 +1188,11 @@ source_set("libcef_static") {
     "//cef/libcef/features",
 
     # Support relative include paths.
+    "//ohos_nweb:nweb_sources",
     "//third_party/abseil-cpp:absl",
+
+    # Support ohos_nweb include paths.
+    "//ohos_nweb:nweb_sources",
   ]
 
   deps = [
@@ -1264,6 +1287,7 @@ source_set("libcef_static") {
     "//third_party/widevine/cdm",
     "//third_party/widevine/cdm:headers",
     "//third_party/zlib:minizip",
+    "//third_party:huawei_securec",
     "//ui/base",
     "//ui/base/ime",
     "//ui/events",
@@ -1283,9 +1307,12 @@ source_set("libcef_static") {
 
   if (defined(ohos_nweb_ex) && ohos_nweb_ex) {
     deps += [ "//ohos_nweb_ex/overrides/cef" ]
+
+    import("//ohos_nweb_ex/build/env.gni")
+    configs += [ "//ohos_nweb_ex/build:build_config" ]
   }
 
-  #ifdef OHOS_EX_ADBLOCK
+  #ifdef OHOS_ARKWEB_ADBLOCK
   if (defined(ohos_arkweb_adblock) && ohos_arkweb_adblock) {
     sources += [
       "libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.cc",
@@ -1306,6 +1333,18 @@ source_set("libcef_static") {
       "//components/subresource_filter/tools/ruleset_converter:support",
       "//components/url_pattern_index/proto:url_pattern_index",
       "//third_party/protobuf:protobuf_lite",
+    ]
+  }
+
+  #endif
+
+  #ifdef OHOS_ARKWEB_EXTENSIONS
+  if (defined(ohos_arkweb_extensions) && ohos_arkweb_extensions) {
+    sources += [
+      "libcef/browser/extensions/api/tabs/tabs_event_router.cc",
+      "libcef/browser/extensions/api/tabs/tabs_event_router.h",
+      "libcef/browser/extensions/api/tabs/tabs_windows_api.cc",
+      "libcef/browser/extensions/api/tabs/tabs_windows_api.h",
     ]
   }
 
@@ -1620,6 +1659,13 @@ grit("cef_strings") {
   source = "libcef/resources/cef_strings.grd"
   outputs = [ "grit/cef_strings.h" ]
   all_locales = platform_pak_locales + [ "fake-bidi" ]
+
+  #ifdef ohos_i18n
+  if (is_ohos && ohos_i18n) {
+    all_locales += extra_locales
+  }
+
+  #endif
   foreach(locale, all_locales) {
     outputs += [ "cef_strings_${locale}.pak" ]
   }
@@ -1737,6 +1783,7 @@ make_pack_header("strings") {
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_accessibility_strings.h",
     "$root_gen_dir/third_party/blink/public/strings/grit/blink_strings.h",
     "$root_gen_dir/ui/strings/grit/ui_strings.h",
+    "$root_gen_dir/ohos_resources/components/string/grit/ohos_components_strings.h",
   ]
 
   deps = [
@@ -1750,6 +1797,7 @@ make_pack_header("strings") {
     "//components/strings:components_locale_settings",
     "//components/strings:components_strings",
     "//extensions/strings",
+    "//ohos_resources/components/string:ohos_components_strings",
     "//services/strings",
     "//third_party/blink/public/strings",
     "//third_party/blink/public/strings:accessibility_strings",

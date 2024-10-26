@@ -17,11 +17,7 @@
 #include "ohos_adapter_helper.h"
 #include "v8/include/v8-exception.h"
 
-#define MAX_FLOWBUF_DATA_SIZE 52428800 /* 50 MB */
-#define MAX_ENTRIES 10
-#define HEADER_SIZE (MAX_ENTRIES * 8) /* 10 * (int position + int length) */
-#define INDEX_SIZE 2
-#define DEFAULT_ID 1073741824
+#include "third_party/bounds_checking_function/include/securec.h"
 
 namespace {
 
@@ -37,6 +33,11 @@ const char kMethodInvocationErrorMessage[] =
 namespace NWEB {
 int32_t OhGinJavascriptFunctionInvocationHelper::maxFdNum_ = -1;
 std::atomic<int32_t> OhGinJavascriptFunctionInvocationHelper::usedFd_ {0};
+const int MAX_FLOWBUF_DATA_SIZE = 52428800; /* 50 MB */
+const int MAX_ENTRIES = 10;
+const int HEADER_SIZE = (MAX_ENTRIES * 8); /* 10 * (int position + int length) */
+const int INDEX_SIZE = 2;
+const int DEFAULT_ID = 1073741824;
 
 OhGinJavascriptFunctionInvocationHelper::
     OhGinJavascriptFunctionInvocationHelper(
@@ -67,21 +68,24 @@ bool OhGinJavascriptFunctionInvocationHelper::StoreString(int index, void* mem, 
   }
   // Check if the header is full
   if (i == MAX_ENTRIES) {
-    LOG(DEBUG) << "Flowbuf header is full, cannot store more strings";
+    LOG(ERROR) << "Flowbuf header is full, cannot store more strings";
     return false;
   }
 
   char* dataMem = static_cast<char*>(mem) + HEADER_SIZE;
   // Check for available space in data port
   if (dataPos + static_cast<int>(strlen(str) + 1) > MAX_FLOWBUF_DATA_SIZE) {
-     LOG(DEBUG) << "Flowbuf not enough space to store more strings";
+     LOG(ERROR) << "Flowbuf not enough space to store more strings";
      return false;
   }
 
   int* newEntry = static_cast<int*>(mem) + (i * INDEX_SIZE);
   *(newEntry) = index;
   *(newEntry + 1) = static_cast<int>(strlen(str) + 1);
-  memcpy(dataMem + dataPos, str, strlen(str) + 1);
+  if (memcpy_s(dataMem + dataPos, MAX_FLOWBUF_DATA_SIZE - dataPos, str, strlen(str) + 1) != EOK) {
+    LOG(ERROR) << "Flowbuf memcpy fail, cannot store more strings";
+    return false;
+  }
   return true;
 }
 
@@ -206,7 +210,7 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
     gin::Arguments* args,
     OhGinJavascriptBridgeObject* object) {
   if (dispatcher_->IsAsyncMethod(object->object_id(), method_name_)) {
-    return dispatcher_->InvokeJavascriptMethodAsync(object->object_id(), method_name_, arguments);
+    return InvokeJavascriptMethod(arguments, error, args, object);
   }
 
   auto flowbufferAdapter = OHOS::NWeb::OhosAdapterHelper::GetInstance().CreateFlowbufferAdapter();

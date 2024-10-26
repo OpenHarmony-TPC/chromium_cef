@@ -30,9 +30,9 @@
 // This class may be instantiated and accessed DLL-side only.
 class CefBrowserCppToC
     : public CefCppToCRefCounted<CefBrowserCppToC, CefBrowser, cef_browser_t> {
-public:
+ public:
   CefBrowserCppToC();
   virtual ~CefBrowserCppToC();
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_BROWSER_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_BROWSER_CPPTOC_H_

@@ -495,15 +495,6 @@ int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
 }
 #endif
 
-#ifdef OHOS_DISPLAY_CUTOUT
-void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
-                                                    int top,
-                                                    int right,
-                                                    int bottom) {
-  NOTIMPLEMENTED();
-}
-#endif
-
 #ifdef OHOS_AI
 void CefBrowserPlatformDelegate::CreateOverlay(const gfx::ImageSkia& image,
                                                const gfx::Rect& image_rect,
@@ -516,8 +507,21 @@ void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
   DCHECK(false);
 }
 
+void CefBrowserPlatformDelegate::OnDestroyImageAnalyzerOverlay() {
+  DCHECK(false);
+}
+
 float CefBrowserPlatformDelegate::GetPageScaleFactor() {
   return 1;
+}
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
+                                                    int top,
+                                                    int right,
+                                                    int bottom) {
+  NOTIMPLEMENTED();
 }
 #endif
 

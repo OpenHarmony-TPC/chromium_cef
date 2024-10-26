@@ -1,20 +1,9 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#ifndef CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_BLOCK_PAGE_H_
-#define CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_BLOCK_PAGE_H_
+#ifndef CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_BLOCK_PAGE_H_
+#define CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_BLOCK_PAGE_H_
 
 #include <memory>
 
@@ -33,19 +22,19 @@ using security_interstitials::MetricsHelper;
 using security_interstitials::SecurityInterstitialControllerClient;
 using security_interstitials::SecurityInterstitialPage;
 
-class OhosSbBlockPage : public SecurityInterstitialPage {
+class SbBlockPage : public SecurityInterstitialPage {
  public:
-  OhosSbBlockPage(
+  SbBlockPage(
       content::WebContents* web_contents,
       const GURL& request_url,
       int policy,
       OHSBThreatType block_type,
       std::unique_ptr<SecurityInterstitialControllerClient> controller_client);
-  ~OhosSbBlockPage() override;
+  ~SbBlockPage() override;
 
   // DISALLOW_COPY_AND_ASSIGN
-  OhosSbBlockPage(const OhosSbBlockPage&) = delete;
-  OhosSbBlockPage& operator=(const OhosSbBlockPage&) = delete;
+  SbBlockPage(const SbBlockPage&) = delete;
+  SbBlockPage& operator=(const SbBlockPage&) = delete;
 
   std::string GetHTMLContents() override;
   void OnInterstitialClosing() override;
@@ -56,7 +45,8 @@ class OhosSbBlockPage : public SecurityInterstitialPage {
 
   void PopulateInterstitialStrings(base::Value::Dict& load_time_data) override;
  
-  void PopulateUrlTrustListInterstitialStrings(base::Value::Dict& load_time_data);
+  void PopulateUrlTrustListInterstitialStrings(
+    base::Value::Dict& load_time_data);
 
   std::string GetUrlTrustListErrorHTMLContents();
 
@@ -71,4 +61,4 @@ class OhosSbBlockPage : public SecurityInterstitialPage {
 
 }  // namespace ohos_safe_browsing
 
-#endif  // CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_BLOCK_PAGE_H_
+#endif  // CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_BLOCK_PAGE_H_

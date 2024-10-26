@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=676f9a27e6f2665faa8ca72b5ed29fb78480eebb$
+// $hash=55dba640c3e02667053652c612e6e3c1c56aeed8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_GEOLOCATION_ACESS_CTOCPP_H_

@@ -28,7 +28,8 @@ class ThirdPartyCookieAccessPolicy {
  public:
   static ThirdPartyCookieAccessPolicy* GetInstance();
 
-  bool AllowGetCookies(const network::ResourceRequest& request);
+  bool AllowGetCookies(const network::ResourceRequest& request,
+      const GURL& main_frame_host);
   void SetTBWFilePath(const base::FilePath& tbw_path);
 
   void AddITPBypassingList(const std::vector<std::string>& host_list);

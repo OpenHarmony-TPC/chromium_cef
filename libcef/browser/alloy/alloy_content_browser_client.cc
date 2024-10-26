@@ -250,9 +250,11 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "components/embedder_support/content_settings_utils.h"
 #include "content/public/browser/allow_service_worker_result.h"
 #include "content/public/browser/site_isolation_policy.h"
+#include "extensions/browser/api/messaging/messaging_api_message_filter.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/api/web_request/web_request_proxying_webtransport.h"
 #include "extensions/browser/extension_navigation_throttle.h"
+#include "extensions/browser/extension_service_worker_message_filter.h"
 #include "extensions/browser/extension_util.h"
 #include "extensions/browser/service_worker/service_worker_host.h"
 #include "services/network/public/cpp/self_deleting_url_loader_factory.h"
@@ -273,6 +275,12 @@ using extensions::mojom::APIPermissionID;
 
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "chrome/browser/content_settings/page_specific_content_settings_delegate.h"
+#include "components/content_settings/browser/page_specific_content_settings.h"
+#endif
+
 #if defined(OHOS_CRASHPAD)
 #include "components/crash/content/browser/crash_handler_host_linux.h"
 #endif
@@ -289,6 +297,12 @@ using extensions::mojom::APIPermissionID;
 #if defined(OHOS_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+#include "components/subresource_filter/content/browser/content_subresource_filter_throttle_manager.h"
+#include "libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h"
+#endif  // OHOS_ARKWEB_ADBLOCK
+
 namespace {
 #if BUILDFLAG(IS_OHOS)
 void TransferVector(const std::vector<std::string>& source,
@@ -305,6 +319,13 @@ void TransferVector(const std::vector<std::string>& source,
   }
 }
 #endif
+
+#if defined(OHOS_CACHE)
+constexpr int64_t LARGE_CAPACITY_DEVICE_THRESHOLD = static_cast<int64_t>(100) * 1024 * 1024 * 1024;
+constexpr int64_t LARGE_CAPACITY_DEVICE_CACHE_SIZE = 100 * 1024 * 1024;
+constexpr int64_t SMALL_CAPACITY_DEVICE_CACHE_SIZE = 20 * 1024 * 1024;
+constexpr char WEB_CACHE_PATH[] = "/data/storage/e12/base/cache/web";
+#endif // defined(OHOS_CACHE)
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 // The SpecialAccessFileURLLoaderFactory provided to the extension background
@@ -990,6 +1011,11 @@ void AlloyContentBrowserClient::RenderProcessWillLaunch(
 
   if (extensions::ExtensionsEnabled()) {
     host->AddFilter(new extensions::ExtensionMessageFilter(id, profile));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    host->AddFilter(new extensions::ExtensionServiceWorkerMessageFilter(
+        id, profile, host->GetStoragePartition()->GetServiceWorkerContext()));
+    host->AddFilter(new extensions::MessagingAPIMessageFilter(id, profile));
+#endif
   }
 
   // If the renderer process crashes then the host may already have
@@ -1002,6 +1028,18 @@ void AlloyContentBrowserClient::RenderProcessWillLaunch(
   Profile* original_profile = profile->GetOriginalProfile();
   RendererUpdaterFactory::GetForProfile(original_profile)
       ->InitializeRenderer(host);
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    auto renderer_configuration = GetRendererConfiguration(host);
+    RendererContentSettingRules rules;
+    content_settings::GetRendererContentSettingRules(
+        HostContentSettingsMapFactory::GetForProfile(host->GetBrowserContext()),
+        &rules);
+    renderer_configuration->SetContentSettingRules(rules);
+  }
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 }
 
 bool AlloyContentBrowserClient::ShouldUseProcessPerSite(
@@ -1162,35 +1200,7 @@ void AlloyContentBrowserClient::SiteInstanceGotProcess(
   }
 
   extensions::ProcessMap::Get(context)->Insert(
-      extension->id(), site_instance->GetProcess()->GetID(),
-      site_instance->GetId());
-}
-
-void AlloyContentBrowserClient::SiteInstanceDeleting(
-    content::SiteInstance* site_instance) {
-  if (!extensions::ExtensionsEnabled()) {
-    return;
-  }
-
-  if (!site_instance->HasProcess()) {
-    return;
-  }
-
-  auto context = site_instance->GetBrowserContext();
-  auto registry = extensions::ExtensionRegistry::Get(context);
-  if (!registry) {
-    return;
-  }
-
-  auto extension = registry->enabled_extensions().GetExtensionOrAppByURL(
-      site_instance->GetSiteURL());
-  if (!extension) {
-    return;
-  }
-
-  extensions::ProcessMap::Get(context)->Remove(
-      extension->id(), site_instance->GetProcess()->GetID(),
-      site_instance->GetId());
+      extension->id(), site_instance->GetProcess()->GetID());
 }
 
 void AlloyContentBrowserClient::BindHostReceiverForRenderer(
@@ -1627,11 +1637,6 @@ void AlloyContentBrowserClient::OverrideWebkitPrefs(
   prefs->force_enable_zoom = web_contents->GetForceEnableZoom();
 #endif
 
-#if BUILDFLAG(IS_OHOS) && defined(OHOS_EX_BLANK_TARGET_POPUP_INTERCEPT)
-  prefs->blank_target_popup_intercept_enabled =
-      web_contents->GetEnableBlankTargetPopupIntercept();
-#endif
-
   web_contents->SetPageBaseBackgroundColor(base_background_color);
 }
 
@@ -1810,7 +1815,7 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
 #endif
 
 #if OHOS_URL_TRUST_LIST
-  throttles.push_back(ohos_safe_browsing::OhosUrlTrustListNavigationThrottle::Create(
+  throttles.push_back(ohos_safe_browsing::UrlTrustListNavigationThrottle::Create(
     navigation_handle));
 #endif
 
@@ -1905,7 +1910,8 @@ AlloyContentBrowserClient::CreateURLLoaderThrottles(
     }
 
     if (!is_same_host) {
-      result.push_back(std::make_unique<throttle::OhosAppLinkThrottle>(frame_tree_node_id));
+      result.push_back(std::make_unique<throttle::OhosAppLinkThrottle>(frame_tree_node_id,
+        (request.transition_type & ui::PAGE_TRANSITION_CLIENT_REDIRECT) != 0));
     }
   }
 #endif
@@ -2629,6 +2635,10 @@ void AlloyContentBrowserClient::OnNetworkServiceCreated(
   DCHECK(SystemNetworkContextManager::GetInstance());
   SystemNetworkContextManager::GetInstance()->OnNetworkServiceCreated(
       network_service);
+#ifdef OHOS_EX_NETWORK_CONNECTION
+  network_service->BindDnsToNetwork(net_service::NetHelpers::network);
+  net::NetworkChangeNotifier::BindToNetwork(net_service::NetHelpers::network);
+#endif
 
 #if defined(OHOS_HTTP_DNS)
   if (net_service::NetHelpers::HasValidDnsOverHttpConfig()) {
@@ -2756,9 +2766,17 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
       // In order to make better use of cache, we use the same strategy as
       // chromium for httpcache.
       // Determined by DiskCache itself.
-       network_context_params->http_cache_max_size = 0;
+      network_context_params->http_cache_max_size = 0;
     } else {
-      network_context_params->http_cache_max_size = 20 * 1024 * 1024;
+      int64_t totalDiskSpace =
+        base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
+      if (totalDiskSpace >= LARGE_CAPACITY_DEVICE_THRESHOLD) {
+        LOG(DEBUG) << "Set http cache max size to 100MB for large capacity device";
+        network_context_params->http_cache_max_size = LARGE_CAPACITY_DEVICE_CACHE_SIZE;
+      } else {
+        LOG(DEBUG) << "Set http cache max size to 20MB for small capacity device";
+        network_context_params->http_cache_max_size = SMALL_CAPACITY_DEVICE_CACHE_SIZE;
+      }
     }
   }
 #endif  // defined(OHOS_CACHE)
@@ -3026,6 +3044,12 @@ void AlloyContentBrowserClient::OnWebContentsCreated(
 #ifdef OHOS_FCP
   cef::InitializePageLoadMetricsForWebContents(web_contents);
 #endif
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  content_settings::PageSpecificContentSettings::CreateForWebContents(
+      web_contents,
+      std::make_unique<chrome::PageSpecificContentSettingsDelegate>(web_contents));
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 }
 
 bool AlloyContentBrowserClient::IsFindInPageDisabledForOrigin(
@@ -3083,6 +3107,17 @@ bool AlloyContentBrowserClient::ShouldAllowInsecureLocalNetworkRequests(
     const url::Origin& origin) {
   return content_settings::ShouldAllowInsecureLocalNetworkRequests(
       HostContentSettingsMapFactory::GetForProfile(browser_context), origin);
+}
+
+bool AlloyContentBrowserClient::ShouldDisableOriginAgentClusterDefault(
+    content::BrowserContext* browser_context) {
+  // The enterprise policy for kOriginAgentClusterDefaultEnabled defaults to
+  // true to defer to Chromium's decision. If it is set to false, it should
+  // override Chromium's decision and use site-keyed agent clusters by default
+  // instead.
+  return !Profile::FromBrowserContext(browser_context)
+              ->GetPrefs()
+              ->GetBoolean(prefs::kOriginAgentClusterDefaultEnabled);
 }
 #endif
 
@@ -3166,6 +3201,21 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
 }
 
 #endif
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+AlloyContentBrowserClient::GetRendererConfiguration(
+    content::RenderProcessHost* render_process_host) {
+  IPC::ChannelProxy* channel = render_process_host->GetChannel();
+  if (!channel)
+    return mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>();
+
+  mojo::AssociatedRemote<chrome::mojom::RendererConfiguration>
+      renderer_configuration;
+  channel->GetRemoteAssociatedInterface(&renderer_configuration);
+  return renderer_configuration;
+}
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
 
 #if BUILDFLAG(IS_OHOS)
 bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(

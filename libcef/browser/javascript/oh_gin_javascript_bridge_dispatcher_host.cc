@@ -80,6 +80,7 @@ OhGinJavascriptBridgeDispatcherHost::~OhGinJavascriptBridgeDispatcherHost() {
   javascript_sync_permission_map_.clear();
   javascript_async_permission_map_.clear();
   object_id_map_.clear();
+  async_object_id_map_.clear();
 }
 
 // Run on the UI thread.
@@ -159,8 +160,7 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
       // sync_method_map_ has no async method infomation, so send an empty list.
       base::Value::List empty_list;
       render_frame_host->Send(new OhGinJavascriptBridgeMsg_AddNamedObject(
-          render_frame_host->GetRoutingID(), object_name, object_id, empty_list,
-          false));
+          render_frame_host->GetRoutingID(), object_name, object_id, empty_list, false));
     }
   }
 }
@@ -385,6 +385,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     async_object_pair.first = object_name;
     async_object_pair.second = async_method_set;
     async_method_map_[object_id_] = async_object_pair;
+    async_object_id_map_[object_id_].insert(object_name);
     ParseJson(permission, object_id_, true);
   }
 
@@ -438,6 +439,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebViewController(
     async_object_pair.first = object_name;
     async_object_pair.second = async_method_set;
     async_method_map_[object_id] = async_object_pair;
+    async_object_id_map_[object_id].insert(object_name);
     ParseJson(permission, object_id, true);
   }
 
@@ -553,7 +555,7 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
     const std::vector<std::string>& method_list) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (sync_method_map_.empty() && async_method_map_.empty()) {
-    LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
+    LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject:Map "
                   "is empty!";
     return;
   }
@@ -562,21 +564,23 @@ void OhGinJavascriptBridgeDispatcherHost::RemoveNamedObject(
 }
 
 bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
-    const std::string& object_name,
-    bool is_async) {
+    const std::string& object_name, bool is_async) {
+  LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal "
+             << "target object name: " << object_name;
+  auto& method_map = is_async ? async_method_map_ : sync_method_map_;
   bool ret = false;
-  auto& map = is_async ? async_method_map_ : sync_method_map_;
-  if (map.empty()) {
-    return ret = false;
+  if (method_map.empty()) {
+    return ret;
   }
+  auto& id_map = is_async ? async_object_id_map_ : object_id_map_;
   std::unique_lock<std::shared_mutex> lock(share_mutex_);
-  for (auto& [object_id, object_name_set] : object_id_map_) {
+  for (auto& [object_id, object_name_set] : id_map) {
     for (const std::string& now_object_name : object_name_set) {
       if (now_object_name == object_name) {
         object_name_set.erase(object_name);
         if (object_name_set.size() == 0) {
-          object_id_map_.erase(object_id);
-          map.erase(object_id);
+          id_map.erase(object_id);
+          method_map.erase(object_id);
         }
 
         ret = true;
@@ -594,6 +598,7 @@ bool OhGinJavascriptBridgeDispatcherHost::RemoveNamedObjectInternal(
                       new OhGinJavascriptBridgeMsg_RemoveNamedObject(
                           render_frame_host->GetRoutingID(), copied_name));
                 });
+        return ret;
       }
     }
   }

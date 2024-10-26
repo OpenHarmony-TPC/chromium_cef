@@ -56,6 +56,7 @@ class AuthCallbackImpl : public CefAuthCallback {
   }
 
   void Continue(const CefString& username, const CefString& password) override {
+    LOG(INFO) << "HttpAuth user continue";
     if (!task_runner_->RunsTasksInCurrentSequence()) {
       task_runner_->PostTask(
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
@@ -87,9 +88,11 @@ class AuthCallbackImpl : public CefAuthCallback {
     constexpr int32_t MAX_PWD_LENGTH = 256;
     auto dataBase = CefDataBase::GetGlobalDataBase();
     if (dataBase == nullptr) {
+      LOG(ERROR) << "IsHttpAuthInfoSaved dataBase is empty";
       return false;
     }
     if (!dataBase->ExistHttpAuthCredentials()) {
+      LOG(WARNING) << "IsHttpAuthInfoSaved dataBase is existHttpAuth";
       return false;
     }
     CefString username;
@@ -98,6 +101,7 @@ class AuthCallbackImpl : public CefAuthCallback {
                                      MAX_PWD_LENGTH + 1);
     if (username.empty() || strlen(password) == 0) {
       memset(password, 0, MAX_PWD_LENGTH + 1);
+      LOG(WARNING) << "IsHttpAuthInfoSaved name or password is empty";
       return false;
     }
     CefString passwordCef(password, strlen(password));
@@ -107,15 +111,18 @@ class AuthCallbackImpl : public CefAuthCallback {
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
                                     passwordCef));
       passwordCef.MemsetToZero();
+      LOG(INFO) << "IsHttpAuthInfoSaved continue";
       return true;
     }
     if (delegate_) {
       delegate_->Continue(username, passwordCef);
       delegate_ = nullptr;
       passwordCef.MemsetToZero();
+      LOG(INFO) << "IsHttpAuthInfoSaved login byself";
       return true;
     }
     passwordCef.MemsetToZero();
+    LOG(WARNING) << "IsHttpAuthInfoSaved is not found";
     return false;
   }
 #endif
@@ -204,10 +211,10 @@ LoginDelegate::LoginDelegate(const net::AuthChallengeInfo& auth_info,
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   // |callback| needs to be executed asynchronously.
-  CEF_POST_TASK(CEF_UIT, base::BindOnce(&LoginDelegate::Start, 
-			                weak_ptr_factory_.GetWeakPtr(), browser,
+  CEF_POST_TASK(CEF_UIT, base::BindOnce(&LoginDelegate::Start,
+                                        weak_ptr_factory_.GetWeakPtr(), browser,
                                         auth_info, request_id,
-					is_request_for_main_frame,
+                                        is_request_for_main_frame,
                                         origin_url, response_headers));
 #else
   // |callback| needs to be executed asynchronously.
@@ -263,7 +270,7 @@ void LoginDelegate::ContinueBeforeCommit(
 }
 
 void LoginDelegate::StartInternal(CefRefPtr<CefBrowserHostBase> browser,
-		                  const net::AuthChallengeInfo& auth_info,
+                                  const net::AuthChallengeInfo& auth_info,
                                   const content::GlobalRequestID& request_id,
                                   const GURL& origin_url) {
   auto url_request_info = CefBrowserURLRequest::FromRequestID(request_id);

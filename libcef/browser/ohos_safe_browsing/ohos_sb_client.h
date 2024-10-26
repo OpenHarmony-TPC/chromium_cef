@@ -1,20 +1,9 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-#ifndef CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CLIENT_H_
-#define CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CLIENT_H_
+#ifndef CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CLIENT_H_
+#define CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CLIENT_H_
 
 #include <memory>
 
@@ -29,16 +18,16 @@
 
 namespace ohos_safe_browsing {
 
-class OhosSbClient : public content::WebContentsObserver {
+class SbClient : public content::WebContentsObserver {
  public:
-  explicit OhosSbClient(content::WebContents* web_contents, 
-                        PrefService* prefs,
-                        bool incognito_mode);
-  ~OhosSbClient() override;
+  explicit SbClient(content::WebContents* web_contents,
+                    PrefService* prefs,
+                    bool incognito_mode);
+  ~SbClient() override;
 
   // DISALLOW_COPY_AND_ASSIGN
-  OhosSbClient(const OhosSbClient&) = delete;
-  OhosSbClient& operator=(const OhosSbClient&) = delete;
+  SbClient(const SbClient&) = delete;
+  SbClient& operator=(const SbClient&) = delete;
 
   struct SbBlockingPageInfo {
     SbBlockingPageInfo();
@@ -66,13 +55,12 @@ class OhosSbClient : public content::WebContentsObserver {
     BlockingPageInfo(const BlockingPageInfo&) = delete;
     BlockingPageInfo& operator=(const BlockingPageInfo&) = delete;
 
-    static void SetBlockingPageInfo(
-      content::WebContents* web_contents,
-      const GURL& url,
-      int policy,
-      OHSBThreatType block_type,
-      int hw_code,
-      const GURL& redirect_url);
+    static void SetBlockingPageInfo(content::WebContents* web_contents,
+                                    const GURL& url,
+                                    int policy,
+                                    OHSBThreatType block_type,
+                                    int hw_code,
+                                    const GURL& redirect_url);
 
    private:
     explicit BlockingPageInfo(content::WebContents* web_contents);
@@ -83,32 +71,38 @@ class OhosSbClient : public content::WebContentsObserver {
     OHSBThreatType block_type_ = OHSBThreatType::THREAT_DEFAULT;
     int hw_code_{0};
     GURL redirect_url_ = GURL("");
+
     WEB_CONTENTS_USER_DATA_KEY_DECL();
   };
 
   void ShowBlockingPage();
-                        
+
   bool IsBlockPageShowing();
 
   void SetEvilUrlPolicyAndHwCode(const GURL& url,
                                  int policy,
                                  OHSBThreatType block_type,
                                  int hw_code,
-                                 const GURL& redirect_url); 
+                                 const GURL& redirect_url);
 
   static bool InMaliciousAllowlist(const PrefService* prefs,
                                    const std::string& url,
                                    bool incognito_mode);
+
+  bool InMaliciousAllowlist(const std::string& url) {
+    return SbClient::InMaliciousAllowlist(prefs_, url, incognito_mode_);
+  }
+
  private:
   // WebContentsObserver implementation
   void NavigationEntryCommitted(
       const content::LoadCommittedDetails& load_details) override;
-  
+
   void DisplayBlockingPage(const GURL& url,
                            int policy,
                            OHSBThreatType block_type,
                            const std::string& app_locale);
-  
+
   void NotifySafeBrowsingCheckResult(OHSBThreatType threat_type);
 
   PrefService* prefs_;
@@ -117,4 +111,4 @@ class OhosSbClient : public content::WebContentsObserver {
 
 }  // namespace ohos_safe_browsing
 
-#endif  // CEF_LIBCEF_BROWSER_OHOS_SAFE_BROWSING_OHOS_SB_CLIENT_H_
+#endif  // CEF_LIBCEF_BROWSER_SAFE_BROWSING_SB_CLIENT_H_

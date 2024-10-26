@@ -67,6 +67,14 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(cefimpl::TabsSetZoomSettingsFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomSettingsFunction),
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+    EXTENSION_FUNCTION_NAME(cefimpl::TabsReloadFunction),
+#endif
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    // chrome.extension.getURL()'s implementation is in the renderer.
+    "extension",
+    "extension.getURL",
+#endif
+#if defined(OHOS_ARKWEB_EXTENSIONS)
     "developerPrivate",
     EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionsInfoFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionSizeFunction),
@@ -153,6 +161,7 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<DeveloperPrivateIsProfileManagedFunction>();
   registry->RegisterFunction<DeveloperPrivateRequestFileSourceFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
+  registry->RegisterFunction<cefimpl::TabsReloadFunction>();
 #endif
 }
 

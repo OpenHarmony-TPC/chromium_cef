@@ -167,6 +167,37 @@ CefRefPtr<AlloyBrowserHostImpl> GetBrowserForTabId(
   return nullptr;
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+/*
+ * Sometimes the extension function is called from background script, and it's
+ * windowless AlloyBrowser does not have a client or handler.
+ * Try to get an AlloyBrowserHostImpl with a non-null client, that means it has
+ * a nweb_handler can be used to interact with APP.
+ */
+CefRefPtr<AlloyBrowserHostImpl> GetClientAvailableBrowser(int tab_id) {
+  for (const auto& browser_info :
+      CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
+    CefRefPtr<AlloyBrowserHostImpl> current_browser =
+        static_cast<AlloyBrowserHostImpl*>(browser_info->browser().get());
+    if (current_browser &&
+        current_browser->GetTabId() == tab_id && tab_id >= 0) {
+      return current_browser;
+    }
+  }
+
+  for (const auto& browser_info :
+      CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
+    CefRefPtr<AlloyBrowserHostImpl> current_browser =
+        static_cast<AlloyBrowserHostImpl*>(browser_info->browser().get());
+    if (current_browser &&
+        current_browser->web_contents() && current_browser->client()) {
+      return current_browser;
+    }
+  }
+  return nullptr;
+}
+#endif
+
 const Extension* GetExtensionForUrl(content::BrowserContext* browser_context,
                                     const GURL& url) {
   ExtensionRegistry* registry = ExtensionRegistry::Get(browser_context);

@@ -47,8 +47,8 @@ class CefBrowserFrame
 
 #if BUILDFLAG(IS_OHOS)
   void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params) override;
-  void OnGetImageForContextNodeNull() override;
+      cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) override;
+  void OnGetImageForContextNodeNull(int command_id) override;
 
   void ShouldOverrideUrlLoading(const std::string& url,
                                 const std::string& request_method,

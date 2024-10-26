@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d62fbf1af312a46028926e2367f4e097043c6fc0$
+// $hash=347f22333bbd52effefb8aaf6c97c91bb74e3211$
 //
 
 #include "libcef_dll/cpptoc/request_handler_cpptoc.h"
@@ -564,6 +564,34 @@ void CEF_CALLBACK request_handler_on_render_process_responding(
       CefBrowserCToCpp::Wrap(browser));
 }
 
+void CEF_CALLBACK
+request_handler_on_update_target_url(struct _cef_request_handler_t* self,
+                                     cef_browser_t* browser,
+                                     const cef_string_t* url) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+
+  // Execute
+  CefRequestHandlerCppToC::Get(self)->OnUpdateTargetURL(
+      CefBrowserCToCpp::Wrap(browser), CefString(url));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -590,6 +618,7 @@ CefRequestHandlerCppToC::CefRequestHandlerCppToC() {
       request_handler_on_render_process_not_responding;
   GetStruct()->on_render_process_responding =
       request_handler_on_render_process_responding;
+  GetStruct()->on_update_target_url = request_handler_on_update_target_url;
 }
 
 // DESTRUCTOR - Do not edit by hand.

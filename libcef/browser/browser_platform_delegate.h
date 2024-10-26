@@ -337,6 +337,8 @@ class CefBrowserPlatformDelegate {
   virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 
   virtual void NotifyForNextTouchEvent();
+
+  virtual void SetNativeEmbedMode(bool flag) {};
 #endif
 
   // Notify the browser that screen information has changed. Only used with
@@ -467,6 +469,7 @@ class CefBrowserPlatformDelegate {
                                      int32_t height,
                                      double keyboard) {}
   virtual bool ShouldVirtualKeyboardOverlay() { return false; }
+
   virtual void OnNativeEmbedLifecycleChange(
       const CefRenderHandler::CefNativeEmbedData& info) {}
   virtual void OnNativeEmbedVisibilityChange(
@@ -480,17 +483,18 @@ class CefBrowserPlatformDelegate {
   virtual int GetShrinkViewportHeight();
 #endif
 
-#ifdef OHOS_DISPLAY_CUTOUT
-  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
-#endif
-
 #ifdef OHOS_AI
   virtual void CreateOverlay(const gfx::ImageSkia& image,
                              const gfx::Rect& image_rect,
                              const gfx::Point& touch_point,
                              const gfx::Rect& screen_rect);
   virtual void OnTextSelected(bool flag);
+  virtual void OnDestroyImageAnalyzerOverlay();
   virtual float GetPageScaleFactor();
+#endif
+
+#ifdef OHOS_DISPLAY_CUTOUT
+  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)

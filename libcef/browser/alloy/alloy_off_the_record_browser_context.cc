@@ -103,6 +103,9 @@ void AlloyOffTheRecordBrowserContext::StoreOrTriggerInitCallback(
 
 void AlloyOffTheRecordBrowserContext::Initialize() {
   CefBrowserContext::Initialize();
+  LOG(INFO) << "OffTheRecordBrowserContext Initialize cache_path_ is empty:"
+            << cache_path_.empty();
+
   Profile* original_profile = AsProfile()->GetOriginalProfile();
   DCHECK(original_profile);
   key_ = std::make_unique<ProfileKey>(cache_path_,
@@ -171,6 +174,7 @@ void AlloyOffTheRecordBrowserContext::Initialize() {
   DCHECK(pref_service);
   user_prefs::UserPrefs::Set(this, pref_service);
   key_->SetPrefs(pref_service);
+
   media_device_id_salt_ = new MediaDeviceIDSalt(pref_service);
 
   TrackZoomLevelsFromParent();
@@ -243,6 +247,7 @@ CefRefPtr<CefExtension> AlloyOffTheRecordBrowserContext::GetExtension(
 }
 
 bool AlloyOffTheRecordBrowserContext::UnloadExtension(const CefString& extension_id) {
+  DCHECK(extensions::ExtensionsEnabled());
   return true;
 }
 

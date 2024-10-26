@@ -23,7 +23,7 @@ CefRefPtr<CefPostDataStream> CefPostDataStream::Create() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_post_data_stream_t *_retval = cef_post_data_stream_create();
+  cef_post_data_stream_t* _retval = cef_post_data_stream_create();
 
   // Return type: refptr_same
   return CefPostDataStreamCToCpp::Wrap(_retval);
@@ -34,7 +34,7 @@ CefRefPtr<CefPostDataStream> CefPostDataStream::Create() {
 NO_SANITIZE("cfi-icall")
 void CefPostDataStreamCToCpp::SetReadCallback(
     CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_read_callback)) {
     return;
   }
@@ -55,7 +55,7 @@ void CefPostDataStreamCToCpp::SetReadCallback(
 NO_SANITIZE("cfi-icall")
 void CefPostDataStreamCToCpp::Init(
     CefRefPtr<CefPostDataStreamInitCallback> init_callback) {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, init)) {
     return;
   }
@@ -75,9 +75,10 @@ void CefPostDataStreamCToCpp::Init(
 
 NO_SANITIZE("cfi-icall")
 void CefPostDataStreamCToCpp::Read(
-    void *buffer, int buf_len,
+    void* buffer,
+    int buf_len,
     CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, read)) {
     return;
   }
@@ -101,7 +102,7 @@ void CefPostDataStreamCToCpp::Read(
 }
 
 NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetSize() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_size)) {
     return 0;
   }
@@ -116,7 +117,7 @@ NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetSize() {
 }
 
 NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetPosition() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_position)) {
     return 0;
   }
@@ -131,7 +132,7 @@ NO_SANITIZE("cfi-icall") uint64 CefPostDataStreamCToCpp::GetPosition() {
 }
 
 NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsChunked() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_chunked)) {
     return false;
   }
@@ -146,7 +147,7 @@ NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsChunked() {
 }
 
 NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::HasNullSource() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, has_null_source)) {
     return false;
   }
@@ -161,7 +162,7 @@ NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::HasNullSource() {
 }
 
 NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsEOF() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_eof)) {
     return false;
   }
@@ -176,7 +177,7 @@ NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsEOF() {
 }
 
 NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsInMemory() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, is_in_memory)) {
     return false;
   }
@@ -191,7 +192,7 @@ NO_SANITIZE("cfi-icall") bool CefPostDataStreamCToCpp::IsInMemory() {
 }
 
 NO_SANITIZE("cfi-icall") void CefPostDataStreamCToCpp::Reset() {
-  cef_post_data_stream_t *_struct = GetStruct();
+  cef_post_data_stream_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, reset)) {
     return;
   }
@@ -211,16 +212,17 @@ CefPostDataStreamCToCpp::CefPostDataStreamCToCpp() {}
 CefPostDataStreamCToCpp::~CefPostDataStreamCToCpp() {}
 
 template <>
-cef_post_data_stream_t *
-CefCToCppRefCounted<CefPostDataStreamCToCpp, CefPostDataStream,
-                    cef_post_data_stream_t>::UnwrapDerived(CefWrapperType type,
-                                                           CefPostDataStream
-                                                               *c) {
+cef_post_data_stream_t* CefCToCppRefCounted<
+    CefPostDataStreamCToCpp,
+    CefPostDataStream,
+    cef_post_data_stream_t>::UnwrapDerived(CefWrapperType type,
+                                           CefPostDataStream* c) {
   DCHECK(false) << "Unexpected class type: " << type;
   return nullptr;
 }
 
 template <>
-CefWrapperType CefCToCppRefCounted<CefPostDataStreamCToCpp, CefPostDataStream,
+CefWrapperType CefCToCppRefCounted<CefPostDataStreamCToCpp,
+                                   CefPostDataStream,
                                    cef_post_data_stream_t>::kWrapperType =
     WT_POST_DATA_STREAM;

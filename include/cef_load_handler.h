@@ -175,6 +175,12 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
                                       int64_t firstContentfulPaintMs) {}
 
   ///
+  /// Called when received website security risk check result.
+  ///
+  /*--cef()--*/
+  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
+
+  ///
   /// Called when the first meaningful paint rendering of web page.
   ///
   /*--cef()--*/
@@ -195,13 +201,6 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   virtual void OnNavigationEntryCommitted(
       CefRefPtr<CefLoadCommittedDetails> details) {}
 
-
-  ///
-  /// Called when received website security risk check result.
-  ///
-  /*--cef()--*/
-  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
-
   ///
   /// Called when tracker's cookie is prevented.
   ///
@@ -209,6 +208,14 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   virtual void OnIntelligentTrackingPreventionResult(
       const CefString& website_host,
       const CefString& tracker_host) {}
+
+#ifdef OHOS_BFCACHE
+  ///
+  /// Called when page load from bfcache.
+  ///
+  /*--cef()--*/
+  virtual void UpdateFavicon(CefRefPtr<CefBrowser> browser) {}
+#endif // OHOS_BFCACHE
 
 #endif  // BUILDFLAG(IS_OHOS)
 };

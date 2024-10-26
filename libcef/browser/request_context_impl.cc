@@ -633,7 +633,13 @@ CefRequestContextImpl::GetOrCreateRequestContext(const Config& config) {
 
 CefRequestContextImpl::CefRequestContextImpl(
     const CefRequestContextImpl::Config& config)
-    : config_(config) {}
+    : config_(config) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      if (config.is_global && !config_.settings.global_request_context) {
+        config_.settings.global_request_context = this;
+      }
+#endif
+    }
 
 void CefRequestContextImpl::Initialize() {
   CEF_REQUIRE_UIT();
@@ -673,7 +679,7 @@ void CefRequestContextImpl::Initialize() {
     if (config_.incognito_mode) {
       browser_context_ =
           CefAppManager::Get()->CreateNewIncognitoBrowserContext(
-              config_.settings, std::move(initialized_cb));      
+              config_.settings, std::move(initialized_cb));
     } else {
       browser_context_ = CefAppManager::Get()->CreateNewBrowserContext(
           config_.settings, std::move(initialized_cb));

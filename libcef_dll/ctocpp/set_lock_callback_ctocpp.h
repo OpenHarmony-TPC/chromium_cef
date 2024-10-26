@@ -29,9 +29,10 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed DLL-side only.
 class CefSetLockCallbackCToCpp
-    : public CefCToCppRefCounted<CefSetLockCallbackCToCpp, CefSetLockCallback,
+    : public CefCToCppRefCounted<CefSetLockCallbackCToCpp,
+                                 CefSetLockCallback,
                                  cef_set_lock_callback_t> {
-public:
+ public:
   CefSetLockCallbackCToCpp();
   virtual ~CefSetLockCallbackCToCpp();
 
@@ -39,4 +40,4 @@ public:
   void Handle(bool key) override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_SET_LOCK_CALLBACK_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_SET_LOCK_CALLBACK_CTOCPP_H_

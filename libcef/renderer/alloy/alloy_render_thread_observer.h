@@ -15,6 +15,10 @@
 #include "content/public/renderer/render_thread_observer.h"
 #include "mojo/public/cpp/bindings/associated_receiver_set.h"
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+#include "third_party/blink/public/common/associated_interfaces/associated_interface_registry.h"
+#endif
+
 // This class sends and receives control messages in the renderer process.
 class AlloyRenderThreadObserver : public content::RenderThreadObserver,
                                   public chrome::mojom::RendererConfiguration {
@@ -32,6 +36,10 @@ class AlloyRenderThreadObserver : public content::RenderThreadObserver,
   // Return a copy of the dynamic parameters - those that may change while the
   // render process is running.
   chrome::mojom::DynamicParamsPtr GetDynamicParams() const;
+
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  const RendererContentSettingRules* content_setting_rules() const;
+#endif
 
  private:
   // content::RenderThreadObserver:
@@ -55,7 +63,13 @@ class AlloyRenderThreadObserver : public content::RenderThreadObserver,
       mojo::PendingAssociatedReceiver<chrome::mojom::RendererConfiguration>
           receiver);
 
+#if defined(OHOS_EX_EXCEPTION_LIST)
+  void SetContentSettingRules(const RendererContentSettingRules& rules) override;
+#endif  // defined(OHOS_EX_EXCEPTION_LIST)
+
   bool is_incognito_process_ = false;
+
+  RendererContentSettingRules content_setting_rules_;
 
   mojo::AssociatedReceiverSet<chrome::mojom::RendererConfiguration>
       renderer_configuration_receivers_;

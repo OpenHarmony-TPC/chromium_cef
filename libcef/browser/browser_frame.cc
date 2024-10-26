@@ -83,15 +83,15 @@ CefRefPtr<CefFrameHostImpl> CefBrowserFrame::GetFrameHost(
 
 #if BUILDFLAG(IS_OHOS)
 void CefBrowserFrame::OnGetImageForContextNode(
-    cef::mojom::GetImageForContextNodeParamsPtr params) {
+    cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) {
   if (auto host = GetFrameHost()) {
-    host->OnGetImageForContextNode(std::move(params));
+    host->OnGetImageForContextNode(std::move(params), command_id);
   }
 }
 
-void CefBrowserFrame::OnGetImageForContextNodeNull() {
+void CefBrowserFrame::OnGetImageForContextNodeNull(int command_id) {
   if (auto host = GetFrameHost()) {
-    host->OnGetImageForContextNodeNull();
+    host->OnGetImageForContextNodeNull(command_id);
   }
 }
 

@@ -291,6 +291,7 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
     shrink_viewport_height_ = 0;
   }
 #endif
+  view->SetNativeEmbedMode(native_embed_mode_);
 
   view->SendTouchEvent(event_adjust);
   if (event.type == CEF_TET_PRESSED) {
@@ -462,6 +463,9 @@ void CefBrowserPlatformDelegateOsr::NotifyForNextTouchEvent() {
   if (!view)
     return;
   view->NotifyForNextTouchEvent();
+}
+void CefBrowserPlatformDelegateOsr::SetNativeEmbedMode(bool flag) {
+  native_embed_mode_ = flag;
 }
 #endif
 
@@ -1003,6 +1007,7 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
   if (!web_contents_) {
     return nullptr;
   }
+
   content::RenderViewHost* host = web_contents_->GetRenderViewHost();
   if (host) {
     return static_cast<CefRenderWidgetHostViewOSR*>(
@@ -1189,6 +1194,12 @@ void CefBrowserPlatformDelegateOsr::CreateOverlay(const gfx::ImageSkia& image,
 void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
   if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
     view->OnTextSelected(flag);
+  }
+}
+
+void CefBrowserPlatformDelegateOsr::OnDestroyImageAnalyzerOverlay() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnDestroyImageAnalyzerOverlay();
   }
 }
 

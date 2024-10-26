@@ -1,17 +1,7 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// Copyright (c) 2023 Huawei Device Co., Ltd. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_client.h"
 
 #include "base/containers/lru_cache.h"
@@ -30,25 +20,25 @@
 
 namespace {
 constexpr int kMaxCachedProfiles = 100;
-base::LRUCache<GURL, ohos_safe_browsing::OhosSbClient::SbBlockingPageInfo>
+base::LRUCache<GURL, ohos_safe_browsing::SbClient::SbBlockingPageInfo>
     blocking_page_info_cache(kMaxCachedProfiles);
 }  // namespace
 
 namespace ohos_safe_browsing {
 
-OhosSbClient::OhosSbClient(content::WebContents* web_contents, 
+SbClient::SbClient(content::WebContents* web_contents,
                    PrefService* prefs,
                    bool incognito_mode)
-    : content::WebContentsObserver(web_contents), 
+    : content::WebContentsObserver(web_contents),
       prefs_(prefs),
       incognito_mode_(incognito_mode) {}
 
-OhosSbClient::~OhosSbClient() = default;
+SbClient::~SbClient() = default;
 
 // static
-bool OhosSbClient::InMaliciousAllowlist(const PrefService* prefs,
-                                        const std::string& url,
-                                        bool incognito_mode) {
+bool SbClient::InMaliciousAllowlist(const PrefService* prefs,
+                                    const std::string& url,
+                                    bool incognito_mode) {
   if (!prefs) {
     return false;
   }
@@ -64,7 +54,7 @@ bool OhosSbClient::InMaliciousAllowlist(const PrefService* prefs,
   return false;
 }
 
-void OhosSbClient::NavigationEntryCommitted(
+void SbClient::NavigationEntryCommitted(
     const content::LoadCommittedDetails& load_details) {
   if (!web_contents() || web_contents()->IsBeingDestroyed()) {
     return;
@@ -87,7 +77,7 @@ void OhosSbClient::NavigationEntryCommitted(
   ShowBlockingPage();
 }
 
-void OhosSbClient::ShowBlockingPage() {
+void SbClient::ShowBlockingPage() {
   if (!web_contents() || web_contents()->IsBeingDestroyed()) {
     return;
   }
@@ -105,12 +95,13 @@ void OhosSbClient::ShowBlockingPage() {
   redirect_chain.push_back(virtual_url);
   std::reverse(redirect_chain.begin(), redirect_chain.end());
 
-  bool is_page_type_normal = 
+  bool is_page_type_normal =
       (visible_entry->GetPageType() == content::PAGE_TYPE_NORMAL);
   if (!is_page_type_normal) {
     return;
   }
-
+  std::string lang = base::i18n::GetConfiguredLocale();
+  
   for (auto& url : redirect_chain) {
     const auto& blocking_cached = blocking_page_info_cache.Peek(url);
     if (blocking_cached != blocking_page_info_cache.end()) {
@@ -126,7 +117,7 @@ void OhosSbClient::ShowBlockingPage() {
       }
 
       if ((policy == OHSBPolicyType::POLICY_POPUP_AND_DANGER ||
-          policy == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS) &&
+           policy == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS) &&
           block_type != OHSBThreatType::THREAT_WARNING) {
         is_display_block_page = true;
         NotifySafeBrowsingCheckResult(block_type);
@@ -139,14 +130,14 @@ void OhosSbClient::ShowBlockingPage() {
       }
 
       if (is_display_block_page) {
-         DisplayBlockingPage(url, policy, block_type, "zh-CN");
-         return;
+        DisplayBlockingPage(url, policy, block_type, lang);
+        return;
       }
     }
   }
 }
 
-void OhosSbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
+void SbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
                                          int policy,
                                          OHSBThreatType block_type,
                                          int hw_code,
@@ -160,12 +151,12 @@ void OhosSbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
   }
 }
 
-OhosSbClient::BlockingPageInfo::BlockingPageInfo(content::WebContents* web_contents)
-    : content::WebContentsUserData<OhosSbClient::BlockingPageInfo>(*web_contents) {}
+SbClient::BlockingPageInfo::BlockingPageInfo(content::WebContents* web_contents)
+    : content::WebContentsUserData<SbClient::BlockingPageInfo>(*web_contents) {}
 
-OhosSbClient::SbBlockingPageInfo::SbBlockingPageInfo() {}
+SbClient::SbBlockingPageInfo::SbBlockingPageInfo() {}
 
-OhosSbClient::SbBlockingPageInfo::SbBlockingPageInfo(
+SbClient::SbBlockingPageInfo::SbBlockingPageInfo(
     const GURL& url,
     ohos_safe_browsing::OHSBThreatType block_type,
     int hw_code,
@@ -177,10 +168,10 @@ OhosSbClient::SbBlockingPageInfo::SbBlockingPageInfo(
       info_policy(policy),
       info_redirect_url(redirect_url) {}
 
-OhosSbClient::SbBlockingPageInfo::~SbBlockingPageInfo() {}
+SbClient::SbBlockingPageInfo::~SbBlockingPageInfo() {}
 
 // static
-void OhosSbClient::BlockingPageInfo::SetBlockingPageInfo(
+void SbClient::BlockingPageInfo::SetBlockingPageInfo(
     content::WebContents* web_contents,
     const GURL& url,
     int policy,
@@ -203,15 +194,15 @@ void OhosSbClient::BlockingPageInfo::SetBlockingPageInfo(
   }
 }
 
-void OhosSbClient::DisplayBlockingPage(const GURL& url,
+void SbClient::DisplayBlockingPage(const GURL& url,
                                    int policy,
                                    OHSBThreatType block_type,
                                    const std::string& app_locale) {
   LOG(INFO) << "SafeBrowsing " << __func__ << " url: " << url.spec()
             << ", type: " << block_type;
-  auto controller = std::make_unique<OhosSbControllerClient>(
+  auto controller = std::make_unique<SbControllerClient>(
       web_contents(), prefs_, url, app_locale, incognito_mode_);
-  std::unique_ptr<OhosSbBlockPage> blocking_page = std::make_unique<OhosSbBlockPage>(
+  std::unique_ptr<SbBlockPage> blocking_page = std::make_unique<SbBlockPage>(
       web_contents(), url, policy, block_type, std::move(controller));
   base::WeakPtr<content::NavigationHandle> error_page_navigation_handle =
       web_contents()->GetController().LoadPostCommitErrorPage(
@@ -224,7 +215,7 @@ void OhosSbClient::DisplayBlockingPage(const GURL& url,
   }
 }
 
-bool OhosSbClient::IsBlockPageShowing() {
+bool SbClient::IsBlockPageShowing() {
   security_interstitials::SecurityInterstitialTabHelper*
       security_interstitial_tab_helper = security_interstitials::
           SecurityInterstitialTabHelper::FromWebContents(web_contents());
@@ -232,7 +223,7 @@ bool OhosSbClient::IsBlockPageShowing() {
          security_interstitial_tab_helper->IsDisplayingInterstitial();
 }
 
-void OhosSbClient::NotifySafeBrowsingCheckResult(OHSBThreatType threat_type) {
+void SbClient::NotifySafeBrowsingCheckResult(OHSBThreatType threat_type) {
   if (!web_contents()) {
     return;
   }
@@ -253,6 +244,6 @@ void OhosSbClient::NotifySafeBrowsingCheckResult(OHSBThreatType threat_type) {
   load_handler->OnSafeBrowsingCheckResult(type);
 }
 
-WEB_CONTENTS_USER_DATA_KEY_IMPL(OhosSbClient::BlockingPageInfo);
+WEB_CONTENTS_USER_DATA_KEY_IMPL(SbClient::BlockingPageInfo);
 
 }  // namespace ohos_safe_browsing
