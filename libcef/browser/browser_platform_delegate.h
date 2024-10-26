@@ -475,6 +475,7 @@ class CefBrowserPlatformDelegate {
       const std::string& embed_id, bool visibility) {}
   virtual void SetScrollable(bool enable) {}
   virtual void AdvanceFocusForIME(int focusType) {}
+  virtual void ScrollBy(float delta_x, float delta_y) {}
 #endif
 
 #ifdef OHOS_EX_TOPCONTROLS

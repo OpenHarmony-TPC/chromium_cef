@@ -3230,9 +3230,10 @@ void CefBrowserHostBase::ScrollTo(float x, float y) {
 }
 
 void CefBrowserHostBase::ScrollBy(float delta_x, float delta_y) {
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->ScrollBy(delta_x, delta_y);
+  // By calling cc interface SetSynchronousInputHandlerRootScrollOffset,
+  // sliding can be realized without waiting for rendering to be completed.
+  if (platform_delegate_) {
+    platform_delegate_->ScrollBy(delta_x, delta_y);
   }
 }
 
