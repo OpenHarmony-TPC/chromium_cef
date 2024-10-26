@@ -205,7 +205,7 @@ class OhGinJavascriptBridgeDispatcherHost
   std::unordered_map<int32_t, std::unordered_set<std::string>> async_object_id_map_;
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;
-  static std::string GetLastCallingFrameUrlTLS();
+  static const char* GetLastCallingFrameUrlTLS();
 };
 }  // namespace NWEB
 #endif

@@ -1071,15 +1071,14 @@ base::ThreadLocalStorage::Slot& LastCallingFrameUrlContentTLS()
   return *last_calling_frame_url_tls;
 }
 
-std::string OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
+const char* OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
 {
   void *value = LastCallingFrameUrlContentTLS().Get();
-  std::string last_calling_frame_url;
   if (value) {
-    last_calling_frame_url = static_cast<LastCallingFrameUrlInfo*>(value)->url;
+    return static_cast<LastCallingFrameUrlInfo*>(value)->url.c_str();
   }
 
-  return last_calling_frame_url;
+  return nullptr;
 }
 
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
