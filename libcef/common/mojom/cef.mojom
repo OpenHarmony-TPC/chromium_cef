@@ -175,6 +175,9 @@ interface RenderFrame {
  
   [EnableIf=is_ohos]
   TerminateRenderProcess();
+
+  [EnableIf=ohos_scrollbar]
+  UpdatePixelRatio(float ratio);
 };
 
 // Interface for communicating with a frame in the browser process.

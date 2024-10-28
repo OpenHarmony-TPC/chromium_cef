@@ -2819,12 +2819,28 @@ void CefBrowserHostBase::SetInitialScale(float scale) {
 }
 
 void CefBrowserHostBase::SetVirtualPixelRatio(float ratio) {
+#ifdef OHOS_SCROLLBAR
+  if (std::fabs(ratio - virtual_pixel_ratio_) > std::numeric_limits<float>::epsilon()) {
+    UpdatePixelRatio(ratio);
+  }
+#endif
   virtual_pixel_ratio_ = ratio;
 }
 
 float CefBrowserHostBase::GetVirtualPixelRatio() {
   return virtual_pixel_ratio_;
 }
+
+#ifdef OHOS_SCROLLBAR
+void CefBrowserHostBase::UpdatePixelRatio(float ratio) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->UpdatePixelRatio(ratio);
+  } else {
+    LOG(ERROR) << "main frame is invalid";
+  }
+}
+#endif
 
 float CefBrowserHostBase::Scale() {
   auto web_contents = GetWebContents();
