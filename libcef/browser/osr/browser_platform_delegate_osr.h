@@ -147,6 +147,7 @@ class CefBrowserPlatformDelegateOsr
   void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility) override;
   void SetScrollable(bool enable) override;
   void AdvanceFocusForIME(int focusType) override;
+  void ScrollBy(float delta_x, float delta_y) override;
 #endif
 
 #ifdef OHOS_ARKWEB_ADBLOCK

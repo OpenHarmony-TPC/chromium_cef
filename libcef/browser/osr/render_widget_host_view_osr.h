@@ -231,6 +231,7 @@ class CefRenderWidgetHostViewOSR
   void SetScrollable(bool enable);
   void OnDidNavigateMainFrameToNewPage() override;
   void AdvanceFocusForIME(int focusType);
+  void ScrollBy(float delta_x, float delta_y);
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)
