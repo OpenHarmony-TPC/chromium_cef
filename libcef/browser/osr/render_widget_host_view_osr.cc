@@ -2485,6 +2485,7 @@ void CefRenderWidgetHostViewOSR::OnTouchMove {
     return;
   }
   isBoosting_ = true;
+  BoostingPreiodly();
 }
 #endif
 
