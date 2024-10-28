@@ -109,6 +109,10 @@ class CefFrameImpl
   void TerminateRenderProcess() override;
 #endif  // BUILDFLAG(IS_OHOS)
 
+#ifdef OHOS_SCROLLBAR
+  void UpdatePixelRatio(float ratio) override;
+#endif
+
 #ifdef OHOS_POST_URL
   void PostURL(const CefString& url,
                const std::vector<char>& post_data) override;
