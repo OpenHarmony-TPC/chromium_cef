@@ -38,7 +38,7 @@ struct JsProxyPermissionConfigData {
 typedef struct LastCallingFrameUrlInfo {
   std::string url;
 } LastCallingFrameUrlInfo;
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#endif
 
 class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
