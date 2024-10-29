@@ -4,8 +4,6 @@
 
 #include "libcef/browser/password/oh_password_manager_client.h"
 
-#include <codecvt>
-#include <locale>
 #include <memory>
 #include <string>
 #include <utility>
@@ -1009,6 +1007,13 @@ void OhPasswordManagerClient::NotifyAutofillPopupShow(bool is_show) {
     return;
   }
   autofill_manager->SetPasswordPopupShow(is_show);
+
+  auto autofill_client =
+      autofill::OhAutofillClient::FromWebContents(web_contents());
+  if (autofill_client) {
+    autofill_client->SetPasswordPopupHider(is_show ? autofill_manager
+                                                   : nullptr);
+  }
 }
 
 void OhPasswordManagerClient::FillAccountSuggestion(

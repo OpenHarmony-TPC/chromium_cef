@@ -308,6 +308,16 @@ bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
     return password_manager->IsUsernamePasswordField(field_id);
   }
 }
+
+absl::optional<std::string> OhAutofillManager::QueryPopupShowAndGetHideStr() {
+  if (!is_password_popup_show_) {
+    return absl::nullopt;
+  }
+
+  base::Value::List view_data_list;
+  view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_CLOSE));
+  return base::WriteJson(view_data_list);
+}
 #endif
 
 bool OhAutofillManager::ShouldClearPreviewedForm() {

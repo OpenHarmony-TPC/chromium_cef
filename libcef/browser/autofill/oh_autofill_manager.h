@@ -105,6 +105,8 @@ class OhAutofillManager : public AutofillManager {
   bool IsUsernamePasswordFormField(FormRendererId form_id,
                                    FieldRendererId field_id);
   void SetPasswordPopupShow(bool is_show) { is_password_popup_show_ = is_show; }
+
+  absl::optional<std::string> QueryPopupShowAndGetHideStr();
 #endif
 
  protected:
