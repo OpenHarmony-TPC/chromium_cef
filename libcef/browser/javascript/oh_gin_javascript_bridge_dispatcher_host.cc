@@ -1076,7 +1076,10 @@ base::ThreadLocalStorage::Slot& LastCallingFrameUrlContentTLS()
     &LastCallingFrameUrlDestructorFunc);
   return *last_calling_frame_url_tls;
 }
+#endif
+}
 
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
 const char* OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
 {
   void *value = LastCallingFrameUrlContentTLS().Get();
@@ -1087,7 +1090,6 @@ const char* OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
   return nullptr;
 }
 #endif
-}
 
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     int routing_id,
