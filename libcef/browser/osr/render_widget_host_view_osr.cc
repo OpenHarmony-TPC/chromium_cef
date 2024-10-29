@@ -2467,7 +2467,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
     CEF_POST_DELAYED_TASK(CEF_UIT,
       base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
-      weak_ptr_factory_,GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+      weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
   }
 
   if (!has_touch_point_) {
@@ -2481,7 +2481,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
 }
 
 void CefRenderWidgetHostViewOSR::OnTouchMove {
-  if(pointer_state_.GetPointerCount == 0 || isBoosting_){
+  if(pointer_state_.GetPointerCount == 0 || isBoosting_) {
     return;
   }
   isBoosting_ = true;
