@@ -34,9 +34,11 @@ struct JsProxyPermissionConfigData {
   std::string method_name;
 };
 
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
 typedef struct LastCallingFrameUrlInfo {
   std::string url;
 } LastCallingFrameUrlInfo;
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
 
 class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
@@ -71,6 +73,10 @@ class OhGinJavascriptBridgeDispatcherHost
   void RemoveNamedObject(const std::string& object_name,
                          const std::vector<std::string>& method_list);
   bool RemoveNamedObjectInternal(const std::string& object_name, bool is_async);
+
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+  static const char* GetLastCallingFrameUrlTLS();
+#endif
 
   // WebContentsObserver
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
@@ -205,7 +211,6 @@ class OhGinJavascriptBridgeDispatcherHost
   std::unordered_map<int32_t, std::unordered_set<std::string>> async_object_id_map_;
   CefRefPtr<CefClient> client_;
   bool install_filter_when_render_process_gone_ = false;
-  static const char* GetLastCallingFrameUrlTLS();
 };
 }  // namespace NWEB
 #endif

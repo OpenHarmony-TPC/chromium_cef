@@ -3,7 +3,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
 #include "base/threading/thread_local_storage.h"
+#endif
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
 
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
@@ -1059,9 +1061,13 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::strin
   return true;
 }
 
+namespace {
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
 void LastCallingFrameUrlDestructorFunc(void* value)
 {
-  delete reinterpret_cast<LastCallingFrameUrlInfo*>(value);
+  if (value) {
+    delete reinterpret_cast<LastCallingFrameUrlInfo*>(value);
+  }
 }
 
 base::ThreadLocalStorage::Slot& LastCallingFrameUrlContentTLS()
@@ -1080,6 +1086,8 @@ const char* OhGinJavascriptBridgeDispatcherHost::GetLastCallingFrameUrlTLS()
 
   return nullptr;
 }
+#endif
+}
 
 void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     int routing_id,
@@ -1097,11 +1105,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     return;
   }
 
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
   }
+#endif
 
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
@@ -1161,11 +1171,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     return;
   }
 
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
   }
+#endif
 
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
@@ -1219,11 +1231,13 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     return;
   }
 
+#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
     LastCallingFrameUrlContentTLS().Set(reinterpret_cast<void*>(url_info));
   }
+#endif
 
   if (content::BrowserThread::CurrentlyOn(content::BrowserThread::UI) && web_contents()) {
     OhJavascriptInjector* javascriptInjector =
