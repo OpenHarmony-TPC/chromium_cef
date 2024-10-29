@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
 #include "base/threading/thread_local_storage.h"
 #endif
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
@@ -1062,7 +1062,7 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::strin
 }
 
 namespace {
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
 void LastCallingFrameUrlDestructorFunc(void* value)
 {
   if (value) {
@@ -1105,7 +1105,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethod(
     return;
   }
 
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY 
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
@@ -1171,7 +1171,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodAsync(
     return;
   }
 
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
@@ -1231,7 +1231,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnInvokeMethodFlowbuf(
     return;
   }
 
-#ifdef OHOS_LASTCALLING_FRAME_URL_TLS
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
   {
     LastCallingFrameUrlInfo* url_info = new LastCallingFrameUrlInfo();
     url_info->url = document_url;
