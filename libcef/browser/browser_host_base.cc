@@ -102,6 +102,7 @@
 
 #ifdef OHOS_I18N
 #include "third_party/blink/public/common/renderer_preferences/renderer_preferences.h"
+#include "ui/base/ui_base_switches.h"
 #endif
 
 #ifdef OHOS_ARKWEB_ADBLOCK
@@ -1586,22 +1587,39 @@ void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
 
   std::string origin_locale =
       ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
+  LOG(DEBUG) << "UpdateLocale origin locale:" << origin_locale
+             << ", update locale:" << update_locale;
   if (origin_locale == update_locale) {
     LOG(WARNING) << "CefBrowserHostBase::UpdateLocale no need to update locale";
     return;
   }
 
-  std::string result =
+  // each render process may need to update locale.
+  content::RenderProcessHost* host =
+      GetWebContents()->GetPrimaryMainFrame()->GetProcess();
+  if (host) {
+    host->OnLocaleChangedToRenderer(update_locale);
+  }
+
+  const std::string result =
       ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(
           update_locale);
+
   if (result.empty()) {
     LOG(ERROR) << "browser host update locale failed";
     return;
   }
-  auto frame = GetMainFrame();
-  if (frame && frame->IsValid()) {
-    static_cast<CefFrameHostImpl*>(frame.get())->UpdateLocale(update_locale);
-    g_browser_process->SetApplicationLocale(result);
+  g_browser_process->SetApplicationLocale(result);
+
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (!command_line->HasSwitch(::switches::kLang)) {
+    return;
+  }
+
+  std::string current_lang =
+      command_line->GetSwitchValueASCII(::switches::kLang);
+  if (current_lang != result) {
+    command_line->AppendSwitchASCII(switches::kLang, result);
   }
 }
 #endif

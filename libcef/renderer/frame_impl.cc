@@ -1224,27 +1224,6 @@ void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
   }
 }
 
-#ifdef OHOS_I18N
-void CefFrameImpl::UpdateLocale(const std::string& locale) {
-  if (!ui::ResourceBundle::HasSharedInstance() ||
-      !ui::ResourceBundle::LocaleDataPakExists(locale)) {
-    LOG(ERROR) << "CefFrameImpl update locale failed";
-    return;
-  }
-  std::string origin_locale =
-      ui::ResourceBundle::GetSharedInstance().GetLoadedLocaleForTesting();
-  if (origin_locale == locale) {
-    LOG(ERROR) << "CefFrameImpl UpdateLocale no need to update locale";
-    return;
-  }
-  std::string result =
-      ui::ResourceBundle::GetSharedInstance().ReloadLocaleResources(locale);
-  if (result.empty()) {
-    LOG(ERROR) << "CefFrameImpl update locale failed";
-  }
-}
-#endif  // #ifdef OHOS_I18N
-
 void CefFrameImpl::GetImagesWithResponse(
     cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) {
   ExecuteOnLocalFrame(
