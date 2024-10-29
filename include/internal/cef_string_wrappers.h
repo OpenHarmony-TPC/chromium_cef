@@ -40,6 +40,8 @@
 #include "base/files/file_path.h"
 #endif
 
+#include "third_party/bounds_checking_function/include/securec.h"
+
 ///
 /// Traits implementation for wide character strings.
 ///
@@ -556,8 +558,9 @@ class CefStringBase {
     if (!string_) {
       return;
     }
-    if (string_->str != NULL) {
-      memset(string_->str, 0, string_->length);
+    if (string_->str != NULL ||
+        memset_s(string_->str, string_->length, 0, string_->length) != EOK) {
+      return;
     }
   }
   // #endif  // BUILDFLAG(IS_OHOS)
