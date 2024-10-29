@@ -2481,7 +2481,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
 }
 
 void CefRenderWidgetHostViewOSR::OnTouchMove {
-  if(pointer_state_.GetPointerCount == 0 || isBoosting_) {
+  if(pointer_state_.GetPointerCount() == 0 || isBoosting_) {
     return;
   }
   isBoosting_ = true;
