@@ -558,7 +558,7 @@ class CefStringBase {
     if (!string_) {
       return;
     }
-    if (string_->str != NULL ||
+    if (string_->str != NULL &&
         memset_s(string_->str, string_->length, 0, string_->length) != EOK) {
       return;
     }
