@@ -213,15 +213,15 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
     }
   }
 
-  void ContinueTask(bool user_input) override {
+  void ContinueTask(bool user_input, bool stopPropagation) override {
     if (CEF_CURRENTLY_ON_UIT()) {
       if (!callback_.is_null()) {
-        std::move(callback_).Run(user_input);
+        std::move(callback_).Run(user_input, stopPropagation);
       }
     } else {
       CEF_POST_TASK(CEF_UIT,
                     base::BindOnce(&CefGestureEventCallbackImpl::ContinueTask, this,
-                                   user_input));
+                                   user_input, stopPropagation));
     }
   }
 
@@ -231,7 +231,7 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  private:
   static void CancelNow(CallbackType callback) {
     CEF_REQUIRE_UIT();
-    std::move(callback).Run(false);
+    std::move(callback).Run(false, true);
   }
 
   CallbackType callback_;
@@ -3412,10 +3412,14 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
-  if (!scroll_enabled_ &&
+  if (input_event.GetType() == blink::WebInputEvent::Type::kTouchStart) {
+    event_result_ = false;
+  }
+  if ((!scroll_enabled_ || event_result_) &&
       input_event.GetType() ==
           blink::WebInputEvent::Type::kGestureScrollUpdate) {
-    LOG(DEBUG) << "can not GestureScroll, scroll is disabled";
+    LOG(DEBUG) << "can not GestureScroll, scroll is disabled. scroll_enabled_ is "
+               << scroll_enabled_ <<  "event_result_ is " << event_result_;
     return blink::mojom::InputEventResultState::kConsumed;
   }
 
@@ -3571,11 +3575,7 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
   }
 }
 void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) {
-  if (touchEvent->type == blink::mojom::NativeTouchType::UP) {
-    gesture_provider_.SetNativeEmbedEnabled(false);
-  } else {
-    gesture_provider_.SetNativeEmbedEnabled(true);
-  }
+
   if (browser_impl_.get()) {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
@@ -3601,14 +3601,12 @@ void CefRenderWidgetHostViewOSR::OnNativeEmbedLifecycleChange(const CefRenderHan
   }
 }
 
-void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result) {
+void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result, bool stopPropagation) {
   if (!render_widget_host_) {
     return;
   }
-  if (!result) {
-    gesture_provider_.SetNativeEmbedEnabled(false);
-  }
-  render_widget_host_->input_router()->SetGestureEventResult(result);
+  event_result_ = result;
+  render_widget_host_->input_router()->SetGestureEventResult(result, stopPropagation);
 }
 
 void CefRenderWidgetHostViewOSR::SetNativeEmbedMode(bool flag) {

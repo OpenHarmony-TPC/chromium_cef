@@ -37,7 +37,7 @@ class CefGestureEventCallbackCToCpp
   virtual ~CefGestureEventCallbackCToCpp();
 
   // CefGestureEventCallback methods.
-  void ContinueTask(bool result) override;
+  void ContinueTask(bool result, bool stopPropagation) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_GESTURE_EVENT_CALLBACK_CTOCPP_H_
