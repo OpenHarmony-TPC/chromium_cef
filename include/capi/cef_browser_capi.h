@@ -113,8 +113,9 @@ typedef struct _cef_gesture_event_callback_t {
   ///
   /// Method that will be called upon completion.
   ///
-  void(CEF_CALLBACK* continue_task)(struct _cef_gesture_event_callback_t* self,
-                                    int result);
+  void(CEF_CALLBACK *continue_task)(struct _cef_gesture_event_callback_t *self,
+                                    int result,
+                                    int stopPropagation);
 } cef_gesture_event_callback_t;
 
 ///

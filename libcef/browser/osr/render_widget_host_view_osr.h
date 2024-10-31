@@ -450,7 +450,7 @@ class CefRenderWidgetHostViewOSR
       const CefTouchHandleState& end_selection_handle,
       bool need_report);
   bool NeedPopupInsertTouchHandleQuickMenu();
-  void SetGestureEventResult(bool result);
+  void SetGestureEventResult(bool result, bool stopPropagation);
   void SetNativeEmbedMode(bool flag);
 #endif
 
@@ -673,6 +673,8 @@ class CefRenderWidgetHostViewOSR
   float page_scale_factor_ = 0.f;
 
   bool is_mouse_locked_ = false;
+
+  bool event_result_ = false;
 
 #if defined(OHOS_PERFORMANCE_JITTER)
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
