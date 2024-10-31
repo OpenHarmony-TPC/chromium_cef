@@ -34,6 +34,12 @@ struct JsProxyPermissionConfigData {
   std::string method_name;
 };
 
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
+typedef struct LastCallingFrameUrlInfo {
+  std::string url;
+} LastCallingFrameUrlInfo;
+#endif
+
 class OhGinJavascriptBridgeDispatcherHost
     : public base::RefCountedThreadSafe<OhGinJavascriptBridgeDispatcherHost>,
       public content::WebContentsObserver {
@@ -67,6 +73,10 @@ class OhGinJavascriptBridgeDispatcherHost
   void RemoveNamedObject(const std::string& object_name,
                          const std::vector<std::string>& method_list);
   bool RemoveNamedObjectInternal(const std::string& object_name, bool is_async);
+
+#ifdef OHOS_SECURE_JAVASCRIPT_PROXY
+  static const char* GetLastCallingFrameUrlTLS();
+#endif
 
   // WebContentsObserver
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
