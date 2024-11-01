@@ -108,7 +108,7 @@ void MaybeSetUserAgentOverrideForMainFrame(
   LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
              << ", is_main_frame " << navigation->IsInMainFrame()
-             << ", is_reload " << is_reload << ", url " << url.spec();
+             << ", is_reload " << is_reload;
 
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
   if (!navigation->IsInMainFrame()) {
