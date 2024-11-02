@@ -1028,6 +1028,11 @@ typedef struct _cef_browser_host_t {
                                      const cef_key_event_t* event);
 
   ///
+  /// Send a key event to the browser.
+  ///
+  void(CEF_CALLBACK* set_focus_on_web)(struct _cef_browser_host_t* self);
+
+  ///
   /// Send a mouse click event to the browser. The |x| and |y| coordinates are
   /// relative to the upper-left corner of the view.
   ///
