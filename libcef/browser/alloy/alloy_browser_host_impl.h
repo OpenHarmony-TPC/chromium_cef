@@ -516,7 +516,7 @@ bool NeedsReload() override;
   base::ProcessId GetRenderProcessId();
   void UpdateVSyncFrequency();
   void ResetVSyncFrequency();
-  void SetVisible(bool visible);
+  void SetVisible(int32_t nweb_id, bool visible);
   void SetNativeEmbedMode(bool flag) override;
 #endif
 
