@@ -3769,6 +3769,9 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(
 
 #ifdef OHOS_AI
 void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
+  if (flag) {
+    gesture_provider_.OnAITextSelected();
+  }
   if (render_widget_host_) {
     render_widget_host_->OnTextSelected(flag);
     overlay_in_progress_ = flag;
