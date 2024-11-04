@@ -21,7 +21,8 @@ namespace {
 
 void CEF_CALLBACK
 gesture_event_callback_continue_task(struct _cef_gesture_event_callback_t* self,
-                                     int result) {
+                                     int result,
+                                     int stopPropagation) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -32,7 +33,8 @@ gesture_event_callback_continue_task(struct _cef_gesture_event_callback_t* self,
   }
 
   // Execute
-  CefGestureEventCallbackCppToC::Get(self)->ContinueTask(result ? true : false);
+  CefGestureEventCallbackCppToC::Get(self)->ContinueTask(
+      result ? true : false, stopPropagation ? true : false);
 }
 
 }  // namespace

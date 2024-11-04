@@ -18,7 +18,7 @@
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-void CefGestureEventCallbackCToCpp::ContinueTask(bool result) {
+void CefGestureEventCallbackCToCpp::ContinueTask(bool result, bool stopPropagation) {
   shutdown_checker::AssertNotShutdown();
 
   cef_gesture_event_callback_t* _struct = GetStruct();
@@ -29,7 +29,7 @@ void CefGestureEventCallbackCToCpp::ContinueTask(bool result) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->continue_task(_struct, result);
+  _struct->continue_task(_struct, result, stopPropagation);
 }
 
 // CONSTRUCTOR - Do not edit by hand.
