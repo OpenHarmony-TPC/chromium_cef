@@ -1133,6 +1133,12 @@ void CefBrowserPlatformDelegateOsr::SetScrollable(bool enable) {
     view->SetScrollable(enable);
 }
 
+void CefBrowserPlatformDelegateOsr::ScrollBy(float delta_x, float delta_y) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view)
+    view->ScrollBy(delta_x, delta_y);
+}
+
 void CefBrowserPlatformDelegateOsr::AdvanceFocusForIME(int focusType) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
