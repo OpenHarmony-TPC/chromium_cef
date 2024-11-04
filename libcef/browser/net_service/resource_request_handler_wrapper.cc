@@ -163,7 +163,7 @@ void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
       return;
     }
     auto navigation_lock = browser->browser_info()->CreateNavigationLock();
-    LOG(DEBUG) << "OnRequestErrorInUiTask IsMainFrame: " << request->IsMainFrame() << ", url: " << request->GetURL().ToString();
+    LOG(DEBUG) << "OnRequestErrorInUiTask IsMainFrame: " << request->IsMainFrame();
     if (request->IsMainFrame()) {
       load_handler->OnLoadStart(browser, frame, request->GetURL(), transition_type);
     }
@@ -874,7 +874,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                       const network::ResourceRequest& request,
                       int error_code,
                       bool safebrowsing_hit) override {
-    LOG(DEBUG) << "OnRequestError " << error_code << ", url: " << request.url.spec();
+    LOG(DEBUG) << "OnRequestError " << error_code;
     if (init_state_ && error_code != net::ERR_ABORTED) {
       CefRefPtr<CefRequestImpl> cef_request = new CefRequestImpl();
       cef_request->SetURL(CefString(request.url.spec()));

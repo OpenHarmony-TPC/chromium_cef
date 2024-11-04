@@ -138,10 +138,10 @@ void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
     // if filter not created, it will be re-created.
     // During application startup and loading, JS pre-registers ifream-related hosts.
     if (!OhGinJavascriptBridgeMessageFilter::FromHost(agent_scheduling_group, false)) {
-	scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter_new =
+        scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter_new =
             OhGinJavascriptBridgeMessageFilter::FromHost(
             agent_scheduling_group, /*create_if_not_exists=*/true);
-	filter_new->AddRoutingIdForHost(this, render_frame_host);
+        filter_new->AddRoutingIdForHost(this, render_frame_host);
     }
   }
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
@@ -974,7 +974,6 @@ CefRefPtr<CefListValue> ParseBaseValueTOCefValue(base::Value::List* value) {
 bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(const std::string& document_url,
     const std::string& method_name, int32_t object_id, bool is_async) {
   LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: "
-             << "document_url: " << document_url
              << ", method_name: " << method_name
              << ", object_id: " << object_id
              << ", is_async: " << is_async;
