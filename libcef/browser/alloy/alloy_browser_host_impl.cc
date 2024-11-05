@@ -2927,10 +2927,9 @@ bool AlloyBrowserHostImpl::NeedsReload() {
 #ifdef OHOS_AI
 void AlloyBrowserHostImpl::CreateOverlay(const gfx::ImageSkia& image,
                                          const gfx::Rect& image_rect,
-                                         const gfx::Point& touch_point,
-                                         const gfx::Rect& screen_rect) {
+                                         const gfx::Point& touch_point) {
   if (platform_delegate_) {
-    platform_delegate_->CreateOverlay(image, image_rect, touch_point, screen_rect);
+    platform_delegate_->CreateOverlay(image, image_rect, touch_point);
   }
 }
 

@@ -507,8 +507,7 @@ void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
 #ifdef OHOS_AI
 void CefBrowserPlatformDelegate::CreateOverlay(const gfx::ImageSkia& image,
                                                const gfx::Rect& image_rect,
-                                               const gfx::Point& touch_point,
-                                               const gfx::Rect& screen_rect) {
+                                               const gfx::Point& touch_point) {
   DCHECK(false);
 }
 
