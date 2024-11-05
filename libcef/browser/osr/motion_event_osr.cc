@@ -4,7 +4,7 @@
 // found in the LICENSE file.
 
 #include "libcef/browser/osr/motion_event_osr.h"
-
+#include "base/logging.h"
 #include <algorithm>
 
 #include "ui/events/base_event_utils.h"
@@ -201,6 +201,10 @@ void CefMotionEventOSR::UpdateTouch(const CefTouchEvent& touch, int id) {
 
 void CefMotionEventOSR::UpdateCachedAction(const CefTouchEvent& touch, int id) {
   DCHECK(GetPointerCount());
+  if (touch.type == CEF_TET_PRESSED || touch.type == CEF_TET_RELEASED) {
+    LOG(DEBUG) << "CefMotionEventOSR::UpdateCachedAction actiontype=" << GetAction()
+      << " pointercount=" << GetPointerCount() << " touchtype=" << touch.type;
+  }
   switch (touch.type) {
     case CEF_TET_PRESSED:
       if (GetPointerCount() == 1) {
