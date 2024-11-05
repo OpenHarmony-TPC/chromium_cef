@@ -865,6 +865,8 @@ bool TerminateRenderProcess() override;
 
 #if defined(OHOS_INPUT_EVENTS)
   uint64_t last_zoom_time_ = 0;
+  bool scrollable_ = true;
+  int scrollType_ = -1;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
   CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
