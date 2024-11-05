@@ -960,7 +960,7 @@ int CefBrowserCToCpp::SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
       _struct, urlTrustList.GetStruct(), detailErrMsg.GetWritableStruct());
 }
 
-cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget(bool isPopup) {
+cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget(bool isPopup) {
   return 0;
 }
 
