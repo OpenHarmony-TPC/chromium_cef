@@ -3688,6 +3688,13 @@ void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
 }
 
+void CefRenderWidgetHostViewOSR::ScrollBy(float delta_x, float delta_y) {
+  if (!render_widget_host_) {
+    return;
+  }
+  render_widget_host_->input_router()->ScrollBy(delta_x, delta_y);
+}
+
 void CefRenderWidgetHostViewOSR::OnDidNavigateMainFrameToNewPage() {
   ResetGestureDetection(false);
 }
