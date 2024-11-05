@@ -95,6 +95,7 @@ class OhAutofillManager : public AutofillManager {
   absl::optional<std::string> FormDataToJsonForSave(const FormData& form);
   void FillData(const std::string& json_str);
   std::string GetAttributeOrUniqueId(const FormFieldData& field);
+  void FillDataWithId(base::Value::Dict* dict);
   bool isFocusField(const FormFieldData& field_data,
                     const FormFieldData& field);
 
