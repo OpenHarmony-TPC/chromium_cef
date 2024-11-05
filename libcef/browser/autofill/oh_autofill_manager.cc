@@ -98,7 +98,7 @@ std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field
 }
 
 bool OhAutofillManager::isFocusField(const FormFieldData& field_data,
-                    const FormFieldData& field) {
+                                     const FormFieldData& field) {
   if (field_data.unique_renderer_id.is_null() || field.unique_renderer_id.is_null()) {
       return false;
   }
