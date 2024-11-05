@@ -708,15 +708,24 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       return;
     }
 
+#if defined(OHOS_NETWORK_LOAD)
+    MaybeLoadCookies(request_id, state, request, {}, std::move(exec_callback));
+#else
     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
+#endif
   }
 
   void MaybeLoadCookies(int32_t request_id,
                         RequestState* state,
                         network::ResourceRequest* request,
+                        const absl::optional<GURL>& new_url,
                         base::OnceClosure callback) {
     CEF_REQUIRE_IOT();
+#if defined(OHOS_NETWORK_LOAD)
     if (!cookie_helper::IsCookieableScheme(request->url,
+#else
+    if (!cookie_helper::IsCookieableScheme(new_url.value_or(request->url),
+#endif
                                            init_state_->cookieable_schemes_)
     ) {
       // The scheme does not support cookies.
@@ -738,6 +747,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         weak_ptr_factory_.GetWeakPtr(), request_id, request,
         std::move(callback));
     cookie_helper::LoadCookies(init_state_->browser_context_getter_, *request,
+                               new_url,
                                allow_cookie_callback,
                                std::move(done_cookie_callback));
   }
@@ -1327,10 +1337,8 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
     // Clear the cookie  first. we will get cookie for this redirect.
     request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
-    // Get cookies for redirect url.
-    request->url = new_url;
 
-    MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
+    MaybeLoadCookies(request_id, state, request, new_url, std::move(exec_callback));
   }
 #endif
 

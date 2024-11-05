@@ -44,6 +44,9 @@ using DoneCookieCallback =
 // called on the IO thread.
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
+#if defined(OHOS_NETWORK_LOAD)
+                 const absl::optional<GURL>& new_url,
+#endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback);
 
