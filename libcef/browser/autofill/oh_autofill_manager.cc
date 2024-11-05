@@ -46,6 +46,7 @@ const std::string KEY_RECT_W = "width";
 const std::string KEY_RECT_H = "height";
 const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
+const std::string VALUE_OFF = "off";
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
 const std::string KEY_USERNAME = "username";
@@ -89,11 +90,19 @@ CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
 
 std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
   auto attribute = field.autocomplete_attribute;
-  if (!attribute.empty()) {
+  if (!attribute.empty() || field.unique_renderer_id.is_null()) {
     return attribute;
   }
   auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
   return unique_renderer_id;
+}
+
+bool OhAutofillManager::isFocusField(const FormFieldData& field_data,
+                    const FormFieldData& field) {
+  if (field_data.unique_renderer_id.is_null() || field.unique_renderer_id.is_null()) {
+      return false;
+  }
+  return field_data.unique_renderer_id.value() === field.unique_renderer_id.value();
 }
 
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
@@ -122,9 +131,12 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
     auto key = GetAttributeOrUniqueId(field_data);
+    if (key == VALUE_OFF || !field_data.is_visible) {
+        continue;
+    }
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
-        key == GetAttributeOrUniqueId(field) ? 1 : 0));
+        isFocusField(field_data, field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
