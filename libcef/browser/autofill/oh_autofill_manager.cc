@@ -131,9 +131,6 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   for (const FormFieldData& field_data : form.fields) {
     base::Value::List list;
     auto key = GetAttributeOrUniqueId(field_data);
-    if (key == VALUE_OFF || !field_data.is_visible) {
-        continue;
-    }
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
         isFocusField(field_data, field) ? 1 : 0));
