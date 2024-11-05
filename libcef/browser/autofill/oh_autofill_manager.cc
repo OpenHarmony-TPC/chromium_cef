@@ -211,6 +211,33 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   return base::WriteJson(view_data_list);
 }
 
+void OhAutofillManager::FillDataWithId(base::Value::Dict* dict) {
+  for (auto it = dict->begin(); it != dict->end(); it++) {
+    const base::Value::Dict* sub_dict = dict->FindDict(it->first);
+    if (sub_dict) {
+      const std::string* str = sub_dict->FindString(KEY_VALUE);
+      if (!str) {
+        continue;
+      }
+      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
+      if (!index.has_value() || index.value() <= 0) {
+        continue;
+      }
+      uint32_t i = static_cast<uint32_t>(index.value());
+      uint32_t size = static_cast<uint32_t>(form_->fields.size());
+      if (i > size) {
+          continue;
+      }
+      FormFieldData& field_data = form_->fields[i - 1];
+      if (GetAttributeOrUniqueId(field_data) == VALUE_OFF || !field_data.is_visible) {
+          continue;
+      }
+      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
+                                                 base::UTF8ToUTF16(*str));
+    }
+  }
+}
+
 void OhAutofillManager::FillData(const std::string& json_str) {
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
@@ -242,28 +269,14 @@ void OhAutofillManager::FillData(const std::string& json_str) {
 
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value || value->empty()) {
+    if (!value || value->empty() || GetAttributeOrUniqueId(field_data) == VALUE_OFF ||
+        !field_data.is_visible) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
                                                base::UTF8ToUTF16(*value));
   }
-  for (auto it = root_dict->begin(); it != root_dict->end(); it++) {
-    const base::Value::Dict* sub_dict = root_dict->FindDict(it->first);
-    if (sub_dict) {
-      const std::string* str = sub_dict->FindString(KEY_VALUE);
-      if (!str) {
-        continue;
-      }
-      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
-      if (!index.has_value() || index.value() <= 0 || index.value() > form_->fields.size()) {
-        continue;
-      }
-      uint32_t i = static_cast<uint32_t>(index.value()) - 1;
-      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
-                                                 base::UTF8ToUTF16(*str));
-    }
-  }
+  FillDataWithId(root_dict);
   is_show_ = false;
 }
 
