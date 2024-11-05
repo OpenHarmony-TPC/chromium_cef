@@ -1006,6 +1006,24 @@ void CEF_CALLBACK browser_set_back_forward_cache_options(
   CefBrowserCppToC::Get(self)->SetBackForwardCacheOptions(size, timeToLive);
 }
 
+void CEF_CALLBACK
+browser_set_ad_block_enabled_for_site(struct _cef_browser_t* self,
+                                      int is_adblock_enabled,
+                                      int main_frame_tree_node_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetAdBlockEnabledForSite(
+      is_adblock_enabled ? true : false, main_frame_tree_node_id);
+}
+
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1080,6 +1098,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_set_url_trust_list_with_err_msg;
   GetStruct()->set_back_forward_cache_options =
       browser_set_back_forward_cache_options;
+  GetStruct()->set_ad_block_enabled_for_site =
+      browser_set_ad_block_enabled_for_site;
 }
 
 // DESTRUCTOR - Do not edit by hand.

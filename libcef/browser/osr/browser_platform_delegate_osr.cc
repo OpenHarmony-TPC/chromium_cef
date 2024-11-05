@@ -835,6 +835,19 @@ void CefBrowserPlatformDelegateOsr::OnAdsBlocked(
   }
 }
 
+bool CefBrowserPlatformDelegateOsr::TrigAdBlockEnabledForSiteFromUi(
+    const std::string& main_frame_url,
+    int main_frame_tree_node_id) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+
+  if (handler.get()) {
+    return handler->TrigAdBlockEnabledForSiteFromUi(
+        browser_, CefString(main_frame_url), main_frame_tree_node_id);
+  }
+
+  return false;
+}
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

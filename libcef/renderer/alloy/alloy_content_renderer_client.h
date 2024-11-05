@@ -218,6 +218,8 @@ class AlloyContentRendererClient
   void TriggerElementHidingInFrame(int routing_id) override;
 
   void TriggerUserElementHidingInFrame(int routing_id) override;
+
+  bool GetAdBlockEnabledByFrame(content::RenderFrame* render_frame);
 #endif
 
  private:

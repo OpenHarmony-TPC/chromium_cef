@@ -976,6 +976,23 @@ void CefBrowserCToCpp::SetBackForwardCacheOptions(int32_t size,
   _struct->set_back_forward_cache_options(_struct, size, timeToLive);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::SetAdBlockEnabledForSite(bool is_adblock_enabled,
+                                                int main_frame_tree_node_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_ad_block_enabled_for_site)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_ad_block_enabled_for_site(_struct, is_adblock_enabled,
+                                         main_frame_tree_node_id);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

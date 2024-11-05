@@ -196,6 +196,15 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ShowPasswordDialog(bool is_update, const CefString& url) {}
+
+  ///
+  /// trigger adblock switch from ui.
+  ///
+  /*--cef()--*/
+  virtual bool TrigAdBlockEnabledForSiteFromUi(
+      CefRefPtr<CefBrowser> browser,
+      const CefString& main_frame_url,
+      int main_frame_tree_node_id) { return false;}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

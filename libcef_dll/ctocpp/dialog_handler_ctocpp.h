@@ -64,6 +64,9 @@ class CefDialogHandlerCToCpp
                            const std::vector<CefAutofillPopupItem>& menu_items,
                            bool is_password_popup_type) override;
   void ShowPasswordDialog(bool is_update, const CefString& url) override;
+  bool TrigAdBlockEnabledForSiteFromUi(CefRefPtr<CefBrowser> browser,
+                                       const CefString& main_frame_url,
+                                       int main_frame_tree_node_id) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

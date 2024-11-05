@@ -278,6 +278,9 @@ class CefBrowserHostBase : public CefBrowserHost,
 
   void EnableAdsBlock(bool enable) override;
 
+  void SetAdBlockEnabledForSite(
+      bool is_adblock_enabled,
+      int main_frame_tree_node_id) override;
 #endif
 
   void RegisterArkJSfunction(const CefString& object_name,

@@ -2652,6 +2652,16 @@ void AlloyBrowserHostImpl::OnAdsBlocked(
   }
 }
 
+bool AlloyBrowserHostImpl::TrigAdBlockEnabledForSiteFromUi(
+    const std::string& main_frame_url,
+    int main_frame_tree_node_id) {
+  if (platform_delegate_) {
+    return platform_delegate_->TrigAdBlockEnabledForSiteFromUi(
+        main_frame_url, main_frame_tree_node_id);
+  }
+
+  return false;
+}
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

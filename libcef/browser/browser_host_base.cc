@@ -3608,6 +3608,17 @@ bool CefBrowserHostBase::IsAdsBlockEnabledForCurPage() {
 
   return GetWebContents()->IsAdsBlockEnabledForCurPage();
 }
+
+void CefBrowserHostBase::SetAdBlockEnabledForSite(
+    bool is_adblock_enabled,
+    int main_frame_tree_node_id) {
+  if (!GetWebContents()) {
+    LOG(ERROR) << "[AdBlock] SetAdBlockEnabledForSite get webcontents null";
+    return;
+  }
+
+  GetWebContents()->SetAdBlockEnabledForSite(is_adblock_enabled, main_frame_tree_node_id);
+}
 #endif
 
 void CefBrowserHostBase::SetSavePasswordAutomatically(bool enable) {
