@@ -287,13 +287,20 @@ bool CanSaveOrLoadCookies(const CefBrowserContext::Getter& browser_context_gette
 
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
+#if defined(OHOS_NETWORK_LOAD)
+                 const absl::optional<GURL>& new_url,
+#endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
   CEF_REQUIRE_IOT();
 
   if ((request.load_flags & net::LOAD_DO_NOT_SEND_COOKIES) ||
       request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
+#if defined(OHOS_NETWORK_LOAD)
+      new_url.value_or(request.url).IsAboutBlank()
+#else
       request.url.IsAboutBlank()
+#endif
 #if defined(OHOS_EX_EXCEPTION_LIST)
       || !CanSaveOrLoadCookies(browser_context_getter, request)
 #endif
@@ -305,7 +312,12 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   CEF_POST_TASK(
       CEF_UIT,
-      base::BindOnce(LoadCookiesOnUIThread, browser_context_getter, request.url,
+                     base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
+#if defined(OHOS_NETWORK_LOAD)
+                     new_url.value_or(request.url),
+#else
+                     request.url,
+#endif
                      GetCookieOptions(request, /*for_loading_cookies=*/true),
                      net::CookiePartitionKeyCollection(), allow_cookie_callback,
                      std::move(done_callback)));
