@@ -705,7 +705,7 @@ bool TerminateRenderProcess() override;
   std::string GetDataURI(const std::string& data);
 
   void SetNativeWindow(cef_native_window_t window) override;
-  cef_accelerated_widget_t GetAcceleratedWidget(bool isPopup);
+  uint32_t GetAcceleratedWidget(bool isPopup) override;
 
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;

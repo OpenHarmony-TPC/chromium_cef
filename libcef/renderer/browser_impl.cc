@@ -531,4 +531,8 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
     web_frame->SendProcessMessage(PID_BROWSER, message);
   }
 }
+
+cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget(bool isPopup) {
+  return 0;
+}
 #endif
