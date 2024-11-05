@@ -948,8 +948,7 @@ NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::CreateOverlay(CefRefPtr<CefBrowser> browser,
                                            CefRefPtr<CefImage> cef_image,
                                            const CefRect& cef_image_rect,
-                                           const CefPoint& cef_touch_point,
-                                           const CefRect& cef_screen_rect) {
+                                           const CefPoint& cef_touch_point) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -973,13 +972,13 @@ void CefRenderHandlerCToCpp::CreateOverlay(CefRefPtr<CefBrowser> browser,
   // Execute
   _struct->create_overlay(_struct, CefBrowserCppToC::Wrap(browser),
                           CefImageCppToC::Wrap(cef_image), &cef_image_rect,
-                          &cef_touch_point, &cef_screen_rect);
+                          &cef_touch_point);
 }
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnOverlayStateChanged(
     CefRefPtr<CefBrowser> browser,
-    const CefRect& cef_screen_rect) {
+    const CefRect& cef_image_rect) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -997,7 +996,7 @@ void CefRenderHandlerCToCpp::OnOverlayStateChanged(
 
   // Execute
   _struct->on_overlay_state_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                                    &cef_screen_rect);
+                                    &cef_image_rect);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -1126,20 +1125,20 @@ NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
                                                 CefSize& size) {
   shutdown_checker::AssertNotShutdown();
- 
+
   cef_render_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_device_pixel_size)) {
     return;
   }
- 
+
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
+
   // Verify param: browser; type: refptr_diff
   DCHECK(browser.get());
   if (!browser.get()) {
     return;
   }
- 
+
   // Execute
   _struct->get_device_pixel_size(_struct, CefBrowserCppToC::Wrap(browser),
                                  &size);
