@@ -102,7 +102,7 @@ bool OhAutofillManager::isFocusField(const FormFieldData& field_data,
   if (field_data.unique_renderer_id.is_null() || field.unique_renderer_id.is_null()) {
       return false;
   }
-  return field_data.unique_renderer_id.value() === field.unique_renderer_id.value();
+  return field_data.unique_renderer_id.value() == field.unique_renderer_id.value();
 }
 
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
