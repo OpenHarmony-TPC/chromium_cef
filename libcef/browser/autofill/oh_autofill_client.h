@@ -20,6 +20,8 @@
 #include "content/public/browser/web_contents_user_data.h"
 #include "include/cef_browser.h"
 
+#include "libcef/browser/autofill/oh_autofill_manager.h"
+
 namespace autofill {
 class AutocompleteHistoryManager;
 class AutofillDriver;
@@ -198,6 +200,12 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   void Dismissed();
   void SuggestionSelected(int position);
 
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  void SetPasswordPopupHider(OhAutofillManager* manager) {
+    password_popup_hider_ = manager;
+  }
+#endif
+
  private:
   // `use_android_autofill_manager` determines which DriverInitCallback to use
   // for the ContentAutofillDriverFactory: autofill::BrowserDriverInitHook() or
@@ -221,6 +229,10 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   std::unique_ptr<autofill::AutocompleteHistoryManager>
       autocomplete_history_manager_;
   CefRefPtr<CefWebMessageReceiver> callback_;
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  OhAutofillManager* password_popup_hider_ = nullptr;
+#endif
+
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;
 #endif
