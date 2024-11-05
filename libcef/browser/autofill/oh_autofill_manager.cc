@@ -208,7 +208,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   return base::WriteJson(view_data_list);
 }
 
-void OhAutofillManager::FillDataWithId(base::Value::Dict* dict) {
+void OhAutofillManager::FillDataWithId(const base::Value::Dict* dict) {
   for (auto it = dict->begin(); it != dict->end(); it++) {
     const base::Value::Dict* sub_dict = dict->FindDict(it->first);
     if (sub_dict) {
