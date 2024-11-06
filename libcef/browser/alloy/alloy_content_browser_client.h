@@ -403,6 +403,10 @@ CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
   bool ShouldIsolateErrorPage(bool in_main_frame) override;
 #endif
 
+#ifdef OHOS_ARKWEB_ADBLOCK
+  void UpdateAdBlockEnabledForSite(
+      content::RenderFrameHost* rfh, const GURL& gurl) override;
+#endif
  private:
   // Returns the extension or app associated with |site_instance| or NULL.
   const extensions::Extension* GetExtension(

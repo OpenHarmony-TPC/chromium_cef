@@ -94,6 +94,8 @@ public:
   int SetUrlTrustListWithErrMsg(const CefString &urlTrustList,
                                 CefString &detailErrMsg) override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
+  void SetAdBlockEnabledForSite(bool is_adblock_enabled,
+                                int main_frame_tree_node_id) override;
 };
 
 #endif // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_

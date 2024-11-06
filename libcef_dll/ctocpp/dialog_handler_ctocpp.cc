@@ -256,6 +256,40 @@ void CefDialogHandlerCToCpp::ShowPasswordDialog(bool is_update,
   _struct->show_password_dialog(_struct, is_update, url.GetStruct());
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefDialogHandlerCToCpp::TrigAdBlockEnabledForSiteFromUi(
+    CefRefPtr<CefBrowser> browser,
+    const CefString& main_frame_url,
+    int main_frame_tree_node_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, trig_ad_block_enabled_for_site_from_ui)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return false;
+  }
+  // Verify param: main_frame_url; type: string_byref_const
+  DCHECK(!main_frame_url.empty());
+  if (main_frame_url.empty()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->trig_ad_block_enabled_for_site_from_ui(
+      _struct, CefBrowserCppToC::Wrap(browser), main_frame_url.GetStruct(),
+      main_frame_tree_node_id);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefDialogHandlerCToCpp::CefDialogHandlerCToCpp() {}

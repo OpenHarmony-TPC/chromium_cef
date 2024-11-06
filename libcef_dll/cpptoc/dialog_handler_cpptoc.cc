@@ -253,6 +253,40 @@ dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
       is_update ? true : false, CefString(url));
 }
 
+int CEF_CALLBACK dialog_handler_trig_ad_block_enabled_for_site_from_ui(
+    struct _cef_dialog_handler_t* self,
+    cef_browser_t* browser,
+    const cef_string_t* main_frame_url,
+    int main_frame_tree_node_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return 0;
+  }
+  // Verify param: main_frame_url; type: string_byref_const
+  DCHECK(main_frame_url);
+  if (!main_frame_url) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefDialogHandlerCppToC::Get(self)->TrigAdBlockEnabledForSiteFromUi(
+          CefBrowserCToCpp::Wrap(browser), CefString(main_frame_url),
+          main_frame_tree_node_id);
+
+  // Return type: bool
+  return _retval;
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -264,6 +298,8 @@ CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_ads_blocked = dialog_handler_on_ads_blocked;
   GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
   GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
+  GetStruct()->trig_ad_block_enabled_for_site_from_ui =
+      dialog_handler_trig_ad_block_enabled_for_site_from_ui;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -154,6 +154,9 @@ class CefBrowserPlatformDelegateOsr
   void OnAdsBlocked(const std::string& main_frame_url,
                     const std::map<std::string, int32_t>& subresource_blocked,
                     bool is_site_first_report) override;
+
+  bool TrigAdBlockEnabledForSiteFromUi(const std::string& main_frame_url,
+                                       int main_frame_tree_node_id) override;
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

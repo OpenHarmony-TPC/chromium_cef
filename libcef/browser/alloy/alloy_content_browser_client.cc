@@ -1847,6 +1847,14 @@ AlloyContentBrowserClient::CreateThrottlesForNavigation(
     throttle_manager->MaybeAppendNavigationThrottles(navigation_handle,
                                                      &throttles);
   }
+
+  if (!navigation_handle->IsDownload() && navigation_handle->IsInMainFrame() &&
+      navigation_handle->GetURL().SchemeIsHTTPOrHTTPS() &&
+      navigation_handle->GetWebContents()) {
+    LOG(INFO) << "[AdBlock] Start to get adblock switch from UI";
+    navigation_handle->GetWebContents()->TrigAdBlockEnabledForSiteFromUi(
+        navigation_handle->GetURL().spec());
+  }
 #endif  // OHOS_ARKWEB_ADBLOCK
 
   return throttles;
@@ -3261,5 +3269,19 @@ bool AlloyContentBrowserClient::ShouldOverrideUrlLoading(
 
 bool AlloyContentBrowserClient::ShouldIsolateErrorPage(bool in_main_frame) {
   return false;
+}
+#endif
+
+#ifdef OHOS_ARKWEB_ADBLOCK
+void AlloyContentBrowserClient::UpdateAdBlockEnabledForSite(
+    content::RenderFrameHost* rfh,
+    const GURL& gurl) {
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(rfh);
+  if (!web_contents) {
+    return;
+  }
+
+  web_contents->TrigAdBlockEnabledForSiteFromUi(gurl.spec());
 }
 #endif
