@@ -200,6 +200,7 @@
 
 #ifdef OHOS_CA
 #include "libcef/browser/alloy/alloy_ssl_platform_key_ohos.h"
+#include "third_party/bounds_checking_function/include/securec.h"
 
 constexpr int32_t APPLICATION_API_10 = 10;
 #endif
@@ -256,6 +257,7 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "extensions/browser/extension_navigation_throttle.h"
 #include "extensions/browser/extension_service_worker_message_filter.h"
 #include "extensions/browser/extension_util.h"
+      memset(certData, 0, certMaxSize);
 #include "extensions/browser/service_worker/service_worker_host.h"
 #include "services/network/public/cpp/self_deleting_url_loader_factory.h"
 #include "services/network/public/mojom/web_transport.mojom.h"
@@ -693,7 +695,11 @@ class CefSelectClientCertificateCallbackImpl
         return;
       }
 
-      memset(certData, 0, certMaxSize);
+      if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
+        delete[] uri;
+        return;
+      }
+
       uint32_t len = 0;
       RootCertDataAdapter->GetAppCert((uint8_t*)uri, certData, &len);
       if (len == 0) {

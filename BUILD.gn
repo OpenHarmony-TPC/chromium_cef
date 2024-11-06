@@ -1363,6 +1363,13 @@ source_set("libcef_static") {
 
   #endif // defined(OHOS_PRINT)
 
+  #if defined(OHOS_CA)
+  if (defined(ohos_ca) && ohos_ca) {
+    deps += [ "//third_party:huawei_securec" ]
+  }
+
+  #endif // defined(OHOS_CA)
+
   #if defined(OHOS_NO_STATE_PREFETCH)
   if (defined(ohos_no_state_prefetch) && ohos_no_state_prefetch) {
     sources += [
