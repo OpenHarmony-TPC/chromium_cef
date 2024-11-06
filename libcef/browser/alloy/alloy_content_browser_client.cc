@@ -257,7 +257,6 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "extensions/browser/extension_navigation_throttle.h"
 #include "extensions/browser/extension_service_worker_message_filter.h"
 #include "extensions/browser/extension_util.h"
-      memset(certData, 0, certMaxSize);
 #include "extensions/browser/service_worker/service_worker_host.h"
 #include "services/network/public/cpp/self_deleting_url_loader_factory.h"
 #include "services/network/public/mojom/web_transport.mojom.h"
