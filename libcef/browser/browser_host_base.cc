@@ -124,7 +124,6 @@ static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
 enum class WebScrollType : int {
     UNKNOWN = -1,
     EVENT = 0,
-    POSITION
 };
 #endif  // defined(OHOS_INPUT_EVENTS)
 
@@ -3266,6 +3265,10 @@ void CefBrowserHostBase::ScrollTo(float x, float y) {
 void CefBrowserHostBase::ScrollBy(float delta_x, float delta_y) {
   // By calling cc interface SetSynchronousInputHandlerRootScrollOffset,
   // sliding can be realized without waiting for rendering to be completed.
+  if (!scrollable_ && scrollType_ != static_cast<int>(WebScrollType::EVENT)) {
+    return;
+  }
+
   if (platform_delegate_) {
     platform_delegate_->ScrollBy(delta_x, delta_y);
   }
@@ -3298,18 +3301,20 @@ void CefBrowserHostBase::SetOverscrollMode(int overscrollMode) {
 }
 
 void CefBrowserHostBase::SetScrollable(bool enable, int scrollType) {
-  LOG(DEBUG) << "set scrollable: " << enable;
+  LOG(DEBUG) << "set scrollable: " << enable << ", scrollType = " << scrollType;
+  scrollable_ = enable;
+  scrollType_ = scrollType;
 
   if (platform_delegate_) {
     platform_delegate_->SetScrollable(enable);
   }
 
-  if (scrollType == static_cast<int>(WebScrollType::UNKNOWN) ||
-      scrollType == static_cast<int>(WebScrollType::POSITION) ||
-      enable) {
-    auto frame = GetMainFrame();
-    if (frame && frame->IsValid()) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    if (scrollType == static_cast<int>(WebScrollType::UNKNOWN)) {
       static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(enable);
+    } else if (scrollType == static_cast<int>(WebScrollType::EVENT)) {
+      static_cast<CefFrameHostImpl*>(frame.get())->SetScrollable(true);
     }
   }
 }
