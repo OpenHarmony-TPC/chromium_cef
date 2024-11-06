@@ -759,6 +759,11 @@ bool TerminateRenderProcess() override;
 #endif
 
   void SetPopupWindow(cef_native_window_t popupWindow) override;
+
+#ifdef OHOS_USERAGENT
+  std::string GetCustomUserAgent();
+#endif
+
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
@@ -886,6 +891,9 @@ bool TerminateRenderProcess() override;
 #ifdef OHOS_ITP
   mutable base::Lock lock_;
   bool intelligent_tracking_prevention_cookies_enabled_ GUARDED_BY(lock_) = false;
+#endif
+#ifdef OHOS_USERAGENT
+  std::string custom_user_agent_;
 #endif
 #endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);

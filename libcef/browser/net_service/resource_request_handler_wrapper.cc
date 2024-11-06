@@ -396,6 +396,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       DCHECK(!accept_language_.empty());
       user_agent_ =
           CefAppManager::Get()->GetContentClient()->browser()->GetUserAgent();
+#ifdef OHOS_USERAGENT
+      if (browser) {
+        custom_user_agent_ = browser->GetCustomUserAgent();
+      }
+#endif
       DCHECK(!user_agent_.empty());
     }
 
@@ -431,6 +436,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     // Default values for standard headers.
     std::string accept_language_;
     std::string user_agent_;
+#ifdef OHOS_USERAGENT
+    std::string custom_user_agent_;
+#endif
 
     // Used to route authentication and certificate callbacks through the
     // associated StoragePartition instance.
@@ -1063,6 +1071,15 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
   #endif
     GetOhosResourceHandlerStillInIO(request_id, request, std::move(callback));
+  }
+#endif
+
+#ifdef OHOS_USERAGENT
+  std::string GetCustomUserAgent() override {
+    if (init_state_) {
+      return init_state_->custom_user_agent_;
+    }
+    return "";
   }
 #endif
 

@@ -436,6 +436,9 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
       gurl, content::Referrer(web_contents->GetLastCommittedURL(),
                               network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
+#if defined(OHOS_USERAGENT)
+  params->add_request_header(net::HttpRequestHeaders::kUserAgent, custom_user_agent_);
+#endif
   manager->DownloadUrl(std::move(params));
 }
 
@@ -954,6 +957,10 @@ void CefBrowserHostBase::PutUserAgent(const CefString& ua) {
   if (!GetWebContents()) {
     return;
   }
+
+#if defined(OHOS_USERAGENT)
+  custom_user_agent_ = ua;
+#endif
 
 #if defined(OHOS_EX_UA)
   std::string user_agent = ua;
@@ -4077,3 +4084,9 @@ void CefBrowserHostBase::SetPopupWindow(cef_native_window_t window)
 {
   popup_widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
+
+#if defined(OHOS_USERAGENT)
+std::string CefBrowserHostBase::GetCustomUserAgent() {
+  return custom_user_agent_;
+}
+#endif
