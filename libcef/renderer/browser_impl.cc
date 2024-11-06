@@ -532,7 +532,7 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
   }
 }
 
-cef_accelerated_widget_t CefBrowserHostBase::GetAcceleratedWidget(bool isPopup) {
+cef_accelerated_widget_t CefBrowserImpl::GetAcceleratedWidget(bool isPopup) {
   return 0;
 }
 #endif
