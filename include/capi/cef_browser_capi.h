@@ -532,6 +532,14 @@ typedef struct _cef_browser_t {
       struct _cef_browser_t* self,
       int32_t size,
       int32_t timeToLive);
+
+  ///
+  /// Set adblock switch
+  ///
+  void(CEF_CALLBACK* set_ad_block_enabled_for_site)(
+      struct _cef_browser_t* self,
+      int is_adblock_enabled,
+      int main_frame_tree_node_id);
 } cef_browser_t;
 
 ///

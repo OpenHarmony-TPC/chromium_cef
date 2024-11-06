@@ -112,6 +112,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void EnableAdsBlock(bool enable) override {}
   bool IsAdsBlockEnabled() override { return false; }
   bool IsAdsBlockEnabledForCurPage() override { return false; }
+
+  void SetAdBlockEnabledForSite(
+      bool is_adblock_enabled,
+      int main_frame_tree_node_id) override  {}
 #endif
 
   // #ifdefined(OHOS_EX_PASSWORD)

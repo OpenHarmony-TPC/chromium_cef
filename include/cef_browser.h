@@ -525,6 +525,13 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) = 0;
 
+  /// Set adblock switch
+  ///
+  /*--cef()--*/
+  virtual void SetAdBlockEnabledForSite(
+      bool is_adblock_enabled,
+      int main_frame_tree_node_id) = 0;
+
   ///
   /// Get window id.
   ///

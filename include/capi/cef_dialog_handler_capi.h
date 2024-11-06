@@ -195,6 +195,15 @@ typedef struct _cef_dialog_handler_t {
   void(CEF_CALLBACK* show_password_dialog)(struct _cef_dialog_handler_t* self,
                                            int is_update,
                                            const cef_string_t* url);
+
+  ///
+  /// trigger adblock switch from ui.
+  ///
+  int(CEF_CALLBACK* trig_ad_block_enabled_for_site_from_ui)(
+      struct _cef_dialog_handler_t* self,
+      struct _cef_browser_t* browser,
+      const cef_string_t* main_frame_url,
+      int main_frame_tree_node_id);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

@@ -14,6 +14,7 @@
 #include "base/memory/scoped_refptr.h"
 #include "build/build_config.h"
 #include "build/chromeos_buildflags.h"
+#include "components/autofill/content/browser/content_autofill_driver.h"
 #include "components/autofill/content/common/mojom/autofill_driver.mojom-forward.h"
 #include "components/autofill/core/common/password_generation_util.h"
 #include "components/autofill/core/common/unique_ids.h"
@@ -332,7 +333,8 @@ class OhPasswordManagerClient
   absl::optional<std::string> PasswordFormToJsonForSave(
       const password_manager::PasswordForm& form);
 
-  void SetShouldSuppressKeyboard(bool suppress);
+  void SuppressKeyboard();
+  void UnsuppressKeyboard();
 
   bool IsLoginInfoConsistentWithFilled(
       const password_manager::PasswordForm& info);
@@ -397,7 +399,10 @@ class OhPasswordManagerClient
   autofill::InputFillRequestData last_request_fill_username_;
   autofill::InputFillRequestData last_request_fill_password_;
 
-  bool is_keyboard_supressed_ = false;
+  // Keyboard suppressor
+  bool is_need_restore_keyboard_ = false;
+  raw_ptr<autofill::ContentAutofillDriver> suppressed_driver_ = nullptr;
+  base::OneShotTimer unsuppress_timer_;
 #endif
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();

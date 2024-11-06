@@ -462,6 +462,12 @@ void CefBrowserPlatformDelegate::OnAdsBlocked(
     bool is_site_first_report) {
   NOTIMPLEMENTED();
 }
+
+bool CefBrowserPlatformDelegate::TrigAdBlockEnabledForSiteFromUi(
+    const std::string& main_frame_url,
+    int main_frame_tree_node_id) {
+  return false;
+}
 #endif
 
 #if defined(OHOS_EX_PASSWORD)

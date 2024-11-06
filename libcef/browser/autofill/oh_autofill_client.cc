@@ -26,7 +26,6 @@
 
 #include "chrome/browser/browser_process.h"
 
-#include "libcef/browser/autofill/oh_autofill_manager.h"
 #if defined(OHOS_EX_PASSWORD)
 #include "base/base_switches.h"
 #include "base/command_line.h"
@@ -366,6 +365,17 @@ void OhAutofillClient::HideAutofillPopup(autofill::PopupHidingReason reason) {
   delegate_.reset();
 #if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
   GetWebContents().HideAutofillPopup();
+#endif
+
+#if defined(OHOS_PASSWORD_AUTOFILL)
+  if (password_popup_hider_ && reason == PopupHidingReason::kTabGone) {
+    auto hidePopupStr = password_popup_hider_->QueryPopupShowAndGetHideStr();
+    if (hidePopupStr.has_value() && OnAutofillEvent(hidePopupStr.value())) {
+      LOG(INFO) << "visibility changed, the password autofill popup is hidden";
+      password_popup_hider_->SetPasswordPopupShow(false);
+    }
+    password_popup_hider_ = nullptr;
+  }
 #endif
 }
 

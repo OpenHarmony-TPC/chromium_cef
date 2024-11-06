@@ -4,8 +4,6 @@
 
 #include "libcef/browser/password/oh_password_manager_client.h"
 
-#include <codecvt>
-#include <locale>
 #include <memory>
 #include <string>
 #include <utility>
@@ -826,15 +824,16 @@ absl::optional<std::string> OhPasswordManagerClient::PasswordFormToJsonForSave(
 
 void OhPasswordManagerClient::ProcessAutofillCancel(
     const std::string& fillContent) {
-  // If it is on the PC platform, or if the request is not sent by me, I will
-  // not handle the fill cancle event.
-  if (!is_keyboard_supressed_) {
+  // If the soft keyboard does not need to be restored, the fill cancel event
+  // will not be processed.
+  if (!is_need_restore_keyboard_) {
     LOG(INFO) << "don't need to handle the fill cancle event";
     return;
   }
+  is_need_restore_keyboard_ = false;
 
   LOG(INFO) << "autofill handle fill cancel event";
-  SetShouldSuppressKeyboard(false);
+  UnsuppressKeyboard();
 
   if (!web_contents()) {
     LOG(ERROR) << "web_contents is nullptr";
@@ -894,7 +893,7 @@ void OhPasswordManagerClient::AutoFillWithIMFEvent(bool is_username,
       LOG(ERROR) << "failed to call autofill for request";
       return;
     }
-    SetShouldSuppressKeyboard(true);
+    is_need_restore_keyboard_ = true;
   }
 }
 
@@ -902,9 +901,8 @@ void OhPasswordManagerClient::FillData(const std::string& page_url,
                                        const std::string& username,
                                        const std::string& password,
                                        bool is_other_account) {
-  if (is_keyboard_supressed_) {
-    SetShouldSuppressKeyboard(false);
-  }
+  UnsuppressKeyboard();
+  is_need_restore_keyboard_ = false;
   auto username_id = last_request_fill_username_.field_renderer_id;
   auto password_id = last_request_fill_password_.field_renderer_id;
   auto digest = is_other_account
@@ -921,7 +919,7 @@ void OhPasswordManagerClient::FillData(const std::string& page_url,
                         base::UTF8ToUTF16(password));
 }
 
-void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
+void OhPasswordManagerClient::SuppressKeyboard() {
   if (!web_contents()) {
     LOG(ERROR) << "web_contents is nullptr";
     return;
@@ -937,9 +935,26 @@ void OhPasswordManagerClient::SetShouldSuppressKeyboard(bool suppress) {
     LOG(ERROR) << "autofill_driver is nullptr";
     return;
   }
-  LOG(INFO) << "set the keyboard suppressd=" << (suppress ? "true" : "false");
-  autofill_driver->SetShouldSuppressKeyboardCallback(suppress);
-  is_keyboard_supressed_ = suppress;
+  if (suppressed_driver_.get() == autofill_driver) {
+    return;
+  }
+  UnsuppressKeyboard();
+  LOG(INFO) << "Set the soft keyboard to be suppressd";
+  autofill_driver->SetShouldSuppressKeyboard(true);
+  suppressed_driver_ = autofill_driver;
+  is_need_restore_keyboard_ = true;
+  unsuppress_timer_.Start(FROM_HERE, base::Seconds(1), this,
+                          &OhPasswordManagerClient::UnsuppressKeyboard);
+}
+
+void OhPasswordManagerClient::UnsuppressKeyboard() {
+  if (!suppressed_driver_) {
+    return;
+  }
+  LOG(INFO) << "Set the soft keyboard to be unsuppressd";
+  suppressed_driver_->SetShouldSuppressKeyboard(false);
+  suppressed_driver_ = nullptr;
+  unsuppress_timer_.Stop();
 }
 
 bool OhPasswordManagerClient::IsLoginInfoConsistentWithFilled(
@@ -992,6 +1007,13 @@ void OhPasswordManagerClient::NotifyAutofillPopupShow(bool is_show) {
     return;
   }
   autofill_manager->SetPasswordPopupShow(is_show);
+
+  auto autofill_client =
+      autofill::OhAutofillClient::FromWebContents(web_contents());
+  if (autofill_client) {
+    autofill_client->SetPasswordPopupHider(is_show ? autofill_manager
+                                                   : nullptr);
+  }
 }
 
 void OhPasswordManagerClient::FillAccountSuggestion(
@@ -1054,7 +1076,7 @@ void OhPasswordManagerClient::OnRequestAutofill(
           LOG(ERROR) << "failed to call autofill for request";
           return;
         }
-        SetShouldSuppressKeyboard(true);
+        SuppressKeyboard();
         UpdateLastRequestFilledItems(username_data, password_data);
       }
     }

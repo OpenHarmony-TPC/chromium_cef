@@ -980,6 +980,31 @@ bool AlloyContentRendererClient::HandleNavigation(
 #endif
 
 #ifdef OHOS_ARKWEB_ADBLOCK
+bool AlloyContentRendererClient::GetAdBlockEnabledByFrame(
+    content::RenderFrame* render_frame) {
+  if (!render_frame)
+    return false;
+  // check global switch
+  if (!render_frame->GetGlobalAdblockEnabled()) {
+    return false;
+  }
+  if (render_frame->IsMainFrame()) {
+    blink::WebLocalFrame* main_web_frame = render_frame->GetWebFrame();
+    if (main_web_frame)
+      return main_web_frame->GetAdBlockEnabled();
+  }
+
+  // Subframe should get adblock switch from MainFrame
+  auto* main_render_frame = render_frame->GetMainRenderFrame();
+  if (main_render_frame) {
+    blink::WebLocalFrame* main_web_frame = main_render_frame->GetWebFrame();
+    if (!main_web_frame)
+      return false;
+    return main_web_frame->GetAdBlockEnabled();
+  }
+  return false;
+}
+
 void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
   // |render_frame| might be dead by now.
   auto* render_frame = content::RenderFrame::FromRoutingID(routing_id);
@@ -998,6 +1023,11 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
       web_frame->GetDocumentLoader()->GetWebSubresourceFilter();
   if (!filter) {
     LOG(DEBUG) << "[AdBlock] TriggerElementHidingInFrame filter null";
+    return;
+  }
+
+  if (!GetAdBlockEnabledByFrame(render_frame)) {
+    LOG(DEBUG) << "[AdBlock] AdBlock disabled";
     return;
   }
 
