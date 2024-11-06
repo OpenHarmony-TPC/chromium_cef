@@ -532,6 +532,13 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void SetAdBlockEnabledForSite(
       bool is_adblock_enabled,
       int main_frame_tree_node_id) = 0;
+
+  ///
+  /// Get window id.
+  ///
+  /*--cef()--*/
+  virtual uint32_t GetAcceleratedWidget(bool IsPopup) = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };

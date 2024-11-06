@@ -94,6 +94,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 #if BUILDFLAG(IS_OHOS)
   void DidCommitCompositorFrame() override;
   void DidUpdateMainFrameLayout() override;
+  uint32_t GetAcceleratedWidget(bool isPopup) override;
 #endif
 
 #if BUILDFLAG(IS_OHOS)
