@@ -591,6 +591,16 @@ void CefFrameHostImpl::TerminateRenderProcess(bool& result) {
   result = true;
 }
 
+#ifdef OHOS_SCROLLBAR
+void CefFrameHostImpl::UpdatePixelRatio(float ratio) {
+  LOG(INFO) << "UpdatePixelRatio in browser CefFrameHostImpl start, ratio:" << ratio;
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](float ratio, const RenderFrameType& render_frame) {
+                      render_frame->UpdatePixelRatio(ratio);
+                    }, ratio));
+}
+#endif
+
 void CefFrameHostImpl::ExecuteJavaScriptWithUserGestureForTests(
     const CefString& javascript) {
   if (!CEF_CURRENTLY_ON_UIT()) {

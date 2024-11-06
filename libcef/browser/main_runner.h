@@ -79,6 +79,11 @@ class CefMainRunner : public CefMainRunnerHandler {
   // Destroys the runtime and related objects.
   void FinalizeShutdown(base::OnceClosure finalize_shutdown);
 
+#ifdef OHOS_SCROLLBAR
+  // parse pixel ratio from command_line.
+  static void ParsePixelRatio(const base::CommandLine& command_line);
+#endif
+
   const bool multi_threaded_message_loop_;
   const bool external_message_pump_;
 

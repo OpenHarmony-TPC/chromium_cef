@@ -718,6 +718,10 @@ bool TerminateRenderProcess() override;
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
 
+#ifdef OHOS_SCROLLBAR
+  void UpdatePixelRatio(float ratio);
+#endif
+
 #ifdef OHOS_NETWORK_CONNINFO
   bool GetFileAccess();
   bool GetBlockNetwork();

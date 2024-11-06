@@ -40,6 +40,10 @@
 #include "base/process/process.h"
 #endif
 
+#ifdef OHOS_SCROLLBAR
+#include "base/ohos/sys_info_utils.h"
+#endif
+
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 #include "content/renderer/render_frame_impl.h"
@@ -946,6 +950,13 @@ void CefFrameImpl::TerminateRenderProcess() {
     return;
   }
   LOG(INFO) << "TerminateRenderProcess end in render side";
+}
+#endif
+
+#ifdef OHOS_SCROLLBAR
+void CefFrameImpl::UpdatePixelRatio(float ratio) {
+  LOG(INFO) << "UpdatePixelRatio in render side SetPixelRatio:" << ratio;
+  base::ohos::SetPixelRatio(ratio);
 }
 #endif
 

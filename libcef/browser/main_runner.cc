@@ -16,6 +16,9 @@
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/debug/debugger.h"
+#ifdef OHOS_SCROLLBAR
+#include "base/ohos/sys_info_utils.h"
+#endif
 #include "base/run_loop.h"
 #include "base/sequence_checker.h"
 #include "base/synchronization/lock.h"
@@ -291,6 +294,23 @@ void CefMainRunner::QuitMessageLoop() {
   }
 }
 
+#ifdef OHOS_SCROLLBAR
+// static
+void CefMainRunner::ParsePixelRatio(const base::CommandLine& command_line) {
+  const std::string& pixel_ratio =
+      command_line.GetSwitchValueASCII(switches::kPixelRatio);
+  if (pixel_ratio.empty()) {
+    return;
+  }
+  std::stringstream ss(pixel_ratio);
+  float ratio = -1;
+  ss >> ratio;
+  if (ratio > 0) {
+    base::ohos::SetPixelRatio(ratio);
+  }
+}
+#endif
+
 // static
 int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
                                       CefRefPtr<CefApp> application,
@@ -314,6 +334,9 @@ int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
   if (process_type.empty()) {
     return -1;
   }
+#ifdef OHOS_SCROLLBAR
+  ParsePixelRatio(command_line);
+#endif
 
   auto runtime_type = command_line.HasSwitch(switches::kEnableChromeRuntime)
                           ? RuntimeType::CHROME

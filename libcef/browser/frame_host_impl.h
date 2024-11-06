@@ -134,6 +134,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void TerminateRenderProcess(bool& result);
 #endif
 
+#ifdef OHOS_SCROLLBAR
+  void UpdatePixelRatio(float ratio);
+#endif
+
   void ExecuteJavaScriptWithUserGestureForTests(const CefString& javascript);
 
   // Returns the RFH associated with this frame. Must be called on the UI
