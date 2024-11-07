@@ -149,6 +149,11 @@ class InterceptedRequestHandler {
   // To get setting of net helper.
   virtual void GetSettingOfNetHelper(struct NetHelperSetting& setting) {}
 #endif
+#ifdef OHOS_USERAGENT
+  virtual std::string GetCustomUserAgent() {
+    return "";
+  }
+#endif
 };
 
 // URL Loader Factory that supports request/response interception, processing
@@ -239,6 +244,13 @@ class ProxyURLLoaderFactory
   void OnProxyBindingError();
   void RemoveRequest(InterceptedRequest* request);
   void MaybeDestroySelf();
+  void CreateLoaderAndStartForDownloadRequest(
+      mojo::PendingReceiver<network::mojom::URLLoader> receiver,
+      int32_t request_id,
+      uint32_t options,
+      network::ResourceRequest request,
+      mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+      const net::MutableNetworkTrafficAnnotationTag& traffic_annotation);
 
   mojo::ReceiverSet<network::mojom::URLLoaderFactory> proxy_receivers_;
   mojo::Remote<network::mojom::URLLoaderFactory> target_factory_;

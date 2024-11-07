@@ -1646,6 +1646,37 @@ void ProxyURLLoaderFactory::CreateProxy(
                                base::Unretained(proxy), web_contents_getter));
 }
 
+#ifdef OHOS_DOWNLOAD
+void ProxyURLLoaderFactory::CreateLoaderAndStartForDownloadRequest(
+    mojo::PendingReceiver<network::mojom::URLLoader> receiver,
+    int32_t request_id,
+    uint32_t options,
+    network::ResourceRequest request,
+    mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+    const net::MutableNetworkTrafficAnnotationTag& traffic_annotation) {
+  network::ResourceRequest request_for_ua = request;
+  if (request_handler_ && !request_handler_->GetCustomUserAgent().empty()) {
+    request_for_ua.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kUserAgent,
+                                              request_handler_->GetCustomUserAgent());
+  }
+  if (target_factory_) {
+    target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
+                                          options, request_for_ua, std::move(client),
+                                          traffic_annotation);
+  }
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+void ModifyOptions(uint32_t& options) {
+  if (!NetHelpers::IsAllowAcceptCookies()) {
+    options |= network::mojom::kURLLoadOptionBlockAllCookies;
+  } else if (!NetHelpers::IsThirdPartyCookieAllowed()) {
+    options |= network::mojom::kURLLoadOptionBlockThirdPartyCookies;
+  }
+}
+#endif
+
 void ProxyURLLoaderFactory::CreateLoaderAndStart(
     mojo::PendingReceiver<network::mojom::URLLoader> receiver,
     int32_t request_id,
@@ -1658,11 +1689,15 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     // Don't start a request while we're shutting down.
     return;
   }
-#if defined(OHOS_EX_DOWNLOAD)
-  if ((request.is_download_request)|| (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS())) {
-#else
+#ifdef OHOS_DOWNLOAD
+  if (request.is_download_request) {
+    CreateLoaderAndStartForDownloadRequest(std::move(receiver), request_id,
+                                           options, request, std::move(client),
+                                           traffic_annotation);
+    return;
+  }
+#endif
   if (DisableRequestHandlingForTesting() && request.url.SchemeIsHTTPOrHTTPS()) {
-#endif  //  OHOS_EX_DOWNLOAD
     // This is the so-called pass-through, no-op option.
     if (target_factory_) {
       target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
@@ -1679,13 +1714,7 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
   }
 
 #if BUILDFLAG(IS_OHOS)
-  bool allCookiePolicy = NetHelpers::IsAllowAcceptCookies();
-  bool thirdPartyCookiePolicy = NetHelpers::IsThirdPartyCookieAllowed();
-  if (!allCookiePolicy) {
-    options |= network::mojom::kURLLoadOptionBlockAllCookies;
-  } else if (!thirdPartyCookiePolicy) {
-    options |= network::mojom::kURLLoadOptionBlockThirdPartyCookies;
-  }
+  ModifyOptions(options);
 #endif
 
   InterceptedRequest* req = new InterceptedRequest(
