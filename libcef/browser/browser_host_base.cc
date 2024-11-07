@@ -2932,7 +2932,11 @@ void CefBrowserHostBase::ExecuteJSCallback(
   base::JSONWriter::Write(result, &json);
   if (callback != nullptr) {
     CefRefPtr<CefValue> data = CefValue::Create();
-    data->SetString(json);
+    if (result.type() == base::Value::Type::STRING) {
+      data->SetString(result.GetString());
+    } else {
+      data->SetString(json);
+    }
     callback->OnJavaScriptExeResult(data);
   }
 }
@@ -2942,12 +2946,10 @@ void CefBrowserHostBase::ExecuteExtensionJSCallback(
     base::Value result) {
   LOG(DEBUG) << "javascript result callback enter, type:"
     << result.GetTypeName(result.type());
-  std::string json;
-  base::JSONWriter::Write(result, &json);
   CefRefPtr<CefValue> data = CefValue::Create();
   switch (result.type()) {
     case base::Value::Type::STRING: {
-      data->SetString(json);
+      data->SetString(result.GetString());
       break;
     }
     case base::Value::Type::DOUBLE: {
