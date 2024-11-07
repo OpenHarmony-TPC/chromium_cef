@@ -350,11 +350,10 @@ void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
 #ifdef OHOS_AI
 void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
                                           const gfx::Rect& image_rect,
-                                          const gfx::Point& touch_point,
-                                          const gfx::Rect& screen_rect) {
+                                          const gfx::Point& touch_point) {
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
   if (browser.get()) {
-    browser->CreateOverlay(image, image_rect, touch_point, screen_rect);
+    browser->CreateOverlay(image, image_rect, touch_point);
   }
 }
 #endif

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=93eb46d8f54c452312b03c0b1c291a27ec5714fb$
+// $hash=2b67c12c1bf66dc91ed8a45906c115a8eb84677e$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
@@ -407,8 +407,7 @@ typedef struct _cef_render_handler_t {
                                      struct _cef_browser_t* browser,
                                      struct _cef_image_t* cef_image,
                                      const cef_rect_t* cef_image_rect,
-                                     const cef_point_t* cef_touch_point,
-                                     const cef_rect_t* cef_screen_rect);
+                                     const cef_point_t* cef_touch_point);
 
   ///
   /// Called when overlay state is changed.
@@ -416,7 +415,7 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_overlay_state_changed)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
-      const cef_rect_t* cef_screen_rect);
+      const cef_rect_t* cef_image_rect);
 
   ///
   /// Called to retrieve the visible view rectangle in screen DIP coordinates.

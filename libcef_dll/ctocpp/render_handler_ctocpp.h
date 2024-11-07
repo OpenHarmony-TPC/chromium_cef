@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f396ebe673e7b5cdf869cba023fabea354eb9ba$
+// $hash=a537ca16e2f3f465b68cc035feeb83ed94397779$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -132,10 +132,9 @@ class CefRenderHandlerCToCpp
   void CreateOverlay(CefRefPtr<CefBrowser> browser,
                      CefRefPtr<CefImage> cef_image,
                      const CefRect& cef_image_rect,
-                     const CefPoint& cef_touch_point,
-                     const CefRect& cef_screen_rect) override;
+                     const CefPoint& cef_touch_point) override;
   void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
-                             const CefRect& cef_screen_rect) override;
+                             const CefRect& cef_image_rect) override;
   void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
                               CefRect& rect) override;
   void SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,

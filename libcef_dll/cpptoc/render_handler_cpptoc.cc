@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=20b366e5920d32479114e6a5d57f5eae0deeb7d6$
+// $hash=2268d579d3a78bc95b0a812bfc08d4a40523a59b$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
@@ -1140,8 +1140,7 @@ render_handler_create_overlay(struct _cef_render_handler_t* self,
                               cef_browser_t* browser,
                               cef_image_t* cef_image,
                               const cef_rect_t* cef_image_rect,
-                              const cef_point_t* cef_touch_point,
-                              const cef_rect_t* cef_screen_rect) {
+                              const cef_point_t* cef_touch_point) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1170,29 +1169,22 @@ render_handler_create_overlay(struct _cef_render_handler_t* self,
   if (!cef_touch_point) {
     return;
   }
-  // Verify param: cef_screen_rect; type: simple_byref_const
-  DCHECK(cef_screen_rect);
-  if (!cef_screen_rect) {
-    return;
-  }
 
   // Translate param: cef_image_rect; type: simple_byref_const
   CefRect cef_image_rectVal = cef_image_rect ? *cef_image_rect : CefRect();
   // Translate param: cef_touch_point; type: simple_byref_const
   CefPoint cef_touch_pointVal = cef_touch_point ? *cef_touch_point : CefPoint();
-  // Translate param: cef_screen_rect; type: simple_byref_const
-  CefRect cef_screen_rectVal = cef_screen_rect ? *cef_screen_rect : CefRect();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->CreateOverlay(
       CefBrowserCToCpp::Wrap(browser), CefImageCToCpp::Wrap(cef_image),
-      cef_image_rectVal, cef_touch_pointVal, cef_screen_rectVal);
+      cef_image_rectVal, cef_touch_pointVal);
 }
 
 void CEF_CALLBACK
 render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
                                         cef_browser_t* browser,
-                                        const cef_rect_t* cef_screen_rect) {
+                                        const cef_rect_t* cef_image_rect) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1206,18 +1198,18 @@ render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
   if (!browser) {
     return;
   }
-  // Verify param: cef_screen_rect; type: simple_byref_const
-  DCHECK(cef_screen_rect);
-  if (!cef_screen_rect) {
+  // Verify param: cef_image_rect; type: simple_byref_const
+  DCHECK(cef_image_rect);
+  if (!cef_image_rect) {
     return;
   }
 
-  // Translate param: cef_screen_rect; type: simple_byref_const
-  CefRect cef_screen_rectVal = cef_screen_rect ? *cef_screen_rect : CefRect();
+  // Translate param: cef_image_rect; type: simple_byref_const
+  CefRect cef_image_rectVal = cef_image_rect ? *cef_image_rect : CefRect();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnOverlayStateChanged(
-      CefBrowserCToCpp::Wrap(browser), cef_screen_rectVal);
+      CefBrowserCToCpp::Wrap(browser), cef_image_rectVal);
 }
 
 void CEF_CALLBACK
@@ -1372,9 +1364,9 @@ render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
                                      cef_browser_t* browser,
                                      cef_size_t* size) {
   shutdown_checker::AssertNotShutdown();
- 
+
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
+
   DCHECK(self);
   if (!self) {
     return;
@@ -1389,14 +1381,14 @@ render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
   if (!size) {
     return;
   }
- 
+
   // Translate param: size; type: simple_byref
   CefSize sizeVal = size ? *size : CefSize();
- 
+
   // Execute
   CefRenderHandlerCppToC::Get(self)->GetDevicePixelSize(
       CefBrowserCToCpp::Wrap(browser), sizeVal);
- 
+
   // Restore param: size; type: simple_byref
   if (size) {
     *size = sizeVal;

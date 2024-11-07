@@ -3513,9 +3513,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       handler->OnScrollState(browser_impl_.get(), false);
 #ifdef OHOS_AI
       if (render_widget_host_ && overlay_in_progress_) {
-        gfx::Rect screen_rect = render_widget_host_->GetScreenRect();
-        CefRect cef_screen_rect(screen_rect.x(), screen_rect.y(), screen_rect.width(), screen_rect.height());
-        handler->OnOverlayStateChanged(browser_impl_.get(), cef_screen_rect);
+        gfx::Rect image_rect = render_widget_host_->GetImageRect();
+        CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
+        handler->OnOverlayStateChanged(browser_impl_.get(), cef_image_rect);
       }
 #endif
     } else if (input_event.GetType() ==

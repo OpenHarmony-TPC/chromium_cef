@@ -419,15 +419,14 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void CreateOverlay(CefRefPtr<CefBrowser> browser,
                              CefRefPtr<CefImage> cef_image,
                              const CefRect& cef_image_rect,
-                             const CefPoint& cef_touch_point,
-                             const CefRect& cef_screen_rect) {}
+                             const CefPoint& cef_touch_point) {}
 
   ///
   /// Called when overlay state is changed.
   ///
   /*--cef()--*/
   virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
-                                     const CefRect& cef_screen_rect) {}
+                                     const CefRect& cef_image_rect) {}
 
   ///
   /// Called to retrieve the visible view rectangle in screen DIP coordinates. This
