@@ -25,6 +25,12 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
 
+#if defined(OHOS_NO_STATE_PREFETCH)
+#include "chrome/browser/preloading/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_contents.h"
+#include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
+#endif  // defined(OHOS_NO_STATE_PREFETCH)
+
 namespace {
 
 // Timeout delay for new browser info responses.
@@ -338,11 +344,61 @@ bool CefBrowserInfoManager::AddWebContents(content::WebContents* new_contents) {
   return false;
 }
 
+#if defined(OHOS_NO_STATE_PREFETCH)
+bool CefBrowserInfoManager::IsPrerendering(
+        const content::GlobalRenderFrameHostId& global_id) {
+  std::vector<CefBrowserContext*> browser_context_all = 
+      CefBrowserContext::GetAll();
+  if (browser_context_all.size() == 0) {
+    return false;
+  }
+
+  auto* rfh = content::RenderFrameHost::FromID(global_id);
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(rfh);
+  if (!web_contents) {
+    return false;
+  }
+
+  for (auto& context: CefBrowserContext::GetAll()) {
+    prerender::NoStatePrefetchManager* no_state_prefetch_manager =
+        prerender::NoStatePrefetchManagerFactory::GetForBrowserContext(
+            context->AsBrowserContext());
+    if (no_state_prefetch_manager) {
+      auto* no_state_prefetch_content =
+          no_state_prefetch_manager->GetNoStatePrefetchContents(web_contents);
+      if (no_state_prefetch_content) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+void CefBrowserInfoManager::CancelForPrerendering(
+        const content::GlobalRenderFrameHostId& global_id,
+        int timeout_id) {
+  CEF_REQUIRE_UIT();
+  LOG(INFO) << "cancel for prerendering";
+  if (!g_info_manager) {
+    return;
+  }
+
+  if (!IsPrerendering(global_id)) {
+    return;
+  }
+
+  TimeoutNewBrowserInfoResponse(global_id, timeout_id);
+}
+#endif
+
 void CefBrowserInfoManager::OnGetNewBrowserInfo(
     const content::GlobalRenderFrameHostId& global_id,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
   DCHECK(frame_util::IsValidGlobalId(global_id));
   DCHECK(callback);
+  LOG(INFO) << "on get new browser info";
 
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
@@ -374,6 +430,14 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   pending->callback_runner = callback_runner;
   pending_new_browser_info_map_.insert(
       std::make_pair(global_id, std::move(pending)));
+
+  LOG(INFO) << "on get new browser info wait timeout";
+#if defined(OHOS_NO_STATE_PREFETCH)
+  CEF_POST_TASK(
+      CEF_UIT,
+      base::BindOnce(&CefBrowserInfoManager::CancelForPrerendering,
+                     global_id, timeout_id));
+#endif
 
   // Register a timeout for the pending response so that the renderer process
   // doesn't hang forever. With the Chrome runtime, timeouts may occur in cases
@@ -641,6 +705,7 @@ void CefBrowserInfoManager::TimeoutNewBrowserInfoResponse(
     const content::GlobalRenderFrameHostId& global_id,
     int timeout_id) {
   CEF_REQUIRE_UIT();
+  LOG(INFO) << "on get new browser info timeout";
   if (!g_info_manager) {
     return;
   }
