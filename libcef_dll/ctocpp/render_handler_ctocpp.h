@@ -130,10 +130,9 @@ class CefRenderHandlerCToCpp
   void CreateOverlay(CefRefPtr<CefBrowser> browser,
                      CefRefPtr<CefImage> cef_image,
                      const CefRect& cef_image_rect,
-                     const CefPoint& cef_touch_point,
-                     const CefRect& cef_screen_rect) override;
+                     const CefPoint& cef_touch_point) override;
   void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
-                             const CefRect& cef_screen_rect) override;
+                             const CefRect& cef_image_rect) override;
   void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
                                     const CefString& text,
                                     const CefRange& selected_range,

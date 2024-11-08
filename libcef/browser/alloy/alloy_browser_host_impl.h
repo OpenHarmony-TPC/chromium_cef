@@ -486,8 +486,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #ifdef OHOS_AI
   void CreateOverlay(const gfx::ImageSkia& image,
                      const gfx::Rect& image_rect,
-                     const gfx::Point& touch_point,
-                     const gfx::Rect& screen_rect);
+                     const gfx::Point& touch_point);
   void OnTextSelected(bool flag) override;
   void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
