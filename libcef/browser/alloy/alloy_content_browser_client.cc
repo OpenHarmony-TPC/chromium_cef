@@ -696,6 +696,7 @@ class CefSelectClientCertificateCallbackImpl
 
       if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
         delete[] uri;
+        delete[] certData;
         return;
       }
 
