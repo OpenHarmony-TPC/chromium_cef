@@ -3479,14 +3479,10 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
-  if (input_event.GetType() == blink::WebInputEvent::Type::kTouchStart) {
-    event_result_ = false;
-  }
-  if ((!scroll_enabled_ || event_result_) &&
+  if (!scroll_enabled_ &&
       input_event.GetType() ==
           blink::WebInputEvent::Type::kGestureScrollUpdate) {
-    LOG(DEBUG) << "can not GestureScroll, scroll is disabled. scroll_enabled_ is "
-               << scroll_enabled_ <<  "event_result_ is " << event_result_;
+    LOG(DEBUG) << "can not GestureScroll, scroll is disabled";
     return blink::mojom::InputEventResultState::kConsumed;
   }
 
@@ -3682,7 +3678,6 @@ void CefRenderWidgetHostViewOSR::SetGestureEventResult(bool result, bool stopPro
   if (!render_widget_host_) {
     return;
   }
-  event_result_ = result;
   render_widget_host_->input_router()->SetGestureEventResult(result, stopPropagation);
   CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();

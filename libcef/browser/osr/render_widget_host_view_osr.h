@@ -680,7 +680,6 @@ class CefRenderWidgetHostViewOSR
 
   bool is_mouse_locked_ = false;
 
-  bool event_result_ = false;
 
 #if defined(OHOS_PERFORMANCE_JITTER)
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
