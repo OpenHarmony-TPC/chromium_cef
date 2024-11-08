@@ -473,6 +473,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetDevicePixelSize(CefRefPtr<CefBrowser> browser, CefSize& size) {}
+
+  ///
+  /// Called when an accessibility event occurs.
+  ///
+  /*--cef()--*/
+  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
