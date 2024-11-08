@@ -46,6 +46,7 @@ const std::string KEY_RECT_W = "width";
 const std::string KEY_RECT_H = "height";
 const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
+const std::string VALUE_OFF = "off";
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
 const std::string KEY_USERNAME = "username";
@@ -89,11 +90,19 @@ CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
 
 std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
   auto attribute = field.autocomplete_attribute;
-  if (!attribute.empty()) {
+  if (!attribute.empty() || field.unique_renderer_id.is_null()) {
     return attribute;
   }
   auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
   return unique_renderer_id;
+}
+
+bool OhAutofillManager::isFocusField(const FormFieldData& field_data,
+                                     const FormFieldData& field) {
+  if (field_data.unique_renderer_id.is_null() || field.unique_renderer_id.is_null()) {
+      return false;
+  }
+  return field_data.unique_renderer_id.value() == field.unique_renderer_id.value();
 }
 
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
@@ -124,7 +133,7 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
     auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(
         KEY_FOUCS,
-        key == GetAttributeOrUniqueId(field) ? 1 : 0));
+        isFocusField(field_data, field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
@@ -199,6 +208,33 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   return base::WriteJson(view_data_list);
 }
 
+void OhAutofillManager::FillDataWithId(const base::Value::Dict* dict) {
+  for (auto it = dict->begin(); it != dict->end(); it++) {
+    const base::Value::Dict* sub_dict = dict->FindDict(it->first);
+    if (sub_dict) {
+      const std::string* str = sub_dict->FindString(KEY_VALUE);
+      if (!str) {
+        continue;
+      }
+      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
+      if (!index.has_value() || index.value() <= 0) {
+        continue;
+      }
+      uint32_t i = static_cast<uint32_t>(index.value());
+      uint32_t size = static_cast<uint32_t>(form_->fields.size());
+      if (i > size) {
+          continue;
+      }
+      FormFieldData& field_data = form_->fields[i - 1];
+      if (GetAttributeOrUniqueId(field_data) == VALUE_OFF || !field_data.is_visible) {
+          continue;
+      }
+      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
+                                                 base::UTF8ToUTF16(*str));
+    }
+  }
+}
+
 void OhAutofillManager::FillData(const std::string& json_str) {
   absl::optional<base::Value> root = base::JSONReader::Read(json_str);
   if (!root.has_value()) {
@@ -230,28 +266,14 @@ void OhAutofillManager::FillData(const std::string& json_str) {
 
   for (const FormFieldData& field_data : form_->fields) {
     const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value || value->empty()) {
+    if (!value || value->empty() || GetAttributeOrUniqueId(field_data) == VALUE_OFF ||
+        !field_data.is_visible) {
       continue;
     }
     driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
                                                base::UTF8ToUTF16(*value));
   }
-  for (auto it = root_dict->begin(); it != root_dict->end(); it++) {
-    const base::Value::Dict* sub_dict = root_dict->FindDict(it->first);
-    if (sub_dict) {
-      const std::string* str = sub_dict->FindString(KEY_VALUE);
-      if (!str) {
-        continue;
-      }
-      absl::optional<int> index = sub_dict->FindInt(KEY_PLACEHOLDER);
-      if (!index.has_value() || index.value() <= 0 || index.value() > form_->fields.size()) {
-        continue;
-      }
-      uint32_t i = static_cast<uint32_t>(index.value()) - 1;
-      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
-                                                 base::UTF8ToUTF16(*str));
-    }
-  }
+  FillDataWithId(root_dict);
   is_show_ = false;
 }
 
