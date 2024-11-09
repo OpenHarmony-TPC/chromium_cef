@@ -1043,6 +1043,10 @@ void CefBrowserCToCpp::SetBackForwardCacheOptions(int32_t size,
   _struct->set_back_forward_cache_options(_struct, size, timeToLive);
 }
 
+cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget() {
+  return 0;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

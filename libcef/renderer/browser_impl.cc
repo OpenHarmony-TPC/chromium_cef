@@ -559,4 +559,8 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
                << ",height:" << viewport_size.height();
   }
 }
+
+cef_accelerated_widget_t CefBrowserImpl::GetAcceleratedWidget() {
+  return 0;
+}
 #endif
