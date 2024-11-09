@@ -92,7 +92,6 @@ const size_t kMaxDamageRects = 10;
 const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
 #if defined(OHOS_PERFORMANCE_JITTER)
-const size_t kMaxGestureQueueSize = 10;
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
 const int TOUCH_DOWN_DELAY_TIME = 200;
 const int TOUCH_UP_DURATION_TIME = 100;
@@ -745,7 +744,7 @@ void CefRenderWidgetHostViewOSR::ResetVSyncFrequency() {
 }
 
 void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
-  TRACE_EVENT0("base", "CefRenderWidgetHostViewOSR::SendTouchEventList");
+  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::SendTouchEventList", "count", event_list.size());
 
   for (const auto& event : event_list) {
 #if defined(OHOS_PERFORMANCE_JITTER)
@@ -2305,16 +2304,6 @@ void CefRenderWidgetHostViewOSR::SendTouchEvent(const CefTouchEvent& event) {
       LOG(ERROR) << "compositor is null when send touch event";
     }
   }
-
-  if (event.type == CEF_TET_PRESSED || event.type == CEF_TET_RELEASED || event.type == CEF_TET_CANCELLED) {
-      web_touch_event_count_ = 0;
-
-      while(!web_touch_event_queue_.empty()) {
-        blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
-        SendTouchGestureEvent(touchEvent);
-        web_touch_event_queue_.pop_front();
-      }
-  }
 #endif
 
   if (!IsPopupWidget() && popup_host_view_) {
@@ -2656,33 +2645,9 @@ void CefRenderWidgetHostViewOSR::ProcessAckedTouchEvent(
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
 void CefRenderWidgetHostViewOSR::OnVsync() {
-  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsync",
-    "gesture_event_queue", gesture_event_queue_.size());
-  if (gesture_event_queue_.size() > kMaxGestureQueueSize) {
-    LOG(ERROR) << "gesture event queue size is error:"
-               << gesture_event_queue_.size();
-    gesture_event_queue_.clear();
-  }
-
-  if (!gesture_event_queue_.empty()) {
-    SendGestureEvent(std::move(gesture_event_queue_.front()));
-    gesture_event_queue_.pop_front();
-  }
 }
 
 void CefRenderWidgetHostViewOSR::OnVsyncReceived() {
-  TRACE_EVENT1("base", "CefRenderWidgetHostViewOSR::OnVsyncReceived",
-    "web_touch_event_queue", web_touch_event_queue_.size());
-  if (web_touch_event_queue_.size() > kMaxGestureQueueSize) {
-    LOG(WARNING) << "web touch event queue size is error:"
-               << web_touch_event_queue_.size();
-  }
-
-  if (!web_touch_event_queue_.empty()) {
-    blink::WebTouchEvent touchEvent = web_touch_event_queue_.front();
-    SendTouchGestureEvent(touchEvent);
-    web_touch_event_queue_.pop_front();
-  }
 }
 #endif
 
@@ -2698,12 +2663,6 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
   FilterScrollEventImpl(gesture);
 #endif
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
-  if (gesture.type() == ui::ET_GESTURE_SCROLL_BEGIN) {
-    gesture_update_count_ = 0;
-  } else if (gesture.type() == ui::ET_GESTURE_SCROLL_UPDATE) {
-    gesture_update_count_++;
-  }
-
   SendGestureEvent(gesture);
 }
 
