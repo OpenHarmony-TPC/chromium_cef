@@ -683,11 +683,7 @@ class CefSelectClientCertificateCallbackImpl
         return;
       }
 
-      if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
-        delete[] uri;
-        delete[] certData;
-        return;
-      }
+      (void)memset_s(certData, certMaxSize, 0, certMaxSize);
       uint32_t len = 0;
       RootCertDataAdapter->GetAppCert((uint8_t*)uri, certData, &len);
       if (len == 0) {
