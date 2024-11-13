@@ -156,12 +156,24 @@ void CefDragDataImpl::SetLinkMetadata(const CefString& data) {
 void CefDragDataImpl::SetFragmentText(const CefString& text) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
+#ifdef OHOS_DRAG_DROP
+  if (text.empty()) {
+    data_.text.reset();
+    return;
+  }
+#endif
   data_.text = text.ToString16();
 }
 
 void CefDragDataImpl::SetFragmentHtml(const CefString& fragment) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
+#ifdef OHOS_DRAG_DROP
+  if (fragment.empty()) {
+    data_.html.reset();
+    return;
+  }
+#endif
   data_.html = fragment.ToString16();
 }
 
