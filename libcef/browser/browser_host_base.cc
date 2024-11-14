@@ -900,6 +900,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.hide_horizontal_scrollbars =
       browser_settings.hide_horizontal_scrollbars;
   settings_.scroll_enabled = browser_settings.scroll_enabled;
+  settings_.blur_enabled = browser_settings.blur_enabled;
 #endif  // defined(OHOS_INPUT_EVENTS)
 #if BUILDFLAG(IS_OHOS)
   settings_.native_embed_mode_enabled =
@@ -1504,6 +1505,16 @@ void CefBrowserHostBase::ReloadOriginalUrl() {
   auto wc = GetWebContents();
   if (wc) {
     wc->GetController().Reload(content::ReloadType::ORIGINAL_REQUEST_URL, true);
+  }
+}
+
+void CefBrowserHostBase::SetFocusOnWeb() {
+  if (settings_.blur_enabled) {
+    auto web_contents = GetWebContents();
+    if (web_contents) {
+      LOG(INFO) << "CefBrowserHostBase::SetFocusOnWeb: ClearFocusedElement";
+      web_contents->ClearFocusedElement();
+    }
   }
 }
 
