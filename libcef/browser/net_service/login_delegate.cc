@@ -98,15 +98,11 @@ class AuthCallbackImpl : public CefAuthCallback {
     dataBase->GetHttpAuthCredentials(host_, realm_, username, password,
                                      MAX_PWD_LENGTH + 1);
     if (username.empty() || strlen(password) == 0) {
-      if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) != EOK) {
-        return false;
-      }
+      (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
       return false;
     }
     CefString passwordCef(password, strlen(password));
-    if (memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1) != EOK) {
-      return false;
-    }
+    (void)memset_s(password, MAX_PWD_LENGTH + 1, 0, MAX_PWD_LENGTH + 1);
     if (!task_runner_->RunsTasksInCurrentSequence()) {
       task_runner_->PostTask(
           FROM_HERE, base::BindOnce(&AuthCallbackImpl::Continue, this, username,
