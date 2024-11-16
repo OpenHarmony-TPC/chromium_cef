@@ -125,6 +125,7 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
 #endif
 #ifdef OHOS_FOCUS
   if (is_view_focus_failed_ && view) {
+    LOG(INFO) << "RenderViewCreated request focus after failed:" << focus_status_;
     view->SetFocus(focus_status_);
     is_view_focus_failed_ = false;
   }
@@ -310,7 +311,7 @@ void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {
     view->SetFocus(setFocus);
     is_view_focus_failed_ = false;
   } else {
-    LOG(DEBUG) << "CefBrowserPlatformDelegateOsr::SetFocus failed.";
+    LOG(WARNING) << "CefBrowserPlatformDelegateOsr::SetFocus failed.";
     is_view_focus_failed_ = true;
   }
 #else
