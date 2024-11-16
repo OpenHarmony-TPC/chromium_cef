@@ -2514,6 +2514,7 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
     return;
   }
 
+  LOG(INFO) << "CefRenderWidgetHostViewOSR::SetFocus:" << focus;
   content::RenderWidgetHostImpl* widget =
       content::RenderWidgetHostImpl::From(render_widget_host_);
   if (focus) {
