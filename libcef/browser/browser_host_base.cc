@@ -450,7 +450,7 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
                              network::mojom::ReferrerPolicy::kDefault));
   params->set_referrer(referrer.url);
 #if defined(OHOS_USERAGENT)
-if (!custom_user_agent_.empty()) {
+  if (!custom_user_agent_.empty()) {
     params->add_request_header(net::HttpRequestHeaders::kUserAgent, custom_user_agent_);
   }
 #endif
