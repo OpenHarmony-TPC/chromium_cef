@@ -56,6 +56,7 @@
 
 #if BUILDFLAG(IS_OHOS)
 #include "base/logging.h"
+#include "base/ohos/ltpo/include/sliding_observer.h"
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
@@ -785,51 +786,25 @@ void AlloyBrowserHostImpl::OnWindowHide() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowHide");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowHide";
   RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, true);
-  SetVisible(false);
+  SetVisible(nweb_id_, false);
 }
 
 void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnOnlineRenderToForeground");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnOnlineRenderToForeground";
-  SetVisible(true);
+  SetVisible(nweb_id_, true);
 }
 
 void AlloyBrowserHostImpl::NotifyForNextTouchEvent() {
-  TRACE_EVENT0("base", "AlloyBrowserHostImpl::NotifyForNextTouchEvent");
-  LOG(DEBUG) << "AlloyBrowserHostImpl::NotifyForNextTouchEvent";
-  if (!IsWindowless()) {
-    DCHECK(false) << "Window rendering is not disabled";
-    return;
-  }
-
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    CEF_POST_TASK(CEF_UIT, base::BindOnce(&AlloyBrowserHostImpl::NotifyForNextTouchEvent,
-                                          this));
-    return;
-  }
-
-  if (platform_delegate_)
-    platform_delegate_->NotifyForNextTouchEvent();
 }
 
-void AlloyBrowserHostImpl::SetVisible(bool visible)
+void AlloyBrowserHostImpl::SetVisible(int32_t nweb_id, bool visible)
 {
-  content::WebContents* contents = web_contents();
-  if (!contents) {
-    LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus web_contents is null";
-    return;
-  }
-
-  if (auto render_view_host = contents->GetRenderViewHost()) {
-    auto render_process_host = render_view_host->GetProcess();
-    if (!render_process_host) {
-      LOG(ERROR) << "AlloyBrowserHostImpl::ReportRenderProcessStatus render_process_host is null";
-      return;
-    }
-    if (auto* host = content::GpuProcessHost::Get()) {
-      if (auto* host_impl = host->gpu_host()) {
-        host_impl->SetVisible(visible);
-      }
+  if (auto* host = content::GpuProcessHost::Get()) {
+    if (auto* host_impl = host->gpu_host()) {
+      TRACE_EVENT2("base", "AlloyBrowserHostImpl::SetVisible", "nweb_id", nweb_id, "visible", visible);
+      LOG(INFO) << "AlloyBrowserHostImpl::SetVisible nweb_id: " << nweb_id << ", visible " << visible;
+      host_impl->SetVisible(nweb_id, visible);
     }
   }
 }
@@ -905,6 +880,9 @@ void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
   if (platform_delegate_) {
     platform_delegate_->NotifyScreenInfoChanged();
   }
+#if BUILDFLAG(IS_OHOS)
+  base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
+#endif
 }
 
 void AlloyBrowserHostImpl::Invalidate(PaintElementType type) {
@@ -2437,7 +2415,7 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   }
   ReportWindowStatus(true);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
-  SetVisible(true);
+  SetVisible(nweb_id_, true);
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
