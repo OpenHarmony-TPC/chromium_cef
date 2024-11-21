@@ -525,6 +525,11 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) = 0;
 
+  ///
+  /// Get window id.
+  ///
+  /*--cef()--*/
+  virtual uint32_t GetAcceleratedWidget() = 0;
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
