@@ -109,8 +109,6 @@ class CefTouchSelectionControllerClientOSR
 #if defined(OHOS_CLIPBOARD)
   void ExecuteCommandMouse(int command_id, int event_flags);
   void MouseMayUpdateClientClippedSelectionBounds(const gfx::Rect& clipped_selection_bounds);
-  int32_t GetEditFlags();
-  bool IsCommandIdEnabled(int command_id, int32_t edit_flags) const override;
 #endif
 
   bool IsQuickMenuAvailable() const;

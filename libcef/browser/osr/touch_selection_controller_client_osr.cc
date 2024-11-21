@@ -29,10 +29,6 @@
 #include "content/public/common/content_switches.h"
 #endif
 
-#ifdef OHOS_CLIPBOARD
-#include "third_party/blink/public/common/context_menu_data/edit_flags.h"
-#endif
-
 namespace {
 
 // Delay before showing the quick menu, in milliseconds.
@@ -540,48 +536,6 @@ void CefTouchSelectionControllerClientOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
-#ifdef OHOS_CLIPBOARD
-int32_t CefTouchSelectionControllerClientOSR::GetEditFlags() {
-  if (!rwhv_ || !rwhv_->browser_impl()) {
-    return 0;
-  }
-  auto browser = rwhv_->browser_impl();
-  if (!browser->web_contents()) {
-    return 0;
-  }
-  int32_t edit_flags = browser->web_contents()->GetEditFlags();
-  LOG(INFO) << "select menu GetEditFlags edit_flags:" << edit_flags;
-  return edit_flags;
-}
-
-bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(int command_id, int32_t edit_flags) const {
-  const bool can_select_all = !!(edit_flags & blink::ContextMenuDataEditFlags::kCanSelectAll);
-  const bool can_cut = !!(edit_flags & blink::ContextMenuDataEditFlags::kCanCut);
-  const bool can_paste = !!(edit_flags & blink::ContextMenuDataEditFlags::kCanPaste);
-  const bool can_copy = !!(edit_flags & blink::ContextMenuDataEditFlags::kCanCopy);
-  switch (command_id) {
-    case QM_EDITFLAG_CAN_ELLIPSIS:
-      return true;  // Always allowed to show the ellipsis button.
-    case QM_EDITFLAG_CAN_CUT:
-      return can_cut;
-    case QM_EDITFLAG_CAN_COPY:
-      return can_copy;
-    case QM_EDITFLAG_CAN_PASTE: {
-      auto hasPasteData = ui::Clipboard::GetForCurrentThread()->HasPasteData();
-      if (!hasPasteData) {
-        LOG(INFO) << "select menu browser No data is pasted.";
-        return false;
-      }
-      return can_paste;
-    }
-    case QM_EDITFLAG_CAN_SELECT_ALL:
-      return can_select_all;
-    default:
-      return false;
-  }
-}
-#endif
-
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
@@ -602,20 +556,11 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
     gfx::SizeF size(diagonal.x(), diagonal.y());
 
     int quickmenuflags = 0;
-#ifdef OHOS_CLIPBOARD
-    int32_t edit_flags = GetEditFlags();
-    for (const auto& command : kMenuCommands) {
-      if (active_menu_client_->IsCommandIdEnabled(command, edit_flags)) {
-        quickmenuflags |= command;
-      }
-    }
-#else
     for (const auto& command : kMenuCommands) {
       if (active_menu_client_->IsCommandIdEnabled(command)) {
         quickmenuflags |= command;
       }
     }
-#endif
     LOG(INFO) << "Quick Menu Flags Is = " << quickmenuflags;
     CefRefPtr<CefRunQuickMenuCallbackImpl> callbackImpl(
         new CefRunQuickMenuCallbackImpl(base::BindOnce(
