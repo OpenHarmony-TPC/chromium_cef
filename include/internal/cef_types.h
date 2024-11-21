@@ -4109,6 +4109,11 @@ typedef enum {
   /// media playing reached end of the stream
   ///
   END_OF_STREAM,
+
+  ///
+  /// media playing is interrupted because of media player gone
+  ///
+  PLAYER_GONE,
 } cef_media_playing_state_t;
 
 ///
