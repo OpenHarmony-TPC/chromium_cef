@@ -1395,6 +1395,23 @@ render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
   }
 }
 
+void CEF_CALLBACK
+render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
+                                      int64_t accessibilityId,
+                                      int32_t eventType) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1463,6 +1480,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_set_gesture_event_result;
   GetStruct()->start_vibra_feedback = render_handler_start_vibra_feedback;
   GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
+  GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.
