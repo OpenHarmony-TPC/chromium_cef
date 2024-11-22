@@ -18,6 +18,7 @@
 #include "base/task/single_thread_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
+#include "base/trace_event/trace_event.h"
 #include "content/public/browser/browser_thread.h"
 #include "net/base/features.h"
 #include "net/base/io_buffer.h"
@@ -902,6 +903,9 @@ void StreamReaderURLLoader::OnReaderReadCompleted(int bytes_read) {
   }
   if (bytes_read == 0) {
     // Eof, read completed.
+#if BUILDFLAG(IS_OHOS)
+    TRACE_EVENT1("net", "StreamReaderURLLoader::OnReaderReadCompleted", "id", request_id_);
+#endif
     pending_buffer_->Complete(0);
     RequestComplete(net::OK);
     return;

@@ -1234,6 +1234,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       HandleRedirect(request_id, state, request, headers, *redirect_info,
                      std::move(callback));
     } else {
+#if BUILDFLAG(IS_OHOS)
+      TRACE_EVENT1("net", "InterceptedRequestHandlerWrapper::OnRequestResponse", "id", request_id);
+#endif
       HandleResponse(request_id, state, request, headers, std::move(callback));
     }
   }

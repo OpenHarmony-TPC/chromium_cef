@@ -969,7 +969,9 @@ void InterceptedRequest::InterceptResponseReceived(
   if (response) {
     // Non-null response: make sure to use it as an override for the
     // normal network data.
-    TRACE_EVENT1("net", "InterceptedRequest::InterceptResponseReceived", "url", request_.url.spec());
+#if BUILDFLAG(IS_OHOS)
+    TRACE_EVENT2("net", "InterceptedRequest::InterceptResponseReceived", "url", request_.url.spec(), "id", id());
+# endif
     ContinueAfterInterceptWithOverride(std::move(response));
   } else {
     // Request was not intercepted/overridden. Proceed with loading
