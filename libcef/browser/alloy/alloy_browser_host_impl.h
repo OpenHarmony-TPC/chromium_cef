@@ -390,6 +390,10 @@ bool NeedsReload() override;
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id,
     content::WebContentsObserver::MediaStoppedReason reason) override;
+#if BUILDFLAG(IS_OHOS)
+  void MediaPlayerGone(const content::WebContentsObserver::MediaPlayerInfo& video_type,
+                           const content::MediaPlayerId& id) override;
+#endif
   void AccessibilityEventReceived(
       const content::AXEventNotificationDetails& content_event_bundle) override;
   void AccessibilityLocationChangesReceived(

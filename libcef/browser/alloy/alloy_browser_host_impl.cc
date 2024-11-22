@@ -2128,6 +2128,17 @@ void AlloyBrowserHostImpl::MediaStoppedPlaying(
 }
 
 #if BUILDFLAG(IS_OHOS)
+  void AlloyBrowserHostImpl::MediaPlayerGone(const content::WebContentsObserver::MediaPlayerInfo& video_type,
+                           const content::MediaPlayerId& id) {
+    LOG(INFO) << "AlloyBrowserHostImpl::MediaPlayerGone, is_video: " << video_type.has_video;
+    cef_media_type_t type = video_type.has_video ? cef_media_type_t::VIDEO : cef_media_type_t::AUDIO;
+    if (client_.get() && client_->GetMediaHandler().get()) {
+      client_->GetMediaHandler()->OnMediaStateChanged(this, type, cef_media_playing_state_t::PLAYER_GONE);
+    }
+  }
+#endif
+
+#if BUILDFLAG(IS_OHOS)
 void AlloyBrowserHostImpl::UpdateVSyncFrequency() {
   if (!base::ohos::IsMobileDevice()) {
     LOG(DEBUG) << " VSync adjustment is only available for mobile deive";
