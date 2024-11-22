@@ -951,6 +951,11 @@ int CefBrowserCToCpp::SetUrlTrustListWithErrMsg(const CefString &urlTrustList,
       _struct, urlTrustList.GetStruct(), detailErrMsg.GetWritableStruct());
 }
 
+cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget()
+{
+    return 0;
+}
+
 NO_SANITIZE("cfi-icall")
 void CefBrowserCToCpp::SetBackForwardCacheOptions(int32_t size,
                                                   int32_t timeToLive) {

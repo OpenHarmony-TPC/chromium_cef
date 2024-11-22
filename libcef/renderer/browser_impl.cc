@@ -524,4 +524,9 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
     web_frame->SendProcessMessage(PID_BROWSER, message);
   }
 }
+
+cef_accelerated_widget_t CefBrowserImpl::GetAcceleratedWidget()
+{
+    return 0;
+}
 #endif
