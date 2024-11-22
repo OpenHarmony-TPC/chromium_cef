@@ -785,6 +785,7 @@ void AlloyBrowserHostImpl::OnWindowShow() {
   TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnWindowShow");
   LOG(DEBUG) << "AlloyBrowserHostImpl::OnWindowShow";
   RenderProcessStateHandler::GetInstance()->UpdateRenderProcessState(GetRenderProcessId(), nweb_id_, false);
+  SetVisible(nweb_id_, true);
 }
 
 void AlloyBrowserHostImpl::OnWindowHide() {
@@ -795,9 +796,6 @@ void AlloyBrowserHostImpl::OnWindowHide() {
 }
 
 void AlloyBrowserHostImpl::OnOnlineRenderToForeground() {
-  TRACE_EVENT0("base", "AlloyBrowserHostImpl::OnOnlineRenderToForeground");
-  LOG(DEBUG) << "AlloyBrowserHostImpl::OnOnlineRenderToForeground";
-  SetVisible(nweb_id_, true);
 }
 
 void AlloyBrowserHostImpl::NotifyForNextTouchEvent() {
@@ -2431,7 +2429,6 @@ void AlloyBrowserHostImpl::RenderViewReady() {
   }
   ReportWindowStatus(true);
   LOG(DEBUG) << "AlloyBrowserHostImpl::RenderViewReady";
-  SetVisible(nweb_id_, true);
 #if BUILDFLAG(IS_OHOS)
   UpdateZoomSupportEnabled();
 #endif
