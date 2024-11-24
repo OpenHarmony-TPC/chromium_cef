@@ -846,6 +846,7 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
 
 #if defined(OHOS_PERFORMANCE_JITTER)
 void CefRenderWidgetHostViewOSR::SendTouchGestureEvent(blink::WebTouchEvent& touch_event) {
+  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchGestureEvent");
   ui::LatencyInfo latency_info = CreateLatencyInfo(touch_event);
   if (ShouldRouteEvents()) {
     render_widget_host_->delegate()->GetInputEventRouter()->RouteTouchEvent(
