@@ -1,5 +1,10 @@
 /*
  * Copyright (c) Huawei Technologies Co., Ltd. 2018-2022. All rights reserved.
+ *
+ * Based on chrome_password_manager_client.h originally written by
+ * Copyright 2014 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
  */
 
 #ifndef CEF_LIBCEF_BROWSER_PASSWORD_OH_PASSWORD_MANAGER_CLIENT_H_
