@@ -449,7 +449,7 @@ class CefRenderWidgetHostViewOSR
       const CefTouchHandleState& end_selection_handle,
       bool need_report);
   bool NeedPopupInsertTouchHandleQuickMenu();
-  void SetGestureEventResult(bool result);
+  void SetGestureEventResult(bool result, bool stopPropagation);
   void SetNativeEmbedMode(bool flag);
 #endif
 
