@@ -1556,7 +1556,8 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
 
 void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
                                            const GURL& url) {
-  contents_delegate_->UpdateTargetURL(source, url);
+    ReportWindowStatus(false);
+    contents_delegate_->UpdateTargetURL(source, url);
 }
 
 bool AlloyBrowserHostImpl::DidAddMessageToConsole(
