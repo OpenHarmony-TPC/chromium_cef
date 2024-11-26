@@ -528,7 +528,9 @@ void CefBrowserImpl::DidCommitCompositorFrame() {
                << content_width << ",height: " << content_height
                << ". Viewport width:" << viewport_size.width()
                << ",height:" << viewport_size.height();
-    web_frame->SendProcessMessage(PID_BROWSER, message);
+    if (web_frame) {
+      web_frame->SendProcessMessage(PID_BROWSER, message);
+    }
   }
 }
 
