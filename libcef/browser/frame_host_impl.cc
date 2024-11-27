@@ -621,7 +621,13 @@ void CefFrameHostImpl::MaybeReAttach(
   // We expect that Detach() was called previously.
   CHECK(!is_temporary());
   CHECK(!render_frame_.is_bound());
-  CHECK(!render_frame_host_);
+
+  if (render_frame_host_) {
+    if (render_frame_.is_bound()) {
+      render_frame_->FrameDetached();
+    }
+    render_frame_.reset();
+  }
 
   // The RFH may change but the GlobalId should remain the same.
   CHECK_EQ(frame_id_,
