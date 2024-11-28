@@ -227,9 +227,34 @@ void CefTouchSelectionControllerClientOSR::OnTouchUp() {
   UpdateQuickMenu();
 }
 
+#ifdef OHOS_CLIPBOARD
+void CefTouchSelectionControllerClientOSR::UpdateQuickMenuByHandlesHidden() {
+  if (!rwhv_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->web_contents()) {
+    return;
+  }
+  if (!browser->web_contents()->IsShowingContextMenu()) {
+    LOG(INFO) << "Current Quick Menu IS Not Showing";
+    UpdateQuickMenu();
+  } else {
+    NotifyTouchSelectionChanged(true);
+  }
+}
+#endif
+
 void CefTouchSelectionControllerClientOSR::OnScrollStarted() {
   scroll_in_progress_ = true;
   rwhv_->selection_controller()->SetTemporarilyHidden(true);
+#ifdef OHOS_CLIPBOARD
+  if (handles_hidden_by_selection_ui_) {
+    LOG(INFO) << "scroll starts when the handle menu is hidden";
+    UpdateQuickMenuByHandlesHidden();
+    return;
+  }
+#endif
   UpdateQuickMenu();
 }
 
@@ -237,6 +262,13 @@ void CefTouchSelectionControllerClientOSR::OnScrollCompleted() {
   scroll_in_progress_ = false;
   active_client_->DidScroll();
   rwhv_->selection_controller()->SetTemporarilyHidden(false);
+#ifdef OHOS_CLIPBOARD
+  if (handles_hidden_by_selection_ui_) {
+    LOG(INFO) << "scroll completed when the handle menu is hidden";
+    UpdateQuickMenuByHandlesHidden();
+    return;
+  }
+#endif
   UpdateQuickMenu();
 }
 
