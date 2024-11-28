@@ -208,9 +208,6 @@ class CefFrameImpl
 #endif
   void PutZoomingForTextFactor(float factor) override;
   void GetImageForContextNode(int command_id) override;
-#ifdef OHOS_I18N
-  void UpdateLocale(const std::string& locale) override;
-#endif  // #ifdef OHOS_I18N
   void GetImagesWithResponse(
       cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) override;
   void RemoveCache() override;

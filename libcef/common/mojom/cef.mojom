@@ -114,9 +114,6 @@ interface RenderFrame {
   MoveOrResizeStarted();
 
   [EnableIf=is_ohos]
-  UpdateLocale(string locale);
-
-  [EnableIf=is_ohos]
   SendHitEvent(HitEventParams params);
 
   [EnableIf=is_ohos]
