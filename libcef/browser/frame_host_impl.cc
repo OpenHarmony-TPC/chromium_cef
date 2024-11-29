@@ -863,17 +863,6 @@ std::string CefFrameHostImpl::GetDebugString() const {
 }
 
 #if BUILDFLAG(IS_OHOS)
-#ifdef OHOS_I18N
-void CefFrameHostImpl::UpdateLocale(const CefString& locale) {
-  SendToRenderFrame(__FUNCTION__, base::BindOnce(
-                                      [](const std::string& locale,
-                                         const RenderFrameType& render_frame) {
-                                        render_frame->UpdateLocale(locale);
-                                      },
-                                      locale.ToString()));
-}
-#endif  // #ifdef OHOS_I18N
-
 void CefFrameHostImpl::OnGetImageForContextNode(
     cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) {
   CefImageImpl* image_impl = new (std::nothrow) CefImageImpl();

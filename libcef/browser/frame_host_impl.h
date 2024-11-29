@@ -186,9 +186,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
                            uint32_t buffer_size,
                            base::ReadOnlySharedMemoryRegion region);
 
-#ifdef OHOS_I18N
-  void UpdateLocale(const CefString& locale);
-#endif  // #ifdef OHOS_I18N
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) override;
   void OnGetImageForContextNodeNull(int command_id) override;
