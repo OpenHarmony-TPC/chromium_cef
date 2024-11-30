@@ -3807,6 +3807,22 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
       settings_.is_safe_browsing_enable = enable;
     }
   }
+
+  void CefBrowserHostBase::EnableSafeBrowsingDetection(bool enable,
+                                                       bool strictMode) {
+    if (!GetWebContents()) {
+      return;
+    }
+    GetWebContents()->EnableSafeBrowsingDetection(enable, strictMode);
+  }
+
+  bool CefBrowserHostBase::IsSafeBrowsingDetectionEnabled() const {
+    if (!GetWebContents()) {
+      return false;
+    }
+
+    return GetWebContents()->IsSafeBrowsingDetectionEnabled();
+  }
 #endif
 
 #if defined(OHOS_PASSWORD_AUTOFILL)

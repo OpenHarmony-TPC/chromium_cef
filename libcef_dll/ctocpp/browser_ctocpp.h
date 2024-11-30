@@ -97,6 +97,7 @@ public:
   void SetAdBlockEnabledForSite(bool is_adblock_enabled,
                                 int main_frame_tree_node_id) override;
   uint32_t GetAcceleratedWidget(bool isPopup) override;
+  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
   bool NeedToFireBeforeUnloadOrUnloadEvents() override;
   void DispatchBeforeUnload() override;
 };

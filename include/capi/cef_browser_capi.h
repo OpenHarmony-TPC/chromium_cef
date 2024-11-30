@@ -562,6 +562,14 @@ typedef struct _cef_browser_t {
       int main_frame_tree_node_id);
 
   ///
+  /// Enable safe browsing detection.
+  ///
+  void(CEF_CALLBACK* enable_safe_browsing_detection)(
+      struct _cef_browser_t* self,
+      int enable,
+      int strictMode);
+
+  ///
   /// Determine if BeforeUnload or Unload events need to be triggered.
   ///
   int(CEF_CALLBACK* need_to_fire_before_unload_events)(

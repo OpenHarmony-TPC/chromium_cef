@@ -1024,6 +1024,24 @@ browser_set_ad_block_enabled_for_site(struct _cef_browser_t* self,
       is_adblock_enabled ? true : false, main_frame_tree_node_id);
 }
 
+void CEF_CALLBACK
+browser_enable_safe_browsing_detection(struct _cef_browser_t* self,
+                                       int enable,
+                                       int strictMode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->EnableSafeBrowsingDetection(
+      enable ? true : false, strictMode ? true : false);
+}
+
 int CEF_CALLBACK browser_need_to_fire_before_unload_events(
     struct _cef_browser_t* self) {
   shutdown_checker::AssertNotShutdown();
@@ -1133,6 +1151,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_set_back_forward_cache_options;
   GetStruct()->set_ad_block_enabled_for_site =
       browser_set_ad_block_enabled_for_site;
+  GetStruct()->enable_safe_browsing_detection =
+      browser_enable_safe_browsing_detection;
   GetStruct()->need_to_fire_before_unload_events =
       browser_need_to_fire_before_unload_events;
   GetStruct()->dispatch_before_unload =

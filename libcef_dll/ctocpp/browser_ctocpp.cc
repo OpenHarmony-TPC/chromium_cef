@@ -998,6 +998,22 @@ void CefBrowserCToCpp::SetAdBlockEnabledForSite(bool is_adblock_enabled,
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::EnableSafeBrowsingDetection(bool enable,
+                                                   bool strictMode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_safe_browsing_detection)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_safe_browsing_detection(_struct, enable, strictMode);
+}
+
+NO_SANITIZE("cfi-icall")
 bool CefBrowserCToCpp::NeedToFireBeforeUnloadOrUnloadEvents() {
   shutdown_checker::AssertNotShutdown();
 

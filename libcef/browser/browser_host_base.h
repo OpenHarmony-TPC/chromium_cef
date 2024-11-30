@@ -587,6 +587,8 @@ bool TerminateRenderProcess() override;
 #if BUILDFLAG(IS_OHOS)
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
+  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
+  bool IsSafeBrowsingDetectionEnabled() const;
 #endif
 
   // CefBrowserContentsDelegate::Observer methods:
