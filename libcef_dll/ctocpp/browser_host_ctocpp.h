@@ -23,8 +23,10 @@
 #include <vector>
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_client_capi.h"
+#include "include/capi/cef_devtools_message_handler_delegate_capi.h"
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
+#include "include/cef_devtools_message_handler_delegate.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -73,6 +75,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                     CefRefPtr<CefClient> client,
                     const CefBrowserSettings& settings,
                     const CefPoint& inspect_element_at) override;
+  void ShowDevToolsWith(CefRefPtr<CefBrowserHost> frontend_browser,
+                        CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+                        const CefPoint& inspect_element_at) override;
   void CloseDevTools() override;
   bool HasDevTools() override;
   bool SendDevToolsMessage(const void* message, size_t message_size) override;

@@ -71,10 +71,20 @@ constexpr size_t kMaxMessageChunkSize = IPC::Channel::kMaximumMessageSize / 4;
 
 constexpr int kMaxLogLineLength = 1024;
 
+#ifdef OHOS_DEVTOOLS
+static const char kTitleFormat[] = "DevTools - %s";
+#endif // OHOS_DEVTOOLS
+
 static std::string GetFrontendURL() {
+#ifdef OHOS_DEVTOOLS
+  return base::StringPrintf("%s://%s/devtools_app.html?can_dock=true&dockSide=undocked",
+                            content::kChromeDevToolsScheme,
+                            scheme::kChromeDevToolsHost);
+#else
   return base::StringPrintf("%s://%s/devtools_app.html",
                             content::kChromeDevToolsScheme,
                             scheme::kChromeDevToolsHost);
+#endif // OHOS_DEVTOOLS
 }
 
 base::Value::Dict BuildObjectForResponse(const net::HttpResponseHeaders* rh,
@@ -169,6 +179,18 @@ void LogProtocolMessage(const base::FilePath& log_file,
     log_error = true;
   }
 }
+
+#ifdef OHOS_DEVTOOLS
+base::Value::Dict CreateFileSystemValue(
+    CefDevToolsFileManager::FileSystem file_system) {
+  base::Value::Dict file_system_value;
+  file_system_value.Set("type", file_system.type);
+  file_system_value.Set("fileSystemName", file_system.file_system_name);
+  file_system_value.Set("rootURL", file_system.root_url);
+  file_system_value.Set("fileSystemPath", file_system.file_system_path);
+  return file_system_value;
+}
+#endif // OHOS_DEVTOOLS
 
 }  // namespace
 
@@ -282,6 +304,36 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
   return devtools_frontend;
 }
 
+#ifdef OHOS_DEVTOOLS
+// static
+CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      AlloyBrowserHostImpl* inspected_browser,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback) {
+  LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
+            << inspect_element_at.x << "*" << inspect_element_at.y << "})";
+  content::WebContents* inspected_contents = inspected_browser->web_contents();
+
+  AlloyBrowserHostImpl* alloy_frontend_browser =
+      static_cast<AlloyBrowserHostImpl*>(frontend_browser.get());
+  auto handler = std::make_unique<CefDevToolsMessageHandler>(
+      std::move(devtools_message_handler));
+  // CefDevToolsFrontend will delete itself when the frontend WebContents is
+  // destroyed.
+  CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
+      alloy_frontend_browser, std::move(handler),
+      inspected_contents, inspect_element_at,
+      std::move(frontend_destroyed_callback));
+
+  // Need to load the URL after creating the DevTools objects.
+  alloy_frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL());
+
+  return devtools_frontend;
+}
+#endif // OHOS_DEVTOOLS
+
 void CefDevToolsFrontend::Activate() {
   frontend_browser_->ActivateContents(web_contents());
 }
@@ -322,12 +374,44 @@ CefDevToolsFrontend::CefDevToolsFrontend(
   DCHECK(!frontend_destroyed_callback_.is_null());
 }
 
+#ifdef OHOS_DEVTOOLS
+CefDevToolsFrontend::CefDevToolsFrontend(
+    AlloyBrowserHostImpl* frontend_browser,
+    std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler,
+    content::WebContents* inspected_contents,
+    const CefPoint& inspect_element_at,
+    base::OnceClosure frontend_destroyed_callback)
+    : content::WebContentsObserver(frontend_browser->web_contents()),
+      frontend_browser_(frontend_browser),
+      inspected_contents_(inspected_contents),
+      inspect_element_at_(inspect_element_at),
+      frontend_destroyed_callback_(std::move(frontend_destroyed_callback)),
+      file_manager_(frontend_browser, this, GetPrefs()),
+      protocol_log_file_(
+          base::CommandLine::ForCurrentProcess()->GetSwitchValuePath(
+              switches::kDevToolsProtocolLogFile)),
+      devtools_message_handler_(std::move(devtools_message_handler)),
+      weak_factory_(this) {
+  DCHECK(!frontend_destroyed_callback_.is_null());
+  file_manager_.SetDevToolsMessageHandler(devtools_message_handler_.get());
+}
+#endif // OHOS_DEVTOOLS
+
 CefDevToolsFrontend::~CefDevToolsFrontend() {}
 
 void CefDevToolsFrontend::ReadyToCommitNavigation(
     content::NavigationHandle* navigation_handle) {
   content::RenderFrameHost* frame = navigation_handle->GetRenderFrameHost();
   if (navigation_handle->IsInMainFrame()) {
+#ifdef OHOS_DEVTOOLS
+    if (agent_host_.get()) {
+      agent_host_->DetachClient(this);
+      agent_host_->AttachClient(this);
+    }
+    if (frontend_host_) {
+      return;
+    }
+#endif // OHOS_DEVTOOLS
     frontend_host_ = content::DevToolsFrontendHost::Create(
         frame, base::BindRepeating(
                    &CefDevToolsFrontend::HandleMessageFromDevToolsFrontend,
@@ -359,8 +443,20 @@ void CefDevToolsFrontend::PrimaryMainDocumentElementAvailable() {
     agent_host_ = agent_host;
     agent_host_->AttachClient(this);
     if (!inspect_element_at_.IsEmpty()) {
+#ifdef OHOS_DEVTOOLS
+      content::RenderFrameHost* rfh = inspected_contents_->GetFocusedFrame();
+      if (!rfh) {
+        rfh = inspected_contents_->GetPrimaryMainFrame();
+      }
+      if (!rfh) {
+        return;
+      }
+      agent_host_->InspectElement(rfh,
+                                  inspect_element_at_.x, inspect_element_at_.y);
+#else
       agent_host_->InspectElement(inspected_contents_->GetFocusedFrame(),
                                   inspect_element_at_.x, inspect_element_at_.y);
+#endif // OHOS_DEVTOOLS
     }
   }
 }
@@ -389,6 +485,18 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
   if (params_value) {
     params = std::move(*params_value);
   }
+
+#ifdef OHOS_DEVTOOLS
+  if (devtools_message_handler_) {
+    if (devtools_message_handler_->HandleMessage(
+          request_id, *method, params)) {
+      if (request_id) {
+        SendMessageAck(request_id, base::Value::Dict());
+      }
+      return;
+    }
+  }
+#endif // OHOS_DEVTOOLS
 
   if (*method == "dispatchProtocolMessage") {
     if (params.size() < 1) {
@@ -516,8 +624,12 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     ScopedDictPrefUpdate update(GetPrefs(), prefs::kDevToolsPreferences);
     update->Remove(*name);
   } else if (*method == "requestFileSystems") {
+#ifdef OHOS_DEVTOOLS
+    RequestFileSystems();
+#else
     web_contents()->GetPrimaryMainFrame()->ExecuteJavaScriptForTests(
         u"DevToolsAPI.fileSystemsLoaded([]);", base::NullCallback());
+#endif // OHOS_DEVTOOLS
   } else if (*method == "reattach") {
     if (!agent_host_) {
       return;
@@ -555,6 +667,65 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
       return;
     }
     file_manager_.AppendToFile(*url, *content);
+#ifdef OHOS_DEVTOOLS
+  } else if (*method == "openInNewTab") {
+    if (params.size() < 1) {
+      return;
+    }
+    const std::string* url = params[0].GetIfString();
+    if (url == nullptr) {
+      return;
+    }
+    content::OpenURLParams urlParams(GURL(*url), content::Referrer(),
+                                     WindowOpenDisposition::NEW_FOREGROUND_TAB,
+                                     ui::PAGE_TRANSITION_LINK, false);
+    if (inspected_contents_ != nullptr) {
+      inspected_contents_->OpenURL(urlParams);
+    }
+    return;
+  } else if (*method == "addFileSystem") {
+    if (params.size() < 1) {
+      return;
+    }
+    const std::string* type = params[0].GetIfString();
+    if (!type) {
+      return;
+    }
+    file_manager_.AddFileSystem(*type);
+  } else if (*method == "removeFileSystem") {
+    if (params.size() < 1) {
+      return;
+    }
+    const std::string* file_system_path = params[0].GetIfString();
+    if (!file_system_path) {
+      return;
+    }
+    file_manager_.RemoveFileSystem(*file_system_path);
+  } else if (*method == "inspectedURLChanged") {
+    if (params.size() < 1) {
+      return;
+    }
+    const std::string* url = params[0].GetIfString();
+    if (!url) {
+      return;
+    }
+    content::NavigationController& controller = web_contents()->GetController();
+    content::NavigationEntry* entry = controller.GetActiveEntry();
+    const std::string kHttpPrefix = "http://";
+    const std::string kHttpsPrefix = "https://";
+    const std::string simplified_url =
+        base::StartsWith(*url, kHttpsPrefix, base::CompareCase::SENSITIVE)
+            ? url->substr(kHttpsPrefix.length())
+            : base::StartsWith(*url, kHttpPrefix, base::CompareCase::SENSITIVE)
+                  ? url->substr(kHttpPrefix.length())
+                  : *url;
+    // DevTools UI is not localized.
+    web_contents()->UpdateTitleForEntry(
+        entry, base::UTF8ToUTF16(
+                   base::StringPrintf(kTitleFormat, simplified_url.c_str())));
+
+    return;
+#endif // OHOS_DEVTOOLS
   } else {
     return;
   }
@@ -663,3 +834,66 @@ PrefService* CefDevToolsFrontend::GetPrefs() const {
       ->AsProfile()
       ->GetPrefs();
 }
+
+#ifdef OHOS_DEVTOOLS
+void CefDevToolsFrontend::FileSystemAdded(
+    const std::string& error,
+    const CefDevToolsFileManager::FileSystem* file_system) {
+  if (file_system) {
+    CallClientFunction("DevToolsAPI", "fileSystemAdded", base::Value(error),
+        base::Value(CreateFileSystemValue(*file_system)));
+  } else {
+    CallClientFunction("DevToolsAPI", "fileSystemAdded", base::Value(error));
+  }
+}
+
+void CefDevToolsFrontend::FileSystemRemoved(const std::string& file_system_path) {
+  CallClientFunction("DevToolsAPI", "fileSystemRemoved",
+      base::Value(file_system_path));
+}
+
+void CefDevToolsFrontend::FilePathsChanged(
+    const std::vector<std::string>& changed_paths,
+    const std::vector<std::string>& added_paths,
+    const std::vector<std::string>& removed_paths) {
+  const int kMaxPathsPerMessage = 1000;
+  size_t changed_index = 0;
+  size_t added_index = 0;
+  size_t removed_index = 0;
+  // Dispatch limited amount of file paths in a time to avoid
+  // IPC max message size limit. See https://crbug.com/797817.
+  while (changed_index < changed_paths.size() ||
+         added_index < added_paths.size() ||
+         removed_index < removed_paths.size()) {
+    int budget = kMaxPathsPerMessage;
+    base::Value::List changed;
+    base::Value::List added;
+    base::Value::List removed;
+    while (budget > 0 && changed_index < changed_paths.size()) {
+      changed.Append(changed_paths[changed_index++]);
+      --budget;
+    }
+    while (budget > 0 && added_index < added_paths.size()) {
+      added.Append(added_paths[added_index++]);
+      --budget;
+    }
+    while (budget > 0 && removed_index < removed_paths.size()) {
+      removed.Append(removed_paths[removed_index++]);
+      --budget;
+    }
+    CallClientFunction("DevToolsAPI", "fileSystemFilesChangedAddedRemoved",
+                     base::Value(std::move(changed)),
+                     base::Value(std::move(added)),
+                     base::Value(std::move(removed)));
+  }
+}
+
+void CefDevToolsFrontend::RequestFileSystems() {
+  base::Value::List file_systems_value;
+  for (auto const& file_system : file_manager_.GetFileSystems()) {
+    file_systems_value.Append(CreateFileSystemValue(file_system));
+  }
+  CallClientFunction("DevToolsAPI", "fileSystemsLoaded",
+      base::Value(std::move(file_systems_value)));
+}
+#endif // OHOS_DEVTOOLS
