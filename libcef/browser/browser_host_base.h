@@ -765,7 +765,9 @@ bool TerminateRenderProcess() override;
   std::string GetCustomUserAgent();
 #endif
 
- protected:
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
+
+protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);

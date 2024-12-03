@@ -591,3 +591,12 @@ int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
   }
   return result;
 }
+
+void CefBrowserPlatformDelegate::ScaleGestureChangeV2(int type,
+                                                      float scale,
+                                                      float originScale,
+                                                      float centerX,
+                                                      float centerY)
+{
+  DCHECK(false);
+}

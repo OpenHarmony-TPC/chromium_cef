@@ -319,6 +319,8 @@ class CefRenderWidgetHostViewOSR
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
 
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY);
+
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
 
   void OnVsyncReceived();

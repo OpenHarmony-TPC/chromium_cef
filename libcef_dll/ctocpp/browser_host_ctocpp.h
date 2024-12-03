@@ -315,6 +315,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void CreateToPDF(const CefPdfPrintSettings& settings,
                    CefRefPtr<CefPdfValueCallback> callback) override;
   void SetPopupWindow(cef_native_window_t window) override;
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

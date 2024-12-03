@@ -2096,6 +2096,16 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_popup_window)(struct _cef_browser_host_t* self,
                                        cef_native_window_t window);
+
+  ///
+  /// Set zoom with the dela facetor
+  ///
+  void(CEF_CALLBACK* scale_gesture_change_v2)(struct _cef_browser_host_t* self,
+                              int type,
+                              float scale,
+                              float originScale,
+                              float width,
+                              float height);
 } cef_browser_host_t;
 
 ///

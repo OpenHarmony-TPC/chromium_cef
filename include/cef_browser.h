@@ -2112,5 +2112,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetPopupWindow(cef_native_window_t window) = 0;
+
+  ///
+  /// Set zoom with the dela facetor
+  ///
+  /*--cef()--*/
+  virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
