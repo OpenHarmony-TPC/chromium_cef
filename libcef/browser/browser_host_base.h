@@ -39,6 +39,10 @@
 #include "components/js_injection/browser/js_communication_host.h"
 #endif //IS_OHOS
 
+#ifdef OHOS_DEVTOOLS
+#include "include/cef_devtools_message_handler_delegate.h"
+#endif // OHOS_DEVTOOLS
+
 namespace extensions {
 class Extension;
 }
@@ -252,6 +256,13 @@ class CefBrowserHostBase : public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void NotifyMoveOrResizeStarted() override;
+
+#ifdef OHOS_DEVTOOLS
+  void ShowDevToolsWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) override {}
+#endif // OHOS_DEVTOOLS
 
 #if BUILDFLAG(IS_OHOS)
   /* ohos webview begin */

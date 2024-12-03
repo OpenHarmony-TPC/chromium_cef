@@ -59,6 +59,7 @@ extern "C" {
 
 struct _cef_browser_host_t;
 struct _cef_client_t;
+struct _cef_dev_tools_message_handler_delegate_t;
 
 ///
 /// Structure to implement to be notified of asynchronous completion via
@@ -842,6 +843,15 @@ typedef struct _cef_browser_host_t {
       const struct _cef_window_info_t* windowInfo,
       struct _cef_client_t* client,
       const struct _cef_browser_settings_t* settings,
+      const cef_point_t* inspect_element_at);
+
+  ///
+  /// Opend DevTools with frontend_browser.
+  ///
+  void(CEF_CALLBACK* show_dev_tools_with)(
+      struct _cef_browser_host_t* self,
+      struct _cef_browser_host_t* frontend_browser,
+      struct _cef_dev_tools_message_handler_delegate_t* delegate,
       const cef_point_t* inspect_element_at);
 
   ///

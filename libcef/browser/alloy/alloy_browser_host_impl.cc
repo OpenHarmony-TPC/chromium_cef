@@ -633,6 +633,21 @@ void AlloyBrowserHostImpl::ShowDevTools(const CefWindowInfo& windowInfo,
                                   inspect_element_at);
 }
 
+#ifdef OHOS_DEVTOOLS
+void AlloyBrowserHostImpl::ShowDevToolsWith(
+    CefRefPtr<CefBrowserHost> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    const CefPoint& inspect_element_at) {
+  LOG(INFO) << "ShowDevToolsWith";
+  CEF_REQUIRE_UIT();
+  if (!EnsureDevToolsManager()) {
+    return;
+  }
+  devtools_manager_->ShowDevToolsWith(
+      frontend_browser, delegate, inspect_element_at);
+}
+#endif // OHOS_DEVTOOLS
+
 void AlloyBrowserHostImpl::CloseDevTools() {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,

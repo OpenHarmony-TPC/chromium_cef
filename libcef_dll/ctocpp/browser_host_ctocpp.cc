@@ -14,6 +14,7 @@
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
 #include "libcef_dll/cpptoc/client_cpptoc.h"
+#include "libcef_dll/cpptoc/dev_tools_message_handler_delegate_cpptoc.h"
 #include "libcef_dll/cpptoc/dev_tools_message_observer_cpptoc.h"
 #include "libcef_dll/cpptoc/download_image_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/java_script_result_callback_cpptoc.h"
@@ -470,6 +471,38 @@ void CefBrowserHostCToCpp::ShowDevTools(const CefWindowInfo& windowInfo,
   // Execute
   _struct->show_dev_tools(_struct, &windowInfo, CefClientCppToC::Wrap(client),
                           &settings, &inspect_element_at);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ShowDevToolsWith(
+    CefRefPtr<CefBrowserHost> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    const CefPoint& inspect_element_at) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, show_dev_tools_with)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: frontend_browser; type: refptr_same
+  DCHECK(frontend_browser.get());
+  if (!frontend_browser.get()) {
+    return;
+  }
+  // Verify param: delegate; type: refptr_diff
+  DCHECK(delegate.get());
+  if (!delegate.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->show_dev_tools_with(
+      _struct, CefBrowserHostCToCpp::Unwrap(frontend_browser),
+      CefDevToolsMessageHandlerDelegateCppToC::Wrap(delegate),
+      &inspect_element_at);
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseDevTools() {

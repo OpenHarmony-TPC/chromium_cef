@@ -131,6 +131,36 @@ void CefDevToolsManager::ShowDevTools(const CefWindowInfo& windowInfo,
   }
 }
 
+#ifdef OHOS_DEVTOOLS
+void CefDevToolsManager::ShowDevToolsWith(
+    CefRefPtr<CefBrowserHost> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+    const CefPoint& inspect_element_at) {
+  LOG(INFO) << "CefDevToolsManager::ShowDevToolsWith({"
+            << inspect_element_at.x << "*" << inspect_element_at.y << "})";
+  CEF_REQUIRE_UIT();
+  if (devtools_frontend_) {
+    if (!inspect_element_at.IsEmpty()) {
+      devtools_frontend_->InspectElementAt(inspect_element_at.x,
+                                           inspect_element_at.y);
+    }
+    devtools_frontend_->Focus();
+    return;
+  }
+
+  if (cef::IsChromeRuntimeEnabled()) {
+    NOTIMPLEMENTED();
+  } else {
+    auto alloy_browser = static_cast<AlloyBrowserHostImpl*>(inspected_browser_);
+    devtools_frontend_ = CefDevToolsFrontend::ShowWith(
+        frontend_browser, std::move(devtools_message_handler),
+        alloy_browser, inspect_element_at,
+        base::BindOnce(&CefDevToolsManager::OnFrontEndDestroyed,
+                       weak_ptr_factory_.GetWeakPtr()));
+  }
+}
+#endif // OHOS_DEVTOOLS
+
 void CefDevToolsManager::CloseDevTools() {
   CEF_REQUIRE_UIT();
   if (!devtools_frontend_) {
