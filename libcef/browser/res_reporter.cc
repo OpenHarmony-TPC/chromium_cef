@@ -28,7 +28,7 @@ ResReporter::~ResReporter()
     CloseLibrary();
 }
 
-void ResReporter::Init()
+NO_SANITIZE("cfi-icall") void ResReporter::Init()
 {
     int ret = LoadLibrary();
     if (!ret) {
