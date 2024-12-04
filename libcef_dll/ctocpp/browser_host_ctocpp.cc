@@ -3570,6 +3570,21 @@ void CefBrowserHostCToCpp::SetPopupWindow(cef_native_window_t window) {
   _struct->set_popup_window(_struct, window);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scale_gesture_change_v2)) {
+    return;
+  }
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  // Execute
+  _struct->scale_gesture_change_v2(_struct, type, scale, originScale, width, height);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

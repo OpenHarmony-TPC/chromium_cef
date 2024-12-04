@@ -97,6 +97,13 @@ const float kDefaultScaleFactor = 1.0;
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
 const int TOUCH_DOWN_DELAY_TIME = 200;
 const int TOUCH_UP_DURATION_TIME = 100;
+
+constexpr int32_t PINCH_START_TYPE = 1;
+constexpr int32_t PINCH_UPDATE_TYPE = 3;
+constexpr int32_t PINCH_END_TYPE = 2;
+
+const int32_t DEFAULT_PINCH_FINGER = 2;
+
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -2713,6 +2720,64 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
 #endif
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   SendGestureEvent(gesture);
+}
+
+void CefRenderWidgetHostViewOSR::ScaleGestureChangeV2(int type,
+                                                      float scale,
+                                                      float originScale,
+                                                      float centerX,
+                                                      float centerY)
+{
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::ScaleGestureChangeV2 type: " << type
+             << " scale: " << scale << " originScale: " << originScale;
+  auto event_type = ui::ET_UNKNOWN;
+  switch (type)
+  {
+  case PINCH_START_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_BEGIN;
+    break;
+  case PINCH_UPDATE_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_UPDATE;
+    break;
+  case PINCH_END_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_END;
+    break;
+  default:
+    LOG(ERROR) << "CefRenderWidgetHostViewOSR::ScaleGestureChangeV2 type invalid.";
+    return;
+  }
+
+  ui::GestureEventDetails details(event_type);
+  details.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHPAD);
+  details.set_scale(originScale);
+  SendGestureEvent(ui::GestureEventData(details,
+                                        0,
+                                        ui::MotionEvent::ToolType::MOUSE,
+                                        base::TimeTicks::Now(),
+                                        centerX,
+                                        centerY,
+                                        centerX,
+                                        centerY,
+                                        DEFAULT_PINCH_FINGER,
+                                        gfx::RectF(),
+                                        0,
+                                        0U));
+
+  ui::GestureEventDetails details2(event_type);
+  details2.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHSCREEN);
+  details2.set_scale(scale);
+  SendGestureEvent(ui::GestureEventData(details2,
+                                        0,
+                                        ui::MotionEvent::ToolType::FINGER,
+                                        base::TimeTicks::Now(),
+                                        centerX,
+                                        centerY,
+                                        centerX,
+                                        centerY,
+                                        DEFAULT_PINCH_FINGER,
+                                        gfx::RectF(),
+                                        0,
+                                        0U));
 }
 
 void CefRenderWidgetHostViewOSR::SendGestureEvent(

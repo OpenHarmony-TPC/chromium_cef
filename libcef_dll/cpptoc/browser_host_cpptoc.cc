@@ -3861,6 +3861,26 @@ browser_host_set_popup_window(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetPopupWindow(window);
 }
 
+void CEF_CALLBACK
+browser_host_scale_gesture_change_v2(struct _cef_browser_host_t* self,
+                                    int type,
+                                    float scale,
+                                    float originScale,
+                                    float width,
+                                    float height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScaleGestureChangeV2(type, scale, originScale, width, height);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4079,6 +4099,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->auto_fill_with_imfevent = browser_host_auto_fill_with_imfevent;
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
   GetStruct()->set_popup_window = browser_host_set_popup_window;
+  GetStruct()->scale_gesture_change_v2 = browser_host_scale_gesture_change_v2;
 }
 
 // DESTRUCTOR - Do not edit by hand.
