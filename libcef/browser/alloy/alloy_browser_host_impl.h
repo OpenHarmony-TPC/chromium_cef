@@ -119,6 +119,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
                     CefRefPtr<CefClient> client,
                     const CefBrowserSettings& settings,
                     const CefPoint& inspect_element_at) override;
+#ifdef OHOS_DEVTOOLS
+  void ShowDevToolsWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) override;
+#endif // OHOS_DEVTOOLS
   void CloseDevTools() override;
   bool HasDevTools() override;
   bool IsWindowRenderingDisabled() override;

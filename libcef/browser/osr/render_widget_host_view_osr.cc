@@ -71,6 +71,8 @@
 #include "content/browser/browser_main_loop.h"
 #include "ohos_adapter_helper.h"
 #include "ui/events/gesture_detection/gesture_configuration.h"
+#include "ui/gfx/text_elider.h"
+
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -1234,7 +1236,14 @@ void CefRenderWidgetHostViewOSR::UpdateTooltipUnderCursor(
     return;
   }
 
+#if BUILDFLAG(IS_OHOS)
+  const size_t kMaxTooltipLength = 1024;
+  std::u16string truncated_text =
+    gfx::TruncateString(tooltip_text, kMaxTooltipLength, gfx::WORD_BREAK);
+  CefString tooltip(truncated_text);
+#else
   CefString tooltip(tooltip_text);
+#endif // BUILDFLAG(IS_OHOS)
   CefRefPtr<CefDisplayHandler> handler =
       browser_impl_->GetClient()->GetDisplayHandler();
   if (handler.get()) {

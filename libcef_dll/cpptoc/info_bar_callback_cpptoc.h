@@ -9,33 +9,30 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=26286189ce3ea683e5c9fffca986db1d8042c5d9$
+// $hash=8aaee2cf300843a14fd130a13f7217928262948e$
 //
 
-#ifndef CEF_LIBCEF_DLL_CPPTOC_BROWSER_HOST_CPPTOC_H_
-#define CEF_LIBCEF_DLL_CPPTOC_BROWSER_HOST_CPPTOC_H_
+#ifndef CEF_LIBCEF_DLL_CPPTOC_INFO_BAR_CALLBACK_CPPTOC_H_
+#define CEF_LIBCEF_DLL_CPPTOC_INFO_BAR_CALLBACK_CPPTOC_H_
 #pragma once
 
 #if !defined(BUILDING_CEF_SHARED)
 #error This file can be included DLL-side only
 #endif
 
-#include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_client_capi.h"
 #include "include/capi/cef_devtools_message_handler_delegate_capi.h"
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
 #include "include/cef_devtools_message_handler_delegate.h"
 #include "libcef_dll/cpptoc/cpptoc_ref_counted.h"
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserHostCppToC
-    : public CefCppToCRefCounted<CefBrowserHostCppToC, CefBrowserHost,
-                                 cef_browser_host_t> {
-public:
-  CefBrowserHostCppToC();
-  virtual ~CefBrowserHostCppToC();
+class CefInfoBarCallbackCppToC
+    : public CefCppToCRefCounted<CefInfoBarCallbackCppToC,
+                                 CefInfoBarCallback,
+                                 cef_info_bar_callback_t> {
+ public:
+  CefInfoBarCallbackCppToC();
+  virtual ~CefInfoBarCallbackCppToC();
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_BROWSER_HOST_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_INFO_BAR_CALLBACK_CPPTOC_H_

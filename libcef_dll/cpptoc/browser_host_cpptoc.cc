@@ -25,6 +25,7 @@
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
+#include "libcef_dll/ctocpp/dev_tools_message_handler_delegate_ctocpp.h"
 #include "libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.h"
 #include "libcef_dll/ctocpp/download_image_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/java_script_result_callback_ctocpp.h"
@@ -555,6 +556,46 @@ browser_host_show_dev_tools(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->ShowDevTools(
       windowInfoObj, CefClientCToCpp::Wrap(client), settingsObj,
+      inspect_element_atVal);
+}
+
+void CEF_CALLBACK browser_host_show_dev_tools_with(
+    struct _cef_browser_host_t* self,
+    struct _cef_browser_host_t* frontend_browser,
+    struct _cef_dev_tools_message_handler_delegate_t* delegate,
+    const cef_point_t* inspect_element_at) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: frontend_browser; type: refptr_same
+  DCHECK(frontend_browser);
+  if (!frontend_browser) {
+    return;
+  }
+  // Verify param: delegate; type: refptr_diff
+  DCHECK(delegate);
+  if (!delegate) {
+    return;
+  }
+  // Verify param: inspect_element_at; type: simple_byref_const
+  DCHECK(inspect_element_at);
+  if (!inspect_element_at) {
+    return;
+  }
+
+  // Translate param: inspect_element_at; type: simple_byref_const
+  CefPoint inspect_element_atVal =
+      inspect_element_at ? *inspect_element_at : CefPoint();
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ShowDevToolsWith(
+      CefBrowserHostCppToC::Unwrap(frontend_browser),
+      CefDevToolsMessageHandlerDelegateCToCpp::Wrap(delegate),
       inspect_element_atVal);
 }
 
@@ -3905,6 +3946,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->find = browser_host_find;
   GetStruct()->stop_finding = browser_host_stop_finding;
   GetStruct()->show_dev_tools = browser_host_show_dev_tools;
+  GetStruct()->show_dev_tools_with = browser_host_show_dev_tools_with;
   GetStruct()->close_dev_tools = browser_host_close_dev_tools;
   GetStruct()->has_dev_tools = browser_host_has_dev_tools;
   GetStruct()->send_dev_tools_message = browser_host_send_dev_tools_message;

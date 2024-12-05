@@ -55,6 +55,10 @@
 #include "include/internal/cef_string_map.h"
 #endif  // BUILDFLAG(IS_OHOS)
 
+#ifdef OHOS_DEVTOOLS
+class CefDevToolsMessageHandlerDelegate;
+#endif // OHOS_DEVTOOLS
+
 class CefBrowserHost;
 class CefClient;
 
@@ -876,6 +880,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                             CefRefPtr<CefClient> client,
                             const CefBrowserSettings& settings,
                             const CefPoint& inspect_element_at) = 0;
+
+#ifdef OHOS_DEVTOOLS
+  ///
+  /// Opend DevTools with frontend_browser.
+  ///
+  /*--cef()--*/
+  virtual void ShowDevToolsWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) = 0;
+#endif // OHOS_DEVTOOLS
 
   ///
   /// Explicitly close the associated DevTools browser, if any.
