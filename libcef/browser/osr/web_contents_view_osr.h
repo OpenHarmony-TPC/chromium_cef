@@ -120,6 +120,11 @@ class CefWebContentsViewOSR : public content::WebContentsView,
                      const gfx::Point& touch_point) override;
 #endif
 
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  virtual content::WebContents* GetWebContents() override;
+  void DidStopRefresh() override;
+#endif
+
  private:
   CefRenderWidgetHostViewOSR* GetView() const;
   AlloyBrowserHostImpl* GetBrowser() const;

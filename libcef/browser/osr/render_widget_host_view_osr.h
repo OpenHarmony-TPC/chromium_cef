@@ -55,6 +55,11 @@
 #include "third_party/ohos_ndk/includes/ohos_adapter/adapter_base.h"
 #endif
 
+#ifdef OHOS_EX_PULL_TO_REFRESH
+#include "content/browser/ohos/overscroll_controller_ohos.h"
+#include "ui/ohos/overscroll_refresh_handler.h"
+#endif
+
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
 #include "content/browser/ohos/software_compositor_host_ohos.h"
 #endif
@@ -106,7 +111,11 @@ class CefRenderWidgetHostViewOSR
       public content::RenderFrameMetadataProvider::Observer,
       public ui::CompositorDelegate,
       public content::TextInputManager::Observer,
-      public ui::GestureProviderClient {
+      public ui::GestureProviderClient
+#ifdef OHOS_EX_PULL_TO_REFRESH
+      , public ui::OverscrollRefreshHandler
+#endif
+{
  public:
   CefRenderWidgetHostViewOSR(SkColor background_color,
                              bool use_shared_texture,
@@ -213,6 +222,16 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
   ui::Compositor* GetCompositor() override;
+#endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  // ui::OverscrollRefreshHandler implementation
+  bool PullToRefreshAction(ui::PullToRefreshAction action) override;
+  void PullToRefreshUpdate(float x_delta, float y_delta) override;
+
+  void DidStopRefresh();
+  bool IsDisplayingInterstitial();
+  bool FilterInputEventForPullToRefresh(const blink::WebInputEvent& input_event);
 #endif
 
 #if !BUILDFLAG(IS_MAC)
@@ -514,6 +533,13 @@ class CefRenderWidgetHostViewOSR
   void OnTopControlsChanged(float top_controls_offset,
                             float top_content_offset);
 #endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  void CreateOverscrollControllerIfPossible();
+  void OnFocusInternal();
+  void LostFocusInternal();
+#endif
+
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
   void RemoveGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
 
@@ -682,6 +708,14 @@ class CefRenderWidgetHostViewOSR
   base::circular_deque<blink::WebTouchEvent> web_touch_event_queue_;
   size_t web_touch_event_count_ = 0;
 #endif
+#endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  bool pull_to_refreshing_ = false;
+  float pull_to_refresh_offset_x_ = 0;
+  float pull_to_refresh_offset_y_ = 0;
+  gfx::Transform root_layer_transform_{};
+  std::unique_ptr<content::OverscrollControllerOHOS> overscroll_controller_;
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

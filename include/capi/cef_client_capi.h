@@ -292,6 +292,19 @@ typedef struct _cef_client_t {
   ///
   struct _cef_web_extension_api_handler_t*(
       CEF_CALLBACK* get_web_extension_api_handler)(struct _cef_client_t* self);
+
+  ///
+  /// Notify the action of pull to refresh.
+  ///
+  bool(CEF_CALLBACK* on_pull_to_refresh_action)(struct _cef_client_t* self,
+                                                int action);
+
+  ///
+  /// Notify the offset of pull to refresh.
+  ///
+  void(CEF_CALLBACK* on_pull_to_refresh_pull)(struct _cef_client_t* self,
+                                              float offset_x,
+                                              float offset_y);
 } cef_client_t;
 
 #ifdef __cplusplus

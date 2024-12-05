@@ -357,3 +357,15 @@ void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
   }
 }
 #endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+void CefWebContentsViewOSR::DidStopRefresh() {
+  if (CefRenderWidgetHostViewOSR* view = GetView()) {
+    view->DidStopRefresh();
+  }
+}
+
+content::WebContents* CefWebContentsViewOSR::GetWebContents() {
+  return web_contents_;
+}
+#endif

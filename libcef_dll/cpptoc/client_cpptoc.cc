@@ -602,6 +602,36 @@ client_do_browser_controls_shrink_renderer_size(struct _cef_client_t* self) {
   return _retval;
 }
 
+bool CEF_CALLBACK client_on_pull_to_refresh_action(struct _cef_client_t* self,
+                                                   int action) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return false;
+  }
+
+  // Execute
+  bool _retval = CefClientCppToC::Get(self)->OnPullToRefreshAction(action);
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK client_on_pull_to_refresh_pull(struct _cef_client_t* self,
+                                                 float offset_x,
+                                                 float offset_y) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefClientCppToC::Get(self)->OnPullToRefreshPull(offset_x, offset_y);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -642,6 +672,8 @@ CefClientCppToC::CefClientCppToC() {
   GetStruct()->on_get_top_controls_height = client_on_get_top_controls_height;
   GetStruct()->do_browser_controls_shrink_renderer_size =
       client_do_browser_controls_shrink_renderer_size;
+  GetStruct()->on_pull_to_refresh_action = client_on_pull_to_refresh_action;
+  GetStruct()->on_pull_to_refresh_pull = client_on_pull_to_refresh_pull;
 }
 
 // DESTRUCTOR - Do not edit by hand.
