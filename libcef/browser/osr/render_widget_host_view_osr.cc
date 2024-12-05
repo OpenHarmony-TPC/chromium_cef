@@ -86,6 +86,12 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #include "ui/events/blink/did_overscroll_params.h"
 #endif  // defined(OHOS_INPUT_EVENTS)
 
+#ifdef OHOS_EX_PULL_TO_REFRESH
+#include "components/security_interstitials/content/security_interstitial_tab_helper.h"
+#include "content/browser/ohos/overscroll_controller_ohos.h"
+#include "ui/ohos/overscroll_refresh.h"
+#endif
+
 namespace {
 
 // The maximum number of damage rects to cache for outstanding frame requests
@@ -457,6 +463,10 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
       ->HasSwitch(switches::kDoubleTapSupportForPlatformEnabled);
   gesture_provider_.SetDoubleTapSupportForPlatformEnabled(excludable_devices);
 #endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  CreateOverscrollControllerIfPossible();
+#endif
 }
 
 CefRenderWidgetHostViewOSR::~CefRenderWidgetHostViewOSR() {
@@ -528,6 +538,11 @@ void CefRenderWidgetHostViewOSR::ReleaseCompositor() {
   }
 #endif  // IS_OHOS
 #endif
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (overscroll_controller_) {
+    overscroll_controller_.reset();
+  }
+#endif
 }
 
 // Called for full-screen widgets.
@@ -571,6 +586,9 @@ void CefRenderWidgetHostViewOSR::Focus() {
       content::RenderWidgetHostImpl::From(render_widget_host_);
   widget->GotFocus();
   widget->SetActive(true);
+#endif
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  OnFocusInternal();
 #endif
 }
 
@@ -677,6 +695,12 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
       video_consumer_->SetActive(true);
     }
   }
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (overscroll_controller_) {
+    overscroll_controller_->Enable();
+  }
+#endif
 }
 
 void CefRenderWidgetHostViewOSR::Hide() {
@@ -715,6 +739,12 @@ void CefRenderWidgetHostViewOSR::Hide() {
 #if defined(OHOS_INPUT_EVENTS)
   if (GetTextInputManager()) {
     GetTextInputManager()->RemoveObserver(this);
+  }
+#endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (overscroll_controller_) {
+    overscroll_controller_->Disable();
   }
 #endif
 }
@@ -1728,6 +1758,16 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
 
   gesture_provider_.SetDoubleTapSupportForPageEnabled(
       !metadata.is_mobile_optimized);
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (overscroll_controller_) {
+    overscroll_controller_->OnFrameMetadataUpdated(
+        metadata.page_scale_factor, metadata.device_scale_factor,
+        metadata.scrollable_viewport_size, metadata.root_layer_size,
+        metadata.root_scroll_offset.value_or(gfx::PointF()),
+        metadata.root_overflow_y_hidden);
+  }
+#endif
 }
 #endif
 
@@ -2461,7 +2501,7 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
 }
 
 void CefRenderWidgetHostViewOSR::BoostingPreiodly() {
-  if(!isBoosting_) {
+  if (!isBoosting_) {
     return;
   }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
@@ -2509,7 +2549,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
 }
 
 void CefRenderWidgetHostViewOSR::OnTouchMove() {
-  if(pointer_state_.GetPointerCount() == 0 || isBoosting_) {
+  if (pointer_state_.GetPointerCount() == 0 || isBoosting_) {
     return;
   }
   isBoosting_ = true;
@@ -2551,6 +2591,9 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
       selection_controller_client_->SetTemporarilyHidden(false);
     }
 #endif  // #ifdef OHOS_CLIPBOARD
+#ifdef OHOS_EX_PULL_TO_REFRESH
+    OnFocusInternal();
+#endif
   } else {
 #if !BUILDFLAG(IS_OHOS)
     if (browser_impl_.get()) {
@@ -2563,6 +2606,9 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
 
     widget->SetActive(false);
     widget->LostFocus();
+#ifdef OHOS_EX_PULL_TO_REFRESH
+    LostFocusInternal();
+#endif
   }
 }
 
@@ -2793,6 +2839,13 @@ void CefRenderWidgetHostViewOSR::ScaleGestureChangeV2(int type,
 
 void CefRenderWidgetHostViewOSR::SendGestureEvent(
     const ui::GestureEventData& gesture) {
+#endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  // Sending a gesture that may trigger overscroll should resume the effect.
+  if (overscroll_controller_) {
+    overscroll_controller_->Enable();
+  }
 #endif
 
   blink::WebGestureEvent web_event =
@@ -3257,6 +3310,12 @@ void CefRenderWidgetHostViewOSR::GestureEventAck(
     blink::mojom::InputEventResultState ack_result,
     blink::mojom::ScrollResultDataPtr scroll_result_data) {
   StopFlingingIfNecessary(event, ack_result);
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (overscroll_controller_) {
+    overscroll_controller_->OnGestureEventAck(event, ack_result);
+  }
+#endif
 }
 #endif
 
@@ -3545,6 +3604,12 @@ void CefRenderWidgetHostViewOSR::DidOverscroll(
         params.accumulated_overscroll.y() == 0 ? 0 : fling_velocity_y;
     handler->OnOverScrollFlingVelocity(browser_impl_.get(), fling_velocity_x,
                                        fling_velocity_y, is_fling);
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+    if (overscroll_controller_) {
+      overscroll_controller_->OnOverscrolled(params);
+    }
+#endif
   }
 }
 
@@ -3563,6 +3628,12 @@ blink::mojom::InputEventResultState
 CefRenderWidgetHostViewOSR::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+  if (FilterInputEventForPullToRefresh(input_event)) {
+    return blink::mojom::InputEventResultState::kConsumed;
+  }
+#endif
 
   if (!scroll_enabled_ &&
       input_event.GetType() ==
@@ -3860,3 +3931,177 @@ float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
   return page_scale_factor_;
 }
 #endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+bool CefRenderWidgetHostViewOSR::FilterInputEventForPullToRefresh(
+    const blink::WebInputEvent& input_event) {
+  if (overscroll_controller_ &&
+      blink::WebInputEvent::IsGestureEventType(input_event.GetType())) {
+    blink::WebGestureEvent gesture_event =
+        static_cast<const blink::WebGestureEvent&>(input_event);
+    if (overscroll_controller_->WillHandleGestureEvent(gesture_event)) {
+      // Terminate an active fling when a GSU generated from the fling progress
+      // (GSU with inertial state) is consumed by the overscroll_controller_ and
+      // overscrolling mode is not |OVERSCROLL_NONE|. The early fling
+      // termination generates a GSE which completes the overscroll action.
+      if (gesture_event.GetType() ==
+              blink::WebInputEvent::Type::kGestureScrollUpdate &&
+          gesture_event.data.scroll_update.inertial_phase ==
+              blink::WebGestureEvent::InertialPhaseState::kMomentum) {
+        host_->StopFling();
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+void CefRenderWidgetHostViewOSR::CreateOverscrollControllerIfPossible() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebExPullToRefresh)) {
+    return;
+  }
+
+  // an OverscrollController is already set
+  if (overscroll_controller_) {
+    return;
+  }
+
+  content::RenderWidgetHostDelegate* delegate = host()->delegate();
+  if (!delegate) {
+    return;
+  }
+
+  content::RenderViewHostDelegateView* delegate_view =
+      delegate->GetDelegateView();
+  // render_widget_host_unittest.cc uses an object called
+  // MockRenderWidgetHostDelegate that does not have a DelegateView
+  if (!delegate_view) {
+    return;
+  }
+
+  if (has_parent_) {
+    return;
+  }
+
+#ifdef DISABLE_GPU
+  if (!compositor_) {
+    return;
+  }
+#else
+  auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+      browser_impl_->GetAcceleratedWidget(is_popup_));
+  if (!compositor) {
+    return;
+  }
+#endif
+
+  overscroll_controller_ =
+      std::make_unique<content::OverscrollControllerOHOS>(this);
+}
+
+void CefRenderWidgetHostViewOSR::OnFocusInternal() {
+  if (overscroll_controller_) {
+    overscroll_controller_->Enable();
+  }
+}
+
+void CefRenderWidgetHostViewOSR::LostFocusInternal() {
+  if (overscroll_controller_) {
+    overscroll_controller_->Disable();
+  }
+}
+
+bool CefRenderWidgetHostViewOSR::IsDisplayingInterstitial() {
+  if (!host() || !host()->delegate()) {
+    return false;
+  }
+
+  auto rvh_delegate_view = host()->delegate()->GetDelegateView();
+  if (!rvh_delegate_view || !rvh_delegate_view->GetWebContents()) {
+    return false;
+  }
+
+  security_interstitials::SecurityInterstitialTabHelper*
+      security_interstitial_tab_helper =
+          security_interstitials::SecurityInterstitialTabHelper::
+              FromWebContents(rvh_delegate_view->GetWebContents());
+  return security_interstitial_tab_helper &&
+      security_interstitial_tab_helper->IsDisplayingInterstitial();
+}
+
+bool CefRenderWidgetHostViewOSR::PullToRefreshAction(
+    ui::PullToRefreshAction action) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get() ||
+      IsDisplayingInterstitial()) {
+    return false;
+  }
+
+  if (action == ui::PullToRefreshAction::PULL_START ? pull_to_refreshing_ :
+                                                    !pull_to_refreshing_) {
+    return false;
+  }
+
+  bool result = browser_impl_->GetClient()->OnPullToRefreshAction(
+      static_cast<int>(action));
+  switch (action) {
+    case ui::PullToRefreshAction::PULL_START: {
+      pull_to_refreshing_ = result;
+      root_layer_transform_ = GetRootLayer()->transform();
+      pull_to_refresh_offset_x_ = pull_to_refresh_offset_y_ = 0;
+      break;
+    }
+    case ui::PullToRefreshAction::PULL_REFRESH: {
+      if (browser_impl_ && result) {
+        browser_impl_->Reload();
+      }
+      break;
+    }
+    case ui::PullToRefreshAction::PULL_RESET: {
+      pull_to_refreshing_ = false;
+      pull_to_refresh_offset_x_ = pull_to_refresh_offset_y_ = 0;
+      browser_impl_->GetClient()->OnPullToRefreshPull(0, 0);
+      GetRootLayer()->SetTransform(root_layer_transform_);
+      break;
+    }
+    case ui::PullToRefreshAction::UNKNOWN:
+    case ui::PullToRefreshAction::PULL_CANCEL:
+    case ui::PullToRefreshAction::PULL_RELEASE:
+      break;
+  }
+
+  LOG(INFO) << __func__ << " [pulltorefresh] " << action << " " << result;
+  return result;
+}
+
+void CefRenderWidgetHostViewOSR::PullToRefreshUpdate(float x_delta,
+                                                     float y_delta) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefRenderWidgetHostViewOSR::PullToRefreshUpdate,
+                       weak_ptr_factory_.GetWeakPtr(), x_delta, y_delta));
+    return;
+  }
+  if (!for_browser_ || !browser_impl_.get() ||
+      !browser_impl_->GetClient().get()) {
+    return;
+  }
+  pull_to_refresh_offset_x_ += x_delta;
+  pull_to_refresh_offset_y_ += y_delta;
+  browser_impl_->GetClient()->OnPullToRefreshPull(pull_to_refresh_offset_x_,
+                                                  pull_to_refresh_offset_y_);
+
+  gfx::Transform root_layer_transform = GetRootLayer()->transform();
+  root_layer_transform.PostTranslate(gfx::Vector2dF(0, y_delta));
+  GetRootLayer()->SetTransform(root_layer_transform);
+  LOG(DEBUG) << __func__
+             << " [pulltorefresh] y_offset:" << pull_to_refresh_offset_y_;
+}
+
+void CefRenderWidgetHostViewOSR::DidStopRefresh() {
+  if (overscroll_controller_) {
+    overscroll_controller_->DidStopRefresh();
+  }
+}
+#endif  // OHOS_EX_PULL_TO_REFRESH
