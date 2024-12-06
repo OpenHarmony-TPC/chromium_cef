@@ -1234,3 +1234,13 @@ bool CefBrowserPlatformDelegateOsr::WebPageSnapshot(
   return false;
 }
 #endif
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+void CefBrowserPlatformDelegateOsr::OnBeforeUnloadFired(bool proceed) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    handler->OnBeforeUnloadFired(browser_, proceed);
+  }
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD

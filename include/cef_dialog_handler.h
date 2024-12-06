@@ -205,6 +205,13 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
       CefRefPtr<CefBrowser> browser,
       const CefString& main_frame_url,
       int main_frame_tree_node_id) { return false;}
+
+  ///
+  /// Handles the BeforeUnload event.
+  ///
+  /*--cef()--*/
+  virtual void OnBeforeUnloadFired(CefRefPtr<CefBrowser> browser,
+                                   bool proceed) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
