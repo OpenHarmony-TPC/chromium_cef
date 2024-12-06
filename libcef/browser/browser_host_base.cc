@@ -4120,6 +4120,22 @@ void CefBrowserHostBase::SetPopupWindow(cef_native_window_t window)
   popup_widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+bool CefBrowserHostBase::NeedToFireBeforeUnloadOrUnloadEvents() {
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->NeedToFireBeforeUnloadOrUnloadEvents();
+}
+
+void CefBrowserHostBase::DispatchBeforeUnload() {
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->DispatchBeforeUnload(false);
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
 #if defined(OHOS_USERAGENT)
 std::string CefBrowserHostBase::GetCustomUserAgent() {
   return custom_user_agent_;
