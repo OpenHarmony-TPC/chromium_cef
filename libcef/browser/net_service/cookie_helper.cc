@@ -254,7 +254,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
   if ((request.load_flags & net::LOAD_DO_NOT_SEND_COOKIES) ||
       request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
 #if defined(OHOS_NETWORK_LOAD)
-      new_url.value_or(request.url).IsAboutBlank()
+      new_url.value_or(request.url).IsAboutBlank()) {
 #else
       request.url.IsAboutBlank()) {
 #endif
