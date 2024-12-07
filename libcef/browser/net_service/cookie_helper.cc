@@ -265,7 +265,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   CEF_POST_TASK(
       CEF_UIT,
-                     base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
+      base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
 #if defined(OHOS_NETWORK_LOAD)
                      new_url.value_or(request.url),
 #else
