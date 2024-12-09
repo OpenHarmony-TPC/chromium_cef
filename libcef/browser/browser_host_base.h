@@ -382,6 +382,7 @@ class CefBrowserHostBase : public CefBrowserHost,
 #if BUILDFLAG(IS_OHOS)
   int GetSecurityLevel() override;
   void DeleteHistory() override;
+  void SetFocusOnWeb() override;
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
   CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
