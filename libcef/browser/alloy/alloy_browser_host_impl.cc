@@ -2873,6 +2873,13 @@ void AlloyBrowserHostImpl::OnZoomChanged(
           data.can_show_bubble);
     }
   }
+  if (web_contents()) {
+    if (auto* browser_context = CefBrowserContext::FromBrowserContext(
+            web_contents()->GetBrowserContext())) {
+      DCHECK(browser_context->AsProfile()->GetPrefs());
+      browser_context->AsProfile()->GetPrefs()->CommitPendingWrite();
+    }
+  }
 }
 #endif
 
