@@ -357,3 +357,16 @@ void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
   }
 }
 #endif
+
+#ifdef OHOS_EX_PULL_TO_REFRESH
+void CefWebContentsViewOSR::DidStopRefresh() {
+  if (CefRenderWidgetHostViewOSR* view = GetView()) {
+    view->DidStopRefresh();
+  }
+}
+
+content::WebContents* CefWebContentsViewOSR::GetWebContents() {
+  return web_contents_;
+}
+#endif
+

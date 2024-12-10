@@ -75,6 +75,8 @@ class CefClientCToCpp
                             float top_content_offset) override;
   int OnGetTopControlsHeight() override;
   bool DoBrowserControlsShrinkRendererSize() override;
+  bool OnPullToRefreshAction(int action) override;
+  void OnPullToRefreshPull(float offset_x, float offset_y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

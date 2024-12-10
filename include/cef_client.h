@@ -309,6 +309,18 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool DoBrowserControlsShrinkRendererSize() { return false; }
+
+  ///
+  /// Notify the action of pull to refresh.
+  ///
+  /*--cef()--*/
+  virtual bool OnPullToRefreshAction(int action) { return false; }
+
+  ///
+  /// Notify the offset of pull to refresh.
+  ///
+  /*--cef()--*/
+  virtual void OnPullToRefreshPull(float offset_x, float offset_y) {}
 #endif
 
 #if defined(OHOS_CUSTOM_VIDEO_PLAYER)

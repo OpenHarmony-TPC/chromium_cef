@@ -421,7 +421,6 @@ test("libcef_static_unittests") {
     "//base/test:run_all_unittests",
     "//testing/gmock",
     "//testing/gtest",
-    "libcef/common/mojom",
   ]
 
   configs += [
@@ -431,7 +430,7 @@ test("libcef_static_unittests") {
 
   include_dirs = [
     "//third_party/skia",
-    "//third_party/boringssl/src/include"
+    "//third_party/boringssl/src/include",
   ]
 }
 
@@ -496,14 +495,14 @@ source_set("libcef_static") {
               "libcef/browser/alloy/chrome_profile_alloy.h",
               "libcef/browser/alloy/chrome_profile_manager_alloy.cc",
               "libcef/browser/alloy/chrome_profile_manager_alloy.h",
-              "libcef/browser/alloy/render_process_state_handler.cc",
-              "libcef/browser/alloy/render_process_state_handler.h",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.cc",
               "libcef/browser/alloy/dialogs/alloy_constrained_window_views_client.h",
               "libcef/browser/alloy/dialogs/alloy_javascript_dialog_manager_delegate.cc",
               "libcef/browser/alloy/dialogs/alloy_javascript_dialog_manager_delegate.h",
               "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.cc",
               "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h",
+              "libcef/browser/alloy/render_process_state_handler.cc",
+              "libcef/browser/alloy/render_process_state_handler.h",
               "libcef/browser/audio_capturer.cc",
               "libcef/browser/audio_capturer.h",
               "libcef/browser/audio_loopback_stream_creator.cc",
@@ -1279,6 +1278,7 @@ source_set("libcef_static") {
     "//services/service_manager/public/cpp",
     "//skia",
     "//storage/browser",
+    "//third_party:huawei_securec",
     "//third_party/blink/public:blink",
     "//third_party/brotli:dec",
     "//third_party/cld_3/src/src:cld_3",
@@ -1291,7 +1291,6 @@ source_set("libcef_static") {
     "//third_party/widevine/cdm",
     "//third_party/widevine/cdm:headers",
     "//third_party/zlib:minizip",
-    "//third_party:huawei_securec",
     "//ui/base",
     "//ui/base/ime",
     "//ui/events",
@@ -1509,6 +1508,7 @@ source_set("libcef_static") {
       "//components/security_interstitials/content:security_interstitial_page",
       "//components/security_interstitials/core",
       "//ui/events",
+      "//ui/ohos",  # OHOS_EX_PULL_TO_REFRESH
       "//ui/strings",
       "//ui/views",
       "//ui/views/controls/webview",
