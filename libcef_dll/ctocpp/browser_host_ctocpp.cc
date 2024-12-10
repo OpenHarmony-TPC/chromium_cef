@@ -846,6 +846,21 @@ void CefBrowserHostCToCpp::SendKeyEvent(const CefKeyEvent& event) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetFocusOnWeb() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_focus_on_web)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_focus_on_web(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SendMouseClickEvent(const CefMouseEvent& event,
                                                MouseButtonType type,
                                                bool mouseUp,

@@ -98,6 +98,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendKeyEvent(const CefKeyEvent& event) override;
+  void SetFocusOnWeb() override;
   void SendMouseClickEvent(const CefMouseEvent& event,
                            MouseButtonType type,
                            bool mouseUp,

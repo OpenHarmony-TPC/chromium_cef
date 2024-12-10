@@ -1400,6 +1400,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void ExitFullScreen() = 0;
 
   ///
+  /// SetFocusOnWeb
+  ///
+  /*--cef()--*/
+  virtual void SetFocusOnWeb() = 0;
+
+  ///
   /// UpdateLocale
   ///
   /*--cef()--*/
