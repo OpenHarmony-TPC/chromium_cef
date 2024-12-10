@@ -2054,6 +2054,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void GetOverScrollOffset(float* offset_x, float* offset_y) = 0;
 #endif
+
+  ///
+  /// Scroll to the position with anime.
+  ///
+  /*--cef()--*/
+  virtual void ScrollToWithAnime(float x, float y, int32_t duration) = 0;
+
+  ///
+  /// Scroll by the delta with anime.
+  ///
+  /*--cef()--*/
+  virtual void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 
   ///

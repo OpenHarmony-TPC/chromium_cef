@@ -2090,6 +2090,18 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK *get_overscroll_offset)(struct _cef_browser_host_t *self,
                                             float* offset_x, float* offset_y);
+
+  ///
+  /// Scroll to the position with anime.
+  ///
+  void(CEF_CALLBACK *scroll_to_with_anime)(struct _cef_browser_host_t *self,
+                                           float x, float y, int32_t duration);
+
+  ///
+  /// Scroll by the delta with anime.
+  ///
+  void(CEF_CALLBACK *scroll_by_with_anime)(struct _cef_browser_host_t *self,
+                                           float delta_x, float delta_y, int32_t duration);
 } cef_browser_host_t;
 
 ///

@@ -175,6 +175,12 @@ interface RenderFrame {
 
   [EnableIf=ohos_scrollbar]
   UpdatePixelRatio(float ratio);
+
+  [EnableIf=ohos_input_events]
+  ScrollToWithAnime(float x, float y, int32 duration);
+
+  [EnableIf=ohos_input_events]
+  ScrollByWithAnime(float delta_x, float delta_y, int32 duration);
 };
 
 // Interface for communicating with a frame in the browser process.
