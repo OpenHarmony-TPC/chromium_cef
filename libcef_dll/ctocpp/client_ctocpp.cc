@@ -581,6 +581,35 @@ bool CefClientCToCpp::DoBrowserControlsShrinkRendererSize() {
   return _retval ? true : false;
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefClientCToCpp::OnPullToRefreshAction(int action) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_pull_to_refresh_action)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->on_pull_to_refresh_action(_struct, action);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::OnPullToRefreshPull(float offset_x, float offset_y) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_pull_to_refresh_pull)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_pull_to_refresh_pull(_struct, offset_x, offset_y);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefClientCToCpp::CefClientCToCpp() {}
