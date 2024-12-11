@@ -1870,6 +1870,13 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
   if (!page_scale_factor_) {
     // set init page scale factor.
     page_scale_factor_ = metadata.page_scale_factor;
+    if (browser_impl_.get()) {
+      CefRefPtr<CefDisplayHandler> handler =
+          browser_impl_->client()->GetDisplayHandler();
+      CHECK(handler);
+      handler->OnScaleInited(browser_impl_.get(),
+                              std::round(page_scale_factor_ * 100));
+    }
     return;
   }
   float new_page_scale_factor = metadata.page_scale_factor;
