@@ -206,7 +206,7 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                               float old_page_scale_factor,
                               float new_page_scale_factor) {}
   ///
-  /// Called when the page scale factor has changed.
+  /// Called when the page scale factor has inited.
   ///
   /*--cef()--*/
   virtual void OnScaleInited(CefRefPtr<CefBrowser> browser,
