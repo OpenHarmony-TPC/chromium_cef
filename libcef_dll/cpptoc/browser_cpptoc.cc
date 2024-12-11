@@ -1024,6 +1024,38 @@ browser_set_ad_block_enabled_for_site(struct _cef_browser_t* self,
       is_adblock_enabled ? true : false, main_frame_tree_node_id);
 }
 
+int CEF_CALLBACK browser_need_to_fire_before_unload_events(
+    struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserCppToC::Get(self)->NeedToFireBeforeUnloadOrUnloadEvents();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK browser_dispatch_before_unload(
+    struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->DispatchBeforeUnload();
+}
 } // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1100,6 +1132,10 @@ CefBrowserCppToC::CefBrowserCppToC() {
       browser_set_back_forward_cache_options;
   GetStruct()->set_ad_block_enabled_for_site =
       browser_set_ad_block_enabled_for_site;
+  GetStruct()->need_to_fire_before_unload_events =
+      browser_need_to_fire_before_unload_events;
+  GetStruct()->dispatch_before_unload =
+      browser_dispatch_before_unload;
 }
 
 // DESTRUCTOR - Do not edit by hand.
