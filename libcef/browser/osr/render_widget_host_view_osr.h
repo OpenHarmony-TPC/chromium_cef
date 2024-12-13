@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
@@ -747,6 +748,7 @@ class CefRenderWidgetHostViewOSR
   bool scroll_enabled_ = true;
   int32_t node_id_ = -1;
   bool is_tap_down_in_cursor_update_ = false;
+  std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
