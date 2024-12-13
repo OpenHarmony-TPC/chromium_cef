@@ -1906,6 +1906,17 @@ typedef struct _cef_mouse_event_t {
   /// cef_event_flags_t for values.
   ///
   uint32 modifiers;
+
+  ///
+  /// X raw coordinate relative to the left side of the view.
+  ///
+  int raw_x;
+
+  ///
+  /// Y raw coordinate relative to the top side of the view.
+  ///
+  int raw_y;
+
 } cef_mouse_event_t;
 
 ///
@@ -2497,6 +2508,8 @@ typedef enum {
   CT_DND_MOVE,
   CT_DND_COPY,
   CT_DND_LINK,
+  CT_LOCK,
+  CT_UNLOCK,
 } cef_cursor_type_t;
 
 ///

@@ -222,8 +222,13 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     return;
   }
 
+  CefMouseEvent mouseEvent = event;
+  if (view->IsRequestUnadjustedMovement()) {
+    mouseEvent.x = mouseEvent.raw_x;
+    mouseEvent.y = mouseEvent.raw_y;
+  }
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
-      event, type, mouseUp, clickCount);
+      mouseEvent, type, mouseUp, clickCount);
   view->SendMouseEvent(web_event);
 }
 
@@ -235,8 +240,13 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     return;
   }
 
+  CefMouseEvent mouseEvent = event;
+  if (view->IsRequestUnadjustedMovement()) {
+    mouseEvent.x = mouseEvent.raw_x;
+    mouseEvent.y = mouseEvent.raw_y;
+  }
   blink::WebMouseEvent web_event =
-      native_delegate_->TranslateWebMoveEvent(event, mouseLeave);
+      native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
   view->SendMouseEvent(web_event);
 }
 

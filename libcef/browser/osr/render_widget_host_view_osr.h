@@ -481,6 +481,7 @@ class CefRenderWidgetHostViewOSR
   bool NeedPopupInsertTouchHandleQuickMenu();
   void SetGestureEventResult(bool result, bool stopPropagation);
   void SetNativeEmbedMode(bool flag);
+  bool IsRequestUnadjustedMovement();
 #endif
 
 #ifdef OHOS_CLIPBOARD
@@ -710,6 +711,7 @@ class CefRenderWidgetHostViewOSR
 
   bool is_mouse_locked_ = false;
 
+  bool is_request_unadjusted_movement_ = false;
 
 #if defined(OHOS_PERFORMANCE_JITTER)
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
