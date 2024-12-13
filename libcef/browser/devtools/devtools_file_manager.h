@@ -11,6 +11,13 @@
 #include <map>
 #include <string>
 
+#ifdef OHOS_DEVTOOLS
+#include "base/functional/callback_helpers.h"
+#include "base/values.h"
+#include "chrome/browser/devtools/devtools_file_watcher.h"
+#include "components/prefs/pref_change_registrar.h"
+#endif // OHOS_DEVTOOLS
+
 namespace base {
 class FilePath;
 class SequencedTaskRunner;
@@ -20,11 +27,50 @@ class Value;
 class AlloyBrowserHostImpl;
 class PrefService;
 
+#ifdef OHOS_DEVTOOLS
+namespace content {
+class WebContents;
+} // namespace content
+
+class CefDevToolsMessageHandler;
+#endif // OHOS_DEVTOOLS
+
 // File management helper for DevTools.
 // Based on chrome/browser/devtools/devtools_ui_bindings.cc and
 // chrome/browser/devtools/devtools_file_helper.cc.
 class CefDevToolsFileManager {
+#ifdef OHOS_DEVTOOLS
  public:
+  struct FileSystem {
+    FileSystem();
+    ~FileSystem();
+    FileSystem(const FileSystem& other);
+    FileSystem(const std::string& type,
+               const std::string& file_system_name,
+               const std::string& root_url,
+               const std::string& file_system_path);
+
+    std::string type;
+    std::string file_system_name;
+    std::string root_url;
+    std::string file_system_path;
+  };
+
+  class Delegate {
+   public:
+    virtual ~Delegate() {}
+    virtual void FileSystemAdded(const std::string& error,
+                                 const FileSystem* file_system) = 0;
+    virtual void FileSystemRemoved(const std::string& file_system_path) = 0;
+    virtual void FilePathsChanged(
+        const std::vector<std::string>& changed_paths,
+        const std::vector<std::string>& added_paths,
+        const std::vector<std::string>& removed_paths) = 0;
+  };
+  CefDevToolsFileManager(AlloyBrowserHostImpl* browser_impl,
+                         Delegate* delegate,
+                         PrefService* prefs);
+#endif // OHOS_DEVTOOLS
   CefDevToolsFileManager(AlloyBrowserHostImpl* browser_impl,
                          PrefService* prefs);
 
@@ -35,6 +81,15 @@ class CefDevToolsFileManager {
                   const std::string& content,
                   bool save_as);
   void AppendToFile(const std::string& url, const std::string& content);
+
+#ifdef OHOS_DEVTOOLS
+  void SetDevToolsMessageHandler(
+      CefDevToolsMessageHandler* devtools_message_Handler);
+  void RequestFileSystems();
+  std::vector<FileSystem> GetFileSystems();
+  void AddFileSystem(const std::string& type);
+  void RemoveFileSystem(const std::string& file_system_path);
+#endif // OHOS_DEVTOOLS
 
  private:
   // SaveToFile implementation:
@@ -69,13 +124,64 @@ class CefDevToolsFileManager {
                           const base::Value* arg2,
                           const base::Value* arg3);
 
+#ifdef OHOS_DEVTOOLS
+  void CallClientMethod(
+      const std::string& object_name,
+      const std::string& method_name,
+      const base::Value arg1 = {},
+      const base::Value arg2 = {},
+      const base::Value arg3 = {},
+      base::OnceCallback<void(base::Value)> cb = base::NullCallback());
+
+  bool IsFileSystemAdded(const std::string& file_system_path);
+  void FileSystemAdded(
+      const std::string& error,
+      const FileSystem* file_system);
+  void InnerAddFileSystem(
+      const std::string& type,
+      const base::FilePath& path,
+      bool allowed);
+
+  using FileSystemSelectedCallback =
+      base::OnceCallback<void(const base::FilePath&)>;
+  using FileSystemSelectionCancelCallback = base::OnceCallback<void()>;
+  void FileSystemSelectionDialogDismissed(
+      FileSystemSelectedCallback selectedCallback,
+      FileSystemSelectionCancelCallback cancelCallback,
+      const std::vector<base::FilePath>& file_paths);
+
+  void FileSystemPathsSettingChangedOnUI();
+  void FilePathsChanged(
+      const std::vector<std::string>& changed_paths,
+      const std::vector<std::string>& added_paths,
+      const std::vector<std::string>& removed_paths);
+
+  void ShowDevToolsInfoBar(
+      const std::string& type,
+      const base::FilePath& path);
+#endif // OHOS_DEVTOOLS
+
   // Guaranteed to outlive this object.
   AlloyBrowserHostImpl* browser_impl_;
+#ifdef OHOS_DEVTOOLS
+  Delegate* delegate_;
+#endif // OHOS_DEVTOOLS
   PrefService* prefs_;
 
   using PathsMap = std::map<std::string, base::FilePath>;
   PathsMap saved_files_;
   scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
+
+#ifdef OHOS_DEVTOOLS
+  CefDevToolsMessageHandler* devtools_message_handler_ = nullptr;
+  content::WebContents* web_contents_;
+  PrefChangeRegistrar pref_change_registrar_;
+  using PathToType = std::map<std::string, std::string>;
+  PathToType file_system_paths_;
+  std::unique_ptr<DevToolsFileWatcher, DevToolsFileWatcher::Deleter>
+      file_watcher_;
+#endif // OHOS_DEVTOOLS
+
   base::WeakPtrFactory<CefDevToolsFileManager> weak_factory_;
 };
 

@@ -1177,6 +1177,16 @@ source_set("libcef_static") {
   ]
   #endif
 
+  #if defined(OHOS_DEVTOOLS)
+  if (defined(ohos_devtools) && ohos_devtools) {
+    sources += [
+      "include/cef_devtools_message_handler_delegate.h",
+      "libcef/browser/devtools/devtools_message_handler.cc",
+      "libcef/browser/devtools/devtools_message_handler.h",
+    ]
+  }
+  #endif // OHOS_DEVTOOLS
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",

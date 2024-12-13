@@ -35,6 +35,12 @@ class CefDevToolsManager {
                     CefRefPtr<CefClient> client,
                     const CefBrowserSettings& settings,
                     const CefPoint& inspect_element_at);
+#ifdef OHOS_DEVTOOLS
+  void ShowDevToolsWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      const CefPoint& inspect_element_at);
+#endif // OHOS_DEVTOOLS
   void CloseDevTools();
   bool HasDevTools();
   bool SendDevToolsMessage(const void* message, size_t message_size);

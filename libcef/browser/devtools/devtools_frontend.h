@@ -18,6 +18,11 @@
 #include "content/public/browser/devtools_frontend_host.h"
 #include "content/public/browser/web_contents_observer.h"
 
+#ifdef OHOS_DEVTOOLS
+#include "include/cef_devtools_message_handler_delegate.h"
+#include "libcef/browser/devtools/devtools_message_handler.h"
+#endif // OHOS_DEVTOOLS
+
 namespace base {
 class Value;
 }
@@ -37,6 +42,9 @@ enum class ProtocolMessageType {
 };
 
 class CefDevToolsFrontend : public content::WebContentsObserver,
+#ifdef OHOS_DEVTOOLS
+                            public CefDevToolsFileManager::Delegate,
+#endif // OHOS_DEVTOOLS
                             public content::DevToolsAgentHostClient {
  public:
   CefDevToolsFrontend(const CefDevToolsFrontend&) = delete;
@@ -49,6 +57,15 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       const CefBrowserSettings& settings,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback);
+
+#ifdef OHOS_DEVTOOLS
+  static CefDevToolsFrontend* ShowWith(
+      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      AlloyBrowserHostImpl* inspected_browser,
+      const CefPoint& inspect_element_at,
+      base::OnceClosure frontend_destroyed_callback);
+#endif // OHOS_DEVTOOLS
 
   void Activate();
   void Focus();
@@ -68,6 +85,14 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
                       content::WebContents* inspected_contents,
                       const CefPoint& inspect_element_at,
                       base::OnceClosure destroyed_callback);
+#ifdef OHOS_DEVTOOLS
+  CefDevToolsFrontend(AlloyBrowserHostImpl* frontend_browser,
+                      std::unique_ptr<CefDevToolsMessageHandler>
+                          devtools_message_handler,
+                      content::WebContents* inspected_contents,
+                      const CefPoint& inspect_element_at,
+                      base::OnceClosure destroyed_callback);
+#endif // OHOS_DEVTOOLS
   ~CefDevToolsFrontend() override;
 
   // content::DevToolsAgentHostClient implementation.
@@ -75,6 +100,18 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
   void DispatchProtocolMessage(content::DevToolsAgentHost* agent_host,
                                base::span<const uint8_t> message) override;
   void HandleMessageFromDevToolsFrontend(base::Value::Dict message);
+
+#ifdef OHOS_DEVTOOLS
+  // CefDevToolsFileManager::Delegate implementation.
+  void FileSystemAdded(
+      const std::string& error,
+      const CefDevToolsFileManager::FileSystem* file_system) override;
+  void FileSystemRemoved(const std::string& file_system_path) override;
+  void FilePathsChanged(
+      const std::vector<std::string>& changed_paths,
+      const std::vector<std::string>& added_paths,
+      const std::vector<std::string>& removed_paths) override;
+#endif // OHOS_DEVTOOLS
 
  private:
   // WebContentsObserver overrides
@@ -90,6 +127,10 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
                           const base::StringPiece& message);
 
   PrefService* GetPrefs() const;
+
+#ifdef OHOS_DEVTOOLS
+  void RequestFileSystems();
+#endif // OHOS_DEVTOOLS
 
   CefRefPtr<AlloyBrowserHostImpl> frontend_browser_;
   content::WebContents* inspected_contents_;
@@ -107,6 +148,10 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
   CefDevToolsFileManager file_manager_;
 
   const base::FilePath protocol_log_file_;
+
+#ifdef OHOS_DEVTOOLS
+  std::unique_ptr<CefDevToolsMessageHandler> devtools_message_handler_;
+#endif // OHOS_DEVTOOLS
 
   base::WeakPtrFactory<CefDevToolsFrontend> weak_factory_;
 };
