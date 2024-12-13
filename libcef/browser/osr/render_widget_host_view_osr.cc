@@ -55,6 +55,7 @@
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_selection_controller.h"
 #include "ohos_nweb/src/nweb_resize_helper.h"
+#include "content/public/common/input_event_ack_state.h"
 
 #ifdef OHOS_EX_TOPCONTROLS
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
@@ -2835,7 +2836,7 @@ void CefRenderWidgetHostViewOSR::ScaleGestureChangeV2(int type,
   ui::GestureEventDetails details2(event_type);
   details2.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHSCREEN);
   details2.set_scale(scale);
-  SendGestureEvent(ui::GestureEventData(details2,
+  pending_touchpad_pinch_events_.push(ui::GestureEventData(details2,
                                         0,
                                         ui::MotionEvent::ToolType::FINGER,
                                         base::TimeTicks::Now(),
@@ -3321,6 +3322,19 @@ void CefRenderWidgetHostViewOSR::GestureEventAck(
     const blink::WebGestureEvent& event,
     blink::mojom::InputEventResultState ack_result,
     blink::mojom::ScrollResultDataPtr scroll_result_data) {
+  if (event.SourceDevice() == blink::WebGestureDevice::kTouchpad &&
+      event.primary_pointer_type == ui::EventPointerType::kMouse) {
+    if (ack_result != blink::mojom::InputEventResultState::kConsumed) {
+      while (pending_touchpad_pinch_events_.size()) {
+        SendGestureEvent(pending_touchpad_pinch_events_.front());
+        pending_touchpad_pinch_events_.pop();
+      }
+    } else {
+      std::queue<ui::GestureEventData> tmp;
+      pending_touchpad_pinch_events_.swap(tmp);
+    }
+  }
+
   StopFlingingIfNecessary(event, ack_result);
 
 #ifdef OHOS_EX_PULL_TO_REFRESH
