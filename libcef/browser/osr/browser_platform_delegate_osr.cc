@@ -247,6 +247,11 @@ void CefBrowserPlatformDelegateOsr::SendTouchpadFlingEvent(const CefMouseEvent& 
   if (!view) {
     return;
   }
+  blink::WebGestureEvent fling_cancel =
+    native_delegate_->TranslateTouchpadFlingEvent(event);
+  fling_cancel.data.fling_start.target_viewport = false;
+  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+  view->SendTouchpadFlingEvent(fling_cancel);
 
   blink::WebGestureEvent fling_start =
       native_delegate_->TranslateTouchpadFlingEvent(event);
