@@ -3585,10 +3585,31 @@ void CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg(int32_t width, int32_t he
   keyboard_rect.set_y(0);
   keyboard_rect.set_width(width);
   keyboard_rect.set_height(keyboard);
-  if(GetVirtualKeyboardMode() == ui::mojom::VirtualKeyboardMode::kOverlaysContent){
-    NotifyVirtualKeyboardOverlayRect(keyboard_rect);
+
+  if (GetVirtualKeyboardMode() !=
+      ui::mojom::VirtualKeyboardMode::kOverlaysContent) {
+    return;
   }
+
+  gfx::Rect keyboard_rect_with_scale;
+  if (!keyboard_rect.IsEmpty()) {
+    auto browser = browser_impl_->GetBrowser();
+    if (browser != nullptr && browser->GetHost() != nullptr) {
+      float ratio = browser->GetHost()->GetVirtualPixelRatio();
+      if (ratio <= 0) {
+        LOG(ERROR) << __func__ << " get ratio invalid: " << ratio;
+        return;
+      }
+      keyboard_rect_with_scale = ScaleToEnclosedRect(keyboard_rect, 1 / ratio);
+      keyboard_rect_with_scale.Intersect(GetViewBounds());
+      LOG(DEBUG) << "CefRenderWidgetHostViewOSR::SetVirtualKeyBoardArg"
+                 << ",keyboard_rect_with_scale.width" << keyboard_rect_with_scale.width()
+                 << ",keyboard_rect_with_scale.height" << keyboard_rect_with_scale.height();
+    }
+  }
+  NotifyVirtualKeyboardOverlayRect(keyboard_rect_with_scale);
 }
+
 void CefRenderWidgetHostViewOSR::DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) {
   if (touchEvent->type == blink::mojom::NativeTouchType::UP) {
     gesture_provider_.SetNativeEmbedEnabled(false);
