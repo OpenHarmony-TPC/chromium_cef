@@ -109,7 +109,7 @@ class CefGestureEventCallback : public virtual CefBaseRefCounted {
   /// Method that will be called upon completion.
   ///
   /*--cef()--*/
-  virtual void ContinueTask(bool result) = 0;
+  virtual void ContinueTask(bool result, bool stopPropagation) = 0;
 };
 
 ///
