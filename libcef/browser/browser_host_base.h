@@ -765,6 +765,11 @@ bool TerminateRenderProcess() override;
   std::string GetCustomUserAgent();
 #endif
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+  bool IsIframe() override { return false; }
+  void ReloadFocusedFrame() override {}
+#endif
+
 #if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
   bool NeedToFireBeforeUnloadOrUnloadEvents() override;
   void DispatchBeforeUnload() override;

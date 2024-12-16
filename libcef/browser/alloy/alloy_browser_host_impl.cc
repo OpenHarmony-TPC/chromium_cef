@@ -2957,6 +2957,23 @@ float AlloyBrowserHostImpl::GetPageScaleFactor() {
 }
 #endif
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+bool AlloyBrowserHostImpl::IsIframe()
+{
+  if (web_contents() && web_contents()->GetFocusedFrame()) {
+    return !!web_contents()->GetFocusedFrame()->GetParentOrOuterDocument();
+  }
+  return false;
+}
+
+void AlloyBrowserHostImpl::ReloadFocusedFrame()
+{
+  if (web_contents()) {
+    web_contents()->ReloadFocusedFrame();
+  }
+}
+#endif
+
 #if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
 void AlloyBrowserHostImpl::OnBeforeUnloadFired(bool proceed) {
   if (platform_delegate_) {
