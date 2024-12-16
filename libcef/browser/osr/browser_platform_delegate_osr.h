@@ -124,7 +124,7 @@ class CefBrowserPlatformDelegateOsr
   bool GetPendingSizeStatus() override;
   void SetFitContentMode(int mode) override;
   int drawMode_ = -1;
-  bool isNeedReDrawMode_ = false;
+  gfx::Rect drawRect_{0, 0, 0, 0};
   int fit_content_mode_ = 0;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
