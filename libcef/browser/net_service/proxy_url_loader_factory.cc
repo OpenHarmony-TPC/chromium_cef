@@ -1240,6 +1240,17 @@ void InterceptedRequest::OnDestroy() {
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
+#ifdef OHOS_BUGFIX_CRASH
+  if (!factory_) {
+    LOG(ERROR) << "InterceptedRequest::OnDestroy factory_ is nullptr";
+    return;
+  }
+  if (!factory_->request_handler_) {
+    LOG(ERROR) << "InterceptedRequest::OnDestroy factory_->request_handler_ is nullptr";
+    return;
+  }
+#endif
+
   factory_->request_handler_->OnRequestComplete(id_, request_, status_);
 
 #ifdef OHOS_NETWORK_LOAD
