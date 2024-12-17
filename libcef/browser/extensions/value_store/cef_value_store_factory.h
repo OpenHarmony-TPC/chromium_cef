@@ -45,7 +45,7 @@ class CefValueStoreFactory : public ValueStoreFactory {
  private:
   ~CefValueStoreFactory() override;
 
-  std::unique_ptr<ValueStore> CreateStore();
+  std::unique_ptr<ValueStore> CreateStore(const base::FilePath& directory);
 
   base::FilePath db_path_;
   ValueStore* last_created_store_ = nullptr;
