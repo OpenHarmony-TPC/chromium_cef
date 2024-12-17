@@ -115,6 +115,8 @@
 #include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h"
 #endif
 
+#include "content/browser/renderer_host/media/media_stream_manager.h"
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -702,6 +704,45 @@ void CefBrowserHostBase::CreateToPDF(const CefPdfPrintSettings& settings,
 
   print_util::CreateToPDF(web_contents, settings, callback);
 }
+
+
+void CefBrowserHostBase::StopScreenCapture(const CefString& sessionid) {
+#if defined(OHOS_EX_SCREEN_CAPTURE)
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  std::string sessionidStr = sessionid;
+  web_contents->StopScreenCapture(sessionidStr);
+#endif // defined(OHOS_EX_SCREEN_CAPTURE)
+}
+
+void CefBrowserHostBase::RegisterScreenCaptureDelegateListener(
+    CefRefPtr<CefScreenCaptureCallback> listener) {
+#if defined(OHOS_EX_SCREEN_CAPTURE)
+  if (!listener) {
+    LOG(ERROR) << "CefBrowserHostBase::RegisterScreenCaptureDelegateListener "
+                  "listener is nullptr";
+    return;
+  }
+  
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+
+  content::MediaStreamManager::SetScreenCaptureDelegateCallback(
+      base::BindRepeating(
+          [](CefRefPtr<CefScreenCaptureCallback> callback,
+             int32_t nweb_id, const char* sessionid, int32_t code) {
+            callback->OnStateChange(nweb_id, CefString(sessionid), code);
+          },
+          listener));
+#endif // defined(OHOS_EX_SCREEN_CAPTURE)
+}
+
 
 bool CefBrowserHostBase::SendDevToolsMessage(const void* message,
                                              size_t message_size) {
