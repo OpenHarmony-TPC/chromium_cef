@@ -2133,5 +2133,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) = 0;
+
+  ///
+  /// set video assistant enable.
+  ///
+  /*--cef()--*/
+  virtual void EnableVideoAssistant(bool enable) = 0;
+
+  ///
+  /// execute video assistant function.
+  ///
+  /*--cef()--*/
+  virtual void ExecuteVideoAssistantFunction(const CefString& cmdId) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

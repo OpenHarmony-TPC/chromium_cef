@@ -321,6 +321,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                    CefRefPtr<CefPdfValueCallback> callback) override;
   void SetPopupWindow(cef_native_window_t window) override;
   void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) override;
+  void EnableVideoAssistant(bool enable) override;
+  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

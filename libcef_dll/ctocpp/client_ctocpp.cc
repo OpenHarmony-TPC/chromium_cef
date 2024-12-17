@@ -610,6 +610,64 @@ void CefClientCToCpp::OnPullToRefreshPull(float offset_x, float offset_y) {
   _struct->on_pull_to_refresh_pull(_struct, offset_x, offset_y);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::OnShowToast(double duration, const CefString& toast) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_show_toast)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: toast; type: string_byref_const
+  DCHECK(!toast.empty());
+  if (toast.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_show_toast(_struct, duration, toast.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::OnShowVideoAssistant(
+    const CefString& videoAssistantItems) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_show_video_assistant)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: videoAssistantItems; type: string_byref_const
+  DCHECK(!videoAssistantItems.empty());
+  if (videoAssistantItems.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_show_video_assistant(_struct, videoAssistantItems.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefClientCToCpp::OnReportStatisticLog(const CefString& content) {
+  cef_client_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_report_statistic_log)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: content; type: string_byref_const
+  DCHECK(!content.empty());
+  if (content.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_report_statistic_log(_struct, content.GetStruct());
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefClientCToCpp::CefClientCToCpp() {}

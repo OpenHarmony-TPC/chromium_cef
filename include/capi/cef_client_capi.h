@@ -294,6 +294,26 @@ typedef struct _cef_client_t {
   void(CEF_CALLBACK* on_pull_to_refresh_pull)(struct _cef_client_t* self,
                                               float offset_x,
                                               float offset_y);
+
+  ///
+  /// notify application to show toast.
+  ///
+  void(CEF_CALLBACK* on_show_toast)(struct _cef_client_t* self,
+                                    double duration,
+                                    const cef_string_t* toast);
+
+  ///
+  /// notify application to show video assistant.
+  ///
+  void(CEF_CALLBACK* on_show_video_assistant)(
+      struct _cef_client_t* self,
+      const cef_string_t* videoAssistantItems);
+
+  ///
+  /// notify application to report statistic log.
+  ///
+  void(CEF_CALLBACK* on_report_statistic_log)(struct _cef_client_t* self,
+                                              const cef_string_t* content);
 } cef_client_t;
 
 #ifdef __cplusplus
