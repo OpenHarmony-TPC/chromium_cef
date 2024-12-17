@@ -2269,7 +2269,7 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
           event, ui::LatencyInfo(ui::SourceEventType::OTHER));
     }
   }
-#if defined(IS_OHOS)
+#if BUILDFLAG(IS_OHOS)
   else {
     LOG(ERROR) << "SendMouseEvent event dropped because render_widget_host " << !!render_widget_host_;
   }
