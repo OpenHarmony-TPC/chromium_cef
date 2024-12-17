@@ -165,6 +165,19 @@ class CefSetLockCallback : public virtual CefBaseRefCounted {
   virtual void Handle(bool key) = 0;
 };
 
+///
+/// callback for RegisterScreenCaptureDelegateListener().
+///
+/*--cef(source=client)--*/
+class CefScreenCaptureCallback : public virtual CefBaseRefCounted {
+public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void OnStateChange(int32_t nweb_id, const CefString& sessionid, int32_t code) = 0;
+};
+
 /* ---------- ohos webview add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 
@@ -2138,5 +2151,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void ReloadFocusedFrame() = 0;
 #endif
+
+  ///
+  ///  Close current screen capture.
+  ///
+  /*--cef()--*/
+  virtual void StopScreenCapture(const CefString& sessionid) = 0;
+
+  ///
+  ///  Register screen capture listener.
+  ///
+  /*--cef()--*/
+  virtual void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

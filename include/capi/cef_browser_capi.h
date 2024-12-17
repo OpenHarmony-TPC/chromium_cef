@@ -191,6 +191,25 @@ typedef struct _cef_set_lock_callback_t {
 } cef_set_lock_callback_t;
 
 ///
+/// callback for register_screen_capture_delegate_listener.
+///
+typedef struct _cef_screen_capture_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK* on_state_change)(
+      struct _cef_screen_capture_callback_t* self,
+      int32_t nweb_id,
+      const cef_string_t* sessionid,
+      int32_t code);
+} cef_screen_capture_callback_t;
+
+///
 /// Structure used to represent a browser. When used in the browser process the
 /// functions of this structure may be called on any thread unless otherwise
 /// indicated in the comments. When used in the render process the functions of
@@ -2117,6 +2136,19 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* set_popup_window)(struct _cef_browser_host_t* self,
                                        cef_native_window_t window);
+
+  ///
+  ///  Close current screen capture.
+  ///
+  void(CEF_CALLBACK* stop_screen_capture)(struct _cef_browser_host_t* self,
+                                          const cef_string_t* sessionid);
+
+  ///
+  ///  Register screen capture listener.
+  ///
+  void(CEF_CALLBACK* register_screen_capture_delegate_listener)(
+      struct _cef_browser_host_t* self,
+      struct _cef_screen_capture_callback_t* listener);
 } cef_browser_host_t;
 
 ///
