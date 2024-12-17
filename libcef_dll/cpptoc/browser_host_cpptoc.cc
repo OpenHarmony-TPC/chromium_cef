@@ -3922,6 +3922,44 @@ browser_host_scale_gesture_change_v2(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->ScaleGestureChangeV2(type, scale, originScale, width, height);
 }
 
+void CEF_CALLBACK
+browser_host_enable_video_assistant(struct _cef_browser_host_t* self,
+                                    int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->EnableVideoAssistant(enable ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_execute_video_assistant_function(struct _cef_browser_host_t* self,
+                                              const cef_string_t* cmdId) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: cmdId; type: string_byref_const
+  DCHECK(cmdId);
+  if (!cmdId) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ExecuteVideoAssistantFunction(
+      CefString(cmdId));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4142,6 +4180,9 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
   GetStruct()->set_popup_window = browser_host_set_popup_window;
   GetStruct()->scale_gesture_change_v2 = browser_host_scale_gesture_change_v2;
+  GetStruct()->enable_video_assistant = browser_host_enable_video_assistant;
+  GetStruct()->execute_video_assistant_function =
+      browser_host_execute_video_assistant_function;
 }
 
 // DESTRUCTOR - Do not edit by hand.

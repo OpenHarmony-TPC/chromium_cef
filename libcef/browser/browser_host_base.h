@@ -511,6 +511,9 @@ bool NeedsReload() override;
 #endif
 #endif  // BUILDFLAG(IS_OHOS)
 
+  void EnableVideoAssistant(bool enable) override;
+  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
+
 #if defined(OHOS_MEDIA_POLICY)
   void CloseMedia() override;
   void StopMedia() override;

@@ -479,6 +479,12 @@ bool NeedsReload() override;
       const content::MediaInfo& media_info) override;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#if defined(OHOS_VIDEO_ASSISTANT)
+  void OnShowToast(double duration, const std::string& toast) override;
+  void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
+  void OnReportStatisticLog(const std::string& content) override;
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+
 #ifdef OHOS_AI
   void CreateOverlay(const gfx::ImageSkia& image,
                      const gfx::Rect& image_rect,

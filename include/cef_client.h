@@ -328,6 +328,24 @@ class CefClient : public virtual CefBaseRefCounted {
       CefOwnPtr<CefMediaPlayerListener> listener,
       const CefCustomMediaInfo& media_info) { return nullptr; }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+  ///
+  /// notify application to show toast.
+  ///
+  /*--cef()--*/
+  virtual void OnShowToast(double duration, const CefString& toast) {}
+
+  ///
+  /// notify application to show video assistant.
+  ///
+  /*--cef()--*/
+  virtual void OnShowVideoAssistant(const CefString& videoAssistantItems) {}
+
+  ///
+  /// notify application to report statistic log.
+  ///
+  /*--cef()--*/
+  virtual void OnReportStatisticLog(const CefString& content) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

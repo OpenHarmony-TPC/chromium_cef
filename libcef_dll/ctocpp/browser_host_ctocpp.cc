@@ -3618,6 +3618,43 @@ void CefBrowserHostCToCpp::ScaleGestureChangeV2(int type, float scale, float ori
   _struct->scale_gesture_change_v2(_struct, type, scale, originScale, width, height);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::EnableVideoAssistant(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_video_assistant(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ExecuteVideoAssistantFunction(
+    const CefString& cmdId) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, execute_video_assistant_function)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: cmdId; type: string_byref_const
+  DCHECK(!cmdId.empty());
+  if (cmdId.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->execute_video_assistant_function(_struct, cmdId.GetStruct());
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

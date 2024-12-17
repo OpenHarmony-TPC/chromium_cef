@@ -2116,6 +2116,19 @@ typedef struct _cef_browser_host_t {
                               float originScale,
                               float width,
                               float height);
+
+  ///
+  /// set video assistant enable.
+  ///
+  void(CEF_CALLBACK* enable_video_assistant)(struct _cef_browser_host_t* self,
+                                             int enable);
+
+  ///
+  /// execute video assistant function.
+  ///
+  void(CEF_CALLBACK* execute_video_assistant_function)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* cmdId);
 } cef_browser_host_t;
 
 ///

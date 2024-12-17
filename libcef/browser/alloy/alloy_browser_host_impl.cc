@@ -2951,6 +2951,37 @@ AlloyBrowserHostImpl::CreateCustomMediaPlayer(
 }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#if defined(OHOS_VIDEO_ASSISTANT)
+void AlloyBrowserHostImpl::OnShowToast(double duration,
+                                       const std::string& toast) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to show toast";
+    return;
+  }
+
+  client_->OnShowToast(duration, toast);
+}
+
+void AlloyBrowserHostImpl::OnShowVideoAssistant(
+    const std::string& videoAssistantItems) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to show video assistant";
+    return;
+  }
+
+  client_->OnShowVideoAssistant(videoAssistantItems);
+}
+
+void AlloyBrowserHostImpl::OnReportStatisticLog(const std::string& content) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to report sttistic log";
+    return;
+  }
+
+  client_->OnReportStatisticLog(content);
+}
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+
 #ifdef OHOS_RENDER_PROCESS_MODE
 void AlloyBrowserHostImpl::NotifyNeedsReload(bool needs_reload) {
   if (is_hidden_ && needs_reload) {

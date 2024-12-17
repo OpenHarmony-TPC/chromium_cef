@@ -3508,6 +3508,28 @@ int CefBrowserHostBase::GetNWebId() {
 
 #endif  // IS_OHOS
 
+void CefBrowserHostBase::EnableVideoAssistant(bool enable) {
+#if defined(OHOS_VIDEO_ASSISTANT)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when enable video assistant";
+    return;
+  }
+
+  GetWebContents()->EnableVideoAssistant(enable);
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+}
+
+void CefBrowserHostBase::ExecuteVideoAssistantFunction(const CefString& cmdId) {
+#if defined(OHOS_VIDEO_ASSISTANT)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when execute video assistant function";
+    return;
+  }
+
+  GetWebContents()->ExecuteVideoAssistantFunction(cmdId.ToString());
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+}
+
 #if defined(OHOS_MEDIA_POLICY)
 void CefBrowserHostBase::CloseMedia() {
   if (is_fullscreen_) {
