@@ -3629,6 +3629,36 @@ void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
   _struct->get_overscroll_offset(_struct, offset_x, offset_y);
 }
 #endif
+
+NO_SANITIZE("cfi-icall") 
+void CefBrowserHostCToCpp::ScrollToWithAnime(float x, float y, int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_to)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_to_with_anime(_struct, x, y, duration);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, scroll_by)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->scroll_by_with_anime(_struct, delta_x, delta_y, duration);
+}
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

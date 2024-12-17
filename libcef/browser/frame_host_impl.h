@@ -231,6 +231,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 #if defined(OHOS_GET_SCROLL_OFFSET)
   void GetOverScrollOffset(float* offset_x, float* offset_y);
 #endif
+  void ScrollToWithAnime(float x, float y, int32_t duration);
+  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration);
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #endif  // BUILDFLAG(IS_OHOS)

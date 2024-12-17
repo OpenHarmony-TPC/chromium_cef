@@ -3874,6 +3874,40 @@ browser_host_auto_fill_with_imfevent(struct _cef_browser_host_t* self,
       is_new_password ? true : false, content);
 }
 
+void CEF_CALLBACK browser_host_scroll_to_with_anime(struct _cef_browser_host_t* self,
+                                                    float x,
+                                                    float y,
+                                                    int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollToWithAnime(x, y, duration);
+}
+
+void CEF_CALLBACK browser_host_scroll_by_with_anime(struct _cef_browser_host_t* self,
+                                                    float delta_x,
+                                                    float delta_y,
+                                                    int32_t duration) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y, duration);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4096,6 +4130,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
   GetStruct()->process_autofill_cancel = browser_host_process_autofill_cancel;
   GetStruct()->auto_fill_with_imfevent = browser_host_auto_fill_with_imfevent;
+  GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
+  GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
 }
 
 // DESTRUCTOR - Do not edit by hand.
