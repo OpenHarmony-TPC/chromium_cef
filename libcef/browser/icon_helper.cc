@@ -89,6 +89,14 @@ void IconHelper::OnUpdateFaviconURL(
 #endif  // defined(OHOS_WPT)
       continue;
     }
+    std::vector<IconSize> sizes;
+    for (const auto& size : candidate->icon_sizes) {
+      sizes.emplace_back(size.width(), size.height());
+    }
+    if (sizes.empty()) {
+      LOG(WARNING) << "No icon sizes available for URL: "
+                   << candidate->icon_url;
+    }
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
         DownloadFavicon(candidate);
@@ -96,10 +104,14 @@ void IconHelper::OnUpdateFaviconURL(
       case blink::mojom::FaviconIconType::kTouchIcon:
         handler_->OnReceivedTouchIconUrl(
             browser_, CefString(candidate->icon_url.spec()), false);
+        handler_->OnTouchIconUrlWithSizesReceived(
+            CefString(candidate->icon_url.spec()), false, sizes);
         break;
       case blink::mojom::FaviconIconType::kTouchPrecomposedIcon:
         handler_->OnReceivedTouchIconUrl(
             browser_, CefString(candidate->icon_url.spec()), true);
+        handler_->OnTouchIconUrlWithSizesReceived(
+            CefString(candidate->icon_url.spec()), true, sizes);
         break;
       case blink::mojom::FaviconIconType::kInvalid:
         LOG(INFO) << "An invalid icon type.";
