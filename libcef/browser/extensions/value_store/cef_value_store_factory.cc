@@ -29,7 +29,7 @@ CefValueStoreFactory::~CefValueStoreFactory() = default;
 std::unique_ptr<ValueStore> CefValueStoreFactory::CreateValueStore(
     const base::FilePath& directory,
     const std::string& uma_client_name) {
-  std::unique_ptr<ValueStore> value_store(CreateStore());
+  std::unique_ptr<ValueStore> value_store(CreateStore(directory));
   // This factory is purposely keeping the raw pointers to each ValueStore
   // created. Cefs using CefValueStoreFactory must be careful to keep
   // those ValueStore's alive for the duration of their test.
@@ -61,12 +61,12 @@ void CefValueStoreFactory::Reset() {
   value_store_map_.clear();
 }
 
-std::unique_ptr<ValueStore> CefValueStoreFactory::CreateStore() {
+std::unique_ptr<ValueStore> CefValueStoreFactory::CreateStore(const base::FilePath& directory) {
   std::unique_ptr<ValueStore> store;
   if (db_path_.empty()) {
     store = std::make_unique<CefValueStore>();
   } else {
-    store = std::make_unique<LeveldbValueStore>(kUMAClientName, db_path_);
+    store = std::make_unique<LeveldbValueStore>(kUMAClientName, db_path_.Append(directory));
   }
   last_created_store_ = store.get();
   return store;
