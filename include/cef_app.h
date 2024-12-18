@@ -151,6 +151,11 @@ void CefResumeDownload(const CefString& guid,
 /// This function should be called on the main application thread.
 ///
 /*--cef()--*/
+void CefSetFileRenameOption(const int file_rename_option);
+///
+/// This function should be called on the main application thread.
+///
+/*--cef()--*/
 CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid);
 #endif  // BUILDFLAG(IS_OHOS)
 
