@@ -3428,8 +3428,18 @@ void CefRenderWidgetHostViewOSR::OnTextSelectionChanged(
     content::TextInputManager *text_input_manager,
     RenderWidgetHostViewBase *updated_view)
 {
+  if (!text_input_manager || !updated_view)
+  {
+    LOG(ERROR) << "OnTextSelectionChanged text is null";
+    return;
+  }
   const content::TextInputManager::TextSelection &selection =
       *text_input_manager->GetTextSelection(updated_view);
+  if (!browser_impl_ || !browser_impl_->GetClient())
+  {
+    LOG(ERROR) << "OnTextSelectionChanged get client failed";
+    return;
+  }
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
