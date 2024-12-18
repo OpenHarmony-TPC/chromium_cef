@@ -45,6 +45,10 @@
 #include "services/network/public/mojom/network_service.mojom.h"
 #include "libcef/browser/download_item_impl.h"
 
+#if defined(OHOS_EX_DOWNLOAD)
+#include "components/download/public/common/download_utils.h"
+#endif // defined(OHOS_EX_DOWNLOAD)
+
 namespace {
 
 CefContext* g_context = nullptr;
@@ -544,6 +548,11 @@ void CefResumeDownload(const CefString& guid,
     LOG(ERROR) << "browser contexts is empty, resume download failed";
   }
 #endif  //  OHOS_EX_DOWNLOAD
+}
+void CefSetFileRenameOption(const int file_rename_option) {
+#if defined(OHOS_EX_DOWNLOAD)
+  SetFileRenameOptions((download::FileRenameOptions)file_rename_option);
+#endif // OHOS_EX_DOWNLOAD
 }
 
 // CefContext
