@@ -91,8 +91,6 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 #include "content/browser/ohos/overscroll_controller_ohos.h"
 #include "ui/ohos/overscroll_refresh.h"
-#include "render_widget_host_view_osr.h"
-#include "render_widget_host_view_osr.h"
 #endif
 
 namespace {
