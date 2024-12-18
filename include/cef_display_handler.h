@@ -41,6 +41,7 @@
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
+#include "ohos_nweb/src/capi/nweb_icon_size.h"
 
 ///
 /// Implement this interface to handle events related to browser display state.
@@ -81,8 +82,7 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
                                       bool fullscreen,
-                                      const CefSize& video_natural_size) {
-  }
+                                      const CefSize& video_natural_size) {}
 
   ///
   /// Called when the browser is about to display a tooltip. |text| contains the
@@ -197,6 +197,15 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                                  size_t height,
                                  cef_color_type_t color_type,
                                  cef_alpha_type_t alpha_type) {}
+
+  ///
+  /// onTouchIconUrlWithSizesReceived.
+  ///
+  /*--cef()--*/
+  virtual void OnTouchIconUrlWithSizesReceived(
+      const CefString& image_url,
+      bool precomposed,
+      const std::vector<IconSize>& sizes) {}
 
   ///
   /// Called when the page scale factor has changed.
