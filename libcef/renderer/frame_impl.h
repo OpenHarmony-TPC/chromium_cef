@@ -223,6 +223,7 @@ class CefFrameImpl
   struct CefHitData {
     int type;
     CefString extra_data;
+    CefHitData() : type(0), extra_data("") {}
   };
   void ScrollTo(float x, float y) override;
   void ScrollBy(float delta_x, float delta_y) override;
