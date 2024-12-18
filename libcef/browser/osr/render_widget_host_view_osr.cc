@@ -91,6 +91,8 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
 #include "content/browser/ohos/overscroll_controller_ohos.h"
 #include "ui/ohos/overscroll_refresh.h"
+#include "render_widget_host_view_osr.h"
+#include "render_widget_host_view_osr.h"
 #endif
 
 namespace {
@@ -3422,6 +3424,20 @@ std::u16string CefRenderWidgetHostViewOSR::GetText() {
   if (text_input_manager_)
     return text_input_manager_->GetTextSelection(this)->text();
   return std::u16string();
+}
+
+void CefRenderWidgetHostViewOSR::OnTextSelectionChanged(
+    content::TextInputManager *text_input_manager,
+    RenderWidgetHostViewBase *updated_view)
+{
+  const content::TextInputManager::TextSelection &selection =
+      *text_input_manager->GetTextSelection(updated_view);
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnTextSelectionChanged(
+      browser_impl_.get(), selection.selected_text(),
+      CefRange(selection.range().start(), selection.range().end()));
 }
 #endif  // #ifdef OHOS_CLIPBOARD
 
