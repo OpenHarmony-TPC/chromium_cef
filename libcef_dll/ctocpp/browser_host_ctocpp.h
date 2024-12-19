@@ -306,6 +306,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                          int32_t duration) override;
   void GetScrollOffset(float* offset_x, float* offset_y) override;
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
+#ifdef OHOS_EX_REFRESH_IFRAME
+  bool IsIframe() override;
+  void ReloadFocusedFrame() override;
+#endif
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;

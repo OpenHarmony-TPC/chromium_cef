@@ -2032,6 +2032,16 @@ typedef struct _cef_browser_host_t {
                                              float* offset_y);
 
   ///
+  /// Get whether it is the iframe.
+  ///
+  int(CEF_CALLBACK* is_iframe)(struct _cef_browser_host_t* self);
+
+  ///
+  /// fresh focused frame for context menu.
+  ///
+  void(CEF_CALLBACK* reload_focused_frame)(struct _cef_browser_host_t* self);
+
+  ///
   /// OnSafeInsetsChange
   ///
   void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,

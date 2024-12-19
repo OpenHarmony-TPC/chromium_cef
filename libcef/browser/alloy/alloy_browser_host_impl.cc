@@ -3018,3 +3018,20 @@ float AlloyBrowserHostImpl::GetPageScaleFactor() {
   return 1;
 }
 #endif
+
+#ifdef OHOS_EX_REFRESH_IFRAME
+bool AlloyBrowserHostImpl::IsIframe()
+{
+  if (web_contents() && web_contents()->GetFocusedFrame()) {
+    return !!web_contents()->GetFocusedFrame()->GetParentOrOuterDocument();
+  }
+  return false;
+}
+
+void AlloyBrowserHostImpl::ReloadFocusedFrame()
+{
+  if (web_contents()) {
+    web_contents()->ReloadFocusedFrame();
+  }
+}
+#endif

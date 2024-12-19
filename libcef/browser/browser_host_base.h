@@ -781,6 +781,12 @@ bool TerminateRenderProcess() override;
 
   void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+  bool IsIframe() override { return false; }
+  void ReloadFocusedFrame() override {}
+#endif
+
+
 protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

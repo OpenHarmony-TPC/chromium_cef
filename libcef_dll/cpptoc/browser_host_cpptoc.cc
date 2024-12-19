@@ -3683,6 +3683,40 @@ browser_host_get_over_scroll_offset(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->GetOverScrollOffset(offset_x, offset_y);
 }
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+int CEF_CALLBACK browser_host_is_iframe(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->IsIframe();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_reload_focused_frame(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ReloadFocusedFrame();
+}
+#endif
+
 void CEF_CALLBACK
 browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
                                    int left,
@@ -4166,6 +4200,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->get_scroll_offset = browser_host_get_scroll_offset;
   GetStruct()->get_over_scroll_offset = browser_host_get_over_scroll_offset;
+#ifdef OHOS_EX_REFRESH_IFRAME
+  GetStruct()->is_iframe = browser_host_is_iframe;
+  GetStruct()->reload_focused_frame = browser_host_reload_focused_frame;
+#endif
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
   GetStruct()->notify_for_next_touch_event =
       browser_host_notify_for_next_touch_event;
