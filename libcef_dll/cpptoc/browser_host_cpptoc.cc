@@ -31,6 +31,7 @@
 #include "libcef_dll/ctocpp/java_script_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/navigation_entry_visitor_ctocpp.h"
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/pdf_value_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/precompile_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/set_lock_callback_ctocpp.h"
@@ -3908,6 +3909,44 @@ void CEF_CALLBACK browser_host_scroll_by_with_anime(struct _cef_browser_host_t* 
   CefBrowserHostCppToC::Get(self)->ScrollByWithAnime(delta_x, delta_y, duration);
 }
 
+void CEF_CALLBACK
+browser_host_create_to_pdf(struct _cef_browser_host_t* self,
+                           const struct _cef_pdf_print_settings_t* settings,
+                           cef_pdf_value_callback_t* callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: settings; type: struct_byref_const
+  DCHECK(settings);
+  if (!settings) {
+    return;
+  }
+  if (!template_util::has_valid_size(settings)) {
+    DCHECK(false) << "invalid settings->[base.]size";
+    return;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback);
+  if (!callback) {
+    return;
+  }
+
+  // Translate param: settings; type: struct_byref_const
+  CefPdfPrintSettings settingsObj;
+  if (settings) {
+    settingsObj.Set(*settings, false);
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CreateToPDF(
+      settingsObj, CefPdfValueCallbackCToCpp::Wrap(callback));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4132,6 +4171,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->auto_fill_with_imfevent = browser_host_auto_fill_with_imfevent;
   GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
+  GetStruct()->create_to_pdf = browser_host_create_to_pdf;
 }
 
 // DESTRUCTOR - Do not edit by hand.
