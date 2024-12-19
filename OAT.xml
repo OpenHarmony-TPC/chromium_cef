@@ -94,6 +94,8 @@ used to filter file path.
                 <filteritem type="filepath" name="libcef/browser/autofill/oh_autofill_manager.cc" desc="基于Chromium作者的android_autofill_manager.cc，所有权利保留"/>
                 <filteritem type="filepath" name="libcef/browser/password/oh_password_manager_client.cc" desc="基于Chromium作者的chrome_password_manager_client.cc，所有权利保留"/>
                 <filteritem type="filepath" name="libcef/browser/password/oh_password_manager_client.h" desc="基于Chromium作者的chrome_password_manager_client.h，所有权利保留"/>
+                <filteritem type="filepath" name="libcef/browser/printing/print_util.h" desc="恢复文件版权年限更改"/>
+                <filteritem type="filepath" name="libcef/browser/printing/print_util.cc" desc="恢复文件版权年限更改"/>
             </filefilter>
         </filefilterlist>
         <licensematcherlist>
