@@ -25,6 +25,7 @@
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
 #include "extensions/browser/api/management/management_api.h"
+#include "extensions/browser/api/runtime/runtime_api.h"
 #endif
 namespace cef {
 
@@ -45,6 +46,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::DeveloperPrivateAPI::GetFactoryInstance();
     extensions::ManagementAPI::GetFactoryInstance();
     extensions::WebRequestAPI::GetFactoryInstance();
+    extensions::RuntimeAPI::GetFactoryInstance();
 #endif
   }
 
