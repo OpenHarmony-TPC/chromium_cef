@@ -11,6 +11,7 @@
 
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
+#include "ohos_nweb/src/capi/nweb_icon_size.h"
 
 #include "third_party/blink/public/mojom/favicon/favicon_url.mojom-forward.h"
 #include "third_party/skia/include/core/SkBitmap.h"

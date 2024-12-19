@@ -206,6 +206,16 @@ typedef struct _cef_display_handler_t {
                                            cef_alpha_type_t alpha_type);
 
   ///
+  /// OnTouchIconUrlWithSizesReceived.
+  ///
+  void(CEF_CALLBACK* on_touch_icon_url_with_sizes_received)(
+      struct _cef_display_handler_t* self,
+      const cef_string_t* icon_url,
+      int precomposed,
+      cef_size_t* sizes,
+      size_t sizes_count);
+
+  ///
   /// Called when the page scale factor has changed.
   ///
   void(CEF_CALLBACK* on_scale_changed)(struct _cef_display_handler_t* self,
