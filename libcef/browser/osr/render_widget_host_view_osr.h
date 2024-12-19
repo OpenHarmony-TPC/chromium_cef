@@ -486,6 +486,8 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_CLIPBOARD
   std::u16string GetSelectedText() override;
   std::u16string GetText();
+  void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
+                              RenderWidgetHostViewBase* updated_view) override;
 #endif  // #ifdef OHOS_CLIPBOARD
 
 #ifdef OHOS_EX_FREE_COPY

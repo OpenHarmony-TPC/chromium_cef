@@ -3423,6 +3423,27 @@ std::u16string CefRenderWidgetHostViewOSR::GetText() {
     return text_input_manager_->GetTextSelection(this)->text();
   return std::u16string();
 }
+
+void CefRenderWidgetHostViewOSR::OnTextSelectionChanged(
+    content::TextInputManager *text_input_manager,
+    RenderWidgetHostViewBase *updated_view) {
+  if (!text_input_manager || !updated_view) {
+    LOG(ERROR) << "OnTextSelectionChanged text is null";
+    return;
+  }
+  const content::TextInputManager::TextSelection &selection =
+      *text_input_manager->GetTextSelection(updated_view);
+  if (!browser_impl_ || !browser_impl_->GetClient()) {
+    LOG(ERROR) << "OnTextSelectionChanged get client failed";
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnTextSelectionChanged(
+      browser_impl_.get(), selection.selected_text(),
+      CefRange(selection.range().start(), selection.range().end()));
+}
 #endif  // #ifdef OHOS_CLIPBOARD
 
 #ifdef OHOS_EX_FREE_COPY
