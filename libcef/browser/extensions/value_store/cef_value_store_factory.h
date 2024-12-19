@@ -45,7 +45,11 @@ class CefValueStoreFactory : public ValueStoreFactory {
  private:
   ~CefValueStoreFactory() override;
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  std::unique_ptr<ValueStore> CreateStore(const base::FilePath& directory);
+#else
   std::unique_ptr<ValueStore> CreateStore();
+#endif
 
   base::FilePath db_path_;
   ValueStore* last_created_store_ = nullptr;
