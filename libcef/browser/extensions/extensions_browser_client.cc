@@ -37,6 +37,10 @@
 #include "extensions/common/api/mime_handler.mojom.h"
 #include "extensions/common/constants.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/runtime/chrome_runtime_api_delegate.h"
+#endif
+
 using content::BrowserContext;
 using content::BrowserThread;
 
@@ -363,9 +367,14 @@ void CefExtensionsBrowserClient::RegisterBrowserInterfaceBindersForFrame(
 std::unique_ptr<RuntimeAPIDelegate>
 CefExtensionsBrowserClient::CreateRuntimeAPIDelegate(
     content::BrowserContext* context) const {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return std::unique_ptr<RuntimeAPIDelegate>(
+      new ChromeRuntimeAPIDelegate(context));
+#else
   // TODO(extensions): Implement to support Apps.
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 const ComponentExtensionResourceManager*

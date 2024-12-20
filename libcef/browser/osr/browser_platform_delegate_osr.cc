@@ -21,6 +21,12 @@
 #include "ui/display/screen.h"
 #include "ui/events/base_event_utils.h"
 
+#if defined(OHOS_EX_FREE_COPY)
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 #ifdef OHOS_HTML_SELECT
 namespace {
 void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
@@ -1001,6 +1007,13 @@ void CefBrowserPlatformDelegateOsr::DragSourceSystemDragEnded() {
     view->SetTextHandlesTemporarilyHiddenByDrag(false, false);
   }
 #endif
+
+#ifdef OHOS_EX_FREE_COPY
+  if (web_contents &&
+          base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebExFreeCopy)) {
+    web_contents->SetShowingContextMenu(true);
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::AccessibilityEventReceived(
@@ -1269,3 +1282,13 @@ void CefBrowserPlatformDelegateOsr::ScaleGestureChangeV2(int type,
     view->ScaleGestureChangeV2(type, scale, originScale, centerX, centerY);
   }
 }
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+void CefBrowserPlatformDelegateOsr::OnBeforeUnloadFired(bool proceed) {
+  CefRefPtr<CefDialogHandler> handler =
+      browser_->GetClient()->GetDialogHandler();
+  if (handler.get()) {
+    handler->OnBeforeUnloadFired(browser_, proceed);
+  }
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD

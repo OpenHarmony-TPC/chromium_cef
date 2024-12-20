@@ -511,6 +511,9 @@ class CefBrowserPlatformDelegate {
 #endif
 
   virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY);
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  virtual void OnBeforeUnloadFired(bool proceed);
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
 
  protected:
   // Allow deletion via std::unique_ptr only.

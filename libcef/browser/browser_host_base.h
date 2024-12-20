@@ -785,7 +785,17 @@ bool TerminateRenderProcess() override;
 
   void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
 
-protected:
+#ifdef OHOS_EX_REFRESH_IFRAME
+  bool IsIframe() override { return false; }
+  void ReloadFocusedFrame() override {}
+#endif
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override;
+  void DispatchBeforeUnload() override;
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
+ protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);

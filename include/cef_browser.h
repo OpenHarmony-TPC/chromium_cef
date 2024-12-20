@@ -556,6 +556,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual uint32_t GetAcceleratedWidget(bool IsPopup) = 0;
 
+  ///
+  /// Determine if BeforeUnload or Unload events need to be triggered.
+  ///
+  /*--cef()--*/
+  virtual bool NeedToFireBeforeUnloadOrUnloadEvents() = 0;
+
+  ///
+  /// Trigger the BeforeUnload event with an option to auto-cancel.
+  ///
+  /*--cef()--*/
+  virtual void DispatchBeforeUnload() = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
@@ -2171,5 +2183,19 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) = 0;
+
+#ifdef OHOS_EX_REFRESH_IFRAME
+  ///
+  /// Get whether it is the iframe.
+  ///
+  /*--cef()--*/
+  virtual bool IsIframe() = 0;
+
+  ///
+  /// fresh focused frame for context menu.
+  ///
+  /*--cef()--*/
+  virtual void ReloadFocusedFrame() = 0;
+#endif
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
