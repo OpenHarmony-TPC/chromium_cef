@@ -287,6 +287,29 @@ int CEF_CALLBACK dialog_handler_trig_ad_block_enabled_for_site_from_ui(
   return _retval;
 }
 
+void CEF_CALLBACK
+dialog_handler_on_before_unload_fired(struct _cef_dialog_handler_t* self,
+                                    cef_browser_t* browser,
+                                    bool proceed) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnBeforeUnloadFired(
+    CefBrowserCToCpp::Wrap(browser), proceed);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -300,6 +323,7 @@ CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
   GetStruct()->trig_ad_block_enabled_for_site_from_ui =
       dialog_handler_trig_ad_block_enabled_for_site_from_ui;
+  GetStruct()->on_before_unload_fired = dialog_handler_on_before_unload_fired;
 }
 
 // DESTRUCTOR - Do not edit by hand.

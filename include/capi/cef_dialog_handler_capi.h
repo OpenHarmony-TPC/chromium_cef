@@ -204,6 +204,13 @@ typedef struct _cef_dialog_handler_t {
       struct _cef_browser_t* browser,
       const cef_string_t* main_frame_url,
       int main_frame_tree_node_id);
+
+  ///
+  /// Handles the BeforeUnload event.
+  ///
+  void(CEF_CALLBACK* on_before_unload_fired)(struct _cef_dialog_handler_t* self,
+                                             struct _cef_browser_t* browser,
+                                             bool proceed);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

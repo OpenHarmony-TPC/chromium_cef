@@ -786,8 +786,12 @@ bool TerminateRenderProcess() override;
   void ReloadFocusedFrame() override {}
 #endif
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override;
+  void DispatchBeforeUnload() override;
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
 
-protected:
+ protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);

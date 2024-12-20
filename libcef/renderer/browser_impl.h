@@ -178,6 +178,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override {}
 #endif
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override { return false; }
+  void DispatchBeforeUnload() override {}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
  private:
   // ID of the browser that this RenderView is associated with. During loading
   // of cross-origin requests multiple RenderViews may be associated with the

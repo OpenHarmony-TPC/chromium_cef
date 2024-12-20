@@ -67,6 +67,7 @@ class CefDialogHandlerCToCpp
   bool TrigAdBlockEnabledForSiteFromUi(CefRefPtr<CefBrowser> browser,
                                        const CefString& main_frame_url,
                                        int main_frame_tree_node_id) override;
+  void OnBeforeUnloadFired(CefRefPtr<CefBrowser> browser, bool proceed) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
