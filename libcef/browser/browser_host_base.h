@@ -353,6 +353,10 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
+  void StopScreenCapture(const CefString& session_id) override;
+  void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) override;
+
   void SetNWebId(int NWebID) override;
   void PrecompileJavaScript(const std::string& url,
                             const std::string& script,

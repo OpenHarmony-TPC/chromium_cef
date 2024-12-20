@@ -323,6 +323,9 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) override;
   void EnableVideoAssistant(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
+  void StopScreenCapture(const CefString& session_id) override;
+  void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
