@@ -2145,5 +2145,19 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ExecuteVideoAssistantFunction(const CefString& cmdId) = 0;
+
+#ifdef OHOS_EX_REFRESH_IFRAME
+  ///
+  /// Get whether it is the iframe.
+  ///
+  /*--cef()--*/
+  virtual bool IsIframe() = 0;
+
+  ///
+  /// fresh focused frame for context menu.
+  ///
+  /*--cef()--*/
+  virtual void ReloadFocusedFrame() = 0;
+#endif
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
