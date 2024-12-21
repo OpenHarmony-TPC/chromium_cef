@@ -17,6 +17,10 @@
 #include "extensions/common/permissions/permission_message_provider.h"
 #include "extensions/common/url_pattern_set.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/common/extensions/chrome_extensions_api_provider.h"
+#endif
+
 namespace extensions {
 
 namespace {
@@ -42,6 +46,9 @@ CefExtensionsClient::CefExtensionsClient()
       webstore_update_url_(extension_urls::kChromeWebstoreUpdateURL) {
   AddAPIProvider(std::make_unique<CoreExtensionsAPIProvider>());
   AddAPIProvider(std::make_unique<CefExtensionsAPIProvider>());
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  AddAPIProvider(std::make_unique<ChromeExtensionsAPIProvider>());
+#endif
 }
 
 CefExtensionsClient::~CefExtensionsClient() {}
