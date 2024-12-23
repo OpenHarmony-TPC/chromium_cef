@@ -40,7 +40,12 @@ network::mojom::CookieManager* GetCookieManager(
 }
 
 net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
+#ifdef OHOS_NETWORK_LOAD
+                                    bool for_loading_cookies,
+                                    const absl::optional<GURL> new_url) {
+#else
                                     bool for_loading_cookies) {
+#endif // OHOS_NETWORK_LOAD
   // Match the logic from InterceptionJob::FetchCookies and
   // ChromeContentBrowserClient::ShouldIgnoreSameSiteCookieRestrictionsWhenTopLevel.
   bool should_treat_as_first_party =
@@ -60,6 +65,12 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
                      request.navigation_redirect_chain.begin() +
                          request.navigation_redirect_chain.size() - 1);
   }
+
+#ifdef OHOS_NETWORK_LOAD
+  if (new_url.has_value()) {
+    url_chain.push_back(new_url.value());
+  }
+#endif // OHOS_NETWORK_LOAD
 
   net::CookieOptions options;
   options.set_include_httponly();
@@ -244,13 +255,20 @@ bool IsCookieableScheme(
 
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
+#if defined(OHOS_NETWORK_LOAD)
+                 const absl::optional<GURL>& new_url,
+#endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
   CEF_REQUIRE_IOT();
 
   if ((request.load_flags & net::LOAD_DO_NOT_SEND_COOKIES) ||
       request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
+#if defined(OHOS_NETWORK_LOAD)
+      new_url.value_or(request.url).IsAboutBlank()) {
+#else
       request.url.IsAboutBlank()) {
+#endif
     // Continue immediately without loading cookies.
     std::move(done_callback).Run(0, {});
     return;
@@ -258,8 +276,14 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   CEF_POST_TASK(
       CEF_UIT,
-      base::BindOnce(LoadCookiesOnUIThread, browser_context_getter, request.url,
+      base::BindOnce(LoadCookiesOnUIThread, browser_context_getter,
+#if defined(OHOS_NETWORK_LOAD)
+                     new_url.value_or(request.url),
+					 GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+#else
+                     request.url,
                      GetCookieOptions(request, /*for_loading_cookies=*/true),
+#endif // OHOS_NETWORK_LOAD
                      net::CookiePartitionKeyCollection(), allow_cookie_callback,
                      std::move(done_callback)));
 }
@@ -316,7 +340,11 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
         CEF_UIT,
         base::BindOnce(
             SaveCookiesOnUIThread, browser_context_getter, request.url,
+#ifdef OHOS_NETWORK_LOAD
+            GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+#else
             GetCookieOptions(request, /*for_loading_cookies=*/false),
+#endif // OHOS_NETWORK_LOAD
             total_count, std::move(allowed_cookies), std::move(done_callback)));
 
   } else {
