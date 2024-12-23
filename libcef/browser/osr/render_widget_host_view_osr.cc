@@ -1042,6 +1042,13 @@ blink::mojom::PointerLockResult CefRenderWidgetHostViewOSR::LockMouse(
     return blink::mojom::PointerLockResult::kAlreadyLocked;
   }
   is_mouse_locked_ = true;
+  is_request_unadjusted_movement_ = request_unadjusted_movement;
+  CefRefPtr<CefDisplayHandler> handler =
+        browser_impl_->client()->GetDisplayHandler();
+  if (handler) {
+    CefCursorInfo cursor_info;
+    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK, cursor_info);
+  }
   return blink::mojom::PointerLockResult::kSuccess;
 #else
   return blink::mojom::PointerLockResult::kPermissionDenied;
@@ -1068,6 +1075,13 @@ void CefRenderWidgetHostViewOSR::UnlockMouse() {
     return;
   }
   is_mouse_locked_ = false;
+  is_request_unadjusted_movement_ = false;
+  CefRefPtr<CefDisplayHandler> handler =
+        browser_impl_->client()->GetDisplayHandler();
+  if (handler) {
+    CefCursorInfo cursor_info;
+    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK, cursor_info);
+  }
   if (render_widget_host_) {
     render_widget_host_->SendMouseLockLost();
     render_widget_host_->LostMouseLock();
@@ -3915,6 +3929,11 @@ void CefRenderWidgetHostViewOSR::SetNativeEmbedMode(bool flag) {
     return;
   }
   render_widget_host_->input_router()->SetNativeEmbedMode(flag);
+}
+
+bool CefRenderWidgetHostViewOSR::IsRequestUnadjustedMovement()
+{
+  return is_request_unadjusted_movement_;
 }
 
 void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
