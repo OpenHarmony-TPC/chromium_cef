@@ -215,6 +215,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   // on Windows/Linux.
   gfx::Point GetScreenPoint(const gfx::Point& view, bool want_dip_coords) const;
 
+#ifdef OHOS_DRAG_DROP
+  gfx::Rect GetVisibleRectToWeb();
+#endif
+
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
                      const gfx::ImageSkia& image,

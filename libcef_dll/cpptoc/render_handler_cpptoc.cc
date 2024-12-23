@@ -1412,6 +1412,73 @@ render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
 }
 
+void CEF_CALLBACK
+render_handler_get_visible_rect_to_web(struct _cef_render_handler_t* self,
+                                       int* visibleX,
+                                       int* visibleY,
+                                       int* visibleWidth,
+                                       int* visibleHeight) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Verify param: visibleX; type: simple_byref
+  DCHECK(visibleX);
+  if (!visibleX) {
+    return;
+  }
+  // Verify param: visibleY; type: simple_byref
+  DCHECK(visibleY);
+  if (!visibleY) {
+    return;
+  }
+  // Verify param: visibleWidth; type: simple_byref
+  DCHECK(visibleWidth);
+  if (!visibleWidth) {
+    return;
+  }
+  // Verify param: visibleHeight; type: simple_byref
+  DCHECK(visibleHeight);
+  if (!visibleHeight) {
+    return;
+  }
+
+  // Translate param: visibleX; type: simple_byref
+  int visibleXVal = visibleX ? *visibleX : 0;
+  // Translate param: visibleY; type: simple_byref
+  int visibleYVal = visibleY ? *visibleY : 0;
+  // Translate param: visibleWidth; type: simple_byref
+  int visibleWidthVal = visibleWidth ? *visibleWidth : 0;
+  // Translate param: visibleHeight; type: simple_byref
+  int visibleHeightVal = visibleHeight ? *visibleHeight : 0;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetVisibleRectToWeb(visibleXVal, visibleYVal, visibleWidthVal,
+                                                         visibleHeightVal);
+
+  // Restore param: visibleX; type: simple_byref
+  if (visibleX) {
+    *visibleX = visibleXVal;
+  }
+  // Restore param: visibleY; type: simple_byref
+  if (visibleY) {
+    *visibleY = visibleYVal;
+  }
+  // Restore param: visibleWidth; type: simple_byref
+  if (visibleWidth) {
+    *visibleWidth = visibleWidthVal;
+  }
+  // Restore param: visibleHeight; type: simple_byref
+  if (visibleHeight) {
+    *visibleHeight = visibleHeightVal;
+  }
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1481,6 +1548,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->start_vibra_feedback = render_handler_start_vibra_feedback;
   GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
   GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
+  GetStruct()->get_visible_rect_to_web = render_handler_get_visible_rect_to_web;
 }
 
 // DESTRUCTOR - Do not edit by hand.

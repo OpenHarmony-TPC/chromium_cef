@@ -1181,6 +1181,21 @@ void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
   _struct->on_accessibility_event(_struct, accessibilityId, eventType);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_visible_rect_to_web)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->get_visible_rect_to_web(_struct, &visibleX, &visibleY, &visibleWidth, &visibleHeight);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}
