@@ -2348,6 +2348,21 @@ gfx::Point AlloyBrowserHostImpl::GetScreenPoint(const gfx::Point& view,
   return gfx::Point();
 }
 
+#ifdef OHOS_DRAG_DROP
+gfx::Rect AlloyBrowserHostImpl::GetVisibleRectToWeb() {
+  if (!GetClient() || !GetClient()->GetRenderHandler()) {
+    return gfx::Rect();
+  }
+  CefRefPtr<CefRenderHandler> handler = GetClient()->GetRenderHandler();
+  int visible_x = 0;
+  int visible_y = 0;
+  int visible_width = 0;
+  int visible_height = 0;
+  handler->GetVisibleRectToWeb(visible_x, visible_y, visible_width, visible_height);
+  return gfx::Rect(visible_x, visible_y, visible_width, visible_height);
+}
+#endif
+
 void AlloyBrowserHostImpl::StartDragging(
     const content::DropData& drop_data,
     blink::DragOperationsMask allowed_ops,
