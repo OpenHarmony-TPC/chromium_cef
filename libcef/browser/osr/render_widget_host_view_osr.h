@@ -228,6 +228,7 @@ class CefRenderWidgetHostViewOSR
   void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
   void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility);
   void SetScrollable(bool enable);
+  bool GetScrollable() override;
   void OnDidNavigateMainFrameToNewPage() override;
   void AdvanceFocusForIME(int focusType);
   void ScrollBy(float delta_x, float delta_y);

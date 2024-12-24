@@ -3665,6 +3665,10 @@ void CefRenderWidgetHostViewOSR::SetScrollable(bool enable) {
   scroll_enabled_ = enable;
 }
 
+bool CefRenderWidgetHostViewOSR::GetScrollable() {
+  return scroll_enabled_;
+}
+
 void CefRenderWidgetHostViewOSR::ScrollBy(float delta_x, float delta_y) {
   if (!render_widget_host_) {
     return;
