@@ -2175,6 +2175,7 @@ typedef struct _cef_browser_host_t {
   ///  Close current screen capture.
   ///
   void(CEF_CALLBACK* stop_screen_capture)(struct _cef_browser_host_t* self,
+                                          int32_t nweb_id,
                                           const cef_string_t* session_id);
 
   ///

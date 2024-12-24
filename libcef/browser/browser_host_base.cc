@@ -706,7 +706,7 @@ void CefBrowserHostBase::CreateToPDF(const CefPdfPrintSettings& settings,
 }
 
 
-void CefBrowserHostBase::StopScreenCapture(const CefString& session_id) {
+void CefBrowserHostBase::StopScreenCapture(int32_t nweb_id, const CefString& session_id) {
 #if defined(OHOS_EX_SCREEN_CAPTURE)
   auto web_contents = GetWebContents();
   if (!web_contents) {
@@ -714,7 +714,7 @@ void CefBrowserHostBase::StopScreenCapture(const CefString& session_id) {
     return;
   }
   std::string session_id_str = session_id;
-  web_contents->StopScreenCapture(session_id_str);
+  web_contents->StopScreenCapture(nweb_id, session_id_str);
 #endif // defined(OHOS_EX_SCREEN_CAPTURE)
 }
 

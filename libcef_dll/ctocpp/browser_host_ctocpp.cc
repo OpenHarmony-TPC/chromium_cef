@@ -3690,7 +3690,7 @@ void CefBrowserHostCToCpp::ExecuteVideoAssistantFunction(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::StopScreenCapture(const CefString& session_id) {
+void CefBrowserHostCToCpp::StopScreenCapture(int32_t nweb_id, const CefString& session_id) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -3707,7 +3707,7 @@ void CefBrowserHostCToCpp::StopScreenCapture(const CefString& session_id) {
   }
 
   // Execute
-  _struct->stop_screen_capture(_struct, session_id.GetStruct());
+  _struct->stop_screen_capture(_struct, nweb_id, session_id.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")

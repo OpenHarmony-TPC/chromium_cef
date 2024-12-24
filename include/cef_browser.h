@@ -2175,7 +2175,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///  Close current screen capture.
   ///
   /*--cef()--*/
-  virtual void StopScreenCapture(const CefString& session_id) = 0;
+  virtual void StopScreenCapture(int32_t nweb_id, const CefString& session_id) = 0;
 
   ///
   ///  Register screen capture listener.
