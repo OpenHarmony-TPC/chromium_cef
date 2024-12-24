@@ -44,6 +44,7 @@
 #include "ui/native_theme/native_theme.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/ohos/sys_info_utils.h"
 #include "content/public/browser/render_widget_host.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #endif
@@ -311,6 +312,27 @@ void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {
       command_line->HasSwitch(switches::kImageShrinkStandaloneToFit);
   web.text_areas_are_resizable =
       !command_line->HasSwitch(switches::kDisableTextAreaResize);
+
+#if BUILDFLAG(IS_OHOS)
+  // These OHOS default prefs defined in web_preferences.cc is only used for
+  // none PC device, PC device has different prefs as below.
+  if (base::ohos::IsPcDevice()) {
+    web.viewport_meta_enabled = false;
+    web.auto_zoom_focused_editable_to_legible_scale = false;
+    web.shrinks_viewport_contents_to_fit = false;
+    web.viewport_style = blink::mojom::ViewportStyle::kDefault;
+    web.always_show_context_menu_on_touch = true;
+    web.smooth_scroll_for_find_enabled = false;
+    web.main_frame_resizes_are_orientation_changes = false;
+
+    web.double_tap_to_zoom_enabled = false;
+
+    web.text_autosizing_enabled = false;
+
+    web.default_minimum_page_scale_factor = 1.f;
+    web.default_maximum_page_scale_factor = 4.f;
+  }
+#endif
 }
 
 // Helper macro for setting a WebPreferences variable based on the value of a
