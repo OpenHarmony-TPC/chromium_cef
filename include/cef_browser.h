@@ -557,6 +557,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual uint32_t GetAcceleratedWidget(bool IsPopup) = 0;
 
   ///
+  /// Enable safe browsing detection.
+  ///
+  /*--cef()--*/
+  virtual void EnableSafeBrowsingDetection(bool enable, bool strictMode) = 0;
+
+  ///
   /// Determine if BeforeUnload or Unload events need to be triggered.
   ///
   /*--cef()--*/

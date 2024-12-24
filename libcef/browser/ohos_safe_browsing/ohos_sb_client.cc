@@ -88,7 +88,8 @@ void OhosSbClient::NavigationEntryCommitted(
 }
 
 void OhosSbClient::ShowBlockingPage() {
-  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed() ||
+      !web_contents()->IsSafeBrowsingDetectionEnabled()) {
     return;
   }
 

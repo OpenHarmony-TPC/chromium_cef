@@ -150,6 +150,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 #if BUILDFLAG(IS_OHOS)
   bool IsSafeBrowsingEnabled() override{ return false; }
   void EnableSafeBrowsing(bool enable) override{}
+  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override {}
 #endif
 
 #ifdef OHOS_ITP
