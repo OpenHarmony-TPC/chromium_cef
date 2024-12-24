@@ -1044,6 +1044,17 @@ bool CefBrowserContentsDelegate::OnSetFocus(cef_focus_source_t source) {
   return false;
 }
 
+#if defined(OHOS_MULTI_WINDOW)
+void CefBrowserContentsDelegate::OnActivateContent() {
+  LOG(INFO) << "CefBrowserContentsDelegate::ActivateContent";
+  if (auto c = client()) {
+    if (auto handler = c->GetFocusHandler()) {
+       handler->OnActivateContent();
+    }
+  }
+}
+#endif
+
 CefRefPtr<CefClient> CefBrowserContentsDelegate::client() const {
   if (auto b = browser()) {
     return b->GetHost()->GetClient();

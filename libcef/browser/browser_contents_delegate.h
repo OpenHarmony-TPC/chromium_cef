@@ -124,6 +124,9 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
 #endif
 
+#if defined(OHOS_MULTI_WINDOW)
+void OnActivateContent() override;
+#endif
   // WebContentsObserver methods:
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
   void RenderFrameHostChanged(content::RenderFrameHost* old_host,

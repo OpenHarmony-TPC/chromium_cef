@@ -76,6 +76,14 @@ class CefFocusHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnGotFocus(CefRefPtr<CefBrowser> browser) {}
+
+#if defined(OHOS_MULTI_WINDOW)
+  ///
+  /// Notify the web activated by window.open.
+  ///
+  /*--cef()--*/
+  virtual void OnActivateContent() {}
+#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_FOCUS_HANDLER_H_
