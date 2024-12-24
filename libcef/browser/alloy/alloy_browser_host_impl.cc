@@ -1673,7 +1673,8 @@ bool AlloyBrowserHostImpl::WebHandleKeyboardEvent(
         ui::GetAcceleratorFromNativeWebKeyboardEvent(event);
     ui::KeyEvent key_event = accelerator.ToKeyEvent();
     const ui::EventType type = key_event.type();
-    if (run_accelerator_flag && (type == ui::ET_KEY_PRESSED)) {
+    if (run_accelerator_flag && (type == ui::ET_KEY_PRESSED &&
+        event.GetType() != blink::WebKeyboardEvent::Type::kChar)) {
       run_accelerator_flag = true;
     } else {
       run_accelerator_flag = false;
