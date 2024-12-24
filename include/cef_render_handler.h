@@ -479,6 +479,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
+
+  ///
+  /// Get the visible area relative to the web.
+  ///
+  /*--cef()--*/
+  virtual void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

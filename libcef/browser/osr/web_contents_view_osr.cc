@@ -205,6 +205,16 @@ void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
+#ifdef OHOS_DRAG_DROP
+gfx::Rect CefWebContentsViewOSR::GetVisibleRectToWeb() {
+  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
+  if (browser.get()) {
+    return browser->GetVisibleRectToWeb();
+  }
+  return gfx::Rect();
+}
+#endif
+
 void CefWebContentsViewOSR::StartDragging(
     const content::DropData& drop_data,
     blink::DragOperationsMask allowed_ops,

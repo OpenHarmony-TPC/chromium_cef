@@ -474,6 +474,15 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
                                              int64_t accessibilityId,
                                              int32_t eventType);
+
+  ///
+  /// Get the visible area relative to the web.
+  ///
+  void(CEF_CALLBACK* get_visible_rect_to_web)(struct _cef_render_handler_t* self,
+                                              int* visibleX,
+                                              int* visibleY,
+                                              int* visibleWidth,
+                                              int* visibleHeight);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

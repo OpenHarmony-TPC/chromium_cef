@@ -74,6 +74,10 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   void MouseSelectMenuShow(bool show) override;
   void ChangeVisibilityOfQuickMenu() override;
 #endif
+
+#ifdef OHOS_DRAG_DROP
+  gfx::Rect GetVisibleRectToWeb() override;
+#endif
   void StartDragging(const content::DropData& drop_data,
                      blink::DragOperationsMask allowed_ops,
                      const gfx::ImageSkia& image,
