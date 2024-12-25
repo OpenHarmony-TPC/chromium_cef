@@ -3997,6 +3997,7 @@ browser_host_execute_video_assistant_function(struct _cef_browser_host_t* self,
 
 void CEF_CALLBACK
 browser_host_stop_screen_capture(struct _cef_browser_host_t* self,
+                                 int32_t nweb_id,
                                  const cef_string_t* session_id) {
   shutdown_checker::AssertNotShutdown();
 
@@ -4013,7 +4014,7 @@ browser_host_stop_screen_capture(struct _cef_browser_host_t* self,
   }
 
   // Execute
-  CefBrowserHostCppToC::Get(self)->StopScreenCapture(CefString(session_id));
+  CefBrowserHostCppToC::Get(self)->StopScreenCapture(nweb_id, CefString(session_id));
 }
 
 void CEF_CALLBACK browser_host_register_screen_capture_delegate_listener(
