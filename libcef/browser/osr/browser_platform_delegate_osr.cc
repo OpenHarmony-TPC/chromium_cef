@@ -792,7 +792,26 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
   CefRefPtr<CefRenderHandler> handler =
       browser_->GetClient()->GetRenderHandler();
   if (handler.get()) {
+#ifdef OHOS_DRAG_DROP
+    CefImageImpl* image_impl = nullptr;
+    if (image.size().IsEmpty()) {
+      // An empty drag image is possible if the Javascript sets an empty drag image on purpose.
+      // Create a dummy 1x1 pixel image to avoid crashes when converting to cef bitmap.
+      LOG(INFO) << "drag image is empty";
+      image_impl = new (std::nothrow) CefImageImpl();
+      if (image_impl) {
+        SkBitmap dummy_bitmap;
+        dummy_bitmap.allocN32Pixels(1, 1);
+        dummy_bitmap.eraseColor(0);
+        image_impl->AddBitmap(1.0, dummy_bitmap);
+      }
+    } else {
+      image_impl = new (std::nothrow) CefImageImpl(image);
+    }
+    CefRefPtr<CefImage> cef_image(image_impl);
+#else
     CefRefPtr<CefImage> cef_image(new CefImageImpl(image));
+#endif
     CefPoint cef_image_pos(image_offset.x(), image_offset.y());
     CefRefPtr<CefDragDataImpl> drag_data(
         new CefDragDataImpl(drop_data, cef_image, cef_image_pos));
