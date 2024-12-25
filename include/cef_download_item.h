@@ -39,6 +39,7 @@
 #pragma once
 
 #include "include/cef_base.h"
+#include "include/cef_values.h"
 
 ///
 /// Class used to represent a download item.
@@ -142,7 +143,7 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   /// Returns the content disposition.
   ///
   /*--cef()--*/
-  virtual CefString GetContentDisposition() = 0;
+  virtual CefRefPtr<CefValue> GetContentDisposition() = 0;
 
   ///
   /// Returns the mime type.
