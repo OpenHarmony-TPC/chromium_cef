@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8764ac5ba0126a6ebf5cfa008ed0fa62fa90a96$
+// $hash=801678582c97c2385f28f59c4967206b527e5539$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CTOCPP_H_
@@ -23,6 +23,7 @@
 #include "include/capi/cef_download_item_capi.h"
 #include "include/cef_download_item.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
+#include "libcef_dll/ctocpp/value_ctocpp.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
@@ -49,7 +50,7 @@ class CefDownloadItemCToCpp : public CefCToCppRefCounted<CefDownloadItemCToCpp,
   CefString GetURL() override;
   CefString GetOriginalUrl() override;
   CefString GetSuggestedFileName() override;
-  CefString GetContentDisposition() override;
+  CefRefPtr<CefValue> GetContentDisposition() override;
   CefString GetMimeType() override;
   CefString GetOriginalMimeType() override;
   CefString GetGuid() override;
