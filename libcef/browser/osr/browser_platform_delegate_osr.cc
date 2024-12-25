@@ -187,6 +187,7 @@ void CefBrowserPlatformDelegateOsr::WasResized() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {
     view->WasResized();
+    view->SetDrawMode(drawMode_);
   }
 }
 
@@ -1045,22 +1046,20 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 #if defined(OHOS_COMPOSITE_RENDER)
 void CefBrowserPlatformDelegateOsr::SetDrawRect(int x, int y, int width, int height) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  gfx::Rect newDrawRect = gfx::Rect(x, y, width, height);
   if (view) {
-    if (isNeedReDrawMode_) {
-      view->SetDrawMode(drawMode_);
-    }
-    isNeedReDrawMode_ = false;
-    view->SetDrawRect(gfx::Rect(x, y, width, height));
+    drawRect_ = newDrawRect;
+    LOG(DEBUG) << "CefBrowserPlatformDelegateOsr::SetDrawRect, drawRect:" << drawRect_.ToString().c_str();
+    view->SetDrawRect(drawRect_);
   }
 }
 
 void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
-  if (drawMode_ == mode) {
-    isNeedReDrawMode_ = false;
-    return;
-  }
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   drawMode_ = mode;
-  isNeedReDrawMode_ = true;
+  if (view) {
+    view->SetDrawMode(drawMode_);
+  }
 }
 
 void CefBrowserPlatformDelegateOsr::SetFitContentMode(int mode) {
