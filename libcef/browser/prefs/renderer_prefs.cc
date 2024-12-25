@@ -502,6 +502,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
 #ifdef OHOS_NETWORK_LOAD
   SET_STATE(cef.universal_access_from_file_urls, web.allow_universal_access_from_file_urls);
 #endif
+
+#ifdef OHOS_ACTIVE_POLICY
+  web.delay_for_background_tab_freezing = cef.delay_for_background_tab_freezing;
+#endif
 }
 
 void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry,

@@ -642,6 +642,10 @@ struct CefBrowserSettingsTraits {
 #if defined(OHOS_RENDER_PROCESS_SHARE)
     target->shared_render_process_token = src->shared_render_process_token;
 #endif
+#ifdef OHOS_ACTIVE_POLICY
+    target->delay_for_background_tab_freezing =
+        src->delay_for_background_tab_freezing;
+#endif
   }
 };
 

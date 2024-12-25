@@ -740,6 +740,9 @@ typedef struct _cef_browser_settings_t {
 #if defined(OHOS_RENDER_PROCESS_SHARE)
   cef_string_t shared_render_process_token;
 #endif
+#ifdef OHOS_ACTIVE_POLICY
+  int64_t delay_for_background_tab_freezing;
+#endif
 } cef_browser_settings_t;
 
 ///
