@@ -768,12 +768,17 @@ OhPasswordManagerClient::PasswordFormToJsonForRequest(
                                                   imf_info->is_other_account));
   }
 
+  password_manager::ContentPasswordManagerDriver* pwd_manager_driver =
+      driver_factory_->GetDriverForFrame(web_contents()->GetFocusedFrame());
   std::unordered_map<std::string, autofill::InputFillRequestData> fillItem = {
       {KEY_USERNAME, username_data}, {KEY_PASSWORD, password_data}};
   for (auto item : fillItem) {
     base::Value::List list;
     list.Append(
         base::Value::Dict().Set(KEY_FOCUS, item.second.is_focused ? 1 : 0));
+    if (pwd_manager_driver != nullptr) {
+      item.second.bounds = TransformToRootCoordinates(pwd_manager_driver->render_frame_host(), item.second.bounds);
+    }
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
         static_cast<int32_t>((item.second.bounds.x() + offset.x()) * ratio)));
