@@ -23,7 +23,6 @@
 #include "include/capi/cef_download_item_capi.h"
 #include "include/cef_download_item.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
-#include "libcef_dll/ctocpp/value_ctocpp.h"
 
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
