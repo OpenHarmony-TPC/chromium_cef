@@ -507,6 +507,7 @@ class CefBrowserPlatformDelegate {
 #if defined(OHOS_INPUT_EVENTS)
   virtual void ScrollFocusedEditableNodeIntoView();
 #endif
+  virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY);
 
  protected:
   // Allow deletion via std::unique_ptr only.

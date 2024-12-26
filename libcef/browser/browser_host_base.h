@@ -798,6 +798,7 @@ bool TerminateRenderProcess() override;
 #ifdef OHOS_USERAGENT
   std::string GetCustomUserAgent();
 #endif
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
 
  protected:
   bool EnsureDevToolsManager();

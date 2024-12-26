@@ -1252,3 +1252,14 @@ bool CefBrowserPlatformDelegateOsr::WebPageSnapshot(
   return false;
 }
 #endif
+
+void CefBrowserPlatformDelegateOsr::ScaleGestureChangeV2(int type,
+                                                         float scale,
+                                                         float originScale,
+                                                         float centerX,
+                                                         float centerY)
+{
+  if (CefRenderWidgetHostViewOSR *view = GetOSRHostView()) {
+    view->ScaleGestureChangeV2(type, scale, originScale, centerX, centerY);
+  }
+}

@@ -2145,6 +2145,16 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const struct _cef_pdf_print_settings_t* settings,
       struct _cef_pdf_value_callback_t* callback);
+
+  ///
+  /// Set zoom with the dela facetor
+  ///
+  void(CEF_CALLBACK* scale_gesture_change_v2)(struct _cef_browser_host_t* self,
+                              int type,
+                              float scale,
+                              float originScale,
+                              float width,
+                              float height);
 } cef_browser_host_t;
 
 ///

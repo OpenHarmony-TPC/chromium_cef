@@ -197,6 +197,7 @@ bool WebPageSnapshot(const char* id,
                      int height,
                      cef_web_snapshot_callback_t callback) override;
 #endif
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
 
  protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.

@@ -51,6 +51,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include <queue>
 #include <unordered_map>
 #include "third_party/ohos_ndk/includes/ohos_adapter/adapter_base.h"
 #endif
@@ -317,6 +318,8 @@ class CefRenderWidgetHostViewOSR
   void OnVsync();
 
   void SendGestureEvent(const ui::GestureEventData& gesture);
+
+  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY);
 
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
 
@@ -704,6 +707,7 @@ class CefRenderWidgetHostViewOSR
   bool scroll_enabled_ = true;
   int32_t node_id_ = -1;
   bool is_tap_down_in_cursor_update_ = false;
+  std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
