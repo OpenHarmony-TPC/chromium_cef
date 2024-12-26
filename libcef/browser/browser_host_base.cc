@@ -985,6 +985,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #ifdef OHOS_NETWORK_LOAD
   settings_.universal_access_from_file_urls = browser_settings.universal_access_from_file_urls;
 #endif
+#ifdef OHOS_ACTIVE_POLICY
+  settings_.delay_for_background_tab_freezing =
+      browser_settings.delay_for_background_tab_freezing;
+#endif
 }
 
 void CefBrowserHostBase::SetWebPreferences(
