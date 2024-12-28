@@ -1965,10 +1965,13 @@ content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
 #endif
 }
 
-#ifdef OHOS_FOCUS
+#if defined(OHOS_MULTI_WINDOW)
 void AlloyBrowserHostImpl::ActivateContents(content::WebContents* contents) {
   LOG(INFO) << "AlloyBrowserHostImpl::ActivateContents";
   OnSetFocus(FOCUS_SOURCE_SYSTEM);
+  if (contents_delegate_) {
+    contents_delegate_->OnActivateContent();
+  }
 }
 #endif
 

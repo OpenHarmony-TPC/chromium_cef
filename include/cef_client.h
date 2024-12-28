@@ -321,6 +321,12 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnPullToRefreshPull(float offset_x, float offset_y) {}
+
+  ///
+  /// Notify the web activated by window.open.
+  ///
+  /*--cef()--*/
+  virtual void OnActivateContent() {}
 #endif
 
 #if defined(OHOS_CUSTOM_VIDEO_PLAYER)
