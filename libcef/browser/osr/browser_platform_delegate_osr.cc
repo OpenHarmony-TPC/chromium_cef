@@ -226,6 +226,14 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
       event, type, mouseUp, clickCount);
   view->SendMouseEvent(web_event);
+
+#if defined(OHOS_INPUT_EVENTS)
+  blink::WebGestureEvent fling_cancel =
+      native_delegate_->TranslateTouchpadFlingEvent(event);
+  fling_cancel.data.fling_start.target_viewport = false;
+  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+  view->SendTouchpadFlingEvent(fling_cancel);
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
@@ -273,6 +281,14 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
   if (!view) {
     return;
   }
+
+#if defined(OHOS_INPUT_EVENTS)
+  blink::WebGestureEvent fling_cancel =
+      native_delegate_->TranslateTouchpadFlingEvent(event);
+  fling_cancel.data.fling_start.target_viewport = false;
+  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+  view->SendTouchpadFlingEvent(fling_cancel);
+#endif
 
   blink::WebMouseWheelEvent web_event =
       native_delegate_->TranslateWebWheelEvent(event, deltaX, deltaY);
