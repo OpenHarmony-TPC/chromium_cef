@@ -2732,7 +2732,7 @@ bool AlloyContentBrowserClient::ConfigureNetworkContextParams(
       cef_context->AsProfile()->ShouldRestoreOldSessionCookies();
 #endif
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_OHOS_PRPP)
   network::mojom::NetworkContext* network_context = GetSystemNetworkContext();
   if (network_context != nullptr) {
     network_context->InitPRParallelPreloadMgr();
