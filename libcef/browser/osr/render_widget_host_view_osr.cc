@@ -1593,6 +1593,8 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     if (n > 0) {
       handler->StartVibraFeedback("longPress.light");
     }
+  } else {
+    is_select_text_ = false;
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
 
@@ -3579,6 +3581,7 @@ void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
+  UpdateEditBounds();
 
   if (!is_select_text_) {
     handler->OnCursorUpdate(browser_impl_->GetBrowser(),
@@ -3587,7 +3590,6 @@ void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
     return;
   }
 
-  UpdateEditBounds();
   auto processedOffset = HandleCursorOffset();
   handler->OnCursorUpdate(browser_impl_->GetBrowser(),
                           CefRect(processedOffset.first, processedOffset.second,
