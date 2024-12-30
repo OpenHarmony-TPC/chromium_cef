@@ -3947,6 +3947,26 @@ browser_host_create_to_pdf(struct _cef_browser_host_t* self,
       settingsObj, CefPdfValueCallbackCToCpp::Wrap(callback));
 }
 
+void CEF_CALLBACK
+browser_host_scale_gesture_change_v2(struct _cef_browser_host_t* self,
+                                    int type,
+                                    float scale,
+                                    float originScale,
+                                    float width,
+                                    float height) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ScaleGestureChangeV2(type, scale, originScale, width, height);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4172,6 +4192,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->scroll_to_with_anime = browser_host_scroll_to_with_anime;
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
+  GetStruct()->scale_gesture_change_v2 = browser_host_scale_gesture_change_v2;
 }
 
 // DESTRUCTOR - Do not edit by hand.

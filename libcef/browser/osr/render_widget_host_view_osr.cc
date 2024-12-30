@@ -81,6 +81,7 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
+#include "content/public/common/input_event_ack_state.h"
 #include "ui/base/ime/text_input_flags.h"
 #include "ui/events/blink/did_overscroll_params.h"
 #endif  // defined(OHOS_INPUT_EVENTS)
@@ -97,6 +98,13 @@ const float kDefaultScaleFactor = 1.0;
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
 const int TOUCH_DOWN_DELAY_TIME = 200;
 const int TOUCH_UP_DURATION_TIME = 100;
+
+constexpr int32_t PINCH_START_TYPE = 1;
+constexpr int32_t PINCH_UPDATE_TYPE = 3;
+constexpr int32_t PINCH_END_TYPE = 2;
+
+const int32_t DEFAULT_PINCH_FINGER = 2;
+
 #endif
 display::mojom::ScreenOrientation ConvertOrientationType(
     cef_screen_orientation_type_t type) {
@@ -2676,6 +2684,64 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
   SendGestureEvent(gesture);
 }
 
+void CefRenderWidgetHostViewOSR::ScaleGestureChangeV2(int type,
+                                                      float scale,
+                                                      float originScale,
+                                                      float centerX,
+                                                      float centerY)
+{
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::ScaleGestureChangeV2 type: " << type
+             << " scale: " << scale << " originScale: " << originScale;
+  auto event_type = ui::ET_UNKNOWN;
+  switch (type)
+  {
+  case PINCH_START_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_BEGIN;
+    break;
+  case PINCH_UPDATE_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_UPDATE;
+    break;
+  case PINCH_END_TYPE:
+    event_type = ui::ET_GESTURE_PINCH_END;
+    break;
+  default:
+    LOG(ERROR) << "CefRenderWidgetHostViewOSR::ScaleGestureChangeV2 type invalid.";
+    return;
+  }
+
+  ui::GestureEventDetails details(event_type);
+  details.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHPAD);
+  details.set_scale(originScale);
+  SendGestureEvent(ui::GestureEventData(details,
+                                        0,
+                                        ui::MotionEvent::ToolType::MOUSE,
+                                        base::TimeTicks::Now(),
+                                        centerX,
+                                        centerY,
+                                        centerX,
+                                        centerY,
+                                        DEFAULT_PINCH_FINGER,
+                                        gfx::RectF(),
+                                        0,
+                                        0U));
+
+  ui::GestureEventDetails details2(event_type);
+  details2.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHSCREEN);
+  details2.set_scale(scale);
+  pending_touchpad_pinch_events_.push(ui::GestureEventData(details2,
+                                        0,
+                                        ui::MotionEvent::ToolType::FINGER,
+                                        base::TimeTicks::Now(),
+                                        centerX,
+                                        centerY,
+                                        centerX,
+                                        centerY,
+                                        DEFAULT_PINCH_FINGER,
+                                        gfx::RectF(),
+                                        0,
+                                        0U));
+}
+
 void CefRenderWidgetHostViewOSR::SendGestureEvent(
     const ui::GestureEventData& gesture) {
 #endif
@@ -3131,6 +3197,18 @@ void CefRenderWidgetHostViewOSR::GestureEventAck(
     const blink::WebGestureEvent& event,
     blink::mojom::InputEventResultState ack_result,
     blink::mojom::ScrollResultDataPtr scroll_result_data) {
+  if (event.SourceDevice() == blink::WebGestureDevice::kTouchpad &&
+      event.primary_pointer_type == ui::EventPointerType::kMouse) {
+    if (ack_result != blink::mojom::InputEventResultState::kConsumed) {
+      while (pending_touchpad_pinch_events_.size()) {
+        SendGestureEvent(pending_touchpad_pinch_events_.front());
+        pending_touchpad_pinch_events_.pop();
+      }
+    } else {
+      std::queue<ui::GestureEventData> tmp;
+      pending_touchpad_pinch_events_.swap(tmp);
+    }
+  }
   StopFlingingIfNecessary(event, ack_result);
 }
 #endif

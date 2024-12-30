@@ -4228,3 +4228,11 @@ std::string CefBrowserHostBase::GetCustomUserAgent() {
   return custom_user_agent_;
 }
 #endif
+
+void CefBrowserHostBase::ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY)
+{
+  if (platform_delegate_)
+  {
+    platform_delegate_->ScaleGestureChangeV2(type, scale, originScale, centerX, centerY);
+  }
+}
