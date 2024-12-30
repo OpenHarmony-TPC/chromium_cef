@@ -1579,13 +1579,12 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     if (n > 0) {
       handler->StartVibraFeedback("longPress.light");
     }
-#endif  // defined(OHOS_INPUT_EVENTS)
-  }
-#if defined(OHOS_INPUT_EVENTS)
-  else {
+  } else {
     is_select_text_ = false;
   }
-#endif // defined(OHOS_INPUT_EVENTS)
+#else
+  }
+#endif  // defined(OHOS_INPUT_EVENTS)
 
   handler->OnTextSelectionChanged(browser_impl_.get(), selected_text,
                                   cef_range);
