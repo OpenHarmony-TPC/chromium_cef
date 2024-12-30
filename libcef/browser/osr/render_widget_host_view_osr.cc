@@ -1581,10 +1581,8 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     }
   } else {
     is_select_text_ = false;
-  }
-#else
-  }
 #endif  // defined(OHOS_INPUT_EVENTS)
+  }
 
   handler->OnTextSelectionChanged(browser_impl_.get(), selected_text,
                                   cef_range);
