@@ -571,6 +571,12 @@ bool NeedsReload() override;
 		  content::RenderProcessNotRespondingReason reason,
                                      const std::string& stack);
 #endif
+#if defined(OHOS_VIDEO_ASSISTANT)
+  std::unique_ptr<content::VideoAssistant> CreateVideoAssistant() override;
+  void PopluateVideoAssistantConfig(
+      const std::string& url,
+      media::mojom::VideoAssistantConfigPtr& config) override;
+#endif // OHOS_VIDEO_ASSISTANT
 
   CefWindowHandle opener_;
   const bool is_windowless_;
