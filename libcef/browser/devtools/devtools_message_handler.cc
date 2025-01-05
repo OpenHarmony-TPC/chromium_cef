@@ -182,6 +182,13 @@ CefDevToolsMessageHandler::ShowFileChooser(
   for (; it != params.accept_types.end(); ++it) {
     accept_filters.push_back(*it);
   }
+#ifdef OHOS_FILE_UPLOAD
+  it = params.mime_types.begin();
+  std::vector<CefString> mime_filters;
+  for (; it != params.mime_types.end(); ++it) {
+    mime_filters.push_back(*it);
+  }
+#endif
 
   CefRefPtr<CefFileDialogCallbackImpl> callback_impl(
       new CefFileDialogCallbackImpl(std::move(callback)));
@@ -189,7 +196,11 @@ CefDevToolsMessageHandler::ShowFileChooser(
   bool handled = delegate_->ShowFileChooser(
       static_cast<cef_file_dialog_mode_t>(mode), params.title,
       params.default_file_name.value(), accept_filters,
+#ifdef OHOS_FILE_UPLOAD
+      params.use_media_capture, mime_filters, callback_impl.get());
+#else
       params.use_media_capture, callback_impl.get());
+#endif
   if (handled) {
     return CefFileDialogManager::RunFileChooserCallback();
   }

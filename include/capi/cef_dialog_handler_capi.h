@@ -143,6 +143,7 @@ typedef struct _cef_dialog_handler_t {
       const cef_string_t* default_file_path,
       cef_string_list_t accept_filters,
       int capture,
+      cef_string_list_t mime_filters,
       struct _cef_file_dialog_callback_t* callback);
 
   ///

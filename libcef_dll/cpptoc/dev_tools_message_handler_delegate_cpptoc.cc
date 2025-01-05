@@ -29,6 +29,7 @@ int CEF_CALLBACK dev_tools_message_handler_delegate_show_file_chooser(
     const cef_string_t* default_file_path,
     cef_string_list_t accept_filters,
     int capture,
+    cef_string_list_t mime_filters,
     struct _cef_file_dialog_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -43,18 +44,22 @@ int CEF_CALLBACK dev_tools_message_handler_delegate_show_file_chooser(
   if (!callback) {
     return 0;
   }
-  // Unverified params: title, default_file_path, accept_filters
+  // Unverified params: title, default_file_path, accept_filters, mime_filters
 
   // Translate param: accept_filters; type: string_vec_byref_const
   std::vector<CefString> accept_filtersList;
   transfer_string_list_contents(accept_filters, accept_filtersList);
+
+  // Translate param: mime_filters; type: string_vec_byref_const
+  std::vector<CefString> mime_filtersList;
+  transfer_string_list_contents(mime_filters, mime_filtersList);
 
   // Execute
   bool _retval =
       CefDevToolsMessageHandlerDelegateCppToC::Get(self)->ShowFileChooser(
           mode, CefString(title), CefString(default_file_path),
           accept_filtersList, capture ? true : false,
-          CefFileDialogCallbackCToCpp::Wrap(callback));
+          mime_filtersList, CefFileDialogCallbackCToCpp::Wrap(callback));
 
   // Return type: bool
   return _retval;

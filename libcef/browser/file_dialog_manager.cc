@@ -412,6 +412,7 @@ void CefFileDialogManager::RunSelectFile(
 
   if (params)
     accept_types = *(reinterpret_cast<AcceptTypes*>(params));
+  chooser_params.mime_types = accept_types.first;
   chooser_params.use_media_capture = accept_types.second;
 #endif
   auto callback =
@@ -527,12 +528,24 @@ CefFileDialogManager::MaybeRunDelegate(
         accept_filters.push_back(*it);
       }
 
+#ifdef OHOS_FILE_UPLOAD
+      std::vector<CefString> mime_filters;
+      it = params.mime_types.begin();
+      for (; it != params.mime_types.end(); ++it) {
+        mime_filters.push_back(*it);
+      }
+#endif
+
       CefRefPtr<CefFileDialogCallbackImpl> callbackImpl(
           new CefFileDialogCallbackImpl(std::move(callback)));
       const bool handled = handler->OnFileDialog(
           browser_, static_cast<cef_file_dialog_mode_t>(mode), params.title,
           params.default_file_name.value(), accept_filters,
+#ifdef OHOS_FILE_UPLOAD
+          params.use_media_capture, mime_filters, callbackImpl.get());
+#else
           params.use_media_capture, callbackImpl.get());
+#endif
       if (!handled) {
         // May return nullptr if the client has already executed the callback.
         callback = callbackImpl->Disconnect();
