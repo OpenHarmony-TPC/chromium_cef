@@ -949,9 +949,15 @@ void CefFrameHostImpl::OnGetImageFromCache(
       if (sk_image->asLegacyBitmap(&bitmap)) {
 #ifdef OHOS_CLIPBOARD
         SkBitmap resize_image = DownScale(bitmap);
-        image_impl->AddBitmap(1.0, resize_image);
+        if (resize_image.colorType() == kBGRA_8888_SkColorType ||
+            resize_image.colorType() == kRGBA_8888_SkColorType) {
+              image_impl->AddBitmap(1.0, resize_image);
+        }
 #else
-        image_impl->AddBitmap(1.0, bitmap);
+        if (bitmap.colorType() == kBGRA_8888_SkColorType ||
+            bitmap.colorType() == kRGBA_8888_SkColorType) {
+              image_impl->AddBitmap(1.0, bitmap);
+        }
 #endif
       }
     }
