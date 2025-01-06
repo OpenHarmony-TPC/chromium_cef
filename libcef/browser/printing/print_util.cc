@@ -166,7 +166,8 @@ void CreateToPDF(content::WebContents* web_contents,
   const bool display_header_footer = !!settings.display_header_footer;
 
   // Defaults to no header/footer.
-  absl::optional<std::string> header_template, footer_template;
+  absl::optional<std::string> header_template;
+  absl::optional<std::string> footer_template;
   if (display_header_footer) {
     if (settings.header_template.length > 0) {
       header_template = CefString(&settings.header_template);
@@ -183,14 +184,18 @@ void CreateToPDF(content::WebContents* web_contents,
   }
 
   // Defaults to letter size.
-  absl::optional<double> paper_width, paper_height;
+  absl::optional<double> paper_width;
+  absl::optional<double> paper_height;
   if (settings.paper_width > 0 && settings.paper_height > 0) {
     paper_width = settings.paper_width;
     paper_height = settings.paper_height;
   }
 
   // Defaults to kDefaultMarginInInches.
-  absl::optional<double> margin_top, margin_bottom, margin_left, margin_right;
+  absl::optional<double> margin_top;
+  absl::optional<double> margin_bottom;
+  absl::optional<double> margin_left;
+  absl::optional<double> margin_right;
   if (settings.margin_type == PDF_PRINT_MARGIN_NONE) {
     margin_top = 0;
     margin_bottom = 0;
