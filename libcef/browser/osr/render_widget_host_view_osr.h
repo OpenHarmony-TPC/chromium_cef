@@ -538,7 +538,7 @@ class CefRenderWidgetHostViewOSR
   void OnScrollOffsetChanged();
 
 #if defined(OHOS_INPUT_EVENTS)
-  void UpdateEditBounds();
+  bool UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
   void FilterScrollEventImpl(const ui::GestureEventData& gesture);
 #endif  // defined(OHOS_INPUT_EVENTS)
