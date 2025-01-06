@@ -2172,7 +2172,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CreateToPDF(const CefPdfPrintSettings& settings,
-                           CefRefPtr<CefPdfValueCallback> callback) = 0;                                    
+                           CefRefPtr<CefPdfValueCallback> callback) = 0;
 
   ///
   /// Set zoom with the dela facetor
