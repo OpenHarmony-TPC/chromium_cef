@@ -7,12 +7,25 @@
 #pragma once
 
 #include "include/cef_browser.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace content {
 class WebContents;
 }
 
 namespace print_util {
+
+struct PdfCreateParams {
+  absl::optional<std::string> header_template;
+  absl::optional<std::string> footer_template;
+  absl::optional<double> scale;
+  absl::optional<double> paper_width;
+  absl::optional<double> paper_height;
+  absl::optional<double> margin_top;
+  absl::optional<double> margin_bottom;
+  absl::optional<double> margin_left;
+  absl::optional<double> margin_right;
+};
 
 // Called from CefBrowserHostBase::Print.
 void Print(content::WebContents* web_contents, bool print_preview_disabled);
