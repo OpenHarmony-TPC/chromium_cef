@@ -1516,7 +1516,6 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     }
   } else {
     is_select_text_ = false;
-  }
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
 
