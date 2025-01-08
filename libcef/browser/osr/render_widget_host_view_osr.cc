@@ -1514,6 +1514,9 @@ void CefRenderWidgetHostViewOSR::SelectionChanged(const std::u16string& text,
     if (n > 0) {
       handler->StartVibraFeedback("longPress.light");
     }
+  } else {
+    is_select_text_ = false;
+  }
 #endif  // defined(OHOS_INPUT_EVENTS)
   }
 
@@ -1858,19 +1861,6 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 }
 
 void CefRenderWidgetHostViewOSR::WasResized() {
-#if defined(OHOS_INPUT_EVENTS)
-  UpdateEditBounds();
-  if (is_select_text_) {
-    auto processedOffset = HandleCursorOffset();
-    CefRefPtr<CefRenderHandler> handler =
-        browser_impl_->GetClient()->GetRenderHandler();
-    CHECK(handler);
-    handler->OnCursorUpdate(
-        browser_impl_->GetBrowser(),
-        CefRect(processedOffset.first, processedOffset.second,
-                focus_rect_width_, focus_rect_height_));
-  }
-#endif  // defined(OHOS_INPUT_EVENTS)
   // Only one resize will be in-flight at a time.
   if (hold_resize_) {
 #if defined(OHOS_COMPOSITE_RENDER)
@@ -1895,17 +1885,6 @@ void CefRenderWidgetHostViewOSR::SetShouldFrameSubmissionBeforeDraw(
 }
 
 void CefRenderWidgetHostViewOSR::WasKeyboardResized() {
-  UpdateEditBounds();
-  if (is_select_text_) {
-    auto processedOffset = HandleCursorOffset();
-    CefRefPtr<CefRenderHandler> handler =
-        browser_impl_->GetClient()->GetRenderHandler();
-    CHECK(handler);
-    handler->OnCursorUpdate(
-        browser_impl_->GetBrowser(),
-        CefRect(processedOffset.first, processedOffset.second,
-                focus_rect_width_, focus_rect_height_));
-  }
   // Only one resize will be in-flight at a time.
   if (hold_resize_) {
     isKeyboardResized_ = true;
@@ -2561,6 +2540,14 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
+
+  if (UpdateEditBounds()) {
+    auto processedOffset = HandleCursorOffset();
+    handler->OnCursorUpdate(browser_impl_->GetBrowser(),
+                            CefRect(processedOffset.first, processedOffset.second,
+                                    focus_rect_width_, focus_rect_height_));
+  }
+
   bool is_need_reset_ime_listener = false;
   if (state) {
     int32_t current_node_id = state->node_id;
@@ -3420,23 +3407,27 @@ void CefRenderWidgetHostViewOSR::SelectionBoundsChanged(
     return;
   }
 
-  UpdateEditBounds();
-  auto processedOffset = HandleCursorOffset();
-  handler->OnCursorUpdate(browser_impl_->GetBrowser(),
-                          CefRect(processedOffset.first, processedOffset.second,
-                                  focus_rect_width_, focus_rect_height_));
+  if (UpdateEditBounds()) {
+    auto processedOffset = HandleCursorOffset();
+    handler->OnCursorUpdate(browser_impl_->GetBrowser(),
+                            CefRect(processedOffset.first, processedOffset.second,
+                                    focus_rect_width_, focus_rect_height_));
+  }
 }
 
-void CefRenderWidgetHostViewOSR::UpdateEditBounds() {
+bool CefRenderWidgetHostViewOSR::UpdateEditBounds() {
   if (text_input_manager_ && text_input_manager_->GetTextInputState()) {
     auto state = text_input_manager_->GetTextInputState();
-    CHECK(state);
-    CHECK(state->edit_context_control_bounds);
+    if (!state || !state->edit_context_control_bounds) {
+      return false;
+    }
     edit_bounds_x_ = state->edit_context_control_bounds->x();
     edit_bounds_y_ = state->edit_context_control_bounds->y();
     edit_bounds_width_ = state->edit_context_control_bounds->width();
     edit_bounds_height_ = state->edit_context_control_bounds->height();
+    return true;
   }
+  return false;
 }
 
 void CefRenderWidgetHostViewOSR::FocusedNodeChanged(
