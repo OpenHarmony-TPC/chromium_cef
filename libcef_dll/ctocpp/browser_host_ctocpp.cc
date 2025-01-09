@@ -2704,6 +2704,57 @@ void CefBrowserHostCToCpp::RemoveJavaScriptOnDocumentEnd() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::JavaScriptOnHeadReady(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, java_script_on_head_ready)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: script; type: string_byref_const
+  DCHECK(!script.empty());
+  if (script.empty()) {
+    return;
+  }
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  cef_string_list_t script_rulesList = cef_string_list_alloc();
+  DCHECK(script_rulesList);
+  if (script_rulesList) {
+    transfer_string_list_contents(script_rules, script_rulesList);
+  }
+
+  // Execute
+  _struct->java_script_on_head_ready(_struct, script.GetStruct(),
+                                       script_rulesList);
+
+  // Restore param:script_rules; type: string_vec_byref_const
+  if (script_rulesList) {
+    cef_string_list_free(script_rulesList);
+  }
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::RemoveJavaScriptOnHeadReady() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, remove_java_script_on_head_ready)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->remove_java_script_on_head_ready(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetDrawRect(int x, int y, int width, int height) {
   shutdown_checker::AssertNotShutdown();
 
@@ -3640,14 +3691,14 @@ void CefBrowserHostCToCpp::SetPopupWindow(cef_native_window_t window) {
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) {
   shutdown_checker::AssertNotShutdown();
- 
+
   cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, scale_gesture_change_v2)) {
     return;
   }
- 
+
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
+
   // Execute
   _struct->scale_gesture_change_v2(_struct, type, scale, originScale, width, height);
 }
