@@ -1851,6 +1851,20 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
+  /// JavaScriptOnHeadReady
+  ///
+  void(CEF_CALLBACK* java_script_on_head_ready)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* script,
+      cef_string_list_t script_rules);
+
+  ///
+  /// RemoveJavaScriptOnHeadReady
+  ///
+  void(CEF_CALLBACK* remove_java_script_on_head_ready)(
+      struct _cef_browser_host_t* self);
+
+  ///
   /// Set the draw rect
   ///
   void(CEF_CALLBACK* set_draw_rect)(struct _cef_browser_host_t* self,

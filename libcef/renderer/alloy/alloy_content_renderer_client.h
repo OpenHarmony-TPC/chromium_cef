@@ -175,6 +175,9 @@ class AlloyContentRendererClient
   void GetSupportedKeySystems(media::GetSupportedKeySystemsCB cb) override;
   void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
   void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
+#if defined(OHOS_JSPROXY)
+  void RunScriptsAtHeadReady(content::RenderFrame* render_frame) override;
+#endif
   void RunScriptsAtDocumentIdle(content::RenderFrame* render_frame) override;
   void DevToolsAgentAttached() override;
   void DevToolsAgentDetached() override;

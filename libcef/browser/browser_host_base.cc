@@ -739,7 +739,7 @@ void CefBrowserHostBase::RegisterScreenCaptureDelegateListener(
                   "listener is nullptr";
     return;
   }
-  
+
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
@@ -1105,6 +1105,7 @@ void CefBrowserHostBase::UnregisterArkJSfunction(
   javascriptInjector->RemoveInterface(object_name.ToString(), method_vector);
 }
 
+#if defined(OHOS_JSPROXY)
 js_injection::JsCommunicationHost*
 CefBrowserHostBase::GetJsCommunicationHost() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -1172,6 +1173,37 @@ void CefBrowserHostBase::RemoveJavaScriptOnDocumentEnd() {
     }
   }
 }
+
+void CefBrowserHostBase::JavaScriptOnHeadReady(
+    const CefString& script,
+    const std::vector<CefString>& script_rules) {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    std::string stdScript = script.ToString();
+    std::vector<std::string> scriptRules;
+    for (CefString rule : script_rules) {
+      scriptRules.push_back(rule.ToString());
+    }
+
+    js_injection::JsCommunicationHost::AddScriptResult result =
+        host->AddHeadReadyJavaScript(script, scriptRules);
+    if (result.script_id.has_value()) {
+      head_ready_script_result_map_[stdScript] = result.script_id.value();
+    }
+  }
+}
+
+void CefBrowserHostBase::RemoveJavaScriptOnHeadReady() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+  auto* host = GetJsCommunicationHost();
+  if (host) {
+    for (auto iter : head_ready_script_result_map_) {
+      host->RemoveHeadReadyJavaScript(iter.second);
+    }
+  }
+}
+#endif
 
 void CefBrowserHostBase::CallH5Function(
     int32_t routing_id,
