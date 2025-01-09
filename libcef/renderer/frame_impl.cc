@@ -1199,18 +1199,14 @@ void CefFrameImpl::DistinguishAndAssignSrcLinkType(
   if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
                                      &data->extra_data_for_type)) {
     data->type = HitTestDataType::kGeo;
-    LOG(INFO)<<"plj PopulateHitTestData type=Geo";
   } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
                                             &data->extra_data_for_type)) {
     data->type = HitTestDataType::kPhone;
-    LOG(INFO)<<"plj PopulateHitTestData type=Phone";
   } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
                                             &data->extra_data_for_type)) {
     data->type = HitTestDataType::kEmail;
-    LOG(INFO)<<"plj PopulateHitTestData type=Email";
   } else {
     data->type = HitTestDataType::kSrcLink;
-    LOG(INFO)<<"plj PopulateHitTestData type=SrcLink";
     data->extra_data_for_type = url.possibly_invalid_spec();
     if (!data->extra_data_for_type.empty()) {
       data->href = base::UTF8ToUTF16(data->extra_data_for_type);
@@ -1234,18 +1230,15 @@ void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
     DistinguishAndAssignSrcLinkType(absolute_link_url, data);
   } else if (has_link_url && has_image_url && !is_javascript_scheme) {
     data->type = HitTestDataType::kSrcImageLink;
-    LOG(INFO)<<"plj PopulateHitTestData type=ImageLink";
     data->extra_data_for_type = data->img_src.possibly_invalid_spec();
     if (absolute_link_url.is_valid()) {
       data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
     }
   } else if (!has_link_url && has_image_url) {
     data->type = HitTestDataType::kImage;
-    LOG(INFO)<<"plj PopulateHitTestData type=Image";
     data->extra_data_for_type = data->img_src.possibly_invalid_spec();
   } else if (is_editable) {
     data->type = HitTestDataType::kEditText;
-    LOG(INFO)<<"plj PopulateHitTestData type=EditText";
     DCHECK_EQ(0u, data->extra_data_for_type.length());
   }
 }
@@ -1376,7 +1369,6 @@ void CefFrameImpl::ZoomBy(float delta,
 
 void CefFrameImpl::GetHitData(
     cef::mojom::RenderFrame::GetHitDataCallback callback) {
-  LOG(INFO) << "plj CefFrameImpl::GetHitData type="<<cef_hit_data_.type;
   std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
 }
 
