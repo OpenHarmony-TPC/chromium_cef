@@ -160,68 +160,63 @@ void PrintToPDF(content::WebContents* web_contents,
   callback->OnPdfPrintFinished(CefString(), false);
 }
 
+PdfCreateParams ProcessPdfCreateSettings(const CefPdfPrintSettings& settings) {
+  PdfCreateParams params;
+  const bool display_header_footer = !!settings.display_header_footer;
+
+  if (display_header_footer) {
+    if (settings.header_template.length > 0) {
+      params.header_template = CefString(&settings.header_template);
+    }
+    if (settings.footer_template.length > 0) {
+      params.footer_template = CefString(&settings.footer_template);
+    }
+  }
+
+  if (settings.scale > 0) {
+    params.scale = settings.scale;
+  }
+
+  if (settings.paper_width > 0 && settings.paper_height > 0) {
+    params.paper_width = settings.paper_width;
+    params.paper_height = settings.paper_height;
+  }
+
+  if (settings.margin_type == PDF_PRINT_MARGIN_NONE) {
+    params.margin_top = 0;
+    params.margin_bottom = 0;
+    params.margin_left = 0;
+    params.margin_right = 0;
+  } else if (settings.margin_type == PDF_PRINT_MARGIN_CUSTOM) {
+    if (settings.margin_top >= 0) {
+      params.margin_top = settings.margin_top;
+    }
+    if (settings.margin_bottom >= 0) {
+      params.margin_bottom = settings.margin_bottom;
+    }
+    if (settings.margin_left >= 0) {
+      params.margin_left = settings.margin_left;
+    }
+    if (settings.margin_right >= 0) {
+      params.margin_right = settings.margin_right;
+    }
+  }
+
+  return params;
+}
+
 void CreateToPDF(content::WebContents* web_contents,
                  const CefPdfPrintSettings& settings,
                  CefRefPtr<CefPdfValueCallback> callback) {
-  const bool display_header_footer = !!settings.display_header_footer;
-
-  // Defaults to no header/footer.
-  absl::optional<std::string> header_template;
-  absl::optional<std::string> footer_template;
-  if (display_header_footer) {
-    if (settings.header_template.length > 0) {
-      header_template = CefString(&settings.header_template);
-    }
-    if (settings.footer_template.length > 0) {
-      footer_template = CefString(&settings.footer_template);
-    }
-  }
-
-  // Defaults to 1.0.
-  absl::optional<double> scale;
-  if (settings.scale > 0) {
-    scale = settings.scale;
-  }
-
-  // Defaults to letter size.
-  absl::optional<double> paper_width;
-  absl::optional<double> paper_height;
-  if (settings.paper_width > 0 && settings.paper_height > 0) {
-    paper_width = settings.paper_width;
-    paper_height = settings.paper_height;
-  }
-
-  // Defaults to kDefaultMarginInInches.
-  absl::optional<double> margin_top;
-  absl::optional<double> margin_bottom;
-  absl::optional<double> margin_left;
-  absl::optional<double> margin_right;
-  if (settings.margin_type == PDF_PRINT_MARGIN_NONE) {
-    margin_top = 0;
-    margin_bottom = 0;
-    margin_left = 0;
-    margin_right = 0;
-  } else if (settings.margin_type == PDF_PRINT_MARGIN_CUSTOM) {
-    if (settings.margin_top >= 0) {
-      margin_top = settings.margin_top;
-    }
-    if (settings.margin_bottom >= 0) {
-      margin_bottom = settings.margin_bottom;
-    }
-    if (settings.margin_left >= 0) {
-      margin_left = settings.margin_left;
-    }
-    if (settings.margin_right >= 0) {
-      margin_right = settings.margin_right;
-    }
-  }
+  PdfCreateParams params = ProcessPdfCreateSettings(settings);
 
   absl::variant<printing::mojom::PrintPagesParamsPtr, std::string>
       print_pages_params = print_to_pdf::GetPrintPagesParams(
           web_contents->GetPrimaryMainFrame()->GetLastCommittedURL(),
-          !!settings.landscape, display_header_footer,
-          !!settings.print_background, scale, paper_width, paper_height,
-          margin_top, margin_bottom, margin_left, margin_right,
+          !!settings.landscape, !!settings.display_header_footer,
+          !!settings.print_background, params.scale, params.paper_width,
+          params.paper_height, params.margin_top, params.margin_bottom,
+          params.margin_left, params.margin_right,
           CefString(&settings.header_template),
           CefString(&settings.footer_template),
           !!settings.prefer_css_page_size);
