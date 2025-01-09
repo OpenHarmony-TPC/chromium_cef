@@ -1027,6 +1027,15 @@ void CefFrameHostImpl::SetInitialScale(float scale) {
                         scale));
 }
 
+void CefFrameHostImpl::SetOptimizeParserBudgetEnabled(bool enable) {
+   SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce(
+                        [](bool enable, const RenderFrameType& render_frame) {
+                          render_frame->SetOptimizeParserBudgetEnabled(enable);
+                        },
+                        enable));
+}
+
 #ifdef OHOS_NETWORK_CONNINFO
 void CefFrameHostImpl::SetJsOnlineProperty(bool network_up) {
   SendToRenderFrame(

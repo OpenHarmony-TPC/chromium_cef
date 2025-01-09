@@ -4039,6 +4039,22 @@ void CEF_CALLBACK browser_host_register_screen_capture_delegate_listener(
       CefScreenCaptureCallbackCToCpp::Wrap(listener));
 }
 
+void CEF_CALLBACK
+browser_host_set_optimize_parser_budget_enabled(struct _cef_browser_host_t* self,
+                                                int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetOptimizeParserBudgetEnabled(
+      enable ? true : false);
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4269,6 +4285,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
   GetStruct()->register_screen_capture_delegate_listener =
       browser_host_register_screen_capture_delegate_listener;
+  GetStruct()->set_optimize_parser_budget_enabled = 
+      browser_host_set_optimize_parser_budget_enabled;
 }
 
 // DESTRUCTOR - Do not edit by hand.

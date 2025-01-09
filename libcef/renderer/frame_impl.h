@@ -203,6 +203,7 @@ class CefFrameImpl
 #if BUILDFLAG(IS_OHOS)
   void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
   void SetInitialScale(float initialScale) override;
+  void SetOptimizeParserBudgetEnabled(bool enable) override;
 #ifdef OHOS_NETWORK_CONNINFO
   void SetJsOnlineProperty(bool network_up) override;
 #endif
