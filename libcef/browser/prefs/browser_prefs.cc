@@ -100,6 +100,10 @@
 #include "extensions/browser/permissions_manager.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+#include "components/cdm/browser/media_drm_storage_impl.h" 
+#endif
+
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
 #ifdef OHOS_ARKWEB_ADBLOCK
@@ -345,7 +349,11 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #endif
 #if BUILDFLAG(IS_OHOS)
     ohos_safe_browsing::RegisterProfilePrefs(registry.get());
- #endif
+#if defined(OHOS_ENABLE_CDM)
+    LOG(INFO) << "[DRM]" << __func__;
+    cdm::MediaDrmStorageImpl::RegisterProfilePrefs(registry.get());
+#endif
+#endif
     HostContentSettingsMap::RegisterProfilePrefs(registry.get());
     language::LanguagePrefs::RegisterProfilePrefs(registry.get());
     media_router::RegisterProfilePrefs(registry.get());
