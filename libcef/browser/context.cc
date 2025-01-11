@@ -697,6 +697,10 @@ void CefContext::PopulateGlobalRequestContextSettings(
 #if defined(OHOS_INCOGNITO_MODE)
   settings->incognito_mode = false;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
+#endif
 }
 
 #if defined(OHOS_INCOGNITO_MODE)
@@ -713,6 +717,10 @@ void CefContext::PopulateGlobalOTRRequestContextSettings(
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
   settings->incognito_mode = true;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
+#endif
 }
 #endif
 

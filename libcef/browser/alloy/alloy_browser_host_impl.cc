@@ -1589,6 +1589,21 @@ void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
     contents_delegate_->UpdateTargetURL(source, url);
 }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void AlloyBrowserHostImpl::WebExtensionUpdateTabUrl(
+    int32_t tab_id, const GURL& url) {
+  contents_delegate_->WebExtensionUpdateTabUrl(tab_id, url);
+}
+
+void AlloyBrowserHostImpl::SetTabId(int32_t tab_id) {
+  tab_id_ = tab_id;
+}
+
+int32_t AlloyBrowserHostImpl::GetTabId() {
+  return tab_id_;
+}
+#endif
+
 bool AlloyBrowserHostImpl::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel level,
@@ -2568,8 +2583,7 @@ void AlloyBrowserHostImpl::ReportWindowStatus(bool first_view_ready) {
 
 void AlloyBrowserHostImpl::UpdateZoomSupportEnabled() {
   auto rvh = web_contents()->GetRenderViewHost();
-  CefRenderWidgetHostViewOSR* view =
-      static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+  auto view = rvh->GetWidget()->GetView();
 
   if (view) {
     view->SetDoubleTapSupportEnabled(settings_.supports_double_tap_zoom);

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3d8aff355099fa2928211aabf97052462a9492ee$
+// $hash=32539eb9c6db3f49eabe4f98f29ecb623299e524$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -168,7 +168,6 @@ typedef struct _cef_display_handler_t {
 
   ///
   /// Called when the viewport-fit meta is detected for web page.
-  /// changed.
   ///
   void(CEF_CALLBACK* on_viewport_fit_change)(
       struct _cef_display_handler_t* self,

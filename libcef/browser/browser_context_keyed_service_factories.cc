@@ -23,6 +23,7 @@
 #include "extensions/browser/renderer_startup_helper.h"
 #include "services/network/public/cpp/features.h"
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
 #include "extensions/browser/api/management/management_api.h"
 #include "chrome/browser/extensions/api/commands/command_service.h"
@@ -49,6 +50,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::WebRequestAPI::GetFactoryInstance();
     extensions::CommandService::GetFactoryInstance();
     extensions::RuntimeAPI::GetFactoryInstance();
+    extensions::cef::TabsWindowsAPI::GetFactoryInstance();
 #endif
   }
 

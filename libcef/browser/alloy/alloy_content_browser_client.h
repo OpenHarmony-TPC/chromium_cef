@@ -281,6 +281,8 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
   bool ShouldAllowInsecureLocalNetworkRequests(
       content::BrowserContext* browser_context,
       const url::Origin& origin) override;
+  bool ShouldDisableOriginAgentClusterDefault(
+      content::BrowserContext* browser_context) override;
 #endif
 
 #if BUILDFLAG(IS_OHOS)

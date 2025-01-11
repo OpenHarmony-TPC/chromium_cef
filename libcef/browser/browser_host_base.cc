@@ -117,6 +117,9 @@
 
 #include "content/browser/renderer_host/media/media_stream_manager.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#endif
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -334,8 +337,10 @@ CefBrowserHostBase::CefBrowserHostBase(
   contents_delegate_->AddObserver(this);
 #if BUILDFLAG(IS_OHOS)
   contents_delegate_->InitIconHelper();
-  permission_request_handler_.reset(new AlloyPermissionRequestHandler(
-      client_->GetPermissionRequest(), GetWebContents()));
+  if (client) {
+    permission_request_handler_.reset(new AlloyPermissionRequestHandler(
+      client->GetPermissionRequest(), GetWebContents()));
+  }
 #endif
 }
 
@@ -4190,6 +4195,37 @@ int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
     urlTrustListUpdated, detailErrMsgUpdated));
   detailErrMsg.FromString(detailErrMsgUpdated);
   return res;
+}
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserHostBase::SetTabId(int tab_id) {}
+int CefBrowserHostBase::GetTabId() { return -1; }
+
+void CefBrowserHostBase::WebExtensionTabUpdated(
+    int tab_id,
+    const std::vector<CefString>& changed_property_names,
+    const CefString& url) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "TabUpdated get contents failed.";
+    return;
+  }
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "TabUpdated get browser context failed.";
+    return;
+  }
+
+  std::vector<std::string> changed_properties;
+  std::for_each(changed_property_names.begin(), changed_property_names.end(),
+      [&changed_properties] (const CefString& name) {
+    changed_properties.emplace_back(name.ToString());
+  });
+
+  extensions::cef::TabsWindowsAPI::Get(browser_context)->TabUpdated(
+      tab_id, web_contents, changed_properties, url.ToString());
 }
 #endif
 

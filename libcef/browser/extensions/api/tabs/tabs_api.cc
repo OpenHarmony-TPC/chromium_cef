@@ -212,6 +212,9 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
     return false;
   }
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  web_contents_->WebExtensionUpdateTabUrl(tab_id, url);
+#else
   content::NavigationController::LoadURLParams load_params(url);
 
   // Treat extension-initiated navigations as renderer-initiated so that the URL
@@ -234,7 +237,7 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
 
   DCHECK_EQ(url,
             web_contents_->GetController().GetPendingEntry()->GetVirtualURL());
-
+#endif
   return true;
 }
 

@@ -318,6 +318,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
   void ScrollFocusedEditableNodeIntoView() override;

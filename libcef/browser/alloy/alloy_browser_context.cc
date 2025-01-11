@@ -210,7 +210,12 @@ void AlloyBrowserContext::Initialize() {
 #endif
     extension_system_ = static_cast<extensions::CefExtensionSystem*>(
         extensions::ExtensionSystem::Get(this));
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    if (settings_.global_request_context) {
+      extension_system_->SetGlobalRequestContext(
+          static_cast<CefRequestContext*>(settings_.global_request_context));
+    }
+#endif
     extension_system_->InitForRegularProfile(true);
     // Make sure the ProcessManager is created so that it receives extension
     // load notifications. This is necessary for the proper initialization of

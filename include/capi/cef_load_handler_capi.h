@@ -213,6 +213,12 @@ typedef struct _cef_load_handler_t {
       struct _cef_load_handler_t* self,
       const cef_string_t* website_host,
       const cef_string_t* tracker_host);
+
+  ///
+  /// Called when page load from bfcache.
+  ///
+  void(CEF_CALLBACK* update_favicon)(struct _cef_load_handler_t* self,
+                                     struct _cef_browser_t* browser);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

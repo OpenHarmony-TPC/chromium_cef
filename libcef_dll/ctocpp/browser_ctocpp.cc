@@ -964,6 +964,37 @@ cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget(bool isPopup) {
   return 0;
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::SetTabId(int tab_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_tab_id)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_tab_id(_struct, tab_id);
+}
+
+NO_SANITIZE("cfi-icall") int CefBrowserCToCpp::GetTabId() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_tab_id)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->get_tab_id(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
 NO_SANITIZE("cfi-icall")
 void CefBrowserCToCpp::SetBackForwardCacheOptions(int32_t size,
                                                   int32_t timeToLive) {

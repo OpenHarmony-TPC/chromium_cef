@@ -46,6 +46,11 @@
 #include "libcef/browser/load_committed_details_impl.h"
 #endif  // defined(OHOS_NAVIGATION)
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/tabs/tabs_constants.h"
+#include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#endif
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -301,6 +306,17 @@ void CefBrowserContentsDelegate::LoadingStateChanged(
                                     can_go_forward);
     }
   }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int32_t tab_id = browser()->GetTabId();
+  if (tab_id >= 0) {
+    std::vector<std::string> changed_properties;
+    changed_properties.push_back(extensions::tabs_constants::kStatusKey);
+    extensions::cef::TabsWindowsAPI::Get(
+        source->GetBrowserContext())->TabUpdated(
+            tab_id, source, changed_properties, "");
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
@@ -311,6 +327,17 @@ void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
     }
   }
 }
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserContentsDelegate::WebExtensionUpdateTabUrl(
+    int32_t tab_id, const GURL& url) {
+  if (auto c = client()) {
+    if (auto handler = c->GetWebExtensionApiHandler()) {
+      handler->OnUpdateTabUrl(tab_id, url.spec());
+    }
+  }
+}
+#endif
 
 bool CefBrowserContentsDelegate::DidAddMessageToConsole(
     content::WebContents* source,

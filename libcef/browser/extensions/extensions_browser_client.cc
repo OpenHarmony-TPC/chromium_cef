@@ -278,6 +278,7 @@ bool CefExtensionsBrowserClient::CreateBackgroundExtensionHost(
       cef_browser_context->GetExtension(extension->id());
   DCHECK(cef_extension);
   if (!cef_extension) {
+    LOG(INFO) << "Cancel the background host creation :" << extension->id();
     // Cancel the background host creation.
     return true;
   }
@@ -287,6 +288,7 @@ bool CefExtensionsBrowserClient::CreateBackgroundExtensionHost(
   CefRefPtr<CefRequestContext> request_context =
       cef_extension->GetLoaderContext();
   if (!request_context) {
+    LOG(INFO) << "request_context empty for :" << extension->id();
     // Cancel the background host creation.
     return true;
   }
@@ -313,6 +315,7 @@ bool CefExtensionsBrowserClient::CreateBackgroundExtensionHost(
       AlloyBrowserHostImpl::Create(create_params);
   if (browser) {
     *host = browser->GetExtensionHost();
+    LOG(INFO) << "Background extension host created for :" << extension->id();
     DCHECK(*host);
   }
   return true;

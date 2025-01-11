@@ -254,9 +254,11 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "components/embedder_support/content_settings_utils.h"
 #include "content/public/browser/allow_service_worker_result.h"
 #include "content/public/browser/site_isolation_policy.h"
+#include "extensions/browser/api/messaging/messaging_api_message_filter.h"
 #include "extensions/browser/api/web_request/web_request_api.h"
 #include "extensions/browser/api/web_request/web_request_proxying_webtransport.h"
 #include "extensions/browser/extension_navigation_throttle.h"
+#include "extensions/browser/extension_service_worker_message_filter.h"
 #include "extensions/browser/extension_util.h"
 #include "extensions/browser/service_worker/service_worker_host.h"
 #include "services/network/public/cpp/self_deleting_url_loader_factory.h"
@@ -1005,6 +1007,11 @@ void AlloyContentBrowserClient::RenderProcessWillLaunch(
 
   if (extensions::ExtensionsEnabled()) {
     host->AddFilter(new extensions::ExtensionMessageFilter(id, profile));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    host->AddFilter(new extensions::ExtensionServiceWorkerMessageFilter(
+        id, profile, host->GetStoragePartition()->GetServiceWorkerContext()));
+    host->AddFilter(new extensions::MessagingAPIMessageFilter(id, profile));
+#endif
   }
 
   // If the renderer process crashes then the host may already have
@@ -3127,6 +3134,17 @@ bool AlloyContentBrowserClient::ShouldAllowInsecureLocalNetworkRequests(
     const url::Origin& origin) {
   return content_settings::ShouldAllowInsecureLocalNetworkRequests(
       HostContentSettingsMapFactory::GetForProfile(browser_context), origin);
+}
+ 
+bool AlloyContentBrowserClient::ShouldDisableOriginAgentClusterDefault(
+    content::BrowserContext* browser_context) {
+  // The enterprise policy for kOriginAgentClusterDefaultEnabled defaults to
+  // true to defer to Chromium's decision. If it is set to false, it should
+  // override Chromium's decision and use site-keyed agent clusters by default
+  // instead.
+  return !Profile::FromBrowserContext(browser_context)
+              ->GetPrefs()
+              ->GetBoolean(prefs::kOriginAgentClusterDefaultEnabled);
 }
 #endif
 

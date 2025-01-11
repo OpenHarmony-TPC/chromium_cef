@@ -369,6 +369,14 @@ typedef struct _cef_render_handler_t {
       const struct _cef_native_embed_data_t* info);
 
   ///
+  /// Called when embed visible.
+  ///
+  void(CEF_CALLBACK* on_native_embed_visibility_change)(
+      struct _cef_render_handler_t* self,
+      const char* embed_id,
+      int visibility);
+
+  ///
   /// Called when select all is clicked.
   ///
   void(CEF_CALLBACK* notify_select_all_clicked)(

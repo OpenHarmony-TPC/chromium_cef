@@ -59,6 +59,7 @@
 #include "include/cef_process_message.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_request_handler.h"
+#include "include/cef_web_extension_api_handler.h"
 
 #if BUILDFLAG(IS_OHOS)
 #include "include/cef_media_handler.h"
@@ -334,6 +335,17 @@ class CefClient : public virtual CefBaseRefCounted {
       CefOwnPtr<CefMediaPlayerListener> listener,
       const CefCustomMediaInfo& media_info) { return nullptr; }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  ///
+  /// Return the handler for web extension api. If no handler is provided the
+  /// default implementation will be used.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
+    return nullptr;
+  }
+#endif
 
   ///
   /// notify application to show toast.

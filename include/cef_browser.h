@@ -39,6 +39,9 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include <set>
+
 #include "include/cef_base.h"
 #include "include/cef_devtools_message_observer.h"
 #include "include/cef_drag_data.h"
@@ -535,6 +538,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual int SetUrlTrustListWithErrMsg(
     const CefString& urlTrustList, CefString& detailErrMsg) = 0;
+
+  ///
+  /// Set tabId.
+  ///
+  /*--cef()--*/
+  virtual void SetTabId(int tab_id) = 0;
+
+  ///
+  /// Get tabId.
+  ///
+  /*--cef()--*/
+  virtual int GetTabId() = 0;
 
   ///
   /// Set url trust list.
@@ -2119,6 +2134,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) = 0;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  ///
+  /// Receiving the tab updated notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) = 0;
+#endif
 
   ///
   /// Set the callback of the autofill event.

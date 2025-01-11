@@ -546,6 +546,16 @@ typedef struct _cef_browser_t {
       cef_string_t* detailErrMsg);
 
   ///
+  /// Set tabId.
+  ///
+  void(CEF_CALLBACK* set_tab_id)(struct _cef_browser_t* self, int tab_id);
+
+  ///
+  /// Get tabId.
+  ///
+  int(CEF_CALLBACK* get_tab_id)(struct _cef_browser_t* self);
+
+  ///
   /// Set url trust list.
   ///
   void(CEF_CALLBACK* set_back_forward_cache_options)(
@@ -2127,6 +2137,15 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_grant_file_access_dirs)(
       struct _cef_browser_host_t* self,
       cef_string_list_t dir_list);
+
+  ///
+  /// Receiving the tab updated notification.
+  ///
+  void(CEF_CALLBACK* web_extension_tab_updated)(
+      struct _cef_browser_host_t* self,
+      int tab_id,
+      cef_string_list_t changed_property_names,
+      const cef_string_t* url);
 
   ///
   /// Set the callback of the autofill event.

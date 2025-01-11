@@ -1907,7 +1907,7 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
   browserPtr = CefBrowserHostBase::GetBrowserForHost(frame);
 #ifdef OHOS_NETWORK_LOAD
   bool is_guest_view = false;
-  if (browserPtr->browser_info()) {
+  if (browserPtr && browserPtr->browser_info()) {
     realFramePtr =
         browserPtr->browser_info()->GetFrameForHost(frame, &is_guest_view, true);
   }

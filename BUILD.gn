@@ -1347,6 +1347,18 @@ source_set("libcef_static") {
 
   #endif
 
+  #ifdef OHOS_ARKWEB_EXTENSIONS
+  if (defined(ohos_arkweb_extensions) && ohos_arkweb_extensions) {
+    sources += [
+      "libcef/browser/extensions/api/tabs/tabs_event_router.cc",
+      "libcef/browser/extensions/api/tabs/tabs_event_router.h",
+      "libcef/browser/extensions/api/tabs/tabs_windows_api.cc",
+      "libcef/browser/extensions/api/tabs/tabs_windows_api.h",
+    ]
+  }
+
+  #endif
+
   #if defined(OHOS_PRINT)
   if (defined(ohos_print) && ohos_print) {
     sources += [

@@ -459,6 +459,12 @@ bool NeedsReload() override;
                                        int main_frame_tree_node_id) override;
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+  void SetTabId(int32_t tab_id) override;
+  int32_t GetTabId() override;
+#endif
+
 #if defined(OHOS_EX_PASSWORD)
   void ShowPasswordDialog(bool is_update, const std::string& url) override;
 #endif
@@ -624,6 +630,10 @@ bool NeedsReload() override;
   int video_stream_cnt_ = 0;
 
   int drawMode_ = 0;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int tab_id_ = -1;
 #endif
   bool start_play_ = false;
 
