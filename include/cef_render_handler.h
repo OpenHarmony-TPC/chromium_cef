@@ -485,6 +485,14 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) {}
+
+  ///
+  /// Called when scroll begin or end.
+  ///
+  /*--cef()--*/
+  virtual void OnScrollStart(CefRefPtr<CefBrowser> browser,
+                                 const float x,
+                                 const float y) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

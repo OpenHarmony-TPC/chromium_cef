@@ -3708,7 +3708,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
         blink::WebInputEvent::Type::kGestureScrollBegin) {
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollStarted();
-      handler->OnScrollState(browser_impl_.get(), true);
+      handler->OnScrollStart(browser_impl_.get(), 
+                            gesture_event.data.scroll_begin.delta_x_hint,
+                            gesture_event.data.scroll_begin.delta_y_hint);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
       is_scroll_consumed_ = false;

@@ -483,6 +483,14 @@ typedef struct _cef_render_handler_t {
                                               int* visibleY,
                                               int* visibleWidth,
                                               int* visibleHeight);
+
+  ///
+  /// Called when scroll begin or end.
+  ///
+  void(CEF_CALLBACK* on_scroll_start)(struct _cef_render_handler_t* self,
+                                      struct _cef_browser_t* browser,
+                                         const float x,
+                                         const float y);                                         
 } cef_render_handler_t;
 
 #ifdef __cplusplus
