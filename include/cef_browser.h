@@ -2226,5 +2226,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void RemoveJavaScriptOnHeadReady() = 0;
 #endif
 
+#if defined(OHOS_MEDIA_AVSESSION)
+  ///
+  /// Set whether to connect to media avsession.
+  ///
+  /*--cef()--*/
+  virtual void PutWebMediaAVSessionEnabled(bool enable) = 0;
+#endif // OHOS_MEDIA_AVSESSION
+
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

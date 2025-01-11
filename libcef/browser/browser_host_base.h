@@ -808,6 +808,11 @@ bool TerminateRenderProcess() override;
 #if BUILDFLAG(IS_OHOS)
   void SetOptimizeParserBudgetEnabled(bool enable) override;
 #endif
+
+ #if defined(OHOS_MEDIA_AVSESSION)
+  void PutWebMediaAVSessionEnabled(bool enable) override;
+ #endif // OHOS_MEDIA_AVSESSION
+ 
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

@@ -2213,6 +2213,13 @@ typedef struct _cef_browser_host_t {
   void (CEF_CALLBACK* set_optimize_parser_budget_enabled)(
         struct _cef_browser_host_t* self,
         int enable);
+
+  ///
+  /// Set whether to connect to media avsession.
+  ///
+  void (CEF_CALLBACK* put_web_media_avsession_enabled)(
+        struct _cef_browser_host_t* self,
+        int is_enable);
 } cef_browser_host_t;
 
 ///

@@ -4252,3 +4252,14 @@ void CefBrowserHostBase::SetOptimizeParserBudgetEnabled(bool enable) {
   }
 }
 #endif
+
+#if defined(OHOS_MEDIA_AVSESSION)
+void CefBrowserHostBase::PutWebMediaAVSessionEnabled(bool enable) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
+  if(!mediaSession || !GetWebContents()) {
+    LOG(ERROR) << "PutWebMediaAVSessionEnabled failed, mediaSession or web contents is error.";
+    return;
+  }
+  mediaSession->PutWebMediaAVSessionEnabled(enable);
+}
+#endif // OHOS_MEDIA_AVSESSION

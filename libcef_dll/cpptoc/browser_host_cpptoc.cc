@@ -4102,6 +4102,23 @@ browser_host_set_optimize_parser_budget_enabled(struct _cef_browser_host_t* self
   CefBrowserHostCppToC::Get(self)->SetOptimizeParserBudgetEnabled(
       enable ? true : false);
 }
+
+void CEF_CALLBACK
+browser_host_put_web_media_avsession_enabled(struct _cef_browser_host_t* self,
+                                             int is_enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->PutWebMediaAVSessionEnabled(is_enable ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4338,6 +4355,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_register_screen_capture_delegate_listener;
   GetStruct()->set_optimize_parser_budget_enabled = 
       browser_host_set_optimize_parser_budget_enabled;
+  GetStruct()->put_web_media_avsession_enabled =
+      browser_host_put_web_media_avsession_enabled;
 }
 
 // DESTRUCTOR - Do not edit by hand.
