@@ -161,6 +161,12 @@ class AlloyContentBrowserClient : public content::ContentBrowserClient {
       service_manager::BinderRegistry* registry,
       blink::AssociatedInterfaceRegistry* associated_registry,
       content::RenderProcessHost* render_process_host) override;
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+  void BindMediaServiceReceiver(
+      content::RenderFrameHost* render_frame_host,
+      mojo::GenericPendingReceiver receiver) override;
+#endif
+
 #if !BUILDFLAG(IS_OHOS)
   std::unique_ptr<net::ClientCertStore> CreateClientCertStore(
       content::BrowserContext* browser_context) override;

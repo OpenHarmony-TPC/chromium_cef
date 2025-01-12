@@ -46,6 +46,10 @@
 #include "libcef/common/cdm_host_file_path.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+#include "libcef/common/alloy/alloy_ohos_media_drm_bridge_client.h"
+#endif
+
 namespace {
 
 // The following plugin-related methods are from
@@ -186,3 +190,10 @@ gfx::Image& AlloyContentClient::GetNativeImageNamed(int resource_id) {
 
   return value;
 }
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+::media::OHOSMediaDrmBridgeClient* AlloyContentClient::GetMediaDrmBridgeClient() {
+  LOG(INFO) << "[DRM]" << __func__;
+  return new AlloyOHOSMediaDrmBridgeClient();
+}
+#endif

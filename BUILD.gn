@@ -1062,6 +1062,13 @@ source_set("libcef_static") {
       "libcef/renderer/alloy/alloy_content_settings_client.cc",
       "libcef/renderer/alloy/alloy_content_settings_client.h",
     ]
+
+    if (defined(ohos_enable_cdm) && ohos_enable_cdm) {
+      sources += [
+        "libcef/common/alloy/alloy_ohos_media_drm_bridge_client.cc",
+        "libcef/common/alloy/alloy_ohos_media_drm_bridge_client.h",
+      ]
+    }
   }
 
   #ifdef OHOS_ITP

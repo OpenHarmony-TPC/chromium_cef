@@ -193,6 +193,10 @@
 #include "libcef/browser/report_manager.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+#include "chrome/browser/media/ohos/cdm/media_drm_storage_factory.h"
+#endif
+
 #ifdef OHOS_NETWORK_PROXY
 #include "net/proxy_resolution/proxy_config_service_ohos.h"
 #include "net/proxy_resolution/proxy_resolution_service.h"
@@ -1998,6 +2002,19 @@ void AlloyContentBrowserClient::ExposeInterfacesToRenderer(
   CefReportManager::ExposeInterfacesToRenderer(registry, associated_registry, host);
 #endif
 }
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+void AlloyContentBrowserClient::BindMediaServiceReceiver(
+      content::RenderFrameHost* render_frame_host,
+      mojo::GenericPendingReceiver receiver) {
+  LOG(INFO) << "[DRM]" << __func__;
+  if (auto r = receiver.As<media::mojom::MediaDrmStorage>()) {
+    CreateMediaDrmStorage(render_frame_host, std::move(r));
+    return;
+  }
+  LOG(INFO) << "[DRM]" << __func__;
+}
+#endif
 
 #if !BUILDFLAG(IS_OHOS)
 std::unique_ptr<net::ClientCertStore>

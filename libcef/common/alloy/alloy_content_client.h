@@ -28,6 +28,9 @@ class AlloyContentClient : public content::ContentClient {
       ui::ResourceScaleFactor scale_factor) override;
   base::RefCountedMemory* GetDataResourceBytes(int resource_id) override;
   gfx::Image& GetNativeImageNamed(int resource_id) override;
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
+  ::media::OHOSMediaDrmBridgeClient* GetMediaDrmBridgeClient() override;
+#endif  // BUILDFLAG(IS_OHOS) && defined(OHOS_ENABLE_CDM)
 };
 
 #endif  // CEF_LIBCEF_COMMON_ALLOY_ALLOY_CONTENT_CLIENT_H_
