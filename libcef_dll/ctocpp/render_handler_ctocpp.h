@@ -148,6 +148,9 @@ class CefRenderHandlerCToCpp
                           CefSize& size) override;
   void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
   void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) override;
+  void OnScrollStart(CefRefPtr<CefBrowser> browser,
+                         const float x,
+                         const float y) override;  
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

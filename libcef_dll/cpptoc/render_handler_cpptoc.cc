@@ -1479,6 +1479,29 @@ render_handler_get_visible_rect_to_web(struct _cef_render_handler_t* self,
   }
 }
 
+void CEF_CALLBACK
+render_handler_on_scroll_start(struct _cef_render_handler_t* self,
+                               cef_browser_t* browser,
+                                   const float x,
+                                   const float y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnScrollStart(
+      CefBrowserCToCpp::Wrap(browser), x, y);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1549,6 +1572,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
   GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
   GetStruct()->get_visible_rect_to_web = render_handler_get_visible_rect_to_web;
+  GetStruct()->on_scroll_start = render_handler_on_scroll_start;
 }
 
 // DESTRUCTOR - Do not edit by hand.
