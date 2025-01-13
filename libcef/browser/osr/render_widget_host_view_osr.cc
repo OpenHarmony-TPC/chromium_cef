@@ -358,9 +358,9 @@ CefRenderWidgetHostViewOSR::CefRenderWidgetHostViewOSR(
   DCHECK(render_widget_host_);
   DCHECK(!render_widget_host_->GetView());
 
-#ifdef OHOS_EX_TOPCONTROLS
-  for_browser_ =
-      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebExTopControls);
+#if BUILDFLAG(IS_OHOS)
+  for_nweb_ex_ =
+      base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx);
 #endif
 
   if (parent_host_view_) {
@@ -1009,7 +1009,7 @@ absl::optional<SkColor> CefRenderWidgetHostViewOSR::GetBackgroundColor() {
 
 void CefRenderWidgetHostViewOSR::UpdateBackgroundColor() {
 #if defined(OHOS_BACKGROUND_COLOR)
-  if (SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
+  if (for_nweb_ex_ || SkColorGetA(background_color_) != SK_AlphaOPAQUE) {
 #ifdef DISABLE_GPU
     if (compositor_) {
       compositor_->SetBackgroundColor(background_color_);
@@ -1760,7 +1760,7 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
   }
 
-  if (for_browser_) {
+  if (for_nweb_ex_) {
     // Set parameters for adaptive handle orientation.
     gfx::SizeF viewport_size(metadata.scrollable_viewport_size);
     viewport_size.Scale(metadata.page_scale_factor);
@@ -2661,7 +2661,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-  
+
   if (UpdateEditBounds()) {
     auto processedOffset = HandleCursorOffset();
     handler->OnCursorUpdate(browser_impl_->GetBrowser(),
@@ -3770,12 +3770,12 @@ void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
 
 #ifdef OHOS_EX_TOPCONTROLS
 int CefRenderWidgetHostViewOSR::GetTopControlsOffset() const {
-  return for_browser_ ? top_controls_offset_ : 0;
+  return for_nweb_ex_ ? top_controls_offset_ : 0;
 }
 
 int CefRenderWidgetHostViewOSR::GetShrinkViewportHeight() {
   int shrink_viewport_height = 0;
-  if (!for_browser_ || !host()->delegate()) {
+  if (!for_nweb_ex_ || !host()->delegate()) {
     return shrink_viewport_height;
   }
 
@@ -3793,7 +3793,7 @@ int CefRenderWidgetHostViewOSR::GetShrinkViewportHeight() {
 void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
     float top_controls_offset,
     float top_content_offset) {
-  if (!for_browser_ || !browser_impl_.get() ||
+  if (!for_nweb_ex_ || !browser_impl_.get() ||
       !browser_impl_->GetClient().get()) {
     return;
   }
@@ -4123,6 +4123,11 @@ bool CefRenderWidgetHostViewOSR::PullToRefreshAction(
     return false;
   }
 
+  bool is_dark =
+      (browser_impl_->settings().force_dark_mode_enabled == STATE_ENABLED &&
+       browser_impl_->settings().dark_prefer_color_scheme_enabled ==
+           STATE_ENABLED);
+
   bool result = browser_impl_->GetClient()->OnPullToRefreshAction(
       static_cast<int>(action));
   switch (action) {
@@ -4130,6 +4135,9 @@ bool CefRenderWidgetHostViewOSR::PullToRefreshAction(
       pull_to_refreshing_ = result;
       root_layer_transform_ = GetRootLayer()->transform();
       pull_to_refresh_offset_x_ = pull_to_refresh_offset_y_ = 0;
+      if (result && is_dark) {
+        SetBackgroundColor(SK_ColorBLACK);
+      }
       break;
     }
     case ui::PullToRefreshAction::PULL_REFRESH: {
@@ -4143,6 +4151,9 @@ bool CefRenderWidgetHostViewOSR::PullToRefreshAction(
       pull_to_refresh_offset_x_ = pull_to_refresh_offset_y_ = 0;
       browser_impl_->GetClient()->OnPullToRefreshPull(0, 0);
       GetRootLayer()->SetTransform(root_layer_transform_);
+      if (is_dark) {
+        SetBackgroundColor(SK_ColorWHITE);
+      }
       break;
     }
     case ui::PullToRefreshAction::UNKNOWN:
@@ -4164,7 +4175,7 @@ void CefRenderWidgetHostViewOSR::PullToRefreshUpdate(float x_delta,
                        weak_ptr_factory_.GetWeakPtr(), x_delta, y_delta));
     return;
   }
-  if (!for_browser_ || !browser_impl_.get() ||
+  if (!for_nweb_ex_ || !browser_impl_.get() ||
       !browser_impl_->GetClient().get()) {
     return;
   }
