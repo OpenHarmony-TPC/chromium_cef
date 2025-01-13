@@ -1877,6 +1877,9 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
                  "OnRenderFrameMetadataChangedAfterActivation",
                  "viewport_size_in_pixels", viewport_size_in_pixels.ToString(),
                  "device_scale_factor", device_scale_factor);
+#if BUILDFLAG(IS_OHOS)
+    setWebPaintedTask_.Cancel();
+#endif
     viewport_size_in_pixels_ = viewport_size_in_pixels;
     device_scale_factor_ = device_scale_factor;
     CEF_POST_TASK(CEF_UIT,
@@ -1956,7 +1959,12 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 }
 
 void CefRenderWidgetHostViewOSR::WasResized() {
-  // Only one resize will be in-flight at a time.
+// Only one resize will be in-flight at a time.
+#if BUILDFLAG(IS_OHOS)
+  TRACE_EVENT2("cef", "CefRenderWidgetHostViewOSR::WasResized",
+               "hold_resize_", hold_resize_,
+               "pending_resize_", pending_resize_);
+#endif
   if (hold_resize_) {
 #if defined(OHOS_COMPOSITE_RENDER)
     isKeyboardResized_ = false;
@@ -3201,6 +3209,16 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
       // The size has changed. Avoid resizing again until ReleaseResizeHold() is
       // called.
       hold_resize_ = true;
+#if BUILDFLAG(IS_OHOS)
+      if (!setWebPaintedTask_IsCancelled())
+      {
+        setWebPaintedTask_.Cancel();
+      }
+      setWebPaintedTask_.Reset(base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
+                                              weak_ptr_factory_.GetWeakPtr()));
+      content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE, setWebPaintedTask_.callback(), base::Milliseconds(400));
+      TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
+#endif
       cached_scale_factor_ = GetDeviceScaleFactor();
       return true;
     }
