@@ -3210,7 +3210,7 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
       // called.
       hold_resize_ = true;
 #if BUILDFLAG(IS_OHOS)
-      if (!setWebPaintedTask_IsCancelled())
+      if (!setWebPaintedTask_.IsCancelled())
       {
         setWebPaintedTask_.Cancel();
       }
