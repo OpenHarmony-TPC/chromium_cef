@@ -708,6 +708,9 @@ class CefRenderWidgetHostViewOSR
   int32_t node_id_ = -1;
   bool is_tap_down_in_cursor_update_ = false;
   std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
+  int64_t touchpad_mouse_event_count_ = 0;
+  blink::mojom::InputEventResultState touchpad_mouse_consumed_ = blink::mojom::InputEventResultState::kUnknown;
+  base::Lock pinch_lock_;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
