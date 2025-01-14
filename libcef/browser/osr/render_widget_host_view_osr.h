@@ -11,7 +11,6 @@
 #include <set>
 #include <string>
 #include <vector>
-#include <queue>
 
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
@@ -52,6 +51,7 @@
 #endif
 
 #if BUILDFLAG(IS_OHOS)
+#include <queue>
 #include <unordered_map>
 #include "third_party/ohos_ndk/includes/ohos_adapter/adapter_base.h"
 #endif
@@ -754,6 +754,9 @@ class CefRenderWidgetHostViewOSR
   int32_t node_id_ = -1;
   bool is_tap_down_in_cursor_update_ = false;
   std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
+  int64_t touchpad_mouse_event_count_ = 0;
+  blink::mojom::InputEventResultState touchpad_mouse_consumed_ = blink::mojom::InputEventResultState::kUnknown;
+  base::Lock pinch_lock_;
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 #ifdef OHOS_EX_TOPCONTROLS
