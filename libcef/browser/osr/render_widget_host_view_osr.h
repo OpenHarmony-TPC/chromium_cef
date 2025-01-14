@@ -715,6 +715,7 @@ class CefRenderWidgetHostViewOSR
   bool is_mouse_locked_ = false;
 
   bool is_request_unadjusted_movement_ = false;
+  bool for_nweb_ex_ = false;
 
 #if defined(OHOS_PERFORMANCE_JITTER)
   base::circular_deque<ui::GestureEventData> gesture_event_queue_;
@@ -759,7 +760,6 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_EX_TOPCONTROLS
   float top_controls_offset_ = 0.f;
   float top_content_offset_ = 0.f;
-  bool for_browser_ = false;
 #endif
 
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
