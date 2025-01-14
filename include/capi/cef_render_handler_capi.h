@@ -465,6 +465,15 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* get_device_pixel_size)(struct _cef_render_handler_t* self,
                                             struct _cef_browser_t* browser,
                                             cef_size_t* size);
+
+  ///
+  /// Get the visible area relative to the web.
+  ///
+  void(CEF_CALLBACK* get_visible_rect_to_web)(struct _cef_render_handler_t* self,
+                                              int* visibleX,
+                                              int* visibleY,
+                                              int* visibleWidth,
+                                              int* visibleHeight);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

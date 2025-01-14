@@ -465,6 +465,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetDevicePixelSize(CefRefPtr<CefBrowser> browser, CefSize& size) {}
+
+  ///
+  /// Get the visible area relative to the web.
+  ///
+  /*--cef()--*/
+  virtual void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
