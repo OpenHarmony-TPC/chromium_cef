@@ -214,6 +214,9 @@ interface BrowserFrame {
                            bool user_gesture,
                            bool is_redirect,
                            bool is_outermost_main_frame) => (bool result);
+
+  [EnableIf=is_ohos]
+  UpdateHitTestData(int32 type, string extra_data);
 };
 
 struct CrossOriginWhiteListEntry {

@@ -1630,6 +1630,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void GetHitData(int& type, CefString& extra_data) = 0;
 
   ///
+  /// Gets the latest hitdata
+  ///
+  /*--cef()--*/
+  virtual void GetLastHitData(int& type, CefString& extra_data) = 0;
+
+  ///
   /// Set the inital page scale
   ///
   /*--cef()--*/

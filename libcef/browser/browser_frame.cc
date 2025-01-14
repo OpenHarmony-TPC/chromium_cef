@@ -110,4 +110,10 @@ void CefBrowserFrame::ShouldOverrideUrlLoading(const std::string &url,
                                    std::move(callback));
   }
 }
+
+void CefBrowserFrame::UpdateHitTestData(int32_t type, const std::string& extra_data) {
+  if (auto host = GetFrameHost()) {
+    host->UpdateHitTestData(type, extra_data);
+  }
+}
 #endif
