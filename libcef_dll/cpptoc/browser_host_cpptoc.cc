@@ -3861,6 +3861,40 @@ browser_host_set_grant_file_access_dirs(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
+browser_host_web_extension_tab_updated(struct _cef_browser_host_t* self,
+                                       int tab_id,
+                                       cef_string_list_t changed_property_names,
+                                       const cef_string_t* url) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: changed_property_names; type: string_vec_byref_const
+  DCHECK(changed_property_names);
+  if (!changed_property_names) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+
+  // Translate param: changed_property_names; type: string_vec_byref_const
+  std::vector<CefString> changed_property_namesList;
+  transfer_string_list_contents(changed_property_names,
+                                changed_property_namesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->WebExtensionTabUpdated(
+      tab_id, changed_property_namesList, CefString(url));
+}
+
+void CEF_CALLBACK
 browser_host_set_autofill_callback(struct _cef_browser_host_t* self,
                                    cef_web_message_receiver_t* callback) {
   shutdown_checker::AssertNotShutdown();
@@ -4375,6 +4409,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_notify_for_next_touch_event;
   GetStruct()->set_grant_file_access_dirs =
       browser_host_set_grant_file_access_dirs;
+  GetStruct()->web_extension_tab_updated =
+      browser_host_web_extension_tab_updated;
   GetStruct()->set_autofill_callback = browser_host_set_autofill_callback;
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
   GetStruct()->scroll_focused_editable_node_into_view =

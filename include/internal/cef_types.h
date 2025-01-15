@@ -526,6 +526,11 @@ typedef struct _cef_request_context_settings_t {
 #if defined(OHOS_INCOGNITO_MODE)
     bool incognito_mode;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  /// Only used by Extensions's background script initialization during startup.
+  void* global_request_context;
+#endif
 } cef_request_context_settings_t;
 
 ///

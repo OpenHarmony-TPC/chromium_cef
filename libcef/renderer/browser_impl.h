@@ -97,6 +97,11 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   uint32_t GetAcceleratedWidget(bool isPopup) override;
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void SetTabId(int32_t tab_id) override;
+  int32_t GetTabId() override;
+#endif
+
 #if BUILDFLAG(IS_OHOS)
   bool CanGoBackOrForward(int num_steps) override;
   void GoBackOrForward(int num_steps) override;
@@ -227,6 +232,10 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool needs_contents_size_update_ = true;
   int viewport_width_ = 0;
   int viewport_height_ = 0;
+#endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  int tab_id_;
 #endif
 
   IMPLEMENT_REFCOUNTING(CefBrowserImpl);

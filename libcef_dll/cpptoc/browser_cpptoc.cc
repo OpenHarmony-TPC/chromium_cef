@@ -991,6 +991,37 @@ int CEF_CALLBACK browser_set_url_trust_list_with_err_msg(
   return _retval;
 }
 
+void CEF_CALLBACK browser_set_tab_id(struct _cef_browser_t* self, int tab_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->SetTabId(tab_id);
+}
+
+int CEF_CALLBACK browser_get_tab_id(struct _cef_browser_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  int _retval = CefBrowserCppToC::Get(self)->GetTabId();
+
+  // Return type: simple
+  return _retval;
+}
+
 void CEF_CALLBACK browser_set_back_forward_cache_options(
     struct _cef_browser_t *self, int32_t size, int32_t timeToLive) {
   shutdown_checker::AssertNotShutdown();
@@ -1147,6 +1178,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->enable_ads_block = browser_enable_ads_block;
   GetStruct()->set_url_trust_list_with_err_msg =
       browser_set_url_trust_list_with_err_msg;
+  GetStruct()->set_tab_id = browser_set_tab_id;
+  GetStruct()->get_tab_id = browser_get_tab_id;
   GetStruct()->set_back_forward_cache_options =
       browser_set_back_forward_cache_options;
   GetStruct()->set_ad_block_enabled_for_site =

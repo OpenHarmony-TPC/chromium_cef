@@ -3559,6 +3559,44 @@ void CefBrowserHostCToCpp::SetGrantFileAccessDirs(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::WebExtensionTabUpdated(
+    int tab_id,
+    const std::vector<CefString>& changed_property_names,
+    const CefString& url) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, web_extension_tab_updated)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+
+  // Translate param: changed_property_names; type: string_vec_byref_const
+  cef_string_list_t changed_property_namesList = cef_string_list_alloc();
+  DCHECK(changed_property_namesList);
+  if (changed_property_namesList) {
+    transfer_string_list_contents(changed_property_names,
+                                  changed_property_namesList);
+  }
+
+  // Execute
+  _struct->web_extension_tab_updated(
+      _struct, tab_id, changed_property_namesList, url.GetStruct());
+
+  // Restore param:changed_property_names; type: string_vec_byref_const
+  if (changed_property_namesList) {
+    cef_string_list_free(changed_property_namesList);
+  }
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetAutofillCallback(
     CefRefPtr<CefWebMessageReceiver> callback) {
   shutdown_checker::AssertNotShutdown();

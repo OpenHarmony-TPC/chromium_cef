@@ -784,6 +784,15 @@ bool TerminateRenderProcess() override;
                        cef_web_snapshot_callback_t callback)override;
 #endif
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override;
+  void SetTabId(int tab_id) override;
+  int GetTabId() override;
+#endif
+
 #ifdef OHOS_BFCACHE
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
 #endif

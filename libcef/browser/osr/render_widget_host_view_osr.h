@@ -467,8 +467,8 @@ class CefRenderWidgetHostViewOSR
 
 #if BUILDFLAG(IS_OHOS)
   bool IsMouseLocked() override;
-  void SetDoubleTapSupportEnabled(bool enabled);
-  void SetMultiTouchZoomSupportEnabled(bool enabled);
+  void SetDoubleTapSupportEnabled(bool enabled) override;
+  void SetMultiTouchZoomSupportEnabled(bool enabled) override;
 
   static void AddCompositor(gfx::AcceleratedWidget widget,
                             ui::Compositor* compositor);

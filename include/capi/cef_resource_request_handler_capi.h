@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=eebcbcb2d20231144218b0188c05e3b37a827749$
+// $hash=1077c53c1d36b7bb7dde05e81dd205e3a195cf13$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RESOURCE_REQUEST_HANDLER_CAPI_H_
@@ -48,12 +48,29 @@
 #include "include/capi/cef_resource_handler_capi.h"
 #include "include/capi/cef_response_capi.h"
 #include "include/capi/cef_response_filter_capi.h"
+#include "include/capi/cef_scheme_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct _cef_cookie_access_filter_t;
+
+///
+/// cef_intercept_callback_t
+///
+typedef struct _cef_intercept_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Continue.
+  ///
+  void(CEF_CALLBACK* cont)(struct _cef_intercept_callback_t* self,
+                           struct _cef_resource_handler_t* resource_handler);
+} cef_intercept_callback_t;
 
 ///
 /// Implement this structure to handle events related to browser requests. The
@@ -206,6 +223,18 @@ typedef struct _cef_resource_request_handler_t {
       struct _cef_frame_t* frame,
       struct _cef_request_t* request,
       int* allow_os_execution);
+
+  ///
+  /// GetResourceHandlerByIO.
+  ///
+  void(CEF_CALLBACK* get_resource_handler_by_io)(
+      struct _cef_resource_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      struct _cef_request_t* request,
+      struct _cef_intercept_callback_t* callback,
+      struct _cef_scheme_handler_factory_t* scheme_factory,
+      const cef_string_t* scheme);
 } cef_resource_request_handler_t;
 
 ///

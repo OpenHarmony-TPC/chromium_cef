@@ -66,6 +66,13 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsSetZoomSettingsFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomSettingsFunction),
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    // chrome.extension.getURL()'s implementation is in the renderer.
+    "extension",
+    "extension.getURL",
+#endif
+
 #if defined(OHOS_ARKWEB_EXTENSIONS)
     "developerPrivate",
     EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionsInfoFunction),

@@ -488,6 +488,15 @@ bool CefBrowserImpl::ShouldShowLoadingUI() {
 }
 // #endif  // defined(OHOS_NWEB_EX)
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void CefBrowserImpl::SetTabId(int32_t tab_id) {
+  tab_id_ = tab_id;
+}
+int32_t CefBrowserImpl::GetTabId() {
+  return tab_id_;
+}
+#endif
+
 #if BUILDFLAG(IS_OHOS)
 void CefBrowserImpl::DidUpdateMainFrameLayout() {
   needs_contents_size_update_ = true;

@@ -263,12 +263,10 @@ void SetCefSpecialPrefs(content::RenderViewHost* rvh,
   if (rwhvb && rwhvb->IsRenderWidgetHostViewChildFrame()) {
     return;
   }
-  CefRenderWidgetHostViewOSR* view =
-      static_cast<CefRenderWidgetHostViewOSR*>(rwhvb);
-  if (view) {
-    view->SetDoubleTapSupportEnabled(
+  if (rwhvb) {
+    rwhvb->SetDoubleTapSupportEnabled(
         browser->settings().supports_double_tap_zoom);
-    view->SetMultiTouchZoomSupportEnabled(
+    rwhvb->SetMultiTouchZoomSupportEnabled(
         browser->settings().supports_multi_touch_zoom);
   }
 }

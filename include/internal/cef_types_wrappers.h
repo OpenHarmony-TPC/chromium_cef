@@ -500,6 +500,10 @@ struct CefRequestContextSettingsTraits {
 #if defined(OHOS_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    target->global_request_context = src->global_request_context;
+#endif
   }
 };
 

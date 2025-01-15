@@ -6,6 +6,10 @@
 #define CEF_LIBCEF_RENDERER_EXTENSIONS_EXTENSIONS_DISPATCHER_DELEGATE_H_
 
 #include "extensions/renderer/dispatcher_delegate.h"
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/renderer/dispatcher.h"
+#include "extensions/renderer/native_extension_bindings_system.h"
+#endif
 
 namespace extensions {
 
@@ -22,6 +26,11 @@ class CefExtensionsDispatcherDelegate : public DispatcherDelegate {
 
   void PopulateSourceMap(
       extensions::ResourceBundleSourceMap* source_map) override;
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  void InitializeBindingsSystem(
+      Dispatcher* dispatcher,
+      NativeExtensionBindingsSystem* bindings_system) override;
+#endif
 };
 
 }  // namespace extensions
