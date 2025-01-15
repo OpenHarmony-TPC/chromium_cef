@@ -1882,9 +1882,6 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
                                  weak_ptr_factory_.GetWeakPtr()));
-#if BUILDFLAG(IS_OHOS)
-    setReleaseResizeHoldDelayedTask_.Cancel();
-#endif
   }
 
   if (!page_scale_factor_) {
@@ -3208,12 +3205,14 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
 #endif
       // The size has changed. Avoid resizing again until ReleaseResizeHold() is
       // called.
-      hold_resize_ = true;
 #if BUILDFLAG(IS_OHOS)
       if (!setReleaseResizeHoldDelayedTask_.IsCancelled())
       {
         setReleaseResizeHoldDelayedTask_.Cancel();
       }
+#endif
+      hold_resize_ = true;
+#if BUILDFLAG(IS_OHOS)
       setReleaseResizeHoldDelayedTask_.Reset(base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
                                                             weak_ptr_factory_.GetWeakPtr()));
       content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(), base::Milliseconds(400));
@@ -3234,6 +3233,12 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
 }
 
 void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
+#if BUILDFLAG(IS_OHOS)
+  if (!setReleaseResizeHoldDelayedTask_.IsCancelled())
+  {
+    setReleaseResizeHoldDelayedTask_.Cancel();
+  }
+#endif
   DCHECK(hold_resize_);
   hold_resize_ = false;
   cached_scale_factor_ = -1;
