@@ -3814,6 +3814,21 @@ void CefBrowserHostCToCpp::SetOptimizeParserBudgetEnabled(bool enable) {
   _struct->set_optimize_parser_budget_enabled(_struct, enable);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::PutWebMediaAVSessionEnabled(bool is_enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, put_web_media_avsession_enabled)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->put_web_media_avsession_enabled(_struct, is_enable);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}
