@@ -25,39 +25,6 @@
 
 namespace extensions {
 
-namespace {
-
-bool InsertWebContents(std::vector<content::WebContents*>* vector,
-                       content::WebContents* web_contents) {
-  vector->push_back(web_contents);
-  return false;  // Continue iterating.
-}
-
-}  // namespace
-
-void GetAllGuestsForOwnerContents(content::WebContents* owner,
-                                  std::vector<content::WebContents*>* guests) {
-  content::BrowserPluginGuestManager* plugin_guest_manager =
-      owner->GetBrowserContext()->GetGuestManager();
-  plugin_guest_manager->ForEachGuest(
-      owner, base::BindRepeating(InsertWebContents, guests));
-}
-
-content::WebContents* GetOwnerForGuestContents(content::WebContents* guest) {
-  content::WebContentsImpl* guest_impl =
-      static_cast<content::WebContentsImpl*>(guest);
-  content::BrowserPluginGuest* plugin_guest =
-      guest_impl->GetBrowserPluginGuest();
-  if (plugin_guest) {
-    return plugin_guest->owner_web_contents();
-  }
-
-  // Maybe it's a print preview dialog.
-  auto print_preview_controller =
-      g_browser_process->print_preview_dialog_controller();
-  return print_preview_controller->GetInitiator(guest);
-}
-
 CefRefPtr<CefBrowserHostBase> GetOwnerBrowserForGlobalId(
     const content::GlobalRenderFrameHostId& global_id,
     bool* is_guest_view) {
@@ -194,6 +161,40 @@ CefRefPtr<AlloyBrowserHostImpl> GetClientAvailableBrowser(int tab_id) {
       return current_browser;
     }
   }
+  return nullptr;
+}
+
+CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
+    int tab_id,
+    content::BrowserContext* browser_context) {
+  REQUIRE_ALLOY_RUNTIME();
+  CEF_REQUIRE_UIT();
+  DCHECK(browser_context);
+  if (tab_id < 0 || !browser_context) {
+    return nullptr;
+  }
+
+  auto cef_browser_context =
+      CefBrowserContext::FromBrowserContext(browser_context);
+
+  for (const auto& browser_info :
+       CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
+    CefRefPtr<AlloyBrowserHostImpl> current_browser =
+        static_cast<AlloyBrowserHostImpl*>(browser_info->browser().get());
+    if (current_browser && current_browser->GetTabId() == tab_id) {
+      // Make sure we're operating in the same CefBrowserContext.
+      if (CefBrowserContext::FromBrowserContext(
+              current_browser->GetBrowserContext()) == cef_browser_context) {
+        return current_browser;
+      } else {
+        LOG(WARNING) << "[Extension] Browser with tabId " << tab_id
+                     << " cannot be accessed because is uses a different "
+                        "CefRequestContext";
+        break;
+      }
+    }
+  }
+
   return nullptr;
 }
 #endif

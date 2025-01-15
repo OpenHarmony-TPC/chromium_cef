@@ -95,7 +95,9 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                            bool should_show_loading_ui) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+  void WebExtensionUpdateTab(
+      int32_t tab_id,
+      const NWebExtensionTabUpdateProperties* update_properties) override;
 #endif
   bool DidAddMessageToConsole(content::WebContents* source,
                               blink::mojom::ConsoleMessageLevel log_level,

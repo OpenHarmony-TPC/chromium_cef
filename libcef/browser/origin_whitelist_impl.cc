@@ -299,7 +299,11 @@ bool HasCrossOriginWhitelistEntry(const url::Origin& source,
   // Components of chrome that are implemented as extensions or platform apps
   // are allowed to use chrome://resources/ and chrome://theme/ URLs.
   // See also RegisterNonNetworkSubresourceURLLoaderFactories.
-  if (source.scheme() == extensions::kExtensionScheme &&
+  if ((source.scheme() == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+       || source.scheme() == extensions::kArkwebExtensionScheme
+#endif
+       ) &&
       target.scheme() == content::kChromeUIScheme &&
       (target.host() == chrome::kChromeUIThemeHost ||
        target.host() == content::kChromeUIResourcesHost)) {

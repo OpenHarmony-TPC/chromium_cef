@@ -28,7 +28,14 @@
 #include "extensions/browser/api/management/management_api.h"
 #include "chrome/browser/extensions/api/commands/command_service.h"
 #include "extensions/browser/api/runtime/runtime_api.h"
+#include "libcef/browser/extensions/api/web_navigation/web_navigation_api.h"
+#include "extensions/browser/api/declarative_net_request/rules_monitor_service.h"
+#include "chrome/browser/extensions/menu_manager_factory.h"
 #endif
+#ifdef OHOS_NOTIFICATION
+#include "chrome/browser/extensions/api/notifications/extension_notification_display_helper_factory.h"
+#endif // OHOS_NOTIFICATION
+
 namespace cef {
 
 void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
@@ -51,7 +58,13 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::CommandService::GetFactoryInstance();
     extensions::RuntimeAPI::GetFactoryInstance();
     extensions::cef::TabsWindowsAPI::GetFactoryInstance();
+    extensions::cef::WebNavigationAPI::GetFactoryInstance();
+    extensions::declarative_net_request::RulesMonitorService::GetFactoryInstance();
+    extensions::MenuManagerFactory::GetInstance();
 #endif
+#ifdef OHOS_NOTIFICATION
+    extensions::ExtensionNotificationDisplayHelperFactory::GetInstance();
+#endif // OHOS_NOTIFICATION
   }
 
   if (base::FeatureList::IsEnabled(network::features::kReduceAcceptLanguage)) {

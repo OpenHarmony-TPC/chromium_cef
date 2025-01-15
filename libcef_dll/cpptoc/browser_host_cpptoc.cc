@@ -3894,6 +3894,57 @@ browser_host_web_extension_tab_updated(struct _cef_browser_host_t* self,
       tab_id, changed_property_namesList, CefString(url));
 }
 
+void CEF_CALLBACK browser_host_web_extension_tab_updatedChangeInfo(
+    struct _cef_browser_host_t* self,
+    int tab_id,
+    cef_string_list_t changed_property_names,
+    std::unique_ptr<NWebExtensionTabChangeInfo> info) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: changed_property_names; type: string_vec_byref_const
+  DCHECK(changed_property_names);
+  if (!changed_property_names) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(info);
+  if (!info) {
+    return;
+  }
+
+  // Translate param: changed_property_names; type: string_vec_byref_const
+  std::vector<CefString> changed_property_namesList;
+  transfer_string_list_contents(changed_property_names,
+                                changed_property_namesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->WebExtensionTabUpdated(
+      tab_id, changed_property_namesList, std::move(info));
+}
+
+void CEF_CALLBACK
+browser_host_web_extension_tab_actived(struct _cef_browser_host_t* self,
+                                       int tab_id,
+                                       int window_id) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+ 
+  // Execute
+  CefBrowserHostCppToC::Get(self)->WebExtensionTabActivated(tab_id, window_id);
+}
+
 void CEF_CALLBACK
 browser_host_set_autofill_callback(struct _cef_browser_host_t* self,
                                    cef_web_message_receiver_t* callback) {
@@ -4413,6 +4464,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_web_extension_tab_updated;
   GetStruct()->set_autofill_callback = browser_host_set_autofill_callback;
   GetStruct()->fill_autofill_data = browser_host_fill_autofill_data;
+  GetStruct()->web_extension_tab_updated_change_info =
+      browser_host_web_extension_tab_updatedChangeInfo;
+  GetStruct()->web_extension_tab_actived =
+      browser_host_web_extension_tab_actived;
   GetStruct()->scroll_focused_editable_node_into_view =
       browser_host_scroll_focused_editable_node_into_view;
   GetStruct()->process_autofill_cancel = browser_host_process_autofill_cancel;

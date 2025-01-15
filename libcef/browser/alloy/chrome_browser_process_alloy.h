@@ -130,6 +130,10 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
 #endif
 
  private:
+#ifdef OHOS_NOTIFICATION
+  void CreateNotificationPlatformBridge();
+#endif // OHOS_NOTIFICATION
+
   bool initialized_;
   bool context_initialized_;
   bool shutdown_;
@@ -154,6 +158,11 @@ class ChromeBrowserProcessAlloy : public BrowserProcess {
   std::unique_ptr<base::FieldTrialList> field_trial_list_;
 
   std::unique_ptr<component_updater::ComponentUpdateService> component_updater_;
+
+#ifdef OHOS_NOTIFICATION
+  bool created_notification_bridge_ = false;
+  std::unique_ptr<NotificationPlatformBridge> notification_bridge_;
+#endif // OHOS_NOTIFICATION
 
 #ifdef OHOS_ARKWEB_ADBLOCK
   bool created_subresource_filter_ruleset_service_ = false;

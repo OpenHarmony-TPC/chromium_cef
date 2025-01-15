@@ -130,6 +130,9 @@
 
       'include/cef_custom_media_info.h',
       'include/cef_custom_media_player_delegate.h',
+      'include/cef_extension_context_menus_handler.h',
+      'include/cef_extension_window_handler.h',
+      'include/cef_web_extension_tab_api_handler.h',
     ],
     'autogen_capi_includes': [
       'include/capi/cef_accessibility_handler_capi.h',

@@ -16,6 +16,10 @@
 #include "base/one_shot_event.h"
 #include "extensions/browser/extension_system.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "extensions/browser/extension_registry_info_manager.h"
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 namespace base {
 class DictionaryValue;
 }
@@ -122,6 +126,8 @@ class CefExtensionSystem : public ExtensionSystem {
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   void SetGlobalRequestContext(CefRequestContext* context);
+
+  ExtensionRegistryInfoManager* GetExtensionRegistryInfoManager() override;
 #endif
 
  private:
@@ -210,6 +216,8 @@ class CefExtensionSystem : public ExtensionSystem {
   std::unique_ptr<UninstallPingSender> uninstall_ping_sender_;
 
   CefRefPtr<CefRequestContext> global_request_context_;
+
+  std::unique_ptr<ExtensionRegistryInfoManager> extension_registry_info_manager_;
 #endif
 
   // Must be the last member.

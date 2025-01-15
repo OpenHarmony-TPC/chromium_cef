@@ -66,9 +66,23 @@ TabsEventRouter* TabsWindowsAPI::tabs_event_router() {
 void TabsWindowsAPI::TabUpdated(int tab_id,
     content::WebContents* contents,
     const std::vector<std::string>& changed_property_names,
+    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
+  tabs_event_router()->DispatchTabUpdatedEvent(
+    tab_id, contents, changed_property_names, std::move(changeInfo));
+}
+
+void TabsWindowsAPI::TabUpdated(int tab_id,
+    content::WebContents* contents,
+    const std::vector<std::string>& changed_property_names,
     const std::string& url) {
   tabs_event_router()->DispatchTabUpdatedEvent(
     tab_id, contents, changed_property_names, url);
+}
+
+void TabsWindowsAPI::TabActived(int tab_id,
+                                int window_id,
+                                content::WebContents* contents) {
+  tabs_event_router()->DispatchTabActiveEvent(tab_id, window_id, contents);
 }
 
 void TabsWindowsAPI::Shutdown() {
