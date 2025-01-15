@@ -778,7 +778,7 @@ class CefRenderWidgetHostViewOSR
   int32_t needFocusViewport_ = 0;
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 #if BUILDFLAG(IS_OHOS)
-  base::CancelableOnceClosure setWebPaintedTask_;
+  base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;
 #endif
 };
 

@@ -1877,14 +1877,14 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
                  "OnRenderFrameMetadataChangedAfterActivation",
                  "viewport_size_in_pixels", viewport_size_in_pixels.ToString(),
                  "device_scale_factor", device_scale_factor);
-#if BUILDFLAG(IS_OHOS)
-    setWebPaintedTask_.Cancel();
-#endif
     viewport_size_in_pixels_ = viewport_size_in_pixels;
     device_scale_factor_ = device_scale_factor;
     CEF_POST_TASK(CEF_UIT,
                   base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
                                  weak_ptr_factory_.GetWeakPtr()));
+#if BUILDFLAG(IS_OHOS)
+    setReleaseResizeHoldDelayedTask_.Cancel();
+#endif
   }
 
   if (!page_scale_factor_) {
@@ -3210,13 +3210,13 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
       // called.
       hold_resize_ = true;
 #if BUILDFLAG(IS_OHOS)
-      if (!setWebPaintedTask_.IsCancelled())
+      if (!setReleaseResizeHoldDelayedTask_.IsCancelled())
       {
-        setWebPaintedTask_.Cancel();
+        setReleaseResizeHoldDelayedTask_.Cancel();
       }
-      setWebPaintedTask_.Reset(base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
-                                              weak_ptr_factory_.GetWeakPtr()));
-      content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE, setWebPaintedTask_.callback(), base::Milliseconds(400));
+      setReleaseResizeHoldDelayedTask_.Reset(base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
+                                                            weak_ptr_factory_.GetWeakPtr()));
+      content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(), base::Milliseconds(400));
       TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
 #endif
       cached_scale_factor_ = GetDeviceScaleFactor();
