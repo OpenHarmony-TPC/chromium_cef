@@ -3206,18 +3206,17 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
       // The size has changed. Avoid resizing again until ReleaseResizeHold() is
       // called.
 #if BUILDFLAG(IS_OHOS)
-      if (!setReleaseResizeHoldDelayedTask_.IsCancelled())
-      {
-        setReleaseResizeHoldDelayedTask_.Cancel();
-      }
+      setReleaseResizeHoldDelayedTask_.Reset(
+          base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
+                         weak_ptr_factory_.GetWeakPtr()));
+      content::GetUIThreadTaskRunner({})->PostDelayedTask(
+          FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(),
+          base::Milliseconds(400));
+      TRACE_EVENT0(
+          "cef",
+          "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
 #endif
       hold_resize_ = true;
-#if BUILDFLAG(IS_OHOS)
-      setReleaseResizeHoldDelayedTask_.Reset(base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
-                                                            weak_ptr_factory_.GetWeakPtr()));
-      content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(), base::Milliseconds(400));
-      TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
-#endif
       cached_scale_factor_ = GetDeviceScaleFactor();
       return true;
     }
@@ -3234,10 +3233,7 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
 
 void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
 #if BUILDFLAG(IS_OHOS)
-  if (!setReleaseResizeHoldDelayedTask_.IsCancelled())
-  {
-    setReleaseResizeHoldDelayedTask_.Cancel();
-  }
+  setReleaseResizeHoldDelayedTask_.Cancel();
 #endif
   DCHECK(hold_resize_);
   hold_resize_ = false;
