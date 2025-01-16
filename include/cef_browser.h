@@ -2240,5 +2240,9 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void PutWebMediaAVSessionEnabled(bool enable) = 0;
 #endif // OHOS_MEDIA_AVSESSION
 
+  /// set custom web media player enable.
+  ///
+  /*--cef()--*/
+  virtual void CustomWebMediaPlayer(bool enable) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

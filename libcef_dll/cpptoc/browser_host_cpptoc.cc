@@ -4155,6 +4155,21 @@ browser_host_put_web_media_avsession_enabled(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->PutWebMediaAVSessionEnabled(is_enable ? true : false);
 }
 
+void CEF_CALLBACK
+browser_host_custom_web_media_player(struct _cef_browser_host_t* self,
+                                     int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CustomWebMediaPlayer(enable ? true : false);
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4390,10 +4405,11 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
   GetStruct()->register_screen_capture_delegate_listener =
       browser_host_register_screen_capture_delegate_listener;
-  GetStruct()->set_optimize_parser_budget_enabled = 
+  GetStruct()->set_optimize_parser_budget_enabled =
       browser_host_set_optimize_parser_budget_enabled;
   GetStruct()->put_web_media_avsession_enabled =
       browser_host_put_web_media_avsession_enabled;
+  GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
 }
 
 // DESTRUCTOR - Do not edit by hand.
