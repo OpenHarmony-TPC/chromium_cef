@@ -60,6 +60,9 @@ class InterceptedRequestHandler {
   using CancelRequestCallback = base::OnceCallback<void(int /* error_code */)>;
   virtual void OnBeforeRequest(int32_t request_id,
                                network::ResourceRequest* request,
+#ifdef OHOS_NETWORK_LOAD
+                               bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                                bool request_was_redirected,
                                OnBeforeRequestResultCallback callback,
                                CancelRequestCallback cancel_callback);
@@ -114,6 +117,9 @@ class InterceptedRequestHandler {
       const GURL& /* redirect_url */)>;
   virtual void OnRequestResponse(
       int32_t request_id,
+#ifdef OHOS_NETWORK_LOAD
+      bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
       network::ResourceRequest* request,
       net::HttpResponseHeaders* headers,
       absl::optional<net::RedirectInfo> redirect_info,
