@@ -3920,6 +3920,22 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::MaximizeResize() {
   _struct->maximize_resize(_struct);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+
+  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->custom_web_media_player(_struct, enable);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

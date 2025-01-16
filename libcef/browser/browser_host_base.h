@@ -526,6 +526,7 @@ class CefBrowserHostBase : public CefBrowserHost,
 
   void EnableVideoAssistant(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
+  void CustomWebMediaPlayer(bool enable) override;
 
 #if defined(OHOS_MEDIA_POLICY)
   void CloseMedia() override;
