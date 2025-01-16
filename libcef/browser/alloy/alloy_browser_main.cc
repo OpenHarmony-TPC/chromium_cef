@@ -405,6 +405,11 @@ void AlloyBrowserMainParts::PostMainMessageLoopRun() {
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_PERSISTENT_TASK)
   if (performance_manager_lifetime_) {
     LOG(INFO) << "performance_manager_lifetime_ reset";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(INFO) << "performance_manager_lifetime_ reset";
+#endif
+
     performance_manager_lifetime_.reset();
   }
 #endif

@@ -143,6 +143,10 @@
 #include "printing/metafile_agent.h"
 #endif
 
+#ifdef OHOS_LOGGER_REPORT
+#include "url/ohos/log_utils.h"
+#endif
+
 #include "libcef/renderer/alloy/ohos_safe_browsing_error_page_controller_delegate_impl.h"
 
 #ifdef OHOS_NOTIFICATION
@@ -1043,12 +1047,18 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
   auto* render_frame = content::RenderFrame::FromRoutingID(routing_id);
   if (!render_frame) {
     LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame render_frame null";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "[AdBlock] TriggerElementHidingInFrame render_frame null";
+#endif
     return;
   }
 
   blink::WebLocalFrame* web_frame = render_frame->GetWebFrame();
   if (!web_frame) {
     LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame web_frame null";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "[AdBlock] TriggerElementHidingInFrame web_frame null";
+#endif
     return;
   }
 
@@ -1068,18 +1078,29 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
   if (!document.Url().ProtocolIs("https") &&
       !document.Url().ProtocolIs("http")) {
     LOG(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "[AdBlock] TriggerElementHidingInFrame scheme error";
+#endif
     return;
   }
 
   if (web_frame->GetHasDocumentTypeOption()) {
     LOG(WARNING) << "[AdBlock] Match $document for "
                  << document.Url().GetString().Utf8();
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(WARNING) << "[AdBlock] Match $document for "
+                 << url::LogUtils::ConvertUrlWithMask(document.Url().GetString().Utf8());
+#endif
     return;
   }
 
   if (web_frame->GetHasElemHideTypeOption()) {
     LOG(WARNING) << "[AdBlock] Match selemhide for "
                  << document.Url().GetString().Utf8();
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(WARNING) << "[AdBlock] Match $elemhide for "
+                 << url::LogUtils::ConvertUrlWithMask(document.Url().GetString().Utf8());
+#endif
     return;
   }
 
@@ -1087,6 +1108,10 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
   if (has_generichide) {
     LOG(WARNING) << "[AdBlock] Match sgenerichide for "
                  << document.Url().GetString().Utf8();
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(WARNING) << "[AdBlock] Match $generichide for "
+                 << url::LogUtils::ConvertUrlWithMask(document.Url().GetString().Utf8());
+#endif
   }
 
   base::TimeTicks start = base::TimeTicks::Now();
@@ -1103,6 +1128,11 @@ void AlloyContentRendererClient::TriggerElementHidingInFrame(int routing_id) {
     LOG(WARNING) << "[AdBlock] Element hiding for "
                  << document.Url().GetString().Utf8() << "assumming "
                  << duration.InMicroseconds() << "microseconds";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(WARNING) << "[AdBlock] Element hiding for "
+                 << url::LogUtils::ConvertUrlWithMask(document.Url().GetString().Utf8())
+                 << " assumming " << duration.InMicroseconds() << " microseconds";
+#endif
     return;
   }
 
@@ -1115,6 +1145,11 @@ void AlloyContentRendererClient::TriggerUserElementHidingInFrame(
   auto* render_frame = content::RenderFrame::FromRoutingID(routing_id);
   if (!render_frame) {
     LOG(ERROR) << "[AdBlock] TriggerUserElementHidingInFrame render_frame null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "[AdBlock] TriggerUserElementHidingInFrame render_frame null";
+#endif
+
     return;
   }
 
@@ -1145,6 +1180,12 @@ void AlloyContentRendererClient::TriggerUserElementHidingInFrame(
     LOG(WARNING) << "[User AdBlock] Element hiding for "
                  << document.Url().GetString().Utf8() << " assumming "
                  << duration.InMicroseconds() << " microseconds";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(WARNING) << "[User AdBlock] Element hiding for "
+                 << url::LogUtils::ConvertUrlWithMask(document.Url().GetString().Utf8()) 
+                 <<  " assumming "  << duration.InMicroseconds() 
+                 <<  " microseconds";
+#endif
     return;
   }
   selectors.reset();

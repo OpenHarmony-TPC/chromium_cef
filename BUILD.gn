@@ -1193,6 +1193,12 @@ source_set("libcef_static") {
   }
   #endif // OHOS_DEVTOOLS
 
+#if defined(OHOS_LOGGER_REPORT)
+  sources += [
+    "include/cef_logger_callback_api_handler.h",
+  ]
+#endif
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",

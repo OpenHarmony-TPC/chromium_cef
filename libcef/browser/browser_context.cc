@@ -452,4 +452,5 @@ CefBrowserContext::GetGlobalCookieableSchemes() {
   static base::NoDestructor<CookieableSchemes> schemes(
       []() { return MakeSupportedSchemes(CefContext::Get()->settings()); }());
   return *schemes;
+
 }

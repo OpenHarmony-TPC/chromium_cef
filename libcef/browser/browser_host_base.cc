@@ -1005,7 +1005,11 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 void CefBrowserHostBase::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
+#ifdef OHOS_LOGGER_REPORT  
+  GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
+#else
   GetWebContents()->OnWebPreferencesChanged();
+#endif
 }
 
 void CefBrowserHostBase::OnWebPreferencesChanged() {
@@ -3661,6 +3665,9 @@ void CefBrowserHostBase::ResumeMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession or webContents failed.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession or webContents failed.";
+#endif
     return;
   }
   mediaSession->Resume(content::MediaSession::SuspendType::kSystem);
@@ -3671,6 +3678,9 @@ void CefBrowserHostBase::PauseMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession or webContents failed.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession or webContents failed.";
+#endif
     return;
   }
   mediaSession->Suspend(content::MediaSession::SuspendType::kSystem);
@@ -3681,6 +3691,9 @@ void CefBrowserHostBase::StopMedia() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
   if (!mediaSession) {
     LOG(ERROR) << "CefBrowserHostBase::StopMedia get mediaSession failed.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::StopMedia get mediaSession failed.";
+#endif
     return;
   }
   mediaSession->Stop(content::MediaSession::SuspendType::kSystem);
@@ -3690,6 +3703,9 @@ int CefBrowserHostBase::GetMediaPlaybackState() {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession or webContents failed.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get mediaSession or webContents failed.";
+#endif
     return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::NONE);
   }
   if (!GetWebContents()->IsHtmlPlayEnabled()) {
@@ -3761,12 +3777,17 @@ void CefBrowserHostBase::EnableAdsBlock(bool enable) {
   }
   GetWebContents()->EnableAdsBlock(enable);
   LOG(INFO) << "web adblock enabled : " << enable;
-
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "web adblock enabled :" << enable;
+#endif
   OHOS::adblock::AdBlockConfig::GetInstance()->ReadFromPrefService();
   if (!OHOS::adblock::AdBlockConfig::GetInstance()
            ->GetUserEasylistReplaceSwitch() &&
       enable) {
     LOG(INFO) << "[Adblock] enable cloud control for easylist";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(INFO) << "[Adblock] enable cloud control for easylist";
+#endif
     ohos_adblock::AdblockConfigBridge::GetInstance()->EnableAdsBlock(
         GetBrowserContext(), true);
   } else {
@@ -3851,6 +3872,11 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
     auto web_contents = GetWebContents();
     if (!web_contents) {
       LOG(ERROR) << "GetWebContents null";
+
+#ifdef OHOS_LOGGER_REPORT
+      LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+
       return;
     }
 
@@ -3865,6 +3891,9 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
     auto web_contents = GetWebContents();
     if (!web_contents) {
       LOG(ERROR) << "GetWebContents null";
+#ifdef OHOS_LOGGER_REPORT
+      LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
       return;
     }
 
@@ -3882,6 +3911,9 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
   void CefBrowserHostBase::EnableSafeBrowsing(bool enable) {
     if (settings_.is_safe_browsing_enable != enable) {
       LOG(INFO) << "enable safe browsing" << enable;
+#ifdef OHOS_LOGGER_REPORT
+      LOG_FEEDBACK(INFO) << "enable safe browsing" << enable;
+#endif  
       settings_.is_safe_browsing_enable = enable;
     }
   }
@@ -3909,6 +3941,9 @@ void CefBrowserHostBase::ProcessAutofillCancel(
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
 
@@ -3926,6 +3961,9 @@ void CefBrowserHostBase::AutoFillWithIMFEvent(bool is_username,
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
 
@@ -3994,6 +4032,11 @@ void CefBrowserHostBase::StartCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+
     return;
   }
   web_contents->StartCamera(web_contents->GetNWebId());
@@ -4005,6 +4048,11 @@ void CefBrowserHostBase::StopCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+
     return;
   }
   web_contents->StopCamera(web_contents->GetNWebId());
@@ -4016,6 +4064,11 @@ void CefBrowserHostBase::CloseCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+
     return;
   }
   web_contents->CloseCamera(web_contents->GetNWebId());
@@ -4035,6 +4088,11 @@ void CefBrowserHostBase::EnableIntelligentTrackingPrevention(bool enable) {
     intelligent_tracking_prevention_cookies_enabled_ = enable;
   }
   LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
+
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
+#endif
+
   ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()->
       EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
 }
@@ -4050,6 +4108,11 @@ void CefBrowserHostBase::SetNWebId(int NWebID) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
+
     return;
   }
   web_contents->SetNWebId(NWebID);
@@ -4121,6 +4184,11 @@ void CefBrowserHostBase::GenerateCodeCache(const std::string& url,
   auto wc = GetWebContents();
   if (wc == nullptr) {
     LOG(ERROR) << "WebContents has not initialized.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "WebContents has not initialized";
+#endif
+
     callback->OnPrecompileFinished(
         static_cast<int32_t>(oh_code_cache::CacheError::INTERNAL_ERROR));
     return;
@@ -4204,6 +4272,9 @@ int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
   std::string detailErrMsgUpdated;
   if (!webContents) {
     LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
+#endif
     return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
   }
   ohos_safe_browsing::OhosUrlTrustListManager* manager =
@@ -4214,6 +4285,9 @@ int CefBrowserHostBase::SetUrlTrustListWithErrMsg(
     manager = new ohos_safe_browsing::OhosUrlTrustListManager();
     if (!manager) {
       LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager failed.";
+#ifdef OHOS_LOGGER_REPORT
+      LOG_FEEDBACK(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager failed.";
+#endif
       return static_cast<int>(
         ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
     }
@@ -4341,11 +4415,18 @@ void CefBrowserHostBase::SetBackForwardCacheOptions(int32_t size, int32_t timeTo
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "SetBackForwardCacheOptions failed to get web contents in CefBrowserHostBase.";
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "SetBackForwardCacheOptions failed to get web contents in CefBrowserHostBase.";
+#endif
     return;
   }
 
   LOG(INFO) << "SetBackForwardCacheOptions param size: " << size
             << " timeToLive: " << timeToLive;
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "SetBackForwardCacheOptions size: " << size
+            << " timeToLive: " << timeToLive;
+#endif
   content::NavigationController& controller = web_contents->GetController();
   controller.GetBackForwardCache().SetCacheSize(size);
   controller.GetBackForwardCache().SetTimeToLive(timeToLive);
