@@ -573,7 +573,7 @@ void InterceptedRequest::Restart() {
   const GURL original_url = request_.url;
 #if defined(OHOS_EX_DOWNLOAD)
   factory_->request_handler_->OnBeforeRequest(
-      id_, &request_, request_was_redirected_,
+      id_, &request_, request_was_redirected_, current_request_uses_header_client_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                      weak_factory_.GetWeakPtr(), original_url),
       base::BindOnce(&InterceptedRequest::CancelRequest,
@@ -1060,7 +1060,11 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
   }
 
   factory_->request_handler_->OnRequestResponse(
+#ifdef OHOS_NETWORK_LOAD
+      id_, current_request_uses_header_client_, &request_, headers.get(), redirect_info,
+#else // OHOS_NETWORK_LOAD
       id_, &request_, headers.get(), redirect_info,
+#endif
       base::BindOnce(&InterceptedRequest::ContinueResponseOrRedirect,
                      weak_factory_.GetWeakPtr(), std::move(continuation)));
 }
@@ -1444,6 +1448,9 @@ void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
     network::ResourceRequest* request,
     bool request_was_redirected,
+#ifdef OHOS_NETWORK_LOAD
+    bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
     OnBeforeRequestResultCallback callback,
     CancelRequestCallback cancel_callback) {
   std::move(callback).Run(false, false);
@@ -1458,6 +1465,9 @@ void InterceptedRequestHandler::ShouldInterceptRequest(
 
 void InterceptedRequestHandler::OnRequestResponse(
     int32_t request_id,
+#ifdef OHOS_NETWORK_LOAD
+    bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
     absl::optional<net::RedirectInfo> redirect_info,

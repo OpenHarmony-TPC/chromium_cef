@@ -232,11 +232,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     PendingRequest(int32_t request_id,
                    network::ResourceRequest* request,
                    bool request_was_redirected,
+#ifdef OHOS_NETWORK_LOAD
+                   bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                    OnBeforeRequestResultCallback callback,
                    CancelRequestCallback cancel_callback)
         : id_(request_id),
           request_(request),
           request_was_redirected_(request_was_redirected),
+#ifdef OHOS_NETWORK_LOAD
+          current_request_uses_header_client_(current_request_uses_header_client),
+#endif // OHOS_NETWORK_LOAD
           callback_(std::move(callback)),
           cancel_callback_(std::move(cancel_callback)) {}
 
@@ -247,13 +253,21 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
     void Run(InterceptedRequestHandlerWrapper* self) {
+#ifdef OHOS_NETWORK_LOAD
+      self->OnBeforeRequest(id_, request_, request_was_redirected_, current_request_uses_header_client_,
+                            std::move(callback_), std::move(cancel_callback_));
+#else
       self->OnBeforeRequest(id_, request_, request_was_redirected_,
                             std::move(callback_), std::move(cancel_callback_));
+#endif // OHOS_NETWORK_LOAD
     }
 
     const int32_t id_;
     network::ResourceRequest* const request_;
     const bool request_was_redirected_;
+#ifdef OHOS_NETWORK_LOAD
+    bool current_request_uses_header_client_ = false;
+#endif
     OnBeforeRequestResultCallback callback_;
     CancelRequestCallback cancel_callback_;
   };
@@ -611,6 +625,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   void OnBeforeRequest(int32_t request_id,
                        network::ResourceRequest* request,
                        bool request_was_redirected,
+#ifdef OHOS_NETWORK_LOAD
+                       bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                        OnBeforeRequestResultCallback callback,
                        CancelRequestCallback cancel_callback) override {
     CEF_REQUIRE_IOT();
@@ -624,7 +641,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     if (!init_state_) {
       // Queue requests until we're initialized.
       pending_requests_.push_back(std::make_unique<PendingRequest>(
+#ifdef OHOS_NETWORK_LOAD
+          request_id, request, request_was_redirected, current_request_uses_header_client, std::move(callback),
+#else // OHOS_NETWORK_LOAD
           request_id, request, request_was_redirected, std::move(callback),
+#endif // OHOS_NETWORK_LOAD
           std::move(cancel_callback)));
       return;
     }
@@ -639,7 +660,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
           base::BindOnce(&InterceptedRequestHandlerWrapper::
                              TryCreateURLLoaderNetworkObserver,
                          std::make_unique<PendingRequest>(
+#ifdef OHOS_NETWORK_LOAD
+                             request_id, request, request_was_redirected, current_request_uses_header_client,
+#else // OHOS_NETWORK_LOAD
                              request_id, request, request_was_redirected,
+#endif // OHOS_NETWORK_LOAD
                              std::move(callback), std::move(cancel_callback)),
                          init_state_->frame_,
                          init_state_->browser_context_getter_,
@@ -717,16 +742,19 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
 #if defined(OHOS_NETWORK_LOAD)
-    MaybeLoadCookies(request_id, state, request, {}, std::move(exec_callback));
-#else
-     MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
-#endif
+    MaybeLoadCookies(request_id, state, request, {}, current_request_uses_header_client, std::move(exec_callback));
+#else // defined(OHOS_NETWORK_LOAD)
+    MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
+#endif // defined(OHOS_NETWORK_LOAD)
   }
 
   void MaybeLoadCookies(int32_t request_id,
                         RequestState* state,
                         network::ResourceRequest* request,
+#ifdef OHOS_NETWORK_LOAD
                         const absl::optional<GURL>& new_url,
+                        bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                         base::OnceClosure callback) {
     CEF_REQUIRE_IOT();
 #if defined(OHOS_NETWORK_LOAD)
@@ -752,7 +780,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                   &InterceptedRequestHandlerWrapper::AllowCookieAlways);
     auto done_cookie_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::ContinueWithLoadedCookies,
+#ifdef OHOS_NETWORK_LOAD
+        weak_ptr_factory_.GetWeakPtr(), request_id, request, current_request_uses_header_client,
+#else // OHOS_NETWORK_LOAD
         weak_ptr_factory_.GetWeakPtr(), request_id, request,
+#endif // OHOS_NETWORK_LOAD
         std::move(callback));
     cookie_helper::LoadCookies(init_state_->browser_context_getter_, *request,
                                new_url,
@@ -804,6 +836,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
   void ContinueWithLoadedCookies(int32_t request_id,
                                  network::ResourceRequest* request,
+#ifdef OHOS_NETWORK_LOAD
+                                 bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                                  base::OnceClosure callback,
                                  int total_count,
                                  net::CookieList allowed_cookies) {
@@ -820,7 +855,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       // Also add/save cookies ourselves for default-handled network requests
       // so that we can filter them. This will be a no-op for custom-handled
       // requests.
-      request->load_flags |= kLoadNoCookiesFlags;
+#ifdef OHOS_NETWORK_LOAD
+      if (current_request_uses_header_client)
+#endif // OHOS_NETWORK_LOAD
+        request->load_flags |= kLoadNoCookiesFlags;
     }
 
     if (!allowed_cookies.empty()) {
@@ -1210,6 +1248,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   }
 
   void OnRequestResponse(int32_t request_id,
+#ifdef OHOS_NETWORK_LOAD
+                         bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                          network::ResourceRequest* request,
                          net::HttpResponseHeaders* headers,
                          absl::optional<net::RedirectInfo> redirect_info,
@@ -1242,7 +1283,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     if (redirect_info.has_value()) {
       HandleRedirect(request_id, state, request, headers, *redirect_info,
+#ifdef OHOS_NETWORK_LOAD
+                     current_request_uses_header_client, std::move(callback));
+#else
                      std::move(callback));
+#endif // OHOS_NETWORK_LOAD
     } else {
 #if BUILDFLAG(IS_OHOS)
       TRACE_EVENT1("net", "InterceptedRequestHandlerWrapper::OnRequestResponse", "id", request_id);
@@ -1256,6 +1301,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                       network::ResourceRequest* request,
                       net::HttpResponseHeaders* headers,
                       const net::RedirectInfo& redirect_info,
+#ifdef OHOS_NETWORK_LOAD
+                      bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                       OnRequestResponseResultCallback callback) {
     GURL new_url = redirect_info.new_url;
     CefString newUrl = redirect_info.new_url.spec();
@@ -1288,7 +1336,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     request->site_for_cookies = redirect_info.new_site_for_cookies;
     auto exec_callback = base::BindOnce(
         &InterceptedRequestHandlerWrapper::RedirectSavedCookieDone,
+#ifdef OHOS_NETWORK_LOAD
+        weak_ptr_factory_.GetWeakPtr(), request_id, request, current_request_uses_header_client,
+#else // OHOS_NETWORK_LOAD
         weak_ptr_factory_.GetWeakPtr(), request_id, request,
+#endif // OHOS_NETWORK_LOAD
         std::move(callback), new_url);
 #endif
     MaybeSaveCookies(request_id, state, request, headers,
@@ -1299,6 +1351,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 #if BUILDFLAG(IS_OHOS)
   void RedirectSavedCookieDone(int32_t request_id,
                                network::ResourceRequest* request,
+#ifdef OHOS_NETWORK_LOAD
+                               bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
     auto exec_callback = base::BindOnce(
@@ -1312,8 +1367,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
     // Clear the cookie  first. we will get cookie for this redirect.
     request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
-    
-    MaybeLoadCookies(request_id, state, request, new_url, std::move(exec_callback));
+
+#if defined(OHOS_NETWORK_LOAD)
+    MaybeLoadCookies(request_id, state, request, new_url, current_request_uses_header_client, std::move(exec_callback));
+#else // defined(OHOS_NETWORK_LOAD)
+    MaybeLoadCookies(request_id, state, request, std::move(exec_callback));
+#endif // defined(OHOS_NETWORK_LOAD)
   }
 #endif
 
