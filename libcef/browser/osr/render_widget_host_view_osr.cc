@@ -1956,7 +1956,12 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 }
 
 void CefRenderWidgetHostViewOSR::WasResized() {
-  // Only one resize will be in-flight at a time.
+// Only one resize will be in-flight at a time.
+#if BUILDFLAG(IS_OHOS)
+  TRACE_EVENT2("base", "CefRenderWidgetHostViewOSR::WasResized",
+               "hold_resize_", hold_resize_,
+               "pending_resize_", pending_resize_);
+#endif
   if (hold_resize_) {
 #if defined(OHOS_COMPOSITE_RENDER)
     isKeyboardResized_ = false;
@@ -3210,6 +3215,17 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
 #endif
       // The size has changed. Avoid resizing again until ReleaseResizeHold() is
       // called.
+#if BUILDFLAG(IS_OHOS)
+      setReleaseResizeHoldDelayedTask_.Reset(
+          base::BindOnce(&CefRenderWidgetHostViewOSR::ReleaseResizeHold,
+                         weak_ptr_factory_.GetWeakPtr()));
+      content::GetUIThreadTaskRunner({})->PostDelayedTask(
+          FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(),
+          base::Milliseconds(400));
+      TRACE_EVENT0(
+          "base",
+          "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
+#endif
       hold_resize_ = true;
       cached_scale_factor_ = GetDeviceScaleFactor();
       return true;
@@ -3226,6 +3242,9 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
 }
 
 void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
+#if BUILDFLAG(IS_OHOS)
+  setReleaseResizeHoldDelayedTask_.Cancel();
+#endif
   DCHECK(hold_resize_);
   hold_resize_ = false;
   cached_scale_factor_ = -1;

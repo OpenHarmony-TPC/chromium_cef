@@ -780,6 +780,9 @@ class CefRenderWidgetHostViewOSR
 #endif
   int32_t needFocusViewport_ = 0;
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
+#if BUILDFLAG(IS_OHOS)
+  base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
