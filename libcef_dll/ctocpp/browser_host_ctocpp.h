@@ -305,6 +305,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        int height,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
+  void OnDestroyImageAnalyzerOverlay() override;
+  void OnFoldStatusChanged(uint32_t foldStatus) override;
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x,
                          float delta_y,

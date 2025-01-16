@@ -2075,6 +2075,18 @@ typedef struct _cef_browser_host_t {
                                             int focusType);
 
   ///
+  /// Called when image analyzer overlay is destroyed.
+  ///
+  void(CEF_CALLBACK* on_destroy_image_analyzer_overlay)(
+    struct _cef_browser_host_t* self);
+
+  ///
+  /// Called when the folding status of the phone screen changes.
+  ///
+  void(CEF_CALLBACK* on_fold_status_changed)(struct _cef_browser_host_t* self,
+                                             uint32_t foldStatus);
+
+  ///
   /// Scroll to the position with anime.
   ///
   void(CEF_CALLBACK* scroll_to_with_anime)(struct _cef_browser_host_t* self,

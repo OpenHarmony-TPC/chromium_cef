@@ -521,8 +521,16 @@ void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
   DCHECK(false);
 }
 
+void CefBrowserPlatformDelegate::OnDestroyImageAnalyzerOverlay() {
+  DCHECK(false);
+}
+
 float CefBrowserPlatformDelegate::GetPageScaleFactor() {
   return 1;
+}
+
+void CefBrowserPlatformDelegate::OnFoldStatusChanged(uint32_t foldstatus) {
+  DCHECK(false);
 }
 #endif
 

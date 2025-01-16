@@ -1263,11 +1263,24 @@ void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
   }
 }
 
+void CefBrowserPlatformDelegateOsr::OnDestroyImageAnalyzerOverlay() {
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnDestroyImageAnalyzerOverlay();
+  }
+}
+
 float CefBrowserPlatformDelegateOsr::GetPageScaleFactor() {
   if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
     return view->GetPageScaleFactor();
   }
   return 1;
+}
+
+void CefBrowserPlatformDelegateOsr::OnFoldStatusChanged(uint32_t foldstatus) {
+  fold_status_ = foldstatus;
+  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
+    view->OnFoldStatusChanged(foldstatus);
+  }
 }
 #endif
 
