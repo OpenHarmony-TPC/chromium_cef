@@ -14,6 +14,10 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "include/cef_permission_request.h"
 
+#ifdef OHOS_NOTIFICATION
+#include "include/cef_permission_status_query.h"
+#endif // OHOS_NOTIFICATION
+
 // This class is used to send the permission requests, or cancel ongoing
 // requests.
 // It is owned by WebContents and has 1x1 mapping to WebContents. All methods

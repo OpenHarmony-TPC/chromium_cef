@@ -70,6 +70,11 @@ typedef uint32_t cef_accelerated_widget_t;
 
 // cef native window type
 typedef void* cef_native_window_t;
+
+#ifdef OHOS_NOTIFICATION
+// Permission status query callback.
+typedef base::RepeatingCallback<void(int32_t)> cef_permission_status_query_callback_t;
+#endif // OHOS_NOTIFICATION
 #endif  // BUILDFLAG(IS_OHOS)
 
 // Return the alpha byte from a cef_color_t value.

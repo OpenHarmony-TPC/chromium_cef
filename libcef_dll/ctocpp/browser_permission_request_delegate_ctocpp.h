@@ -57,6 +57,11 @@ class CefBrowserPermissionRequestDelegateCToCpp
   void AbortAskClipboardReadWritePermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
                                    const CefString& origin) override;
+#ifdef OHOS_NOTIFICATION
+  void AskNotificationPermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskNotificationPermission(const CefString& origin) override;
+#endif // OHOS_NOTIFICATION
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_PERMISSION_REQUEST_DELEGATE_CTOCPP_H_

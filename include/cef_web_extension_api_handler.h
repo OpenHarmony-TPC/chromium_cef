@@ -39,6 +39,7 @@
 #pragma once
 
 #include "include/cef_base.h"
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
 
 ///
 /// Implement this interface to handle webextension's api events. The methods of
@@ -52,7 +53,9 @@ class CefWebExtensionApiHandler : public virtual CefBaseRefCounted {
   /// Called when chrome.tabs.update.
   ///
   /*--cef()--*/
-  virtual void OnUpdateTabUrl(int tab_id, const CefString& url) {}
+  virtual void OnUpdateTab(
+      int tab_id,
+      const NWebExtensionTabUpdateProperties* update_properties) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_WEB_EXTENSION_API_HANDLER_H_

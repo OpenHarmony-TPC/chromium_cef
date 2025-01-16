@@ -13,6 +13,10 @@
 #include "content/public/browser/permission_controller_delegate.h"
 #include "libcef/browser/browser_host_base.h"
 
+#ifdef OHOS_NOTIFICATION
+#include <map>
+#endif // OHOS_NOTIFICATION
+
 namespace content {
 class WebContents;
 }
@@ -79,6 +83,13 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
   void UnsubscribePermissionStatusChange(
       SubscriptionId subscription_id) override;
 
+#ifdef OHOS_NOTIFICATION
+  void GetPermissionStatusAsync(
+      blink::PermissionType permission,
+      const GURL& requesting_origin,
+      base::OnceCallback<void(blink::mojom::PermissionStatus)> callback) override;
+#endif // OHOS_NOTIFICATION
+
  protected:
   void AbortPermissionRequest(int request_id);
   void AbortPermissionRequests();
@@ -86,6 +97,11 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
  private:
   class UnhandledRequest;
   using UnhandledRequestsMap = base::IDMap<std::unique_ptr<UnhandledRequest>>;
+
+#ifdef OHOS_NOTIFICATION
+  class UnhandledQuery;
+  using UnhandledQuerysMap = base::IDMap<std::unique_ptr<UnhandledQuery>>;
+#endif // OHOS_NOTIFICATION
 
   void RequestPermissionByType(const blink::PermissionType permission_type,
                                CefRefPtr<CefBrowserHostBase> browser,
@@ -104,6 +120,18 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
       int request_id,
       blink::PermissionType permission,
       bool allowed);
+
+#ifdef OHOS_NOTIFICATION
+  static void OnQueryResponseCallBack(
+      const base::WeakPtr<AlloyPermissionManager>& manager,
+      int query_id,
+      blink::PermissionType permission,
+      int32_t status);
+
+  UnhandledQuerysMap unhandled_querys_;
+
+  std::map<GURL, int32_t> notification_permission_;
+#endif // OHOS_NOTIFICATION
 
   base::WeakPtrFactory<AlloyPermissionManager> weak_ptr_factory_{this};
   UnhandledRequestsMap unhandled_requests_;

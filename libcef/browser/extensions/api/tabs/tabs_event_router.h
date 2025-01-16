@@ -36,6 +36,15 @@ class TabsEventRouter {
 
   ~TabsEventRouter();
 
+  // The DispatchEvent methods forward events to the |profile|'s event router.
+  // The TabsEventRouter listens to events for all profiles,
+  // so we avoid duplication by dropping events destined for other profiles.
+  void DispatchEvent(Profile* profile,
+                     events::HistogramValue histogram_value,
+                     const std::string& event_name,
+                     base::Value::List args,
+                     EventRouter::UserGestureState user_gesture);
+
   // Packages |changed_property_names| as a tab updated event for the tab
   // |contents| and dispatches the event to the extension.
   void DispatchTabUpdatedEvent(
@@ -43,7 +52,16 @@ class TabsEventRouter {
       content::WebContents* contents,
       const std::vector<std::string>& changed_property_names,
       const std::string& url);
+  void DispatchTabUpdatedEvent(
+      int tab_id,
+      content::WebContents* contents,
+      const std::vector<std::string>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo);
 
+  void DispatchTabActiveEvent(int tab_id,
+                              int window_id,
+                              content::WebContents* contents);
+ 
  private:
   // The main profile that owns this event router.
   raw_ptr<Profile> profile_;
