@@ -1958,7 +1958,7 @@ bool CefRenderWidgetHostViewOSR::InstallTransparency() {
 void CefRenderWidgetHostViewOSR::WasResized() {
 // Only one resize will be in-flight at a time.
 #if BUILDFLAG(IS_OHOS)
-  TRACE_EVENT2("cef", "CefRenderWidgetHostViewOSR::WasResized",
+  TRACE_EVENT2("base", "CefRenderWidgetHostViewOSR::WasResized",
                "hold_resize_", hold_resize_,
                "pending_resize_", pending_resize_);
 #endif
@@ -3213,7 +3213,7 @@ bool CefRenderWidgetHostViewOSR::ResizeRootLayer() {
           FROM_HERE, setReleaseResizeHoldDelayedTask_.callback(),
           base::Milliseconds(400));
       TRACE_EVENT0(
-          "cef",
+          "base",
           "CefRenderWidgetHostViewOSR::ResizeRootLayer, trigger delay task.");
 #endif
       hold_resize_ = true;
