@@ -1473,6 +1473,11 @@ void AlloyBrowserHostImpl::SetAudioResumeInterval(int resumeInterval) {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
   if (!mediaSession) {
     LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
+#endif
+
     return;
   }
   mediaSession->audioResumeInterval_ = resumeInterval;
@@ -1482,6 +1487,11 @@ void AlloyBrowserHostImpl::SetAudioExclusive(bool audioExclusive) {
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
   if (!mediaSession) {
     LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioExclusive get mediaSession failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "AlloyBrowserHostImpl::SetAudioExclusive get mediaSession failed.";
+#endif
+
     return;
   }
   mediaSession->audioExclusive_ = audioExclusive;
@@ -2085,6 +2095,11 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
 void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
 #if defined(OHOS_MEDIA_MUTE_AUDIO)
   LOG(INFO) << "OnAudioStateChanged: " << audible;
+
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "OnAudioStateChanged: " << audible;
+#endif
+
   if (client_.get() && client_->GetMediaHandler().get()) {
     client_->GetMediaHandler()->OnAudioStateChanged(this, audible);
   }

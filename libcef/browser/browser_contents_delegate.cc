@@ -1212,6 +1212,11 @@ void CefBrowserContentsDelegate::OnLoadError(CefRefPtr<CefRequest> request,
 void CefBrowserContentsDelegate::OnOldPageNoLongerRendered(const GURL& url,
                                                            bool success) {
   LOG(INFO) << "CefBrowserContentsDelegate::OldPageNoLongerRendered";
+
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "CefBrowserContentsDelegate::OldPageNoLongerRendered";
+#endif
+
   if (!browser_info_) {
     return;
   }
@@ -1242,12 +1247,22 @@ void CefBrowserContentsDelegate::OnRefreshAccessedHistory(
   CefRefPtr<CefClient> cefClient = client();
   if (!cefClient.get()) {
     LOG(ERROR) << "cef client is null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "cef client is null";
+#endif
+
     return;
   }
 
   auto handler = cefClient->GetLoadHandler();
   if (!handler.get()) {
     LOG(ERROR) << "cef client handler is null";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "cef client handler is null";
+#endif
+
     return;
   }
 

@@ -62,6 +62,11 @@
 #include "libcef/browser/alloy/alloy_off_the_record_browser_context.h"
 #endif
 
+#if defined(OHOS_LOGGER_REPORT)
+#include "base/ohos/logger.h"
+#include "base/logging.h"
+#endif
+
 namespace {
 
 const char* const kNonWildcardDomainNonPortSchemes[] = {
@@ -416,6 +421,9 @@ absl::variant<int, content::MainFunctionParams> AlloyMainDelegate::RunProcess(
     const std::string& process_type,
     content::MainFunctionParams main_function_params) {
   if (process_type.empty()) {
+#if defined(OHOS_LOGGER_REPORT)
+    ohos::logger::SetMainProcessMode(true);
+#endif
     return runner_->RunMainProcess(std::move(main_function_params));
   }
 

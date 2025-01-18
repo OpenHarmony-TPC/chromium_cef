@@ -216,6 +216,9 @@ PrefService* ChromeBrowserProcessAlloy::local_state() {
       if (!base::PathExists(root_cache_path)) {
         if (!base::CreateDirectory(root_cache_path)) {
           LOG(ERROR) << "Create directory failed:" << root_cache_path.value();
+#ifdef OHOS_LOGGER_REPORT
+          LOG_FEEDBACK(ERROR) << "Create directory failed:" << root_cache_path.value();
+#endif
           return nullptr;
         }
       }
@@ -433,6 +436,11 @@ void ChromeBrowserProcessAlloy::CreateSubresourceFilterRulesetService() {
       user_data_dir.Append(::subresource_filter::kTopLevelDirectoryName)
           .Append(::subresource_filter::kUnindexedRulesetBaseDirectoryName);
   LOG(INFO) << "[AdBlock] Create subresource filter ruleset service";
+
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "[AdBlock] Create subresource filter ruleset service";
+#endif
+
   subresource_filter_ruleset_service_ =
       std::make_unique<::subresource_filter::RulesetService>(
           local_state(), background_task_runner, indexed_ruleset_base_dir,
@@ -482,6 +490,10 @@ void ChromeBrowserProcessAlloy::CreateSubresourceFilterUserRulesetService() {
           .Append(::subresource_filter::kUserUnindexedRulesetBaseDirectoryName);
 
   LOG(INFO) << "[AdBlock] Create user subresource filter ruleset service";
+
+#ifdef OHOS_LOGGER_REPORT
+  LOG_FEEDBACK(INFO) << "[AdBlock] Create user subresource filter ruleset service";
+#endif
 
   subresource_filter_user_ruleset_service_ =
       std::make_unique<::subresource_filter::UserRulesetService>(

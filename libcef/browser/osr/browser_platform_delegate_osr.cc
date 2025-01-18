@@ -932,6 +932,14 @@ void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
               << ", y: " << element_bounds.y()
               << ", element_bounds width: " << element_bounds.width()
               << ", element_bounds height:" << element_bounds.height();
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(INFO) << "element is screen bounds x:" << element_bounds.x()
+              << ", y: " << element_bounds.y()
+              << ", element_bounds width: " << element_bounds.width()
+              << ", element_bounds height:" << element_bounds.height();
+#endif
+
     handler->OnShowAutofillPopup(
         browser_,
         CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
