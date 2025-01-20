@@ -130,6 +130,9 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
     is_view_focus_failed_ = false;
   }
 #endif
+#if defined(OHOS_COMPOSITE_RENDER)
+  SetDrawMode(drawMode_);
+#endif
 #endif
 }
 
@@ -187,7 +190,6 @@ void CefBrowserPlatformDelegateOsr::WasResized() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {
     view->WasResized();
-    view->SetDrawMode(drawMode_);
   }
 }
 
