@@ -552,13 +552,12 @@ void OhosPrintManager::PrintPdfRequested() {
 }
 
 std::string OhosPrintManager::GetHtmlTitle() {
-  std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
   std::u16string u16str = u"";
   std::string printJobName = "";
   if (weak_ptr_web_contents_) {
     u16str = weak_ptr_web_contents_->GetTitle();
   }
-  printJobName = convert.to_bytes(u16str);
+  printJobName = base::UTF16ToUTF8(u16str);
   printJobName = RemoveProtocol(printJobName);
   std::replace(printJobName.begin(), printJobName.end(), '/', '_');
   std::replace(printJobName.begin(), printJobName.end(), '?', '_');
