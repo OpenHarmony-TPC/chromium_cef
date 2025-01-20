@@ -268,6 +268,11 @@ void CefWebStorageCToCpp::GetSavedPasswordsInfo(
       _struct, CefGetSavedPasswordsCallbackCppToC::Wrap(callback));
 }
 
+NO_SANITIZE("cfi-icall")
+void CefWebStorageCToCpp::MigratePasswordsInfo() {
+  return;
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefWebStorageCToCpp::CefWebStorageCToCpp() {}

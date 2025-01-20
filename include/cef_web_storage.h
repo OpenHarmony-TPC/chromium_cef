@@ -185,6 +185,8 @@ class CefWebStorage : public virtual CefBaseRefCounted {
   /*--cef(optional_param=url,optional_param=username,optional_param=callback)--*/
   virtual void GetSavedPasswordsInfo(
       CefRefPtr<CefGetSavedPasswordsCallback> callback) = 0;
+
+  virtual void MigratePasswordsInfo() = 0;
 };
 
 #endif  // CEF_INCLUDE_CEF_STORAGE_H_
