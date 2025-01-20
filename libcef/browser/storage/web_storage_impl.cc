@@ -617,6 +617,10 @@ void OnMigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_i
 void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
     password_manager::PasswordStoreInterface* store,
     std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
+  if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigratePasswordsToPasswordVault)) {
+    return;
+  }
+
   base::ThreadPool::PostTask(
           FROM_HERE,
           {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
