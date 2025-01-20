@@ -1159,6 +1159,29 @@ void CefRenderHandlerCToCpp::GetVisibleRectToWeb(int& visibleX, int& visibleY, i
   _struct->get_visible_rect_to_web(_struct, &visibleX, &visibleY, &visibleWidth, &visibleHeight);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnScrollStart(CefRefPtr<CefBrowser> browser,
+                                               const float x,
+                                               const float y) {                                             
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_scroll_start)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_scroll_start(_struct, CefBrowserCppToC::Wrap(browser), x, y);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}
