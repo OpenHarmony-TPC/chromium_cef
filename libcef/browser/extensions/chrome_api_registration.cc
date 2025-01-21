@@ -26,6 +26,7 @@
 #include "libcef/browser/extensions/api/context_menus/context_menus_api.h"
 #include "libcef/browser/extensions/api/web_navigation/web_navigation_api.h"
 #include "libcef/browser/extensions/api/windows/windows_api.h"
+#include "libcef/browser/extensions/api/cookies/cookies_api.h"
 #endif
 #ifdef OHOS_NOTIFICATION
 #include "chrome/browser/extensions/api/notifications/notifications_api.h"
@@ -123,6 +124,12 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(ActionSetIconFunction),
     "windows",
     EXTENSION_FUNCTION_NAME(cefimpl::WindowsGetAllFunction),
+    "cookies",
+    EXTENSION_FUNCTION_NAME(cefimpl::CookiesGetFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::CookiesGetAllFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::CookiesSetFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::CookiesRemoveFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::CookiesGetAllCookieStoresFunction),
 #endif
 #ifdef OHOS_NOTIFICATION
   "notifications",
@@ -222,6 +229,12 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<ActionSetIconFunction>();
   // windows
   registry->RegisterFunction<cefimpl::WindowsGetAllFunction>();
+  // cookies
+  registry->RegisterFunction<cefimpl::CookiesGetFunction>();
+  registry->RegisterFunction<cefimpl::CookiesGetAllFunction>();
+  registry->RegisterFunction<cefimpl::CookiesSetFunction>();
+  registry->RegisterFunction<cefimpl::CookiesRemoveFunction>();
+  registry->RegisterFunction<cefimpl::CookiesGetAllCookieStoresFunction>();
 #endif
 #ifdef OHOS_NOTIFICATION
   registry->RegisterFunction<NotificationsCreateFunction>();

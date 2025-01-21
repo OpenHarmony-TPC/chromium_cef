@@ -101,5 +101,9 @@
   "notifications": {
     "dependencies": ["permission:notifications"],
     "contexts": ["blessed_extension"]
+  },
+  "cookies": {
+    "dependencies": ["permission:cookies"],
+    "contexts": ["blessed_extension"]
   }
 }

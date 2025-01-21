@@ -1073,7 +1073,7 @@ source_set("libcef_static") {
 
   #ifdef OHOS_NOTIFICATION
   if (defined(ohos_notification) && ohos_notification) {
-    sources += [ 
+    sources += [
       "libcef/browser/permission/alloy_access_query.cc",
       "libcef/browser/permission/alloy_access_query.h",
     ]
@@ -1390,6 +1390,8 @@ source_set("libcef_static") {
       "libcef/browser/web_extension_tab_manager.h",
       "libcef/browser/windows_manager.h",
       "libcef/browser/windows_manager.cc",
+      "libcef/browser/extensions/api/cookies/cookies_api.cc",
+      "libcef/browser/extensions/api/cookies/cookies_api.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",
