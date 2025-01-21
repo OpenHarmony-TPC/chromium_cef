@@ -413,6 +413,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
 #if defined(OHOS_EX_DOWNLOAD)
   bool is_download_{ false };
+  bool is_triggered_by_download_ { false };
 #endif
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
@@ -496,6 +497,10 @@ InterceptedRequest::InterceptedRequest(
       &InterceptedRequest::OnURLLoaderClientError, base::Unretained(this)));
   proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderError, base::Unretained(this)));
+
+#ifdef OHOS_EX_DWONLAOD
+  is_triggered_by_download_ = request.is_triggered_by_download;
+#endif
 }
 
 InterceptedRequest::~InterceptedRequest() {
@@ -1371,14 +1376,16 @@ void InterceptedRequest::CallOnComplete(
 
 #if defined(OHOS_EX_DOWNLOAD)
 void InterceptedRequest::CancelRequest(int error_code) {
+  // Do not cancel download request if origin window is destoryed.
+  if (is_download_ || is_triggered_by_download_)
+    return;
+
   // Donn't cancel network requests. Network requests should be canceled by the holder
   // instead of following the tab, such as serviceworker download, etc. Although the
   // tab is destroyed, the request still needs to be maintained.
-  if (!is_download_) {
-    network::URLLoaderCompletionStatus status(error_code);
-    status.abort_due_to_cef_browser_destroyed = true;
-    SendErrorStatusAndCompleteImmediately(status);
-  }
+  network::URLLoaderCompletionStatus status(error_code);
+  status.abort_due_to_cef_browser_destroyed = true;
+  SendErrorStatusAndCompleteImmediately(status);
 }
 #endif  //  OHOS_EX_DOWNLOAD
 
