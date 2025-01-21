@@ -94,7 +94,7 @@ void SetQueryInfoCurrentWindowId(content::WebContents* webcontents,
   if (tab_id > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         CefWebExtensionTabManager::GetInstance()->GetTab(tab_id);
-    if (tab->nwebId < 0) {
+    if (!tab || tab->nwebId < 0) {
       queryInfo.currentWindowId = TABS_API_WINDOW_ID_CURRENT;
     } else {
       queryInfo.currentWindowId = tab->windowId;
@@ -286,7 +286,7 @@ content::WebContents* BaseAPIFunction::GetWebContents(int tab_id) {
       return browser->web_contents();
     }
   }
-  
+
   LOG(INFO) << "GetWebContents fallback to use Identifier tabId:" << tab_id;
   if (tab_id >= 0) {
     // May be an invalid tabId or in the wrong BrowserContext.
@@ -966,7 +966,7 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
   } else {
     queryInfo.url = std::nullopt;
   }
-  
+
   queryInfo.windowType = GetQueryWindowType(params->query_info.window_type);
   std::vector<NWebExtensionTab> tabs = CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
   base::Value::List tab_list = GetTabValueList(tabs);
