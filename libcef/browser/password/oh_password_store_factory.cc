@@ -14,7 +14,16 @@
 #include "libcef/browser/alloy/alloy_browser_context.h"
 #include "libcef/browser/password/oh_sync_start_util.h"
 
+#if defined(OHOS_EX_PASSWORD)
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
+#endif
+
 using password_manager::PasswordStore;
+
+#if defined(OHOS_EX_PASSWORD)
+constexpr base::FilePath::CharType kNWebMigrateDir[] = FILE_PATH_LITERAL("migrate");
+#endif
 
 // static
 scoped_refptr<PasswordStore> OhPasswordStoreFactory::GetPasswordStoreForContext(
@@ -52,9 +61,16 @@ scoped_refptr<PasswordStore> OhPasswordStoreFactory::BuildServiceInstanceFor(
     return password_store_;
   }
 
+   base::FilePath db_path = context->GetPath();
+#if defined(OHOS_EX_PASSWORD)
+  base::FilePath migrate_path = db_path.Append(FILE_PATH_LITERAL(kNWebMigrateDir));
+  if (base::PathExists(migrate_path)) {
+    db_path = migrate_path;
+  }
+#endif
+
   password_store_ = new password_manager::PasswordStore(
-      password_manager::PasswordStoreBackend::Create(context->GetPath(),
-                                                     profile->GetPrefs()));
+      password_manager::PasswordStoreBackend::Create(db_path, profile->GetPrefs()));
 
   password_store_->Init(profile->GetPrefs(), nullptr);
 
