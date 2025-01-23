@@ -1045,6 +1045,7 @@ blink::mojom::PointerLockResult CefRenderWidgetHostViewOSR::LockMouse(
   is_request_unadjusted_movement_ = request_unadjusted_movement;
   CefRefPtr<CefDisplayHandler> handler =
         browser_impl_->client()->GetDisplayHandler();
+  LOG(INFO) << "SetMouseLock unadjust mouse movement is " << (request_unadjusted_movement ? "on" : "off");
   if (handler) {
     CefCursorInfo cursor_info;
     handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK, cursor_info);
@@ -1078,6 +1079,7 @@ void CefRenderWidgetHostViewOSR::UnlockMouse() {
   is_request_unadjusted_movement_ = false;
   CefRefPtr<CefDisplayHandler> handler =
         browser_impl_->client()->GetDisplayHandler();
+  LOG(INFO) << "SetMouseLock off";
   if (handler) {
     CefCursorInfo cursor_info;
     handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK, cursor_info);
