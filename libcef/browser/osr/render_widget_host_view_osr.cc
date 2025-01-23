@@ -15,6 +15,7 @@
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #include "libcef/browser/osr/video_consumer_osr.h"
 #include "libcef/browser/thread_util.h"
+#include "libcef/browser/native/cursor_util.h"
 
 #include "base/command_line.h"
 #include "base/functional/callback_helpers.h"
@@ -1227,7 +1228,13 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
   #endif
 }
 
-void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {}
+void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser is null when update cursor";
+    return;
+  }
+  cursor_util::OnCursorChange(browser_impl_->GetBrowser(), cursor);
+}
 
 content::CursorManager* CefRenderWidgetHostViewOSR::GetCursorManager() {
   return cursor_manager_.get();
