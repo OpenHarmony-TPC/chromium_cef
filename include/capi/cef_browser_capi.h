@@ -2264,6 +2264,11 @@ typedef struct _cef_browser_host_t {
   void (CEF_CALLBACK* put_web_media_avsession_enabled)(
         struct _cef_browser_host_t* self,
         int is_enable);
+
+  /// set custom web media player enable.
+  ///
+  void(CEF_CALLBACK* custom_web_media_player)(struct _cef_browser_host_t* self,
+                                              int enable);
 } cef_browser_host_t;
 
 ///

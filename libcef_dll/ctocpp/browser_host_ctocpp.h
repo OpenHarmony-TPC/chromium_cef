@@ -351,6 +351,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
 #if defined(OHOS_MEDIA_AVSESSION)
   void PutWebMediaAVSessionEnabled(bool enable) override;
 #endif // OHOS_MEDIA_AVSESSION
+  void CustomWebMediaPlayer(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
