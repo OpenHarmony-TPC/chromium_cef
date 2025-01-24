@@ -3379,6 +3379,36 @@ void CefBrowserHostCToCpp::AdvanceFocusForIME(int focusType) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnDestroyImageAnalyzerOverlay() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_destroy_image_analyzer_overlay)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_destroy_image_analyzer_overlay(_struct);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnFoldStatusChanged(uint32_t foldStatus) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_fold_status_changed)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_fold_status_changed(_struct, foldStatus);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ScrollToWithAnime(float x,
                                              float y,
                                              int32_t duration) {

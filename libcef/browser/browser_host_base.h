@@ -780,7 +780,9 @@ bool TerminateRenderProcess() override;
 
 #ifdef OHOS_AI
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+  void OnFoldStatusChanged(uint32_t foldstatus) override;
 #endif
 
 #ifdef OHOS_URL_TRUST_LIST

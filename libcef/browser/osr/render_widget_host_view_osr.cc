@@ -1804,6 +1804,19 @@ void CefRenderWidgetHostViewOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
+#ifdef OHOS_AI
+bool CefRenderWidgetHostViewOSR::CloseImageOverlaySelection() {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<CefContextMenuHandler> handler =
+        browser_impl_->GetClient()->GetContextMenuHandler();
+    if (handler) {
+      return handler->CloseImageOverlaySelection();
+    }
+  }
+  return false;
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     base::TimeTicks activation_time) {
   auto metadata =
@@ -3477,9 +3490,13 @@ void CefRenderWidgetHostViewOSR::OnTextSelectionChanged(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-  handler->OnTextSelectionChanged(
-      browser_impl_.get(), selection.selected_text(),
-      CefRange(selection.range().start(), selection.range().end()));
+  if (!selection.selected_text().empty() && !selection.range().is_empty()) {
+    handler->OnTextSelectionChanged(
+       browser_impl_.get(), selection.selected_text(),
+       CefRange(selection.range().start(), selection.range().end()));
+  } else {
+    LOG(INFO) << "OnTextSelectionChanged selected_text is null";
+  }
 }
 #endif  // #ifdef OHOS_CLIPBOARD
 
@@ -4047,8 +4064,21 @@ void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::OnDestroyImageAnalyzerOverlay() {
+  overlay_in_progress_ = false;
+  if (render_widget_host_) {
+    render_widget_host_->OnDestroyImageAnalyzerOverlay();
+  }
+}
+
 float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
   return page_scale_factor_;
+}
+
+void CefRenderWidgetHostViewOSR::OnFoldStatusChanged(uint32_t foldstatus) {
+  if (render_widget_host_) {
+    render_widget_host_->OnFoldStatusChanged(foldstatus);
+  }
 }
 #endif
 

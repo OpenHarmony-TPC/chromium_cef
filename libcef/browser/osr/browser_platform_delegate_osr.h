@@ -190,7 +190,9 @@ class CefBrowserPlatformDelegateOsr
                      const gfx::Rect& image_rect,
                      const gfx::Point& touch_point) override;
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+  void OnFoldStatusChanged(uint32_t foldstatus) override;
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
@@ -250,6 +252,10 @@ bool WebPageSnapshot(const char* id,
 
 #ifdef OHOS_DISPLAY_CUTOUT
   gfx::Insets safe_insets_;
+#endif
+
+#ifdef OHOS_AI
+  uint32_t fold_status_ = 0;
 #endif
   bool native_embed_mode_ = false;
   // We keep track of the RenderWidgetHost from which the current drag started,

@@ -510,7 +510,9 @@ bool NeedsReload() override;
                      const gfx::Rect& image_rect,
                      const gfx::Point& touch_point);
   void OnTextSelected(bool flag) override;
+  void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+  void OnFoldStatusChanged(uint32_t foldstatus) override;
 #endif
 
 #if defined(OHOS_DISPATCH_BEFORE_UNLOAD)

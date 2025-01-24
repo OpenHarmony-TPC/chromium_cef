@@ -496,7 +496,9 @@ class CefBrowserPlatformDelegate {
                              const gfx::Rect& image_rect,
                              const gfx::Point& touch_point);
   virtual void OnTextSelected(bool flag);
+  virtual void OnDestroyImageAnalyzerOverlay();
   virtual float GetPageScaleFactor();
+  virtual void OnFoldStatusChanged(uint32_t foldstatus);
 #endif
 
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
