@@ -227,7 +227,8 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
       blink::mojom::MediaStreamType::DISPLAY_AUDIO_CAPTURE) {
     media_audio_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN, audioSourceId_);
     blink::MediaStreamDevices devices;
-    stream_devices.audio_device = blink::MediaStreamDevice(request_.audio_type, media_audio_id.ToString(), "System Audio");
+    stream_devices.audio_device =
+      blink::MediaStreamDevice(request_.audio_type, media_audio_id.ToString(), "System Audio");
   }
 
   content::DesktopMediaID media_id;
