@@ -295,11 +295,13 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
   }
 
 #if defined(OHOS_INPUT_EVENTS)
-  blink::WebGestureEvent fling_cancel =
+  if (view->render_widget_host() && !view->render_widget_host()->IsAutoscrollInProgress()) {
+    blink::WebGestureEvent fling_cancel =
       native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_cancel.data.fling_start.target_viewport = false;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  view->SendTouchpadFlingEvent(fling_cancel);
+    fling_cancel.data.fling_start.target_viewport = false;
+    fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+    view->SendTouchpadFlingEvent(fling_cancel);
+  }
 #endif
 
   blink::WebMouseWheelEvent web_event =
