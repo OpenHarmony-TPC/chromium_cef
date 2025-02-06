@@ -1326,6 +1326,9 @@ void CefBrowserHostBase::GoBack() {
 
   auto wc = GetWebContents();
   if (wc && wc->GetController().CanGoBack()) {
+#if defined(OHOS_CLIPBOARD)
+    wc->CollapseAllFramesSelection();
+#endif  // defined(OHOS_CLIPBOARD)
     wc->GetController().GoBack();
   }
 }
