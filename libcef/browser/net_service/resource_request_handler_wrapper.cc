@@ -758,9 +758,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                         base::OnceClosure callback) {
     CEF_REQUIRE_IOT();
 #if defined(OHOS_NETWORK_LOAD)
-    if (!cookie_helper::IsCookieableScheme(request->url,
-#else
     if (!cookie_helper::IsCookieableScheme(new_url.value_or(request->url),
+#else
+    if (!cookie_helper::IsCookieableScheme(request->url,
 #endif
                                            init_state_->cookieable_schemes_)
     ) {
