@@ -198,8 +198,7 @@ void SbClient::DisplayBlockingPage(const GURL& url,
                                    int policy,
                                    OHSBThreatType block_type,
                                    const std::string& app_locale) {
-  LOG(INFO) << "SafeBrowsing " << __func__ << " url: " << url.spec()
-            << ", type: " << block_type;
+  LOG(INFO) << "SafeBrowsing " << __func__ << ", type: " << block_type;
   auto controller = std::make_unique<SbControllerClient>(
       web_contents(), prefs_, url, app_locale, incognito_mode_);
   std::unique_ptr<SbBlockPage> blocking_page = std::make_unique<SbBlockPage>(
