@@ -34,6 +34,7 @@
 #include "libcef_dll/ctocpp/pdf_value_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/precompile_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
+#include "libcef_dll/ctocpp/screen_capture_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/set_lock_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/store_web_archive_result_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
@@ -3967,6 +3968,49 @@ browser_host_scale_gesture_change_v2(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->ScaleGestureChangeV2(type, scale, originScale, width, height);
 }
 
+void CEF_CALLBACK
+browser_host_stop_screen_capture(struct _cef_browser_host_t* self,
+                                 int32_t nweb_id,
+                                 const cef_string_t* session_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: session_id; type: string_byref_const
+  DCHECK(session_id);
+  if (!session_id) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->StopScreenCapture(nweb_id, CefString(session_id));
+}
+
+void CEF_CALLBACK browser_host_register_screen_capture_delegate_listener(
+    struct _cef_browser_host_t* self,
+    cef_screen_capture_callback_t* listener) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: listener; type: refptr_diff
+  DCHECK(listener);
+  if (!listener) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RegisterScreenCaptureDelegateListener(
+      CefScreenCaptureCallbackCToCpp::Wrap(listener));
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4193,6 +4237,9 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
   GetStruct()->scale_gesture_change_v2 = browser_host_scale_gesture_change_v2;
+  GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
+  GetStruct()->register_screen_capture_delegate_listener =
+      browser_host_register_screen_capture_delegate_listener;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -146,6 +146,19 @@ class CefSetLockCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// callback for RegisterScreenCaptureDelegateListener().
+///
+/*--cef(source=client)--*/
+class CefScreenCaptureCallback : public virtual CefBaseRefCounted {
+public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void OnStateChange(int32_t nweb_id, const CefString& session_id, int32_t code) = 0;
+};
+
+///
 /// Interface to implement to be notified of compiling javascript completion via
 /// CefBrowserHostBase::PrecompileJavaScript().
 ///
@@ -2179,5 +2192,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) = 0;
+
+  ///
+  ///  Close current screen capture.
+  ///
+  /*--cef()--*/
+  virtual void StopScreenCapture(int32_t nweb_id, const CefString& session_id) = 0;
+
+  ///
+  ///  Register screen capture listener.
+  ///
+  /*--cef()--*/
+  virtual void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
