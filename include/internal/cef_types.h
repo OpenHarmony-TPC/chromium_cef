@@ -1930,7 +1930,26 @@ typedef struct _cef_mouse_event_t {
   ///
   int raw_y;
 
+  ///
+  /// event source. See cef_event_source_t for values.
+  ///
+  int32_t source;
+
 } cef_mouse_event_t;
+
+typedef enum{
+  CEF_EST_UNKNOWN = 0,
+  CEF_EST_FINGER = 1,
+  CEF_EST_PEN = 2,
+  CEF_EST_RUBBER = 3,
+  CEF_EST_BRUSH = 4,
+  CEF_EST_PENCIL = 5,
+  CEF_EST_AIRBRUSH = 6,
+  CEF_EST_MOUSE = 7,
+  CEF_EST_LENS = 8,
+  CEF_EST_TOUCHPAD = 9,
+  CEF_EST_JOYSTICK = 10,
+} cef_event_source_t;
 
 ///
 /// Touch points states types.
