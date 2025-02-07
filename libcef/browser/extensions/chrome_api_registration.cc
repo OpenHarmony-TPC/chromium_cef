@@ -208,6 +208,7 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenUrlFunction>();
   // webNavigation
+  registry->RegisterFunction<cefimpl::WebNavigationGetFrameFunction>();
   registry->RegisterFunction<cefimpl::WebNavigationGetAllFramesFunction>();
   // scripting
   registry->RegisterFunction<cefimpl::ScriptingExecuteScriptFunction>();
