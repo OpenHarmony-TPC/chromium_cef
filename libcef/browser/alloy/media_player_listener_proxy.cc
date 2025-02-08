@@ -72,3 +72,8 @@ void MediaPlayerListenerProxy::OnVideoSizeChanged(int width, int height) {
     cef_listener_->OnVideoSizeChanged(width, height);
   }
 }
+void MediaPlayerListenerProxy::OnFullscreenOverlayChanged(bool fullscreen_overlay) {
+  if (cef_listener_) {
+    cef_listener_->OnFullscreenOverlayChanged(fullscreen_overlay);
+  }
+}
