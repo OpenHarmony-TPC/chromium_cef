@@ -293,6 +293,8 @@ std::string BuildMediaInfo(
   root.Set("downloadBtn", show_download_btn);
   root.Set("playbackrateBtn", show_playback_rate);
 
+  root.Set("fullscreenoverlay", media_info->fullscreen_overlay);
+
   auto json = base::WriteJson(root);
   return json ? json.value() : std::string();
 }

@@ -92,6 +92,12 @@ class CefMediaPlayerListenerForVAST {
   ///
   /*--cef()--*/
   virtual void OnVideoSizeChanged(int width, int height) = 0;
+
+  ///
+  /// triggered on overlay changed.
+  ///
+  /*--cef()--*/
+  virtual void OnFullscreenOverlayChanged(bool fullscreen_overlay) = 0;
 };
 
 #endif // BUILDFLAG(IS_OHOS)
