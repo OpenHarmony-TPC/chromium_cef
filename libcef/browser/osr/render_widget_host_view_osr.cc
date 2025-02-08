@@ -2533,7 +2533,7 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
 }
 
 void CefRenderWidgetHostViewOSR::BoostingPreiodly() {
-  if (!isBoosting_) {
+  if (pointer_state_.GetPointerCount() == 0) {
     return;
   }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
@@ -2581,7 +2581,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
 }
 
 void CefRenderWidgetHostViewOSR::OnTouchMove() {
-  if (pointer_state_.GetPointerCount() == 0 || isBoosting_) {
+  if (pointer_state_.GetPointerCount() == 0) {
     return;
   }
   isBoosting_ = true;
