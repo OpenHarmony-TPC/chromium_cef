@@ -23,6 +23,7 @@
 #include "libcef_dll/cpptoc/pdf_value_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/precompile_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
+#include "libcef_dll/cpptoc/screen_capture_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/set_lock_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/store_web_archive_result_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/task_cpptoc.h"
@@ -3699,6 +3700,50 @@ void CefBrowserHostCToCpp::ScaleGestureChangeV2(int type, float scale, float ori
 
   // Execute
   _struct->scale_gesture_change_v2(_struct, type, scale, originScale, width, height);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::StopScreenCapture(int32_t nweb_id, const CefString& session_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, stop_screen_capture)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: session_id; type: string_byref_const
+  DCHECK(!session_id.empty());
+  if (session_id.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->stop_screen_capture(_struct, nweb_id, session_id.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::RegisterScreenCaptureDelegateListener(
+    CefRefPtr<CefScreenCaptureCallback> listener) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, register_screen_capture_delegate_listener)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: listener; type: refptr_diff
+  DCHECK(listener.get());
+  if (!listener.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->register_screen_capture_delegate_listener(
+      _struct, CefScreenCaptureCallbackCppToC::Wrap(listener));
 }
 
 // CONSTRUCTOR - Do not edit by hand.
