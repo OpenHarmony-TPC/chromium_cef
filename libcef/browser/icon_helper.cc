@@ -94,8 +94,7 @@ void IconHelper::OnUpdateFaviconURL(
       sizes.emplace_back(size.width(), size.height());
     }
     if (sizes.empty()) {
-      LOG(WARNING) << "No icon sizes available for URL: "
-                   << candidate->icon_url;
+      LOG(WARNING) << "No icon sizes available";
     }
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
