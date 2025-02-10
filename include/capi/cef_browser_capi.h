@@ -2197,6 +2197,13 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* register_screen_capture_delegate_listener)(
       struct _cef_browser_host_t* self,
       struct _cef_screen_capture_callback_t* listener);
+
+  ///
+  /// Set whether use optimized HTML parser budget to reduce FCP time.
+  ///
+  void (CEF_CALLBACK* set_optimize_parser_budget_enabled)(
+        struct _cef_browser_host_t* self,
+        int enable);
 } cef_browser_host_t;
 
 ///

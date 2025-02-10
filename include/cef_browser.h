@@ -2219,5 +2219,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void ReloadFocusedFrame() = 0;
 #endif
+
+  ///
+  /// Set whether use optimized HTML parser budget to reduce FCP time.
+  ///
+  /*--cef()--*/
+  virtual void SetOptimizeParserBudgetEnabled(bool enable) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

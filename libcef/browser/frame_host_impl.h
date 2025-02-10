@@ -196,6 +196,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SendHitEvent(float x, float y, float width, float height);
 
   void SetInitialScale(float scale);
+  void SetOptimizeParserBudgetEnabled(bool enable);
 #ifdef OHOS_NETWORK_CONNINFO
   void SetJsOnlineProperty(bool network_up);
 #endif

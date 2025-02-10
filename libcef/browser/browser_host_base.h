@@ -809,6 +809,9 @@ bool TerminateRenderProcess() override;
   void ReloadFocusedFrame() override {}
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  void SetOptimizeParserBudgetEnabled(bool enable) override;
+#endif
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

@@ -4278,3 +4278,13 @@ void CefBrowserHostBase::ScaleGestureChangeV2(int type, float scale, float origi
     platform_delegate_->ScaleGestureChangeV2(type, scale, originScale, centerX, centerY);
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::SetOptimizeParserBudgetEnabled(bool enable) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())
+        ->SetOptimizeParserBudgetEnabled(enable);
+  }
+}
+#endif

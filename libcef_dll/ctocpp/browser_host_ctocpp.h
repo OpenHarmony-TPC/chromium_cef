@@ -335,6 +335,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
   void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) override;
+  void SetOptimizeParserBudgetEnabled(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

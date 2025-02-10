@@ -70,6 +70,7 @@
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "ui/base/resource/resource_bundle.h"
 #include "third_party/blink/public/web/web_settings.h"
+#include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
 #endif
 
 #ifdef OHOS_CLIPBOARD
@@ -1060,6 +1061,21 @@ void CefFrameImpl::SetInitialScale(float initialScale) {
     return;
   }
   webview->SetInitialPageScaleOverride(initialScale);
+}
+
+void CefFrameImpl::SetOptimizeParserBudgetEnabled(bool enable) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "SetOptimizeParserBudgetEnabled. render_frame is nullptr.";
+    return;
+  }
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SetOptimizeParserBudgetEnabled webview is NULL";
+    return;
+  }
+  blink::SetOptimizeParserBudgetEnabled(enable);
 }
 
 #ifdef OHOS_NETWORK_CONNINFO
