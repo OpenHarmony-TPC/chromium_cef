@@ -159,6 +159,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void GetImageFromCache(const CefString& url) override;
   void ExitFullScreen() override;
   void UpdateLocale(const CefString& locale) override;
+  void UpdateNavigatorLanguage(const CefString& locale) override;
   CefString GetOriginalUrl() override;
   void PutNetworkAvailable(bool available) override;
   void RemoveCache(bool include_disk_files) override;

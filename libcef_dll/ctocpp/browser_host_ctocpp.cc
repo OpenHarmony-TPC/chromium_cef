@@ -1528,6 +1528,26 @@ void CefBrowserHostCToCpp::UpdateLocale(const CefString& locale) {
   _struct->update_locale(_struct, locale.GetStruct());
 }
 
+void CefBrowserHostCToCpp::UpdateNavigatorLanguage(const CefString& locale) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, update_locale)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: locale; type: string_byref_const
+  DCHECK(!locale.empty());
+  if (locale.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->update_locale(_struct, locale.GetStruct());
+}
+
 NO_SANITIZE("cfi-icall") CefString CefBrowserHostCToCpp::GetOriginalUrl() {
   shutdown_checker::AssertNotShutdown();
 

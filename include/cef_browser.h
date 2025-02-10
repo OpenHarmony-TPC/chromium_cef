@@ -1477,6 +1477,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void UpdateLocale(const CefString& locale) = 0;
 
   ///
+  /// UpdateNavigatorLanguage
+  ///
+  /*--cef()--*/
+  virtual void UpdateNavigatorLanguage(const CefString& locale) = 0;
+
+  ///
   /// Returns the original url of the request.
   ///
   /*--cef()--*/

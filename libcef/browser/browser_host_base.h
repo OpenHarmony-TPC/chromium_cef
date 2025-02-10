@@ -325,6 +325,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void GetRootBrowserAccessibilityManager(void** manager) override;
 #ifdef OHOS_I18N
   void UpdateLocale(const CefString& locale) override;
+  void UpdateNavigatorLanguage(const CefString& locale) override;
 #endif  // OHOS_I18N
 #ifdef OHOS_NETWORK_CONNINFO
   CefString GetOriginalUrl() override;
