@@ -325,6 +325,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void GetScrollOffset(float* offset_x, float* offset_y) override;
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
 #endif
+#ifdef OHOS_EX_REFRESH_IFRAME
+  bool IsIframe() override;
+  void ReloadFocusedFrame() override;
+#endif
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
   void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) override;

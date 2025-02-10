@@ -3677,6 +3677,40 @@ void CEF_CALLBACK browser_host_on_destroy_image_analyzer_overlay(
   CefBrowserHostCppToC::Get(self)->OnDestroyImageAnalyzerOverlay();
 }
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+int CEF_CALLBACK browser_host_is_iframe(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefBrowserHostCppToC::Get(self)->IsIframe();
+
+  // Return type: bool
+  return _retval;
+}
+
+void CEF_CALLBACK
+browser_host_reload_focused_frame(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ReloadFocusedFrame();
+}
+#endif
+
 void CEF_CALLBACK
 browser_host_on_safe_insets_change(struct _cef_browser_host_t* self,
                                    int left,
@@ -4220,6 +4254,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->advance_focus_for_ime = browser_host_advance_focus_for_ime;
   GetStruct()->on_destroy_image_analyzer_overlay =
       browser_host_on_destroy_image_analyzer_overlay;
+#ifdef OHOS_EX_REFRESH_IFRAME
+  GetStruct()->is_iframe = browser_host_is_iframe;
+  GetStruct()->reload_focused_frame = browser_host_reload_focused_frame;
+#endif
   GetStruct()->on_safe_insets_change = browser_host_on_safe_insets_change;
   GetStruct()->notify_for_next_touch_event =
       browser_host_notify_for_next_touch_event;
