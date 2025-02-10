@@ -107,6 +107,7 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(DeveloperPrivateRequestFileSourceFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenDevToolsFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenUrlFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateDeleteExtensionErrorsFunction),
     "scripting",
     EXTENSION_FUNCTION_NAME(cefimpl::ScriptingExecuteScriptFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::ScriptingInsertCSSFunction),
@@ -207,6 +208,7 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<DeveloperPrivateRequestFileSourceFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenUrlFunction>();
+  registry->RegisterFunction<DeveloperPrivateDeleteExtensionErrorsFunction>();
   // webNavigation
   registry->RegisterFunction<cefimpl::WebNavigationGetFrameFunction>();
   registry->RegisterFunction<cefimpl::WebNavigationGetAllFramesFunction>();
