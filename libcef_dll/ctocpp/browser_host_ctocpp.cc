@@ -3633,6 +3633,41 @@ void CefBrowserHostCToCpp::GetOverScrollOffset(float* offset_x,
 
 #endif
 
+#ifdef OHOS_EX_REFRESH_IFRAME
+NO_SANITIZE("cfi-icall")
+bool CefBrowserHostCToCpp::IsIframe() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, is_iframe)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->is_iframe(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ReloadFocusedFrame() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, reload_focused_frame)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->reload_focused_frame(_struct);
+}
+#endif
+
 NO_SANITIZE("cfi-icall") 
 void CefBrowserHostCToCpp::ScrollToWithAnime(float x, float y, int32_t duration) {
   shutdown_checker::AssertNotShutdown();

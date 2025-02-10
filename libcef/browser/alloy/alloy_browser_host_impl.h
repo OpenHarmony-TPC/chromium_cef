@@ -277,6 +277,11 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       content::RenderWidgetHost* render_widget_host) override;
 #endif
 
+#if defined(OHOS_EX_REFRESH_IFRAME)
+  bool IsIframe() override;
+  void ReloadFocusedFrame() override;
+#endif
+
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
     DESTRUCTION_STATE_PENDING,

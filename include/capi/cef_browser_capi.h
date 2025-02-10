@@ -2057,6 +2057,16 @@ typedef struct _cef_browser_host_t {
                                             int focusType);
 
   ///
+  /// Get whether it is the iframe.
+  ///
+  int(CEF_CALLBACK* is_iframe)(struct _cef_browser_host_t* self);
+
+  ///
+  /// fresh focused frame for context menu.
+  ///
+  void(CEF_CALLBACK* reload_focused_frame)(struct _cef_browser_host_t* self);
+
+  ///
   /// Called when image analyzer overlay is destoryed.
   ///
   void(CEF_CALLBACK* on_destroy_image_analyzer_overlay)(
