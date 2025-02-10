@@ -29,6 +29,7 @@ class MediaPlayerListenerProxy : public content::MediaPlayerListener {
   void OnSeekFinished() override;
   void OnError(uint32_t error_code, const std::string& error_msg) override;
   void OnVideoSizeChanged(int width, int height) override;
+  void OnFullscreenOverlayChanged(bool fullscreen_overlay) override;
 
  private:
   std::unique_ptr<CefMediaPlayerListenerForVAST> cef_listener_;
