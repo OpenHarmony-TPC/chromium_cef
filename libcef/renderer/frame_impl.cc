@@ -1127,7 +1127,12 @@ void CefFrameImpl::GetImageForContextNode() {
 
   cef::mojom::GetImageForContextNodeParamsPtr params =
       cef::mojom::GetImageForContextNodeParams::New();
-  blink::WebNode context_node = frame_->ContextMenuNode();
+  blink::WebNode context_node;
+  if (frame_->View() && frame_->View()->FocusedFrame()) {
+    context_node = frame_->View()->FocusedFrame()->ContextMenuNode();
+  } else {
+    context_node = frame_->ContextMenuNode();
+  }
   std::vector<uint8_t> image_data;
   gfx::Size original_size;
   std::string image_extension;
