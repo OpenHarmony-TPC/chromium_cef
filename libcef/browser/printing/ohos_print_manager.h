@@ -75,6 +75,7 @@ class OhosPrintManager : public printing::PrintManager,
   void RunPrintRequestedCallback(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
+  void SetPrintStatusOnUIThread(bool is_print_now, uint32_t state);
   void SetPrintStatus(bool is_print_now, uint32_t status);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);

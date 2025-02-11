@@ -102,7 +102,7 @@ class PrintDocumentAdapterImpl
     LOG(INFO) << "OhosPrintManager onJobStateChanged.";
     state_ = state;
     if (ohosPrintManager_) {
-      ohosPrintManager_->SetPrintStatus(false, state);
+      ohosPrintManager_->SetPrintStatusOnUIThread(false, state);
     }
     if (ohosPrintManager_ && !isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
@@ -148,7 +148,7 @@ class ApplicationPrintDocumentAdapterImpl
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
     LOG(INFO) << "Application OhosPrintManager onJobStateChanged.";
     if (ohosPrintManager_) {
-      ohosPrintManager_->SetPrintStatus(false, state);
+      ohosPrintManager_->SetPrintStatusOnUIThread(false, state);
     }
 
     state_ = state;
@@ -579,6 +579,18 @@ std::string OhosPrintManager::RemoveProtocol(const std::string& url) {
 void OhosPrintManager::SetToken(void* token) {
   printTokenMap_[base::Process::Current().Pid()] = token;
   token_ = token;
+}
+
+void OhosPrintManager::SetPrintStatusOnUIThread(bool is_print_now, uint32_t state) {
+  auto main_task_runner = content::GetUIThreadTaskRunner({});
+  if (!main_task_runner) {
+    LOG(ERROR) << "main_task_runner is nullptr";
+    return;
+  }
+  main_task_runner->PostTask(
+      FROM_HERE, base::BindOnce(&OhosPrintManager::SetPrintStatus,
+                                base::Unretained(this),
+                                is_print_now, state));
 }
 
 void OhosPrintManager::SetPrintStatus(bool is_print_now, uint32_t state) {
