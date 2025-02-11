@@ -413,6 +413,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
 #if defined(OHOS_EX_DOWNLOAD)
   bool is_download_{ false };
+  bool is_triggered_by_download_ { false };
 #endif
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
@@ -496,6 +497,10 @@ InterceptedRequest::InterceptedRequest(
       &InterceptedRequest::OnURLLoaderClientError, base::Unretained(this)));
   proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderError, base::Unretained(this)));
+
+#ifdef OHOS_EX_DWONLAOD
+  is_triggered_by_download_ = request.is_triggered_by_download;
+#endif
 }
 
 InterceptedRequest::~InterceptedRequest() {
@@ -573,7 +578,7 @@ void InterceptedRequest::Restart() {
   const GURL original_url = request_.url;
 #if defined(OHOS_EX_DOWNLOAD)
   factory_->request_handler_->OnBeforeRequest(
-      id_, &request_, request_was_redirected_,
+      id_, &request_, request_was_redirected_, current_request_uses_header_client_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                      weak_factory_.GetWeakPtr(), original_url),
       base::BindOnce(&InterceptedRequest::CancelRequest,
@@ -1060,7 +1065,11 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
   }
 
   factory_->request_handler_->OnRequestResponse(
-      id_, &request_, headers.get(), redirect_info,
+#ifdef OHOS_NETWORK_LOAD
+    id_, current_request_uses_header_client_, &request_, headers.get(), redirect_info,
+#else // OHOS_NETWORK_LOAD
+    id_, &request_, headers.get(), redirect_info,
+#endif
       base::BindOnce(&InterceptedRequest::ContinueResponseOrRedirect,
                      weak_factory_.GetWeakPtr(), std::move(continuation)));
 }
@@ -1382,14 +1391,16 @@ void InterceptedRequest::CallOnComplete(
 
 #if defined(OHOS_EX_DOWNLOAD)
 void InterceptedRequest::CancelRequest(int error_code) {
+  // Do not cancel download request if origin window is destoryed.
+  if (is_download_ || is_triggered_by_download_)
+    return;
+
   // Donn't cancel network requests. Network requests should be canceled by the holder
   // instead of following the tab, such as serviceworker download, etc. Although the
   // tab is destroyed, the request still needs to be maintained.
-  if (!is_download_) {
-    network::URLLoaderCompletionStatus status(error_code);
-    status.abort_due_to_cef_browser_destroyed = true;
-    SendErrorStatusAndCompleteImmediately(status);
-  }
+  network::URLLoaderCompletionStatus status(error_code);
+  status.abort_due_to_cef_browser_destroyed = true;
+  SendErrorStatusAndCompleteImmediately(status);
 }
 #endif  //  OHOS_EX_DOWNLOAD
 
@@ -1455,6 +1466,9 @@ void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
     network::ResourceRequest* request,
     bool request_was_redirected,
+#ifdef OHOS_NETWORK_LOAD
+    bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
     OnBeforeRequestResultCallback callback,
     CancelRequestCallback cancel_callback) {
   std::move(callback).Run(false, false);
@@ -1469,6 +1483,9 @@ void InterceptedRequestHandler::ShouldInterceptRequest(
 
 void InterceptedRequestHandler::OnRequestResponse(
     int32_t request_id,
+#ifdef OHOS_NETWORK_LOAD
+    bool current_request_uses_header_client,
+#endif // OHOS_NETWORK_LOAD
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
     absl::optional<net::RedirectInfo> redirect_info,
