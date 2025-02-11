@@ -136,7 +136,25 @@ void RenderProcessStateHandler::InitRenderProcessState(
   LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: render_id: "
              << render_process_id << " nweb_id: " << nweb_id;
   if (initial_web_component_list_.size() == 0) {
-    LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: No task";
+    // browser click search. same web component, render has been changed. 
+    for (RenderProcessStateMap& item : render_process_map_list_) {
+      if (item.render_process_id == render_process_id) {
+        LOG(DEBUG)
+            << "RenderProcessStateHandler::InitRenderProcessState: has already reported";
+        return;
+      }
+      for (WebComponentState& web_component_state : item.web_component_list) {
+        if (web_component_state.nweb_id == nweb_id) {
+          LOG(DEBUG) << "RenderProcessStateHandler::InitRenderProcessState: render_id has been changed: "
+                     << item.render_process_id << " -> " << render_process_id
+                     << " nweb_id: " << web_component_state.nweb_id
+                     << " state: " << web_component_state.state;
+          // report last web componet state.
+          UpdateRenderProcessState(render_process_id, nweb_id, web_component_state.state);
+          return;
+        }
+      }
+    }
     return;
   }
 
