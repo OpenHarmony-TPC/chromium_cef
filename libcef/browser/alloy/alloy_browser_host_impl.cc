@@ -2842,6 +2842,14 @@ void AlloyBrowserHostImpl::OnZoomChanged(
           data.can_show_bubble);
     }
   }
+  if (web_contents()) {
+    auto* browser_context = CefBrowserContext::FromBrowserContext(
+        web_contents()->GetBrowserContext());
+    if (browser_context) {
+      DCHECK(browser_context->AsProfile()->GetPrefs());
+      browser_context->AsProfile()->GetPrefs()->CommitPendingWrite();
+    }
+  }
 }
 #endif
 
