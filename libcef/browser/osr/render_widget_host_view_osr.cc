@@ -84,6 +84,7 @@ std::unordered_map<gfx::AcceleratedWidget, uint32_t>
 #include "content/public/common/input_event_ack_state.h"
 #include "ui/base/ime/text_input_flags.h"
 #include "ui/events/blink/did_overscroll_params.h"
+#include "libcef/browser/native/cursor_util.h"
 #endif  // defined(OHOS_INPUT_EVENTS)
 
 namespace {
@@ -1161,7 +1162,15 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
   Show();
 }
 
-void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {}
+void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {
+#if defined(OHOS_INPUT_EVENTS)
+  if (!browser_impl_) {
+    LOG(ERROR) << "browser is null when update cursor";
+    return;
+  }
+  cursor_util::OnCursorChange(browser_impl_->GetBrowser(), cursor);
+#endif
+}
 
 content::CursorManager* CefRenderWidgetHostViewOSR::GetCursorManager() {
   return cursor_manager_.get();
