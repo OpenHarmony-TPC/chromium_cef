@@ -2616,7 +2616,7 @@ void CefRenderWidgetHostViewOSR::OnUpdateTextInputStateCalled(
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), input_info,
                                         is_need_reset_ime_listener,
                                         text_input_attributes);
-  } else if (!state || mode == CEF_TEXT_INPUT_MODE_NONE) {
+  } else if ((!state || mode == CEF_TEXT_INPUT_MODE_NONE) && (HasFocus())) {
     LOG(DEBUG) << "CefRenderWidgetHostViewOSR:: OnVirtualKeyboardRequested not editable";
     CefRenderHandler::TextInputInfo input_info;
     handler->OnVirtualKeyboardRequested(browser_impl_->GetBrowser(), input_info,
