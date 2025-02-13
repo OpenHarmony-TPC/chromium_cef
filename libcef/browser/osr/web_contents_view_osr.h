@@ -77,6 +77,7 @@ class CefWebContentsViewOSR : public content::WebContentsView,
 
 #ifdef OHOS_AI
   bool CloseImageOverlaySelection() override;
+  void OnOverlayZoomChanged() override;
 #endif
 
 #ifdef OHOS_DRAG_DROP

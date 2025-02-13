@@ -3590,11 +3590,7 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
 #ifdef OHOS_AI
-      if (render_widget_host_ && overlay_in_progress_) {
-        gfx::Rect image_rect = render_widget_host_->GetImageRect();
-        CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
-        handler->OnOverlayStateChanged(browser_impl_.get(), cef_image_rect);
-      }
+      NotifyOverlayStateChanged();
 #endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
@@ -3900,6 +3896,20 @@ float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
 void CefRenderWidgetHostViewOSR::OnFoldStatusChanged(uint32_t foldstatus) {
   if (render_widget_host_) {
     render_widget_host_->OnFoldStatusChanged(foldstatus);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::NotifyOverlayStateChanged() {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::NotifyOverlayStateChanged";
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    if (handler && render_widget_host_ && overlay_in_progress_) {
+      // change to async in future
+      gfx::Rect image_rect = render_widget_host_->GetImageRect();
+      CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
+      handler->OnOverlayStateChanged(browser_impl_.get(), cef_image_rect);
+    }
   }
 }
 #endif

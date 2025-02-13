@@ -488,6 +488,7 @@ class CefRenderWidgetHostViewOSR
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
   void OnFoldStatusChanged(uint32_t foldstatus);
+  void NotifyOverlayStateChanged();
 #endif
 
 #ifdef OHOS_DRAG_DROP
