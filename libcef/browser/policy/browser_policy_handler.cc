@@ -28,7 +28,7 @@
 namespace policy {
 
 namespace {
-constexpr int32 kApiMinSdkVerison = 50001013;
+constexpr unsigned long long kApiMinSdkVerison = 50100016;
 
 Profile* GetActiveProfile() {
   auto request_context = static_cast<CefRequestContextImpl*>(
@@ -53,8 +53,8 @@ bool ShouldUseBrowserPolicy(bool& should_use_browser_policy) {
   if (version_string.empty()) {
     return false;
   }
-  int version = std::stoi(version_string);
-  LOG(INFO) << "ShouldUseBrowserPolicy version: " << version;
+  unsigned long long version = std::stoull(version_string);
+  LOG(INFO) << "ShouldUseBrowserPolicy get SDK version: " << version;
   should_use_browser_policy = version >= kApiMinSdkVerison;
   return true;
 }
@@ -95,14 +95,10 @@ void BrowserPolicyHandler::SetPolicyAndNotify(const std::string& policy,
   }
 }
 
-bool BrowserPolicyHandler::GetPolicy(std::string& policy) {
-  if (policy_.empty()) {
-    return false;
-  }
-  LOG(INFO) << "BrowserPolicyHandler policy read";
+PolicyBundle BrowserPolicyHandler::GetPolicyBundle() {
+  LOG(INFO) << "BrowserPolicyHandler policy bundle gotten";
 
-  policy = policy_;
-  return true;
+  return bundle_.Clone();
 }
 
 bool BrowserPolicyHandler::SetPolicy(const std::string& policy, int version) {
@@ -121,18 +117,24 @@ bool BrowserPolicyHandler::SetPolicy(const std::string& policy, int version) {
     LOG(ERROR) << "BrowserPolicyHandler SetPolicy GetActiveProfile failed";
     return false;
   }
+
   auto prefs = GetActiveProfile()->GetPrefs();
   if (!prefs) {
     LOG(ERROR) << "BrowserPolicyHandler SetPolicy GetPrefs failed";
     return false;
   }
 
-  current_version_ = version;
-  policy_ = policy;
+  PolicyBundle bundle;
+  if (!PolicyLoaderOhos::ParsePolicy(policy, &bundle)) {
+    LOG(ERROR) << "BrowserPolicyHandler policy json format invalid";
+    return false;
+  }
 
+  current_version_ = version;
+  bundle_ = bundle.Clone();
   prefs->SetInteger(prefs::kBrowserPolicyVersion, version);
 
-  LOG(INFO) << "BrowserPolicyHandler new policy set";
+  LOG(INFO) << "BrowserPolicyHandler new policy set: " << policy;
   return true;
 }
 

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "base/observer_list.h"
+#include "components/policy/core/common/policy_bundle.h"
 
 namespace policy {
 
@@ -35,7 +36,7 @@ class BrowserPolicyHandler {
   };
   static BrowserPolicyHandler* GetInstance();
   void SetPolicyAndNotify(const std::string& policy, int version);
-  bool GetPolicy(std::string& policy);
+  PolicyBundle GetPolicyBundle();
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
 
@@ -43,7 +44,7 @@ class BrowserPolicyHandler {
   const int kInvalidPolicyVersion = -1;
   bool SetPolicy(const std::string& policy, int version);
   void MaybeInitFromPersistentPrefs();
-  std::string policy_;
+  PolicyBundle bundle_;
   int current_version_ = kInvalidPolicyVersion;
   base::ObserverList<Observer>::Unchecked observers_;
 };
