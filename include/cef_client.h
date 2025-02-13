@@ -328,6 +328,24 @@ class CefClient : public virtual CefBaseRefCounted {
     return nullptr;
   }
 #endif
+
+  ///
+  /// notify application to show toast.
+  ///
+  /*--cef()--*/
+  virtual void OnShowToast(double duration, const CefString& toast) {}
+
+  ///
+  /// notify application to show video assistant.
+  ///
+  /*--cef()--*/
+  virtual void OnShowVideoAssistant(const CefString& videoAssistantItems) {}
+
+  ///
+  /// notify application to report statistic log.
+  ///
+  /*--cef()--*/
+  virtual void OnReportStatisticLog(const CefString& content) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

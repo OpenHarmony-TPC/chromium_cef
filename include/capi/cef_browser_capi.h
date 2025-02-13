@@ -574,6 +574,14 @@ typedef struct _cef_browser_t {
       struct _cef_browser_t* self,
       int32_t size,
       int32_t timeToLive);
+
+  ///
+  /// Enable safe browsing detection.
+  ///
+  void(CEF_CALLBACK* enable_safe_browsing_detection)(
+      struct _cef_browser_t* self,
+      int enable,
+      int strictMode);
 } cef_browser_t;
 
 ///
@@ -2184,6 +2192,19 @@ typedef struct _cef_browser_host_t {
                               float originScale,
                               float width,
                               float height);
+
+  ///
+  /// set video assistant enable.
+  ///
+  void(CEF_CALLBACK* enable_video_assistant)(struct _cef_browser_host_t* self,
+                                             int enable);
+
+  ///
+  /// execute video assistant function.
+  ///
+  void(CEF_CALLBACK* execute_video_assistant_function)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* cmdId);
 
   ///
   ///  Close current screen capture.

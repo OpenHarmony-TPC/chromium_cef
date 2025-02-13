@@ -4003,6 +4003,44 @@ browser_host_scale_gesture_change_v2(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
+browser_host_enable_video_assistant(struct _cef_browser_host_t* self,
+                                    int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->EnableVideoAssistant(enable ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_execute_video_assistant_function(struct _cef_browser_host_t* self,
+                                              const cef_string_t* cmdId) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: cmdId; type: string_byref_const
+  DCHECK(cmdId);
+  if (!cmdId) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->ExecuteVideoAssistantFunction(
+      CefString(cmdId));
+}
+
+void CEF_CALLBACK
 browser_host_stop_screen_capture(struct _cef_browser_host_t* self,
                                  int32_t nweb_id,
                                  const cef_string_t* session_id) {
@@ -4275,6 +4313,9 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->scroll_by_with_anime = browser_host_scroll_by_with_anime;
   GetStruct()->create_to_pdf = browser_host_create_to_pdf;
   GetStruct()->scale_gesture_change_v2 = browser_host_scale_gesture_change_v2;
+  GetStruct()->enable_video_assistant = browser_host_enable_video_assistant;
+  GetStruct()->execute_video_assistant_function =
+      browser_host_execute_video_assistant_function;
   GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
   GetStruct()->register_screen_capture_delegate_listener =
       browser_host_register_screen_capture_delegate_listener;

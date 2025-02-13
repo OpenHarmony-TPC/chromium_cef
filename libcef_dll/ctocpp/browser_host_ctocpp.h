@@ -332,6 +332,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ScrollToWithAnime(float x, float y, int32_t duration) override;
   void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
   void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) override;
+  void EnableVideoAssistant(bool enable) override;
+  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
   void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
   void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) override;

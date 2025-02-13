@@ -3738,6 +3738,43 @@ void CefBrowserHostCToCpp::ScaleGestureChangeV2(int type, float scale, float ori
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::EnableVideoAssistant(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_video_assistant(_struct, enable);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::ExecuteVideoAssistantFunction(
+    const CefString& cmdId) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, execute_video_assistant_function)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: cmdId; type: string_byref_const
+  DCHECK(!cmdId.empty());
+  if (cmdId.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->execute_video_assistant_function(_struct, cmdId.GetStruct());
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::StopScreenCapture(int32_t nweb_id, const CefString& session_id) {
   shutdown_checker::AssertNotShutdown();
 

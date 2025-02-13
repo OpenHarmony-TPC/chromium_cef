@@ -573,6 +573,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual uint32_t GetAcceleratedWidget() = 0;
 
+  ///
+  /// Enable safe browsing detection.
+  ///
+  /*--cef()--*/
+  virtual void EnableSafeBrowsingDetection(bool enable, bool strictMode) = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };
@@ -2192,6 +2198,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) = 0;
+
+  ///
+  /// set video assistant enable.
+  ///
+  /*--cef()--*/
+  virtual void EnableVideoAssistant(bool enable) = 0;
+
+  ///
+  /// execute video assistant function.
+  ///
+  /*--cef()--*/
+  virtual void ExecuteVideoAssistantFunction(const CefString& cmdId) = 0;
 
   ///
   ///  Close current screen capture.

@@ -498,6 +498,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       const content::MediaInfo& media_info) override;
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#if defined(OHOS_VIDEO_ASSISTANT)
+  void OnShowToast(double duration, const std::string& toast) override;
+  void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
+  void OnReportStatisticLog(const std::string& content) override;
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+
 #ifdef OHOS_AI
   void CreateOverlay(const gfx::ImageSkia& image,
                      const gfx::Rect& image_rect,
@@ -573,6 +579,12 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
       content::RenderProcessNotRespondingReason reason,
       const std::string& stack);
 #endif
+#if defined(OHOS_VIDEO_ASSISTANT)
+  std::unique_ptr<content::VideoAssistant> CreateVideoAssistant() override;
+  void PopluateVideoAssistantConfig(
+      const std::string& url,
+      media::mojom::VideoAssistantConfigPtr& config) override;
+#endif // OHOS_VIDEO_ASSISTANT
 
   CefWindowHandle opener_;
   const bool is_windowless_;

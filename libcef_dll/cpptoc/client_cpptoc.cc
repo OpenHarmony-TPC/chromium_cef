@@ -602,6 +602,63 @@ client_do_browser_controls_shrink_renderer_size(struct _cef_client_t* self) {
   return _retval;
 }
 
+void CEF_CALLBACK client_on_show_toast(struct _cef_client_t* self,
+                                       double duration,
+                                       const cef_string_t* toast) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: toast; type: string_byref_const
+  DCHECK(toast);
+  if (!toast) {
+    return;
+  }
+
+  // Execute
+  CefClientCppToC::Get(self)->OnShowToast(duration, CefString(toast));
+}
+
+void CEF_CALLBACK
+client_on_show_video_assistant(struct _cef_client_t* self,
+                               const cef_string_t* videoAssistantItems) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: videoAssistantItems; type: string_byref_const
+  DCHECK(videoAssistantItems);
+  if (!videoAssistantItems) {
+    return;
+  }
+
+  // Execute
+  CefClientCppToC::Get(self)->OnShowVideoAssistant(
+      CefString(videoAssistantItems));
+}
+
+void CEF_CALLBACK client_on_report_statistic_log(struct _cef_client_t* self,
+                                                 const cef_string_t* content) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: content; type: string_byref_const
+  DCHECK(content);
+  if (!content) {
+    return;
+  }
+
+  // Execute
+  CefClientCppToC::Get(self)->OnReportStatisticLog(CefString(content));
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -642,6 +699,9 @@ CefClientCppToC::CefClientCppToC() {
   GetStruct()->on_get_top_controls_height = client_on_get_top_controls_height;
   GetStruct()->do_browser_controls_shrink_renderer_size =
       client_do_browser_controls_shrink_renderer_size;
+  GetStruct()->on_show_toast = client_on_show_toast;
+  GetStruct()->on_show_video_assistant = client_on_show_video_assistant;
+  GetStruct()->on_report_statistic_log = client_on_report_statistic_log;
 }
 
 // DESTRUCTOR - Do not edit by hand.
