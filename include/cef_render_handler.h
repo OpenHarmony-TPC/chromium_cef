@@ -449,6 +449,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetFillContent(const std::string& content) {}
+
+  ///
+  /// Called when an accessibility event occurs.
+  ///
+  /*--cef()--*/
+  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

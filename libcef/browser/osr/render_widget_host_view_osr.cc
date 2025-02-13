@@ -1325,6 +1325,13 @@ void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
   }
 }
 
+void CefRenderWidgetHostViewOSR::SendAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnAccessibilityEvent(accessibilityId, eventType);
+}
+
 void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {
   if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
             browser_impl_->GetAcceleratedWidget())) {

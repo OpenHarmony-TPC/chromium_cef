@@ -211,6 +211,7 @@ class CefRenderWidgetHostViewOSR
   gfx::Rect GetBoundsInRootWindow() override;
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
+  void SendAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
   ui::Compositor* GetCompositor() override;
   void UpdateDrawMode();
 #endif

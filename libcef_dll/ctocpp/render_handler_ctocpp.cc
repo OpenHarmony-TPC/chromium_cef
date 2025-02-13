@@ -1103,6 +1103,21 @@ void CefRenderHandlerCToCpp::SetFillContent(const std::string& content) {
   _struct->set_fill_content(_struct, content.c_str());
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
+                                                  int32_t eventType) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_accessibility_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_accessibility_event(_struct, accessibilityId, eventType);
+}
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}
