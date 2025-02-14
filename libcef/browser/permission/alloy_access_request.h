@@ -126,6 +126,7 @@ private:
   content::MediaResponseCallback callback_;
   int32_t mode_;
   int32_t sourceId_;
+  int32_t audioSourceId_;
 
   IMPLEMENT_REFCOUNTING(AlloyScreenCaptureAccessRequest);
 };
