@@ -12,6 +12,10 @@
 #include "media/audio/audio_device_description.h"
 #endif // defined(OHOS_WEBRTC)
 
+namespace {
+  constexpr int32_t kSystemAudioSourceId = -2;
+}
+
 AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
                                        int resources,
                                        cef_permission_callback_t callback)
@@ -169,7 +173,7 @@ AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(CefBrowserHostB
                                                                  content::MediaResponseCallback callback)
     : browser_(browser), request_(request),
       callback_(std::move(callback)), mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE),
-      sourceId_(-1), audioSourceId_(-2) {}
+      sourceId_(-1), audioSourceId_(kSystemAudioSourceId) {}
 
 AlloyScreenCaptureAccessRequest::~AlloyScreenCaptureAccessRequest() {
   if (!callback_.is_null()) {
