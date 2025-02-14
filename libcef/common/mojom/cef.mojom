@@ -119,6 +119,9 @@ interface RenderFrame {
   [EnableIf=is_ohos]
   SetInitialScale(float initialScale);
 
+  [EnableIf=is_ohos]
+  SetOptimizeParserBudgetEnabled(bool enable);
+
   // Adjusts the javascript 'online' property value.
   [EnableIf=ohos_network_conninfo]
   SetJsOnlineProperty(bool network_up);
