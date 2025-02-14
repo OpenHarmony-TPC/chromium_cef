@@ -75,6 +75,9 @@ class CefClientCToCpp
                             float top_content_offset) override;
   int OnGetTopControlsHeight() override;
   bool DoBrowserControlsShrinkRendererSize() override;
+  void OnShowToast(double duration, const CefString& toast) override;
+  void OnShowVideoAssistant(const CefString& videoAssistantItems) override;
+  void OnReportStatisticLog(const CefString& content) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

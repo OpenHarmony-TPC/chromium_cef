@@ -1099,6 +1099,24 @@ browser_set_back_forward_cache_options(struct _cef_browser_t* self,
   CefBrowserCppToC::Get(self)->SetBackForwardCacheOptions(size, timeToLive);
 }
 
+void CEF_CALLBACK
+browser_enable_safe_browsing_detection(struct _cef_browser_t* self,
+                                       int enable,
+                                       int strictMode) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserCppToC::Get(self)->EnableSafeBrowsingDetection(
+      enable ? true : false, strictMode ? true : false);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1177,6 +1195,8 @@ CefBrowserCppToC::CefBrowserCppToC() {
   GetStruct()->get_tab_id = browser_get_tab_id;
   GetStruct()->set_back_forward_cache_options =
       browser_set_back_forward_cache_options;
+  GetStruct()->enable_safe_browsing_detection =
+      browser_enable_safe_browsing_detection;
 }
 
 // DESTRUCTOR - Do not edit by hand.

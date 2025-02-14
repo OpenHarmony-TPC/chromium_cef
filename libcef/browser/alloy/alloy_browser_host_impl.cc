@@ -116,6 +116,15 @@
 #include "content/public/common/content_switches.h"
 #endif
 
+#if defined(OHOS_VIDEO_ASSISTANT)
+#include "content/browser/media/video_assistant/video_assistant.h"
+#include "media/mojo/mojom/media_player.mojom.h"
+#ifdef OHOS_NWEB_EX
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
+#endif // OHOS_NWEB_EX
+#endif // OHOS_VIDEO_ASSISTANT
+
 using content::KeyboardEventProcessingResult;
 
 namespace {
@@ -2935,6 +2944,37 @@ AlloyBrowserHostImpl::CreateCustomMediaPlayer(
 }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#if defined(OHOS_VIDEO_ASSISTANT)
+void AlloyBrowserHostImpl::OnShowToast(double duration,
+                                       const std::string& toast) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to show toast";
+    return;
+  }
+
+  client_->OnShowToast(duration, toast);
+}
+
+void AlloyBrowserHostImpl::OnShowVideoAssistant(
+    const std::string& videoAssistantItems) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to show video assistant";
+    return;
+  }
+
+  client_->OnShowVideoAssistant(videoAssistantItems);
+}
+
+void AlloyBrowserHostImpl::OnReportStatisticLog(const std::string& content) {
+  if (!client_) {
+    LOG(WARNING) << "client is nullptr when notify to report statistic log";
+    return;
+  }
+
+  client_->OnReportStatisticLog(content);
+}
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+
 #if defined(OHOS_RENDERER_ANR_DUMP)
 void AlloyBrowserHostImpl::RendererUnresponsive(
     content::WebContents* source,
@@ -3001,6 +3041,49 @@ float AlloyBrowserHostImpl::GetPageScaleFactor() {
   return 1;
 }
 #endif
+
+#if defined(OHOS_VIDEO_ASSISTANT)
+std::unique_ptr<content::VideoAssistant>
+AlloyBrowserHostImpl::CreateVideoAssistant() {
+#ifdef OHOS_NWEB_EX
+  return std::make_unique<nweb_ex::VideoAssistant>(this);
+#else
+  return content::WebContentsDelegate::CreateVideoAssistant();
+#endif // OHOS_NWEB_EX
+}
+void AlloyBrowserHostImpl::PopluateVideoAssistantConfig(
+    const std::string& url,
+    media::mojom::VideoAssistantConfigPtr& config) {
+#ifdef OHOS_NWEB_EX
+  auto cloud_control = nweb_ex::AlloyBrowserEngineCloudConfig::GetInstance();
+  nweb_ex::BrowserEngineCloudControlConfig cloud_config;
+  bool match = cloud_control->GetControlConfigByUrl(url, cloud_config);
+  if (!match) {
+    config->video_assistant = true;
+    config->playback_rate = true;
+    config->download_button =
+        media::mojom::VideoAssistantDownloadButton::kDownloadPerPage;
+    return;
+  }
+  config->video_assistant = cloud_config.videoAssistant;
+  config->playback_rate = cloud_config.playbackRate;
+  switch (cloud_config.downloadBtn) {
+    case nweb_ex::DownloadBtn::kDownloadPerPage:
+      config->download_button =
+          media::mojom::VideoAssistantDownloadButton::kDownloadPerPage;
+      break;
+    case nweb_ex::DownloadBtn::kDownloadForceShow:
+      config->download_button =
+          media::mojom::VideoAssistantDownloadButton::kDownloadForceShow;
+      break;
+    case nweb_ex::DownloadBtn::kDownloadForceHide:
+      config->download_button =
+          media::mojom::VideoAssistantDownloadButton::kDownloadForceHide;
+      break;
+  }
+#endif // OHOS_NWEB_EX
+}
+#endif // OHOS_VIDEO_ASSISTANT
 
 #ifdef OHOS_EX_REFRESH_IFRAME
 bool AlloyBrowserHostImpl::IsIframe()

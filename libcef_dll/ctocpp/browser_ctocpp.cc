@@ -1047,6 +1047,22 @@ cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget() {
   return 0;
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::EnableSafeBrowsingDetection(bool enable,
+                                                   bool strictMode) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, enable_safe_browsing_detection)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->enable_safe_browsing_detection(_struct, enable, strictMode);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

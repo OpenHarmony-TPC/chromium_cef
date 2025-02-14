@@ -514,6 +514,9 @@ class CefBrowserHostBase : public CefBrowserHost,
 #endif
 #endif  // BUILDFLAG(IS_OHOS)
 
+  void EnableVideoAssistant(bool enable) override;
+  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
+
 #if defined(OHOS_MEDIA_POLICY)
   void CloseMedia() override;
   void StopMedia() override;
@@ -581,6 +584,8 @@ bool TerminateRenderProcess() override;
 #if BUILDFLAG(IS_OHOS)
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
+  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
+  bool IsSafeBrowsingDetectionEnabled() const;
 #endif
 
   // CefBrowserContentsDelegate::Observer methods:

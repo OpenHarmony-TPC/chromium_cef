@@ -100,6 +100,7 @@ class CefBrowserCToCpp
   int GetTabId() override;
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
   uint32_t GetAcceleratedWidget() override;
+  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_CTOCPP_H_
