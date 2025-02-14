@@ -9,6 +9,7 @@
 #include "content/public/browser/media_capture_devices.h"
 #include "libcef/browser/media_capture_devices_dispatcher.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+#include "media/audio/audio_device_description.h"
 #endif // defined(OHOS_WEBRTC)
 
 AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
@@ -220,6 +221,14 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     }
   }
 
+  content::DesktopMediaID media_audio_id;
+  if (request_.audio_type ==
+      blink::mojom::MediaStreamType::DISPLAY_AUDIO_CAPTURE) {
+    media_audio_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN, -2);
+    blink::MediaStreamDevices devices;
+    stream_devices.audio_device = blink::MediaStreamDevice(request_.audio_type, media_audio_id.ToString(), "System Audio");
+  }
+  
   content::DesktopMediaID media_id;
   if (request_.requested_video_device_id.empty()) {
     if (mode_ == cef_screen_capture_mode_t::CAPTURE_HOME_SCREEN_MODE) {
