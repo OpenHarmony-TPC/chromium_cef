@@ -621,6 +621,7 @@ struct CefBrowserSettingsTraits {
     target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->draw_mode = src->draw_mode;
     target->force_zero_layout_height = src->force_zero_layout_height;
+    target->font_weight_scale = src->font_weight_scale;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
