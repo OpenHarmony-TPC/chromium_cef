@@ -817,6 +817,12 @@ bool TerminateRenderProcess() override;
 #if BUILDFLAG(IS_OHOS)
   void SetOptimizeParserBudgetEnabled(bool enable) override;
 #endif
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override;
+  void DispatchBeforeUnload() override;
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
  protected:
   bool EnsureDevToolsManager();
   void InitializeDevToolsRegistrationOnUIThread(

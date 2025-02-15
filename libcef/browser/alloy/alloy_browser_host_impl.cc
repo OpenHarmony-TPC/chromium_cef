@@ -3101,3 +3101,11 @@ void AlloyBrowserHostImpl::ReloadFocusedFrame()
   }
 }
 #endif
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+void AlloyBrowserHostImpl::OnBeforeUnloadFired(bool proceed) {
+  if (platform_delegate_) {
+    platform_delegate_->OnBeforeUnloadFired(proceed);
+  }
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD

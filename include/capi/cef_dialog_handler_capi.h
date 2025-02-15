@@ -195,6 +195,13 @@ typedef struct _cef_dialog_handler_t {
   void(CEF_CALLBACK* show_password_dialog)(struct _cef_dialog_handler_t* self,
                                            int is_update,
                                            const cef_string_t* url);
+
+  ///
+  /// Handles the BeforeUnload event.
+  ///
+  void(CEF_CALLBACK* on_before_unload_fired)(struct _cef_dialog_handler_t* self,
+                                             struct _cef_browser_t* browser,
+                                             bool proceed);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

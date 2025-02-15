@@ -196,6 +196,13 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void ShowPasswordDialog(bool is_update, const CefString& url) {}
+
+  ///
+  /// Handles the BeforeUnload event.
+  ///
+  /*--cef()--*/
+  virtual void OnBeforeUnloadFired(CefRefPtr<CefBrowser> browser,
+                                   bool proceed) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

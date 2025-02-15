@@ -582,6 +582,17 @@ typedef struct _cef_browser_t {
       struct _cef_browser_t* self,
       int enable,
       int strictMode);
+
+  ///
+  /// Determine if BeforeUnload or Unload events need to be triggered.
+  ///
+  int(CEF_CALLBACK* need_to_fire_before_unload_events)(
+      struct _cef_browser_t* self);
+
+  ///
+  /// Trigger the BeforeUnload event with an option to auto-cancel.
+  ///
+  void(CEF_CALLBACK* dispatch_before_unload)(struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///

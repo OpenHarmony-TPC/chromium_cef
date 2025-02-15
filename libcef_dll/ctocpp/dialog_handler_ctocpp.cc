@@ -256,6 +256,29 @@ void CefDialogHandlerCToCpp::ShowPasswordDialog(bool is_update,
   _struct->show_password_dialog(_struct, is_update, url.GetStruct());
 }
 
+NO_SANITIZE("cfi-icall")
+void CefDialogHandlerCToCpp::OnBeforeUnloadFired(
+    CefRefPtr<CefBrowser> browser,
+    bool proceed) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_dialog_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_before_unload_fired)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!browser.get());
+  if (browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_before_unload_fired(_struct, CefBrowserCppToC::Wrap(browser), proceed);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefDialogHandlerCToCpp::CefDialogHandlerCToCpp() {}

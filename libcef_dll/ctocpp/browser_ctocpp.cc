@@ -1063,6 +1063,39 @@ void CefBrowserCToCpp::EnableSafeBrowsingDetection(bool enable,
   _struct->enable_safe_browsing_detection(_struct, enable, strictMode);
 }
 
+NO_SANITIZE("cfi-icall")
+bool CefBrowserCToCpp::NeedToFireBeforeUnloadOrUnloadEvents() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, need_to_fire_before_unload_events)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->need_to_fire_before_unload_events(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::DispatchBeforeUnload() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, dispatch_before_unload)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->dispatch_before_unload(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}

@@ -579,6 +579,18 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void EnableSafeBrowsingDetection(bool enable, bool strictMode) = 0;
 
+  ///
+  /// Determine if BeforeUnload or Unload events need to be triggered.
+  ///
+  /*--cef()--*/
+  virtual bool NeedToFireBeforeUnloadOrUnloadEvents() = 0;
+
+  ///
+  /// Trigger the BeforeUnload event with an option to auto-cancel.
+  ///
+  /*--cef()--*/
+  virtual void DispatchBeforeUnload() = 0;
+
   /* ---------- ohos_nweb_ex add end --------- */
 #endif  // BUILDFLAG(IS_OHOS)
 };

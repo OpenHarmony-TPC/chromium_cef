@@ -199,6 +199,10 @@ bool WebPageSnapshot(const char* id,
 #endif
   void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  void OnBeforeUnloadFired(bool proceed) override;
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
  protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsr(

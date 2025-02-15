@@ -4326,3 +4326,19 @@ void CefBrowserHostBase::SetOptimizeParserBudgetEnabled(bool enable) {
   }
 }
 #endif
+
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+bool CefBrowserHostBase::NeedToFireBeforeUnloadOrUnloadEvents() {
+  if (!GetWebContents()) {
+    return false;
+  }
+  return GetWebContents()->NeedToFireBeforeUnloadOrUnloadEvents();
+}
+
+void CefBrowserHostBase::DispatchBeforeUnload() {
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->DispatchBeforeUnload(false);
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD

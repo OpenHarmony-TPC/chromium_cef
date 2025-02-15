@@ -253,6 +253,29 @@ dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
       is_update ? true : false, CefString(url));
 }
 
+void CEF_CALLBACK
+dialog_handler_on_before_unload_fired(struct _cef_dialog_handler_t* self,
+                                    cef_browser_t* browser,
+                                    bool proceed) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Execute
+  CefDialogHandlerCppToC::Get(self)->OnBeforeUnloadFired(
+    CefBrowserCToCpp::Wrap(browser), proceed);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -264,6 +287,7 @@ CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
   GetStruct()->on_ads_blocked = dialog_handler_on_ads_blocked;
   GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
   GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
+  GetStruct()->on_before_unload_fired = dialog_handler_on_before_unload_fired;
 }
 
 // DESTRUCTOR - Do not edit by hand.
