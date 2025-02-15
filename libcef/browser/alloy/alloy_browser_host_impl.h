@@ -513,6 +513,10 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   float GetPageScaleFactor() override;
 #endif
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+  void OnBeforeUnloadFired(bool proceed) override;
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
  private:
   friend class CefBrowserPlatformDelegateAlloy;
 

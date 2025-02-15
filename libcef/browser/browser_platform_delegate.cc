@@ -540,6 +540,12 @@ void CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView() {
 }
 #endif
 
+#if defined(OHOS_DISPATCH_BEFORE_UNLOAD)
+void CefBrowserPlatformDelegate::OnBeforeUnloadFired(bool proceed) {
+    NOTIMPLEMENTED();
+}
+#endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32 cef_modifiers) {
