@@ -228,6 +228,7 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     RegisterExtensionPersistentPrefs(persistent_prefs);
 #endif
 #if defined(OHOS_EDM_POLICY)
+    persistent_prefs.insert(prefs::kBrowserPolicy);
     persistent_prefs.insert(prefs::kBrowserPolicyVersion);
 #endif
     factory.set_user_prefs(base::MakeRefCounted<SegregatedPrefStore>(
@@ -432,6 +433,7 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     // Currently OriginAgentCluster is not enabled by default on OHOS.
     registry->RegisterBooleanPref(prefs::kOriginAgentClusterDefaultEnabled,
                                   false);
+    registry->RegisterStringPref(prefs::kBrowserPolicy, std::string());
     registry->RegisterIntegerPref(prefs::kBrowserPolicyVersion, 0);
 #endif
 

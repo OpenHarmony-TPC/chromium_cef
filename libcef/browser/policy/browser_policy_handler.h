@@ -35,6 +35,7 @@ class BrowserPolicyHandler {
     virtual ~Observer() = default;
   };
   static BrowserPolicyHandler* GetInstance();
+  void MaybeInitFromPersistentPrefs();
   void SetPolicyAndNotify(const std::string& policy, int version);
   PolicyBundle GetPolicyBundle();
   void AddObserver(Observer* observer);
@@ -43,7 +44,6 @@ class BrowserPolicyHandler {
  private:
   const int kInvalidPolicyVersion = -1;
   bool SetPolicy(const std::string& policy, int version);
-  void MaybeInitFromPersistentPrefs();
   PolicyBundle bundle_;
   int current_version_ = kInvalidPolicyVersion;
   base::ObserverList<Observer>::Unchecked observers_;

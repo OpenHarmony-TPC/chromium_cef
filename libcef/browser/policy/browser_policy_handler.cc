@@ -75,6 +75,8 @@ void BrowserPolicyHandler::MaybeInitFromPersistentPrefs() {
     }
     current_version_ =
         prefs->GetInteger(prefs::kBrowserPolicyVersion);
+    std::string policy = prefs->GetString(prefs::kBrowserPolicy);
+    PolicyLoaderOhos::ParsePolicy(policy, &bundle_);
   }
 }
 
@@ -132,6 +134,7 @@ bool BrowserPolicyHandler::SetPolicy(const std::string& policy, int version) {
 
   current_version_ = version;
   bundle_ = bundle.Clone();
+  prefs->SetString(prefs::kBrowserPolicy, policy);
   prefs->SetInteger(prefs::kBrowserPolicyVersion, version);
 
   LOG(INFO) << "BrowserPolicyHandler new policy set: " << policy;
