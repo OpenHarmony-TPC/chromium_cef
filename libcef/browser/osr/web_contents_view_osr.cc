@@ -213,6 +213,13 @@ bool CefWebContentsViewOSR::CloseImageOverlaySelection() {
   }
   return false;
 }
+
+void CefWebContentsViewOSR::OnOverlayZoomChanged() {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->NotifyOverlayStateChanged();
+  }
+}
 #endif
 
 #ifdef OHOS_DRAG_DROP
