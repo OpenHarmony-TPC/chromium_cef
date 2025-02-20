@@ -197,6 +197,12 @@ void CefBrowserInfo::FrameHostStateChanged(
   base::AutoLock lock_scope(lock_);
 
   auto it = frame_id_map_.find(host->GetGlobalId());
+#if BUILDFLAG(IS_OHOS)
+  if (it == frame_id_map_.end()) {
+    LOG(ERROR) << "FrameHostStateChanged frameIdMap it nullptr key id: " << host->GetGlobalId();
+    return;
+  }
+#endif
   DCHECK(it != frame_id_map_.end());
   DCHECK((!it->second->is_in_bfcache_ && added_to_bfcache) ||
          (it->second->is_in_bfcache_ && removed_from_bfcache));
