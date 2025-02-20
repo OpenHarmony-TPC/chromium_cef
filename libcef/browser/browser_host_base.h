@@ -328,6 +328,8 @@ class CefBrowserHostBase : public CefBrowserHost,
                              int32_t height,
                              double keyboard) override;
   bool ShouldVirtualKeyboardOverlay() override;
+
+#if defined(OHOS_JSPROXY)
   void JavaScriptOnDocumentStart(
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
@@ -335,7 +337,13 @@ class CefBrowserHostBase : public CefBrowserHost,
   void JavaScriptOnDocumentEnd(
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
+  void JavaScriptOnHeadReady(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnHeadReady() override;
   void RemoveJavaScriptOnDocumentEnd() override;
+#endif
+
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
   void SetFitContentMode(int mode) override;
@@ -946,6 +954,7 @@ bool TerminateRenderProcess() override;
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
   std::map<std::string, int> document_start_script_result_map_;
   std::map<std::string, int> document_end_script_result_map_;
+  std::map<std::string, int> head_ready_script_result_map_;
 #ifdef OHOS_ITP
   mutable base::Lock lock_;
   bool intelligent_tracking_prevention_cookies_enabled_ GUARDED_BY(lock_) = false;

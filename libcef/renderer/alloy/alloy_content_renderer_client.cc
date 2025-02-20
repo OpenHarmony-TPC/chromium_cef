@@ -667,6 +667,18 @@ void AlloyContentRendererClient::RunScriptsAtDocumentEnd(
 #endif //IS_OHOS
 }
 
+#if defined(OHOS_JSPROXY)
+void AlloyContentRendererClient::RunScriptsAtHeadReady(
+    content::RenderFrame* render_frame) {
+  js_injection::JsCommunication* communication =
+      js_injection::JsCommunication::Get(render_frame);
+
+  if (communication) {
+    communication->RunScriptsAtHeadReady();
+  }
+}
+#endif
+
 void AlloyContentRendererClient::RunScriptsAtDocumentIdle(
     content::RenderFrame* render_frame) {
   if (extensions::ExtensionsEnabled()) {

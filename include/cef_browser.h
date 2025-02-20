@@ -2255,5 +2255,22 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetOptimizeParserBudgetEnabled(bool enable) = 0;
+
+#if defined(OHOS_JSPROXY)
+  ///
+  /// JavaScriptOnHeadReady
+  ///
+  /*--cef()--*/
+  virtual void JavaScriptOnHeadReady(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) = 0;
+
+  ///
+  /// RemoveJavaScriptOnHeadReady
+  ///
+  /*--cef()--*/
+  virtual void RemoveJavaScriptOnHeadReady() = 0;
+#endif
+
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

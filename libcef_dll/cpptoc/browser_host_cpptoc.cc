@@ -2967,6 +2967,53 @@ void CEF_CALLBACK browser_host_remove_java_script_on_document_end(
   CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnDocumentEnd();
 }
 
+void CEF_CALLBACK
+browser_host_java_script_on_head_ready(struct _cef_browser_host_t* self,
+                                         const cef_string_t* script,
+                                         cef_string_list_t script_rules) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: script; type: string_byref_const
+  DCHECK(script);
+  if (!script) {
+    return;
+  }
+  // Verify param: script_rules; type: string_vec_byref_const
+  DCHECK(script_rules);
+  if (!script_rules) {
+    return;
+  }
+
+  // Translate param: script_rules; type: string_vec_byref_const
+  std::vector<CefString> script_rulesList;
+  transfer_string_list_contents(script_rules, script_rulesList);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->JavaScriptOnHeadReady(CefString(script),
+                                                           script_rulesList);
+}
+
+void CEF_CALLBACK browser_host_remove_java_script_on_head_ready(
+    struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->RemoveJavaScriptOnHeadReady();
+}
+
 void CEF_CALLBACK browser_host_set_draw_rect(struct _cef_browser_host_t* self,
                                              int x,
                                              int y,
@@ -4265,6 +4312,10 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_java_script_on_document_end;
   GetStruct()->remove_java_script_on_document_end =
       browser_host_remove_java_script_on_document_end;
+  GetStruct()->java_script_on_head_ready =
+      browser_host_java_script_on_head_ready;
+  GetStruct()->remove_java_script_on_head_ready =
+      browser_host_remove_java_script_on_head_ready;
   GetStruct()->set_draw_rect = browser_host_set_draw_rect;
   GetStruct()->set_draw_mode = browser_host_set_draw_mode;
   GetStruct()->create_web_print_document_adapter =

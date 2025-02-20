@@ -253,6 +253,10 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
       const CefString& script,
       const std::vector<CefString>& script_rules) override;
   void RemoveJavaScriptOnDocumentEnd() override;
+  void JavaScriptOnHeadReady(
+      const CefString& script,
+      const std::vector<CefString>& script_rules) override;
+  void RemoveJavaScriptOnHeadReady() override;
   void SetNativeEmbedMode(bool flag) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
