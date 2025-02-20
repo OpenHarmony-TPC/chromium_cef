@@ -9,7 +9,12 @@
 #include "content/public/browser/media_capture_devices.h"
 #include "libcef/browser/media_capture_devices_dispatcher.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+#include "media/audio/audio_device_description.h"
 #endif // defined(OHOS_WEBRTC)
+
+namespace {
+  constexpr int32_t kSystemAudioSourceId = -2;
+}
 
 AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
                                        int resources,
@@ -167,7 +172,8 @@ AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(CefBrowserHostB
                                                                  const content::MediaStreamRequest& request,
                                                                  content::MediaResponseCallback callback)
     : browser_(browser), request_(request),
-      callback_(std::move(callback)), mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE), sourceId_(-1) {}
+      callback_(std::move(callback)), mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE),
+      sourceId_(-1), audioSourceId_(kSystemAudioSourceId) {}
 
 AlloyScreenCaptureAccessRequest::~AlloyScreenCaptureAccessRequest() {
   if (!callback_.is_null()) {
@@ -220,6 +226,15 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     }
   }
 
+  content::DesktopMediaID media_audio_id;
+  if (request_.audio_type ==
+      blink::mojom::MediaStreamType::DISPLAY_AUDIO_CAPTURE) {
+    media_audio_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN, audioSourceId_);
+    blink::MediaStreamDevices devices;
+    stream_devices.audio_device =
+      blink::MediaStreamDevice(request_.audio_type, media_audio_id.ToString(), "System Audio");
+  }
+  
   content::DesktopMediaID media_id;
   if (request_.requested_video_device_id.empty()) {
     if (mode_ == cef_screen_capture_mode_t::CAPTURE_HOME_SCREEN_MODE) {
