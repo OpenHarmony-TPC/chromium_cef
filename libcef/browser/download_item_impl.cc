@@ -117,11 +117,9 @@ CefString CefDownloadItemImpl::GetSuggestedFileName() {
   return const_value().GetSuggestedFilename();
 }
 
-CefRefPtr<CefValue> CefDownloadItemImpl::GetContentDisposition() {
-  CEF_VALUE_VERIFY_RETURN(false, nullptr);
-  CefRefPtr<CefValue> data = CefValue::Create();
-  data->SetStdString(const_value().GetContentDisposition());
-  return data;
+CefString CefDownloadItemImpl::GetContentDisposition() {
+  CEF_VALUE_VERIFY_RETURN(false, CefString());
+  return const_value().GetContentDisposition();
 }
 
 CefString CefDownloadItemImpl::GetMimeType() {
