@@ -122,6 +122,13 @@ CefString CefDownloadItemImpl::GetContentDisposition() {
   return const_value().GetContentDisposition();
 }
 
+CefRefPtr<CefValue> CefDownloadItemImpl::GetOriginContentDisposition() {
+  CEF_VALUE_VERIFY_RETURN(false, nullptr);
+  CefRefPtr<CefValue> data = CefValue::Create();
+  data->SetStdString(const_value().GetContentDisposition());
+  return data;
+}
+
 CefString CefDownloadItemImpl::GetMimeType() {
   CEF_VALUE_VERIFY_RETURN(false, CefString());
   return const_value().GetMimeType();
