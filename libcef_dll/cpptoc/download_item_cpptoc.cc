@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/cpptoc/download_item_cpptoc.h"
+#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -297,11 +298,29 @@ download_item_get_content_disposition(struct _cef_download_item_t* self) {
   }
 
   // Execute
-    CefString _retval =
-        CefDownloadItemCppToC::Get(self)->GetContentDisposition();
+    CefString _retval = CefDownloadItemCppToC::Get(self)->GetContentDisposition();
 
   // Return type: string
   return _retval.DetachToUserFree();
+}
+
+struct _cef_value_t* CEF_CALLBACK
+download_item_get_origin_content_disposition(struct _cef_download_item_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+    CefRefPtr<CefValue> _retval =
+        CefDownloadItemCppToC::Get(self)->GetContentDisposition();
+
+  // Return type: refptr_same
+  return CefValueCppToC::Wrap(_retval);
 }
 
 cef_string_userfree_t CEF_CALLBACK
@@ -537,6 +556,7 @@ CefDownloadItemCppToC::CefDownloadItemCppToC() {
   GetStruct()->get_original_url = download_item_get_original_url;
   GetStruct()->get_suggested_file_name = download_item_get_suggested_file_name;
   GetStruct()->get_content_disposition = download_item_get_content_disposition;
+  GetStruct()->get_origin_content_disposition = download_item_get_origin_content_disposition;
   GetStruct()->get_mime_type = download_item_get_mime_type;
   GetStruct()->get_original_mime_type = download_item_get_original_mime_type;
   GetStruct()->get_guid = download_item_get_guid;

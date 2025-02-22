@@ -149,6 +149,13 @@ typedef struct _cef_download_item_t {
       struct _cef_download_item_t* self);
 
   ///
+  /// Returns the content disposition.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  struct _cef_value_t*(CEF_CALLBACK* get_origin_content_disposition)(
+      struct _cef_download_item_t* self);
+
+  ///
   /// Returns the mime type.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
