@@ -56,6 +56,12 @@ std::unique_ptr<MetricsHelper> OhosSbControllerClient::GetMetricsHelper(
 }
 
 void OhosSbControllerClient::GoBack() {
+  if (!SecurityInterstitialControllerClient::CanGoBack()) {
+    LOG(INFO) << "OhosSbControllerClient::GoBack Close";
+    web_contents_->Close();
+    return;
+  }
+
   SecurityInterstitialControllerClient::GoBackAfterNavigationCommitted();
   return;
 }
