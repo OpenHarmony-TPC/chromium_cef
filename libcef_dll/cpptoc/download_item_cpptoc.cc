@@ -317,7 +317,7 @@ download_item_get_origin_content_disposition(struct _cef_download_item_t* self) 
 
   // Execute
     CefRefPtr<CefValue> _retval =
-        CefDownloadItemCppToC::Get(self)->GetContentDisposition();
+        CefDownloadItemCppToC::Get(self)->GetOriginContentDisposition();
 
   // Return type: refptr_same
   return CefValueCppToC::Wrap(_retval);
