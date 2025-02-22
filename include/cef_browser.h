@@ -1455,6 +1455,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void GetImageFromCache(const CefString& url, int command_id) = 0;
 
+
+  ///
+  /// GetImageFromCacheEx
+  ///
+  /*--cef()--*/
+  virtual void GetImageFromCacheEx(const CefString& url) = 0;
+
   ///
   /// ExitFullScreen
   ///

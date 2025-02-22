@@ -201,6 +201,11 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SetJsOnlineProperty(bool network_up);
 #endif
 
+#ifdef OHOS_NWEB_EX
+  void OnGetImageFromCacheEx(std::string url,
+                           uint32_t buffer_size,
+                           base::ReadOnlySharedMemoryRegion region);
+#endif
   void GetImageForContextNode(int command_id);
 
   // Sets the zoom factor for text only. Used in layout modes other than

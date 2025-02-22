@@ -1697,6 +1697,27 @@ browser_host_get_image_from_cache(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK
+browser_host_get_image_from_cache_ex(struct _cef_browser_host_t* self,
+                                  const cef_string_t* url) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->GetImageFromCacheEx(CefString(url));
+}
+
+void CEF_CALLBACK
 browser_host_exit_full_screen(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -4238,6 +4259,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->get_image_for_context_node =
       browser_host_get_image_for_context_node;
   GetStruct()->get_image_from_cache = browser_host_get_image_from_cache;
+  GetStruct()->get_image_from_cache_ex = browser_host_get_image_from_cache_ex;
   GetStruct()->exit_full_screen = browser_host_exit_full_screen;
   GetStruct()->update_locale = browser_host_update_locale;
   GetStruct()->get_original_url = browser_host_get_original_url;

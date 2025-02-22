@@ -902,6 +902,44 @@ void CefFrameHostImpl::OnGetImageForContextNodeNull(int command_id) {
     handler->OnGetImageForContextNode(GetBrowser(), image, command_id);
   }
 }
+#ifdef OHOS_NWEB_EX
+void CefFrameHostImpl::OnGetImageFromCacheEx(
+    std::string url,
+    uint32_t buffer_size,
+    base::ReadOnlySharedMemoryRegion region) {
+  auto browser = GetBrowserHostBase();
+  if (!browser) {
+    return;
+  }
+
+  CefRefPtr<CefContextMenuHandler> handler;
+  auto client = browser->GetClient();
+  if (client) {
+    handler = client->GetContextMenuHandler();
+  }
+  if (!handler) {
+    return;
+  }
+
+  if (!region.IsValid()) {
+    LOG(ERROR)
+        << "OnGetImageFromCache: Read-only shared memory region is invalid";
+    handler->OnGetImageFromCacheEx(nullptr, 0);
+    return;
+  }
+  base::ReadOnlySharedMemoryMapping mapping = region.MapAt(0, buffer_size);
+  if (!mapping.IsValid()) {
+    LOG(ERROR)
+        << "OnGetImageFromCache: Read-only shared memory mapping is invalid";
+    handler->OnGetImageFromCacheEx(nullptr, 0);
+    return;
+  }
+  uint8_t* buffer = (uint8_t*)(mapping.memory());
+
+  LOG(DEBUG) << "OnGetImageFromCacheEx invoke";
+  handler->OnGetImageFromCacheEx(buffer, buffer_size);
+}
+#endif
 
 void CefFrameHostImpl::OnGetImageFromCache(
     std::string url,

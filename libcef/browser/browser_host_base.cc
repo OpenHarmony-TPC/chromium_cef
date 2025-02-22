@@ -1680,7 +1680,7 @@ void CefBrowserHostBase::SetBrowserUserAgentString(
 #if defined(OHOS_I18N)
 void CefBrowserHostBase::UpdateLocale(const CefString& locale) {
   std::string update_locale = locale.ToString();
-
+  
   // need to notify renderer preference to change accepted_language.
   if (!GetWebContents()) {
     return;
@@ -3290,6 +3290,22 @@ void CefBrowserHostBase::GetImageForContextNode(int command_id) {
   if (frame && frame->IsValid()) {
     static_cast<CefFrameHostImpl*>(frame.get())->GetImageForContextNode(command_id);
   }
+}
+
+void CefBrowserHostBase::GetImageFromCacheEx(const CefString& url) {
+#ifdef OHOS_NWEB_EX
+  LOG(INFO) << "CefBrowserHostBase::GetImageFromCacheEx";
+  auto web_contents = GetWebContents();
+  auto frame = GetMainFrame();
+  if (web_contents && frame && frame->IsValid()) {
+    content::RenderFrameHost* rfh = web_contents->GetPrimaryMainFrame();
+      rfh->GetImageFromCache(
+          url.ToString(),
+          base::BindOnce(&CefFrameHostImpl::OnGetImageFromCacheEx,
+                         static_cast<CefFrameHostImpl*>(frame.get()), url.ToString()));
+    return;
+  }
+#endif
 }
 
 void CefBrowserHostBase::GetImageFromCache(const CefString& url, int command_id) {
