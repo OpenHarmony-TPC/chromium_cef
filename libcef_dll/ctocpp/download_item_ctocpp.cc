@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9856586d219a5b1ddc6d26c51049599569ba4234$
+// $hash=4e1a4826a5fc77e2d81cbd8f4d1d721fe416d3d6$
 //
 
 #include "libcef_dll/ctocpp/download_item_ctocpp.h"
@@ -314,7 +314,7 @@ CefRefPtr<CefValue> CefDownloadItemCToCpp::GetOriginContentDisposition() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_value_t* _retval = _struct->get_content_disposition(_struct);
+  cef_value_t* _retval = _struct->get_origin_content_disposition(_struct);
 
   // Return type: refptr_same
   return CefValueCToCpp::Wrap(_retval);
