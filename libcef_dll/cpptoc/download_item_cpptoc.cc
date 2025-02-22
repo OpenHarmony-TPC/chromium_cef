@@ -286,7 +286,7 @@ download_item_get_suggested_file_name(struct _cef_download_item_t* self) {
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t _cef_value_t* CEF_CALLBACK
+cef_string_userfree_t CEF_CALLBACK
 download_item_get_content_disposition(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
