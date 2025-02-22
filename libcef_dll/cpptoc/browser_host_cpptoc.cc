@@ -4255,6 +4255,21 @@ browser_host_custom_web_media_player(struct _cef_browser_host_t* self,
   // Execute
   CefBrowserHostCppToC::Get(self)->CustomWebMediaPlayer(enable ? true : false);
 }
+
+void CEF_CALLBACK
+browser_host_maximize_resize(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->MaximizeResize();
+}
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -4501,6 +4516,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->put_web_media_avsession_enabled =
       browser_host_put_web_media_avsession_enabled;
   GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
+  GetStruct()->maximize_resize = browser_host_maximize_resize;
 }
 
 // DESTRUCTOR - Do not edit by hand.

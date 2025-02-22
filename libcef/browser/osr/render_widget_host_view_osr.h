@@ -516,6 +516,11 @@ class CefRenderWidgetHostViewOSR
   void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  void MaximizeResize();
+  void RestoreRenderFit() override;
+#endif
+
  private:
   void SetFrameRate();
   bool SetScreenInfo();

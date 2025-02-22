@@ -4250,3 +4250,22 @@ void CefRenderWidgetHostViewOSR::DidStopRefresh() {
   }
 }
 #endif  // OHOS_EX_PULL_TO_REFRESH
+
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::MaximizeResize() {
+  auto compositor = CefRenderWidgetHostViewOSR::GetCompositor();
+  if (compositor) {
+    compositor->DisableSwapUntilMaximized();
+  }
+}
+
+void CefRenderWidgetHostViewOSR::RestoreRenderFit() {
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "RestoreRenderFit get client failed.";
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler = browser_impl_->client()->GetRenderHandler();
+  CHECK(handler);
+  handler->RestoreRenderFit();
+}
+#endif
