@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=801678582c97c2385f28f59c4967206b527e5539$
+// $hash=a8764ac5ba0126a6ebf5cfa008ed0fa62fa90a96$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CTOCPP_H_
@@ -50,7 +50,7 @@ class CefDownloadItemCToCpp : public CefCToCppRefCounted<CefDownloadItemCToCpp,
   CefString GetURL() override;
   CefString GetOriginalUrl() override;
   CefString GetSuggestedFileName() override;
-  CefRefPtr<CefValue> GetContentDisposition() override;
+  CefString GetContentDisposition() override;
   CefString GetMimeType() override;
   CefString GetOriginalMimeType() override;
   CefString GetGuid() override;

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5998532dc9d84ad0802b86aaf4d986b77ec124d0$
+// $hash=d901d43eb44685070a2eb1826137a4d714717940$
 //
 
 #include "libcef_dll/cpptoc/download_item_cpptoc.h"
-#include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -286,7 +285,7 @@ download_item_get_suggested_file_name(struct _cef_download_item_t* self) {
   return _retval.DetachToUserFree();
 }
 
-struct _cef_value_t* CEF_CALLBACK
+cef_string_userfree_t _cef_value_t* CEF_CALLBACK
 download_item_get_content_disposition(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -298,11 +297,11 @@ download_item_get_content_disposition(struct _cef_download_item_t* self) {
   }
 
   // Execute
-    CefRefPtr<CefValue> _retval =
+    CefString _retval =
         CefDownloadItemCppToC::Get(self)->GetContentDisposition();
 
-  // Return type: refptr_same
-  return CefValueCppToC::Wrap(_retval);
+  // Return type: string
+  return _retval.DetachToUserFree();
 }
 
 cef_string_userfree_t CEF_CALLBACK

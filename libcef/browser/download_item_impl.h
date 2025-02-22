@@ -38,7 +38,7 @@ class CefDownloadItemImpl
   CefString GetURL() override;
   CefString GetOriginalUrl() override;
   CefString GetSuggestedFileName() override;
-  CefRefPtr<CefValue> GetContentDisposition() override;
+  CefString GetContentDisposition() override;
   CefString GetMimeType() override;
   CefString GetOriginalMimeType() override;
   CefString GetGuid() override;

@@ -9,11 +9,10 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0a0c193ae6e77b98ea8f5945c323819ee91be4ee$
+// $hash=9856586d219a5b1ddc6d26c51049599569ba4234$
 //
 
 #include "libcef_dll/ctocpp/download_item_ctocpp.h"
-#include "libcef_dll/ctocpp/value_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
@@ -283,21 +282,23 @@ CefString CefDownloadItemCToCpp::GetSuggestedFileName() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefValue> CefDownloadItemCToCpp::GetContentDisposition() {
+CefString CefDownloadItemCToCpp::GetContentDisposition() {
   shutdown_checker::AssertNotShutdown();
 
   cef_download_item_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_content_disposition)) {
-    return nullptr;
+    return CefString();
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  cef_value_t* _retval = _struct->get_content_disposition(_struct);
+  cef_string_userfree_t _retval = _struct->get_content_disposition(_struct);
 
-  // Return type: refptr_same
-  return CefValueCToCpp::Wrap(_retval);
+  // Return type: string
+  CefString _retvalStr;
+  _retvalStr.AttachToUserFree(_retval);
+  return _retvalStr;
 }
 
 NO_SANITIZE("cfi-icall") CefString CefDownloadItemCToCpp::GetMimeType() {
