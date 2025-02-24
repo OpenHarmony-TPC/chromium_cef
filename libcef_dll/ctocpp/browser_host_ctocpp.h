@@ -157,6 +157,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   bool GetWebDebuggingAccess() override;
   void GetImageForContextNode(int command_id) override;
   void GetImageFromCache(const CefString& url, int command_id) override;
+
+  void GetImageFromCacheEx(const CefString& url) override;
   void ExitFullScreen() override;
   void UpdateLocale(const CefString& locale) override;
   CefString GetOriginalUrl() override;

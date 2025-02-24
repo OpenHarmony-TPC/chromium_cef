@@ -1495,6 +1495,27 @@ void CefBrowserHostCToCpp::GetImageFromCache(const CefString& url,
   _struct->get_image_from_cache(_struct, url.GetStruct(), command_id);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetImageFromCacheEx(const CefString& url) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_image_from_cache_ex)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_image_from_cache_ex(_struct, url.GetStruct());
+}
+
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ExitFullScreen() {
   shutdown_checker::AssertNotShutdown();
 

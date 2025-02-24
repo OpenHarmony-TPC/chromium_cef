@@ -1435,6 +1435,11 @@ typedef struct _cef_browser_host_t {
                                            int command_id);
 
   ///
+  /// GetImageFromCacheEx
+  ///
+  void(CEF_CALLBACK* get_image_from_cache_ex)(struct _cef_browser_host_t* self,
+                                           const cef_string_t* url);
+  ///
   /// ExitFullScreen
   ///
   void(CEF_CALLBACK* exit_full_screen)(struct _cef_browser_host_t* self);

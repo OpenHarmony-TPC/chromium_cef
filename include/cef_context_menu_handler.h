@@ -226,6 +226,13 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   virtual void OnGetImageFromCache(CefRefPtr<CefImage> image, int command_id) {}
 
   ///
+  /// Called when GetImageFromCache function to get image from
+  /// memory cache.
+  ///
+  /*--cef()--*/
+  virtual void OnGetImageFromCacheEx(uint8_t* data, int buffer_size) {}
+
+  ///
   /// Called when you need to temporarily hide/restore the handle menu.
   ///
   /*--cef()--*/
