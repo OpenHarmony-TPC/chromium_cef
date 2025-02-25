@@ -328,6 +328,10 @@ class CefRenderWidgetHostViewOSR
   void OnTouchDown();
 
   void StopBoosting();
+
+  void BoostingPreiodly();
+
+  void OnTouchMove();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -724,6 +728,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   bool isBoosting_ = false;
   bool is_fling_ = false;
+  bool has_touch_point_ = false;
 #endif
 
 #ifdef OHOS_CLIPBOARD
