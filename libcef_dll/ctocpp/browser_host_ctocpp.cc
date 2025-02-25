@@ -3978,6 +3978,21 @@ void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
   _struct->custom_web_media_player(_struct, enable);
 }
 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::MaximizeResize() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+
+  if (CEF_MEMBER_MISSING(_struct, maximize_resize)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->maximize_resize(_struct);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

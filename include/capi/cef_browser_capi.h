@@ -2281,6 +2281,11 @@ typedef struct _cef_browser_host_t {
   ///
   void(CEF_CALLBACK* custom_web_media_player)(struct _cef_browser_host_t* self,
                                               int enable);
+
+  ///
+  /// Web maximize resize optimize.
+  ///
+  void(CEF_CALLBACK* maximize_resize)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

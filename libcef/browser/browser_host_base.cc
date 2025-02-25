@@ -2132,6 +2132,10 @@ void CefBrowserHostBase::AbortAskNotificationPermission(
 }
 #endif // OHOS_NOTIFICATION
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::MaximizeResize() {}
+#endif
+
 void CefBrowserHostBase::AskProtectedMediaIdentifierPermission(
     const CefString& origin,
     cef_permission_callback_t callback) {

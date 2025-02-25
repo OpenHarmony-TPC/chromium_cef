@@ -493,6 +493,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnScrollStart(CefRefPtr<CefBrowser> browser,
                                  const float x,
                                  const float y) {}
+
+  ///
+  /// restore renderfit
+  ///
+  /*--cef()--*/
+  virtual void RestoreRenderFit() {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

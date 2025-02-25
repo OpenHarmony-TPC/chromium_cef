@@ -3208,6 +3208,14 @@ void AlloyBrowserHostImpl::OnFoldStatusChanged(uint32_t foldstatus) {
 }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::MaximizeResize() {
+  if (platform_delegate_) {
+    platform_delegate_->MaximizeResize();
+  }
+}
+#endif
+
 #ifdef OHOS_EX_REFRESH_IFRAME
 bool AlloyBrowserHostImpl::IsIframe()
 {

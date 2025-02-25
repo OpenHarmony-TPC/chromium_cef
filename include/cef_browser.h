@@ -2303,5 +2303,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void CustomWebMediaPlayer(bool enable) = 0;
+
+#if BUILDFLAG(IS_OHOS)
+  ///
+  /// Web maximize resize optimize.
+  ///
+  /*--cef()--*/
+  virtual void MaximizeResize() = 0;
+#endif
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

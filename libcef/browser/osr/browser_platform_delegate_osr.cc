@@ -1334,3 +1334,12 @@ void CefBrowserPlatformDelegateOsr::OnBeforeUnloadFired(bool proceed) {
   }
 }
 #endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateOsr::MaximizeResize() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->MaximizeResize();
+  }
+}
+#endif
