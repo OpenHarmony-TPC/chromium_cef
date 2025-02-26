@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5998532dc9d84ad0802b86aaf4d986b77ec124d0$
+// $hash=d901d43eb44685070a2eb1826137a4d714717940$
 //
 
 #include "libcef_dll/cpptoc/download_item_cpptoc.h"
@@ -286,7 +286,7 @@ download_item_get_suggested_file_name(struct _cef_download_item_t* self) {
   return _retval.DetachToUserFree();
 }
 
-struct _cef_value_t* CEF_CALLBACK
+cef_string_userfree_t CEF_CALLBACK
 download_item_get_content_disposition(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -298,8 +298,26 @@ download_item_get_content_disposition(struct _cef_download_item_t* self) {
   }
 
   // Execute
+    CefString _retval = CefDownloadItemCppToC::Get(self)->GetContentDisposition();
+
+  // Return type: string
+  return _retval.DetachToUserFree();
+}
+
+struct _cef_value_t* CEF_CALLBACK
+download_item_get_origin_content_disposition(struct _cef_download_item_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
     CefRefPtr<CefValue> _retval =
-        CefDownloadItemCppToC::Get(self)->GetContentDisposition();
+        CefDownloadItemCppToC::Get(self)->GetOriginContentDisposition();
 
   // Return type: refptr_same
   return CefValueCppToC::Wrap(_retval);
@@ -538,6 +556,7 @@ CefDownloadItemCppToC::CefDownloadItemCppToC() {
   GetStruct()->get_original_url = download_item_get_original_url;
   GetStruct()->get_suggested_file_name = download_item_get_suggested_file_name;
   GetStruct()->get_content_disposition = download_item_get_content_disposition;
+  GetStruct()->get_origin_content_disposition = download_item_get_origin_content_disposition;
   GetStruct()->get_mime_type = download_item_get_mime_type;
   GetStruct()->get_original_mime_type = download_item_get_original_mime_type;
   GetStruct()->get_guid = download_item_get_guid;
