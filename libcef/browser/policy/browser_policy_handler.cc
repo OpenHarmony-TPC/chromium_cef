@@ -84,8 +84,7 @@ void BrowserPolicyHandler::InitPolicyFromFile(
   LOG(INFO) << "InitPolicyFromFile policy_file_path_: " << policy_file_path_;
 
   std::string policy;
-  bool succeeded;
-  succeeded = base::ReadFileToString(policy_file_path_, &policy);
+  bool succeeded = base::ReadFileToString(policy_file_path_, &policy);
   if (!succeeded) {
     LOG(WARNING) << "BrowserPolicyHandler read file failed";
     if (!base::PathExists(cache_path)) {
