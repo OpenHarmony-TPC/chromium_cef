@@ -231,8 +231,10 @@ PrefService* ChromeBrowserProcessAlloy::local_state() {
                << root_cache_path.value();
 #endif
 #if defined(OHOS_EDM_POLICY)
+    base::FilePath policy_dir;
+    base::PathService::Get(base::DIR_CACHE, &policy_dir);
     policy::BrowserPolicyHandler::GetInstance()->InitPolicyFromFile(
-        root_cache_path);
+      policy_dir);
 #endif
     local_state_ =
         browser_prefs::CreatePrefService(nullptr /* profile */, root_cache_path,
