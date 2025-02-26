@@ -48,6 +48,10 @@
 #include "base/logging.h"
 #endif
 
+#if defined(OHOS_EDM_POLICY)
+#include "libcef/browser/policy/browser_policy_handler.h"
+#endif
+
 #ifdef OHOS_NOTIFICATION
 #include "chrome/browser/notifications/notification_platform_bridge.h"
 #endif // OHOS_NOTIFICATION
@@ -225,6 +229,10 @@ PrefService* ChromeBrowserProcessAlloy::local_state() {
     }
     LOG(DEBUG) << "[adblock] CreatePrefService path:"
                << root_cache_path.value();
+#endif
+#if defined(OHOS_EDM_POLICY)
+    policy::BrowserPolicyHandler::GetInstance()->InitPolicyFromFile(
+        root_cache_path);
 #endif
     local_state_ =
         browser_prefs::CreatePrefService(nullptr /* profile */, root_cache_path,

@@ -33,10 +33,6 @@
 #include "libcef/browser/net_database/cef_incognito_data_base_impl.h"
 #endif
 
-#if defined(OHOS_EDM_POLICY)
-#include "components/policy/core/common/policy_loader_ohos.h"
-#endif
-
 using content::BrowserThread;
 
 namespace {
@@ -269,9 +265,6 @@ void CefRequestContextImpl::ExecuteWhenBrowserContextInitialized(
 
   EnsureBrowserContext();
   browser_context()->StoreOrTriggerInitCallback(std::move(callback));
-#if defined(OHOS_EDM_POLICY)
-  policy::PolicyLoaderOhos::TryChoosePolicySource();
-#endif
 }
 
 void CefRequestContextImpl::GetBrowserContext(
