@@ -143,7 +143,13 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   /// Returns the content disposition.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefValue> GetContentDisposition() = 0;
+  virtual CefString GetContentDisposition() = 0;
+
+  ///
+  /// Returns the origin content disposition.
+  ///
+  /*--cef()--*/
+  virtual CefRefPtr<CefValue> GetOriginContentDisposition() = 0;
 
   ///
   /// Returns the mime type.
