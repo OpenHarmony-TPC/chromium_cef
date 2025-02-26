@@ -17,28 +17,6 @@
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall")
-void CefWebExtensionApiHandlerCToCpp::OnUpdateTabUrl(int tab_id,
-                                                     const CefString& url) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_web_extension_api_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_tab_update_url)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_tab_update_url(_struct, tab_id, url.GetStruct());
-}
-
 // CONSTRUCTOR - Do not edit by hand.
 
 CefWebExtensionApiHandlerCToCpp::CefWebExtensionApiHandlerCToCpp() {}

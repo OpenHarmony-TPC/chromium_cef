@@ -48,6 +48,10 @@
 #include "base/logging.h"
 #endif
 
+#ifdef OHOS_NOTIFICATION
+#include "chrome/browser/notifications/notification_platform_bridge.h"
+#endif // OHOS_NOTIFICATION
+
 ChromeBrowserProcessAlloy::ChromeBrowserProcessAlloy()
     : initialized_(false),
       context_initialized_(false),
@@ -258,8 +262,14 @@ NotificationUIManager* ChromeBrowserProcessAlloy::notification_ui_manager() {
 
 NotificationPlatformBridge*
 ChromeBrowserProcessAlloy::notification_platform_bridge() {
+#ifdef OHOS_NOTIFICATION
+  if (!created_notification_bridge_)
+    CreateNotificationPlatformBridge();
+  return notification_bridge_.get();
+#else
   DCHECK(false);
   return nullptr;
+#endif // OHOS_NOTIFICATION
 }
 
 void ChromeBrowserProcessAlloy::SetGeolocationManager(
@@ -566,3 +576,11 @@ HidSystemTrayIcon* ChromeBrowserProcessAlloy::hid_system_tray_icon() {
   DCHECK(false);
   return nullptr;
 }
+
+#ifdef OHOS_NOTIFICATION
+void ChromeBrowserProcessAlloy::CreateNotificationPlatformBridge() {
+  DCHECK(!notification_bridge_);
+  notification_bridge_ = NotificationPlatformBridge::Create();
+  created_notification_bridge_ = true;
+}
+#endif // OHOS_NOTIFICATION

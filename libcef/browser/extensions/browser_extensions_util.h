@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "include/internal/cef_ptr.h"
+#include "contents_extensions_util.h"
 
 #include "url/gurl.h"
 
@@ -16,7 +17,6 @@ class BrowserContext;
 struct GlobalRenderFrameHostId;
 class RenderFrameHost;
 class RenderViewHost;
-class WebContents;
 }  // namespace content
 
 class CefBrowserHostBase;
@@ -25,13 +25,6 @@ class AlloyBrowserHostImpl;
 namespace extensions {
 
 class Extension;
-
-// Populates |guests| with all guest WebContents with the specified |owner|.
-void GetAllGuestsForOwnerContents(content::WebContents* owner,
-                                  std::vector<content::WebContents*>* guests);
-
-// Returns the WebContents that owns the specified |guest|, if any.
-content::WebContents* GetOwnerForGuestContents(content::WebContents* guest);
 
 // Returns the CefBrowserHostBase that owns the host identified by the specified
 // global ID, if any. |is_guest_view| will be set to true if the ID
@@ -61,6 +54,11 @@ CefRefPtr<CefBrowserHostBase> GetOwnerBrowserForHost(
  * a nweb_handler can be used to interact with APP.
  */
 CefRefPtr<AlloyBrowserHostImpl> GetClientAvailableBrowser(int tab_id);
+
+// Get browser by tab_id for extension.
+CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
+    int tab_id,
+    content::BrowserContext* browser_context);
 #endif
 
 // Returns the browser matching |tab_id| and |browser_context|. Returns false if

@@ -30,6 +30,12 @@ class CefExtensionsDispatcherDelegate : public DispatcherDelegate {
   void InitializeBindingsSystem(
       Dispatcher* dispatcher,
       NativeExtensionBindingsSystem* bindings_system) override;
+
+  void RegisterNativeHandlers(
+      Dispatcher* dispatcher,
+      ModuleSystem* module_system,
+      NativeExtensionBindingsSystem* bindings_system,
+      ScriptContext* context) override;
 #endif
 };
 

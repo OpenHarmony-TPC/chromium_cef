@@ -22,6 +22,18 @@
 #include "extensions/common/manifest_constants.h"
 #include "extensions/common/permissions/permissions_data.h"
 #include "third_party/blink/public/common/page/page_zoom.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#include "components/sessions/content/session_tab_helper.h"
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
+#include "libcef/browser/extensions/contents_extensions_util.h"
+#include "libcef/browser/browser_info_manager.h"
+#include "libcef/browser/extensions/tab_extensions_util.h"
+#include "libcef/browser/web_extension_tab_manager.h"
+#include "libcef/browser/extensions/extension_function_details.h"
+#include "libcef/browser/extensions/browser_extensions_util.h"
+#endif
 
 using zoom::ZoomController;
 
@@ -60,52 +72,241 @@ void ZoomModeToZoomSettings(zoom::ZoomController::ZoomMode zoom_mode,
   }
 }
 
+template <class T1, class T2>
+T1 ConvertAbsOptionalToStd(T2 in) {
+  if (in) {
+    return in.value();
+  }
+  return std::nullopt;
+}
+
+#define TABS_API_WINDOW_ID_CURRENT   -2
+void SetQueryInfoCurrentWindowId(content::WebContents* webcontents,
+                                 NWebExtensionTabQueryInfo& queryInfo) {
+  if (!webcontents) {
+    queryInfo.currentWindowId = TABS_API_WINDOW_ID_CURRENT;
+    return;
+  }
+
+  int32_t tab_id = webcontents->GetTabId();
+  if (tab_id > 0) {
+    std::unique_ptr<NWebExtensionTab> tab =
+        CefWebExtensionTabManager::GetInstance()->GetTab(tab_id);
+    if (tab->nwebId < 0) {
+      queryInfo.currentWindowId = TABS_API_WINDOW_ID_CURRENT;
+    } else {
+      queryInfo.currentWindowId = tab->windowId;
+    }
+  } else {
+    int nweb_id = webcontents->GetNWebId();
+    int window_id =
+        extensions::CefExtensionWindowIdManager::GetWindowId(nweb_id);
+    if (window_id < 0) {
+      queryInfo.currentWindowId = TABS_API_WINDOW_ID_CURRENT;
+    } else {
+      queryInfo.currentWindowId = window_id;
+    }
+  }
+}
+
+std::optional<NWebExtensionTabStatus> GetQueryStatus(api::tabs::TabStatus status) {
+  std::optional<NWebExtensionTabStatus> tabStatus = std::nullopt;
+  switch (status) {
+    case api::tabs::TAB_STATUS_UNLOADED:
+      tabStatus = NWebExtensionTabStatus::UNLOADED;
+    break;
+    case api::tabs::TAB_STATUS_LOADING:
+      tabStatus = NWebExtensionTabStatus::LOADING;
+    break;
+    case api::tabs::TAB_STATUS_COMPLETE:
+      tabStatus = NWebExtensionTabStatus::COMPLETE;
+    break;
+    default:
+    break;
+  }
+  return tabStatus;
+}
+
+std::optional<WebExtensionWindowType> GetQueryWindowType(api::tabs::WindowType window_type) {
+  std::optional<WebExtensionWindowType> queryWindowType;
+  switch (window_type) {
+    case api::tabs::WINDOW_TYPE_NORMAL:
+      queryWindowType = WebExtensionWindowType::NORMAL;
+    break;
+    case api::tabs::WINDOW_TYPE_POPUP:
+      queryWindowType = WebExtensionWindowType::POPUP;
+    break;
+    case api::tabs::WINDOW_TYPE_PANEL:
+      queryWindowType = WebExtensionWindowType::PANEL;
+    break;
+    case api::tabs::WINDOW_TYPE_APP:
+      queryWindowType = WebExtensionWindowType::APP;
+    break;
+    case api::tabs::WINDOW_TYPE_DEVTOOLS:
+      queryWindowType = WebExtensionWindowType::DEVTOOLS;
+    break;
+    default:
+    break;
+  }
+  return queryWindowType;
+}
+
 }  // namespace
 
 ExtensionFunction::ResponseAction TabsGetFunction::Run() {
-  return RespondNow(Error(kNotImplementedError));
+  LOG(DEBUG) << "TabsGetFunction Run";
+  absl::optional<tabs::Get::Params> params =
+      tabs::Get::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  int tab_id = params->tab_id;
+  std::unique_ptr<NWebExtensionTab> web_extension_tab =
+      CefWebExtensionTabManager::GetInstance()->GetTab(tab_id);
+  if (!web_extension_tab) {
+    return RespondNow(Error(kNotImplementedError));
+  }
+  if (web_extension_tab->nwebId <= 0) {
+    LOG(DEBUG) << "tab no arguments";
+    return RespondNow(NoArguments());
+  }
+
+  base::Value::List create_results;
+  create_results.reserve(1);
+  create_results.Append(GetTabValue(*web_extension_tab));
+
+  return RespondNow(ArgumentList(std::move(create_results)));
 }
 
 TabsCreateFunction::TabsCreateFunction() : cef_details_(this) {}
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+void TabsCreateFunction::GetCreateParams(
+    absl::optional<tabs::Create::Params>& params,
+    NWebTabCreateInfo& create_info) {
+  if (params->create_properties.active) {
+    create_info.active = params->create_properties.active.value();
+  }
+
+  if (params->create_properties.index) {
+    create_info.index = params->create_properties.index.value();
+  }
+
+  if (params->create_properties.opener_tab_id) {
+    create_info.openerTabId = params->create_properties.opener_tab_id.value();
+  }
+
+  if (params->create_properties.pinned) {
+    create_info.pinned = params->create_properties.pinned.value();
+  }
+
+  if (params->create_properties.window_id) {
+    create_info.windowId = params->create_properties.window_id.value();
+  }
+}
+
+void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& function,
+                                      const NWebExtensionTab* tab) {
+  DCHECK(function);
+  if (!function) {
+    LOG(ERROR) << "OnTabCreated is empty!!!!";
+    return;
+  }
+  if (tab->nwebId <= 0) {
+    function->Respond(function->Error("create error"));
+  } else {
+  function->Respond(function->has_callback()
+          ? function->WithArguments(base::Value(GetTabValue(*tab)))
+          : function->NoArguments());
+  }
+
+  if (!function->call_create_tab_) {
+    LOG(INFO) << "TabsCreateFunction Release";
+    function->Release();
+  }
+}
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
   absl::optional<tabs::Create::Params> params =
       tabs::Create::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
+  NWebTabCreateInfo create_info;
+  GetCreateParams(params, create_info);
 
-  CefExtensionFunctionDetails::OpenTabParams options;
-  options.window_id = params->create_properties.window_id;
-  options.opener_tab_id = params->create_properties.opener_tab_id;
-  options.active = params->create_properties.selected;
-  // The 'active' property has replaced the 'selected' property.
-  options.active = params->create_properties.active;
-  options.pinned = params->create_properties.pinned;
-  options.index = params->create_properties.index;
-  options.url = params->create_properties.url;
+  GURL url;
+  if (params->create_properties.url) {
+    auto result = ExtensionTabUtil::PrepareURLForNavigation(
+        *params->create_properties.url, extension(), browser_context());
+    if (!result.has_value()) {
+      return RespondNow(Error(result.error()));
+    }
+    url = std::move(*result);
+  }
+  create_info.url = url.spec();
 
-  std::string error;
-  auto result = cef_details_.OpenTab(options, user_gesture(), &error);
-  if (!result) {
-    return RespondNow(Error(error));
+  call_create_tab_ =true;
+  bool success = OHOS::NWeb::NWebHandlerDelegate::OnCreateTab(
+      create_info, base::BindRepeating(&TabsCreateFunction::OnTabCreated,
+                                       weak_ptr_factory_.GetWeakPtr()));
+  call_create_tab_ =false;
+
+  if (did_respond()) {
+    LOG(INFO) << "TabsCreateFunction did_respond";
+    return AlreadyResponded();
   }
 
-  // Return data about the newly created tab.
-  return RespondNow(has_callback()
-                        ? WithArguments(base::Value(result->ToValue()))
-                        : NoArguments());
+  if (success) {
+    AddRef();
+    LOG(INFO) << "TabsCreateFunction AddRef";
+    return RespondLater();
+  } else {
+    return RespondNow(Error("not support tabs.create"));
+  }
+#else
+  return RespondNow(Error("not support tabs.create"));
+#endif // OHOS_ARKWEB_EXTENSIONS
 }
 
 BaseAPIFunction::BaseAPIFunction() : cef_details_(this) {}
 
 content::WebContents* BaseAPIFunction::GetWebContents(int tab_id) {
-  // Find a browser that we can access, or set |error_| and return nullptr.
-  CefRefPtr<AlloyBrowserHostImpl> browser =
-      cef_details_.GetBrowserForTabIdFirstTime(tab_id, &error_);
-  if (!browser) {
-    return nullptr;
+  if (tab_id >= 0) {
+    content::WebContents* web_contents = GetWebContentByTabId(tab_id);
+    if (!web_contents) {
+      LOG(INFO) << "cannot find WebContents by tabId:" << tab_id;
+    } else {
+      return web_contents;
+    }
+  } else {
+    CefRefPtr<AlloyBrowserHostImpl> browser = cef_details_.GetCurrentBrowser();
+    if (!browser || browser->GetTabId() < 0) {
+      browser = GetClientAvailableBrowser(tab_id);
+    }
+    if (browser && browser->web_contents()) {
+      LOG(INFO) << "find WebContents by GetCurrentBrowser tabId:" << tab_id;
+      return browser->web_contents();
+    }
+  }
+  
+  LOG(INFO) << "GetWebContents fallback to use Identifier tabId:" << tab_id;
+  if (tab_id >= 0) {
+    // May be an invalid tabId or in the wrong BrowserContext.
+    CefRefPtr<AlloyBrowserHostImpl> browser =
+        GetBrowserForTabId(tab_id, browser_context());
+    if (!browser || !browser->web_contents() ||
+        !cef_details_.CanAccessBrowser(browser)) {
+      LOG(INFO) << "cannot find WebContents by Identifier:" << tab_id;
+      error_ = ErrorUtils::FormatErrorMessage(
+            keys::kTabNotFoundError, base::NumberToString(tab_id));
+      return nullptr;
+    }
+    return browser->web_contents();
   }
 
-  return browser->web_contents();
+  LOG(INFO) << "cannot find WebContents by tabId:" << tab_id;
+  error_ = ErrorUtils::FormatErrorMessage(
+        keys::kTabNotFoundError, base::NumberToString(tab_id));
+  return nullptr;
 }
 
 ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
@@ -116,6 +317,18 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   tab_id_ = params->tab_id ? *params->tab_id : -1;
   content::WebContents* web_contents = GetWebContents(tab_id_);
   if (!web_contents) {
+    for (const auto& browser_info :
+         CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
+      CefRefPtr<AlloyBrowserHostImpl> current_browser =
+          static_cast<AlloyBrowserHostImpl*>(browser_info->browser().get());
+      if (current_browser && current_browser->web_contents() &&
+          current_browser->client()) {
+         web_contents = current_browser->web_contents();
+         break;
+      }
+    }
+  }
+  if (!web_contents) {
     return RespondNow(Error(std::move(error_)));
   }
 
@@ -124,6 +337,82 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   // TODO(rafaelw): handle setting remaining tab properties:
   // -title
   // -favIconUrl
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  // compatible with phone
+  if (!OHOS::NWeb::NWebHandlerDelegate::HasExtensionListener()) {
+    if (params->update_properties.url.has_value()) {
+      std::string updated_url = *params->update_properties.url;
+      if (!UpdateURL(updated_url, tab_id_, &error_)) {
+        return RespondNow(Error(std::move(error_)));
+      }
+    }
+    return RespondNow(GetResult());
+  }
+
+  NWebExtensionTabUpdateProperties update_properties;
+  bool no_change = true;
+
+  if (params->update_properties.url.has_value()) {
+    GURL url;
+    auto url_expected = ExtensionTabUtil::PrepareURLForNavigation(
+        *params->update_properties.url, extension(), browser_context());
+    if (!url_expected.has_value()) {
+      error_ = std::move(url_expected.error());
+      return RespondNow(Error(std::move(error_)));
+    }
+    url = *url_expected;
+
+    const bool is_javascript_scheme = url.SchemeIs(url::kJavaScriptScheme);
+    // JavaScript URLs are forbidden in chrome.tabs.update().
+    if (is_javascript_scheme) {
+      error_ = tabs_constants::kJavaScriptUrlsNotAllowedInTabsUpdate;
+      return RespondNow(Error(std::move(error_)));
+    }
+    update_properties.url = url.spec();
+    no_change = false;
+  }
+
+  if (params->update_properties.active.has_value()) {
+    update_properties.active = *params->update_properties.active;
+    no_change = false;
+  }
+
+  if (params->update_properties.highlighted.has_value()) {
+    update_properties.highlighted = *params->update_properties.highlighted;
+    no_change = false;
+  }
+
+  if (params->update_properties.pinned.has_value()) {
+    update_properties.pinned = *params->update_properties.pinned;
+    no_change = false;
+  }
+
+  if (params->update_properties.muted.has_value()) {
+    update_properties.muted = *params->update_properties.muted;
+    no_change = false;
+  }
+
+  if (params->update_properties.opener_tab_id.has_value()) {
+    int opener_id = *params->update_properties.opener_tab_id;
+    if (opener_id == tab_id_) {
+      return RespondNow(Error("Cannot set a tab's opener to itself."));
+    }
+
+    update_properties.openerTabId = *params->update_properties.opener_tab_id;
+    no_change = false;
+  }
+
+  if (params->update_properties.auto_discardable.has_value()) {
+    update_properties.autoDiscardable =
+        *params->update_properties.auto_discardable;
+    no_change = false;
+  }
+
+  if (!no_change) {
+    web_contents_->WebExtensionUpdateTab(tab_id_, &update_properties);
+  }
+#else
 
   // Navigate the tab to a new location if the url is different.
   if (params->update_properties.url.has_value()) {
@@ -188,6 +477,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
     // TODO: Set auto-discardable state for the tab at |tab_id_|.
     NOTIMPLEMENTED();
   }
+#endif  // defined(OHOS_ARKWEB_EXTENSIONS)
 
   return RespondNow(GetResult());
 }
@@ -212,9 +502,6 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
     return false;
   }
 
-#if defined(OHOS_ARKWEB_EXTENSIONS)
-  web_contents_->WebExtensionUpdateTabUrl(tab_id, url);
-#else
   content::NavigationController::LoadURLParams load_params(url);
 
   // Treat extension-initiated navigations as renderer-initiated so that the URL
@@ -546,6 +833,163 @@ ExtensionFunction::ResponseAction TabsGetZoomSettingsFunction::Run() {
 
   return RespondNow(
       ArgumentList(api::tabs::GetZoomSettings::Results::Create(zoom_settings)));
+}
+
+ExtensionFunction::ResponseAction TabsGetCurrentFunction::Run() {
+  int tab_id = -1;
+  content::WebContents* web_contents = GetWebContents(tab_id);
+  tab_id = sessions::SessionTabHelper::IdForTab(web_contents).id();
+  return RespondNow(NoArguments());
+}
+
+ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
+  absl::optional<tabs::CaptureVisibleTab::Params> params =
+      tabs::CaptureVisibleTab::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+
+  window_id_ = params->window_id;
+  LOG(INFO) << "WebExtension TabsCaptureVisibleTabFunction window id " << *window_id_;
+
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsDiscardFunction::Run() {
+  absl::optional<tabs::Discard::Params> params =
+      tabs::Discard::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+
+  tab_id_ = params->tab_id;
+  LOG(INFO) << "WebExtension TabsDiscardFunction tab_id " << *tab_id_;
+
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsDuplicateFunction::Run() {
+  absl::optional<tabs::Duplicate::Params> params =
+      tabs::Duplicate::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+
+  tab_id_ = params->tab_id;
+  LOG(INFO) << "WebExtension TabsDuplicateFunction tab_id " << tab_id_;
+
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsGoBackFunction::Run() {
+  absl::optional<tabs::GoBack::Params> params =
+      tabs::GoBack::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsGoForwardFunction::Run() {
+  absl::optional<tabs::GoForward::Params> params =
+      tabs::GoForward::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
+  absl::optional<tabs::Group::Params> params =
+      tabs::Group::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsHighlightFunction::Run() {
+  absl::optional<tabs::Highlight::Params> params =
+      tabs::Highlight::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsMoveFunction::Run() {
+  absl::optional<tabs::Move::Params> params =
+      tabs::Move::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
+  absl::optional<tabs::Query::Params> params =
+      tabs::Query::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  LOG(DEBUG) << "TabsQueryFunction Run";
+
+  NWebExtensionTabQueryInfo queryInfo;
+  content::WebContents* webcontents = GetSenderWebContents();
+  SetQueryInfoCurrentWindowId(webcontents, queryInfo);
+
+  queryInfo.currentWindow =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.current_window);
+  queryInfo.active =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.active);
+  queryInfo.audible =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.audible);
+  queryInfo.autoDiscardable =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.auto_discardable);
+  queryInfo.windowId =
+      ConvertAbsOptionalToStd<std::optional<int>, absl::optional<int>>(
+          params->query_info.window_id);
+  queryInfo.discarded =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.discarded);
+  queryInfo.groupId =
+      ConvertAbsOptionalToStd<std::optional<int>, absl::optional<int>>(
+          params->query_info.group_id);
+  queryInfo.highlighted =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.highlighted);
+  queryInfo.index =
+      ConvertAbsOptionalToStd<std::optional<int>, absl::optional<int>>(
+          params->query_info.index);
+  queryInfo.lastFocusedWindow =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.last_focused_window);
+  queryInfo.muted =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.muted);
+  queryInfo.pinned =
+      ConvertAbsOptionalToStd<std::optional<bool>, absl::optional<bool>>(
+          params->query_info.pinned);
+  queryInfo.status = GetQueryStatus(params->query_info.status);
+  queryInfo.title = ConvertAbsOptionalToStd<std::optional<std::string>,
+                                            absl::optional<std::string>>(
+      params->query_info.title);
+  if (params->query_info.url) {
+    std::vector<std::string> urls;
+    if (params->query_info.url->as_string) {
+      urls.push_back(*params->query_info.url->as_string);
+    } else if (params->query_info.url->as_strings) {
+      urls.swap(*params->query_info.url->as_strings);
+    }
+    queryInfo.url = urls;
+  } else {
+    queryInfo.url = std::nullopt;
+  }
+  
+  queryInfo.windowType = GetQueryWindowType(params->query_info.window_type);
+  std::vector<NWebExtensionTab> tabs = CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
+  base::Value::List tab_list = GetTabValueList(tabs);
+  return RespondNow(WithArguments(std::move(tab_list)));
+}
+
+ExtensionFunction::ResponseAction TabsRemoveFunction::Run() {
+  absl::optional<tabs::Remove::Params> params =
+      tabs::Remove::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
+}
+
+ExtensionFunction::ResponseAction TabsUngroupFunction::Run() {
+  absl::optional<tabs::Ungroup::Params> params =
+      tabs::Ungroup::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+  return RespondNow(Error(kNotImplementedError));
 }
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)

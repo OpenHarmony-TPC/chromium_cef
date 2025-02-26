@@ -53,6 +53,10 @@
 #include "include/capi/cef_task_capi.h"
 #include "include/internal/cef_string_map.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -2147,6 +2151,20 @@ typedef struct _cef_browser_host_t {
       cef_string_list_t changed_property_names,
       const cef_string_t* url);
 
+  void(CEF_CALLBACK* web_extension_tab_updated_change_info)(
+      struct _cef_browser_host_t* self,
+      int tab_id,
+      cef_string_list_t changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo);
+
+  ///
+  /// Receiving the tab actived notification.
+  ///
+  void(CEF_CALLBACK* web_extension_tab_actived)(
+      struct _cef_browser_host_t* self,
+      int tab_id,
+      int window_id);
+ 
   ///
   /// ScrollFocusedEditableNodeIntoView.
   ///

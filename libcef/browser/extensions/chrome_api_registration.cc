@@ -18,8 +18,18 @@
 #include "extensions/browser/api/storage/storage_api.h"
 #include "extensions/browser/extension_function_registry.h"
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/extension_action/extension_action_api.h"
+#include "chrome/browser/extensions/api/side_panel/side_panel_api.h"
 #include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
+#include "extensions/browser/api/declarative_net_request/declarative_net_request_api.h"
+#include "libcef/browser/extensions/api/scripting/scripting_api.h"
+#include "libcef/browser/extensions/api/context_menus/context_menus_api.h"
+#include "libcef/browser/extensions/api/web_navigation/web_navigation_api.h"
+#include "libcef/browser/extensions/api/windows/windows_api.h"
 #endif
+#ifdef OHOS_NOTIFICATION
+#include "chrome/browser/extensions/api/notifications/notifications_api.h"
+#endif // OHOS_NOTIFICATION
 
 namespace extensions {
 namespace api {
@@ -67,14 +77,14 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(cefimpl::TabsSetZoomSettingsFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsGetZoomSettingsFunction),
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+    EXTENSION_FUNCTION_NAME(cefimpl::TabsQueryFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::TabsReloadFunction),
-#endif
-#if defined(OHOS_ARKWEB_EXTENSIONS)
+    "webNavigation",
+    EXTENSION_FUNCTION_NAME(cefimpl::WebNavigationGetFrameFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::WebNavigationGetAllFramesFunction),
     // chrome.extension.getURL()'s implementation is in the renderer.
     "extension",
     "extension.getURL",
-#endif
-#if defined(OHOS_ARKWEB_EXTENSIONS)
     "developerPrivate",
     EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionsInfoFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateGetExtensionSizeFunction),
@@ -95,7 +105,34 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(DeveloperPrivateIsProfileManagedFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateRequestFileSourceFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenDevToolsFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenUrlFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateDeleteExtensionErrorsFunction),
+    "scripting",
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingExecuteScriptFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingInsertCSSFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingRemoveCSSFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingRegisterContentScriptsFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingGetRegisteredContentScriptsFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingUnregisterContentScriptsFunction),
+    EXTENSION_FUNCTION_NAME(cefimpl::ScriptingUpdateContentScriptsFunction),
+    "contextMenus",
+    EXTENSION_FUNCTION_NAME(cefimpl::ContextMenusCreateFunction),
+    "sidePanel",
+    EXTENSION_FUNCTION_NAME(SidePanelOpenFunction),
+    EXTENSION_FUNCTION_NAME(SidePanelSetOptionsFunction),
+    "action",
+    EXTENSION_FUNCTION_NAME(ActionSetIconFunction),
+    "windows",
+    EXTENSION_FUNCTION_NAME(cefimpl::WindowsGetAllFunction),
 #endif
+#ifdef OHOS_NOTIFICATION
+  "notifications",
+  EXTENSION_FUNCTION_NAME(NotificationsCreateFunction),
+  EXTENSION_FUNCTION_NAME(NotificationsUpdateFunction),
+  EXTENSION_FUNCTION_NAME(NotificationsClearFunction),
+  EXTENSION_FUNCTION_NAME(NotificationsGetAllFunction),
+  EXTENSION_FUNCTION_NAME(NotificationsGetPermissionLevelFunction),
+#endif // OHOS_NOTIFICATION
     nullptr,  // Indicates end of array.
 };
 
@@ -143,6 +180,8 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<cefimpl::TabsSetZoomSettingsFunction>();
   registry->RegisterFunction<cefimpl::TabsGetZoomSettingsFunction>();
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+  registry->RegisterFunction<cefimpl::TabsQueryFunction>();
+  registry->RegisterFunction<cefimpl::TabsReloadFunction>();
   registry->RegisterFunction<DeveloperPrivateGetExtensionsInfoFunction>();
   registry->RegisterFunction<DeveloperPrivateGetExtensionSizeFunction>();
   registry->RegisterFunction<DeveloperPrivateGetItemsInfoFunction>();
@@ -161,8 +200,39 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<DeveloperPrivateIsProfileManagedFunction>();
   registry->RegisterFunction<DeveloperPrivateRequestFileSourceFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
-  registry->RegisterFunction<cefimpl::TabsReloadFunction>();
+  registry->RegisterFunction<DeveloperPrivateOpenUrlFunction>();
+  registry->RegisterFunction<DeveloperPrivateDeleteExtensionErrorsFunction>();
+  // webNavigation
+  registry->RegisterFunction<cefimpl::WebNavigationGetFrameFunction>();
+  registry->RegisterFunction<cefimpl::WebNavigationGetAllFramesFunction>();
+  // scripting
+  registry->RegisterFunction<cefimpl::ScriptingExecuteScriptFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingInsertCSSFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingRemoveCSSFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingRegisterContentScriptsFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingGetRegisteredContentScriptsFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingUnregisterContentScriptsFunction>();
+  registry->RegisterFunction<cefimpl::ScriptingUpdateContentScriptsFunction>();
+  // contextMenus
+  registry->RegisterFunction<cefimpl::ContextMenusCreateFunction>();
+  // sidePanel
+  registry->RegisterFunction<SidePanelGetOptionsFunction>();
+  registry->RegisterFunction<SidePanelSetOptionsFunction>();
+  registry->RegisterFunction<SidePanelSetPanelBehaviorFunction>();
+  registry->RegisterFunction<SidePanelGetPanelBehaviorFunction>();
+  registry->RegisterFunction<SidePanelOpenFunction>();
+  // action methods
+  registry->RegisterFunction<ActionSetIconFunction>();
+  // windows
+  registry->RegisterFunction<cefimpl::WindowsGetAllFunction>();
 #endif
+#ifdef OHOS_NOTIFICATION
+  registry->RegisterFunction<NotificationsCreateFunction>();
+  registry->RegisterFunction<NotificationsUpdateFunction>();
+  registry->RegisterFunction<NotificationsClearFunction>();
+  registry->RegisterFunction<NotificationsGetAllFunction>();
+  registry->RegisterFunction<NotificationsGetPermissionLevelFunction>();
+#endif // OHOS_NOTIFICATION
 }
 
 }  // namespace cef

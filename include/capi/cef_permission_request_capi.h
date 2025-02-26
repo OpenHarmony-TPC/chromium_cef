@@ -303,6 +303,23 @@ typedef struct _cef_browser_permission_request_delegate_t {
   void(CEF_CALLBACK* abort_ask_clipboard_sanitized_write_permission)(
       struct _cef_browser_permission_request_delegate_t* self,
       const cef_string_t* origin);
+
+#if defined(OHOS_NOTIFICATION)
+  ///
+  /// Handle the Notification permission requests.
+  ///
+  void(CEF_CALLBACK* ask_notification_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin,
+      cef_permission_callback_t callback);
+
+  ///
+  /// Cancel the Notification permission requests.
+  ///
+  void(CEF_CALLBACK* abort_ask_notification_permission)(
+      struct _cef_browser_permission_request_delegate_t* self,
+      const cef_string_t* origin);
+#endif // defined(OHOS_NOTIFICATION)
 } cef_browser_permission_request_delegate_t;
 
 ///

@@ -35,7 +35,9 @@ class CefWebExtensionApiHandlerCToCpp
   virtual ~CefWebExtensionApiHandlerCToCpp();
 
   // CefWebExtensionApiHandler methods.
-  void OnUpdateTabUrl(int tab_id, const CefString& url) override;
+  void OnUpdateTab(
+      int tab_id,
+      const NWebExtensionTabUpdateProperties* update_properties) override {}
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WEB_EXTENSION_API_HANDLER_CTOCPP_H_

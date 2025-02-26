@@ -14,6 +14,13 @@
 #include "content/public/browser/context_menu_params.h"
 #include "content/public/browser/web_contents_observer.h"
 
+#ifdef OHOS_ARKWEB_EXTENSIONS
+#include "chrome/browser/extensions/menu_manager.h"
+#include "ohos_nweb/src/capi/nweb_context_menus_on_clicked_data.h"
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#include "include/cef_extension_context_menus_handler.h"
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 namespace content {
 class RenderFrameHost;
 class WebContents;
@@ -25,6 +32,18 @@ class CefRunContextMenuCallback;
 class CefMenuManager : public CefMenuModelImpl::Delegate,
                        public content::WebContentsObserver {
  public:
+#ifdef OHOS_ARKWEB_EXTENSIONS
+  static void OnClickedExtensionContextMenus(const std::string& extension_id,
+                                             ContextMenusOnClickedData& data,
+                                             std::optional<NWebExtensionTab>& tab);
+  static std::vector<NWebContextMenusItem> GetAllExtensionContextMenus(const std::vector<std::string>& extension_ids);
+  static void SetContextMenusHandler(CefExtensionContextMenusHandler* handler);
+  static void OnContextMenusCreate(const std::string& extension_id, extensions::MenuItem* menu_item);
+  static void OnContextMenusUpdate(const std::string& extension_id, extensions::MenuItem* menu_item);
+  static void OnContextMenusRemove(const std::string& extension_id, const std::string& menu_item_id);
+  static void OnContextMenusRemoveAll(const std::string& extension_id);
+#endif // OHOS_ARKWEB_EXTENSIONS
+
   CefMenuManager(AlloyBrowserHostImpl* browser,
                  std::unique_ptr<CefMenuRunner> runner);
 
@@ -44,6 +63,11 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   void CancelContextMenu();
 
  private:
+#ifdef OHOS_ARKWEB_EXTENSIONS
+  static void GetFlattenedMenuItemSubtree(std::vector<NWebContextMenusItem>& items,
+                                           const std::unique_ptr<extensions::MenuItem>& item);
+#endif // OHOS_ARKWEB_EXTENSIONS
+
   // CefMenuModelImpl::Delegate methods.
   void ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
                       int command_id,
@@ -67,6 +91,10 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
                           content::ContextMenuParams& params) const;
   void UpdateMenuEditStateFlags(content::ContextMenuParams& params);
 #endif  // #ifdef OHOS_CLIPBOARD
+#ifdef OHOS_ARKWEB_EXTENSIONS
+  static CefExtensionContextMenusHandler* context_menus_handler;
+#endif // OHOS_ARKWEB_EXTENSIONS
+
   // AlloyBrowserHostImpl pointer is guaranteed to outlive this object.
   AlloyBrowserHostImpl* browser_;
 

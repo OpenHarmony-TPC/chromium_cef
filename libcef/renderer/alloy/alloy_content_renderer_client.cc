@@ -145,6 +145,11 @@
 
 #include "libcef/renderer/alloy/ohos_safe_browsing_error_page_controller_delegate_impl.h"
 
+#ifdef OHOS_NOTIFICATION
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif // OHOS_NOTIFICATION
+
 AlloyContentRendererClient::AlloyContentRendererClient()
     : main_entry_time_(base::TimeTicks::Now()),
       render_manager_(new CefRenderManager) {
@@ -211,9 +216,18 @@ void AlloyContentRendererClient::RunSingleProcessCleanup() {
 
 void AlloyContentRendererClient::PostIOThreadCreated(
     base::SingleThreadTaskRunner*) {
+#ifdef OHOS_NOTIFICATION
+  if (!(*base::CommandLine::ForCurrentProcess()).HasSwitch(
+      switches::kEnableNwebEx)) {
+    // TODO(cef):Enable these once the implementation supports it.
+    blink::WebRuntimeFeatures::EnableNotifications(false);
+    blink::WebRuntimeFeatures::EnablePushMessaging(false);
+  }
+#else
   // TODO(cef):Enable these once the implementation supports it.
   blink::WebRuntimeFeatures::EnableNotifications(false);
   blink::WebRuntimeFeatures::EnablePushMessaging(false);
+#endif // OHOS_NOTIFICATION
 }
 
 void AlloyContentRendererClient::RenderThreadStarted() {
@@ -283,6 +297,8 @@ void AlloyContentRendererClient::RenderThreadStarted() {
 #if defined(OHOS_ARKWEB_EXTENSIONS)
     blink::WebSecurityPolicy::RegisterURLSchemeAsExtension(
         blink::WebString::FromASCII(extensions::kExtensionScheme));
+    blink::WebSecurityPolicy::RegisterURLSchemeAsExtension(
+        blink::WebString::FromASCII(extensions::kArkwebExtensionScheme));
 #endif
   }
 }
@@ -736,7 +752,8 @@ void AlloyContentRendererClient::SetRuntimeFeaturesDefaultsBeforeBlinkInitializa
 bool AlloyContentRendererClient::AllowScriptExtensionForServiceWorker(
     const url::Origin& script_origin) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return script_origin.scheme() == extensions::kExtensionScheme;
+  return (script_origin.scheme() == extensions::kExtensionScheme ||
+          script_origin.scheme() == extensions::kArkwebExtensionScheme);
 #else
   return false;
 #endif
@@ -812,7 +829,11 @@ blink::WebFrame* AlloyContentRendererClient::FindFrame(
 bool AlloyContentRendererClient::IsSafeRedirectTarget(const GURL& from_url,
                                                       const GURL& to_url) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (to_url.SchemeIs(extensions::kExtensionScheme)) {
+  if (to_url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || to_url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     const extensions::Extension* extension =
         extensions::RendererExtensionRegistry::Get()->GetByID(to_url.host());
     if (!extension) {

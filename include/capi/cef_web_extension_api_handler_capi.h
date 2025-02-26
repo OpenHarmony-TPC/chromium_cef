@@ -56,16 +56,7 @@ typedef struct _cef_web_extension_api_handler_t {
   /// Base structure.
   ///
   cef_base_ref_counted_t base;
-
-  ///
-  /// Called when chrome.tabs.update.
-  ///
-  void(CEF_CALLBACK* on_tab_update_url)(
-      struct _cef_web_extension_api_handler_t* self,
-      int tab_id,
-      const cef_string_t* url);
 } cef_web_extension_api_handler_t;
-
 #ifdef __cplusplus
 }
 #endif

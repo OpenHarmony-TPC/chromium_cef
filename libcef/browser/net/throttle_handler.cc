@@ -69,6 +69,11 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
     return false;
   }
 #endif
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (navigation_handle->GetURL().SchemeIs(extensions::kArkwebExtensionScheme)) {
+    return false;
+  }
+#endif
   if (browser) {
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetRequestHandler()) {

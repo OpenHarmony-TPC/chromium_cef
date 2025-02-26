@@ -77,6 +77,11 @@
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
+#ifdef OHOS_NOTIFICATION
+#include "chrome/browser/notifications/platform_notification_service_factory.h"
+#include "chrome/browser/notifications/platform_notification_service_impl.h"
+#endif // OHOS_NOTIFICATION
+
 using content::BrowserThread;
 
 // Creates and manages VisitedLinkEventListener objects for each
@@ -452,7 +457,11 @@ storage::SpecialStoragePolicy* AlloyBrowserContext::GetSpecialStoragePolicy() {
 
 content::PlatformNotificationService*
 AlloyBrowserContext::GetPlatformNotificationService() {
+#ifdef OHOS_NOTIFICATION
+  return PlatformNotificationServiceFactory::GetForProfile(this);
+#else
   return nullptr;
+#endif // OHOS_NOTIFICATION
 }
 
 content::PushMessagingService* AlloyBrowserContext::GetPushMessagingService() {

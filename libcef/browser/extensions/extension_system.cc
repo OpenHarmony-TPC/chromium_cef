@@ -71,6 +71,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/webui/extensions/extension_icon_source.h"
 #include "chrome/browser/ui/webui/extensions/extensions_internals_source.h"
+#include "chrome/browser/extensions/menu_manager.h"
 #include "content/public/browser/url_data_source.h"
 #include "extensions/browser/content_verifier.h"
 #include "extensions/browser/management_policy.h"
@@ -82,6 +83,7 @@
 #include "extensions/common/extension.h"
 #include "extensions/common/manifest_handlers/background_info.h"
 #include "extensions/common/permissions/permissions_data.h"
+#include "extensions/browser/extension_registry.h"
 #endif
 
 using content::BrowserContext;
@@ -183,12 +185,6 @@ UninstallPingSender::FilterResult ShouldSendUninstallPing(
     Profile* profile,
     const Extension* extension,
     UninstallReason reason) {
-  ExtensionManagement* extension_management =
-      ExtensionManagementFactory::GetForBrowserContext(profile);
-  if (extension && (extension->from_webstore() ||
-                    extension_management->UpdatesFromWebstore(*extension))) {
-    return UninstallPingSender::SEND_PING;
-  }
   return UninstallPingSender::DO_NOT_SEND_PING;
 }
 #endif
@@ -215,6 +211,19 @@ void CefExtensionSystem::Init() {
   DCHECK(!initialized_);
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
+  extension_registry_info_manager_ = std::make_unique<ExtensionRegistryInfoManager>(browser_context_);
+  ExtensionRegistry* registry = ExtensionRegistry::Get(browser_context_);
+  if (!registry) {
+    LOG(ERROR) << "registry is null";
+  }
+  registry->AddObserver(extension_registry_info_manager_.get());
+
+  MenuManager* menu_manager = MenuManager::Get(browser_context_);
+  if (!menu_manager) {
+    LOG(ERROR) << "menu_manager is null";
+  }
+  menu_manager->AddLoadObserver(extension_registry_info_manager_.get());
+
   Profile* profile = Profile::FromBrowserContext(browser_context_);
 
   extension_service_ = std::make_unique<ExtensionService>(
@@ -973,6 +982,10 @@ void CefExtensionSystem::NotifyExtensionUnloaded(
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   DeactivateTaskQueueForExtension(browser_context_, extension);
 #endif
+}
+
+ExtensionRegistryInfoManager* CefExtensionSystem::GetExtensionRegistryInfoManager() {
+  return extension_registry_info_manager_.get();
 }
 
 }  // namespace extensions

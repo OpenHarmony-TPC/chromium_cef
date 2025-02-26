@@ -127,7 +127,15 @@ void AlloyContentClient::AddAdditionalSchemes(Schemes* schemes) {
 
   schemes->csp_bypassing_schemes.push_back(extensions::kExtensionScheme);
 #endif
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  schemes->standard_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->extension_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->savable_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->secure_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->service_worker_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->cors_enabled_schemes.push_back(extensions::kArkwebExtensionScheme);
+  schemes->csp_bypassing_schemes.push_back(extensions::kArkwebExtensionScheme);
+#endif
   CefAppManager::Get()->AddAdditionalSchemes(schemes);
 }
 

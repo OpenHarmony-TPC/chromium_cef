@@ -70,6 +70,9 @@
 namespace {
 
 const char* const kNonWildcardDomainNonPortSchemes[] = {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    extensions::kArkwebExtensionScheme,
+#endif
     extensions::kExtensionScheme, content::kChromeDevToolsScheme,
     content::kChromeUIScheme, content::kChromeUIUntrustedScheme};
 const size_t kNonWildcardDomainNonPortSchemesSize =

@@ -317,6 +317,14 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       const CefString& url) override;
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> info) override;
+  void WebExtensionTabActivated(int tab_id, int window_id) override;
+  void WebExtensionActionClicked(
+      std::string extensionId,
+      const NWebExtensionTab* tab) override {}
   void ScrollFocusedEditableNodeIntoView() override;
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
