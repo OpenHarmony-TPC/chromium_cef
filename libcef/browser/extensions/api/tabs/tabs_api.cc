@@ -22,6 +22,8 @@
 #include "extensions/common/manifest_constants.h"
 #include "extensions/common/permissions/permissions_data.h"
 #include "third_party/blink/public/common/page/page_zoom.h"
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "base/command_line.h"
 #include "content/public/common/content_switches.h"
 #include "components/sessions/content/session_tab_helper.h"
@@ -524,7 +526,7 @@ bool TabsUpdateFunction::UpdateURL(const std::string& url_string,
 
   DCHECK_EQ(url,
             web_contents_->GetController().GetPendingEntry()->GetVirtualURL());
-#endif
+
   return true;
 }
 
