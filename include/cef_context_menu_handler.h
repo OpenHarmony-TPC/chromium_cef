@@ -400,6 +400,12 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   ///
   /*--cef(default_retval=CM_SOURCETYPE_NONE)--*/
   virtual SourceType GetSourceType() = 0;
+
+  ///
+  /// Returns ImageRect.
+  ///
+  /*--cef()--*/
+  virtual void GetImageRect(int& x, int& y, int& w, int& h) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
 };
 
