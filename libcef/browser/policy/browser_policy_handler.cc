@@ -15,8 +15,9 @@
 
 #include "browser_policy_handler.h"
 
-#include "base/command_line.h"
+#include "base/files/file_util.h"
 #include "base/no_destructor.h"
+#include "base/ohos/sys_info_utils.h"
 #include "cef/libcef/browser/chrome/chrome_browser_context.h"
 #include "cef/libcef/browser/request_context_impl.h"
 #include "cef/libcef/common/app_manager.h"
@@ -28,7 +29,8 @@
 namespace policy {
 
 namespace {
-constexpr unsigned long long kApiMinSdkVerison = 50100016;
+constexpr int kApiMinApiVersion = 16;
+const char kBrowserPolicyFileName[] = "BrowserEnterprisePolicy.json";
 
 Profile* GetActiveProfile() {
   auto request_context = static_cast<CefRequestContextImpl*>(
@@ -41,24 +43,6 @@ Profile* GetActiveProfile() {
 }
 }  // namespace
 
-bool ShouldUseBrowserPolicy(bool& should_use_browser_policy) {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kOhosAppApiVersion)) {
-    LOG(ERROR) << "kOhosAppApiVersion not exist";
-    return false;
-  }
-  std::string version_string =
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kOhosAppApiVersion);
-  if (version_string.empty()) {
-    return false;
-  }
-  unsigned long long version = std::stoull(version_string);
-  LOG(INFO) << "ShouldUseBrowserPolicy get SDK version: " << version;
-  should_use_browser_policy = version >= kApiMinSdkVerison;
-  return true;
-}
-
 // static
 BrowserPolicyHandler* BrowserPolicyHandler::GetInstance() {
   static base::NoDestructor<BrowserPolicyHandler> instance;
@@ -66,25 +50,57 @@ BrowserPolicyHandler* BrowserPolicyHandler::GetInstance() {
 }
 
 void BrowserPolicyHandler::MaybeInitFromPersistentPrefs() {
-  if (current_version_ == kInvalidPolicyVersion && GetActiveProfile()) {
-    auto prefs = GetActiveProfile()->GetPrefs();
-    if (!prefs) {
-      LOG(ERROR) << "BrowserPolicyHandler MaybeInitFromPersistentPrefs "
-                    "GetPrefs failed";
-      return;
-    }
-    current_version_ =
-        prefs->GetInteger(prefs::kBrowserPolicyVersion);
-    std::string policy = prefs->GetString(prefs::kBrowserPolicy);
-    PolicyLoaderOhos::ParsePolicy(policy, &bundle_);
+  if (current_version_ != kInvalidPolicyVersion) {
+    return;
   }
+
+  if (!GetActiveProfile()) {
+    LOG(ERROR) << "BrowserPolicyHandler GetActiveProfile failed";
+    return;
+  }
+  auto prefs = GetActiveProfile()->GetPrefs();
+  if (!prefs) {
+    LOG(ERROR) << "BrowserPolicyHandler MaybeInitFromPersistentPrefs "
+                  "GetPrefs failed";
+    return;
+  }
+
+  if (!prefs->FindPreference(prefs::kBrowserPolicyVersion)) {
+    LOG(ERROR) << "BrowserPolicyHandler initial failed: pref not found";
+  }
+
+  current_version_ = prefs->GetInteger(prefs::kBrowserPolicyVersion);
+  LOG(INFO) << "BrowserPolicyHandler current_version_: " << current_version_;
+}
+
+void BrowserPolicyHandler::InitPolicyFromFile(
+    const base::FilePath& cache_path) {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  policy_file_path_ =
+      base::FilePath(cache_path.AppendASCII(kBrowserPolicyFileName).value());
+  LOG(INFO) << "InitPolicyFromFile policy_file_path_: " << policy_file_path_;
+
+  std::string policy;
+  bool succeeded = base::ReadFileToString(policy_file_path_, &policy);
+  if (!succeeded) {
+    LOG(WARNING) << "BrowserPolicyHandler read file failed";
+    if (!base::PathExists(cache_path)) {
+      CreateDirectory(cache_path);
+    }
+    base::WriteFile(policy_file_path_, "{}");
+    return;
+  }
+  LOG(INFO) << "InitPolicyFromFile initial policy: " << policy;
+  PolicyLoaderOhos::ParsePolicy(policy, &bundle_);
+  initialized = true;
 }
 
 void BrowserPolicyHandler::SetPolicyAndNotify(const std::string& policy,
                                               int version) {
-  bool use_browser_policy = false;
-  std::ignore = ShouldUseBrowserPolicy(use_browser_policy);
-  if (!use_browser_policy) {
+  if (base::ohos::ApplicationApiVersion() < kApiMinApiVersion) {
     LOG(ERROR) << "current api version does not support enterprise ";
     return;
   }
@@ -134,7 +150,10 @@ bool BrowserPolicyHandler::SetPolicy(const std::string& policy, int version) {
 
   current_version_ = version;
   bundle_ = bundle.Clone();
-  prefs->SetString(prefs::kBrowserPolicy, policy);
+  LOG(INFO) << "WriteFile policy_file_path_: " << policy_file_path_;
+  if (!base::WriteFile(policy_file_path_, policy)) {
+    LOG(ERROR) << "BrowserPolicyHandler WriteFile failed";
+  }
   prefs->SetInteger(prefs::kBrowserPolicyVersion, version);
 
   LOG(INFO) << "BrowserPolicyHandler new policy set: " << policy;
