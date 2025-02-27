@@ -2093,6 +2093,10 @@ void CefBrowserHostBase::AbortAskSensorsPermission(
 }
 #endif // defined(OHOS_SENSOR)
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::MaximizeResize() {}
+#endif
+
 void CefBrowserHostBase::AskProtectedMediaIdentifierPermission(
     const CefString& origin,
     cef_permission_callback_t callback) {

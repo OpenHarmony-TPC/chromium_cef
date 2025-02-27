@@ -2279,5 +2279,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void RemoveJavaScriptOnHeadReady() = 0;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  ///
+  /// Web maximize resize optimize.
+  ///
+  /*--cef()--*/
+  virtual void MaximizeResize() = 0;
+#endif
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

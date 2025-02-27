@@ -344,6 +344,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) override;
   void SetOptimizeParserBudgetEnabled(bool enable) override;
+  void MaximizeResize() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
