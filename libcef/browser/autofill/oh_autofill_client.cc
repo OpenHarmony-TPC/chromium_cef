@@ -55,10 +55,22 @@ OhAutofillClient::~OhAutofillClient() {
 
 void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
 #if defined(OHOS_AUTOFILL)
+  if (!data) {
+    LOG(ERROR) << "data is null";
+    return;
+  }
   std::string json_str = data->GetStdString();
   content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
+  if (!rfh) {
+    LOG(ERROR) << "rfh is nullptr";
+    return;
+  }
   autofill::ContentAutofillDriver* driver =
       autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
+  if (!driver) {
+    LOG(ERROR) << "driver is nullptr";
+    return;
+  }
   auto mgr = static_cast<OhAutofillManager*>(driver->oh_autofill_manager());
   if (mgr) {
     mgr->FillData(json_str);
