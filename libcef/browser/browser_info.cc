@@ -217,6 +217,12 @@ void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
   browser_->request_context()->OnRenderFrameDeleted(
       global_id, frame_info->is_main_frame_, frame_info->is_guest_view_);
 
+#if BUILDFLAG(IS_OHOS)
+  if (frame_info->is_speculative_) {
+    last_delete_speculative_rfh_ = global_id;
+  }
+#endif
+
   // Remove from the lookup maps.
   frame_id_map_.erase(it);
 
@@ -561,3 +567,9 @@ CefBrowserInfo::NotificationStateLock::~NotificationStateLock() {
     }
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+content::GlobalRenderFrameHostId CefBrowserInfo::GetLastDeleteSpeculativeRFH() {
+  return last_delete_speculative_rfh_;
+}
+#endif

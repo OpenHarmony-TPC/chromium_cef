@@ -398,7 +398,7 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
   DCHECK(frame_util::IsValidGlobalId(global_id));
   DCHECK(callback);
-  LOG(INFO) << "on get new browser info";
+  LOG(INFO) << "on get new browser info" << frame_util::GetFrameDebugString(global_id);
 
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
@@ -643,12 +643,14 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::GetBrowserInfoInternal(
     bool is_guest_view_tmp;
     auto frame =
         browser_info->GetFrameForGlobalId(global_id, &is_guest_view_tmp);
-    if (frame || is_guest_view_tmp) {
+#if BUILDFLAG(IS_OHOS)
+    if (frame || is_guest_view_tmp || browser_info->GetLastDeleteSpeculativeRFH() == global_id) {
       if (is_guest_view) {
         *is_guest_view = is_guest_view_tmp;
       }
       return browser_info;
     }
+#endif
   }
 
   return nullptr;
