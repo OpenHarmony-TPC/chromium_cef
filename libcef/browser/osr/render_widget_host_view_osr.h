@@ -156,6 +156,12 @@ class CefRenderWidgetHostViewOSR
 #if defined(OHOS_CLIPBOARD)
   void MouseSelectMenuShow(bool show);
   void ChangeVisibilityOfQuickMenu();
+  void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
+                              RenderWidgetHostViewBase* updated_view) override;
+#endif
+
+#ifdef OHOS_AI
+  bool CloseImageOverlaySelection();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -461,8 +467,6 @@ class CefRenderWidgetHostViewOSR
 #ifdef OHOS_CLIPBOARD
   std::u16string GetSelectedText() override;
   std::u16string GetText();
-  void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
-                              RenderWidgetHostViewBase* updated_view) override;
 #endif  // #ifdef OHOS_CLIPBOARD
 
 #ifdef OHOS_EX_FREE_COPY
@@ -477,6 +481,7 @@ class CefRenderWidgetHostViewOSR
   void OnTextSelected(bool flag);
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
+  void OnFoldStatusChanged(uint32_t foldstatus);
 #endif
 
 #ifdef OHOS_DRAG_DROP

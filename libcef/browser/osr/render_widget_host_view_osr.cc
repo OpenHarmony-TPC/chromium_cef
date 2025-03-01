@@ -1722,6 +1722,19 @@ void CefRenderWidgetHostViewOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
+#ifdef OHOS_AI
+bool CefRenderWidgetHostViewOSR::CloseImageOverlaySelection() {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<CefContextMenuHandler> handler =
+        browser_impl_->GetClient()->GetContextMenuHandler();
+    if (handler) {
+      return handler->CloseImageOverlaySelection();
+    }
+  }
+  return false;
+}
+#endif
+
 void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedAfterActivation(
     base::TimeTicks activation_time) {
   auto metadata =
@@ -3817,6 +3830,7 @@ void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
 }
 
 void CefRenderWidgetHostViewOSR::OnDestroyImageAnalyzerOverlay() {
+  overlay_in_progress_ = false;
   if (render_widget_host_) {
     render_widget_host_->OnDestroyImageAnalyzerOverlay();
   }
@@ -3824,5 +3838,11 @@ void CefRenderWidgetHostViewOSR::OnDestroyImageAnalyzerOverlay() {
 
 float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
   return page_scale_factor_;
+}
+
+void CefRenderWidgetHostViewOSR::OnFoldStatusChanged(uint32_t foldstatus) {
+  if (render_widget_host_) {
+    render_widget_host_->OnFoldStatusChanged(foldstatus);
+  }
 }
 #endif

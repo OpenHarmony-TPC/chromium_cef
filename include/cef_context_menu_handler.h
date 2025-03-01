@@ -246,6 +246,14 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void ChangeVisibilityOfQuickMenu() {}
 #endif
+
+#ifdef OHOS_AI
+  ///
+  /// Called when you need to close the image overlay selection.
+  ///
+  /*--cef()--*/
+  virtual bool CloseImageOverlaySelection() { return false; }
+#endif
 };
 
 ///

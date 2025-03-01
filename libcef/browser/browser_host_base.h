@@ -782,6 +782,7 @@ bool TerminateRenderProcess() override;
   void OnTextSelected(bool flag) override;
   void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+  void OnFoldStatusChanged(uint32_t foldstatus) override;
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT

@@ -511,6 +511,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnTextSelected(bool flag) override;
   void OnDestroyImageAnalyzerOverlay() override;
   float GetPageScaleFactor() override;
+  void OnFoldStatusChanged(uint32_t foldstatus) override;
 #endif
 
 #if defined(OHOS_DISPATCH_BEFORE_UNLOAD)

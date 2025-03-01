@@ -75,6 +75,10 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   void ChangeVisibilityOfQuickMenu() override;
 #endif
 
+#ifdef OHOS_AI
+  bool CloseImageOverlaySelection() override;
+#endif
+
 #ifdef OHOS_DRAG_DROP
   gfx::Rect GetVisibleRectToWeb() override;
 #endif

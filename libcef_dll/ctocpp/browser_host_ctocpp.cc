@@ -3468,6 +3468,21 @@ void CefBrowserHostCToCpp::OnDestroyImageAnalyzerOverlay() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::OnFoldStatusChanged(uint32_t foldStatus) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_fold_status_changed)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->on_fold_status_changed(_struct, foldStatus);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::OnSafeInsetsChange(int left,
                                               int top,
                                               int right,

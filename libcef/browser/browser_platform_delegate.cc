@@ -513,6 +513,10 @@ void CefBrowserPlatformDelegate::OnDestroyImageAnalyzerOverlay() {
 float CefBrowserPlatformDelegate::GetPageScaleFactor() {
   return 1;
 }
+
+void CefBrowserPlatformDelegate::OnFoldStatusChanged(uint32_t foldstatus) {
+  DCHECK(false);
+}
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT
