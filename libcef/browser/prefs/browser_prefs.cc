@@ -8,6 +8,7 @@
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/media_capture_devices_dispatcher.h"
+#include "libcef/browser/policy/browser_policy_handler.h"
 #include "libcef/browser/prefs/pref_registrar.h"
 #include "libcef/browser/prefs/pref_store.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
@@ -242,6 +243,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #ifdef OHOS_CLOUD_CONTROL
     RegisterCloudControlPersistentPrefs(persistent_prefs);
 #endif
+#if defined(OHOS_EDM_POLICY)
+    persistent_prefs.insert(prefs::kBrowserPolicyVersion);
+#endif
     factory.set_user_prefs(base::MakeRefCounted<SegregatedPrefStore>(
         base::MakeRefCounted<CefPrefStore>(),
         base::MakeRefCounted<JsonPrefStore>(pref_path),
@@ -443,6 +447,7 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     // Currently OriginAgentCluster is not enabled by default on OHOS.
     registry->RegisterBooleanPref(prefs::kOriginAgentClusterDefaultEnabled,
                                   false);
+    registry->RegisterIntegerPref(prefs::kBrowserPolicyVersion, 0);
 #endif
 
     // Spell checking preferences.
