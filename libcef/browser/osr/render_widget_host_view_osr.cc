@@ -3525,6 +3525,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
         static_cast<const blink::WebGestureEvent&>(input_event);
     if (input_event.GetType() ==
         blink::WebInputEvent::Type::kGestureScrollBegin) {
+#ifdef OHOS_AI
+        is_scrolling_ = true;
+#endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollStarted();
       handler->OnScrollStart(browser_impl_.get(), 
@@ -3532,6 +3535,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
                             gesture_event.data.scroll_begin.delta_y_hint);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
+#ifdef OHOS_AI
+      is_scrolling_ = false;
+#endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
@@ -3545,6 +3551,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
                is_mouse_wheel_scroll_) {
+#ifdef OHOS_AI
+      is_scrolling_ = true;
+#endif
       is_scroll_consumed_ =
         handler->FilterScrollEvent(browser_impl_.get(),
                                   gesture_event.data.scroll_update.delta_x,
@@ -3809,6 +3818,10 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(
 #endif
 
 #ifdef OHOS_AI
+bool CefRenderWidgetHostViewOSR::IsScrolling() {
+  return is_scrolling_;
+}
+
 void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
   if (render_widget_host_) {
     render_widget_host_->OnTextSelected(flag);

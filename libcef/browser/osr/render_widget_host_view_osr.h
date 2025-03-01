@@ -474,6 +474,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 
 #ifdef OHOS_AI
+  bool IsScrolling();
   void OnTextSelected(bool flag);
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
@@ -732,6 +733,7 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_AI
   bool overlay_in_progress_ = false;
+  bool is_scrolling_ = false;
 #endif
   int32_t needFocusViewport_ = 0;
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
