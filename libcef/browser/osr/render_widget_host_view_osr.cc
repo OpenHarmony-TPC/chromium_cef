@@ -3851,3 +3851,22 @@ float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
   return page_scale_factor_;
 }
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::MaximizeResize() {
+  auto compositor = CefRenderWidgetHostViewOSR::GetCompositor();
+  if (compositor) {
+    compositor->DisableSwapUntilMaximized();
+  }
+}
+
+void CefRenderWidgetHostViewOSR::RestoreRenderFit() {
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "RestoreRenderFit get client failed.";
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler = browser_impl_->client()->GetRenderHandler();
+  CHECK(handler);
+  handler->RestoreRenderFit();
+}
+#endif

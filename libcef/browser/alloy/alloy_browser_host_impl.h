@@ -560,6 +560,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void ResetVSyncFrequency();
   void SetVisible(int32_t nweb_id, bool visible);
   void SetNativeEmbedMode(bool flag) override;
+  void MaximizeResize() override;
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)

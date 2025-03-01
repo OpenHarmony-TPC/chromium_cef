@@ -2255,6 +2255,11 @@ typedef struct _cef_browser_host_t {
   void (CEF_CALLBACK* set_optimize_parser_budget_enabled)(
         struct _cef_browser_host_t* self,
         int enable);
+
+  ///
+  /// Web maximize resize optimize.
+  ///
+  void(CEF_CALLBACK* maximize_resize)(struct _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

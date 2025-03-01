@@ -3042,6 +3042,14 @@ float AlloyBrowserHostImpl::GetPageScaleFactor() {
 }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::MaximizeResize() {
+  if (platform_delegate_) {
+    platform_delegate_->MaximizeResize();
+  }
+}
+#endif
+
 #if defined(OHOS_VIDEO_ASSISTANT)
 std::unique_ptr<content::VideoAssistant>
 AlloyBrowserHostImpl::CreateVideoAssistant() {
