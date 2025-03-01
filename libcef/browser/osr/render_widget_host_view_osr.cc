@@ -803,6 +803,9 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
       continue;
     }
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+    OnTouchMove();
+#endif
     if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
       pointer_state_.CleanupRemovedTouchPoints(event);
       continue;
@@ -2423,13 +2426,26 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
     ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
 }
 
+void CefRenderWidgetHostViewOSR::BoostingPreiodly() {
+  if(pointer_state_.GetPointerCount() == 0) {
+    return;
+  }
+  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+    .CreateSocPerfClientAdapter()
+    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  CEF_POST_DELAYED_TASK(CEF_UIT,
+    base::BindOnce(&CefRenderWidgetHostViewOSR::BoostingPreiodly,
+    weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+}
+
 void CefRenderWidgetHostViewOSR::OnTouchDown() {
   if (pointer_state_.GetPointerCount() == 0) {
+    has_touch_point_ = false;
     if (isBoosting_) {
+      isBoosting_ = false;
       CEF_POST_DELAYED_TASK(CEF_UIT,
         base::BindOnce(&CefRenderWidgetHostViewOSR::StopBoosting,
           weak_ptr_factory_.GetWeakPtr()), TOUCH_UP_DURATION_TIME);
-      isBoosting_ = false;
       if (auto* host = content::GpuProcessHost::Get()) {
         if (auto* host_impl = host->gpu_host()) {
           host_impl->SetHasTouchPoint(false);
@@ -2438,22 +2454,31 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
     }
     return;
   }
-  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+  if (isBoosting_) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
-  OHOS::NWeb::ResSchedClientAdapter::ReportScene(
-      OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER, OHOS::NWeb::ResSchedSceneAdapter::SLIDE);
-  if (!isBoosting_) {
+    CEF_POST_DELAYED_TASK(CEF_UIT,
+      base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
+      weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+  }
+
+  if (!has_touch_point_) {
     if (auto* host = content::GpuProcessHost::Get()) {
      if (auto* host_impl = host->gpu_host()) {
         host_impl->SetHasTouchPoint(true);
       }
     }
   }
+  has_touch_point_ = true;
+}
+
+void CefRenderWidgetHostViewOSR::OnTouchMove() {
+  if(pointer_state_.GetPointerCount() == 0) {
+    return;
+  }
   isBoosting_ = true;
-  CEF_POST_DELAYED_TASK(CEF_UIT,
-      base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
-            weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+  BoostingPreiodly();
 }
 #endif
 
