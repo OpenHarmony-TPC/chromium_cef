@@ -73,6 +73,7 @@ class CefBrowserPlatformDelegateOsr
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
   void NotifyForNextTouchEvent() override;
   void SetNativeEmbedMode(bool flag) override;
+  void MaximizeResize() override;
 #endif
 #if defined(OHOS_INPUT_EVENTS)
   void ScrollFocusedEditableNodeIntoView() override;

@@ -803,6 +803,9 @@ void CefRenderWidgetHostViewOSR::SendTouchEventList(const std::vector<CefTouchEv
       continue;
     }
 
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+    OnTouchMove();
+#endif
     if (selection_controller_->WillHandleTouchEvent(pointer_state_)) {
       pointer_state_.CleanupRemovedTouchPoints(event);
       continue;
@@ -2423,13 +2426,26 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
     ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
 }
 
+void CefRenderWidgetHostViewOSR::BoostingPreiodly() {
+  if(pointer_state_.GetPointerCount() == 0) {
+    return;
+  }
+  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+    .CreateSocPerfClientAdapter()
+    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+  CEF_POST_DELAYED_TASK(CEF_UIT,
+    base::BindOnce(&CefRenderWidgetHostViewOSR::BoostingPreiodly,
+    weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+}
+
 void CefRenderWidgetHostViewOSR::OnTouchDown() {
   if (pointer_state_.GetPointerCount() == 0) {
+    has_touch_point_ = false;
     if (isBoosting_) {
+      isBoosting_ = false;
       CEF_POST_DELAYED_TASK(CEF_UIT,
         base::BindOnce(&CefRenderWidgetHostViewOSR::StopBoosting,
           weak_ptr_factory_.GetWeakPtr()), TOUCH_UP_DURATION_TIME);
-      isBoosting_ = false;
       if (auto* host = content::GpuProcessHost::Get()) {
         if (auto* host_impl = host->gpu_host()) {
           host_impl->SetHasTouchPoint(false);
@@ -2438,22 +2454,31 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
     }
     return;
   }
-  OHOS::NWeb::OhosAdapterHelper::GetInstance()
+  if (isBoosting_) {
+    OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
       ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
-  OHOS::NWeb::ResSchedClientAdapter::ReportScene(
-      OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER, OHOS::NWeb::ResSchedSceneAdapter::SLIDE);
-  if (!isBoosting_) {
+    CEF_POST_DELAYED_TASK(CEF_UIT,
+      base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
+      weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+  }
+
+  if (!has_touch_point_) {
     if (auto* host = content::GpuProcessHost::Get()) {
      if (auto* host_impl = host->gpu_host()) {
         host_impl->SetHasTouchPoint(true);
       }
     }
   }
+  has_touch_point_ = true;
+}
+
+void CefRenderWidgetHostViewOSR::OnTouchMove() {
+  if(pointer_state_.GetPointerCount() == 0) {
+    return;
+  }
   isBoosting_ = true;
-  CEF_POST_DELAYED_TASK(CEF_UIT,
-      base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
-            weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
+  BoostingPreiodly();
 }
 #endif
 
@@ -3525,6 +3550,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
         static_cast<const blink::WebGestureEvent&>(input_event);
     if (input_event.GetType() ==
         blink::WebInputEvent::Type::kGestureScrollBegin) {
+#ifdef OHOS_AI
+        is_scrolling_ = true;
+#endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollStarted();
       handler->OnScrollStart(browser_impl_.get(), 
@@ -3532,6 +3560,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
                             gesture_event.data.scroll_begin.delta_y_hint);
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollEnd) {
+#ifdef OHOS_AI
+      is_scrolling_ = false;
+#endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
@@ -3545,6 +3576,9 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
                is_mouse_wheel_scroll_) {
+#ifdef OHOS_AI
+      is_scrolling_ = true;
+#endif
       is_scroll_consumed_ =
         handler->FilterScrollEvent(browser_impl_.get(),
                                   gesture_event.data.scroll_update.delta_x,
@@ -3809,6 +3843,10 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(
 #endif
 
 #ifdef OHOS_AI
+bool CefRenderWidgetHostViewOSR::IsScrolling() {
+  return is_scrolling_;
+}
+
 void CefRenderWidgetHostViewOSR::OnTextSelected(bool flag) {
   if (render_widget_host_) {
     render_widget_host_->OnTextSelected(flag);
@@ -3824,5 +3862,24 @@ void CefRenderWidgetHostViewOSR::OnDestroyImageAnalyzerOverlay() {
 
 float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
   return page_scale_factor_;
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::MaximizeResize() {
+  auto compositor = CefRenderWidgetHostViewOSR::GetCompositor();
+  if (compositor) {
+    compositor->DisableSwapUntilMaximized();
+  }
+}
+
+void CefRenderWidgetHostViewOSR::RestoreRenderFit() {
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "RestoreRenderFit get client failed.";
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler = browser_impl_->client()->GetRenderHandler();
+  CHECK(handler);
+  handler->RestoreRenderFit();
 }
 #endif

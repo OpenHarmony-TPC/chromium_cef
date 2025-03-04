@@ -763,6 +763,8 @@ source_set("libcef_static") {
               "libcef/browser/permission/alloy_permission_request_handler.h",
               "libcef/browser/permission_prompt.cc",
               "libcef/browser/permission_prompt.h",
+              "libcef/browser/policy/browser_policy_handler.cc",
+              "libcef/browser/policy/browser_policy_handler.h",
               "libcef/browser/prefs/browser_prefs.cc",
               "libcef/browser/prefs/browser_prefs.h",
               "libcef/browser/prefs/pref_helper.cc",

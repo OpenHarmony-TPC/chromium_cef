@@ -328,6 +328,10 @@ class CefRenderWidgetHostViewOSR
   void OnTouchDown();
 
   void StopBoosting();
+
+  void BoostingPreiodly();
+
+  void OnTouchMove();
 #endif
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -474,6 +478,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 
 #ifdef OHOS_AI
+  bool IsScrolling();
   void OnTextSelected(bool flag);
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
@@ -481,6 +486,11 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_DRAG_DROP
   void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  void MaximizeResize();
+  void RestoreRenderFit() override;
 #endif
 
  private:
@@ -724,6 +734,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
   bool isBoosting_ = false;
   bool is_fling_ = false;
+  bool has_touch_point_ = false;
 #endif
 
 #ifdef OHOS_CLIPBOARD
@@ -732,6 +743,7 @@ class CefRenderWidgetHostViewOSR
 
 #ifdef OHOS_AI
   bool overlay_in_progress_ = false;
+  bool is_scrolling_ = false;
 #endif
   int32_t needFocusViewport_ = 0;
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;

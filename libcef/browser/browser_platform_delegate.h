@@ -339,6 +339,8 @@ class CefBrowserPlatformDelegate {
   virtual void NotifyForNextTouchEvent();
 
   virtual void SetNativeEmbedMode(bool flag) {};
+
+  virtual void MaximizeResize() {}
 #endif
 
   // Notify the browser that screen information has changed. Only used with
