@@ -95,6 +95,11 @@
 #if defined(OHOS_INPUT_EVENTS)
 #include "ohos_nweb/src/nweb_inputmethod_handler.h"
 #include "libcef/browser/browser_util.h"
+#include "chrome/browser/extensions/extension_keybinding_registry.h"
+#include "ui/base/accelerators/accelerator.h"
+#include "chrome/browser/extensions/extension_commands_global_registry.h"
+#include "ui/content_accelerators/accelerator_util.h"
+#include "libcef/browser/alloy/cef_extension_keybinding_registry_views.h"
 #endif
 
 #if defined(OHOS_INCOGNITO_MODE)
@@ -1653,6 +1658,32 @@ bool AlloyBrowserHostImpl::WebHandleKeyboardEvent(
     return true;
   }
 
+  if (source) {
+    content::BrowserContext *browser_context = source->GetBrowserContext();
+    extensions::ExtensionCommandsGlobalRegistry *registry =
+        extensions::ExtensionCommandsGlobalRegistry::Get(browser_context);
+    if (registry) {
+      registry->registry_for_active_window();
+    }
+
+    bool run_accelerator_flag = true;
+    ui::Accelerator accelerator =
+        ui::GetAcceleratorFromNativeWebKeyboardEvent(event);
+    ui::KeyEvent key_event = accelerator.ToKeyEvent();
+    const ui::EventType type = key_event.type();
+    if (run_accelerator_flag && (type == ui::ET_KEY_PRESSED &&
+      event.GetType() != blink::WebKeyboardEvent::Type::kChar)) {
+      run_accelerator_flag = true;
+    } else {
+      run_accelerator_flag = false;
+    }
+
+    if (run_accelerator_flag) {
+      CefExtensionKeybindingRegistryViews cef_key_view(browser_context);
+      cef_key_view.AcceleratorPressed(accelerator);
+    }
+  }
+  
   if (platform_delegate_ && platform_delegate_->HandleKeyboardEvent(event)) {
     return true;
   }
