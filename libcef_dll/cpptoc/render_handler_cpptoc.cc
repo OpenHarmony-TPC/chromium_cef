@@ -1461,6 +1461,23 @@ render_handler_on_scroll_start(struct _cef_render_handler_t* self,
       CefBrowserCToCpp::Wrap(browser), x, y);
 }
 
+void CEF_CALLBACK
+render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
+                                      int64_t accessibilityId,
+                                      int32_t eventType) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1529,6 +1546,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
   GetStruct()->get_visible_rect_to_web = render_handler_get_visible_rect_to_web;
   GetStruct()->on_scroll_start = render_handler_on_scroll_start;
+  GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.
