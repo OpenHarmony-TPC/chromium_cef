@@ -128,7 +128,13 @@
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#include "chrome/browser/extensions/api/extension_action/extension_action_api.h"
 #endif
+
+#ifdef OHOS_NOTIFICATION
+#include "libcef/browser/permission/alloy_access_query.h"
+#endif
+
 namespace {
 
 #if defined(OHOS_INPUT_EVENTS)
@@ -2092,6 +2098,30 @@ void CefBrowserHostBase::AbortAskSensorsPermission(
   }
 }
 #endif // defined(OHOS_SENSOR)
+
+#ifdef OHOS_NOTIFICATION
+void CefBrowserHostBase::AskNotificationPermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  if (permission_request_handler_) {
+    permission_request_handler_->SendRequest(new AlloyAccessRequest(
+        origin, AlloyAccessRequest::Resources::NOTIFICATION,
+        std::move(callback)));
+  } else {
+    LOG(ERROR) << "AskNotificationPermission, handler is null.";
+  }
+}
+
+void CefBrowserHostBase::AbortAskNotificationPermission(
+    const CefString& origin) {
+  if (permission_request_handler_) {
+    permission_request_handler_->CancelRequest(
+        origin, AlloyAccessRequest::Resources::NOTIFICATION);
+  } else {
+    LOG(ERROR) << "AbortAskNotificationPermission, handler is null.";
+  }
+}
+#endif // OHOS_NOTIFICATION
 
 #if BUILDFLAG(IS_OHOS)
 void CefBrowserHostBase::MaximizeResize() {}
@@ -4331,6 +4361,83 @@ void CefBrowserHostBase::WebExtensionTabUpdated(
   extensions::cef::TabsWindowsAPI::Get(browser_context)->TabUpdated(
       tab_id, web_contents, changed_properties, url.ToString());
 }
+
+void CefBrowserHostBase::WebExtensionTabUpdated(
+    int tab_id,
+    const std::vector<CefString>& changed_property_names,
+    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "TabUpdated get contents failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "TabUpdated get contents failed.";
+#endif
+
+    return;
+  }
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "TabUpdated get browser context failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "TabUpdated get browser contents failed.";
+#endif
+
+    return;
+  }
+
+  std::vector<std::string> changed_properties;
+  std::for_each(changed_property_names.begin(), changed_property_names.end(),
+      [&changed_properties] (const CefString& name) {
+    changed_properties.emplace_back(name.ToString());
+  });
+
+  extensions::cef::TabsWindowsAPI::Get(browser_context)->TabUpdated(
+      tab_id, web_contents, changed_properties, std::move(changeInfo));
+}
+
+void CefBrowserHostBase::WebExtensionTabActivated(int tab_id, int window_id) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "TabActivated get contents failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "TabActivated get contents failed.";
+#endif
+
+    return;
+  }
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "TabActivated get browser context failed.";
+
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(ERROR) << "TabActivated get browser contents failed.";
+#endif
+
+    return;
+  }
+  extensions::cef::TabsWindowsAPI::Get(browser_context)
+      ->TabActived(tab_id, window_id, web_contents);
+}
+
+void CefBrowserHostBase::WebExtensionActionClicked(
+    std::string extensionId,
+    const NWebExtensionTab* tab) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents)
+    LOG(ERROR) << "WebExtensionActionClicked get web_contents failed.";
+
+  auto browser_context = web_contents->GetBrowserContext();
+  if (!browser_context)
+    LOG(ERROR) << "WebExtensionActionClicked get browser_context failed.";
+
+  extensions::ExtensionActionAPI::Get(browser_context)
+      ->DispatchExtensionActionClickedWithCustomArgs(web_contents, extensionId,
+                                                     tab);
+}
 #endif
 
 #ifdef OHOS_BFCACHE
@@ -4394,3 +4501,13 @@ void CefBrowserHostBase::DispatchBeforeUnload() {
   GetWebContents()->DispatchBeforeUnload(false);
 }
 #endif // OHOS_DISPATCH_BEFORE_UNLOAD
+
+#ifdef OHOS_NOTIFICATION
+void CefBrowserHostBase::GetPermissionStatusAsync(
+    const CefString& origin,
+    cef_permission_status_query_callback_t callback) {
+  CefPermissionQuery::GetPermissionStatusAsync(
+      new AlloyAccessQuery(origin, AlloyAccessRequest::Resources::NOTIFICATION,
+                           std::move(callback)));
+}
+#endif // OHOS_NOTIFICATION

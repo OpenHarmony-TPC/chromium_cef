@@ -187,6 +187,11 @@ class CefBrowserHostBase : public CefBrowserHost,
   // one browser focused at a time.
   static CefRefPtr<CefBrowserHostBase> GetLikelyFocusedBrowser();
 
+#ifdef OHOS_NOTIFICATION
+  static void GetPermissionStatusAsync(const CefString& origin,
+                                       cef_permission_status_query_callback_t callback);
+#endif // OHOS_NOTIFICATION
+
   CefBrowserHostBase(
       const CefBrowserSettings& settings,
       CefRefPtr<CefClient> client,
@@ -714,6 +719,11 @@ bool TerminateRenderProcess() override;
                                 cef_permission_callback_t callback) override;
   void AbortAskSensorsPermission(const CefString& origin) override;
 #endif // defined(OHOS_SENSOR)
+#ifdef OHOS_NOTIFICATION
+  void AskNotificationPermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskNotificationPermission(const CefString& origin) override;
+#endif // OHOS_NOTIFICATION
   void AskProtectedMediaIdentifierPermission(
       const CefString& origin,
       cef_permission_callback_t callback) override;
@@ -806,8 +816,19 @@ bool TerminateRenderProcess() override;
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       const CefString& url) override;
+
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
   void SetTabId(int tab_id) override;
   int GetTabId() override;
+
+  void WebExtensionTabActivated(int tab_id, int window_id) override;
+
+  void WebExtensionActionClicked(
+      std::string extensionId,
+      const NWebExtensionTab* tab) override;
 #endif
 
 #ifdef OHOS_BFCACHE

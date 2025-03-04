@@ -219,6 +219,19 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AbortAskClipboardSanitizedWritePermission(const CefString& origin) = 0;
+#ifdef OHOS_NOTIFICATION
+  ///
+  /// Handle the Notification permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskNotificationPermission(const CefString& origin,
+                                         cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Notification permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskNotificationPermission(const CefString& origin) = 0;
+#endif // OHOS_NOTIFICATION
 };
 
 ///

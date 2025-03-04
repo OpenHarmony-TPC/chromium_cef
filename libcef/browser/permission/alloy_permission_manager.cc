@@ -16,6 +16,9 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
+#ifdef OHOS_NOTIFICATION
+#include "services/network/public/cpp/is_potentially_trustworthy.h"
+#endif // OHOS_NOTIFICATION
 
 using blink::PermissionType;
 using blink::mojom::PermissionStatus;
@@ -116,6 +119,30 @@ class AlloyPermissionManager::UnhandledRequest {
   std::set<PermissionType> resolved_permissions_;
   bool cancelled_;
 };
+
+#ifdef OHOS_NOTIFICATION
+using PermissionStatusCallback =
+    base::OnceCallback<void(blink::mojom::PermissionStatus)>;
+
+class AlloyPermissionManager::UnhandledQuery {
+ public:
+  UnhandledQuery(PermissionType permission,
+                 GURL requesting_origin,
+                 PermissionStatusCallback callback)
+      : permission_(permission),
+        requesting_origin_(requesting_origin),
+        callback_(std::move(callback)) {}
+
+  PermissionType GetPermissionType() { return permission_; }
+  GURL GetOrigin() { return requesting_origin_; }
+
+ private:
+  friend class AlloyPermissionManager;
+  PermissionType permission_;
+  GURL requesting_origin_;
+  PermissionStatusCallback callback_;
+};
+#endif // OHOS_NOTIFICATION
 
 AlloyPermissionManager::AlloyPermissionManager() {}
 
@@ -275,7 +302,22 @@ void AlloyPermissionManager::RequestPermissionByType(
               &AlloyPermissionManager::OnRequestResponseCallBack,
               weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
       break;
+#ifdef OHOS_NOTIFICATION
     case PermissionType::NOTIFICATIONS:
+      if (browser) {
+        if (!network::IsUrlPotentiallyTrustworthy(pending_request_raw->requesting_origin_)) {
+          break;
+        }
+        browser->AskNotificationPermission(
+          pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+              &AlloyPermissionManager::OnRequestResponseCallBack,
+              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }
+      break;
+#else
+    case PermissionType::NOTIFICATIONS:
+#endif
     case PermissionType::DURABLE_STORAGE:
     case PermissionType::BACKGROUND_SYNC:
     case PermissionType::ACCESSIBILITY_EVENTS:
@@ -348,6 +390,11 @@ void AlloyPermissionManager::OnRequestResponseCallBack(
             pending_request->requesting_origin_) {
       continue;
     }
+#ifdef OHOS_NOTIFICATION
+    if (permission == PermissionType::NOTIFICATIONS) {
+      manager->notification_permission_[pending_request->requesting_origin_] = (int32_t)status;
+    }
+#endif // OHOS_NOTIFICATION
     it.GetCurrentValue()->SetPermissionStatus(permission, status);
     if (it.GetCurrentValue()->IsCompleted()) {
       complete_request_ids.push_back(it.GetCurrentKey());
@@ -377,9 +424,21 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
   } else if (permission == PermissionType::SENSORS) {
     return PermissionStatus::ASK;
 #endif // defined(OHOS_SENSOR)
+#ifdef OHOS_NOTIFICATION
+  } else if (permission == PermissionType::NOTIFICATIONS) {
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+        switches::kEnableNwebExPermission)) {
+      if (notification_permission_.count(requesting_origin)) {
+        return (PermissionStatus)notification_permission_[requesting_origin];
+      } else {
+        return PermissionStatus::DENIED;
+      }
+    }
+#endif // OHOS_NOTIFICATION
   }
   return PermissionStatus::DENIED;
 }
+
 PermissionStatus AlloyPermissionManager::GetPermissionStatusForWorker(
     PermissionType permission,
     content::RenderProcessHost* render_process_host,
@@ -561,7 +620,19 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
         browser->AbortAskSensorsPermission(requesting_origin.spec());
       break;
 #endif // defined(OHOS_SENSOR)
+#ifdef OHOS_NOTIFICATION
     case PermissionType::NOTIFICATIONS:
+      if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+          switches::kEnableNwebEx) && browser) {
+        browser->AbortAskNotificationPermission(
+            requesting_origin.spec());
+      } else {
+        NOTREACHED() << "Invalid PermissionType.";
+      }
+      break;
+#else
+    case PermissionType::NOTIFICATIONS:
+#endif // OHOS_NOTIFICATION
     case PermissionType::DURABLE_STORAGE:
     case PermissionType::BACKGROUND_SYNC:
     case PermissionType::ACCESSIBILITY_EVENTS:
@@ -585,3 +656,57 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
       break;
   }
 }
+
+#ifdef OHOS_NOTIFICATION
+void AlloyPermissionManager::OnQueryResponseCallBack(
+    const base::WeakPtr<AlloyPermissionManager>& manager,
+    int query_id,
+    blink::PermissionType permission,
+    int32_t status) {
+  if (!manager) {
+    return;
+  }
+
+  UnhandledQuery* pending_query =
+      manager->unhandled_querys_.Lookup(query_id);
+  if (!pending_query) {
+    LOG(ERROR) << "cannot find UnhandledQuery for query response";
+    return;
+  }
+  if (!pending_query->callback_) {
+    LOG(ERROR) << "query callback had been destroyed";
+    return;
+  }
+
+  if (status < (int32_t)blink::mojom::PermissionStatus::kMinValue
+      || status > (int32_t)blink::mojom::PermissionStatus::kMaxValue) {
+    return;
+  }
+
+  manager->notification_permission_[pending_query->GetOrigin()] = status;
+  std::move(pending_query->callback_).Run((blink::mojom::PermissionStatus)status);
+  manager->unhandled_querys_.Remove(query_id);
+}
+
+void AlloyPermissionManager::GetPermissionStatusAsync(
+    blink::PermissionType permission,
+    const GURL& requesting_origin,
+    base::OnceCallback<void(blink::mojom::PermissionStatus)> callback) {
+  if (permission != PermissionType::NOTIFICATIONS) {
+    std::move(callback).Run(PermissionStatus::DENIED);
+    return;
+  }
+
+  auto pending_query = std::make_unique<UnhandledQuery>(
+        permission, requesting_origin, std::move(callback));
+  UnhandledQuery* pending_query_raw = pending_query.get();
+  const int query_id =
+      unhandled_querys_.Add(std::move(pending_query));
+
+ CefBrowserHostBase::GetPermissionStatusAsync(
+     pending_query_raw->requesting_origin_.spec(),
+     base::BindRepeating(
+         &OnQueryResponseCallBack, weak_ptr_factory_.GetWeakPtr(),
+         query_id, permission));
+}
+#endif // OHOS_NOTIFICATION

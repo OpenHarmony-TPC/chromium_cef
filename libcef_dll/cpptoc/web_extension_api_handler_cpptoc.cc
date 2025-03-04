@@ -19,36 +19,11 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-void CEF_CALLBACK web_extension_api_handler_on_tab_update_url(
-    struct _cef_web_extension_api_handler_t* self,
-    int tab_id,
-    const cef_string_t* url) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
-    return;
-  }
-
-  // Execute
-  CefWebExtensionApiHandlerCppToC::Get(self)->OnUpdateTabUrl(tab_id,
-                                                             CefString(url));
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
-CefWebExtensionApiHandlerCppToC::CefWebExtensionApiHandlerCppToC() {
-  GetStruct()->on_tab_update_url = web_extension_api_handler_on_tab_update_url;
-}
+CefWebExtensionApiHandlerCppToC::CefWebExtensionApiHandlerCppToC() {}
 
 // DESTRUCTOR - Do not edit by hand.
 

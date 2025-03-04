@@ -33,6 +33,9 @@ class AlloyAccessRequest : public CefAccessRequest {
     CLIPBOARD_READ_WRITE = 1 << 5,
     CLIPBOARD_SANITIZED_WRITE = 1 << 6,
     SENSORS = 1 << 7,
+#ifdef OHOS_NOTIFICATION
+    NOTIFICATION = 1 << 8,
+#endif // OHOS_NOTIFICATION
   };
 
   AlloyAccessRequest(const CefString& origin,

@@ -1128,6 +1128,9 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     const content::OpenURLParams& params) {
   if (is_guest_view && !params.is_pdf &&
       !params.url.SchemeIs(extensions::kExtensionScheme) &&
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      !params.url.SchemeIs(extensions::kArkwebExtensionScheme) &&
+#endif
       !params.url.SchemeIs(content::kChromeUIScheme)) {
     // The PDF viewer will load the PDF extension in the guest view, and print
     // preview will load chrome://print in the guest view. The PDF renderer
@@ -1564,9 +1567,10 @@ void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
 }
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-void AlloyBrowserHostImpl::WebExtensionUpdateTabUrl(
-    int32_t tab_id, const GURL& url) {
-  contents_delegate_->WebExtensionUpdateTabUrl(tab_id, url);
+void AlloyBrowserHostImpl::WebExtensionUpdateTab(
+    int32_t tab_id,
+    const NWebExtensionTabUpdateProperties* update_properties) {
+  contents_delegate_->WebExtensionUpdateTab(tab_id, update_properties);
 }
 
 void AlloyBrowserHostImpl::SetTabId(int32_t tab_id) {

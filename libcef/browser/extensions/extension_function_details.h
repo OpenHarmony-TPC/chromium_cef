@@ -76,7 +76,8 @@ class CefExtensionFunctionDetails {
   // client permissions.
   CefRefPtr<AlloyBrowserHostImpl> GetBrowserForTabIdFirstTime(
       int tab_id,
-      std::string* error_message) const;
+      std::string* error_message
+      ) const;
 
   // Returns the browser matching |tab_id| or NULL if the browser cannot be
   // found or does not have a WebContents. |tab_id| must be >= 0.

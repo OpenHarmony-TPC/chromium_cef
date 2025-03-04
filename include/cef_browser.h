@@ -62,6 +62,10 @@
 class CefDevToolsMessageHandlerDelegate;
 #endif // OHOS_DEVTOOLS
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 class CefBrowserHost;
 class CefClient;
 
@@ -2170,6 +2174,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       const CefString& url) = 0;
+
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) = 0;
+
+  virtual void WebExtensionTabActivated(int tab_id, int window_id) = 0;
+
+  virtual void WebExtensionActionClicked(
+      std::string extensionId,
+      const NWebExtensionTab* tab) = 0;
 #endif
 
   ///

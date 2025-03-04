@@ -409,6 +409,53 @@ void CefBrowserPermissionRequestDelegateCToCpp::
                                                           origin.GetStruct());
 }
 
+#ifdef OHOS_NOTIFICATION
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AskNotificationPermission(
+    const CefString& origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, ask_notification_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->ask_notification_permission(_struct, origin.GetStruct(), callback);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserPermissionRequestDelegateCToCpp::AbortAskNotificationPermission(
+    const CefString& origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_permission_request_delegate_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, abort_ask_notification_permission)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: origin; type: string_byref_const
+  DCHECK(!origin.empty());
+  if (origin.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->abort_ask_notification_permission(_struct, origin.GetStruct());
+}
+#endif // OHOS_NOTIFICATION
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserPermissionRequestDelegateCToCpp::

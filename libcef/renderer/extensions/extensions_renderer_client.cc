@@ -80,7 +80,8 @@ bool CefExtensionsRendererClient::ExtensionAPIEnabledForServiceWorkerScript(
     const GURL& scope,
     const GURL& script_url) const {
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-  if (!script_url.SchemeIs(extensions::kExtensionScheme)) {
+  if (!script_url.SchemeIs(extensions::kExtensionScheme) &&
+      !script_url.SchemeIs(extensions::kArkwebExtensionScheme)) {
     return false;
   }
 
@@ -209,7 +210,11 @@ void CefExtensionsRendererClient::WillSendRequest(
     GURL* new_url) {
   // Check whether the request should be allowed. If not allowed, we reset the
   // URL to something invalid to prevent the request and cause an error.
-  if (url.ProtocolIs(extensions::kExtensionScheme) &&
+  if ((url.ProtocolIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+       || url.ProtocolIs(extensions::kArkwebExtensionScheme)
+#endif
+           ) &&
       !resource_request_policy_->CanRequestResource(
           GURL(url), frame, transition_type,
           base::OptionalFromPtr(initiator_origin))) {

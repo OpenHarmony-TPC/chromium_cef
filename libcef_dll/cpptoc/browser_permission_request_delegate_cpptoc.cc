@@ -420,6 +420,55 @@ browser_permission_request_delegate_abort_ask_clipboard_sanitized_write_permissi
       ->AbortAskClipboardSanitizedWritePermission(CefString(origin));
 }
 
+#ifdef OHOS_NOTIFICATION
+void CEF_CALLBACK
+browser_permission_request_delegate_ask_notification_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin,
+    cef_permission_callback_t callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AskNotificationPermission(CefString(origin), callback);
+}
+
+void CEF_CALLBACK
+browser_permission_request_delegate_abort_ask_notification_permission(
+    struct _cef_browser_permission_request_delegate_t* self,
+    const cef_string_t* origin) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: origin; type: string_byref_const
+  DCHECK(origin);
+  if (!origin) {
+    return;
+  }
+
+  // Execute
+  CefBrowserPermissionRequestDelegateCppToC::Get(self)
+      ->AbortAskNotificationPermission(CefString(origin));
+}
+#endif // OHOS_NOTIFICATION
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -462,6 +511,12 @@ CefBrowserPermissionRequestDelegateCppToC::
   GetStruct()->abort_ask_sensors_permission =
       browser_permission_request_delegate_abort_ask_sensors_permission;
 #endif // defined(OHOS_SENSOR)
+#ifdef OHOS_NOTIFICATION
+  GetStruct()->ask_notification_permission =
+      browser_permission_request_delegate_ask_notification_permission;
+  GetStruct()->abort_ask_notification_permission =
+      browser_permission_request_delegate_abort_ask_notification_permission;
+#endif // OHOS_NOTIFICATION
 }
 
 // DESTRUCTOR - Do not edit by hand.

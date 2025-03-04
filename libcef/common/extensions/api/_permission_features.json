@@ -40,9 +40,37 @@
       "extension_types": ["platform_app"]
     }
   ],
+  "sidePanel": {
+    "channel": "stable",
+    "extension_types": ["extension"],
+    "min_manifest_version": 3
+  },
    // OHOS_ARKWEB_EXTENSIONS
+   "webNavigation": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app"]
+  },
    "developerPrivate": {
     "channel": "stable",
     "extension_types": ["platform_app"]
+  },
+  "scripting": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app", "hosted_app", "platform_app"]
+  },
+  "contextMenus": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app", "hosted_app", "platform_app"]
+  },
+  "windows": {
+    "channel": "stable",
+    "extension_types": ["extension", "legacy_packaged_app", "hosted_app", "platform_app"]
+  },
+  // OHOS_NOTIFICATION
+  "notifications": {
+    "channel": "stable",
+    "extension_types": [
+      "extension", "legacy_packaged_app", "hosted_app", "platform_app"
+    ]
   }
 }

@@ -260,6 +260,7 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "extensions/browser/service_worker/service_worker_host.h"
 #include "services/network/public/cpp/self_deleting_url_loader_factory.h"
 #include "services/network/public/mojom/web_transport.mojom.h"
+#include "libcef/browser/extensions/api/web_navigation/web_navigation_api.h"
 #endif
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
@@ -942,7 +943,11 @@ base::FilePath GetRootCachePath() {
 const extensions::Extension* GetEnabledExtensionFromSiteURL(
     content::BrowserContext* context,
     const GURL& site_url) {
-  if (!site_url.SchemeIs(extensions::kExtensionScheme)) {
+  if (!site_url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      && !site_url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     return nullptr;
   }
 
@@ -1102,7 +1107,11 @@ bool AlloyContentBrowserClient::ShouldTreatURLSchemeAsFirstPartyWhenTopLevel(
   }
 
   if (extensions::ExtensionsEnabled()) {
-    return scheme == extensions::kExtensionScheme;
+    return (scheme == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+            || scheme == extensions::kArkwebExtensionScheme
+#endif
+    );
   }
 
   return false;
@@ -1143,6 +1152,7 @@ void AlloyContentBrowserClient::GetAdditionalViewSourceSchemes(
   additional_schemes->push_back(extensions::kExtensionScheme);
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   additional_schemes->push_back(content::kArkWebUIScheme);
+  additional_schemes->push_back(extensions::kArkwebExtensionScheme);
 #endif
 }
 
@@ -2048,6 +2058,13 @@ void AlloyContentBrowserClient::RegisterNonNetworkNavigationURLLoaderFactories(
       extensions::CreateExtensionNavigationURLLoaderFactory(
           web_contents->GetBrowserContext(), ukm_source_id,
           !!extensions::WebViewGuest::FromWebContents(web_contents)));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  factories->emplace(
+      extensions::kArkwebExtensionScheme,
+      extensions::CreateExtensionNavigationURLLoaderFactory(
+          web_contents->GetBrowserContext(), ukm_source_id,
+          !!extensions::WebViewGuest::FromWebContents(web_contents)));
+#endif
 }
 
 void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
@@ -2060,25 +2077,24 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
       content::RenderFrameHost::FromID(render_process_id, render_frame_id);
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(frame_host);
-  if (!web_contents) {
-    return;
-  }
 
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context) {
-    return;
-  }
+  content::BrowserContext* browser_context = nullptr;
 
-  factories->emplace(url::kFileScheme,
-                     content::CreateFileURLLoaderFactory(
+  if (web_contents) {
+    browser_context = web_contents->GetBrowserContext();
+    if (browser_context) {
+      factories->emplace(url::kFileScheme,
+                         content::CreateFileURLLoaderFactory(
                          browser_context->GetPath(),
                          browser_context->GetSharedCorsOriginAccessList()));
 #ifdef OHOS_HAP_DECOMPRESSED
-  factories->emplace(url::kResourcesScheme,
-                     content::CreateFileURLLoaderFactory(
+      factories->emplace(url::kResourcesScheme,
+                         content::CreateFileURLLoaderFactory(
                          browser_context->GetPath(),
                          browser_context->GetSharedCorsOriginAccessList()));
 #endif
+    }
+  }
 #endif
 
   if (!extensions::ExtensionsEnabled()) {
@@ -2089,6 +2105,11 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
                                                              render_frame_id);
   if (factory) {
     factories->emplace(extensions::kExtensionScheme, std::move(factory));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    factories->emplace(extensions::kArkwebExtensionScheme,
+                       extensions::CreateExtensionURLLoaderFactory(
+                           render_process_id, render_frame_id));
+#endif
   }
 
 #if !BUILDFLAG(IS_OHOS)
@@ -2100,6 +2121,12 @@ void AlloyContentBrowserClient::RegisterNonNetworkSubresourceURLLoaderFactories(
     return;
   }
 #endif
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (!web_contents || !browser_context) {
+    return;
+  }
+#endif defined(OHOS_ARKWEB_EXTENSIONS)
 
   extensions::CefExtensionWebContentsObserver* web_observer =
       extensions::CefExtensionWebContentsObserver::FromWebContents(
@@ -2169,6 +2196,12 @@ void AlloyContentBrowserClient::
       extensions::kExtensionScheme,
       extensions::CreateExtensionWorkerMainResourceURLLoaderFactory(
           browser_context));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  factories->emplace(
+      extensions::kArkwebExtensionScheme,
+      extensions::CreateExtensionWorkerMainResourceURLLoaderFactory(
+          browser_context));
+#endif
 #endif  // BUILDFLAG(ENABLE_EXTENSIONS)
 }
 
@@ -2189,6 +2222,12 @@ void AlloyContentBrowserClient::
       extensions::kExtensionScheme,
       extensions::CreateExtensionServiceWorkerScriptURLLoaderFactory(
           browser_context));
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  factories->emplace(
+      extensions::kArkwebExtensionScheme,
+      extensions::CreateExtensionServiceWorkerScriptURLLoaderFactory(
+          browser_context));
+#endif
 #endif  // BUILDFLAG(ENABLE_EXTENSIONS)
 }
 #endif  // defined(OHOS_ARKWEB_EXTENSIONS)
@@ -2423,7 +2462,11 @@ AlloyContentBrowserClient::GetStoragePartitionConfigForSite(
   // In general, those use cases aren't considered part of the user's normal
   // browsing activity.
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  if (site.SchemeIs(extensions::kExtensionScheme)) {
+  if (site.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || site.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     // The host in an extension site URL is the extension_id.
     CHECK(site.has_host());
     return extensions::util::GetStoragePartitionConfigForExtensionId(
@@ -2502,7 +2545,11 @@ std::string AlloyContentBrowserClient::GetSiteDisplayNameForCdmProcess(
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   // If |site_url| wraps a chrome extension ID, we can display the extension
   // name instead, which is more human-readable.
-  if (site_url.SchemeIs(extensions::kExtensionScheme)) {
+  if (site_url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || site_url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     const extensions::Extension* extension =
         extensions::ExtensionRegistry::Get(browser_context)
             ->enabled_extensions()
@@ -2523,7 +2570,11 @@ AlloyContentBrowserClient::DetermineAddressSpaceFromURL(const GURL& url) {
     return network::mojom::IPAddressSpace::kLoopback;
   }
 #endif
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (url.SchemeIs(extensions::kArkwebExtensionScheme)) {
+    return network::mojom::IPAddressSpace::kLoopback;
+  }
+#endif
   return network::mojom::IPAddressSpace::kUnknown;
 }
 
@@ -2535,7 +2586,11 @@ bool AlloyContentBrowserClient::DoesSchemeAllowCrossOriginSharedWorker(
     return true;
   }
 #endif
-
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  if (scheme == extensions::kArkwebExtensionScheme) {
+    return true;
+  }
+#endif
   return false;
 }
 
@@ -2564,7 +2619,11 @@ bool AlloyContentBrowserClient::IsBuiltinComponent(
 bool AlloyContentBrowserClient::
     ShouldInheritCrossOriginEmbedderPolicyImplicitly(const GURL& url) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return url.SchemeIs(extensions::kExtensionScheme);
+  return (url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+          || url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  );
 #else
   return false;
 #endif
@@ -2576,7 +2635,11 @@ bool AlloyContentBrowserClient::
     return true;
   }
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return url.SchemeIs(extensions::kExtensionScheme);
+  return (url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+          || url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  );
 #else
   return false;
 #endif
@@ -2591,7 +2654,11 @@ bool AlloyContentBrowserClient::ShouldSendOutermostOriginToRenderer(
   // extensions though this is required for the way content injection API
   // works. We do not want one extension injecting content into the context
   // of another extension.
-  return outermost_origin.scheme() == extensions::kExtensionScheme;
+  return (outermost_origin.scheme() == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || outermost_origin.scheme() == extensions::kArkwebExtensionScheme
+#endif
+  );
 #else
   return false;
 #endif
@@ -2610,7 +2677,11 @@ bool AlloyContentBrowserClient::IsFileSystemURLNavigationAllowed(
   // scheme() is chrome-extension: (filesystem: is automatically discarded)
   // host() is the extension-id
   const url::Origin origin = url::Origin::Create(url);
-  if (origin.scheme() == extensions::kExtensionScheme) {
+  if (origin.scheme() == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || origin.scheme() == extensions::kArkwebExtensionScheme
+#endif
+  ) {
     const Extension* extension =
         extensions::ExtensionRegistry::Get(browser_context)
             ->enabled_extensions()
@@ -2625,7 +2696,11 @@ bool AlloyContentBrowserClient::IsFileSystemURLNavigationAllowed(
 bool AlloyContentBrowserClient::ShouldUseFirstPartyStorageKey(
     const url::Origin& origin) {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-  return origin.scheme() == extensions::kExtensionScheme;
+  return (origin.scheme() == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+          || origin.scheme() == extensions::kArkwebExtensionScheme
+#endif
+  );
 #else
   return false;
 #endif  // BUILDFLAG(ENABLE_EXTENSIONS)
@@ -2934,7 +3009,11 @@ void AlloyContentBrowserClient::RegisterBrowserInterfaceBindersForFrame(
   }
 
   const GURL& site = render_frame_host->GetSiteInstance()->GetSiteURL();
-  if (!site.SchemeIs(extensions::kExtensionScheme)) {
+  if (!site.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      && !site.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     return;
   }
 
@@ -3046,6 +3125,9 @@ void AlloyContentBrowserClient::OnWebContentsCreated(
   if (extensions::ExtensionsEnabled()) {
     extensions::CefExtensionWebContentsObserver::CreateForWebContents(
         web_contents);
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    extensions::cef::WebNavigationTabObserver::CreateForWebContents(web_contents);
+#endif
   }
 #ifdef OHOS_FCP
   cef::InitializePageLoadMetricsForWebContents(web_contents);
@@ -3183,7 +3265,11 @@ bool AlloyContentBrowserClient::WillCreateRestrictedCookieManager(
     mojo::PendingReceiver<network::mojom::RestrictedCookieManager>* receiver) {
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  if (origin.scheme() == extensions::kExtensionScheme) {
+  if (origin.scheme() == extensions::kExtensionScheme
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      || origin.scheme() == extensions::kArkwebExtensionScheme
+#endif
+  ) {
     DCHECK_EQ(network::mojom::RestrictedCookieManagerRole::SCRIPT, role);
     extensions::ChromeExtensionCookies::Get(browser_context)
         ->CreateRestrictedCookieManager(origin, isolation_info,

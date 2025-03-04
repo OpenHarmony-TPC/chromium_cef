@@ -11,6 +11,10 @@
 #include "extensions/browser/api/execute_code_function.h"
 #include "extensions/browser/extension_function.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "ohos_nweb/src/capi/nweb_extension_api_struct_info.h"
+#endif // OHOS_ARKWEB_EXTENSIONS
+
 // The contents of this file are extracted from
 // chrome/browser/extensions/api/tabs/tabs_api.h.
 
@@ -39,7 +43,20 @@ class TabsCreateFunction : public ExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("tabs.create", TABS_CREATE)
 
  private:
+
   const CefExtensionFunctionDetails cef_details_;
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  static void OnTabCreated(const base::WeakPtr<TabsCreateFunction>& function,
+                           const NWebExtensionTab* tab);
+
+  void GetCreateParams(absl::optional<api::tabs::Create::Params>&,
+                       NWebTabCreateInfo& create_info);
+
+  bool call_create_tab_ = false;
+
+  base::WeakPtrFactory<TabsCreateFunction> weak_ptr_factory_{this};
+#endif // OHOS_ARKWEB_EXTENSIONS
 };
 
 class BaseAPIFunction : public ExtensionFunction {
@@ -179,6 +196,120 @@ class TabsGetZoomSettingsFunction : public BaseAPIFunction {
   ResponseAction Run() override;
 
   DECLARE_EXTENSION_FUNCTION("tabs.getZoomSettings", TABS_GETZOOMSETTINGS)
+};
+
+class TabsCaptureVisibleTabFunction : public ExtensionFunction {
+ public:
+  ~TabsCaptureVisibleTabFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.captureVisibleTab", TABS_CAPTUREVISIBLETAB)
+ private:
+  absl::optional<int> window_id_;
+};
+
+class TabsGetCurrentFunction : public BaseAPIFunction {
+ public:
+  ~TabsGetCurrentFunction() override {}
+ 
+  ResponseAction Run() override;
+ 
+  DECLARE_EXTENSION_FUNCTION("tabs.getCurrent", TABS_GETCURRENT)
+};
+
+class TabsDiscardFunction : public ExtensionFunction {
+ public:
+  ~TabsDiscardFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.discard", TABS_DISCARD)
+ private:
+  absl::optional<int> tab_id_;
+};
+
+class TabsDuplicateFunction : public ExtensionFunction {
+ public:
+  ~TabsDuplicateFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.duplicate", TABS_DUPLICATE)
+private:
+  int tab_id_;
+};
+
+class TabsGoBackFunction : public ExtensionFunction {
+ public:
+  ~TabsGoBackFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.goBack", TABS_GOBACK)
+private:
+ absl::optional<int> tab_id;
+};
+
+class TabsGoForwardFunction : public ExtensionFunction {
+public:
+  ~TabsGoForwardFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.goForward", TABS_GOFORWARD)
+  private:
+  absl::optional<int> tab_id;
+};
+
+class TabsGroupFunction : public ExtensionFunction {
+public:
+  ~TabsGroupFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.group", TABS_GROUP)
+};
+
+class TabsHighlightFunction : public ExtensionFunction {
+  ~TabsHighlightFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.highlight", TABS_HIGHLIGHT)
+};
+
+class TabsMoveFunction : public ExtensionFunction {
+  ~TabsMoveFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.move", TABS_MOVE)
+};
+
+class TabsQueryFunction : public ExtensionFunction {
+public:
+  ~TabsQueryFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.query", TABS_QUERY)
+};
+
+class TabsRemoveFunction : public ExtensionFunction {
+  ~TabsRemoveFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.remove", TABS_REMOVE)
+};
+
+class TabsUngroupFunction : public ExtensionFunction {
+  ~TabsUngroupFunction() override {}
+
+  ResponseAction Run() override;
+
+  DECLARE_EXTENSION_FUNCTION("tabs.ungroup", TABS_UNGROUP)
 };
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)

@@ -1073,6 +1073,16 @@ source_set("libcef_static") {
     cflags = [ "-DOHOS_FUZZ_COMPILE_ERROR_FIX" ]
   }
 
+  #ifdef OHOS_NOTIFICATION
+  if (defined(ohos_notification) && ohos_notification) {
+    sources += [ 
+      "libcef/browser/permission/alloy_access_query.cc",
+      "libcef/browser/permission/alloy_access_query.h",
+    ]
+  }
+
+  #endif
+
   #ifdef OHOS_ITP
   if (defined(ohos_itp) && ohos_itp) {
     if (!defined(ohos_nweb_ex) || !ohos_nweb_ex) {
@@ -1365,6 +1375,29 @@ source_set("libcef_static") {
       "libcef/browser/extensions/api/tabs/tabs_event_router.h",
       "libcef/browser/extensions/api/tabs/tabs_windows_api.cc",
       "libcef/browser/extensions/api/tabs/tabs_windows_api.h",
+      "libcef/browser/extensions/api/web_navigation/web_navigation_api.cc",
+      "libcef/browser/extensions/api/web_navigation/web_navigation_api.h",
+      "libcef/browser/extensions/api/web_navigation/web_navigation_api_helpers.cc",
+      "libcef/browser/extensions/api/web_navigation/web_navigation_api_helpers.h",
+      "libcef/browser/extensions/api/context_menus/context_menus_api.h",
+      "libcef/browser/extensions/api/context_menus/context_menus_api.cc",
+      "libcef/browser/extensions/api/context_menus/context_menus_api_helpers.h",
+      "libcef/browser/extensions/api/context_menus/context_menus_api_helpers.cc",
+      "libcef/browser/extensions/api/windows/windows_api.h",
+      "libcef/browser/extensions/api/windows/windows_api.cc",
+      "libcef/browser/extensions/api/scripting/scripting_api.h",
+      "libcef/browser/extensions/api/scripting/scripting_api.cc",
+      "libcef/browser/extensions/contents_extensions_util.cc",
+      "libcef/browser/extensions/contents_extensions_util.h",
+      "libcef/browser/extensions/tab_extensions_util.cc",
+      "libcef/browser/extensions/tab_extensions_util.h",
+      "libcef/browser/web_extension_tab_manager.cc",
+      "libcef/browser/web_extension_tab_manager.h",
+      "libcef/browser/windows_manager.h",
+      "libcef/browser/windows_manager.cc",
+    ]
+    configs += [
+      "//ohos_nweb:nweb_config",
     ]
   }
 

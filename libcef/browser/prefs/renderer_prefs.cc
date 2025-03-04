@@ -180,7 +180,11 @@ void SetExtensionPrefs(content::WebContents* web_contents,
   // would get the wrong preferences.
   const GURL& site_url =
       web_contents->GetPrimaryMainFrame()->GetSiteInstance()->GetSiteURL();
-  if (!site_url.SchemeIs(extensions::kExtensionScheme)) {
+  if (!site_url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+      && !site_url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+  ) {
     return;
   }
 
@@ -237,7 +241,11 @@ bool UpdatePreferredColorScheme(blink::web_pref::WebPreferences* web_prefs,
     // Update based on last committed url.
     bool force_light = url.SchemeIs(content::kChromeUIScheme);
     if (!force_light) {
-      force_light = url.SchemeIs(extensions::kExtensionScheme) &&
+      force_light = (url.SchemeIs(extensions::kExtensionScheme)
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+                     || url.SchemeIs(extensions::kArkwebExtensionScheme)
+#endif
+                         ) &&
                     url.host_piece() == extension_misc::kPdfExtensionId;
     }
     if (force_light) {

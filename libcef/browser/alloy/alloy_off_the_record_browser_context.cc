@@ -74,6 +74,11 @@
 #include "chrome/browser/ui/zoom/chrome_zoom_level_otr_delegate.h"
 #endif
 
+#ifdef OHOS_NOTIFICATION
+#include "chrome/browser/notifications/platform_notification_service_factory.h"
+#include "chrome/browser/notifications/platform_notification_service_impl.h"
+#endif // OHOS_NOTIFICATION
+
 using content::BrowserThread;
 
 AlloyOffTheRecordBrowserContext::AlloyOffTheRecordBrowserContext(
@@ -318,7 +323,11 @@ storage::SpecialStoragePolicy* AlloyOffTheRecordBrowserContext::GetSpecialStorag
 
 content::PlatformNotificationService*
 AlloyOffTheRecordBrowserContext::GetPlatformNotificationService() {
+#ifdef OHOS_NOTIFICATION
+  return PlatformNotificationServiceFactory::GetForProfile(this);
+#else
   return nullptr;
+#endif // OHOS_NOTIFICATION
 }
 
 content::PushMessagingService* AlloyOffTheRecordBrowserContext::GetPushMessagingService() {

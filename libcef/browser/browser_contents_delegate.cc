@@ -317,9 +317,11 @@ void CefBrowserContentsDelegate::LoadingStateChanged(
   if (tab_id >= 0) {
     std::vector<std::string> changed_properties;
     changed_properties.push_back(extensions::tabs_constants::kStatusKey);
+    std::unique_ptr<NWebExtensionTabChangeInfo> info = std::make_unique<NWebExtensionTabChangeInfo>();
+    info->url = "";
     extensions::cef::TabsWindowsAPI::Get(
         source->GetBrowserContext())->TabUpdated(
-            tab_id, source, changed_properties, "");
+            tab_id, source, changed_properties, std::move(info));
   }
 #endif
 }
@@ -341,11 +343,12 @@ void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
 }
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-void CefBrowserContentsDelegate::WebExtensionUpdateTabUrl(
-    int32_t tab_id, const GURL& url) {
+void CefBrowserContentsDelegate::WebExtensionUpdateTab(
+    int32_t tab_id,
+    const NWebExtensionTabUpdateProperties* update_properties) {
   if (auto c = client()) {
     if (auto handler = c->GetWebExtensionApiHandler()) {
-      handler->OnUpdateTabUrl(tab_id, url.spec());
+      handler->OnUpdateTab(tab_id, update_properties);
     }
   }
 }

@@ -464,7 +464,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 #endif
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
-  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+  void WebExtensionUpdateTab(
+      int32_t tab_id,
+      const NWebExtensionTabUpdateProperties* update_properties) override;
   void SetTabId(int32_t tab_id) override;
   int32_t GetTabId() override;
 #endif

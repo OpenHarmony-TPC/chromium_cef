@@ -37,6 +37,11 @@
 #include "extensions/common/api/mime_handler.mojom.h"
 #include "extensions/common/constants.h"
 
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+#include "chrome/browser/extensions/api/runtime/chrome_runtime_api_delegate.h"
+#include "chrome/browser/extensions/chrome_extension_host_delegate.h"
+#endif
+
 using content::BrowserContext;
 using content::BrowserThread;
 
@@ -256,9 +261,14 @@ ProcessManagerDelegate* CefExtensionsBrowserClient::GetProcessManagerDelegate()
 
 std::unique_ptr<ExtensionHostDelegate>
 CefExtensionsBrowserClient::CreateExtensionHostDelegate() {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return std::unique_ptr<ExtensionHostDelegate>(
+      new ChromeExtensionHostDelegate);
+#else
   // CEF does not use the ExtensionHost constructor that calls this method.
   DCHECK(false);
   return std::unique_ptr<ExtensionHostDelegate>();
+#endif // OHOS_ARKWEB_EXTENSIONS
 }
 
 bool CefExtensionsBrowserClient::CreateBackgroundExtensionHost(

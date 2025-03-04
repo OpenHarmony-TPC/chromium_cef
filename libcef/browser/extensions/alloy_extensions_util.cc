@@ -14,6 +14,13 @@ int GetTabIdForWebContents(content::WebContents* web_contents) {
   if (!browser) {
     return -1;
   }
+
+#ifdef OHOS_ARKWEB_EXTENSIONS
+  if (browser->GetTabId() >= 0) {
+    return browser->GetTabId();
+  }
+#endif // OHOS_ARKWEB_EXTENSIONS
+
   return browser->GetIdentifier();
 }
 

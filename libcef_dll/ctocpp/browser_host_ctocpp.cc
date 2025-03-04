@@ -3566,6 +3566,51 @@ void CefBrowserHostCToCpp::WebExtensionTabUpdated(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::WebExtensionTabUpdated(
+    int tab_id,
+    const std::vector<CefString>& changed_property_names,
+    std::unique_ptr<NWebExtensionTabChangeInfo> info) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, web_extension_tab_updated_change_info)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: changed_property_names; type: string_vec_byref_const
+  cef_string_list_t changed_property_namesList = cef_string_list_alloc();
+  DCHECK(changed_property_namesList);
+  if (changed_property_namesList) {
+    transfer_string_list_contents(changed_property_names,
+                                  changed_property_namesList);
+  }
+
+  // Execute
+  _struct->web_extension_tab_updated_change_info(
+      _struct, tab_id, changed_property_namesList, std::move(info));
+
+  // Restore param:changed_property_names; type: string_vec_byref_const
+  if (changed_property_namesList) {
+    cef_string_list_free(changed_property_namesList);
+  }
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::WebExtensionTabActivated(int tab_id, int window_id) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, web_extension_tab_actived)) {
+    return;
+  }
+ 
+  // Execute
+  _struct->web_extension_tab_actived(_struct, tab_id, window_id);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::ScrollFocusedEditableNodeIntoView() {
   shutdown_checker::AssertNotShutdown();
 

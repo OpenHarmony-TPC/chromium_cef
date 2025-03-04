@@ -37,6 +37,19 @@ void AddInternalSchemes(content::ContentClient::Schemes* schemes) {
           false, /* is_code_cache_enabled */
 #endif
       },
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+    {
+          extensions::kArkwebExtensionScheme, true, /* is_standard */
+          false,                                    /* is_local */
+          false,                                    /* is_display_isolated */
+          true,                                     /* is_secure */
+          true,                                     /* is_cors_enabled */
+          true,                                     /* is_csp_bypassing */
+#if BUILDFLAG(IS_OHOS)
+          false, /* is_code_cache_enabled */
+#endif
+      },
+#endif
   };
 
   // The |is_display_isolated| value is excluded here because it's registered
@@ -87,6 +100,7 @@ bool IsInternalHandledScheme(const std::string& scheme) {
 #endif //OHOS_FILE_UPLOAD
 #if defined(OHOS_ARKWEB_EXTENSIONS)
     content::kArkWebUIScheme,
+    extensions::kArkwebExtensionScheme,
 #endif
   };
 

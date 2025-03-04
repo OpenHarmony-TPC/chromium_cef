@@ -11,6 +11,19 @@
 
 {
   // From chrome/common/extensions/api/_api_features.json.
+  "action": {
+    "dependencies": ["manifest:action"],
+    "contexts": ["blessed_extension"]
+  },
+  "action.isEnabled": {
+    "channel": "stable"
+  },
+  "action.getBadgeTextColor": {
+    "channel": "stable"
+  },
+  "action.setBadgeTextColor": {
+    "channel": "stable"
+  },
   // Required by the PDF extension which is hosted in a guest view.
   "contentSettings": {
     "dependencies": ["permission:contentSettings"],
@@ -44,6 +57,10 @@
     "disallow_for_service_workers": false
   },
   // OHOS_ARKWEB_EXTENSIONS
+  "webNavigation": {
+    "dependencies": ["permission:webNavigation"],
+    "contexts": ["blessed_extension"]
+  },
   "developerPrivate": [{
     "dependencies": ["permission:developerPrivate", "permission:management"],
     "contexts": ["blessed_extension"]
@@ -55,6 +72,22 @@
        "arkweb://extensions/*"
       ]
   }],
+  "scripting": {
+    "dependencies": ["permission:scripting"],
+    "contexts": ["blessed_extension"]
+  },
+  "contextMenus": {
+    "dependencies": ["permission:contextMenus"],
+    "contexts": ["blessed_extension"]
+  },
+  "sidePanel": {
+    "dependencies": ["permission:sidePanel"],
+    "contexts": ["blessed_extension"]
+  },
+  "windows": {
+    "dependencies": ["permission:windows"],
+    "contexts": ["blessed_extension"]
+  },
   "extension": {
     "channel": "stable",
     "extension_types": ["extension", "legacy_packaged_app"],
@@ -63,5 +96,10 @@
   "extension.getURL": {
     "contexts": ["blessed_extension", "unblessed_extension", "content_script"],
     "max_manifest_version": 2
+  },
+  // OHOS_NOTIFICATION
+  "notifications": {
+    "dependencies": ["permission:notifications"],
+    "contexts": ["blessed_extension"]
   }
 }
