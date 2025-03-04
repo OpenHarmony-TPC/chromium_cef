@@ -1177,6 +1177,19 @@ source_set("libcef_static") {
 
   #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+  #ifdef OHOS_VIDEO_ASSISTANT
+  if (defined(ohos_video_assistant) && ohos_video_assistant) {
+    sources += [
+      "include/cef_media_player_controller.h",
+      "include/cef_media_player_listener_for_vast.h",
+      "libcef/browser/alloy/cef_media_player_controller_impl.cc",
+      "libcef/browser/alloy/cef_media_player_controller_impl.h",
+      "libcef/browser/alloy/media_player_listener_proxy.cc",
+      "libcef/browser/alloy/media_player_listener_proxy.h",
+    ]
+  }
+  #endif // OHOS_VIDEO_ASSISTANT
+
   #if defined(OHOS_ARKWEB_ADBLOCK)
   sources += [
     "libcef/browser/adsblock_manager_impl.cc",

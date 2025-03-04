@@ -122,10 +122,17 @@
 #endif
 
 #if defined(OHOS_VIDEO_ASSISTANT)
+#include "base/json/json_writer.h"
+#include "base/values.h"
+#include "content/public/browser/media_player_controller.h"
+#include "content/public/browser/media_player_listener.h"
 #include "content/browser/media/video_assistant/video_assistant.h"
+#include "libcef/browser/alloy/cef_media_player_controller_impl.h"
+#include "libcef/browser/alloy/media_player_listener_proxy.h"
 #include "media/mojo/mojom/media_player.mojom.h"
 #ifdef OHOS_NWEB_EX
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
 #endif // OHOS_NWEB_EX
 #endif // OHOS_VIDEO_ASSISTANT
@@ -267,6 +274,37 @@ class CefMediaPlayerListenerImpl : public CefMediaPlayerListener {
   std::unique_ptr<content::CustomMediaPlayerListener> listener_;
 };
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
+
+#ifdef OHOS_VIDEO_ASSISTANT
+#ifdef OHOS_NWEB_EX
+std::string BuildMediaInfo(
+    const media::mojom::MediaInfoForVASTPtr& media_info,
+    const media::mojom::VideoAssistantConfigPtr& config) {
+  bool show_download_btn = media_info->duration > 0 &&
+      media_info->duration < std::numeric_limits<double>::max() &&
+      config->download_button !=
+          media::mojom::VideoAssistantDownloadButton::kDownloadForceHide;
+  bool show_playback_rate = config->playback_rate;
+  base::Value::Dict root;
+  root.Set("id", media_info->id);
+  root.Set("title", media_info->title);
+  root.Set("duration", media_info->duration);
+  root.Set("curTime", media_info->current_time);
+  root.Set("playbackrate", media_info->playback_rate);
+  root.Set("width", media_info->video_width);
+  root.Set("height", media_info->video_height);
+  root.Set("muted", media_info->isMuted);
+  root.Set("isPlaying", media_info->isPlaying);
+  root.Set("downloadBtn", show_download_btn);
+  root.Set("playbackrateBtn", show_playback_rate);
+
+  root.Set("fullscreenoverlay", media_info->fullscreen_overlay);
+
+  auto json = base::WriteJson(root);
+  return json ? json.value() : std::string();
+}
+#endif // OHOS_NWEB_EX
+#endif // OHOS_VIDEO_ASSISTANT
 
 }  // namespace
 
@@ -1190,6 +1228,12 @@ bool AlloyBrowserHostImpl::IsFullscreenForTabOrPending(
 
 blink::mojom::DisplayMode AlloyBrowserHostImpl::GetDisplayMode(
     const content::WebContents* web_contents) {
+#ifdef OHOS_VIDEO_ASSISTANT
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+        "enable-nweb-ex-video-assistant")) {
+    return blink::mojom::DisplayMode::kBrowser;
+  }
+#endif // OHOS_VIDEO_ASSISTANT
   return is_fullscreen_ ? blink::mojom::DisplayMode::kFullscreen
                         : blink::mojom::DisplayMode::kBrowser;
 }
@@ -3007,6 +3051,42 @@ void AlloyBrowserHostImpl::OnReportStatisticLog(const std::string& content) {
   }
 
   client_->OnReportStatisticLog(content);
+}
+
+std::unique_ptr<content::MediaPlayerListener>
+AlloyBrowserHostImpl::OnFullScreenOverlayEnter(
+    media::mojom::MediaInfoForVASTPtr media_info_ptr,
+    const content::MediaPlayerId& media_player_id) {
+  if (!client_) {
+    LOG(WARNING) << "client is null, OnFullScreenOverlayEnter failed";
+    return nullptr;
+  }
+
+  if (!GetWebContents()) {
+    return nullptr;
+  }
+  std::unique_ptr<CefMediaPlayerListenerForVAST> listener;
+#ifdef OHOS_NWEB_EX
+  auto config = media::mojom::VideoAssistantConfig::New(true, true,
+      media::mojom::VideoAssistantDownloadButton::kDownloadPerPage);
+  auto url =
+      GetWebContents()->GetLastCommittedURL().DeprecatedGetOriginAsURL().spec();
+  PopluateVideoAssistantConfig(url, config);
+
+  auto media_info = BuildMediaInfo(media_info_ptr, config);
+  auto media_player_controller =
+      std::make_unique<nweb_ex::MediaPlayerControllerImpl>(
+          this, media_player_id, std::move(media_info_ptr), std::move(config));
+
+  listener = client_->OnFullScreenOverlayEnter(
+      std::make_unique<CefMediaPlayerControllerImpl>(
+          std::move(media_player_controller)),
+      media_info);
+#endif // OHOS_NWEB_EX
+  if (!listener) {
+    return nullptr;
+  }
+  return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
 }
 #endif  // defined(OHOS_VIDEO_ASSISTANT)
 

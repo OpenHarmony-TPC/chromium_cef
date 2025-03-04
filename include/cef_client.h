@@ -72,6 +72,11 @@
 #include "include/cef_media_player_listener.h"
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#ifdef OHOS_VIDEO_ASSISTANT
+#include "include/cef_media_player_controller.h"
+#include "include/cef_media_player_listener_for_vast.h"
+#endif // OHOS_VIDEO_ASSISTANT
+
 ///
 /// Implement this interface to provide handler implementations.
 ///
@@ -346,6 +351,17 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnReportStatisticLog(const CefString& content) {}
+
+#ifdef OHOS_VIDEO_ASSISTANT
+  ///
+  /// Return the interface for listening to the full-screen video.
+  ///
+  /*--cef()--*/
+  virtual CefOwnPtr<CefMediaPlayerListenerForVAST> OnFullScreenOverlayEnter(
+      CefOwnPtr<CefMediaPlayerController> media_player_controller,
+      const std::string& extra_info) { return nullptr; }
+
+#endif // OHOS_VIDEO_ASSISTANT
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

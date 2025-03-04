@@ -504,6 +504,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnShowToast(double duration, const std::string& toast) override;
   void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
   void OnReportStatisticLog(const std::string& content) override;
+  std::unique_ptr<content::MediaPlayerListener> OnFullScreenOverlayEnter(
+      media::mojom::MediaInfoForVASTPtr media_info_ptr,
+      const content::MediaPlayerId& media_player_id) override;
 #endif  // defined(OHOS_VIDEO_ASSISTANT)
 
 #ifdef OHOS_AI

@@ -3725,6 +3725,17 @@ void CefBrowserHostBase::ExecuteVideoAssistantFunction(const CefString& cmdId) {
 #endif  // defined(OHOS_VIDEO_ASSISTANT)
 }
 
+void CefBrowserHostBase::CustomWebMediaPlayer(bool enable) {
+#if defined(OHOS_VIDEO_ASSISTANT)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when enable custom web media player";
+    return;
+  }
+
+  GetWebContents()->CustomWebMediaPlayer(enable);
+#endif  // defined(OHOS_VIDEO_ASSISTANT)
+}
+
 #if defined(OHOS_MEDIA_POLICY)
 void CefBrowserHostBase::CloseMedia() {
   if (is_fullscreen_) {
