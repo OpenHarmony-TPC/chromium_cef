@@ -407,6 +407,16 @@ typedef struct _cef_context_menu_params_t {
   ///
   cef_context_menu_source_type_t(CEF_CALLBACK* get_source_type)(
       struct _cef_context_menu_params_t* self);
+
+  ///
+  /// Returns ImageRect
+  ///
+  void(CEF_CALLBACK* get_image_rect)(
+      struct _cef_context_menu_params_t* self,
+      int* x,
+      int* y,
+      int* w,
+      int* h);
 } cef_context_menu_params_t;
 
 #ifdef __cplusplus

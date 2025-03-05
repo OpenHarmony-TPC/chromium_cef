@@ -443,6 +443,21 @@ CefContextMenuParams::SourceType CefContextMenuParamsCToCpp::GetSourceType() {
   return _retval;
 }
 
+NO_SANITIZE("cfi-icall")
+void CefContextMenuParamsCToCpp::GetImageRect(int& x, int& y, int& w, int& h) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_context_menu_params_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_image_rect)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->get_image_rect(_struct, &x, &y, &w, &h);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefContextMenuParamsCToCpp::CefContextMenuParamsCToCpp() {}
