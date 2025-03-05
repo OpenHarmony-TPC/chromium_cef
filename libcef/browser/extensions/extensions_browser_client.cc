@@ -376,9 +376,14 @@ void CefExtensionsBrowserClient::RegisterBrowserInterfaceBindersForFrame(
 std::unique_ptr<RuntimeAPIDelegate>
 CefExtensionsBrowserClient::CreateRuntimeAPIDelegate(
     content::BrowserContext* context) const {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return std::unique_ptr<RuntimeAPIDelegate>(
+      new ChromeRuntimeAPIDelegate(context));
+#else
   // TODO(extensions): Implement to support Apps.
   DCHECK(false);
   return nullptr;
+#endif
 }
 
 const ComponentExtensionResourceManager*
