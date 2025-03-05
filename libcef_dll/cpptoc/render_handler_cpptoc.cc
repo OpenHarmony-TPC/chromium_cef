@@ -1325,6 +1325,23 @@ render_handler_set_fill_content(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->SetFillContent(content);
 }
 
+void CEF_CALLBACK
+render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
+                                      int64_t accessibilityId,
+                                      int32_t eventType) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1389,6 +1406,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->on_resize_scrollable_viewport =
       render_handler_on_resize_scrollable_viewport;
   GetStruct()->set_fill_content = render_handler_set_fill_content;
+  GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
 }
 
 // DESTRUCTOR - Do not edit by hand.
