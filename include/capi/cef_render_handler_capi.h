@@ -482,6 +482,13 @@ typedef struct _cef_render_handler_t {
                                       struct _cef_browser_t* browser,
                                          const float x,
                                          const float y);                                         
+
+  ///
+  /// Called when an accessibility event occurs.
+  ///
+  void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
+                                             int64_t accessibilityId,
+                                             int32_t eventType);                                     
 } cef_render_handler_t;
 
 #ifdef __cplusplus

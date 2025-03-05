@@ -214,6 +214,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void SendInternalBeginFrame() override;
   ui::Compositor* GetCompositor() override;
+  void SendAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
 #endif
 
 #if !BUILDFLAG(IS_MAC)
