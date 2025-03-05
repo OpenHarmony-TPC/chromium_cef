@@ -643,7 +643,12 @@ ContentVerifier* CefExtensionSystem::content_verifier() {
 
 std::unique_ptr<ExtensionSet> CefExtensionSystem::GetDependentExtensions(
     const Extension* extension) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  return extension_service()->shared_module_service()->GetDependentExtensions(
+      extension);
+#else
   return std::make_unique<ExtensionSet>();
+#endif
 }
 
 void CefExtensionSystem::InstallUpdate(
