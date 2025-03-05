@@ -3659,6 +3659,15 @@ void CefRenderWidgetHostViewOSR::OnTopControlsChanged(
       !browser_impl_->GetClient().get()) {
     return;
   }
+  bool is_dark =
+      (browser_impl_->settings().force_dark_mode_enabled == STATE_ENABLED &&
+       browser_impl_->settings().dark_prefer_color_scheme_enabled ==
+           STATE_ENABLED);
+  if (is_dark) {
+    SetBackgroundColor(SK_ColorBLACK);
+  } else {
+    SetBackgroundColor(SK_ColorWHITE);
+  }
   browser_impl_->GetClient()->OnTopControlsChanged(top_controls_offset,
                                                    top_content_offset);
   gfx::Transform root_layer_transform;
