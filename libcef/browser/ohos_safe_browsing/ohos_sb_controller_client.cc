@@ -45,6 +45,12 @@ std::unique_ptr<MetricsHelper> SbControllerClient::GetMetricsHelper(
 }
 
 void SbControllerClient::GoBack() {
+  if (!SecurityInterstitialControllerClient::CanGoBack()) {
+    LOG(INFO) << "SbControllerClient::GoBack Close";
+    web_contents_->Close();
+    return;
+  }
+
   SecurityInterstitialControllerClient::GoBackAfterNavigationCommitted();
   return;
 }
