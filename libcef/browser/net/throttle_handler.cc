@@ -25,6 +25,14 @@ namespace throttle {
 
 namespace {
 
+GURL SanitizeUrl(const GURL& url) {
+  GURL::Replacements rep;
+  rep.ClearUsername();
+  rep.ClearPassword();
+  rep.ClearQuery();
+  return url.ReplaceComponents(rep);
+}
+
 bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
   CEF_REQUIRE_UIT();
 
@@ -34,7 +42,10 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
 #if defined(OHOS_NO_STATE_PREFETCH)
   // Record the url so that it can be preconnected at the next startup.
   if (is_main_frame) {
-    predictor::VisitedUrlInfo url_info(navigation_handle->GetURL());
+    GURL original_url = navigation_handle->GetURL();
+    GURL sanitized_url = SanitizeUrl(original_url);
+
+    predictor::VisitedUrlInfo url_info(sanitized_url);
     predictor::PredictorDatabase::GetInstance()->RecordVisitedUrl(url_info);
   }
 #endif  // defined(OHOS_NO_STATE_PREFETCH)

@@ -289,18 +289,6 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
 #if BUILDFLAG(IS_MAC)
   screen_ = std::make_unique<display::ScopedNativeScreen>();
 #endif
-#if BUILDFLAG(IS_OHOS) && defined(OHOS_NETWORK_LOAD)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kForBrowser)) {
-    if (!network_quality_tracker_) {
-      network_quality_tracker_ =
-          std::make_unique<network::NetworkQualityTracker>(
-              base::BindRepeating(&content::GetNetworkService));
-    }
-    network_quality_observer_ =
-        content::CreateNetworkQualityObserver(network_quality_tracker_.get());
-  }
-#endif
 
   if (extensions::ExtensionsEnabled()) {
     // This should be set in ChromeBrowserProcessAlloy::Initialize.
@@ -337,6 +325,19 @@ int AlloyBrowserMainParts::PreMainMessageLoopRun() {
   CefContext::Get()->PopulateGlobalOTRRequestContextSettings(&off_the_record_settings);
   global_otr_request_context_ =
       CefRequestContextImpl::CreateGlobalOTRRequestContext(off_the_record_settings);
+#endif
+
+#if BUILDFLAG(IS_OHOS) && defined(OHOS_NETWORK_LOAD)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kForBrowser)) {
+    if (!network_quality_tracker_) {
+      network_quality_tracker_ =
+          std::make_unique<network::NetworkQualityTracker>(
+              base::BindRepeating(&content::GetNetworkService));
+    }
+    network_quality_observer_ =
+        content::CreateNetworkQualityObserver(network_quality_tracker_.get());
+  }
 #endif
 
 #if !BUILDFLAG(IS_OHOS)
