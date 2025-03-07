@@ -205,6 +205,16 @@ void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
+#ifdef OHOS_AI
+bool CefWebContentsViewOSR::CloseImageOverlaySelection() {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    return rwhv->CloseImageOverlaySelection();
+  }
+  return false;
+}
+#endif
+
 #ifdef OHOS_DRAG_DROP
 gfx::Rect CefWebContentsViewOSR::GetVisibleRectToWeb() {
   CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();

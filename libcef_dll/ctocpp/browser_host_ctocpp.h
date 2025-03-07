@@ -310,6 +310,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                        cef_web_snapshot_callback_t callback) override;
   void AdvanceFocusForIME(int focusType) override;
   void OnDestroyImageAnalyzerOverlay() override;
+  void OnFoldStatusChanged(uint32_t foldStatus) override;
   void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
   void NotifyForNextTouchEvent() override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;

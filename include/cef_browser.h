@@ -2109,10 +2109,16 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void AdvanceFocusForIME(int focusType) = 0;
 
   ///
-  /// Called when image analyzer overlay is destoryed.
+  /// Called when image analyzer overlay is destroyed.
   ///
   /*--cef()--*/
   virtual void OnDestroyImageAnalyzerOverlay() = 0;
+
+  ///
+  /// Called when the folding status of the phone screen changes.
+  ///
+  /*--cef()--*/
+  virtual void OnFoldStatusChanged(uint32_t foldStatus) = 0;
 
   ///
   /// SetNativeEmbedMode.

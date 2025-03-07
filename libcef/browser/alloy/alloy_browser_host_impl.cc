@@ -3155,6 +3155,18 @@ float AlloyBrowserHostImpl::GetPageScaleFactor() {
   }
   return 1;
 }
+
+void AlloyBrowserHostImpl::OnFoldStatusChanged(uint32_t foldstatus) {
+  if (CEF_CURRENTLY_ON_UIT()) {
+    if (platform_delegate_) {
+      platform_delegate_->OnFoldStatusChanged(foldstatus);
+    }
+  } else {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&AlloyBrowserHostImpl::OnFoldStatusChanged,
+                                 this, foldstatus));
+  }
+}
 #endif
 
 #if BUILDFLAG(IS_OHOS)

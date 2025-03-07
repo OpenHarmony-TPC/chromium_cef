@@ -493,6 +493,7 @@ class CefBrowserPlatformDelegate {
   virtual void OnTextSelected(bool flag);
   virtual void OnDestroyImageAnalyzerOverlay();
   virtual float GetPageScaleFactor();
+  virtual void OnFoldStatusChanged(uint32_t foldstatus);
 #endif
 
 #ifdef OHOS_DISPLAY_CUTOUT

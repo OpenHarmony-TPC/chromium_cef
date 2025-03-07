@@ -2099,6 +2099,18 @@ typedef struct _cef_browser_host_t {
                                             int focusType);
 
   ///
+  /// Called when image analyzer overlay is destroyed.
+  ///
+  void(CEF_CALLBACK* on_destroy_image_analyzer_overlay)(
+    struct _cef_browser_host_t* self);
+
+  ///
+  /// Called when the folding status of the phone screen changes.
+  ///
+  void(CEF_CALLBACK* on_fold_status_changed)(struct _cef_browser_host_t* self,
+                                             uint32_t foldStatus);
+
+  ///
   /// Get whether it is the iframe.
   ///
   int(CEF_CALLBACK* is_iframe)(struct _cef_browser_host_t* self);
@@ -2107,12 +2119,6 @@ typedef struct _cef_browser_host_t {
   /// fresh focused frame for context menu.
   ///
   void(CEF_CALLBACK* reload_focused_frame)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Called when image analyzer overlay is destoryed.
-  ///
-  void(CEF_CALLBACK* on_destroy_image_analyzer_overlay)(
-      struct _cef_browser_host_t* self);
 
   ///
   /// OnSafeInsetsChange

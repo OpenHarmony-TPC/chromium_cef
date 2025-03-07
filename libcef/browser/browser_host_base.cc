@@ -4299,6 +4299,12 @@ void CefBrowserHostBase::NotifyForNextTouchEvent() {
 }
 #endif
 
+#ifdef OHOS_AI
+void CefBrowserHostBase::OnFoldStatusChanged(uint32_t foldstatus) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
+#endif
+
 #if defined(OHOS_SOFTWARE_COMPOSITOR)
 bool CefBrowserHostBase::WebPageSnapshot(
     const char* id,
