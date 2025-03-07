@@ -602,7 +602,6 @@ void CefReadDownloaData(const std::string& guid,
 }
 #endif
 
-
 // CefContext
 
 CefContext::CefContext()
