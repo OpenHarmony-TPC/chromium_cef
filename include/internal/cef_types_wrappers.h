@@ -611,6 +611,7 @@ struct CefBrowserSettingsTraits {
     target->scrollbar_color = src->scrollbar_color;
     target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->native_embed_mode_enabled = src->native_embed_mode_enabled;
+    target->intrinsic_size_enabled = src->intrinsic_size_enabled;
     cef_string_set(src->embed_tag.str, src->embed_tag.length, &target->embed_tag,
                    copy);
     cef_string_set(src->embed_tag.str, src->embed_tag.length,

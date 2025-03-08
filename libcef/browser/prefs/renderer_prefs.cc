@@ -455,6 +455,7 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   SET_STATE(cef.image_loading, web.images_enabled);
   SET_STATE(cef.force_dark_mode_enabled, web.force_dark_mode_enabled);
   SET_STATE(cef.native_embed_mode_enabled, web.native_embed_mode_enabled);
+  SET_STATE(cef.intrinsic_size_enabled, web.intrinsic_size_enabled);
   web.embed_tag = CefString(&cef.embed_tag);
   web.embed_tag_type = CefString(&cef.embed_tag_type);
   web.draw_mode = cef.draw_mode;
