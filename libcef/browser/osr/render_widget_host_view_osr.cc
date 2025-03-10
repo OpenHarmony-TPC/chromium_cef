@@ -2178,8 +2178,11 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
 
 void CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent(
     blink::WebGestureEvent event) {
-  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent");
-
+  TRACE_EVENT1("cef", "CefRenderWidgetHostViewOSR::SendTouchpadFlingEvent", 
+    "type", blink::WebInputEvent::GetName(event.GetType()));
+  if (event.GetType() == blink::WebInputEvent::Type::kGestureFlingStart) {
+    mouse_wheel_phase_handler_.IgnorePendingWheelEndEvent();
+  }
   if (render_widget_host_ && render_widget_host_->GetView()) {
     if (ShouldRouteEvents()) {
       render_widget_host_->delegate()
