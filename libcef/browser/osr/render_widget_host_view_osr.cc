@@ -54,6 +54,7 @@
 #include "ui/gfx/geometry/dip_util.h"
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_selection_controller.h"
+#include "ohos_nweb/src/nweb_resize_helper.h"
 
 #ifdef OHOS_EX_TOPCONTROLS
 #include "content/browser/renderer_host/render_view_host_delegate_view.h"
@@ -3146,6 +3147,10 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
     CefRefPtr<CefRenderHandler> handler =
         browser_impl_->client()->GetRenderHandler();
     CHECK(handler);
+  }
+  bool isDragResized = OHOS::NWeb::NWebResizeHelper::GetInstance().IsDragResizeStart();
+  if (isDragResized) {
+    OHOS::NWeb::NWebResizeHelper::GetInstance().SetDragResizeStart(false);
   }
 }
 
