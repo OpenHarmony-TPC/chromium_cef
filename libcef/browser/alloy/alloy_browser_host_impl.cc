@@ -3086,6 +3086,45 @@ AlloyBrowserHostImpl::CreateCustomMediaPlayer(
 }
 #endif // OHOS_CUSTOM_VIDEO_PLAYER
 
+#if defined(OHOS_RENDERER_ANR_DUMP)
+void AlloyBrowserHostImpl::RendererUnresponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host,
+    base::RepeatingClosure hang_monitor_restarter,
+    content::RenderProcessNotRespondingReason reason
+) {
+  content::RenderProcessHost* host =
+      source->GetPrimaryMainFrame()->GetProcess();
+  if (!host->IsReady() || !source->GetPrimaryMainFrame()->IsRenderFrameLive()) {
+    LOG(INFO) << "AlloyBrowserHostImpl::RendererUnresponsive not ready for render dump";
+    OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
+    return;
+  }
+  host->InvokeRenderCrashDump();
+  host->dumpCurrentJavaScriptStackInMainThread(
+      base::BindOnce(&AlloyBrowserHostImpl::OnDumpJavaScriptStackCallback, this,
+                     host->GetProcess().Pid(), reason));
+}
+
+void AlloyBrowserHostImpl::OnDumpJavaScriptStackCallback(
+    int pid,
+    content::RenderProcessNotRespondingReason reason,
+    const std::string& stack) {
+  if (auto handler = client_->GetRequestHandler()) {
+    handler->OnRenderProcessNotResponding(this, stack, pid,
+                                          static_cast<int>(reason));
+  }
+}
+
+void AlloyBrowserHostImpl::RendererResponsive(
+    content::WebContents* source,
+    content::RenderWidgetHost* render_widget_host) {
+  if (auto handler = client_->GetRequestHandler()) {
+    handler->OnRenderProcessResponding(this);
+  }
+}
+#endif
+
 #if defined(OHOS_VIDEO_ASSISTANT)
 void AlloyBrowserHostImpl::OnShowToast(double duration,
                                        const std::string& toast) {
