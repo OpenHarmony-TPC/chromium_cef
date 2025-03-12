@@ -3098,12 +3098,15 @@ void AlloyBrowserHostImpl::RendererUnresponsive(
     content::RenderProcessNotRespondingReason reason
 
 ) {
+  LOG(INFO) << "AlloyBrowserHostImpl::RendererUnresponsive";
   content::RenderProcessHost* host =
       source->GetPrimaryMainFrame()->GetProcess();
   if (!host->IsReady() || !source->GetPrimaryMainFrame()->IsRenderFrameLive()) {
+    LOG(INFO) << "AlloyBrowserHostImpl::RendererUnresponsive not ready for render dump";
     OnDumpJavaScriptStackCallback(host->GetProcess().Pid(), reason, "");
     return;
   }
+  host->InvokeRenderCrashDump();
   host->dumpCurrentJavaScriptStackInMainThread(
       base::BindOnce(&AlloyBrowserHostImpl::OnDumpJavaScriptStackCallback, this,
                      host->GetProcess().Pid(), reason));
