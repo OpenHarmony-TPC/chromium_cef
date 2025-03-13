@@ -1693,8 +1693,8 @@ void CefRenderWidgetHostViewOSR::OnRenderFrameMetadataChangedBeforeActivation(
       top_content_offset -
       metadata.top_controls_height / metadata.device_scale_factor;
 
-  if (top_content_offset != top_content_offset_ ||
-      top_controls_offset != top_controls_offset_) {
+  if (!pull_to_refresh_ && (top_content_offset != top_content_offset_ ||
+                            top_controls_offset != top_controls_offset_)) {
     top_content_offset_ = top_content_offset;
     top_controls_offset_ = top_controls_offset;
     OnTopControlsChanged(top_controls_offset_, top_content_offset_);
