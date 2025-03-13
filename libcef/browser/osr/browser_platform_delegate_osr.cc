@@ -21,6 +21,11 @@
 #include "ui/display/screen.h"
 #include "ui/events/base_event_utils.h"
 
+#ifdef OHOS_NWEB_EX
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 #ifdef OHOS_HTML_SELECT
 namespace {
 void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
@@ -259,6 +264,17 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
   blink::WebMouseEvent web_event =
       native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
   view->SendMouseEvent(web_event);
+#ifdef OHOS_NWEB_EX
+  // when mouse leave web,should clear target url.
+  if (mouseLeave && base::CommandLine::ForCurrentProcess()->HasSwitch(
+                        switches::kEnableNwebEx)) {
+    content::WebContentsImpl* web_contents =
+        static_cast<content::WebContentsImpl*>(web_contents_);
+    if (web_contents_) {
+      web_contents->CleanTargetUrl();
+    }
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::SendTouchpadFlingEvent(const CefMouseEvent& event,
