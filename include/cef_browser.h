@@ -1934,6 +1934,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
 
   ///
+  /// Get selected text by context menu parameter.
+  ///
+  /*--cef()--*/
+  virtual std::string GetSelectedTextFromContextParam() = 0;
+
+  ///
   /// Get the top controls offset.
   ///
   /*--cef()--*/

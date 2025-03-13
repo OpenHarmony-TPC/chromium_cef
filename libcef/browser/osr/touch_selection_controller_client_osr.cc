@@ -308,6 +308,7 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
 #if defined(OHOS_EX_FREE_COPY)
     if (is_browser) {
       if (params.source_type == ui::MENU_SOURCE_SELECT_AND_COPY) {
+        rwhv_->SetLastSelectedTextFromContextParam(params.selection_text);
         quick_menu_requested_ = true;
       }
       SelectionTextNotEmpty(!params.selection_text.empty());
@@ -415,6 +416,7 @@ void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   if (base::CommandLine::ForCurrentProcess() &&
       base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kEnableNwebExFreeCopy)) {
+    rwhv_->SetLastSelectedTextFromContextParam(std::u16string());
     SelectionTextNotEmpty(false);
   }
 #endif

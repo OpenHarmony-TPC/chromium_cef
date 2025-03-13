@@ -333,6 +333,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void WebExtensionActionClicked(
       std::string extensionId,
       const NWebExtensionTab* tab) override {}
+  std::string GetSelectedTextFromContextParam() override { return ""; }
   void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
   void FillAutofillData(CefRefPtr<CefValue> message) override;
   void ScrollFocusedEditableNodeIntoView() override;
