@@ -774,6 +774,16 @@ void CefRenderWidgetHostViewOSR::SetEnableLowerFrameRate(bool enabled) {
   }
 }
 
+void CefRenderWidgetHostViewOSR::SetEnableHalfFrameRate(bool enabled) {
+  if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
+    ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+        browser_impl_->GetAcceleratedWidget(is_popup_));
+    if (compositor) {
+      compositor->SetEnableHalfFrameRate(enabled);
+    }
+  }
+}
+
 void CefRenderWidgetHostViewOSR::UpdateVSyncFrequency() {
   if (browser_impl_ && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = CefRenderWidgetHostViewOSR::GetCompositor(

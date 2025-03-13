@@ -481,6 +481,7 @@ bool NeedsReload() override;
   bool GetPrintBackground() override;
 #endif // defined(OHOS_PRINT)
   void SetEnableLowerFrameRate(bool enabled) override;
+  void SetEnableHalfFrameRate(bool enabled) override;
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;

@@ -1933,6 +1933,21 @@ void CefBrowserHostCToCpp::SetEnableLowerFrameRate(bool enabled) {
   _struct->set_enable_lower_frame_rate(_struct, enabled);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetEnableHalfFrameRate(bool enabled) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_enable_half_frame_rate)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_enable_half_frame_rate(_struct, enabled);
+}
+
 NO_SANITIZE("cfi-icall") CefString CefBrowserHostCToCpp::Title() {
   shutdown_checker::AssertNotShutdown();
 

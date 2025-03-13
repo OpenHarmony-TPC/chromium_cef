@@ -189,6 +189,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
       CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
   void WasKeyboardResized() override;
   void SetEnableLowerFrameRate(bool enabled) override;
+  void SetEnableHalfFrameRate(bool enabled) override;
   CefString Title() override;
   void CreateWebMessagePorts(std::vector<CefString>& ports) override;
   void PostWebMessage(CefString& message,

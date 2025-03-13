@@ -139,6 +139,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void OnWindowHide() override;
   void OnOnlineRenderToForeground() override;
   void SetEnableLowerFrameRate(bool enabled) override;
+  void SetEnableHalfFrameRate(bool enabled) override;
   void SetWindowId(int window_id, int nweb_id) override;
   void RenderViewReady() override;
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
