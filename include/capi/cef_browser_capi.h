@@ -1567,6 +1567,13 @@ typedef struct _cef_browser_host_t {
       int enabled);
 
   ///
+  /// Set if half the frame rate.
+  ///
+  void(CEF_CALLBACK* set_enable_half_frame_rate)(
+      struct _cef_browser_host_t* self,
+      int enabled);
+
+  ///
   /// Gets the title for the current page.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().

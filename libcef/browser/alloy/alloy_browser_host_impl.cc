@@ -939,6 +939,24 @@ void AlloyBrowserHostImpl::SetEnableLowerFrameRate(bool enabled) {
   }
 }
 
+void AlloyBrowserHostImpl::SetEnableHalfFrameRate(bool enabled) {
+  LOG(DEBUG) << "SetEnableHalfFrameRate:" << enabled;
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefBrowserHost::SetEnableHalfFrameRate, this, enabled));
+    return;
+  }
+
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    CefRenderWidgetHostViewOSR* view =
+        static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->SetEnableHalfFrameRate(enabled);
+    }
+  }
+}
+
 void AlloyBrowserHostImpl::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
   if (!IsWindowless()) {
     DCHECK(false) << "Window rendering is not disabled";

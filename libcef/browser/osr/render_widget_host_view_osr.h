@@ -148,6 +148,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
+  void SetEnableHalfFrameRate(bool enabled);
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
   void EvictFrameBackBuffers(bool invisible) override;
   void UpdateVSyncFrequency();

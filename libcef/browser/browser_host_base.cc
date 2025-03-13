@@ -3367,6 +3367,10 @@ bool CefBrowserHostBase::GetPrintBackground() {
 void CefBrowserHostBase::SetEnableLowerFrameRate(bool enabled) {
   // TODO(ohos): please impl the function and remove this comment.
 }
+
+void CefBrowserHostBase::SetEnableHalfFrameRate(bool enabled) {
+  // TODO(ohos): please impl the function and remove this comment.
+}
 #endif
 
 #ifdef OHOS_PAGE_UP_DOWN

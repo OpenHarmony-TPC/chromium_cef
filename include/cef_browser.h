@@ -2311,5 +2311,11 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void MaximizeResize() = 0;
 #endif
+
+  ///
+  /// Set if half the frame rate.
+  ///
+  /*--cef()--*/
+  virtual void SetEnableHalfFrameRate(bool enabled) = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

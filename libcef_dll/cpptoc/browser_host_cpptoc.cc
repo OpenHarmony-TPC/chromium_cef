@@ -2115,6 +2115,23 @@ browser_host_set_enable_lower_frame_rate(struct _cef_browser_host_t* self,
                                                                    : false);
 }
 
+void CEF_CALLBACK
+browser_host_set_enable_half_frame_rate(struct _cef_browser_host_t* self,
+                                         int enabled) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetEnableHalfFrameRate(enabled ? true
+                                                                   : false);
+}
+
 cef_string_userfree_t CEF_CALLBACK
 browser_host_title(struct _cef_browser_host_t* self) {
   shutdown_checker::AssertNotShutdown();
@@ -4383,6 +4400,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->was_keyboard_resized = browser_host_was_keyboard_resized;
   GetStruct()->set_enable_lower_frame_rate =
       browser_host_set_enable_lower_frame_rate;
+  GetStruct()->set_enable_half_frame_rate =
+      browser_host_set_enable_half_frame_rate;
   GetStruct()->title = browser_host_title;
   GetStruct()->create_web_message_ports = browser_host_create_web_message_ports;
   GetStruct()->post_web_message = browser_host_post_web_message;
