@@ -159,6 +159,29 @@ void CefSetFileRenameOption(const int file_rename_option);
 CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid);
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if defined(OHOS_EX_DOWNLOAD)
+///
+/// This interface is used to implement the callback function of readDownloadData.
+///
+/*--cef(source=client)--*/
+class CefReadDownloadDataCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Callback function of readDownloadData.
+  ///
+  /*--cef(optional_param=guid,optional_param=buffer)--*/
+  virtual void OnReadDownloadDataDone(const CefString& guid, const CefRefPtr<CefBinaryValue>& buffer) = 0;
+};
+
+///
+/// This function should be called on the main application thread.
+///
+/*--cef()--*/
+void CefReadDownloaData(const std::string& guid,
+                        const int32_t read_size,
+                        CefRefPtr<CefReadDownloadDataCallback> callback);
+#endif  // BUILDFLAG(OHOS_EX_DOWNLOAD)
+
 ///
 /// Implement this interface to provide handler implementations. Methods will be
 /// called by the process and/or thread indicated.
