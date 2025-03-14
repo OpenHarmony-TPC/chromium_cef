@@ -524,6 +524,7 @@ bool NeedsReload() override;
   // #ifdef OHOS_EX_FREE_COPY
   void SelectAndCopy() override;
   bool ShouldShowFreeCopy() override;
+  std::string GetSelectedTextFromContextParam() override;
   // #endif
   int GetNWebId() override;
 #ifdef OHOS_ITP

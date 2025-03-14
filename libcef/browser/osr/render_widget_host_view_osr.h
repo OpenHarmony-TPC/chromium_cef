@@ -505,6 +505,16 @@ class CefRenderWidgetHostViewOSR
   void OnSafeInsetsChange(const gfx::Insets& safe_insets);
 #endif
 
+#ifdef OHOS_EX_FREE_COPY
+  std::u16string GetLastSelectedTextFromContextParam() {
+    return last_selected_text_from_menu_;
+  }
+
+  void SetLastSelectedTextFromContextParam(std::u16string selectedText) {
+    last_selected_text_from_menu_ = selectedText;
+  }
+#endif
+
 #ifdef OHOS_AI
   void CreateOverlay(const gfx::ImageSkia& image,
                      const gfx::Rect& image_rect,
@@ -744,6 +754,10 @@ class CefRenderWidgetHostViewOSR
   size_t web_touch_event_count_ = 0;
 #endif
 #endif
+
+#ifdef OHOS_EX_FREE_COPY
+  std::u16string last_selected_text_from_menu_;
+#endif  // BUILDFLAG(OHOS_EX_FREE_COPY)
 
 #ifdef OHOS_EX_PULL_TO_REFRESH
   bool pull_to_refreshing_ = false;

@@ -60,6 +60,9 @@
 #include "ui/base/resource/resource_bundle.h"
 #endif
 
+#if defined(OHOS_EX_FREE_COPY)
+#include "libcef/browser/osr/render_widget_host_view_osr.h"
+#endif
 #if defined(OHOS_MEDIA_POLICY)
 #include "content/browser/media/session/media_session_impl.h"
 #endif // defined(OHOS_MEDIA_POLICY)
@@ -3592,6 +3595,24 @@ std::vector<std::string> CefBrowserHostBase::GetGrantFileAccessDirs() {
 
 void CefBrowserHostBase::SetShouldFrameSubmissionBeforeDraw(bool should) {
   // TODO(ohos): please impl the function and remove this comment.
+}
+
+std::string CefBrowserHostBase::GetSelectedTextFromContextParam() {
+#if defined(OHOS_EX_FREE_COPY)
+  if (GetWebContents()) {
+    auto rvh = GetWebContents()->GetRenderViewHost();
+    if (rvh && rvh->GetWidget() && rvh->GetWidget()->GetView()) {
+      CefRenderWidgetHostViewOSR* view =
+          static_cast<CefRenderWidgetHostViewOSR*>(rvh->GetWidget()->GetView());
+      if (view && !view->GetLastSelectedTextFromContextParam().empty()) {
+        return base::UTF16ToUTF8(view->GetLastSelectedTextFromContextParam());
+      }
+    }
+  }
+  return std::string();
+#else
+  return std::string();
+#endif
 }
 
 void CefBrowserHostBase::SelectAndCopy() {
