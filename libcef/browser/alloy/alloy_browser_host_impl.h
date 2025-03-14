@@ -266,6 +266,18 @@ void NotifyNeedsReload(bool needs_reload) override;
 bool NeedsReload() override;
 #endif
 
+#if defined(OHOS_RENDERER_ANR_DUMP)
+  void RendererUnresponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter,
+      content::RenderProcessNotRespondingReason reason) override;
+
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
+#endif
+
 #if defined(OHOS_EX_REFRESH_IFRAME)
   bool IsIframe() override;
   void ReloadFocusedFrame() override;
