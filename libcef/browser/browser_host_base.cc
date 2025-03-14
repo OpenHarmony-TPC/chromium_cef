@@ -993,6 +993,10 @@ void CefBrowserHostBase::UpdateBrowserSettings(
   settings_.supports_multiple_windows = browser_settings.supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
 
+#if defined(OHOS_MEDIA_CAPABILITIES_ENHANCE)
+  settings_.usage_scenario = browser_settings.usage_scenario;
+#endif
+
 #ifdef OHOS_NETWORK_LOAD
   settings_.universal_access_from_file_urls = browser_settings.universal_access_from_file_urls;
 #endif
@@ -1005,7 +1009,7 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 void CefBrowserHostBase::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
-#ifdef OHOS_LOGGER_REPORT  
+#ifdef OHOS_LOGGER_REPORT
   GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
 #else
   GetWebContents()->OnWebPreferencesChanged();
@@ -3913,7 +3917,7 @@ void CefBrowserHostBase::PasswordSuggestionSelected(int list_index) {
       LOG(INFO) << "enable safe browsing" << enable;
 #ifdef OHOS_LOGGER_REPORT
       LOG_FEEDBACK(INFO) << "enable safe browsing" << enable;
-#endif  
+#endif
       settings_.is_safe_browsing_enable = enable;
     }
   }
