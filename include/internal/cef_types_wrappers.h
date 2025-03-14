@@ -641,6 +641,10 @@ struct CefBrowserSettingsTraits {
     target->supports_multiple_windows = src->supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
 
+#if defined(OHOS_MEDIA_CAPABILITIES_ENHANCE)
+    target->usage_scenario = src->usage_scenario;
+#endif
+
 #ifdef OHOS_NETWORK_LOAD
     target->universal_access_from_file_urls = src->universal_access_from_file_urls;
 #endif

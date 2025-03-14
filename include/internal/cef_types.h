@@ -745,6 +745,10 @@ typedef struct _cef_browser_settings_t {
   bool record_whole_document;
 #endif
 
+#if defined(OHOS_MEDIA_CAPABILITIES_ENHANCE)
+  int32_t usage_scenario;
+#endif
+
 #if defined(OHOS_MULTI_WINDOW)
   bool supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW

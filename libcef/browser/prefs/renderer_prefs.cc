@@ -506,6 +506,10 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.supports_multiple_windows = cef.supports_multiple_windows;
 #endif // OHOS_MULTI_WINDOW
 
+#if defined(OHOS_MEDIA_CAPABILITIES_ENHANCE)
+  web.usage_scenario = cef.usage_scenario;
+#endif
+
 #ifdef OHOS_NETWORK_LOAD
   SET_STATE(cef.universal_access_from_file_urls, web.allow_universal_access_from_file_urls);
 #endif
