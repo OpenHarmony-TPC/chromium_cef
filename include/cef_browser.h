@@ -1107,6 +1107,10 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void NotifyScreenInfoChanged() = 0;
 
+#if BUILDFLAG(IS_OHOS)
+  virtual void NotifyScreenInfoChangedV2() {};
+#endif
+
   ///
   /// Invalidate the view. The browser will call CefRenderHandler::OnPaint
   /// asynchronously. This method is only used when window rendering is

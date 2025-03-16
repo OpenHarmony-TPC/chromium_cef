@@ -1407,10 +1407,32 @@ gfx::Rect CefRenderWidgetHostViewOSR::GetBoundsInRootWindow() {
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->client()->GetRenderHandler();
   CHECK(handler);
+
+#if BUILDFLAG(IS_OHOS)
+  gfx::Rect view_bounds;
+  double screen_x = 0;
+  double screen_y = 0;
+
+  if (browser_impl_ && browser_impl_->GetClient() && handler) {
+    handler->GetScreenOffset(browser_impl_.get(), screen_x, screen_y);
+  }
+
+  if (handler->GetRootScreenRect(browser_impl_.get(), rc)) {
+    view_bounds = gfx::Rect(rc.x + screen_x, rc.y + screen_y, rc.width, rc.height);
+  } else {
+    gfx::Rect view_bounds_inner = GetViewBounds();
+    view_bounds = gfx::Rect(view_bounds_inner.x() + screen_x,
+                            view_bounds_inner.y() + screen_y,
+                            view_bounds_inner.width(),
+                            view_bounds_inner.height());
+  }
+  return view_bounds;
+#else
   if (handler->GetRootScreenRect(browser_impl_.get(), rc)) {
     return gfx::Rect(rc.x, rc.y, rc.width, rc.height);
   }
   return GetViewBounds();
+#endif
 }
 
 #if BUILDFLAG(IS_OHOS)
@@ -2141,6 +2163,21 @@ void CefRenderWidgetHostViewOSR::OnScreenInfoChanged() {
     guest_host_view->OnScreenInfoChanged();
   }
 }
+
+#if BUILDFLAG(IS_OHOS)
+void CefRenderWidgetHostViewOSR::OnScreenInfoChangedV2() {
+  TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::OnScreenInfoChangedV2");
+  SetViewBounds();
+  if (!render_widget_host_) {
+    return;
+  }
+  if (render_widget_host_->delegate()) {
+    render_widget_host_->delegate()->SendScreenRects();
+  } else {
+    render_widget_host_->SendScreenRects();
+  }
+}
+#endif
 
 void CefRenderWidgetHostViewOSR::Invalidate(
     CefBrowserHost::PaintElementType type) {
