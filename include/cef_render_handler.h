@@ -491,6 +491,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
+
+  ///
+  /// Get Screen Offset
+  ///
+  /*--cef()--*/
+  virtual void GetScreenOffset(CefRefPtr<CefBrowser> browser, double& x, double& y) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

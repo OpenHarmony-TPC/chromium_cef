@@ -146,6 +146,9 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void NotifyForNextTouchEvent() override;
 #endif
   void NotifyScreenInfoChanged() override;
+#if BUILDFLAG(IS_OHOS)
+  void NotifyScreenInfoChangedV2() override;
+#endif
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;

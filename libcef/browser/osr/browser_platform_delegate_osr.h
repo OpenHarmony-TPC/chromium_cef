@@ -79,6 +79,9 @@ class CefBrowserPlatformDelegateOsr
   void ScrollFocusedEditableNodeIntoView() override;
 #endif
   void NotifyScreenInfoChanged() override;
+#if BUILDFLAG(IS_OHOS)
+  void NotifyScreenInfoChangedV2() override;
+#endif
   void Invalidate(cef_paint_element_type_t type) override;
   void SendExternalBeginFrame() override;
   void SetWindowlessFrameRate(int frame_rate) override;
