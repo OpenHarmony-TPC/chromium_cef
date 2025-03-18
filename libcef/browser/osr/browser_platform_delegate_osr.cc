@@ -220,6 +220,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     int clickCount) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
     return;
   }
 
@@ -241,6 +242,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     bool mouseLeave) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
     return;
   }
 
@@ -279,6 +281,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     int deltaY) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseWheelEvent drop mouse event!!";
     return;
   }
 
