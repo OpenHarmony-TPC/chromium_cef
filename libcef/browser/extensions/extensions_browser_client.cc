@@ -39,6 +39,8 @@
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/runtime/chrome_runtime_api_delegate.h"
+#include "cef/libcef/browser/chrome/chrome_browser_context.h"
+#include "cef/libcef/common/app_manager.h"
 #endif
 
 using content::BrowserContext;
@@ -94,6 +96,18 @@ class CefKioskDelegate : public extensions::KioskDelegate {
     return false;
   }
 };
+
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+Profile* GetProfileForExtensions() {
+  auto request_context = static_cast<CefRequestContextImpl*>(
+      CefAppManager::Get()->GetGlobalRequestContext().get());
+  if (!request_context || !request_context->GetBrowserContext()) {
+    LOG(ERROR) << "GetProfileForExtensions failed";
+    return nullptr;
+  }
+  return request_context->GetBrowserContext()->AsProfile();
+}
+#endif
 
 }  // namespace
 
@@ -394,9 +408,17 @@ void CefExtensionsBrowserClient::BroadcastEventToRenderers(
     const std::string& event_name,
     base::Value::List args,
     bool dispatch_to_off_the_record_profiles) {
+#if defined(OHOS_ARKWEB_EXTENSIONS)
+  Profile* profile = GetProfileForExtensions();
+  g_browser_process->extension_event_router_forwarder()
+      ->BroadcastEventToRenderers(histogram_value, event_name, std::move(args),
+                                  GURL(), dispatch_to_off_the_record_profiles,
+                                  profile);
+#else
   g_browser_process->extension_event_router_forwarder()
       ->BroadcastEventToRenderers(histogram_value, event_name, std::move(args),
                                   GURL(), dispatch_to_off_the_record_profiles);
+#endif
 }
 
 ExtensionCache* CefExtensionsBrowserClient::GetExtensionCache() {

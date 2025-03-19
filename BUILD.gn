@@ -1073,6 +1073,15 @@ source_set("libcef_static") {
     }
   }
 
+  #ifdef OHOS_ARKWEB_EXTENSIONS
+  if (defined(ohos_arkweb_extensions) && ohos_arkweb_extensions) {
+    sources += [
+      "libcef\browser\extensions\api\system_display\display_info_provider_ohos.cc",
+      "libcef\browser\extensions\api\system_display\display_info_provider_ohos.h",
+    ]
+  }
+  #endif
+
   #ifdef OHOS_NOTIFICATION
   if (defined(ohos_notification) && ohos_notification) {
     sources += [

@@ -42,6 +42,8 @@ class CefExtensionsAPIClient : public ExtensionsAPIClient {
       override;
 #if defined(OHOS_ARKWEB_EXTENSIONS)
   ManagementAPIDelegate* CreateManagementAPIDelegate() const override;
+  std::unique_ptr<DisplayInfoProvider> CreateDisplayInfoProvider()
+      const override;
 #endif
  private:
   std::unique_ptr<FileSystemDelegate> file_system_delegate_;
