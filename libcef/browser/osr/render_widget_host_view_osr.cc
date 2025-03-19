@@ -2600,7 +2600,7 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
 }
 
 void CefRenderWidgetHostViewOSR::OnTouchMove() {
-  if (pointer_state_.GetPointerCount() == 0) {
+  if (pointer_state_.GetPointerCount() == 0 || isBoosting_ == true) {
     return;
   }
   isBoosting_ = true;
