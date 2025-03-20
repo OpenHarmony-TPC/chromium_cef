@@ -569,6 +569,7 @@ class CefRenderWidgetHostViewOSR
   bool UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
   void FilterScrollEventImpl(const ui::GestureEventData& gesture);
+  void SetFocusOnGestureEvent(const ui::GestureEventData& gesture);
 #endif  // defined(OHOS_INPUT_EVENTS)
 #ifdef OHOS_EX_TOPCONTROLS
   void OnTopControlsChanged(float top_controls_offset,
