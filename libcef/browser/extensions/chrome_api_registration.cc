@@ -20,6 +20,7 @@
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/extension_action/extension_action_api.h"
 #include "chrome/browser/extensions/api/side_panel/side_panel_api.h"
+#include "chrome/browser/extensions/api/debugger/debugger_api.h"
 #include "chrome/browser/extensions/api/developer_private/developer_private_api.h"
 #include "extensions/browser/api/declarative_net_request/declarative_net_request_api.h"
 #include "libcef/browser/extensions/api/scripting/scripting_api.h"
@@ -135,6 +136,11 @@ const char* const kSupportedAPIs[] = {
     "system",
     "system.display",
     EXTENSION_FUNCTION_NAME(SystemDisplayGetInfoFunction),
+    "debugger",
+    EXTENSION_FUNCTION_NAME(DebuggerAttachFunction),
+    EXTENSION_FUNCTION_NAME(DebuggerDetachFunction),
+    EXTENSION_FUNCTION_NAME(DebuggerSendCommandFunction),
+    EXTENSION_FUNCTION_NAME(DebuggerGetTargetsFunction),
 #endif
 #ifdef OHOS_NOTIFICATION
   "notifications",
@@ -244,6 +250,11 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<cefimpl::CookiesGetAllCookieStoresFunction>();
   // system.display
   registry->RegisterFunction<SystemDisplayGetInfoFunction>();
+  // debugger
+  registry->RegisterFunction<DebuggerAttachFunction>();
+  registry->RegisterFunction<DebuggerDetachFunction>();
+  registry->RegisterFunction<DebuggerSendCommandFunction>();
+  registry->RegisterFunction<DebuggerGetTargetsFunction>();
 #endif
 #ifdef OHOS_NOTIFICATION
   registry->RegisterFunction<NotificationsCreateFunction>();
