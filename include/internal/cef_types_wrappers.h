@@ -613,6 +613,7 @@ struct CefBrowserSettingsTraits {
         src->blank_target_popup_intercept_enabled;
     target->native_embed_mode_enabled =
         src->native_embed_mode_enabled;
+    target->intrinsic_size_enabled = src->intrinsic_size_enabled;
     cef_string_set(src->embed_tag.str, src->embed_tag.length, &target->embed_tag,
                    copy);
     cef_string_set(src->embed_tag.str, src->embed_tag.length,

@@ -962,6 +962,8 @@ void CefBrowserHostBase::UpdateBrowserSettings(
 #if BUILDFLAG(IS_OHOS)
   settings_.native_embed_mode_enabled =
       browser_settings.native_embed_mode_enabled;
+  settings_.intrinsic_size_enabled =
+      browser_settings.intrinsic_size_enabled;
   SETTINGS_STRING_SET(browser_settings.embed_tag, settings_.embed_tag);
   SETTINGS_STRING_SET(browser_settings.embed_tag_type,
                       settings_.embed_tag_type);
