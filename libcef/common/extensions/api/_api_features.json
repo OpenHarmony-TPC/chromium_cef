@@ -105,5 +105,9 @@
   "cookies": {
     "dependencies": ["permission:cookies"],
     "contexts": ["blessed_extension"]
+  },
+  "system.display": {
+    "dependencies": ["permission:system.display"],
+    "contexts": ["blessed_extension"]
   }
 }

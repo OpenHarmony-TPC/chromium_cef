@@ -32,6 +32,7 @@
 #include "extensions/browser/api/declarative_net_request/rules_monitor_service.h"
 #include "chrome/browser/extensions/menu_manager_factory.h"
 #include "libcef/browser/extensions/api/cookies/cookies_api.h"
+#include "extensions/browser/api/system_info/system_info_api.h"
 #endif
 #ifdef OHOS_NOTIFICATION
 #include "chrome/browser/extensions/api/notifications/extension_notification_display_helper_factory.h"
@@ -63,6 +64,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::declarative_net_request::RulesMonitorService::GetFactoryInstance();
     extensions::MenuManagerFactory::GetInstance();
     extensions::cef::CookiesAPI::GetFactoryInstance();
+    extensions::SystemInfoAPI::GetFactoryInstance();
 #endif
 #ifdef OHOS_NOTIFICATION
     extensions::ExtensionNotificationDisplayHelperFactory::GetInstance();
