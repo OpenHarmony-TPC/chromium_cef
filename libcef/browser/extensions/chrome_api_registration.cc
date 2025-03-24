@@ -26,6 +26,7 @@
 #include "libcef/browser/extensions/api/context_menus/context_menus_api.h"
 #include "libcef/browser/extensions/api/web_navigation/web_navigation_api.h"
 #include "libcef/browser/extensions/api/windows/windows_api.h"
+#include "extensions/browser/api/system_display/system_display_api.h"
 #endif
 #ifdef OHOS_NOTIFICATION
 #include "chrome/browser/extensions/api/notifications/notifications_api.h"
@@ -124,6 +125,9 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(ActionSetIconFunction),
     "windows",
     EXTENSION_FUNCTION_NAME(cefimpl::WindowsGetAllFunction),
+    "system",
+    "system.display",
+    EXTENSION_FUNCTION_NAME(SystemDisplayGetInfoFunction),
 #endif
 #ifdef OHOS_NOTIFICATION
   "notifications",
@@ -225,6 +229,8 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<ActionSetIconFunction>();
   // windows
   registry->RegisterFunction<cefimpl::WindowsGetAllFunction>();
+  // system.display
+  registry->RegisterFunction<SystemDisplayGetInfoFunction>();
 #endif
 #ifdef OHOS_NOTIFICATION
   registry->RegisterFunction<NotificationsCreateFunction>();
