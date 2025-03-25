@@ -535,6 +535,7 @@ class CefRenderWidgetHostViewOSR
 #if BUILDFLAG(IS_OHOS)
   void MaximizeResize();
   void RestoreRenderFit() override;
+  bool SetCurrentSizeInPixel();
 #endif
 
  private:
@@ -816,6 +817,7 @@ class CefRenderWidgetHostViewOSR
   base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 #if BUILDFLAG(IS_OHOS)
   base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;
+  gfx::Size current_size_in_pixel_ = {0, 0};
 #endif
 };
 

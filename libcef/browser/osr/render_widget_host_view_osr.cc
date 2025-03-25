@@ -3181,9 +3181,15 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
     *visible_changed = visible_view_bounds_changed;
   }
 #endif
+#if defined(IS_OHOS)
+    const bool size_in_pixel_changed = SetCurrentSizeInPixel();
+#endif
   if (!force && !screen_info_changed && !view_bounds_changed
 #if defined(OHOS_INPUT_EVENTS)
       && !visible_view_bounds_changed
+#endif
+#if defined(IS_OHOS)
+      && !size_in_pixel_changed
 #endif
   ) {
     return false;
@@ -3752,7 +3758,7 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
 #endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollStarted();
-      handler->OnScrollStart(browser_impl_.get(), 
+      handler->OnScrollStart(browser_impl_.get(),
                             gesture_event.data.scroll_begin.delta_x_hint,
                             gesture_event.data.scroll_begin.delta_y_hint);
     } else if (input_event.GetType() ==
@@ -4353,5 +4359,14 @@ void CefRenderWidgetHostViewOSR::RestoreRenderFit() {
   CefRefPtr<CefRenderHandler> handler = browser_impl_->client()->GetRenderHandler();
   CHECK(handler);
   handler->RestoreRenderFit();
+}
+
+bool CefRenderWidgetHostViewOSR::SetCurrentSizeInPixel() {
+    gfx::Size size_in_pixel = SizeInPixels();
+    if (size_in_pixel == current_size_in_pixel_) {
+        return false;
+    }
+    current_size_in_pixel_ = size_in_pixel;
+    return true;
 }
 #endif
