@@ -1307,10 +1307,16 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
 void CefFrameImpl::GetScrollOffset(
     cef::mojom::RenderFrame::GetScrollOffsetCallback callback) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "GetScrollOffset get render frame failed";
+    std::move(callback).Run(0.0f, 0.0f);
+    return;
+  }
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webView = render_frame->GetWebView();
   if (!webView) {
     LOG(ERROR) << "GetScrollOffset get webView failed";
+    std::move(callback).Run(0.0f, 0.0f);
     return;
   }
   auto scroll_offset = webView->GetScrollOffset();
@@ -1403,6 +1409,11 @@ void CefFrameImpl::UpdateDrawRect() {
 void CefFrameImpl::GetOverScrollOffset(
     cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "GetOverScrollOffset get render frame failed";
+    std::move(callback).Run(0.0f, 0.0f);
+    return;
+  }
   DCHECK(render_frame->IsMainFrame());
 
   auto overScroll_offset = render_frame->GetOverScrollOffset();
