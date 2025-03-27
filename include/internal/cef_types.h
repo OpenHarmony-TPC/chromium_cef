@@ -710,6 +710,7 @@ typedef struct _cef_browser_settings_t {
   cef_color_t scrollbar_color;
   bool is_safe_browsing_enable;
   cef_state_t native_embed_mode_enabled;
+  cef_state_t intrinsic_size_enabled;
   cef_string_t embed_tag;
   cef_string_t embed_tag_type;
   bool scroll_enabled;
