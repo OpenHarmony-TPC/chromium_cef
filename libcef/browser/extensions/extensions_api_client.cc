@@ -27,6 +27,8 @@
 
 #if defined(OHOS_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/management/chrome_management_api_delegate.h"
+#include "chrome/browser/extensions/system_display/display_info_provider.h"
+#include "extensions/browser/api/system_display/display_info_provider.h"
 #endif
 
 namespace extensions {
@@ -98,6 +100,11 @@ FileSystemDelegate* CefExtensionsAPIClient::GetFileSystemDelegate() {
 ManagementAPIDelegate* CefExtensionsAPIClient::CreateManagementAPIDelegate()
     const {
   return new ChromeManagementAPIDelegate;
+}
+
+std::unique_ptr<DisplayInfoProvider>
+CefExtensionsAPIClient::CreateDisplayInfoProvider() const {
+  return CreateChromeDisplayInfoProvider();
 }
 #endif
 }  // namespace extensions

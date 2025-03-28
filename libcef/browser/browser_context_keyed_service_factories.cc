@@ -31,6 +31,7 @@
 #include "chrome/browser/extensions/menu_manager_factory.h"
 #include "chrome/browser/extensions/api/commands/command_service.h"
 #include "extensions/browser/api/runtime/runtime_api.h"
+#include "extensions/browser/api/system_info/system_info_api.h"
 #endif
 #ifdef OHOS_NOTIFICATION
 #include "chrome/browser/extensions/api/notifications/extension_notification_display_helper_factory.h"
@@ -61,6 +62,7 @@ void EnsureBrowserContextKeyedServiceFactoriesBuilt() {
     extensions::MenuManagerFactory::GetInstance();
     extensions::CommandService::GetFactoryInstance();
     extensions::RuntimeAPI::GetFactoryInstance();
+    extensions::SystemInfoAPI::GetFactoryInstance();
 #endif
 #ifdef OHOS_NOTIFICATION
     extensions::ExtensionNotificationDisplayHelperFactory::GetInstance();
