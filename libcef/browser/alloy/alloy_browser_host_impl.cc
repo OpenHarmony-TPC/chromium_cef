@@ -60,6 +60,9 @@
 #include "base/ohos/ltpo/include/dynamic_frame_rate_decision.h"
 #include "base/ohos/sys_info_utils.h"
 #include "content/browser/gpu/gpu_process_host.h"
+#include "content/browser/renderer_host/render_process_host_impl.h"
+#include "content/browser/site_info.h"
+#include "content/browser/site_instance_impl.h"
 #include "libcef/browser/alloy/render_process_state_handler.h"
 #include "libcef/browser/osr/render_widget_host_view_osr.h"
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
@@ -1644,9 +1647,26 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
       CefRefPtr<AlloyBrowserHostImpl> browser(this);
 
       if (source) {
+#ifdef BUILDFLAG(IS_OHOS)
+        if (content::RenderProcessHost::render_process_mode() == content::RenderProcessMode::SINGLE_MODE) {
+          auto mainFrame = source->GetPrimaryMainFrame();
+          auto process = static_cast<content::RenderProcessHostImpl*>(
+            mainFrame->GetProcess());
+          auto siteInstance = static_cast<content::SiteInstanceImpl*>(mainFrame->GetSiteInstance());
+          if (process && siteInstance) {
+            LOG(INFO) << "delay shutdown render process in single mode";
+            process->DelayProcessShutdown(base::Seconds(1), base::TimeDelta(), siteInstance->GetSiteInfo());
+          }
+        } else {
+          // Try to fast shutdown the associated process.
+          source->GetPrimaryMainFrame()->GetProcess()->FastShutdownIfPossible(
+            1, false);
+        }
+#else
         // Try to fast shutdown the associated process.
         source->GetPrimaryMainFrame()->GetProcess()->FastShutdownIfPossible(
             1, false);
+#endif
       }
 
       // No window exists. Destroy the browser immediately. Don't call other
