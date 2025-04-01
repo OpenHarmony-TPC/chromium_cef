@@ -8,9 +8,11 @@
 
 #include <memory>
 
-#include "libcef/browser/request_context_impl.h"
-
+#include "arkweb/build/features/features.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/request_context_impl.h"
 #include "chrome/browser/chrome_content_browser_client.h"
+#include "content/public/browser/web_contents_view_delegate.h"
 
 class ChromeBrowserMainExtraPartsCef;
 
@@ -25,6 +27,8 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
 
   ~ChromeContentBrowserClientCef() override;
 
+  void CleanupOnUIThread() override;
+
   // ChromeContentBrowserClient overrides.
   std::unique_ptr<content::BrowserMainParts> CreateBrowserMainParts(
       bool is_integration_test) override;
@@ -38,12 +42,27 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
       const GURL& request_url,
       bool is_main_frame_request,
       bool strict_enforcement,
-#ifdef OHOS_NETWORK_LOAD
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
       const GURL& origin_url,
       const std::string& referrer,
 #endif
       base::OnceCallback<void(content::CertificateRequestResultType)> callback)
       override;
+  base::OnceClosure SelectClientCertificate(
+      content::BrowserContext* browser_context,
+      int process_id,
+      content::WebContents* web_contents,
+      net::SSLCertRequestInfo* cert_request_info,
+      net::ClientCertIdentityList client_certs,
+      std::unique_ptr<content::ClientCertificateDelegate> delegate) override;
+#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
+  bool CanCreateWindow(
+      content::RenderFrameHost* opener,
+      const GURL& target_url,
+      WindowOpenDisposition disposition,
+      bool user_gesture,
+      content::mojom::FrameHost::GetCreateNewWindowCallback callback) override;
+#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
   bool CanCreateWindow(content::RenderFrameHost* opener,
                        const GURL& opener_url,
                        const GURL& opener_top_level_frame_url,
@@ -57,46 +76,53 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
                        bool user_gesture,
                        bool opener_suppressed,
                        bool* no_javascript_access) override;
+  void CreateWindowResult(content::RenderFrameHost* opener,
+                          bool success) override;
   void OverrideWebkitPrefs(content::WebContents* web_contents,
                            blink::web_pref::WebPreferences* prefs) override;
-  bool WillCreateURLLoaderFactory(
+  void WillCreateURLLoaderFactory(
       content::BrowserContext* browser_context,
       content::RenderFrameHost* frame,
       int render_process_id,
       URLLoaderFactoryType type,
       const url::Origin& request_initiator,
-      absl::optional<int64_t> navigation_id,
+      const net::IsolationInfo& isolation_info,
+      std::optional<int64_t> navigation_id,
       ukm::SourceIdObj ukm_source_id,
-      mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+      network::URLLoaderFactoryBuilder& factory_builder,
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
       bool* bypass_redirect_checks,
       bool* disable_secure_dns,
-      network::mojom::URLLoaderFactoryOverridePtr* factory_override) override;
+      network::mojom::URLLoaderFactoryOverridePtr* factory_override,
+      scoped_refptr<base::SequencedTaskRunner> navigation_response_task_runner)
+      override;
   bool HandleExternalProtocol(
       const GURL& url,
       content::WebContents::Getter web_contents_getter,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       content::NavigationUIData* navigation_data,
       bool is_primary_main_frame,
       bool is_in_fenced_frame_tree,
       network::mojom::WebSandboxFlags sandbox_flags,
       ui::PageTransition page_transition,
       bool has_user_gesture,
-      const absl::optional<url::Origin>& initiating_origin,
+      const std::optional<url::Origin>& initiating_origin,
       content::RenderFrameHost* initiator_document,
+      const net::IsolationInfo& isolation_info,
       mojo::PendingRemote<network::mojom::URLLoaderFactory>* out_factory)
       override;
   bool HandleExternalProtocol(
       content::WebContents::Getter web_contents_getter,
-      int frame_tree_node_id,
+      content::FrameTreeNodeId frame_tree_node_id,
       content::NavigationUIData* navigation_data,
       bool is_primary_main_frame,
       bool is_in_fenced_frame_tree,
       network::mojom::WebSandboxFlags sandbox_flags,
       const network::ResourceRequest& request,
-      const absl::optional<url::Origin>& initiating_origin,
+      const std::optional<url::Origin>& initiating_origin,
       content::RenderFrameHost* initiator_document,
+      const net::IsolationInfo& isolation_info,
       mojo::PendingRemote<network::mojom::URLLoaderFactory>* out_factory)
       override;
   std::vector<std::unique_ptr<content::NavigationThrottle>>
@@ -112,14 +138,14 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
   std::unique_ptr<content::LoginDelegate> CreateLoginDelegate(
       const net::AuthChallengeInfo& auth_info,
       content::WebContents* web_contents,
+      content::BrowserContext* browser_context,
       const content::GlobalRequestID& request_id,
-      bool is_request_for_main_frame,
+      bool is_request_for_primary_main_frame_navigation,
+      bool is_request_for_navigation,
       const GURL& url,
       scoped_refptr<net::HttpResponseHeaders> response_headers,
       bool first_auth_attempt,
       LoginAuthRequiredCallback auth_required_callback) override;
-  void BrowserURLHandlerCreated(content::BrowserURLHandler* handler) override;
-  bool IsWebUIAllowedToMakeNetworkRequests(const url::Origin& origin) override;
   void ExposeInterfacesToRenderer(
       service_manager::BinderRegistry* registry,
       blink::AssociatedInterfaceRegistry* associated_registry,
@@ -127,6 +153,12 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
   void RegisterBrowserInterfaceBindersForFrame(
       content::RenderFrameHost* render_frame_host,
       mojo::BinderMapWithContext<content::RenderFrameHost*>* map) override;
+  std::unique_ptr<content::WebContentsViewDelegate> GetWebContentsViewDelegate(
+      content::WebContents* web_contents) override;
+#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
+  bool ShouldDisableSiteIsolation(
+      content::SiteIsolationMode site_isolation_mode) override;
+#endif
 
   CefRefPtr<CefRequestContextImpl> request_context() const;
 
@@ -134,8 +166,14 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
   scoped_refptr<base::SingleThreadTaskRunner> user_visible_task_runner() const;
   scoped_refptr<base::SingleThreadTaskRunner> user_blocking_task_runner() const;
 
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+  CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
+#endif
  private:
-  ChromeBrowserMainExtraPartsCef* browser_main_parts_ = nullptr;
+  static std::unique_ptr<content::WebContentsViewDelegate>
+  CreateWebContentsViewDelegate(content::WebContents* web_contents);
+
+  raw_ptr<ChromeBrowserMainExtraPartsCef> browser_main_parts_ = nullptr;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_CHROME_CONTENT_BROWSER_CLIENT_CEF_

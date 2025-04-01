@@ -6,9 +6,11 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_VIEW_UTIL_H_
 #pragma once
 
-#include "include/views/cef_view.h"
-#include "include/views/cef_window.h"
+#include <optional>
 
+#include "cef/include/views/cef_view.h"
+#include "cef/include/views/cef_window.h"
+#include "ui/color/color_id.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/views/view.h"
 
@@ -45,7 +47,6 @@ class CefWindowDelegate;
 namespace view_util {
 
 // Default values.
-extern const SkColor kDefaultBackgroundColor;
 extern const char kDefaultFontList[];
 
 // Called when a CefView is initialized to create the initial association
@@ -159,11 +160,33 @@ views::NativeWidget* CreateNativeWidget(
 // whose position in the view hierarchy determines the z-order of the widget
 // relative to views with layers and views with associated NativeViews.
 void SetHostView(views::Widget* widget, views::View* host_view);
-views::View* GetHostView(views::Widget* widget);
+views::View* GetHostView(const views::Widget* widget);
 
 #if BUILDFLAG(IS_MAC)
 float GetNSWindowTitleBarHeight(views::Widget* widget);
 #endif
+
+// Returns the mixer color for |id|. If |view| has been added to a Widget it
+// will use the Widget's ColorProvider, otherwise it will use the global theme
+// ColorProvider. Returns gfx::kPlaceholderColor if |id| cannot be constructed.
+SkColor GetColor(const views::View* view, ui::ColorId id);
+
+// Sets the color associated with |id|. If |view| has been added to a Widget it
+// will use the Widget's ColorProvider, otherwise it will use the global theme
+// ColorProvider.
+void SetColor(views::View* view, ui::ColorId id, SkColor color);
+
+// Returns the currently configured background color for |view|. If
+// |allow_transparent| is true then it may return an empty value to indicate
+// transparency.
+std::optional<SkColor> GetBackgroundColor(const views::View* view,
+                                          bool allow_transparent);
+
+// Returns true if dark theme should be used for |widget|.
+bool ShouldUseDarkTheme(views::Widget* widget);
+
+// Updates the titlebar light/dark theme for |widget|.
+void UpdateTitlebarTheme(views::Widget* widget);
 
 }  // namespace view_util
 

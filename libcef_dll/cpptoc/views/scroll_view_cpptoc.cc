@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2ac2ff6e231398755ea6f2748985d21c0b4b1510$
+// $hash=1a624e78c1f34412717a3bf45bacc306fbde2b9c$
 //
 
 #include "libcef_dll/cpptoc/views/scroll_view_cpptoc.h"
+
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
 #include "libcef_dll/cpptoc/views/panel_cpptoc.h"
@@ -966,6 +967,25 @@ scroll_view_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK scroll_view_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefScrollViewCppToC::Get(reinterpret_cast<cef_scroll_view_t*>(self))
+          ->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK scroll_view_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1012,6 +1032,26 @@ scroll_view_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefScrollViewCppToC::Get(reinterpret_cast<cef_scroll_view_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK scroll_view_get_theme_color(struct _cef_view_t* self,
+                                                     int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefScrollViewCppToC::Get(reinterpret_cast<cef_scroll_view_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1283,9 +1323,11 @@ CefScrollViewCppToC::CefScrollViewCppToC() {
   GetStruct()->base.is_focusable = scroll_view_is_focusable;
   GetStruct()->base.is_accessibility_focusable =
       scroll_view_is_accessibility_focusable;
+  GetStruct()->base.has_focus = scroll_view_has_focus;
   GetStruct()->base.request_focus = scroll_view_request_focus;
   GetStruct()->base.set_background_color = scroll_view_set_background_color;
   GetStruct()->base.get_background_color = scroll_view_get_background_color;
+  GetStruct()->base.get_theme_color = scroll_view_get_theme_color;
   GetStruct()->base.convert_point_to_screen =
       scroll_view_convert_point_to_screen;
   GetStruct()->base.convert_point_from_screen =

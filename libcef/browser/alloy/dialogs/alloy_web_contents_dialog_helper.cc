@@ -2,11 +2,10 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
-
-#include "libcef/browser/browser_platform_delegate.h"
+#include "cef/libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
 
 #include "base/notreached.h"
+#include "cef/libcef/browser/browser_platform_delegate.h"
 #include "chrome/browser/platform_util.h"
 #include "components/web_modal/web_contents_modal_dialog_manager.h"
 #include "ui/views/widget/widget.h"
@@ -43,30 +42,35 @@ AlloyWebContentsDialogHelper::GetWebContentsModalDialogHost() {
 }
 
 gfx::NativeView AlloyWebContentsDialogHelper::GetHostView() const {
-  // Windowless rendering uses GetHostWidget() instead.
-  if (browser_delegate_->IsWindowless()) {
-    return gfx::NativeView();
+  // Windowless rendering uses GetAcceleratedWidget() instead.
+  if (!browser_delegate_->IsWindowless()) {
+#if BUILDFLAG(IS_MAC)
+    // This is supported with all configurations except MacOS with external
+    // parent because we can't provide a gfx::NativeView or a
+    // gfx::AcceleratedWidget on that platform (it's an arbitrary internal
+    // Chromium type). This code should not be reached in that case because
+    // print preview is disabled.
+    DCHECK(!browser_delegate_->HasExternalParent());
+#endif
+    if (auto widget = browser_delegate_->GetWindowWidget()) {
+      return widget->GetNativeView();
+    }
   }
-
-  if (auto widget = browser_delegate_->GetWindowWidget()) {
-    return widget->GetNativeView();
-  }
-  DCHECK(false);
+  NOTIMPLEMENTED();
   return gfx::NativeView();
 }
 
-gfx::AcceleratedWidget AlloyWebContentsDialogHelper::GetHostWidget() const {
+gfx::AcceleratedWidget AlloyWebContentsDialogHelper::GetAcceleratedWidget()
+    const {
 #if defined(USE_AURA)
   // Windowed rendering uses GetHostView() instead.
-  if (!browser_delegate_->IsWindowless()) {
-    return gfx::kNullAcceleratedWidget;
-  }
-
-  if (auto parent_widget = browser_delegate_->GetHostWindowHandle()) {
-    return parent_widget;
+  if (browser_delegate_->IsWindowless()) {
+    if (auto parent_widget = browser_delegate_->GetHostWindowHandle()) {
+      return parent_widget;
+    }
   }
 #endif  // defined(USE_AURA)
-  DCHECK(false);
+  NOTIMPLEMENTED();
   return gfx::kNullAcceleratedWidget;
 }
 

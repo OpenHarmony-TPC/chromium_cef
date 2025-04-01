@@ -9,12 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9788904ad41f1bd106394fa745987a3db7d63d13$
+// $hash=33875e81f50c56e30db9d538e97f51d83a65ee3f$
 //
 
 #include "libcef_dll/cpptoc/request_cpptoc.h"
+
 #include "libcef_dll/cpptoc/post_data_cpptoc.h"
-#include "libcef_dll/cpptoc/post_data_stream_cpptoc.h"
 #include "libcef_dll/transfer_util.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
@@ -420,7 +420,7 @@ request_get_transition_type(struct _cef_request_t* self) {
   return _retval;
 }
 
-uint64 CEF_CALLBACK request_get_identifier(struct _cef_request_t* self) {
+uint64_t CEF_CALLBACK request_get_identifier(struct _cef_request_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -429,72 +429,10 @@ uint64 CEF_CALLBACK request_get_identifier(struct _cef_request_t* self) {
   }
 
   // Execute
-  uint64 _retval = CefRequestCppToC::Get(self)->GetIdentifier();
+  uint64_t _retval = CefRequestCppToC::Get(self)->GetIdentifier();
 
   // Return type: simple
   return _retval;
-}
-
-int CEF_CALLBACK request_is_main_frame(struct _cef_request_t* self) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefRequestCppToC::Get(self)->IsMainFrame();
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK request_is_redirect(struct _cef_request_t* self) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefRequestCppToC::Get(self)->IsRedirect();
-
-  // Return type: bool
-  return _retval;
-}
-
-int CEF_CALLBACK request_has_user_gesture(struct _cef_request_t* self) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefRequestCppToC::Get(self)->HasUserGesture();
-
-  // Return type: bool
-  return _retval;
-}
-
-struct _cef_post_data_stream_t* CEF_CALLBACK
-request_get_upload_stream(struct _cef_request_t* self) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefRefPtr<CefPostDataStream> _retval =
-      CefRequestCppToC::Get(self)->GetUploadStream();
-
-  // Return type: refptr_same
-  return CefPostDataStreamCppToC::Wrap(_retval);
 }
 
 }  // namespace
@@ -526,10 +464,6 @@ CefRequestCppToC::CefRequestCppToC() {
   GetStruct()->get_resource_type = request_get_resource_type;
   GetStruct()->get_transition_type = request_get_transition_type;
   GetStruct()->get_identifier = request_get_identifier;
-  GetStruct()->is_main_frame = request_is_main_frame;
-  GetStruct()->is_redirect = request_is_redirect;
-  GetStruct()->has_user_gesture = request_has_user_gesture;
-  GetStruct()->get_upload_stream = request_get_upload_stream;
 }
 
 // DESTRUCTOR - Do not edit by hand.

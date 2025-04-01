@@ -27,6 +27,7 @@ bool CefDevToolsMessageHandlerDelegateCToCpp::ShowFileChooser(
     const CefString& default_file_path,
     const std::vector<CefString>& accept_filters,
     bool capture,
+    const std::vector<CefString>& mime_filters,
     CefRefPtr<CefFileDialogCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -51,10 +52,16 @@ bool CefDevToolsMessageHandlerDelegateCToCpp::ShowFileChooser(
     transfer_string_list_contents(accept_filters, accept_filtersList);
   }
 
+  cef_string_list_t mime_filtersList = cef_string_list_alloc();
+  DCHECK(mime_filtersList);
+  if (mime_filtersList) {
+    transfer_string_list_contents(mime_filters, mime_filtersList);
+  }
+
   // Execute
   int _retval = _struct->show_file_chooser(
       _struct, mode, title.GetStruct(), default_file_path.GetStruct(),
-      accept_filtersList, capture, CefFileDialogCallbackCppToC::Wrap(callback));
+      accept_filtersList, capture, mime_filtersList, CefFileDialogCallbackCppToC::Wrap(callback));
 
   // Restore param:accept_filters; type: string_vec_byref_const
   if (accept_filtersList) {

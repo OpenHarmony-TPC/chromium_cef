@@ -9,10 +9,10 @@
 #include <set>
 #include <string>
 
+#include "cef/ohos_cef_ext/include/arkweb_display_handler_ext.h"
 #include "include/cef_client.h"
 #include "include/wrapper/cef_helpers.h"
-#include "include/wrapper/cef_message_router.h"
-#include "include/wrapper/cef_resource_manager.h"
+#include "tests/cefclient/browser/base_client_handler.h"
 #include "tests/cefclient/browser/client_types.h"
 #include "tests/cefclient/browser/test_runner.h"
 
@@ -27,25 +27,27 @@ class ClientDownloadImageCallback;
 
 // Client handler abstract base class. Provides common functionality shared by
 // all concrete client handler implementations.
-class ClientHandler : public CefClient,
+class ClientHandler : public BaseClientHandler,
                       public CefCommandHandler,
                       public CefContextMenuHandler,
-                      public CefDisplayHandler,
+                      public ArkWebDisplayHandlerExt,
                       public CefDownloadHandler,
                       public CefDragHandler,
-                      public CefFocusHandler,
                       public CefKeyboardHandler,
-                      public CefLifeSpanHandler,
-                      public CefLoadHandler,
-                      public CefPermissionHandler,
-                      public CefRequestHandler,
-                      public CefResourceRequestHandler {
+                      public CefPermissionHandler {
  public:
   // Implement this interface to receive notification of ClientHandler
   // events. The methods of this class will be called on the main thread unless
   // otherwise indicated.
   class Delegate {
    public:
+    // Returns true if the window should use Views. Safe to call on any thread.
+    virtual bool UseViews() const = 0;
+
+    // Returns true if the window should use Alloy style. Safe to call on any
+    // thread.
+    virtual bool UseAlloyStyle() const = 0;
+
     // Called when the browser is created.
     virtual void OnBrowserCreated(CefRefPtr<CefBrowser> browser) = 0;
 
@@ -79,6 +81,9 @@ class ClientHandler : public CefClient,
     virtual void OnSetDraggableRegions(
         const std::vector<CefDraggableRegion>& regions) = 0;
 
+    // Called on the UI thread to optionally handle the browser gaining focus.
+    virtual bool OnSetFocus(cef_focus_source_t source) { return false; }
+
     // Set focus to the next/previous control.
     virtual void OnTakeFocus(bool next) {}
 
@@ -86,10 +91,8 @@ class ClientHandler : public CefClient,
     virtual void OnBeforeContextMenu(CefRefPtr<CefMenuModel> model) {}
 
    protected:
-    virtual ~Delegate() {}
+    virtual ~Delegate() = default;
   };
-
-  typedef std::set<CefMessageRouterBrowserSide::Handler*> MessageHandlerSet;
 
   // Constructor may be called on any thread.
   // |delegate| must outlive this object or DetachDelegate() must be called.
@@ -104,17 +107,15 @@ class ClientHandler : public CefClient,
 
   // CefClient methods
   CefRefPtr<CefCommandHandler> GetCommandHandler() override { return this; }
-  CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override {
+  CefRefPtr<CefContextMenuHandlerExt> GetContextMenuHandler() override {
     return this;
   }
-  CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
+  CefRefPtr<ArkWebDisplayHandlerExt> GetDisplayHandler() override {
+    return this;
+  }
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
   CefRefPtr<CefDragHandler> GetDragHandler() override { return this; }
-  CefRefPtr<CefFocusHandler> GetFocusHandler() override { return this; }
   CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override { return this; }
-  CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
-  CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
-  CefRefPtr<CefRequestHandler> GetRequestHandler() override { return this; }
   CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
     return this;
   }
@@ -183,7 +184,7 @@ class ClientHandler : public CefClient,
   bool CanDownload(CefRefPtr<CefBrowser> browser,
                    const CefString& url,
                    const CefString& request_method) override;
-  void OnBeforeDownload(CefRefPtr<CefBrowser> browser,
+  bool OnBeforeDownload(CefRefPtr<CefBrowser> browser,
                         CefRefPtr<CefDownloadItem> download_item,
                         const CefString& suggested_name,
                         CefRefPtr<CefBeforeDownloadCallback> callback) override;
@@ -214,6 +215,7 @@ class ClientHandler : public CefClient,
   bool OnBeforePopup(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
+      int popup_id,
       const CefString& target_url,
       const CefString& target_frame_name,
       CefLifeSpanHandler::WindowOpenDisposition target_disposition,
@@ -224,6 +226,14 @@ class ClientHandler : public CefClient,
       CefBrowserSettings& settings,
       CefRefPtr<CefDictionaryValue>& extra_info,
       bool* no_javascript_access) override;
+  void OnBeforePopupAborted(CefRefPtr<CefBrowser> browser,
+                            int popup_id) override;
+  void OnBeforeDevToolsPopup(CefRefPtr<CefBrowser> browser,
+                             CefWindowInfo& windowInfo,
+                             CefRefPtr<CefClient>& client,
+                             CefBrowserSettings& settings,
+                             CefRefPtr<CefDictionaryValue>& extra_info,
+                             bool* use_default_window) override;
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
   bool DoClose(CefRefPtr<CefBrowser> browser) override;
   void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
@@ -244,15 +254,10 @@ class ClientHandler : public CefClient,
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
       const CefString& requesting_origin,
-      uint32 requested_permissions,
+      uint32_t requested_permissions,
       CefRefPtr<CefMediaAccessCallback> callback) override;
 
   // CefRequestHandler methods
-  bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser,
-                      CefRefPtr<CefFrame> frame,
-                      CefRefPtr<CefRequest> request,
-                      bool user_gesture,
-                      bool is_redirect) override;
   bool OnOpenURLFromTab(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
@@ -285,39 +290,21 @@ class ClientHandler : public CefClient,
       bool isProxy,
       const CefString& host,
       int port,
-#if BUILDFLAG(IS_OHOS)
       const std::vector<CefString>& key_types,
       const std::vector<CefString>& principals,
-#endif
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) override;
   void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-                                 TerminationStatus status) override;
+                                 TerminationStatus status,
+                                 int error_code,
+                                 const CefString& error_string) override;
   void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) override;
 
   // CefResourceRequestHandler methods
-  cef_return_value_t OnBeforeResourceLoad(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefCallback> callback) override;
-  CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) override;
-  CefRefPtr<CefResponseFilter> GetResourceResponseFilter(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefResponse> response) override;
   void OnProtocolExecution(CefRefPtr<CefBrowser> browser,
                            CefRefPtr<CefFrame> frame,
                            CefRefPtr<CefRequest> request,
                            bool& allow_os_execution) override;
-
-  // Returns the number of browsers currently using this handler. Can only be
-  // called on the CEF UI thread.
-  int GetBrowserCount() const;
 
   // Show a new DevTools popup window.
   void ShowDevTools(CefRefPtr<CefBrowser> browser,
@@ -331,9 +318,6 @@ class ClientHandler : public CefClient,
 
   // Show SSL information for the current site.
   void ShowSSLInformation(CefRefPtr<CefBrowser> browser);
-
-  // Set a string resource for loading via StringResourceProvider.
-  void SetStringResource(const std::string& page, const std::string& data);
 
   // Returns the Delegate.
   Delegate* delegate() const { return delegate_; }
@@ -352,10 +336,10 @@ class ClientHandler : public CefClient,
   friend class ClientDownloadImageCallback;
 
   // Create a new popup window using the specified information. |is_devtools|
-  // will be true if the window will be used for DevTools. Return true to
-  // proceed with popup browser creation or false to cancel the popup browser.
-  // May be called on any thead.
+  // will be true if the window will be used for DevTools. Returns true if a
+  // RootWindow was created for the popup.
   bool CreatePopupWindow(CefRefPtr<CefBrowser> browser,
+                         int popup_id,
                          bool is_devtools,
                          const CefPopupFeatures& popupFeatures,
                          CefWindowInfo& windowInfo,
@@ -376,13 +360,20 @@ class ClientHandler : public CefClient,
   void NotifyTakeFocus(bool next);
 
   // Test context menu creation.
-  void BuildTestMenu(CefRefPtr<CefMenuModel> model);
-  bool ExecuteTestMenu(int command_id);
+  void BuildTestMenu(CefRefPtr<CefBrowser> browser,
+                     CefRefPtr<CefMenuModel> model);
+  bool ExecuteTestMenu(CefRefPtr<CefBrowser> browser, int command_id);
 
   void SetOfflineState(CefRefPtr<CefBrowser> browser, bool offline);
 
   // THREAD SAFE MEMBERS
   // The following members may be accessed from any thread.
+
+  // True if this handler uses Views.
+  const bool use_views_;
+
+  // True if this handler uses Alloy style.
+  const bool use_alloy_style_;
 
   // True if this handler uses off-screen rendering.
   const bool is_osr_;
@@ -415,17 +406,6 @@ class ClientHandler : public CefClient,
   CefRefPtr<ClientPrintHandlerGtk> print_handler_;
 #endif
 
-  // Handles the browser side of query routing. The renderer side is handled
-  // in client_renderer.cc.
-  CefRefPtr<CefMessageRouterBrowserSide> message_router_;
-
-  // Manages the registration and delivery of resources.
-  CefRefPtr<CefResourceManager> resource_manager_;
-
-  // Used to manage string resources in combination with StringResourceProvider.
-  // Only accessed on the IO thread.
-  test_runner::StringResourceMap string_resource_map_;
-
   // MAIN THREAD MEMBERS
   // The following members will only be accessed on the main thread. This will
   // be the same as the CEF UI thread except when using multi-threaded message
@@ -436,27 +416,20 @@ class ClientHandler : public CefClient,
   // UI THREAD MEMBERS
   // The following members will only be accessed on the CEF UI thread.
 
-  // Track state information for the text context menu.
+  // Track state information for the test context menu.
   struct TestMenuState {
-    TestMenuState() : check_item(true), radio_item(0) {}
-    bool check_item;
-    int radio_item;
+    TestMenuState() = default;
+    bool check_item = true;
+    int radio_item = 0;
+    int chrome_theme_mode_item = -1;
+    int chrome_theme_color_item = -1;
   } test_menu_state_;
-
-  // The current number of browsers using this handler.
-  int browser_count_ = 0;
 
   // Console logging state.
   const std::string console_log_file_;
 
   // True if an editable field currently has focus.
   bool focus_on_editable_field_ = false;
-
-  // True for the initial navigation after browser creation.
-  bool initial_navigation_ = true;
-
-  // Set of Handlers registered with the message router.
-  MessageHandlerSet message_handler_set_;
 
   DISALLOW_COPY_AND_ASSIGN(ClientHandler);
 };

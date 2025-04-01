@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=3d8aff355099fa2928211aabf97052462a9492ee$
+// $hash=086360dcc17e8e75b768fa357e6e550fc1c1ffef$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DISPLAY_HANDLER_CAPI_H_
@@ -57,6 +57,18 @@ typedef struct _cef_display_handler_t {
   /// Base structure.
   ///
   cef_base_ref_counted_t base;
+
+#if BUILDFLAG(ARKWEB_NAVIGATION)
+  ///
+  /// OnTouchIconUrlWithSizesReceived.
+  ///
+  void(CEF_CALLBACK* on_touch_icon_url_with_sizes_received)(
+      struct _cef_display_handler_t* self,
+      const cef_string_t* icon_url,
+      int precomposed,
+      cef_size_t* sizes,
+      size_t sizes_count);
+#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
   ///
   /// Called when a frame's address has changed.
@@ -84,8 +96,14 @@ typedef struct _cef_display_handler_t {
   /// Called when web content in the page has toggled fullscreen mode. If
   /// |fullscreen| is true (1) the content will automatically be sized to fill
   /// the browser content area. If |fullscreen| is false (0) the content will
-  /// automatically return to its original size and position. The client is
-  /// responsible for resizing the browser if desired.
+  /// automatically return to its original size and position. With the Alloy
+  /// runtime the client is responsible for triggering the fullscreen transition
+  /// (for example, by calling cef_window_t::SetFullscreen when using Views).
+  /// With the Chrome runtime the fullscreen transition will be triggered
+  /// automatically. The cef_window_delegate_t::OnWindowFullscreenTransition
+  /// function will be called during the fullscreen transition for notification
+  /// purposes.
+  ///
   ///
   void(CEF_CALLBACK* on_fullscreen_mode_change)(
       struct _cef_display_handler_t* self,
@@ -165,61 +183,6 @@ typedef struct _cef_display_handler_t {
       struct _cef_browser_t* browser,
       int has_video_access,
       int has_audio_access);
-
-  ///
-  /// Called when the viewport-fit meta is detected for web page.
-  /// changed.
-  ///
-  void(CEF_CALLBACK* on_viewport_fit_change)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
-      int viewport_fit);
-
-  ///
-  /// onReceivedTouchIconUrl.
-  ///
-  void(CEF_CALLBACK* on_received_touch_icon_url)(
-      struct _cef_display_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* icon_url,
-      int precomposed);
-
-  ///
-  /// onReceivedIcon.
-  ///
-  void(CEF_CALLBACK* on_received_icon)(struct _cef_display_handler_t* self,
-                                       const void* data,
-                                       size_t width,
-                                       size_t height,
-                                       cef_color_type_t color_type,
-                                       cef_alpha_type_t alpha_type);
-
-  ///
-  /// OnReceivedIconUrl.
-  ///
-  void(CEF_CALLBACK* on_received_icon_url)(struct _cef_display_handler_t* self,
-                                           const cef_string_t* image_url,
-                                           const void* data,
-                                           size_t width,
-                                           size_t height,
-                                           cef_color_type_t color_type,
-                                           cef_alpha_type_t alpha_type);
-
-  ///
-  /// Called when the page scale factor has changed.
-  ///
-  void(CEF_CALLBACK* on_scale_changed)(struct _cef_display_handler_t* self,
-                                       struct _cef_browser_t* browser,
-                                       float old_page_scale_factor,
-                                       float new_page_scale_factor);
-
-  ///
-  /// Called when the page browser zoom has changed.
-  ///
-  void(CEF_CALLBACK* on_contents_browser_zoom_change)(
-      struct _cef_display_handler_t* self,
-      double zoom_factor,
-      int can_show_bubble);
 } cef_display_handler_t;
 
 #ifdef __cplusplus

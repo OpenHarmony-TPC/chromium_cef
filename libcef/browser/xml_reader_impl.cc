@@ -2,12 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/xml_reader_impl.h"
-
-#include "include/cef_stream.h"
+#include "cef/libcef/browser/xml_reader_impl.h"
 
 #include "base/logging.h"
 #include "base/notreached.h"
+#include "cef/include/cef_stream.h"
 
 // Static functions
 
@@ -80,7 +79,8 @@ void XMLCALL xml_error_callback(void* arg,
  * Signature of the function to use when there is an error and
  * the module handles the new error reporting mechanism.
  */
-void XMLCALL xml_structured_error_callback(void* userData, xmlErrorPtr error) {
+void XMLCALL xml_structured_error_callback(void* userData,
+                                           const xmlError* error) {
   if (!error->message) {
     return;
   }
@@ -117,8 +117,7 @@ CefString xmlCharToString(const xmlChar* xmlStr, bool free) {
 }  // namespace
 
 CefXmlReaderImpl::CefXmlReaderImpl()
-    : supported_thread_id_(base::PlatformThread::CurrentId()),
-      reader_(nullptr) {}
+    : supported_thread_id_(base::PlatformThread::CurrentId()) {}
 
 CefXmlReaderImpl::~CefXmlReaderImpl() {
   if (reader_ != nullptr) {

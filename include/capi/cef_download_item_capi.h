@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=5f28a962c75d960c3113e998d67d15ed5fa4f47c$
+// $hash=c43fdfff3c7ac6cb623ac12f06a3baa9de1970ec$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DOWNLOAD_ITEM_CAPI_H_
@@ -77,9 +77,20 @@ typedef struct _cef_download_item_t {
   int(CEF_CALLBACK* is_canceled)(struct _cef_download_item_t* self);
 
   ///
+  /// Returns true (1) if the download has been interrupted.
+  ///
+  int(CEF_CALLBACK* is_interrupted)(struct _cef_download_item_t* self);
+
+  ///
+  /// Returns the most recent interrupt reason.
+  ///
+  cef_download_interrupt_reason_t(CEF_CALLBACK* get_interrupt_reason)(
+      struct _cef_download_item_t* self);
+
+  ///
   /// Returns a simple speed estimate in bytes/s.
   ///
-  int64(CEF_CALLBACK* get_current_speed)(struct _cef_download_item_t* self);
+  int64_t(CEF_CALLBACK* get_current_speed)(struct _cef_download_item_t* self);
 
   ///
   /// Returns the rough percent complete or -1 if the receive total size is
@@ -90,12 +101,12 @@ typedef struct _cef_download_item_t {
   ///
   /// Returns the total number of bytes.
   ///
-  int64(CEF_CALLBACK* get_total_bytes)(struct _cef_download_item_t* self);
+  int64_t(CEF_CALLBACK* get_total_bytes)(struct _cef_download_item_t* self);
 
   ///
   /// Returns the number of received bytes.
   ///
-  int64(CEF_CALLBACK* get_received_bytes)(struct _cef_download_item_t* self);
+  int64_t(CEF_CALLBACK* get_received_bytes)(struct _cef_download_item_t* self);
 
   ///
   /// Returns the time that the download started.
@@ -118,7 +129,7 @@ typedef struct _cef_download_item_t {
   ///
   /// Returns the unique identifier for this download.
   ///
-  uint32(CEF_CALLBACK* get_id)(struct _cef_download_item_t* self);
+  uint32_t(CEF_CALLBACK* get_id)(struct _cef_download_item_t* self);
 
   ///
   /// Returns the URL.
@@ -154,74 +165,6 @@ typedef struct _cef_download_item_t {
   // The resulting string must be freed by calling cef_string_userfree_free().
   cef_string_userfree_t(CEF_CALLBACK* get_mime_type)(
       struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the original mime type.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_original_mime_type)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the guid.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_guid)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download state,
-  /// IN_PROGRESS,COMPLETE,CANCELED,INTERRUPTED,PENDING,PAUSED.
-  ///
-  int(CEF_CALLBACK* get_state)(struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download if paused.
-  ///
-  int(CEF_CALLBACK* is_paused)(struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download request function.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_method)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download last error code.
-  ///
-  int(CEF_CALLBACK* get_last_error_code)(struct _cef_download_item_t* self);
-
-  ///
-  /// Returns if the download is pending.
-  ///
-  int(CEF_CALLBACK* is_pending)(struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download last modified time.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_last_modified_time)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download etag.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_etag)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Returns the download received slices.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_received_slices)(
-      struct _cef_download_item_t* self);
-
-  ///
-  /// Get nweb id.
-  ///
-  int(CEF_CALLBACK* get_nweb_id)(struct _cef_download_item_t* self);
 } cef_download_item_t;
 
 #ifdef __cplusplus

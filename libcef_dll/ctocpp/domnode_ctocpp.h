@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a07d115868477fbf1e43b3fa9fbd5e6be2788daf$
+// $hash=1ad0d170b1a3b785d8ce65d7cfbbf2b05a457c52$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOMNODE_CTOCPP_H_
@@ -38,7 +38,7 @@ class CefDOMNodeCToCpp
   bool IsElement() override;
   bool IsEditable() override;
   bool IsFormControlElement() override;
-  CefString GetFormControlElementType() override;
+  FormControlType GetFormControlElementType() override;
   bool IsSame(CefRefPtr<CefDOMNode> that) override;
   CefString GetName() override;
   CefString GetValue() override;

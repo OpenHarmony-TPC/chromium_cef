@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=95f4e2e58fed7cc14c52f8c7164f4a0f7a63c6f4$
+// $hash=af82af05fec824761f5ff735ff6c9831938deb16$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_
@@ -20,7 +20,6 @@
 #error This file can be included DLL-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_request_handler_capi.h"
 #include "include/cef_request_handler.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
@@ -72,34 +71,18 @@ class CefRequestHandlerCToCpp
       bool isProxy,
       const CefString& host,
       int port,
-      const std::vector<CefString>& key_types,
-      const std::vector<CefString>& principals,
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) override;
   void OnRenderViewReady(CefRefPtr<CefBrowser> browser) override;
+  bool OnRenderProcessUnresponsive(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefUnresponsiveProcessCallback> callback) override;
+  void OnRenderProcessResponsive(CefRefPtr<CefBrowser> browser) override;
   void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-                                 TerminationStatus status) override;
+                                 TerminationStatus status,
+                                 int error_code,
+                                 const CefString& error_string) override;
   void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) override;
-  bool ShouldOverrideUrlLoading(CefRefPtr<CefBrowser> browser,
-                                const CefString& url,
-                                const CefString& method,
-                                bool user_gesture,
-                                bool is_redirect,
-                                bool is_outermost_main_frame) override;
-  bool OnAllCertificateError(CefRefPtr<CefBrowser> browser,
-                             cef_errorcode_t cert_error,
-                             const CefString& request_url,
-                             const CefString& origin_url,
-                             const CefString& referrer,
-                             bool is_main_frame_request,
-                             bool is_fatal_error,
-                             CefRefPtr<CefSSLInfo> ssl_info,
-                             CefRefPtr<CefCallback> callback) override;
-  void OnRenderProcessNotResponding(CefRefPtr<CefBrowser> browser,
-                                    const CefString& referrer,
-                                    int pid,
-                                    int reason) override;
-  void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_REQUEST_HANDLER_CTOCPP_H_

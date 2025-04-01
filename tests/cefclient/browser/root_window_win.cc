@@ -6,6 +6,7 @@
 
 #include <shellscalingapi.h>
 
+#include <memory>
 #include <optional>
 
 #include "include/base/cef_build.h"
@@ -107,7 +108,8 @@ int GetURLBarHeight(HWND hwnd) {
 
 }  // namespace
 
-RootWindowWin::RootWindowWin() {
+RootWindowWin::RootWindowWin(bool use_alloy_style)
+    : RootWindow(use_alloy_style) {
   // Create a HRGN representing the draggable window area.
   draggable_region_ = ::CreateRectRgn(0, 0, 0, 0);
 }
@@ -133,7 +135,6 @@ void RootWindowWin::Init(RootWindow::Delegate* delegate,
   with_controls_ = config->with_controls;
   always_on_top_ = config->always_on_top;
   with_osr_ = config->with_osr;
-  with_extension_ = config->with_extension;
 
   CreateBrowserWindow(config->url);
 
@@ -314,20 +315,15 @@ bool RootWindowWin::WithWindowlessRendering() const {
   return with_osr_;
 }
 
-bool RootWindowWin::WithExtension() const {
-  REQUIRE_MAIN_THREAD();
-  return with_extension_;
-}
-
 void RootWindowWin::CreateBrowserWindow(const std::string& startup_url) {
   if (with_osr_) {
     OsrRendererSettings settings = {};
     MainContext::Get()->PopulateOsrSettings(&settings);
-    browser_window_.reset(
-        new BrowserWindowOsrWin(this, with_controls_, startup_url, settings));
+    browser_window_ = std::make_unique<BrowserWindowOsrWin>(
+        this, with_controls_, startup_url, settings);
   } else {
-    browser_window_.reset(
-        new BrowserWindowStdWin(this, with_controls_, startup_url));
+    browser_window_ = std::make_unique<BrowserWindowStdWin>(
+        this, with_controls_, startup_url);
   }
 }
 
@@ -340,7 +336,7 @@ void RootWindowWin::CreateRootWindow(const CefBrowserSettings& settings,
 
   // Load strings from the resource file.
   const std::wstring& window_title = GetResourceString(IDS_APP_TITLE);
-  const std::wstring& window_class = GetResourceString(IDC_CEFCLIENT);
+  const std::wstring& window_class = GetResourceString(IDR_MAINFRAME);
 
   const cef_color_t background_color = MainContext::Get()->GetBackgroundColor();
   const HBRUSH background_brush = CreateSolidBrush(
@@ -446,10 +442,10 @@ void RootWindowWin::RegisterRootClass(HINSTANCE hInstance,
   wcex.cbClsExtra = 0;
   wcex.cbWndExtra = 0;
   wcex.hInstance = hInstance;
-  wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CEFCLIENT));
+  wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
   wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
   wcex.hbrBackground = background_brush;
-  wcex.lpszMenuName = MAKEINTRESOURCE(IDC_CEFCLIENT);
+  wcex.lpszMenuName = MAKEINTRESOURCE(IDR_MAINFRAME);
   wcex.lpszClassName = window_class.c_str();
   wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -944,38 +940,39 @@ void RootWindowWin::OnCreate(LPCREATESTRUCT lpCreateStruct) {
     back_hwnd_ = CreateWindow(
         L"BUTTON", L"Back", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         x_offset, 0, button_width, urlbar_height, hwnd_,
-        reinterpret_cast<HMENU>(IDC_NAV_BACK), hInstance, 0);
+        reinterpret_cast<HMENU>(IDC_NAV_BACK), hInstance, nullptr);
     CHECK(back_hwnd_);
     x_offset += button_width;
 
-    forward_hwnd_ =
-        CreateWindow(L"BUTTON", L"Forward",
-                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
-                     x_offset, 0, button_width, urlbar_height, hwnd_,
-                     reinterpret_cast<HMENU>(IDC_NAV_FORWARD), hInstance, 0);
+    forward_hwnd_ = CreateWindow(
+        L"BUTTON", L"Forward",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED, x_offset, 0,
+        button_width, urlbar_height, hwnd_,
+        reinterpret_cast<HMENU>(IDC_NAV_FORWARD), hInstance, nullptr);
     CHECK(forward_hwnd_);
     x_offset += button_width;
 
-    reload_hwnd_ =
-        CreateWindow(L"BUTTON", L"Reload",
-                     WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
-                     x_offset, 0, button_width, urlbar_height, hwnd_,
-                     reinterpret_cast<HMENU>(IDC_NAV_RELOAD), hInstance, 0);
+    reload_hwnd_ = CreateWindow(
+        L"BUTTON", L"Reload",
+        WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED, x_offset, 0,
+        button_width, urlbar_height, hwnd_,
+        reinterpret_cast<HMENU>(IDC_NAV_RELOAD), hInstance, nullptr);
     CHECK(reload_hwnd_);
     x_offset += button_width;
 
     stop_hwnd_ = CreateWindow(
         L"BUTTON", L"Stop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_DISABLED,
         x_offset, 0, button_width, urlbar_height, hwnd_,
-        reinterpret_cast<HMENU>(IDC_NAV_STOP), hInstance, 0);
+        reinterpret_cast<HMENU>(IDC_NAV_STOP), hInstance, nullptr);
     CHECK(stop_hwnd_);
     x_offset += button_width;
 
-    edit_hwnd_ = CreateWindow(L"EDIT", 0,
-                              WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT |
-                                  ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_DISABLED,
-                              x_offset, 0, rect.right - button_width * 4,
-                              urlbar_height, hwnd_, 0, hInstance, 0);
+    edit_hwnd_ =
+        CreateWindow(L"EDIT", nullptr,
+                     WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT |
+                         ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_DISABLED,
+                     x_offset, 0, rect.right - button_width * 4, urlbar_height,
+                     hwnd_, nullptr, hInstance, nullptr);
     CHECK(edit_hwnd_);
 
     // Override the edit control's window procedure.
@@ -1013,13 +1010,15 @@ void RootWindowWin::OnCreate(LPCREATESTRUCT lpCreateStruct) {
     CefRect cef_rect(rect.left, rect.top, rect.right - rect.left,
                      rect.bottom - rect.top);
     browser_window_->CreateBrowser(hwnd_, cef_rect, browser_settings_, nullptr,
-                                   delegate_->GetRequestContext(this));
+                                   delegate_->GetRequestContext());
   } else {
     // With popups we already have a browser window. Parent the browser window
     // to the root window and show it in the correct location.
     browser_window_->ShowPopup(hwnd_, rect.left, rect.top,
                                rect.right - rect.left, rect.bottom - rect.top);
   }
+
+  window_created_ = true;
 }
 
 bool RootWindowWin::OnClose() {
@@ -1068,8 +1067,6 @@ void RootWindowWin::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
     // Make sure the browser is sized correctly.
     OnSize(false);
   }
-
-  delegate_->OnBrowserCreated(this, browser);
 }
 
 void RootWindowWin::OnBrowserWindowDestroyed() {
@@ -1079,9 +1076,10 @@ void RootWindowWin::OnBrowserWindowDestroyed() {
 
   if (!window_destroyed_) {
     // The browser was destroyed first. This could be due to the use of
-    // off-screen rendering or execution of JavaScript window.close().
-    // Close the RootWindow.
-    Close(true);
+    // off-screen rendering or native (external) parent, or execution of
+    // JavaScript window.close(). Close the RootWindow asyncronously to allow
+    // the current call stack to unwind.
+    MAIN_POST_CLOSURE(base::BindOnce(&RootWindowWin::Close, this, true));
   }
 
   browser_destroyed_ = true;

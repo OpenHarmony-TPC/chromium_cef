@@ -9,18 +9,19 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9b357fa442ff1172f5559b6a5d0055dc43e3dac0$
+// $hash=f2c75557e03ed0b788372f3e1b57e3a70e4ca736$
 //
 
 #include "libcef_dll/ctocpp/select_client_certificate_callback_ctocpp.h"
+
+#include "libcef_dll/ctocpp/x509certificate_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
 void CefSelectClientCertificateCallbackCToCpp::Select(
-    const CefString& private_key_file,
-    const CefString& cert_chain_file) {
+    CefRefPtr<CefX509Certificate> cert) {
   shutdown_checker::AssertNotShutdown();
 
   cef_select_client_certificate_callback_t* _struct = GetStruct();
@@ -30,50 +31,10 @@ void CefSelectClientCertificateCallbackCToCpp::Select(
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: private_key_file; type: string_byref_const
-  DCHECK(!private_key_file.empty());
-  if (private_key_file.empty()) {
-    return;
-  }
-  // Verify param: cert_chain_file; type: string_byref_const
-  DCHECK(!cert_chain_file.empty());
-  if (cert_chain_file.empty()) {
-    return;
-  }
+  // Unverified params: cert
 
   // Execute
-  _struct->select(_struct, private_key_file.GetStruct(),
-                  cert_chain_file.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefSelectClientCertificateCallbackCToCpp::Cancel() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_select_client_certificate_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, cancel)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->cancel(_struct);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefSelectClientCertificateCallbackCToCpp::Ignore() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_select_client_certificate_callback_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, ignore)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->ignore(_struct);
+  _struct->select(_struct, CefX509CertificateCToCpp::Unwrap(cert));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

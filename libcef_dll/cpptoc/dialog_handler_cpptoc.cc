@@ -9,231 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2f0e356eb55325a2f897bd2909f87db4537d8673$
+// $hash=fa9650c5e71c8176de408bcf2be57e6ea8d1294b$
 //
 
 #include "libcef_dll/cpptoc/dialog_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
-#include "libcef_dll/ctocpp/file_dialog_callback_ctocpp.h"
-#include "libcef_dll/ctocpp/select_popup_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
-#include "libcef_dll/transfer_util.h"
 
 namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int CEF_CALLBACK
-dialog_handler_on_file_dialog(struct _cef_dialog_handler_t* self,
-                              cef_browser_t* browser,
-                              cef_file_dialog_mode_t mode,
-                              const cef_string_t* title,
-                              const cef_string_t* default_file_path,
-                              cef_string_list_t accept_filters,
-                              int capture,
-                              cef_file_dialog_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return 0;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback);
-  if (!callback) {
-    return 0;
-  }
-  // Unverified params: title, default_file_path, accept_filters
-
-  // Translate param: accept_filters; type: string_vec_byref_const
-  std::vector<CefString> accept_filtersList;
-  transfer_string_list_contents(accept_filters, accept_filtersList);
-
-  // Execute
-  bool _retval = CefDialogHandlerCppToC::Get(self)->OnFileDialog(
-      CefBrowserCToCpp::Wrap(browser), mode, CefString(title),
-      CefString(default_file_path), accept_filtersList, capture ? true : false,
-      CefFileDialogCallbackCToCpp::Wrap(callback));
-
-  // Return type: bool
-  return _retval;
-}
-
 void CEF_CALLBACK
-dialog_handler_on_select_popup_menu(struct _cef_dialog_handler_t* self,
-                                    cef_browser_t* browser,
-                                    const cef_rect_t* bounds,
-                                    int item_height,
-                                    double item_font_size,
-                                    int selected_item,
-                                    size_t menu_itemsCount,
-                                    cef_select_popup_item_t const* menu_items,
-                                    int right_aligned,
-                                    int allow_multiple_selection,
-                                    cef_select_popup_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: bounds; type: simple_byref_const
-  DCHECK(bounds);
-  if (!bounds) {
-    return;
-  }
-  // Verify param: menu_items; type: simple_vec_byref_const
-  DCHECK(menu_itemsCount == 0 || menu_items);
-  if (menu_itemsCount > 0 && !menu_items) {
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback);
-  if (!callback) {
-    return;
-  }
-
-  // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
-  // Translate param: menu_items; type: simple_vec_byref_const
-  std::vector<CefSelectPopupItem> menu_itemsList;
-  if (menu_itemsCount > 0) {
-    for (size_t i = 0; i < menu_itemsCount; ++i) {
-      CefSelectPopupItem menu_itemsVal = menu_items[i];
-      menu_itemsList.push_back(menu_itemsVal);
-    }
-  }
-
-  // Execute
-  CefDialogHandlerCppToC::Get(self)->OnSelectPopupMenu(
-      CefBrowserCToCpp::Wrap(browser), boundsVal, item_height, item_font_size,
-      selected_item, menu_itemsList, right_aligned ? true : false,
-      allow_multiple_selection ? true : false,
-      CefSelectPopupCallbackCToCpp::Wrap(callback));
-}
-
-void CEF_CALLBACK
-dialog_handler_on_hide_autofill_popup(struct _cef_dialog_handler_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefDialogHandlerCppToC::Get(self)->OnHideAutofillPopup();
-}
-
-void CEF_CALLBACK
-dialog_handler_on_ads_blocked(struct _cef_dialog_handler_t* self,
-                              cef_browser_t* browser,
-                              const cef_string_t* main_frame_url,
-                              cef_string_map_t subresource_blocked,
-                              int is_site_first_report) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: main_frame_url; type: string_byref_const
-  DCHECK(main_frame_url);
-  if (!main_frame_url) {
-    return;
-  }
-  // Verify param: subresource_blocked; type: string_map_single_byref_const
-  DCHECK(subresource_blocked);
-  if (!subresource_blocked) {
-    return;
-  }
-
-  // Translate param: subresource_blocked; type: string_map_single_byref_const
-  std::map<CefString, CefString> subresource_blockedMap;
-  transfer_string_map_contents(subresource_blocked, subresource_blockedMap);
-
-  // Execute
-  CefDialogHandlerCppToC::Get(self)->OnAdsBlocked(
-      CefBrowserCToCpp::Wrap(browser), CefString(main_frame_url),
-      subresource_blockedMap, is_site_first_report ? true : false);
-}
-
-void CEF_CALLBACK dialog_handler_on_show_autofill_popup(
-    struct _cef_dialog_handler_t* self,
-    cef_browser_t* browser,
-    const cef_rect_t* bounds,
-    int right_aligned,
-    size_t menu_itemsCount,
-    cef_autofill_popup_item_t const* menu_items,
-    int is_password_popup_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: bounds; type: simple_byref_const
-  DCHECK(bounds);
-  if (!bounds) {
-    return;
-  }
-  // Verify param: menu_items; type: simple_vec_byref_const
-  DCHECK(menu_itemsCount == 0 || menu_items);
-  if (menu_itemsCount > 0 && !menu_items) {
-    return;
-  }
-
-  // Translate param: bounds; type: simple_byref_const
-  CefRect boundsVal = bounds ? *bounds : CefRect();
-  // Translate param: menu_items; type: simple_vec_byref_const
-  std::vector<CefAutofillPopupItem> menu_itemsList;
-  if (menu_itemsCount > 0) {
-    for (size_t i = 0; i < menu_itemsCount; ++i) {
-      CefAutofillPopupItem menu_itemsVal = menu_items[i];
-      menu_itemsList.push_back(menu_itemsVal);
-    }
-  }
-
-  // Execute
-  CefDialogHandlerCppToC::Get(self)->OnShowAutofillPopup(
-      CefBrowserCToCpp::Wrap(browser), boundsVal, right_aligned ? true : false,
-      menu_itemsList, is_password_popup_type ? true : false);
-}
-
-void CEF_CALLBACK
-dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
-                                    int is_update,
-                                    const cef_string_t* url) {
+dialog_handler_on_before_unload_fired(struct _cef_dialog_handler_t* self,
+                                      cef_browser_t* browser,
+                                      bool proceed) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -243,63 +33,21 @@ dialog_handler_show_password_dialog(struct _cef_dialog_handler_t* self,
     return;
   }
   // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
+  DCHECK(browser);
+  if (!browser) {
     return;
   }
 
   // Execute
-  CefDialogHandlerCppToC::Get(self)->ShowPasswordDialog(
-      is_update ? true : false, CefString(url));
+  CefDialogHandlerCppToC::Get(self)->OnBeforeUnloadFired(
+    CefBrowserCToCpp::Wrap(browser), proceed);
 }
-
-int CEF_CALLBACK dialog_handler_trig_ad_block_enabled_for_site_from_ui(
-    struct _cef_dialog_handler_t* self,
-    cef_browser_t* browser,
-    const cef_string_t* main_frame_url,
-    int main_frame_tree_node_id) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return 0;
-  }
-  // Verify param: main_frame_url; type: string_byref_const
-  DCHECK(main_frame_url);
-  if (!main_frame_url) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval =
-      CefDialogHandlerCppToC::Get(self)->TrigAdBlockEnabledForSiteFromUi(
-          CefBrowserCToCpp::Wrap(browser), CefString(main_frame_url),
-          main_frame_tree_node_id);
-
-  // Return type: bool
-  return _retval;
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
 
 CefDialogHandlerCppToC::CefDialogHandlerCppToC() {
-  GetStruct()->on_file_dialog = dialog_handler_on_file_dialog;
-  GetStruct()->on_select_popup_menu = dialog_handler_on_select_popup_menu;
-  GetStruct()->on_hide_autofill_popup = dialog_handler_on_hide_autofill_popup;
-  GetStruct()->on_ads_blocked = dialog_handler_on_ads_blocked;
-  GetStruct()->on_show_autofill_popup = dialog_handler_on_show_autofill_popup;
-  GetStruct()->show_password_dialog = dialog_handler_show_password_dialog;
-  GetStruct()->trig_ad_block_enabled_for_site_from_ui =
-      dialog_handler_trig_ad_block_enabled_for_site_from_ui;
+  GetStruct()->on_before_unload_fired = dialog_handler_on_before_unload_fired;
 }
 
 // DESTRUCTOR - Do not edit by hand.

@@ -5,8 +5,9 @@
 #ifndef CEF_LIBCEF_BROWSER_CHROME_BROWSER_PLATFORM_DELEGATE_CHROME_H_
 #define CEF_LIBCEF_BROWSER_CHROME_BROWSER_PLATFORM_DELEGATE_CHROME_H_
 
-#include "libcef/browser/browser_platform_delegate.h"
-#include "libcef/browser/native/browser_platform_delegate_native.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/browser_platform_delegate.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native.h"
 
 class Browser;
 
@@ -41,8 +42,8 @@ class CefBrowserPlatformDelegateChrome
                             bool want_dip_coords) const override;
   void ViewText(const std::string& text) override;
   CefEventHandle GetEventHandle(
-      const content::NativeWebKeyboardEvent& event) const override;
-  bool IsPrintPreviewSupported() const override;
+      const input::NativeWebKeyboardEvent& event) const override;
+  bool IsAlloyStyle() const override { return false; }
 
   // CefBrowserPlatformDelegateNative::WindowlessHandler methods:
   CefWindowHandle GetParentWindowHandle() const override;
@@ -55,12 +56,20 @@ class CefBrowserPlatformDelegateChrome
     return native_delegate_.get();
   }
 
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+  void OnOnlineRenderToForeground() override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  void WasOccluded(bool occluded) override {}
+#endif
+
  protected:
   gfx::NativeWindow GetNativeWindow() const;
 
   std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate_;
 
-  Browser* chrome_browser_ = nullptr;
+  raw_ptr<Browser> chrome_browser_ = nullptr;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_BROWSER_PLATFORM_DELEGATE_CHROME_H_

@@ -75,15 +75,18 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   /// Called when web content in the page has toggled fullscreen mode. If
   /// |fullscreen| is true the content will automatically be sized to fill the
   /// browser content area. If |fullscreen| is false the content will
-  /// automatically return to its original size and position. The client is
-  /// responsible for resizing the browser if desired.
+  /// automatically return to its original size and position. With the Alloy
+  /// runtime the client is responsible for triggering the fullscreen transition
+  /// (for example, by calling CefWindow::SetFullscreen when using Views). With
+  /// the Chrome runtime the fullscreen transition will be triggered
+  /// automatically. The CefWindowDelegate::OnWindowFullscreenTransition method
+  /// will be called during the fullscreen transition for notification purposes.
+  ///
   ///
   /*--cef()--*/
   virtual void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
                                       bool fullscreen,
-                                      const CefSize& video_natural_size) {
-  }
-
+                                      const CefSize& video_natural_size) {}
   ///
   /// Called when the browser is about to display a tooltip. |text| contains the
   /// text that will be displayed in the tooltip. To handle the display of the
@@ -153,6 +156,13 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   }
 
   ///
+  /// Called when the page scale factor has inited.
+  ///
+  /*--cef()--*/
+  virtual void OnScaleInited(CefRefPtr<CefBrowser> browser,
+                             float page_scale_factor) {}
+
+  ///
   /// Called when the browser's access to an audio and/or video source has
   /// changed.
   ///
@@ -160,58 +170,6 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   virtual void OnMediaAccessChange(CefRefPtr<CefBrowser> browser,
                                    bool has_video_access,
                                    bool has_audio_access) {}
-
-  ///
-  /// Called when the viewport-fit meta is detected for web page.
-  ///
-  /*--cef()--*/
-  virtual void OnViewportFitChange(CefRefPtr<CefBrowser> browser,
-                                   int viewport_fit) {}
-
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// onReceivedTouchIconUrl.
-  ///
-  /*--cef()--*/
-  virtual void OnReceivedTouchIconUrl(CefRefPtr<CefBrowser> browser,
-                                      const CefString& icon_url,
-                                      bool precomposed) {}
-
-  ///
-  /// onReceivedIcon.
-  ///
-  /*--cef()--*/
-  virtual void OnReceivedIcon(const void* data,
-                              size_t width,
-                              size_t height,
-                              cef_color_type_t color_type,
-                              cef_alpha_type_t alpha_type) {}
-
-  ///
-  /// OnReceivedIconUrl.
-  ///
-  /*--cef()--*/
-  virtual void OnReceivedIconUrl(const CefString& image_url,
-                                 const void* data,
-                                 size_t width,
-                                 size_t height,
-                                 cef_color_type_t color_type,
-                                 cef_alpha_type_t alpha_type) {}
-
-  ///
-  /// Called when the page scale factor has changed.
-  ///
-  /*--cef()--*/
-  virtual void OnScaleChanged(CefRefPtr<CefBrowser> browser,
-                              float old_page_scale_factor,
-                              float new_page_scale_factor) {}
-  ///
-  /// Called when the page browser zoom has changed.
-  ///
-  /*--cef()--*/
-  virtual void OnContentsBrowserZoomChange(double zoom_factor,
-                                           bool can_show_bubble) {}
-#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_DISPLAY_HANDLER_H_

@@ -2,12 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/cef_parser.h"
-#include "libcef/common/values_impl.h"
-
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/values.h"
+#include "cef/include/cef_parser.h"
+#include "cef/libcef/common/values_impl.h"
 
 namespace {
 
@@ -47,8 +46,8 @@ CefRefPtr<CefValue> CefParseJSON(const void* json,
   if (!json || json_size == 0) {
     return nullptr;
   }
-  absl::optional<base::Value> parse_result = base::JSONReader::Read(
-      base::StringPiece(static_cast<const char*>(json), json_size),
+  std::optional<base::Value> parse_result = base::JSONReader::Read(
+      std::string_view(static_cast<const char*>(json), json_size),
       GetJSONReaderOptions(options));
   if (parse_result) {
     return new CefValueImpl(std::move(parse_result.value()));

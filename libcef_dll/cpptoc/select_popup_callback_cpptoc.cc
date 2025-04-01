@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/cpptoc/select_popup_callback_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {

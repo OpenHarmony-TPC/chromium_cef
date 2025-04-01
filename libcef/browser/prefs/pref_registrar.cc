@@ -2,14 +2,14 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/prefs/pref_registrar.h"
+#include "cef/libcef/browser/prefs/pref_registrar.h"
 
-#include "include/cef_app.h"
-#include "include/cef_browser_process_handler.h"
-#include "include/cef_preference.h"
-#include "libcef/common/app_manager.h"
-#include "libcef/common/values_impl.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/include/cef_app.h"
+#include "cef/include/cef_browser_process_handler.h"
+#include "cef/include/cef_preference.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/values_impl.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_store.h"
 
@@ -51,7 +51,8 @@ class CefPreferenceRegistrarImpl : public CefPreferenceRegistrar {
         registry_->RegisterDoublePref(nameStr, default_value->GetDouble());
         return true;
       case VTYPE_STRING:
-        registry_->RegisterStringPref(nameStr, default_value->GetString());
+        registry_->RegisterStringPref(
+            nameStr, std::string_view(default_value->GetString().ToString()));
         return true;
       case VTYPE_DICTIONARY:
       case VTYPE_LIST:
@@ -70,15 +71,17 @@ class CefPreferenceRegistrarImpl : public CefPreferenceRegistrar {
     auto impl_value = impl->CopyValue();
 
     if (impl_value.type() == base::Value::Type::DICT) {
-      registry_->RegisterDictionaryPref(name, std::move(impl_value));
+      registry_->RegisterDictionaryPref(std::string_view(name),
+                                        std::move(impl_value.GetDict()));
     } else if (impl_value.type() == base::Value::Type::LIST) {
-      registry_->RegisterListPref(name, std::move(impl_value));
+      registry_->RegisterListPref(std::string_view(name),
+                                  std::move(impl_value.GetList()));
     } else {
       DCHECK(false);
     }
   }
 
-  PrefRegistrySimple* const registry_;
+  const raw_ptr<PrefRegistrySimple> registry_;
 };
 
 }  // namespace

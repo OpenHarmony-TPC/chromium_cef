@@ -11,46 +11,45 @@
 #include <string>
 #include <vector>
 
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "include/cef_frame.h"
-#include "include/internal/cef_types.h"
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/browser_info.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/javascript_dialog_manager.h"
-#include "libcef/browser/menu_manager.h"
-#include "libcef/browser/request_context_impl.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_browser.h"
+#include "cef/include/cef_client.h"
+#include "cef/include/cef_frame.h"
+#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
+#include "cef/include/internal/cef_types.h"
+#endif
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/menu_manager.h"
+#include "cef/libcef/browser/request_context_impl.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
-#include "extensions/common/mojom/view_type.mojom-forward.h"
+#include "ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 
-#ifdef OHOS_HTML_SELECT
+#if BUILDFLAG(ARKWEB_HTML_SELECT)
 #include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 #endif
 
-#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
+#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
+#include "include/cef_custom_media_player_delegate.h"
+#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
+
+#if BUILDFLAG(ARKWEB_DATALIST)
 #include "components/autofill/core/browser/ui/suggestion.h"
 #endif
 
-#ifdef OHOS_EX_GET_ZOOM_LEVEL
-#include "components/zoom/zoom_controller.h"
-#include "components/zoom/zoom_observer.h"
-#endif
-
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
-#include "include/cef_custom_media_player_delegate.h"
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
-
 class CefAudioCapturer;
 class CefBrowserInfo;
-class SiteInstance;
 
-// CefBrowser implementation for the alloy runtime. Method calls are delegated
-// to the CefPlatformDelegate or the WebContents as appropriate. All methods are
+#if !BUILDFLAG(ARKWEB_ZOOM)
+class SiteInstance;
+#endif
+
+// CefBrowser implementation for Alloy style. Method calls are delegated to the
+// CefPlatformDelegate or the WebContents as appropriate. All methods are
 // thread-safe unless otherwise indicated.
 //
 // WebContentsDelegate: Interface for handling WebContents delegations. There is
@@ -64,13 +63,16 @@ class SiteInstance;
 // messages sent using AlloyBrowserHostImpl::Send() will be forwarded to the
 // RenderViewHost (after posting to the UI thread if necessary). Use
 // WebContentsObserver::routing_id() when sending IPC messages.
-class AlloyBrowserHostImpl : public CefBrowserHostBase,
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
                              public content::WebContentsDelegate,
                              public content::WebContentsObserver
-#ifdef OHOS_EX_GET_ZOOM_LEVEL
-                             , public zoom::ZoomObserver
-#endif
- {
+#else
+class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
+                             public content::WebContentsDelegate,
+                             public content::WebContentsObserver
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+{
  public:
   // Used for handling the response to command messages.
   class CommandResponseHandler : public virtual CefBaseRefCounted {
@@ -80,9 +82,18 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
 
   ~AlloyBrowserHostImpl() override;
 
+  CefRefPtr<AlloyBrowserHostImpl> AsAlloyBrowserHostImpl() override {
+    return this;
+  }
+
   // Create a new AlloyBrowserHostImpl instance with owned WebContents.
   static CefRefPtr<AlloyBrowserHostImpl> Create(
       CefBrowserCreateParams& create_params);
+
+  // Safe (checked) conversion from CefBrowserHostBase to AlloyBrowserHostImpl.
+  // Use this method instead of static_cast.
+  static CefRefPtr<AlloyBrowserHostImpl> FromBaseChecked(
+      CefRefPtr<CefBrowserHostBase> host_base);
 
   // Returns the browser associated with the specified RenderViewHost.
   static CefRefPtr<AlloyBrowserHostImpl> GetBrowserForHost(
@@ -102,48 +113,28 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   bool TryCloseBrowser() override;
   CefWindowHandle GetWindowHandle() override;
   CefWindowHandle GetOpenerWindowHandle() override;
-  double GetZoomLevel() override;
-  void SetZoomLevel(double zoomLevel) override;
-  void SetBrowserZoomLevel(double zoom_factor) override;
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext
-#if BUILDFLAG(IS_OHOS)
-            ,
-            bool newSession
-#endif
-            ) override;
+            bool findNext) override;
   void StopFinding(bool clearSelection) override;
-  void ShowDevTools(const CefWindowInfo& windowInfo,
-                    CefRefPtr<CefClient> client,
-                    const CefBrowserSettings& settings,
-                    const CefPoint& inspect_element_at) override;
-#ifdef OHOS_DEVTOOLS
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
   void ShowDevToolsWith(
-      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at) override;
-#endif // OHOS_DEVTOOLS
-  void CloseDevTools() override;
-  bool HasDevTools() override;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
-#if defined(OHOS_INPUT_EVENTS)
-  void ScrollFocusedEditableNodeIntoView() override;
-#endif
-#if BUILDFLAG(IS_OHOS)
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded(bool occluded) override;
-  void OnWindowShow() override;
-  void OnWindowHide() override;
-  void OnOnlineRenderToForeground() override;
   void SetEnableLowerFrameRate(bool enabled) override;
-  void SetWindowId(int window_id, int nweb_id) override;
-  void RenderViewReady() override;
-  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
-  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
-  void NotifyForNextTouchEvent() override;
+#endif
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
+  void UpdateVSyncFrequency();
+  void ResetVSyncFrequency();
 #endif
   void NotifyScreenInfoChanged() override;
   void Invalidate(PaintElementType type) override;
@@ -172,23 +163,20 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-#if defined(OHOS_MEDIA_POLICY)
-  void SetAudioResumeInterval(int resumeInterval) override;
-  void SetAudioExclusive(bool audioExclusive) override;
-#endif // defined(OHOS_MEDIA_POLICY)
-  void SetAccessibilityState(cef_state_t accessibility_state) override;
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
   void GetRootBrowserAccessibilityManager(void** manager) override;
 #endif
+
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
-  CefRefPtr<CefExtension> GetExtension() override;
-  bool IsBackgroundHost() override;
+  bool CanExecuteChromeCommand(int command_id) override;
+  void ExecuteChromeCommand(int command_id,
+                            cef_window_open_disposition_t disposition) override;
 
-  // Returns true if windowless rendering is enabled.
+  // CefBrowserHostBase methods:
   bool IsWindowless() const override;
-
+  bool IsAlloyStyle() const override { return true; }
   bool IsVisible() const override;
 
   // Returns true if this browser supports picture-in-picture.
@@ -207,7 +195,6 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void CancelContextMenu();
 
   bool MaybeAllowNavigation(content::RenderFrameHost* opener,
-                            bool is_guest_view,
                             const content::OpenURLParams& params) override;
 
   // Convert from view DIP coordinates to screen coordinates. If
@@ -221,44 +208,16 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
                      const gfx::Vector2d& image_offset,
                      const blink::mojom::DragEventSourceInfo& event_info,
                      content::RenderWidgetHostImpl* source_rwh);
-  void UpdateDragCursor(ui::mojom::DragOperation operation);
-
-  // Accessors that must be called on the UI thread.
-  extensions::ExtensionHost* GetExtensionHost() const;
+  void UpdateDragOperation(ui::mojom::DragOperation operation,
+                           bool document_is_handling_drag);
 
   void OnSetFocus(cef_focus_source_t source) override;
 
   bool ShowContextMenu(const content::ContextMenuParams& params);
 
-  bool Discard() override;
-
-  bool Restore() override;
-
-#if defined(OHOS_COMPOSITE_RENDER)
-  void WasKeyboardResized() override;
-#endif  // defined(OHOS_COMPOSITE_RENDER)
-
-#if defined(OHOS_PRINT)
-  void SetToken(void* token) override;
-  void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                     void** webPrintDocumentAdapter) override;
-  void SetPrintBackground(bool enable) override;
-  bool GetPrintBackground() override;
-#endif // defined(OHOS_PRINT)
-
-#if defined(OHOS_INPUT_EVENTS)
-  void ContentsZoomChange(bool zoom_in) override;
-#endif
-
-#if defined(OHOS_INPUT_EVENTS)
-  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard) override;
-  bool ShouldVirtualKeyboardOverlay() override;
-  void AdvanceFocusForIME(int focusType) override;
-#endif
-
-#ifdef OHOS_RENDER_PROCESS_MODE
-void NotifyNeedsReload(bool needs_reload) override;
-bool NeedsReload() override;
+#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
+  bool IsIframe() override;
+  void ReloadFocusedFrame() override;
 #endif
 
   enum DestructionState {
@@ -270,18 +229,24 @@ bool NeedsReload() override;
   DestructionState destruction_state() const { return destruction_state_; }
 
   // content::WebContentsDelegate methods.
+  void PrintCrossProcessSubframe(
+      content::WebContents* web_contents,
+      const gfx::Rect& rect,
+      int document_cookie,
+      content::RenderFrameHost* subframe_host) const override;
   content::WebContents* OpenURLFromTab(
       content::WebContents* source,
-      const content::OpenURLParams& params) override;
-  bool ShouldAllowRendererInitiatedCrossProcessNavigation(
-      bool is_main_frame_navigation) override;
-  void AddNewContents(content::WebContents* source,
-                      std::unique_ptr<content::WebContents> new_contents,
-                      const GURL& target_url,
-                      WindowOpenDisposition disposition,
-                      const blink::mojom::WindowFeatures& window_features,
-                      bool user_gesture,
-                      bool* was_blocked) override;
+      const content::OpenURLParams& params,
+      base::OnceCallback<void(content::NavigationHandle&)>
+          navigation_handle_callback) override;
+  content::WebContents* AddNewContents(
+      content::WebContents* source,
+      std::unique_ptr<content::WebContents> new_contents,
+      const GURL& target_url,
+      WindowOpenDisposition disposition,
+      const blink::mojom::WindowFeatures& window_features,
+      bool user_gesture,
+      bool* was_blocked) override;
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void CloseContents(content::WebContents* source) override;
@@ -291,25 +256,23 @@ bool NeedsReload() override;
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  bool WebHandleKeyboardEvent(content::WebContents* source,
+                              const input::NativeWebKeyboardEvent& event);
+#endif
+  void ContentsZoomChange(bool zoom_in) override;
   void BeforeUnloadFired(content::WebContents* source,
                          bool proceed,
                          bool* proceed_to_fire_unload) override;
-#ifdef OHOS_CLIPBOARD
-  bool HandleContextMenu(content::RenderFrameHost& render_frame_host,
-                         const content::ContextMenuParams& params) override;
-#endif
   bool TakeFocus(content::WebContents* source, bool reverse) override;
   void CanDownload(const GURL& url,
                    const std::string& request_method,
                    base::OnceCallback<void(bool)> callback) override;
   content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
       content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool HandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool PreHandleGestureEvent(content::WebContents* source,
-                             const blink::WebGestureEvent& event) override;
+      const input::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(content::WebContents* source,
+                           const input::NativeWebKeyboardEvent& event) override;
   bool CanDragEnter(content::WebContents* source,
                     const content::DropData& data,
                     blink::DragOperationsMask operations_allowed) override;
@@ -318,14 +281,25 @@ bool NeedsReload() override;
       const GURL& target_url,
       int opener_render_process_id,
       int opener_render_frame_id,
-      content::WebContentsView** view,
-      content::RenderViewHostDelegateView** delegate_view) override;
+      raw_ptr<content::WebContentsView>* view,
+      raw_ptr<content::RenderViewHostDelegateView>* delegate_view) override;
   void WebContentsCreated(content::WebContents* source_contents,
                           int opener_render_process_id,
                           int opener_render_frame_id,
                           const std::string& frame_name,
                           const GURL& target_url,
                           content::WebContents* new_contents) override;
+  void RendererUnresponsive(content::WebContents* source,
+                            content::RenderWidgetHost* render_widget_host,
+                            base::RepeatingClosure hang_monitor_restarter
+#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
+                            ,
+                            content::RendererIsUnresponsiveReason reason
+#endif
+                            ) override;
+  void RendererResponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
   content::JavaScriptDialogManager* GetJavaScriptDialogManager(
       content::WebContents* source) override;
   void RunFileChooser(content::RenderFrameHost* render_frame_host,
@@ -354,34 +328,27 @@ bool NeedsReload() override;
       const content::MediaStreamRequest& request,
       content::MediaResponseCallback callback) override;
   bool CheckMediaAccessPermission(content::RenderFrameHost* render_frame_host,
-                                  const GURL& security_origin,
+                                  const url::Origin& security_origin,
                                   blink::mojom::MediaStreamType type) override;
-  bool IsNeverComposited(content::WebContents* web_contents) override;
   content::PictureInPictureResult EnterPictureInPicture(
       content::WebContents* web_contents) override;
   void ExitPictureInPicture() override;
-  bool IsBackForwardCacheSupported() override;
+  bool IsBackForwardCacheSupported(content::WebContents& web_contents) override;
   content::PreloadingEligibility IsPrerender2Supported(
       content::WebContents& web_contents) override;
+  void DraggableRegionsChanged(
+      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
+      content::WebContents* contents) override;
 
-#ifdef OHOS_FOCUS
-  void ActivateContents(content::WebContents* contents) override;
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-  void RequestToLockMouse(content::WebContents* web_contents,
-                          bool user_gesture,
-                          bool last_unlocked_by_target) override;
-  void LostMouseLock() override;
-
-  // Shows the repost form confirmation dialog box.
-  void ShowRepostFormWarningDialog(content::WebContents* source) override;
-
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
   void OnNativeEmbedStatusUpdate(
       const content::NativeEmbedInfo& native_embed_info,
       content::NativeEmbedInfo::TagState state) override;
-
-  void OnLayerRectVisibilityChange(const std::string& embed_id, bool visibility) override;
+  void OnNativeEmbedFirstFramePaint(
+      int32_t native_embed_id,
+      const std::string& embed_id_attribute) override;
+  void OnLayerRectVisibilityChange(const std::string& embed_id,
+                                   bool visibility) override;
 #endif
 
   // content::WebContentsObserver methods.
@@ -389,40 +356,61 @@ bool NeedsReload() override;
   void DidFinishNavigation(
       content::NavigationHandle* navigation_handle) override;
   void OnAudioStateChanged(bool audible) override;
-  void OnFormEditingStateChanged(bool state, uint64_t form_id) override;
-  void MediaStartedPlaying(const content::WebContentsObserver::MediaPlayerInfo& video_type,
-                           const content::MediaPlayerId& id) override;
-  void MediaStoppedPlaying(
-    const content::WebContentsObserver::MediaPlayerInfo& video_type,
-    const content::MediaPlayerId& id,
-    content::WebContentsObserver::MediaStoppedReason reason) override;
-#if BUILDFLAG(IS_OHOS)
-  void MediaPlayerGone(const content::WebContentsObserver::MediaPlayerInfo& video_type,
-                           const content::MediaPlayerId& id) override;
-#endif
   void AccessibilityEventReceived(
-      const content::AXEventNotificationDetails& content_event_bundle) override;
+      const ui::AXUpdatesAndEvents& details) override;
   void AccessibilityLocationChangesReceived(
-      const std::vector<content::AXLocationChangeNotificationDetails>& locData)
-      override;
+      const ui::AXTreeID& tree_id,
+      ui::AXLocationAndScrollUpdates& details) override;
   void WebContentsDestroyed() override;
 
-#if BUILDFLAG(IS_OHOS)
-  /* ohos webview begin */
-  void AddVisitedLinks(const std::vector<CefString>& urls) override;
-  void SetBackgroundColor(int color) override;
-  SkColor GetBackgroundColor() const;
-  void GetZoomLevelCallback();
-  int GetDrawMode();
-
+#if BUILDFLAG(ARKWEB_FOCUS)
+  void ActivateContents(content::WebContents* contents) override;
+#endif  // BUILDFLAG(ARKWEB_FOCUS)
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  void SetNativeEmbedMode(bool flag) override;
+#endif
+#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
+  void OnFormEditingStateChanged(bool state, uint64_t form_id) override;
+  void MediaStartedPlaying(
+      const content::WebContentsObserver::MediaPlayerInfo& video_type,
+      const content::MediaPlayerId& id) override;
+  void MediaStoppedPlaying(
+      const content::WebContentsObserver::MediaPlayerInfo& video_type,
+      const content::MediaPlayerId& id,
+      content::WebContentsObserver::MediaStoppedReason reason) override;
+  void MediaPlayerGone(
+      const content::WebContentsObserver::MediaPlayerInfo& video_type,
+      const content::MediaPlayerId& id) override;
+#endif
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
   void SetTouchInsertHandleMenuShow(bool show) {
     web_contents()->SetTouchInsertHandleMenuShow(show);
   }
+
   bool GetTouchInsertHandleMenuShow() {
     return web_contents()->GetTouchInsertHandleMenuShow();
   }
 
-#ifdef OHOS_HTML_SELECT
+  bool HandleContextMenu(content::RenderFrameHost& render_frame_host,
+                         const content::ContextMenuParams& params) override;
+
+  void UpdateZoomSupportEnabled();
+#endif
+
+#if BUILDFLAG(ARKWEB_PRINT)
+  void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
+#endif
+
+#if BUILDFLAG(ARKWEB_DISCARD)
+  bool Discard() override;
+  bool Restore() override;
+#endif
+
+#if BUILDFLAG(ARKWEB_HTML_SELECT)
   void ShowPopupMenu(
       mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
       const gfx::Rect& bounds,
@@ -432,16 +420,31 @@ bool NeedsReload() override;
       std::vector<blink::mojom::MenuItemPtr> menu_items,
       bool right_aligned,
       bool allow_multiple_selection);
-#endif  // #ifdef OHOS_HTML_SELECT
+#endif  // ARKWEB_HTML_SELECT
 
-#ifdef OHOS_CSS_INPUT_TIME
+#if BUILDFLAG(ARKWEB_CSS_INPUT_TIME)
   void OpenDateTimeChooser() override;
   void CloseDateTimeChooser() override;
-#endif  // #ifdef OHOS_CSS_INPUT_TIME
-  /* ohos webview end */
-#endif
+#endif  // ARKWEB_CSS_INPUT_TIME
 
-#ifdef OHOS_ARKWEB_ADBLOCK
+#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
+  std::unique_ptr<content::CustomMediaPlayer> CreateCustomMediaPlayer(
+      std::unique_ptr<content::CustomMediaPlayerListener> listener,
+      const content::MediaInfo& media_info) override;
+#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
+
+#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+  void OnShowToast(double duration, const std::string& toast) override;
+  void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
+  void OnReportStatisticLog(const std::string& content) override;
+#endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  // Shows the repost form confirmation dialog box.
+  void ShowRepostFormWarningDialog(content::WebContents* source) override;
+#endif  // ARKWEB_NETWORK_BASE
+
+#if BUILDFLAG(ARKWEB_ADBLOCK)
   void OnAdsBlocked(const std::string& main_frame_url,
                     const std::map<std::string, int32_t>& subresource_blocked,
                     bool is_site_first_report) override;
@@ -450,41 +453,44 @@ bool NeedsReload() override;
                                        int main_frame_tree_node_id) override;
 #endif
 
-#if defined(OHOS_EX_PASSWORD)
-  void ShowPasswordDialog(bool is_update, const std::string& url) override;
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override;
+  void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
+
+  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
+  void WebExtensionUpdateTab(
+      int32_t tab_id,
+      const NWebExtensionTabUpdateProperties* update_properties) override;
+  void ExtensionSetTabId(int tab_id) override;
+  int ExtensionGetTabId() const override;
+  void WebExtensionTabActivated(int tab_id, int window_id) override;
+ 
+  void WebExtensionActionClicked(
+      std::string extensionId,
+      const NWebExtensionTab* tab) override;
 #endif
 
-#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void OnShareFile(const std::string& filePath,
+                   const std::string& utdTypeId) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
+  void OnBeforeUnloadFired(bool proceed) override;
+#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
+
+#if BUILDFLAG(ARKWEB_DATALIST)
   void OnShowAutofillPopup(const gfx::RectF& element_bounds,
                            bool is_rtl,
                            const std::vector<autofill::Suggestion>& suggestions,
                            bool is_password_popup_type) override;
   void OnHideAutofillPopup() override;
-#endif
-
-#ifdef OHOS_EX_GET_ZOOM_LEVEL
-  void OnZoomChanged(
-      const zoom::ZoomController::ZoomChangedEventData& data) override;
-  void OnZoomControllerDestroyed(
-      zoom::ZoomController* zoom_controller) override {}
-#endif
-
-#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
-  CefString GetLastJavascriptProxyCallingFrameUrl() override;
-#endif
-
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
-  std::unique_ptr<content::CustomMediaPlayer> CreateCustomMediaPlayer(
-      std::unique_ptr<content::CustomMediaPlayerListener> listener,
-      const content::MediaInfo& media_info) override;
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
-
-#ifdef OHOS_AI
-  void CreateOverlay(const gfx::ImageSkia& image,
-                     const gfx::Rect& image_rect,
-                     const gfx::Point& touch_point);
-  void OnTextSelected(bool flag) override;
-  float GetPageScaleFactor() override;
 #endif
 
  private:
@@ -499,8 +505,7 @@ bool NeedsReload() override;
       CefRefPtr<AlloyBrowserHostImpl> opener,
       bool is_devtools_popup,
       CefRefPtr<CefRequestContextImpl> request_context,
-      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
-      CefRefPtr<CefExtension> extension);
+      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate);
 
   AlloyBrowserHostImpl(
       const CefBrowserSettings& settings,
@@ -509,8 +514,7 @@ bool NeedsReload() override;
       scoped_refptr<CefBrowserInfo> browser_info,
       CefRefPtr<AlloyBrowserHostImpl> opener,
       CefRefPtr<CefRequestContextImpl> request_context,
-      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
-      CefRefPtr<CefExtension> extension);
+      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate);
 
   // Give the platform delegate an opportunity to create the host window.
   bool CreateHostWindow();
@@ -518,46 +522,16 @@ bool NeedsReload() override;
   void StartAudioCapturer();
   void OnRecentlyAudibleTimerFired();
 
-#if BUILDFLAG(IS_OHOS)
-  void SetFocusInternal(bool focus);
-
-  void UpdateBackgroundColor(int color);
-  void UpdateZoomSupportEnabled();
-  void ReportWindowStatus(bool first_view_ready);
-  void InactiveUnloadOldProcess(base::ProcessId pid);
-  base::ProcessId GetRenderProcessId();
-  void UpdateVSyncFrequency();
-  void ResetVSyncFrequency();
-  void SetVisible(int32_t nweb_id, bool visible);
-  void SetNativeEmbedMode(bool flag) override;
+#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
+  void OnDumpJavaScriptStackCallback(
+      int pid,
+      content::RendererIsUnresponsiveReason reason,
+      const std::string& stack);
 #endif
 
-#if defined(OHOS_INPUT_EVENTS)
-  bool IsNeedZoomChange(const content::NativeWebKeyboardEvent& event,
-    bool& zoom_in);
-  bool WebHandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event);
-#endif
-
-#if defined(OHOS_COMPOSITE_RENDER)
-  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-  void SetDrawRect(int x, int y, int width, int height) override;
-  void SetDrawMode(int mode) override;
-  bool GetPendingSizeStatus() override;
-  void SetFitContentMode(int mode) override;
-#endif  // defined(OHOS_COMPOSITE_RENDER)
-#if defined(OHOS_RENDERER_ANR_DUMP)
-  void OnDumpJavaScriptStackCallback(int pid,
-		  content::RenderProcessNotRespondingReason reason,
-                                     const std::string& stack);
-#endif
-
-  CefWindowHandle opener_;
+  CefWindowHandle opener_window_handle_ = kNullWindowHandle;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
-  CefRefPtr<CefExtension> extension_;
-  bool is_background_host_ = false;
 
   // Represents the current browser destruction state. Only accessed on the UI
   // thread.
@@ -566,9 +540,6 @@ bool NeedsReload() override;
   // True if the OS window hosting the browser has been destroyed. Only accessed
   // on the UI thread.
   bool window_destroyed_ = false;
-
-  // Used for creating and managing JavaScript dialogs.
-  std::unique_ptr<CefJavaScriptDialogManager> javascript_dialog_manager_;
 
   // Used for creating and managing context menus.
   std::unique_ptr<CefMenuManager> menu_manager_;
@@ -582,28 +553,57 @@ bool NeedsReload() override;
   std::unique_ptr<base::OneShotTimer> recently_audible_timer_;
 
 #if BUILDFLAG(IS_OHOS)
-  int base_background_color_ = 0xffffffff;
-
-  double curFactor_ = 0.0;
-
-  std::shared_ptr<base::WaitableEvent> event_ = nullptr;
-  bool is_hidden_ = false;
-  int window_id_ = -1;
+  void OnWindowShow() override;
+  void OnWindowHide() override;
+  void OnOnlineRenderToForeground() override;
+  void SetWindowId(int window_id, int nweb_id) override;
+  void RenderViewReady() override;
+  void InactiveUnloadOldProcess(base::ProcessId pid);
   int nweb_id_ = -1;
+  int window_id_ = -1;
   base::ProcessId last_pid_ = -1;
+  void SetVisible(int32_t nweb_id, bool visible);
+  static int32_t ltpo_strategy_;
+#endif
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  void ReportWindowStatus(bool first_view_ready);
+  bool is_hidden_ = false;
+#endif
+
+#if BUILDFLAG(ARKWEB_REPORT_RENDER_STATE)
+  base::ProcessId GetRenderProcessId();
+#endif
+
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  void WasKeyboardResized() override;
+  void SetDrawRect(int x, int y, int width, int height) override;
+  void SetDrawMode(int mode) override;
+  bool GetPendingSizeStatus() override;
+  void SetFitContentMode(int mode) override;
+  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
+  std::string GetCurrentLanguage() override;
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+
+#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+  std::unique_ptr<content::VideoAssistant> CreateVideoAssistant() override;
+  void PopluateVideoAssistantConfig(
+      const std::string& url,
+      media::mojom::VideoAssistantConfigPtr& config) override;
+#endif  // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   bool has_video_playing_ = false;
   bool has_touch_event_ = false;
   bool set_lower_frame_rate_ = false;
-  static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000/*ms*/;
-  static int32_t ltpo_strategy_;
   int video_stream_cnt_ = 0;
-
-  int drawMode_ = 0;
+  static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000 /*ms*/;
 #endif
+#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
   bool start_play_ = false;
-
-#ifdef OHOS_RENDER_PROCESS_MODE
-  bool needs_reload_ = false;
+#endif
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  int tab_id_ = -1;
 #endif
 };
 

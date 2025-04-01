@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ef0e2e93340e25211668b8a3391a2aee735d2727$
+// $hash=0297fb187696e3e9169e377bb73963d9d733a9cd$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_
@@ -20,8 +20,6 @@
 #error This file can be included DLL-side only
 #endif
 
-#include <map>
-#include <vector>
 #include "include/capi/cef_dialog_handler_capi.h"
 #include "include/cef_dialog_handler.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
@@ -37,36 +35,7 @@ class CefDialogHandlerCToCpp
   virtual ~CefDialogHandlerCToCpp();
 
   // CefDialogHandler methods.
-  bool OnFileDialog(CefRefPtr<CefBrowser> browser,
-                    FileDialogMode mode,
-                    const CefString& title,
-                    const CefString& default_file_path,
-                    const std::vector<CefString>& accept_filters,
-                    bool capture,
-                    CefRefPtr<CefFileDialogCallback> callback) override;
-  void OnSelectPopupMenu(CefRefPtr<CefBrowser> browser,
-                         const CefRect& bounds,
-                         int item_height,
-                         double item_font_size,
-                         int selected_item,
-                         const std::vector<CefSelectPopupItem>& menu_items,
-                         bool right_aligned,
-                         bool allow_multiple_selection,
-                         CefRefPtr<CefSelectPopupCallback> callback) override;
-  void OnHideAutofillPopup() override;
-  void OnAdsBlocked(CefRefPtr<CefBrowser> browser,
-                    const CefString& main_frame_url,
-                    const std::map<CefString, CefString>& subresource_blocked,
-                    bool is_site_first_report) override;
-  void OnShowAutofillPopup(CefRefPtr<CefBrowser> browser,
-                           const CefRect& bounds,
-                           bool right_aligned,
-                           const std::vector<CefAutofillPopupItem>& menu_items,
-                           bool is_password_popup_type) override;
-  void ShowPasswordDialog(bool is_update, const CefString& url) override;
-  bool TrigAdBlockEnabledForSiteFromUi(CefRefPtr<CefBrowser> browser,
-                                       const CefString& main_frame_url,
-                                       int main_frame_tree_node_id) override;
+  void OnBeforeUnloadFired(CefRefPtr<CefBrowser> browser, bool proceed) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DIALOG_HANDLER_CTOCPP_H_

@@ -10,11 +10,11 @@
 #include <vector>
 
 #include "include/base/cef_callback.h"
+#include "include/views/cef_browser_view.h"
 #include "include/wrapper/cef_stream_resource_handler.h"
 #include "tests/cefclient/browser/main_context.h"
 #include "tests/cefclient/browser/test_runner.h"
 #include "tests/cefclient/browser/window_test_runner.h"
-
 #include "tests/cefclient/browser/window_test_runner_views.h"
 
 #if defined(OS_WIN)
@@ -25,8 +25,7 @@
 #include "tests/cefclient/browser/window_test_runner_mac.h"
 #endif
 
-namespace client {
-namespace window_test {
+namespace client::window_test {
 
 namespace {
 
@@ -35,11 +34,14 @@ const char kMessagePositionName[] = "WindowTest.Position";
 const char kMessageMinimizeName[] = "WindowTest.Minimize";
 const char kMessageMaximizeName[] = "WindowTest.Maximize";
 const char kMessageRestoreName[] = "WindowTest.Restore";
+const char kMessageFullscreenName[] = "WindowTest.Fullscreen";
 const char kMessageTitlebarHeightName[] = "WindowTest.TitlebarHeight";
 
 // Create the appropriate platform test runner object.
-std::unique_ptr<WindowTestRunner> CreateWindowTestRunner() {
-  if (MainContext::Get()->UseViews()) {
+std::unique_ptr<WindowTestRunner> CreateWindowTestRunner(
+    CefRefPtr<CefBrowser> browser) {
+  if (CefBrowserView::GetForBrowser(browser)) {
+    // Browser is Views-hosted.
     return std::make_unique<WindowTestRunnerViews>();
   }
 
@@ -82,36 +84,40 @@ std::optional<float> ParseHeight(const std::string& message) {
 // Handle messages in the browser process.
 class Handler : public CefMessageRouterBrowserSide::Handler {
  public:
-  Handler() : runner_(CreateWindowTestRunner()) {}
+  Handler() = default;
 
   // Called due to cefBroadcast execution in window.html.
-  virtual bool OnQuery(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefFrame> frame,
-                       int64 query_id,
-                       const CefString& request,
-                       bool persistent,
-                       CefRefPtr<Callback> callback) override {
+  bool OnQuery(CefRefPtr<CefBrowser> browser,
+               CefRefPtr<CefFrame> frame,
+               int64_t query_id,
+               const CefString& request,
+               bool persistent,
+               CefRefPtr<Callback> callback) override {
     // Only handle messages from the test URL.
     const std::string& url = frame->GetURL();
     if (!test_runner::IsTestURL(url, kTestUrlPath)) {
       return false;
     }
 
+    auto runner = CreateWindowTestRunner(browser);
+
     const std::string& message_name = request;
     if (message_name.find(kMessagePositionName) == 0) {
       const auto vec = ParsePosition(message_name);
       if (vec.size() == 4) {
-        runner_->SetPos(browser, vec[0], vec[1], vec[2], vec[3]);
+        runner->SetPos(browser, vec[0], vec[1], vec[2], vec[3]);
       }
     } else if (message_name == kMessageMinimizeName) {
-      runner_->Minimize(browser);
+      runner->Minimize(browser);
     } else if (message_name == kMessageMaximizeName) {
-      runner_->Maximize(browser);
+      runner->Maximize(browser);
     } else if (message_name == kMessageRestoreName) {
-      runner_->Restore(browser);
+      runner->Restore(browser);
+    } else if (message_name == kMessageFullscreenName) {
+      runner->Fullscreen(browser);
     } else if (message_name.find(kMessageTitlebarHeightName) == 0) {
       const auto height = ParseHeight(message_name);
-      runner_->SetTitleBarHeight(browser, height);
+      runner->SetTitleBarHeight(browser, height);
     } else {
       NOTREACHED();
     }
@@ -119,9 +125,6 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
     callback->Success("");
     return true;
   }
-
- private:
-  std::unique_ptr<WindowTestRunner> runner_;
 };
 
 }  // namespace
@@ -130,5 +133,4 @@ void CreateMessageHandlers(test_runner::MessageHandlerSet& handlers) {
   handlers.insert(new Handler());
 }
 
-}  // namespace window_test
-}  // namespace client
+}  // namespace client::window_test

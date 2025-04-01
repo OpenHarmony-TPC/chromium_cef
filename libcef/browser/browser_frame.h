@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_FRAME_H_
 #pragma once
 
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/frame_service_base.h"
-
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/frame_service_base.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "mojo/public/cpp/bindings/binder_map.h"
 
@@ -38,31 +37,36 @@ class CefBrowserFrame
   void SendMessage(const std::string& name,
                    base::Value::List arguments) override;
   void SendSharedMemoryRegion(const std::string& name,
-                              base::ReadOnlySharedMemoryRegion region) override;
+                              base::WritableSharedMemoryRegion region) override;
   void FrameAttached(mojo::PendingRemote<cef::mojom::RenderFrame> render_frame,
                      bool reattached) override;
   void UpdateDraggableRegions(
-      absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
+      std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
-
-#if BUILDFLAG(IS_OHOS)
-  void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params) override;
-  void OnGetImageForContextNodeNull() override;
-
-  void ShouldOverrideUrlLoading(const std::string& url,
-                                const std::string& request_method,
-                                bool user_gesture,
-                                bool is_redirect,
-                                bool is_outermost_main_frame,
-                                cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) override;
-#endif
 
   // FrameServiceBase methods:
   bool ShouldCloseOnFinishNavigation() const override { return false; }
 
-  CefRefPtr<CefFrameHostImpl> GetFrameHost(
-      bool prefer_speculative = false) const;
+  CefRefPtr<CefFrameHostImpl> GetFrameHost(bool prefer_speculative,
+                                           bool* is_excluded = nullptr) const;
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  void OnGetImageForContextNode(
+      cef::mojom::GetImageForContextNodeParamsPtr params,
+      int command_id) override;
+
+  void OnGetImageForContextNodeNull(int command_id) override;
+#endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void ShouldOverrideUrlLoading(
+      const std::string& url,
+      const std::string& request_method,
+      bool user_gesture,
+      bool is_redirect,
+      bool is_outermost_main_frame,
+      cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback)
+      override;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_FRAME_H_

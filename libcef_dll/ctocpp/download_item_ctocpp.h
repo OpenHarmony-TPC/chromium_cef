@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8764ac5ba0126a6ebf5cfa008ed0fa62fa90a96$
+// $hash=01ee412c19b7b7985bf121b12bd5dbd620b6c1fb$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CTOCPP_H_
@@ -38,30 +38,21 @@ class CefDownloadItemCToCpp : public CefCToCppRefCounted<CefDownloadItemCToCpp,
   bool IsInProgress() override;
   bool IsComplete() override;
   bool IsCanceled() override;
-  int64 GetCurrentSpeed() override;
+  bool IsInterrupted() override;
+  cef_download_interrupt_reason_t GetInterruptReason() override;
+  int64_t GetCurrentSpeed() override;
   int GetPercentComplete() override;
-  int64 GetTotalBytes() override;
-  int64 GetReceivedBytes() override;
+  int64_t GetTotalBytes() override;
+  int64_t GetReceivedBytes() override;
   CefBaseTime GetStartTime() override;
   CefBaseTime GetEndTime() override;
   CefString GetFullPath() override;
-  uint32 GetId() override;
+  uint32_t GetId() override;
   CefString GetURL() override;
   CefString GetOriginalUrl() override;
   CefString GetSuggestedFileName() override;
   CefString GetContentDisposition() override;
   CefString GetMimeType() override;
-  CefString GetOriginalMimeType() override;
-  CefString GetGuid() override;
-  int GetState() override;
-  bool IsPaused() override;
-  CefString GetMethod() override;
-  int GetLastErrorCode() override;
-  bool IsPending() override;
-  CefString GetLastModifiedTime() override;
-  CefString GetETag() override;
-  CefString GetReceivedSlices() override;
-  int GetNWebId() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DOWNLOAD_ITEM_CTOCPP_H_

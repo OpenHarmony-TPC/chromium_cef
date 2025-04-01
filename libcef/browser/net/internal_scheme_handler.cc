@@ -16,6 +16,7 @@
 #include "base/threading/thread_restrictions.h"
 #include "net/base/mime_util.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "include/base/cef_basictypes.h"
 
 namespace scheme {
 

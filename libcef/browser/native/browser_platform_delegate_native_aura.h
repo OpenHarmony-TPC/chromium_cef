@@ -5,9 +5,9 @@
 #ifndef CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_AURA_H_
 #define CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_AURA_H_
 
-#include "libcef/browser/native/browser_platform_delegate_native.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native.h"
 #include "ui/events/event.h"
 
 namespace content {
@@ -41,7 +41,7 @@ class CefBrowserPlatformDelegateNativeAura
                             bool want_dip_coords) const override;
 
   // CefBrowserPlatformDelegateNative methods:
-  content::NativeWebKeyboardEvent TranslateWebKeyEvent(
+  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
       const CefKeyEvent& key_event) const override;
   blink::WebMouseEvent TranslateWebClickEvent(
       const CefMouseEvent& mouse_event,
@@ -50,8 +50,10 @@ class CefBrowserPlatformDelegateNativeAura
       int clickCount) const override;
   blink::WebMouseEvent TranslateWebMoveEvent(const CefMouseEvent& mouse_event,
                                              bool mouseLeave) const override;
+#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
   blink::WebGestureEvent TranslateTouchpadFlingEvent(
-    const CefMouseEvent& mouse_event) const override;
+      const CefMouseEvent& mouse_event) const override;
+#endif
   blink::WebMouseWheelEvent TranslateWebWheelEvent(
       const CefMouseEvent& mouse_event,
       int deltaX,
@@ -67,7 +69,10 @@ class CefBrowserPlatformDelegateNativeAura
       int clickCount) const;
   virtual ui::MouseEvent TranslateUiMoveEvent(const CefMouseEvent& mouse_event,
                                               bool mouseLeave) const;
-  virtual ui::GestureEvent TranslateUiTouchpadEvent(const CefMouseEvent& mouse_event) const;
+#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
+  virtual ui::GestureEvent TranslateUiTouchpadEvent(
+      const CefMouseEvent& mouse_event) const;
+#endif
   virtual ui::MouseWheelEvent TranslateUiWheelEvent(
       const CefMouseEvent& mouse_event,
       int deltaX,
@@ -78,12 +83,12 @@ class CefBrowserPlatformDelegateNativeAura
   base::OnceClosure GetWidgetDeleteCallback();
 
   static base::TimeTicks GetEventTimeStamp();
-  static int TranslateUiEventModifiers(uint32 cef_modifiers);
-  static int TranslateUiChangedButtonFlags(uint32 cef_modifiers);
+  static int TranslateUiEventModifiers(uint32_t cef_modifiers);
+  static int TranslateUiChangedButtonFlags(uint32_t cef_modifiers);
 
   // Widget hosting the web contents. It will be deleted automatically when the
   // associated root window is destroyed.
-  views::Widget* window_widget_ = nullptr;
+  raw_ptr<views::Widget> window_widget_ = nullptr;
 
  private:
   // Will only be called if the Widget is deleted before

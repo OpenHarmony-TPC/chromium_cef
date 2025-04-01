@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5ca99147f1a3d13ee826bcd5b7ff52caf32e30c4$
+// $hash=6e89ce3d2f2e87cb3a3bf7238f54d0493f61955e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_URLREQUEST_CLIENT_CTOCPP_H_
@@ -37,11 +37,11 @@ class CefURLRequestClientCToCpp
   // CefURLRequestClient methods.
   void OnRequestComplete(CefRefPtr<CefURLRequest> request) override;
   void OnUploadProgress(CefRefPtr<CefURLRequest> request,
-                        int64 current,
-                        int64 total) override;
+                        int64_t current,
+                        int64_t total) override;
   void OnDownloadProgress(CefRefPtr<CefURLRequest> request,
-                          int64 current,
-                          int64 total) override;
+                          int64_t current,
+                          int64_t total) override;
   void OnDownloadData(CefRefPtr<CefURLRequest> request,
                       const void* data,
                       size_t data_length) override;

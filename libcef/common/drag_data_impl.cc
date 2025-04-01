@@ -2,12 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#include "cef/libcef/common/drag_data_impl.h"
+
 #include <string>
 
 #include "base/files/file_path.h"
-#include "base/files/file_util.h"
-#include "libcef/browser/stream_impl.h"
-#include "libcef/common/drag_data_impl.h"
+#include "cef/libcef/browser/stream_impl.h"
 
 #define CHECK_READONLY_RETURN_VOID()        \
   if (read_only_) {                         \
@@ -127,9 +127,24 @@ bool CefDragDataImpl::GetFileNames(std::vector<CefString>& names) {
   for (; it != data_.filenames.end(); ++it) {
     auto name = it->display_name.value();
     if (name.empty()) {
-      name = it->path.value();
+      name = it->path.BaseName().value();
     }
     names.push_back(name);
+  }
+
+  return true;
+}
+
+bool CefDragDataImpl::GetFilePaths(std::vector<CefString>& paths) {
+  base::AutoLock lock_scope(lock_);
+  if (data_.filenames.empty()) {
+    return false;
+  }
+
+  std::vector<ui::FileInfo>::const_iterator it = data_.filenames.begin();
+  for (; it != data_.filenames.end(); ++it) {
+    auto path = it->path.value();
+    paths.push_back(path);
   }
 
   return true;
@@ -156,7 +171,7 @@ void CefDragDataImpl::SetLinkMetadata(const CefString& data) {
 void CefDragDataImpl::SetFragmentText(const CefString& text) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-#ifdef OHOS_DRAG_DROP
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   if (text.empty()) {
     data_.text.reset();
     return;
@@ -168,7 +183,7 @@ void CefDragDataImpl::SetFragmentText(const CefString& text) {
 void CefDragDataImpl::SetFragmentHtml(const CefString& fragment) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-#ifdef OHOS_DRAG_DROP
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   if (fragment.empty()) {
     data_.html.reset();
     return;
@@ -196,18 +211,19 @@ void CefDragDataImpl::AddFile(const CefString& path,
                               const CefString& display_name) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
-  data_.filenames.push_back(
-      ui::FileInfo(base::FilePath(path), base::FilePath(display_name)));
+  data_.filenames.emplace_back(base::FilePath(path),
+                               base::FilePath(display_name));
 }
 
-#if BUILDFLAG(IS_OHOS)
+// #if BUILDFLAG(IS_OHOS)
 size_t CefDragDataImpl::GetImageFileSize() {
   base::AutoLock lock_scope(lock_);
-  if (data_.file_contents.empty())
+  if (data_.file_contents.empty()) {
     return 0;
+  }
   return data_.file_contents.size();
 }
-#endif
+// #endif
 
 void CefDragDataImpl::ClearFilenames() {
   base::AutoLock lock_scope(lock_);
@@ -238,7 +254,7 @@ bool CefDragDataImpl::HasImage() {
   return image_ ? true : false;
 }
 
-#ifdef OHOS_DRAG_DROP
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
 bool CefDragDataImpl::IsImageFileContents() {
   return data_.IsImageFileContents();
 }

@@ -2,15 +2,20 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/net_service/resource_handler_wrapper.h"
+#include "cef/libcef/browser/net_service/resource_handler_wrapper.h"
 
-#include "libcef/browser/net_service/proxy_url_loader_factory.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
-
+#include "arkweb/build/features/features.h"
+#include "base/memory/raw_ptr.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/libcef/browser/net_service/proxy_url_loader_factory.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
+#include "cef/libcef/common/request_impl.h"
 #include "net/http/http_status_code.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#endif
 
 namespace net_service {
 
@@ -34,7 +39,7 @@ class SkipCallbackWrapper : public CefResourceSkipCallback {
     }
   }
 
-  void Continue(int64 bytes_skipped) override {
+  void Continue(int64_t bytes_skipped) override {
     if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
       work_thread_task_runner_->PostTask(
           FROM_HERE,
@@ -225,7 +230,7 @@ class ReadResponseCallbackWrapper : public CefCallback {
   }
 
   scoped_refptr<HandlerProvider> handler_provider_;
-  net::IOBuffer* const dest_;
+  const raw_ptr<net::IOBuffer> dest_;
   int length_;
   CefRefPtr<ReadCallbackWrapper> callback_;
 
@@ -413,7 +418,11 @@ class ResourceResponseWrapper : public ResourceResponse {
     }
 
     // May be recreated on redirect.
+#if BUILDFLAG(IS_ARKWEB)
+    request_ = new ArkWebRequestImplExt();
+#else
     request_ = new CefRequestImpl();
+#endif
     request_->Set(&request, request_id);
     request_->SetReadOnly(true);
 
@@ -485,8 +494,11 @@ class ResourceResponseWrapper : public ResourceResponse {
     }
 
     if (reason_phrase->empty() && *status_code > 0) {
-      *reason_phrase = net::GetHttpReasonPhrase(
+      auto ans = net::GetHttpReasonPhrase(
           static_cast<net::HttpStatusCode>(*status_code));
+      if (ans != nullptr) {
+        *reason_phrase = ans;
+      }
     }
 
     *mime_type = response->GetMimeType();
@@ -505,14 +517,15 @@ class ResourceResponseWrapper : public ResourceResponse {
     }
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   const std::string& GetResponseData() override {
     auto handler = handler_provider_->handler();
     if (!handler) {
       static const std::string data;
       return data;
     }
-    return handler->GetResponseData();
+    static const std::string data = handler->GetResponseData();
+    return data;
   }
 
   size_t GetResponseDataBuffer(char* data, size_t dest_size) override {

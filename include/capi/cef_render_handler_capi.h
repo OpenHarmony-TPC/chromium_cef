@@ -33,13 +33,14 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=2b67c12c1bf66dc91ed8a45906c115a8eb84677e$
+// $hash=5151b6ea3c06e46a75f2cd7679044a2891063d29$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_RENDER_HANDLER_CAPI_H_
 #pragma once
 
+#include "arkweb/build/features/features.h"
 #include "include/capi/cef_accessibility_handler_capi.h"
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
@@ -149,17 +150,27 @@ typedef struct _cef_render_handler_t {
   /// Called when an element has been rendered to the shared texture handle.
   /// |type| indicates whether the element is the view or the popup widget.
   /// |dirtyRects| contains the set of rectangles in pixel coordinates that need
-  /// to be repainted. |shared_handle| is the handle for a D3D11 Texture2D that
-  /// can be accessed via ID3D11Device using the OpenSharedResource function.
-  /// This function is only called when cef_window_tInfo::shared_texture_enabled
-  /// is set to true (1), and is currently only supported on Windows.
+  /// to be repainted. |info| contains the shared handle; on Windows it is a
+  /// HANDLE to a texture that can be opened with D3D11 OpenSharedResource, on
+  /// macOS it is an IOSurface pointer that can be opened with Metal or OpenGL,
+  /// and on Linux it contains several planes, each with an fd to the underlying
+  /// system native buffer.
   ///
-  void(CEF_CALLBACK* on_accelerated_paint)(struct _cef_render_handler_t* self,
-                                           struct _cef_browser_t* browser,
-                                           cef_paint_element_type_t type,
-                                           size_t dirtyRectsCount,
-                                           cef_rect_t const* dirtyRects,
-                                           void* shared_handle);
+  /// The underlying implementation uses a pool to deliver frames. As a result,
+  /// the handle may differ every frame depending on how many frames are in-
+  /// progress. The handle's resource cannot be cached and cannot be accessed
+  /// outside of this callback. It should be reopened each time this callback is
+  /// executed and the contents should be copied to a texture owned by the
+  /// client application. The contents of |info| will be released back to the
+  /// pool after this callback returns.
+  ///
+  void(CEF_CALLBACK* on_accelerated_paint)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_paint_element_type_t type,
+      size_t dirtyRectsCount,
+      cef_rect_t const* dirtyRects,
+      const cef_accelerated_paint_info_t* info);
 
   ///
   /// Called to retrieve the size of the touch handle for the specified
@@ -179,6 +190,14 @@ typedef struct _cef_render_handler_t {
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       const cef_touch_handle_state_t* state);
+
+  ///
+  // Called when the RootLayer has changed.
+  ///
+  void(CEF_CALLBACK* on_root_layer_changed)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser,
+                                            int height,
+                                            int width);
 
   ///
   /// Called when the user starts dragging content in the web view. Contextual
@@ -242,6 +261,26 @@ typedef struct _cef_render_handler_t {
       const cef_string_t* selected_text,
       const cef_range_t* selected_range);
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// OnResizeScrollableViewport.
+  ///
+  void(CEF_CALLBACK* on_resize_scrollable_viewport)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser);
+#endif
+
+  ///
+  /// Called when an on-screen keyboard should be shown or hidden for the
+  /// specified |browser|. |input_mode| specifies what kind of keyboard should
+  /// be opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any existing
+  /// keyboard for this browser should be hidden.
+  ///
+  void(CEF_CALLBACK* on_virtual_keyboard_requested)(
+      struct _cef_render_handler_t* self,
+      struct _cef_browser_t* browser,
+      cef_text_input_mode_t input_mode);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   ///
   /// Called when an on-screen keyboard should be shown or hidden for the
   /// specified |browser|. |input_mode| specifies what kind of keyboard should
@@ -249,231 +288,41 @@ typedef struct _cef_render_handler_t {
   /// keyboard for this browser should be hidden.|show_keyboard| specifies
   /// whether to display the keyboard.
   ///
-  void(CEF_CALLBACK* on_virtual_keyboard_requested)(
+  void(CEF_CALLBACK* on_virtual_keyboard_requestedex)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       cef_text_input_info_t text_input_info,
       int is_need_reset_listener,
       cef_string_map_t attributes);
+#endif
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   ///
-  /// Called when touch selection is updated. The client is responsible for
-  /// rendering the touch handles.
-  ///
-  void(CEF_CALLBACK* on_touch_selection_changed)(
-      struct _cef_render_handler_t* self,
-      const cef_touch_handle_state_t* insert_handle,
-      const cef_touch_handle_state_t* start_selection_handle,
-      const cef_touch_handle_state_t* end_selection_handle,
-      int need_report);
-
-  ///
-  /// Called when the RootLayer has changed.
-  ///
-  void(CEF_CALLBACK* on_root_layer_changed)(struct _cef_render_handler_t* self,
-                                            struct _cef_browser_t* browser,
-                                            int height,
-                                            int width);
-
-  ///
-  /// Called when text selection has changed for the specified |browser|. |text|
-  /// is the currently text and |selected_range| is the character range.
-  ///
-  void(CEF_CALLBACK* on_selection_changed)(struct _cef_render_handler_t* self,
-                                           struct _cef_browser_t* browser,
-                                           const cef_string_t* text,
-                                           const cef_range_t* selected_range);
-
-  ///
-  /// Called when the cursor position has changed.
-  ///
-  void(CEF_CALLBACK* on_cursor_update)(struct _cef_render_handler_t* self,
-                                       struct _cef_browser_t* browser,
-                                       const cef_rect_t* rect);
-
-  ///
-  /// Called when swap buffer completed with new size.
-  ///
-  void(CEF_CALLBACK* on_complete_swap_with_new_size)(
-      struct _cef_render_handler_t* self);
-
-  ///
-  /// Called when resize not work.
-  ///
-  void(CEF_CALLBACK* on_resize_not_work)(struct _cef_render_handler_t* self);
-
-  ///
-  /// Called when over scroll.
-  ///
-  void(CEF_CALLBACK* on_overscroll)(struct _cef_render_handler_t* self,
-                                    struct _cef_browser_t* browser,
-                                    const float x,
-                                    const float y);
-
-  ///
-  /// Called when editable status has been changed.
-  ///
-  void(CEF_CALLBACK* on_editable_changed)(struct _cef_render_handler_t* self,
-                                          struct _cef_browser_t* browser,
-                                          int is_editable_node);
-
-  ///
-  /// Called when over scroll.
-  ///
-  void(CEF_CALLBACK* on_over_scroll_fling_velocity)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const float x,
-      const float y,
-      int is_fling);
-
-  ///
-  /// Called when over scroll fling end.
-  ///
-  void(CEF_CALLBACK* on_over_scroll_fling_end)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser);
-
-  ///
-  /// Called when scroll begin or end.
-  ///
-  void(CEF_CALLBACK* on_scroll_state)(struct _cef_render_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      int scroll_state);
-
-  ///
-  /// Called when scroll.
-  ///
-  int(CEF_CALLBACK* filter_scroll_event)(struct _cef_render_handler_t* self,
-                                         struct _cef_browser_t* browser,
-                                         const float x,
-                                         const float y,
-                                         const float fling_x,
-                                         const float fling_y);
-
-  ///
-  /// Called when embed touch.
-  ///
-  void(CEF_CALLBACK* on_native_embed_gesture_event)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const struct _cef_embed_touch_event_t* event,
-      struct _cef_gesture_event_callback_t* callback);
-
-  ///
-  /// Called when embed touch.
-  ///
-  void(CEF_CALLBACK* on_native_embed_lifecycle_change)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const struct _cef_native_embed_data_t* info);
-
-  ///
-  /// Called when select all is clicked.
-  ///
-  void(CEF_CALLBACK* notify_select_all_clicked)(
-      struct _cef_render_handler_t* self,
-      int select_all);
-
-  ///
-  /// Called when scroll begin or end.
-  ///
-  void(CEF_CALLBACK* release_resize_hold)(struct _cef_render_handler_t* self,
-                                          struct _cef_browser_t* browser);
-
-  ///
-  /// Called when text input state has changed for the specified |browser|.
-  ///
-  void(CEF_CALLBACK* on_update_text_input_state_called)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* text,
-      const cef_range_t* selected_range,
-      const cef_range_t* compositon_range);
-
-  ///
-  /// Called when selecting word.
-  ///
-  void(CEF_CALLBACK* get_word_selection)(struct _cef_render_handler_t* self,
-                                         struct _cef_browser_t* browser,
-                                         const cef_string_t* text,
-                                         int8_t offset,
-                                         cef_point_t* select);
-
-  ///
-  /// Called when creating overlay.
-  ///
-  void(CEF_CALLBACK* create_overlay)(struct _cef_render_handler_t* self,
-                                     struct _cef_browser_t* browser,
-                                     struct _cef_image_t* cef_image,
-                                     const cef_rect_t* cef_image_rect,
-                                     const cef_point_t* cef_touch_point);
-
-  ///
-  /// Called when overlay state is changed.
-  ///
-  void(CEF_CALLBACK* on_overlay_state_changed)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_rect_t* cef_image_rect);
-
-  ///
-  /// Called to retrieve the visible view rectangle in screen DIP coordinates.
-  /// This function must always provide a non-NULL rectangle.
+  /// Called to retrieve the view rectangle in screen DIP coordinates. This
+  /// function must always provide a non-NULL rectangle.
   ///
   void(CEF_CALLBACK* get_visible_viewport_rect)(
       struct _cef_render_handler_t* self,
       struct _cef_browser_t* browser,
       cef_rect_t* rect);
+#endif
 
   ///
-  /// SendDynamicFrameLossEvent
+  /// Get the visible area relative to the web.
   ///
-  void(CEF_CALLBACK* send_dynamic_frame_loss_event)(
+  void(CEF_CALLBACK* get_visible_rect_to_web)(
       struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* sceneId,
-      int isStart);
-
-  ///
-  /// OnResizeScrollableViewport.
-  ///
-  void(CEF_CALLBACK* on_resize_scrollable_viewport)(
-      struct _cef_render_handler_t* self,
-      struct _cef_browser_t* browser);
-
-  ///
-  /// SetFillContent
-  ///
-  void(CEF_CALLBACK* set_fill_content)(struct _cef_render_handler_t* self,
-                                       const char* content);
+      int* visibleX,
+      int* visibleY,
+      int* visibleWidth,
+      int* visibleHeight);
 
   ///
   /// SetGestureEventResult
   ///
   void(CEF_CALLBACK* set_gesture_event_result)(
       struct _cef_render_handler_t* self,
-      const int result);
-
-  ///
-  /// Called when you need to start vibrator.
-  ///
-  void(CEF_CALLBACK* start_vibra_feedback)(struct _cef_render_handler_t* self,
-                                           const char* vibratorType);
-
-  ///
-  /// Get Device pixel size.
-  ///
-  void(CEF_CALLBACK* get_device_pixel_size)(struct _cef_render_handler_t* self,
-                                            struct _cef_browser_t* browser,
-                                            cef_size_t* size);
-
-  ///
-  /// Called when an accessibility event occurs.
-  ///
-  void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
-                                             int64_t accessibilityId,
-                                             int32_t eventType);
+      bool result);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

@@ -39,6 +39,7 @@
 #pragma once
 
 #include <vector>
+
 #include "include/cef_base.h"
 #include "include/cef_devtools_message_observer.h"
 #include "include/cef_drag_data.h"
@@ -48,129 +49,16 @@
 #include "include/cef_registration.h"
 #include "include/cef_request_context.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "include/cef_permission_request.h"
-#include "include/cef_task.h"
-#include "include/cef_download_item.h"
-#include "include/internal/cef_string_map.h"
-#endif  // BUILDFLAG(IS_OHOS)
-
-#ifdef OHOS_DEVTOOLS
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
 class CefDevToolsMessageHandlerDelegate;
-#endif // OHOS_DEVTOOLS
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 class CefBrowserHost;
 class CefClient;
 
-#if BUILDFLAG(IS_OHOS)
-///
-/// Interface to implement to be notified of asynchronous completion via
-/// CefBrowserHostBase::ExecuteJavaScript().
-///
-/*--cef(source=client)--*/
-class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion. |num_deleted| will be the
-  /// number of cookies that were deleted.
-  ///
-  /*--cef()--*/
-  virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
-};
-
-/* ---------- ohos webview add begin --------- */
-///
-/// Interface to implement to be notified of asynchronous completion via
-/// CefBrowserHostBase::StoreWebArchive().
-///
-/*--cef(source=client)--*/
-class CefStoreWebArchiveResultCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion. |result| will either be the
-  /// filename under which the file was saved, or empty if saving the file
-  /// failed.
-  ///
-  /*--cef(optional_param=result)--*/
-  virtual void OnStoreWebArchiveDone(const CefString& result) = 0;
-};
-
-///
-/// Interface to implement to be notified of asynchronous completion via
-/// CefBrowserHostBase::SetGestureEventResult().
-///
-/*--cef(source=client)--*/
-class CefGestureEventCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion.
-  ///
-  /*--cef()--*/
-  virtual void ContinueTask(bool result, bool stopPropagation) = 0;
-};
-
-///
-/// Interface to implement to be notified of asynchronous web message channel.
-///
-/*--cef(source=client)--*/
-class CefWebMessageReceiver : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon |PostPortMessage|. |message| will be sent
-  /// to another end of web message channel.
-  ///
-  /*--cef()--*/
-  virtual void OnMessage(CefRefPtr<CefValue> message) = 0;
-
-  ///
-  /// The same as OnMessage, the result of the execution will be returned.
-  ///
-  /*--cef()--*/
-  virtual bool OnMessageWithBoolResult(CefRefPtr<CefValue> message) = 0;
-};
-
-///
-/// Interface to implement to be notified of compiling javascript completion via
-/// CefBrowserHostBase::PrecompileJavaScript().
-///
-/*--cef(source=client)--*/
-class CefPrecompileCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion.
-  ///
-  /*--cef()--*/
-  virtual void OnPrecompileFinished(int32_t result) = 0;
-};
-
-///
-/// options and info of CefBrowserHostBase::PrecompileJavaScript().
-///
-/*--cef(source=library)--*/
-class CefCacheOptions : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Return the response headers of javascript request.
-  ///
-  /*--cef(default_retval=nullptr)--*/
-  virtual cef_string_map_t GetResponseHeaders() = 0;
-};
-
-///
-/// CefSetLockCallback
-///
-/*--cef(source=client)--*/
-class CefSetLockCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Handle.
-  ///
-  /*--cef()--*/
-  virtual void Handle(bool key) = 0;
-};
-
-/* ---------- ohos webview add end --------- */
-#endif  // BUILDFLAG(IS_OHOS)
+class ArkWebBrowserExt;
+class CefBrowserHostBase;
+class ArkWebBrowserHostExt;
 
 ///
 /// Class used to represent a browser. When used in the browser process the
@@ -188,12 +76,17 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsValid() = 0;
 
+  virtual CefRefPtr<ArkWebBrowserExt> AsArkWebBrowser() { return nullptr; }
+
+  virtual CefRefPtr<CefBrowserHostBase> AsCefBrowserHostBase() {
+    return nullptr;
+  }
+
   ///
   /// Returns the browser host object. This method can only be called in the
   /// browser process.
   ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefBrowserHost> GetHost() = 0;
+  virtual CefRefPtr<ArkWebBrowserHostExt> GetHost() { return nullptr; }
 
   ///
   /// Returns true if the browser can navigate backwards.
@@ -290,14 +183,15 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /// Returns the frame with the specified identifier, or NULL if not found.
   ///
-  /*--cef(capi_name=get_frame_byident)--*/
-  virtual CefRefPtr<CefFrame> GetFrame(int64 identifier) = 0;
+  /*--cef()--*/
+  virtual CefRefPtr<CefFrame> GetFrameByIdentifier(
+      const CefString& identifier) = 0;
 
   ///
   /// Returns the frame with the specified name, or NULL if not found.
   ///
   /*--cef(optional_param=name)--*/
-  virtual CefRefPtr<CefFrame> GetFrame(const CefString& name) = 0;
+  virtual CefRefPtr<CefFrame> GetFrameByName(const CefString& name) = 0;
 
   ///
   /// Returns the number of frames that currently exist.
@@ -309,7 +203,7 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /// Returns the identifiers of all existing frames.
   ///
   /*--cef(count_func=identifiers:GetFrameCount)--*/
-  virtual void GetFrameIdentifiers(std::vector<int64>& identifiers) = 0;
+  virtual void GetFrameIdentifiers(std::vector<CefString>& identifiers) = 0;
 
   ///
   /// Returns the names of all existing frames.
@@ -318,233 +212,16 @@ class CefBrowser : public virtual CefBaseRefCounted {
   virtual void GetFrameNames(std::vector<CefString>& names) = 0;
 
   ///
-  /// Returns the Permission Request Delegate object.
+  /// Determine if BeforeUnload or Unload events need to be triggered.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefBrowserPermissionRequestDelegate>
-  GetPermissionRequestDelegate() = 0;
+  virtual bool NeedToFireBeforeUnloadOrUnloadEvents() = 0;
 
   ///
-  /// Returns the Geolocation Permission handler object.
+  /// Trigger the BeforeUnload event with an option to auto-cancel.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() = 0;
-
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// Returns true if the browser can navigate forwards.
-  ///
-  /*--cef()--*/
-  virtual bool CanGoBackOrForward(int num_steps) = 0;
-
-  ///
-  /// Navigate backwards or forwards.
-  ///
-  /*--cef()--*/
-  virtual void GoBackOrForward(int num_steps) = 0;
-
-  ///
-  /// DeleteHistory
-  ///
-  /*--cef()--*/
-  virtual void DeleteHistory() = 0;
-
-  ///
-  /// display the selection control when click Free copy interface
-  ///
-  /*--cef()--*/
-  virtual void SelectAndCopy() = 0;
-
-  ///
-  /// should show free copy menu
-  ///
-  /*--cef()--*/
-  virtual bool ShouldShowFreeCopy() = 0;
-
-  ///
-  /// select password dialog to fill
-  ///
-  /*--cef()--*/
-  virtual void PasswordSuggestionSelected(int list_index) = 0;
-
-  ///
-  /// Update browser controls state.
-  ///
-  /*--cef()--*/
-  virtual void UpdateBrowserControlsState(int constraints,
-                                          int current,
-                                          bool animate) = 0;
-
-  ///
-  /// Update browser controls height.
-  ///
-  /*--cef()--*/
-  virtual void UpdateBrowserControlsHeight(int height, bool animate) = 0;
-  ///
-  /// Prefetch the resources required by the page, but will not execute js or
-  /// render the page.
-  ///
-  /*--cef()--*/
-  virtual void PrefetchPage(CefString& url,
-                            CefString& additionalHttpHeaders) = 0;
-
-  /* ---------- ohos_nweb_ex add begin --------- */
-  ///
-  /// Reload the current page with original url.
-  ///
-  /*--cef()--*/
-  virtual void ReloadOriginalUrl() = 0;
-
-  ///
-  /// Can save current page as a archive.
-  ///
-  /*--cef()--*/
-  virtual bool CanStoreWebArchive() = 0;
-
-  ///
-  /// Set user agent for current page.
-  ///
-  /*--cef()--*/
-  virtual void SetBrowserUserAgentString(const CefString& user_agent) = 0;
-
-  ///
-  /// Is loading to different document.
-  ///
-  /*--cef()--*/
-  virtual bool ShouldShowLoadingUI() = 0;
-
-  ///
-  /// Set force enable zoom.
-  ///
-  /*--cef()--*/
-  virtual void SetForceEnableZoom(bool forceEnableZoom) = 0;
-
-  ///
-  /// Whether force enable zoom had been enabled.
-  ///
-  /*--cef()--*/
-  virtual bool GetForceEnableZoom() = 0;
-
-  ///
-  /// Returns the NWeb Id.
-  ///
-  /*--cef()--*/
-  virtual int GetNWebId() = 0;
-
-  ///
-  /// Set whether the target_blank pop-up window is opened in the current tab.
-  ///
-  /*--cef()--*/
-  virtual void SetEnableBlankTargetPopupIntercept(
-      bool enableBlankTargetPopup) = 0;
-
-  ///
-  /// Whether automatically saving password had been enabled.
-  ///
-  /*--cef()--*/
-  virtual bool GetSavePasswordAutomatically() = 0;
-
-  ///
-  /// Set enable to allow automatically save password
-  ///
-  /*--cef()--*/
-  virtual void SetSavePasswordAutomatically(bool enable) = 0;
-
-  ///
-  /// save or upddate current page password
-  ///
-  /*--cef()--*/
-  virtual void SaveOrUpdatePassword(bool is_update) = 0;
-
-  ///
-  /// Whether saving password had been enabled.
-  ///
-  /*--cef()--*/
-  virtual bool GetSavePassword() = 0;
-
-  ///
-  /// Set enable to save password
-  ///
-  /*--cef()--*/
-  virtual void SetSavePassword(bool enable) = 0;
-
-  ///
-  /// Get security level for current page.
-  ///
-  /*--cef()--*/
-  virtual int GetSecurityLevel() = 0;
-
-  ///
-  /// Enable the ability to check website security risks.
-  ///
-  /*--cef()--*/
-  virtual void EnableSafeBrowsing(bool enable) = 0;
-
-  ///
-  /// Get whether checking website security risks is enabled.
-  ///
-  /*--cef()--*/
-  virtual bool IsSafeBrowsingEnabled() = 0;
-
-  ///
-  /// Enable the ability to intelligent tracking prevention, default disabled.
-  ///
-  /*--cef()--*/
-  virtual void EnableIntelligentTrackingPrevention(bool enable) = 0;
-
-  ///
-  /// Get whether intelligent tracking prevention is enabled.
-  ///
-  /*--cef()--*/
-  virtual bool IsIntelligentTrackingPreventionEnabled() = 0;
-
-  ///
-  /// Get whether Ads block is enabled.
-  ///
-  /*--cef()--*/
-  virtual bool IsAdsBlockEnabled() = 0;
-
-  ///
-  /// Get whether Ads block is enabled for current page.
-  ///
-  /*--cef()--*/
-  virtual bool IsAdsBlockEnabledForCurPage() = 0;
-
-  ///
-  /// Set enable to allow automatically save password
-  ///
-  /*--cef()--*/
-  virtual void EnableAdsBlock(bool enable) = 0;
-
-  ///
-  /// Set url trust list.
-  ///
-  /*--cef()--*/
-  virtual int SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList, CefString& detailErrMsg) = 0;
-
-  ///
-  /// Set url trust list.
-  ///
-  /*--cef()--*/
-  virtual void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) = 0;
-
-  ///
-  /// Set adblock switch
-  ///
-  /*--cef()--*/
-  virtual void SetAdBlockEnabledForSite(
-      bool is_adblock_enabled,
-      int main_frame_tree_node_id) = 0;
-
-  ///
-  /// Get window id.
-  ///
-  /*--cef()--*/
-  virtual uint32_t GetAcceleratedWidget(bool IsPopup) = 0;
-
-  /* ---------- ohos_nweb_ex add end --------- */
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual void DispatchBeforeUnload() = 0;
 };
 
 ///
@@ -620,6 +297,7 @@ class CefDownloadImageCallback : public virtual CefBaseRefCounted {
                                        CefRefPtr<CefImage> image) = 0;
 };
 
+#if BUILDFLAG(ARKWEB_PDF)
 ///
 /// Callback interface for CefBrowserHost::CreateToPDF. The methods of this
 /// class will be called on the browser process UI thread.
@@ -634,6 +312,22 @@ class CefPdfValueCallback : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnReceiveValue(const char* value, const long size) = 0;
+};
+#endif
+
+///
+/// callback for RegisterScreenCaptureDelegateListener().
+///
+/*--cef(source=client)--*/
+class CefScreenCaptureCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  /*--cef()--*/
+  virtual void OnStateChange(int32_t nweb_id,
+                             const CefString& session_id,
+                             int32_t code) = 0;
 };
 
 ///
@@ -689,35 +383,74 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
       CefRefPtr<CefRequestContext> request_context);
 
   ///
+  /// Returns the browser (if any) with the specified identifier.
+  ///
+  /*--cef()--*/
+  static CefRefPtr<CefBrowser> GetBrowserByIdentifier(int browser_id);
+
+  ///
   /// Returns the hosted browser object.
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefBrowser> GetBrowser() = 0;
 
   ///
-  /// Request that the browser close. The JavaScript 'onbeforeunload' event will
-  /// be fired. If |force_close| is false the event handler, if any, will be
-  /// allowed to prompt the user and the user can optionally cancel the close.
-  /// If |force_close| is true the prompt will not be displayed and the close
-  /// will proceed. Results in a call to CefLifeSpanHandler::DoClose() if the
-  /// event handler allows the close or if |force_close| is true. See
-  /// CefLifeSpanHandler::DoClose() documentation for additional usage
-  /// information.
+  /// Request that the browser close. Closing a browser is a multi-stage process
+  /// that may complete either synchronously or asynchronously, and involves
+  /// callbacks such as CefLifeSpanHandler::DoClose (Alloy style only),
+  /// CefLifeSpanHandler::OnBeforeClose, and a top-level window close handler
+  /// such as CefWindowDelegate::CanClose (or platform-specific equivalent). In
+  /// some cases a close request may be delayed or canceled by the user. Using
+  /// TryCloseBrowser() instead of CloseBrowser() is recommended for most use
+  /// cases. See CefLifeSpanHandler::DoClose() documentation for detailed usage
+  /// and examples.
+  ///
+  /// If |force_close| is false then JavaScript unload handlers, if any, may be
+  /// fired and the close may be delayed or canceled by the user. If
+  /// |force_close| is true then the user will not be prompted and the close
+  /// will proceed immediately (possibly asynchronously). If browser close is
+  /// delayed and not canceled the default behavior is to call the top-level
+  /// window close handler once the browser is ready to be closed. This default
+  /// behavior can be changed for Alloy style browsers by implementing
+  /// CefLifeSpanHandler::DoClose(). IsReadyToBeClosed() can be used to detect
+  /// mandatory browser close events when customizing close behavior on the
+  /// browser process UI thread.
   ///
   /*--cef()--*/
   virtual void CloseBrowser(bool force_close) = 0;
 
   ///
-  /// Helper for closing a browser. Call this method from the top-level window
-  /// close handler (if any). Internally this calls CloseBrowser(false) if the
-  /// close has not yet been initiated. This method returns false while the
-  /// close is pending and true after the close has completed. See
-  /// CloseBrowser() and CefLifeSpanHandler::DoClose() documentation for
-  /// additional usage information. This method must be called on the browser
-  /// process UI thread.
+  /// Helper for closing a browser. This is similar in behavior to
+  /// CLoseBrowser(false) but returns a boolean to reflect the immediate close
+  /// status. Call this method from a top-level window close handler such as
+  /// CefWindowDelegate::CanClose (or platform-specific equivalent) to request
+  /// that the browser close, and return the result to indicate if the window
+  /// close should proceed. Returns false if the close will be delayed
+  /// (JavaScript unload handlers triggered but still pending) or true if the
+  /// close will proceed immediately (possibly asynchronously). See
+  /// CloseBrowser() documentation for additional usage information. This method
+  /// must be called on the browser process UI thread.
   ///
   /*--cef()--*/
   virtual bool TryCloseBrowser() = 0;
+
+  ///
+  /// Returns true if the browser is ready to be closed, meaning that the close
+  /// has already been initiated and that JavaScript unload handlers have
+  /// already executed or should be ignored. This can be used from a top-level
+  /// window close handler such as CefWindowDelegate::CanClose (or
+  /// platform-specific equivalent) to distringuish between potentially
+  /// cancelable browser close events (like the user clicking the top-level
+  /// window close button before browser close has started) and mandatory
+  /// browser close events (like JavaScript `window.close()` or after browser
+  /// close has started in response to [Try]CloseBrowser()). Not completing the
+  /// browser close for mandatory close events (when this method returns true)
+  /// will leave the browser in a partially closed state that interferes with
+  /// proper functioning. See CloseBrowser() documentation for additional usage
+  /// information. This method must be called on the browser process UI thread.
+  ///
+  /*--cef()--*/
+  virtual bool IsReadyToBeClosed() = 0;
 
   ///
   /// Set whether the browser is focused.
@@ -744,6 +477,13 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual CefWindowHandle GetOpenerWindowHandle() = 0;
 
   ///
+  /// Retrieve the unique identifier of the browser that opened this browser.
+  /// Will return 0 for non-popup browsers.
+  ///
+  /*--cef()--*/
+  virtual int GetOpenerIdentifier() = 0;
+
+  ///
   /// Returns true if this browser is wrapped in a CefBrowserView.
   ///
   /*--cef()--*/
@@ -762,17 +502,39 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual CefRefPtr<CefRequestContext> GetRequestContext() = 0;
 
   ///
-  /// Get the current zoom level. The default zoom level is 0.0. This method can
-  /// only be called on the UI thread.
+  /// Returns true if this browser can execute the specified zoom command. This
+  /// method can only be called on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual bool CanZoom(cef_zoom_command_t command) = 0;
+
+  ///
+  /// Execute a zoom command in this browser. If called on the UI thread the
+  /// change will be applied immediately. Otherwise, the change will be applied
+  /// asynchronously on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual void Zoom(cef_zoom_command_t command) = 0;
+
+  ///
+  /// Get the default zoom level. This value will be 0.0 by default but can be
+  /// configured. This method can only be called on the UI thread.
+  ///
+  /*--cef()--*/
+  virtual double GetDefaultZoomLevel() = 0;
+
+  ///
+  /// Get the current zoom level. This method can only be called on the UI
+  /// thread.
   ///
   /*--cef()--*/
   virtual double GetZoomLevel() = 0;
 
   ///
   /// Change the zoom level to the specified value. Specify 0.0 to reset the
-  /// zoom level. If called on the UI thread the change will be applied
-  /// immediately. Otherwise, the change will be applied asynchronously on the
-  /// UI thread.
+  /// zoom level to the default. If called on the UI thread the change will be
+  /// applied immediately. Otherwise, the change will be applied asynchronously
+  /// on the UI thread.
   ///
   /*--cef()--*/
   virtual void SetZoomLevel(double zoomLevel) = 0;
@@ -804,7 +566,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /// Download the file at |url| using CefDownloadHandler.
   ///
-  /*--cef(optional_param=post_body)--*/
+  /*--cef()--*/
   virtual void StartDownload(const CefString& url) = 0;
 
   ///
@@ -822,7 +584,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void DownloadImage(const CefString& image_url,
                              bool is_favicon,
-                             uint32 max_image_size,
+                             uint32_t max_image_size,
                              bool bypass_cache,
                              CefRefPtr<CefDownloadImageCallback> callback) = 0;
 
@@ -856,8 +618,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void Find(const CefString& searchText,
                     bool forward,
                     bool matchCase,
-                    bool findNext,
-                    bool newSession) = 0;
+                    bool findNext) = 0;
 
   ///
   /// Cancel all searches that are currently going on.
@@ -881,16 +642,16 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                             const CefBrowserSettings& settings,
                             const CefPoint& inspect_element_at) = 0;
 
-#ifdef OHOS_DEVTOOLS
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
   ///
   /// Opend DevTools with frontend_browser.
   ///
   /*--cef()--*/
   virtual void ShowDevToolsWith(
-      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at) = 0;
-#endif // OHOS_DEVTOOLS
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///
   /// Explicitly close the associated DevTools browser, if any.
@@ -1013,38 +774,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void WasHidden(bool hidden) = 0;
-
-  ///
-  /// Notify the browser that it has been occluded or unoccluded. Layouting and
-  /// CefRenderHandler::OnPaint notification will stop when the browser is
-  /// occluded. This method is only used when window rendering is disabled.
-  ///
-  /*--cef()--*/
-  virtual void WasOccluded(bool occluded) = 0;
-
-  ///
-  /// Running and do something when the window show
-  ///
-  /*--cef()--*/
-  virtual void OnWindowShow() = 0;
-
-  ///
-  /// Running and do something when the window hide
-  ///
-  /*--cef()--*/
-  virtual void OnWindowHide() = 0;
-
-  ///
-  /// Running and do something when the render visible
-  ///
-  /*--cef()--*/
-  virtual void OnOnlineRenderToForeground() = 0;
-
-  ///
-  /// Send touch event list to the browser for a windowless browser.
-  ///
-  /*--cef()--*/
-  virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) = 0;
 
   ///
   /// Send a notification to the browser that the screen info has changed. The
@@ -1325,21 +1054,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
                                     const CefSize& max_size) = 0;
 
   ///
-  /// Returns the extension hosted in this browser or NULL if no extension is
-  /// hosted. See CefRequestContext::LoadExtension for details.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefExtension> GetExtension() = 0;
-
-  ///
-  /// Returns true if this browser is hosting an extension background script.
-  /// Background hosts do not have a window and are not displayable. See
-  /// CefRequestContext::LoadExtension for details.
-  ///
-  /*--cef()--*/
-  virtual bool IsBackgroundHost() = 0;
-
-  ///
   /// Set whether the browser's audio is muted.
   ///
   /*--cef()--*/
@@ -1352,786 +1066,123 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsAudioMuted() = 0;
 
-#if BUILDFLAG(IS_OHOS)
   ///
-  /// GetRootBrowserAccessibilityManager
+  /// Returns true if the renderer is currently in browser fullscreen. This
+  /// differs from window fullscreen in that browser fullscreen is entered using
+  /// the JavaScript Fullscreen API and modifies CSS attributes such as the
+  /// ::backdrop pseudo-element and :fullscreen pseudo-class. This method can
+  /// only be called on the UI thread.
   ///
   /*--cef()--*/
-  virtual void GetRootBrowserAccessibilityManager(void** manager) = 0;
+  virtual bool IsFullscreen() = 0;
 
   ///
-  /// Execute a string of JavaScript code, return result by callback
+  /// Requests the renderer to exit browser fullscreen. In most cases exiting
+  /// window fullscreen should also exit browser fullscreen. With Alloy
+  /// style this method should be called in response to a user action such as
+  /// clicking the green traffic light button on MacOS
+  /// (CefWindowDelegate::OnWindowFullscreenTransition callback) or pressing the
+  /// "ESC" key (CefKeyboardHandler::OnPreKeyEvent callback). With Chrome
+  /// style these standard exit actions are handled internally but
+  /// new/additional user actions can use this method. Set |will_cause_resize|
+  /// to true if exiting browser fullscreen will cause a view resize.
   ///
   /*--cef()--*/
-  virtual void ExecuteJavaScript(
-      const std::string& code,
-      CefRefPtr<CefJavaScriptResultCallback> callback,
-      bool extention) = 0;
+  virtual void ExitFullscreen(bool will_cause_resize) = 0;
 
   ///
-  /// Execute a string of JavaScript code, return result by callback
+  /// Returns true if a Chrome command is supported and enabled. Values for
+  /// |command_id| can be found in the cef_command_ids.h file. This method can
+  /// only be called on the UI thread. Only used with Chrome style.
   ///
   /*--cef()--*/
-  virtual void ExecuteJavaScriptExt(
-      const int fd,
-      const uint64 scriptLength,
-      CefRefPtr<CefJavaScriptResultCallback> callback,
-      bool extention) = 0;
+  virtual bool CanExecuteChromeCommand(int command_id) = 0;
 
   ///
-  /// Set native window from ohos rs
+  /// Execute a Chrome command. Values for |command_id| can be found in the
+  /// cef_command_ids.h file. |disposition| provides information about the
+  /// intended command target. Only used with Chrome style.
   ///
   /*--cef()--*/
-  virtual void SetNativeWindow(cef_native_window_t window) = 0;
+  virtual void ExecuteChromeCommand(
+      int command_id,
+      cef_window_open_disposition_t disposition) = 0;
 
   ///
-  /// Set web debugging access
+  /// Returns true if the render process associated with this browser is
+  /// currently unresponsive as indicated by a lack of input event processing
+  /// for at least 15 seconds. To receive associated state change notifications
+  /// and optionally handle an unresponsive render process implement
+  /// CefRequestHandler::OnRenderProcessUnresponsive. This method can only be
+  /// called on the UI thread.
   ///
   /*--cef()--*/
-  virtual void SetWebDebuggingAccess(bool isEnableDebug) = 0;
+  virtual bool IsRenderProcessUnresponsive() = 0;
 
   ///
-  /// Get web debugging access
+  /// Returns the runtime style for this browser (ALLOY or CHROME). See
+  /// cef_runtime_style_t documentation for details.
   ///
-  /*--cef()--*/
-  virtual bool GetWebDebuggingAccess() = 0;
-
-  ///
-  /// GetImageForContextNode
-  ///
-  /*--cef()--*/
-  virtual void GetImageForContextNode() = 0;
-
-  ///
-  /// GetImageFromCache
-  ///
-  /*--cef()--*/
-  virtual void GetImageFromCache(const CefString& url) = 0;
-
-  ///
-  /// ExitFullScreen
-  ///
-  /*--cef()--*/
-  virtual void ExitFullScreen() = 0;
-
-  ///
-  /// SetFocusOnWeb
-  ///
-  /*--cef()--*/
-  virtual void SetFocusOnWeb() = 0;
-
-  ///
-  /// UpdateLocale
-  ///
-  /*--cef()--*/
-  virtual void UpdateLocale(const CefString& locale) = 0;
-
-  ///
-  /// Returns the original url of the request.
-  ///
-  /*--cef()--*/
-  virtual CefString GetOriginalUrl() = 0;
-
-  ///
-  /// Set network status
-  ///
-  /*--cef()--*/
-  virtual void PutNetworkAvailable(bool available) = 0;
-
-  ///
-  /// Remove web cache
-  ///
-  /*--cef()--*/
-  virtual void RemoveCache(bool include_disk_files) = 0;
-
-  ///
-  /// Post task to ui thread.
-  ///
-  /*--cef()--*/
-  virtual void PostTaskToUIThread(CefRefPtr<CefTask> task) = 0;
-
-  ///
-  /// Set the virtual pixel ratio
-  ///
-  /*--cef()--*/
-  virtual void SetVirtualPixelRatio(float ratio) = 0;
-
-  ///
-  /// Get the virtual pixel ratio
-  ///
-  /*--cef()--*/
-  virtual float GetVirtualPixelRatio() = 0;
-
-  ///
-  /// Recompute the WebPreferences based on the current state of the
-  /// CefSettings, we will also call SetWebPreferences and send the updated
-  /// WebPreferences to all RenderViews by WebContents.
-  ///
-  /*--cef()--*/
-  virtual void SetWebPreferences(
-      const CefBrowserSettings& browser_settings) = 0;
-
-  ///
-  /// PutUserAgent
-  ///
-  /*--cef()--*/
-  virtual void PutUserAgent(const CefString& ua) = 0;
-
-  ///
-  /// DefaultUserAgent
-  ///
-  /*--cef()--*/
-  virtual CefString DefaultUserAgent() = 0;
-
-  ///
-  /// SetBackgroundColor
-  ///
-  /*--cef()--*/
-  virtual void SetBackgroundColor(int color) = 0;
-
-  ///
-  /// UpdateEasyListRules
-  ///
-  /*--cef()--*/
-  virtual void UpdateAdblockEasyListRules(long adBlockEasyListVersion) = 0;
-
-  ///
-  /// RegisterArkJSfunction
-  ///
-  /*--cef()--*/
-  virtual void RegisterArkJSfunction(const CefString& object_name,
-                                     const std::vector<CefString>& method_list,
-                                     const std::vector<CefString>& async_method_list,
-                                     const int32_t object_id,
-                                     const CefString& permission) = 0;
-
-  ///
-  /// UnregisterArkJSfunction
-  ///
-  /*--cef(optional_param=method_list)--*/
-  virtual void UnregisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) = 0;
-
-  ///
-  /// CallH5Function
-  ///
-  /*--cef()--*/
-  virtual void CallH5Function(int32_t routing_id,
-                              int32_t h5_object_id,
-                              const CefString& h5_method_name,
-                              const std::vector<CefRefPtr<CefValue>>& args) = 0;
-
-  ///
-  /// Saves the current view as a web archive.
-  ///
-  /*--cef()--*/
-  virtual void StoreWebArchive(
-      const CefString& base_name,
-      bool auto_name,
-      CefRefPtr<CefStoreWebArchiveResultCallback> callback) = 0;
-
-  ///
-  /// Notify the browser that the widget has been resized because of virtual
-  /// keyboard.
-  ///
-  /*--cef()--*/
-  virtual void WasKeyboardResized() = 0;
-
-  ///
-  /// Set if lower the frame rate.
-  ///
-  /*--cef()--*/
-  virtual void SetEnableLowerFrameRate(bool enabled) = 0;
-  /* ---------- ohos webview add end --------- */
-
-  ///
-  /// Gets the title for the current page.
-  ///
-  /*--cef()--*/
-  virtual CefString Title() = 0;
-
-  ///
-  /// Create a message channel, which include two message ports.
-  ///
-  /*--cef()--*/
-  virtual void CreateWebMessagePorts(std::vector<CefString>& ports) = 0;
-
-  ///
-  /// Posts a MessageEvent to the main frame.
-  ///
-  /*--cef()--*/
-  virtual void PostWebMessage(CefString& message,
-                              std::vector<CefString>& ports,
-                              CefString& targetUri) = 0;
-
-  ///
-  /// Close the web message port.
-  ///
-  /*--cef()--*/
-  virtual void ClosePort(CefString& port_handle) = 0;
-
-  ///
-  /// Destroy all web message ports.
-  ///
-  /*--cef()--*/
-  virtual void DestroyAllWebMessagePorts() = 0;
-
-  ///
-  /// Post a message to the port.
-  ///
-  /*--cef()--*/
-  virtual void PostPortMessage(const CefString& port_handle,
-                               CefRefPtr<CefValue> message) = 0;
-
-  ///
-  /// Set the callback of the port.
-  ///
-  /*--cef()--*/
-  virtual void SetPortMessageCallback(
-      const CefString& port_handle,
-      CefRefPtr<CefWebMessageReceiver> callback) = 0;
-
-  ///
-  /// Gets the latest hitdata
-  ///
-  /*--cef()--*/
-  virtual void GetHitData(int& type, CefString& extra_data) = 0;
-
-  ///
-  /// Set the inital page scale
-  ///
-  /*--cef()--*/
-  virtual void SetInitialScale(float scale) = 0;
-
-  ///
-  /// Gets the progress for the current page.
-  ///
-  /*--cef()--*/
-  virtual int PageLoadProgress() = 0;
-
-  ///
-  /// Gets the progress for the current page.
-  ///
-  /*--cef()--*/
-  virtual float Scale() = 0;
-
-  ///
-  /// Loads the given data into this WebView, using baseUrl as the base URL for
-  /// the content. The base URL is used both to resolve relative URLs and when
-  /// applying JavaScript's same origin policy. The historyUrl is used for the
-  /// history entry.
-  /// optional_param=baseUrl, optional_param=data, optional_param=mimeType,
-  /// optional_param=encoding, optional_param=historyUrl
-  ///
-  /*--cef(optional_param=baseUrl, optional_param=data, optional_param=mimeType,
-          optional_param=encoding, optional_param=historyUrl)--*/
-  virtual void LoadWithDataAndBaseUrl(const CefString& baseUrl,
-                                      const CefString& data,
-                                      const CefString& mimeType,
-                                      const CefString& encoding,
-                                      const CefString& historyUrl) = 0;
-
-  ///
-  /// Loads the given data into this WebView
-  /// optional_param=data, optional_param=mimeType, optional_param=encoding,
-  ///
-  /*--cef(optional_param=data, optional_param=mimeType,
-          optional_param=encoding)--*/
-  virtual void LoadWithData(const CefString& data,
-                            const CefString& mimeType,
-                            const CefString& encoding) = 0;
-
-  ///
-  /// add visited url.
-  ///
-  /*--cef(optional_param=urls)--*/
-  virtual void AddVisitedLinks(const std::vector<CefString>& urls) {}
-
-  ///
-  /// Resume download after interrupted.
-  ///
-  /*--cef(optional_param=etag,optional_param=last_modified,optional_param=received_slices_string)--*/
-  virtual void ResumeDownload(const CefString& url,
-                              const CefString& full_path,
-                              int64 received_bytes,
-                              int64 total_bytes,
-                              const CefString& etag,
-                              const CefString& mime_type,
-                              const CefString& last_modified,
-                              const CefString& received_slices_string) = 0;
-  ///
-  ///  Set the audio resume interval of the broswer.
-  ///
-  /*--cef()--*/
-  virtual void SetAudioResumeInterval(int resumeInterval) = 0;
-
-  ///
-  ///  Set whether the browser's audio is exclusive.
-  ///
-  /*--cef()--*/
-  virtual void SetAudioExclusive(bool audioExclusive) = 0;
-
-  ///
-  /// Close fullScreen video.
-  ///
-  /*--cef()--*/
-  virtual void CloseMedia() = 0;
-
-  ///
-  /// Stop all audio and video playback on the web page.
-  ///
-  /*--cef()--*/
-  virtual void StopMedia() = 0;
-
-  ///
-  /// Restart playback of all audio and video on the web page.
-  ///
-  /*--cef()--*/
-  virtual void ResumeMedia() = 0;
-
-  ///
-  /// Pause all audio and video playback on the web page.
-  ///
-  /*--cef()--*/
-  virtual void PauseMedia() = 0;
-
-  ///
-  /// View the playback status of all audio and video on the web page.
-  ///
-  /*--cef()--*/
-  virtual int GetMediaPlaybackState() = 0;
-
-  ///
-  /// Scroll page up or down
-  ///
-  /*--cef()--*/
-  virtual void ScrollPageUpDown(bool is_up,
-                                bool is_half,
-                                float view_height) = 0;
-
-  ///
-  /// Get web history state
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefBinaryValue> GetWebState() = 0;
-
-  ///
-  /// Restore web history state
-  ///
-  /*--cef()--*/
-  virtual bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) = 0;
-
-  ///
-  /// Scroll to the position.
-  ///
-  /*--cef()--*/
-  virtual void ScrollTo(float x, float y) = 0;
-
-  ///
-  /// Scroll by the delta distance.
-  ///
-  /*--cef()--*/
-  virtual void ScrollBy(float delta_x, float delta_y) = 0;
-
-  ///
-  /// Slide Scroll by the speed.
-  ///
-  /*--cef()--*/
-  virtual void SlideScroll(float vx, float vy) = 0;
-
-  ///
-  /// Set whether webview can access files
-  ///
-  /*--cef()--*/
-  virtual void SetFileAccess(bool falg) = 0;
-
-  ///
-  /// Set whether webview can access network
-  ///
-  /*--cef()--*/
-  virtual void SetBlockNetwork(bool falg) = 0;
-
-  ///
-  /// Set the cache mode of webview
-  ///
-  /*--cef()--*/
-  virtual void SetCacheMode(int falg) = 0;
-
-  ///
-  /// Set should frame submission before draw
-  ///
-  /*--cef()--*/
-  virtual void SetShouldFrameSubmissionBeforeDraw(bool should) = 0;
-
-  ///
-  /// Set zoom with the dela facetor
-  ///
-  /*--cef()--*/
-  virtual void ZoomBy(float delta, float width, float height) = 0;
-
-  ///
-  /// Set the window id of the UI framework
-  ///
-  /*--cef()--*/
-  virtual void SetWindowId(int window_id, int nweb_id) = 0;
-
-  ///
-  /// Set the token of the UI framework
-  ///
-  /*--cef()--*/
-  virtual void SetToken(void* token) = 0;
-
-  ///
-  /// Set the property values for width, height, and keyboard height
-  ///
-  /*--cef()--*/
-  virtual void SetVirtualKeyBoardArg(int32_t width,
-                                     int32_t height,
-                                     double keyboard) = 0;
-
-  ///
-  /// Set the virtual keyboard to override the web status
-  ///
-  /*--cef()--*/
-  virtual bool ShouldVirtualKeyboardOverlay() = 0;
-
-  ///
-  /// JavaScriptOnDocumentStart
-  ///
-  /*--cef()--*/
-  virtual void JavaScriptOnDocumentStart(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
-
-  ///
-  /// RemoveJavaScriptOnDocumentStart
-  ///
-  /*--cef()--*/
-  virtual void RemoveJavaScriptOnDocumentStart() = 0;
-
-  ///
-  /// JavaScriptOnDocumentEnd
-  ///
-  /*--cef()--*/
-  virtual void JavaScriptOnDocumentEnd(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
-
-  ///
-  /// RemoveJavaScriptOnDocumentEnd
-  ///
-  /*--cef()--*/
-  virtual void RemoveJavaScriptOnDocumentEnd() = 0;
-
-  ///
-  /// Set the draw rect
-  ///
-  /*--cef()--*/
-  virtual void SetDrawRect(int x, int y, int width, int height) = 0;
-
-  ///
-  /// Set the draw mode
-  ///
-  /*--cef()--*/
-  virtual void SetDrawMode(int mode) = 0;
-
-  ///
-  /// Create the Web print document adapter of the UI framework
-  ///
-  /*--cef()--*/
-  virtual void CreateWebPrintDocumentAdapter(
-      const CefString& jobName,
-      void** webPrintDocumentAdapter) = 0;
-
-  ///
-  /// Set the over-scroll mode of web
-  ///
-  /*--cef()--*/
-  virtual void SetOverscrollMode(int mode) = 0;
-
-
-  ///
-  /// Discard a webview window
-  ///
-  /*--cef()--*/
-  virtual bool Discard() = 0;
-
-  ///
-  /// Restore the discarded webview window
-  ///
-  /*--cef()--*/
-  virtual bool Restore() = 0;
-
-  ///
-  /// Change the zoom factor for browser zoom.
-  /// If called on the UI thread the change will be applied immediately.
-  /// Otherwise, the change will be applied asynchronously on the UI thread.
-  ///
-  /*--cef()--*/
-  virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
-
-  ///
-  /// Get the top controls offset.
-  ///
-  /*--cef()--*/
-  virtual int GetTopControlsOffset() = 0;
-
-  ///
-  /// Get the shrink viewport height.
-  ///
-  /*--cef()--*/
-  virtual int GetShrinkViewportHeight() = 0;
-
-  ///
-  /// Set background print enable.
-  ///
-  /*--cef()--*/
-  virtual void SetPrintBackground(bool enable) = 0;
-
-  ///
-  /// Get whether print background.
-  ///
-  /*--cef()--*/
-  virtual bool GetPrintBackground() = 0;
-
-  ///
-  /// set Scrollable
-  ///
-  /*--cef()--*/
-  virtual void SetScrollable(bool enable, int scrollType) = 0;
-
-  ///
-  ///  Start current camera.
-  ///
-  /*--cef()--*/
-  virtual void StartCamera() = 0;
-
-  ///
-  ///  Stop current camera.
-  ///
-  /*--cef()--*/
-  virtual void StopCamera() = 0;
-
-  ///
-  ///  Close current camera.
-  ///
-  /*--cef()--*/
-  virtual void CloseCamera() = 0;
-
-  ///
-  /// Get the last javascript proxy calling frame url.
-  ///
-  /*--cef()--*/
-  virtual CefString GetLastJavascriptProxyCallingFrameUrl() = 0;
-
-  ///
-  ///  Set NWebID.
-  ///
-  /*--cef()--*/
-  virtual void SetNWebId(int nWebId) = 0;
-
-  ///
-  /// get pendingSizeStatus.
-  ///
-  /*--cef()--*/
-  virtual bool GetPendingSizeStatus() = 0;
-
-  ///
-  ///  precompile javascript and generate code cache.
-  ///
-  /*--cef()--*/
-  virtual void PrecompileJavaScript(
-      const std::string& url,
-      const std::string& script,
-      CefRefPtr<CefCacheOptions> cacheOptions,
-      CefRefPtr<CefPrecompileCallback> callback) = 0;
-
-  ///
-  /// SetWakeLockHandler.
-  ///
-  /*--cef(optional_param=callback)--*/
-  virtual void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) = 0;
-
-  ///
-  /// Get CefDownloadItem by download_item_id.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) = 0;
-
-  ///
-  ///  Notify browser host needs reload when the render process terminated.
-  ///
-  /*--cef()--*/
-  virtual void NotifyNeedsReload(bool needs_reload) = 0;
-
-  ///
-  ///  Return true if needs reload page, or false if nees not reload.
-  ///
-  /*--cef()--*/
-  virtual bool NeedsReload() = 0;
-
-  ///
-  /// Terminate render process
-  ///
-  /*--cef()--*/
-  virtual bool TerminateRenderProcess() = 0;
-
-  ///
-  /// RegisterNativeJSProxy
-  ///
-  /*--cef()--*/
-  virtual void RegisterNativeJSProxy(const CefString& object_name,
-                                     const std::vector<CefString>& method_list,
-                                     const int32_t object_id,
-                                     bool is_async,
-                                     const CefString& permission) = 0;
-
-  ///
-  /// SendTouchpadFlingEvent
-  ///
-  /*--cef()--*/
-  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) = 0;
-
-  ///
-  /// Set the fit content mode
-  ///
-  /*--cef()--*/
-  virtual void SetFitContentMode(int mode) = 0;
-
-  ///
-  /// update draw_rect state.
-  ///
-  /*--cef()--*/
-  virtual void UpdateDrawRect() = 0;
-
-  ///
-  /// Called when text is selected.
-  ///
-  /*--cef()--*/
-  virtual void OnTextSelected(bool flag) = 0;
-
-  ///
-  /// Get page scale factor.
-  ///
-  /*--cef()--*/
-  virtual float GetPageScaleFactor() = 0;
-
-  ///
-  /// WebPageSnapshot, return result by callback
-  ///
-  /*--cef()--*/
-  virtual bool WebPageSnapshot(const char* id,
-                               int width,
-                               int height,
-                               cef_web_snapshot_callback_t callback) = 0;
-
-  ///
-  /// Advance focus for IME to the browser.
-  ///
-  /*--cef()--*/
-  virtual void AdvanceFocusForIME(int focusType) = 0;
-
-  ///
-  /// Scroll to the position with anime.
-  ///
-  /*--cef()--*/
-  virtual void ScrollToWithAnime(float x, float y, int32_t duration) = 0;
-
-  ///
-  /// Scroll by the delta with anime.
-  ///
-  /*--cef()--*/
-  virtual void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) = 0;
-
-  ///
-  /// SetNativeEmbedMode.
-  ///
-  /*--cef()--*/
-  virtual void SetNativeEmbedMode(bool flag) = 0;
-
-#if defined(OHOS_GET_SCROLL_OFFSET)
-  ///
-  /// Get the current scroll offset of the webpage.
-  ///
-  /*--cef()--*/
-  virtual void GetScrollOffset(float* offset_x, float* offset_y) = 0;
+  /*--cef(default_retval=CEF_RUNTIME_STYLE_DEFAULT)--*/
+  virtual cef_runtime_style_t GetRuntimeStyle() = 0;
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   ///
-  /// Get the current overscroll offset of the webpage.
+  /// SetPopupWindow.
   ///
   /*--cef()--*/
-  virtual void GetOverScrollOffset(float* offset_x, float* offset_y) = 0;
+  virtual void SetPopupWindow(cef_native_window_t window) = 0;
 #endif
-#endif  // BUILDFLAG(IS_OHOS)
 
-  ///
-  /// OnSafeInsetsChange
-  ///
-  /*--cef()--*/
-  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom) = 0;
-
-  ///
-  /// Notify for next touch move event.
-  ///
-  /*--cef()--*/
-  virtual void NotifyForNextTouchEvent() = 0;
-
-  ///
-  /// Set grant file access dirs.
-  ///
-  /*--cef()--*/
-  virtual void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) = 0;
-
-  ///
-  /// Set the callback of the autofill event.
-  ///
-  /*--cef()--*/
-  virtual void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) = 0;
-
-  ///
-  /// Fill autofill data.
-  ///
-  /*--cef()--*/
-  virtual void FillAutofillData(CefRefPtr<CefValue> message) = 0;
-
-  ///
-  /// ScrollFocusedEditableNodeIntoView.
-  ///
-  /*--cef()--*/
-  virtual void ScrollFocusedEditableNodeIntoView() = 0;
-
-  ///
-  /// Process autofill cancel content.
-  ///
-  /*--cef()--*/
-  virtual void ProcessAutofillCancel(const std::string& fillContent) = 0;
-
-  ///
-  /// request autofill from IMF event.
-  ///
-  /*--cef()--*/
-  virtual void AutoFillWithIMFEvent(bool is_username,
-                                    bool is_other_account,
-                                    bool is_new_password,
-                                    const std::string& content) = 0;
-
+#if BUILDFLAG(ARKWEB_PDF)
   ///
   /// Create pdf data stream.
   ///
   /*--cef()--*/
   virtual void CreateToPDF(const CefPdfPrintSettings& settings,
                            CefRefPtr<CefPdfValueCallback> callback) = 0;
+#endif
   ///
-  /// SetPopupWindow.
+  /// set video assistant enable.
   ///
   /*--cef()--*/
-  virtual void SetPopupWindow(cef_native_window_t window) = 0;
+  virtual void EnableVideoAssistant(bool enable) = 0;
 
   ///
-  /// Set zoom with the dela facetor
+  /// execute video assistant function.
   ///
   /*--cef()--*/
-  virtual void ScaleGestureChangeV2(int type, float scale, float originScale, float width, float height) = 0;
+  virtual void ExecuteVideoAssistantFunction(const CefString& cmdId) = 0;
+
+#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
+  ///
+  /// Get whether it is the iframe.
+  ///
+  /*--cef()--*/
+  virtual bool IsIframe() = 0;
+
+  ///
+  /// fresh focused frame for context menu.
+  ///
+  /*--cef()--*/
+  virtual void ReloadFocusedFrame() = 0;
+#endif
+
+  ///
+  ///  Close current screen capture.
+  ///
+  /*--cef()--*/
+  virtual void StopScreenCapture(int32_t nweb_id,
+                                 const CefString& session_id) = 0;
+
+  ///
+  ///  Register screen capture listener.
+  ///
+  /*--cef()--*/
+  virtual void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) = 0;
 };
+
+#include "ohos_cef_ext/include/arkweb_browser_ext.h"
+
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/net/http_header_utils.h"
+#include "cef/libcef/common/net/http_header_utils.h"
 
 #include <algorithm>
 
@@ -17,10 +17,9 @@ namespace HttpHeaderUtils {
 std::string GenerateHeaders(const HeaderMap& map) {
   std::string headers;
 
-  for (HeaderMap::const_iterator header = map.begin(); header != map.end();
-       ++header) {
-    const CefString& key = header->first;
-    const CefString& value = header->second;
+  for (const auto& header : map) {
+    const CefString& key = header.first;
+    const CefString& value = header.second;
 
     if (!key.empty()) {
       // Delimit with "\r\n".

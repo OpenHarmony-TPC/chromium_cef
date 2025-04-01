@@ -8,23 +8,22 @@
 
 #include <memory>
 
-#include "libcef/browser/frame_host_impl.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/callback_list.h"
 #include "base/observer_list.h"
-#include "content/public/browser/notification_observer.h"
-#include "content/public/browser/notification_registrar.h"
+#include "cef/libcef/browser/frame_host_impl.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "libcef/browser/icon_helper.h"
-#endif
+#if BUILDFLAG(ARKWEB_FAVICON)
+#include "ohos_cef_ext/libcef/browser/arkweb_icon_helper_ext.h"
+#endif  // BUILDFLAG(ARKWEB_FAVICON)
 
 class CefBrowser;
 class CefBrowserInfo;
 class CefBrowserPlatformDelegate;
 class CefClient;
+class ArkWebBrowserContentsDelegateExt;
 
 // Flags that represent which states have changed.
 enum class CefBrowserContentsState : uint8_t {
@@ -50,12 +49,20 @@ constexpr inline CefBrowserContentsState operator|(
 }
 
 // Tracks state and executes client callbacks based on WebContents callbacks.
-// Includes functionality that is shared by the alloy and chrome runtimes.
-// Only accessed on the UI thread.
+// Includes functionality that is shared by Alloy and Chrome styles. Only
+// accessed on the UI thread.
 class CefBrowserContentsDelegate : public content::WebContentsDelegate,
-                                   public content::WebContentsObserver,
-                                   public content::NotificationObserver {
+                                   public content::WebContentsObserver {
  public:
+  virtual ArkWebBrowserContentsDelegateExt*
+  AsArkWebBrowserContentsDelegateExt() {
+    return nullptr;
+  }
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual void OnRefreshAccessedHistoryEx(CefRefPtr<CefFrame> frame,
+                                          const GURL& url,
+                                          bool isReload) {}
+#endif
   using State = CefBrowserContentsState;
 
   // Interface to implement for observers that wish to be informed of changes
@@ -70,7 +77,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
     virtual void OnWebContentsDestroyed(content::WebContents* web_contents) = 0;
 
    protected:
-    ~Observer() override {}
+    ~Observer() override = default;
   };
 
   explicit CefBrowserContentsDelegate(
@@ -87,10 +94,15 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
 
-  // WebContentsDelegate methods:
-  content::WebContents* OpenURLFromTab(
+  // Same as OpenURLFromTab but only taking |navigation_handle_callback|
+  // if the return value is non-nullptr.
+  content::WebContents* OpenURLFromTabEx(
       content::WebContents* source,
-      const content::OpenURLParams& params) override;
+      const content::OpenURLParams& params,
+      base::OnceCallback<void(content::NavigationHandle&)>&
+          navigation_handle_callback);
+
+  // WebContentsDelegate methods:
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
@@ -108,21 +120,12 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                    base::OnceCallback<void(bool)> callback) override;
   content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
       content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool HandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-
-#if BUILDFLAG(IS_OHOS)
-  void RequestToLockMouse(content::WebContents* web_contents,
-                          bool user_gesture,
-                          bool last_unlocked_by_target) override;
-  void LostMouseLock() override;
-  void UnlockMouse();
-
-  // Shows the repost form confirmation dialog box.
-  void ShowRepostFormWarningDialog(content::WebContents* source) override;
-#endif
+      const input::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(content::WebContents* source,
+                           const input::NativeWebKeyboardEvent& event) override;
+  void DraggableRegionsChanged(
+      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
+      content::WebContents* contents) override;
 
   // WebContentsObserver methods:
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
@@ -158,32 +161,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void OnFocusChangedInPage(content::FocusedNodeDetails* details) override;
   void WebContentsDestroyed() override;
 
-#if defined(OHOS_WPT)
-  void DidStartNavigation(content::NavigationHandle* navigation) override;
-#endif  // defined(OHOS_WPT)
-
-#if defined(OHOS_FAVICON)
-  void DocumentOnLoadCompletedInPrimaryMainFrame() override;
-#endif  // defined(OHOS_FAVICON)
-
-#if defined(OHOS_NAVIGATION)
-  void NavigationEntryCommitted(
-      const content::LoadCommittedDetails& load_details) override;
-#endif  // defined(OHOS_NAVIGATION)
-
-#if defined(OHOS_DISPLAY_CUTOUT)
-  void ViewportFitChanged(blink::mojom::ViewportFit value) override;
-#endif
-
-  // NotificationObserver methods.
-  void Observe(int type,
-               const content::NotificationSource& source,
-               const content::NotificationDetails& details) override;
-
   // Accessors for state information. Changes will be signaled to
   // Observer::OnStateChanged.
   bool is_loading() const { return is_loading_; }
-#if !BUILDFLAG(IS_OHOS)
+#if !BUILDFLAG(ARKWEB_NETWORK_BASE)
   bool can_go_back() const { return can_go_back_; }
   bool can_go_forward() const { return can_go_forward_; }
 #endif
@@ -195,14 +176,15 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   // TODO(cef): Make this private if/when possible.
   bool OnSetFocus(cef_focus_source_t source);
 
-#if BUILDFLAG(IS_OHOS)
-  void InitIconHelper();
-#endif
+#if BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
+  friend class ArkWebBrowserContentsDelegateExt;
+#endif  // BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
 
  private:
   CefRefPtr<CefClient> client() const;
   CefRefPtr<CefBrowser> browser() const;
   CefBrowserPlatformDelegate* platform_delegate() const;
+  friend class ArkWebBrowserContentsDelegateExt;
 
   // Helpers for executing client callbacks.
   void OnAddressChange(const GURL& url);
@@ -214,45 +196,20 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   void OnLoadError(CefRefPtr<CefFrame> frame, const GURL& url, int error_code);
   void OnTitleChange(const std::u16string& title);
   void OnFullscreenModeChange(bool fullscreen
-#if defined(OHOS_MEDIA)
+#if BUILDFLAG(ARKWEB_MEDIA)
                               ,
                               const CefSize& video_natural_size
-#endif  // defined(OHOS_MEDIA)
+#endif  // BUILDFLAG(ARKWEB_MEDIA)
   );
 
   void OnStateChanged(State state_changed);
 
-#if BUILDFLAG(IS_OHOS)
-  void OnLoadError(CefRefPtr<CefRequest> request,
-                   bool is_in_main_frame,
-                   bool has_user_gesture,
-                   int error_code);
-  void OnOldPageNoLongerRendered(const GURL& url, bool success);
-  void OnRefreshAccessedHistory(CefRefPtr<CefFrame> frame,
-                                const GURL& url,
-                                bool isReload);
-
-  // Returns true if the mouse is locked.
-  bool IsMouseLocked() const;
-
-  // Returns true if the mouse was locked and no notification should be
-  // displayed to the user.
-  bool IsMouseLockedSilently() const;
-
-  void SetTabWithExclusiveAccess(content::WebContents* tab);
-
-  bool HandleUserKeyEvent(const content::NativeWebKeyboardEvent& event);
-#endif
-
   scoped_refptr<CefBrowserInfo> browser_info_;
-
   bool is_loading_ = false;
-
-#if !BUILDFLAG(IS_OHOS)
+#if !BUILDFLAG(ARKWEB_NETWORK_BASE)
   bool can_go_back_ = false;
   bool can_go_forward_ = false;
 #endif
-
   bool has_document_ = false;
   bool is_fullscreen_ = false;
 
@@ -265,33 +222,15 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   // Observers that want to be notified of changes to this object.
   base::ObserverList<Observer> observers_;
 
-  // Used for managing notification subscriptions.
-  std::unique_ptr<content::NotificationRegistrar> registrar_;
-
   // True if the focus is currently on an editable field on the page.
   bool focus_on_editable_field_ = false;
-
-#if BUILDFLAG(IS_OHOS)
-  // Store web site icon.
-  CefRefPtr<IconHelper> icon_helper_;
-
-  enum MouseLockState {
-    MOUSELOCK_UNLOCKED,
-    // Mouse has been locked.
-    MOUSELOCK_LOCKED,
-    // Mouse has been locked silently, with no notification to user.
-    MOUSELOCK_LOCKED_SILENTLY
-  };
-
-  MouseLockState mouse_lock_state_;
-
-  // Timestamp when the user last successfully escaped from a lock request.
-  base::TimeTicks last_user_escape_time_;
-
-  content::WebContents* tab_with_exclusive_access_ = nullptr;
-
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
 #endif
+#if BUILDFLAG(ARKWEB_FAVICON)
+  // Store web site icon.
+  CefRefPtr<IconHelper> icon_helper_;
+#endif  // BUILDFLAG(ARKWEB_FAVICON)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_H_

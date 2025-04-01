@@ -2,12 +2,14 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/zip_reader_impl.h"
+#include "cef/libcef/browser/zip_reader_impl.h"
+
 #include <time.h>
+
 #include "base/logging.h"
 #include "base/notreached.h"
 #include "base/time/time.h"
-#include "include/cef_stream.h"
+#include "cef/include/cef_stream.h"
 
 // Static functions
 
@@ -78,12 +80,7 @@ int ZCALLBACK zlib_error_callback OF((voidpf opaque, voidpf stream)) {
 }  // namespace
 
 CefZipReaderImpl::CefZipReaderImpl()
-    : supported_thread_id_(base::PlatformThread::CurrentId()),
-      reader_(nullptr),
-      has_fileopen_(false),
-      has_fileinfo_(false),
-      filesize_(0),
-      filemodified_(0) {}
+    : supported_thread_id_(base::PlatformThread::CurrentId()) {}
 
 CefZipReaderImpl::~CefZipReaderImpl() {
   if (reader_ != nullptr) {
@@ -185,7 +182,7 @@ CefString CefZipReaderImpl::GetFileName() {
   return filename_;
 }
 
-int64 CefZipReaderImpl::GetFileSize() {
+int64_t CefZipReaderImpl::GetFileSize() {
   if (!VerifyContext() || !GetFileInfo()) {
     return -1;
   }
@@ -244,7 +241,7 @@ int CefZipReaderImpl::ReadFile(void* buffer, size_t bufferSize) {
   return unzReadCurrentFile(reader_, buffer, bufferSize);
 }
 
-int64 CefZipReaderImpl::Tell() {
+int64_t CefZipReaderImpl::Tell() {
   if (!VerifyContext() || !has_fileopen_) {
     return -1;
   }
@@ -270,7 +267,7 @@ bool CefZipReaderImpl::GetFileInfo() {
   memset(&file_info, 0, sizeof(file_info));
 
   if (unzGetCurrentFileInfo(reader_, &file_info, file_name, sizeof(file_name),
-                            NULL, 0, NULL, 0) != UNZ_OK) {
+                            nullptr, 0, nullptr, 0) != UNZ_OK) {
     return false;
   }
 

@@ -6,20 +6,17 @@
 #define CEF_LIBCEF_BROWSER_REQUEST_CONTEXT_IMPL_H_
 #pragma once
 
-#include "include/cef_request_context.h"
-#include "libcef/browser/adsblock_manager_impl.h"
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/media_router/media_router_impl.h"
-#include "libcef/browser/net_service/cookie_manager_impl.h"
-#include "libcef/browser/thread_util.h"
-
-#if BUILDFLAG(IS_OHOS)
+#include "base/memory/raw_ptr.h"
+#include "cef/include/cef_request_context.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/media_router/media_router_impl.h"
+#include "cef/libcef/browser/net_service/cookie_manager_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/ohos_cef_ext/libcef/browser/adsblock_manager_impl.h"
 #include "libcef/browser/net_database/cef_data_base_impl.h"
-#include "libcef/browser/storage/web_storage_impl.h"
-#endif
 
-#if defined(OHOS_INCOGNITO_MODE)
-#include "libcef/browser/net_service/incognito_cookie_manager_ohos_impl.h"
+#if BUILDFLAG(ARKWEB_WEBSTORAGE)
+#include "cef/ohos_cef_ext/libcef/browser/storage/web_storage_impl.h"
 #endif
 
 namespace content {
@@ -43,7 +40,7 @@ class CefRequestContextImpl : public CefRequestContext {
   static CefRefPtr<CefRequestContextImpl> CreateGlobalRequestContext(
       const CefRequestContextSettings& settings);
 
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   // Creates the singleton global RequestContext in incognito mode. Called
   // from AlloyBrowserMainParts::PreMainMessageLoopRun.
   static CefRefPtr<CefRequestContextImpl> CreateGlobalOTRRequestContext(
@@ -54,14 +51,32 @@ class CefRequestContextImpl : public CefRequestContext {
   // Will return the global context if |request_context| is NULL.
   static CefRefPtr<CefRequestContextImpl> GetOrCreateForRequestContext(
       CefRefPtr<CefRequestContext> request_context
-#if defined(OHOS_INCOGNITO_MODE)
-      , bool incognito_mode = false
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+      ,
+      bool incognito_mode = false
 #endif
-      );
+  );
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+  bool IsOffTheRecord() { return config_.settings.incognito_mode; }
+#endif
+  // Returns a CefRequestContextImpl for the specified |browser_context| and
+  // optional |handler|. If |handler| is nullptr, and a CefRequestContextImpl
+  // without a handler currently exists for |browser_context|, then that
+  // existing CefRequestContextImpl will be returned. Otherwise, a new
+  // CefRequestContextImpl will be created with the specified |handler|. Must be
+  // called on the UI thread.
+  static CefRefPtr<CefRequestContextImpl> GetOrCreateForBrowserContext(
+      CefBrowserContext* browser_context,
+      CefRefPtr<CefRequestContextHandler> handler);
 
-#if defined(OHOS_INCOGNITO_MODE)
-bool IsOffTheRecord() { return config_.incognito_mode; }
-#endif
+  // Returns the BrowserContext for the specified |request_context|. Will return
+  // the global BrowserContext if |request_context| is NULL.
+  static content::BrowserContext* GetBrowserContext(
+      CefRefPtr<CefRequestContext> request_context);
+
+  // Returns the Profile for the specified |request_context|. Will return the
+  // global Profile if |request_context| is NULL.
+  static Profile* GetProfile(CefRefPtr<CefRequestContext> request_context);
 
   // Verify that the browser context can be directly accessed (e.g. on the UI
   // thread and initialized).
@@ -92,8 +107,14 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
   CefString GetCachePath() override;
   CefRefPtr<CefCookieManager> GetCookieManager(
       CefRefPtr<CefCompletionCallback> callback) override;
+#if BUILDFLAG(ARKWEB_COOKIE)
+  CefRefPtr<CefCookieManagerExt> GetCookieManagerExt(
+      bool support_incognito,
+      CefRefPtr<CefCompletionCallback> callback) override;
+#endif  // BUILDFLAG(ARKWEB_COOKIE)
   CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
       CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefDataBase> GetDataBase() override;
   bool RegisterSchemeHandlerFactory(
       const CefString& scheme_name,
       const CefString& domain_name,
@@ -109,60 +130,68 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
                      CefString& error) override;
   void ClearCertificateExceptions(
       CefRefPtr<CefCompletionCallback> callback) override;
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+  void ClearClientAuthenticationCache(
+      CefRefPtr<CefCompletionCallback> callback) override;
+#endif  // ARKWEB_CERT_AUTHENTICATION
   void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) override;
   void CloseAllConnections(CefRefPtr<CefCompletionCallback> callback) override;
   void ResolveHost(const CefString& origin,
                    CefRefPtr<CefResolveCallback> callback) override;
-  void LoadExtension(const CefString& root_directory,
-                     CefRefPtr<CefDictionaryValue> manifest,
-                     CefRefPtr<CefExtensionHandler> handler) override;
-  bool DidLoadExtension(const CefString& extension_id) override;
-  bool HasExtension(const CefString& extension_id) override;
-  bool GetExtensions(std::vector<CefString>& extension_ids) override;
-  CefRefPtr<CefExtension> GetExtension(const CefString& extension_id) override;
   CefRefPtr<CefMediaRouter> GetMediaRouter(
       CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefValue> GetWebsiteSetting(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type) override;
+  void SetWebsiteSetting(const CefString& requesting_url,
+                         const CefString& top_level_url,
+                         cef_content_setting_types_t content_type,
+                         CefRefPtr<CefValue> value) override;
+  cef_content_setting_values_t GetContentSetting(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type) override;
+  void SetContentSetting(const CefString& requesting_url,
+                         const CefString& top_level_url,
+                         cef_content_setting_types_t content_type,
+                         cef_content_setting_values_t value) override;
+  void SetChromeColorScheme(cef_color_variant_t variant,
+                            cef_color_t user_color) override;
+  cef_color_variant_t GetChromeColorSchemeMode() override;
+  cef_color_t GetChromeColorSchemeColor() override;
+  cef_color_variant_t GetChromeColorSchemeVariant() override;
 
   const CefRequestContextSettings& settings() const { return config_.settings; }
 
-  // Called from CefBrowserContentsDelegate::RenderFrameCreated or
-  // CefMimeHandlerViewGuestDelegate::OnGuestAttached when a render frame is
-  // created.
+  // Called from CefBrowserContentsDelegate::RenderFrameCreated when a render
+  // frame is created.
   void OnRenderFrameCreated(const content::GlobalRenderFrameHostId& global_id,
-                            bool is_main_frame,
-                            bool is_guest_view);
+                            bool is_main_frame);
 
-  // Called from CefBrowserContentsDelegate::RenderFrameDeleted or
-  // CefMimeHandlerViewGuestDelegate::OnGuestDetached when a render frame is
-  // deleted.
+  // Called from CefBrowserContentsDelegate::RenderFrameDeleted when a render
+  // frame is deleted.
   void OnRenderFrameDeleted(const content::GlobalRenderFrameHostId& global_id,
-                            bool is_main_frame,
-                            bool is_guest_view);
-
-#if BUILDFLAG(IS_OHOS)
-  CefRefPtr<CefDataBase> GetDataBase() override;
+                            bool is_main_frame);
+#if BUILDFLAG(ARKWEB_WEBSTORAGE)
   CefRefPtr<CefWebStorage> GetWebStorage(
-      CefRefPtr<CefCompletionCallback> callback) override;
-  void ClearClientAuthenticationCache(
       CefRefPtr<CefCompletionCallback> callback) override;
 #endif
 
  private:
   friend class CefRequestContext;
 
-#if BUILDFLAG(IS_OHOS)
-  friend class CefBrowserHost;
-#endif
-
   struct Config {
     // True if wrapping the global context.
     bool is_global = false;
 
+    // Wrap an existing (non-global) browser context. When specifying this value
+    // GetOrCreateRequestContext() must be called on the UI thread.
+    raw_ptr<CefBrowserContext> browser_context = nullptr;
+
     // |settings| or |other| will be set when creating a new CefRequestContext
-    // via the API. When wrapping an existing CefBrowserContext* both will be
-    // empty and Initialize(CefBrowserContext*) will be called immediately after
-    // CefRequestContextImpl construction.
+    // via the API.
     CefRequestContextSettings settings;
     CefRefPtr<CefRequestContextImpl> other;
 
@@ -170,29 +199,35 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
     CefRefPtr<CefRequestContextHandler> handler;
 
     // Used to uniquely identify CefRequestContext objects before an associated
-    // CefBrowserContext has been created. Should be set when a new
+    // CefBrowserContext has been created. Should be set when creating a new
     // CefRequestContext via the API.
     int unique_id = -1;
-
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
     bool incognito_mode = false;
 #endif
   };
 
   static CefRefPtr<CefRequestContextImpl> GetOrCreateRequestContext(
-      const Config& config);
+      Config&& config);
 
-  explicit CefRequestContextImpl(const Config& config);
+  explicit CefRequestContextImpl(Config&& config);
 
   void Initialize();
   void BrowserContextInitialized();
 
-  // Make sure the browser context exists. Only called on the UI thread.
-  void EnsureBrowserContext();
-
   void ClearCertificateExceptionsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+  void ClearClientAuthenticationCacheInternal(
+      CefRefPtr<CefCompletionCallback> callback,
+      CefBrowserContext::Getter browser_context_getter);
+#endif  // ARKWEB_CERT_AUTHENTICATION
+
+#if BUILDFLAG(ARKWEB_WEBSTORAGE)
+  void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
+                                    CefRefPtr<CefCompletionCallback> callback);
+#endif
   void ClearHttpAuthCredentialsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
@@ -202,6 +237,22 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
   void ResolveHostInternal(const CefString& origin,
                            CefRefPtr<CefResolveCallback> callback,
                            CefBrowserContext::Getter browser_context_getter);
+  void SetWebsiteSettingInternal(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type,
+      CefRefPtr<CefValue> value,
+      CefBrowserContext::Getter browser_context_getter);
+  void SetContentSettingInternal(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type,
+      cef_content_setting_values_t value,
+      CefBrowserContext::Getter browser_context_getter);
+  void SetChromeColorSchemeInternal(
+      cef_color_variant_t variant,
+      cef_color_t user_color,
+      CefBrowserContext::Getter browser_context_getter);
 
   void InitializeCookieManagerInternal(
       CefRefPtr<CefCookieManagerImpl> cookie_manager,
@@ -214,22 +265,8 @@ bool IsOffTheRecord() { return config_.incognito_mode; }
 
   CefBrowserContext* browser_context() const;
 
-#if BUILDFLAG(IS_OHOS)
-  void ClearClientAuthenticationCacheInternal(
-      CefRefPtr<CefCompletionCallback> callback,
-      CefBrowserContext::Getter browser_context_getter);
-  void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
-                                    CefRefPtr<CefCompletionCallback> callback);
-#endif  // BUILDFLAG(IS_OHOS)
-
-#if defined(OHOS_INCOGNITO_MODE)
-  void InitializeIncognitoCookieManagerInternal(
-      CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
-      CefRefPtr<CefCompletionCallback> callback);
-#endif
-
   // We must disassociate from this on destruction.
-  CefBrowserContext* browser_context_ = nullptr;
+  raw_ptr<CefBrowserContext> browser_context_ = nullptr;
 
   Config config_;
 

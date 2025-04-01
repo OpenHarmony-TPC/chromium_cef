@@ -3,15 +3,14 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/common/net_service/net_service_util.h"
-
-#include "include/internal/cef_time_wrappers.h"
-#include "libcef/common/time_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 
 #include <set>
 
 #include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/include/internal/cef_time_wrappers.h"
+#include "cef/libcef/common/time_util.h"
 #include "net/cookies/canonical_cookie.h"
 #include "net/cookies/cookie_util.h"
 #include "net/cookies/parsed_cookie.h"
@@ -228,7 +227,7 @@ bool MakeCefCookie(const net::CanonicalCookie& cc, CefCookie& cookie) {
   CefString(&cookie.value).FromString(cc.Value());
   CefString(&cookie.domain).FromString(cc.Domain());
   CefString(&cookie.path).FromString(cc.Path());
-  cookie.secure = cc.IsSecure();
+  cookie.secure = cc.SecureAttribute();
   cookie.httponly = cc.IsHttpOnly();
   cookie.creation = CefBaseTime(cc.CreationDate());
   cookie.last_access = CefBaseTime(cc.LastAccessDate());
@@ -261,7 +260,7 @@ bool MakeCefCookie(const GURL& url,
     path_string = pc.Path();
   }
   std::string cookie_path =
-      net::CanonicalCookie::CanonPathWithString(url, path_string);
+      net::cookie_util::CanonPathWithString(url, path_string);
   base::Time creation_time = base::Time::Now();
   base::Time cookie_expires =
       net::CanonicalCookie::ParseExpiration(pc, creation_time, creation_time);

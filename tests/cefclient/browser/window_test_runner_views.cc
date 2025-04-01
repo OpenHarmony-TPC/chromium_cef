@@ -8,12 +8,10 @@
 #include "include/views/cef_display.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
-
 #include "tests/cefclient/browser/root_window_views.h"
 #include "tests/cefclient/browser/views_window.h"
 
-namespace client {
-namespace window_test {
+namespace client::window_test {
 
 namespace {
 
@@ -42,7 +40,7 @@ void SetTitlebarHeight(const CefRefPtr<CefBrowser>& browser,
 
 }  // namespace
 
-WindowTestRunnerViews::WindowTestRunnerViews() {}
+WindowTestRunnerViews::WindowTestRunnerViews() = default;
 
 void WindowTestRunnerViews::SetPos(CefRefPtr<CefBrowser> browser,
                                    int x,
@@ -69,11 +67,21 @@ void WindowTestRunnerViews::Restore(CefRefPtr<CefBrowser> browser) {
   GetWindow(browser)->Restore();
 }
 
+void WindowTestRunnerViews::Fullscreen(CefRefPtr<CefBrowser> browser) {
+  auto window = GetWindow(browser);
+
+  // Results in a call to ViewsWindow::OnWindowFullscreenTransition().
+  if (window->IsFullscreen()) {
+    window->SetFullscreen(false);
+  } else {
+    window->SetFullscreen(true);
+  }
+}
+
 void WindowTestRunnerViews::SetTitleBarHeight(
     CefRefPtr<CefBrowser> browser,
     const std::optional<float>& height) {
   SetTitlebarHeight(browser, height);
 }
 
-}  // namespace window_test
-}  // namespace client
+}  // namespace client::window_test

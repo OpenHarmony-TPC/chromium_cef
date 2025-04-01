@@ -3,26 +3,30 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/browser/net_service/proxy_url_loader_factory.h"
+#include "cef/libcef/browser/net_service/proxy_url_loader_factory.h"
 
 #include <tuple>
 
-#include "libcef/browser/context.h"
-#include "libcef/browser/origin_whitelist_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/common/net/scheme_registration.h"
-#include "libcef/common/net_service/net_service_util.h"
-
 #include "base/barrier_closure.h"
 #include "base/command_line.h"
+#include "base/memory/raw_ptr.h"
 #include "base/strings/string_number_conversions.h"
+#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
 #include "base/trace_event/trace_event.h"
+#endif
+#include "arkweb/build/features/features.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/origin_whitelist_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "cef/libcef/common/net/scheme_registration.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "components/safe_browsing/core/common/safebrowsing_constants.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/resource_context.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/referrer.h"
 #include "mojo/public/cpp/base/big_buffer.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "net/http/http_status_code.h"
@@ -31,17 +35,21 @@
 #include "services/network/public/cpp/cors/cors.h"
 #include "services/network/public/cpp/features.h"
 #include "services/network/public/mojom/early_hints.mojom.h"
+#include "third_party/blink/public/common/loader/referrer_utils.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "libcef/browser/res_reporter.h"
-#include "libcef/common/request_impl.h"
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/browser/res_reporter.h"
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #include "net/base/load_flags.h"
-#if defined(OHOS_EX_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 #include "content/public/browser/download_utils.h"
 #include "third_party/blink/public/common/mime_util/mime_util.h"
 #endif
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
+#endif
 namespace net_service {
 
 namespace {
@@ -49,14 +57,13 @@ namespace {
 // User data key for ResourceContextData.
 const void* const kResourceContextUserDataKey = &kResourceContextUserDataKey;
 
-absl::optional<std::string> GetHeaderString(
+std::optional<std::string> GetHeaderString(
     const net::HttpResponseHeaders* headers,
     const std::string& header_name) {
-  std::string header_value;
-  if (!headers || !headers->GetNormalizedHeader(header_name, &header_value)) {
-    return absl::nullopt;
+  if (headers) {
+    return headers->GetNormalizedHeader(header_name);
   }
-  return header_value;
+  return std::nullopt;
 }
 
 void CreateProxyHelper(
@@ -76,7 +83,22 @@ bool DisableRequestHandlingForTesting() {
   return disabled;
 }
 
-#if BUILDFLAG(IS_OHOS)
+// Match logic in devtools_url_loader_interceptor.cc
+// InterceptionJob::CalculateResponseTainting.
+network::mojom::FetchResponseType CalculateResponseTainting(
+    bool should_check_cors,
+    network::mojom::RequestMode mode,
+    bool tainted_origin) {
+  if (should_check_cors) {
+    return network::mojom::FetchResponseType::kCors;
+  }
+  if (mode == network::mojom::RequestMode::kNoCors && tainted_origin) {
+    return network::mojom::FetchResponseType::kOpaque;
+  }
+  return network::mojom::FetchResponseType::kBasic;
+}
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
 CefRefPtr<CefResponse> ExtractHttpErrorResponse(
     const net::HttpResponseHeaders* headers) {
   CefRefPtr<CefResponse> response = CefResponse::Create();
@@ -110,7 +132,7 @@ class ResourceContextData : public base::SupportsUserData::Data {
   ResourceContextData(const ResourceContextData&) = delete;
   ResourceContextData& operator=(const ResourceContextData&) = delete;
 
-  ~ResourceContextData() override {}
+  ~ResourceContextData() override = default;
 
   static void AddProxyOnUIThread(
       ProxyURLLoaderFactory* proxy,
@@ -244,7 +266,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
   ~InterceptedRequest() override;
 
   // Restart the request. This happens on initial start and after redirect.
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
   void Restart(bool is_redirect);
 #else
   void Restart();
@@ -255,7 +277,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
       mojo::PendingReceiver<network::mojom::TrustedHeaderClient> receiver);
 
   // Called from InterceptDelegate::OnInputStreamOpenFailed.
-  void InputStreamFailed(bool restart_needed);
+  bool InputStreamFailed();
 
   // mojom::TrustedHeaderClient methods:
   void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
@@ -269,9 +291,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
   void OnReceiveResponse(
       network::mojom::URLResponseHeadPtr head,
       mojo::ScopedDataPipeConsumerHandle body,
-      absl::optional<mojo_base::BigBuffer> cached_metadata) override;
-#if BUILDFLAG(IS_OHOS)
-  void OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region, uint64_t buffer_size) override;
+      std::optional<mojo_base::BigBuffer> cached_metadata) override;
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
+  void OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region,
+                                      uint64_t buffer_size) override;
 #endif
   void OnReceiveRedirect(const net::RedirectInfo& redirect_info,
                          network::mojom::URLResponseHeadPtr head) override;
@@ -286,7 +309,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
       const std::vector<std::string>& removed_headers,
       const net::HttpRequestHeaders& modified_headers,
       const net::HttpRequestHeaders& modified_cors_exempt_headers,
-      const absl::optional<GURL>& new_url) override;
+      const std::optional<GURL>& new_url) override;
   void SetPriority(net::RequestPriority priority,
                    int32_t intra_priority_value) override;
   void PauseReadingBodyFromNet() override;
@@ -294,7 +317,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   int32_t id() const { return id_; }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void OnHttpErrorForUIThread(int32_t,
                               CefRefPtr<CefRequest> request,
                               bool is_main_frame,
@@ -315,7 +338,7 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   // Helpers for optionally overriding headers.
   void HandleResponseOrRedirectHeaders(
-      absl::optional<net::RedirectInfo> redirect_info,
+      std::optional<net::RedirectInfo> redirect_info,
       net::CompletionOnceCallback continuation);
   void ContinueResponseOrRedirect(
       net::CompletionOnceCallback continuation,
@@ -351,9 +374,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
                       bool wait_for_loader_error);
 
   void SendErrorAndCompleteImmediately(int error_code);
-#if defined(OHOS_EX_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   void CancelRequest(int error_code);
-#endif  //  OHOS_EX_DOWNLOAD
+#endif
   void SendErrorStatusAndCompleteImmediately(
       const network::URLLoaderCompletionStatus& status);
 
@@ -361,10 +384,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
 
   void OnUploadProgressACK();
 
-  ProxyURLLoaderFactory* const factory_;
+  const raw_ptr<ProxyURLLoaderFactory> factory_;
   const int32_t id_;
   const uint32_t options_;
-  bool input_stream_previously_failed_ = false;
   bool request_was_redirected_ = false;
   int redirect_limit_ = net::URLRequest::kMaxRedirects;
   bool redirect_in_progress_ = false;
@@ -388,13 +410,14 @@ class InterceptedRequest : public network::mojom::URLLoader,
   network::ResourceRequest request_;
   network::mojom::URLResponseHeadPtr current_response_;
   mojo::ScopedDataPipeConsumerHandle current_body_;
-  absl::optional<mojo_base::BigBuffer> current_cached_metadata_;
+  std::optional<mojo_base::BigBuffer> current_cached_metadata_;
   scoped_refptr<net::HttpResponseHeaders> current_headers_;
   scoped_refptr<net::HttpResponseHeaders> override_headers_;
   GURL original_url_;
   GURL redirect_url_;
   GURL header_client_redirect_url_;
   const net::MutableNetworkTrafficAnnotationTag traffic_annotation_;
+  std::optional<network::mojom::CredentialsMode> original_crendentials_mode_;
 
   mojo::Receiver<network::mojom::URLLoader> proxied_loader_receiver_;
   mojo::Remote<network::mojom::URLLoaderClient> target_client_;
@@ -409,10 +432,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
   mojo::Receiver<network::mojom::TrustedHeaderClient> header_client_receiver_{
       this};
 
-  StreamReaderURLLoader* stream_loader_ = nullptr;
+  std::unique_ptr<StreamReaderURLLoader> stream_loader_;
 
-#if defined(OHOS_EX_DOWNLOAD)
-  bool is_download_{ false };
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+  bool is_download_{false};
 #endif
 
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
@@ -430,9 +453,8 @@ class InterceptDelegate : public StreamReaderURLLoader::Delegate {
     return response_->OpenInputStream(request_id, request, std::move(callback));
   }
 
-  void OnInputStreamOpenFailed(int32_t request_id, bool* restarted) override {
-    request_->InputStreamFailed(false /* restart_needed */);
-    *restarted = false;
+  bool OnInputStreamOpenFailed(int32_t request_id) override {
+    return request_->InputStreamFailed();
   }
 
   void GetResponseHeaders(int32_t request_id,
@@ -447,7 +469,7 @@ class InterceptDelegate : public StreamReaderURLLoader::Delegate {
                                   extra_headers);
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   const std::string& GetResponseData() override {
     return response_->GetResponseData();
   }
@@ -504,11 +526,11 @@ InterceptedRequest::~InterceptedRequest() {
   }
   if (on_headers_received_callback_) {
     std::move(on_headers_received_callback_)
-        .Run(net::ERR_ABORTED, absl::nullopt, GURL());
+        .Run(net::ERR_ABORTED, std::nullopt, GURL());
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void InterceptedRequest::Restart(bool is_redirect) {
   ResReporter::GetInstance().FetchBegin();
 #else
@@ -525,7 +547,7 @@ void InterceptedRequest::Restart() {
     }
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   if (request_.method == "OPTIONS") {
     current_request_uses_header_client_ = false;
   } else {
@@ -535,43 +557,90 @@ void InterceptedRequest::Restart() {
 #else
   current_request_uses_header_client_ =
       factory_->url_loader_header_client_receiver_.is_bound();
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
 
-  if (request_.request_initiator &&
-      network::cors::ShouldCheckCors(request_.url, request_.request_initiator,
-                                     request_.mode)) {
-    if (scheme::IsCorsEnabledScheme(request_.url.scheme())) {
-      // Add the Origin header for CORS-enabled scheme requests.
-      request_.headers.SetHeaderIfMissing(
-          net::HttpRequestHeaders::kOrigin,
-          request_.request_initiator->Serialize());
-    } else if (!HasCrossOriginWhitelistEntry(
-                   *request_.request_initiator,
-                   url::Origin::Create(request_.url))) {
-      // Fail requests if a CORS check is required and the scheme is not CORS
-      // enabled. This matches the error condition that would be generated by
-      // CorsURLLoader::StartRequest in the network process.
-      SendErrorStatusAndCompleteImmediately(
-          network::URLLoaderCompletionStatus(network::CorsErrorStatus(
-              network::mojom::CorsError::kCorsDisabledScheme)));
-      return;
-    }
+  const bool is_cross_origin =
+      request_.request_initiator &&
+      !request_.request_initiator->IsSameOriginWith(request_.url);
+  const bool is_cors_enabled_scheme =
+      scheme::IsCorsEnabledScheme(request_.url.scheme());
+
+  // Match logic in network::cors::ShouldCheckCors.
+  bool should_check_cors =
+      is_cross_origin &&
+      request_.mode != network::mojom::RequestMode::kNavigate &&
+      request_.mode != network::mojom::RequestMode::kNoCors;
+
+  if (should_check_cors && !is_cors_enabled_scheme &&
+      !HasCrossOriginWhitelistEntry(*request_.request_initiator,
+                                    url::Origin::Create(request_.url))) {
+    // Fail requests if a CORS check is required and the scheme is not CORS
+    // enabled. This matches the error condition that would be generated by
+    // CorsURLLoader::StartRequest in the network process.
+    SendErrorStatusAndCompleteImmediately(
+        network::URLLoaderCompletionStatus(network::CorsErrorStatus(
+            network::mojom::CorsError::kCorsDisabledScheme)));
+    return;
   }
 
-#ifdef OHOS_NETWORK_CONNINFO
+  // Maybe update |credentials_mode| for fetch requests.
+  if (request_.credentials_mode ==
+      network::mojom::CredentialsMode::kSameOrigin) {
+    // Match logic in devtools_url_loader_interceptor.cc
+    // InterceptionJob::FollowRedirect.
+    bool tainted_origin = false;
+    if (redirect_in_progress_ && request_.request_initiator &&
+        !url::IsSameOriginWith(request_.url, original_url_) &&
+        !request_.request_initiator->IsSameOriginWith(original_url_)) {
+      tainted_origin = true;
+    }
+
+    // Match logic in CorsURLLoader::StartNetworkRequest.
+    const auto response_tainting = CalculateResponseTainting(
+        should_check_cors, request_.mode, tainted_origin);
+    original_crendentials_mode_ = request_.credentials_mode;
+    request_.credentials_mode =
+        network::cors::CalculateCredentialsFlag(request_.credentials_mode,
+                                                response_tainting)
+            ? network::mojom::CredentialsMode::kInclude
+            : network::mojom::CredentialsMode::kOmit;
+  }
+
+  const bool should_add_origin_header =
+      // Cross-origin requests that are not kNavigate nor kNoCors.
+      should_check_cors ||
+      // Same-origin requests except for GET and HEAD.
+      (!is_cross_origin &&
+       request_.method != net::HttpRequestHeaders::kGetMethod &&
+       request_.method != net::HttpRequestHeaders::kHeadMethod);
+
+  if (should_add_origin_header) {
+    // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
+    url::Origin origin_header_value =
+        request_.request_initiator.value_or(url::Origin());
+    origin_header_value = content::Referrer::SanitizeOriginForRequest(
+        request_.url, origin_header_value,
+        blink::ReferrerUtils::NetToMojoReferrerPolicy(
+            request_.referrer_policy));
+
+    request_.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kOrigin,
+                                        origin_header_value.Serialize());
+  }
+
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   struct NetHelperSetting setting;
   factory_->request_handler_->GetSettingOfNetHelper(setting);
   if (IsURLBlocked(request_.url, setting)) {
-    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
+    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
     return;
   }
 
   request_.load_flags = UpdateLoadFlags(request_.load_flags, setting);
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
   const GURL original_url = request_.url;
-#if defined(OHOS_EX_DOWNLOAD)
+#if defined(ARKWEB_EX_DOWNLOAD)
   factory_->request_handler_->OnBeforeRequest(
       id_, &request_, request_was_redirected_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
@@ -585,7 +654,7 @@ void InterceptedRequest::Restart() {
                      weak_factory_.GetWeakPtr(), original_url),
       base::BindOnce(&InterceptedRequest::SendErrorAndCompleteImmediately,
                      weak_factory_.GetWeakPtr()));
-#endif  //  OHOS_EX_DOWNLOAD
+#endif
 }
 
 void InterceptedRequest::OnLoaderCreated(
@@ -596,29 +665,23 @@ void InterceptedRequest::OnLoaderCreated(
   header_client_receiver_.Bind(std::move(receiver));
 }
 
-void InterceptedRequest::InputStreamFailed(bool restart_needed) {
-  DCHECK(!input_stream_previously_failed_);
-
+bool InterceptedRequest::InputStreamFailed() {
   if (intercept_only_) {
     // This can happen for unsupported schemes, when no proper
     // response from the intercept handler is received, i.e.
     // the provided input stream in response failed to load. In
     // this case we send and error and stop loading.
     SendErrorAndCompleteImmediately(net::ERR_UNKNOWN_URL_SCHEME);
-    return;
+    return true;
   }
 
-  if (!restart_needed) {
-    return;
-  }
-
-  input_stream_previously_failed_ = true;
-
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   Restart(false);
 #else
   Restart();
 #endif
+
+  return false;
 }
 
 // TrustedHeaderClient methods.
@@ -627,12 +690,12 @@ void InterceptedRequest::OnBeforeSendHeaders(
     const net::HttpRequestHeaders& headers,
     OnBeforeSendHeadersCallback callback) {
   if (!current_request_uses_header_client_) {
-    std::move(callback).Run(net::OK, absl::nullopt);
+    std::move(callback).Run(net::OK, std::nullopt);
     return;
   }
 
   request_.headers = headers;
-  std::move(callback).Run(net::OK, absl::nullopt);
+  std::move(callback).Run(net::OK, std::nullopt);
 
   // Resume handling of client messages after continuing from an async callback.
   if (proxied_client_receiver_.is_bound()) {
@@ -645,14 +708,14 @@ void InterceptedRequest::OnHeadersReceived(
     const net::IPEndPoint& remote_endpoint,
     OnHeadersReceivedCallback callback) {
   if (!current_request_uses_header_client_) {
-    std::move(callback).Run(net::OK, absl::nullopt, GURL());
+    std::move(callback).Run(net::OK, std::nullopt, GURL());
     return;
   }
 
   current_headers_ = base::MakeRefCounted<net::HttpResponseHeaders>(headers);
   on_headers_received_callback_ = std::move(callback);
 
-  absl::optional<net::RedirectInfo> redirect_info;
+  std::optional<net::RedirectInfo> redirect_info;
   std::string location;
   if (current_headers_->IsRedirect(&location)) {
     const GURL new_url = request_.url.Resolve(location);
@@ -676,34 +739,33 @@ void InterceptedRequest::OnReceiveEarlyHints(
 void InterceptedRequest::OnReceiveResponse(
     network::mojom::URLResponseHeadPtr head,
     mojo::ScopedDataPipeConsumerHandle body,
-    absl::optional<mojo_base::BigBuffer> cached_metadata) {
+    std::optional<mojo_base::BigBuffer> cached_metadata) {
   current_response_ = std::move(head);
   current_body_ = std::move(body);
   current_cached_metadata_ = std::move(cached_metadata);
 
-#if defined(OHOS_EX_DOWNLOAD)
-  bool must_download =
-      content::download_utils::MustDownload(
-              request_.url, current_response_->headers.get(), current_response_->mime_type);
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+  bool must_download = content::download_utils::MustDownload(
+      nullptr, request_.url, current_response_->headers.get(),
+      current_response_->mime_type);
   bool known_mime_type =
       blink::IsSupportedMimeType(current_response_->mime_type);
-  is_download_ =
-     !current_response_->intercepted_by_plugin &&
-     (must_download || !known_mime_type);
+  is_download_ = !current_response_->intercepted_by_plugin &&
+                 (must_download || !known_mime_type);
 #endif
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   if (current_response_->headers &&
       current_response_->headers->response_code() >= 400) {
     // The WebViewClient onReceivedHttpError callback will be invoked for any
     // resource (such as main page, iframe, image, etc.) with status code >= 4
     auto error_reponse =
         ExtractHttpErrorResponse(current_response_->headers.get());
-    CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
+    CefRefPtr<ArkWebRequestImplExt> request = new ArkWebRequestImplExt();
     request->SetURL(CefString(request_.url.spec()));
     request->SetMethod(CefString(request_.method));
     request->Set(request_.headers);
-#ifdef OHOS_NETWORK_CONNINFO
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     request->SetDestination(request_.destination);
     OnHttpErrorForUIThread(id_, request, request->IsMainFrame(),
                            request_.has_user_gesture, error_reponse);
@@ -721,16 +783,24 @@ void InterceptedRequest::OnReceiveResponse(
     ContinueToResponseStarted(net::OK);
   } else {
     HandleResponseOrRedirectHeaders(
-        absl::nullopt,
+        std::nullopt,
         base::BindOnce(&InterceptedRequest::ContinueToResponseStarted,
                        weak_factory_.GetWeakPtr()));
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
-void InterceptedRequest::OnTransferDataWithSharedMemory(base::ReadOnlySharedMemoryRegion region, uint64_t buffer_size) {
-  LOG(DEBUG) << "shared-memory InterceptedRequest::OnTransferDataWithSharedMemory buffer_size=" << buffer_size;
-  target_client_->OnTransferDataWithSharedMemory(std::move(region), buffer_size);
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
+void InterceptedRequest::OnTransferDataWithSharedMemory(
+    base::ReadOnlySharedMemoryRegion region,
+    uint64_t buffer_size) {
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
+  LOG(DEBUG)
+      << "shared-memory InterceptedRequest::OnTransferDataWithSharedMemory "
+         "buffer_size="
+      << buffer_size;
+#endif
+  target_client_->OnTransferDataWithSharedMemory(std::move(region),
+                                                 buffer_size);
 }
 #endif
 
@@ -828,12 +898,12 @@ void InterceptedRequest::FollowRedirect(
     const std::vector<std::string>& removed_headers_ext,
     const net::HttpRequestHeaders& modified_headers_ext,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
-    const absl::optional<GURL>& new_url) {
+    const std::optional<GURL>& new_url) {
   std::vector<std::string> removed_headers = removed_headers_ext;
   net::HttpRequestHeaders modified_headers = modified_headers_ext;
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
   // We will not create a new url loader for redirects. However, the cef
   // controls the add/save of cookies, so we need to load cookies and then
   // transfer them to the network layer. Will only merge cookie headers bellow.
@@ -843,7 +913,6 @@ void InterceptedRequest::FollowRedirect(
                                    modified_cors_exempt_headers, new_url);
   }
 #endif
-
   // If |OnURLLoaderClientError| was called then we're just waiting for the
   // connection error handler of |proxied_loader_receiver_|. Don't restart the
   // job since that'll create another URLLoader.
@@ -854,9 +923,7 @@ void InterceptedRequest::FollowRedirect(
   // Normally we would call FollowRedirect on the target loader and it would
   // begin loading the redirected request. However, the client might want to
   // intercept that request so restart the job instead.
-#if BUILDFLAG(IS_OHOS)
-  // Continue call FollowRedirect on the target loader, if the client intercept
-  // that request the loader will be reset when OnComplete.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   Restart(true);
 #else
   Restart();
@@ -890,15 +957,16 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
   intercept_request_ = intercept_request;
   intercept_only_ = intercept_only;
 
-  // We donn't create a urlloader for redirect, so should not intercept the redirect.
-#if BUILDFLAG(IS_OHOS)
+  // We donn't create a urlloader for redirect, so should not intercept the
+  // redirect.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   if (target_loader_) {
     InterceptResponseReceived(original_url, nullptr);
     return;
   }
 #endif
 
-  if (input_stream_previously_failed_ || !intercept_request_) {
+  if (!intercept_request_) {
     // Equivalent to no interception.
     InterceptResponseReceived(original_url, nullptr);
   } else {
@@ -915,7 +983,7 @@ void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
 void InterceptedRequest::InterceptResponseReceived(
     const GURL& original_url,
     std::unique_ptr<ResourceResponse> response) {
-#if !BUILDFLAG(IS_OHOS)
+#if !BUILDFLAG(IS_ARKWEB)
   // We donn't reset and create a new url_loader for redirects then
   // donn't need call HandleResponseOrRedirectHeaders when received
   // response.
@@ -940,14 +1008,15 @@ void InterceptedRequest::InterceptResponseReceived(
 
     current_response_->encoded_data_length = headers->raw_headers().length();
     current_response_->content_length = 0;
+    // Avoid incorrect replacement of 0 with nullptr. NOLINTNEXTLINE
     current_response_->encoded_body_length = 0;
 
-    std::string origin;
-    if (request_.headers.GetHeader(net::HttpRequestHeaders::kOrigin, &origin) &&
-        origin != url::Origin().Serialize()) {
+    const auto origin =
+        request_.headers.GetHeader(net::HttpRequestHeaders::kOrigin);
+    if (origin && origin != url::Origin().Serialize()) {
       // Allow redirects of cross-origin resource loads.
       headers->AddHeader(network::cors::header_names::kAccessControlAllowOrigin,
-                         origin);
+                         *origin);
     }
 
     if (request_.credentials_mode ==
@@ -964,14 +1033,14 @@ void InterceptedRequest::InterceptResponseReceived(
                        weak_factory_.GetWeakPtr(), redirect_info));
     return;
   }
-#endif  // IS_OHOS
-
+#endif  // IS_ARKWEB
   if (response) {
     // Non-null response: make sure to use it as an override for the
     // normal network data.
-#if BUILDFLAG(IS_OHOS)
-    TRACE_EVENT2("net", "InterceptedRequest::InterceptResponseReceived", "url", request_.url.spec(), "id", id());
-# endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
+    TRACE_EVENT2("net", "InterceptedRequest::InterceptResponseReceived", "url",
+                 request_.url.spec(), "id", id());
+#endif
     ContinueAfterInterceptWithOverride(std::move(response));
   } else {
     // Request was not intercepted/overridden. Proceed with loading
@@ -994,6 +1063,14 @@ void InterceptedRequest::ContinueAfterIntercept() {
         target_loader_.BindNewPipeAndPassReceiver(), id_, options, request_,
         proxied_client_receiver_.BindNewPipeAndPassRemote(),
         traffic_annotation_);
+    if (original_crendentials_mode_) {
+      // Restore the original |credentials_mode| value after calling
+      // CreateLoaderAndStart. This matches the logic in CorsURLLoader::
+      // StartNetworkRequest and allows InterceptedRequest::Restart to compute
+      // the correct |credentials_mode| during a fetch request redirect.
+      request_.credentials_mode = *original_crendentials_mode_;
+      original_crendentials_mode_.reset();
+    }
   }
 }
 
@@ -1001,11 +1078,12 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
     std::unique_ptr<ResourceResponse> response) {
   // StreamReaderURLLoader will synthesize TrustedHeaderClient callbacks to
   // avoid having Set-Cookie headers stripped by the IPC layer.
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   if (request_.method == "OPTIONS") {
     current_request_uses_header_client_ = false;
 
-    stream_loader_ = new StreamReaderURLLoader(
+    DCHECK(!stream_loader_);
+    stream_loader_ = std::make_unique<StreamReaderURLLoader>(
         id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
         mojo::NullRemote(), traffic_annotation_,
         std::move(current_cached_metadata_),
@@ -1014,7 +1092,7 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
   } else {
     current_request_uses_header_client_ = true;
 
-    stream_loader_ = new StreamReaderURLLoader(
+    stream_loader_ = std::make_unique<StreamReaderURLLoader>(
         id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
         header_client_receiver_.BindNewPipeAndPassRemote(), traffic_annotation_,
         std::move(current_cached_metadata_),
@@ -1024,18 +1102,19 @@ void InterceptedRequest::ContinueAfterInterceptWithOverride(
 #else
   current_request_uses_header_client_ = true;
 
-  stream_loader_ = new StreamReaderURLLoader(
+  DCHECK(!stream_loader_);
+  stream_loader_ = std::make_unique<StreamReaderURLLoader>(
       id_, request_, proxied_client_receiver_.BindNewPipeAndPassRemote(),
       header_client_receiver_.BindNewPipeAndPassRemote(), traffic_annotation_,
       std::move(current_cached_metadata_),
       std::make_unique<InterceptDelegate>(std::move(response),
                                           weak_factory_.GetWeakPtr()));
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
   stream_loader_->Start();
 }
 
 void InterceptedRequest::HandleResponseOrRedirectHeaders(
-    absl::optional<net::RedirectInfo> redirect_info,
+    std::optional<net::RedirectInfo> redirect_info,
     net::CompletionOnceCallback continuation) {
   override_headers_ = nullptr;
   redirect_url_ = redirect_info.has_value() ? redirect_info->new_url : GURL();
@@ -1075,7 +1154,7 @@ void InterceptedRequest::ContinueResponseOrRedirect(
     return;
   } else if (response_mode ==
              InterceptedRequestHandler::ResponseMode::RESTART) {
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
     Restart(false);
 #else
     Restart();
@@ -1102,7 +1181,7 @@ void InterceptedRequest::ContinueToHandleOverrideHeaders(int error_code) {
   }
 
   DCHECK(on_headers_received_callback_);
-  absl::optional<std::string> headers;
+  std::optional<std::string> headers;
   if (override_headers_) {
     headers = override_headers_->raw_headers();
   }
@@ -1127,6 +1206,7 @@ net::RedirectInfo InterceptedRequest::MakeRedirectResponseAndInfo(
 
   // Clear the Content-Length values.
   current_response_->content_length = 0;
+  // Avoid incorrect replacement of 0 with nullptr. NOLINTNEXTLINE
   current_response_->encoded_body_length = 0;
   current_response_->headers->RemoveHeader(
       net::HttpRequestHeaders::kContentLength);
@@ -1200,13 +1280,13 @@ void InterceptedRequest::ContinueToBeforeRedirect(
   bool should_clear_upload;
   net::RedirectUtil::UpdateHttpRequest(original_url, original_method,
                                        new_redirect_info,
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
                                        // OHOS not restart on redirect.
-                                       absl::nullopt,
+                                       std::nullopt,
 #else
-                                       absl::make_optional(remove_headers),
+                                       std::make_optional(remove_headers),
 #endif
-                                       /*modified_headers=*/absl::nullopt,
+                                       /*modified_headers=*/std::nullopt,
                                        &request_.headers, &should_clear_upload);
 
   if (should_clear_upload) {
@@ -1231,6 +1311,9 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
   const bool is_redirect =
       redirect_url.is_valid() || (headers && headers->IsRedirect(&location));
   if (stream_loader_ && is_redirect) {
+    // Don't continue reading from the stream loader.
+    stream_loader_->Cancel();
+
     // Redirecting from OnReceiveResponse generally isn't supported by the
     // NetworkService, so we can only support it when using a custom loader.
     // TODO(network): Remove this special case.
@@ -1265,6 +1348,9 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
       if (!result.has_value() &&
           !HasCrossOriginWhitelistEntry(*request_.request_initiator,
                                         url::Origin::Create(request_.url))) {
+        // Don't continue reading from the stream loader.
+        stream_loader_->Cancel();
+
         SendErrorStatusAndCompleteImmediately(
             network::URLLoaderCompletionStatus(result.error()));
         return;
@@ -1277,6 +1363,11 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
       proxied_client_receiver_.Resume();
     }
 
+    if (stream_loader_) {
+      // Continue reading from the stream loader.
+      stream_loader_->Continue();
+    }
+
     target_client_->OnReceiveResponse(
         std::move(current_response_),
         factory_->request_handler_->OnFilterResponseBody(
@@ -1286,11 +1377,23 @@ void InterceptedRequest::ContinueToResponseStarted(int error_code) {
 }
 
 void InterceptedRequest::OnDestroy() {
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   ResReporter::GetInstance().FetchEnd();
 #endif
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
+
+#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
+  if (!factory_) {
+    LOG(ERROR) << "InterceptedRequest::OnDestroy factory_ is nullptr";
+    return;
+  }
+  if (!factory_->request_handler_) {
+    LOG(ERROR) << "InterceptedRequest::OnDestroy factory_->request_handler_ is "
+                  "nullptr";
+    return;
+  }
+#endif
 
   factory_->request_handler_->OnRequestComplete(id_, request_, status_);
 
@@ -1369,7 +1472,7 @@ void InterceptedRequest::CallOnComplete(
   }
 }
 
-#if defined(OHOS_EX_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 void InterceptedRequest::CancelRequest(int error_code) {
   // Donn't cancel network requests. Network requests should be canceled by the holder
   // instead of following the tab, such as serviceworker download, etc. Although the
@@ -1380,7 +1483,7 @@ void InterceptedRequest::CancelRequest(int error_code) {
     SendErrorStatusAndCompleteImmediately(status);
   }
 }
-#endif  //  OHOS_EX_DOWNLOAD
+#endif  //  ARKWEB_EX_DOWNLOAD
 
 void InterceptedRequest::SendErrorAndCompleteImmediately(int error_code) {
   SendErrorStatusAndCompleteImmediately(
@@ -1413,7 +1516,7 @@ void InterceptedRequest::OnUploadProgressACK() {
   waiting_for_upload_progress_ack_ = false;
 }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void InterceptedRequest::OnHttpErrorForUIThread(
     int32_t id,
     CefRefPtr<CefRequest> request,
@@ -1437,8 +1540,8 @@ void InterceptedRequest::OnHttpErrorForUIThread(
 // InterceptedRequestHandler
 //==============================
 
-InterceptedRequestHandler::InterceptedRequestHandler() {}
-InterceptedRequestHandler::~InterceptedRequestHandler() {}
+InterceptedRequestHandler::InterceptedRequestHandler() = default;
+InterceptedRequestHandler::~InterceptedRequestHandler() = default;
 
 void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
@@ -1460,7 +1563,7 @@ void InterceptedRequestHandler::OnRequestResponse(
     int32_t request_id,
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
-    absl::optional<net::RedirectInfo> redirect_info,
+    std::optional<net::RedirectInfo> redirect_info,
     OnRequestResponseResultCallback callback) {
   std::move(callback).Run(
       ResponseMode::CONTINUE, nullptr,
@@ -1489,7 +1592,7 @@ ProxyURLLoaderFactory::ProxyURLLoaderFactory(
   CEF_REQUIRE_IOT();
   DCHECK(request_handler_);
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   std::vector<int> tids;
   tids.push_back(gettid());
   ResReporter::GetInstance().AddRtg(tids);
@@ -1537,29 +1640,27 @@ void ProxyURLLoaderFactory::SetDisconnectCallback(
   on_disconnect_ = std::move(on_disconnect);
 }
 
-#ifdef OHOS_NETWORK_LOAD
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 // static
 void ProxyURLLoaderFactory::CreateProxy(
     content::BrowserContext* browser_context,
-    mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+    network::URLLoaderFactoryBuilder& factory_builder,
     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
         header_client,
     std::unique_ptr<InterceptedRequestHandler> request_handler,
     network::mojom::URLLoaderFactoryOverridePtr* factory_override) {
   CEF_REQUIRE_UIT();
   DCHECK(request_handler);
-
   mojo::PendingReceiver<network::mojom::URLLoaderFactory> proxied_receiver;
   mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote;
-  
   if (factory_override) {
     // We are interested in factories "inside" of CORS, so use
     // |factory_override|.
     *factory_override = network::mojom::URLLoaderFactoryOverride::New();
-    proxied_receiver = 
+    proxied_receiver =
         (*factory_override)
             ->overriding_factory.InitWithNewPipeAndPassReceiver();
-    (*factory_override)->overridden_factory_receiver = 
+    (*factory_override)->overridden_factory_receiver =
         target_factory_remote.InitWithNewPipeAndPassReceiver();
     (*factory_override)->skip_cors_enabled_scheme_check = true;
   } else {
@@ -1567,11 +1668,10 @@ void ProxyURLLoaderFactory::CreateProxy(
     // ContentBrowserClient::WillCreateURLLoaderFactory guarantee that
     // |factory_override| is null only when the security features on the network
     // service is no-op for requests coming to the URLLoaderFactory. Hence we
-    // can use |factory_receiver| here.
-    proxied_receiver = std::move(*factory_receiver);
-    *factory_receiver = target_factory_remote.InitWithNewPipeAndPassReceiver();
+    // can use |factory_builder| here.
+    std::tie(proxied_receiver, target_factory_remote) =
+        factory_builder.Append();
   }
-
   mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
       header_client_receiver;
   if (header_client) {
@@ -1593,16 +1693,14 @@ void ProxyURLLoaderFactory::CreateProxy(
 // static
 void ProxyURLLoaderFactory::CreateProxy(
     content::BrowserContext* browser_context,
-    mojo::PendingReceiver<network::mojom::URLLoaderFactory>* factory_receiver,
+    network::URLLoaderFactoryBuilder& factory_builder,
     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
         header_client,
     std::unique_ptr<InterceptedRequestHandler> request_handler) {
   CEF_REQUIRE_UIT();
   DCHECK(request_handler);
 
-  auto proxied_receiver = std::move(*factory_receiver);
-  mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory_remote;
-  *factory_receiver = target_factory_remote.InitWithNewPipeAndPassReceiver();
+  auto [factory_receiver, target_factory_remote] = factory_builder.Append();
 
   mojo::PendingReceiver<network::mojom::TrustedURLLoaderHeaderClient>
       header_client_receiver;
@@ -1617,7 +1715,7 @@ void ProxyURLLoaderFactory::CreateProxy(
   CEF_POST_TASK(
       CEF_IOT,
       base::BindOnce(
-          &ProxyURLLoaderFactory::CreateOnIOThread, std::move(proxied_receiver),
+          &ProxyURLLoaderFactory::CreateOnIOThread, std::move(factory_receiver),
           std::move(target_factory_remote), std::move(header_client_receiver),
           base::Unretained(resource_context), std::move(request_handler)));
 }
@@ -1648,7 +1746,7 @@ void ProxyURLLoaderFactory::CreateProxy(
                                base::Unretained(proxy), web_contents_getter));
 }
 
-#ifdef OHOS_DOWNLOAD
+#if BUILDFLAG(ARKWEB_DOWNLOAD)
 void ProxyURLLoaderFactory::CreateLoaderAndStartForDownloadRequest(
     mojo::PendingReceiver<network::mojom::URLLoader> receiver,
     int32_t request_id,
@@ -1658,18 +1756,20 @@ void ProxyURLLoaderFactory::CreateLoaderAndStartForDownloadRequest(
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation) {
   network::ResourceRequest request_for_ua = request;
   if (request_handler_ && !request_handler_->GetCustomUserAgent().empty()) {
-    request_for_ua.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kUserAgent,
-                                              request_handler_->GetCustomUserAgent());
+    request_for_ua.headers.SetHeaderIfMissing(
+        net::HttpRequestHeaders::kUserAgent,
+        request_handler_->GetCustomUserAgent());
   }
+
   if (target_factory_) {
-    target_factory_->CreateLoaderAndStart(std::move(receiver), request_id,
-                                          options, request_for_ua, std::move(client),
-                                          traffic_annotation);
+    target_factory_->CreateLoaderAndStart(
+        std::move(receiver), request_id, options, request_for_ua,
+        std::move(client), traffic_annotation);
   }
 }
 #endif
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_COOKIE)
 void ModifyOptions(uint32_t& options) {
   if (!NetHelpers::IsAllowAcceptCookies()) {
     options |= network::mojom::kURLLoadOptionBlockAllCookies;
@@ -1691,7 +1791,7 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     // Don't start a request while we're shutting down.
     return;
   }
-#ifdef OHOS_DOWNLOAD
+#if BUILDFLAG(ARKWEB_DOWNLOAD)
   if (request.is_download_request) {
     CreateLoaderAndStartForDownloadRequest(std::move(receiver), request_id,
                                            options, request, std::move(client),
@@ -1714,16 +1814,14 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
     target_factory_->Clone(
         target_factory_clone.InitWithNewPipeAndPassReceiver());
   }
-
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_COOKIE)
   ModifyOptions(options);
 #endif
-
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   req->Restart(false);
 #else
   req->Restart();

@@ -4,15 +4,15 @@
 
 #include "tests/ceftests/test_server.h"
 
-#include "tests/ceftests/test_server_manager.h"
-
 #include <vector>
+
+#include "tests/ceftests/test_server_manager.h"
 
 namespace test_server {
 
 // Must use a different port than server_unittest.cc.
 const char kHttpServerAddress[] = "127.0.0.1";
-const uint16 kHttpServerPort = 8098;
+const uint16_t kHttpServerPort = 8098;
 
 const char kIncompleteDoNotSendData[] = "DO NOT SEND";
 

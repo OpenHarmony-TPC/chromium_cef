@@ -2,22 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/native/browser_platform_delegate_native_mac.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_mac.h"
 
 #import <Cocoa/Cocoa.h>
 #import <CoreServices/CoreServices.h>
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/native/javascript_dialog_runner_mac.h"
-#include "libcef/browser/native/menu_runner_mac.h"
-#include "libcef/browser/thread_util.h"
-
-#include "base/mac/scoped_nsautorelease_pool.h"
+#include "base/apple/owned_objc.h"
+#include "base/apple/scoped_nsautorelease_pool.h"
 #include "base/memory/ptr_util.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/include/internal/cef_types_mac.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/native/javascript_dialog_runner_mac.h"
+#include "cef/libcef/browser/native/menu_runner_mac.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "components/input/native_web_keyboard_event.h"
 #include "content/browser/renderer_host/render_widget_host_view_mac.h"
-#include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/blink/public/common/input/web_input_event.h"
@@ -47,10 +48,8 @@
   if (browser_) {
     // Force the browser to be destroyed and release the reference added in
     // PlatformCreateWindow().
-    static_cast<AlloyBrowserHostImpl*>(browser_)->WindowDestroyed();
+    AlloyBrowserHostImpl::FromBaseChecked(browser_)->WindowDestroyed();
   }
-
-  [super dealloc];
 }
 
 @end
@@ -59,7 +58,7 @@
 @interface CefWindowDelegate : NSObject <NSWindowDelegate> {
  @private
   CefBrowserHostBase* browser_;  // weak
-  NSWindow* window_;
+  NSWindow* __strong window_;
 }
 - (id)initWithWindow:(NSWindow*)window andBrowser:(CefBrowserHostBase*)browser;
 @end
@@ -70,16 +69,12 @@
   if (self = [super init]) {
     window_ = window;
     browser_ = browser;
-
-    [window_ setDelegate:self];
   }
   return self;
 }
 
 - (void)dealloc {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
-
-  [super dealloc];
 }
 
 - (BOOL)windowShouldClose:(id)window {
@@ -87,6 +82,11 @@
     // Cancel the close.
     return NO;
   }
+
+  // For an NSWindow object, the default is to be released on |close|. We
+  // instead want it to remain valid until all strong references are released
+  // via |cleanup:| and |BrowserDestroyed|.
+  ((NSWindow*)window).releasedWhenClosed = NO;
 
   // Clean ourselves up after clearing the stack of anything that might have the
   // window on it.
@@ -100,7 +100,7 @@
 
 - (void)cleanup:(id)window {
   [window_ setDelegate:nil];
-  [self release];
+  window_ = nil;
 }
 
 @end
@@ -239,21 +239,21 @@ void GetNSBoundsInDisplay(const gfx::Rect& dip_bounds,
 CefBrowserPlatformDelegateNativeMac::CefBrowserPlatformDelegateNativeMac(
     const CefWindowInfo& window_info,
     SkColor background_color)
-    : CefBrowserPlatformDelegateNative(window_info, background_color),
-      host_window_created_(false) {}
+    : CefBrowserPlatformDelegateNative(window_info, background_color) {}
 
 void CefBrowserPlatformDelegateNativeMac::BrowserDestroyed(
     CefBrowserHostBase* browser) {
   CefBrowserPlatformDelegateNative::BrowserDestroyed(browser);
 
   if (host_window_created_) {
-    // Release the reference added in CreateHostWindow().
+    // Release the references added in CreateHostWindow().
     browser->Release();
+    window_delegate_ = nil;
   }
 }
 
 bool CefBrowserPlatformDelegateNativeMac::CreateHostWindow() {
-  base::mac::ScopedNSAutoreleasePool autorelease_pool;
+  base::apple::ScopedNSAutoreleasePool autorelease_pool;
 
   NSWindow* new_window = nil;
 
@@ -285,12 +285,15 @@ bool CefBrowserPlatformDelegateNativeMac::CreateHostWindow() {
                                                  defer:NO];
 
     // Create the delegate for control and browser window events.
-    [[CefWindowDelegate alloc] initWithWindow:new_window andBrowser:browser_];
+    // Add a reference that will be released in BrowserDestroyed().
+    window_delegate_ = [[CefWindowDelegate alloc] initWithWindow:new_window
+                                                      andBrowser:browser_];
+    [new_window setDelegate:window_delegate_];
 
     parent_view = [new_window contentView];
     browser_view_rect = [parent_view bounds];
 
-    window_info_.parent_view = parent_view;
+    window_info_.parent_view = CAST_NSVIEW_TO_CEF_WINDOW_HANDLE(parent_view);
 
     // Make the content view for the window have a layer. This will make all
     // sub-views have layers. This is necessary to ensure correct layer
@@ -314,7 +317,6 @@ bool CefBrowserPlatformDelegateNativeMac::CreateHostWindow() {
   [parent_view addSubview:browser_view];
   [browser_view setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
   [browser_view setNeedsDisplay:YES];
-  [browser_view release];
 
   // Parent the WebContents to the browser view.
   const NSRect bounds = [browser_view bounds];
@@ -324,7 +326,7 @@ bool CefBrowserPlatformDelegateNativeMac::CreateHostWindow() {
   [native_view setAutoresizingMask:(NSViewWidthSizable | NSViewHeightSizable)];
   [native_view setNeedsDisplay:YES];
 
-  window_info_.view = browser_view;
+  window_info_.view = CAST_NSVIEW_TO_CEF_WINDOW_HANDLE(browser_view);
 
   if (new_window != nil && !window_info_.hidden) {
     // Show the window.
@@ -358,7 +360,7 @@ void CefBrowserPlatformDelegateNativeMac::SendKeyEvent(
     return;
   }
 
-  content::NativeWebKeyboardEvent web_event = TranslateWebKeyEvent(event);
+  input::NativeWebKeyboardEvent web_event = TranslateWebKeyEvent(event);
   view->ForwardKeyboardEvent(web_event, ui::LatencyInfo());
 }
 
@@ -448,20 +450,18 @@ void CefBrowserPlatformDelegateNativeMac::ViewText(const std::string& text) {
 }
 
 bool CefBrowserPlatformDelegateNativeMac::HandleKeyboardEvent(
-    const content::NativeWebKeyboardEvent& event) {
+    const input::NativeWebKeyboardEvent& event) {
   // Give the top level menu equivalents a chance to handle the event.
-  if ([event.os_event type] == NSEventTypeKeyDown) {
-    return [[NSApp mainMenu] performKeyEquivalent:event.os_event];
+  NSEvent* ns_event = event.os_event.Get();
+  if (ns_event.type == NSEventTypeKeyDown) {
+    return [[NSApp mainMenu] performKeyEquivalent:ns_event];
   }
   return false;
 }
 
-// static
-void CefBrowserPlatformDelegate::HandleExternalProtocol(const GURL& url) {}
-
 CefEventHandle CefBrowserPlatformDelegateNativeMac::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
-  return event.os_event;
+    const input::NativeWebKeyboardEvent& event) const {
+  return CAST_NSEVENT_TO_CEF_EVENT_HANDLE(event.os_event.Get());
 }
 
 std::unique_ptr<CefJavaScriptDialogRunner>
@@ -474,10 +474,17 @@ CefBrowserPlatformDelegateNativeMac::CreateMenuRunner() {
   return base::WrapUnique(new CefMenuRunnerMac);
 }
 
-content::NativeWebKeyboardEvent
+bool CefBrowserPlatformDelegateNativeMac::IsPrintPreviewSupported() const {
+  // MacOS with external parent can't support print preview because there is no
+  // gfx::NativeView or gfx::AcceleratedWidget. See related comments in
+  // AlloyWebContentsDialogHelper.
+  return false;
+}
+
+input::NativeWebKeyboardEvent
 CefBrowserPlatformDelegateNativeMac::TranslateWebKeyEvent(
     const CefKeyEvent& key_event) const {
-  content::NativeWebKeyboardEvent result(
+  input::NativeWebKeyboardEvent result(
       blink::WebInputEvent::Type::kUndefined,
       blink::WebInputEvent::Modifiers::kNoModifiers, ui::EventTimeForNow());
 
@@ -507,11 +514,12 @@ CefBrowserPlatformDelegateNativeMac::TranslateWebKeyEvent(
   }
 
   NSString* charactersIgnoringModifiers =
-      [[[NSString alloc] initWithCharacters:&key_event.unmodified_character
-                                     length:1] autorelease];
-  NSString* characters =
-      [[[NSString alloc] initWithCharacters:&key_event.character
-                                     length:1] autorelease];
+      [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(
+                                               &key_event.unmodified_character)
+                                    length:1];
+  NSString* characters = [[NSString alloc]
+      initWithCharacters:reinterpret_cast<const unichar*>(&key_event.character)
+                  length:1];
 
   NSEvent* synthetic_event =
       [NSEvent keyEventWithType:event_type
@@ -525,7 +533,8 @@ CefBrowserPlatformDelegateNativeMac::TranslateWebKeyEvent(
                             isARepeat:NO
                               keyCode:key_event.native_key_code];
 
-  result = content::NativeWebKeyboardEvent(synthetic_event);
+  result =
+      input::NativeWebKeyboardEvent(base::apple::OwnedNSEvent(synthetic_event));
   if (key_event.type == KEYEVENT_CHAR) {
     result.SetType(blink::WebInputEvent::Type::kChar);
   }

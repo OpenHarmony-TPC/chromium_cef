@@ -9,20 +9,18 @@
 
 #include <map>
 #include <set>
-#include <string>
 #include <vector>
 
-#include "include/cef_base.h"
-#include "include/cef_browser.h"
-
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/osr/host_display_client_osr.h"
-#include "libcef/browser/osr/motion_event_osr.h"
-
-#include "base/containers/circular_deque.h"
+#include "arkweb/build/features/features.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "build/build_config.h"
 #include "cc/layers/deadline_policy.h"
+#include "cef/include/cef_base.h"
+#include "cef/include/cef_browser.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/osr/host_display_client_osr.h"
+#include "cef/libcef/browser/osr/motion_event_osr.h"
 #include "components/viz/common/frame_sinks/begin_frame_source.h"
 #include "components/viz/common/surfaces/parent_local_surface_id_allocator.h"
 #include "content/browser/renderer_host/input/mouse_wheel_phase_handler.h"
@@ -39,7 +37,7 @@
 #include "ui/events/base_event_utils.h"
 #include "ui/events/gesture_detection/filtered_gesture_provider.h"
 #include "ui/events/gesture_detection/gesture_configuration.h"
-#include "ui/events/gesture_detection/motion_event_generic.h"
+#include "ui/events/velocity_tracker/motion_event_generic.h"
 #include "ui/gfx/geometry/rect.h"
 
 #if BUILDFLAG(IS_MAC)
@@ -50,13 +48,19 @@
 #include "ui/gfx/win/window_impl.h"
 #endif
 
-#if BUILDFLAG(IS_OHOS)
-#include <unordered_map>
-#include "third_party/ohos_ndk/includes/ohos_adapter/adapter_base.h"
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+#include "content/browser/ohos/software_compositor_host_ohos.h"
 #endif
 
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
-#include "content/browser/ohos/software_compositor_host_ohos.h"
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+#include <queue>
+
+#include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_touch_selection_controller_client_osr_ext.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#include "arkweb/chromium_ext/content/browser/ohos/overscroll_controller_ohos.h"
+#include "arkweb/chromium_ext/ui/ohos/overscroll_refresh_handler.h"
 #endif
 
 namespace ui {
@@ -65,7 +69,6 @@ class TouchSelectionController;
 
 namespace content {
 class BackingStore;
-class CursorManager;
 class DelegatedFrameHost;
 class DelegatedFrameHostClient;
 class RenderWidgetHost;
@@ -73,11 +76,17 @@ class RenderWidgetHostImpl;
 class RenderWidgetHostViewGuest;
 }  // namespace content
 
+namespace input {
+class CursorManager;
+}
+
 class CefCopyFrameGenerator;
 class CefSoftwareOutputDeviceOSR;
 class CefTouchSelectionControllerClientOSR;
 class CefVideoConsumerOSR;
 class CefWebContentsViewOSR;
+class ArkWebRenderWidgetHostViewOSRExt;
+class ArkWebTouchSelectionControllerClientOSRExt;
 
 ///////////////////////////////////////////////////////////////////////////////
 // CefRenderWidgetHostViewOSR
@@ -106,8 +115,17 @@ class CefRenderWidgetHostViewOSR
       public content::RenderFrameMetadataProvider::Observer,
       public ui::CompositorDelegate,
       public content::TextInputManager::Observer,
-      public ui::GestureProviderClient {
+      public ui::GestureProviderClient
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+    ,
+      public ui::OverscrollRefreshHandler
+#endif
+{
  public:
+  virtual ArkWebRenderWidgetHostViewOSRExt*
+  AsArkWebRenderWidgetHostViewOSRExt() {
+    return nullptr;
+  }
   CefRenderWidgetHostViewOSR(SkColor background_color,
                              bool use_shared_texture,
                              bool use_external_begin_frame,
@@ -120,7 +138,8 @@ class CefRenderWidgetHostViewOSR
 
   ~CefRenderWidgetHostViewOSR() override;
 
-  using GestureEventCallbackTask = base::OnceCallback<void(bool)>;
+  friend class ArkWebRenderWidgetHostViewOSRExt;
+
   // RenderWidgetHostView implementation.
   void InitAsChild(gfx::NativeView parent_view) override;
   void SetSize(const gfx::Size& size) override;
@@ -135,47 +154,40 @@ class CefRenderWidgetHostViewOSR
       content::PageVisibilityState page_visibility) override;
   void Hide() override;
   bool IsShowing() override;
-#if BUILDFLAG(IS_OHOS)
-  void WasOccluded() override;
-  void SetEnableLowerFrameRate(bool enabled);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
+  void SetScrollable(bool enable);
+  void WasKeyboardResized();
+  virtual void UpdateTextInputState(const ui::mojom::TextInputState* state) {}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
+  void OnTouchDown();
+  void StopBoosting();
+  void BoostingPreiodly();
+  void OnTouchMove();
+#endif
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void EvictFrameBackBuffers(bool invisible) override;
-  void UpdateVSyncFrequency();
-  void ResetVSyncFrequency();
-  void NotifyForNextTouchEvent(bool need_wait_for_touch_move = true);
-  void TriggerVsync();
-  void UpdateDrawRect(const gfx::Rect &rect);
 #endif
-#ifdef OHOS_EX_TOPCONTROLS
-  gfx::Rect GetPhysicalViewBounds();
-  int GetShrinkViewportHeight();
-  int GetTopControlsOffset() const override;
-  void OnTopControlsHeightChanged();
-#endif
-#if defined(OHOS_CLIPBOARD)
-  void MouseSelectMenuShow(bool show);
-  void ChangeVisibilityOfQuickMenu();
-#endif
-
   void EnsureSurfaceSynchronizedForWebTest() override;
   content::TouchSelectionControllerClientManager*
   GetTouchSelectionControllerClientManager() override;
   gfx::Rect GetViewBounds() override;
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   gfx::Size GetPhysicalVisibleViewportSize();
   gfx::Size GetVisibleViewportSize() override;
 #endif
   void SetBackgroundColor(SkColor color) override;
-  absl::optional<SkColor> GetBackgroundColor() override;
+  std::optional<SkColor> GetBackgroundColor() override;
   void UpdateBackgroundColor() override;
-  absl::optional<content::DisplayFeature> GetDisplayFeature() override;
+  std::optional<content::DisplayFeature> GetDisplayFeature() override;
   void SetDisplayFeatureForTesting(
       const content::DisplayFeature* display_feature) override;
-  blink::mojom::PointerLockResult LockMouse(
+  blink::mojom::PointerLockResult LockPointer(
       bool request_unadjusted_movement) override;
-  blink::mojom::PointerLockResult ChangeMouseLock(
+  blink::mojom::PointerLockResult ChangePointerLock(
       bool request_unadjusted_movement) override;
-  void UnlockMouse() override;
+  void UnlockPointer() override;
   void TakeFallbackContentFrom(content::RenderWidgetHostView* view) override;
 
 #if BUILDFLAG(IS_MAC)
@@ -189,9 +201,12 @@ class CefRenderWidgetHostViewOSR
       const std::string& url,
       const std::vector<std::string>& file_paths,
       blink::mojom::ShareService::ShareCallback callback) override;
+  uint64_t GetNSViewId() const override;
 #endif  // BUILDFLAG(IS_MAC)
 
   // RenderWidgetHostViewBase implementation.
+  void InvalidateLocalSurfaceIdAndAllocationGroup() override;
+  void ClearFallbackSurfaceForCommitPending() override;
   void ResetFallbackToFirstNavigationSurface() override;
   void InitAsPopup(content::RenderWidgetHostView* parent_host_view,
                    const gfx::Rect& bounds,
@@ -201,7 +216,7 @@ class CefRenderWidgetHostViewOSR
   void RenderProcessGone() override;
   void Destroy() override;
   void UpdateTooltipUnderCursor(const std::u16string& tooltip_text) override;
-  content::CursorManager* GetCursorManager() override;
+  input::CursorManager* GetCursorManager() override;
   gfx::Size GetCompositorViewportPixelSize() override;
   void CopyFromSurface(
       const gfx::Rect& src_rect,
@@ -211,10 +226,7 @@ class CefRenderWidgetHostViewOSR
   void TransformPointToRootSurface(gfx::PointF* point) override;
   gfx::Rect GetBoundsInRootWindow() override;
 #if BUILDFLAG(IS_OHOS)
-  void SendInternalBeginFrame() override;
-  void SendAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
   ui::Compositor* GetCompositor() override;
-  void UpdateDrawMode();
 #endif
 
 #if !BUILDFLAG(IS_MAC)
@@ -222,44 +234,27 @@ class CefRenderWidgetHostViewOSR
       const cc::RenderFrameMetadata& metadata) override;
 #endif
 
-#if defined(OHOS_INPUT_EVENTS)
-  void NotifyVirtualKeyboardOverlayRect(const gfx::Rect& keyboard_rect) override;
-  ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
-  void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
-  void DidNativeEmbedEvent(const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
-  void OnNativeEmbedLifecycleChange(const CefRenderHandler::CefNativeEmbedData& info);
-  void OnNativeEmbedVisibilityChange(const std::string& embed_id, bool visibility);
-  void SetScrollable(bool enable);
-  void OnDidNavigateMainFrameToNewPage() override;
-  void AdvanceFocusForIME(int focusType);
-  void ScrollBy(float delta_x, float delta_y);
-#endif
-
-#if defined(OHOS_COMPOSITE_RENDER)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should);
-  void WasKeyboardResized();
-  void SetDrawMode(int mode);
-  void SetDrawRect(const gfx::Rect& rect);
-  bool GetPendingSizeStatus();
-  void SetFitContentMode(int mode);
-  int32_t is_fit_content_ = 0;
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 
   viz::SurfaceId GetCurrentSurfaceId() const override;
   void ImeCompositionRangeChanged(
       const gfx::Range& range,
-      const std::vector<gfx::Rect>& character_bounds) override;
+      const std::optional<std::vector<gfx::Rect>>& character_bounds,
+      const std::optional<std::vector<gfx::Rect>>& line_bounds) override;
   std::unique_ptr<content::SyntheticGestureTarget>
   CreateSyntheticGestureTarget() override;
   bool TransformPointToCoordSpaceForView(
       const gfx::PointF& point,
-      RenderWidgetHostViewBase* target_view,
+      input::RenderWidgetHostViewInput* target_view,
       gfx::PointF* transformed_point) override;
   void DidNavigate() override;
   void SelectionChanged(const std::u16string& text,
                         size_t offset,
                         const gfx::Range& range) override;
   const viz::LocalSurfaceId& GetLocalSurfaceId() const override;
+  void UpdateFrameSinkIdRegistration() override;
   const viz::FrameSinkId& GetFrameSinkId() const override;
   viz::FrameSinkId GetRootFrameSinkId() override;
   void NotifyHostAndDelegateOnWasShown(
@@ -272,23 +267,12 @@ class CefRenderWidgetHostViewOSR
 
   void OnFrameComplete(const viz::BeginFrameAck& ack);
 
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
   void OnRendererWidgetCreated() override;
-
-  bool WebPageSnapshot(const char* id,
-                       int width,
-                       int  height,
-                       cef_web_snapshot_callback_t callback);
 #endif
   // RenderFrameMetadataProvider::Observer implementation.
-
-#if BUILDFLAG(IS_OHOS)
-  void OnRenderFrameMetadataChangedBeforeActivation(
-      const cc::RenderFrameMetadata& metadata) override;
-#else
   void OnRenderFrameMetadataChangedBeforeActivation(
       const cc::RenderFrameMetadata& metadata) override {}
-#endif
   void OnRenderFrameMetadataChangedAfterActivation(
       base::TimeTicks activation_time) override;
   void OnRenderFrameSubmission() override {}
@@ -306,83 +290,52 @@ class CefRenderWidgetHostViewOSR
 
   // ui::GestureProviderClient implementation.
   void ProcessAckedTouchEvent(
-      const content::TouchEventWithLatencyInfo& touch,
+      const input::TouchEventWithLatencyInfo& touch,
       blink::mojom::InputEventResultState ack_result) override;
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
-
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_ZOOM)
   bool RequiresDoubleTapGestureEvents() const override;
 #endif
 
-#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
-  void OnVsync();
-
-  void SendGestureEvent(const ui::GestureEventData& gesture);
-
-  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY);
-
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
 
-  void OnVsyncReceived();
-
-  void OnTouchDown();
-
-  void StopBoosting();
-
-  void BoostingPreiodly();
-
-  void OnTouchMove();
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void SendGestureEvent(const ui::GestureEventData& gesture);
 #endif
-
-#if defined(OHOS_INPUT_EVENTS)
-  void SelectionBoundsChanged(const gfx::Rect& anchor_rect,
-                              base::i18n::TextDirection anchor_dir,
-                              const gfx::Rect& focus_rect,
-                              base::i18n::TextDirection focus_dir,
-                              const gfx::Rect& bounding_box,
-                              bool is_anchor_first) override;
-  void FocusedNodeChanged(bool is_editable_node,
-                          const gfx::Rect& node_bounds_in_screen) override;
-  void DidOverscroll(const ui::DidOverscrollParams& params) override;
-  void DynamicFrameLossEvent(const std::string& sceneId, bool isStart) override;
-  void DidStopFlinging() override;
-  blink::mojom::InputEventResultState FilterInputEvent(
-      const blink::WebInputEvent& input_event) override;
-  void OnUpdateTextInputStateCalledInner(
-    const ui::mojom::TextInputState* state);
-
-#endif  // defined(OHOS_INPUT_EVENTS)
 
   bool InstallTransparency();
 
   void WasResized();
   void SynchronizeVisualProperties(
       const cc::DeadlinePolicy& deadline_policy,
-#if defined(OHOS_COMPOSITE_RENDER)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
       const absl::optional<viz::LocalSurfaceId>& child_local_surface_id,
       bool isKeyboard = false);
 #else
       const absl::optional<viz::LocalSurfaceId>& child_local_surface_id);
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   void OnScreenInfoChanged();
   void Invalidate(CefBrowserHost::PaintElementType type);
   void SendExternalBeginFrame();
-  void SendKeyEvent(const content::NativeWebKeyboardEvent& event);
+  void SendKeyEvent(const input::NativeWebKeyboardEvent& event);
   void SendMouseEvent(const blink::WebMouseEvent& event);
-  void SendTouchpadFlingEvent(blink::WebGestureEvent event);
   void SendMouseWheelEvent(const blink::WebMouseWheelEvent& event);
   void SendTouchEvent(const CefTouchEvent& event);
-#ifdef OHOS_CLIPBOARD
-  void ResetGestureDetection(bool is_lost_focus);
-#endif
   bool ShouldRouteEvents() const;
   void SetFocus(bool focus);
   void UpdateFrameRate();
 
+#if BUILDFLAG(ARKWEB_DSS)
+  virtual gfx::Size SizeInPixels();
+#else
   gfx::Size SizeInPixels();
+#endif
   void OnPaint(const gfx::Rect& damage_rect,
                const gfx::Size& pixel_size,
                const void* pixels);
+  void OnAcceleratedPaint(const gfx::Rect& damage_rect,
+                          const gfx::Size& pixel_size,
+                          const CefAcceleratedPaintInfo& info);
 
   void OnBeginFame(base::TimeTicks frame_time);
 
@@ -436,70 +389,53 @@ class CefRenderWidgetHostViewOSR
     return selection_controller_.get();
   }
 
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  ArkWebTouchSelectionControllerClientOSRExt* selection_controller_client()
+      const {
+    return selection_controller_client_.get();
+  }
+#else
   CefTouchSelectionControllerClientOSR* selection_controller_client() const {
     return selection_controller_client_.get();
   }
+#endif
 
   ui::TextInputType GetTextInputType();
 
   bool is_hidden() const { return !is_showing_; }
 
 #if BUILDFLAG(IS_OHOS)
-  bool IsMouseLocked() override;
-  void SetDoubleTapSupportEnabled(bool enabled);
-  void SetMultiTouchZoomSupportEnabled(bool enabled);
-
   static void AddCompositor(gfx::AcceleratedWidget widget,
                             ui::Compositor* compositor);
   static ui::Compositor* GetCompositor(gfx::AcceleratedWidget widget);
-
-  void OnTouchSelectionChanged(
-      const CefTouchHandleState& insert_handle,
-      const CefTouchHandleState& start_selection_handle,
-      const CefTouchHandleState& end_selection_handle,
-      bool need_report);
-  bool NeedPopupInsertTouchHandleQuickMenu();
-  void SetGestureEventResult(bool result, bool stopPropagation);
-  void SetNativeEmbedMode(bool flag);
 #endif
 
-#ifdef OHOS_CLIPBOARD
-  std::u16string GetSelectedText() override;
-  std::u16string GetText();
-#endif  // #ifdef OHOS_CLIPBOARD
-
-#ifdef OHOS_EX_FREE_COPY
-  std::vector<int8_t> GetWordSelection(const std::string& text, int8_t offset) override;
+#if BUILDFLAG(ARKWEB_DSS)
+  friend class ArkWebRenderWidgetHostViewOSRExt;
 #endif
 
-#ifdef OHOS_DISPLAY_CUTOUT
-  void OnSafeInsetsChange(const gfx::Insets& safe_insets);
-#endif
-
-#ifdef OHOS_AI
-  void OnTextSelected(bool flag);
-  float GetPageScaleFactor();
-#endif
-
-#ifdef OHOS_DRAG_DROP
-  void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+  gfx::Rect GetPhysicalViewBounds();
+  virtual int GetShrinkViewportHeight() { return 0; }
+  int GetTopControlsOffset() const override { return 0; }
+  virtual void OnTopControlsHeightChanged() {}
+  virtual void OnTopControlsChanged(float top_controls_offset,
+                                    float top_content_offset) {}
 #endif
 
  private:
   void SetFrameRate();
   bool SetScreenInfo();
   bool SetViewBounds();
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool SetVisibleViewportSize();
-#endif
-#if defined(OHOS_INPUT_EVENTS)
   bool SetRootLayerSize(bool force, bool* visible_changed = nullptr);
 #else
   bool SetRootLayerSize(bool force);
 #endif
 
   // Manages resizing so that only one resize request is in-flight at a time.
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool ResizeRootLayer(bool isKeyboard, bool& visible_changed);
 #else
   bool ResizeRootLayer();
@@ -513,15 +449,6 @@ class CefRenderWidgetHostViewOSR
 
   void OnScrollOffsetChanged();
 
-#if defined(OHOS_INPUT_EVENTS)
-  void UpdateEditBounds();
-  std::pair<int, int> HandleCursorOffset();
-  void FilterScrollEventImpl(const ui::GestureEventData& gesture);
-#endif  // defined(OHOS_INPUT_EVENTS)
-#ifdef OHOS_EX_TOPCONTROLS
-  void OnTopControlsChanged(float top_controls_offset,
-                            float top_content_offset);
-#endif
   void AddGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
   void RemoveGuestHostView(CefRenderWidgetHostViewOSR* guest_host);
 
@@ -549,7 +476,7 @@ class CefRenderWidgetHostViewOSR
   // has allocated one. Also sets child sequence number component of the
   // viz::LocalSurfaceId allocator.
   void UpdateLocalSurfaceIdFromEmbeddedClient(
-      const absl::optional<viz::LocalSurfaceId>& local_surface_id);
+      const std::optional<viz::LocalSurfaceId>& local_surface_id);
 
   // Returns the current viz::LocalSurfaceIdAllocation.
   const viz::LocalSurfaceId& GetOrCreateLocalSurfaceId();
@@ -560,34 +487,24 @@ class CefRenderWidgetHostViewOSR
   // opaqueness changes.
   void UpdateBackgroundColorFromRenderer(SkColor color);
 
-#if BUILDFLAG(IS_OHOS)
-  void OnRootLayerChanged();
-#if defined(OHOS_SCROLL_PERFORMANCE)
-  void GestureEventAck(const blink::WebGestureEvent& event,
-                       blink::mojom::InputEventResultState ack_result,
-                       blink::mojom::ScrollResultDataPtr scroll_result_data) override;
-#endif
-  void OnScaleChanged(float old_page_scale_factor, float nwe_page_scale_factor);
-#endif
-
   // The last selection bounds reported to the view.
   gfx::SelectionBound selection_start_;
   gfx::SelectionBound selection_end_;
 
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  std::unique_ptr<ArkWebTouchSelectionControllerClientOSRExt>
+      selection_controller_client_;
+#else
   std::unique_ptr<CefTouchSelectionControllerClientOSR>
       selection_controller_client_;
+#endif
+
   std::unique_ptr<ui::TouchSelectionController> selection_controller_;
 
   // The background color of the web content.
   SkColor background_color_;
 
   int frame_rate_threshold_us_ = 0;
-
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
-  gfx::SizeF scrollable_viewport_size_;
-
-  std::unique_ptr<content::SoftwareCompositorHostOhos> software_compositor_;
-#endif
 
   std::unique_ptr<ui::Compositor> compositor_;
   std::unique_ptr<content::DelegatedFrameHost> delegated_frame_host_;
@@ -600,41 +517,39 @@ class CefRenderWidgetHostViewOSR
       parent_local_surface_id_allocator_;
   viz::ParentLocalSurfaceIdAllocator compositor_local_surface_id_allocator_;
 
-  std::unique_ptr<content::CursorManager> cursor_manager_;
+  std::unique_ptr<input::CursorManager> cursor_manager_;
 
   // Provides |source_id| for BeginFrameArgs that we create.
   viz::StubBeginFrameSource begin_frame_source_;
   uint64_t begin_frame_number_ = viz::BeginFrameArgs::kStartingFrameNumber;
   bool begin_frame_pending_ = false;
 
+  bool use_shared_texture_ = false;
   bool sync_frame_rate_ = false;
   bool external_begin_frame_enabled_ = false;
   bool needs_external_begin_frames_ = false;
 
-  CefHostDisplayClientOSR* host_display_client_ = nullptr;
+  raw_ptr<CefHostDisplayClientOSR> host_display_client_ = nullptr;
   std::unique_ptr<CefVideoConsumerOSR> video_consumer_;
 
   bool hold_resize_ = false;
   bool pending_resize_ = false;
-#if defined(OHOS_COMPOSITE_RENDER)
-  bool isKeyboardResized_ = false;
-#endif
 
   float cached_scale_factor_ = 0.0f;
 
   // The associated Model.  While |this| is being Destroyed,
   // |render_widget_host_| is NULL and the message loop is run one last time
   // Message handlers must check for a NULL |render_widget_host_|.
-  content::RenderWidgetHostImpl* render_widget_host_;
+  raw_ptr<content::RenderWidgetHostImpl> render_widget_host_;
 
   bool has_parent_;
-  CefRenderWidgetHostViewOSR* parent_host_view_;
-  CefRenderWidgetHostViewOSR* popup_host_view_ = nullptr;
-  CefRenderWidgetHostViewOSR* child_host_view_ = nullptr;
-  std::set<CefRenderWidgetHostViewOSR*> guest_host_views_;
-#if defined(OHOS_COMPOSITE_RENDER)
+  raw_ptr<CefRenderWidgetHostViewOSR> parent_host_view_;
+  raw_ptr<CefRenderWidgetHostViewOSR> popup_host_view_ = nullptr;
+  raw_ptr<CefRenderWidgetHostViewOSR> child_host_view_ = nullptr;
+  std::set<raw_ptr<CefRenderWidgetHostViewOSR>> guest_host_views_;
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   bool should_wait_ = false;
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 
   CefRefPtr<AlloyBrowserHostImpl> browser_impl_;
 
@@ -642,7 +557,7 @@ class CefRenderWidgetHostViewOSR
   bool is_destroyed_ = false;
   bool is_first_navigation_ = true;
   gfx::Rect current_view_bounds_;
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   gfx::Size current_visible_view_bounds_ = {0, 0};
 #endif
   gfx::Rect popup_position_;
@@ -672,70 +587,68 @@ class CefRenderWidgetHostViewOSR
 
 #if BUILDFLAG(IS_OHOS)
   bool is_popup_ = false;
-  gfx::SizeF root_layer_size_;
   static std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
       compositor_map_;
-
   static std::unordered_map<gfx::AcceleratedWidget, uint32_t>
       accelerate_widget_map_;
-
+#endif
+#if BUILDFLAG(IS_ARKWEB)
   float page_scale_factor_ = 0.f;
-
-  bool is_mouse_locked_ = false;
-
-
-#if defined(OHOS_PERFORMANCE_JITTER)
-  base::circular_deque<ui::GestureEventData> gesture_event_queue_;
-
-  size_t gesture_update_count_ = 0;
-
-  base::circular_deque<blink::WebTouchEvent> web_touch_event_queue_;
-  size_t web_touch_event_count_ = 0;
-#endif
-#endif
-
-#if defined(OHOS_INPUT_EVENTS)
-  double focus_rect_x_ = 0;
-  double focus_rect_y_ = 0;
-  double focus_rect_width_ = 0;
-  double focus_rect_height_ = 0;
-  int edit_bounds_x_ = 0;
-  int edit_bounds_y_ = 0;
-  int edit_bounds_width_ = 0;
-  int edit_bounds_height_ = 0;
-  int last_key_code_ = -1;
-  bool is_select_text_ = false;
-  bool is_editable_node_ = false;
   gfx::Size viewport_size_in_pixels_;
-  bool is_scroll_consumed_ = false;
-  bool is_mouse_wheel_scroll_ = false;
   float device_scale_factor_ = 1.0f;
-  bool scroll_enabled_ = true;
-  int32_t node_id_ = -1;
-  bool is_tap_down_in_cursor_update_ = false;
-#endif  // defined(OHOS_INPUT_EVENTS)
-
-#ifdef OHOS_EX_TOPCONTROLS
-  float top_controls_offset_ = 0.f;
-  float top_content_offset_ = 0.f;
-  bool for_browser_ = false;
+  int32_t needFocusViewport_ = 0;
+  virtual void OnRootLayerChanged() {}
+  virtual void OnScaleChanged(float old_page_scale_factor,
+                              float nwe_page_scale_factor) {}
+#endif
+#if BUILDFLAG(ARKWEB_AI)
+  bool overlay_in_progress_ = false;
+#endif
+#if BUILDFLAG(ARKWEB_ZOOM)
+  std::string device_type_;
+  bool requires_double_tap_gesture_events_ = false;
+#endif
+  gfx::Rect clipped_selection_bounds_;
+  base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;
 #endif
 
-#if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
+ protected:
+#if BUILDFLAG(ARKWEB_FIT_CONTENT)
+  int32_t is_fit_content_ = 0;
+#endif
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+  gfx::SizeF scrollable_viewport_size_;
+  std::unique_ptr<content::SoftwareCompositorHostOhos> software_compositor_;
+  gfx::SizeF root_layer_size_;
+#endif
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  bool is_editable_node_ = false;
+  bool isKeyboardResized_ = false;
+  int32_t node_id_ = -1;
+  int last_key_code_ = -1;
+  bool scroll_enabled_ = true;
+  bool is_scroll_consumed_ = false;
+  std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
+  virtual void FilterScrollEventImpl(const ui::GestureEventData& gesture) {}
+  bool is_tap_down_in_cursor_update_ = false;
+#endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   bool isBoosting_ = false;
   bool is_fling_ = false;
   bool has_touch_point_ = false;
 #endif
-
-#ifdef OHOS_CLIPBOARD
-  gfx::Rect clipped_selection_bounds_;
-#endif  // OHOS_CLIPBOARD
-
-#ifdef OHOS_AI
-  bool overlay_in_progress_ = false;
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+  std::unique_ptr<content::OverscrollControllerOHOS> overscroll_controller_;
+  virtual void CreateOverscrollControllerIfPossible() {}
+  virtual void OnFocusInternal() {}
+  virtual void LostFocusInternal() {}
 #endif
-  int32_t needFocusViewport_ = 0;
-  base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+  float top_controls_offset_ = 0.f;
+  float top_content_offset_ = 0.f;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_

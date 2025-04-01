@@ -6,11 +6,10 @@
 #define CEF_LIBCEF_BROWSER_TRACE_SUBSCRIBER_H_
 #pragma once
 
-#include "include/cef_trace.h"
-
 #include "base/files/file_path.h"
 #include "base/memory/ref_counted_memory.h"
 #include "base/memory/weak_ptr.h"
+#include "cef/include/cef_trace.h"
 
 // May only be accessed on the browser process UI thread.
 class CefTraceSubscriber {
@@ -29,7 +28,7 @@ class CefTraceSubscriber {
   void OnTracingFileResult(CefRefPtr<CefEndTracingCallback> callback,
                            const base::FilePath& tracing_file);
 
-  bool collecting_trace_data_;
+  bool collecting_trace_data_ = false;
   base::WeakPtrFactory<CefTraceSubscriber> weak_factory_;
 };
 

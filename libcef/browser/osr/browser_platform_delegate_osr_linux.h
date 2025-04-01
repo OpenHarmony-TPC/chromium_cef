@@ -5,7 +5,7 @@
 #ifndef CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_LINUX_H_
 #define CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_LINUX_H_
 
-#include "libcef/browser/osr/browser_platform_delegate_osr.h"
+#include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
 
 // Windowless browser implementation for Linux.
 class CefBrowserPlatformDelegateOsrLinux
@@ -13,6 +13,7 @@ class CefBrowserPlatformDelegateOsrLinux
  public:
   CefBrowserPlatformDelegateOsrLinux(
       std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
+      bool use_shared_texture,
       bool use_external_begin_frame);
 
   // CefBrowserPlatformDelegate methods:

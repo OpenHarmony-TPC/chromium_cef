@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7ad6d7e9d42490e37b36f90c8d81e20279d08a02$
+// $hash=2adf38c3d6cd61e5cca5ff0f2c20beda2d63be67$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_
@@ -35,9 +35,6 @@ class CefClientCToCpp
   // CefClient methods.
   CefRefPtr<CefAudioHandler> GetAudioHandler() override;
   CefRefPtr<CefCommandHandler> GetCommandHandler() override;
-  CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override;
-  CefRefPtr<CefDialogHandler> GetDialogHandler() override;
-  CefRefPtr<CefDisplayHandler> GetDisplayHandler() override;
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override;
   CefRefPtr<CefDragHandler> GetDragHandler() override;
   CefRefPtr<CefFindHandler> GetFindHandler() override;
@@ -47,34 +44,15 @@ class CefClientCToCpp
   CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() override;
   CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override;
   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override;
-  CefRefPtr<CefLoadHandler> GetLoadHandler() override;
   CefRefPtr<CefPrintHandler> GetPrintHandler() override;
-  CefRefPtr<CefRenderHandler> GetRenderHandler() override;
   CefRefPtr<CefRequestHandler> GetRequestHandler() override;
+  void OnShowToast(double duration, const CefString& toast) override;
+  void OnShowVideoAssistant(const CefString& videoAssistantItems) override;
+  void OnReportStatisticLog(const CefString& content) override;
   bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                 CefRefPtr<CefFrame> frame,
                                 CefProcessId source_process,
                                 CefRefPtr<CefProcessMessage> message) override;
-  CefRefPtr<CefPermissionRequest> GetPermissionRequest() override;
-  CefRefPtr<CefMediaHandler> GetMediaHandler() override;
-  int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                             const CefString& method,
-                             const CefString& object_name,
-                             CefRefPtr<CefListValue> result,
-                             int32_t routing_id,
-                             int32_t object_id) override;
-  bool HasJavaScriptObjectMethods(int32_t object_id,
-                                  const CefString& method_name) override;
-  void GetJavaScriptObjectMethods(
-      int32_t object_id,
-      CefRefPtr<CefValue> returned_method_names) override;
-  void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) override;
-  void RemoveTransientJavaScriptObject() override;
-  CefRefPtr<CefFormHandler> GetFormHandler() override;
-  void OnTopControlsChanged(float top_controls_offset,
-                            float top_content_offset) override;
-  int OnGetTopControlsHeight() override;
-  bool DoBrowserControlsShrinkRendererSize() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CLIENT_CTOCPP_H_

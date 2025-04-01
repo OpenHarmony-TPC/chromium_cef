@@ -2,11 +2,10 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/x509_certificate_impl.h"
+#include "cef/libcef/browser/x509_certificate_impl.h"
 
-#include "libcef/browser/x509_cert_principal_impl.h"
-#include "libcef/common/time_util.h"
-
+#include "cef/libcef/browser/x509_cert_principal_impl.h"
+#include "cef/libcef/common/time_util.h"
 #include "net/cert/x509_util.h"
 #include "net/ssl/ssl_private_key.h"
 
@@ -108,6 +107,11 @@ void CefX509CertificateImpl::AcquirePrivateKey(
   } else {
     std::move(private_key_callback).Run(nullptr);
   }
+}
+
+std::unique_ptr<net::ClientCertIdentity>
+CefX509CertificateImpl::DisconnectIdentity() {
+  return std::move(identity_);
 }
 
 void CefX509CertificateImpl::GetEncodedIssuerChain(

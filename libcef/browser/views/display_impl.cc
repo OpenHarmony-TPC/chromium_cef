@@ -2,10 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/views/display_impl.h"
+#include "cef/libcef/browser/views/display_impl.h"
 
-#include "libcef/browser/views/view_util.h"
-
+#include "cef/libcef/browser/views/view_util.h"
 #include "ui/display/screen.h"
 
 // static
@@ -47,8 +46,8 @@ void CefDisplay::GetAllDisplays(std::vector<CefRefPtr<CefDisplay>>& displays) {
 
   using DisplayVector = std::vector<display::Display>;
   DisplayVector vec = display::Screen::GetScreen()->GetAllDisplays();
-  for (size_t i = 0; i < vec.size(); ++i) {
-    displays.push_back(new CefDisplayImpl(vec[i]));
+  for (const auto& i : vec) {
+    displays.push_back(new CefDisplayImpl(i));
   }
 }
 
@@ -111,7 +110,7 @@ CefDisplayImpl::~CefDisplayImpl() {
   CEF_REQUIRE_UIT();
 }
 
-int64 CefDisplayImpl::GetID() {
+int64_t CefDisplayImpl::GetID() {
   CEF_REQUIRE_UIT_RETURN(-1);
   return display_.id();
 }

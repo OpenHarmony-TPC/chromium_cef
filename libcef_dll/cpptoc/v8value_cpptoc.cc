@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a5616f2ac175ce772cea9b336a9418fc38650a38$
+// $hash=10ac43c0f16dedaf21bfa55f126f61c4d179abca$
 //
 
 #include "libcef_dll/cpptoc/v8value_cpptoc.h"
+
 #include "libcef_dll/cpptoc/v8context_cpptoc.h"
 #include "libcef_dll/cpptoc/v8exception_cpptoc.h"
 #include "libcef_dll/ctocpp/base_ref_counted_ctocpp.h"
@@ -54,7 +55,7 @@ CEF_EXPORT cef_v8value_t* cef_v8value_create_bool(int value) {
   return CefV8ValueCppToC::Wrap(_retval);
 }
 
-CEF_EXPORT cef_v8value_t* cef_v8value_create_int(int32 value) {
+CEF_EXPORT cef_v8value_t* cef_v8value_create_int(int32_t value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
@@ -64,7 +65,7 @@ CEF_EXPORT cef_v8value_t* cef_v8value_create_int(int32 value) {
   return CefV8ValueCppToC::Wrap(_retval);
 }
 
-CEF_EXPORT cef_v8value_t* cef_v8value_create_uint(uint32 value) {
+CEF_EXPORT cef_v8value_t* cef_v8value_create_uint(uint32_t value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
@@ -138,21 +139,32 @@ CEF_EXPORT cef_v8value_t* cef_v8value_create_array_buffer(
     cef_v8array_buffer_release_callback_t* release_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: buffer; type: simple_byaddr
-  DCHECK(buffer);
-  if (!buffer) {
-    return NULL;
-  }
   // Verify param: release_callback; type: refptr_diff
   DCHECK(release_callback);
   if (!release_callback) {
     return NULL;
   }
+  // Unverified params: buffer
 
   // Execute
   CefRefPtr<CefV8Value> _retval = CefV8Value::CreateArrayBuffer(
       buffer, length,
       CefV8ArrayBufferReleaseCallbackCToCpp::Wrap(release_callback));
+
+  // Return type: refptr_same
+  return CefV8ValueCppToC::Wrap(_retval);
+}
+
+CEF_EXPORT cef_v8value_t* cef_v8value_create_array_buffer_with_copy(
+    void* buffer,
+    size_t length) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: buffer
+
+  // Execute
+  CefRefPtr<CefV8Value> _retval =
+      CefV8Value::CreateArrayBufferWithCopy(buffer, length);
 
   // Return type: refptr_same
   return CefV8ValueCppToC::Wrap(_retval);
@@ -443,7 +455,7 @@ int CEF_CALLBACK v8value_get_bool_value(struct _cef_v8value_t* self) {
   return _retval;
 }
 
-int32 CEF_CALLBACK v8value_get_int_value(struct _cef_v8value_t* self) {
+int32_t CEF_CALLBACK v8value_get_int_value(struct _cef_v8value_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -452,13 +464,13 @@ int32 CEF_CALLBACK v8value_get_int_value(struct _cef_v8value_t* self) {
   }
 
   // Execute
-  int32 _retval = CefV8ValueCppToC::Get(self)->GetIntValue();
+  int32_t _retval = CefV8ValueCppToC::Get(self)->GetIntValue();
 
   // Return type: simple
   return _retval;
 }
 
-uint32 CEF_CALLBACK v8value_get_uint_value(struct _cef_v8value_t* self) {
+uint32_t CEF_CALLBACK v8value_get_uint_value(struct _cef_v8value_t* self) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -467,7 +479,7 @@ uint32 CEF_CALLBACK v8value_get_uint_value(struct _cef_v8value_t* self) {
   }
 
   // Execute
-  uint32 _retval = CefV8ValueCppToC::Get(self)->GetUIntValue();
+  uint32_t _retval = CefV8ValueCppToC::Get(self)->GetUIntValue();
 
   // Return type: simple
   return _retval;
@@ -785,7 +797,6 @@ int CEF_CALLBACK v8value_set_value_byindex(struct _cef_v8value_t* self,
 int CEF_CALLBACK
 v8value_set_value_byaccessor(struct _cef_v8value_t* self,
                              const cef_string_t* key,
-                             cef_v8_accesscontrol_t settings,
                              cef_v8_propertyattribute_t attribute) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
@@ -796,8 +807,8 @@ v8value_set_value_byaccessor(struct _cef_v8value_t* self,
   // Unverified params: key
 
   // Execute
-  bool _retval = CefV8ValueCppToC::Get(self)->SetValue(CefString(key), settings,
-                                                       attribute);
+  bool _retval =
+      CefV8ValueCppToC::Get(self)->SetValue(CefString(key), attribute);
 
   // Return type: bool
   return _retval;
@@ -945,6 +956,37 @@ int CEF_CALLBACK v8value_neuter_array_buffer(struct _cef_v8value_t* self) {
   bool _retval = CefV8ValueCppToC::Get(self)->NeuterArrayBuffer();
 
   // Return type: bool
+  return _retval;
+}
+
+size_t CEF_CALLBACK
+v8value_get_array_buffer_byte_length(struct _cef_v8value_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  size_t _retval = CefV8ValueCppToC::Get(self)->GetArrayBufferByteLength();
+
+  // Return type: simple
+  return _retval;
+}
+
+void* CEF_CALLBACK v8value_get_array_buffer_data(struct _cef_v8value_t* self) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  void* _retval = CefV8ValueCppToC::Get(self)->GetArrayBufferData();
+
+  // Return type: simple_byaddr
   return _retval;
 }
 
@@ -1153,6 +1195,9 @@ CefV8ValueCppToC::CefV8ValueCppToC() {
   GetStruct()->get_array_buffer_release_callback =
       v8value_get_array_buffer_release_callback;
   GetStruct()->neuter_array_buffer = v8value_neuter_array_buffer;
+  GetStruct()->get_array_buffer_byte_length =
+      v8value_get_array_buffer_byte_length;
+  GetStruct()->get_array_buffer_data = v8value_get_array_buffer_data;
   GetStruct()->get_function_name = v8value_get_function_name;
   GetStruct()->get_function_handler = v8value_get_function_handler;
   GetStruct()->execute_function = v8value_execute_function;

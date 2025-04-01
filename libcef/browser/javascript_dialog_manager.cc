@@ -3,30 +3,57 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/javascript_dialog_manager.h"
+#include "cef/libcef/browser/javascript_dialog_manager.h"
 
 #include <utility>
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/thread_util.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
 #include "base/logging.h"
+#include "cef/libcef/browser/browser_guest_util.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "components/javascript_dialogs/tab_modal_dialog_manager.h"
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include <string>
+
+#include "base/base_switches.h"
+#include "base/command_line.h"
 #include "components/strings/grit/components_strings.h"
+#include "content/public/common/content_switches.h"
 #include "ui/base/l10n/l10n_util.h"
 #endif
 
 namespace {
 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+constexpr int32_t API_TARGET_VERSION_12 = 12;
+// Same as API_VERSION_MOD in js_ui_ability.cpp of ability_runtime
+constexpr int32_t API_VERSION_MOD = 100;
+
+int32_t GetApiTargetVersion() {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kOhosAppApiVersion)) {
+    LOG(ERROR) << "kOhosAppApiVersion not exist";
+    return -1;
+  }
+  std::string apiVersion =
+      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
+          switches::kOhosAppApiVersion);
+  if (apiVersion.empty()) {
+    return -1;
+  }
+  return std::stoi(apiVersion) % API_VERSION_MOD;
+}
+#endif
+
 class CefJSDialogCallbackImpl : public CefJSDialogCallback {
  public:
   using CallbackType = content::JavaScriptDialogManager::DialogClosedCallback;
 
-  CefJSDialogCallbackImpl(CallbackType callback)
+  explicit CefJSDialogCallbackImpl(CallbackType callback)
       : callback_(std::move(callback)) {}
   ~CefJSDialogCallbackImpl() override {
     if (!callback_.is_null()) {
@@ -67,8 +94,21 @@ class CefJSDialogCallbackImpl : public CefJSDialogCallback {
 
 javascript_dialogs::TabModalDialogManager* GetTabModalDialogManager(
     content::WebContents* web_contents) {
-  return javascript_dialogs::TabModalDialogManager::FromWebContents(
-      web_contents);
+  if (auto* manager =
+          javascript_dialogs::TabModalDialogManager::FromWebContents(
+              web_contents)) {
+    return manager;
+  }
+
+  // Try the owner WebContents if the dialog originates from an excluded view
+  // such as the PDF viewer or Print Preview. This is safe to call even if Alloy
+  // extensions are disabled.
+  if (auto* owner_contents = GetOwnerForGuestContents(web_contents)) {
+    return javascript_dialogs::TabModalDialogManager::FromWebContents(
+        owner_contents);
+  }
+
+  return nullptr;
 }
 
 }  // namespace
@@ -77,7 +117,7 @@ CefJavaScriptDialogManager::CefJavaScriptDialogManager(
     CefBrowserHostBase* browser)
     : browser_(browser), weak_ptr_factory_(this) {}
 
-CefJavaScriptDialogManager::~CefJavaScriptDialogManager() {}
+CefJavaScriptDialogManager::~CefJavaScriptDialogManager() = default;
 
 void CefJavaScriptDialogManager::Destroy() {
   if (handler_) {
@@ -115,7 +155,7 @@ void CefJavaScriptDialogManager::RunJavaScriptDialog(
 
       // Execute the user callback.
       bool handled = handler->OnJSDialog(
-          browser_, origin_url.spec(),
+          browser_.get(), origin_url.spec(),
           static_cast<cef_jsdialog_type_t>(message_type), message_text,
           default_prompt_text, callbackPtr.get(), *did_suppress_message);
       if (handled) {
@@ -157,6 +197,12 @@ void CefJavaScriptDialogManager::RunJavaScriptDialog(
   }
 
   auto manager = GetTabModalDialogManager(web_contents);
+  if (!manager) {
+    // Dismiss the dialog.
+    std::move(callback).Run(false, std::u16string());
+    return;
+  }
+
   manager->RunJavaScriptDialog(web_contents, render_frame_host, message_type,
                                message_text, default_prompt_text,
                                std::move(callback), did_suppress_message);
@@ -167,16 +213,13 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
     content::RenderFrameHost* render_frame_host,
     bool is_reload,
     DialogClosedCallback callback) {
-  if (browser_->WillBeDestroyed()) {
-    // Currently destroying the browser. Accept the unload without showing
-    // the prompt.
-    std::move(callback).Run(true, std::u16string());
-    return;
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  static int32_t api_target_version = GetApiTargetVersion();
+  std::u16string message = u"Is it OK to leave/reload this page?";
+  if (api_target_version >= API_TARGET_VERSION_12) {
+    message = l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
   }
-
-#if BUILDFLAG(IS_OHOS)
-  const std::u16string& message_text =
-      l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
+  const std::u16string& message_text = message;
 #else
   const std::u16string& message_text = u"Is it OK to leave/reload this page?";
 #endif
@@ -198,7 +241,7 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
 
       // Execute the user callback.
       bool handled = handler->OnBeforeUnloadDialog(
-          browser_, url, message_text, is_reload, callbackPtr.get());
+          browser_.get(), url, message_text, is_reload, callbackPtr.get());
       if (handled) {
         return;
       }
@@ -231,6 +274,12 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
   }
 
   auto manager = GetTabModalDialogManager(web_contents);
+  if (!manager) {
+    // Accept the unload without showing the prompt.
+    std::move(callback).Run(true, std::u16string());
+    return;
+  }
+
   manager->RunBeforeUnloadDialog(web_contents, render_frame_host, is_reload,
                                  std::move(callback));
 }
@@ -255,6 +304,10 @@ bool CefJavaScriptDialogManager::HandleJavaScriptDialog(
   }
 
   auto manager = GetTabModalDialogManager(web_contents);
+  if (!manager) {
+    return true;
+  }
+
   return manager->HandleJavaScriptDialog(web_contents, accept, prompt_override);
 }
 
@@ -263,7 +316,7 @@ void CefJavaScriptDialogManager::CancelDialogs(
     bool reset_state) {
   if (handler_) {
     if (reset_state) {
-      handler_->OnResetDialogState(browser_);
+      handler_->OnResetDialogState(browser_.get());
     }
     handler_ = nullptr;
     return;
@@ -284,6 +337,10 @@ void CefJavaScriptDialogManager::CancelDialogs(
   }
 
   auto manager = GetTabModalDialogManager(web_contents);
+  if (!manager) {
+    return;
+  }
+
   manager->CancelDialogs(web_contents, reset_state);
 }
 
@@ -292,7 +349,7 @@ void CefJavaScriptDialogManager::DialogClosed(
     bool success,
     const std::u16string& user_input) {
   if (handler_) {
-    handler_->OnDialogClosed(browser_);
+    handler_->OnDialogClosed(browser_.get());
     // Call OnResetDialogState.
     CancelDialogs(/*web_contents=*/nullptr, /*reset_state=*/true);
   }

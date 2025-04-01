@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/native/browser_platform_delegate_native_aura.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_aura.h"
 
-#include "libcef/browser/native/menu_runner_views_aura.h"
-#include "libcef/browser/views/view_util.h"
-
+#include "cef/libcef/browser/native/menu_runner_views_aura.h"
+#include "cef/libcef/browser/views/view_util.h"
 #include "content/browser/renderer_host/render_widget_host_view_aura.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
@@ -102,10 +101,10 @@ gfx::Point CefBrowserPlatformDelegateNativeAura::GetScreenPoint(
   return screen_pt;
 }
 
-content::NativeWebKeyboardEvent
+input::NativeWebKeyboardEvent
 CefBrowserPlatformDelegateNativeAura::TranslateWebKeyEvent(
     const CefKeyEvent& key_event) const {
-  return content::NativeWebKeyboardEvent(TranslateUiKeyEvent(key_event));
+  return input::NativeWebKeyboardEvent(TranslateUiKeyEvent(key_event));
 }
 
 blink::WebMouseEvent
@@ -125,11 +124,13 @@ CefBrowserPlatformDelegateNativeAura::TranslateWebMoveEvent(
   return ui::MakeWebMouseEvent(TranslateUiMoveEvent(mouse_event, mouseLeave));
 }
 
+#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
 blink::WebGestureEvent
 CefBrowserPlatformDelegateNativeAura::TranslateTouchpadFlingEvent(
     const CefMouseEvent& mouse_event) const {
   return ui::MakeWebGestureEvent(TranslateUiTouchpadEvent(mouse_event));
 }
+#endif
 
 blink::WebMouseWheelEvent
 CefBrowserPlatformDelegateNativeAura::TranslateWebWheelEvent(
@@ -148,7 +149,7 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiClickEvent(
   DCHECK_GE(clickCount, 1);
 
   ui::EventType event_type =
-      mouseUp ? ui::ET_MOUSE_RELEASED : ui::ET_MOUSE_PRESSED;
+      mouseUp ? ui::EventType::kMouseReleased : ui::EventType::kMousePressed;
   gfx::PointF location(mouse_event.x, mouse_event.y);
   gfx::PointF root_location(GetScreenPoint(
       gfx::Point(mouse_event.x, mouse_event.y), /*want_dip_coords=*/false));
@@ -166,14 +167,6 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiClickEvent(
     case MBT_RIGHT:
       changed_button_flags |= ui::EF_RIGHT_MOUSE_BUTTON;
       break;
-#if BUILDFLAG(IS_OHOS)
-    case MBT_BACK:
-      changed_button_flags |= ui::EF_BACK_MOUSE_BUTTON;
-      break;
-    case MBT_FORWARD:
-      changed_button_flags |= ui::EF_FORWARD_MOUSE_BUTTON;
-      break;
-#endif
     default:
       DCHECK(false);
   }
@@ -188,7 +181,7 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiMoveEvent(
     const CefMouseEvent& mouse_event,
     bool mouseLeave) const {
   ui::EventType event_type =
-      mouseLeave ? ui::ET_MOUSE_EXITED : ui::ET_MOUSE_MOVED;
+      mouseLeave ? ui::EventType::kMouseExited : ui::EventType::kMouseMoved;
   gfx::PointF location(mouse_event.x, mouse_event.y);
   gfx::PointF root_location(GetScreenPoint(
       gfx::Point(mouse_event.x, mouse_event.y), /*want_dip_coords=*/false));
@@ -204,19 +197,21 @@ ui::MouseEvent CefBrowserPlatformDelegateNativeAura::TranslateUiMoveEvent(
                         changed_button_flags);
 }
 
+#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
 ui::GestureEvent CefBrowserPlatformDelegateNativeAura::TranslateUiTouchpadEvent(
     const CefMouseEvent& mouse_event) const {
-  ui::GestureEventDetails details(ui::ET_SCROLL_FLING_START);
+  ui::GestureEventDetails details(ui::EventType::kScrollFlingStart);
   details.set_device_type(ui::GestureDeviceType::DEVICE_TOUCHPAD);
-  return ui::GestureEvent(mouse_event.x, mouse_event.y, 0, base::TimeTicks(), details);
+  return ui::GestureEvent(mouse_event.x, mouse_event.y, 0, base::TimeTicks(),
+                          details);
 }
+#endif
 
 ui::MouseWheelEvent CefBrowserPlatformDelegateNativeAura::TranslateUiWheelEvent(
     const CefMouseEvent& mouse_event,
     int deltaX,
     int deltaY) const {
   gfx::Vector2d offset(GetUiWheelEventOffset(deltaX, deltaY));
-  DCHECK(!offset.IsZero());
 
   gfx::PointF location(mouse_event.x, mouse_event.y);
   gfx::PointF root_location(GetScreenPoint(
@@ -250,7 +245,7 @@ base::TimeTicks CefBrowserPlatformDelegateNativeAura::GetEventTimeStamp() {
 
 // static
 int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
-    uint32 cef_modifiers) {
+    uint32_t cef_modifiers) {
   int result = 0;
   // Set modifiers based on key state.
   if (cef_modifiers & EVENTFLAG_CAPS_LOCK_ON) {
@@ -274,14 +269,6 @@ int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
   if (cef_modifiers & EVENTFLAG_RIGHT_MOUSE_BUTTON) {
     result |= ui::EF_RIGHT_MOUSE_BUTTON;
   }
-#if BUILDFLAG(IS_OHOS)
-  if (cef_modifiers & EVENTFLAG_BACK_MOUSE_BUTTON) {
-    result |= ui::EF_BACK_MOUSE_BUTTON;
-  }
-  if (cef_modifiers & EVENTFLAG_FORWARD_MOUSE_BUTTON) {
-    result |= ui::EF_FORWARD_MOUSE_BUTTON;
-  }
-#endif
   if (cef_modifiers & EVENTFLAG_COMMAND_DOWN) {
     result |= ui::EF_COMMAND_DOWN;
   }
@@ -302,7 +289,7 @@ int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
 
 // static
 int CefBrowserPlatformDelegateNativeAura::TranslateUiChangedButtonFlags(
-    uint32 cef_modifiers) {
+    uint32_t cef_modifiers) {
   int result = 0;
   if (cef_modifiers & EVENTFLAG_LEFT_MOUSE_BUTTON) {
     result |= ui::EF_LEFT_MOUSE_BUTTON;

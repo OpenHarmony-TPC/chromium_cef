@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=aed95b3f0672a32a1d3a33fcd9f89fba5e589bdf$
+// $hash=13a0b2eadeb6d5f33e6ec16a8f09b4b93a954ec4$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_PERMISSION_HANDLER_CTOCPP_H_
@@ -39,17 +39,17 @@ class CefPermissionHandlerCToCpp
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
       const CefString& requesting_origin,
-      uint32 requested_permissions,
+      uint32_t requested_permissions,
       CefRefPtr<CefMediaAccessCallback> callback) override;
   bool OnShowPermissionPrompt(
       CefRefPtr<CefBrowser> browser,
-      uint64 prompt_id,
+      uint64_t prompt_id,
       const CefString& requesting_origin,
-      uint32 requested_permissions,
+      uint32_t requested_permissions,
       CefRefPtr<CefPermissionPromptCallback> callback) override;
   void OnDismissPermissionPrompt(
       CefRefPtr<CefBrowser> browser,
-      uint64 prompt_id,
+      uint64_t prompt_id,
       cef_permission_request_result_t result) override;
 };
 

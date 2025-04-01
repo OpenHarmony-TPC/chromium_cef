@@ -10,22 +10,13 @@
 
 #include <memory>
 
-#include "include/cef_request.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_request.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
 #include "net/cookies/site_for_cookies.h"
 #include "services/network/public/mojom/referrer_policy.mojom-shared.h"
 #include "url/gurl.h"
-
-#if defined(OHOS_SCHEME_HANDLER)
-#include "base/synchronization/waitable_event.h"
-#include "base/task/thread_pool.h"
-#include "net/base/io_buffer.h"
-#include "net/base/upload_data_stream.h"
-#include "services/network/chunked_data_pipe_upload_data_stream.h"
-#include "services/network/public/mojom/chunked_data_pipe_getter.mojom.h"
-#endif
 
 namespace blink {
 class WebURLRequest;
@@ -46,8 +37,10 @@ struct ResourceRequest;
 class ResourceRequestBody;
 }  // namespace network
 
+class ArkWebRequestExt;
+
 // Implementation of CefRequest
-class CefRequestImpl : public CefRequest {
+class CefRequestImpl : public virtual CefRequest {
  public:
   enum Changes {
     kChangedNone = 0,
@@ -72,13 +65,6 @@ class CefRequestImpl : public CefRequest {
   CefString GetReferrerURL() override;
   ReferrerPolicy GetReferrerPolicy() override;
   CefRefPtr<CefPostData> GetPostData() override;
-#if defined(OHOS_SCHEME_HANDLER)
-  CefRefPtr<CefPostDataStream> GetUploadStream() override;
-  bool IsRedirect() override;
-  bool HasUserGesture() override;
-  void SetFrameUrl(const CefString& frame_url);
-  CefString GetFrameUrl();
-#endif  // defined(OHOS_SCHEME_HANDLER)
   void SetPostData(CefRefPtr<CefPostData> postData) override;
   void GetHeaderMap(HeaderMap& headerMap) override;
   void SetHeaderMap(const HeaderMap& headerMap) override;
@@ -96,22 +82,29 @@ class CefRequestImpl : public CefRequest {
   void SetFirstPartyForCookies(const CefString& url) override;
   ResourceType GetResourceType() override;
   TransitionType GetTransitionType() override;
-  uint64 GetIdentifier() override;
-#ifdef OHOS_NETWORK_CONNINFO
-  bool IsMainFrame() override;
-#endif
+  uint64_t GetIdentifier() override;
+
   // Populate this object from the ResourceRequest object.
-  void Set(const network::ResourceRequest* request, uint64 identifier);
+  virtual void Set(const network::ResourceRequest* request,
+                   uint64_t identifier);
 
   // Populate the ResourceRequest object from this object.
   // If |changed_only| is true then only the changed fields will be updated.
   void Get(network::ResourceRequest* request, bool changed_only) const;
 
-  // Populate this object from the RedirectInfo object.
-  void Set(const net::RedirectInfo& redirect_info);
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+  virtual
+#endif
+      // Populate this object from the RedirectInfo object.
+      void
+      Set(const net::RedirectInfo& redirect_info);
 
   // Populate this object from the HttpRequestHeaders object.
-  void Set(const net::HttpRequestHeaders& headers);
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+  virtual
+#endif
+      void
+      Set(const net::HttpRequestHeaders& headers);
 
   // Populate this object from the NavigationParams object.
   // Called from throttle_handler.cc NavigationOnUIThread().
@@ -138,13 +131,15 @@ class CefRequestImpl : public CefRequest {
   void DiscardChanges();
   uint8_t GetChanges() const;
 
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+  void SetDestination(network::mojom::RequestDestination destination);
+#endif
+
   static network::mojom::ReferrerPolicy NetReferrerPolicyToBlinkReferrerPolicy(
       cef_referrer_policy_t net_policy);
   static cef_referrer_policy_t BlinkReferrerPolicyToNetReferrerPolicy(
       network::mojom::ReferrerPolicy blink_policy);
-#ifdef OHOS_NETWORK_CONNINFO
-  void SetDestination(network::mojom::RequestDestination destination);
-#endif
+
  private:
   // Mark values as changed. Must be called before the new values are assigned.
   void Changed(uint8_t changes);
@@ -165,16 +160,8 @@ class CefRequestImpl : public CefRequest {
   HeaderMap headermap_;
   ResourceType resource_type_;
   TransitionType transition_type_;
-  uint64 identifier_;
-#ifdef OHOS_NETWORK_CONNINFO
-  network::mojom::RequestDestination destination_;
-#endif
-#if defined(OHOS_SCHEME_HANDLER)
-  bool is_redirect_{false};
-  bool has_user_gesture_{false};
-  CefRefPtr<CefPostDataStream> postdata_stream_;
-  GURL frame_url_;
-#endif
+  uint64_t identifier_;
+
   // The below members are used by CefURLRequest.
   int flags_;
   net::SiteForCookies site_for_cookies_;
@@ -209,61 +196,13 @@ class CefRequestImpl : public CefRequest {
 
   mutable base::Lock lock_;
 
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+  network::mojom::RequestDestination destination_;
+#endif
+
   IMPLEMENT_REFCOUNTING(CefRequestImpl);
 };
 
-#if defined(OHOS_SCHEME_HANDLER)
-class CefPostDataStreamImpl : public CefPostDataStream {
- public:
-  CefPostDataStreamImpl();
-  ~CefPostDataStreamImpl();
-
-  void SetReadCallback(
-      CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
-
-  void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) override;
-  void Read(void* buffer,
-            int buf_len,
-            CefRefPtr<CefPostDataStreamReadCallback> read_callback) override;
-  uint64_t GetSize() override;
-  uint64_t GetPosition() override;
-  bool IsChunked() override;
-  bool HasNullSource() override;
-  bool IsEOF() override;
-  bool IsInMemory() override;
-  void Set(network::ResourceRequestBody* body);
-  void Reset() override;
-
-  void GetChunkedDataPipeGetter(network::ResourceRequestBody* body);
-
- private:
-  void OnStreamInitialized(int rv);
-  void OnStreamRead(scoped_refptr<net::WrappedIOBuffer> buffer,
-                    base::WaitableEvent* event,
-                    int rv);
-  void ReadAsync(void* buffer,
-            int buf_len,
-            CefRefPtr<CefPostDataStreamReadCallback> read_callback);
-  void OnStreamReadAsync(scoped_refptr<net::WrappedIOBuffer> buffer,
-                         CefRefPtr<CefPostDataStreamReadCallback> read_callback,
-                         int rv);
-  void ReadOnTaskRunner(void* buffer,
-            int buf_len,
-            base::WaitableEvent* event);
-
-  CefRefPtr<CefPostDataStreamReadCallback> read_callback_;
-  CefRefPtr<CefPostDataStreamInitCallback> init_callback_;
-
-  std::unique_ptr<net::UploadDataStream> upload_stream_;
-  bool initialated_{false};
-  bool is_data_pipe_{false};
-  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
-      base::ThreadPool::CreateSequencedTaskRunner({});
-  int last_read_rv_ = -2;
-  mutable base::Lock lock_;
-  IMPLEMENT_REFCOUNTING(CefPostDataStreamImpl);
-};
-#endif  // defined(OHOS_SCHEME_HANDLER)
 // Implementation of CefPostData
 class CefPostDataImpl : public CefPostData {
  public:
@@ -291,16 +230,16 @@ class CefPostDataImpl : public CefPostData {
   ElementVector elements_;
 
   // True if this object is read-only.
-  bool read_only_;
+  bool read_only_ = false;
 
   // True if this object has excluded elements.
-  bool has_excluded_elements_;
+  bool has_excluded_elements_ = false;
 
   // True if this object should track changes.
-  bool track_changes_;
+  bool track_changes_ = false;
 
   // True if this object has changes.
-  bool has_changes_;
+  bool has_changes_ = false;
 
   mutable base::Lock lock_;
 
@@ -336,23 +275,23 @@ class CefPostDataElementImpl : public CefPostDataElement {
   void Changed();
   void Cleanup();
 
-  Type type_;
+  Type type_ = PDE_TYPE_EMPTY;
   union {
     struct {
-      void* bytes;
+      RAW_PTR_EXCLUSION void* bytes;
       size_t size;
     } bytes;
     cef_string_t filename;
   } data_;
 
   // True if this object is read-only.
-  bool read_only_;
+  bool read_only_ = false;
 
   // True if this object should track changes.
-  bool track_changes_;
+  bool track_changes_ = false;
 
   // True if this object has changes.
-  bool has_changes_;
+  bool has_changes_ = false;
 
   mutable base::Lock lock_;
 

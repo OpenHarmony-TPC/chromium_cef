@@ -58,7 +58,7 @@ NSButton* MakeButton(NSRect* rect, NSString* title, NSView* parent) {
   [button autorelease];
 #endif  // !__has_feature(objc_arc)
   [button setTitle:title];
-  [button setBezelStyle:NSSmallSquareBezelStyle];
+  [button setBezelStyle:NSBezelStyleSmallSquare];
   [button setAutoresizingMask:(NSViewMaxXMargin | NSViewMinYMargin)];
   [parent addSubview:button];
   rect->origin.x += BUTTON_WIDTH;
@@ -218,7 +218,6 @@ class RootWindowMacImpl
   CefRefPtr<CefBrowser> GetBrowser() const;
   ClientWindowHandle GetWindowHandle() const;
   bool WithWindowlessRendering() const;
-  bool WithExtension() const;
 
   // BrowserWindow::Delegate methods.
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser);
@@ -237,12 +236,10 @@ class RootWindowMacImpl
   RootWindowMac& root_window_;
   bool with_controls_ = false;
   bool with_osr_ = false;
-  bool with_extension_ = false;
   bool is_popup_ = false;
   CefRect initial_bounds_;
   cef_show_state_t initial_show_state_ = CEF_SHOW_STATE_NORMAL;
   std::unique_ptr<BrowserWindow> browser_window_;
-  bool initialized_ = false;
 
   // Main window.
   NSWindow* window_ = nil;
@@ -275,11 +272,10 @@ RootWindowMacImpl::~RootWindowMacImpl() {
 void RootWindowMacImpl::Init(RootWindow::Delegate* delegate,
                              std::unique_ptr<RootWindowConfig> config,
                              const CefBrowserSettings& settings) {
-  DCHECK(!initialized_);
+  DCHECK(!root_window_.initialized_);
 
   with_controls_ = config->with_controls;
   with_osr_ = config->with_osr;
-  with_extension_ = config->with_extension;
 
   if (!config->bounds.IsEmpty()) {
     // Initial state was specified via the config object.
@@ -297,7 +293,7 @@ void RootWindowMacImpl::Init(RootWindow::Delegate* delegate,
 
   CreateBrowserWindow(config->url);
 
-  initialized_ = true;
+  root_window_.initialized_ = true;
 
   CreateRootWindow(settings, config->initially_hidden);
 }
@@ -310,7 +306,7 @@ void RootWindowMacImpl::InitAsPopup(RootWindow::Delegate* delegate,
                                     CefRefPtr<CefClient>& client,
                                     CefBrowserSettings& settings) {
   DCHECK(delegate);
-  DCHECK(!initialized_);
+  DCHECK(!root_window_.initialized_);
 
   with_controls_ = with_controls;
   with_osr_ = with_osr;
@@ -331,7 +327,7 @@ void RootWindowMacImpl::InitAsPopup(RootWindow::Delegate* delegate,
 
   CreateBrowserWindow(std::string());
 
-  initialized_ = true;
+  root_window_.initialized_ = true;
 
   // The new popup is initially parented to a temporary window. The native root
   // window will be created after the browser is created and the popup window
@@ -458,11 +454,6 @@ ClientWindowHandle RootWindowMacImpl::GetWindowHandle() const {
 bool RootWindowMacImpl::WithWindowlessRendering() const {
   REQUIRE_MAIN_THREAD();
   return with_osr_;
-}
-
-bool RootWindowMacImpl::WithExtension() const {
-  REQUIRE_MAIN_THREAD();
-  return with_extension_;
 }
 
 void RootWindowMacImpl::OnNativeWindowClosed() {
@@ -620,8 +611,7 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
     browser_window_->CreateBrowser(
         CAST_NSVIEW_TO_CEF_WINDOW_HANDLE(contentView),
         CefRect(0, 0, contentBounds.size.width, contentBounds.size.height),
-        settings, nullptr,
-        root_window_.delegate_->GetRequestContext(&root_window_));
+        settings, nullptr, root_window_.delegate_->GetRequestContext());
   } else {
     // With popups we already have a browser window. Parent the browser window
     // to the root window and show it in the correct location.
@@ -641,6 +631,8 @@ void RootWindowMacImpl::CreateRootWindow(const CefBrowserSettings& settings,
     // Show the window.
     Show(mode);
   }
+
+  root_window_.window_created_ = true;
 }
 
 void RootWindowMacImpl::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
@@ -651,8 +643,6 @@ void RootWindowMacImpl::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
   if (is_popup_) {
     CreateRootWindow(CefBrowserSettings(), false);
   }
-
-  root_window_.delegate_->OnBrowserCreated(&root_window_, browser);
 }
 
 void RootWindowMacImpl::OnBrowserWindowDestroyed() {
@@ -770,7 +760,8 @@ void RootWindowMacImpl::NotifyDestroyedIfDone() {
   }
 }
 
-RootWindowMac::RootWindowMac() {
+RootWindowMac::RootWindowMac(bool use_alloy_style)
+    : RootWindow(use_alloy_style) {
   impl_ = new RootWindowMacImpl(*this);
 }
 
@@ -839,10 +830,6 @@ ClientWindowHandle RootWindowMac::GetWindowHandle() const {
 
 bool RootWindowMac::WithWindowlessRendering() const {
   return impl_->WithWindowlessRendering();
-}
-
-bool RootWindowMac::WithExtension() const {
-  return impl_->WithExtension();
 }
 
 void RootWindowMac::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {

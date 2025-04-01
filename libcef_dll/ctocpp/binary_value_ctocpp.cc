@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=021ef4ddfd78217e988aae2535f78672de9dad04$
+// $hash=8ff0f88b9a33d5c635a0128aef98046c68ddb3ad$
 //
 
 #include "libcef_dll/ctocpp/binary_value_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -137,6 +138,23 @@ CefRefPtr<CefBinaryValue> CefBinaryValueCToCpp::Copy() {
 
   // Return type: refptr_same
   return CefBinaryValueCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall") const void* CefBinaryValueCToCpp::GetRawData() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_binary_value_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_raw_data)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  const void* _retval = _struct->get_raw_data(_struct);
+
+  // Return type: simple_byaddr
+  return _retval;
 }
 
 NO_SANITIZE("cfi-icall") size_t CefBinaryValueCToCpp::GetSize() {

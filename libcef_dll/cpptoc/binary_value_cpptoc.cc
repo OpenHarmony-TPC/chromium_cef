@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5086cf67b0ea050c324c57142cf324611c4cb4c9$
+// $hash=a5ca27729a570de0318a9d15416fee153afaec32$
 //
 
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
@@ -140,6 +141,24 @@ binary_value_copy(struct _cef_binary_value_t* self) {
   return CefBinaryValueCppToC::Wrap(_retval);
 }
 
+const void* CEF_CALLBACK
+binary_value_get_raw_data(struct _cef_binary_value_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  const void* _retval = CefBinaryValueCppToC::Get(self)->GetRawData();
+
+  // Return type: simple_byaddr
+  return _retval;
+}
+
 size_t CEF_CALLBACK binary_value_get_size(struct _cef_binary_value_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -193,6 +212,7 @@ CefBinaryValueCppToC::CefBinaryValueCppToC() {
   GetStruct()->is_same = binary_value_is_same;
   GetStruct()->is_equal = binary_value_is_equal;
   GetStruct()->copy = binary_value_copy;
+  GetStruct()->get_raw_data = binary_value_get_raw_data;
   GetStruct()->get_size = binary_value_get_size;
   GetStruct()->get_data = binary_value_get_data;
 }

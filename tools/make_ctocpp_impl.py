@@ -153,12 +153,6 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
                 '\n  if ('+arg_name+'.empty()) {'\
                 '\n    return'+retval_default+';'\
                 '\n  }'
-    elif arg_type == 'std_string_byref_const':
-      result += comment+\
-                '\n  DCHECK(!'+arg_name+'.empty());'\
-                '\n  if ('+arg_name+'.empty()) {'\
-                '\n    return'+retval_default+';'\
-                '\n  }'
 
     # check index params
     index_params = arg.parent.get_attrib_list('index_param')
@@ -211,8 +205,6 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
       params.append('&' + arg_name + 'Int')
     elif arg_type == 'string_byref_const':
       params.append(arg_name + '.GetStruct()')
-    elif arg_type == 'std_string_byref_const':
-      params.append(arg_name + '.c_str()')
     elif arg_type == 'string_byref':
       params.append(arg_name + '.GetWritableStruct()')
     elif arg_type == 'refptr_same':
@@ -343,11 +335,6 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
     result += '\n'
   result_len = len(result)
 
-  if is_cef_shutdown:
-    result += '\n\n#if DCHECK_IS_ON()'\
-              '\n  shutdown_checker::SetIsShutdown();'\
-              '\n#endif\n'
-
   # execution
   result += '\n  // Execute\n  '
 
@@ -355,6 +342,8 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
     # has a return value
     if retval_type == 'simple' or retval_type == 'bool':
       result += retval.get_type().get_result_simple_type_root()
+    elif retval_type == 'simple_byaddr':
+      result += retval.get_type().get_result_simple_type()
     elif retval_type == 'string':
       result += 'cef_string_userfree_t'
     elif retval_type == 'refptr_same' or retval_type == 'refptr_diff' or \
@@ -376,6 +365,11 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
     result += ',\n      '.join(params)
 
   result += ');\n'
+
+  if is_cef_shutdown:
+    result += '\n\n#if DCHECK_IS_ON()'\
+              '\n  shutdown_checker::SetIsShutdown();'\
+              '\n#endif\n'
 
   result_len = len(result)
 
@@ -493,7 +487,7 @@ def make_ctocpp_function_impl_new(clsname, name, func, base_scoped):
   if retval_type != 'none':
     # has a return value
     result += '\n  // Return type: ' + retval_type
-    if retval_type == 'simple':
+    if retval_type == 'simple' or retval_type == 'simple_byaddr':
       result += '\n  return _retval;'
     elif retval_type == 'bool':
       result += '\n  return _retval?true:false;'

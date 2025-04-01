@@ -1,12 +1,11 @@
-// Copyright (c) 2022-2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2022 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/printing/print_util.h"
-
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/printing/print_util.h"
 
 #include "base/files/file_util.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "chrome/browser/printing/print_view_manager.h"
 #include "chrome/browser/printing/print_view_manager_common.h"
 #include "components/printing/browser/print_to_pdf/pdf_print_utils.h"
@@ -22,9 +21,7 @@ void SavePdfFile(const CefString& path,
   CEF_REQUIRE_BLOCKING();
   DCHECK_GT(data->size(), 0U);
 
-  const bool ok =
-      base::WriteFile(path, reinterpret_cast<const char*>(data->data()),
-                      data->size()) == static_cast<int>(data->size());
+  const bool ok = base::WriteFile(path, *data);
 
   if (callback) {
     CEF_POST_TASK(CEF_UIT,
@@ -49,6 +46,7 @@ void OnPDFCreated(const CefString& path,
       base::BindOnce(&SavePdfFile, path, callback, std::move(data)));
 }
 
+#if BUILDFLAG(ARKWEB_PDF)
 void OnCreatedPDF(CefRefPtr<CefPdfValueCallback> callback,
                   print_to_pdf::PdfPrintResult print_result,
                   scoped_refptr<base::RefCountedMemory> data) {
@@ -62,14 +60,13 @@ void OnCreatedPDF(CefRefPtr<CefPdfValueCallback> callback,
   callback->OnReceiveValue(reinterpret_cast<const char*>(data->data()),
                            data->size());
 }
+#endif  // BUILDFLAG(ARKWEB_PDF)
 
 }  // namespace
 
 void Print(content::WebContents* web_contents, bool print_preview_disabled) {
   // Like chrome::Print() but specifying the WebContents.
-  printing::StartPrint(web_contents,
-                       /*print_renderer=*/mojo::NullAssociatedRemote(),
-                       print_preview_disabled,
+  printing::StartPrint(web_contents, print_preview_disabled,
                        /*has_selection=*/false);
 }
 
@@ -81,7 +78,7 @@ void PrintToPDF(content::WebContents* web_contents,
   const bool display_header_footer = !!settings.display_header_footer;
 
   // Defaults to no header/footer.
-  absl::optional<std::string> header_template, footer_template;
+  std::optional<std::string> header_template, footer_template;
   if (display_header_footer) {
     if (settings.header_template.length > 0) {
       header_template = CefString(&settings.header_template);
@@ -92,20 +89,20 @@ void PrintToPDF(content::WebContents* web_contents,
   }
 
   // Defaults to 1.0.
-  absl::optional<double> scale;
+  std::optional<double> scale;
   if (settings.scale > 0) {
     scale = settings.scale;
   }
 
   // Defaults to letter size.
-  absl::optional<double> paper_width, paper_height;
+  std::optional<double> paper_width, paper_height;
   if (settings.paper_width > 0 && settings.paper_height > 0) {
     paper_width = settings.paper_width;
     paper_height = settings.paper_height;
   }
 
   // Defaults to kDefaultMarginInInches.
-  absl::optional<double> margin_top, margin_bottom, margin_left, margin_right;
+  std::optional<double> margin_top, margin_bottom, margin_left, margin_right;
   if (settings.margin_type == PDF_PRINT_MARGIN_NONE) {
     margin_top = 0;
     margin_bottom = 0;
@@ -133,8 +130,8 @@ void PrintToPDF(content::WebContents* web_contents,
           !!settings.print_background, scale, paper_width, paper_height,
           margin_top, margin_bottom, margin_left, margin_right,
           CefString(&settings.header_template),
-          CefString(&settings.footer_template),
-          !!settings.prefer_css_page_size);
+          CefString(&settings.footer_template), !!settings.prefer_css_page_size,
+          !!settings.generate_tagged_pdf, !!settings.generate_document_outline);
 
   if (absl::holds_alternative<std::string>(print_pages_params)) {
     LOG(ERROR) << "PrintToPDF failed with error: "
@@ -160,13 +157,14 @@ void PrintToPDF(content::WebContents* web_contents,
   callback->OnPdfPrintFinished(CefString(), false);
 }
 
+#if BUILDFLAG(ARKWEB_PDF)
 void CreateToPDF(content::WebContents* web_contents,
                  const CefPdfPrintSettings& settings,
                  CefRefPtr<CefPdfValueCallback> callback) {
   const bool display_header_footer = !!settings.display_header_footer;
 
   // Defaults to no header/footer.
-  absl::optional<std::string> header_template, footer_template;
+  std::optional<std::string> header_template, footer_template;
   if (display_header_footer) {
     if (settings.header_template.length > 0) {
       header_template = CefString(&settings.header_template);
@@ -177,20 +175,20 @@ void CreateToPDF(content::WebContents* web_contents,
   }
 
   // Defaults to 1.0.
-  absl::optional<double> scale;
+  std::optional<double> scale;
   if (settings.scale > 0) {
     scale = settings.scale;
   }
 
   // Defaults to letter size.
-  absl::optional<double> paper_width, paper_height;
+  std::optional<double> paper_width, paper_height;
   if (settings.paper_width > 0 && settings.paper_height > 0) {
     paper_width = settings.paper_width;
     paper_height = settings.paper_height;
   }
 
   // Defaults to kDefaultMarginInInches.
-  absl::optional<double> margin_top, margin_bottom, margin_left, margin_right;
+  std::optional<double> margin_top, margin_bottom, margin_left, margin_right;
   if (settings.margin_type == PDF_PRINT_MARGIN_NONE) {
     margin_top = 0;
     margin_bottom = 0;
@@ -218,8 +216,8 @@ void CreateToPDF(content::WebContents* web_contents,
           !!settings.print_background, scale, paper_width, paper_height,
           margin_top, margin_bottom, margin_left, margin_right,
           CefString(&settings.header_template),
-          CefString(&settings.footer_template),
-          !!settings.prefer_css_page_size);
+          CefString(&settings.footer_template), !!settings.prefer_css_page_size,
+          !!settings.generate_tagged_pdf, !!settings.generate_document_outline);
 
   if (absl::holds_alternative<std::string>(print_pages_params)) {
     LOG(ERROR) << "PrintToPDF failed with error: "
@@ -240,5 +238,6 @@ void CreateToPDF(content::WebContents* web_contents,
         base::BindOnce(&OnCreatedPDF, callback));
   }
 }
+#endif  // BUILDFLAG(ARKWEB_PDF)
 
 }  // namespace print_util

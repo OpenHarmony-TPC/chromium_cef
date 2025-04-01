@@ -2,23 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/net/throttle_handler.h"
+#include "cef/libcef/browser/net/throttle_handler.h"
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/browser_info_manager.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/common/frame_util.h"
-#include "libcef/common/request_impl.h"
-
+#include "arkweb/build/features/features.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/common/frame_util.h"
+#include "cef/libcef/common/request_impl.h"
 #include "components/navigation_interception/intercept_navigation_throttle.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/navigation_throttle.h"
 #include "content/public/browser/page_navigator.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "libcef/browser/predictors/predictor_database.h"
-#endif  // IS_OHOS
-#if defined(OHOS_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+#include "libcef/common/arkweb_request_impl_ext.h"
+#include "ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "extensions/common/constants.h"
 #endif
 
@@ -32,13 +34,13 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
   const bool is_main_frame = navigation_handle->IsInMainFrame();
   const auto global_id = frame_util::GetGlobalId(navigation_handle);
 
-#if defined(OHOS_NO_STATE_PREFETCH)
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
   // Record the url so that it can be preconnected at the next startup.
   if (is_main_frame) {
     predictor::VisitedUrlInfo url_info(navigation_handle->GetURL());
     predictor::PredictorDatabase::GetInstance()->RecordVisitedUrl(url_info);
   }
-#endif  // defined(OHOS_NO_STATE_PREFETCH)
+#endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 
   // Identify the RenderFrameHost that originated the navigation.
   const auto parent_global_id =
@@ -65,11 +67,14 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
   }
 
   bool ignore_navigation = false;
-#if defined(OHOS_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   if (navigation_handle->GetURL().SchemeIs(extensions::kExtensionScheme)) {
     return false;
   }
-#endif
+  if (navigation_handle->GetURL().SchemeIs(extensions::kArkwebExtensionScheme)) {
+    return false;
+  }
+#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   if (browser) {
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetRequestHandler()) {
@@ -85,7 +90,11 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
           frame = browser->browser_info()->CreateTempSubFrame(parent_global_id);
         }
 
+#if BUILDFLAG(IS_ARKWEB)
+        CefRefPtr<CefRequestImpl> request = new ArkWebRequestImplExt();
+#else
         CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
+#endif
         request->Set(navigation_handle);
         request->SetReadOnly(true);
 
@@ -116,7 +125,9 @@ void CreateThrottlesForNavigation(content::NavigationHandle* navigation_handle,
       std::make_unique<navigation_interception::InterceptNavigationThrottle>(
           navigation_handle, base::BindRepeating(&NavigationOnUIThread),
           navigation_interception::SynchronyMode::kSync);
-  throttles.push_back(std::move(throttle));
+
+  // Always execute our throttle first.
+  throttles.emplace(throttles.begin(), std::move(throttle));
 }
 
 }  // namespace throttle

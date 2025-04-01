@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=539410dcde7c8d016eb7cabb7fdc0e1f884a8742$
+// $hash=43620131fd71a3f775e8bd43277b11fa814343e0$
 //
 
 #include "libcef_dll/cpptoc/media_access_callback_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -21,7 +22,7 @@ namespace {
 
 void CEF_CALLBACK
 media_access_callback_cont(struct _cef_media_access_callback_t* self,
-                           uint32 allowed_permissions) {
+                           uint32_t allowed_permissions) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

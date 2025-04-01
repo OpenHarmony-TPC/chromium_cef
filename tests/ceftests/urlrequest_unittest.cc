@@ -15,6 +15,7 @@
 #include "include/cef_task.h"
 #include "include/cef_urlrequest.h"
 #include "include/cef_waitable_event.h"
+#include "include/test/cef_test_helpers.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_scoped_temp_dir.h"
 #include "tests/ceftests/test_handler.h"
@@ -39,12 +40,12 @@ namespace {
 // Browser-side app delegate.
 class URLRequestBrowserTest : public client::ClientAppBrowser::Delegate {
  public:
-  URLRequestBrowserTest() {}
+  URLRequestBrowserTest() = default;
 
   void OnBeforeCommandLineProcessing(
       CefRefPtr<client::ClientAppBrowser> app,
       CefRefPtr<CefCommandLine> command_line) override {
-    // Delegate auth callbacks to GetAuthCredentials with the chrome runtime.
+    // Delegate auth callbacks to GetAuthCredentials.
     command_line->AppendSwitch("disable-chrome-login-prompt");
 
     // Disable component extensions that require creation of a background
@@ -65,7 +66,7 @@ const char kRequestHostCustom[] = "test";
 
 // Server backend.
 const char* kRequestAddressServer = test_server::kHttpServerAddress;
-const uint16 kRequestPortServer = test_server::kHttpServerPort;
+const uint16_t kRequestPortServer = test_server::kHttpServerPort;
 const char kRequestSchemeServer[] = "http";
 
 const char kRequestSendCookieName[] = "urcookie_send";
@@ -111,7 +112,7 @@ enum ContextTestMode {
 
 // Defines test expectations for a request.
 struct RequestRunSettings {
-  RequestRunSettings() {}
+  RequestRunSettings() = default;
 
   // Set expectations for request failure.
   void SetRequestFailureExpected(cef_errorcode_t error_code) {
@@ -212,13 +213,13 @@ class RequestDataMap {
       TYPE_REDIRECT,
     };
 
-    Entry(Type entry_type) : type(entry_type), settings(nullptr) {}
+    explicit Entry(Type entry_type) : type(entry_type) {}
 
     Type type;
 
     // Used with TYPE_NORMAL.
     // |settings| is not owned by this object.
-    RequestRunSettings* settings;
+    RequestRunSettings* settings = nullptr;
 
     // Used with TYPE_REDIRECT.
     CefRefPtr<CefRequest> redirect_request;
@@ -411,7 +412,7 @@ void GetTestCookie(CefRefPtr<CefRequestContext> request_context,
   class Visitor : public CefCookieVisitor {
    public:
     explicit Visitor(GetTestCookieCallback callback)
-        : callback_(std::move(callback)), cookie_exists_(false) {
+        : callback_(std::move(callback)) {
       EXPECT_FALSE(callback_.is_null());
     }
     ~Visitor() override { std::move(callback_).Run(cookie_exists_); }
@@ -431,7 +432,7 @@ void GetTestCookie(CefRefPtr<CefRequestContext> request_context,
 
    private:
     GetTestCookieCallback callback_;
-    bool cookie_exists_;
+    bool cookie_exists_ = false;
 
     IMPLEMENT_REFCOUNTING(Visitor);
   };
@@ -473,8 +474,15 @@ void VerifyNormalRequest(const RequestRunSettings* settings,
   // CEF_SETTINGS_ACCEPT_LANGUAGE value from CefSettings.accept_language_list
   // set in CefTestSuite::GetSettings() and expanded internally by
   // ComputeAcceptLanguageFromPref.
-  EXPECT_STREQ("en-GB,en;q=0.9",
-               GetHeaderValue(headerMap, "accept-language").c_str());
+  const std::string& accept_language =
+      GetHeaderValue(headerMap, "accept-language");
+  if (CefIsFeatureEnabledForTests("ReduceAcceptLanguage")) {
+    EXPECT_TRUE(accept_language == "en-GB" ||
+                accept_language == "en-GB,en;q=0.9")
+        << accept_language;
+  } else {
+    EXPECT_STREQ("en-GB,en;q=0.9", accept_language.data());
+  }
 
   if (server_backend) {
     EXPECT_FALSE(GetHeaderValue(headerMap, "accept-encoding").empty());
@@ -510,8 +518,7 @@ void GetNormalResponse(const RequestRunSettings* settings,
 
   if (settings->expect_save_cookie) {
     std::stringstream ss;
-    ss << kRequestSaveCookieName << "="
-       << "save-cookie-value";
+    ss << kRequestSaveCookieName << "=" << "save-cookie-value";
     headerMap.insert(std::make_pair("Set-Cookie", ss.str()));
   }
 
@@ -591,7 +598,7 @@ class RequestSchemeHandlerOld : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     GetNormalResponse(settings_, response);
@@ -675,20 +682,20 @@ class RequestSchemeHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     GetNormalResponse(settings_, response);
     response_length = response_data_.length() - offset_;
   }
 
-  bool Skip(int64 bytes_to_skip,
-            int64& bytes_skipped,
+  bool Skip(int64_t bytes_to_skip,
+            int64_t& bytes_skipped,
             CefRefPtr<CefResourceSkipCallback> callback) override {
     size_t size = response_data_.length();
     if (offset_ < size) {
       bytes_skipped =
-          std::min(bytes_to_skip, static_cast<int64>(size - offset_));
+          std::min(bytes_to_skip, static_cast<int64_t>(size - offset_));
       offset_ += bytes_skipped;
     } else {
       bytes_skipped = ERR_FAILED;
@@ -777,7 +784,7 @@ class RequestRedirectSchemeHandlerOld : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
 
@@ -851,7 +858,7 @@ class RequestRedirectSchemeHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
 
@@ -943,7 +950,7 @@ class IncompleteSchemeHandlerOld : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     EXPECT_EQ(settings_->incomplete_type,
@@ -959,7 +966,7 @@ class IncompleteSchemeHandlerOld : public CefResourceHandler {
     settings_->response->GetHeaderMap(headerMap);
     settings_->response->SetHeaderMap(headerMap);
 
-    response_length = static_cast<int64>(settings_->response_data.size());
+    response_length = static_cast<int64_t>(settings_->response_data.size());
   }
 
   bool ReadResponse(void* data_out,
@@ -1047,7 +1054,7 @@ class IncompleteSchemeHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     EXPECT_EQ(settings_->incomplete_type,
@@ -1063,7 +1070,7 @@ class IncompleteSchemeHandler : public CefResourceHandler {
     settings_->response->GetHeaderMap(headerMap);
     settings_->response->SetHeaderMap(headerMap);
 
-    response_length = static_cast<int64>(settings_->response_data.size());
+    response_length = static_cast<int64_t>(settings_->response_data.size());
   }
 
   bool Read(void* data_out,
@@ -1114,7 +1121,7 @@ class IncompleteSchemeHandler : public CefResourceHandler {
 
 class RequestSchemeHandlerFactory : public CefSchemeHandlerFactory {
  public:
-  RequestSchemeHandlerFactory() {}
+  RequestSchemeHandlerFactory() = default;
 
   CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser,
                                        CefRefPtr<CefFrame> frame,
@@ -1231,12 +1238,9 @@ class RequestSchemeHandlerFactory : public CefSchemeHandlerFactory {
 // HTTP server handler.
 class RequestServerHandler : public test_server::ObserverHelper {
  public:
-  RequestServerHandler()
-      : initialized_(false),
-        expected_http_request_ct_(-1),
-        actual_http_request_ct_(0) {}
+  RequestServerHandler() = default;
 
-  virtual ~RequestServerHandler() { RunCompleteCallback(false); }
+  ~RequestServerHandler() override { RunCompleteCallback(false); }
 
   // Must be called before CreateServer().
   void AddSchemeHandler(RequestRunSettings* settings) {
@@ -1410,7 +1414,7 @@ class RequestServerHandler : public test_server::ObserverHelper {
 
   RequestDataMap data_map_;
 
-  bool initialized_;
+  bool initialized_ = false;
 
   // Only accessed on the UI thread.
   base::OnceClosure complete_callback_;
@@ -1421,8 +1425,8 @@ class RequestServerHandler : public test_server::ObserverHelper {
   TrackCallback got_initialized_;
   TrackCallback got_shutdown_;
 
-  int expected_http_request_ct_;
-  int actual_http_request_ct_;
+  int expected_http_request_ct_ = -1;
+  int actual_http_request_ct_ = 0;
 
   std::string request_log_;
 };
@@ -2350,7 +2354,7 @@ class RequestTestRunner : public base::RefCountedThreadSafe<RequestTestRunner> {
 
       std::string upload_data;
       GetUploadData(expected_request, upload_data);
-      EXPECT_EQ((int64)upload_data.size(), client->upload_total_);
+      EXPECT_EQ((int64_t)upload_data.size(), client->upload_total_);
     } else {
       EXPECT_EQ(0, client->upload_progress_ct_);
       EXPECT_EQ(0, client->upload_total_);
@@ -2358,8 +2362,8 @@ class RequestTestRunner : public base::RefCountedThreadSafe<RequestTestRunner> {
 
     if (settings_.expect_download_progress) {
       EXPECT_LE(1, client->download_progress_ct_);
-      EXPECT_EQ((int64)(settings_.response_data.size() -
-                        settings_.expected_download_offset),
+      EXPECT_EQ((int64_t)(settings_.response_data.size() -
+                          settings_.expected_download_offset),
                 client->download_total_);
     } else {
       EXPECT_EQ(0, client->download_progress_ct_);
@@ -2628,6 +2632,18 @@ class RequestTestHandler : public TestHandler {
         base::BindOnce(&RequestTestHandler::OnIncompleteRequest, this));
     test_runner_->Initialize();
 
+    // Configure the number of times that SignalTestCompletion() will be called.
+    // We need to call it at least 1 time if we don't create a browser.
+    size_t completion_count = test_frame_method_ ? 0U : 1U;
+    if (context_mode_ != CONTEXT_GLOBAL) {
+      // Don't end the test until the temporary request context has been
+      // destroyed.
+      completion_count++;
+    }
+    if (completion_count > 0U) {
+      SetSignalTestCompletionCount(completion_count);
+    }
+
     // Get or create the request context.
     if (context_mode_ == CONTEXT_GLOBAL) {
       CefRefPtr<CefRequestContext> request_context =
@@ -2637,10 +2653,6 @@ class RequestTestHandler : public TestHandler {
 
       PreSetupComplete();
     } else {
-      // Don't end the test until the temporary request context has been
-      // destroyed.
-      SetSignalCompletionWhenAllBrowsersClose(false);
-
       CefRequestContextSettings settings;
 
       if (context_mode_ == CONTEXT_ONDISK) {
@@ -2714,7 +2726,8 @@ class RequestTestHandler : public TestHandler {
                                    CefRefPtr<CefCallback> callback) override {
     if (test_running_ && test_frame_method_) {
       EXPECT_TRUE(frame);
-      EXPECT_EQ(test_frame_->GetIdentifier(), frame->GetIdentifier());
+      EXPECT_STREQ(test_frame_->GetIdentifier().ToString().c_str(),
+                   frame->GetIdentifier().ToString().c_str());
       test_frame_resource_load_ct_++;
     }
 
@@ -2768,7 +2781,6 @@ class RequestTestHandler : public TestHandler {
 
     // TestComplete will eventually be called from DestroyTest instead of being
     // triggered by browser destruction.
-    SetSignalCompletionWhenAllBrowsersClose(false);
     CefPostDelayedTask(
         TID_UI, base::BindOnce(&TestHandler::CloseBrowser, GetBrowser(), false),
         1000);
@@ -2826,24 +2838,11 @@ class RequestTestHandler : public TestHandler {
 
     TestHandler::DestroyTest();
 
-    // For non-global contexts OnTestComplete() will be called when the
-    // RequestContextHandler is destroyed.
-    bool call_test_complete = false;
-    if (context_mode_ == CONTEXT_GLOBAL) {
-      if (!test_frame_method_) {
-        // These tests don't create a browser that would signal implicitly.
-        call_test_complete = true;
-      } else if (!SignalCompletionWhenAllBrowsersClose()) {
-        // These tests close the browser to terminate in-progress requests
-        // before test completion.
-        call_test_complete = true;
-      }
-    }
-
     // Release references to the context and handler.
     test_runner_->Destroy();
 
-    if (call_test_complete) {
+    // These tests don't create a browser that would signal implicitly.
+    if (!test_frame_method_) {
       OnTestComplete();
     }
   }
@@ -2855,15 +2854,12 @@ class RequestTestHandler : public TestHandler {
       return;
     }
 
-    EXPECT_FALSE(got_on_test_complete_);
-    got_on_test_complete_.yes();
-
     if (!context_tmpdir_.IsEmpty()) {
       // Temp directory will be deleted on application shutdown.
       context_tmpdir_.Take();
     }
 
-    TestComplete();
+    SignalTestCompletion();
   }
 
  private:
@@ -2904,7 +2900,6 @@ class RequestTestHandler : public TestHandler {
 
  public:
   int auth_credentials_ct_ = 0;
-  TrackCallback got_on_test_complete_;
 
   IMPLEMENT_REFCOUNTING(RequestTestHandler);
 };
@@ -3074,14 +3069,14 @@ class InvalidURLTestClient : public CefURLRequestClient {
   }
 
   void OnUploadProgress(CefRefPtr<CefURLRequest> request,
-                        int64 current,
-                        int64 total) override {
+                        int64_t current,
+                        int64_t total) override {
     EXPECT_TRUE(false);  // Not reached.
   }
 
   void OnDownloadProgress(CefRefPtr<CefURLRequest> request,
-                          int64 current,
-                          int64 total) override {
+                          int64_t current,
+                          int64_t total) override {
     EXPECT_TRUE(false);  // Not reached.
   }
 

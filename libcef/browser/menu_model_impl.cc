@@ -3,15 +3,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/menu_model_impl.h"
+#include "cef/libcef/browser/menu_model_impl.h"
 
+#include <memory>
 #include <vector>
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/task_runner_impl.h"
 
 #include "base/functional/bind.h"
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/task_runner_impl.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 #include "ui/base/accelerators/accelerator.h"
 #include "ui/base/models/image_model.h"
@@ -37,7 +39,9 @@ class CefSimpleMenuModel : public ui::MenuModel {
   CefSimpleMenuModel& operator=(const CefSimpleMenuModel&) = delete;
 
   // MenuModel methods.
-  bool HasIcons() const override { return false; }
+  base::WeakPtr<MenuModel> AsWeakPtr() override {
+    return weak_ptr_factory_.GetWeakPtr();
+  }
 
   size_t GetItemCount() const override { return impl_->GetCount(); }
 
@@ -171,7 +175,8 @@ class CefSimpleMenuModel : public ui::MenuModel {
   void MenuWillClose() override { impl_->MenuWillClose(); }
 
  private:
-  CefMenuModelImpl* impl_;
+  raw_ptr<CefMenuModelImpl> impl_;
+  base::WeakPtrFactory<CefSimpleMenuModel> weak_ptr_factory_{this};
 };
 
 cef_menu_color_type_t GetMenuColorType(bool is_text,
@@ -249,10 +254,10 @@ CefMenuModelImpl::CefMenuModelImpl(
       menu_model_delegate_(menu_model_delegate),
       is_submenu_(is_submenu) {
   DCHECK(delegate_ || menu_model_delegate_);
-  model_.reset(new CefSimpleMenuModel(this));
+  model_ = std::make_unique<CefSimpleMenuModel>(this);
 }
 
-CefMenuModelImpl::~CefMenuModelImpl() {}
+CefMenuModelImpl::~CefMenuModelImpl() = default;
 
 bool CefMenuModelImpl::IsSubMenu() {
   if (!VerifyContext()) {
@@ -988,9 +993,9 @@ bool CefMenuModelImpl::VerifyRefCount() {
     return false;
   }
 
-  for (ItemVector::iterator i = items_.begin(); i != items_.end(); ++i) {
-    if ((*i).submenu_.get()) {
-      if (!(*i).submenu_->VerifyRefCount()) {
+  for (auto& item : items_) {
+    if (item.submenu_.get()) {
+      if (!item.submenu_->VerifyRefCount()) {
         return false;
       }
     }
@@ -1019,8 +1024,8 @@ void CefMenuModelImpl::AddMenuItem(
     case blink::mojom::CustomContextMenuItemType::kSubMenu: {
       CefRefPtr<CefMenuModelImpl> sub_menu = static_cast<CefMenuModelImpl*>(
           AddSubMenu(command_id, menu_item.label).get());
-      for (size_t i = 0; i < menu_item.submenu.size(); ++i) {
-        sub_menu->AddMenuItem(*menu_item.submenu[i]);
+      for (const auto& i : menu_item.submenu) {
+        sub_menu->AddMenuItem(*i);
       }
       break;
     }

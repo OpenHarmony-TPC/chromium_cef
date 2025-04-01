@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=900bd6e17b07d9ee1044814db863c3853525c737$
+// $hash=6ff215fc96e15be41034d964d6736d6ade64fd1b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_FRAME_CAPI_H_
@@ -55,24 +55,6 @@ struct _cef_browser_t;
 struct _cef_urlrequest_client_t;
 struct _cef_urlrequest_t;
 struct _cef_v8context_t;
-
-///
-/// Structure to implement to be notified of asynchronous completion via
-/// cef_frame_tHostImpl::GetImages.
-///
-typedef struct _cef_get_images_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Method that will be called upon completion. |num_deleted| will be the
-  /// number of cookies that were deleted.
-  ///
-  void(CEF_CALLBACK* get_images)(struct _cef_get_images_callback_t* self,
-                                 int response);
-} cef_get_images_callback_t;
 
 ///
 /// Structure used to represent a frame in the browser window. When used in the
@@ -115,6 +97,11 @@ typedef struct _cef_frame_t {
   /// Execute paste in this frame.
   ///
   void(CEF_CALLBACK* paste)(struct _cef_frame_t* self);
+
+  ///
+  /// Execute paste and match style in this frame.
+  ///
+  void(CEF_CALLBACK* paste_and_match_style)(struct _cef_frame_t* self);
 
   ///
   /// Execute delete in this frame.
@@ -196,10 +183,12 @@ typedef struct _cef_frame_t {
   cef_string_userfree_t(CEF_CALLBACK* get_name)(struct _cef_frame_t* self);
 
   ///
-  /// Returns the globally unique identifier for this frame or < 0 if the
+  /// Returns the globally unique identifier for this frame or NULL if the
   /// underlying frame does not yet exist.
   ///
-  int64(CEF_CALLBACK* get_identifier)(struct _cef_frame_t* self);
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t(CEF_CALLBACK* get_identifier)(
+      struct _cef_frame_t* self);
 
   ///
   /// Returns the parent of this frame or NULL if this is the main (top-level)
@@ -224,6 +213,18 @@ typedef struct _cef_frame_t {
   ///
   struct _cef_v8context_t*(CEF_CALLBACK* get_v8context)(
       struct _cef_frame_t* self);
+
+  ///
+  // Loads the given URL with additional HTTP headers, specified as a map from
+  // name to value. Note that if this map contains any of the headers that are
+  // set by default by this WebView, such as those controlling caching, accept
+  // types or the User-Agent, their values may be overridden by this WebView's
+  // defaults.
+  ///
+  void(CEF_CALLBACK* load_header_url)(
+      struct _cef_frame_t* self,
+      const cef_string_t* url,
+      const cef_string_t* additionalHttpHeaders);
 
   ///
   /// Visit the DOM document. This function can only be called from the render
@@ -264,39 +265,6 @@ typedef struct _cef_frame_t {
       struct _cef_frame_t* self,
       cef_process_id_t target_process,
       struct _cef_process_message_t* message);
-
-  ///
-  /// Loads the given URL with additional HTTP headers, specified as a map from
-  /// name to value. Note that if this map contains any of the headers that are
-  /// set by default by this WebView, such as those controlling caching, accept
-  /// types or the User-Agent, their values may be overridden by this WebView's
-  /// defaults.
-  ///
-  void(CEF_CALLBACK* load_header_url)(
-      struct _cef_frame_t* self,
-      const cef_string_t* url,
-      const cef_string_t* additionalHttpHeaders);
-
-  ///
-  /// web has image or not
-  ///
-  void(CEF_CALLBACK* get_images)(struct _cef_frame_t* self,
-                                 struct _cef_get_images_callback_t* callback);
-
-  ///
-  /// PostUrl
-  ///
-  void(CEF_CALLBACK* post_url)(struct _cef_frame_t* self,
-                               const cef_string_t* url,
-                               size_t post_dataCount,
-                               char const* post_data);
-
-  ///
-  /// LoadURLWithUserGesture
-  ///
-  void(CEF_CALLBACK* load_urlwith_user_gesture)(struct _cef_frame_t* self,
-                                                const cef_string_t* url,
-                                                int user_gesture);
 } cef_frame_t;
 
 #ifdef __cplusplus

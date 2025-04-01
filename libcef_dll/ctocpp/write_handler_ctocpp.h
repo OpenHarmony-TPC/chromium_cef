@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=5f4ec82fbc7f1391acf34411922d1d68e0f61459$
+// $hash=976423d5aae438aeaddc86b2afac103c5d3ceba6$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_WRITE_HANDLER_CTOCPP_H_
@@ -35,8 +35,8 @@ class CefWriteHandlerCToCpp : public CefCToCppRefCounted<CefWriteHandlerCToCpp,
 
   // CefWriteHandler methods.
   size_t Write(const void* ptr, size_t size, size_t n) override;
-  int Seek(int64 offset, int whence) override;
-  int64 Tell() override;
+  int Seek(int64_t offset, int whence) override;
+  int64_t Tell() override;
   int Flush() override;
   bool MayBlock() override;
 };

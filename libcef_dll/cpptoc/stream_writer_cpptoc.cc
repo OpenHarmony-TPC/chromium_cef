@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f6115343b5a97c98dded1c9ac89c73d2444afbc3$
+// $hash=7af36d44a829bbea8538d281f18afbf91b31efbd$
 //
 
 #include "libcef_dll/cpptoc/stream_writer_cpptoc.h"
+
 #include "libcef_dll/ctocpp/write_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -88,7 +89,7 @@ size_t CEF_CALLBACK stream_writer_write(struct _cef_stream_writer_t* self,
 }
 
 int CEF_CALLBACK stream_writer_seek(struct _cef_stream_writer_t* self,
-                                    int64 offset,
+                                    int64_t offset,
                                     int whence) {
   shutdown_checker::AssertNotShutdown();
 
@@ -106,7 +107,7 @@ int CEF_CALLBACK stream_writer_seek(struct _cef_stream_writer_t* self,
   return _retval;
 }
 
-int64 CEF_CALLBACK stream_writer_tell(struct _cef_stream_writer_t* self) {
+int64_t CEF_CALLBACK stream_writer_tell(struct _cef_stream_writer_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -117,7 +118,7 @@ int64 CEF_CALLBACK stream_writer_tell(struct _cef_stream_writer_t* self) {
   }
 
   // Execute
-  int64 _retval = CefStreamWriterCppToC::Get(self)->Tell();
+  int64_t _retval = CefStreamWriterCppToC::Get(self)->Tell();
 
   // Return type: simple
   return _retval;

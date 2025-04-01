@@ -3,23 +3,27 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/touch_handle_drawable_osr.h"
+#include "cef/libcef/browser/osr/touch_handle_drawable_osr.h"
 
 #include <cmath>
 
-#include "libcef/browser/osr/render_widget_host_view_osr.h"
-
+#include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
 #include "ui/gfx/geometry/rect_f.h"
 #include "ui/gfx/geometry/size.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
+#endif
 
 namespace {
 // Copied from touch_handle_drawable_aura.cc
 
 // The distance by which a handle image is offset from the focal point (i.e.
 // text baseline) downwards.
-#ifndef OHOS_CLIPBOARD
+#if !BUILDFLAG(ARKWEB_MENU)
 constexpr int kSelectionHandleVerticalVisualOffset = 2;
-#endif
+#endif  // !BUILDFLAG(ARKWEB_MENU)
+
 // The padding around the selection handle image can be used to extend the
 // handle so that touch events near the selection handle image are
 // targeted to the selection handle.
@@ -56,7 +60,7 @@ void CefTouchHandleDrawableOSR::SetOrientation(
   }
 
   orientation_ = orientation;
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_MENU)
   UpdateVisiableBounds();
 #else
   CefSize size;
@@ -82,7 +86,7 @@ void CefTouchHandleDrawableOSR::SetOrientation(
   touch_handle_state.mirror_vertical = mirror_vertical;
   touch_handle_state.mirror_horizontal = mirror_horizontal;
   TouchHandleStateChanged(touch_handle_state);
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif
 }
 
 void CefTouchHandleDrawableOSR::SetOrigin(const gfx::PointF& position) {
@@ -92,14 +96,14 @@ void CefTouchHandleDrawableOSR::SetOrigin(const gfx::PointF& position) {
 
   origin_position_ = position;
 
-#ifndef OHOS_CLIPBOARD
+#if !BUILDFLAG(ARKWEB_MENU)
   CefTouchHandleState touch_handle_state;
   touch_handle_state.touch_handle_id = id_;
   touch_handle_state.flags = CEF_THS_FLAG_ORIGIN;
   touch_handle_state.origin = {static_cast<int>(std::round(position.x())),
                                static_cast<int>(std::round(position.y()))};
   TouchHandleStateChanged(touch_handle_state);
-#endif  // #ifndef OHOS_CLIPBOARD
+#endif  // !BUILDFLAG(ARKWEB_MENU)
 }
 
 void CefTouchHandleDrawableOSR::SetAlpha(float alpha) {
@@ -109,43 +113,47 @@ void CefTouchHandleDrawableOSR::SetAlpha(float alpha) {
 
   alpha_ = alpha;
 
-#ifndef OHOS_CLIPBOARD
+#if !BUILDFLAG(ARKWEB_MENU)
   CefTouchHandleState touch_handle_state;
   touch_handle_state.touch_handle_id = id_;
   touch_handle_state.flags = CEF_THS_FLAG_ALPHA;
   touch_handle_state.alpha = alpha_;
   TouchHandleStateChanged(touch_handle_state);
-#endif  // #ifndef OHOS_CLIPBOARD
+#endif  // !BUILDFLAG(ARKWEB_MENU)
 }
 
 gfx::RectF CefTouchHandleDrawableOSR::GetVisibleBounds() const {
   gfx::RectF bounds = relative_bounds_;
   bounds.Offset(origin_position_.x(), origin_position_.y());
 
-#ifndef OHOS_CLIPBOARD
+#if !BUILDFLAG(ARKWEB_MENU)
   bounds.Inset(gfx::InsetsF::TLBR(
       kSelectionHandlePadding,
       kSelectionHandlePadding + kSelectionHandleVerticalVisualOffset,
       kSelectionHandlePadding, kSelectionHandlePadding));
-#endif  // #ifndef OHOS_CLIPBOARD
-
+#endif  // BUILDFLAG(ARKWEB_MENU)
   return bounds;
-}
-
-void CefTouchHandleDrawableOSR::SetEdge(const gfx::PointF& top,
-                                        const gfx::PointF& bottom) {
-#ifdef OHOS_CLIPBOARD
-  edge_height_ = bottom.y() - top.y();
-
-  UpdateVisiableBounds();
-#endif  // #ifdef OHOS_CLIPBOARD
 }
 
 float CefTouchHandleDrawableOSR::GetDrawableHorizontalPaddingRatio() const {
   return 0.0f;
 }
 
-#ifdef OHOS_CLIPBOARD
+void CefTouchHandleDrawableOSR::TouchHandleStateChanged(
+    const CefTouchHandleState& state) {
+  auto browser = rwhv_->browser_impl();
+  auto handler = browser->GetClient()->GetRenderHandler();
+  handler->OnTouchHandleStateChanged(browser.get(), state);
+}
+
+#if BUILDFLAG(ARKWEB_MENU)
+void CefTouchHandleDrawableOSR::SetEdge(const gfx::PointF& top,
+                                        const gfx::PointF& bottom) {
+  edge_height_ = std::abs(bottom.y() - top.y());
+
+  UpdateVisiableBounds();
+}
+
 void CefTouchHandleDrawableOSR::UpdateVisiableBounds() {
   CefSize size;
   auto browser = rwhv_->browser_impl();
@@ -162,16 +170,8 @@ void CefTouchHandleDrawableOSR::UpdateVisiableBounds() {
                                   handle_width, handle_height + edge_height_);
   } else {
     relative_bounds_ =
-        gfx::RectF(-handle_width / 2.0,
-                   -edge_height_ - handle_height,
+        gfx::RectF(-handle_width / 2.0, -edge_height_ - handle_height,
                    handle_width, handle_height + edge_height_);
   }
 }
-#endif  // #ifdef OHOS_CLIPBOARD
-
-void CefTouchHandleDrawableOSR::TouchHandleStateChanged(
-    const CefTouchHandleState& state) {
-  auto browser = rwhv_->browser_impl();
-  auto handler = browser->GetClient()->GetRenderHandler();
-  handler->OnTouchHandleStateChanged(browser.get(), state);
-}
+#endif  // BUILDFLAG(ARKWEB_MENU)

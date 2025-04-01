@@ -2,11 +2,20 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/stream_impl.h"
+#include "cef/libcef/browser/stream_impl.h"
+
 #include <stdlib.h>
+
+#include <algorithm>
+
 #include "base/files/file_util.h"
 #include "base/logging.h"
+#include "base/numerics/safe_conversions.h"
 #include "base/threading/thread_restrictions.h"
+
+#if BUILDFLAG(ARKWEB_SAFE_FUNCTION)
+#include "third_party/bounds_checking_function/include/securec.h"
+#endif
 
 // Static functions
 
@@ -31,7 +40,7 @@ CefRefPtr<CefStreamReader> CefStreamReader::CreateForData(void* data,
   DCHECK(size > 0);
   CefRefPtr<CefStreamReader> reader;
   if (data && size > 0) {
-    reader = new CefBytesReader(data, size, true);
+    reader = new CefBytesReader(data, size);
   }
   return reader;
 }
@@ -88,7 +97,7 @@ size_t CefFileReader::Read(void* ptr, size_t size, size_t n) {
   return fread(ptr, size, n, file_);
 }
 
-int CefFileReader::Seek(int64 offset, int whence) {
+int CefFileReader::Seek(int64_t offset, int whence) {
   base::AutoLock lock_scope(lock_);
 #if BUILDFLAG(IS_WIN)
   return _fseeki64(file_, offset, whence);
@@ -97,7 +106,7 @@ int CefFileReader::Seek(int64 offset, int whence) {
 #endif
 }
 
-int64 CefFileReader::Tell() {
+int64_t CefFileReader::Tell() {
   base::AutoLock lock_scope(lock_);
 #if BUILDFLAG(IS_WIN)
   return _ftelli64(file_);
@@ -128,12 +137,12 @@ size_t CefFileWriter::Write(const void* ptr, size_t size, size_t n) {
   return (size_t)fwrite(ptr, size, n, file_);
 }
 
-int CefFileWriter::Seek(int64 offset, int whence) {
+int CefFileWriter::Seek(int64_t offset, int whence) {
   base::AutoLock lock_scope(lock_);
   return fseek(file_, offset, whence);
 }
 
-int64 CefFileWriter::Tell() {
+int64_t CefFileWriter::Tell() {
   base::AutoLock lock_scope(lock_);
   return ftell(file_);
 }
@@ -145,46 +154,51 @@ int CefFileWriter::Flush() {
 
 // CefBytesReader
 
-CefBytesReader::CefBytesReader(void* data, int64 datasize, bool copy)
-    : data_(nullptr), datasize_(0), copy_(false), offset_(0) {
-  SetData(data, datasize, copy);
-}
-
-CefBytesReader::~CefBytesReader() {
-  SetData(nullptr, 0, false);
+CefBytesReader::CefBytesReader(void* data, int64_t datasize) {
+  SetData(data, datasize);
 }
 
 size_t CefBytesReader::Read(void* ptr, size_t size, size_t n) {
   base::AutoLock lock_scope(lock_);
-  size_t s = (datasize_ - offset_) / size;
-  size_t ret = (n < s ? n : s);
-  memcpy(ptr, (reinterpret_cast<char*>(data_)) + offset_, ret * size);
+  size_t s = (data_.size() - offset_) / size;
+  size_t ret = std::min(n, s);
+#if BUILDFLAG(ARKWEB_SAFE_FUNCTION)
+  if (memcpy_s(ptr, ret * size, data_.data() + offset_, ret * size) != EOK) {
+      LOG(ERROR) << "CefBytesReader::Read memcpy_s failed";
+    return 0;
+  }
+#else
+  memcpy(ptr, data_.data() + offset_, ret * size);
+#endif
   offset_ += ret * size;
   return ret;
 }
 
-int CefBytesReader::Seek(int64 offset, int whence) {
+int CefBytesReader::Seek(int64_t offset, int whence) {
   int rv = -1L;
   base::AutoLock lock_scope(lock_);
+
+  const int64_t size = base::checked_cast<int64_t>(data_.size());
+
   switch (whence) {
     case SEEK_CUR:
-      if (offset_ + offset > datasize_ || offset_ + offset < 0) {
+      if (offset_ + offset > size || offset_ + offset < 0) {
         break;
       }
       offset_ += offset;
       rv = 0;
       break;
     case SEEK_END: {
-      int64 offset_abs = std::abs(offset);
-      if (offset_abs > datasize_) {
+      int64_t offset_abs = std::abs(offset);
+      if (offset_abs > size) {
         break;
       }
-      offset_ = datasize_ - offset_abs;
+      offset_ = size - offset_abs;
       rv = 0;
       break;
     }
     case SEEK_SET:
-      if (offset > datasize_ || offset < 0) {
+      if (offset > size || offset < 0) {
         break;
       }
       offset_ = offset;
@@ -195,128 +209,27 @@ int CefBytesReader::Seek(int64 offset, int whence) {
   return rv;
 }
 
-int64 CefBytesReader::Tell() {
+int64_t CefBytesReader::Tell() {
   base::AutoLock lock_scope(lock_);
   return offset_;
 }
 
 int CefBytesReader::Eof() {
   base::AutoLock lock_scope(lock_);
-  return (offset_ >= datasize_);
+  return (offset_ >= base::checked_cast<int64_t>(data_.size()));
 }
 
-void CefBytesReader::SetData(void* data, int64 datasize, bool copy) {
+void CefBytesReader::SetData(void* data, int64_t datasize) {
   base::AutoLock lock_scope(lock_);
-  if (copy_) {
-    free(data_);
-  }
 
-  copy_ = copy;
   offset_ = 0;
-  datasize_ = datasize;
 
-  if (copy) {
-    data_ = malloc(datasize);
-    DCHECK(data_ != nullptr);
-    if (data_) {
-      memcpy(data_, data, datasize);
-    }
+  if (data && datasize > 0) {
+    data_.reserve(datasize);
+    std::copy(static_cast<unsigned char*>(data),
+              static_cast<unsigned char*>(data) + datasize,
+              std::back_inserter(data_));
   } else {
-    data_ = data;
+    data_.clear();
   }
-}
-
-// CefBytesWriter
-
-CefBytesWriter::CefBytesWriter(size_t grow)
-    : grow_(grow), datasize_(grow), offset_(0) {
-  DCHECK(grow > 0);
-  data_ = malloc(grow);
-  DCHECK(data_ != nullptr);
-}
-
-CefBytesWriter::~CefBytesWriter() {
-  base::AutoLock lock_scope(lock_);
-  if (data_) {
-    free(data_);
-  }
-}
-
-size_t CefBytesWriter::Write(const void* ptr, size_t size, size_t n) {
-  base::AutoLock lock_scope(lock_);
-  size_t rv;
-  if (offset_ + static_cast<int64>(size * n) >= datasize_ &&
-      Grow(size * n) == 0) {
-    rv = 0;
-  } else {
-    memcpy(reinterpret_cast<char*>(data_) + offset_, ptr, size * n);
-    offset_ += size * n;
-    rv = n;
-  }
-
-  return rv;
-}
-
-int CefBytesWriter::Seek(int64 offset, int whence) {
-  int rv = -1L;
-  base::AutoLock lock_scope(lock_);
-  switch (whence) {
-    case SEEK_CUR:
-      if (offset_ + offset > datasize_ || offset_ + offset < 0) {
-        break;
-      }
-      offset_ += offset;
-      rv = 0;
-      break;
-    case SEEK_END: {
-      int64 offset_abs = std::abs(offset);
-      if (offset_abs > datasize_) {
-        break;
-      }
-      offset_ = datasize_ - offset_abs;
-      rv = 0;
-      break;
-    }
-    case SEEK_SET:
-      if (offset > datasize_ || offset < 0) {
-        break;
-      }
-      offset_ = offset;
-      rv = 0;
-      break;
-  }
-
-  return rv;
-}
-
-int64 CefBytesWriter::Tell() {
-  base::AutoLock lock_scope(lock_);
-  return offset_;
-}
-
-int CefBytesWriter::Flush() {
-  return 0;
-}
-
-std::string CefBytesWriter::GetDataString() {
-  base::AutoLock lock_scope(lock_);
-  std::string str(reinterpret_cast<char*>(data_), offset_);
-  return str;
-}
-
-size_t CefBytesWriter::Grow(size_t size) {
-  base::AutoLock lock_scope(lock_);
-  size_t rv;
-  size_t s = (size > grow_ ? size : grow_);
-  void* tmp = realloc(data_, datasize_ + s);
-  DCHECK(tmp != nullptr);
-  if (tmp) {
-    data_ = tmp;
-    datasize_ += s;
-    rv = datasize_;
-  } else {
-    rv = 0;
-  }
-
-  return rv;
 }

@@ -20,7 +20,7 @@ const int kMenuBarGroupId = 100;
 // If the mnemonic is capital I and the UI language is Turkish, lowercasing it
 // results in 'small dotless i', which is different from a 'dotted i'. Similar
 // issues may exist for az and lt locales.
-char16 ToLower(char16 c) {
+char16_t ToLower(char16_t c) {
   CefStringUTF16 str16;
   cef_string_utf16_to_lower(&c, 1, str16.GetWritableStruct());
   return str16.length() > 0 ? str16.c_str()[0] : 0;
@@ -28,7 +28,7 @@ char16 ToLower(char16 c) {
 
 // Extract the mnemonic character from |title|. For example, if |title| is
 // "&Test" then the mnemonic character is 'T'.
-char16 GetMnemonic(const std::u16string& title) {
+char16_t GetMnemonic(const std::u16string& title) {
   size_t index = 0;
   do {
     index = title.find('&', index);
@@ -44,11 +44,13 @@ char16 GetMnemonic(const std::u16string& title) {
 
 }  // namespace
 
-ViewsMenuBar::ViewsMenuBar(Delegate* delegate, int menu_id_start)
+ViewsMenuBar::ViewsMenuBar(Delegate* delegate,
+                           int menu_id_start,
+                           bool use_bottom_controls)
     : delegate_(delegate),
       id_start_(menu_id_start),
-      id_next_(menu_id_start),
-      last_nav_with_keyboard_(false) {
+      use_bottom_controls_(use_bottom_controls),
+      id_next_(menu_id_start) {
   DCHECK(delegate_);
   DCHECK_GT(id_start_, 0);
 }
@@ -81,7 +83,6 @@ CefRefPtr<CefMenuModel> ViewsMenuBar::CreateMenuModel(const CefString& label,
   CefRefPtr<CefMenuButton> button =
       CefMenuButton::CreateMenuButton(this, label);
   button->SetID(new_menu_id);
-  views_style::ApplyTo(button.get());
   button->SetInkDropEnabled(true);
 
   // Assign a group ID to allow focus traversal between MenuButtons using the
@@ -92,7 +93,7 @@ CefRefPtr<CefMenuModel> ViewsMenuBar::CreateMenuModel(const CefString& label,
   panel_->AddChildView(button);
 
   // Extract the mnemonic that triggers the menu, if any.
-  char16 mnemonic = GetMnemonic(label);
+  char16_t mnemonic = GetMnemonic(label);
   if (mnemonic != 0) {
     mnemonics_.insert(std::make_pair(mnemonic, new_menu_id));
   }
@@ -164,12 +165,29 @@ void ViewsMenuBar::OnMenuButtonPressed(
     CefRefPtr<CefMenuButtonPressedLock> button_pressed_lock) {
   CefRefPtr<CefMenuModel> menu_model = GetMenuModel(menu_button->GetID());
 
+  const auto button_bounds = menu_button->GetBoundsInScreen();
+
   // Adjust menu position to align with the button.
   CefPoint point = screen_point;
   if (CefIsRTL()) {
-    point.x += menu_button->GetBounds().width - 4;
+    point.x += button_bounds.width - 4;
   } else {
-    point.x -= menu_button->GetBounds().width - 4;
+    point.x -= button_bounds.width - 4;
+  }
+
+  if (use_bottom_controls_) {
+    const auto display_bounds =
+        menu_button->GetWindow()->GetDisplay()->GetWorkArea();
+    const int available_height = display_bounds.y + display_bounds.height -
+                                 button_bounds.y - button_bounds.height;
+
+    // Approximation of the menu height.
+    const int menu_height =
+        static_cast<int>(menu_model->GetCount()) * button_bounds.height;
+    if (menu_height > available_height) {
+      // The menu will go upwards, so place it above the button.
+      point.y -= button_bounds.height - 8;
+    }
   }
 
   // Keep track of the current |last_nav_with_keyboard_| status and restore it
@@ -230,6 +248,10 @@ void ViewsMenuBar::MouseOutsideMenu(CefRefPtr<CefMenuModel> menu_model,
 
     CefRefPtr<CefView> button = panel_->GetViewForID(id);
     CefRect button_bounds = button->GetBounds();
+
+    // Adjust for window coordinates.
+    button_bounds.y += panel_bounds.y;
+
     if (CefIsRTL()) {
       // Adjust for right-to-left button layout.
       button_bounds.x =
@@ -260,13 +282,17 @@ void ViewsMenuBar::MenuClosed(CefRefPtr<CefMenuModel> menu_model) {
   }
 }
 
+void ViewsMenuBar::OnThemeChanged(CefRefPtr<CefView> view) {
+  // Apply colors when the theme changes.
+  views_style::OnThemeChanged(view);
+}
+
 void ViewsMenuBar::EnsureMenuPanel() {
   if (panel_) {
     return;
   }
 
-  panel_ = CefPanel::CreatePanel(nullptr);
-  views_style::ApplyTo(panel_);
+  panel_ = CefPanel::CreatePanel(this);
 
   // Use a horizontal box layout.
   CefBoxLayoutSettings top_panel_layout_settings;

@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=0859dcf32bf7353beb949f4b6252966ec799084c$
+// $hash=566aa0a59d05ac70f53f5938206980f096dbdda5$
 //
 
 #include "libcef_dll/cpptoc/waitable_event_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
@@ -97,7 +98,7 @@ void CEF_CALLBACK waitable_event_wait(struct _cef_waitable_event_t* self) {
 }
 
 int CEF_CALLBACK waitable_event_timed_wait(struct _cef_waitable_event_t* self,
-                                           int64 max_ms) {
+                                           int64_t max_ms) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

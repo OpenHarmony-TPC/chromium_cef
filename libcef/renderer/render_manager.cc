@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/renderer/render_manager.h"
+#include "cef/libcef/renderer/render_manager.h"
 
 #include <tuple>
 
@@ -19,33 +19,34 @@
 #endif
 #endif
 
-#include "libcef/common/app_manager.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/common/net/scheme_info.h"
-#include "libcef/common/values_impl.h"
-#include "libcef/renderer/blink_glue.h"
-#include "libcef/renderer/browser_impl.h"
-#include "libcef/renderer/render_frame_observer.h"
-#include "libcef/renderer/thread_util.h"
-#include "libcef/renderer/v8_impl.h"
-
 #include "base/command_line.h"
 #include "base/strings/string_number_conversions.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/cef_switches.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
+#include "cef/libcef/common/net/scheme_info.h"
+#include "cef/libcef/common/values_impl.h"
+#include "cef/libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/browser_impl.h"
+#include "cef/libcef/renderer/render_frame_observer.h"
+#include "cef/libcef/renderer/thread_util.h"
+#include "cef/libcef/renderer/v8_impl.h"
 #include "content/public/common/content_switches.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_thread.h"
 #include "extensions/common/switches.h"
 #include "mojo/public/cpp/bindings/binder_map.h"
+#include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
 #include "services/network/public/mojom/cors_origin_pattern.mojom.h"
 #include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/platform/web_url.h"
 #include "third_party/blink/public/web/web_frame.h"
+#include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
 #include "third_party/blink/public/web/web_view_observer.h"
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
 #include "base/logging.h"
 #include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
 #endif
@@ -56,24 +57,30 @@ CefRenderManager* g_manager = nullptr;
 
 }  // namespace
 
-// Placeholder object for guest views.
-class CefGuestView : public blink::WebViewObserver {
+// Placeholder object for excluded views.
+class CefExcludedView : public blink::WebViewObserver {
  public:
-  CefGuestView(CefRenderManager* manager,
-               blink::WebView* web_view,
-               bool is_windowless)
+  CefExcludedView(CefRenderManager* manager,
+                  blink::WebView* web_view,
+                  std::optional<bool> is_windowless,
+                  std::optional<bool> print_preview_enabled)
       : blink::WebViewObserver(web_view),
         manager_(manager),
-        is_windowless_(is_windowless) {}
+        is_windowless_(is_windowless),
+        print_preview_enabled_(print_preview_enabled) {}
 
-  bool is_windowless() const { return is_windowless_; }
+  std::optional<bool> is_windowless() const { return is_windowless_; }
+  std::optional<bool> print_preview_enabled() const {
+    return print_preview_enabled_;
+  }
 
  private:
   // RenderViewObserver methods.
-  void OnDestruct() override { manager_->OnGuestViewDestroyed(this); }
+  void OnDestruct() override { manager_->OnExcludedViewDestroyed(this); }
 
   CefRenderManager* const manager_;
-  const bool is_windowless_;
+  const std::optional<bool> is_windowless_;
+  const std::optional<bool> print_preview_enabled_;
 };
 
 CefRenderManager::CefRenderManager() {
@@ -109,26 +116,36 @@ void CefRenderManager::RenderFrameCreated(
     content::RenderFrame* render_frame,
     CefRenderFrameObserver* render_frame_observer,
     bool& browser_created,
-    absl::optional<bool>& is_windowless) {
+    std::optional<bool>& is_windowless,
+    std::optional<bool>& print_preview_enabled) {
   auto browser = MaybeCreateBrowser(render_frame->GetWebView(), render_frame,
-                                    &browser_created, &is_windowless);
+                                    &browser_created, &is_windowless,
+                                    &print_preview_enabled);
   if (browser) {
     // Attach the frame to the observer for message routing purposes.
     render_frame_observer->AttachFrame(
         browser->GetWebFrameImpl(render_frame->GetWebFrame()).get());
   }
+
+  // Enable support for draggable regions.
+  // TODO: This has performance consequences so consider making it configurable
+  // (e.g. only enabled for frameless windows). See issue #3636.
+  render_frame->GetWebView()->SetSupportsDraggableRegions(true);
 }
 
-void CefRenderManager::WebViewCreated(blink::WebView* web_view,
-                                      bool& browser_created,
-                                      absl::optional<bool>& is_windowless) {
+void CefRenderManager::WebViewCreated(
+    blink::WebView* web_view,
+    bool& browser_created,
+    std::optional<bool>& is_windowless,
+    std::optional<bool>& print_preview_enabled) {
   content::RenderFrame* render_frame = nullptr;
   if (web_view->MainFrame()->IsWebLocalFrame()) {
     render_frame = content::RenderFrame::FromWebFrame(
         web_view->MainFrame()->ToWebLocalFrame());
   }
 
-  MaybeCreateBrowser(web_view, render_frame, &browser_created, &is_windowless);
+  MaybeCreateBrowser(web_view, render_frame, &browser_created, &is_windowless,
+                     &print_preview_enabled);
 }
 
 void CefRenderManager::DevToolsAgentAttached() {
@@ -194,12 +211,6 @@ bool CefRenderManager::IsExtensionProcess() {
       extensions::switches::kExtensionProcess);
 }
 
-// static
-bool CefRenderManager::IsPdfProcess() {
-  return base::CommandLine::ForCurrentProcess()->HasSwitch(
-      switches::kPdfRenderer);
-}
-
 void CefRenderManager::BindReceiver(
     mojo::PendingReceiver<cef::mojom::RenderManager> receiver) {
   receivers_.Add(this, std::move(receiver));
@@ -251,10 +262,13 @@ void CefRenderManager::WebKitInitialized() {
       if (info.is_fetch_enabled) {
         blink_glue::RegisterURLSchemeAsSupportingFetchAPI(scheme);
       }
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
       if (info.is_code_cache_enabled) {
-        LOG(DEBUG) << "Render manager register the scheme:" << info.scheme_name.c_str() << " supported code cache.";
-        blink::SchemeRegistry::RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(String(info.scheme_name));
+        LOG(DEBUG) << "Render manager register the scheme:"
+                   << info.scheme_name.c_str() << " supported code cache.";
+        blink::SchemeRegistry::
+            RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(
+                String(info.scheme_name));
       }
 #endif
     }
@@ -296,7 +310,8 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
     blink::WebView* web_view,
     content::RenderFrame* render_frame,
     bool* browser_created,
-    absl::optional<bool>* is_windowless) {
+    std::optional<bool>* is_windowless,
+    std::optional<bool>* print_preview_enabled) {
   if (browser_created) {
     *browser_created = false;
   }
@@ -305,52 +320,60 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
     return nullptr;
   }
 
-  // Don't create another browser or guest view object if one already exists for
-  // the view.
+  // Don't create another browser or excluded view object if one already exists
+  // for the view.
   auto browser = GetBrowserForView(web_view);
   if (browser) {
     if (is_windowless) {
       *is_windowless = browser->is_windowless();
     }
+    if (print_preview_enabled) {
+      *print_preview_enabled = browser->print_preview_enabled();
+    }
     return browser;
   }
 
-  auto guest_view = GetGuestViewForView(web_view);
-  if (guest_view) {
+  auto excluded_view = GetExcludedViewForView(web_view);
+  if (excluded_view) {
     if (is_windowless) {
-      *is_windowless = guest_view->is_windowless();
+      *is_windowless = excluded_view->is_windowless();
+    }
+    if (print_preview_enabled) {
+      *print_preview_enabled = excluded_view->print_preview_enabled();
     }
     return nullptr;
   }
 
-  const bool is_pdf = IsPdfProcess();
-
+  // Retrieve browser information synchronously.
   auto params = cef::mojom::NewBrowserInfo::New();
-  if (!is_pdf) {
-    // Retrieve browser information synchronously.
-    GetBrowserManager()->GetNewBrowserInfo(render_frame->GetRoutingID(),
-                                           &params);
-    if (params->browser_id == 0) {
-      // The popup may have been canceled during creation.
-      return nullptr;
-    }
+  GetBrowserManager()->GetNewBrowserInfo(
+      render_frame->GetWebFrame()->GetLocalFrameToken(), &params);
+  if (params->browser_id == 0) {
+    // The popup may have been canceled during creation.
+    return nullptr;
   }
 
   if (is_windowless) {
     *is_windowless = params->is_windowless;
   }
+  if (print_preview_enabled) {
+    *print_preview_enabled = params->print_preview_enabled;
+  }
 
-  if (is_pdf || params->is_guest_view || params->browser_id < 0) {
-    // Don't create a CefBrowser for a PDF renderer, guest view, or if the new
-    // browser info response has timed out.
-    guest_views_.insert(std::make_pair(
+  if (params->is_excluded || params->browser_id < 0) {
+    // Don't create a CefBrowser for excluded content (PDF renderer, PDF
+    // extension or print preview dialog), or if the new browser info response
+    // has timed out.
+    excluded_views_.insert(std::make_pair(
         web_view,
-        std::make_unique<CefGuestView>(this, web_view, params->is_windowless)));
+        std::make_unique<CefExcludedView>(this, web_view, params->is_windowless,
+                                          params->print_preview_enabled)));
     return nullptr;
   }
 
-  browser = new CefBrowserImpl(web_view, params->browser_id, params->is_popup,
-                               params->is_windowless);
+  browser = new ArkWebBrowserExtImpl(web_view, params->browser_id,
+                                     *params->is_popup, *params->is_windowless,
+                                     *params->print_preview_enabled);
   browsers_.insert(std::make_pair(web_view, browser));
 
   // Notify the render process handler.
@@ -389,26 +412,27 @@ void CefRenderManager::OnBrowserDestroyed(CefBrowserImpl* browser) {
   DCHECK(false);
 }
 
-CefGuestView* CefRenderManager::GetGuestViewForView(blink::WebView* view) {
+CefExcludedView* CefRenderManager::GetExcludedViewForView(
+    blink::WebView* view) {
   CEF_REQUIRE_RT_RETURN(nullptr);
 
-  GuestViewMap::const_iterator it = guest_views_.find(view);
-  if (it != guest_views_.end()) {
+  ExcludedViewMap::const_iterator it = excluded_views_.find(view);
+  if (it != excluded_views_.end()) {
     return it->second.get();
   }
   return nullptr;
 }
 
-void CefRenderManager::OnGuestViewDestroyed(CefGuestView* guest_view) {
-  GuestViewMap::iterator it = guest_views_.begin();
-  for (; it != guest_views_.end(); ++it) {
-    if (it->second.get() == guest_view) {
-      guest_views_.erase(it);
+void CefRenderManager::OnExcludedViewDestroyed(CefExcludedView* excluded_view) {
+  ExcludedViewMap::iterator it = excluded_views_.begin();
+  for (; it != excluded_views_.end(); ++it) {
+    if (it->second.get() == excluded_view) {
+      excluded_views_.erase(it);
       return;
     }
   }
 
-  // No guest view was found in the map.
+  // No excluded view was found in the map.
   DCHECK(false);
 }
 

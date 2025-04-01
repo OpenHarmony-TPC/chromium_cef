@@ -16,6 +16,7 @@
 
 #if defined(OS_MAC)
 #include <Carbon/Carbon.h>  // For character codes.
+
 #include "tests/ceftests/os_rendering_unittest_mac.h"
 #elif defined(OS_LINUX)
 #include <X11/keysym.h>
@@ -523,7 +524,7 @@ class OSRTestHandler : public RoutingTestHandler,
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -666,7 +667,7 @@ class OSRTestHandler : public RoutingTestHandler,
 
   bool handleBoundsQuery(CefRefPtr<CefBrowser> browser,
                          CefRefPtr<CefFrame> frame,
-                         int64 query_id,
+                         int64_t query_id,
                          const CefString& request,
                          bool persistent,
                          CefRefPtr<Callback> callback) {
@@ -854,7 +855,7 @@ class OSRTestHandler : public RoutingTestHandler,
 
     // start test only when painting something else then background
     if (IsBackgroundInBuffer(
-            reinterpret_cast<const uint32*>(buffer), width * height,
+            reinterpret_cast<const uint32_t*>(buffer), width * height,
             test_type_ == OSR_TEST_TRANSPARENCY ? 0x00000000 : 0xFFFFFFFF)) {
       return;
     }
@@ -867,7 +868,7 @@ class OSRTestHandler : public RoutingTestHandler,
           EXPECT_EQ(dirtyRects.size(), 1U);
           EXPECT_TRUE(IsFullRepaint(dirtyRects[0], GetScaledInt(kOsrWidth),
                                     GetScaledInt(kOsrHeight)));
-          EXPECT_EQ(0xffff7f7fU, *(reinterpret_cast<const uint32*>(buffer)));
+          EXPECT_EQ(0xffff7f7fU, *(reinterpret_cast<const uint32_t*>(buffer)));
           DestroySucceededTestSoon();
         }
         break;
@@ -877,7 +878,7 @@ class OSRTestHandler : public RoutingTestHandler,
           EXPECT_EQ(dirtyRects.size(), 1U);
           EXPECT_TRUE(IsFullRepaint(dirtyRects[0], GetScaledInt(kOsrWidth),
                                     GetScaledInt(kOsrHeight)));
-          EXPECT_EQ(0x80800000U, *(reinterpret_cast<const uint32*>(buffer)));
+          EXPECT_EQ(0x80800000U, *(reinterpret_cast<const uint32_t*>(buffer)));
           DestroySucceededTestSoon();
         }
         break;
@@ -988,9 +989,9 @@ class OSRTestHandler : public RoutingTestHandler,
           // Unselected option background color is cyan.
           // Go down 100 pixels to skip the selected option and over 5 pixels
           // to avoid hitting the border.
-          const uint32 offset = dirtyRects[0].width * 100 + 5;
+          const uint32_t offset = dirtyRects[0].width * 100 + 5;
           EXPECT_EQ(0xff00ffff,
-                    *(reinterpret_cast<const uint32*>(buffer) + offset));
+                    *(reinterpret_cast<const uint32_t*>(buffer) + offset));
 
           if (ExpectComputedPopupSize()) {
             EXPECT_EQ(expanded_select_rect.width, width);
@@ -1162,14 +1163,16 @@ class OSRTestHandler : public RoutingTestHandler,
 
   void UpdateDragCursor(CefRefPtr<CefBrowser> browser,
                         DragOperation operation) override {
+    if (operation == DRAG_OPERATION_NONE) {
+      return;
+    }
+
     if (test_type_ == OSR_TEST_DRAG_DROP_UPDATE_CURSOR && started()) {
-      if (operation != DRAG_OPERATION_NONE) {
-        const CefRect& dropdiv = GetElementBounds("dropdiv");
-        browser->GetHost()->DragSourceEndedAt(
-            MiddleX(dropdiv), MiddleY(dropdiv), DRAG_OPERATION_NONE);
-        browser->GetHost()->DragSourceSystemDragEnded();
-        DestroySucceededTestSoon();
-      }
+      const CefRect& dropdiv = GetElementBounds("dropdiv");
+      browser->GetHost()->DragSourceEndedAt(MiddleX(dropdiv), MiddleY(dropdiv),
+                                            DRAG_OPERATION_NONE);
+      browser->GetHost()->DragSourceSystemDragEnded();
+      DestroySucceededTestSoon();
     } else if (test_type_ == OSR_TEST_DRAG_DROP_DROP && started()) {
       // Don't end the drag multiple times.
       if (got_update_cursor_) {
@@ -1203,13 +1206,7 @@ class OSRTestHandler : public RoutingTestHandler,
   }
 
   void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                  TextInputMode input_mode
-#if BUILDFLAG(IS_OHOS)
-                                  ,
-                                  bool show_keyboard,
-                                  is_need_reset_listener
-#endif
-                                  ) override {
+                                  TextInputMode input_mode) override {
     if (test_type_ == OSR_TEST_VIRTUAL_KEYBOARD && started()) {
       if (!got_virtual_keyboard_event_.isSet()) {
         got_virtual_keyboard_event_.yes();
@@ -1267,8 +1264,9 @@ class OSRTestHandler : public RoutingTestHandler,
 
     auto current_browser = GetBrowser();
     EXPECT_TRUE(current_browser->IsSame(browser));
-    EXPECT_EQ(current_browser->GetFocusedFrame()->GetIdentifier(),
-              frame->GetIdentifier());
+    EXPECT_STREQ(
+        current_browser->GetFocusedFrame()->GetIdentifier().ToString().c_str(),
+        frame->GetIdentifier().ToString().c_str());
 
     if (test_type_ == OSR_TEST_QUICK_MENU) {
       EXPECT_EQ(2U, got_touch_handle_enabled_ct_);
@@ -1306,8 +1304,9 @@ class OSRTestHandler : public RoutingTestHandler,
 
     auto current_browser = GetBrowser();
     EXPECT_TRUE(current_browser->IsSame(browser));
-    EXPECT_EQ(current_browser->GetFocusedFrame()->GetIdentifier(),
-              frame->GetIdentifier());
+    EXPECT_STREQ(
+        current_browser->GetFocusedFrame()->GetIdentifier().ToString().c_str(),
+        frame->GetIdentifier().ToString().c_str());
 
     EXPECT_EQ(OSR_TEST_QUICK_MENU, test_type_);
 
@@ -1344,8 +1343,9 @@ class OSRTestHandler : public RoutingTestHandler,
 
     auto current_browser = GetBrowser();
     EXPECT_TRUE(current_browser->IsSame(browser));
-    EXPECT_EQ(current_browser->GetFocusedFrame()->GetIdentifier(),
-              frame->GetIdentifier());
+    EXPECT_STREQ(
+        current_browser->GetFocusedFrame()->GetIdentifier().ToString().c_str(),
+        frame->GetIdentifier().ToString().c_str());
 
     EXPECT_EQ(OSR_TEST_QUICK_MENU, test_type_);
 
@@ -1373,8 +1373,9 @@ class OSRTestHandler : public RoutingTestHandler,
 
     auto current_browser = GetBrowser();
     EXPECT_TRUE(current_browser->IsSame(browser));
-    EXPECT_EQ(current_browser->GetFocusedFrame()->GetIdentifier(),
-              frame->GetIdentifier());
+    EXPECT_STREQ(
+        current_browser->GetFocusedFrame()->GetIdentifier().ToString().c_str(),
+        frame->GetIdentifier().ToString().c_str());
 
     EXPECT_EQ(OSR_TEST_QUICK_MENU, test_type_);
 
@@ -1511,9 +1512,9 @@ class OSRTestHandler : public RoutingTestHandler,
     return rc.width == width && rc.height == height;
   }
 
-  static bool IsBackgroundInBuffer(const uint32* buffer,
+  static bool IsBackgroundInBuffer(const uint32_t* buffer,
                                    size_t size,
-                                   uint32 rgba) {
+                                   uint32_t rgba) {
     for (size_t i = 0; i < size; i++) {
       if (buffer[i] != rgba) {
         return false;

@@ -9,17 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=55321993af05bcf115174f00b73bab3524207207$
+// $hash=68d6f6379d73b06ecb4765046e3ff0277746405f$
 //
 
 #include "libcef_dll/ctocpp/resource_request_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/response_cpptoc.h"
 #include "libcef_dll/ctocpp/cookie_access_filter_ctocpp.h"
-#include "libcef_dll/ctocpp/resource_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/response_filter_ctocpp.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
@@ -85,34 +85,6 @@ CefResourceRequestHandler::ReturnValue
 
   // Return type: simple
   return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefResourceHandler> CefResourceRequestHandlerCToCpp::
-    GetResourceHandler(CefRefPtr<CefBrowser> browser,
-                       CefRefPtr<CefFrame> frame,
-                       CefRefPtr<CefRequest> request) {
-  cef_resource_request_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_resource_handler)) {
-    return nullptr;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: request; type: refptr_diff
-  DCHECK(request.get());
-  if (!request.get()) {
-    return nullptr;
-  }
-  // Unverified params: browser, frame
-
-  // Execute
-  cef_resource_handler_t* _retval = _struct->get_resource_handler(
-      _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      CefRequestCppToC::Wrap(request));
-
-  // Return type: refptr_same
-  return CefResourceHandlerCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -223,7 +195,7 @@ void CefResourceRequestHandlerCToCpp::OnResourceLoadComplete(
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefResponse> response,
     URLRequestStatus status,
-    int64 received_content_length) {
+    int64_t received_content_length) {
   cef_resource_request_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_resource_load_complete)) {
     return;

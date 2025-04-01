@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=689b76ff3c07aff14a12cc98fa6a19bad434d3e0$
+// $hash=a3c8e5188e462ca35ced2a8d1992b4ac0bac3b35$
 //
 
 #include "libcef_dll/ctocpp/server_ctocpp.h"
+
 #include "libcef_dll/cpptoc/server_handler_cpptoc.h"
 #include "libcef_dll/ctocpp/task_runner_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -22,7 +23,7 @@
 
 NO_SANITIZE("cfi-icall")
 void CefServer::CreateServer(const CefString& address,
-                             uint16 port,
+                             uint16_t port,
                              int backlog,
                              CefRefPtr<CefServerHandler> handler) {
   shutdown_checker::AssertNotShutdown();
@@ -222,7 +223,7 @@ NO_SANITIZE("cfi-icall")
 void CefServerCToCpp::SendHttpResponse(int connection_id,
                                        int response_code,
                                        const CefString& content_type,
-                                       int64 content_length,
+                                       int64_t content_length,
                                        const HeaderMap& extra_headers) {
   shutdown_checker::AssertNotShutdown();
 

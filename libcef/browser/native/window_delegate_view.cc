@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/native/window_delegate_view.h"
+#include "cef/libcef/browser/native/window_delegate_view.h"
 
 #include <utility>
 
@@ -37,7 +37,8 @@ void CefWindowDelegateView::Init(gfx::AcceleratedWidget parent_widget,
   // See CalculateWindowStylesFromInitParams in
   // ui/views/widget/widget_hwnd_utils.cc for the conversion of |params| to
   // Windows style flags.
-  views::Widget::InitParams params;
+  views::Widget::InitParams params(
+      views::Widget::InitParams::NATIVE_WIDGET_OWNS_WIDGET);
   params.parent_widget = parent_widget;
   params.bounds = bounds;
   params.delegate = this;
@@ -74,7 +75,7 @@ void CefWindowDelegateView::Init(gfx::AcceleratedWidget parent_widget,
 void CefWindowDelegateView::InitContent() {
   SetBackground(views::CreateSolidBackground(background_color_));
   SetLayoutManager(std::make_unique<views::FillLayout>());
-  AddChildView(web_view_);
+  AddChildView(web_view_.get());
 }
 
 void CefWindowDelegateView::DeleteDelegate() {

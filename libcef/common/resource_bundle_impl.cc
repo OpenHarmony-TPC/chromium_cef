@@ -2,12 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/common/resource_bundle_impl.h"
+#include "cef/libcef/common/resource_bundle_impl.h"
 
 #include "base/memory/ref_counted_memory.h"
 #include "ui/base/resource/resource_bundle.h"
 
-CefResourceBundleImpl::CefResourceBundleImpl() {}
+CefResourceBundleImpl::CefResourceBundleImpl() = default;
 
 CefString CefResourceBundleImpl::GetLocalizedString(int string_id) {
   if (!ui::ResourceBundle::HasSharedInstance()) {

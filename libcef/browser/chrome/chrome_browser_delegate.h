@@ -7,15 +7,17 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/browser_info.h"
-#include "libcef/browser/chrome/browser_delegate.h"
-
-#include "third_party/abseil-cpp/absl/types/optional.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/browser_info.h"
+#include "cef/libcef/browser/chrome/browser_delegate.h"
 
 class CefBrowserContentsDelegate;
 class CefRequestContextImpl;
+class CefWindowImpl;
+class CefWindowView;
 class ChromeBrowserHostImpl;
 
 // Implementation of the cef::BrowserDelegate interface. Lifespan is controlled
@@ -39,13 +41,23 @@ class ChromeBrowserHostImpl;
 // but the Browser object will change when the tab is dragged between windows.
 class ChromeBrowserDelegate : public cef::BrowserDelegate {
  public:
+  // The |create_params| and |opener| values are specified via the
+  // Browser::CreateParams passed to Browser::Create. |opener| will only be
+  // specified for certain special Browser types.
   ChromeBrowserDelegate(Browser* browser,
-                        const CefBrowserCreateParams& create_params);
+                        const CefBrowserCreateParams& create_params,
+                        const Browser* opener);
 
   ChromeBrowserDelegate(const ChromeBrowserDelegate&) = delete;
   ChromeBrowserDelegate& operator=(const ChromeBrowserDelegate&) = delete;
 
   ~ChromeBrowserDelegate() override;
+
+  static Browser* CreateDevToolsBrowser(
+      Profile* profile,
+      Browser* opener,
+      content::WebContents* inspected_web_contents,
+      std::unique_ptr<content::WebContents>& devtools_contents);
 
   // cef::BrowserDelegate methods:
   std::unique_ptr<content::WebContents> AddWebContents(
@@ -61,10 +73,27 @@ class ChromeBrowserDelegate : public cef::BrowserDelegate {
   bool IsPageActionIconVisible(PageActionIconType icon_type) override;
   bool IsToolbarButtonVisible(ToolbarButtonType button_type) override;
   void UpdateFindBarBoundingBox(gfx::Rect* bounds) override;
+  void UpdateDialogTopInset(int* dialog_top_y) override;
   [[nodiscard]] content::MediaResponseCallback RequestMediaAccessPermissionEx(
       content::WebContents* web_contents,
       const content::MediaStreamRequest& request,
       content::MediaResponseCallback callback) override;
+  bool RendererUnresponsiveEx(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter) override;
+  bool RendererResponsiveEx(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host) override;
+  std::optional<bool> SupportsWindowFeature(int feature) const override;
+  bool SupportsDraggableRegion() const override;
+  const std::optional<SkRegion> GetDraggableRegion() const override;
+  void WindowFullscreenStateChanged() override;
+  bool HasViewsHostedOpener() const override;
+  bool OpenURLFromTabEx(content::WebContents* source,
+                        const content::OpenURLParams& params,
+                        base::OnceCallback<void(content::NavigationHandle&)>&
+                            navigation_handle_callback) override;
 
   // WebContentsDelegate methods:
   void WebContentsCreated(content::WebContents* source_contents,
@@ -73,9 +102,6 @@ class ChromeBrowserDelegate : public cef::BrowserDelegate {
                           const std::string& frame_name,
                           const GURL& target_url,
                           content::WebContents* new_contents) override;
-  content::WebContents* OpenURLFromTab(
-      content::WebContents* source,
-      const content::OpenURLParams& params) override;
   void LoadingStateChanged(content::WebContents* source,
                            bool should_show_loading_ui) override;
   void UpdateTargetURL(content::WebContents* source, const GURL& url) override;
@@ -91,34 +117,60 @@ class ChromeBrowserDelegate : public cef::BrowserDelegate {
   void CanDownload(const GURL& url,
                    const std::string& request_method,
                    base::OnceCallback<void(bool)> callback) override;
+  content::JavaScriptDialogManager* GetJavaScriptDialogManager(
+      content::WebContents* source) override;
   content::KeyboardEventProcessingResult PreHandleKeyboardEvent(
       content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
-  bool HandleKeyboardEvent(
-      content::WebContents* source,
-      const content::NativeWebKeyboardEvent& event) override;
+      const input::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(content::WebContents* source,
+                           const input::NativeWebKeyboardEvent& event) override;
+  void DraggableRegionsChanged(
+      const std::vector<blink::mojom::DraggableRegionPtr>& regions,
+      content::WebContents* contents) override;
 
   Browser* browser() const { return browser_; }
 
  private:
-  void CreateBrowser(
+  static CefRefPtr<ChromeBrowserHostImpl> CreateBrowserHost(
+      Browser* browser,
       content::WebContents* web_contents,
-      CefBrowserSettings settings,
+      const CefBrowserSettings& settings,
       CefRefPtr<CefClient> client,
       std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
       scoped_refptr<CefBrowserInfo> browser_info,
-      CefRefPtr<ChromeBrowserHostImpl> opener,
+      bool is_devtools_popup,
+      CefRefPtr<CefBrowserHostBase> opener,
       CefRefPtr<CefRequestContextImpl> request_context_impl);
 
-  CefBrowserContentsDelegate* GetDelegateForWebContents(
-      content::WebContents* web_contents);
+  static CefRefPtr<ChromeBrowserHostImpl> CreateBrowserHostForPopup(
+      content::WebContents* web_contents,
+      const CefBrowserSettings& settings,
+      CefRefPtr<CefClient> client,
+      CefRefPtr<CefDictionaryValue> extra_info,
+      std::unique_ptr<CefBrowserPlatformDelegate> platform_delegate,
+      bool is_devtools_popup,
+      CefRefPtr<CefBrowserHostBase> opener);
 
-  Browser* const browser_;
+  CefBrowserContentsDelegate* GetDelegateForWebContents(
+      content::WebContents* web_contents) const;
+
+  bool SupportsFramelessPictureInPicture() const;
+
+  bool IsViewsHosted() const;
+
+  // Will return nullptr if the Browser is not Views-hosted.
+  CefWindowImpl* GetCefWindowImpl() const;
+  CefWindowView* GetCefWindowView() const;
+
+  const raw_ptr<Browser> browser_;
+  base::WeakPtr<ChromeBrowserHostImpl> opener_host_;
 
   // Used when creating a new browser host.
   const CefBrowserCreateParams create_params_;
 
-  absl::optional<bool> show_status_bubble_;
+  std::optional<bool> show_status_bubble_;
+  std::optional<SkRegion> draggable_region_;
+  mutable std::optional<bool> frameless_pip_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_CHROME_BROWSER_DELEGATE_H_

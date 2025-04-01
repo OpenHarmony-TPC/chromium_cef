@@ -16,18 +16,17 @@ namespace {
 
 // Special timer delay placeholder value. Intentionally 32-bit for Windows and
 // OS X platform API compatibility.
-const int32 kTimerDelayPlaceholder = INT_MAX;
+const int32_t kTimerDelayPlaceholder = INT_MAX;
 
 // The maximum number of milliseconds we're willing to wait between calls to
 // DoWork().
-const int64 kMaxTimerDelay = 1000 / 30;  // 30fps
+const int64_t kMaxTimerDelay = 1000 / 30;  // 30fps
 
 client::MainMessageLoopExternalPump* g_external_message_pump = nullptr;
 
 }  // namespace
 
-MainMessageLoopExternalPump::MainMessageLoopExternalPump()
-    : is_active_(false), reentrancy_detected_(false) {
+MainMessageLoopExternalPump::MainMessageLoopExternalPump() {
   DCHECK(!g_external_message_pump);
   g_external_message_pump = this;
 }
@@ -40,7 +39,7 @@ MainMessageLoopExternalPump* MainMessageLoopExternalPump::Get() {
   return g_external_message_pump;
 }
 
-void MainMessageLoopExternalPump::OnScheduleWork(int64 delay_ms) {
+void MainMessageLoopExternalPump::OnScheduleWork(int64_t delay_ms) {
   REQUIRE_MAIN_THREAD();
 
   if (delay_ms == kTimerDelayPlaceholder && IsTimerPending()) {

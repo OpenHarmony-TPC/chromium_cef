@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e6a8dfb9eabe0f8dac65f1c60fb34c8c224fb0e1$
+// $hash=a92e5209291a403b3e9ebbddb79f4893c6c708f3$
 //
 
 #include "libcef_dll/ctocpp/context_menu_params_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -403,59 +404,6 @@ NO_SANITIZE("cfi-icall") bool CefContextMenuParamsCToCpp::IsCustomMenu() {
 
   // Return type: bool
   return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-CefContextMenuParams::InputFieldType
-    CefContextMenuParamsCToCpp::GetInputFieldType() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_context_menu_params_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_input_field_type)) {
-    return CM_INPUTFIELDTYPE_NONE;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_context_menu_input_field_type_t _retval =
-      _struct->get_input_field_type(_struct);
-
-  // Return type: simple
-  return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-CefContextMenuParams::SourceType CefContextMenuParamsCToCpp::GetSourceType() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_context_menu_params_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_source_type)) {
-    return CM_SOURCETYPE_NONE;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_context_menu_source_type_t _retval = _struct->get_source_type(_struct);
-
-  // Return type: simple
-  return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefContextMenuParamsCToCpp::GetImageRect(int& x, int& y, int& w, int& h) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_context_menu_params_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_image_rect)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->get_image_rect(_struct, &x, &y, &w, &h);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

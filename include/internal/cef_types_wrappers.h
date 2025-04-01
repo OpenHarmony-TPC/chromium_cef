@@ -33,7 +33,7 @@
 
 #include <limits>
 
-#include "build/build_config.h"
+#include "arkweb/build/features/features.h"
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_string_list.h"
 #include "include/internal/cef_types.h"
@@ -306,15 +306,19 @@ class CefScreenInfo : public cef_screen_info_t {
                 cef_screen_orientation_type_t orientation_val
 #endif
                 )
-      : cef_screen_info_t {
-    device_scale_factor, depth, depth_per_component, is_monochrome, rect,
-        available_rect
+      : cef_screen_info_t{device_scale_factor,
+                          depth,
+                          depth_per_component,
+                          is_monochrome,
+                          rect,
+                          available_rect
 #if BUILDFLAG(IS_OHOS)
-        ,
-        angle_val, orientation_val
+                          ,
+                          angle_val,
+                          orientation_val
 #endif
+        } {
   }
-  {}
 
   void Set(float device_scale_factor_val,
            int depth_val,
@@ -389,7 +393,6 @@ struct CefSettingsTraits {
     cef_string_clear(&s->main_bundle_path);
     cef_string_clear(&s->cache_path);
     cef_string_clear(&s->root_cache_path);
-    cef_string_clear(&s->user_data_path);
     cef_string_clear(&s->user_agent);
     cef_string_clear(&s->user_agent_product);
     cef_string_clear(&s->locale);
@@ -399,6 +402,7 @@ struct CefSettingsTraits {
     cef_string_clear(&s->locales_dir_path);
     cef_string_clear(&s->accept_language_list);
     cef_string_clear(&s->cookieable_schemes_list);
+    cef_string_clear(&s->chrome_policy_id);
   }
 
   static inline void set(const struct_type* src,
@@ -412,7 +416,6 @@ struct CefSettingsTraits {
                    &target->framework_dir_path, copy);
     cef_string_set(src->main_bundle_path.str, src->main_bundle_path.length,
                    &target->main_bundle_path, copy);
-    target->chrome_runtime = src->chrome_runtime;
     target->multi_threaded_message_loop = src->multi_threaded_message_loop;
     target->external_message_pump = src->external_message_pump;
     target->windowless_rendering_enabled = src->windowless_rendering_enabled;
@@ -422,10 +425,7 @@ struct CefSettingsTraits {
                    &target->cache_path, copy);
     cef_string_set(src->root_cache_path.str, src->root_cache_path.length,
                    &target->root_cache_path, copy);
-    cef_string_set(src->user_data_path.str, src->user_data_path.length,
-                   &target->user_data_path, copy);
     target->persist_session_cookies = src->persist_session_cookies;
-    target->persist_user_preferences = src->persist_user_preferences;
 
     cef_string_set(src->user_agent.str, src->user_agent.length,
                    &target->user_agent, copy);
@@ -436,6 +436,7 @@ struct CefSettingsTraits {
     cef_string_set(src->log_file.str, src->log_file.length, &target->log_file,
                    copy);
     target->log_severity = src->log_severity;
+    target->log_items = src->log_items;
     cef_string_set(src->javascript_flags.str, src->javascript_flags.length,
                    &target->javascript_flags, copy);
 
@@ -443,7 +444,6 @@ struct CefSettingsTraits {
                    &target->resources_dir_path, copy);
     cef_string_set(src->locales_dir_path.str, src->locales_dir_path.length,
                    &target->locales_dir_path, copy);
-    target->pack_loading_disabled = src->pack_loading_disabled;
     target->remote_debugging_port = src->remote_debugging_port;
     target->uncaught_exception_stack_size = src->uncaught_exception_stack_size;
     target->background_color = src->background_color;
@@ -458,7 +458,15 @@ struct CefSettingsTraits {
     target->cookieable_schemes_exclude_defaults =
         src->cookieable_schemes_exclude_defaults;
 
-#if defined(OHOS_INCOGNITO_MODE)
+    cef_string_set(src->chrome_policy_id.str, src->chrome_policy_id.length,
+                   &target->chrome_policy_id, copy);
+    target->chrome_app_icon_id = src->chrome_app_icon_id;
+
+#if defined(OS_POSIX) && !defined(OS_ANDROID)
+    target->disable_signal_handlers = src->disable_signal_handlers;
+#endif
+
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
 #endif
   }
@@ -486,7 +494,6 @@ struct CefRequestContextSettingsTraits {
     cef_string_set(src->cache_path.str, src->cache_path.length,
                    &target->cache_path, copy);
     target->persist_session_cookies = src->persist_session_cookies;
-    target->persist_user_preferences = src->persist_user_preferences;
     cef_string_set(src->accept_language_list.str,
                    src->accept_language_list.length,
                    &target->accept_language_list, copy);
@@ -497,8 +504,12 @@ struct CefRequestContextSettingsTraits {
     target->cookieable_schemes_exclude_defaults =
         src->cookieable_schemes_exclude_defaults;
 
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    target->global_request_context = src->global_request_context;
 #endif
   }
 };
@@ -522,7 +533,6 @@ struct CefBrowserSettingsTraits {
     cef_string_clear(&s->cursive_font_family);
     cef_string_clear(&s->fantasy_font_family);
     cef_string_clear(&s->default_encoding);
-    cef_string_clear(&s->accept_language_list);
   }
 
   static inline void set(const struct_type* src,
@@ -571,15 +581,12 @@ struct CefBrowserSettingsTraits {
 
     target->background_color = src->background_color;
 
-    cef_string_set(src->accept_language_list.str,
-                   src->accept_language_list.length,
-                   &target->accept_language_list, copy);
-
     target->chrome_status_bubble = src->chrome_status_bubble;
+    target->chrome_zoom_bubble = src->chrome_zoom_bubble;
 
-#if defined(OHOS_CLIPBOARD)
-  target->copy_option = src->copy_option;
-#endif // defined(OHOS_CLIPBOARD)
+#if BUILDFLAG(ARKWEB_COPY_OPTION)
+    target->copy_option = src->copy_option;
+#endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
 
 #if BUILDFLAG(IS_OHOS)
     /* ohos webview begin */
@@ -605,41 +612,51 @@ struct CefBrowserSettingsTraits {
     target->contextmenu_customization_enabled =
         src->contextmenu_customization_enabled;
     target->scrollbar_color = src->scrollbar_color;
-    target->blank_target_popup_intercept_enabled =
-        src->blank_target_popup_intercept_enabled;
-    target->native_embed_mode_enabled =
-        src->native_embed_mode_enabled;
-    cef_string_set(src->embed_tag.str, src->embed_tag.length, &target->embed_tag,
-                   copy);
+    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
+    target->native_embed_mode_enabled = src->native_embed_mode_enabled;
+    cef_string_set(src->embed_tag.str, src->embed_tag.length,
+                   &target->embed_tag, copy);
     cef_string_set(src->embed_tag.str, src->embed_tag.length,
                    &target->embed_tag_type, copy);
     target->scroll_enabled = src->scroll_enabled;
-    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
     target->draw_mode = src->draw_mode;
     target->force_zero_layout_height = src->force_zero_layout_height;
     /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_CSS_FONT)
+    target->font_weight_scale = src->font_weight_scale;
+#endif
+
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
     target->incognito_mode = src->incognito_mode;
 #endif
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
+#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
     target->custom_video_player_enable = src->custom_video_player_enable;
     target->custom_video_player_overlay = src->custom_video_player_overlay;
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
+#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
+#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
+    target->supports_multiple_windows = src->supports_multiple_windows;
+#endif  // ARKWEB_MULTI_WINDOW
 
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
     target->record_whole_document = src->record_whole_document;
 #endif
 
-#if defined(OHOS_MULTI_WINDOW)
-    target->supports_multiple_windows = src->supports_multiple_windows;
-#endif // OHOS_MULTI_WINDOW
-
-#ifdef OHOS_NETWORK_LOAD
-    target->universal_access_from_file_urls = src->universal_access_from_file_urls;
+#if BUILDFLAG(ARKWEB_MEDIA_CAPABILITIES_ENHANCE)
+    target->usage_scenario = src->usage_scenario;
 #endif
-#if defined(OHOS_RENDER_PROCESS_SHARE)
+
+#if BUILDFLAG(ARKWEB_ACTIVE_POLICY)
+    target->delay_for_background_tab_freezing =
+        src->delay_for_background_tab_freezing;
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    target->universal_access_from_file_urls =
+        src->universal_access_from_file_urls;
+#endif
+#if BUILDFLAG(ARKWEB_RENDER_PROCESS_SHARE)
     target->shared_render_process_token = src->shared_render_process_token;
 #endif
   }
@@ -781,6 +798,9 @@ struct CefPdfPrintSettingsTraits {
                    &target->header_template, copy);
     cef_string_set(src->footer_template.str, src->footer_template.length,
                    &target->footer_template, copy);
+
+    target->generate_tagged_pdf = src->generate_tagged_pdf;
+    target->generate_document_outline = src->generate_document_outline;
   }
 };
 
@@ -794,7 +814,9 @@ using CefPdfPrintSettings = CefStructBase<CefPdfPrintSettingsTraits>;
 ///
 class CefBoxLayoutSettings : public cef_box_layout_settings_t {
  public:
-  CefBoxLayoutSettings() : cef_box_layout_settings_t{} {}
+  CefBoxLayoutSettings() : cef_box_layout_settings_t{} {
+    cross_axis_alignment = CEF_AXIS_ALIGNMENT_STRETCH;
+  }
   CefBoxLayoutSettings(const cef_box_layout_settings_t& r)
       : cef_box_layout_settings_t(r) {}
 };
@@ -845,6 +867,16 @@ struct CefMediaSinkDeviceInfoTraits {
 ///
 using CefMediaSinkDeviceInfo = CefStructBase<CefMediaSinkDeviceInfoTraits>;
 
+///
+/// Class representing accelerated paint info.
+///
+class CefAcceleratedPaintInfo : public cef_accelerated_paint_info_t {
+ public:
+  CefAcceleratedPaintInfo() : cef_accelerated_paint_info_t{} {}
+  CefAcceleratedPaintInfo(const cef_accelerated_paint_info_t& r)
+      : cef_accelerated_paint_info_t(r) {}
+};
+
 #if BUILDFLAG(IS_OHOS)
 struct CefSelectPopupItemTraits {
   typedef cef_select_popup_item_t struct_type;
@@ -879,9 +911,7 @@ struct CefEmbedTouchEventTraits {
   }
 };
 
-
 using CefEmbedTouchEvent = CefStructBase<CefEmbedTouchEventTraits>;
-
 
 struct CefNativeEmbedDataTraits {
   typedef cef_native_embed_data_t struct_type;
@@ -896,7 +926,6 @@ struct CefNativeEmbedDataTraits {
     *target = *src;
   }
 };
-
 
 using CefNativeEmbedData = CefStructBase<CefNativeEmbedDataTraits>;
 
@@ -1002,5 +1031,64 @@ class CefDateTimeSuggestion
   }
 };
 #endif  // BUILDFLAG(IS_OHOS)
+
+struct CefTaskInfoTraits {
+  using struct_type = cef_task_info_t;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) { cef_string_clear(&s->title); }
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    target->id = src->id;
+    target->type = src->type;
+    target->is_killable = src->is_killable;
+    cef_string_set(src->title.str, src->title.length, &target->title, copy);
+    target->cpu_usage = src->cpu_usage;
+    target->number_of_processors = src->number_of_processors;
+    target->memory = src->memory;
+    target->gpu_memory = src->gpu_memory;
+    target->is_gpu_memory_inflated = src->is_gpu_memory_inflated;
+  }
+};
+
+///
+/// Class representing task information.
+///
+using CefTaskInfo = CefStructBase<CefTaskInfoTraits>;
+
+struct CefLinuxWindowPropertiesTraits {
+  using struct_type = cef_linux_window_properties_t;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {
+    cef_string_clear(&s->wayland_app_id);
+    cef_string_clear(&s->wm_class_class);
+    cef_string_clear(&s->wm_class_name);
+    cef_string_clear(&s->wm_role_name);
+  }
+
+  static inline void set(const struct_type* src,
+                         struct_type* target,
+                         bool copy) {
+    cef_string_set(src->wayland_app_id.str, src->wayland_app_id.length,
+                   &target->wayland_app_id, copy);
+    cef_string_set(src->wm_class_class.str, src->wm_class_class.length,
+                   &target->wm_class_class, copy);
+    cef_string_set(src->wm_class_name.str, src->wm_class_name.length,
+                   &target->wm_class_name, copy);
+    cef_string_set(src->wm_role_name.str, src->wm_role_name.length,
+                   &target->wm_role_name, copy);
+  }
+};
+
+///
+/// Class representing the Linux-specific window properties required
+/// for the window managers to correct group and display the window.
+///
+using CefLinuxWindowProperties = CefStructBase<CefLinuxWindowPropertiesTraits>;
 
 #endif  // CEF_INCLUDE_INTERNAL_CEF_TYPES_WRAPPERS_H_

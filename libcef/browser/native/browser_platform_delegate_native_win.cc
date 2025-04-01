@@ -2,25 +2,23 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/native/browser_platform_delegate_native_win.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_win.h"
 
 #include <shellapi.h>
 #include <wininet.h>
 #include <winspool.h>
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/geometry_util.h"
-#include "libcef/browser/native/window_delegate_view.h"
-#include "libcef/browser/thread_util.h"
-
 #include "base/base_paths_win.h"
 #include "base/files/file_util.h"
 #include "base/path_service.h"
 #include "base/strings/utf_string_conversions.h"
-#include "base/win/registry.h"
 #include "base/win/win_util.h"
-#include "content/public/browser/native_web_keyboard_event.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/geometry_util.h"
+#include "cef/libcef/browser/native/window_delegate_view.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "components/input/native_web_keyboard_event.h"
 #include "third_party/blink/public/common/input/web_mouse_event.h"
 #include "third_party/blink/public/common/input/web_mouse_wheel_event.h"
 #include "ui/aura/window.h"
@@ -54,74 +52,10 @@ void WriteTempFileAndView(const std::string& data) {
   // program to open.
   tmp_file = tmp_file.AddExtension(L"txt");
 
-  int write_ct = base::WriteFile(tmp_file, data.c_str(), data.size());
-  DCHECK_EQ(static_cast<int>(data.size()), write_ct);
+  const bool write_success = base::WriteFile(tmp_file, data);
+  DCHECK(write_success);
 
   ui::win::OpenFileViaShell(tmp_file);
-}
-
-bool HasExternalHandler(const std::string& scheme) {
-  base::win::RegKey key;
-  const std::wstring registry_path =
-      base::ASCIIToWide(scheme + "\\shell\\open\\command");
-  key.Open(HKEY_CLASSES_ROOT, registry_path.c_str(), KEY_READ);
-  if (key.Valid()) {
-    DWORD size = 0;
-    key.ReadValue(NULL, NULL, &size, NULL);
-    if (size > 2) {
-      // ShellExecute crashes the process when the command is empty.
-      // We check for "2" because it always returns the trailing NULL.
-      return true;
-    }
-  }
-
-  return false;
-}
-
-// Match the logic in chrome/browser/platform_util_win.cc
-// OpenExternalOnWorkerThread.
-void ExecuteExternalProtocol(const GURL& url) {
-  CEF_REQUIRE_BLOCKING();
-
-  if (!HasExternalHandler(url.scheme())) {
-    return;
-  }
-
-  // Quote the input scheme to be sure that the command does not have
-  // parameters unexpected by the external program. This url should already
-  // have been escaped.
-  std::string escaped_url = url.spec();
-  escaped_url.insert(0, "\"");
-  escaped_url += "\"";
-
-  // According to Mozilla in uriloader/exthandler/win/nsOSHelperAppService.cpp:
-  // "Some versions of windows (Win2k before SP3, Win XP before SP1) crash in
-  // ShellExecute on long URLs (bug 161357 on bugzilla.mozilla.org). IE 5 and 6
-  // support URLS of 2083 chars in length, 2K is safe."
-  //
-  // It may be possible to increase this. https://crbug.com/727909
-  const size_t kMaxUrlLength = 2048;
-  if (escaped_url.length() > kMaxUrlLength) {
-    return;
-  }
-
-  // Specify %windir%\system32 as the CWD so that any new proc spawned does not
-  // inherit this proc's CWD. Without this, uninstalls may be broken by a
-  // long-lived child proc that holds a handle to the browser's version
-  // directory (the browser's CWD). A process's CWD is in the standard list of
-  // directories to search when loading a DLL, and precedes the system directory
-  // when safe DLL search mode is disabled (not the default). Setting the CWD to
-  // the system directory is a nice way to mitigate a potential DLL search order
-  // hijack for processes that don't implement their own mitigation.
-  base::FilePath system_dir;
-  base::PathService::Get(base::DIR_SYSTEM, &system_dir);
-  if (reinterpret_cast<ULONG_PTR>(ShellExecuteA(
-          NULL, "open", escaped_url.c_str(), NULL,
-          system_dir.AsUTF8Unsafe().c_str(), SW_SHOWNORMAL)) <= 32) {
-    // On failure, it may be good to display a message to the user.
-    // https://crbug.com/727913
-    return;
-  }
 }
 
 gfx::Rect GetDisplayWorkAreaNearestPoint(gfx::Point dip_point) {
@@ -227,7 +161,7 @@ bool CefBrowserPlatformDelegateNativeWin::CreateHostWindow() {
 
   if (!window_info_.parent_window) {
     const bool has_menu =
-        !(window_info_.style & WS_CHILD) && (window_info_.menu != NULL);
+        !(window_info_.style & WS_CHILD) && (window_info_.menu != nullptr);
     window_rect = GetAdjustedScreenFrameRect(window_rect, window_info_.style,
                                              window_info_.ex_style, has_menu);
   }
@@ -237,7 +171,7 @@ bool CefBrowserPlatformDelegateNativeWin::CreateHostWindow() {
                  window_info_.style, window_rect.x, window_rect.y,
                  window_rect.width, window_rect.height,
                  window_info_.parent_window, window_info_.menu,
-                 ::GetModuleHandle(NULL), this);
+                 ::GetModuleHandle(nullptr), this);
 
   // It's possible for CreateWindowEx to fail if the parent window was
   // destroyed between the call to CreateBrowser and the above one.
@@ -313,7 +247,7 @@ bool CefBrowserPlatformDelegateNativeWin::CreateHostWindow() {
 }
 
 void CefBrowserPlatformDelegateNativeWin::CloseHostWindow() {
-  if (window_info_.window != NULL) {
+  if (window_info_.window != nullptr) {
     HWND frameWnd = GetAncestor(window_info_.window, GA_ROOT);
     PostMessage(frameWnd, WM_CLOSE, 0, 0);
   }
@@ -426,13 +360,13 @@ void CefBrowserPlatformDelegateNativeWin::SizeTo(int width, int height) {
 
   const DWORD style = GetWindowLong(window, GWL_STYLE);
   const DWORD ex_style = GetWindowLong(window, GWL_EXSTYLE);
-  const bool has_menu = !(style & WS_CHILD) && (GetMenu(window) != NULL);
+  const bool has_menu = !(style & WS_CHILD) && (GetMenu(window) != nullptr);
 
   const auto frame_rect = GetScreenFrameRectFromDIPContentRect(
       window, gfx::Rect(0, 0, width, height), style, ex_style, has_menu);
 
   // Size the window. The left/top values may be negative.
-  SetWindowPos(window, NULL, 0, 0, frame_rect.width, frame_rect.height,
+  SetWindowPos(window, nullptr, 0, 0, frame_rect.width, frame_rect.height,
                SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
@@ -441,7 +375,7 @@ void CefBrowserPlatformDelegateNativeWin::ViewText(const std::string& text) {
 }
 
 bool CefBrowserPlatformDelegateNativeWin::HandleKeyboardEvent(
-    const content::NativeWebKeyboardEvent& event) {
+    const input::NativeWebKeyboardEvent& event) {
   // Any unhandled keyboard/character messages are sent to DefWindowProc so that
   // shortcut keys work correctly.
   if (event.os_event) {
@@ -475,7 +409,7 @@ bool CefBrowserPlatformDelegateNativeWin::HandleKeyboardEvent(
     UINT scan_code = ::MapVirtualKeyW(event.windows_key_code, MAPVK_VK_TO_VSC);
     msg.lParam = (scan_code << 16) |  // key scan code
                  1;                   // key repeat count
-    if (event.GetModifiers() & content::NativeWebKeyboardEvent::kAltKey) {
+    if (event.GetModifiers() & input::NativeWebKeyboardEvent::kAltKey) {
       msg.lParam |= (1 << 29);
     }
 
@@ -483,15 +417,10 @@ bool CefBrowserPlatformDelegateNativeWin::HandleKeyboardEvent(
   }
 }
 
-// static
-void CefBrowserPlatformDelegate::HandleExternalProtocol(const GURL& url) {
-  CEF_POST_USER_VISIBLE_TASK(base::BindOnce(ExecuteExternalProtocol, url));
-}
-
 CefEventHandle CefBrowserPlatformDelegateNativeWin::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   if (!event.os_event) {
-    return NULL;
+    return nullptr;
   }
   return ChromeToWindowsType(
       const_cast<CHROME_MSG*>(&event.os_event->native_event()));
@@ -507,18 +436,18 @@ ui::KeyEvent CefBrowserPlatformDelegateNativeWin::TranslateUiKeyEvent(
   base::TimeTicks time_stamp = GetEventTimeStamp();
 
   if (key_event.type == KEYEVENT_CHAR) {
-    return ui::KeyEvent(key_event.windows_key_code /* character */, key_code,
-                        dom_code, flags, time_stamp);
+    return ui::KeyEvent::FromCharacter(/*character=*/key_event.windows_key_code,
+                                       key_code, dom_code, flags, time_stamp);
   }
 
-  ui::EventType type = ui::ET_UNKNOWN;
+  ui::EventType type = ui::EventType::kUnknown;
   switch (key_event.type) {
     case KEYEVENT_RAWKEYDOWN:
     case KEYEVENT_KEYDOWN:
-      type = ui::ET_KEY_PRESSED;
+      type = ui::EventType::kKeyPressed;
       break;
     case KEYEVENT_KEYUP:
-      type = ui::ET_KEY_RELEASED;
+      type = ui::EventType::kKeyReleased;
       break;
     default:
       DCHECK(false);
@@ -566,13 +495,13 @@ void CefBrowserPlatformDelegateNativeWin::RegisterWindowClass() {
       /* lpfnWndProc = */ CefBrowserPlatformDelegateNativeWin::WndProc,
       /* cbClsExtra = */ 0,
       /* cbWndExtra = */ 0,
-      /* hInstance = */ ::GetModuleHandle(NULL),
-      /* hIcon = */ NULL,
-      /* hCursor = */ LoadCursor(NULL, IDC_ARROW),
-      /* hbrBackground = */ 0,
-      /* lpszMenuName = */ NULL,
+      /* hInstance = */ ::GetModuleHandle(nullptr),
+      /* hIcon = */ nullptr,
+      /* hCursor = */ LoadCursor(nullptr, IDC_ARROW),
+      /* hbrBackground = */ nullptr,
+      /* lpszMenuName = */ nullptr,
       /* lpszClassName = */ CefBrowserPlatformDelegateNativeWin::GetWndClass(),
-      /* hIconSm = */ NULL,
+      /* hIconSm = */ nullptr,
   };
   RegisterClassEx(&wcex);
 
@@ -638,12 +567,12 @@ LRESULT CALLBACK CefBrowserPlatformDelegateNativeWin::WndProc(HWND hwnd,
     case WM_NCDESTROY:
       if (platform_delegate) {
         // Clear the user data pointer.
-        gfx::SetWindowUserData(hwnd, NULL);
+        gfx::SetWindowUserData(hwnd, nullptr);
 
         // Force the browser to be destroyed. This will result in a call to
         // BrowserDestroyed() that will release the reference added in
         // CreateHostWindow().
-        static_cast<AlloyBrowserHostImpl*>(browser)->WindowDestroyed();
+        AlloyBrowserHostImpl::FromBaseChecked(browser)->WindowDestroyed();
       }
       break;
 
@@ -654,7 +583,7 @@ LRESULT CALLBACK CefBrowserPlatformDelegateNativeWin::WndProc(HWND hwnd,
         // will cause the widget to be hidden which reduces resource usage.
         RECT rc;
         GetClientRect(hwnd, &rc);
-        SetWindowPos(HWNDForWidget(platform_delegate->window_widget_), NULL,
+        SetWindowPos(HWNDForWidget(platform_delegate->window_widget_), nullptr,
                      rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                      SWP_NOZORDER);
       }
@@ -684,8 +613,8 @@ LRESULT CALLBACK CefBrowserPlatformDelegateNativeWin::WndProc(HWND hwnd,
         // Suggested size and position of the current window scaled for the
         // new DPI.
         const RECT* rect = reinterpret_cast<RECT*>(lParam);
-        SetWindowPos(platform_delegate->GetHostWindowHandle(), NULL, rect->left,
-                     rect->top, rect->right - rect->left,
+        SetWindowPos(platform_delegate->GetHostWindowHandle(), nullptr,
+                     rect->left, rect->top, rect->right - rect->left,
                      rect->bottom - rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
       }
       break;

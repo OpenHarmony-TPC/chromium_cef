@@ -3,16 +3,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/printing/print_dialog_linux.h"
+#include "cef/libcef/browser/printing/print_dialog_linux.h"
 
 #include <string>
 #include <vector>
-
-#include "libcef/browser/extensions/browser_extensions_util.h"
-#include "libcef/browser/print_settings_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/app_manager.h"
-#include "libcef/common/frame_util.h"
 
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
@@ -20,6 +14,11 @@
 #include "base/logging.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/print_settings_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/frame_util.h"
 #include "content/public/browser/global_routing_id.h"
 #include "printing/metafile.h"
 #include "printing/mojom/print.mojom-shared.h"
@@ -39,10 +38,8 @@ CefRefPtr<CefBrowserHostBase> GetBrowserForContext(
     return nullptr;
   }
 
-  return extensions::GetOwnerBrowserForGlobalId(
-      frame_util::MakeGlobalId(context->render_process_id(),
-                               context->render_frame_id()),
-      nullptr);
+  return CefBrowserHostBase::GetBrowserForGlobalId(frame_util::MakeGlobalId(
+      context->render_process_id(), context->render_frame_id()));
 }
 
 CefRefPtr<CefPrintHandler> GetPrintHandlerForBrowser(
@@ -228,6 +225,14 @@ void CefPrintDialogLinux::UpdateSettings(
     std::unique_ptr<PrintSettings> settings) {
   UpdateSettings(std::move(settings), false);
 }
+
+#if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+void CefPrintDialogLinux::LoadPrintSettings(
+    const printing::PrintSettings& settings) {
+  // TODO(linux): Need to read data from |settings.system_print_dialog_data()|?
+  UseDefaultSettings();
+}
+#endif
 
 void CefPrintDialogLinux::ShowDialog(
     gfx::NativeView parent_view,

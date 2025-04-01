@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_VIEW_ADAPTER_H_
 #pragma once
 
-#include "include/views/cef_view.h"
-
 #include "base/values.h"
+#include "cef/include/views/cef_view.h"
 
 namespace views {
 class View;
@@ -19,7 +18,7 @@ class View;
 // usage overview.
 class CefViewAdapter {
  public:
-  CefViewAdapter() {}
+  CefViewAdapter() = default;
 
   // Returns the CefViewAdapter for the specified |view|.
   static CefViewAdapter* GetFor(CefRefPtr<CefView> view);
@@ -49,7 +48,7 @@ class CefViewAdapter {
   virtual void GetDebugInfo(base::Value::Dict* info, bool include_children) = 0;
 
  protected:
-  virtual ~CefViewAdapter() {}
+  virtual ~CefViewAdapter() = default;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_VIEWS_VIEW_ADAPTER_H_

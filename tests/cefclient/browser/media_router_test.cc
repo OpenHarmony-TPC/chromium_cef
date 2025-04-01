@@ -12,8 +12,7 @@
 #include "include/cef_parser.h"
 #include "tests/cefclient/browser/test_runner.h"
 
-namespace client {
-namespace media_router_test {
+namespace client::media_router_test {
 
 namespace {
 
@@ -93,10 +92,7 @@ class MediaObserver : public CefMediaObserver {
   MediaObserver(CefRefPtr<CefMediaRouter> media_router,
                 CefRefPtr<CallbackType> subscription_callback)
       : media_router_(media_router),
-        subscription_callback_(subscription_callback),
-        next_sink_query_id_(0),
-        pending_sink_query_id_(-1),
-        pending_sink_callbacks_(0U) {}
+        subscription_callback_(subscription_callback) {}
 
   ~MediaObserver() override { ClearSinkInfoMap(); }
 
@@ -351,12 +347,12 @@ class MediaObserver : public CefMediaObserver {
 
   // Used to uniquely identify a call to OnSinks(), for the purpose of
   // associating OnMediaSinkDeviceInfo() callbacks.
-  int next_sink_query_id_;
+  int next_sink_query_id_ = 0;
 
   // State from the most recent call to OnSinks().
   SinkInfoMap sink_info_map_;
-  int pending_sink_query_id_;
-  size_t pending_sink_callbacks_;
+  int pending_sink_query_id_ = -1;
+  size_t pending_sink_callbacks_ = 0U;
 
   // State from the most recent call to OnRoutes().
   typedef std::map<std::string, CefRefPtr<CefMediaRoute>> RouteMap;
@@ -373,7 +369,7 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
 
   Handler() { CEF_REQUIRE_UI_THREAD(); }
 
-  virtual ~Handler() {
+  ~Handler() override {
     SubscriptionStateMap::iterator it = subscription_state_map_.begin();
     for (; it != subscription_state_map_.end(); ++it) {
       delete it->second;
@@ -383,7 +379,7 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
   // Called due to cefQuery execution in media_router.html.
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -497,7 +493,7 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
 
   void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
                        CefRefPtr<CefFrame> frame,
-                       int64 query_id) override {
+                       int64_t query_id) override {
     CEF_REQUIRE_UI_THREAD();
     RemoveSubscription(browser->GetIdentifier(), query_id);
   }
@@ -535,13 +531,13 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
 
   // Subscription state associated with a single browser.
   struct SubscriptionState {
-    int64 query_id;
+    int64_t query_id;
     CefRefPtr<MediaObserver> observer;
     CefRefPtr<CefRegistration> registration;
   };
 
   bool CreateSubscription(CefRefPtr<CefBrowser> browser,
-                          int64 query_id,
+                          int64_t query_id,
                           CefRefPtr<Callback> callback) {
     const int browser_id = browser->GetIdentifier();
     if (subscription_state_map_.find(browser_id) !=
@@ -566,7 +562,7 @@ class Handler : public CefMessageRouterBrowserSide::Handler {
     return true;
   }
 
-  void RemoveSubscription(int browser_id, int64 query_id) {
+  void RemoveSubscription(int browser_id, int64_t query_id) {
     SubscriptionStateMap::iterator it =
         subscription_state_map_.find(browser_id);
     if (it != subscription_state_map_.end() &&
@@ -598,5 +594,4 @@ void CreateMessageHandlers(test_runner::MessageHandlerSet& handlers) {
   handlers.insert(new Handler());
 }
 
-}  // namespace media_router_test
-}  // namespace client
+}  // namespace client::media_router_test

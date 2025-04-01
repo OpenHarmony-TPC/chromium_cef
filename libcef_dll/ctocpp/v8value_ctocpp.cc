@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d3956da82508a440d74347e913df6c1f75ee6891$
+// $hash=8469f8012718df705bf24d8abc2c127d68df07c2$
 //
 
 #include "libcef_dll/ctocpp/v8value_ctocpp.h"
+
 #include "libcef_dll/cpptoc/base_ref_counted_cpptoc.h"
 #include "libcef_dll/cpptoc/v8accessor_cpptoc.h"
 #include "libcef_dll/cpptoc/v8array_buffer_release_callback_cpptoc.h"
@@ -56,7 +57,7 @@ CefRefPtr<CefV8Value> CefV8Value::CreateBool(bool value) {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefV8Value> CefV8Value::CreateInt(int32 value) {
+CefRefPtr<CefV8Value> CefV8Value::CreateInt(int32_t value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
@@ -67,7 +68,7 @@ CefRefPtr<CefV8Value> CefV8Value::CreateInt(int32 value) {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefV8Value> CefV8Value::CreateUInt(uint32 value) {
+CefRefPtr<CefV8Value> CefV8Value::CreateUInt(uint32_t value) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
@@ -147,21 +148,32 @@ CefRefPtr<CefV8Value> CefV8Value::CreateArrayBuffer(
     CefRefPtr<CefV8ArrayBufferReleaseCallback> release_callback) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Verify param: buffer; type: simple_byaddr
-  DCHECK(buffer);
-  if (!buffer) {
-    return nullptr;
-  }
   // Verify param: release_callback; type: refptr_diff
   DCHECK(release_callback.get());
   if (!release_callback.get()) {
     return nullptr;
   }
+  // Unverified params: buffer
 
   // Execute
   cef_v8value_t* _retval = cef_v8value_create_array_buffer(
       buffer, length,
       CefV8ArrayBufferReleaseCallbackCppToC::Wrap(release_callback));
+
+  // Return type: refptr_same
+  return CefV8ValueCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefV8Value> CefV8Value::CreateArrayBufferWithCopy(void* buffer,
+                                                            size_t length) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Unverified params: buffer
+
+  // Execute
+  cef_v8value_t* _retval =
+      cef_v8value_create_array_buffer_with_copy(buffer, length);
 
   // Return type: refptr_same
   return CefV8ValueCToCpp::Wrap(_retval);
@@ -451,7 +463,7 @@ NO_SANITIZE("cfi-icall") bool CefV8ValueCToCpp::GetBoolValue() {
   return _retval ? true : false;
 }
 
-NO_SANITIZE("cfi-icall") int32 CefV8ValueCToCpp::GetIntValue() {
+NO_SANITIZE("cfi-icall") int32_t CefV8ValueCToCpp::GetIntValue() {
   cef_v8value_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_int_value)) {
     return 0;
@@ -460,13 +472,13 @@ NO_SANITIZE("cfi-icall") int32 CefV8ValueCToCpp::GetIntValue() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int32 _retval = _struct->get_int_value(_struct);
+  int32_t _retval = _struct->get_int_value(_struct);
 
   // Return type: simple
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") uint32 CefV8ValueCToCpp::GetUIntValue() {
+NO_SANITIZE("cfi-icall") uint32_t CefV8ValueCToCpp::GetUIntValue() {
   cef_v8value_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_uint_value)) {
     return 0;
@@ -475,7 +487,7 @@ NO_SANITIZE("cfi-icall") uint32 CefV8ValueCToCpp::GetUIntValue() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  uint32 _retval = _struct->get_uint_value(_struct);
+  uint32_t _retval = _struct->get_uint_value(_struct);
 
   // Return type: simple
   return _retval;
@@ -793,7 +805,6 @@ bool CefV8ValueCToCpp::SetValue(int index, CefRefPtr<CefV8Value> value) {
 
 NO_SANITIZE("cfi-icall")
 bool CefV8ValueCToCpp::SetValue(const CefString& key,
-                                AccessControl settings,
                                 PropertyAttribute attribute) {
   cef_v8value_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_value_byaccessor)) {
@@ -805,8 +816,8 @@ bool CefV8ValueCToCpp::SetValue(const CefString& key,
   // Unverified params: key
 
   // Execute
-  int _retval = _struct->set_value_byaccessor(_struct, key.GetStruct(),
-                                              settings, attribute);
+  int _retval =
+      _struct->set_value_byaccessor(_struct, key.GetStruct(), attribute);
 
   // Return type: bool
   return _retval ? true : false;
@@ -925,8 +936,8 @@ NO_SANITIZE("cfi-icall") int CefV8ValueCToCpp::GetArrayLength() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefV8ArrayBufferReleaseCallback> CefV8ValueCToCpp::
-    GetArrayBufferReleaseCallback() {
+CefRefPtr<CefV8ArrayBufferReleaseCallback>
+CefV8ValueCToCpp::GetArrayBufferReleaseCallback() {
   cef_v8value_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_array_buffer_release_callback)) {
     return nullptr;
@@ -955,6 +966,36 @@ NO_SANITIZE("cfi-icall") bool CefV8ValueCToCpp::NeuterArrayBuffer() {
 
   // Return type: bool
   return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall") size_t CefV8ValueCToCpp::GetArrayBufferByteLength() {
+  cef_v8value_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_array_buffer_byte_length)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  size_t _retval = _struct->get_array_buffer_byte_length(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
+NO_SANITIZE("cfi-icall") void* CefV8ValueCToCpp::GetArrayBufferData() {
+  cef_v8value_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_array_buffer_data)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  void* _retval = _struct->get_array_buffer_data(_struct);
+
+  // Return type: simple_byaddr
+  return _retval;
 }
 
 NO_SANITIZE("cfi-icall") CefString CefV8ValueCToCpp::GetFunctionName() {

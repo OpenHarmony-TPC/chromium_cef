@@ -1,8 +1,8 @@
 diff --git content/browser/web_contents/web_contents_view.h content/browser/web_contents/web_contents_view.h
-index ddf25382e49fc..fe64fa31a7a85 100644
+index 37cb1dac49610..6e5989c73bf08 100644
 --- content/browser/web_contents/web_contents_view.h
 +++ content/browser/web_contents/web_contents_view.h
-@@ -25,7 +25,7 @@ struct DropData;
+@@ -26,7 +26,7 @@ struct DropData;
  // The `WebContentsView` is an interface that is implemented by the platform-
  // dependent web contents views. The `WebContents` uses this interface to talk
  // to them.
@@ -12,66 +12,20 @@ index ddf25382e49fc..fe64fa31a7a85 100644
    virtual ~WebContentsView() = default;
  
 diff --git extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.cc extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.cc
-index 44d0b99677a74..843c49ccaecc3 100644
+index bd3bb10e2d6b1..0559c97775444 100644
 --- extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.cc
 +++ extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.cc
-@@ -228,6 +228,8 @@ void MimeHandlerViewGuest::CreateWebContents(
-   WebContents::CreateParams params(browser_context(),
-                                    guest_site_instance.get());
-   params.guest_delegate = this;
-+  if (delegate_)
-+    delegate_->OverrideWebContentsCreateParams(&params);
-   std::move(callback).Run(std::move(owned_this),
-                           WebContents::CreateWithSessionStorage(
-                               params, owner_web_contents()
-@@ -236,6 +238,10 @@ void MimeHandlerViewGuest::CreateWebContents(
- }
- 
- void MimeHandlerViewGuest::DidAttachToEmbedder() {
-+  is_guest_attached_ = true;
-+  if (delegate_)
-+    delegate_->OnGuestAttached();
-+
-   DCHECK(stream_->handler_url().SchemeIs(extensions::kExtensionScheme));
-   GetController().LoadURL(stream_->handler_url(), content::Referrer(),
-                           ui::PAGE_TRANSITION_AUTO_TOPLEVEL, std::string());
-@@ -497,6 +503,14 @@ void MimeHandlerViewGuest::DidFinishNavigation(
-   }
- }
- 
-+void MimeHandlerViewGuest::WebContentsDestroyed() {
-+  if (is_guest_attached_ && delegate_)
-+    delegate_->OnGuestDetached();
-+
-+  // May delete |this|.
-+  GuestView<MimeHandlerViewGuest>::WebContentsDestroyed();
-+}
-+
- void MimeHandlerViewGuest::FuseBeforeUnloadControl(
-     mojo::PendingReceiver<mime_handler::BeforeUnloadControl> receiver) {
-   if (!pending_before_unload_control_)
-diff --git extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.h extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.h
-index 2ade4d0b28ba4..8ba6293863a93 100644
---- extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.h
-+++ extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest.h
-@@ -196,6 +196,7 @@ class MimeHandlerViewGuest
-   void ReadyToCommitNavigation(
-       content::NavigationHandle* navigation_handle) final;
-   void DidFinishNavigation(content::NavigationHandle* navigation_handle) final;
-+  void WebContentsDestroyed() override;
- 
-   std::unique_ptr<MimeHandlerViewGuestDelegate> delegate_;
-   std::unique_ptr<StreamContainer> stream_;
-@@ -204,6 +205,7 @@ class MimeHandlerViewGuest
-       content::ChildProcessHost::kInvalidUniqueID, MSG_ROUTING_NONE};
-   int embedder_widget_routing_id_ = MSG_ROUTING_NONE;
- 
-+  bool is_guest_attached_ = false;
-   bool is_guest_fullscreen_ = false;
-   bool is_embedder_fullscreen_ = false;
-   bool plugin_can_save_ = false;
+@@ -211,6 +211,8 @@ void MimeHandlerViewGuest::CreateInnerPage(
+     WebContents::CreateParams params(browser_context(),
+                                      guest_site_instance.get());
+     params.guest_delegate = this;
++    if (delegate_)
++      delegate_->OverrideWebContentsCreateParams(&params);
+     std::move(callback).Run(std::move(owned_this),
+                             WebContents::CreateWithSessionStorage(
+                                 params, owner_web_contents()
 diff --git extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest_delegate.h extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest_delegate.h
-index 7f59e7925084e..777b8a3cf103a 100644
+index 2fb8a60c1f56d..edd275135e60d 100644
 --- extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest_delegate.h
 +++ extensions/browser/guest_view/mime_handler_view/mime_handler_view_guest_delegate.h
 @@ -7,6 +7,8 @@
@@ -81,19 +35,15 @@ index 7f59e7925084e..777b8a3cf103a 100644
 +#include "content/public/browser/web_contents.h"
 +
  namespace content {
+ class BrowserContext;
  class RenderFrameHost;
- struct ContextMenuParams;
-@@ -25,6 +27,14 @@ class MimeHandlerViewGuestDelegate {
+@@ -26,6 +28,10 @@ class MimeHandlerViewGuestDelegate {
  
    virtual ~MimeHandlerViewGuestDelegate() {}
  
 +  // Provides an opportunity to supply a custom view implementation.
 +  virtual void OverrideWebContentsCreateParams(
 +      content::WebContents::CreateParams* params) {}
-+
-+  // Called when a guest is attached or detached.
-+  virtual void OnGuestAttached() {}
-+  virtual void OnGuestDetached() {}
 +
    // Handles context menu, or returns false if unhandled.
    //

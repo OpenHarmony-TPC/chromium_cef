@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=098ed5cfe360a06a86bb761f29df434078565570$
+// $hash=82c0a5d4a178b6731729c6fcc267388c19471cb0$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_V8VALUE_CTOCPP_H_
@@ -21,6 +21,7 @@
 #endif
 
 #include <vector>
+
 #include "include/capi/cef_v8_capi.h"
 #include "include/cef_v8.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
@@ -50,8 +51,8 @@ class CefV8ValueCToCpp
   bool IsPromise() override;
   bool IsSame(CefRefPtr<CefV8Value> that) override;
   bool GetBoolValue() override;
-  int32 GetIntValue() override;
-  uint32 GetUIntValue() override;
+  int32_t GetIntValue() override;
+  uint32_t GetUIntValue() override;
   double GetDoubleValue() override;
   CefBaseTime GetDateValue() override;
   CefString GetStringValue() override;
@@ -71,9 +72,7 @@ class CefV8ValueCToCpp
                 CefRefPtr<CefV8Value> value,
                 PropertyAttribute attribute) override;
   bool SetValue(int index, CefRefPtr<CefV8Value> value) override;
-  bool SetValue(const CefString& key,
-                AccessControl settings,
-                PropertyAttribute attribute) override;
+  bool SetValue(const CefString& key, PropertyAttribute attribute) override;
   bool GetKeys(std::vector<CefString>& keys) override;
   bool SetUserData(CefRefPtr<CefBaseRefCounted> user_data) override;
   CefRefPtr<CefBaseRefCounted> GetUserData() override;
@@ -83,6 +82,8 @@ class CefV8ValueCToCpp
   CefRefPtr<CefV8ArrayBufferReleaseCallback> GetArrayBufferReleaseCallback()
       override;
   bool NeuterArrayBuffer() override;
+  size_t GetArrayBufferByteLength() override;
+  void* GetArrayBufferData() override;
   CefString GetFunctionName() override;
   CefRefPtr<CefV8Handler> GetFunctionHandler() override;
   CefRefPtr<CefV8Value> ExecuteFunction(

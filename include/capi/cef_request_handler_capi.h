@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b94100cfe1feea0a2b66e806163f1d5081299d1c$
+// $hash=e2e85245f8a3434e62622af7d3ece377b1dbec21$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_HANDLER_CAPI_H_
@@ -48,11 +48,30 @@
 #include "include/capi/cef_request_capi.h"
 #include "include/capi/cef_resource_request_handler_capi.h"
 #include "include/capi/cef_ssl_info_capi.h"
+#include "include/capi/cef_unresponsive_process_callback_capi.h"
 #include "include/capi/cef_x509_certificate_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+///
+/// Callback structure used to select a client certificate for authentication.
+///
+typedef struct _cef_select_client_certificate_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Chooses the specified certificate for client certificate authentication.
+  /// NULL value means that no client certificate should be used.
+  ///
+  void(CEF_CALLBACK* select)(
+      struct _cef_select_client_certificate_callback_t* self,
+      struct _cef_x509certificate_t* cert);
+} cef_select_client_certificate_callback_t;
 
 ///
 /// Implement this structure to handle events related to browser requests. The
@@ -175,16 +194,19 @@ typedef struct _cef_request_handler_t {
 
   ///
   /// Called on the UI thread when a client certificate is being requested for
-  /// authentication. Return false (0) to use the default behavior and
-  /// automatically select the first certificate available. Return true (1) and
-  /// call cef_select_client_certificate_callback_t::Select either in this
-  /// function or at a later time to select a certificate. Do not call Select or
-  /// call it with NULL to continue without using any certificate. |isProxy|
-  /// indicates whether the host is an HTTPS proxy or the origin server. |host|
-  /// and |port| contains the hostname and port of the SSL server.
-  /// |certificates| is the list of certificates to choose from; this list has
-  /// already been pruned by Chromium so that it only contains certificates from
-  /// issuers that the server trusts.
+  /// authentication. Return false (0) to use the default behavior.  If the
+  /// |certificates| list is not NULL the default behavior will be to display a
+  /// dialog for certificate selection. If the |certificates| list is NULL then
+  /// the default behavior will be not to show a dialog and it will continue
+  /// without using any certificate. Return true (1) and call
+  /// cef_select_client_certificate_callback_t::Select either in this function
+  /// or at a later time to select a certificate. Do not call Select or call it
+  /// with NULL to continue without using any certificate. |isProxy| indicates
+  /// whether the host is an HTTPS proxy or the origin server. |host| and |port|
+  /// contains the hostname and port of the SSL server. |certificates| is the
+  /// list of certificates to choose from; this list has already been pruned by
+  /// Chromium so that it only contains certificates from issuers that the
+  /// server trusts. IS_OHOS extended
   ///
   int(CEF_CALLBACK* on_select_client_certificate)(
       struct _cef_request_handler_t* self,
@@ -192,8 +214,6 @@ typedef struct _cef_request_handler_t {
       int isProxy,
       const cef_string_t* host,
       int port,
-      cef_string_list_t key_types,
-      cef_string_list_t principals,
       size_t certificatesCount,
       struct _cef_x509certificate_t* const* certificates,
       struct _cef_select_client_certificate_callback_t* callback);
@@ -207,69 +227,57 @@ typedef struct _cef_request_handler_t {
                                            struct _cef_browser_t* browser);
 
   ///
+  /// Called on the browser process UI thread when the render process is
+  /// unresponsive as indicated by a lack of input event processing for at least
+  /// 15 seconds. Return false (0) for the default behavior which is an
+  /// indefinite wait with Alloy style or display of the "Page unresponsive"
+  /// dialog with Chrome style. Return true (1) and don't execute the callback
+  /// for an indefinite wait without display of the Chrome style dialog. Return
+  /// true (1) and call cef_unresponsive_process_callback_t::Wait either in this
+  /// function or at a later time to reset the wait timer, potentially
+  /// triggering another call to this function if the process remains
+  /// unresponsive. Return true (1) and call
+  /// cef_unresponsive_process_callback_t:: Terminate either in this function or
+  /// at a later time to terminate the unresponsive process, resulting in a call
+  /// to OnRenderProcessTerminated. OnRenderProcessResponsive will be called if
+  /// the process becomes responsive after this function is called. This
+  /// functionality depends on the hang monitor which can be disabled by passing
+  /// the `--disable-hang-monitor` command-line flag.
+  ///
+  int(CEF_CALLBACK* on_render_process_unresponsive)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_unresponsive_process_callback_t* callback);
+
+  ///
+  /// Called on the browser process UI thread when the render process becomes
+  /// responsive after previously being unresponsive. See documentation on
+  /// OnRenderProcessUnresponsive.
+  ///
+  void(CEF_CALLBACK* on_render_process_responsive)(
+      struct _cef_request_handler_t* self,
+      struct _cef_browser_t* browser);
+
+  ///
   /// Called on the browser process UI thread when the render process terminates
-  /// unexpectedly. |status| indicates how the process terminated.
+  /// unexpectedly. |status| indicates how the process terminated. |error_code|
+  /// and |error_string| represent the error that would be displayed in Chrome's
+  /// "Aw, Snap!" view. Possible |error_code| values include cef_resultcode_t
+  /// non-normal exit values and platform-specific crash values (for example, a
+  /// Posix signal or Windows hardware exception).
   ///
   void(CEF_CALLBACK* on_render_process_terminated)(
       struct _cef_request_handler_t* self,
       struct _cef_browser_t* browser,
-      cef_termination_status_t status);
+      cef_termination_status_t status,
+      int error_code,
+      const cef_string_t* error_string);
 
   ///
   /// Called on the browser process UI thread when the window.document object of
   /// the main frame has been created.
   ///
   void(CEF_CALLBACK* on_document_available_in_main_frame)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser);
-
-  ///
-  /// Called on the browser process UI thread when the url is about to be loaded
-  /// into the current Web.
-  ///
-  int(CEF_CALLBACK* should_override_url_loading)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* url,
-      const cef_string_t* method,
-      int user_gesture,
-      int is_redirect,
-      int is_outermost_main_frame);
-
-  ///
-  /// Called on the UI thread to handle requests for URLs with an invalid SSL
-  /// certificate. Return true (1) and call cef_callback_t functions either in
-  /// this function or at a later time to continue or cancel the request. Return
-  /// false (0) to cancel the request immediately. If
-  /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
-  /// will be accepted without calling this function.
-  ///
-  int(CEF_CALLBACK* on_all_certificate_error)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      cef_errorcode_t cert_error,
-      const cef_string_t* request_url,
-      const cef_string_t* origin_url,
-      const cef_string_t* referrer,
-      int is_main_frame_request,
-      int is_fatal_error,
-      struct _cef_sslinfo_t* ssl_info,
-      struct _cef_callback_t* callback);
-
-  ///
-  /// Called when render process not responding
-  ///
-  void(CEF_CALLBACK* on_render_process_not_responding)(
-      struct _cef_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* referrer,
-      int pid,
-      int reason);
-
-  ///
-  /// Called when render process responding again
-  ///
-  void(CEF_CALLBACK* on_render_process_responding)(
       struct _cef_request_handler_t* self,
       struct _cef_browser_t* browser);
 } cef_request_handler_t;

@@ -11,7 +11,6 @@
 #include "include/cef_devtools_message_observer.h"
 #include "include/cef_parser.h"
 #include "include/wrapper/cef_closure_task.h"
-
 #include "tests/ceftests/test_handler.h"
 #include "tests/gtest/include/gtest/gtest.h"
 
@@ -22,7 +21,7 @@ const char kTestUrl2[] = "https://tests/DevToolsMessage2";
 
 class DevToolsMessageTestHandler : public TestHandler {
  public:
-  DevToolsMessageTestHandler() {}
+  DevToolsMessageTestHandler() = default;
 
   void RunTest() override {
     // Add HTML resources.
@@ -113,7 +112,7 @@ class DevToolsMessageTestHandler : public TestHandler {
     explicit TestMessageObserver(DevToolsMessageTestHandler* handler)
         : handler_(handler) {}
 
-    virtual ~TestMessageObserver() { handler_->observer_destroyed_.yes(); }
+    ~TestMessageObserver() override { handler_->observer_destroyed_.yes(); }
 
     bool OnDevToolsMessage(CefRefPtr<CefBrowser> browser,
                            const void* message,

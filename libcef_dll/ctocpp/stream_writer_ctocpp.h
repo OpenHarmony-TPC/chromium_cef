@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=dd1a095d17c6d0111238a232962d5ac9ce267294$
+// $hash=36b08c4315941475504058f46478f25e649bc265$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_STREAM_WRITER_CTOCPP_H_
@@ -35,8 +35,8 @@ class CefStreamWriterCToCpp : public CefCToCppRefCounted<CefStreamWriterCToCpp,
 
   // CefStreamWriter methods.
   size_t Write(const void* ptr, size_t size, size_t n) override;
-  int Seek(int64 offset, int whence) override;
-  int64 Tell() override;
+  int Seek(int64_t offset, int whence) override;
+  int64_t Tell() override;
   int Flush() override;
   bool MayBlock() override;
 };

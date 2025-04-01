@@ -9,16 +9,13 @@
 
 #include "ui/base/resource/resource_bundle.h"
 
-class AlloyContentClient;
-
 class CefResourceBundleDelegate : public ui::ResourceBundle::Delegate {
  public:
-  CefResourceBundleDelegate() {}
+  CefResourceBundleDelegate();
 
-  void set_pack_loading_disabled(bool val) { pack_loading_disabled_ = val; }
-  bool pack_loading_disabled() const { return pack_loading_disabled_; }
-  void set_allow_pack_file_load(bool val) { allow_pack_file_load_ = val; }
-  bool allow_pack_file_load() const { return allow_pack_file_load_; }
+  CefResourceBundleDelegate(const CefResourceBundleDelegate&) = delete;
+  CefResourceBundleDelegate& operator=(const CefResourceBundleDelegate&) =
+      delete;
 
  private:
   // ui::ResourceBundle::Delegate methods.
@@ -29,18 +26,15 @@ class CefResourceBundleDelegate : public ui::ResourceBundle::Delegate {
                                       const std::string& locale) override;
   gfx::Image GetImageNamed(int resource_id) override;
   gfx::Image GetNativeImageNamed(int resource_id) override;
+  bool HasDataResource(int resource_id) const override;
   base::RefCountedMemory* LoadDataResourceBytes(
       int resource_id,
       ui::ResourceScaleFactor scale_factor) override;
-  absl::optional<std::string> LoadDataResourceString(int resource_id) override;
+  std::optional<std::string> LoadDataResourceString(int resource_id) override;
   bool GetRawDataResource(int resource_id,
                           ui::ResourceScaleFactor scale_factor,
-                          base::StringPiece* value) const override;
+                          std::string_view* value) const override;
   bool GetLocalizedString(int message_id, std::u16string* value) const override;
-
- private:
-  bool pack_loading_disabled_ = false;
-  bool allow_pack_file_load_ = false;
 };
 
 #endif  // CEF_LIBCEF_COMMON_RESOURCE_BUNDLE_DELEGATE_H_

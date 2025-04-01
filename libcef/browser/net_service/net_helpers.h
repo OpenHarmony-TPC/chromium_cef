@@ -5,32 +5,41 @@
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 
-#ifdef OHOS_CUSTOM_DNS
+#include "arkweb/build/features/features.h"
+
+#if BUILDFLAG(ARKWEB_CUSTOM_DNS)
 #include <map>
 #include <vector>
 #endif
+#include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "net/dns/public/secure_dns_mode.h"
+
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+#include "cef/include/cef_download_handler.h"
+#endif
+
 class GURL;
 
 namespace net_service {
 
 #define NETHELPERS_EXPORT __attribute__((visibility("default")))
 
-#ifdef OHOS_NETWORK_CONNINFO
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 struct NetHelperSetting {
   bool file_access;
   bool block_network;
   int cache_mode;
   std::vector<std::string> file_access_dirs_list;
 };
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
-#ifdef OHOS_CUSTOM_DNS
+#if BUILDFLAG(ARKWEB_CUSTOM_DNS)
 struct CustomDnsEntry {
   std::vector<std::string> address;
   int32_t ttl;
 };
-#endif // defined(OHOS_CUSTOM_DNS)
+#endif
 
 class NETHELPERS_EXPORT NetHelpers {
  public:
@@ -38,24 +47,32 @@ class NETHELPERS_EXPORT NetHelpers {
   static bool ShouldBlockFileUrls();
   static bool IsAllowAcceptCookies();
   static bool IsThirdPartyCookieAllowed();
-#ifdef OHOS_NETWORK_CONNINFO
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   static bool ShouldBlockFileUrls(struct NetHelperSetting setting);
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
-#if defined(OHOS_HTTP_DNS)
+#if BUILDFLAG(ARKWEB_HTTP_DNS)
   static net::SecureDnsMode DnsOverHttpMode();
   static std::string DnsOverHttpServerConfig();
   static bool HasValidDnsOverHttpConfig();
-#endif  // defined(OHOS_HTTP_DNS)
+#endif
 
-#if defined(OHOS_CUSTOM_DNS)
-  static void SetHostIP(const std::string host_name, const std::string address, int32_t ttl);
+#if BUILDFLAG(ARKWEB_CUSTOM_DNS)
+  static void SetHostIP(const std::string host_name,
+                        const std::string address,
+                        int32_t ttl);
   static std::map<std::string, struct CustomDnsEntry> GetHostIP();
   static std::vector<std::string> GetHostIP(const std::string host_name);
   static void ClearHostIP(const std::string host_name);
   static void ClearHostIP();
-  static std::map<std::string, struct CustomDnsEntry> custom_dns; 
-#endif // defined(OHOS_CUSTOM_DNS)
+  static std::map<std::string, struct CustomDnsEntry> custom_dns;
+#endif
+
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+  static void SetDownloadHandler(
+      CefRefPtr<CefDownloadHandler> download_handler);
+  static CefRefPtr<CefDownloadHandler> GetDownloadHandler();
+#endif
 
   static bool allow_content_access;
   static bool allow_file_access;
@@ -65,31 +82,36 @@ class NETHELPERS_EXPORT NetHelpers {
   static int cache_mode;
   static int connection_timeout;
 
-#if defined(OHOS_HTTP_DNS)
+#if BUILDFLAG(ARKWEB_HTTP_DNS)
   static int doh_mode;
   static std::string doh_config;
-#endif  // defined(OHOS_HTTP_DNS)
+#endif
+#if BUILDFLAG(ARKWEB_EXT_NETWORK_CONNECTION)
+  static int network;
+#endif
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+  static CefRefPtr<CefDownloadHandler> global_download_handler;
+#endif
 };
 
 bool IsSpecialFileUrl(const GURL& url);
 
 // Update request's |load_flags| based on the settings.
 int UpdateLoadFlags(int load_flags
-#ifdef OHOS_NETWORK_CONNINFO
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
                     ,
                     struct NetHelperSetting setting
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 );
 
 // Returns true if the given URL should be aborted with
 // net::ERR_ACCESS_DENIED.
 bool IsURLBlocked(const GURL& url
-#ifdef OHOS_NETWORK_CONNINFO
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
                   ,
                   struct NetHelperSetting setting
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 );
-
 }  // namespace net_service
 
 #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_

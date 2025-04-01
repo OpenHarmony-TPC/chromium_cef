@@ -2,18 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/chrome/views/chrome_child_window.h"
+#include "cef/libcef/browser/chrome/views/chrome_child_window.h"
 
-#include "libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h"
-#include "libcef/browser/views/browser_view_impl.h"
-#include "libcef/browser/views/window_impl.h"
+#include "cef/libcef/browser/chrome/views/browser_platform_delegate_chrome_views.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/browser/views/window_impl.h"
+#include "ui/gfx/native_widget_types.h"
 
 #if BUILDFLAG(IS_WIN)
-#include "libcef/browser/native/browser_platform_delegate_native_win.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_win.h"
 #include "ui/views/win/hwnd_util.h"
 #endif
 
 namespace {
+
+gfx::AcceleratedWidget GetParentWidget(const CefWindowInfo& window_info) {
+#if !BUILDFLAG(IS_MAC)
+  return window_info.parent_window;
+#else
+  // Chrome style is not supported with native parent on MacOS. See issue #3294.
+  return gfx::kNullAcceleratedWidget;
+#endif
+}
+
+CefWindowHandle GetParentHandle(const CefWindowInfo& window_info) {
+#if !BUILDFLAG(IS_MAC)
+  return window_info.parent_window;
+#else
+  return window_info.parent_view;
+#endif
+}
 
 class ChildWindowDelegate : public CefWindowDelegate {
  public:
@@ -61,8 +79,7 @@ class ChildWindowDelegate : public CefWindowDelegate {
     DCHECK(widget_hwnd);
 
     // The native delegate needs state to perform some actions.
-    auto browser =
-        static_cast<CefBrowserHostBase*>(browser_view_->GetBrowser().get());
+    auto browser = CefBrowserHostBase::FromBrowser(browser_view_->GetBrowser());
     auto platform_delegate = browser->platform_delegate();
     DCHECK(platform_delegate->IsViewsHosted());
     auto chrome_delegate =
@@ -115,6 +132,8 @@ class ChildBrowserViewDelegate : public CefBrowserViewDelegate {
   ChildBrowserViewDelegate(const ChildBrowserViewDelegate&) = delete;
   ChildBrowserViewDelegate& operator=(const ChildBrowserViewDelegate&) = delete;
 
+  // |browser_view| will be nullptr when called for popups with non-Views-hosted
+  // opener.
   CefRefPtr<CefBrowserViewDelegate> GetDelegateForPopupBrowserView(
       CefRefPtr<CefBrowserView> browser_view,
       const CefBrowserSettings& settings,
@@ -123,13 +142,13 @@ class ChildBrowserViewDelegate : public CefBrowserViewDelegate {
     return new ChildBrowserViewDelegate();
   }
 
+  // |browser_view| will be nullptr when called for popups with non-Views-hosted
+  // opener.
   bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
                                  CefRefPtr<CefBrowserView> popup_browser_view,
                                  bool is_devtools) override {
-    DCHECK(!is_devtools);
-
-    auto new_browser = static_cast<CefBrowserHostBase*>(
-        popup_browser_view->GetBrowser().get());
+    auto new_browser =
+        CefBrowserHostBase::FromBrowser(popup_browser_view->GetBrowser());
     auto new_platform_delegate = new_browser->platform_delegate();
     DCHECK(new_platform_delegate->IsViewsHosted());
     auto new_platform_delegate_impl =
@@ -138,8 +157,7 @@ class ChildBrowserViewDelegate : public CefBrowserViewDelegate {
 
     const auto& window_info =
         new_platform_delegate_impl->native_delegate()->window_info();
-    const auto parent_handle =
-        chrome_child_window::GetParentHandle(window_info);
+    const auto parent_handle = GetParentWidget(window_info);
     if (parent_handle != gfx::kNullAcceleratedWidget) {
       ChildWindowDelegate::Create(popup_browser_view, window_info,
                                   parent_handle);
@@ -160,15 +178,7 @@ class ChildBrowserViewDelegate : public CefBrowserViewDelegate {
 namespace chrome_child_window {
 
 bool HasParentHandle(const CefWindowInfo& window_info) {
-  return GetParentHandle(window_info) != gfx::kNullAcceleratedWidget;
-}
-
-gfx::AcceleratedWidget GetParentHandle(const CefWindowInfo& window_info) {
-#if !BUILDFLAG(IS_MAC)
-  return window_info.parent_window;
-#else
-  return gfx::kNullAcceleratedWidget;
-#endif
+  return GetParentHandle(window_info) != kNullWindowHandle;
 }
 
 CefRefPtr<CefBrowserHostBase> MaybeCreateChildBrowser(
@@ -183,7 +193,7 @@ CefRefPtr<CefBrowserHostBase> MaybeCreateChildBrowser(
     return nullptr;
   }
 
-  const auto parent_handle = GetParentHandle(*create_params.window_info);
+  const auto parent_handle = GetParentWidget(*create_params.window_info);
   if (parent_handle == gfx::kNullAcceleratedWidget) {
     return nullptr;
   }
@@ -197,7 +207,12 @@ CefRefPtr<CefBrowserHostBase> MaybeCreateChildBrowser(
   ChildWindowDelegate::Create(browser_view, *create_params.window_info,
                               parent_handle);
 
-  return static_cast<CefBrowserHostBase*>(browser_view->GetBrowser().get());
+  return CefBrowserHostBase::FromBrowser(browser_view->GetBrowser());
+}
+
+CefRefPtr<CefBrowserViewDelegate>
+GetDefaultBrowserViewDelegateForPopupOpener() {
+  return new ChildBrowserViewDelegate();
 }
 
 }  // namespace chrome_child_window

@@ -6,13 +6,13 @@
 #define CEF_LIBCEF_COMMON_CRASH_REPORTER_CLIENT_H_
 
 #include <string>
+#include <string_view>
 #include <vector>
 
-#include "include/cef_version.h"
-
-#include "base/strings/string_piece_forward.h"
+#include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
 #include "build/build_config.h"
+#include "cef/ohos_cef_ext/include/cef_version.h"
 #include "components/crash/core/app/crash_reporter_client.h"
 
 // Global object that is instantiated in each process and configures crash
@@ -78,15 +78,15 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
 #endif
 
   // Set or clear a crash key value.
-  bool SetCrashKeyValue(const base::StringPiece& key,
-                        const base::StringPiece& value);
+  bool SetCrashKeyValue(const std::string_view& key,
+                        const std::string_view& value);
 
  private:
-#if defined(OHOS_CRASHPAD)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   bool has_crash_config_file_ = true;
 #else
   bool has_crash_config_file_ = false;
-#endif  // defined(OHOS_CRASHPAD)
+#endif  // BUILDFLAG(ARKWEB_CRASHPAD)
 
   enum KeySize { SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE };
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2025 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=ee64b4aa6e77fb09f64e448d335424a6877fc2d7$
+// $hash=e9eed56917218058c6ca7ee377919238c19631da$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -43,7 +43,6 @@
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_frame_capi.h"
-#include "include/capi/cef_image_capi.h"
 #include "include/capi/cef_menu_model_capi.h"
 
 #ifdef __cplusplus
@@ -171,7 +170,7 @@ typedef struct _cef_context_menu_handler_t {
   /// that represent the state of the quick menu. Return true (1) if the menu
   /// will be handled and execute |callback| either synchronously or
   /// asynchronously with the selected command ID. Return false (0) to cancel
-  /// the menu.
+  /// the menu. IS_OHOS extended
   ///
   int(CEF_CALLBACK* run_quick_menu)(
       struct _cef_context_menu_handler_t* self,
@@ -181,18 +180,7 @@ typedef struct _cef_context_menu_handler_t {
       const cef_size_t* size,
       const cef_rect_t* select_bounds,
       cef_quick_menu_edit_state_flags_t edit_state_flags,
-      struct _cef_run_quick_menu_callback_t* callback,
-      int is_mouse_trigger,
-      int is_long_press_actived);
-
-  ///
-  /// UpdateClippedSelectionBounds.
-  ///
-  int(CEF_CALLBACK* update_clipped_selection_bounds)(
-      struct _cef_context_menu_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_rect_t* select_bounds);
+      struct _cef_run_quick_menu_callback_t* callback);
 
   ///
   /// Called to execute a command selected from the quick menu for a windowless
@@ -210,40 +198,12 @@ typedef struct _cef_context_menu_handler_t {
   ///
   /// Called when the quick menu for a windowless browser is dismissed
   /// irregardless of whether the menu was canceled or a command was selected.
+  /// IS_OHOS extended
   ///
   void(CEF_CALLBACK* on_quick_menu_dismissed)(
       struct _cef_context_menu_handler_t* self,
       struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      int is_mouse_trigger);
-
-  ///
-  /// Called when GetImageForContextNode function get image for context menu.
-  ///
-  void(CEF_CALLBACK* on_get_image_for_context_node)(
-      struct _cef_context_menu_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_image_t* image);
-
-  ///
-  /// Called when GetImageFromCache function to get image from memory cache.
-  ///
-  void(CEF_CALLBACK* on_get_image_from_cache)(
-      struct _cef_context_menu_handler_t* self,
-      struct _cef_image_t* image);
-
-  ///
-  /// Called when you need to temporarily hide/restore the handle menu.
-  ///
-  void(CEF_CALLBACK* hide_handle_and_quick_menu_if_necessary)(
-      struct _cef_context_menu_handler_t* self,
-      int hide);
-
-  ///
-  /// Called when you click on the selected area.
-  ///
-  void(CEF_CALLBACK* change_visibility_of_quick_menu)(
-      struct _cef_context_menu_handler_t* self);
+      struct _cef_frame_t* frame);
 } cef_context_menu_handler_t;
 
 ///
@@ -400,30 +360,6 @@ typedef struct _cef_context_menu_params_t {
   /// renderer process.
   ///
   int(CEF_CALLBACK* is_custom_menu)(struct _cef_context_menu_params_t* self);
-
-  ///
-  /// Returns the input field type of context node that the context menu was
-  /// invoked on.
-  ///
-  cef_context_menu_input_field_type_t(CEF_CALLBACK* get_input_field_type)(
-      struct _cef_context_menu_params_t* self);
-
-  ///
-  /// Returns the source type of context node that the context menu was invoked
-  /// on.
-  ///
-  cef_context_menu_source_type_t(CEF_CALLBACK* get_source_type)(
-      struct _cef_context_menu_params_t* self);
-
-  ///
-  /// Returns ImageRect
-  ///
-  void(CEF_CALLBACK* get_image_rect)(
-      struct _cef_context_menu_params_t* self,
-      int* x,
-      int* y,
-      int* w,
-      int* h);
 } cef_context_menu_params_t;
 
 #ifdef __cplusplus

@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b2ae7a053685d0da760da107022a85283ba74d26$
+// $hash=6cf96645cb93b04d1873202a672cfb439bff627b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_
@@ -50,36 +50,6 @@ class CefLoadHandlerCToCpp : public CefCToCppRefCounted<CefLoadHandlerCToCpp,
                    ErrorCode errorCode,
                    const CefString& errorText,
                    const CefString& failedUrl) override;
-  void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
-                              bool is_main_frame,
-                              bool has_user_gesture,
-                              int error_code,
-                              const CefString& error_text) override;
-  void OnHttpError(CefRefPtr<CefRequest> request,
-                   bool is_main_frame,
-                   bool has_user_gesture,
-                   CefRefPtr<CefResponse> response) override;
-  void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                const CefString& url,
-                                bool isReload) override;
-  void OnPageVisible(CefRefPtr<CefBrowser> browser,
-                     const CefString& url,
-                     bool success) override;
-  void OnDataResubmission(CefRefPtr<CefBrowser> browser,
-                          CefRefPtr<CefCallback> callback) override;
-  void OnFirstContentfulPaint(int64_t navigationStartTick,
-                              int64_t firstContentfulPaintMs) override;
-  void OnFirstMeaningfulPaint(
-      CefRefPtr<CefFirstMeaningfulPaintDetails> details) override;
-  void OnLargestContentfulPaint(
-      CefRefPtr<CefLargestContentfulPaintDetails> details) override;
-  void OnNavigationEntryCommitted(
-      CefRefPtr<CefLoadCommittedDetails> details) override;
-  void OnSafeBrowsingCheckResult(int threat_type) override;
-  void OnIntelligentTrackingPreventionResult(
-      const CefString& website_host,
-      const CefString& tracker_host) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_LOAD_HANDLER_CTOCPP_H_

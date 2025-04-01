@@ -2,25 +2,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/app_manager.h"
-
-#include "libcef/common/net/scheme_info.h"
-#include "libcef/common/net/scheme_registration.h"
-#include "libcef/common/scheme_registrar_impl.h"
+#include "cef/libcef/common/app_manager.h"
 
 #include "base/command_line.h"
 #include "base/logging.h"
+#include "cef/libcef/common/net/scheme_info.h"
+#include "cef/libcef/common/scheme_registrar_impl.h"
 #include "content/public/browser/child_process_security_policy.h"
 #include "content/public/common/content_switches.h"
 
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
+#include "libcef/common/net/scheme_registration.h"
+#endif
+
 #if BUILDFLAG(IS_WIN)
 #include <windows.h>
+
 #include "base/path_service.h"
 #endif
 
-#ifdef OHOS_SCHEME_HANDLER
-#include "base/values.h"
+#if BUILDFLAG(ARKWEB_SCHEME_HANDLER)
 #include "base/json/json_reader.h"
+#include "base/values.h"
 #endif
 
 namespace {
@@ -44,7 +47,7 @@ CefAppManager::~CefAppManager() {
   g_manager = nullptr;
 }
 
-void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
+void CefAppManager::AddCustomScheme(const CefSchemeInfo* scheme_info) {
   DCHECK(!scheme_info_list_locked_);
   scheme_info_list_.push_back(*scheme_info);
 
@@ -60,7 +63,7 @@ void CefAppManager::AddCustomScheme(CefSchemeInfo* scheme_info) {
     }
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
   if (scheme_info->is_code_cache_enabled) {
     LOG(DEBUG) << "App manager register the scheme:"
                << scheme_info->scheme_name.c_str() << " supported code cache.";
@@ -101,15 +104,16 @@ void CefAppManager::AddAdditionalSchemes(
     schemeRegistrar.GetSchemes(schemes);
   }
 
-#ifdef OHOS_SCHEME_HANDLER
+#if BUILDFLAG(ARKWEB_SCHEME_HANDLER)
   {
     CefSchemeRegistrarImpl schemeRegistrar;
     base::CommandLine* cmdLine = base::CommandLine::ForCurrentProcess();
     if (cmdLine && cmdLine->HasSwitch(switches::kOhSchemeHandlerCustomScheme)) {
       std::string cmdlineSchemes =
           cmdLine->GetSwitchValueASCII(switches::kOhSchemeHandlerCustomScheme);
-      LOG(INFO) << "render scheme_handler cmdlineScheme:" << cmdlineSchemes;
-      absl::optional<base::Value> schemeInfos = base::JSONReader::Read(cmdlineSchemes);
+      LOG(INFO) << "scheme_handler cmdlineScheme:" << cmdlineSchemes;
+      std::optional<base::Value> schemeInfos =
+          base::JSONReader::Read(cmdlineSchemes);
       if (schemeInfos && schemeInfos->is_dict()) {
         for (auto kv : schemeInfos->GetDict()) {
           schemeRegistrar.AddCustomScheme(kv.first, kv.second.GetInt());
@@ -120,11 +124,10 @@ void CefAppManager::AddAdditionalSchemes(
   }
 #endif
 
-#ifdef OHOS_NETWORK_LOAD
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   RenderAddCustomSchemes();
 #endif
 
-  scheme::AddInternalSchemes(schemes);
   scheme_info_list_locked_ = true;
 }
 
@@ -146,7 +149,7 @@ const wchar_t* CefAppManager::GetResourceDllName() {
 }
 #endif  // BUILDFLAG(IS_WIN)
 
-#ifdef OHOS_NETWORK_LOAD
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 std::vector<std::string> CefAppManager::CustomSchemeCmdLineSplit(
     std::string str,
     const char split) {
@@ -179,18 +182,17 @@ void CefAppManager::RenderAddCustomSchemes() {
         if (scheme.size() != 3) {
           break;
         }
-        CefSchemeInfo regScheme = {
-          "",
-          false,
-          false,
-          false,
-          false,
-          false,
-          false,
-          false
-#if BUILDFLAG(IS_OHOS)
-          ,
-          false
+        CefSchemeInfo regScheme = {"",
+                                   false,
+                                   false,
+                                   false,
+                                   false,
+                                   false,
+                                   false,
+                                   false
+#if BUILDFLAG(ARKWEB_NETWORK_BASE) || BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
+                                   ,
+                                   false
 #endif
         };
         regScheme.scheme_name = scheme[0];
@@ -208,4 +210,4 @@ void CefAppManager::RenderAddCustomSchemes() {
     }
   }
 }
-#endif
+#endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)

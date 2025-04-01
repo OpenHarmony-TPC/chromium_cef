@@ -31,7 +31,6 @@
 #define CEF_INCLUDE_CEF_BASE_H_
 #pragma once
 
-#include "include/base/cef_atomic_ref_count.h"
 #include "include/base/cef_build.h"
 #include "include/base/cef_macros.h"
 
@@ -43,7 +42,7 @@
 #include "include/internal/cef_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_mac.h"
-#elif defined(OS_LINUX) || BUILDFLAG(IS_OHOS)
+#elif defined(OS_LINUX) || defined(OS_OHOS)
 #include "include/internal/cef_linux.h"
 #endif
 
@@ -115,6 +114,14 @@ class CefRefCount {
   /// Returns true if the reference count is at least 1.
   ///
   bool HasAtLeastOneRef() const { return !ref_count_.IsZero(); }
+
+  ///
+  /// Returns the current reference count (with no barriers). This is subtle,
+  /// and should be used only for debugging.
+  ///
+  int SubtleRefCountForDebug() const {
+    return ref_count_.SubtleRefCountForDebug();
+  }
 
  private:
   mutable base::AtomicRefCount ref_count_{0};

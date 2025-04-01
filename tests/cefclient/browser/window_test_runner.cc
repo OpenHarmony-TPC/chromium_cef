@@ -4,8 +4,7 @@
 
 #include "tests/cefclient/browser/window_test_runner.h"
 
-namespace client {
-namespace window_test {
+namespace client::window_test {
 
 // static
 void WindowTestRunner::ModifyBounds(const CefRect& display, CefRect& window) {
@@ -36,10 +35,13 @@ void WindowTestRunner::ModifyBounds(const CefRect& display, CefRect& window) {
   }
 }
 
+void WindowTestRunner::Fullscreen(CefRefPtr<CefBrowser> browser) {
+  NOTIMPLEMENTED();
+}
+
 void WindowTestRunner::SetTitleBarHeight(CefRefPtr<CefBrowser> browser,
                                          const std::optional<float>& height) {
   NOTIMPLEMENTED();
 }
 
-}  // namespace window_test
-}  // namespace client
+}  // namespace client::window_test

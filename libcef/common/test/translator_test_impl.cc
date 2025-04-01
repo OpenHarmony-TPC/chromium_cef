@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "include/test/cef_translator_test.h"
+#include "cef/include/test/cef_translator_test.h"
 
 class CefTranslatorTestRefPtrLibraryImpl
     : public CefTranslatorTestRefPtrLibrary {
@@ -390,8 +390,8 @@ class CefTranslatorTestImpl : public CefTranslatorTest {
       return false;
     }
     val.clear();
-    val.push_back(CefPoint(TEST_X_VAL, TEST_Y_VAL));
-    val.push_back(CefPoint(TEST_X_VAL2, TEST_Y_VAL2));
+    val.emplace_back(TEST_X_VAL, TEST_Y_VAL);
+    val.emplace_back(TEST_X_VAL2, TEST_Y_VAL2);
     return true;
   }
 

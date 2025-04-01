@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -42,15 +42,15 @@
 // way that may cause binary incompatibility with other builds. The universal
 // hash value will change if any platform is affected whereas the platform hash
 // values will change only if that particular platform is affected.
-#define CEF_API_HASH_UNIVERSAL "e0c1c18829a193d4ce3962bbbd9ade33c73a7911"
+#define CEF_API_HASH_UNIVERSAL "0e8b9feb9eae8b229f0ca4898fc5f62fb541b727"
 #if defined(OS_WIN)
-#define CEF_API_HASH_PLATFORM "939494d936873b216ec422fd395ae06c9b1a7e73"
+#define CEF_API_HASH_PLATFORM "9aab048649284ec6c24ec0be6a18cf0f93aefb0b"
 #elif defined(OS_MAC)
-#define CEF_API_HASH_PLATFORM "9432b05cacb244ad093c75aa9866b02e77158a30"
+#define CEF_API_HASH_PLATFORM "edfef8a2e94de07cbc767f71056a4b548cdb9ed9"
 #elif defined(OS_LINUX)
-#define CEF_API_HASH_PLATFORM "09d7270d397763dd031cefe1108cc2eae0cb94c5"
+#define CEF_API_HASH_PLATFORM "43bb9f630ca9e8027b9e81b5f07689f1ea3cd863"
 #elif defined(OS_OHOS)
-#define CEF_API_HASH_PLATFORM "09d7270d397763dd031cefe1108cc2eae0cb94c5"
+#define CEF_API_HASH_PLATFORM "43bb9f630ca9e8027b9e81b5f07689f1ea3cd863"
 #endif
 
 #ifdef __cplusplus

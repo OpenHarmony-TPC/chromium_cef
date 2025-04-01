@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=1ca4b46d4d49e3c988417e91c8c18036d5377a08$
+// $hash=d7dde794f6514c0a494779016ba2d4a82cb08e4e$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_
@@ -21,6 +21,7 @@
 #endif
 
 #include <vector>
+
 #include "include/capi/cef_display_handler_capi.h"
 #include "include/cef_display_handler.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
@@ -65,27 +66,6 @@ class CefDisplayHandlerCToCpp
   void OnMediaAccessChange(CefRefPtr<CefBrowser> browser,
                            bool has_video_access,
                            bool has_audio_access) override;
-  void OnViewportFitChange(CefRefPtr<CefBrowser> browser,
-                           int viewport_fit) override;
-  void OnReceivedTouchIconUrl(CefRefPtr<CefBrowser> browser,
-                              const CefString& icon_url,
-                              bool precomposed) override;
-  void OnReceivedIcon(const void* data,
-                      size_t width,
-                      size_t height,
-                      cef_color_type_t color_type,
-                      cef_alpha_type_t alpha_type) override;
-  void OnReceivedIconUrl(const CefString& image_url,
-                         const void* data,
-                         size_t width,
-                         size_t height,
-                         cef_color_type_t color_type,
-                         cef_alpha_type_t alpha_type) override;
-  void OnScaleChanged(CefRefPtr<CefBrowser> browser,
-                      float old_page_scale_factor,
-                      float new_page_scale_factor) override;
-  void OnContentsBrowserZoomChange(double zoom_factor,
-                                   bool can_show_bubble) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_DISPLAY_HANDLER_CTOCPP_H_

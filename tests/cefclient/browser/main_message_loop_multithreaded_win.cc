@@ -21,9 +21,7 @@ const wchar_t kTaskMessageName[] = L"Client_CustomTask";
 
 MainMessageLoopMultithreadedWin::MainMessageLoopMultithreadedWin()
     : thread_id_(base::PlatformThread::CurrentId()),
-      task_message_id_(RegisterWindowMessage(kTaskMessageName)),
-      dialog_hwnd_(nullptr),
-      message_hwnd_(nullptr) {}
+      task_message_id_(RegisterWindowMessage(kTaskMessageName)) {}
 
 MainMessageLoopMultithreadedWin::~MainMessageLoopMultithreadedWin() {
   DCHECK(RunsTasksOnCurrentThread());
@@ -54,7 +52,7 @@ int MainMessageLoopMultithreadedWin::Run() {
   }
 
   HACCEL hAccelTable =
-      LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CEFCLIENT));
+      LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_MAINFRAME));
 
   MSG msg;
 
@@ -118,8 +116,8 @@ HWND MainMessageLoopMultithreadedWin::CreateMessageWindow(HINSTANCE hInstance) {
   wc.lpszClassName = kWndClass;
   RegisterClassEx(&wc);
 
-  return CreateWindow(kWndClass, 0, 0, 0, 0, 0, 0, HWND_MESSAGE, 0, hInstance,
-                      0);
+  return CreateWindow(kWndClass, nullptr, 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr,
+                      hInstance, nullptr);
 }
 
 // static

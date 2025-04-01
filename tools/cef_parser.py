@@ -19,15 +19,22 @@ def notify(msg):
   sys.stdout.write('  NOTE: ' + msg + '\n')
 
 
-def wrap_text(text, indent='', maxchars=80):
+def wrap_text(text, indent='', maxchars=80, listitem=False):
   """ Wrap the text to the specified number of characters. If
     necessary a line will be broken and wrapped after a word.
     """
-  result = ''
-  lines = textwrap.wrap(text, maxchars - len(indent))
-  for line in lines:
-    result += indent + line + '\n'
-  return result
+  if listitem:
+    initial_indent = indent + '- '
+    subsequent_indent = indent + '  '
+  else:
+    initial_indent = indent
+    subsequent_indent = indent
+  lines = textwrap.wrap(
+      text,
+      maxchars,
+      initial_indent=initial_indent,
+      subsequent_indent=subsequent_indent)
+  return '\n'.join(lines) + '\n'
 
 
 def is_base_class(clsname):
@@ -143,6 +150,7 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
   result = ''
   wrapme = ''
   hasemptyline = False
+  listitem = False
   for line in comment:
     # if the line starts with a leading space, remove that space
     if not line is None and len(line) > 0 and line[0] == ' ':
@@ -151,19 +159,28 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
     else:
       didremovespace = False
 
-    if line is None or len(line) == 0 or line[0] == ' ':
-      # the previous paragraph, if any, has ended
+    if line is None or len(line) == 0 or (line[0] == ' ' and not listitem) \
+        or line[0] == '-':
+      # the previous paragraph or list item, if any, has ended
       if len(wrapme) > 0:
         if not translate_map is None:
           # apply the translation
           for key in translate_keys:
             wrapme = wrapme.replace(key, translate_map[key])
         # output the previous paragraph
-        result += wrap_text(wrapme, indent + '/// ', maxchars)
+        result += wrap_text(wrapme, indent + '/// ', maxchars, listitem)
         wrapme = ''
+        listitem = False
 
     if not line is None:
-      if len(line) == 0 or line[0] == ' ':
+      if len(line) > 0 and line[0] == '-':
+        # list item
+        listitem = True
+        wrapme = line[1:].strip()
+      if len(line) > 0 and line[0] == ' ' and listitem:
+        # list item continues
+        wrapme += line[1:]
+      if len(line) == 0 or (line[0] == ' ' and not listitem):
         # blank lines or anything that's further indented should be
         # output as-is
         result += indent + '///'
@@ -173,9 +190,11 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
           else:
             result += line
         result += '\n'
+        listitem = False
       else:
-        # add to the current paragraph
-        wrapme += line + ' '
+        if not listitem:
+          # add to the current paragraph
+          wrapme += line + ' '
     else:
       # output an empty line
       hasemptyline = True
@@ -187,7 +206,7 @@ def format_comment(comment, indent, translate_map=None, maxchars=80):
       for key in translate_map.keys():
         wrapme = wrapme.replace(key, translate_map[key])
     # output the previous paragraph
-    result += wrap_text(wrapme, indent + '/// ', maxchars)
+    result += wrap_text(wrapme, indent + '/// ', maxchars, listitem)
 
   if hasemptyline:
     # an empty line means a break between comments, so the comment is
@@ -257,7 +276,7 @@ def format_translation_includes(header, body):
     result += '#include "libcef_dll/template_util.h"\n'
 
   # identify what CppToC classes are being used
-  p = re.compile('([A-Za-z0-9_]{1,})CppToC')
+  p = re.compile(r'([A-Za-z0-9_]{1,})CppToC')
   list = sorted(set(p.findall(body)))
   for item in list:
     directory = ''
@@ -270,7 +289,7 @@ def format_translation_includes(header, body):
               get_capi_name(item[3:], False)+'_cpptoc.h"\n'
 
   # identify what CToCpp classes are being used
-  p = re.compile('([A-Za-z0-9_]{1,})CToCpp')
+  p = re.compile(r'([A-Za-z0-9_]{1,})CToCpp')
   list = sorted(set(p.findall(body)))
   for item in list:
     directory = ''
@@ -339,21 +358,21 @@ def dict_to_str(dict):
 
 
 # regex for matching comment-formatted attributes
-_cre_attrib = '/\*--cef\(([A-Za-z0-9_ ,=:\n]{0,})\)--\*/'
+_cre_attrib = r'/\*--cef\(([A-Za-z0-9_ ,=:\n]{0,})\)--\*/'
 # regex for matching class and function names
-_cre_cfname = '([A-Za-z0-9_]{1,})'
+_cre_cfname = r'([A-Za-z0-9_]{1,})'
 # regex for matching class and function names including path separators
-_cre_cfnameorpath = '([A-Za-z0-9_\/]{1,})'
+_cre_cfnameorpath = r'([A-Za-z0-9_\/]{1,})'
 # regex for matching typedef value and name combination
-_cre_typedef = '([A-Za-z0-9_<>:,\*\&\s]{1,})'
+_cre_typedef = r'([A-Za-z0-9_<>:,\*\&\s]{1,})'
 # regex for matching function return value and name combination
-_cre_func = '([A-Za-z][A-Za-z0-9_<>:,\*\&\s]{1,})'
+_cre_func = r'([A-Za-z][A-Za-z0-9_<>:,\*\&\s]{1,})'
 # regex for matching virtual function modifiers + arbitrary whitespace
-_cre_vfmod = '([\sA-Za-z0-9_]{0,})'
+_cre_vfmod = r'([\sA-Za-z0-9_]{0,})'
 # regex for matching arbitrary whitespace
-_cre_space = '[\s]{1,}'
+_cre_space = r'[\s]{1,}'
 # regex for matching optional virtual keyword
-_cre_virtual = '(?:[\s]{1,}virtual){0,1}'
+_cre_virtual = r'(?:[\s]{1,}virtual){0,1}'
 
 # Simple translation types. Format is:
 #   'cpp_type' : ['capi_type', 'capi_default_value']
@@ -361,12 +380,12 @@ _simpletypes = {
     'void': ['void', ''],
     'void*': ['void*', 'NULL'],
     'int': ['int', '0'],
-    'int16': ['int16', '0'],
-    'uint16': ['uint16', '0'],
-    'int32': ['int32', '0'],
-    'uint32': ['uint32', '0'],
-    'int64': ['int64', '0'],
-    'uint64': ['uint64', '0'],
+    'int16_t': ['int16_t', '0'],
+    'uint16_t': ['uint16_t', '0'],
+    'int32_t': ['int32_t', '0'],
+    'uint32_t': ['uint32_t', '0'],
+    'int64_t': ['int64_t', '0'],
+    'uint64_t': ['uint64_t', '0'],
     'double': ['double', '0'],
     'float': ['float', '0'],
     'float*': ['float*', 'NULL'],
@@ -379,6 +398,9 @@ _simpletypes = {
     'char* const': ['char* const', 'NULL'],
     'cef_color_t': ['cef_color_t', '0'],
     'cef_json_parser_error_t': ['cef_json_parser_error_t', 'JSON_NO_ERROR'],
+    'CefAcceleratedPaintInfo': [
+        'cef_accelerated_paint_info_t', 'CefAcceleratedPaintInfo()'
+    ],
     'CefAudioParameters': ['cef_audio_parameters_t', 'CefAudioParameters()'],
     'CefBaseTime': ['cef_basetime_t', 'CefBaseTime()'],
     'CefBoxLayoutSettings': [
@@ -427,11 +449,11 @@ def get_function_impls(content, ident, has_impl=True):
   content = content.replace('NO_SANITIZE("cfi-icall")\n', '')
 
   # extract the functions
-  find_regex = '\n' + _cre_func + '\((.*?)\)([A-Za-z0-9_\s]{0,})'
+  find_regex = r'\n' + _cre_func + r'\((.*?)\)([A-Za-z0-9_\s]{0,})'
   if has_impl:
-    find_regex += '\{(.*?)\n\}'
+    find_regex += r'\{(.*?)\n\}'
   else:
-    find_regex += '(;)'
+    find_regex += r'(;)'
   p = re.compile(find_regex, re.MULTILINE | re.DOTALL)
   list = p.findall(content)
 
@@ -577,8 +599,12 @@ class obj_header:
       filename = os.path.relpath(filepath, self.root_directory)
       filename = filename.replace('\\', '/')
 
-    # read the input file into memory
-    self.add_data(filename, read_file(filepath))
+    try:
+      # read the input file into memory
+      self.add_data(filename, read_file(filepath))
+    except Exception:
+      print('Exception while parsing %s' % filepath)
+      raise
 
   def add_data(self, filename, data):
     """ Add header file contents. """
@@ -589,7 +615,7 @@ class obj_header:
     data = data.replace("> >", ">>")
 
     # extract global typedefs
-    p = re.compile('\ntypedef' + _cre_space + _cre_typedef + ';',
+    p = re.compile(r'\ntypedef' + _cre_space + _cre_typedef + r';',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -603,7 +629,7 @@ class obj_header:
         self.typedefs.append(obj_typedef(self, filename, value, alias))
 
     # extract global functions
-    p = re.compile('\n' + _cre_attrib + '\n' + _cre_func + '\((.*?)\)',
+    p = re.compile(r'\n' + _cre_attrib + r'\n' + _cre_func + r'\((.*?)\)',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -617,17 +643,17 @@ class obj_header:
             obj_function(self, filename, attrib, retval, argval, comment))
 
     # extract includes
-    p = re.compile('\n#include \"include/' + _cre_cfnameorpath + '.h')
+    p = re.compile(r'\n#include \"include/' + _cre_cfnameorpath + r'.h')
     includes = p.findall(data)
 
     # extract forward declarations
-    p = re.compile('\nclass' + _cre_space + _cre_cfname + ';')
+    p = re.compile(r'\nclass' + _cre_space + _cre_cfname + r';')
     forward_declares = p.findall(data)
 
     # extract empty classes
-    p = re.compile('\n' + _cre_attrib + '\nclass' + _cre_space + _cre_cfname +
-                   _cre_space + ':' + _cre_space + 'public' + _cre_virtual +
-                   _cre_space + _cre_cfname + _cre_space + '{};',
+    p = re.compile(r'\n' + _cre_attrib + r'\nclass' + _cre_space + _cre_cfname +
+                   _cre_space + r':' + _cre_space + r'public' + _cre_virtual +
+                   _cre_space + _cre_cfname + _cre_space + r'{};',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -649,9 +675,9 @@ class obj_header:
       data = p.sub('', data)
 
     # extract classes
-    p = re.compile('\n' + _cre_attrib + '\nclass' + _cre_space + _cre_cfname +
-                   _cre_space + ':' + _cre_space + 'public' + _cre_virtual +
-                   _cre_space + _cre_cfname + _cre_space + '{(.*?)\n};',
+    p = re.compile(r'\n' + _cre_attrib + r'\nclass' + _cre_space + _cre_cfname +
+                   _cre_space + r':' + _cre_space + r'public' + _cre_virtual +
+                   _cre_space + _cre_cfname + _cre_space + r'{(.*?)\n};',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(data)
     if len(list) > 0:
@@ -834,11 +860,18 @@ class obj_class:
     self.parent_name = parent_name
     self.comment = comment
     self.includes = includes
-    self.forward_declares = forward_declares
+    self.forward_declares = [ y for y in forward_declares if y not in (
+      "ArkWebBrowserExt", "ArkWebBrowserHostExt", "CefBrowserHostBase",
+      "ArkWebClientExt", "ArkWebLoadHandlerExt", "ArkWebRenderHandlerExt",
+      "ArkWebRequestImplExt","ArkwebFrameExt", "CefFrameHostImpl", "CefCookieManagerExt",
+      "CefDownloadItemExt", "ArkWebRenderWidgetHostViewOSRExt", "CefDialogHandlerExt",
+      "ArkWebDisplayHandlerExt", "CefContextMenuHandlerExt", "CefContextMenuParamsExt",
+      "CefAppExt", "CefSelectClientCertificateCallbackExt", "CefRequestHandlerExt",
+      "CefOpenAppLinkCallback")]
 
     # extract typedefs
     p = re.compile(
-        '\n' + _cre_space + 'typedef' + _cre_space + _cre_typedef + ';',
+        r'\n' + _cre_space + r'typedef' + _cre_space + _cre_typedef + r';',
         re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
@@ -853,8 +886,8 @@ class obj_class:
       self.typedefs.append(obj_typedef(self, filename, value, alias))
 
     # extract static functions
-    p = re.compile('\n' + _cre_space + _cre_attrib + '\n' + _cre_space +
-                   'static' + _cre_space + _cre_func + '\((.*?)\)',
+    p = re.compile(r'\n' + _cre_space + _cre_attrib + r'\n' + _cre_space +
+                   r'static' + _cre_space + _cre_func + r'\((.*?)\)',
                    re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
@@ -868,8 +901,8 @@ class obj_class:
 
     # extract virtual functions
     p = re.compile(
-        '\n' + _cre_space + _cre_attrib + '\n' + _cre_space + 'virtual' +
-        _cre_space + _cre_func + '\((.*?)\)' + _cre_vfmod,
+        r'\n' + _cre_space + _cre_attrib + r'\n' + _cre_space + r'virtual' +
+        _cre_space + _cre_func + r'\((.*?)\)' + _cre_vfmod,
         re.MULTILINE | re.DOTALL)
     list = p.findall(body)
 
@@ -1500,6 +1533,7 @@ class obj_argument:
     if self.type.is_result_vector():
       # all vector types must be passed by reference
       if not self.type.is_byref():
+        print('ERROR: Invalid (vector not byref) type')
         return 'invalid'
 
       if self.type.is_result_vector_string():
@@ -1535,6 +1569,8 @@ class obj_argument:
     # string single map type
     if self.type.is_result_map_single():
       if not self.type.is_byref():
+        print('ERROR: Invalid (single map not byref) type for %s' %
+              self.type.get_name())
         return 'invalid'
       if self.type.is_const():
         return 'string_map_single_byref_const'
@@ -1543,11 +1579,14 @@ class obj_argument:
     # string multi map type
     if self.type.is_result_map_multi():
       if not self.type.is_byref():
+        print('ERROR: Invalid (multi map not byref) type for %s' %
+              self.type.get_name())
         return 'invalid'
       if self.type.is_const():
         return 'string_map_multi_byref_const'
       return 'string_map_multi_byref'
 
+    print('ERROR: Invalid (unknown) type for %s' % self.type.get_name())
     return 'invalid'
 
   def get_retval_type(self):
@@ -1555,9 +1594,19 @@ class obj_argument:
     if self.type.has_name():
       raise Exception('Cannot be called for argument types')
 
+    # special case for void* return value (may also be const)
+    if self.type.get_type() == 'void' and self.type.is_byaddr():
+      return 'simple_byaddr'
+
     # unsupported modifiers
-    if self.type.is_const() or self.type.is_byref() or \
-        self.type.is_byaddr():
+    if self.type.is_const():
+      print('ERROR: Invalid (const) type for retval')
+      return 'invalid'
+    if self.type.is_byref():
+      print('ERROR: Invalid (byref) type for retval')
+      return 'invalid'
+    if self.type.is_byaddr():
+      print('ERROR: Invalid (byaddr) type for retval')
       return 'invalid'
 
     # void types don't have a return value
@@ -1585,6 +1634,7 @@ class obj_argument:
       else:
         return prefix + 'ptr_diff'
 
+    print('ERROR: Invalid (unknown) type for retval')
     return 'invalid'
 
   def get_retval_default(self, for_capi):
@@ -1604,6 +1654,10 @@ class obj_argument:
     type = self.get_retval_type()
     if type == 'simple':
       return self.get_type().get_result_simple_default()
+    elif type == 'simple_byaddr':
+      if for_capi:
+        return 'NULL'
+      return 'nullptr'
     elif type == 'bool':
       if for_capi:
         return '0'
@@ -1765,7 +1819,7 @@ class obj_analysis:
       return {'result_type': 'structure', 'result_value': value}
 
     # check for CEF reference pointers
-    p = re.compile('^CefRefPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefRefPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {
@@ -1775,7 +1829,7 @@ class obj_analysis:
       }
 
     # check for CEF owned pointers
-    p = re.compile('^CefOwnPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefOwnPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {
@@ -1785,7 +1839,7 @@ class obj_analysis:
       }
 
     # check for CEF raw pointers
-    p = re.compile('^CefRawPtr<(.*?)>$', re.DOTALL)
+    p = re.compile(r'^CefRawPtr<(.*?)>$', re.DOTALL)
     list = p.findall(value)
     if len(list) == 1:
       return {

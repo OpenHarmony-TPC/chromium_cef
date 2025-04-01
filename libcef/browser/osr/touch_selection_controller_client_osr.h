@@ -8,6 +8,8 @@
 
 #include <memory>
 
+#include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
@@ -16,12 +18,44 @@
 #include "content/public/browser/touch_selection_controller_client_manager.h"
 #include "ui/touch_selection/touch_selection_controller.h"
 #include "ui/touch_selection/touch_selection_menu_runner.h"
-
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+#include "cef/include/cef_context_menu_handler.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
+#endif
 namespace content {
 struct ContextMenuParams;
 }
 
 class CefRenderWidgetHostViewOSR;
+class ArkWebTouchSelectionControllerClientOSRExt;
+class CefRunQuickMenuCallbackImpl : public CefRunQuickMenuCallback {
+ public:
+  using Callback = base::OnceCallback<void(int, int)>;
+
+  explicit CefRunQuickMenuCallbackImpl(Callback callback)
+      : callback_(std::move(callback)) {}
+
+  CefRunQuickMenuCallbackImpl(const CefRunQuickMenuCallbackImpl&) = delete;
+  CefRunQuickMenuCallbackImpl& operator=(const CefRunQuickMenuCallbackImpl&) =
+      delete;
+
+  ~CefRunQuickMenuCallbackImpl() override;
+
+  void Continue(int command_id, cef_event_flags_t event_flags) override;
+
+  void Cancel() override;
+
+  void Disconnect();
+
+ private:
+  static void RunNow(Callback callback,
+                     int command_id,
+                     cef_event_flags_t event_flags);
+
+  Callback callback_;
+
+  IMPLEMENT_REFCOUNTING(CefRunQuickMenuCallbackImpl);
+};
 
 // An implementation of |TouchSelectionControllerClient| to be used in OSR's
 // implementation of touch selection for contents.
@@ -31,6 +65,16 @@ class CefTouchSelectionControllerClientOSR
       public ui::TouchSelectionMenuClient,
       public content::TouchSelectionControllerClientManager {
  public:
+  virtual ArkWebTouchSelectionControllerClientOSRExt*
+  AsArkWebTouchSelectionControllerClientOSRExt() {
+    return nullptr;
+  }
+#if BUILDFLAG(ARKWEB_MENU)
+  virtual void SetTemporarilyHidden(bool hidden) {}
+#endif  // BUILDFLAG(ARKWEB_MENU)
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  friend class ArkWebTouchSelectionControllerClientOSRExt;
+#endif
   explicit CefTouchSelectionControllerClientOSR(
       CefRenderWidgetHostViewOSR* rwhv);
 
@@ -42,19 +86,7 @@ class CefTouchSelectionControllerClientOSR
   ~CefTouchSelectionControllerClientOSR() override;
 
   void CloseQuickMenuAndHideHandles();
-#ifdef OHOS_DRAG_DROP
-  void HideHandleAndQuickMenuIfNecessary(bool hide_handles);
-#endif
-#ifdef OHOS_CLIPBOARD
-  void SetTemporarilyHidden(bool hidden);
-  void NotifyTouchSelectionChanged(bool need_report);
-  bool IsVaildSelectionHandleMove();
-  void UpdateClientClippedSelectionBounds(const gfx::Rect& clipped_selection_bounds);
-#endif  // #ifdef OHOS_CLIPBOARD
 
-#if defined(OHOS_EX_FREE_COPY)
-  void SelectionTextNotEmpty(bool has_selection);
-#endif
   void OnWindowMoved();
 
   // Called on first touch down/last touch up to hide/show the quick menu.
@@ -82,6 +114,10 @@ class CefTouchSelectionControllerClientOSR
 
   // TouchSelectionControllerClientManager.
   void DidStopFlinging() override;
+  void OnSwipeToMoveCursorBegin() override;
+  void OnSwipeToMoveCursorEnd() override;
+  void OnClientHitTestRegionUpdated(
+      ui::TouchSelectionControllerClient* client) override;
   void UpdateClientSelectionBounds(
       const gfx::SelectionBound& start,
       const gfx::SelectionBound& end,
@@ -94,31 +130,33 @@ class CefTouchSelectionControllerClientOSR
   void RemoveObserver(
       TouchSelectionControllerClientManager::Observer* observer) override;
 
-#if BUILDFLAG(IS_OHOS)
-  bool NeedPopupInsertTouchHandleQuickMenu();
-  bool IsInsertHandleShow();
-#endif  // BUILDFLAG(IS_OHOS)
-
-#if defined(OHOS_CLIPBOARD)
-  void MouseSelectMenuShow(bool show);
-  void ChangeVisibilityOfQuickMenu();
+#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
+  void SelectionTextNotEmpty(bool has_selection);
 #endif
+
+#if BUILDFLAG(ARKWEB_MENU)
+  virtual void NotifyTouchSelectionChanged(bool need_report) {}
+#endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  virtual void UpdateQuickMenuByHandlesHidden() {}
+#endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
+
  private:
   class EnvEventObserver;
 
-#if defined(OHOS_CLIPBOARD)
-  void ExecuteCommandMouse(int command_id, int event_flags);
-  void MouseMayUpdateClientClippedSelectionBounds(const gfx::Rect& clipped_selection_bounds);
-
-  void UpdateQuickMenuByHandlesHidden();
-#endif
-
   bool IsQuickMenuAvailable() const;
   void CloseQuickMenu();
+
   void ShowQuickMenu();
   void UpdateQuickMenu();
-#ifdef OHOS_DRAG_DROP
+
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   void SetSelectAllClicked(int command_id);
+#endif
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  void TemporarilyCloseQuickMenu();
 #endif
 
   // ui::TouchSelectionControllerClient:
@@ -147,7 +185,7 @@ class CefTouchSelectionControllerClientOSR
   class InternalClient final : public ui::TouchSelectionControllerClient {
    public:
     explicit InternalClient(CefRenderWidgetHostViewOSR* rwhv) : rwhv_(rwhv) {}
-    ~InternalClient() final {}
+    ~InternalClient() final = default;
 
     bool SupportsAnimation() const final;
     void SetNeedsAnimate() final;
@@ -180,15 +218,13 @@ class CefTouchSelectionControllerClientOSR
   bool touch_down_ = false;
   bool scroll_in_progress_ = false;
   bool handle_drag_in_progress_ = false;
-#if defined(OHOS_EX_FREE_COPY)
+#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   bool isSelectionTextNotEmpty_ = false;
 #endif
-#ifdef OHOS_CLIPBOARD
-  base::TimeTicks select_handle_move_timer_;
+
   gfx::Rect clipped_selection_bounds_;
-  bool mouse_quick_menu_running_ = false;
-#endif
-#ifdef OHOS_DRAG_DROP
+
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   bool handles_hidden_by_selection_ui_ = false;
 #endif
   base::WeakPtrFactory<CefTouchSelectionControllerClientOSR> weak_ptr_factory_;

@@ -2,14 +2,13 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/native/menu_runner_mac.h"
-
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/native/menu_runner_mac.h"
 
 #import "base/mac/scoped_sending_event.h"
 #include "base/task/current_thread.h"
-#import "ui/base/cocoa/menu_controller.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "ui/gfx/geometry/point.h"
+#import "ui/menus/cocoa/menu_controller.h"
 
 CefMenuRunnerMac::CefMenuRunnerMac() {}
 
@@ -20,17 +19,12 @@ bool CefMenuRunnerMac::RunContextMenu(
     CefMenuModelImpl* model,
     const content::ContextMenuParams& params) {
   // Create a menu controller based on the model.
-  menu_controller_.reset([[MenuControllerCocoa alloc]
-               initWithModel:model->model()
-                    delegate:nil
-      useWithPopUpButtonCell:NO]);
+  MenuControllerCocoa* menu_controller =
+      [[MenuControllerCocoa alloc] initWithModel:model->model()
+                                        delegate:nil
+                          useWithPopUpButtonCell:NO];
 
-  // Keep the menu controller alive (by adding an additional retain) until after
-  // the menu has been dismissed. Otherwise it will crash if the browser is
-  // destroyed (and consequently the menu controller is destroyed) while the
-  // menu is still pending.
-  base::scoped_nsobject<MenuControllerCocoa> menu_controller_ref(
-      menu_controller_);
+  menu_controller_ = menu_controller;
 
   // Make sure events can be pumped while the menu is up.
   base::CurrentThread::ScopedAllowApplicationTasksInNativeNestedLoop allow;
@@ -86,7 +80,7 @@ bool CefMenuRunnerMac::RunContextMenu(
 }
 
 void CefMenuRunnerMac::CancelContextMenu() {
-  if (menu_controller_.get()) {
-    [menu_controller_ cancel];
+  if (menu_controller_) {
+    menu_controller_ = nil;
   }
 }

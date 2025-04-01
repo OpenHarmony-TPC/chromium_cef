@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d26912fadfe668828a284ea73bb9c3d0c0649f6b$
+// $hash=8b128054727990699b6c122f74559f2e98274dca$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_X509CERT_PRINCIPAL_CTOCPP_H_
@@ -21,6 +21,7 @@
 #endif
 
 #include <vector>
+
 #include "include/capi/cef_x509_certificate_capi.h"
 #include "include/cef_x509_certificate.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
@@ -41,10 +42,8 @@ class CefX509CertPrincipalCToCpp
   CefString GetLocalityName() override;
   CefString GetStateOrProvinceName() override;
   CefString GetCountryName() override;
-  void GetStreetAddresses(std::vector<CefString>& addresses) override;
   void GetOrganizationNames(std::vector<CefString>& names) override;
   void GetOrganizationUnitNames(std::vector<CefString>& names) override;
-  void GetDomainComponents(std::vector<CefString>& components) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_X509CERT_PRINCIPAL_CTOCPP_H_

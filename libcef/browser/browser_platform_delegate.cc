@@ -2,14 +2,79 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/browser_platform_delegate.h"
+#include "cef/libcef/browser/browser_platform_delegate.h"
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-
+#include "arkweb/build/features/features.h"
+#include "base/command_line.h"
 #include "base/logging.h"
+#include "cef/include/views/cef_window.h"
+#include "cef/include/views/cef_window_delegate.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "chrome/browser/platform_util.h"
+#include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/shell_integration.h"
+#include "chrome/common/chrome_switches.h"
+#include "chrome/common/pref_names.h"
+#include "components/prefs/pref_service.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+
+namespace {
+
+void ExecuteExternalProtocol(const GURL& url) {
+  CEF_REQUIRE_BLOCKING();
+
+  // Check that an application is associated with the scheme.
+  if (shell_integration::GetApplicationNameForScheme(url).empty()) {
+    return;
+  }
+
+  CEF_POST_TASK(TID_UI, base::BindOnce(&platform_util::OpenExternal, url));
+}
+
+// Default popup window delegate implementation.
+class PopupWindowDelegate : public CefWindowDelegate {
+ public:
+  explicit PopupWindowDelegate(CefRefPtr<CefBrowserView> browser_view)
+      : browser_view_(browser_view) {}
+
+  PopupWindowDelegate(const PopupWindowDelegate&) = delete;
+  PopupWindowDelegate& operator=(const PopupWindowDelegate&) = delete;
+
+  void OnWindowCreated(CefRefPtr<CefWindow> window) override {
+    window->AddChildView(browser_view_);
+    window->Show();
+    browser_view_->RequestFocus();
+  }
+
+  void OnWindowDestroyed(CefRefPtr<CefWindow> window) override {
+    browser_view_ = nullptr;
+  }
+
+  bool CanClose(CefRefPtr<CefWindow> window) override {
+    CefRefPtr<CefBrowser> browser = browser_view_->GetBrowser();
+    if (browser) {
+      return browser->GetHost()->TryCloseBrowser();
+    }
+    return true;
+  }
+
+  cef_runtime_style_t GetWindowRuntimeStyle() override {
+    return browser_view_->GetRuntimeStyle();
+  }
+
+ private:
+  CefRefPtr<CefBrowserView> browser_view_;
+
+  IMPLEMENT_REFCOUNTING(PopupWindowDelegate);
+};
+
+}  // namespace
 
 CefBrowserPlatformDelegate::CefBrowserPlatformDelegate() = default;
 
@@ -25,8 +90,8 @@ content::WebContents* CefBrowserPlatformDelegate::CreateWebContents(
 }
 
 void CefBrowserPlatformDelegate::CreateViewForWebContents(
-    content::WebContentsView** view,
-    content::RenderViewHostDelegateView** delegate_view) {
+    raw_ptr<content::WebContentsView>* view,
+    raw_ptr<content::RenderViewHostDelegateView>* delegate_view) {
   DCHECK(false);
 }
 
@@ -57,12 +122,6 @@ void CefBrowserPlatformDelegate::WebContentsDestroyed(
   web_contents_ = nullptr;
 }
 
-bool CefBrowserPlatformDelegate::
-    ShouldAllowRendererInitiatedCrossProcessNavigation(
-        bool is_main_frame_navigation) {
-  return true;
-}
-
 void CefBrowserPlatformDelegate::RenderViewCreated(
     content::RenderViewHost* render_view_host) {
   // Indicate that the view has an external parent (namely us). This setting is
@@ -81,19 +140,6 @@ void CefBrowserPlatformDelegate::BrowserCreated(CefBrowserHostBase* browser) {
   DCHECK(!browser_);
   DCHECK(browser);
   browser_ = browser;
-}
-
-void CefBrowserPlatformDelegate::CreateExtensionHost(
-    const extensions::Extension* extension,
-    const GURL& url,
-    extensions::mojom::ViewType host_type) {
-  DCHECK(false);
-}
-
-extensions::ExtensionHost* CefBrowserPlatformDelegate::GetExtensionHost()
-    const {
-  DCHECK(false);
-  return nullptr;
 }
 
 void CefBrowserPlatformDelegate::NotifyBrowserCreated() {}
@@ -128,8 +174,12 @@ views::Widget* CefBrowserPlatformDelegate::GetWindowWidget() const {
 }
 
 CefRefPtr<CefBrowserView> CefBrowserPlatformDelegate::GetBrowserView() const {
-  DCHECK(false);
   return nullptr;
+}
+
+void CefBrowserPlatformDelegate::SetBrowserView(
+    CefRefPtr<CefBrowserView> browser_view) {
+  DCHECK(false);
 }
 
 web_modal::WebContentsModalDialogHost*
@@ -143,11 +193,93 @@ void CefBrowserPlatformDelegate::PopupWebContentsCreated(
     CefRefPtr<CefClient> client,
     content::WebContents* new_web_contents,
     CefBrowserPlatformDelegate* new_platform_delegate,
-    bool is_devtools) {}
+    bool is_devtools) {
+  // Default popup handling may not be Views-hosted.
+  if (!new_platform_delegate->IsViewsHosted()) {
+    return;
+  }
+
+  CefRefPtr<CefBrowserViewDelegate> new_delegate;
+  CefRefPtr<CefBrowserViewDelegate> opener_delegate;
+  cef_runtime_style_t opener_runtime_style = CEF_RUNTIME_STYLE_DEFAULT;
+
+  auto browser_view = GetBrowserView();
+  if (browser_view) {
+    // When |this| (the popup opener) is Views-hosted use the current delegate.
+    opener_delegate =
+        static_cast<CefBrowserViewImpl*>(browser_view.get())->delegate();
+  }
+  if (!opener_delegate) {
+    opener_delegate =
+        new_platform_delegate->GetDefaultBrowserViewDelegateForPopupOpener();
+  }
+  if (opener_delegate) {
+    new_delegate = opener_delegate->GetDelegateForPopupBrowserView(
+        browser_view, settings, client, is_devtools);
+  }
+
+  if (browser_view) {
+    opener_runtime_style = browser_view->GetRuntimeStyle();
+  } else if (opener_delegate) {
+    opener_runtime_style = opener_delegate->GetBrowserRuntimeStyle();
+  }
+
+  // Create a new BrowserView for the popup.
+  CefRefPtr<CefBrowserViewImpl> new_browser_view =
+      CefBrowserViewImpl::CreateForPopup(settings, new_delegate, is_devtools,
+                                         opener_runtime_style);
+
+  // Associate the PlatformDelegate with the new BrowserView.
+  new_platform_delegate->SetBrowserView(new_browser_view);
+
+  // Keep the BrowserView alive until PopupBrowserCreated() is called.
+  new_browser_view->AddRef();
+}
 
 void CefBrowserPlatformDelegate::PopupBrowserCreated(
+    CefBrowserPlatformDelegate* new_platform_delegate,
     CefBrowserHostBase* new_browser,
-    bool is_devtools) {}
+    bool is_devtools) {
+  // Default popup handling may not be Views-hosted.
+  if (!new_platform_delegate->IsViewsHosted()) {
+    return;
+  }
+
+  CefRefPtr<CefBrowserView> new_browser_view =
+      CefBrowserView::GetForBrowser(new_browser);
+  CHECK(new_browser_view);
+
+  bool popup_handled = false;
+
+  CefRefPtr<CefBrowserViewDelegate> opener_delegate;
+  auto browser_view = GetBrowserView();
+  if (browser_view) {
+    // When |this| (the popup opener) is Views-hosted use the current delegate.
+    opener_delegate =
+        static_cast<CefBrowserViewImpl*>(browser_view.get())->delegate();
+  }
+  if (!opener_delegate) {
+    opener_delegate =
+        new_platform_delegate->GetDefaultBrowserViewDelegateForPopupOpener();
+  }
+  if (opener_delegate) {
+    popup_handled = opener_delegate->OnPopupBrowserViewCreated(
+        browser_view, new_browser_view.get(), is_devtools);
+  }
+
+  if (!popup_handled) {
+    CefWindow::CreateTopLevelWindow(
+        new PopupWindowDelegate(new_browser_view.get()));
+  }
+
+  // Release the reference added in PopupWebContentsCreated().
+  new_browser_view->Release();
+}
+
+CefRefPtr<CefBrowserViewDelegate>
+CefBrowserPlatformDelegate::GetDefaultBrowserViewDelegateForPopupOpener() {
+  return nullptr;
+}
 
 SkColor CefBrowserPlatformDelegate::GetBackgroundColor() const {
   DCHECK(false);
@@ -175,11 +307,14 @@ void CefBrowserPlatformDelegate::SendMouseMoveEvent(const CefMouseEvent& event,
   NOTIMPLEMENTED();
 }
 
-void CefBrowserPlatformDelegate::SendTouchpadFlingEvent(const CefMouseEvent& event,
-                                                        double vx,
-                                                        double vy) {
+#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
+void CefBrowserPlatformDelegate::SendTouchpadFlingEvent(
+    const CefMouseEvent& event,
+    double vx,
+    double vy) {
   NOTIMPLEMENTED();
 }
+#endif
 
 void CefBrowserPlatformDelegate::SendMouseWheelEvent(const CefMouseEvent& event,
                                                      int deltaX,
@@ -215,24 +350,18 @@ void CefBrowserPlatformDelegate::ViewText(const std::string& text) {
 }
 
 bool CefBrowserPlatformDelegate::HandleKeyboardEvent(
-    const content::NativeWebKeyboardEvent& event) {
+    const input::NativeWebKeyboardEvent& event) {
   DCHECK(false);
   return false;
 }
 
-bool CefBrowserPlatformDelegate::PreHandleGestureEvent(
-    content::WebContents* source,
-    const blink::WebGestureEvent& event) {
-  return false;
-}
-
-bool CefBrowserPlatformDelegate::IsNeverComposited(
-    content::WebContents* web_contents) {
-  return false;
+// static
+void CefBrowserPlatformDelegate::HandleExternalProtocol(const GURL& url) {
+  CEF_POST_USER_VISIBLE_TASK(base::BindOnce(ExecuteExternalProtocol, url));
 }
 
 CefEventHandle CefBrowserPlatformDelegate::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   DCHECK(false);
   return kNullEventHandle;
 }
@@ -246,9 +375,6 @@ std::unique_ptr<CefMenuRunner> CefBrowserPlatformDelegate::CreateMenuRunner() {
   NOTIMPLEMENTED();
   return nullptr;
 }
-
-void CefBrowserPlatformDelegate::UpdateFindBarBoundingBox(
-    gfx::Rect* bounds) const {}
 
 bool CefBrowserPlatformDelegate::IsWindowless() const {
   return false;
@@ -273,29 +399,24 @@ bool CefBrowserPlatformDelegate::IsHidden() const {
   return false;
 }
 
-void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
-  NOTREACHED();
-}
-
-void CefBrowserPlatformDelegate::OnWindowShow() {
-  NOTREACHED();
-}
-
-void CefBrowserPlatformDelegate::OnWindowHide() {
-  NOTREACHED();
-}
-
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 void CefBrowserPlatformDelegate::OnOnlineRenderToForeground() {
   DCHECK(false);
 }
+#endif
 
-void CefBrowserPlatformDelegate::SendTouchEventList(const std::vector<CefTouchEvent>& event_list) {
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void CefBrowserPlatformDelegate::SendTouchEventList(
+    const std::vector<CefTouchEvent>& event_list) {
   DCHECK(false);
 }
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
-void CefBrowserPlatformDelegate::NotifyForNextTouchEvent() {
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
   DCHECK(false);
 }
+#endif
 
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {
   DCHECK(false);
@@ -367,8 +488,9 @@ void CefBrowserPlatformDelegate::StartDragging(
   DCHECK(false);
 }
 
-void CefBrowserPlatformDelegate::UpdateDragCursor(
-    ui::mojom::DragOperation operation) {
+void CefBrowserPlatformDelegate::UpdateDragOperation(
+    ui::mojom::DragOperation operation,
+    bool document_is_handling_drag) {
   DCHECK(false);
 }
 
@@ -384,12 +506,13 @@ void CefBrowserPlatformDelegate::DragSourceSystemDragEnded() {
 }
 
 void CefBrowserPlatformDelegate::AccessibilityEventReceived(
-    const content::AXEventNotificationDetails& eventData) {
+    const ui::AXUpdatesAndEvents& details) {
   DCHECK(false);
 }
 
 void CefBrowserPlatformDelegate::AccessibilityLocationChangesReceived(
-    const std::vector<content::AXLocationChangeNotificationDetails>& locData) {
+    const ui::AXTreeID& tree_id,
+    ui::AXLocationAndScrollUpdates& details) {
   DCHECK(false);
 }
 
@@ -418,10 +541,58 @@ void CefBrowserPlatformDelegate::SetAutoResizeEnabled(bool enabled,
 
 void CefBrowserPlatformDelegate::SetAccessibilityState(
     cef_state_t accessibility_state) {
-  NOTIMPLEMENTED();
+  // Do nothing if state is set to default. It'll be disabled by default and
+  // controlled by the command-line flags "force-renderer-accessibility" and
+  // "disable-renderer-accessibility".
+  if (accessibility_state == STATE_DEFAULT) {
+    return;
+  }
+
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+
+  if (!web_contents_impl) {
+    return;
+  }
+
+  ui::AXMode accMode;
+  // In windowless mode set accessibility to TreeOnly mode. Else native
+  // accessibility APIs, specific to each platform, are also created.
+  if (accessibility_state == STATE_ENABLED) {
+    accMode = IsWindowless() ? ui::kAXModeWebContentsOnly : ui::kAXModeComplete;
+  }
+  web_contents_impl->SetAccessibilityMode(accMode);
 }
 
 bool CefBrowserPlatformDelegate::IsPrintPreviewSupported() const {
+  if (IsWindowless()) {
+    // Not supported with windowless rendering.
+    return false;
+  }
+
+  if (web_contents_) {
+    auto cef_browser_context = CefBrowserContext::FromBrowserContext(
+        web_contents_->GetBrowserContext());
+    if (cef_browser_context->AsProfile()->GetPrefs()->GetBoolean(
+            prefs::kPrintPreviewDisabled)) {
+      // Disabled on the Profile.
+      return false;
+    }
+  }
+
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (command_line->HasSwitch(switches::kDisablePrintPreview)) {
+    // Disabled explicitly via the command-line.
+    return false;
+  }
+
+  const bool default_disabled = IsAlloyStyle();
+  if (default_disabled &&
+      !command_line->HasSwitch(switches::kEnablePrintPreview)) {
+    // Default disabled and not enabled explicitly via the command-line.
+    return false;
+  }
+
   return true;
 }
 
@@ -429,7 +600,7 @@ void CefBrowserPlatformDelegate::Find(const CefString& searchText,
                                       bool forward,
                                       bool matchCase,
                                       bool findNext
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
                                       ,
                                       bool newSession
 #endif
@@ -441,7 +612,62 @@ void CefBrowserPlatformDelegate::StopFinding(bool clearSelection) {
   NOTIMPLEMENTED();
 }
 
-#ifdef OHOS_HTML_SELECT
+#if BUILDFLAG(ARKWEB_AI)
+void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
+  NOTIMPLEMENTED();
+}
+
+void CefBrowserPlatformDelegate::OnDestroyImageAnalyzerOverlay() {
+  NOTIMPLEMENTED();
+}
+
+void CefBrowserPlatformDelegate::OnFoldStatusChanged(uint32_t foldStatus) {
+  NOTIMPLEMENTED();
+}
+
+float CefBrowserPlatformDelegate::GetPageScaleFactor() {
+  return 1;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
+void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
+                                                    int top,
+                                                    int right,
+                                                    int bottom) {
+  NOTIMPLEMENTED();
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+bool CefBrowserPlatformDelegate::WebPageSnapshot(
+    const char* id,
+    int width,
+    int height,
+    cef_web_snapshot_callback_t callback) {
+  return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_PRINT)
+void CefBrowserPlatformDelegate::CreateWebPrintDocumentAdapter(
+    const CefString& jobName,
+    void** webPrintDocumentAdapter) {
+  NOTIMPLEMENTED();
+}
+#endif  // BUILDFLAG(ARKWEB_PRINT)
+
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+int CefBrowserPlatformDelegate::GetTopControlsOffset() {
+  return 0;
+}
+
+int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
+  return 0;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_HTML_SELECT)
 void CefBrowserPlatformDelegate::ShowPopupMenu(
     mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
     const gfx::Rect& bounds,
@@ -453,98 +679,17 @@ void CefBrowserPlatformDelegate::ShowPopupMenu(
     bool allow_multiple_selection) {
   NOTIMPLEMENTED();
 }
-#endif  // OHOS_HTML_SELECT
+#endif  // ARKWEB_HTML_SELECT
 
-#ifdef OHOS_ARKWEB_ADBLOCK
-void CefBrowserPlatformDelegate::OnAdsBlocked(
-    const std::string& main_frame_url,
-    const std::map<std::string, int32_t>& subresource_blocked,
-    bool is_site_first_report) {
+#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
+void CefBrowserPlatformDelegate::OnBeforeUnloadFired(bool proceed) {
   NOTIMPLEMENTED();
 }
-
-bool CefBrowserPlatformDelegate::TrigAdBlockEnabledForSiteFromUi(
-    const std::string& main_frame_url,
-    int main_frame_tree_node_id) {
-  return false;
-}
-#endif
-
-#if defined(OHOS_EX_PASSWORD)
-void CefBrowserPlatformDelegate::ShowPasswordDialog(bool is_update,
-                                                    const std::string& url) {
-  NOTIMPLEMENTED();
-}
-#endif
-
-#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
-void CefBrowserPlatformDelegate::OnShowAutofillPopup(
-    const gfx::RectF& element_bounds,
-    bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions,
-    bool is_password_popup_type) {
-  NOTIMPLEMENTED();
-}
-
-void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
-  NOTIMPLEMENTED();
-}
-#endif
-
-#ifdef OHOS_EX_TOPCONTROLS
-int CefBrowserPlatformDelegate::GetTopControlsOffset() {
-  return 0;
-}
-
-int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
-  return 0;
-}
-#endif
-
-#ifdef OHOS_DISPLAY_CUTOUT
-void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
-                                                    int top,
-                                                    int right,
-                                                    int bottom) {
-  NOTIMPLEMENTED();
-}
-#endif
-
-#ifdef OHOS_AI
-void CefBrowserPlatformDelegate::CreateOverlay(const gfx::ImageSkia& image,
-                                               const gfx::Rect& image_rect,
-                                               const gfx::Point& touch_point) {
-  DCHECK(false);
-}
-
-void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
-  DCHECK(false);
-}
-
-float CefBrowserPlatformDelegate::GetPageScaleFactor() {
-  return 1;
-}
-#endif
-
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
-bool CefBrowserPlatformDelegate::WebPageSnapshot(
-    const char* id,
-    int width,
-    int height,
-    cef_web_snapshot_callback_t callback) {
-  return false;
-}
-#endif
-
-#if defined(OHOS_INPUT_EVENTS)
-void CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView() {
-  NOTREACHED();
-}
-#endif
+#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
 
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
-    uint32 cef_modifiers) {
+    uint32_t cef_modifiers) {
   int result = 0;
   // Set modifiers based on key state.
   if (cef_modifiers & EVENTFLAG_CAPS_LOCK_ON) {
@@ -592,11 +737,54 @@ int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
   return result;
 }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+void CefBrowserPlatformDelegate::OnShareFile(const std::string& filePath,
+                                             const std::string& utdTypeId) {
+  NOTIMPLEMENTED();
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView() {
+  LOG(WARNING)
+      << "CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView";
+  DCHECK(false);
+}
+
 void CefBrowserPlatformDelegate::ScaleGestureChangeV2(int type,
                                                       float scale,
                                                       float originScale,
                                                       float centerX,
-                                                      float centerY)
-{
+                                                      float centerY) {
   DCHECK(false);
 }
+#endif
+
+#if BUILDFLAG(ARKWEB_ADBLOCK)
+void CefBrowserPlatformDelegate::OnAdsBlocked(
+    const std::string& main_frame_url,
+    const std::map<std::string, int32_t>& subresource_blocked,
+    bool is_site_first_report) {
+  NOTIMPLEMENTED();
+}
+
+bool CefBrowserPlatformDelegate::TrigAdBlockEnabledForSiteFromUi(
+    const std::string& main_frame_url,
+    int main_frame_tree_node_id) {
+  return false;
+}
+#endif  // BUILDFLAG(ARKWEB_ADBLOCK)
+
+#if BUILDFLAG(ARKWEB_DATALIST)
+void CefBrowserPlatformDelegate::OnShowAutofillPopup(
+    const gfx::RectF& element_bounds,
+    bool is_rtl,
+    const std::vector<autofill::Suggestion>& suggestions,
+    bool is_password_popup_type) {
+  NOTIMPLEMENTED();
+}
+
+void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
+  NOTIMPLEMENTED();
+}
+#endif

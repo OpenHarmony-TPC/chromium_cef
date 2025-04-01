@@ -10,11 +10,10 @@
 #include <map>
 #include <string>
 
-#include "include/cef_app.h"
-#include "libcef/browser/main_runner.h"
-
 #include "base/observer_list.h"
 #include "base/threading/platform_thread.h"
+#include "cef/include/cef_app.h"
+#include "cef/libcef/browser/main_runner.h"
 #include "third_party/skia/include/core/SkColor.h"
 
 class CefBrowserInfoManager;
@@ -30,7 +29,7 @@ class CefContext {
     virtual void OnContextDestroyed() = 0;
 
    protected:
-    virtual ~Observer() {}
+    virtual ~Observer() = default;
   };
 
   CefContext();
@@ -52,10 +51,13 @@ class CefContext {
   bool OnInitThread();
 
   // Returns true if the context is initialized.
-  bool initialized() { return initialized_; }
+  bool initialized() const { return initialized_; }
 
   // Returns true if the context is shutting down.
-  bool shutting_down() { return shutting_down_; }
+  bool shutting_down() const { return shutting_down_; }
+
+  // Only valid after Initialize is called.
+  int exit_code() const { return exit_code_; }
 
   const CefSettings& settings() const { return settings_; }
 
@@ -86,8 +88,7 @@ class CefContext {
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
   bool HasObserver(Observer* observer) const;
-
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   void PopulateGlobalOTRRequestContextSettings(
       CefRequestContextSettings* settings);
 #endif
@@ -103,11 +104,12 @@ class CefContext {
   void FinalizeShutdown();
 
   // Track context state.
-  bool initialized_;
-  bool shutting_down_;
+  bool initialized_ = false;
+  bool shutting_down_ = false;
+  int exit_code_ = -1;
 
   // The thread on which the context was initialized.
-  base::PlatformThreadId init_thread_id_;
+  base::PlatformThreadId init_thread_id_ = 0;
 
   CefSettings settings_;
   CefRefPtr<CefApp> application_;

@@ -9,17 +9,18 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=140e41b66d89629d54ccb97420a5a65e4f02197d$
+// $hash=9eb5c140607cd940c7e55b38da4e8a030381c6d4$
 //
 
 #include "libcef_dll/cpptoc/test/test_server_cpptoc.h"
+
 #include "libcef_dll/ctocpp/test/test_server_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
 CEF_EXPORT cef_test_server_t* cef_test_server_create_and_start(
-    uint16 port,
+    uint16_t port,
     int https_server,
     cef_test_cert_type_t https_cert_type,
     struct _cef_test_server_handler_t* handler) {

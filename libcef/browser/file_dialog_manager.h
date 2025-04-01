@@ -10,9 +10,9 @@
 #include <memory>
 #include <set>
 
-#include "include/cef_browser.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/scoped_refptr.h"
+#include "cef/include/cef_browser.h"
 #include "third_party/blink/public/mojom/choosers/file_chooser.mojom.h"
 #include "ui/shell_dialogs/select_file_dialog.h"
 
@@ -66,32 +66,42 @@ class CefFileDialogManager {
                      const ui::SelectFileDialog::FileTypeInfo* file_types,
                      int file_type_index,
                      const base::FilePath::StringType& default_extension,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
                      gfx::NativeWindow owning_window,
-                     void* params);
+                     std::vector<std::u16string> accept_types,
+                     bool use_media_capture);
+#else
+                     gfx::NativeWindow owning_window);
+#endif
 
   // Must be called when the |listener| passed to RunSelectFile is destroyed.
   void SelectFileListenerDestroyed(ui::SelectFileDialog::Listener* listener);
 
  private:
+  using Extensions = std::vector<std::vector<base::FilePath::StringType>>;
+  using Descriptions = std::vector<std::u16string>;
   [[nodiscard]] RunFileChooserCallback MaybeRunDelegate(
       const blink::mojom::FileChooserParams& params,
+      const Extensions& extensions,
+      const Descriptions& descriptions,
       RunFileChooserCallback callback);
 
   void SelectFileDoneByDelegateCallback(
-      ui::SelectFileDialog::Listener* listener,
-      void* params,
+      MayBeDangling<ui::SelectFileDialog::Listener> listener,
       const std::vector<base::FilePath>& paths);
-  void SelectFileDoneByListenerCallback(bool listener_destroyed);
+  void SelectFileDoneByListenerCallback(
+      MayBeDangling<ui::SelectFileDialog::Listener> listener,
+      bool listener_destroyed);
 
   // CefBrowserHostBase pointer is guaranteed to outlive this object.
-  CefBrowserHostBase* const browser_;
+  const raw_ptr<CefBrowserHostBase> browser_;
 
   // Used when running a platform dialog via RunSelectFile.
   scoped_refptr<ui::SelectFileDialog> dialog_;
-  CefSelectFileDialogListener* dialog_listener_ = nullptr;
+  raw_ptr<CefSelectFileDialogListener> dialog_listener_ = nullptr;
 
   // List of all currently active listeners.
-  std::set<ui::SelectFileDialog::Listener*> active_listeners_;
+  std::set<raw_ptr<ui::SelectFileDialog::Listener>> active_listeners_;
 
   base::WeakPtrFactory<CefFileDialogManager> weak_ptr_factory_{this};
 };

@@ -70,12 +70,12 @@ class OsrRenderHandlerWinD3D11 : public OsrRenderHandlerWin {
   void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                           CefRenderHandler::PaintElementType type,
                           const CefRenderHandler::RectList& dirtyRects,
-                          void* share_handle) override;
+                          const CefAcceleratedPaintInfo& info) override;
 
  private:
   void Render() override;
 
-  uint64_t start_time_;
+  uint64_t start_time_ = 0;
   std::shared_ptr<d3d11::Device> device_;
   std::shared_ptr<d3d11::SwapChain> swap_chain_;
   std::shared_ptr<d3d11::Composition> composition_;

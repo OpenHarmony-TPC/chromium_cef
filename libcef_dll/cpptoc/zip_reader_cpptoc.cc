@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4e75a0d089e5459be1216fe35e34632b0401e95d$
+// $hash=60bbc6e976111295179d7b90ddb6172180e84593$
 //
 
 #include "libcef_dll/cpptoc/zip_reader_cpptoc.h"
+
 #include "libcef_dll/cpptoc/stream_reader_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -136,7 +137,7 @@ zip_reader_get_file_name(struct _cef_zip_reader_t* self) {
   return _retval.DetachToUserFree();
 }
 
-int64 CEF_CALLBACK zip_reader_get_file_size(struct _cef_zip_reader_t* self) {
+int64_t CEF_CALLBACK zip_reader_get_file_size(struct _cef_zip_reader_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -147,7 +148,7 @@ int64 CEF_CALLBACK zip_reader_get_file_size(struct _cef_zip_reader_t* self) {
   }
 
   // Execute
-  int64 _retval = CefZipReaderCppToC::Get(self)->GetFileSize();
+  int64_t _retval = CefZipReaderCppToC::Get(self)->GetFileSize();
 
   // Return type: simple
   return _retval;
@@ -231,7 +232,7 @@ int CEF_CALLBACK zip_reader_read_file(struct _cef_zip_reader_t* self,
   return _retval;
 }
 
-int64 CEF_CALLBACK zip_reader_tell(struct _cef_zip_reader_t* self) {
+int64_t CEF_CALLBACK zip_reader_tell(struct _cef_zip_reader_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -242,7 +243,7 @@ int64 CEF_CALLBACK zip_reader_tell(struct _cef_zip_reader_t* self) {
   }
 
   // Execute
-  int64 _retval = CefZipReaderCppToC::Get(self)->Tell();
+  int64_t _retval = CefZipReaderCppToC::Get(self)->Tell();
 
   // Return type: simple
   return _retval;

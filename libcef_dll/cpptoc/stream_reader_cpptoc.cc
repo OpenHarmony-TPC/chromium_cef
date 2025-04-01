@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bc1f4f7b7a9277ee025b1be0a2b11de1c6a5b962$
+// $hash=62389a6dee9bf4c9133cedd1ecfd85bde0fa6704$
 //
 
 #include "libcef_dll/cpptoc/stream_reader_cpptoc.h"
+
 #include "libcef_dll/ctocpp/read_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -108,7 +109,7 @@ size_t CEF_CALLBACK stream_reader_read(struct _cef_stream_reader_t* self,
 }
 
 int CEF_CALLBACK stream_reader_seek(struct _cef_stream_reader_t* self,
-                                    int64 offset,
+                                    int64_t offset,
                                     int whence) {
   shutdown_checker::AssertNotShutdown();
 
@@ -126,7 +127,7 @@ int CEF_CALLBACK stream_reader_seek(struct _cef_stream_reader_t* self,
   return _retval;
 }
 
-int64 CEF_CALLBACK stream_reader_tell(struct _cef_stream_reader_t* self) {
+int64_t CEF_CALLBACK stream_reader_tell(struct _cef_stream_reader_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -137,7 +138,7 @@ int64 CEF_CALLBACK stream_reader_tell(struct _cef_stream_reader_t* self) {
   }
 
   // Execute
-  int64 _retval = CefStreamReaderCppToC::Get(self)->Tell();
+  int64_t _retval = CefStreamReaderCppToC::Get(self)->Tell();
 
   // Return type: simple
   return _retval;

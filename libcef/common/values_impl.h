@@ -9,11 +9,10 @@
 #include <memory>
 #include <vector>
 
-#include "include/cef_values.h"
-#include "libcef/common/value_base.h"
-
 #include "base/threading/platform_thread.h"
 #include "base/values.h"
+#include "cef/include/cef_values.h"
+#include "cef/libcef/common/value_base.h"
 
 // CefValue implementation
 class CefValueImpl : public CefValue {
@@ -108,7 +107,7 @@ class CefValueImpl : public CefValue {
   };
 
  private:
-  void SetValueInternal(absl::optional<base::Value> value);
+  void SetValueInternal(std::optional<base::Value> value);
 
   // Returns the controller for the current value, if any.
   CefValueController* GetValueController() const;
@@ -153,7 +152,7 @@ class CefBinaryValueImpl : public CefValueBase<CefBinaryValue, base::Value> {
   CefBinaryValueImpl(base::Value* value, bool will_delete);
 
   // The data will always be copied.
-  CefBinaryValueImpl(char* data, size_t data_size);
+  explicit CefBinaryValueImpl(base::span<const uint8_t> value);
 
   CefBinaryValueImpl(const CefBinaryValueImpl&) = delete;
   CefBinaryValueImpl& operator=(const CefBinaryValueImpl&) = delete;
@@ -179,6 +178,7 @@ class CefBinaryValueImpl : public CefValueBase<CefBinaryValue, base::Value> {
   bool IsSame(CefRefPtr<CefBinaryValue> that) override;
   bool IsEqual(CefRefPtr<CefBinaryValue> that) override;
   CefRefPtr<CefBinaryValue> Copy() override;
+  const void* GetRawData() override;
   size_t GetSize() override;
   size_t GetData(void* buffer, size_t buffer_size, size_t data_offset) override;
 

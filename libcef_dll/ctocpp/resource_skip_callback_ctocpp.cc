@@ -9,16 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c139f7c0b5f2be5379bfe32ba3d8b7f5470d8391$
+// $hash=d354604ce2743fda362a234dee468851dfaca3a7$
 //
 
 #include "libcef_dll/ctocpp/resource_skip_callback_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-void CefResourceSkipCallbackCToCpp::Continue(int64 bytes_skipped) {
+void CefResourceSkipCallbackCToCpp::Continue(int64_t bytes_skipped) {
   shutdown_checker::AssertNotShutdown();
 
   cef_resource_skip_callback_t* _struct = GetStruct();

@@ -104,7 +104,7 @@ def make_cpptoc_function_impl_new(cls, name, func, defined_names, base_scoped):
     if arg_type == 'simple_byref' or arg_type == 'simple_byref_const' or \
        arg_type == 'simple_byaddr' or arg_type == 'bool_byref' or arg_type == 'bool_byaddr' or \
        arg_type == 'struct_byref_const' or arg_type == 'struct_byref' or \
-       arg_type == 'string_byref_const' or arg_type == 'std_string_byref_const' or arg_type == 'string_byref' or \
+       arg_type == 'string_byref_const' or arg_type == 'string_byref' or \
        arg_type == 'refptr_same' or arg_type == 'refptr_same_byref' or \
        arg_type == 'refptr_diff' or arg_type == 'refptr_diff_byref' or \
        arg_type == 'ownptr_same' or arg_type == 'ownptr_same_byref' or \
@@ -312,8 +312,6 @@ def make_cpptoc_function_impl_new(cls, name, func, defined_names, base_scoped):
                 '\n    }'\
                 '\n  }'
       params.append(arg_name + 'List')
-    elif arg_type == 'std_string_byref_const':
-      params.append(arg_name)
     else:
       raise Exception('Unsupported argument type %s for parameter %s in %s' %
                       (arg_type, arg_name, name))
@@ -322,17 +320,12 @@ def make_cpptoc_function_impl_new(cls, name, func, defined_names, base_scoped):
     result += '\n'
   result_len = len(result)
 
-  if is_cef_shutdown:
-    result += '\n\n#if DCHECK_IS_ON()'\
-              '\n  shutdown_checker::SetIsShutdown();'\
-              '\n#endif\n'
-
   # execution
   result += '\n  // Execute\n  '
 
   if retval_type != 'none':
     # has a return value
-    if retval_type == 'simple':
+    if retval_type == 'simple' or retval_type == 'simple_byaddr':
       result += retval.get_type().get_result_simple_type()
     else:
       result += retval.get_type().get_type()
@@ -356,6 +349,11 @@ def make_cpptoc_function_impl_new(cls, name, func, defined_names, base_scoped):
     result += '\n      ' + ',\n      '.join(params)
 
   result += ');\n'
+
+  if is_cef_shutdown:
+    result += '\n\n#if DCHECK_IS_ON()'\
+              '\n  shutdown_checker::SetIsShutdown();'\
+              '\n#endif\n'
 
   result_len = len(result)
 
@@ -448,7 +446,7 @@ def make_cpptoc_function_impl_new(cls, name, func, defined_names, base_scoped):
   if retval_type != 'none':
     # has a return value
     result += '\n  // Return type: ' + retval_type
-    if retval_type == 'simple' or retval_type == 'bool':
+    if retval_type == 'simple' or retval_type == 'simple_byaddr' or retval_type == 'bool':
       result += '\n  return _retval;'
     elif retval_type == 'string':
       result += '\n  return _retval.DetachToUserFree();'

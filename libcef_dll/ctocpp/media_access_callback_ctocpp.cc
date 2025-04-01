@@ -9,16 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=957c6bf7eebd00d586b99d887a2b0e2bd15b8287$
+// $hash=c0a7e805dd9c63153e261a3d465c4876528fa7d1$
 //
 
 #include "libcef_dll/ctocpp/media_access_callback_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-void CefMediaAccessCallbackCToCpp::Continue(uint32 allowed_permissions) {
+void CefMediaAccessCallbackCToCpp::Continue(uint32_t allowed_permissions) {
   shutdown_checker::AssertNotShutdown();
 
   cef_media_access_callback_t* _struct = GetStruct();

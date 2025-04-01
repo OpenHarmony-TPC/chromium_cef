@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=cc05a9116adf2a98d4b6169a86052a14e299cfeb$
+// $hash=a1d17102b2aa9df60fa0296cafe9f43d879e20ea$
 //
 
 #include "libcef_dll/cpptoc/views/label_button_cpptoc.h"
+
 #include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
@@ -1177,6 +1178,25 @@ label_button_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK label_button_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefLabelButtonCppToC::Get(reinterpret_cast<cef_label_button_t*>(self))
+          ->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK label_button_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1223,6 +1243,26 @@ label_button_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefLabelButtonCppToC::Get(reinterpret_cast<cef_label_button_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK label_button_get_theme_color(struct _cef_view_t* self,
+                                                      int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefLabelButtonCppToC::Get(reinterpret_cast<cef_label_button_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1507,11 +1547,13 @@ CefLabelButtonCppToC::CefLabelButtonCppToC() {
   GetStruct()->base.base.is_focusable = label_button_is_focusable;
   GetStruct()->base.base.is_accessibility_focusable =
       label_button_is_accessibility_focusable;
+  GetStruct()->base.base.has_focus = label_button_has_focus;
   GetStruct()->base.base.request_focus = label_button_request_focus;
   GetStruct()->base.base.set_background_color =
       label_button_set_background_color;
   GetStruct()->base.base.get_background_color =
       label_button_get_background_color;
+  GetStruct()->base.base.get_theme_color = label_button_get_theme_color;
   GetStruct()->base.base.convert_point_to_screen =
       label_button_convert_point_to_screen;
   GetStruct()->base.base.convert_point_from_screen =

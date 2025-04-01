@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "libcef/common/tracker.h"
-#include "libcef/renderer/frame_impl.h"
-
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "cef/include/cef_browser.h"
+#include "cef/include/cef_client.h"
+#include "cef/libcef/renderer/frame_impl.h"
+#include "third_party/blink/public/common/tokens/tokens.h"
 #include "third_party/blink/public/web/web_view_observer.h"
 
 namespace blink {
@@ -32,7 +32,8 @@ class WebView;
 // side.
 //
 // RenderViewObserver: Interface for observing RenderView notifications.
-class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
+class CefBrowserImpl : public virtual CefBrowser,
+                       public blink::WebViewObserver {
  public:
   // Returns the browser associated with the specified RenderView.
   static CefRefPtr<CefBrowserImpl> GetBrowserForView(blink::WebView* view);
@@ -42,7 +43,7 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 
   // CefBrowser methods.
   bool IsValid() override;
-  CefRefPtr<CefBrowserHost> GetHost() override;
+  // CefRefPtr<CefBrowserHost> GetHost() override;
   bool CanGoBack() override;
   void GoBack() override;
   bool CanGoForward() override;
@@ -57,16 +58,18 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
   bool HasDocument() override;
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
-  CefRefPtr<CefFrame> GetFrame(int64 identifier) override;
-  CefRefPtr<CefFrame> GetFrame(const CefString& name) override;
+  CefRefPtr<CefFrame> GetFrameByIdentifier(
+      const CefString& identifier) override;
+  CefRefPtr<CefFrame> GetFrameByName(const CefString& name) override;
   size_t GetFrameCount() override;
-  void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
+  void GetFrameIdentifiers(std::vector<CefString>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
 
   CefBrowserImpl(blink::WebView* web_view,
                  int browser_id,
                  bool is_popup,
-                 bool is_windowless);
+                 bool is_windowless,
+                 bool print_preview_enabled);
 
   CefBrowserImpl(const CefBrowserImpl&) = delete;
   CefBrowserImpl& operator=(const CefBrowserImpl&) = delete;
@@ -75,128 +78,40 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
 
   // Returns the matching CefFrameImpl reference or creates a new one.
   CefRefPtr<CefFrameImpl> GetWebFrameImpl(blink::WebLocalFrame* frame);
-  CefRefPtr<CefFrameImpl> GetWebFrameImpl(int64_t frame_id);
-
-  // Frame objects will be deleted immediately before the frame is closed.
-  void AddFrameObject(int64_t frame_id, CefTrackNode* tracked_object);
+  CefRefPtr<CefFrameImpl> GetWebFrameImpl(const std::string& identifier);
 
   int browser_id() const { return browser_id_; }
   bool is_popup() const { return is_popup_; }
   bool is_windowless() const { return is_windowless_; }
+  bool print_preview_enabled() const { return print_preview_enabled_; }
 
   // blink::WebViewObserver methods.
   void OnDestruct() override;
-  void FrameDetached(int64_t frame_id);
+  void FrameDetached(blink::WebLocalFrame* frame);
 
   void OnLoadingStateChange(bool isLoading);
   void OnEnterBFCache();
 
-#if BUILDFLAG(IS_OHOS)
-  void DidCommitCompositorFrame() override;
-  void DidUpdateMainFrameLayout() override;
-  uint32_t GetAcceleratedWidget(bool isPopup) override;
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-  bool CanGoBackOrForward(int num_steps) override;
-  void GoBackOrForward(int num_steps) override;
-  void DeleteHistory() override;
-  bool CanStoreWebArchive() override;
-  void ReloadOriginalUrl() override;
-  void SetBrowserUserAgentString(const CefString& user_agent) override {}
-  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
-      override;
-  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
-
-#ifdef OHOS_ARKWEB_ADBLOCK
-  void EnableAdsBlock(bool enable) override {}
-  bool IsAdsBlockEnabled() override { return false; }
-  bool IsAdsBlockEnabledForCurPage() override { return false; }
-
-  void SetAdBlockEnabledForSite(
-      bool is_adblock_enabled,
-      int main_frame_tree_node_id) override  {}
-#endif
-
-  // #ifdefined(OHOS_EX_PASSWORD)
-  void SetSavePasswordAutomatically(bool enable) override{}
-  bool GetSavePasswordAutomatically() override { return false; }
-  void SetSavePassword(bool enable) override{}
-  bool GetSavePassword() override { return false; }
-  void SaveOrUpdatePassword(bool is_update) override{}
-  void PasswordSuggestionSelected(int list_index) override{}
-  // #endif
-  // #ifdefined(OHOS_EX_FREE_COPY)
-  void SelectAndCopy() override{}
-  bool ShouldShowFreeCopy() override { return false; }
-  // #endif
-  int GetNWebId() override { return -1; }
-  void SetEnableBlankTargetPopupIntercept(
-      bool enableBlankTargetPopup) override {}
-#if defined(OHOS_NO_STATE_PREFETCH)
-  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override {
-  }
-#endif  // defined(OHOS_NO_STATE_PREFETCH)
-  // #ifdefined(OHOS_EX_FORCE_ZOOM)
-  void SetForceEnableZoom(bool forceEnableZoom) override {}
-  bool GetForceEnableZoom() override { return false; }
-  // #endif
-
-  // #if defined(OHOS_SECURITY_STATE)
-  int GetSecurityLevel() override{ return 0; }
-  // #endif
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-  bool IsSafeBrowsingEnabled() override{ return false; }
-  void EnableSafeBrowsing(bool enable) override{}
-#endif
-
-#ifdef OHOS_ITP
-  void EnableIntelligentTrackingPrevention(bool enable) override {}
-  bool IsIntelligentTrackingPreventionEnabled() override { return false; }
-#endif
-
-#ifdef OHOS_URL_TRUST_LIST
-  int SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList, CefString& detailErrMsg) override {
-    return 0;
-  }
-#endif
-
-  // #if defined(OHOS_NWEB_EX)
-  // NOTE: Keep the previous line commented, add NWebEx APIs below.
-  bool ShouldShowLoadingUI() override;
-  // OHOS_EX_TOPCONTROLS
-  void UpdateBrowserControlsState(int constraints,
-                                  int current,
-                                  bool animate) override {}
-  void UpdateBrowserControlsHeight(int height, bool animate) override {}
-  // #endif  // defined(OHOS_NWEB_EX)
-
-#ifdef OHOS_BFCACHE
-  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override {}
-#endif
+#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override { return false; }
+  void DispatchBeforeUnload() override {}
+#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
 
  private:
   // ID of the browser that this RenderView is associated with. During loading
   // of cross-origin requests multiple RenderViews may be associated with the
   // same browser ID.
-  int browser_id_;
-  bool is_popup_;
-  bool is_windowless_;
+  const int browser_id_;
+  const bool is_popup_;
+  const bool is_windowless_;
+  const bool print_preview_enabled_;
 
-  // Map of unique frame ids to CefFrameImpl references.
-  using FrameMap = std::map<int64, CefRefPtr<CefFrameImpl>>;
+  // Map of unique frame tokens to CefFrameImpl references.
+  using FrameMap = std::map<blink::LocalFrameToken, CefRefPtr<CefFrameImpl>>;
   FrameMap frames_;
 
   // True if the browser was in the BFCache.
   bool was_in_bfcache_ = false;
-
-  // Map of unique frame ids to CefTrackManager objects that need to be cleaned
-  // up when the frame is deleted.
-  using FrameObjectMap = std::map<int64, CefRefPtr<CefTrackManager>>;
-  FrameObjectMap frame_objects_;
 
   struct LoadingState {
     LoadingState(bool is_loading, bool can_go_back, bool can_go_forward)
@@ -214,14 +129,6 @@ class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
     bool can_go_forward_;
   };
   std::unique_ptr<LoadingState> last_loading_state_;
-
-#if BUILDFLAG(IS_OHOS)
-  int content_width_ = 0;
-  int content_height_ = 0;
-  bool needs_contents_size_update_ = true;
-  int viewport_width_ = 0;
-  int viewport_height_ = 0;
-#endif
 
   IMPLEMENT_REFCOUNTING(CefBrowserImpl);
 };

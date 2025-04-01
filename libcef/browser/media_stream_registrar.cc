@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/media_stream_registrar.h"
+#include "cef/libcef/browser/media_stream_registrar.h"
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/thread_util.h"
 
 class CefMediaStreamUI : public content::MediaStreamUI {
  public:
@@ -39,7 +39,8 @@ class CefMediaStreamUI : public content::MediaStreamUI {
   void OnDeviceStoppedForSourceChange(
       const std::string& label,
       const content::DesktopMediaID& old_media_id,
-      const content::DesktopMediaID& new_media_id) override {}
+      const content::DesktopMediaID& new_media_id,
+      bool captured_surface_control_active) override {}
 
   void OnDeviceStopped(const std::string& label,
                        const content::DesktopMediaID& media_id) override {}
@@ -104,7 +105,7 @@ void CefMediaStreamRegistrar::NotifyMediaStreamChange() {
 
   if (auto client = browser_->GetClient()) {
     if (auto handler = client->GetDisplayHandler()) {
-      handler->OnMediaAccessChange(browser_, video, audio);
+      handler->OnMediaAccessChange(browser_.get(), video, audio);
     }
   }
 }

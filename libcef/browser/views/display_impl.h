@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_DISPLAY_IMPL_H_
 #pragma once
 
-#include "include/views/cef_display.h"
-#include "libcef/browser/thread_util.h"
-
+#include "cef/include/views/cef_display.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "ui/display/display.h"
 
 class CefDisplayImpl : public CefDisplay {
@@ -21,7 +20,7 @@ class CefDisplayImpl : public CefDisplay {
   ~CefDisplayImpl() override;
 
   // CefDisplay methods:
-  int64 GetID() override;
+  int64_t GetID() override;
   float GetDeviceScaleFactor() override;
   void ConvertPointToPixels(CefPoint& point) override;
   void ConvertPointFromPixels(CefPoint& point) override;

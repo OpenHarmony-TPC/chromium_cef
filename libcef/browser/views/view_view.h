@@ -6,13 +6,12 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_VIEW_VIEW_H_
 #pragma once
 
-#include "include/views/cef_view.h"
-#include "include/views/cef_view_delegate.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/views/view_util.h"
-
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/include/views/cef_view.h"
+#include "cef/include/views/cef_view_delegate.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/view_util.h"
 #include "ui/views/accessibility/accessibility_paint_checks.h"
 #include "ui/views/background.h"
 #include "ui/views/view.h"
@@ -39,15 +38,20 @@ CEF_VIEW_VIEW_T class CefViewView : public ViewsViewClass {
   explicit CefViewView(CefViewDelegateClass* cef_delegate, Args... args)
       : ParentClass(args...), cef_delegate_(cef_delegate) {}
 
+  ~CefViewView() override {
+    // Clear the reference to the delegate which may be released by the
+    // CefViewImpl when it's destroyed via UserData.
+    cef_delegate_ = nullptr;
+
+    // Remove any UserData references to class members before they're destroyed.
+    ParentClass::ClearAllUserData();
+  }
+
   // Should be called from InitializeRootView() in the CefViewImpl-derived
   // class that created this object. This method will be called after
   // CefViewImpl registration has completed so it is safe to call complex
   // views::View-derived methods here.
   virtual void Initialize() {
-    // Use our defaults instead of the Views framework defaults.
-    ParentClass::SetBackground(
-        views::CreateSolidBackground(view_util::kDefaultBackgroundColor));
-
     // TODO(crbug.com/1218186): Remove this, if this view is focusable then it
     // needs to add a name so that the screen reader knows what to announce.
     ParentClass::SetProperty(views::kSkipAccessibilityPaintChecks, true);
@@ -69,17 +73,19 @@ CEF_VIEW_VIEW_T class CefViewView : public ViewsViewClass {
   }
 
   // views::View methods:
-  gfx::Size CalculatePreferredSize() const override;
+  gfx::Size CalculatePreferredSize(
+      const views::SizeBounds& available_size) const override;
   gfx::Size GetMinimumSize() const override;
   gfx::Size GetMaximumSize() const override;
   int GetHeightForWidth(int w) const override;
-  void Layout() override;
+  void Layout(views::View::PassKey) override;
   void ViewHierarchyChanged(
       const views::ViewHierarchyChangedDetails& details) override;
   void AddedToWidget() override;
   void RemovedFromWidget() override;
   void OnFocus() override;
   void OnBlur() override;
+  void OnThemeChanged() override;
 
   // Return true if this View is expected to have a minimum size (for example,
   // a button where the minimum size is based on the label).
@@ -92,10 +98,11 @@ CEF_VIEW_VIEW_T class CefViewView : public ViewsViewClass {
       const views::ViewHierarchyChangedDetails& details);
 
   // Not owned by this object.
-  CefViewDelegateClass* const cef_delegate_;
+  raw_ptr<CefViewDelegateClass> cef_delegate_;
 };
 
-CEF_VIEW_VIEW_T gfx::Size CEF_VIEW_VIEW_D::CalculatePreferredSize() const {
+CEF_VIEW_VIEW_T gfx::Size CEF_VIEW_VIEW_D::CalculatePreferredSize(
+    const views::SizeBounds& available_size) const {
   gfx::Size result;
   if (cef_delegate()) {
     CefSize cef_size = cef_delegate()->GetPreferredSize(GetCefView());
@@ -104,7 +111,7 @@ CEF_VIEW_VIEW_T gfx::Size CEF_VIEW_VIEW_D::CalculatePreferredSize() const {
     }
   }
   if (result.IsEmpty()) {
-    result = ParentClass::CalculatePreferredSize();
+    result = ParentClass::CalculatePreferredSize(available_size);
   }
   if (result.IsEmpty()) {
     // Some layouts like BoxLayout expect the preferred size to be non-empty.
@@ -163,8 +170,8 @@ CEF_VIEW_VIEW_T int CEF_VIEW_VIEW_D::GetHeightForWidth(int w) const {
   return result;
 }
 
-CEF_VIEW_VIEW_T void CEF_VIEW_VIEW_D::Layout() {
-  ParentClass::Layout();
+CEF_VIEW_VIEW_T void CEF_VIEW_VIEW_D::Layout(views::View::PassKey) {
+  ParentClass::template LayoutSuperclass<ParentClass>(this);
 
   // If Layout() did not provide a size then use the preferred size.
   if (ParentClass::size().IsEmpty()) {
@@ -212,6 +219,31 @@ CEF_VIEW_VIEW_T void CEF_VIEW_VIEW_D::OnBlur() {
     cef_delegate()->OnBlur(GetCefView());
   }
   ParentClass::OnBlur();
+}
+
+CEF_VIEW_VIEW_T void CEF_VIEW_VIEW_D::OnThemeChanged() {
+  // Clear the background, if set.
+  if (ParentClass::background()) {
+    ParentClass::SetBackground(nullptr);
+  }
+
+  // Apply default theme colors.
+  ParentClass::OnThemeChanged();
+
+  // Allow the client to override the default colors.
+  if (cef_delegate()) {
+    cef_delegate()->OnThemeChanged(GetCefView());
+  }
+
+  // If the background is still unset then possibly set it to the desired value.
+  if (!ParentClass::background()) {
+    // May return an empty value.
+    const auto& color =
+        view_util::GetBackgroundColor(this, /*allow_transparent=*/true);
+    if (color) {
+      ParentClass::SetBackground(views::CreateSolidBackground(*color));
+    }
+  }
 }
 
 CEF_VIEW_VIEW_T void CEF_VIEW_VIEW_D::NotifyChildViewChanged(

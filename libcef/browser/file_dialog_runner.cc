@@ -3,12 +3,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/file_dialog_runner.h"
+#include "cef/libcef/browser/file_dialog_runner.h"
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/extensions/browser_extensions_util.h"
-
-#include "base/memory/singleton.h"
+#include "cef/libcef/browser/browser_host_base.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/ui/chrome_select_file_policy.h"
 #include "ui/shell_dialogs/select_file_dialog_factory.h"
@@ -26,32 +23,24 @@ namespace {
 // |run_from_cef=false| to trigger creation of the default platform dialog.
 class CefSelectFileDialogFactory final : public ui::SelectFileDialogFactory {
  public:
+  CefSelectFileDialogFactory() = default;
+
   CefSelectFileDialogFactory(const CefSelectFileDialogFactory&) = delete;
   CefSelectFileDialogFactory& operator=(const CefSelectFileDialogFactory&) =
       delete;
-
-  static CefSelectFileDialogFactory* GetInstance() {
-    // Leaky because there is no useful cleanup to do.
-    return base::Singleton<
-        CefSelectFileDialogFactory,
-        base::LeakySingletonTraits<CefSelectFileDialogFactory>>::get();
-  }
 
   ui::SelectFileDialog* Create(
       ui::SelectFileDialog::Listener* listener,
       std::unique_ptr<ui::SelectFilePolicy> policy) override;
 
   bool IsCefFactory() const override { return true; }
-
- private:
-  friend struct base::DefaultSingletonTraits<CefSelectFileDialogFactory>;
-
-  CefSelectFileDialogFactory() { ui::SelectFileDialog::SetFactory(this); }
 };
 
 // Delegates the running of the dialog to CefFileDialogManager.
 class CefSelectFileDialog final : public ui::SelectFileDialog {
  public:
+  // |listener| is not owned by this object. It will remain valid until
+  // ListenerDestroyed() is called.
   CefSelectFileDialog(ui::SelectFileDialog::Listener* listener,
                       std::unique_ptr<ui::SelectFilePolicy> policy)
       : ui::SelectFileDialog(listener, std::move(policy)) {
@@ -68,7 +57,6 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
                       int file_type_index,
                       const base::FilePath::StringType& default_extension,
                       gfx::NativeWindow owning_window,
-                      void* params,
                       const GURL* caller) override {
     // Try to determine the associated browser (with decreasing levels of
     // confidence).
@@ -80,8 +68,7 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
           static_cast<ChromeSelectFilePolicy*>(select_file_policy_.get());
       auto web_contents = chrome_policy->source_contents();
       if (web_contents) {
-        browser_ = extensions::GetOwnerBrowserForHost(
-            web_contents->GetRenderViewHost(), nullptr);
+        browser_ = CefBrowserHostBase::GetBrowserForContents(web_contents);
       }
       if (!browser_) {
         LOG(WARNING) << "No browser associated with SelectFilePolicy";
@@ -112,7 +99,7 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
     if (!browser_) {
       LOG(ERROR)
           << "Failed to identify associated browser; canceling the file dialog";
-      listener_->FileSelectionCanceled(params);
+      listener_->FileSelectionCanceled();
       return;
     }
 
@@ -122,7 +109,12 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
 
     browser_->RunSelectFile(listener_, std::move(select_file_policy_), type,
                             title, default_path, file_types, file_type_index,
-                            default_extension, owning_window, params);
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+                            default_extension, owning_window, accept_types_,
+                            use_media_capture_);
+#else
+                            default_extension, owning_window);
+#endif
   }
 
   bool IsRunning(gfx::NativeWindow owning_window) const override {
@@ -140,9 +132,29 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
     return has_multiple_file_choices_;
   }
 
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  void SetAcceptTypes(std::vector<std::u16string> types) override {
+    accept_types_ = std::move(types);
+  }
+
+  void SetUseMediaCapture(bool use_media_capture) override {
+    use_media_capture_ = use_media_capture;
+  }
+
+  void SetOpenWritable(bool open_writable) override {
+    open_writable_ = open_writable;
+  }
+#endif
+
  private:
   gfx::NativeWindow owning_window_ = nullptr;
   bool has_multiple_file_choices_ = false;
+
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  std::vector<std::u16string> accept_types_;
+  bool use_media_capture_ = false;
+  bool open_writable_ = false;
+#endif
 
   CefRefPtr<CefBrowserHostBase> browser_;
 };
@@ -158,8 +170,8 @@ ui::SelectFileDialog* CefSelectFileDialogFactory::Create(
 namespace file_dialog_runner {
 
 void RegisterFactory() {
-  // Implicitly registers on creation.
-  CefSelectFileDialogFactory::GetInstance();
+  ui::SelectFileDialog::SetFactory(
+      std::make_unique<CefSelectFileDialogFactory>());
 }
 
 }  // namespace file_dialog_runner

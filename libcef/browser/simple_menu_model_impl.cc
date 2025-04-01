@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/simple_menu_model_impl.h"
+#include "cef/libcef/browser/simple_menu_model_impl.h"
 
 #include <vector>
 
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/task_runner_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/task_runner_impl.h"
 
 namespace {
 
@@ -62,16 +62,16 @@ CefSimpleMenuModelImpl::~CefSimpleMenuModelImpl() {
 void CefSimpleMenuModelImpl::Detach() {
   DCHECK(VerifyContext());
 
-  if (!submenumap_.empty()) {
+  while (!submenumap_.empty()) {
     auto it = submenumap_.begin();
-    for (; it != submenumap_.end(); ++it) {
-      it->second->Detach();
-    }
-    submenumap_.clear();
+    auto impl = it->second;
+    // Clear the raw_ptr reference before calling Detach().
+    submenumap_.erase(it);
+    impl->Detach();
   }
 
   if (is_owned_) {
-    delete model_;
+    model_.ClearAndDelete();
   }
   model_ = nullptr;
 }
@@ -460,7 +460,7 @@ bool CefSimpleMenuModelImpl::RemoveAccelerator(int command_id) {
   if (!VerifyContext() || command_id == kInvalidIndex) {
     return false;
   }
-  state_delegate_->SetAccelerator(command_id, absl::nullopt);
+  state_delegate_->SetAccelerator(command_id, std::nullopt);
   return true;
 }
 
@@ -564,7 +564,7 @@ CefRefPtr<CefSimpleMenuModelImpl> CefSimpleMenuModelImpl::CreateNewSubMenu(
   }
 
   CefRefPtr<CefSimpleMenuModelImpl> new_impl = new CefSimpleMenuModelImpl(
-      model, delegate_, state_delegate_, is_owned, /*is_submodel=*/true);
+      model, delegate_, state_delegate_, is_owned, /*is_submenu=*/true);
   submenumap_.insert(std::make_pair(model, new_impl));
   return new_impl;
 }

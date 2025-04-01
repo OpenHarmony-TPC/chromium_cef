@@ -33,25 +33,31 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=517a730fa2379060935e9921061a0c8b6149cfab$
+// $hash=11bd5e1e0445d7f4acd1edffba1eb65a70678bfa$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
 #define CEF_INCLUDE_CAPI_CEF_BROWSER_CAPI_H_
 #pragma once
 
+#include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_devtools_message_observer_capi.h"
-#include "include/capi/cef_download_item_capi.h"
 #include "include/capi/cef_drag_data_capi.h"
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_image_capi.h"
 #include "include/capi/cef_navigation_entry_capi.h"
-#include "include/capi/cef_permission_request_capi.h"
 #include "include/capi/cef_registration_capi.h"
 #include "include/capi/cef_request_context_capi.h"
-#include "include/capi/cef_task_capi.h"
+
+#if BUILDFLAG(ARKWEB_PRECOMPILE)
 #include "include/internal/cef_string_map.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#endif // ARKWEB_EXTENSIONS
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,88 +66,11 @@ extern "C" {
 struct _cef_browser_host_t;
 struct _cef_client_t;
 struct _cef_dev_tools_message_handler_delegate_t;
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+struct _cef_store_web_archive_result_callback_t;
+#endif
 
-///
-/// Structure to implement to be notified of asynchronous completion via
-/// cef_browser_host_tBase::execute_java_script().
-///
-typedef struct _cef_java_script_result_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Method that will be called upon completion. |num_deleted| will be the
-  /// number of cookies that were deleted.
-  ///
-  void(CEF_CALLBACK* on_java_script_exe_result)(
-      struct _cef_java_script_result_callback_t* self,
-      struct _cef_value_t* result);
-} cef_java_script_result_callback_t;
-
-///
-/// Structure to implement to be notified of asynchronous completion via
-/// cef_browser_host_tBase::store_web_archive().
-///
-typedef struct _cef_store_web_archive_result_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Method that will be called upon completion. |result| will either be the
-  /// filename under which the file was saved, or NULL if saving the file
-  /// failed.
-  ///
-  void(CEF_CALLBACK* on_store_web_archive_done)(
-      struct _cef_store_web_archive_result_callback_t* self,
-      const cef_string_t* result);
-} cef_store_web_archive_result_callback_t;
-
-///
-/// Structure to implement to be notified of asynchronous completion via
-/// cef_browser_host_tBase::set_gesture_event_result().
-///
-typedef struct _cef_gesture_event_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Method that will be called upon completion.
-  ///
-  void(CEF_CALLBACK* continue_task)(struct _cef_gesture_event_callback_t* self,
-                                    int result,
-                                    int stopPropagation);
-} cef_gesture_event_callback_t;
-
-///
-/// Structure to implement to be notified of asynchronous web message channel.
-///
-typedef struct _cef_web_message_receiver_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Method that will be called upon |PostPortMessage|. |message| will be sent
-  /// to another end of web message channel.
-  ///
-  void(CEF_CALLBACK* on_message)(struct _cef_web_message_receiver_t* self,
-                                 struct _cef_value_t* message);
-
-  ///
-  /// The same as OnMessage, the result of the execution will be returned.
-  ///
-  int(CEF_CALLBACK* on_message_with_bool_result)(
-      struct _cef_web_message_receiver_t* self,
-      struct _cef_value_t* message);
-} cef_web_message_receiver_t;
-
+#if BUILDFLAG(ARKWEB_PRECOMPILE)
 ///
 /// Structure to implement to be notified of compiling javascript completion via
 /// cef_browser_host_tBase::precompile_java_script().
@@ -174,22 +103,18 @@ typedef struct _cef_cache_options_t {
   ///
   cef_string_map_t(CEF_CALLBACK* get_response_headers)(
       struct _cef_cache_options_t* self);
+
+  ///
+  /// Return if the javascript is module script.
+  ///
+  int(CEF_CALLBACK* is_module)(struct _cef_cache_options_t* self);
+
+  ///
+  /// Return if use top-level to compile script.
+  ///
+  int(CEF_CALLBACK* is_top_level)(struct _cef_cache_options_t* self);
 } cef_cache_options_t;
-
-///
-/// cef_set_lock_callback_t
-///
-typedef struct _cef_set_lock_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Handle.
-  ///
-  void(CEF_CALLBACK* handle)(struct _cef_set_lock_callback_t* self, int key);
-} cef_set_lock_callback_t;
+#endif
 
 ///
 /// Structure used to represent a browser. When used in the browser process the
@@ -208,13 +133,6 @@ typedef struct _cef_browser_t {
   /// cef_life_span_handler_t::OnBeforeClose is called.
   ///
   int(CEF_CALLBACK* is_valid)(struct _cef_browser_t* self);
-
-  ///
-  /// Returns the browser host object. This function can only be called in the
-  /// browser process.
-  ///
-  struct _cef_browser_host_t*(CEF_CALLBACK* get_host)(
-      struct _cef_browser_t* self);
 
   ///
   /// Returns true (1) if the browser can navigate backwards.
@@ -300,15 +218,16 @@ typedef struct _cef_browser_t {
   ///
   /// Returns the frame with the specified identifier, or NULL if not found.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_frame_byident)(
+  struct _cef_frame_t*(CEF_CALLBACK* get_frame_by_identifier)(
       struct _cef_browser_t* self,
-      int64 identifier);
+      const cef_string_t* identifier);
 
   ///
   /// Returns the frame with the specified name, or NULL if not found.
   ///
-  struct _cef_frame_t*(CEF_CALLBACK* get_frame)(struct _cef_browser_t* self,
-                                                const cef_string_t* name);
+  struct _cef_frame_t*(CEF_CALLBACK* get_frame_by_name)(
+      struct _cef_browser_t* self,
+      const cef_string_t* name);
 
   ///
   /// Returns the number of frames that currently exist.
@@ -319,8 +238,7 @@ typedef struct _cef_browser_t {
   /// Returns the identifiers of all existing frames.
   ///
   void(CEF_CALLBACK* get_frame_identifiers)(struct _cef_browser_t* self,
-                                            size_t* identifiersCount,
-                                            int64* identifiers);
+                                            cef_string_list_t identifiers);
 
   ///
   /// Returns the names of all existing frames.
@@ -328,219 +246,23 @@ typedef struct _cef_browser_t {
   void(CEF_CALLBACK* get_frame_names)(struct _cef_browser_t* self,
                                       cef_string_list_t names);
 
-  ///
-  /// Returns the Permission Request Delegate object.
-  ///
-  struct _cef_browser_permission_request_delegate_t*(
-      CEF_CALLBACK* get_permission_request_delegate)(
-      struct _cef_browser_t* self);
-
-  ///
-  /// Returns the Geolocation Permission handler object.
-  ///
-  struct _cef_geolocation_acess_t*(CEF_CALLBACK* get_geolocation_permissions)(
-      struct _cef_browser_t* self);
-
-  ///
-  /// Returns true (1) if the browser can navigate forwards.
-  ///
-  int(CEF_CALLBACK* can_go_back_or_forward)(struct _cef_browser_t* self,
-                                            int num_steps);
-
-  ///
-  /// Navigate backwards or forwards.
-  ///
-  void(CEF_CALLBACK* go_back_or_forward)(struct _cef_browser_t* self,
-                                         int num_steps);
-
-  ///
-  /// DeleteHistory
-  ///
-  void(CEF_CALLBACK* delete_history)(struct _cef_browser_t* self);
-
-  ///
-  /// display the selection control when click Free copy structure
-  ///
-  void(CEF_CALLBACK* select_and_copy)(struct _cef_browser_t* self);
-
-  ///
-  /// should show free copy menu
-  ///
-  int(CEF_CALLBACK* should_show_free_copy)(struct _cef_browser_t* self);
-
-  ///
-  /// select password dialog to fill
-  ///
-  void(CEF_CALLBACK* password_suggestion_selected)(struct _cef_browser_t* self,
-                                                   int list_index);
-
-  ///
-  /// Update browser controls state.
-  ///
-  void(CEF_CALLBACK* update_browser_controls_state)(struct _cef_browser_t* self,
-                                                    int constraints,
-                                                    int current,
-                                                    int animate);
-
-  ///
-  /// Update browser controls height.
-  ///
-  void(CEF_CALLBACK* update_browser_controls_height)(
-      struct _cef_browser_t* self,
-      int height,
-      int animate);
-
-  ///
-  /// Prefetch the resources required by the page, but will not execute js or
-  /// render the page.
-  ///
-  void(CEF_CALLBACK* prefetch_page)(struct _cef_browser_t* self,
-                                    cef_string_t* url,
-                                    cef_string_t* additionalHttpHeaders);
-
-  ///
-  /// Reload the current page with original url.
-  ///
-  void(CEF_CALLBACK* reload_original_url)(struct _cef_browser_t* self);
-
-  ///
-  /// Can save current page as a archive.
-  ///
-  int(CEF_CALLBACK* can_store_web_archive)(struct _cef_browser_t* self);
-
-  ///
-  /// Set user agent for current page.
-  ///
-  void(CEF_CALLBACK* set_browser_user_agent_string)(
-      struct _cef_browser_t* self,
-      const cef_string_t* user_agent);
-
-  ///
-  /// Is loading to different document.
-  ///
-  int(CEF_CALLBACK* should_show_loading_ui)(struct _cef_browser_t* self);
-
-  ///
-  /// Set force enable zoom.
-  ///
-  void(CEF_CALLBACK* set_force_enable_zoom)(struct _cef_browser_t* self,
-                                            int forceEnableZoom);
-
-  ///
-  /// Whether force enable zoom had been enabled.
-  ///
-  int(CEF_CALLBACK* get_force_enable_zoom)(struct _cef_browser_t* self);
-
-  ///
-  /// Returns the NWeb Id.
-  ///
-  int(CEF_CALLBACK* get_nweb_id)(struct _cef_browser_t* self);
-
-  ///
-  /// Set whether the target_blank pop-up window is opened in the current tab.
-  ///
-  void(CEF_CALLBACK* set_enable_blank_target_popup_intercept)(
-      struct _cef_browser_t* self,
-      int enableBlankTargetPopup);
-
-  ///
-  /// Whether automatically saving password had been enabled.
-  ///
-  int(CEF_CALLBACK* get_save_password_automatically)(
-      struct _cef_browser_t* self);
-
-  ///
-  /// Set enable to allow automatically save password
-  ///
-  void(CEF_CALLBACK* set_save_password_automatically)(
-      struct _cef_browser_t* self,
-      int enable);
-
-  ///
-  /// save or upddate current page password
-  ///
-  void(CEF_CALLBACK* save_or_update_password)(struct _cef_browser_t* self,
-                                              int is_update);
-
-  ///
-  /// Whether saving password had been enabled.
-  ///
-  int(CEF_CALLBACK* get_save_password)(struct _cef_browser_t* self);
-
-  ///
-  /// Set enable to save password
-  ///
-  void(CEF_CALLBACK* set_save_password)(struct _cef_browser_t* self,
-                                        int enable);
-
+#if BUILDFLAG(ARKWEB_EXT_SECURITY_STATE)
   ///
   /// Get security level for current page.
   ///
   int(CEF_CALLBACK* get_security_level)(struct _cef_browser_t* self);
+#endif
 
   ///
-  /// Enable the ability to check website security risks.
+  /// Determine if BeforeUnload or Unload events need to be triggered.
   ///
-  void(CEF_CALLBACK* enable_safe_browsing)(struct _cef_browser_t* self,
-                                           int enable);
-
-  ///
-  /// Get whether checking website security risks is enabled.
-  ///
-  int(CEF_CALLBACK* is_safe_browsing_enabled)(struct _cef_browser_t* self);
-
-  ///
-  /// Enable the ability to intelligent tracking prevention, default disabled.
-  ///
-  void(CEF_CALLBACK* enable_intelligent_tracking_prevention)(
-      struct _cef_browser_t* self,
-      int enable);
-
-  ///
-  /// Get whether intelligent tracking prevention is enabled.
-  ///
-  int(CEF_CALLBACK* is_intelligent_tracking_prevention_enabled)(
+  int(CEF_CALLBACK* need_to_fire_before_unload_events)(
       struct _cef_browser_t* self);
 
   ///
-  /// Get whether Ads block is enabled.
+  /// Trigger the BeforeUnload event with an option to auto-cancel.
   ///
-  int(CEF_CALLBACK* is_ads_block_enabled)(struct _cef_browser_t* self);
-
-  ///
-  /// Get whether Ads block is enabled for current page.
-  ///
-  int(CEF_CALLBACK* is_ads_block_enabled_for_cur_page)(
-      struct _cef_browser_t* self);
-
-  ///
-  /// Set enable to allow automatically save password
-  ///
-  void(CEF_CALLBACK* enable_ads_block)(struct _cef_browser_t* self, int enable);
-
-  ///
-  /// Set url trust list.
-  ///
-  int(CEF_CALLBACK* set_url_trust_list_with_err_msg)(
-      struct _cef_browser_t* self,
-      const cef_string_t* urlTrustList,
-      cef_string_t* detailErrMsg);
-
-  ///
-  /// Set url trust list.
-  ///
-  void(CEF_CALLBACK* set_back_forward_cache_options)(
-      struct _cef_browser_t* self,
-      int32_t size,
-      int32_t timeToLive);
-
-  ///
-  /// Set adblock switch
-  ///
-  void(CEF_CALLBACK* set_ad_block_enabled_for_site)(
-      struct _cef_browser_t* self,
-      int is_adblock_enabled,
-      int main_frame_tree_node_id);
+  void(CEF_CALLBACK* dispatch_before_unload)(struct _cef_browser_t* self);
 } cef_browser_t;
 
 ///
@@ -651,6 +373,25 @@ typedef struct _cef_pdf_value_callback_t {
 } cef_pdf_value_callback_t;
 
 ///
+/// callback for register_screen_capture_delegate_listener.
+///
+typedef struct _cef_screen_capture_callback_t {
+  ///
+  /// Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  /// Method that will be called upon completion.
+  ///
+  void(CEF_CALLBACK* on_state_change)(
+      struct _cef_screen_capture_callback_t* self,
+      int32_t nweb_id,
+      const cef_string_t* session_id,
+      int32_t code);
+} cef_screen_capture_callback_t;
+
+///
 /// Structure used to represent the browser process aspects of a browser. The
 /// functions of this structure can only be called in the browser process. They
 /// may be called on any thread in that process unless otherwise indicated in
@@ -669,28 +410,61 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
-  /// Request that the browser close. The JavaScript 'onbeforeunload' event will
-  /// be fired. If |force_close| is false (0) the event handler, if any, will be
-  /// allowed to prompt the user and the user can optionally cancel the close.
-  /// If |force_close| is true (1) the prompt will not be displayed and the
-  /// close will proceed. Results in a call to
-  /// cef_life_span_handler_t::do_close() if the event handler allows the close
-  /// or if |force_close| is true (1). See cef_life_span_handler_t::do_close()
-  /// documentation for additional usage information.
+  /// Request that the browser close. Closing a browser is a multi-stage process
+  /// that may complete either synchronously or asynchronously, and involves
+  /// callbacks such as cef_life_span_handler_t::DoClose (Alloy style only),
+  /// cef_life_span_handler_t::OnBeforeClose, and a top-level window close
+  /// handler such as cef_window_delegate_t::CanClose (or platform-specific
+  /// equivalent). In some cases a close request may be delayed or canceled by
+  /// the user. Using try_close_browser() instead of close_browser() is
+  /// recommended for most use cases. See cef_life_span_handler_t::do_close()
+  /// documentation for detailed usage and examples.
+  ///
+  /// If |force_close| is false (0) then JavaScript unload handlers, if any, may
+  /// be fired and the close may be delayed or canceled by the user. If
+  /// |force_close| is true (1) then the user will not be prompted and the close
+  /// will proceed immediately (possibly asynchronously). If browser close is
+  /// delayed and not canceled the default behavior is to call the top-level
+  /// window close handler once the browser is ready to be closed. This default
+  /// behavior can be changed for Alloy style browsers by implementing
+  /// cef_life_span_handler_t::do_close(). is_ready_to_be_closed() can be used
+  /// to detect mandatory browser close events when customizing close behavior
+  /// on the browser process UI thread.
   ///
   void(CEF_CALLBACK* close_browser)(struct _cef_browser_host_t* self,
                                     int force_close);
 
   ///
-  /// Helper for closing a browser. Call this function from the top-level window
-  /// close handler (if any). Internally this calls CloseBrowser(false (0)) if
-  /// the close has not yet been initiated. This function returns false (0)
-  /// while the close is pending and true (1) after the close has completed. See
-  /// close_browser() and cef_life_span_handler_t::do_close() documentation for
-  /// additional usage information. This function must be called on the browser
-  /// process UI thread.
+  /// Helper for closing a browser. This is similar in behavior to
+  /// CLoseBrowser(false (0)) but returns a boolean to reflect the immediate
+  /// close status. Call this function from a top-level window close handler
+  /// such as cef_window_delegate_t::CanClose (or platform-specific equivalent)
+  /// to request that the browser close, and return the result to indicate if
+  /// the window close should proceed. Returns false (0) if the close will be
+  /// delayed (JavaScript unload handlers triggered but still pending) or true
+  /// (1) if the close will proceed immediately (possibly asynchronously). See
+  /// close_browser() documentation for additional usage information. This
+  /// function must be called on the browser process UI thread.
   ///
   int(CEF_CALLBACK* try_close_browser)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Returns true (1) if the browser is ready to be closed, meaning that the
+  /// close has already been initiated and that JavaScript unload handlers have
+  /// already executed or should be ignored. This can be used from a top-level
+  /// window close handler such as cef_window_delegate_t::CanClose (or platform-
+  /// specific equivalent) to distringuish between potentially cancelable
+  /// browser close events (like the user clicking the top-level window close
+  /// button before browser close has started) and mandatory browser close
+  /// events (like JavaScript `window.close()` or after browser close has
+  /// started in response to [Try]close_browser()). Not completing the browser
+  /// close for mandatory close events (when this function returns true (1))
+  /// will leave the browser in a partially closed state that interferes with
+  /// proper functioning. See close_browser() documentation for additional usage
+  /// information. This function must be called on the browser process UI
+  /// thread.
+  ///
+  int(CEF_CALLBACK* is_ready_to_be_closed)(struct _cef_browser_host_t* self);
 
   ///
   /// Set whether the browser is focused.
@@ -716,6 +490,12 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
+  /// Retrieve the unique identifier of the browser that opened this browser.
+  /// Will return 0 for non-popup browsers.
+  ///
+  int(CEF_CALLBACK* get_opener_identifier)(struct _cef_browser_host_t* self);
+
+  ///
   /// Returns true (1) if this browser is wrapped in a cef_browser_view_t.
   ///
   int(CEF_CALLBACK* has_view)(struct _cef_browser_host_t* self);
@@ -733,16 +513,38 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self);
 
   ///
-  /// Get the current zoom level. The default zoom level is 0.0. This function
-  /// can only be called on the UI thread.
+  /// Returns true (1) if this browser can execute the specified zoom command.
+  /// This function can only be called on the UI thread.
+  ///
+  int(CEF_CALLBACK* can_zoom)(struct _cef_browser_host_t* self,
+                              cef_zoom_command_t command);
+
+  ///
+  /// Execute a zoom command in this browser. If called on the UI thread the
+  /// change will be applied immediately. Otherwise, the change will be applied
+  /// asynchronously on the UI thread.
+  ///
+  void(CEF_CALLBACK* zoom)(struct _cef_browser_host_t* self,
+                           cef_zoom_command_t command);
+
+  ///
+  /// Get the default zoom level. This value will be 0.0 by default but can be
+  /// configured. This function can only be called on the UI thread.
+  ///
+  double(CEF_CALLBACK* get_default_zoom_level)(
+      struct _cef_browser_host_t* self);
+
+  ///
+  /// Get the current zoom level. This function can only be called on the UI
+  /// thread.
   ///
   double(CEF_CALLBACK* get_zoom_level)(struct _cef_browser_host_t* self);
 
   ///
   /// Change the zoom level to the specified value. Specify 0.0 to reset the
-  /// zoom level. If called on the UI thread the change will be applied
-  /// immediately. Otherwise, the change will be applied asynchronously on the
-  /// UI thread.
+  /// zoom level to the default. If called on the UI thread the change will be
+  /// applied immediately. Otherwise, the change will be applied asynchronously
+  /// on the UI thread.
   ///
   void(CEF_CALLBACK* set_zoom_level)(struct _cef_browser_host_t* self,
                                      double zoomLevel);
@@ -792,7 +594,7 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const cef_string_t* image_url,
       int is_favicon,
-      uint32 max_image_size,
+      uint32_t max_image_size,
       int bypass_cache,
       struct _cef_download_image_callback_t* callback);
 
@@ -826,8 +628,7 @@ typedef struct _cef_browser_host_t {
                            const cef_string_t* searchText,
                            int forward,
                            int matchCase,
-                           int findNext,
-                           int newSession);
+                           int findNext);
 
   ///
   /// Cancel all searches that are currently going on.
@@ -981,38 +782,6 @@ typedef struct _cef_browser_host_t {
   /// hidden. This function is only used when window rendering is disabled.
   ///
   void(CEF_CALLBACK* was_hidden)(struct _cef_browser_host_t* self, int hidden);
-
-  ///
-  /// Notify the browser that it has been occluded or unoccluded. Layouting and
-  /// cef_render_handler_t::OnPaint notification will stop when the browser is
-  /// occluded. This function is only used when window rendering is disabled.
-  ///
-  void(CEF_CALLBACK* was_occluded)(struct _cef_browser_host_t* self,
-                                   int occluded);
-
-  ///
-  /// Running and do something when the window show
-  ///
-  void(CEF_CALLBACK* on_window_show)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Running and do something when the window hide
-  ///
-  void(CEF_CALLBACK* on_window_hide)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Running and do something when the render visible
-  ///
-  void(CEF_CALLBACK* on_online_render_to_foreground)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Send touch event list to the browser for a windowless browser.
-  ///
-  void(CEF_CALLBACK* send_touch_event_list)(
-      struct _cef_browser_host_t* self,
-      size_t event_listCount,
-      cef_touch_event_t const* event_list);
 
   ///
   /// Send a notification to the browser that the screen info has changed. The
@@ -1169,6 +938,17 @@ typedef struct _cef_browser_host_t {
                                       const cef_range_t* replacement_range,
                                       int relative_cursor_pos);
 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  ///
+  // Saves the current view as a web archive.
+  ///
+  void(CEF_CALLBACK* store_web_archive)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* base_name,
+      int auto_name,
+      struct _cef_store_web_archive_result_callback_t* callback);
+#endif
+
   ///
   /// Completes the existing composition by applying the current composition
   /// node contents. If |keep_selection| is false (0) the current selection, if
@@ -1300,20 +1080,6 @@ typedef struct _cef_browser_host_t {
                                               const cef_size_t* max_size);
 
   ///
-  /// Returns the extension hosted in this browser or NULL if no extension is
-  /// hosted. See cef_request_context_t::LoadExtension for details.
-  ///
-  struct _cef_extension_t*(CEF_CALLBACK* get_extension)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Returns true (1) if this browser is hosting an extension background
-  /// script. Background hosts do not have a window and are not displayable. See
-  /// cef_request_context_t::LoadExtension for details.
-  ///
-  int(CEF_CALLBACK* is_background_host)(struct _cef_browser_host_t* self);
-
-  ///
   /// Set whether the browser's audio is muted.
   ///
   void(CEF_CALLBACK* set_audio_muted)(struct _cef_browser_host_t* self,
@@ -1325,514 +1091,93 @@ typedef struct _cef_browser_host_t {
   ///
   int(CEF_CALLBACK* is_audio_muted)(struct _cef_browser_host_t* self);
 
+#if BUILDFLAG(ARKWEB_PRINT)
   ///
   /// GetRootBrowserAccessibilityManager
   ///
   void(CEF_CALLBACK* get_root_browser_accessibility_manager)(
       struct _cef_browser_host_t* self,
       void** manager);
+#endif
 
   ///
-  /// Execute a string of JavaScript code, return result by callback
+  /// Returns true (1) if the renderer is currently in browser fullscreen. This
+  /// differs from window fullscreen in that browser fullscreen is entered using
+  /// the JavaScript Fullscreen API and modifies CSS attributes such as the
+  /// ::backdrop pseudo-element and :fullscreen pseudo-structure. This function
+  /// can only be called on the UI thread.
   ///
-  void(CEF_CALLBACK* execute_java_script)(
+  int(CEF_CALLBACK* is_fullscreen)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Requests the renderer to exit browser fullscreen. In most cases exiting
+  /// window fullscreen should also exit browser fullscreen. With Alloy style
+  /// this function should be called in response to a user action such as
+  /// clicking the green traffic light button on MacOS
+  /// (cef_window_delegate_t::OnWindowFullscreenTransition callback) or pressing
+  /// the "ESC" key (cef_keyboard_handler_t::OnPreKeyEvent callback). With
+  /// Chrome style these standard exit actions are handled internally but
+  /// new/additional user actions can use this function. Set |will_cause_resize|
+  /// to true (1) if exiting browser fullscreen will cause a view resize.
+  ///
+  void(CEF_CALLBACK* exit_fullscreen)(struct _cef_browser_host_t* self,
+                                      int will_cause_resize);
+
+  ///
+  /// Returns true (1) if a Chrome command is supported and enabled. Values for
+  /// |command_id| can be found in the cef_command_ids.h file. This function can
+  /// only be called on the UI thread. Only used with Chrome style.
+  ///
+  int(CEF_CALLBACK* can_execute_chrome_command)(
       struct _cef_browser_host_t* self,
-      const char* code,
-      struct _cef_java_script_result_callback_t* callback,
-      int extention);
+      int command_id);
 
   ///
-  /// Execute a string of JavaScript code, return result by callback
+  /// Execute a Chrome command. Values for |command_id| can be found in the
+  /// cef_command_ids.h file. |disposition| provides information about the
+  /// intended command target. Only used with Chrome style.
   ///
-  void(CEF_CALLBACK* execute_java_script_ext)(
+  void(CEF_CALLBACK* execute_chrome_command)(
       struct _cef_browser_host_t* self,
-      const int fd,
-      const uint64 scriptLength,
-      struct _cef_java_script_result_callback_t* callback,
-      int extention);
+      int command_id,
+      cef_window_open_disposition_t disposition);
 
   ///
-  /// Set native window from ohos rs
+  /// Returns true (1) if the render process associated with this browser is
+  /// currently unresponsive as indicated by a lack of input event processing
+  /// for at least 15 seconds. To receive associated state change notifications
+  /// and optionally handle an unresponsive render process implement
+  /// cef_request_handler_t::OnRenderProcessUnresponsive. This function can only
+  /// be called on the UI thread.
   ///
-  void(CEF_CALLBACK* set_native_window)(struct _cef_browser_host_t* self,
-                                        cef_native_window_t window);
-
-  ///
-  /// Set web debugging access
-  ///
-  void(CEF_CALLBACK* set_web_debugging_access)(struct _cef_browser_host_t* self,
-                                               int isEnableDebug);
-
-  ///
-  /// Get web debugging access
-  ///
-  int(CEF_CALLBACK* get_web_debugging_access)(struct _cef_browser_host_t* self);
-
-  ///
-  /// GetImageForContextNode
-  ///
-  void(CEF_CALLBACK* get_image_for_context_node)(
+  int(CEF_CALLBACK* is_render_process_unresponsive)(
       struct _cef_browser_host_t* self);
 
   ///
-  /// GetImageFromCache
+  /// Returns the runtime style for this browser (ALLOY or CHROME). See
+  /// cef_runtime_style_t documentation for details.
   ///
-  void(CEF_CALLBACK* get_image_from_cache)(struct _cef_browser_host_t* self,
-                                           const cef_string_t* url);
-
-  ///
-  /// ExitFullScreen
-  ///
-  void(CEF_CALLBACK* exit_full_screen)(struct _cef_browser_host_t* self);
-
-  ///
-  /// UpdateLocale
-  ///
-  void(CEF_CALLBACK* update_locale)(struct _cef_browser_host_t* self,
-                                    const cef_string_t* locale);
-
-  ///
-  /// Returns the original url of the request.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* get_original_url)(
+  cef_runtime_style_t(CEF_CALLBACK* get_runtime_style)(
       struct _cef_browser_host_t* self);
 
   ///
-  /// Set network status
+  /// Get whether it is the iframe.
   ///
-  void(CEF_CALLBACK* put_network_available)(struct _cef_browser_host_t* self,
-                                            int available);
+  int(CEF_CALLBACK* is_iframe)(struct _cef_browser_host_t* self);
 
   ///
-  /// Remove web cache
+  /// fresh focused frame for context menu.
   ///
-  void(CEF_CALLBACK* remove_cache)(struct _cef_browser_host_t* self,
-                                   int include_disk_files);
+  void(CEF_CALLBACK* reload_focused_frame)(struct _cef_browser_host_t* self);
 
   ///
-  /// Post task to ui thread.
-  ///
-  void(CEF_CALLBACK* post_task_to_uithread)(struct _cef_browser_host_t* self,
-                                            struct _cef_task_t* task);
-
-  ///
-  /// Set the virtual pixel ratio
-  ///
-  void(CEF_CALLBACK* set_virtual_pixel_ratio)(struct _cef_browser_host_t* self,
-                                              float ratio);
-
-  ///
-  /// Get the virtual pixel ratio
-  ///
-  float(CEF_CALLBACK* get_virtual_pixel_ratio)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Recompute the WebPreferences based on the current state of the
-  /// CefSettings, we will also call SetWebPreferences and send the updated
-  /// WebPreferences to all RenderViews by WebContents.
-  ///
-  void(CEF_CALLBACK* set_web_preferences)(
-      struct _cef_browser_host_t* self,
-      const struct _cef_browser_settings_t* browser_settings);
-
-  ///
-  /// PutUserAgent
-  ///
-  void(CEF_CALLBACK* put_user_agent)(struct _cef_browser_host_t* self,
-                                     const cef_string_t* ua);
-
-  ///
-  /// DefaultUserAgent
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* default_user_agent)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// SetBackgroundColor
-  ///
-  void(CEF_CALLBACK* set_background_color)(struct _cef_browser_host_t* self,
-                                           int color);
-
-  ///
-  /// UpdateEasyListRules
-  ///
-  void(CEF_CALLBACK* update_adblock_easy_list_rules)(
-      struct _cef_browser_host_t* self,
-      long adBlockEasyListVersion);
-
-  ///
-  /// RegisterArkJSfunction
-  ///
-  void(CEF_CALLBACK* register_ark_jsfunction)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* object_name,
-      cef_string_list_t method_list,
-      cef_string_list_t async_method_list,
-      int32_t object_id,
-      const cef_string_t* permission);
-
-  ///
-  /// UnregisterArkJSfunction
-  ///
-  void(CEF_CALLBACK* unregister_ark_jsfunction)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* object_name,
-      cef_string_list_t method_list);
-
-  ///
-  /// CallH5Function
-  ///
-  void(CEF_CALLBACK* call_h5function)(struct _cef_browser_host_t* self,
-                                      int32_t routing_id,
-                                      int32_t h5_object_id,
-                                      const cef_string_t* h5_method_name,
-                                      size_t argsCount,
-                                      struct _cef_value_t* const* args);
-
-  ///
-  /// Saves the current view as a web archive.
-  ///
-  void(CEF_CALLBACK* store_web_archive)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* base_name,
-      int auto_name,
-      struct _cef_store_web_archive_result_callback_t* callback);
-
-  ///
-  /// Notify the browser that the widget has been resized because of virtual
-  /// keyboard.
-  ///
-  void(CEF_CALLBACK* was_keyboard_resized)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Set if lower the frame rate.
-  ///
-  void(CEF_CALLBACK* set_enable_lower_frame_rate)(
-      struct _cef_browser_host_t* self,
-      int enabled);
-
-  ///
-  /// Gets the title for the current page.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK* title)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Create a message channel, which include two message ports.
-  ///
-  void(CEF_CALLBACK* create_web_message_ports)(struct _cef_browser_host_t* self,
-                                               cef_string_list_t ports);
-
-  ///
-  /// Posts a MessageEvent to the main frame.
-  ///
-  void(CEF_CALLBACK* post_web_message)(struct _cef_browser_host_t* self,
-                                       cef_string_t* message,
-                                       cef_string_list_t ports,
-                                       cef_string_t* targetUri);
-
-  ///
-  /// Close the web message port.
-  ///
-  void(CEF_CALLBACK* close_port)(struct _cef_browser_host_t* self,
-                                 cef_string_t* port_handle);
-
-  ///
-  /// Destroy all web message ports.
-  ///
-  void(CEF_CALLBACK* destroy_all_web_message_ports)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Post a message to the port.
-  ///
-  void(CEF_CALLBACK* post_port_message)(struct _cef_browser_host_t* self,
-                                        const cef_string_t* port_handle,
-                                        struct _cef_value_t* message);
-
-  ///
-  /// Set the callback of the port.
-  ///
-  void(CEF_CALLBACK* set_port_message_callback)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* port_handle,
-      struct _cef_web_message_receiver_t* callback);
-
-  ///
-  /// Gets the latest hitdata
-  ///
-  void(CEF_CALLBACK* get_hit_data)(struct _cef_browser_host_t* self,
-                                   int* type,
-                                   cef_string_t* extra_data);
-
-  ///
-  /// Set the inital page scale
-  ///
-  void(CEF_CALLBACK* set_initial_scale)(struct _cef_browser_host_t* self,
-                                        float scale);
-
-  ///
-  /// Gets the progress for the current page.
-  ///
-  int(CEF_CALLBACK* page_load_progress)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Gets the progress for the current page.
-  ///
-  float(CEF_CALLBACK* scale)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Loads the given data into this WebView, using baseUrl as the base URL for
-  /// the content. The base URL is used both to resolve relative URLs and when
-  /// applying JavaScript's same origin policy. The historyUrl is used for the
-  /// history entry. optional_param=baseUrl, optional_param=data,
-  /// optional_param=mimeType, optional_param=encoding,
-  /// optional_param=historyUrl
-  ///
-  void(CEF_CALLBACK* load_with_data_and_base_url)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* baseUrl,
-      const cef_string_t* data,
-      const cef_string_t* mimeType,
-      const cef_string_t* encoding,
-      const cef_string_t* historyUrl);
-
-  ///
-  /// Loads the given data into this WebView optional_param=data,
-  /// optional_param=mimeType, optional_param=encoding,
-  ///
-  void(CEF_CALLBACK* load_with_data)(struct _cef_browser_host_t* self,
-                                     const cef_string_t* data,
-                                     const cef_string_t* mimeType,
-                                     const cef_string_t* encoding);
-
-  ///
-  /// add visited url.
-  ///
-  void(CEF_CALLBACK* add_visited_links)(struct _cef_browser_host_t* self,
-                                        cef_string_list_t urls);
-
-  ///
-  /// Resume download after interrupted.
-  ///
-  void(CEF_CALLBACK* resume_download)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* url,
-      const cef_string_t* full_path,
-      int64 received_bytes,
-      int64 total_bytes,
-      const cef_string_t* etag,
-      const cef_string_t* mime_type,
-      const cef_string_t* last_modified,
-      const cef_string_t* received_slices_string);
-
-  ///
-  ///  Set the audio resume interval of the broswer.
-  ///
-  void(CEF_CALLBACK* set_audio_resume_interval)(
-      struct _cef_browser_host_t* self,
-      int resumeInterval);
-
-  ///
-  ///  Set whether the browser's audio is exclusive.
-  ///
-  void(CEF_CALLBACK* set_audio_exclusive)(struct _cef_browser_host_t* self,
-                                          int audioExclusive);
-
-  ///
-  /// Close fullScreen video.
-  ///
-  void(CEF_CALLBACK* close_media)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Stop all audio and video playback on the web page.
-  ///
-  void(CEF_CALLBACK* stop_media)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Restart playback of all audio and video on the web page.
-  ///
-  void(CEF_CALLBACK* resume_media)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Pause all audio and video playback on the web page.
-  ///
-  void(CEF_CALLBACK* pause_media)(struct _cef_browser_host_t* self);
-
-  ///
-  /// View the playback status of all audio and video on the web page.
-  ///
-  int(CEF_CALLBACK* get_media_playback_state)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Scroll page up or down
-  ///
-  void(CEF_CALLBACK* scroll_page_up_down)(struct _cef_browser_host_t* self,
-                                          int is_up,
-                                          int is_half,
-                                          float view_height);
-
-  ///
-  /// Get web history state
-  ///
-  struct _cef_binary_value_t*(CEF_CALLBACK* get_web_state)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Restore web history state
-  ///
-  int(CEF_CALLBACK* restore_web_state)(struct _cef_browser_host_t* self,
-                                       struct _cef_binary_value_t* state);
-
-  ///
-  /// Scroll to the position.
-  ///
-  void(CEF_CALLBACK* scroll_to)(struct _cef_browser_host_t* self,
-                                float x,
-                                float y);
-
-  ///
-  /// Scroll by the delta distance.
-  ///
-  void(CEF_CALLBACK* scroll_by)(struct _cef_browser_host_t* self,
-                                float delta_x,
-                                float delta_y);
-
-  ///
-  /// Slide Scroll by the speed.
-  ///
-  void(CEF_CALLBACK* slide_scroll)(struct _cef_browser_host_t* self,
-                                   float vx,
-                                   float vy);
-
-  ///
-  /// Set whether webview can access files
-  ///
-  void(CEF_CALLBACK* set_file_access)(struct _cef_browser_host_t* self,
-                                      int falg);
-
-  ///
-  /// Set whether webview can access network
-  ///
-  void(CEF_CALLBACK* set_block_network)(struct _cef_browser_host_t* self,
-                                        int falg);
-
-  ///
-  /// Set the cache mode of webview
-  ///
-  void(CEF_CALLBACK* set_cache_mode)(struct _cef_browser_host_t* self,
-                                     int falg);
-
-  ///
-  /// Set should frame submission before draw
-  ///
-  void(CEF_CALLBACK* set_should_frame_submission_before_draw)(
-      struct _cef_browser_host_t* self,
-      int should);
-
-  ///
-  /// Set zoom with the dela facetor
-  ///
-  void(CEF_CALLBACK* zoom_by)(struct _cef_browser_host_t* self,
-                              float delta,
-                              float width,
-                              float height);
-
-  ///
-  /// Set the window id of the UI framework
-  ///
-  void(CEF_CALLBACK* set_window_id)(struct _cef_browser_host_t* self,
-                                    int window_id,
-                                    int nweb_id);
-
-  ///
-  /// Set the token of the UI framework
-  ///
-  void(CEF_CALLBACK* set_token)(struct _cef_browser_host_t* self, void* token);
-
-  ///
-  /// Set the property values for width, height, and keyboard height
-  ///
-  void(CEF_CALLBACK* set_virtual_key_board_arg)(
-      struct _cef_browser_host_t* self,
-      int32_t width,
-      int32_t height,
-      double keyboard);
-
-  ///
-  /// Set the virtual keyboard to override the web status
-  ///
-  int(CEF_CALLBACK* should_virtual_keyboard_overlay)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// JavaScriptOnDocumentStart
-  ///
-  void(CEF_CALLBACK* java_script_on_document_start)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* script,
-      cef_string_list_t script_rules);
-
-  ///
-  /// RemoveJavaScriptOnDocumentStart
-  ///
-  void(CEF_CALLBACK* remove_java_script_on_document_start)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// JavaScriptOnDocumentEnd
-  ///
-  void(CEF_CALLBACK* java_script_on_document_end)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* script,
-      cef_string_list_t script_rules);
-
-  ///
-  /// RemoveJavaScriptOnDocumentEnd
-  ///
-  void(CEF_CALLBACK* remove_java_script_on_document_end)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Set the draw rect
-  ///
-  void(CEF_CALLBACK* set_draw_rect)(struct _cef_browser_host_t* self,
-                                    int x,
-                                    int y,
-                                    int width,
-                                    int height);
-
-  ///
-  /// Set the draw mode
-  ///
-  void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
-
-  ///
-  /// Create the Web print document adapter of the UI framework
-  ///
-  void(CEF_CALLBACK* create_web_print_document_adapter)(
-      struct _cef_browser_host_t* self,
-      const cef_string_t* jobName,
-      void** webPrintDocumentAdapter);
-
-  ///
-  /// Set the over-scroll mode of web
-  ///
-  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
-                                          int mode);
-
-  ///
-  /// Discard a webview window
-  ///
-  int(CEF_CALLBACK* discard)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Restore the discarded webview window
-  ///
-  int(CEF_CALLBACK* restore)(struct _cef_browser_host_t* self);
+  /// Notify that safe insets change.
+  ///
+  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
+                                            int left,
+                                            int top,
+                                            int right,
+                                            int bottom);
 
   ///
   /// Change the zoom factor for browser zoom. If called on the UI thread the
@@ -1843,35 +1188,62 @@ typedef struct _cef_browser_host_t {
                                              double zoomFactor);
 
   ///
-  /// Get the top controls offset.
+  /// WebPageSnapshot, return result by callback
   ///
-  int(CEF_CALLBACK* get_top_controls_offset)(struct _cef_browser_host_t* self);
+  int(CEF_CALLBACK* web_page_snapshot)(struct _cef_browser_host_t* self,
+                                       const char* id,
+                                       int width,
+                                       int height,
+                                       cef_web_snapshot_callback_t callback);
+
+#if BUILDFLAG(ARKWEB_REPORT_RENDER_STATE)
+  ///
+  /// Running and do something when the window show
+  ///
+  void(CEF_CALLBACK* on_window_show)(struct _cef_browser_host_t* self);
 
   ///
-  /// Get the shrink viewport height.
+  /// Running and do something when the window hide
   ///
-  int(CEF_CALLBACK* get_shrink_viewport_height)(
+  void(CEF_CALLBACK* on_window_hide)(struct _cef_browser_host_t* self);
+#endif
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+  ///
+  /// Running and do something when the render visible
+  ///
+  void(CEF_CALLBACK* on_online_render_to_foreground)(
       struct _cef_browser_host_t* self);
+#endif
 
   ///
-  /// Set background print enable.
+  /// RegisterArkJSfunction
   ///
-  void(CEF_CALLBACK* set_print_background)(struct _cef_browser_host_t* self,
-                                           int enable);
+  void(CEF_CALLBACK* register_ark_jsfunction)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* object_name,
+      cef_string_list_t method_list,
+      cef_string_list_t async_method_list,
+      int32_t object_id);
 
   ///
-  /// Get whether print background.
+  /// RegisterNativeJSProxy
   ///
-  int(CEF_CALLBACK* get_print_background)(struct _cef_browser_host_t* self);
+  void(CEF_CALLBACK* register_native_jsproxy)(struct _cef_browser_host_t* self,
+                                              const cef_string_t* object_name,
+                                              cef_string_list_t method_list,
+                                              int32_t object_id,
+                                              int is_async);
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   ///
   /// set Scrollable
   ///
   void(CEF_CALLBACK* set_scrollable)(struct _cef_browser_host_t* self,
                                      int enable,
                                      int scrollType);
+#endif
 
-  ///
   ///  Start current camera.
   ///
   void(CEF_CALLBACK* start_camera)(struct _cef_browser_host_t* self);
@@ -1885,25 +1257,7 @@ typedef struct _cef_browser_host_t {
   ///  Close current camera.
   ///
   void(CEF_CALLBACK* close_camera)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Get the last javascript proxy calling frame url.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(
-      CEF_CALLBACK* get_last_javascript_proxy_calling_frame_url)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  ///  Set NWebID.
-  ///
-  void(CEF_CALLBACK* set_nweb_id)(struct _cef_browser_host_t* self, int nWebId);
-
-  ///
-  /// get pendingSizeStatus.
-  ///
-  int(CEF_CALLBACK* get_pending_size_status)(struct _cef_browser_host_t* self);
-
+#if BUILDFLAG(ARKWEB_PRECOMPILE)
   ///
   ///  precompile javascript and generate code cache.
   ///
@@ -1913,93 +1267,30 @@ typedef struct _cef_browser_host_t {
       const char* script,
       struct _cef_cache_options_t* cacheOptions,
       struct _cef_precompile_callback_t* callback);
+#endif
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// OnResizeScrollableViewport.
+  ///
+  void(CEF_CALLBACK* scroll_focused_editable_node_into_view)(
+      struct _cef_browser_host_t* self);
+  ///
+  /// Set zoom with the dela facetor
+  ///
+  void(CEF_CALLBACK* scale_gesture_change_v2)(struct _cef_browser_host_t* self,
+                                              int type,
+                                              float scale,
+                                              float originScale,
+                                              float width,
+                                              float height);
+#endif
 
   ///
-  /// SetWakeLockHandler.
+  /// Set the over-scroll mode of web
   ///
-  void(CEF_CALLBACK* set_wake_lock_handler)(
-      struct _cef_browser_host_t* self,
-      int32_t windowId,
-      struct _cef_set_lock_callback_t* callback);
-
-  ///
-  /// Get cef_download_item_t by download_item_id.
-  ///
-  struct _cef_download_item_t*(CEF_CALLBACK* get_download_item)(
-      struct _cef_browser_host_t* self,
-      uint32 item_id);
-
-  ///
-  ///  Notify browser host needs reload when the render process terminated.
-  ///
-  void(CEF_CALLBACK* notify_needs_reload)(struct _cef_browser_host_t* self,
-                                          int needs_reload);
-
-  ///
-  ///  Return true if needs reload page, or false if nees not reload.
-  ///
-  int(CEF_CALLBACK* needs_reload)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Terminate render process
-  ///
-  int(CEF_CALLBACK* terminate_render_process)(struct _cef_browser_host_t* self);
-
-  ///
-  /// RegisterNativeJSProxy
-  ///
-  void(CEF_CALLBACK* register_native_jsproxy)(struct _cef_browser_host_t* self,
-                                              const cef_string_t* object_name,
-                                              cef_string_list_t method_list,
-                                              int32_t object_id,
-                                              int is_async,
-                                              const cef_string_t* permission);
-
-  ///
-  /// SendTouchpadFlingEvent
-  ///
-  void(CEF_CALLBACK* send_touchpad_fling_event)(
-      struct _cef_browser_host_t* self,
-      const cef_mouse_event_t* event,
-      double vx,
-      double vy);
-
-  ///
-  /// Set the fit content mode
-  ///
-  void(CEF_CALLBACK* set_fit_content_mode)(struct _cef_browser_host_t* self,
-                                           int mode);
-
-  ///
-  /// update draw_rect state.
-  ///
-  void(CEF_CALLBACK* update_draw_rect)(struct _cef_browser_host_t* self);
-
-  ///
-  /// Called when text is selected.
-  ///
-  void(CEF_CALLBACK* on_text_selected)(struct _cef_browser_host_t* self,
-                                       int flag);
-
-  ///
-  /// Get page scale factor.
-  ///
-  float(CEF_CALLBACK* get_page_scale_factor)(struct _cef_browser_host_t* self);
-
-  ///
-  /// WebPageSnapshot, return result by callback
-  ///
-  int(CEF_CALLBACK* web_page_snapshot)(struct _cef_browser_host_t* self,
-                                       const char* id,
-                                       int width,
-                                       int height,
-                                       cef_web_snapshot_callback_t callback);
-
-  ///
-  /// Advance focus for IME to the browser.
-  ///
-  void(CEF_CALLBACK* advance_focus_for_ime)(struct _cef_browser_host_t* self,
-                                            int focusType);
+  void(CEF_CALLBACK* set_overscroll_mode)(struct _cef_browser_host_t* self,
+                                          int mode);
 
   ///
   /// Scroll to the position with anime.
@@ -2018,48 +1309,6 @@ typedef struct _cef_browser_host_t {
                                            int32_t duration);
 
   ///
-  /// Get the current scroll offset of the webpage.
-  ///
-  void(CEF_CALLBACK* get_scroll_offset)(struct _cef_browser_host_t* self,
-                                        float* offset_x,
-                                        float* offset_y);
-
-  ///
-  /// Get the current overscroll offset of the webpage.
-  ///
-  void(CEF_CALLBACK* get_over_scroll_offset)(struct _cef_browser_host_t* self,
-                                             float* offset_x,
-                                             float* offset_y);
-
-  ///
-  /// OnSafeInsetsChange
-  ///
-  void(CEF_CALLBACK* on_safe_insets_change)(struct _cef_browser_host_t* self,
-                                            int left,
-                                            int top,
-                                            int right,
-                                            int bottom);
-
-  ///
-  /// SetNativeEmbedMode.
-  ///
-  void(CEF_CALLBACK* set_native_embed_mode)(struct _cef_browser_host_t* self,
-                                            int flag);
-
-  ///
-  /// Notify for next touch move event.
-  ///
-  void(CEF_CALLBACK* notify_for_next_touch_event)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Set grant file access dirs.
-  ///
-  void(CEF_CALLBACK* set_grant_file_access_dirs)(
-      struct _cef_browser_host_t* self,
-      cef_string_list_t dir_list);
-
-  ///
   /// Set the callback of the autofill event.
   ///
   void(CEF_CALLBACK* set_autofill_callback)(
@@ -2072,26 +1321,12 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* fill_autofill_data)(struct _cef_browser_host_t* self,
                                          struct _cef_value_t* message);
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   ///
-  /// ScrollFocusedEditableNodeIntoView.
+  /// Set popup window from ohos rs
   ///
-  void(CEF_CALLBACK* scroll_focused_editable_node_into_view)(
-      struct _cef_browser_host_t* self);
-
-  ///
-  /// Process autofill cancel content.
-  ///
-  void(CEF_CALLBACK* process_autofill_cancel)(struct _cef_browser_host_t* self,
-                                              const char* fillContent);
-
-  ///
-  /// request autofill from IMF event.
-  ///
-  void(CEF_CALLBACK* auto_fill_with_imfevent)(struct _cef_browser_host_t* self,
-                                              int is_username,
-                                              int is_other_account,
-                                              int is_new_password,
-                                              const char* content);
+  void(CEF_CALLBACK* set_popup_window)(struct _cef_browser_host_t* self,
+                                       cef_native_window_t popupwindow);
 
   ///
   /// Create pdf data stream.
@@ -2100,22 +1335,72 @@ typedef struct _cef_browser_host_t {
       struct _cef_browser_host_t* self,
       const struct _cef_pdf_print_settings_t* settings,
       struct _cef_pdf_value_callback_t* callback);
+#endif
+
+#if BUILDFLAG(ARKWEB_PRINT)
+  ///
+  /// Set background print enable.
+  ///
+  void(CEF_CALLBACK* set_print_background)(struct _cef_browser_host_t* self,
+                                           int enable);
 
   ///
-  /// SetPopupWindow.
+  /// Get whether print background.
   ///
-  void(CEF_CALLBACK* set_popup_window)(struct _cef_browser_host_t* self,
-                                       cef_native_window_t window);
+  int(CEF_CALLBACK* get_print_background)(struct _cef_browser_host_t* self);
+#endif
+
+#if BUILDFLAG(ARKWEB_MEDIA_AVSESSION)
+  ///
+  /// Set whether to connect to media avsession.
+  ///
+  void(CEF_CALLBACK* put_web_media_avsession_enabled)(
+      struct _cef_browser_host_t* self,
+      int is_enable);
+#endif  // ARKWEB_MEDIA_AVSESSION
+  ///
+  /// set video assistant enable.
+  ///
+  void(CEF_CALLBACK* enable_video_assistant)(struct _cef_browser_host_t* self,
+                                             int enable);
 
   ///
-  /// Set zoom with the dela facetor
+  /// execute video assistant function.
   ///
-  void(CEF_CALLBACK* scale_gesture_change_v2)(struct _cef_browser_host_t* self,
-                              int type,
-                              float scale,
-                              float originScale,
-                              float width,
-                              float height);
+  void(CEF_CALLBACK* execute_video_assistant_function)(
+      struct _cef_browser_host_t* self,
+      const cef_string_t* cmdId);
+
+  ///
+  ///  Close current screen capture.
+  ///
+  void(CEF_CALLBACK* stop_screen_capture)(struct _cef_browser_host_t* self,
+                                          int32_t nweb_id,
+                                          const cef_string_t* session_id);
+
+  ///
+  ///  Register screen capture listener.
+  ///
+  void(CEF_CALLBACK* register_screen_capture_delegate_listener)(
+      struct _cef_browser_host_t* self,
+      struct _cef_screen_capture_callback_t* listener);
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void(CEF_CALLBACK* web_extension_tab_updated_change_info)(
+      struct _cef_browser_host_t* self,
+      int tab_id,
+      cef_string_list_t changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo);
+ 
+  ///
+  /// Receiving the tab actived notification.
+  ///
+  void(CEF_CALLBACK* web_extension_tab_actived)(
+      struct _cef_browser_host_t* self,
+      int tab_id,
+      int window_id);
+#endif
+
 } cef_browser_host_t;
 
 ///
@@ -2151,6 +1436,33 @@ CEF_EXPORT cef_browser_t* cef_browser_host_create_browser_sync(
     const struct _cef_browser_settings_t* settings,
     struct _cef_dictionary_value_t* extra_info,
     struct _cef_request_context_t* request_context);
+
+///
+/// Returns the browser (if any) with the specified identifier.
+///
+CEF_EXPORT cef_browser_t* cef_browser_host_get_browser_by_identifier(
+    int browser_id);
+
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+///
+// Structure to implement to be notified of asynchronous completion via
+// cef_browser_host_tBase::store_web_archive().
+///
+typedef struct _cef_store_web_archive_result_callback_t {
+  ///
+  // Base structure.
+  ///
+  cef_base_ref_counted_t base;
+
+  ///
+  // Method that will be called upon completion. |result| will either be the
+  // filename under which the file was saved, or NULL if saving the file failed.
+  ///
+  void(CEF_CALLBACK* on_store_web_archive_done)(
+      struct _cef_store_web_archive_result_callback_t* self,
+      const cef_string_t* result);
+} cef_store_web_archive_result_callback_t;
+#endif
 
 #ifdef __cplusplus
 }

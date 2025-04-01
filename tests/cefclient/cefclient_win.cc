@@ -10,6 +10,7 @@
 #include "include/cef_sandbox_win.h"
 #include "tests/cefclient/browser/main_context_impl.h"
 #include "tests/cefclient/browser/main_message_loop_multithreaded_win.h"
+#include "tests/cefclient/browser/resource.h"
 #include "tests/cefclient/browser/root_window_manager.h"
 #include "tests/cefclient/browser/test_runner.h"
 #include "tests/shared/browser/client_app_browser.h"
@@ -79,18 +80,27 @@ int RunMain(HINSTANCE hInstance, int nCmdShow) {
   // Populate the settings based on command line arguments.
   context->PopulateSettings(&settings);
 
+  // Set the ID for the ICON resource that will be loaded from the main
+  // executable and used when creating default Chrome windows such as DevTools
+  // and Task Manager. Only used with the Chrome runtime.
+  settings.chrome_app_icon_id = IDR_MAINFRAME;
+
   // Create the main message loop object.
   std::unique_ptr<MainMessageLoop> message_loop;
   if (settings.multi_threaded_message_loop) {
-    message_loop.reset(new MainMessageLoopMultithreadedWin);
+    message_loop = std::make_unique<MainMessageLoopMultithreadedWin>();
   } else if (settings.external_message_pump) {
     message_loop = MainMessageLoopExternalPump::Create();
   } else {
-    message_loop.reset(new MainMessageLoopStd);
+    message_loop = std::make_unique<MainMessageLoopStd>();
   }
 
-  // Initialize CEF.
-  context->Initialize(main_args, settings, app, sandbox_info);
+  // Initialize the CEF browser process. May return false if initialization
+  // fails or if early exit is desired (for example, due to process singleton
+  // relaunch behavior).
+  if (!context->Initialize(main_args, settings, app, sandbox_info)) {
+    return CefGetExitCode();
+  }
 
   // Register scheme handlers.
   test_runner::RegisterSchemeHandlers();
@@ -98,8 +108,6 @@ int RunMain(HINSTANCE hInstance, int nCmdShow) {
   auto window_config = std::make_unique<RootWindowConfig>();
   window_config->always_on_top =
       command_line->HasSwitch(switches::kAlwaysOnTop);
-  window_config->with_controls =
-      !command_line->HasSwitch(switches::kHideControls);
   window_config->with_osr =
       settings.windowless_rendering_enabled ? true : false;
 

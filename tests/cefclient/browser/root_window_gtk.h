@@ -7,6 +7,7 @@
 #pragma once
 
 #include <gtk/gtk.h>
+
 #include <memory>
 #include <string>
 
@@ -21,7 +22,7 @@ namespace client {
 class RootWindowGtk : public RootWindow, public BrowserWindow::Delegate {
  public:
   // Constructor may be called on any thread.
-  RootWindowGtk();
+  explicit RootWindowGtk(bool use_alloy_style);
   ~RootWindowGtk();
 
   // RootWindow methods.
@@ -44,7 +45,6 @@ class RootWindowGtk : public RootWindow, public BrowserWindow::Delegate {
   CefRefPtr<CefBrowser> GetBrowser() const override;
   ClientWindowHandle GetWindowHandle() const override;
   bool WithWindowlessRendering() const override;
-  bool WithExtension() const override;
 
  private:
   void CreateBrowserWindow(const std::string& startup_url);
@@ -52,6 +52,7 @@ class RootWindowGtk : public RootWindow, public BrowserWindow::Delegate {
                         bool initially_hidden);
 
   // BrowserWindow::Delegate methods.
+  bool UseAlloyStyle() const override { return IsAlloyStyle(); }
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser) override;
   void OnBrowserWindowClosing() override;
   void OnBrowserWindowDestroyed() override;
@@ -127,11 +128,9 @@ class RootWindowGtk : public RootWindow, public BrowserWindow::Delegate {
   bool with_controls_;
   bool always_on_top_;
   bool with_osr_;
-  bool with_extension_;
   bool is_popup_;
   CefRect start_rect_;
   std::unique_ptr<BrowserWindow> browser_window_;
-  bool initialized_;
 
   // Main window.
   GtkWidget* window_;

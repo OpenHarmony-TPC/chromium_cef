@@ -2,8 +2,9 @@
 // 2016 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/common/crash_reporter_client.h"
+#include "cef/libcef/common/crash_reporter_client.h"
 
+#include <string_view>
 #include <utility>
 
 #if BUILDFLAG(IS_WIN)
@@ -14,7 +15,6 @@
 #include "base/logging.h"
 #include "base/stl_util.h"
 #include "base/strings/string_number_conversions.h"
-#include "base/strings/string_piece.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
@@ -23,7 +23,7 @@
 #include "third_party/crashpad/crashpad/client/annotation.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "libcef/common/util_mac.h"
+#include "cef/libcef/common/util_mac.h"
 #endif
 
 #if BUILDFLAG(IS_POSIX)
@@ -39,8 +39,8 @@
 #endif
 
 #if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC)
+#include "cef/libcef/common/cef_crash_report_utils.h"
 #include "content/public/common/content_switches.h"
-#include "libcef/common/cef_crash_report_utils.h"
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -112,8 +112,8 @@ bool isInvalidFileCharacter(unsigned char c) {
   if (c < ' ' || c == 0x7F) {
     return true;
   }
-  for (size_t i = 0; i < sizeof(kInvalidFileChars); ++i) {
-    if (c == kInvalidFileChars[i]) {
+  for (char kInvalidFileChar : kInvalidFileChars) {
+    if (c == kInvalidFileChar) {
       return true;
     }
   }
@@ -201,8 +201,7 @@ std::string sanitizePath(const std::string& s) {
   std::vector<std::string> parts =
       base::SplitString(path, std::string() + kPathSep, base::KEEP_WHITESPACE,
                         base::SPLIT_WANT_NONEMPTY);
-  for (size_t i = 0; i < parts.size(); ++i) {
-    std::string part = parts[i];
+  for (auto part : parts) {
     if (part != "." && part != "..") {
       part = sanitizePathComponent(part);
     }
@@ -251,7 +250,7 @@ CefCrashReporterClient* g_crash_reporter_client = nullptr;
 
 const char kKeyMapDelim = ',';
 
-std::string NormalizeCrashKey(const base::StringPiece& key) {
+std::string NormalizeCrashKey(const std::string_view& key) {
   std::string str(key);
   std::replace(str.begin(), str.end(), kKeyMapDelim, '-');
   if (str.length() > crashpad::Annotation::kNameMaxLength) {
@@ -298,7 +297,7 @@ int __declspec(dllexport) __cdecl SetCrashKeyValueImpl(const char* key,
                                                        size_t value_size) {
   if (g_crash_reporter_client) {
     return g_crash_reporter_client->SetCrashKeyValue(
-        base::StringPiece(key, key_size), base::StringPiece(value, value_size));
+        std::string_view(key, key_size), std::string_view(value, value_size));
   }
   return 0;
 }
@@ -371,8 +370,8 @@ bool GetDefaultCrashDumpLocation(std::wstring* crash_dir,
 
 #endif  // OS_WIN
 
-CefCrashReporterClient::CefCrashReporterClient() {}
-CefCrashReporterClient::~CefCrashReporterClient() {}
+CefCrashReporterClient::CefCrashReporterClient() = default;
+CefCrashReporterClient::~CefCrashReporterClient() = default;
 
 // Be aware that logging is not initialized at the time this method is called.
 bool CefCrashReporterClient::ReadCrashConfigFile() {
@@ -535,10 +534,10 @@ bool CefCrashReporterClient::ReadCrashConfigFile() {
                   "Not enough storage for key map");
 
     size_t offset = 0;
-    for (size_t i = 0; i < std::size(ids); ++i) {
+    for (auto& id : ids) {
       size_t length = std::min(map_keys.size() - offset,
                                crashpad::Annotation::kValueMaxSize);
-      ids[i].Set(base::StringPiece(map_keys.data() + offset, length));
+      id.Set(std::string_view(map_keys.data() + offset, length));
       offset += length;
       if (offset >= map_keys.size()) {
         break;
@@ -582,7 +581,7 @@ void CefCrashReporterClient::InitializeCrashReportingForProcess() {
     return;
   }
 
-  std::wstring process_type = install_static::GetSwitchValueFromCommandLine(
+  std::wstring process_type = install_static::GetCommandLineSwitchValue(
       ::GetCommandLineW(), install_static::kProcessType);
   if (process_type != install_static::kCrashpadHandler) {
     crash_reporter::SetCrashReporterClient(g_crash_reporter_client);
@@ -662,12 +661,11 @@ bool CefCrashReporterClient::GetCrashDumpLocation(base::FilePath* crash_dir) {
         base::FilePath::FromUTF8Unsafe(alternate_crash_dump_location);
     base::PathService::Override(chrome::DIR_CRASH_DUMPS, crash_dumps_dir_path);
   }
-
-#if defined(OHOS_CRASHPAD)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   return base::PathService::Get(base::DIR_OHOS_CRASHPAD, crash_dir);
 #else
   return base::PathService::Get(chrome::DIR_CRASH_DUMPS, crash_dir);
-#endif // defined(OHOS_CRASHPAD)
+#endif  // BUILDFLAG(ARKWEB_CRASHPAD)
 }
 
 #endif  // !BUILDFLAG(IS_POSIX)
@@ -695,7 +693,7 @@ std::string CefCrashReporterClient::GetUploadUrl() {
 void CefCrashReporterClient::GetCrashOptionalArguments(
     std::vector<std::string>* arguments) {
   if (!rate_limit_) {
-    arguments->push_back(std::string("--no-rate-limit"));
+    arguments->emplace_back("--no-rate-limit");
   }
 
   if (max_uploads_ > 0) {
@@ -757,21 +755,21 @@ bool CefCrashReporterClient::EnableBrowserCrashForwarding() {
       IDKEY(n "-V"), IDKEY(n "-W"), IDKEY(n "-X"), IDKEY(n "-Y"),            \
       IDKEY(n "-Z")
 
-#define IDKEY_FUNCTION(name, size_)                                          \
-  static_assert(size_ <= crashpad::Annotation::kValueMaxSize,                \
-                "Annotation size is too large.");                            \
-  bool Set##name##Annotation(size_t index, const base::StringPiece& value) { \
-    using IDKey = crash_reporter::CrashKeyString<size_>;                     \
-    static IDKey ids[] = {IDKEY_ENTRIES(#name)};                             \
-    if (index < std::size(ids)) {                                            \
-      if (value.empty()) {                                                   \
-        ids[index].Clear();                                                  \
-      } else {                                                               \
-        ids[index].Set(value);                                               \
-      }                                                                      \
-      return true;                                                           \
-    }                                                                        \
-    return false;                                                            \
+#define IDKEY_FUNCTION(name, size_)                                         \
+  static_assert(size_ <= crashpad::Annotation::kValueMaxSize,               \
+                "Annotation size is too large.");                           \
+  bool Set##name##Annotation(size_t index, const std::string_view& value) { \
+    using IDKey = crash_reporter::CrashKeyString<size_>;                    \
+    static IDKey ids[] = {IDKEY_ENTRIES(#name)};                            \
+    if (index < std::size(ids)) {                                           \
+      if (value.empty()) {                                                  \
+        ids[index].Clear();                                                 \
+      } else {                                                              \
+        ids[index].Set(value);                                              \
+      }                                                                     \
+      return true;                                                          \
+    }                                                                       \
+    return false;                                                           \
   }
 
 // The first argument must be kept synchronized with the logic in
@@ -781,8 +779,8 @@ IDKEY_FUNCTION(S, 64)
 IDKEY_FUNCTION(M, 256)
 IDKEY_FUNCTION(L, 1024)
 
-bool CefCrashReporterClient::SetCrashKeyValue(const base::StringPiece& key,
-                                              const base::StringPiece& value) {
+bool CefCrashReporterClient::SetCrashKeyValue(const std::string_view& key,
+                                              const std::string_view& value) {
   if (key.empty() || crash_keys_.empty()) {
     return false;
   }

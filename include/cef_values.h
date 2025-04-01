@@ -39,6 +39,7 @@
 #pragma once
 
 #include <vector>
+
 #include "include/cef_base.h"
 
 class CefBinaryValue;
@@ -136,6 +137,7 @@ class CefValue : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual CefString GetString() = 0;
   virtual std::string GetStdString() = 0;
+
   ///
   /// Returns the underlying value as type binary. The returned reference may
   /// become invalid if the value is owned by another object or if ownership is
@@ -278,6 +280,13 @@ class CefBinaryValue : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefRefPtr<CefBinaryValue> Copy() = 0;
+
+  ///
+  /// Returns a pointer to the beginning of the memory block.
+  /// The returned pointer is valid as long as the CefBinaryValue is alive.
+  ///
+  /*--cef()--*/
+  virtual const void* GetRawData() = 0;
 
   ///
   /// Returns the data size.

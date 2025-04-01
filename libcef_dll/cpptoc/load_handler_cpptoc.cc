@@ -9,19 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c8e1ae0e6b62d0b53b3f946ec9da3a2eae259c1e$
+// $hash=51a09f61c910ca10918228ff97f8f2a0b1614f7d$
 //
 
 #include "libcef_dll/cpptoc/load_handler_cpptoc.h"
+
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
-#include "libcef_dll/ctocpp/callback_ctocpp.h"
-#include "libcef_dll/ctocpp/first_meaningful_paint_details_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
-#include "libcef_dll/ctocpp/largest_contentful_paint_details_ctocpp.h"
 #include "libcef_dll/ctocpp/load_committed_details_ctocpp.h"
-#include "libcef_dll/ctocpp/request_ctocpp.h"
-#include "libcef_dll/ctocpp/response_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
+
 
 namespace {
 
@@ -77,7 +75,11 @@ load_handler_on_load_start(struct _cef_load_handler_t* self,
   if (!frame) {
     return;
   }
-  // Unverified params: url
+  // Verify param: url; type: string_byref_const
+  DCHECK(url);
+  if (!url) {
+    return;
+  }
 
   // Execute
   CefLoadHandlerCppToC::Get(self)->OnLoadStart(CefBrowserCToCpp::Wrap(browser),
@@ -151,218 +153,6 @@ void CEF_CALLBACK load_handler_on_load_error(struct _cef_load_handler_t* self,
       CefString(errorText), CefString(failedUrl));
 }
 
-void CEF_CALLBACK
-load_handler_on_load_error_with_request(struct _cef_load_handler_t* self,
-                                        struct _cef_request_t* request,
-                                        int is_main_frame,
-                                        int has_user_gesture,
-                                        int error_code,
-                                        const cef_string_t* error_text) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: request; type: refptr_diff
-  DCHECK(request);
-  if (!request) {
-    return;
-  }
-  // Verify param: error_text; type: string_byref_const
-  DCHECK(error_text);
-  if (!error_text) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnLoadErrorWithRequest(
-      CefRequestCToCpp::Wrap(request), is_main_frame ? true : false,
-      has_user_gesture ? true : false, error_code, CefString(error_text));
-}
-
-void CEF_CALLBACK load_handler_on_http_error(struct _cef_load_handler_t* self,
-                                             struct _cef_request_t* request,
-                                             int is_main_frame,
-                                             int has_user_gesture,
-                                             struct _cef_response_t* response) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: request; type: refptr_diff
-  DCHECK(request);
-  if (!request) {
-    return;
-  }
-  // Verify param: response; type: refptr_diff
-  DCHECK(response);
-  if (!response) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnHttpError(
-      CefRequestCToCpp::Wrap(request), is_main_frame ? true : false,
-      has_user_gesture ? true : false, CefResponseCToCpp::Wrap(response));
-}
-
-void CEF_CALLBACK
-load_handler_on_refresh_accessed_history(struct _cef_load_handler_t* self,
-                                         cef_browser_t* browser,
-                                         cef_frame_t* frame,
-                                         const cef_string_t* url,
-                                         int isReload) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: frame; type: refptr_diff
-  DCHECK(frame);
-  if (!frame) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnRefreshAccessedHistory(
-      CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-      CefString(url), isReload ? true : false);
-}
-
-void CEF_CALLBACK load_handler_on_page_visible(struct _cef_load_handler_t* self,
-                                               cef_browser_t* browser,
-                                               const cef_string_t* url,
-                                               int success) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Unverified params: url
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnPageVisible(
-      CefBrowserCToCpp::Wrap(browser), CefString(url), success ? true : false);
-}
-
-void CEF_CALLBACK
-load_handler_on_data_resubmission(struct _cef_load_handler_t* self,
-                                  cef_browser_t* browser,
-                                  cef_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback);
-  if (!callback) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnDataResubmission(
-      CefBrowserCToCpp::Wrap(browser), CefCallbackCToCpp::Wrap(callback));
-}
-
-void CEF_CALLBACK
-load_handler_on_first_contentful_paint(struct _cef_load_handler_t* self,
-                                       int64_t navigationStartTick,
-                                       int64_t firstContentfulPaintMs) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnFirstContentfulPaint(
-      navigationStartTick, firstContentfulPaintMs);
-}
-
-void CEF_CALLBACK load_handler_on_first_meaningful_paint(
-    struct _cef_load_handler_t* self,
-    cef_first_meaningful_paint_details_t* details) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: details; type: refptr_diff
-  DCHECK(details);
-  if (!details) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnFirstMeaningfulPaint(
-      CefFirstMeaningfulPaintDetailsCToCpp::Wrap(details));
-}
-
-void CEF_CALLBACK load_handler_on_largest_contentful_paint(
-    struct _cef_load_handler_t* self,
-    cef_largest_contentful_paint_details_t* details) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: details; type: refptr_diff
-  DCHECK(details);
-  if (!details) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnLargestContentfulPaint(
-      CefLargestContentfulPaintDetailsCToCpp::Wrap(details));
-}
-
 void CEF_CALLBACK load_handler_on_navigation_entry_committed(
     struct _cef_load_handler_t* self,
     cef_load_committed_details_t* details) {
@@ -381,52 +171,8 @@ void CEF_CALLBACK load_handler_on_navigation_entry_committed(
   }
 
   // Execute
-  CefLoadHandlerCppToC::Get(self)->OnNavigationEntryCommitted(
+  CefLoadHandlerCppToC::Get(self)->AsArkWebLoadHandlerExt()->OnNavigationEntryCommitted(
       CefLoadCommittedDetailsCToCpp::Wrap(details));
-}
-
-void CEF_CALLBACK
-load_handler_on_safe_browsing_check_result(struct _cef_load_handler_t* self,
-                                           int threat_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnSafeBrowsingCheckResult(threat_type);
-}
-
-void CEF_CALLBACK load_handler_on_intelligent_tracking_prevention_result(
-    struct _cef_load_handler_t* self,
-    const cef_string_t* website_host,
-    const cef_string_t* tracker_host) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: website_host; type: string_byref_const
-  DCHECK(website_host);
-  if (!website_host) {
-    return;
-  }
-  // Verify param: tracker_host; type: string_byref_const
-  DCHECK(tracker_host);
-  if (!tracker_host) {
-    return;
-  }
-
-  // Execute
-  CefLoadHandlerCppToC::Get(self)->OnIntelligentTrackingPreventionResult(
-      CefString(website_host), CefString(tracker_host));
 }
 
 }  // namespace
@@ -438,25 +184,7 @@ CefLoadHandlerCppToC::CefLoadHandlerCppToC() {
   GetStruct()->on_load_start = load_handler_on_load_start;
   GetStruct()->on_load_end = load_handler_on_load_end;
   GetStruct()->on_load_error = load_handler_on_load_error;
-  GetStruct()->on_load_error_with_request =
-      load_handler_on_load_error_with_request;
-  GetStruct()->on_http_error = load_handler_on_http_error;
-  GetStruct()->on_refresh_accessed_history =
-      load_handler_on_refresh_accessed_history;
-  GetStruct()->on_page_visible = load_handler_on_page_visible;
-  GetStruct()->on_data_resubmission = load_handler_on_data_resubmission;
-  GetStruct()->on_first_contentful_paint =
-      load_handler_on_first_contentful_paint;
-  GetStruct()->on_first_meaningful_paint =
-      load_handler_on_first_meaningful_paint;
-  GetStruct()->on_largest_contentful_paint =
-      load_handler_on_largest_contentful_paint;
-  GetStruct()->on_navigation_entry_committed =
-      load_handler_on_navigation_entry_committed;
-  GetStruct()->on_safe_browsing_check_result =
-      load_handler_on_safe_browsing_check_result;
-  GetStruct()->on_intelligent_tracking_prevention_result =
-      load_handler_on_intelligent_tracking_prevention_result;
+  GetStruct()->on_navigation_entry_committed = load_handler_on_navigation_entry_committed;
 }
 
 // DESTRUCTOR - Do not edit by hand.

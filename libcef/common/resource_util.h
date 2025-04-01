@@ -6,13 +6,10 @@
 #define CEF_LIBCEF_COMMON_RESOURCE_UTIL_H_
 #pragma once
 
-#include "include/cef_base.h"
-
-#include "ui/base/resource/resource_scale_factor.h"
+#include "cef/include/cef_base.h"
 
 namespace base {
 class CommandLine;
-class FilePath;
 }  // namespace base
 
 namespace resource_util {
@@ -21,16 +18,12 @@ namespace resource_util {
 // etc).
 base::FilePath GetResourcesDir();
 
-// Returns the default path for the debug.log file.
-base::FilePath GetDefaultLogFilePath();
+// Returns the directory that contains resource files (*.bin, *.dat, *.pak,
+// etc).
+base::FilePath GetResourcesDir();
 
-// Called from MainDelegate::PreSandboxStartup.
-void OverrideDefaultDownloadDir();
 void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line);
-
-// Returns true if |scale_factor| is supported by this platform.
-bool IsScaleFactorSupported(ui::ResourceScaleFactor scale_factor);
 
 #if BUILDFLAG(IS_LINUX)
 // Look for binary files (*.bin, *.dat, *.pak, chrome-sandbox, libGLESv2.so,

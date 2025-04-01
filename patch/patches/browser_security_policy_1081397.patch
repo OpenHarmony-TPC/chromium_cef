@@ -1,29 +1,29 @@
 diff --git content/browser/child_process_security_policy_impl.cc content/browser/child_process_security_policy_impl.cc
-index 66008c3abbc49..64d2773724750 100644
+index d4d1572304587..35fa3abc12213 100644
 --- content/browser/child_process_security_policy_impl.cc
 +++ content/browser/child_process_security_policy_impl.cc
-@@ -1804,6 +1804,16 @@ bool ChildProcessSecurityPolicyImpl::CanAccessDataForMaybeOpaqueOrigin(
-             // DeclarativeApiTest.PersistRules.
-             if (actual_process_lock.matches_scheme(url::kDataScheme))
-               return true;
+@@ -2134,6 +2134,16 @@ bool ChildProcessSecurityPolicyImpl::PerformJailAndCitadelChecks(
+         if (actual_process_lock.matches_scheme(url::kDataScheme)) {
+           return true;
+         }
 +
-+            // Allow other schemes that are non-standard, non-local and WebSafe.
-+            if (lock_url.is_valid() &&
-+                !lock_url.IsStandard() &&
-+                !base::Contains(url::GetLocalSchemes(),
-+                                lock_url.scheme_piece()) &&
-+                base::Contains(schemes_okay_to_request_in_any_process_,
-+                               lock_url.scheme())) {
-+              return true;
-+            }
-           }
++        // Allow other schemes that are non-standard, non-local and WebSafe.
++        if (lock_url.is_valid() && !lock_url.IsStandard() &&
++            !base::Contains(url::GetLocalSchemes(), lock_url.scheme_piece())) {
++          base::AutoLock schemes_lock(schemes_lock_);
++          if (base::Contains(schemes_okay_to_request_in_any_process_,
++                             lock_url.scheme())) {
++            return true;
++          }
++        }
+       }
  
-           // Make an exception to allow most visited tiles to commit in
+       // Make an exception to allow most visited tiles to commit in third-party
 diff --git content/browser/renderer_host/navigation_request.cc content/browser/renderer_host/navigation_request.cc
-index a2530d474b606..20f6aded15935 100644
+index f8e18b15a1951..68c9991a962f7 100644
 --- content/browser/renderer_host/navigation_request.cc
 +++ content/browser/renderer_host/navigation_request.cc
-@@ -7323,10 +7323,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
+@@ -8255,10 +8255,22 @@ NavigationRequest::GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
    bool use_opaque_origin =
        (sandbox_flags & network::mojom::WebSandboxFlags::kOrigin) ==
        network::mojom::WebSandboxFlags::kOrigin;
@@ -41,15 +41,15 @@ index a2530d474b606..20f6aded15935 100644
 +
    if (use_opaque_origin) {
      origin_and_debug_info =
-         std::make_pair(origin_and_debug_info.first.DeriveNewOpaqueOrigin(),
--                       origin_and_debug_info.second + ", sandbox_flags");
-+                       origin_and_debug_info.second);
+         std::pair(origin_and_debug_info.first.DeriveNewOpaqueOrigin(),
+-                  origin_and_debug_info.second + ", sandbox_flags");
++                  origin_and_debug_info.second);
    }
  
    return origin_and_debug_info;
-@@ -7356,6 +7368,15 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
-       GetOriginForURLLoaderFactoryBeforeResponseWithDebugInfo(
-           SandboxFlagsToCommit());
+@@ -8366,11 +8378,20 @@ NavigationRequest::GetOriginForURLLoaderFactoryAfterResponseWithDebugInfo() {
+       DetermineInitiatorRelationship(initiator_rfh,
+                                      frame_tree_node_->current_frame_host()));
  
 +  if (origin_with_debug_info.first.opaque() &&
 +      origin_with_debug_info.second.find("cef_nonstandard") !=
@@ -62,4 +62,11 @@ index a2530d474b606..20f6aded15935 100644
 +
    // MHTML documents should commit as an opaque origin. They should not be able
    // to make network request on behalf of the real origin.
-   DCHECK(!IsMhtmlOrSubframe() || origin_with_debug_info.first.opaque());
+   // TODO(crbug.com/370979008): Migrate to CHECK.
+-  DUMP_WILL_BE_CHECK(!IsMhtmlOrSubframe() ||
+-                     origin_with_debug_info.first.opaque());
++  // DUMP_WILL_BE_CHECK(!IsMhtmlOrSubframe() ||
++  //                    origin_with_debug_info.first.opaque());
+ 
+   // If the target of this navigation will be rendered in a RenderFrameHost,
+   // then verify that the chosen origin is allowed to be accessed from that

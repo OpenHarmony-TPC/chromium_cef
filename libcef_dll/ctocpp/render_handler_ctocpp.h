@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a537ca16e2f3f465b68cc035feeb83ed94397779$
+// $hash=ae20df54c0accee56380672fa4c7e501a0037348$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
@@ -56,7 +56,7 @@ class CefRenderHandlerCToCpp
   void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                           PaintElementType type,
                           const RectList& dirtyRects,
-                          void* shared_handle) override;
+                          const CefAcceleratedPaintInfo& info) override;
   void GetTouchHandleSize(CefRefPtr<CefBrowser> browser,
                           cef_horizontal_alignment_t orientation,
                           CefSize& size) override;
@@ -78,75 +78,11 @@ class CefRenderHandlerCToCpp
   void OnTextSelectionChanged(CefRefPtr<CefBrowser> browser,
                               const CefString& selected_text,
                               const CefRange& selected_range) override;
-  void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                  TextInputInfo text_input_info,
-                                  bool is_need_reset_listener,
-                                  const AttributesMap& attributes) override;
-  void OnTouchSelectionChanged(
-      const CefTouchHandleState& insert_handle,
-      const CefTouchHandleState& start_selection_handle,
-      const CefTouchHandleState& end_selection_handle,
-      bool need_report) override;
-  void OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
-                          int height,
-                          int width) override;
-  void OnSelectionChanged(CefRefPtr<CefBrowser> browser,
-                          const CefString& text,
-                          const CefRange& selected_range) override;
-  void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
-                      const CefRect& rect) override;
-  void OnCompleteSwapWithNewSize() override;
-  void OnResizeNotWork() override;
-  void OnOverscroll(CefRefPtr<CefBrowser> browser,
-                    const float x,
-                    const float y) override;
-  void OnEditableChanged(CefRefPtr<CefBrowser> browser,
-                         bool is_editable_node) override;
-  void OnOverScrollFlingVelocity(CefRefPtr<CefBrowser> browser,
-                                 const float x,
-                                 const float y,
-                                 bool is_fling) override;
-  void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) override;
-  void OnScrollState(CefRefPtr<CefBrowser> browser, bool scroll_state) override;
-  bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
-                         const float x,
-                         const float y,
-                         const float fling_x,
-                         const float fling_y) override;
-  void OnNativeEmbedGestureEvent(
-      CefRefPtr<CefBrowser> browser,
-      const CefEmbedTouchEvent& event,
-      CefRefPtr<CefGestureEventCallback> callback) override;
-  void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
-                                    const CefNativeEmbedData& info) override;
-  void NotifySelectAllClicked(bool select_all) override;
-  void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) override;
-  void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
-                                    const CefString& text,
-                                    const CefRange& selected_range,
-                                    const CefRange& compositon_range) override;
-  void GetWordSelection(CefRefPtr<CefBrowser> browser,
-                        const CefString& text,
-                        int8_t offset,
-                        CefPoint& select) override;
-  void CreateOverlay(CefRefPtr<CefBrowser> browser,
-                     CefRefPtr<CefImage> cef_image,
-                     const CefRect& cef_image_rect,
-                     const CefPoint& cef_touch_point) override;
-  void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
-                             const CefRect& cef_image_rect) override;
   void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
                               CefRect& rect) override;
-  void SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
-                                 const CefString& sceneId,
-                                 bool isStart) override;
-  void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) override;
-  void SetFillContent(const std::string& content) override;
-  void SetGestureEventResult(const bool result) override;
-  void StartVibraFeedback(const std::string& vibratorType) override;
-  void GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
-                          CefSize& size) override;
-  void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
+  void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
+                                  TextInputMode input_mode) override;
+  void SetGestureEventResult(bool result) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

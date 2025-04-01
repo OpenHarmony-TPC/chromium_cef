@@ -11,12 +11,12 @@
 #include <memory>
 #include <string>
 
-#include "include/internal/cef_types.h"
-
+#include "cef/include/internal/cef_types.h"
+#include "cef/ohos_cef_ext/libcef/renderer/blink_glue_ex.h"
 #include "third_party/blink/public/mojom/frame/lifecycle.mojom-blink-forward.h"
 #include "third_party/blink/public/platform/web_common.h"
-#include "v8/include/v8.h"
 #include "ui/gfx/geometry/size.h"
+#include "v8/include/v8.h"
 
 namespace blink {
 class WebElement;
@@ -37,23 +37,12 @@ BLINK_EXPORT bool CanGoForward(blink::WebView* view);
 BLINK_EXPORT void GoBack(blink::WebView* view);
 BLINK_EXPORT void GoForward(blink::WebView* view);
 
-#if BUILDFLAG(IS_OHOS)
-BLINK_EXPORT bool CanGoBackOrForward(blink::WebView* view, int num_steps);
-BLINK_EXPORT void GoBackOrForward(blink::WebView* view, int num_steps);
-#endif
-
 BLINK_EXPORT bool IsInBackForwardCache(blink::WebLocalFrame* frame);
 
 // Returns the text of the document element.
 BLINK_EXPORT blink::WebString DumpDocumentText(blink::WebLocalFrame* frame);
 // Returns the markup of the document element.
 BLINK_EXPORT blink::WebString DumpDocumentMarkup(blink::WebLocalFrame* frame);
-
-#if BUILDFLAG(IS_OHOS)
-BLINK_EXPORT gfx::Size GetContentSize(blink::WebLocalFrame* frame);
-
-BLINK_EXPORT gfx::Size GetVisualViewportSize(blink::WebLocalFrame* frame);
-#endif
 
 // Expose additional actions on WebNode.
 BLINK_EXPORT cef_dom_node_type_t GetNodeType(const blink::WebNode& node);

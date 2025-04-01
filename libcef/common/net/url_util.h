@@ -6,7 +6,7 @@
 #define CEF_LIBCEF_COMMON_NET_URL_UTIL_H_
 #pragma once
 
-#include "include/cef_base.h"
+#include "cef/include/cef_base.h"
 
 class GURL;
 
@@ -21,10 +21,6 @@ GURL MakeGURL(const CefString& url, bool fixup);
 // - Normalizes "about:" and "chrome:" to "chrome://" URLs
 // Modifies |gurl| if necessary. Returns true if |gurl| is empty or valid.
 bool FixupGURL(GURL& gurl);
-
-#ifdef OHOS_NETWORK_LOAD
-GURL FixupGURL(const std::string& url);
-#endif
 
 }  // namespace url_util
 

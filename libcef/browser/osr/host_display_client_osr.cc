@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/host_display_client_osr.h"
+#include "cef/libcef/browser/osr/host_display_client_osr.h"
 
 #include <utility>
 
-#include "libcef/browser/osr/render_widget_host_view_osr.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/shared_memory_mapping.h"
 #include "base/trace_event/trace_event.h"
-#include "components/viz/common/resources/resource_format.h"
+#include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
 #include "components/viz/common/resources/resource_sizes.h"
 #include "mojo/public/cpp/system/platform_handle.h"
 #include "services/viz/privileged/mojom/compositing/layered_window_updater.mojom.h"
@@ -22,6 +21,10 @@
 
 #if BUILDFLAG(IS_WIN)
 #include "skia/ext/skia_utils_win.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
 #endif
 
 class CefLayeredWindowUpdaterOSR : public viz::mojom::LayeredWindowUpdater {
@@ -46,7 +49,7 @@ class CefLayeredWindowUpdaterOSR : public viz::mojom::LayeredWindowUpdater {
   void Draw(const gfx::Rect& damage_rect, DrawCallback draw_callback) override;
 
  private:
-  CefRenderWidgetHostViewOSR* const view_;
+  const raw_ptr<CefRenderWidgetHostViewOSR> view_;
   mojo::Receiver<viz::mojom::LayeredWindowUpdater> receiver_;
   bool active_ = false;
   base::WritableSharedMemoryMapping shared_memory_;
@@ -78,7 +81,7 @@ void CefLayeredWindowUpdaterOSR::OnAllocatedSharedMemory(
   // Make sure |pixel_size| is sane.
   size_t expected_bytes;
   if (!viz::ResourceSizes::MaybeSizeInBytes(
-          pixel_size, viz::ResourceFormat::RGBA_8888, &expected_bytes)) {
+          pixel_size, viz::SinglePlaneFormat::kRGBA_8888, &expected_bytes)) {
     DLOG(ERROR) << "OnAllocatedSharedMemory with size that overflows";
     return;
   }
@@ -115,13 +118,14 @@ CefHostDisplayClientOSR::CefHostDisplayClientOSR(
     CefRenderWidgetHostViewOSR* const view,
     gfx::AcceleratedWidget widget)
     : viz::HostDisplayClient(widget), view_(view) {
-#if defined(OHOS_COMPOSITE_RENDER)
-  if (view_)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  if (view_) {
     browser_impl_ = view_->browser_impl();
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+  }
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 }
 
-CefHostDisplayClientOSR::~CefHostDisplayClientOSR() {}
+CefHostDisplayClientOSR::~CefHostDisplayClientOSR() = default;
 
 void CefHostDisplayClientOSR::SetActive(bool active) {
   active_ = active;
@@ -145,29 +149,28 @@ void CefHostDisplayClientOSR::UseProxyOutputDevice(
   std::move(callback).Run(true);
 }
 
-#if BUILDFLAG(IS_OHOS) && defined(DISABLE_GPU)
 void CefHostDisplayClientOSR::CreateLayeredWindowUpdater(
     mojo::PendingReceiver<viz::mojom::LayeredWindowUpdater> receiver) {
   layered_window_updater_ =
       std::make_unique<CefLayeredWindowUpdaterOSR>(view_, std::move(receiver));
   layered_window_updater_->SetActive(active_);
 }
-#endif
 
-#if BUILDFLAG(IS_LINUX)
+#if BUILDFLAG(IS_LINUX) && BUILDFLAG(IS_OZONE_X11)
 void CefHostDisplayClientOSR::DidCompleteSwapWithNewSize(
     const gfx::Size& size) {}
 #endif
 
-#if defined(OHOS_COMPOSITE_RENDER)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 void CefHostDisplayClientOSR::DidCompleteSwapWithNewSizeOHOS(
     const gfx::Size& size) {
   TRACE_EVENT1("cef", "CefHostDisplayClientOSR::DidCompleteSwapWithNewSize",
                "size", size.ToString());
   if (browser_impl_ && browser_impl_->GetClient()) {
     auto render_handler = browser_impl_->GetClient()->GetRenderHandler();
-    if (render_handler)
+    if (render_handler) {
       render_handler->OnCompleteSwapWithNewSize();
+    }
   }
 }
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/native_widget_mac.h"
+#include "cef/libcef/browser/views/native_widget_mac.h"
 
-#include "include/views/cef_window.h"
-#include "include/views/cef_window_delegate.h"
-#include "libcef/browser/views/ns_window.h"
-
+#include "cef/include/views/cef_window.h"
+#include "cef/include/views/cef_window_delegate.h"
+#include "cef/libcef/browser/views/ns_window.h"
+#include "cef/libcef/browser/views/window_impl.h"
 #include "chrome/browser/apps/app_shim/app_shim_host_mac.h"
 #include "chrome/browser/apps/app_shim/app_shim_manager_mac.h"
 #import "chrome/browser/ui/cocoa/browser_window_command_handler.h"
@@ -83,13 +83,14 @@ NativeWidgetMacNSWindow* CefNativeWidgetMac::CreateNSWindow(
     const remote_cocoa::mojom::CreateWindowParams* params) {
   NSUInteger style_mask =
       NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable |
-      NSWindowStyleMaskClosable | NSWindowStyleMaskResizable |
-      NSWindowStyleMaskTexturedBackground;
+      NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
 
-  bool is_frameless = window_delegate_->IsFrameless(window_);
+  const bool is_frameless = window_delegate_->IsFrameless(window_);
+  const auto accepts_first_mouse = window_delegate_->AcceptsFirstMouse(window_);
 
   auto window = [[CefNSWindow alloc] initWithStyle:style_mask
-                                       isFrameless:is_frameless];
+                                       isFrameless:is_frameless
+                                 acceptsFirstMouse:accepts_first_mouse];
 
   if (is_frameless) {
     [window setTitlebarAppearsTransparent:YES];
@@ -118,28 +119,48 @@ void CefNativeWidgetMac::GetWindowFrameTitlebarHeight(
 
 void CefNativeWidgetMac::OnWindowFullscreenTransitionStart() {
   views::NativeWidgetMac::OnWindowFullscreenTransitionStart();
-  window_delegate_->OnWindowFullscreenTransition(window_, false);
+  if (IsCefWindowInitialized()) {
+    window_delegate_->OnWindowFullscreenTransition(window_, false);
+    if (browser_view_) {
+      browser_view_->FullscreenStateChanging();
+    }
+  }
 }
 
 void CefNativeWidgetMac::OnWindowFullscreenTransitionComplete() {
   views::NativeWidgetMac::OnWindowFullscreenTransitionComplete();
-  window_delegate_->OnWindowFullscreenTransition(window_, true);
+  if (IsCefWindowInitialized()) {
+    if (browser_view_) {
+      browser_view_->FullscreenStateChanged();
+    }
+    window_delegate_->OnWindowFullscreenTransition(window_, true);
+  }
 }
 
 void CefNativeWidgetMac::OnWindowInitialized() {
-  if (!browser_view_) {
+  // This connects the native widget with the command dispatcher so accelerators
+  // work even if a browser_view_ is not created later.
+  // The initialized_ check is necessary because the method can be called twice:
+  // 1. From NativeWidgetMac::InitNativeWidget
+  // 2. From ChromeBrowserFrame::Init
+  if (initialized_) {
     return;
   }
 
   // From BrowserFrameMac::OnWindowInitialized.
   if (auto* bridge = GetInProcessNSWindowBridge()) {
-    bridge->SetCommandDispatcher(
-        [[[ChromeCommandDispatcherDelegate alloc] init] autorelease],
-        [[[BrowserWindowCommandHandler alloc] init] autorelease]);
-  } else {
+    bridge->SetCommandDispatcher([[ChromeCommandDispatcherDelegate alloc] init],
+                                 [[BrowserWindowCommandHandler alloc] init]);
+    initialized_ = true;
+  } else if (browser_view_) {
     if (auto* host = GetHostForBrowser(browser_view_->browser())) {
       host->GetAppShim()->CreateCommandDispatcherForWidget(
           GetNSWindowHost()->bridged_native_widget_id());
+      initialized_ = true;
     }
   }
+}
+
+bool CefNativeWidgetMac::IsCefWindowInitialized() const {
+  return static_cast<CefWindowImpl*>(window_.get())->initialized();
 }

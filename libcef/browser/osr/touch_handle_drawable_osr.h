@@ -6,9 +6,8 @@
 #ifndef CEF_LIBCEF_BROWSER_OSR_TOUCH_HANDLE_DRAWABLE_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_TOUCH_HANDLE_DRAWABLE_OSR_H_
 
-#include "include/internal/cef_types_wrappers.h"
-
 #include "base/memory/raw_ptr.h"
+#include "cef/include/internal/cef_types_wrappers.h"
 #include "ui/gfx/native_widget_types.h"
 #include "ui/touch_selection/touch_handle.h"
 #include "ui/touch_selection/touch_handle_orientation.h"
@@ -34,20 +33,21 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
   void SetOrigin(const gfx::PointF& position) override;
   void SetAlpha(float alpha) override;
   gfx::RectF GetVisibleBounds() const override;
-  void SetEdge(const gfx::PointF& top, const gfx::PointF& bottom) override;
   float GetDrawableHorizontalPaddingRatio() const override;
 
-  // Pass the current touch handle state to the CefRenderHandler.
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_MENU)
+  void SetEdge(const gfx::PointF& top, const gfx::PointF& bottom) override;
   void UpdateVisiableBounds();
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // BUILDFLAG(ARKWEB_MENU)
+
+  // Pass the current touch handle state to the CefRenderHandler.
   void TouchHandleStateChanged(const CefTouchHandleState& state);
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_MENU)
   CefRenderWidgetHostViewOSR* rwhv_;
 #else
   raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // BUILDFLAG(ARKWEB_MENU)
 
   float alpha_ = 0.f;
   static int counter_;
@@ -63,10 +63,10 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
   // Handle bounds relative to the focal position.
   gfx::RectF relative_bounds_ = gfx::RectF(0.0F, 0.0F, 24.0F, 24.0F);
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_MENU)
   // Handle line height
   float edge_height_ = 0.f;
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // BUILDFLAG(ARKWEB_MENU)
 };
 
 #endif

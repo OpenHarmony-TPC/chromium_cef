@@ -2,44 +2,148 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/menu_manager.h"
+#include "cef/libcef/browser/menu_manager.h"
 
 #include <tuple>
 #include <utility>
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "libcef/browser/context_menu_params_impl.h"
-#include "libcef/browser/menu_runner.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/app_manager.h"
-
 #include "base/logging.h"
 #include "cef/grit/cef_strings.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "cef/libcef/browser/context_menu_params_impl.h"
+#include "cef/libcef/browser/menu_runner.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/app_manager.h"
 #include "chrome/grit/generated_resources.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "ui/base/clipboard/clipboard.h"
 #include "ui/base/data_transfer_policy/data_transfer_endpoint.h"
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "base/values.h"
+#include "chrome/browser/extensions/menu_manager.h"
+#include "chrome/common/extensions/api/context_menus.h"
+#include "extensions/browser/event_router.h"
+#include "extensions/browser/extension_system.h"
+#include "libcef/browser/extensions/tab_extensions_util.h"
+#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 namespace {
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
 constexpr cef_context_menu_edit_state_flags_t kMenuCommands[] = {
     CM_EDITFLAG_CAN_CUT, CM_EDITFLAG_CAN_COPY, CM_EDITFLAG_CAN_PASTE,
-    CM_EDITFLAG_CAN_DELETE, CM_EDITFLAG_CAN_SELECT_ALL};
+    CM_EDITFLAG_CAN_DELETE, CM_EDITFLAG_CAN_SELECT_ALL}; 
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
-#endif  // #ifdef OHOS_CLIPBOARD
 CefString GetLabel(int message_id) {
   std::u16string label =
       CefAppManager::Get()->GetContentClient()->GetLocalizedString(message_id);
   DCHECK(!label.empty());
   return label;
 }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+std::string GetTypeStr(extensions::MenuItem::Type type) {
+  switch (type) {
+    case extensions::MenuItem::Type::NORMAL : return "normal";
+    case extensions::MenuItem::Type::CHECKBOX : return "checkbox";
+    case extensions::MenuItem::Type::RADIO : return "radio";
+    case extensions::MenuItem::Type::SEPARATOR : return "separator";
+    default : return nullptr;
+  };
+}
+ 
+std::string GetContextStr(extensions::MenuItem::Context context) {
+  switch (context) {
+    case extensions::MenuItem::Context::ALL : return "all";
+    case extensions::MenuItem::Context::PAGE : return "page";
+    case extensions::MenuItem::Context::SELECTION : return "selection";
+    case extensions::MenuItem::Context::LINK : return "link";
+    case extensions::MenuItem::Context::EDITABLE : return "editable";
+    case extensions::MenuItem::Context::IMAGE : return "image";
+    case extensions::MenuItem::Context::VIDEO : return "video";
+    case extensions::MenuItem::Context::AUDIO : return "audio";
+    case extensions::MenuItem::Context::FRAME : return "frame";
+    case extensions::MenuItem::Context::LAUNCHER : return "launcher";
+    case extensions::MenuItem::Context::BROWSER_ACTION : return "browser_action";
+    case extensions::MenuItem::Context::PAGE_ACTION : return "page_action";
+    case extensions::MenuItem::Context::ACTION : return "action";
+    default : return nullptr;
+  };
+}
+ 
+std::vector<std::string> ContextListToStrVector(const extensions::MenuItem::ContextList& contextList) {
+  std::vector<std::string> result;
+  for (int contextInt = extensions::MenuItem::Context::ALL;
+        contextInt <= extensions::MenuItem::Context::ACTION;
+        contextInt <<= 1) {
+    if (contextList.Contains(static_cast<extensions::MenuItem::Context>(contextInt))) {
+      result.push_back(GetContextStr(static_cast<extensions::MenuItem::Context>(contextInt)));
+    }
+  }
+  return result;
+}
+ 
+content::BrowserContext* GetBrowserContext() {
+  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
+  if (!request_context) {
+    LOG(ERROR) << "request context is null";
+    return nullptr;
+  }
+ 
+  CefRequestContextImpl* request_context_impl =
+    static_cast<CefRequestContextImpl*>(request_context.get());
+  CefBrowserContext* cef_browser_context = request_context_impl->GetBrowserContext();
+  if (!cef_browser_context) {
+    LOG(ERROR) << "cef browser context is null";
+    return nullptr;
+  }
+  content::BrowserContext* browser_context = cef_browser_context->AsBrowserContext();
+  return browser_context;
+}
+ 
+NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
+  NWebContextMenusItem item;
+  item.checked = menu_item->checked();
+  item.contexts = ContextListToStrVector(menu_item->contexts());
+  item.documentUrlPatterns = menu_item->document_url_str_patterns();
+  item.enabled = menu_item->enabled();
+  item.id = menu_item->id().string_uid;
+  if (menu_item->parent_id()) {
+    item.parentId = menu_item->parent_id()->string_uid;
+  }
+  item.targetUrlPatterns = menu_item->target_url_str_patterns();
+  item.title = menu_item->title();
+  item.type = GetTypeStr(menu_item->type());
+  item.visible = menu_item->visible();
+  item.extensionId = menu_item->extension_id();
+  return item;
+}
+ 
+void SetContextMenusEventProperties(base::Value::Dict& properties, ContextMenusOnClickedData& data) {
+  properties.Set("menuItemId", data.menuItemId);
+  properties.Set("parentMenuItemId", data.parentMenuItemId);
+  properties.Set("mediaType", data.mediaType);
+  properties.Set("linkUrl", data.linkUrl);
+  properties.Set("srcUrl", data.srcUrl);
+  properties.Set("pageUrl", data.pageUrl);
+  properties.Set("frameUrl", data.frameUrl);
+  if (data.selectionText.length() > 0) {
+    properties.Set("selectionText", data.selectionText);
+  }
+  properties.Set("editable", data.editable);
+  properties.Set("wasChecked", data.wasChecked);
+  properties.Set("checked", data.checked);
+  properties.Set("frameId", data.frameId);
+}
+#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 const int kInvalidCommandId = -1;
 const cef_event_flags_t kEmptyEventFlags = static_cast<cef_event_flags_t>(0);
@@ -55,7 +159,7 @@ class CefRunContextMenuCallbackImpl : public CefRunContextMenuCallback {
   CefRunContextMenuCallbackImpl& operator=(
       const CefRunContextMenuCallbackImpl&) = delete;
 
-  ~CefRunContextMenuCallbackImpl() {
+  ~CefRunContextMenuCallbackImpl() override {
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
@@ -101,12 +205,145 @@ class CefRunContextMenuCallbackImpl : public CefRunContextMenuCallback {
 
 }  // namespace
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+CefExtensionContextMenusHandler* CefMenuManager::context_menus_handler = nullptr;
+// static
+void CefMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
+                                                    ContextMenusOnClickedData& data,
+                                                    std::optional<NWebExtensionTab>& tab) {
+  content::BrowserContext* browser_context = GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "browser_context is null";
+    return;
+  }
+  extensions::MenuManager* menu_manager = extensions::MenuManager::Get(browser_context);
+  if (!menu_manager) {
+    LOG(ERROR) << "menu_manager is null";
+    return;
+  }
+  extensions::EventRouter* event_router = extensions::EventRouter::Get(browser_context);
+  if (!event_router) {
+    LOG(ERROR) << "event_router is null";
+    return;
+  }
+  extensions::MenuItem::Id id(browser_context->IsOffTheRecord(), extensions::MenuItem::ExtensionKey(extension_id));
+  id.string_uid = data.menuItemId;
+  extensions::MenuItem* item = menu_manager->GetItemById(id);
+  if (!item) {
+    LOG(ERROR) << "item is null";
+    return;
+  }
+  item->SetChecked(data.checked);
+  base::Value::Dict properties;
+  SetContextMenusEventProperties(properties, data);
+  base::Value::List args;
+  args.Append(std::move(properties));
+ 
+  if (tab) {
+    args.Append(extensions::GetTabValue(*tab));
+  }
+ 
+  {
+    auto event = std::make_unique<extensions::Event>(
+        extensions::events::CONTEXT_MENUS,
+        "contextMenus",
+        args.Clone(),
+        browser_context);
+    event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
+    event_router->DispatchEventToExtension(extension_id, std::move(event));
+  }
+  {
+    auto event = std::make_unique<extensions::Event>(
+        extensions::events::CONTEXT_MENUS_ON_CLICKED,
+        extensions::api::context_menus::OnClicked::kEventName,
+        std::move(args),
+        browser_context);
+    event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
+    event_router->DispatchEventToExtension(extension_id, std::move(event));
+  }
+}
+ 
+// static
+std::vector<NWebContextMenusItem> CefMenuManager::GetAllExtensionContextMenus(
+  const std::vector<std::string>& extension_ids) {
+  std::vector<NWebContextMenusItem> items;
+  content::BrowserContext* browser_context = GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "browser_context is null";
+    return items;
+  }
+  extensions::MenuManager* menu_manager = extensions::MenuManager::Get(browser_context);
+  if (!menu_manager) {
+    LOG(ERROR) << "menu_manager is null";
+    return items;
+  }
+  for (const auto& id : menu_manager->ExtensionIds()) {
+    if (extension_ids.size() == 0 ||
+      std::find(extension_ids.begin(), extension_ids.end(), id.extension_id) != extension_ids.end()) {
+      const extensions::MenuItem::OwnedList* top_items = menu_manager->MenuItems(id);
+      for (const std::unique_ptr<extensions::MenuItem>& item : *top_items) {
+        GetFlattenedMenuItemSubtree(items, item);
+      }
+    }
+  }
+  return items;
+}
+ 
+// static
+void CefMenuManager::GetFlattenedMenuItemSubtree(std::vector<NWebContextMenusItem>& items,
+                                                  const std::unique_ptr<extensions::MenuItem>& item) {
+  items.push_back(GetNWebContextMenusItem(item.get()));
+  for (const auto& child : item->children()) {
+    GetFlattenedMenuItemSubtree(items, child);
+  }
+}
+ 
+// static
+void CefMenuManager::SetContextMenusHandler(CefExtensionContextMenusHandler* handler) {
+  context_menus_handler = handler;
+}
+ 
+// static
+void CefMenuManager::OnContextMenusCreate(const std::string& extension_id, extensions::MenuItem* menu_item) {
+  if (!context_menus_handler) {
+    LOG(ERROR) << "context menus handler is null";
+  }
+  NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
+  context_menus_handler->OnContextMenusCreate(extension_id, item);
+}
+ 
+// static
+void CefMenuManager::OnContextMenusUpdate(const std::string& extension_id, extensions::MenuItem* menu_item) {
+  if (!context_menus_handler) {
+    LOG(ERROR) << "context menus handler is null";
+  }
+  NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
+  context_menus_handler->OnContextMenusUpdate(extension_id, item);
+}
+ 
+// static
+void CefMenuManager::OnContextMenusRemove(const std::string& extension_id, const std::string& menu_item_id) {
+  if (!context_menus_handler) {
+    LOG(ERROR) << "context menus handler is null";
+  }
+  context_menus_handler->OnContextMenusRemove(extension_id, menu_item_id);
+}
+ 
+// static
+void CefMenuManager::OnContextMenusRemoveAll(const std::string& extension_id) {
+  if (!context_menus_handler) {
+    LOG(ERROR) << "context menus handler is null";
+  }
+  context_menus_handler->OnContextMenusRemoveAll(extension_id);
+}
+#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
 CefMenuManager::CefMenuManager(AlloyBrowserHostImpl* browser,
                                std::unique_ptr<CefMenuRunner> runner)
     : content::WebContentsObserver(browser->web_contents()),
       browser_(browser),
       runner_(std::move(runner)),
-      custom_menu_callback_(nullptr),
+
       weak_ptr_factory_(this) {
   DCHECK(web_contents());
   model_ = new CefMenuModelImpl(this, nullptr, false);
@@ -132,7 +369,7 @@ bool CefMenuManager::IsShowingContextMenu() {
   return web_contents()->IsShowingContextMenu();
 }
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
 bool CefMenuManager::IsCommandIdEnabled(
     int command_id,
     content::ContextMenuParams& params) const {
@@ -171,7 +408,7 @@ void CefMenuManager::UpdateMenuEditStateFlags(
 
   params.edit_flags = menu_flags;
 }
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
 bool CefMenuManager::CreateContextMenu(
     const content::ContextMenuParams& params) {
@@ -188,9 +425,10 @@ bool CefMenuManager::CreateContextMenu(
 
   params_ = params;
   model_->Clear();
-#ifdef OHOS_CLIPBOARD
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
   UpdateMenuEditStateFlags(params_);
-#endif  // #ifdef OHOS_CLIPBOARD
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
   // Create the default menu model.
   CreateDefaultModel();
@@ -207,7 +445,7 @@ bool CefMenuManager::CreateContextMenu(
           new CefContextMenuParamsImpl(&params_));
       CefRefPtr<CefFrame> frame = browser_->GetFocusedFrame();
 
-      handler->OnBeforeContextMenu(browser_, frame, paramsPtr.get(),
+      handler->OnBeforeContextMenu(browser_.get(), frame, paramsPtr.get(),
                                    model_.get());
 
       MenuWillShow(model_);
@@ -222,7 +460,7 @@ bool CefMenuManager::CreateContextMenu(
         // the callback object is deleted.
         custom_menu_callback_ = callbackImpl.get();
 
-        if (handler->RunContextMenu(browser_, frame, paramsPtr.get(),
+        if (handler->RunContextMenu(browser_.get(), frame, paramsPtr.get(),
                                     model_.get(), callbackImpl.get())) {
           custom_menu = true;
         } else {
@@ -280,8 +518,8 @@ void CefMenuManager::ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
           new CefContextMenuParamsImpl(&params_));
 
       bool handled = handler->OnContextMenuCommand(
-          browser_, browser_->GetFocusedFrame(), paramsPtr.get(), command_id,
-          event_flags);
+          browser_.get(), browser_->GetFocusedFrame(), paramsPtr.get(),
+          command_id, event_flags);
 
       // Do not keep references to the parameters in the callback.
       std::ignore = paramsPtr->Detach(nullptr);
@@ -333,7 +571,8 @@ void CefMenuManager::MenuClosed(CefRefPtr<CefMenuModelImpl> source) {
   if (client.get()) {
     CefRefPtr<CefContextMenuHandler> handler = client->GetContextMenuHandler();
     if (handler.get()) {
-      handler->OnContextMenuDismissed(browser_, browser_->GetFocusedFrame());
+      handler->OnContextMenuDismissed(browser_.get(),
+                                      browser_->GetFocusedFrame());
     }
   }
 
@@ -383,6 +622,8 @@ void CefMenuManager::CreateDefaultModel() {
     model_->AddItem(MENU_ID_CUT, GetLabel(IDS_CONTENT_CONTEXT_CUT));
     model_->AddItem(MENU_ID_COPY, GetLabel(IDS_CONTENT_CONTEXT_COPY));
     model_->AddItem(MENU_ID_PASTE, GetLabel(IDS_CONTENT_CONTEXT_PASTE));
+    model_->AddItem(MENU_ID_PASTE_MATCH_STYLE,
+                    GetLabel(IDS_CONTENT_CONTEXT_PASTE_AND_MATCH_STYLE));
 
     model_->AddSeparator();
     model_->AddItem(MENU_ID_SELECT_ALL,
@@ -402,6 +643,7 @@ void CefMenuManager::CreateDefaultModel() {
     }
     if (!(params_.edit_flags & CM_EDITFLAG_CAN_PASTE)) {
       model_->SetEnabled(MENU_ID_PASTE, false);
+      model_->SetEnabled(MENU_ID_PASTE_MATCH_STYLE, false);
     }
     if (!(params_.edit_flags & CM_EDITFLAG_CAN_DELETE)) {
       model_->SetEnabled(MENU_ID_DELETE, false);
@@ -513,6 +755,9 @@ void CefMenuManager::ExecuteDefaultCommand(int command_id) {
     case MENU_ID_PASTE:
       browser_->GetFocusedFrame()->Paste();
       break;
+    case MENU_ID_PASTE_MATCH_STYLE:
+      browser_->GetFocusedFrame()->PasteAndMatchStyle();
+      break;
     case MENU_ID_DELETE:
       browser_->GetFocusedFrame()->Delete();
       break;
@@ -552,8 +797,8 @@ bool CefMenuManager::IsCustomContextMenuCommand(int command_id) {
 
   // Verify that the specific command ID was passed from the renderer process.
   if (!params_.custom_items.empty()) {
-    for (size_t i = 0; i < params_.custom_items.size(); ++i) {
-      if (static_cast<int>(params_.custom_items[i]->action) == command_id) {
+    for (const auto& custom_item : params_.custom_items) {
+      if (static_cast<int>(custom_item->action) == command_id) {
         return true;
       }
     }

@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=401b3ac9474679f691de5145d88598c37cd5f313$
+// $hash=374db873cd7af7312f9dd7c2bc6440e0f6f8cc02$
 //
 
 #include "libcef_dll/cpptoc/views/window_cpptoc.h"
+
 #include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/cpptoc/menu_model_cpptoc.h"
 #include "libcef_dll/cpptoc/views/box_layout_cpptoc.h"
@@ -64,6 +65,28 @@ void CEF_CALLBACK window_show(struct _cef_window_t* self) {
 
   // Execute
   CefWindowCppToC::Get(self)->Show();
+}
+
+void CEF_CALLBACK
+window_show_as_browser_modal_dialog(struct _cef_window_t* self,
+                                    cef_browser_view_t* browser_view) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser_view; type: refptr_same
+  DCHECK(browser_view);
+  if (!browser_view) {
+    return;
+  }
+
+  // Execute
+  CefWindowCppToC::Get(self)->ShowAsBrowserModalDialog(
+      CefBrowserViewCppToC::Unwrap(browser_view));
 }
 
 void CEF_CALLBACK window_hide(struct _cef_window_t* self) {
@@ -333,6 +356,23 @@ int CEF_CALLBACK window_is_fullscreen(struct _cef_window_t* self) {
   return _retval;
 }
 
+cef_view_t* CEF_CALLBACK window_get_focused_view(struct _cef_window_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return NULL;
+  }
+
+  // Execute
+  CefRefPtr<CefView> _retval = CefWindowCppToC::Get(self)->GetFocusedView();
+
+  // Return type: refptr_same
+  return CefViewCppToC::Wrap(_retval);
+}
+
 void CEF_CALLBACK window_set_title(struct _cef_window_t* self,
                                    const cef_string_t* title) {
   shutdown_checker::AssertNotShutdown();
@@ -445,7 +485,8 @@ window_get_window_app_icon(struct _cef_window_t* self) {
 cef_overlay_controller_t* CEF_CALLBACK
 window_add_overlay_view(struct _cef_window_t* self,
                         cef_view_t* view,
-                        cef_docking_mode_t docking_mode) {
+                        cef_docking_mode_t docking_mode,
+                        int can_activate) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -463,7 +504,8 @@ window_add_overlay_view(struct _cef_window_t* self,
   // Execute
   CefRefPtr<CefOverlayController> _retval =
       CefWindowCppToC::Get(self)->AddOverlayView(CefViewCppToC::Unwrap(view),
-                                                 docking_mode);
+                                                 docking_mode,
+                                                 can_activate ? true : false);
 
   // Return type: refptr_same
   return CefOverlayControllerCppToC::Wrap(_retval);
@@ -597,7 +639,7 @@ window_get_window_handle(struct _cef_window_t* self) {
 
 void CEF_CALLBACK window_send_key_press(struct _cef_window_t* self,
                                         int key_code,
-                                        uint32 event_flags) {
+                                        uint32_t event_flags) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -650,7 +692,8 @@ void CEF_CALLBACK window_set_accelerator(struct _cef_window_t* self,
                                          int key_code,
                                          int shift_pressed,
                                          int ctrl_pressed,
-                                         int alt_pressed) {
+                                         int alt_pressed,
+                                         int high_priority) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -663,7 +706,8 @@ void CEF_CALLBACK window_set_accelerator(struct _cef_window_t* self,
   // Execute
   CefWindowCppToC::Get(self)->SetAccelerator(
       command_id, key_code, shift_pressed ? true : false,
-      ctrl_pressed ? true : false, alt_pressed ? true : false);
+      ctrl_pressed ? true : false, alt_pressed ? true : false,
+      high_priority ? true : false);
 }
 
 void CEF_CALLBACK window_remove_accelerator(struct _cef_window_t* self,
@@ -693,6 +737,54 @@ void CEF_CALLBACK window_remove_all_accelerators(struct _cef_window_t* self) {
 
   // Execute
   CefWindowCppToC::Get(self)->RemoveAllAccelerators();
+}
+
+void CEF_CALLBACK window_set_theme_color(struct _cef_window_t* self,
+                                         int color_id,
+                                         cef_color_t color) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefWindowCppToC::Get(self)->SetThemeColor(color_id, color);
+}
+
+void CEF_CALLBACK window_theme_changed(struct _cef_window_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefWindowCppToC::Get(self)->ThemeChanged();
+}
+
+cef_runtime_style_t CEF_CALLBACK
+window_get_runtime_style(struct _cef_window_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_RUNTIME_STYLE_DEFAULT;
+  }
+
+  // Execute
+  cef_runtime_style_t _retval = CefWindowCppToC::Get(self)->GetRuntimeStyle();
+
+  // Return type: simple
+  return _retval;
 }
 
 struct _cef_window_t* CEF_CALLBACK window_as_window(struct _cef_panel_t* self) {
@@ -1709,6 +1801,24 @@ int CEF_CALLBACK window_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK window_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK window_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1753,6 +1863,26 @@ cef_color_t CEF_CALLBACK window_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK window_get_theme_color(struct _cef_view_t* self,
+                                                int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefWindowCppToC::Get(reinterpret_cast<cef_window_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1970,6 +2100,8 @@ int CEF_CALLBACK window_convert_point_from_view(struct _cef_view_t* self,
 
 CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->show = window_show;
+  GetStruct()->show_as_browser_modal_dialog =
+      window_show_as_browser_modal_dialog;
   GetStruct()->hide = window_hide;
   GetStruct()->center_window = window_center_window;
   GetStruct()->close = window_close;
@@ -1987,6 +2119,7 @@ CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->is_maximized = window_is_maximized;
   GetStruct()->is_minimized = window_is_minimized;
   GetStruct()->is_fullscreen = window_is_fullscreen;
+  GetStruct()->get_focused_view = window_get_focused_view;
   GetStruct()->set_title = window_set_title;
   GetStruct()->get_title = window_get_title;
   GetStruct()->set_window_icon = window_set_window_icon;
@@ -2007,6 +2140,9 @@ CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->set_accelerator = window_set_accelerator;
   GetStruct()->remove_accelerator = window_remove_accelerator;
   GetStruct()->remove_all_accelerators = window_remove_all_accelerators;
+  GetStruct()->set_theme_color = window_set_theme_color;
+  GetStruct()->theme_changed = window_theme_changed;
+  GetStruct()->get_runtime_style = window_get_runtime_style;
   GetStruct()->base.as_window = window_as_window;
   GetStruct()->base.set_to_fill_layout = window_set_to_fill_layout;
   GetStruct()->base.set_to_box_layout = window_set_to_box_layout;
@@ -2061,9 +2197,11 @@ CefWindowCppToC::CefWindowCppToC() {
   GetStruct()->base.base.is_focusable = window_is_focusable;
   GetStruct()->base.base.is_accessibility_focusable =
       window_is_accessibility_focusable;
+  GetStruct()->base.base.has_focus = window_has_focus;
   GetStruct()->base.base.request_focus = window_request_focus;
   GetStruct()->base.base.set_background_color = window_set_background_color;
   GetStruct()->base.base.get_background_color = window_get_background_color;
+  GetStruct()->base.base.get_theme_color = window_get_theme_color;
   GetStruct()->base.base.convert_point_to_screen =
       window_convert_point_to_screen;
   GetStruct()->base.base.convert_point_from_screen =

@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8c379b0e1038da0ee479aacbf82770fcfb168ef$
+// $hash=e4c1a1eed5942ec9a2e3357e021d9078300602e3$
 //
 
 #include "libcef_dll/cpptoc/resource_skip_callback_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -21,7 +22,7 @@ namespace {
 
 void CEF_CALLBACK
 resource_skip_callback_cont(struct _cef_resource_skip_callback_t* self,
-                            int64 bytes_skipped) {
+                            int64_t bytes_skipped) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

@@ -2,16 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/native/browser_platform_delegate_native_linux.h"
-
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/native/window_delegate_view.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native_linux.h"
 
 #include "base/no_destructor.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/native/window_delegate_view.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "components/input/native_web_keyboard_event.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
-#include "content/public/browser/native_web_keyboard_event.h"
 #include "content/public/browser/render_view_host.h"
 #include "third_party/blink/public/mojom/renderer_preferences.mojom.h"
 #include "ui/events/keycodes/dom/dom_key.h"
@@ -20,8 +19,8 @@
 #include "ui/gfx/font_render_params.h"
 #include "ui/views/widget/widget.h"
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
-#include "libcef/browser/native/window_x11.h"
+#if BUILDFLAG(IS_OZONE_X11)
+#include "cef/libcef/browser/native/window_x11.h"
 #include "ui/events/keycodes/keyboard_code_conversion_x.h"
 #include "ui/events/keycodes/keyboard_code_conversion_xkb.h"
 #include "ui/views/widget/desktop_aura/desktop_window_tree_host_linux.h"
@@ -55,7 +54,7 @@ bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
   gfx::Rect rect(window_info_.bounds.x, window_info_.bounds.y,
                  window_info_.bounds.width, window_info_.bounds.height);
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   DCHECK(!window_x11_);
 
   x11::Window parent_window = x11::Window::None;
@@ -66,7 +65,7 @@ bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
   // Create a new window object. It will delete itself when the associated X11
   // window is destroyed.
   window_x11_ =
-      new CefWindowX11(browser_, parent_window, rect,
+      new CefWindowX11(browser_.get(), parent_window, rect,
                        CefString(&window_info_.window_name).ToString());
   DCHECK_NE(window_x11_->xwindow(), x11::Window::None);
   window_info_.window =
@@ -87,7 +86,7 @@ bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
   window_widget_->Show();
 
   window_x11_->Show();
-#endif  // BUILDFLAG(OZONE_PLATFORM_X11)
+#endif  // BUILDFLAG(IS_OZONE_X11)
 
   // As an additional requirement on Linux, we must set the colors for the
   // render widgets in webkit.
@@ -115,7 +114,7 @@ bool CefBrowserPlatformDelegateNativeLinux::CreateHostWindow() {
 }
 
 void CefBrowserPlatformDelegateNativeLinux::CloseHostWindow() {
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   if (window_x11_) {
     window_x11_->Close();
   }
@@ -145,14 +144,14 @@ void CefBrowserPlatformDelegateNativeLinux::SetFocus(bool setFocus) {
     web_contents_->Focus();
   }
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   if (window_x11_) {
     // Give native focus to the DesktopNativeWidgetAura for the root window.
     // Needs to be done via the ::Window so that keyboard focus is assigned
     // correctly.
     window_x11_->Focus();
   }
-#endif  // BUILDFLAG(OZONE_PLATFORM_X11)
+#endif  // BUILDFLAG(IS_OZONE_X11)
 }
 
 void CefBrowserPlatformDelegateNativeLinux::NotifyMoveOrResizeStarted() {
@@ -163,7 +162,7 @@ void CefBrowserPlatformDelegateNativeLinux::NotifyMoveOrResizeStarted() {
     return;
   }
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   if (!window_x11_) {
     return;
   }
@@ -183,16 +182,16 @@ void CefBrowserPlatformDelegateNativeLinux::NotifyMoveOrResizeStarted() {
   content::RenderWidgetHostImpl::From(
       web_contents_->GetRenderViewHost()->GetWidget())
       ->SendScreenRects();
-#endif  // BUILDFLAG(OZONE_PLATFORM_X11)
+#endif  // BUILDFLAG(IS_OZONE_X11)
 }
 
 void CefBrowserPlatformDelegateNativeLinux::SizeTo(int width, int height) {
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   if (window_x11_) {
     window_x11_->SetBounds(
         gfx::Rect(window_x11_->bounds().origin(), gfx::Size(width, height)));
   }
-#endif  // BUILDFLAG(OZONE_PLATFORM_X11)
+#endif  // BUILDFLAG(IS_OZONE_X11)
 }
 
 void CefBrowserPlatformDelegateNativeLinux::ViewText(const std::string& text) {
@@ -228,16 +227,13 @@ void CefBrowserPlatformDelegateNativeLinux::ViewText(const std::string& text) {
 }
 
 bool CefBrowserPlatformDelegateNativeLinux::HandleKeyboardEvent(
-    const content::NativeWebKeyboardEvent& event) {
+    const input::NativeWebKeyboardEvent& event) {
   // TODO(cef): Is something required here to handle shortcut keys?
   return false;
 }
 
-// static
-void CefBrowserPlatformDelegate::HandleExternalProtocol(const GURL& url) {}
-
 CefEventHandle CefBrowserPlatformDelegateNativeLinux::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   // TODO(cef): We need to return an XEvent* from this method, but
   // |event.os_event->native_event()| now returns a ui::Event* instead.
   // See https://crbug.com/965991.
@@ -252,7 +248,7 @@ ui::KeyEvent CefBrowserPlatformDelegateNativeLinux::TranslateUiKeyEvent(
   ui::DomCode dom_code =
       ui::KeycodeConverter::NativeKeycodeToDomCode(key_event.native_key_code);
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   int keysym = ui::XKeysymForWindowsKeyCode(
       key_code, !!(key_event.modifiers & EVENTFLAG_SHIFT_DOWN));
   char16_t character = ui::GetUnicodeCharacterFromXKeySym(keysym);
@@ -263,23 +259,24 @@ ui::KeyEvent CefBrowserPlatformDelegateNativeLinux::TranslateUiKeyEvent(
   base::TimeTicks time_stamp = GetEventTimeStamp();
 
   if (key_event.type == KEYEVENT_CHAR) {
-    return ui::KeyEvent(character, key_code, dom_code, flags, time_stamp);
+    return ui::KeyEvent::FromCharacter(character, key_code, dom_code, flags,
+                                       time_stamp);
   }
 
-  ui::EventType type = ui::ET_UNKNOWN;
+  ui::EventType type = ui::EventType::kUnknown;
   switch (key_event.type) {
     case KEYEVENT_RAWKEYDOWN:
     case KEYEVENT_KEYDOWN:
-      type = ui::ET_KEY_PRESSED;
+      type = ui::EventType::kKeyPressed;
       break;
     case KEYEVENT_KEYUP:
-      type = ui::ET_KEY_RELEASED;
+      type = ui::EventType::kKeyReleased;
       break;
     default:
       DCHECK(false);
   }
 
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#if BUILDFLAG(IS_OZONE_X11)
   ui::DomKey dom_key = ui::XKeySymToDomKey(keysym, character);
 #else
   ui::DomKey dom_key = ui::DomKey::NONE;
@@ -288,12 +285,12 @@ ui::KeyEvent CefBrowserPlatformDelegateNativeLinux::TranslateUiKeyEvent(
   return ui::KeyEvent(type, key_code, dom_code, flags, dom_key, time_stamp);
 }
 
-content::NativeWebKeyboardEvent
+input::NativeWebKeyboardEvent
 CefBrowserPlatformDelegateNativeLinux::TranslateWebKeyEvent(
     const CefKeyEvent& key_event) const {
   ui::KeyEvent ui_event = TranslateUiKeyEvent(key_event);
   if (key_event.type == KEYEVENT_CHAR) {
-    return content::NativeWebKeyboardEvent(ui_event, key_event.character);
+    return input::NativeWebKeyboardEvent(ui_event, key_event.character);
   }
-  return content::NativeWebKeyboardEvent(ui_event);
+  return input::NativeWebKeyboardEvent(ui_event);
 }

@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=7fba757b1b62e48c642d55b808162d6f56bf87d2$
+// $hash=854c9a8831692fabcf6eef2e4a7d7a1089694fd2$
 //
 
 #ifndef CEF_INCLUDE_CAPI_TEST_CEF_TEST_SERVER_CAPI_H_
@@ -104,7 +104,7 @@ typedef struct _cef_test_server_t {
 /// started. The server will continue running until Stop is called.
 ///
 CEF_EXPORT cef_test_server_t* cef_test_server_create_and_start(
-    uint16 port,
+    uint16_t port,
     int https_server,
     cef_test_cert_type_t https_cert_type,
     struct _cef_test_server_handler_t* handler);

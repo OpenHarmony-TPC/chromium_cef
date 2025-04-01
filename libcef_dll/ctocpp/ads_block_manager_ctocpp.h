@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a2eb3f237205bba7437fbf5b1fb9f097300e17c9$
+// $hash=3b240b783fa5c60112d126934f581b08e8d921de$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_ADS_BLOCK_MANAGER_CTOCPP_H_
@@ -21,6 +21,7 @@
 #endif
 
 #include <vector>
+
 #include "include/capi/cef_adsblock_manager_capi.h"
 #include "include/cef_adsblock_manager.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"

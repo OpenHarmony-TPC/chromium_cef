@@ -3,13 +3,11 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
+#include "cef/libcef/browser/net_service/stream_reader_url_loader.h"
+
 #include <regex>
 
-#include "libcef/browser/net_service/stream_reader_url_loader.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
 #include "base/strings/string_number_conversions.h"
@@ -18,7 +16,8 @@
 #include "base/task/single_thread_task_runner.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
-#include "base/trace_event/trace_event.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "content/public/browser/browser_thread.h"
 #include "net/base/features.h"
 #include "net/base/io_buffer.h"
@@ -27,14 +26,17 @@
 #include "services/network/public/cpp/features.h"
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
+#include "base/trace_event/trace_event.h"
+#endif
+
 namespace net_service {
 
 namespace {
 
-#if defined(OHOS_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 constexpr int32_t NET_STATUS_CODE_400 = 400;
 #endif
-
 using OnInputStreamOpenedCallback =
     base::OnceCallback<void(std::unique_ptr<StreamReaderURLLoader::Delegate>,
                             std::unique_ptr<InputStream>)>;
@@ -223,7 +225,8 @@ class InputStreamReader : public base::RefCountedThreadSafe<InputStreamReader> {
       InputStream::SkipCallback skip_callback);
   static void RunReadCallbackOnJobThread(
       int bytes_read,
-      InputStream::ReadCallback read_callback);
+      InputStream::ReadCallback read_callback,
+      scoped_refptr<net::IOBuffer> buffer);
 
   std::unique_ptr<InputStream> stream_;
 
@@ -258,7 +261,7 @@ InputStreamReader::InputStreamReader(
   DCHECK(work_thread_task_runner_);
 }
 
-InputStreamReader::~InputStreamReader() {}
+InputStreamReader::~InputStreamReader() = default;
 
 void InputStreamReader::Skip(int64_t skip_bytes,
                              InputStream::SkipCallback callback) {
@@ -452,8 +455,9 @@ void InputStreamReader::RunReadCallback(int bytes_read) {
 
   DCHECK(!pending_read_callback_.is_null());
   job_thread_task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(InputStreamReader::RunReadCallbackOnJobThread,
-                                bytes_read, std::move(pending_read_callback_)));
+      FROM_HERE,
+      base::BindOnce(InputStreamReader::RunReadCallbackOnJobThread, bytes_read,
+                     std::move(pending_read_callback_), buffer_));
 
   // Reset callback state.
   pending_callback_id_ = -1;
@@ -470,7 +474,8 @@ void InputStreamReader::RunSkipCallbackOnJobThread(
 // static
 void InputStreamReader::RunReadCallbackOnJobThread(
     int bytes_read,
-    InputStream::ReadCallback read_callback) {
+    InputStream::ReadCallback read_callback,
+    scoped_refptr<net::IOBuffer> buffer) {
   std::move(read_callback).Run(bytes_read);
 }
 
@@ -484,7 +489,7 @@ StreamReaderURLLoader::StreamReaderURLLoader(
     mojo::PendingRemote<network::mojom::URLLoaderClient> client,
     mojo::PendingRemote<network::mojom::TrustedHeaderClient> header_client,
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
-    absl::optional<mojo_base::BigBuffer> cached_metadata,
+    std::optional<mojo_base::BigBuffer> cached_metadata,
     std::unique_ptr<Delegate> response_delegate)
     : request_id_(request_id),
       request_(request),
@@ -529,13 +534,46 @@ void StreamReaderURLLoader::Start() {
         base::BindOnce(&StreamReaderURLLoader::ContinueWithRequestHeaders,
                        weak_factory_.GetWeakPtr()));
   } else {
-    ContinueWithRequestHeaders(net::OK, absl::nullopt);
+    ContinueWithRequestHeaders(net::OK, std::nullopt);
   }
+}
+
+void StreamReaderURLLoader::Continue() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+
+  DCHECK(need_client_callback_ && !got_client_callback_);
+  got_client_callback_ = true;
+
+  writable_handle_watcher_.Watch(
+      producer_handle_.get(), MOJO_HANDLE_SIGNAL_WRITABLE,
+      base::BindRepeating(&StreamReaderURLLoader::OnDataPipeWritable,
+                          base::Unretained(this)));
+
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
+  bool is_sync_mode = false;  // TODO(HUAWEI)
+  LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders "
+                "request_id_="
+             << request_id_ << ", is_sync_mode=" << is_sync_mode;
+  if (!is_sync_mode || !TryTransferDataWithSharedMemory()) {
+    ReadMore();
+  }
+#else
+  ReadMore();
+#endif
+}
+
+void StreamReaderURLLoader::Cancel() {
+  DCHECK(thread_checker_.CalledOnValidThread());
+
+  DCHECK(need_client_callback_ && !got_client_callback_);
+  got_client_callback_ = true;
+
+  CleanUp();
 }
 
 void StreamReaderURLLoader::ContinueWithRequestHeaders(
     int32_t result,
-    const absl::optional<net::HttpRequestHeaders>& headers) {
+    const std::optional<net::HttpRequestHeaders>& headers) {
   if (result != net::OK) {
     RequestComplete(result);
     return;
@@ -561,7 +599,7 @@ void StreamReaderURLLoader::FollowRedirect(
     const std::vector<std::string>& removed_headers,
     const net::HttpRequestHeaders& modified_headers,
     const net::HttpRequestHeaders& modified_cors_exempt_headers,
-    const absl::optional<GURL>& new_url) {
+    const std::optional<GURL>& new_url) {
   DCHECK(false);
 }
 
@@ -581,13 +619,8 @@ void StreamReaderURLLoader::OnInputStreamOpened(
   open_cancel_callback_.Reset();
 
   if (!input_stream) {
-    bool restarted = false;
-    response_delegate_->OnInputStreamOpenFailed(request_id_, &restarted);
-    if (restarted) {
-      // The request has been restarted with a new loader.
-      // |this| will be deleted.
-      CleanUp();
-    } else {
+    // May delete |this| iff returns true.
+    if (!response_delegate_->OnInputStreamOpenFailed(request_id_)) {
       HeadersComplete(net::HTTP_NOT_FOUND, -1);
     }
     return;
@@ -626,6 +659,7 @@ void StreamReaderURLLoader::OnReaderSkipCompleted(int64_t bytes_skipped) {
   }
 }
 
+#if BUILDFLAG(ARKWEB_API_PER)
 bool checkResponseDataID(const std::string& identity) {
   if (identity.empty() || identity.length() > kResponseDataIDMaxLength) {
     return false;
@@ -633,6 +667,7 @@ bool checkResponseDataID(const std::string& identity) {
   static std::regex pattern(R"(\d+)");
   return std::regex_match(identity, pattern);
 }
+#endif
 
 void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                             int64_t expected_content_length) {
@@ -647,14 +682,12 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   response_delegate_->GetResponseHeaders(request_id_, &status_code,
                                          &status_text, &mime_type, &charset,
                                          &content_length, &extra_headers);
-
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   LOG(DEBUG) << "intercept StreamReaderURLLoader::HeadersComplete"
-              << " request_id=" << request_id_
-              << " status_code=" << status_code
-              << " status_text=" << status_text
-              << " mime_type=" << mime_type
-              << " charset=" << charset
-              << " content_length=" << content_length;
+             << " request_id_=" << request_id_ << " status_code=" << status_code
+             << " status_text=" << status_text << " mime_type=" << mime_type
+             << " charset=" << charset << " content_length=" << content_length;
+#endif
   if (status_code < 0) {
     // Early exit if the handler reported an error.
     RequestComplete(status_code);
@@ -665,6 +698,7 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   pending_response->request_start = base::TimeTicks::Now();
   pending_response->response_start = base::TimeTicks::Now();
 
+#if BUILDFLAG(ARKWEB_API_PER)
   // When user custom resource responses via 'onInterceptRequest',
   // they can set 'ResponseDataID' value in the reponse header.
   // This value will be utilized to generate codecache for interupt js resource.
@@ -676,18 +710,19 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
     auto identity = it->second;
     if (checkResponseDataID(identity)) {
       pending_response->response_time =
-          base::Time::FromJsTime(std::stod(identity));
+          base::Time::FromMillisecondsSinceUnixEpoch(std::stod(identity));
       LOG(INFO) << "ResponseDataID have set";
     } else {
       LOG(WARNING) << "ResponseDataID[" << (identity)
                    << "] not a reasonable value!";
     }
   }
+#endif
 
   auto headers = MakeResponseHeaders(
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
-#if defined(OHOS_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   if (status_code >= NET_STATUS_CODE_400) {
     if (!mime_type.empty()) {
       headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
@@ -700,7 +735,7 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
     pending_response->content_length = content_length;
   }
 
-#if defined(OHOS_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   if (mime_type.empty()) {
     headers->GetMimeTypeAndCharset(&mime_type, &charset);
   }
@@ -721,11 +756,11 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                        std::move(pending_response)));
   } else {
     ContinueWithResponseHeaders(std::move(pending_response), net::OK,
-                                absl::nullopt, absl::nullopt);
+                                std::nullopt, std::nullopt);
   }
 }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
 bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
   size_t bufferSize = response_delegate_->GetResponseDataBufferSize();
   if (bufferSize <= 0) {
@@ -738,8 +773,10 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
     LOG(ERROR) << "shared-memory create buffer err";
     return false;
   }
-  base::WritableSharedMemoryRegion writable_region = mojo::UnwrapWritableSharedMemoryRegion(std::move(buffer));
-  base::WritableSharedMemoryMapping shared_memory_mapping = writable_region.Map();
+  base::WritableSharedMemoryRegion writable_region =
+      mojo::UnwrapWritableSharedMemoryRegion(std::move(buffer));
+  base::WritableSharedMemoryMapping shared_memory_mapping =
+      writable_region.Map();
   if (!shared_memory_mapping.IsValid()) {
     LOG(ERROR) << "shared-memory mapping err";
     return false;
@@ -755,13 +792,16 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
   }
 
   base::ReadOnlySharedMemoryRegion read_only_region =
-      base::WritableSharedMemoryRegion::ConvertToReadOnly(std::move(writable_region));
+      base::WritableSharedMemoryRegion::ConvertToReadOnly(
+          std::move(writable_region));
   if (!read_only_region.IsValid()) {
     LOG(ERROR) << "shared-memory: convert to read only err";
     return false;
   }
-  client_->OnTransferDataWithSharedMemory(std::move(read_only_region), bufferSize);
-  LOG(DEBUG) << "shared-memory--- GetResponseDataBuffer buffer size=" << bufferSize;
+  client_->OnTransferDataWithSharedMemory(std::move(read_only_region),
+                                          bufferSize);
+  LOG(DEBUG) << "shared-memory--- GetResponseDataBuffer buffer size="
+             << bufferSize;
 
   return true;
 }
@@ -770,8 +810,8 @@ bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
 void StreamReaderURLLoader::ContinueWithResponseHeaders(
     network::mojom::URLResponseHeadPtr pending_response,
     int32_t result,
-    const absl::optional<std::string>& headers,
-    const absl::optional<GURL>& redirect_url) {
+    const std::optional<std::string>& headers,
+    const std::optional<GURL>& redirect_url) {
   if (result != net::OK) {
     RequestComplete(result);
     return;
@@ -796,26 +836,28 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
   if (has_redirect_url || pending_headers->IsRedirect(&location)) {
     pending_response->encoded_data_length = header_length_;
     pending_response->content_length = 0;
-    pending_response->encoded_body_length = 0;
+    pending_response->encoded_body_length = nullptr;
     const GURL new_location =
         has_redirect_url ? *redirect_url : request_.url.Resolve(location);
+
+    CleanUp();
+
+    // The client will restart the request with a new loader.
+    // May delete |this|.
     client_->OnReceiveRedirect(
         MakeRedirectInfo(request_, pending_headers.get(), new_location,
                          pending_headers->response_code()),
         std::move(pending_response));
-    // The client will restart the request with a new loader.
-    // |this| will be deleted.
-    CleanUp();
   } else {
     mojo::ScopedDataPipeConsumerHandle consumer_handle;
-#if defined(OHOS_API_PER)
+#if BUILDFLAG(ARKWEB_API_PER)
     MojoCreateDataPipeOptions options;
     options.struct_size = sizeof(MojoCreateDataPipeOptions);
     options.flags = MOJO_CREATE_DATA_PIPE_FLAG_NONE;
     options.element_num_bytes = 1;
     options.capacity_num_bytes =
-    network::features::GetDataPipeDefaultAllocationSize(
-        network::features::DataPipeAllocationSize::kLargerSizeIfPossible);
+        network::features::GetDataPipeDefaultAllocationSize(
+            network::features::DataPipeAllocationSize::kLargerSizeIfPossible);
     if (CreateDataPipe(&options /*options*/, producer_handle_,
 #else
     if (CreateDataPipe(nullptr /*options*/, producer_handle_,
@@ -824,24 +866,13 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
       RequestComplete(net::ERR_FAILED);
       return;
     }
-    writable_handle_watcher_.Watch(
-        producer_handle_.get(), MOJO_HANDLE_SIGNAL_WRITABLE,
-        base::BindRepeating(&StreamReaderURLLoader::OnDataPipeWritable,
-                            base::Unretained(this)));
 
+    need_client_callback_ = true;
     client_->OnReceiveResponse(std::move(pending_response),
                                std::move(consumer_handle),
                                std::move(cached_metadata_));
-    
-#if BUILDFLAG(IS_OHOS)
-    LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders request_id_=" << request_id_
-                << ", request_.is_sync_mode=" << request_.is_sync_mode;
-    if (!request_.is_sync_mode || !TryTransferDataWithSharedMemory()) {
-      ReadMore();
-    }
-#else
-    ReadMore();
-#endif
+
+    // Wait for the client to call Continue() or Cancel().
   }
 }
 
@@ -849,9 +880,8 @@ void StreamReaderURLLoader::ReadMore() {
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(!pending_buffer_.get());
 
-  uint32_t num_bytes;
   MojoResult mojo_result = network::NetToMojoPendingBuffer::BeginWrite(
-      &producer_handle_, &pending_buffer_, &num_bytes);
+      &producer_handle_, &pending_buffer_);
   if (mojo_result == MOJO_RESULT_SHOULD_WAIT) {
     // The pipe is full. We need to wait for it to have more space.
     writable_handle_watcher_.ArmOrNotify();
@@ -877,7 +907,7 @@ void StreamReaderURLLoader::ReadMore() {
   }
 
   input_stream_reader_->Read(
-      buffer, base::checked_cast<int>(num_bytes),
+      buffer, base::checked_cast<int>(pending_buffer_->size()),
       base::BindOnce(&StreamReaderURLLoader::OnReaderReadCompleted,
                      weak_factory_.GetWeakPtr()));
 }
@@ -903,8 +933,9 @@ void StreamReaderURLLoader::OnReaderReadCompleted(int bytes_read) {
   }
   if (bytes_read == 0) {
     // Eof, read completed.
-#if BUILDFLAG(IS_OHOS)
-    TRACE_EVENT1("net", "StreamReaderURLLoader::OnReaderReadCompleted", "id", request_id_);
+#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
+    TRACE_EVENT1("net", "StreamReaderURLLoader::OnReaderReadCompleted", "id",
+                 request_id_);
 #endif
     pending_buffer_->Complete(0);
     RequestComplete(net::OK);
@@ -931,31 +962,31 @@ void StreamReaderURLLoader::RequestComplete(int status_code) {
   // We don't support decoders, so use the same value.
   status.decoded_body_length = total_bytes_read_;
 
-  client_->OnComplete(status);
   CleanUp();
+
+  // May delete |this|.
+  client_->OnComplete(status);
 }
 
 void StreamReaderURLLoader::CleanUp() {
   DCHECK(thread_checker_.CalledOnValidThread());
 
+  weak_factory_.InvalidateWeakPtrs();
+
   // Resets the watchers and pipes, so that we will never be called back.
   writable_handle_watcher_.Cancel();
   pending_buffer_ = nullptr;
   producer_handle_.reset();
-
-  // Manages its own lifetime.
-  delete this;
 }
 
 bool StreamReaderURLLoader::ParseRange(const net::HttpRequestHeaders& headers) {
   DCHECK(thread_checker_.CalledOnValidThread());
 
-  std::string range_header;
-  if (headers.GetHeader(net::HttpRequestHeaders::kRange, &range_header)) {
+  if (auto range_header = headers.GetHeader(net::HttpRequestHeaders::kRange)) {
     // This loader only cares about the Range header so that we know how many
     // bytes in the stream to skip and how many to read after that.
     std::vector<net::HttpByteRange> ranges;
-    if (net::HttpUtil::ParseRangeHeader(range_header, &ranges)) {
+    if (net::HttpUtil::ParseRangeHeader(*range_header, &ranges)) {
       // In case of multi-range request only use the first range.
       // We don't support multirange requests.
       if (ranges.size() == 1) {

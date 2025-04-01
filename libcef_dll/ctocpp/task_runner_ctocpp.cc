@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=df6e77d5bb333463084c645fbb71ae3a92367c7b$
+// $hash=35e4ad06d4b2158d4a240ecac06b3bf03b02f69e$
 //
 
 #include "libcef_dll/ctocpp/task_runner_ctocpp.h"
+
 #include "libcef_dll/cpptoc/task_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -131,7 +132,7 @@ bool CefTaskRunnerCToCpp::PostTask(CefRefPtr<CefTask> task) {
 
 NO_SANITIZE("cfi-icall")
 bool CefTaskRunnerCToCpp::PostDelayedTask(CefRefPtr<CefTask> task,
-                                          int64 delay_ms) {
+                                          int64_t delay_ms) {
   shutdown_checker::AssertNotShutdown();
 
   cef_task_runner_t* _struct = GetStruct();

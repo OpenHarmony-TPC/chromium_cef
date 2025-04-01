@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/net/url_util.h"
+#include "cef/libcef/common/net/url_util.h"
 
 #include "base/logging.h"
 #include "components/url_formatter/url_fixer.h"
@@ -38,16 +38,5 @@ bool FixupGURL(GURL& gurl) {
   }
   return true;
 }
-
-#ifdef OHOS_NETWORK_LOAD
-GURL FixupGURL(const std::string& url) {
-  GURL fixup_url =
-      url_formatter::FixupURL(url, std::string());
-  if (fixup_url.is_valid()) {
-    return fixup_url;
-  }
-  return GURL();
-}
-#endif
 
 }  // namespace url_util

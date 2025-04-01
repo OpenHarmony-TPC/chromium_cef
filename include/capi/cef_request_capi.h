@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=addcf238798444f6c88d9792e4c086dc4cc0373d$
+// $hash=14ce483864835eca476d08d39ed4236fbd1a874c$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_
@@ -47,7 +47,6 @@ extern "C" {
 #endif
 
 struct _cef_post_data_element_t;
-struct _cef_post_data_stream_t;
 struct _cef_post_data_t;
 
 ///
@@ -63,78 +62,78 @@ typedef struct _cef_request_t {
   ///
   /// Returns true (1) if this object is read-only.
   ///
-  int(CEF_CALLBACK *is_read_only)(struct _cef_request_t *self);
+  int(CEF_CALLBACK* is_read_only)(struct _cef_request_t* self);
 
   ///
   /// Get the fully qualified URL.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_url)(struct _cef_request_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_url)(struct _cef_request_t* self);
 
   ///
   /// Set the fully qualified URL.
   ///
-  void(CEF_CALLBACK *set_url)(struct _cef_request_t *self,
-                              const cef_string_t *url);
+  void(CEF_CALLBACK* set_url)(struct _cef_request_t* self,
+                              const cef_string_t* url);
 
   ///
   /// Get the request function type. The value will default to POST if post data
   /// is provided and GET otherwise.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_method)(struct _cef_request_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_method)(struct _cef_request_t* self);
 
   ///
   /// Set the request function type.
   ///
-  void(CEF_CALLBACK *set_method)(struct _cef_request_t *self,
-                                 const cef_string_t *method);
+  void(CEF_CALLBACK* set_method)(struct _cef_request_t* self,
+                                 const cef_string_t* method);
 
   ///
   /// Set the referrer URL and policy. If non-NULL the referrer URL must be
   /// fully qualified with an HTTP or HTTPS scheme component. Any username,
   /// password or ref component will be removed.
   ///
-  void(CEF_CALLBACK *set_referrer)(struct _cef_request_t *self,
-                                   const cef_string_t *referrer_url,
+  void(CEF_CALLBACK* set_referrer)(struct _cef_request_t* self,
+                                   const cef_string_t* referrer_url,
                                    cef_referrer_policy_t policy);
 
   ///
   /// Get the referrer URL.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_referrer_url)(
-      struct _cef_request_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_referrer_url)(
+      struct _cef_request_t* self);
 
   ///
   /// Get the referrer policy.
   ///
-  cef_referrer_policy_t(CEF_CALLBACK *get_referrer_policy)(
-      struct _cef_request_t *self);
+  cef_referrer_policy_t(CEF_CALLBACK* get_referrer_policy)(
+      struct _cef_request_t* self);
 
   ///
   /// Get the post data.
   ///
-  struct _cef_post_data_t *(CEF_CALLBACK *get_post_data)(
-      struct _cef_request_t *self);
+  struct _cef_post_data_t*(CEF_CALLBACK* get_post_data)(
+      struct _cef_request_t* self);
 
   ///
   /// Set the post data.
   ///
-  void(CEF_CALLBACK *set_post_data)(struct _cef_request_t *self,
-                                    struct _cef_post_data_t *postData);
+  void(CEF_CALLBACK* set_post_data)(struct _cef_request_t* self,
+                                    struct _cef_post_data_t* postData);
 
   ///
   /// Get the header values. Will not include the Referer value if any.
   ///
-  void(CEF_CALLBACK *get_header_map)(struct _cef_request_t *self,
+  void(CEF_CALLBACK* get_header_map)(struct _cef_request_t* self,
                                      cef_string_multimap_t headerMap);
 
   ///
   /// Set the header values. If a Referer value exists in the header map it will
   /// be removed and ignored.
   ///
-  void(CEF_CALLBACK *set_header_map)(struct _cef_request_t *self,
+  void(CEF_CALLBACK* set_header_map)(struct _cef_request_t* self,
                                      cef_string_multimap_t headerMap);
 
   ///
@@ -143,8 +142,9 @@ typedef struct _cef_request_t {
   /// |name| might have multiple values.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_header_by_name)(
-      struct _cef_request_t *self, const cef_string_t *name);
+  cef_string_userfree_t(CEF_CALLBACK* get_header_by_name)(
+      struct _cef_request_t* self,
+      const cef_string_t* name);
 
   ///
   /// Set the header |name| to |value|. If |overwrite| is true (1) any existing
@@ -152,60 +152,61 @@ typedef struct _cef_request_t {
   /// any existing values will not be overwritten. The Referer value cannot be
   /// set using this function.
   ///
-  void(CEF_CALLBACK *set_header_by_name)(struct _cef_request_t *self,
-                                         const cef_string_t *name,
-                                         const cef_string_t *value,
+  void(CEF_CALLBACK* set_header_by_name)(struct _cef_request_t* self,
+                                         const cef_string_t* name,
+                                         const cef_string_t* value,
                                          int overwrite);
 
   ///
   /// Set all values at one time.
   ///
-  void(CEF_CALLBACK *set)(struct _cef_request_t *self, const cef_string_t *url,
-                          const cef_string_t *method,
-                          struct _cef_post_data_t *postData,
+  void(CEF_CALLBACK* set)(struct _cef_request_t* self,
+                          const cef_string_t* url,
+                          const cef_string_t* method,
+                          struct _cef_post_data_t* postData,
                           cef_string_multimap_t headerMap);
 
   ///
   /// Get the flags used in combination with cef_urlrequest_t. See
   /// cef_urlrequest_flags_t for supported values.
   ///
-  int(CEF_CALLBACK *get_flags)(struct _cef_request_t *self);
+  int(CEF_CALLBACK* get_flags)(struct _cef_request_t* self);
 
   ///
   /// Set the flags used in combination with cef_urlrequest_t.  See
   /// cef_urlrequest_flags_t for supported values.
   ///
-  void(CEF_CALLBACK *set_flags)(struct _cef_request_t *self, int flags);
+  void(CEF_CALLBACK* set_flags)(struct _cef_request_t* self, int flags);
 
   ///
   /// Get the URL to the first party for cookies used in combination with
   /// cef_urlrequest_t.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_first_party_for_cookies)(
-      struct _cef_request_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_first_party_for_cookies)(
+      struct _cef_request_t* self);
 
   ///
   /// Set the URL to the first party for cookies used in combination with
   /// cef_urlrequest_t.
   ///
-  void(CEF_CALLBACK *set_first_party_for_cookies)(struct _cef_request_t *self,
-                                                  const cef_string_t *url);
+  void(CEF_CALLBACK* set_first_party_for_cookies)(struct _cef_request_t* self,
+                                                  const cef_string_t* url);
 
   ///
   /// Get the resource type for this request. Only available in the browser
   /// process.
   ///
-  cef_resource_type_t(CEF_CALLBACK *get_resource_type)(
-      struct _cef_request_t *self);
+  cef_resource_type_t(CEF_CALLBACK* get_resource_type)(
+      struct _cef_request_t* self);
 
   ///
   /// Get the transition type for this request. Only available in the browser
   /// process and only applies to requests that represent a main frame or sub-
   /// frame navigation.
   ///
-  cef_transition_type_t(CEF_CALLBACK *get_transition_type)(
-      struct _cef_request_t *self);
+  cef_transition_type_t(CEF_CALLBACK* get_transition_type)(
+      struct _cef_request_t* self);
 
   ///
   /// Returns the globally unique identifier for this request or 0 if not
@@ -213,139 +214,13 @@ typedef struct _cef_request_t {
   /// in the browser process to track a single request across multiple
   /// callbacks.
   ///
-  uint64(CEF_CALLBACK *get_identifier)(struct _cef_request_t *self);
-
-  ///
-  /// Returns whether the request was made for the main frame document. Will be
-  /// false (0) for subresources or iframes
-  ///
-  int(CEF_CALLBACK *is_main_frame)(struct _cef_request_t *self);
-
-  ///
-  /// Returns whether the request was redirect.
-  ///
-  int(CEF_CALLBACK *is_redirect)(struct _cef_request_t *self);
-
-  ///
-  /// Returns whether the request was triggered by user gesture.
-  ///
-  int(CEF_CALLBACK *has_user_gesture)(struct _cef_request_t *self);
-
-  ///
-  /// Get the upload stream.
-  ///
-  struct _cef_post_data_stream_t *(CEF_CALLBACK *get_upload_stream)(
-      struct _cef_request_t *self);
+  uint64_t(CEF_CALLBACK* get_identifier)(struct _cef_request_t* self);
 } cef_request_t;
 
 ///
 /// Create a new cef_request_t object.
 ///
-CEF_EXPORT cef_request_t *cef_request_create(void);
-
-///
-/// Callback for init the stream.
-///
-typedef struct _cef_post_data_stream_init_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Callback for init the stream.
-  ///
-  void(CEF_CALLBACK *cont)(struct _cef_post_data_stream_init_callback_t *self,
-                           int result);
-} cef_post_data_stream_init_callback_t;
-
-///
-/// Callback for read from stream.
-///
-typedef struct _cef_post_data_stream_read_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Callback for read from stream.
-  ///
-  void(CEF_CALLBACK *cont)(struct _cef_post_data_stream_read_callback_t *self,
-                           char *buffer, int bytes_read);
-} cef_post_data_stream_read_callback_t;
-
-///
-/// Structure used to represent post data for a web request. The functions of
-/// this structure may be called on any thread.
-///
-typedef struct _cef_post_data_stream_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Set ready callback.
-  ///
-  void(CEF_CALLBACK *set_read_callback)(
-      struct _cef_post_data_stream_t *self,
-      struct _cef_post_data_stream_read_callback_t *read_callback);
-
-  ///
-  /// Init the stream.
-  ///
-  void(CEF_CALLBACK *init)(
-      struct _cef_post_data_stream_t *self,
-      struct _cef_post_data_stream_init_callback_t *init_callback);
-
-  ///
-  /// Read the stream.
-  ///
-  void(CEF_CALLBACK *read)(
-      struct _cef_post_data_stream_t *self, void *buffer, int buf_len,
-      struct _cef_post_data_stream_read_callback_t *read_callback);
-
-  ///
-  /// Get the size of stream.
-  ///
-  uint64(CEF_CALLBACK *get_size)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// Get the position of stream.
-  ///
-  uint64(CEF_CALLBACK *get_position)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  int(CEF_CALLBACK *is_chunked)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  int(CEF_CALLBACK *has_null_source)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  int(CEF_CALLBACK *is_eof)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  int(CEF_CALLBACK *is_in_memory)(struct _cef_post_data_stream_t *self);
-
-  ///
-  /// reset();
-  ///
-  void(CEF_CALLBACK *reset)(struct _cef_post_data_stream_t *self);
-} cef_post_data_stream_t;
-
-///
-/// Create a new cef_post_data_stream_t object.
-///
-CEF_EXPORT cef_post_data_stream_t *cef_post_data_stream_create(void);
+CEF_EXPORT cef_request_t* cef_request_create(void);
 
 ///
 /// Structure used to represent post data for a web request. The functions of
@@ -360,7 +235,7 @@ typedef struct _cef_post_data_t {
   ///
   /// Returns true (1) if this object is read-only.
   ///
-  int(CEF_CALLBACK *is_read_only)(struct _cef_post_data_t *self);
+  int(CEF_CALLBACK* is_read_only)(struct _cef_post_data_t* self);
 
   ///
   /// Returns true (1) if the underlying POST data includes elements that are
@@ -368,44 +243,44 @@ typedef struct _cef_post_data_t {
   /// file upload data). Modifying cef_post_data_t objects with excluded
   /// elements may result in the request failing.
   ///
-  int(CEF_CALLBACK *has_excluded_elements)(struct _cef_post_data_t *self);
+  int(CEF_CALLBACK* has_excluded_elements)(struct _cef_post_data_t* self);
 
   ///
   /// Returns the number of existing post data elements.
   ///
-  size_t(CEF_CALLBACK *get_element_count)(struct _cef_post_data_t *self);
+  size_t(CEF_CALLBACK* get_element_count)(struct _cef_post_data_t* self);
 
   ///
   /// Retrieve the post data elements.
   ///
-  void(CEF_CALLBACK *get_elements)(struct _cef_post_data_t *self,
-                                   size_t *elementsCount,
-                                   struct _cef_post_data_element_t **elements);
+  void(CEF_CALLBACK* get_elements)(struct _cef_post_data_t* self,
+                                   size_t* elementsCount,
+                                   struct _cef_post_data_element_t** elements);
 
   ///
   /// Remove the specified post data element.  Returns true (1) if the removal
   /// succeeds.
   ///
-  int(CEF_CALLBACK *remove_element)(struct _cef_post_data_t *self,
-                                    struct _cef_post_data_element_t *element);
+  int(CEF_CALLBACK* remove_element)(struct _cef_post_data_t* self,
+                                    struct _cef_post_data_element_t* element);
 
   ///
   /// Add the specified post data element.  Returns true (1) if the add
   /// succeeds.
   ///
-  int(CEF_CALLBACK *add_element)(struct _cef_post_data_t *self,
-                                 struct _cef_post_data_element_t *element);
+  int(CEF_CALLBACK* add_element)(struct _cef_post_data_t* self,
+                                 struct _cef_post_data_element_t* element);
 
   ///
   /// Remove all existing post data elements.
   ///
-  void(CEF_CALLBACK *remove_elements)(struct _cef_post_data_t *self);
+  void(CEF_CALLBACK* remove_elements)(struct _cef_post_data_t* self);
 } cef_post_data_t;
 
 ///
 /// Create a new cef_post_data_t object.
 ///
-CEF_EXPORT cef_post_data_t *cef_post_data_create(void);
+CEF_EXPORT cef_post_data_t* cef_post_data_create(void);
 
 ///
 /// Structure used to represent a single element in the request post data. The
@@ -420,59 +295,61 @@ typedef struct _cef_post_data_element_t {
   ///
   /// Returns true (1) if this object is read-only.
   ///
-  int(CEF_CALLBACK *is_read_only)(struct _cef_post_data_element_t *self);
+  int(CEF_CALLBACK* is_read_only)(struct _cef_post_data_element_t* self);
 
   ///
   /// Remove all contents from the post data element.
   ///
-  void(CEF_CALLBACK *set_to_empty)(struct _cef_post_data_element_t *self);
+  void(CEF_CALLBACK* set_to_empty)(struct _cef_post_data_element_t* self);
 
   ///
   /// The post data element will represent a file.
   ///
-  void(CEF_CALLBACK *set_to_file)(struct _cef_post_data_element_t *self,
-                                  const cef_string_t *fileName);
+  void(CEF_CALLBACK* set_to_file)(struct _cef_post_data_element_t* self,
+                                  const cef_string_t* fileName);
 
   ///
   /// The post data element will represent bytes.  The bytes passed in will be
   /// copied.
   ///
-  void(CEF_CALLBACK *set_to_bytes)(struct _cef_post_data_element_t *self,
-                                   size_t size, const void *bytes);
+  void(CEF_CALLBACK* set_to_bytes)(struct _cef_post_data_element_t* self,
+                                   size_t size,
+                                   const void* bytes);
 
   ///
   /// Return the type of this post data element.
   ///
-  cef_postdataelement_type_t(CEF_CALLBACK *get_type)(
-      struct _cef_post_data_element_t *self);
+  cef_postdataelement_type_t(CEF_CALLBACK* get_type)(
+      struct _cef_post_data_element_t* self);
 
   ///
   /// Return the file name.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t(CEF_CALLBACK *get_file)(
-      struct _cef_post_data_element_t *self);
+  cef_string_userfree_t(CEF_CALLBACK* get_file)(
+      struct _cef_post_data_element_t* self);
 
   ///
   /// Return the number of bytes.
   ///
-  size_t(CEF_CALLBACK *get_bytes_count)(struct _cef_post_data_element_t *self);
+  size_t(CEF_CALLBACK* get_bytes_count)(struct _cef_post_data_element_t* self);
 
   ///
   /// Read up to |size| bytes into |bytes| and return the number of bytes
   /// actually read.
   ///
-  size_t(CEF_CALLBACK *get_bytes)(struct _cef_post_data_element_t *self,
-                                  size_t size, void *bytes);
+  size_t(CEF_CALLBACK* get_bytes)(struct _cef_post_data_element_t* self,
+                                  size_t size,
+                                  void* bytes);
 } cef_post_data_element_t;
 
 ///
 /// Create a new cef_post_data_element_t object.
 ///
-CEF_EXPORT cef_post_data_element_t *cef_post_data_element_create(void);
+CEF_EXPORT cef_post_data_element_t* cef_post_data_element_create(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_REQUEST_CAPI_H_

@@ -2,17 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/chrome/chrome_browser_context.h"
+#include "cef/libcef/browser/chrome/chrome_browser_context.h"
 
-#include "libcef/browser/thread_util.h"
+#include <memory>
 
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/libcef/browser/prefs/browser_prefs.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "chrome/browser/browser_process.h"
+#include "chrome/browser/history/history_service_factory.h"
 #include "chrome/browser/prefs/session_startup_pref.h"
 #include "chrome/browser/profiles/keep_alive/profile_keep_alive_types.h"
 #include "chrome/browser/profiles/keep_alive/scoped_profile_keep_alive.h"
 #include "chrome/browser/profiles/off_the_record_profile_impl.h"
 #include "chrome/common/pref_names.h"
+#include "components/history/core/browser/history_service.h"
 
 namespace {
 
@@ -24,6 +29,7 @@ Profile* GetPrimaryUserProfile() {
   // From ProfileManager::GetActiveUserOrOffTheRecordProfile.
   base::FilePath default_profile_dir = profile_manager->user_data_dir().Append(
       profile_manager->GetInitialProfileDir());
+
   return profile_manager->GetProfile(default_profile_dir);
 }
 
@@ -34,6 +40,27 @@ ChromeBrowserContext::ChromeBrowserContext(
     : CefBrowserContext(settings), weak_ptr_factory_(this) {}
 
 ChromeBrowserContext::~ChromeBrowserContext() = default;
+
+// static
+ChromeBrowserContext* ChromeBrowserContext::GetOrCreateForProfile(
+    Profile* profile) {
+  DCHECK(profile);
+
+  if (auto existing_context = FromProfile(profile)) {
+    return static_cast<ChromeBrowserContext*>(existing_context);
+  }
+
+  CefRequestContextSettings settings;
+  if (!profile->IsOffTheRecord()) {
+    // Become the primary context associated with |cache_path|.
+    CefString(&settings.cache_path) = profile->GetPath().value();
+  }
+
+  auto* new_context = new ChromeBrowserContext(settings);
+  new_context->Initialize();
+  new_context->ProfileCreated(CreateStatus::kInitialized, profile);
+  return new_context;
+}
 
 content::BrowserContext* ChromeBrowserContext::AsBrowserContext() {
   CHECK(!destroyed_);
@@ -73,7 +100,7 @@ void ChromeBrowserContext::InitializeAsync(base::OnceClosure initialized_cb) {
     if (cache_path_ == user_data_dir) {
       // Use the default disk-based profile.
       auto profile = GetPrimaryUserProfile();
-      ProfileCreated(Profile::CreateStatus::CREATE_STATUS_INITIALIZED, profile);
+      ProfileCreated(CreateStatus::kInitialized, profile);
       return;
     } else if (cache_path_.DirName() == user_data_dir) {
       // Create or load a specific disk-based profile. May continue
@@ -82,10 +109,10 @@ void ChromeBrowserContext::InitializeAsync(base::OnceClosure initialized_cb) {
           cache_path_,
           base::BindOnce(&ChromeBrowserContext::ProfileCreated,
                          weak_ptr_factory_.GetWeakPtr(),
-                         Profile::CreateStatus::CREATE_STATUS_INITIALIZED),
+                         CreateStatus::kInitialized),
           base::BindOnce(&ChromeBrowserContext::ProfileCreated,
                          weak_ptr_factory_.GetWeakPtr(),
-                         Profile::CreateStatus::CREATE_STATUS_CREATED));
+                         CreateStatus::kCreated));
       return;
     } else {
       // All profile directories must be relative to |user_data_dir|.
@@ -95,7 +122,7 @@ void ChromeBrowserContext::InitializeAsync(base::OnceClosure initialized_cb) {
   }
 
   // Default to creating a new/unique OffTheRecord profile.
-  ProfileCreated(Profile::CreateStatus::CREATE_STATUS_LOCAL_FAIL, nullptr);
+  ProfileCreated(CreateStatus::kDefault, nullptr);
 }
 
 void ChromeBrowserContext::Shutdown() {
@@ -108,20 +135,44 @@ void ChromeBrowserContext::Shutdown() {
   // |g_browser_process| may be nullptr during shutdown.
   if (g_browser_process) {
     if (should_destroy_) {
-      GetPrimaryUserProfile()->DestroyOffTheRecordProfile(profile_);
+      GetPrimaryUserProfile()->DestroyOffTheRecordProfile(
+          profile_.ExtractAsDangling());
     } else if (profile_) {
       OnProfileWillBeDestroyed(profile_);
     }
   }
 }
 
-void ChromeBrowserContext::ProfileCreated(Profile::CreateStatus status,
+void ChromeBrowserContext::AddVisitedURLs(
+    const GURL& url,
+    const std::vector<GURL>& redirect_chain,
+    ui::PageTransition transition) {
+  auto* profile = AsProfile();
+  if (profile->IsOffTheRecord()) {
+    // Don't persist state.
+    return;
+  }
+
+  // Called from DidFinishNavigation by Alloy style browsers. Chrome style
+  // browsers will handle this via HistoryTabHelper.
+  if (auto history_service = HistoryServiceFactory::GetForProfile(
+          profile, ServiceAccessType::IMPLICIT_ACCESS)) {
+    history::HistoryAddPageArgs add_page_args;
+    add_page_args.url = url;
+    add_page_args.redirects = redirect_chain;
+    add_page_args.transition = transition;
+    add_page_args.time = base::Time::Now();
+    history_service->AddPage(std::move(add_page_args));
+  }
+}
+
+void ChromeBrowserContext::ProfileCreated(CreateStatus status,
                                           Profile* profile) {
   Profile* parent_profile = nullptr;
   OffTheRecordProfileImpl* otr_profile = nullptr;
 
-  if (status != Profile::CreateStatus::CREATE_STATUS_CREATED &&
-      status != Profile::CreateStatus::CREATE_STATUS_INITIALIZED) {
+  if (status != CreateStatus::kCreated &&
+      status != CreateStatus::kInitialized) {
     CHECK(!profile);
     CHECK(!profile_);
 
@@ -135,7 +186,7 @@ void ChromeBrowserContext::ProfileCreated(Profile::CreateStatus status,
     profile_ = parent_profile->GetOffTheRecordProfile(
         profile_id, /*create_if_needed=*/true);
     otr_profile = static_cast<OffTheRecordProfileImpl*>(profile_);
-    status = Profile::CreateStatus::CREATE_STATUS_INITIALIZED;
+    status = CreateStatus::kInitialized;
     should_destroy_ = true;
   } else if (profile && !profile_) {
     // May be CREATE_STATUS_CREATED or CREATE_STATUS_INITIALIZED since
@@ -143,11 +194,13 @@ void ChromeBrowserContext::ProfileCreated(Profile::CreateStatus status,
     // exists.
     profile_ = profile;
     profile_->AddObserver(this);
-    profile_keep_alive_.reset(new ScopedProfileKeepAlive(
-        profile_, ProfileKeepAliveOrigin::kAppWindow));
+    if (!profile_->IsOffTheRecord()) {
+      profile_keep_alive_ = std::make_unique<ScopedProfileKeepAlive>(
+          profile_, ProfileKeepAliveOrigin::kAppWindow);
+    }
   }
 
-  if (status == Profile::CreateStatus::CREATE_STATUS_INITIALIZED) {
+  if (status == CreateStatus::kInitialized) {
     CHECK(profile_);
 
     // Must set |profile_| before Init() calls
@@ -167,12 +220,18 @@ void ChromeBrowserContext::ProfileCreated(Profile::CreateStatus status,
                                         : SessionStartupPref::kPrefValueNewTab);
     }
 
+    browser_prefs::SetInitialProfilePrefs(profile_);
+
     if (!init_callbacks_.empty()) {
       for (auto& callback : init_callbacks_) {
         std::move(callback).Run();
       }
       init_callbacks_.clear();
     }
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
+    OnContextInitialized();
+#endif
   }
 }
 
@@ -182,3 +241,18 @@ void ChromeBrowserContext::OnProfileWillBeDestroyed(Profile* profile) {
   profile_ = nullptr;
   destroyed_ = true;
 }
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
+void ChromeBrowserContext::OnWebViewShow() {
+  ScheduleUpdateCloudControl(this->AsBrowserContext());
+}
+
+void ChromeBrowserContext::OnContextInitialized() {
+  ScheduleUpdateCloudControl(this->AsBrowserContext());
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && !BUILDFLAG(ARKWEB_NWEB_EX)
+void ChromeBrowserContext::ScheduleUpdateCloudControl(
+    content::BrowserContext* context) {}
+#endif

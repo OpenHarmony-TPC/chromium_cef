@@ -8,7 +8,7 @@
 
 #include <memory>
 
-#include "include/test/cef_test_server.h"
+#include "cef/include/test/cef_test_server.h"
 
 class CefTestServerImpl : public CefTestServer {
  public:
@@ -17,7 +17,7 @@ class CefTestServerImpl : public CefTestServer {
   CefTestServerImpl(const CefTestServerImpl&) = delete;
   CefTestServerImpl& operator=(const CefTestServerImpl&) = delete;
 
-  bool Start(uint16 port,
+  bool Start(uint16_t port,
              bool https_server,
              cef_test_cert_type_t https_cert_type,
              CefRefPtr<CefTestServerHandler> handler);

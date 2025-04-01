@@ -2,18 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/navigation_entry_impl.h"
+#include "cef/libcef/browser/navigation_entry_impl.h"
 
-#include "libcef/browser/ssl_status_impl.h"
-#include "libcef/common/time_util.h"
-
+#include "cef/libcef/browser/ssl_status_impl.h"
+#include "cef/libcef/common/time_util.h"
 #include "content/public/browser/navigation_entry.h"
 #include "url/gurl.h"
 
-#ifdef OHOS_NAVIGATION
+#if BUILDFLAG(ARKWEB_NAVIGATION)
 #include "content/public/browser/favicon_status.h"
 #include "third_party/skia/include/core/SkBitmap.h"
-#endif
+#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
 CefNavigationEntryImpl::CefNavigationEntryImpl(content::NavigationEntry* value)
     : CefValueBase<CefNavigationEntry, content::NavigationEntry>(
@@ -75,7 +74,7 @@ CefRefPtr<CefSSLStatus> CefNavigationEntryImpl::GetSSLStatus() {
   return new CefSSLStatusImpl(mutable_value()->GetSSL());
 }
 
-#ifdef OHOS_NAVIGATION
+#if BUILDFLAG(ARKWEB_NAVIGATION)
 bool CefNavigationEntryImpl::GetFavicon(void** pixel_data,
                                         int& color_type,
                                         int& alpha_type,
@@ -97,4 +96,4 @@ bool CefNavigationEntryImpl::GetFavicon(void** pixel_data,
   *pixel_data = bitmap->getPixels();
   return true;
 }
-#endif
+#endif  // BUILDFLAG(ARKWEB_NAVIGATION)

@@ -39,6 +39,9 @@
 #pragma once
 
 #include "include/cef_base.h"
+#include "include/cef_download_item_ext.h"
+
+class CefDownloadItemExt;
 
 ///
 /// Class used to represent a download item.
@@ -72,10 +75,22 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   virtual bool IsCanceled() = 0;
 
   ///
+  /// Returns true if the download has been interrupted.
+  ///
+  /*--cef()--*/
+  virtual bool IsInterrupted() = 0;
+
+  ///
+  /// Returns the most recent interrupt reason.
+  ///
+  /*--cef(default_retval=CEF_DOWNLOAD_INTERRUPT_REASON_NONE)--*/
+  virtual cef_download_interrupt_reason_t GetInterruptReason() = 0;
+
+  ///
   /// Returns a simple speed estimate in bytes/s.
   ///
   /*--cef()--*/
-  virtual int64 GetCurrentSpeed() = 0;
+  virtual int64_t GetCurrentSpeed() = 0;
 
   ///
   /// Returns the rough percent complete or -1 if the receive total size is
@@ -88,13 +103,13 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   /// Returns the total number of bytes.
   ///
   /*--cef()--*/
-  virtual int64 GetTotalBytes() = 0;
+  virtual int64_t GetTotalBytes() = 0;
 
   ///
   /// Returns the number of received bytes.
   ///
   /*--cef()--*/
-  virtual int64 GetReceivedBytes() = 0;
+  virtual int64_t GetReceivedBytes() = 0;
 
   ///
   /// Returns the time that the download started.
@@ -118,7 +133,7 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   /// Returns the unique identifier for this download.
   ///
   /*--cef()--*/
-  virtual uint32 GetId() = 0;
+  virtual uint32_t GetId() = 0;
 
   ///
   /// Returns the URL.
@@ -150,74 +165,7 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual CefString GetMimeType() = 0;
 
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// Returns the original mime type.
-  ///
-  /*--cef()--*/
-  virtual CefString GetOriginalMimeType() = 0;
-
-  ///
-  /// Returns the guid.
-  ///
-  /*--cef()--*/
-  virtual CefString GetGuid() = 0;
-
-  ///
-  /// Returns the download state,
-  /// IN_PROGRESS,COMPLETE,CANCELED,INTERRUPTED,PENDING,PAUSED.
-  ///
-  /*--cef()--*/
-  virtual int GetState() = 0;
-
-  ///
-  /// Returns the download if paused.
-  ///
-  /*--cef()--*/
-  virtual bool IsPaused() = 0;
-
-  ///
-  /// Returns the download request method.
-  ///
-  /*--cef()--*/
-  virtual CefString GetMethod() = 0;
-
-  ///
-  /// Returns the download last error code.
-  ///
-  /*--cef()--*/
-  virtual int GetLastErrorCode() = 0;
-
-  ///
-  /// Returns if the download is pending.
-  ///
-  /*--cef()--*/
-  virtual bool IsPending() = 0;
-
-  ///
-  /// Returns the download last modified time.
-  ///
-  /*--cef()--*/
-  virtual CefString GetLastModifiedTime() = 0;
-
-  ///
-  /// Returns the download etag.
-  ///
-  /*--cef()--*/
-  virtual CefString GetETag() = 0;
-
-  ///
-  /// Returns the download received slices.
-  ///
-  /*--cef()--*/
-  virtual CefString GetReceivedSlices() = 0;
-
-  ///
-  /// Get nweb id.
-  ///
-  /*--cef()--*/
-  virtual int GetNWebId() = 0;
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual CefRefPtr<CefDownloadItemExt> AsArkDownloadItem() { return nullptr; }
 };
 
 #endif  // CEF_INCLUDE_CEF_DOWNLOAD_ITEM_H_

@@ -129,7 +129,7 @@ class CallbackResourceHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     response->SetStatus(status_code_);
     response->SetStatusText(status_text_);
@@ -263,7 +263,7 @@ class IncompleteResourceHandlerOld : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     EXPECT_EQ(test_mode_, BLOCK_READ_RESPONSE);
@@ -366,7 +366,7 @@ class IncompleteResourceHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     EXPECT_IO_THREAD();
     EXPECT_EQ(test_mode_, BLOCK_READ);
@@ -500,7 +500,7 @@ class BasicResponseTest : public TestHandler {
     TestHandler::OnAfterCreated(browser);
 
     if (mode_ == ABORT_AFTER_CREATED) {
-      SetSignalCompletionWhenAllBrowsersClose(false);
+      SetSignalTestCompletionCount(1U);
       CloseBrowser(browser, false);
     }
   }
@@ -529,8 +529,8 @@ class BasicResponseTest : public TestHandler {
     }
     EXPECT_TRUE(frame->IsMain());
 
-    if (IsChromeRuntimeEnabled()) {
-      // With the Chrome runtime this is true on initial navigation via
+    if (!use_alloy_style_browser()) {
+      // With Chrome style this is true on initial navigation via
       // chrome::AddTabAt() and also true for clicked links.
       EXPECT_TRUE(user_gesture);
     } else {
@@ -547,7 +547,7 @@ class BasicResponseTest : public TestHandler {
     VerifyState(kOnBeforeBrowse, request, nullptr);
 
     if (mode_ == ABORT_BEFORE_BROWSE) {
-      SetSignalCompletionWhenAllBrowsersClose(false);
+      SetSignalTestCompletionCount(1U);
       CloseBrowser(browser, false);
     }
 
@@ -565,6 +565,11 @@ class BasicResponseTest : public TestHandler {
     EXPECT_IO_THREAD();
     EXPECT_EQ(browser_id_, browser->GetIdentifier());
     EXPECT_TRUE(frame->IsMain());
+
+    const std::string& url = request->GetURL();
+    if (IgnoreURL(url)) {
+      return nullptr;
+    }
 
     if (request_id_ == 0U) {
       // This is the first callback that provides a request ID.
@@ -615,7 +620,7 @@ class BasicResponseTest : public TestHandler {
       CefRefPtr<CefRequest> request,
       CefRefPtr<CefCallback> callback) override {
     EXPECT_IO_THREAD();
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return RV_CANCEL;
     }
@@ -792,10 +797,10 @@ class BasicResponseTest : public TestHandler {
                               CefRefPtr<CefRequest> request,
                               CefRefPtr<CefResponse> response,
                               URLRequestStatus status,
-                              int64 received_content_length) override {
+                              int64_t received_content_length) override {
     EXPECT_IO_THREAD();
 
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return;
     }
@@ -810,7 +815,7 @@ class BasicResponseTest : public TestHandler {
       EXPECT_EQ(0, received_content_length);
     } else {
       EXPECT_EQ(UR_SUCCESS, status);
-      EXPECT_EQ(static_cast<int64>(GetResponseBody().length()),
+      EXPECT_EQ(static_cast<int64_t>(GetResponseBody().length()),
                 received_content_length);
     }
 
@@ -994,10 +999,10 @@ class BasicResponseTest : public TestHandler {
 
     TestHandler::DestroyTest();
 
-    if (!SignalCompletionWhenAllBrowsersClose()) {
+    if (!AllowTestCompletionWhenAllBrowsersClose()) {
       // Complete asynchronously so the call stack has a chance to unwind.
-      CefPostTask(TID_UI,
-                  base::BindOnce(&BasicResponseTest::TestComplete, this));
+      CefPostTask(TID_UI, base::BindOnce(
+                              &BasicResponseTest::SignalTestCompletion, this));
     }
   }
 
@@ -1337,7 +1342,7 @@ class BasicResponseTest : public TestHandler {
 
   void CloseBrowserAsync() {
     EXPECT_TRUE(IsIncomplete());
-    SetSignalCompletionWhenAllBrowsersClose(false);
+    SetSignalTestCompletionCount(1U);
     CefPostDelayedTask(
         TID_UI, base::BindOnce(&TestHandler::CloseBrowser, GetBrowser(), false),
         100);
@@ -1379,7 +1384,7 @@ class BasicResponseTest : public TestHandler {
   const bool unhandled_;
 
   int browser_id_ = 0;
-  uint64 request_id_ = 0U;
+  uint64_t request_id_ = 0U;
 
   int resource_handler_created_ct_ = 0;
 
@@ -1557,8 +1562,8 @@ class SubresourceResponseTest : public RoutingTestHandler {
       EXPECT_FALSE(true);  // Not reached.
     }
 
-    if (IsChromeRuntimeEnabled() && IsMainURL(url)) {
-      // With the Chrome runtime this is true on initial navigation via
+    if (!use_alloy_style_browser() && IsMainURL(url)) {
+      // With Chrome style this is true on initial navigation via
       // chrome::AddTabAt() and also true for clicked links.
       EXPECT_TRUE(user_gesture);
     } else {
@@ -1601,7 +1606,7 @@ class SubresourceResponseTest : public RoutingTestHandler {
       // Track the frame ID that we'll expect for resource callbacks.
       // Do this here instead of OnBeforeBrowse because OnBeforeBrowse may
       // return -4 (kInvalidFrameId) for the initial navigation.
-      if (frame_id_ == 0) {
+      if (frame_id_.empty()) {
         if (subframe_) {
           if (is_sub_url) {
             frame_id_ = frame->GetIdentifier();
@@ -1680,7 +1685,7 @@ class SubresourceResponseTest : public RoutingTestHandler {
       CefRefPtr<CefCallback> callback) override {
     EXPECT_IO_THREAD();
 
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return RV_CANCEL;
     }
@@ -1903,10 +1908,10 @@ class SubresourceResponseTest : public RoutingTestHandler {
                               CefRefPtr<CefRequest> request,
                               CefRefPtr<CefResponse> response,
                               URLRequestStatus status,
-                              int64 received_content_length) override {
+                              int64_t received_content_length) override {
     EXPECT_IO_THREAD();
 
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return;
     }
@@ -1916,13 +1921,13 @@ class SubresourceResponseTest : public RoutingTestHandler {
     if (IsMainURL(request->GetURL())) {
       EXPECT_TRUE(frame->IsMain());
       EXPECT_EQ(UR_SUCCESS, status);
-      EXPECT_EQ(static_cast<int64>(GetMainResponseBody().length()),
+      EXPECT_EQ(static_cast<int64_t>(GetMainResponseBody().length()),
                 received_content_length);
       return;
     } else if (IsSubURL(request->GetURL())) {
       EXPECT_FALSE(frame->IsMain());
       EXPECT_EQ(UR_SUCCESS, status);
-      EXPECT_EQ(static_cast<int64>(GetSubResponseBody().length()),
+      EXPECT_EQ(static_cast<int64_t>(GetSubResponseBody().length()),
                 received_content_length);
       EXPECT_TRUE(subframe_);
       return;
@@ -1937,7 +1942,7 @@ class SubresourceResponseTest : public RoutingTestHandler {
       EXPECT_EQ(0, received_content_length);
     } else {
       EXPECT_EQ(UR_SUCCESS, status);
-      EXPECT_EQ(static_cast<int64>(GetResponseBody().length()),
+      EXPECT_EQ(static_cast<int64_t>(GetResponseBody().length()),
                 received_content_length);
     }
 
@@ -1988,7 +1993,7 @@ class SubresourceResponseTest : public RoutingTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -2131,10 +2136,11 @@ class SubresourceResponseTest : public RoutingTestHandler {
 
     TestHandler::DestroyTest();
 
-    if (!SignalCompletionWhenAllBrowsersClose()) {
+    if (!AllowTestCompletionWhenAllBrowsersClose()) {
       // Complete asynchronously so the call stack has a chance to unwind.
-      CefPostTask(TID_UI,
-                  base::BindOnce(&SubresourceResponseTest::TestComplete, this));
+      CefPostTask(
+          TID_UI,
+          base::BindOnce(&SubresourceResponseTest::SignalTestCompletion, this));
     }
   }
 
@@ -2405,13 +2411,9 @@ class SubresourceResponseTest : public RoutingTestHandler {
   void VerifyFrame(Callback callback, CefRefPtr<CefFrame> frame) const {
     EXPECT_TRUE(frame);
 
-    if (subframe_) {
-      EXPECT_FALSE(frame->IsMain()) << callback;
-    } else {
-      EXPECT_TRUE(frame->IsMain()) << callback;
-    }
-
-    EXPECT_EQ(frame_id_, frame->GetIdentifier()) << callback;
+    EXPECT_NE(subframe_, frame->IsMain()) << callback;
+    EXPECT_STREQ(frame_id_.c_str(), frame->GetIdentifier().ToString().c_str())
+        << callback;
   }
 
   void VerifyState(Callback callback,
@@ -2544,7 +2546,7 @@ class SubresourceResponseTest : public RoutingTestHandler {
 
   void CloseBrowserAsync() {
     EXPECT_TRUE(IsIncomplete());
-    SetSignalCompletionWhenAllBrowsersClose(false);
+    SetSignalTestCompletionCount(1U);
     CefPostDelayedTask(
         TID_UI, base::BindOnce(&TestHandler::CloseBrowser, GetBrowser(), false),
         100);
@@ -2590,8 +2592,8 @@ class SubresourceResponseTest : public RoutingTestHandler {
   const bool subframe_;
 
   int browser_id_ = 0;
-  int64 frame_id_ = 0;
-  uint64 request_id_ = 0U;
+  std::string frame_id_;
+  uint64_t request_id_ = 0U;
 
   int resource_handler_created_ct_ = 0;
 
@@ -2694,11 +2696,11 @@ class RedirectResponseTest : public TestHandler {
   RedirectResponseTest(TestMode mode, bool via_request_context_handler)
       : via_request_context_handler_(via_request_context_handler) {
     if (mode == URL) {
-      resource_test_.reset(new UrlResourceTest);
+      resource_test_ = std::make_unique<UrlResourceTest>();
     } else if (mode == HEADER) {
-      resource_test_.reset(new HeaderResourceTest);
+      resource_test_ = std::make_unique<HeaderResourceTest>();
     } else {
-      resource_test_.reset(new PostResourceTest);
+      resource_test_ = std::make_unique<PostResourceTest>();
     }
   }
 
@@ -2786,18 +2788,18 @@ class RedirectResponseTest : public TestHandler {
 
   class ResourceTest {
    public:
-    ResourceTest(const std::string& start_url,
-                 size_t expected_resource_response_ct = 2U,
-                 size_t expected_before_resource_load_ct = 1U,
-                 size_t expected_resource_redirect_ct = 0U,
-                 size_t expected_resource_load_complete_ct = 1U)
+    explicit ResourceTest(const std::string& start_url,
+                          size_t expected_resource_response_ct = 2U,
+                          size_t expected_before_resource_load_ct = 1U,
+                          size_t expected_resource_redirect_ct = 0U,
+                          size_t expected_resource_load_complete_ct = 1U)
         : start_url_(start_url),
           expected_resource_response_ct_(expected_resource_response_ct),
           expected_before_resource_load_ct_(expected_before_resource_load_ct),
           expected_resource_redirect_ct_(expected_resource_redirect_ct),
           expected_resource_load_complete_ct_(
               expected_resource_load_complete_ct) {}
-    virtual ~ResourceTest() {}
+    virtual ~ResourceTest() = default;
 
     const std::string& start_url() const { return start_url_; }
 
@@ -2866,7 +2868,7 @@ class RedirectResponseTest : public TestHandler {
                                 CefRefPtr<CefRequest> request,
                                 CefRefPtr<CefResponse> response,
                                 URLRequestStatus status,
-                                int64 received_content_length) {
+                                int64_t received_content_length) {
       EXPECT_TRUE(CheckUrl(request->GetURL()));
 
       // Verify the response returned by GetResourceHandler.
@@ -3079,8 +3081,7 @@ class RedirectResponseTest : public TestHandler {
         CefRefPtr<CefCallback> callback) override {
       EXPECT_IO_THREAD();
 
-      if (IsChromeRuntimeEnabled() &&
-          request->GetResourceType() == RT_FAVICON) {
+      if (request->GetResourceType() == RT_FAVICON) {
         // Ignore favicon requests.
         return RV_CANCEL;
       }
@@ -3185,11 +3186,10 @@ class RedirectResponseTest : public TestHandler {
                                 CefRefPtr<CefRequest> request,
                                 CefRefPtr<CefResponse> response,
                                 URLRequestStatus status,
-                                int64 received_content_length) override {
+                                int64_t received_content_length) override {
       EXPECT_IO_THREAD();
 
-      if (IsChromeRuntimeEnabled() &&
-          request->GetResourceType() == RT_FAVICON) {
+      if (request->GetResourceType() == RT_FAVICON) {
         // Ignore favicon requests.
         return;
       }
@@ -3213,8 +3213,8 @@ class RedirectResponseTest : public TestHandler {
    private:
     RedirectResponseTest* const test_;
 
-    uint64 main_request_id_ = 0U;
-    uint64 sub_request_id_ = 0U;
+    uint64_t main_request_id_ = 0U;
+    uint64_t sub_request_id_ = 0U;
 
     IMPLEMENT_REFCOUNTING(ResourceRequestHandler);
     DISALLOW_COPY_AND_ASSIGN(ResourceRequestHandler);
@@ -3311,7 +3311,7 @@ class BeforeResourceLoadTest : public TestHandler {
       CefRefPtr<CefCallback> callback) override {
     EXPECT_IO_THREAD();
 
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return RV_CANCEL;
     }
@@ -3525,7 +3525,7 @@ std::string CreateOutput(const std::string& content, size_t repeat_ct) {
 // Base class for test filters.
 class ResponseFilterTestBase : public CefResponseFilter {
  public:
-  ResponseFilterTestBase() : filter_count_(0U) {}
+  ResponseFilterTestBase() = default;
 
   bool InitFilter() override {
     EXPECT_FALSE(got_init_filter_);
@@ -3557,7 +3557,7 @@ class ResponseFilterTestBase : public CefResponseFilter {
 
   // Verify the output from the filter.
   virtual void VerifyOutput(cef_urlrequest_status_t status,
-                            int64 received_content_length,
+                            int64_t received_content_length,
                             const std::string& received_content) {
     EXPECT_TRUE(got_init_filter_);
     EXPECT_GT(filter_count_, 0U);
@@ -3569,7 +3569,7 @@ class ResponseFilterTestBase : public CefResponseFilter {
 
  protected:
   TrackCallback got_init_filter_;
-  size_t filter_count_;
+  size_t filter_count_ = 0U;
 
   IMPLEMENT_REFCOUNTING(ResponseFilterTestBase);
 };
@@ -3608,7 +3608,7 @@ class ResponseFilterPassThru : public ResponseFilterTestBase {
   }
 
   void VerifyOutput(cef_urlrequest_status_t status,
-                    int64 received_content_length,
+                    int64_t received_content_length,
                     const std::string& received_content) override {
     ResponseFilterTestBase::VerifyOutput(status, received_content_length,
                                          received_content);
@@ -3645,11 +3645,7 @@ const char kReplaceString[] = "This is the replaced string!";
 // tests/shared/response_filter_test.cc.
 class ResponseFilterNeedMore : public ResponseFilterTestBase {
  public:
-  ResponseFilterNeedMore()
-      : find_match_offset_(0U),
-        replace_overflow_size_(0U),
-        input_size_(0U),
-        repeat_ct_(0U) {}
+  ResponseFilterNeedMore() = default;
 
   FilterStatus Filter(void* data_in,
                       size_t data_in_size,
@@ -3741,7 +3737,7 @@ class ResponseFilterNeedMore : public ResponseFilterTestBase {
   }
 
   void VerifyOutput(cef_urlrequest_status_t status,
-                    int64 received_content_length,
+                    int64_t received_content_length,
                     const std::string& received_content) override {
     ResponseFilterTestBase::VerifyOutput(status, received_content_length,
                                          received_content);
@@ -3792,25 +3788,25 @@ class ResponseFilterNeedMore : public ResponseFilterTestBase {
   }
 
   // The portion of the find string that is currently matching.
-  size_t find_match_offset_;
+  size_t find_match_offset_ = 0U;
 
   // The likely amount of overflow.
-  size_t replace_overflow_size_;
+  size_t replace_overflow_size_ = 0U;
 
   // Overflow from the output buffer.
   std::string overflow_;
 
   // The original input size.
-  size_t input_size_;
+  size_t input_size_ = 0U;
 
   // The number of times the find string was repeated.
-  size_t repeat_ct_;
+  size_t repeat_ct_ = 0U;
 };
 
 // Return a filter error.
 class ResponseFilterError : public ResponseFilterTestBase {
  public:
-  ResponseFilterError() {}
+  ResponseFilterError() = default;
 
   FilterStatus Filter(void* data_in,
                       size_t data_in_size,
@@ -3829,7 +3825,7 @@ class ResponseFilterError : public ResponseFilterTestBase {
   }
 
   void VerifyOutput(cef_urlrequest_status_t status,
-                    int64 received_content_length,
+                    int64_t received_content_length,
                     const std::string& received_content) override {
     ResponseFilterTestBase::VerifyOutput(status, received_content_length,
                                          received_content);
@@ -3883,10 +3879,10 @@ class ResponseFilterTestHandler : public TestHandler {
                               CefRefPtr<CefRequest> request,
                               CefRefPtr<CefResponse> response,
                               URLRequestStatus status,
-                              int64 received_content_length) override {
+                              int64_t received_content_length) override {
     EXPECT_IO_THREAD();
 
-    if (IsChromeRuntimeEnabled() && request->GetResourceType() == RT_FAVICON) {
+    if (request->GetResourceType() == RT_FAVICON) {
       // Ignore favicon requests.
       return;
     }
@@ -3959,7 +3955,7 @@ class ResponseFilterTestHandler : public TestHandler {
   TrackCallback got_load_end_;
 
   URLRequestStatus status_;
-  int64 received_content_length_;
+  int64_t received_content_length_;
 
   IMPLEMENT_REFCOUNTING(ResponseFilterTestHandler);
 };

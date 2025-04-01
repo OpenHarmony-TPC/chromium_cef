@@ -40,14 +40,12 @@
 
 #include <map>
 #include <vector>
+
 #include "include/cef_base.h"
 
+class ArkWebRequestImplExt;
 class CefPostData;
 class CefPostDataElement;
-
-#if defined(OHOS_SCHEME_HANDLER)
-class CefPostDataStream;
-#endif  // defined(OHOS_SCHEME_HANDLER)
 
 ///
 /// Class used to represent a web request. The methods of this class may be
@@ -66,6 +64,13 @@ class CefRequest : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   static CefRefPtr<CefRequest> Create();
+
+  ///
+  /// Get a ArkWebRequestImplExt object.
+  ///
+  virtual CefRefPtr<ArkWebRequestImplExt> AsArkWebRequestExt() {
+    return nullptr;
+  }
 
   ///
   /// Returns true if this object is read-only.
@@ -221,144 +226,8 @@ class CefRequest : public virtual CefBaseRefCounted {
   /// browser process to track a single request across multiple callbacks.
   ///
   /*--cef()--*/
-  virtual uint64 GetIdentifier() = 0;
-
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// Returns whether the request was made for the main frame document.
-  /// Will be false for subresources or iframes
-  ///
-  /*--cef()--*/
-  virtual bool IsMainFrame() = 0;
-
-#if defined(OHOS_SCHEME_HANDLER)
-  ///
-  /// Returns whether the request was redirect.
-  ///
-  /*--cef()--*/
-  virtual bool IsRedirect() = 0;
-
-  ///
-  /// Returns whether the request was triggered by user gesture.
-  ///
-  /*--cef()--*/
-  virtual bool HasUserGesture() = 0;
-
-  ///
-  /// Get the upload stream.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefPostDataStream> GetUploadStream() = 0;
-#endif  // defined(OHOS_SCHEME_HANDLER)
-
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual uint64_t GetIdentifier() = 0;
 };
-
-#if defined(OHOS_SCHEME_HANDLER)
-///
-/// Callback for init the stream.
-///
-/*--cef(source=library)--*/
-class CefPostDataStreamInitCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Callback for init the stream.
-  ///
-  /*--cef(capi_name=cont)--*/
-  virtual void OnInitComplete(int result) = 0;
-};
-
-///
-/// Callback for read from stream.
-///
-/*--cef(source=library)--*/
-class CefPostDataStreamReadCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Callback for read from stream.
-  ///
-  /*--cef(capi_name=cont)--*/
-  virtual void OnReadComplete(char* buffer, int bytes_read) = 0;
-};
-
-///
-/// Class used to represent post data for a web request. The methods of this
-/// class may be called on any thread.
-///
-/*--cef(source=library,no_debugct_check)--*/
-class CefPostDataStream : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Create a new CefPostDataStream object.
-  ///
-  /*--cef()--*/
-  static CefRefPtr<CefPostDataStream> Create();
-
-  ///
-  /// Set ready callback.
-  ///
-  /*--cef()--*/
-  virtual void SetReadCallback(
-      CefRefPtr<CefPostDataStreamReadCallback> read_callback) = 0;
-
-  ///
-  /// Init the stream.
-  ///
-  /*--cef()--*/
-  virtual void Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) = 0;
-
-  ///
-  /// Read the stream.
-  ///
-  /*--cef()--*/
-  virtual void Read(
-      void* buffer,
-      int buf_len,
-      CefRefPtr<CefPostDataStreamReadCallback> read_callback) = 0;
-
-  ///
-  /// Get the size of stream.
-  ///
-  /*--cef()--*/
-  virtual uint64 GetSize() = 0;
-
-  ///
-  /// Get the position of stream.
-  ///
-  /*--cef()--*/
-  virtual uint64 GetPosition() = 0;
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  /*--cef()--*/
-  virtual bool IsChunked() = 0;
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  /*--cef()--*/
-  virtual bool HasNullSource() = 0;
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  /*--cef()--*/
-  virtual bool IsEOF() = 0;
-
-  ///
-  /// Get if the stream is trunked.
-  ///
-  /*--cef()--*/
-  virtual bool IsInMemory() = 0;
-
-  ///
-  /// Reset();
-  ///
-  /*--cef()--*/
-  virtual void Reset() = 0;
-};
-#endif  // defined(OHOS_SCHEME_HANDLER)
 
 ///
 /// Class used to represent post data for a web request. The methods of this

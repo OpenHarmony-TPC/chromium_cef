@@ -9,13 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=bdb469cac07bcb8da2d15c1f5acfdba52c584d85$
+// $hash=7e59131029ee8bb4ea54673bc85c7563688bfe1f$
 //
 
 #include "libcef_dll/ctocpp/browser_process_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/command_line_cpptoc.h"
 #include "libcef_dll/cpptoc/preference_registrar_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
+#include "libcef_dll/ctocpp/request_context_handler_ctocpp.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
@@ -80,7 +82,35 @@ void CefBrowserProcessHandlerCToCpp::OnBeforeChildProcessLaunch(
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserProcessHandlerCToCpp::OnScheduleMessagePumpWork(int64 delay_ms) {
+bool CefBrowserProcessHandlerCToCpp::OnAlreadyRunningAppRelaunch(
+    CefRefPtr<CefCommandLine> command_line,
+    const CefString& current_directory) {
+  cef_browser_process_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_already_running_app_relaunch)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: command_line; type: refptr_diff
+  DCHECK(command_line.get());
+  if (!command_line.get()) {
+    return false;
+  }
+  // Unverified params: current_directory
+
+  // Execute
+  int _retval = _struct->on_already_running_app_relaunch(
+      _struct, CefCommandLineCppToC::Wrap(command_line),
+      current_directory.GetStruct());
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserProcessHandlerCToCpp::OnScheduleMessagePumpWork(
+    int64_t delay_ms) {
   cef_browser_process_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_schedule_message_pump_work)) {
     return;
@@ -106,6 +136,24 @@ CefRefPtr<CefClient> CefBrowserProcessHandlerCToCpp::GetDefaultClient() {
 
   // Return type: refptr_same
   return CefClientCToCpp::Wrap(_retval);
+}
+
+NO_SANITIZE("cfi-icall")
+CefRefPtr<CefRequestContextHandler> CefBrowserProcessHandlerCToCpp::
+    GetDefaultRequestContextHandler() {
+  cef_browser_process_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_default_request_context_handler)) {
+    return nullptr;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_request_context_handler_t* _retval =
+      _struct->get_default_request_context_handler(_struct);
+
+  // Return type: refptr_same
+  return CefRequestContextHandlerCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall")

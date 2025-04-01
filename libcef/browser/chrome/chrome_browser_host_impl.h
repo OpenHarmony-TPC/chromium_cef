@@ -8,32 +8,45 @@
 
 #include <memory>
 
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/chrome/browser_delegate.h"
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/chrome/browser_delegate.h"
+#include "chrome/browser/ui/browser.h"
+#include "ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 
-class Browser;
 class ChromeBrowserDelegate;
+class ChromeBrowserView;
 
-// CefBrowser implementation for the chrome runtime. Method calls are delegated
+// CefBrowser implementation for Chrome style. Method calls are delegated
 // to the chrome Browser object or the WebContents as appropriate. See the
 // ChromeBrowserDelegate documentation for additional details. All methods are
 // thread-safe unless otherwise indicated.
-class ChromeBrowserHostImpl : public CefBrowserHostBase {
+class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
  public:
   // CEF-specific parameters passed via Browser::CreateParams::cef_params and
   // possibly shared by multiple Browser instances.
   class DelegateCreateParams : public cef::BrowserDelegate::CreateParams {
    public:
-    DelegateCreateParams(const CefBrowserCreateParams& create_params)
+    explicit DelegateCreateParams(const CefBrowserCreateParams& create_params)
         : create_params_(create_params) {}
 
     CefBrowserCreateParams create_params_;
   };
 
+  CefRefPtr<ChromeBrowserHostImpl> AsChromeBrowserHostImpl() override {
+    return this;
+  }
+
   // Create a new Browser with a single tab (WebContents) and associated
   // ChromeBrowserHostImpl instance.
   static CefRefPtr<ChromeBrowserHostImpl> Create(
       const CefBrowserCreateParams& params);
+
+  // Safe (checked) conversion from CefBrowserHostBase to ChromeBrowserHostImpl.
+  // Use this method instead of static_cast.
+  static CefRefPtr<ChromeBrowserHostImpl> FromBaseChecked(
+      CefRefPtr<CefBrowserHostBase> host_base);
 
   // Returns the browser associated with the specified RenderViewHost.
   static CefRefPtr<ChromeBrowserHostImpl> GetBrowserForHost(
@@ -59,30 +72,21 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   // CefBrowserHostBase methods called from CefFrameHostImpl:
   void OnSetFocus(cef_focus_source_t source) override;
 
+  // CefBrowserHostBase methods:
+  bool IsWindowless() const override { return false; }
+  bool IsAlloyStyle() const override { return false; }
+
   // CefBrowserHost methods:
   void CloseBrowser(bool force_close) override;
   bool TryCloseBrowser() override;
   CefWindowHandle GetWindowHandle() override;
   CefWindowHandle GetOpenerWindowHandle() override;
-  double GetZoomLevel() override;
-  void SetZoomLevel(double zoomLevel) override;
   void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
-            bool findNext
-#if BUILDFLAG(IS_OHOS)
-            ,
-            bool newSession
-#endif
-            ) override;
+            bool findNext) override;
   void StopFinding(bool clearSelection) override;
-  void ShowDevTools(const CefWindowInfo& windowInfo,
-                    CefRefPtr<CefClient> client,
-                    const CefBrowserSettings& settings,
-                    const CefPoint& inspect_element_at) override;
-  void CloseDevTools() override;
-  bool HasDevTools() override;
-  bool IsWindowRenderingDisabled() override;
+  bool IsWindowRenderingDisabled() override { return false; }
   void WasResized() override;
   void WasHidden(bool hidden) override;
   void NotifyScreenInfoChanged() override;
@@ -112,15 +116,37 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-  void SetAccessibilityState(cef_state_t accessibility_state) override;
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
-  CefRefPtr<CefExtension> GetExtension() override;
-  bool IsBackgroundHost() override;
+  bool CanExecuteChromeCommand(int command_id) override;
+  void ExecuteChromeCommand(int command_id,
+                            cef_window_open_disposition_t disposition) override;
 
-#if BUILDFLAG(IS_OHOS)
-  void SetBackgroundColor(int color) override;
+  Browser* browser() const { return browser_; }
+
+  // Return the CEF specialization of BrowserView.
+  ChromeBrowserView* chrome_browser_view() const;
+
+  base::WeakPtr<ChromeBrowserHostImpl> GetWeakPtr() {
+    return weak_ptr_factory_.GetWeakPtr();
+  }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  virtual void ExtensionSetTabId(int32_t tab_id) override {}
+  virtual int32_t ExtensionGetTabId() const override { return -1; }
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override {}
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
+  virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
+  virtual void WebExtensionActionClicked(
+      std::string extensionId,
+      const NWebExtensionTab* tab) override {}
 #endif
 
  protected:
@@ -137,16 +163,23 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
       CefRefPtr<CefRequestContextImpl> request_context);
 
   // Create a new Browser without initializing the WebContents.
-  static Browser* CreateBrowser(const CefBrowserCreateParams& params);
+  // |browser_create_params| may be empty for default Browser creation behavior.
+  static Browser* CreateBrowser(
+      const CefBrowserCreateParams& params,
+      std::optional<Browser::CreateParams> browser_create_params);
 
   // Called from ChromeBrowserDelegate::CreateBrowser when this object is first
   // created. Must be called on the UI thread.
   void Attach(content::WebContents* web_contents,
-              CefRefPtr<ChromeBrowserHostImpl> opener);
+              bool is_devtools_popup,
+              CefRefPtr<CefBrowserHostBase> opener);
 
   // Called from ChromeBrowserDelegate::AddNewContents to take ownership of a
-  // popup WebContents.
-  void AddNewContents(std::unique_ptr<content::WebContents> contents);
+  // popup WebContents. |browser_create_params| may be empty for default Browser
+  // creation behavior.
+  void AddNewContents(
+      std::unique_ptr<content::WebContents> contents,
+      std::optional<Browser::CreateParams> browser_create_params);
 
   // Called when this object changes Browser ownership (e.g. initially created,
   // dragging between windows, etc). The old Browser, if any, will be cleared
@@ -158,18 +191,22 @@ class ChromeBrowserHostImpl : public CefBrowserHostBase {
   bool WillBeDestroyed() const override;
   void DestroyBrowser() override;
 
-  void DoCloseBrowser(bool force_close);
+  void DoCloseBrowser();
 
   // Returns the current tab index for the associated WebContents, or
   // TabStripModel::kNoTab if not found.
   int GetCurrentTabIndex() const;
 
-#if defined(OHOS_COMPOSITE_RENDER)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   void SetShouldFrameSubmissionBeforeDraw(bool should) override {}
-#endif  // defined(OHOS_COMPOSITE_RENDER)
+  std::string GetCurrentLanguage() override { return ""; }
+#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 
-  Browser* browser_ = nullptr;
+  raw_ptr<Browser> browser_ = nullptr;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
+  bool is_destroying_browser_ = false;
+
+  base::WeakPtrFactory<ChromeBrowserHostImpl> weak_ptr_factory_{this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_CHROME_BROWSER_HOST_IMPL_H_

@@ -1,60 +1,79 @@
-// Copyright (c) 2023 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
 #include "tests/cefclient/browser/default_client_handler.h"
 
-#include "tests/cefclient/browser/test_runner.h"
+#include "tests/cefclient/browser/main_context.h"
+#include "tests/cefclient/browser/root_window_manager.h"
 
 namespace client {
 
-DefaultClientHandler::DefaultClientHandler() {
-  resource_manager_ = new CefResourceManager();
-  test_runner::SetupResourceManager(resource_manager_, nullptr);
+DefaultClientHandler::DefaultClientHandler(std::optional<bool> use_alloy_style)
+    : use_alloy_style_(
+          use_alloy_style.value_or(MainContext::Get()->UseAlloyStyleGlobal())) {
 }
 
-CefRefPtr<CefResourceRequestHandler>
-DefaultClientHandler::GetResourceRequestHandler(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    bool is_navigation,
-    bool is_download,
-    const CefString& request_initiator,
-    bool& disable_default_handling) {
-  CEF_REQUIRE_IO_THREAD();
-  return this;
+// static
+CefRefPtr<DefaultClientHandler> DefaultClientHandler::GetForClient(
+    CefRefPtr<CefClient> client) {
+  auto base = BaseClientHandler::GetForClient(client);
+  if (base && base->GetTypeKey() == &kTypeKey) {
+    return static_cast<DefaultClientHandler*>(base.get());
+  }
+  return nullptr;
 }
 
-cef_return_value_t DefaultClientHandler::OnBeforeResourceLoad(
+bool DefaultClientHandler::OnBeforePopup(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    CefRefPtr<CefCallback> callback) {
-  CEF_REQUIRE_IO_THREAD();
+    int popup_id,
+    const CefString& target_url,
+    const CefString& target_frame_name,
+    CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+    bool user_gesture,
+    const CefPopupFeatures& popupFeatures,
+    CefWindowInfo& windowInfo,
+    CefRefPtr<CefClient>& client,
+    CefBrowserSettings& settings,
+    CefRefPtr<CefDictionaryValue>& extra_info,
+    bool* no_javascript_access) {
+  CEF_REQUIRE_UI_THREAD();
 
-  return resource_manager_->OnBeforeResourceLoad(browser, frame, request,
-                                                 callback);
+  if (target_disposition == CEF_WOD_NEW_PICTURE_IN_PICTURE) {
+    // Use default handling for document picture-in-picture popups.
+    client = nullptr;
+    return false;
+  }
+
+  // Used to configure default values.
+  RootWindowConfig config(/*command_line=*/nullptr);
+
+  // Potentially create a new RootWindow for the popup browser that will be
+  // created asynchronously.
+  MainContext::Get()->GetRootWindowManager()->CreateRootWindowAsPopup(
+      config.use_views, use_alloy_style_, config.with_controls,
+      /*is_osr=*/false, browser->GetIdentifier(), popup_id,
+      /*is_devtools=*/false, popupFeatures, windowInfo, client, settings);
+
+  // Allow popup creation.
+  return false;
 }
 
-CefRefPtr<CefResourceHandler> DefaultClientHandler::GetResourceHandler(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request) {
-  CEF_REQUIRE_IO_THREAD();
-
-  return resource_manager_->GetResourceHandler(browser, frame, request);
+void DefaultClientHandler::OnBeforePopupAborted(CefRefPtr<CefBrowser> browser,
+                                                int popup_id) {
+  CEF_REQUIRE_UI_THREAD();
+  MainContext::Get()->GetRootWindowManager()->AbortOrClosePopup(
+      browser->GetIdentifier(), popup_id);
 }
 
-CefRefPtr<CefResponseFilter> DefaultClientHandler::GetResourceResponseFilter(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    CefRefPtr<CefRequest> request,
-    CefRefPtr<CefResponse> response) {
-  CEF_REQUIRE_IO_THREAD();
+void DefaultClientHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
+  CEF_REQUIRE_UI_THREAD();
 
-  return test_runner::GetResourceResponseFilter(browser, frame, request,
-                                                response);
+  // Close all popups that have this browser as the opener.
+  OnBeforePopupAborted(browser, /*popup_id=*/-1);
+
+  BaseClientHandler::OnBeforeClose(browser);
 }
 
 }  // namespace client

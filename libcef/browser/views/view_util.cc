@@ -2,16 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/view_util.h"
+#include "cef/libcef/browser/views/view_util.h"
 
 #include <utility>
 
-#include "libcef/browser/views/view_adapter.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/include/cef_color_ids.h"
+#include "cef/libcef/browser/views/view_adapter.h"
+#include "cef/libcef/browser/views/widget.h"
+#include "chrome/browser/themes/theme_service.h"
+#include "chrome/browser/themes/theme_service_factory.h"
+#include "chrome/browser/ui/color/chrome_color_id.h"
+#include "ui/color/color_provider.h"
+#include "ui/color/color_provider_manager.h"
 #include "ui/display/display.h"
 #include "ui/display/screen.h"
 #include "ui/gfx/geometry/point.h"
 #include "ui/gfx/geometry/point_conversions.h"
+#include "ui/native_theme/native_theme.h"
+#include "ui/views/background.h"
 #include "ui/views/widget/widget.h"
 #include "ui/views/widget/widget_delegate.h"
 #include "ui/views/window/non_client_view.h"
@@ -46,7 +55,7 @@ class UserData : public base::SupportsUserData::Data {
     DCHECK(view);
     UserData* data = static_cast<UserData*>(view->GetUserData(UserDataKey()));
     if (data) {
-      return data->view_ref_;
+      return data->view_ref_.get();
     }
     return nullptr;
   }
@@ -99,13 +108,13 @@ class UserData : public base::SupportsUserData::Data {
     if (view_) {
       // The CefView does not own the views::View. Remove the CefView's
       // reference to the views::View.
-#if !(BUILDFLAG(IS_OHOS) && defined(OHOS_ASAN)) || defined(TOOLKIT_VIEWS)
+#if !(BUILDFLAG(ARKWEB_ASAN)) || defined(TOOLKIT_VIEWS)
       CefViewAdapter::GetFor(view_)->Detach();
 #endif
     }
   }
 
-  void TakeReference() { view_ = view_ref_; }
+  void TakeReference() { view_ = view_ref_.get(); }
 
   void ReleaseReference() { view_ = nullptr; }
 
@@ -117,12 +126,27 @@ class UserData : public base::SupportsUserData::Data {
   }
 
   CefRefPtr<CefView> view_;
-  CefView* view_ref_;
+  raw_ptr<CefView> view_ref_;
 };
+
+// Based on Widget::GetNativeTheme.
+const ui::NativeTheme* GetDefaultNativeTheme() {
+  return ui::NativeTheme::GetInstanceForNativeUi();
+}
+
+// Based on Widget::GetColorProviderKey.
+ui::ColorProviderKey GetDefaultColorProviderKey() {
+  return GetDefaultNativeTheme()->GetColorProviderKey(/*custom_theme=*/nullptr);
+}
+
+// Based on Widget::GetColorProvider.
+ui::ColorProvider* GetDefaultColorProvider() {
+  return ui::ColorProviderManager::Get().GetColorProviderFor(
+      GetDefaultColorProviderKey());
+}
 
 }  // namespace
 
-const SkColor kDefaultBackgroundColor = SkColorSetARGB(255, 255, 255, 255);
 const char kDefaultFontList[] = "Arial, Helvetica, 14px";
 
 void Register(CefRefPtr<CefView> view) {
@@ -323,6 +347,74 @@ bool ConvertPointFromWindow(views::View* view, gfx::Point* point) {
   views::View::ConvertPointFromWidget(view, point);
 
   return true;
+}
+
+SkColor GetColor(const views::View* view, ui::ColorId id) {
+  // Verify that our enum matches Chromium's values.
+  static_assert(static_cast<int>(CEF_ChromeColorsEnd) ==
+                    static_cast<int>(kChromeColorsEnd),
+                "enum mismatch");
+
+  // |color_provider| will be nullptr if |view| has not yet been added to a
+  // Widget.
+  if (const auto* color_provider = view->GetColorProvider()) {
+    return color_provider->GetColor(id);
+  }
+
+  return GetDefaultColorProvider()->GetColor(id);
+}
+
+void SetColor(views::View* view, ui::ColorId id, SkColor color) {
+  auto* color_provider = view->GetColorProvider();
+  if (!color_provider) {
+    color_provider = GetDefaultColorProvider();
+  }
+
+  if (color_provider) {
+    color_provider->SetColorForTesting(id, color);
+  }
+}
+
+std::optional<SkColor> GetBackgroundColor(const views::View* view,
+                                          bool allow_transparent) {
+  // Return the configured background color, if any.
+  if (view->background()) {
+    return view->background()->get_color();
+  }
+
+  // If the containing Widget is an overlay then it has a transparent background
+  // by default.
+  if (allow_transparent) {
+    const bool is_overlay_hosted =
+        view->GetWidget() && GetHostView(view->GetWidget()) != nullptr;
+    if (is_overlay_hosted) {
+      return std::nullopt;
+    }
+  }
+
+  // Return the default background color.
+  return GetColor(view, ui::kColorPrimaryBackground);
+}
+
+bool ShouldUseDarkTheme(views::Widget* widget) {
+  DCHECK(widget);
+
+  Profile* profile = nullptr;
+  if (auto* cef_widget = CefWidget::GetForWidget(widget)) {
+    profile = cef_widget->GetThemeProfile();
+  }
+
+  if (profile) {
+    const auto* theme_service = ThemeServiceFactory::GetForProfile(profile);
+    const auto browser_color_scheme = theme_service->GetBrowserColorScheme();
+    if (browser_color_scheme != ThemeService::BrowserColorScheme::kSystem) {
+      // Override the native theme value.
+      return browser_color_scheme == ThemeService::BrowserColorScheme::kDark;
+    }
+  }
+
+  // Use the native theme value.
+  return widget->GetNativeTheme()->ShouldUseDarkColors();
 }
 
 }  // namespace view_util

@@ -9,18 +9,15 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=2268d579d3a78bc95b0a812bfc08d4a40523a59b$
+// $hash=fb10148445f36dc1712cf760b9754911bbbcdf13$
 //
 
 #include "libcef_dll/cpptoc/render_handler_cpptoc.h"
+
 #include "libcef_dll/cpptoc/accessibility_handler_cpptoc.h"
-#include "libcef_dll/cpptoc/gesture_event_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
-#include "libcef_dll/ctocpp/image_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
-#include "libcef_dll/template_util.h"
-#include "libcef_dll/transfer_util.h"
 
 namespace {
 
@@ -319,7 +316,7 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
                                     cef_paint_element_type_t type,
                                     size_t dirtyRectsCount,
                                     cef_rect_t const* dirtyRects,
-                                    void* shared_handle) {
+                                    const cef_accelerated_paint_info_t* info) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -338,9 +335,9 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
   if (dirtyRectsCount > 0 && !dirtyRects) {
     return;
   }
-  // Verify param: shared_handle; type: simple_byaddr
-  DCHECK(shared_handle);
-  if (!shared_handle) {
+  // Verify param: info; type: simple_byref_const
+  DCHECK(info);
+  if (!info) {
     return;
   }
 
@@ -352,10 +349,12 @@ render_handler_on_accelerated_paint(struct _cef_render_handler_t* self,
       dirtyRectsList.push_back(dirtyRectsVal);
     }
   }
+  // Translate param: info; type: simple_byref_const
+  CefAcceleratedPaintInfo infoVal = info ? *info : CefAcceleratedPaintInfo();
 
   // Execute
   CefRenderHandlerCppToC::Get(self)->OnAcceleratedPaint(
-      CefBrowserCToCpp::Wrap(browser), type, dirtyRectsList, shared_handle);
+      CefBrowserCToCpp::Wrap(browser), type, dirtyRectsList, infoVal);
 }
 
 void CEF_CALLBACK
@@ -583,643 +582,14 @@ render_handler_on_text_selection_changed(struct _cef_render_handler_t* self,
       selected_rangeVal);
 }
 
-void CEF_CALLBACK render_handler_on_virtual_keyboard_requested(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    cef_text_input_info_t text_input_info,
-    int is_need_reset_listener,
-    cef_string_map_t attributes) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: attributes; type: string_map_single_byref_const
-  DCHECK(attributes);
-  if (!attributes) {
-    return;
-  }
-
-  // Translate param: attributes; type: string_map_single_byref_const
-  std::map<CefString, CefString> attributesMap;
-  transfer_string_map_contents(attributes, attributesMap);
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
-      CefBrowserCToCpp::Wrap(browser), text_input_info,
-      is_need_reset_listener ? true : false, attributesMap);
-}
-
-void CEF_CALLBACK render_handler_on_touch_selection_changed(
-    struct _cef_render_handler_t* self,
-    const cef_touch_handle_state_t* insert_handle,
-    const cef_touch_handle_state_t* start_selection_handle,
-    const cef_touch_handle_state_t* end_selection_handle,
-    int need_report) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: insert_handle; type: simple_byref_const
-  DCHECK(insert_handle);
-  if (!insert_handle) {
-    return;
-  }
-  // Verify param: start_selection_handle; type: simple_byref_const
-  DCHECK(start_selection_handle);
-  if (!start_selection_handle) {
-    return;
-  }
-  // Verify param: end_selection_handle; type: simple_byref_const
-  DCHECK(end_selection_handle);
-  if (!end_selection_handle) {
-    return;
-  }
-
-  // Translate param: insert_handle; type: simple_byref_const
-  CefTouchHandleState insert_handleVal =
-      insert_handle ? *insert_handle : CefTouchHandleState();
-  // Translate param: start_selection_handle; type: simple_byref_const
-  CefTouchHandleState start_selection_handleVal =
-      start_selection_handle ? *start_selection_handle : CefTouchHandleState();
-  // Translate param: end_selection_handle; type: simple_byref_const
-  CefTouchHandleState end_selection_handleVal =
-      end_selection_handle ? *end_selection_handle : CefTouchHandleState();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnTouchSelectionChanged(
-      insert_handleVal, start_selection_handleVal, end_selection_handleVal,
-      need_report ? true : false);
-}
-
-void CEF_CALLBACK
-render_handler_on_root_layer_changed(struct _cef_render_handler_t* self,
-                                     cef_browser_t* browser,
-                                     int height,
-                                     int width) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnRootLayerChanged(
-      CefBrowserCToCpp::Wrap(browser), height, width);
-}
-
-void CEF_CALLBACK
-render_handler_on_selection_changed(struct _cef_render_handler_t* self,
-                                    cef_browser_t* browser,
-                                    const cef_string_t* text,
-                                    const cef_range_t* selected_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Unverified params: text, selected_range
-
-  // Translate param: selected_range; type: simple_byref_const
-  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnSelectionChanged(
-      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal);
-}
-
-void CEF_CALLBACK
-render_handler_on_cursor_update(struct _cef_render_handler_t* self,
-                                cef_browser_t* browser,
-                                const cef_rect_t* rect) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: rect; type: simple_byref_const
-  DCHECK(rect);
-  if (!rect) {
-    return;
-  }
-
-  // Translate param: rect; type: simple_byref_const
-  CefRect rectVal = rect ? *rect : CefRect();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnCursorUpdate(
-      CefBrowserCToCpp::Wrap(browser), rectVal);
-}
-
-void CEF_CALLBACK render_handler_on_complete_swap_with_new_size(
-    struct _cef_render_handler_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnCompleteSwapWithNewSize();
-}
-
-void CEF_CALLBACK
-render_handler_on_resize_not_work(struct _cef_render_handler_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnResizeNotWork();
-}
-
-void CEF_CALLBACK
-render_handler_on_overscroll(struct _cef_render_handler_t* self,
-                             cef_browser_t* browser,
-                             const float x,
-                             const float y) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnOverscroll(
-      CefBrowserCToCpp::Wrap(browser), x, y);
-}
-
-void CEF_CALLBACK
-render_handler_on_editable_changed(struct _cef_render_handler_t* self,
-                                   cef_browser_t* browser,
-                                   int is_editable_node) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnEditableChanged(
-      CefBrowserCToCpp::Wrap(browser), is_editable_node ? true : false);
-}
-
-void CEF_CALLBACK
-render_handler_on_over_scroll_fling_velocity(struct _cef_render_handler_t* self,
-                                             cef_browser_t* browser,
-                                             const float x,
-                                             const float y,
-                                             int is_fling) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnOverScrollFlingVelocity(
-      CefBrowserCToCpp::Wrap(browser), x, y, is_fling ? true : false);
-}
-
-void CEF_CALLBACK
-render_handler_on_over_scroll_fling_end(struct _cef_render_handler_t* self,
-                                        cef_browser_t* browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnOverScrollFlingEnd(
-      CefBrowserCToCpp::Wrap(browser));
-}
-
-void CEF_CALLBACK
-render_handler_on_scroll_state(struct _cef_render_handler_t* self,
-                               cef_browser_t* browser,
-                               int scroll_state) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnScrollState(
-      CefBrowserCToCpp::Wrap(browser), scroll_state ? true : false);
-}
-
-int CEF_CALLBACK
-render_handler_filter_scroll_event(struct _cef_render_handler_t* self,
-                                   cef_browser_t* browser,
-                                   const float x,
-                                   const float y,
-                                   const float fling_x,
-                                   const float fling_y) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefRenderHandlerCppToC::Get(self)->FilterScrollEvent(
-      CefBrowserCToCpp::Wrap(browser), x, y, fling_x, fling_y);
-
-  // Return type: bool
-  return _retval;
-}
-
-void CEF_CALLBACK render_handler_on_native_embed_gesture_event(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const struct _cef_embed_touch_event_t* event,
-    cef_gesture_event_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: event; type: struct_byref_const
-  DCHECK(event);
-  if (!event) {
-    return;
-  }
-  if (!template_util::has_valid_size(event)) {
-    DCHECK(false) << "invalid event->[base.]size";
-    return;
-  }
-  // Verify param: callback; type: refptr_same
-  DCHECK(callback);
-  if (!callback) {
-    return;
-  }
-
-  // Translate param: event; type: struct_byref_const
-  CefEmbedTouchEvent eventObj;
-  if (event) {
-    eventObj.Set(*event, false);
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnNativeEmbedGestureEvent(
-      CefBrowserCToCpp::Wrap(browser), eventObj,
-      CefGestureEventCallbackCppToC::Unwrap(callback));
-}
-
-void CEF_CALLBACK render_handler_on_native_embed_lifecycle_change(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const struct _cef_native_embed_data_t* info) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: info; type: struct_byref_const
-  DCHECK(info);
-  if (!info) {
-    return;
-  }
-  if (!template_util::has_valid_size(info)) {
-    DCHECK(false) << "invalid info->[base.]size";
-    return;
-  }
-
-  // Translate param: info; type: struct_byref_const
-  CefNativeEmbedData infoObj;
-  if (info) {
-    infoObj.Set(*info, false);
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnNativeEmbedLifecycleChange(
-      CefBrowserCToCpp::Wrap(browser), infoObj);
-}
-
-void CEF_CALLBACK
-render_handler_notify_select_all_clicked(struct _cef_render_handler_t* self,
-                                         int select_all) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->NotifySelectAllClicked(select_all ? true
-                                                                       : false);
-}
-
-void CEF_CALLBACK
-render_handler_release_resize_hold(struct _cef_render_handler_t* self,
-                                   cef_browser_t* browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->ReleaseResizeHold(
-      CefBrowserCToCpp::Wrap(browser));
-}
-
-void CEF_CALLBACK render_handler_on_update_text_input_state_called(
-    struct _cef_render_handler_t* self,
-    cef_browser_t* browser,
-    const cef_string_t* text,
-    const cef_range_t* selected_range,
-    const cef_range_t* compositon_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(text);
-  if (!text) {
-    return;
-  }
-  // Verify param: selected_range; type: simple_byref_const
-  DCHECK(selected_range);
-  if (!selected_range) {
-    return;
-  }
-  // Verify param: compositon_range; type: simple_byref_const
-  DCHECK(compositon_range);
-  if (!compositon_range) {
-    return;
-  }
-
-  // Translate param: selected_range; type: simple_byref_const
-  CefRange selected_rangeVal = selected_range ? *selected_range : CefRange();
-  // Translate param: compositon_range; type: simple_byref_const
-  CefRange compositon_rangeVal =
-      compositon_range ? *compositon_range : CefRange();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnUpdateTextInputStateCalled(
-      CefBrowserCToCpp::Wrap(browser), CefString(text), selected_rangeVal,
-      compositon_rangeVal);
-}
-
-void CEF_CALLBACK
-render_handler_get_word_selection(struct _cef_render_handler_t* self,
-                                  cef_browser_t* browser,
-                                  const cef_string_t* text,
-                                  int8_t offset,
-                                  cef_point_t* select) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(text);
-  if (!text) {
-    return;
-  }
-  // Verify param: select; type: simple_byref
-  DCHECK(select);
-  if (!select) {
-    return;
-  }
-
-  // Translate param: select; type: simple_byref
-  CefPoint selectVal = select ? *select : CefPoint();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->GetWordSelection(
-      CefBrowserCToCpp::Wrap(browser), CefString(text), offset, selectVal);
-
-  // Restore param: select; type: simple_byref
-  if (select) {
-    *select = selectVal;
-  }
-}
-
-void CEF_CALLBACK
-render_handler_create_overlay(struct _cef_render_handler_t* self,
-                              cef_browser_t* browser,
-                              cef_image_t* cef_image,
-                              const cef_rect_t* cef_image_rect,
-                              const cef_point_t* cef_touch_point) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: cef_image; type: refptr_diff
-  DCHECK(cef_image);
-  if (!cef_image) {
-    return;
-  }
-  // Verify param: cef_image_rect; type: simple_byref_const
-  DCHECK(cef_image_rect);
-  if (!cef_image_rect) {
-    return;
-  }
-  // Verify param: cef_touch_point; type: simple_byref_const
-  DCHECK(cef_touch_point);
-  if (!cef_touch_point) {
-    return;
-  }
-
-  // Translate param: cef_image_rect; type: simple_byref_const
-  CefRect cef_image_rectVal = cef_image_rect ? *cef_image_rect : CefRect();
-  // Translate param: cef_touch_point; type: simple_byref_const
-  CefPoint cef_touch_pointVal = cef_touch_point ? *cef_touch_point : CefPoint();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->CreateOverlay(
-      CefBrowserCToCpp::Wrap(browser), CefImageCToCpp::Wrap(cef_image),
-      cef_image_rectVal, cef_touch_pointVal);
-}
-
-void CEF_CALLBACK
-render_handler_on_overlay_state_changed(struct _cef_render_handler_t* self,
-                                        cef_browser_t* browser,
-                                        const cef_rect_t* cef_image_rect) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: cef_image_rect; type: simple_byref_const
-  DCHECK(cef_image_rect);
-  if (!cef_image_rect) {
-    return;
-  }
-
-  // Translate param: cef_image_rect; type: simple_byref_const
-  CefRect cef_image_rectVal = cef_image_rect ? *cef_image_rect : CefRect();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnOverlayStateChanged(
-      CefBrowserCToCpp::Wrap(browser), cef_image_rectVal);
-}
-
 void CEF_CALLBACK
 render_handler_get_visible_viewport_rect(struct _cef_render_handler_t* self,
                                          cef_browser_t* browser,
                                          cef_rect_t* rect) {
   shutdown_checker::AssertNotShutdown();
-
+ 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
+ 
   DCHECK(self);
   if (!self) {
     return;
@@ -1234,14 +604,14 @@ render_handler_get_visible_viewport_rect(struct _cef_render_handler_t* self,
   if (!rect) {
     return;
   }
-
+ 
   // Translate param: rect; type: simple_byref
   CefRect rectVal = rect ? *rect : CefRect();
-
+ 
   // Execute
   CefRenderHandlerCppToC::Get(self)->GetVisibleViewportRect(
       CefBrowserCToCpp::Wrap(browser), rectVal);
-
+ 
   // Restore param: rect; type: simple_byref
   if (rect) {
     *rect = rectVal;
@@ -1249,38 +619,9 @@ render_handler_get_visible_viewport_rect(struct _cef_render_handler_t* self,
 }
 
 void CEF_CALLBACK
-render_handler_send_dynamic_frame_loss_event(struct _cef_render_handler_t* self,
+render_handler_on_virtual_keyboard_requested(struct _cef_render_handler_t* self,
                                              cef_browser_t* browser,
-                                             const cef_string_t* sceneId,
-                                             int isStart) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: sceneId; type: string_byref_const
-  DCHECK(sceneId);
-  if (!sceneId) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->SendDynamicFrameLossEvent(
-      CefBrowserCToCpp::Wrap(browser), CefString(sceneId),
-      isStart ? true : false);
-}
-
-void CEF_CALLBACK
-render_handler_on_resize_scrollable_viewport(struct _cef_render_handler_t* self,
-                                             cef_browser_t* browser) {
+                                             cef_text_input_mode_t input_mode) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1296,120 +637,24 @@ render_handler_on_resize_scrollable_viewport(struct _cef_render_handler_t* self,
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->OnResizeScrollableViewport(
-      CefBrowserCToCpp::Wrap(browser));
-}
-
-void CEF_CALLBACK
-render_handler_set_fill_content(struct _cef_render_handler_t* self,
-                                const char* content) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: content; type: std_string_byref_const
-  DCHECK(content);
-  if (!content) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->SetFillContent(content);
+  CefRenderHandlerCppToC::Get(self)->OnVirtualKeyboardRequested(
+      CefBrowserCToCpp::Wrap(browser), input_mode);
 }
 
 void CEF_CALLBACK
 render_handler_set_gesture_event_result(struct _cef_render_handler_t* self,
-                                        const int result) {
+                                const bool result) {
   shutdown_checker::AssertNotShutdown();
-
+ 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
+ 
   DCHECK(self);
   if (!self) {
     return;
   }
-
+ 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->SetGestureEventResult(result ? true
-                                                                  : false);
-}
-
-void CEF_CALLBACK
-render_handler_start_vibra_feedback(struct _cef_render_handler_t* self,
-                                    const char* vibratorType) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: vibratorType; type: std_string_byref_const
-  DCHECK(vibratorType);
-  if (!vibratorType) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->StartVibraFeedback(vibratorType);
-}
-
-void CEF_CALLBACK
-render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
-                                     cef_browser_t* browser,
-                                     cef_size_t* size) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser);
-  if (!browser) {
-    return;
-  }
-  // Verify param: size; type: simple_byref
-  DCHECK(size);
-  if (!size) {
-    return;
-  }
-
-  // Translate param: size; type: simple_byref
-  CefSize sizeVal = size ? *size : CefSize();
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->GetDevicePixelSize(
-      CefBrowserCToCpp::Wrap(browser), sizeVal);
-
-  // Restore param: size; type: simple_byref
-  if (size) {
-    *size = sizeVal;
-  }
-}
-
-void CEF_CALLBACK
-render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
-                                      int64_t accessibilityId,
-                                      int32_t eventType) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
+  CefRenderHandlerCppToC::Get(self)->SetGestureEventResult(result);
 }
 
 }  // namespace
@@ -1436,51 +681,13 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_scroll_offset_changed;
   GetStruct()->on_ime_composition_range_changed =
       render_handler_on_ime_composition_range_changed;
+  GetStruct()->get_visible_viewport_rect =
+      render_handler_get_visible_viewport_rect;
   GetStruct()->on_text_selection_changed =
       render_handler_on_text_selection_changed;
   GetStruct()->on_virtual_keyboard_requested =
       render_handler_on_virtual_keyboard_requested;
-  GetStruct()->on_touch_selection_changed =
-      render_handler_on_touch_selection_changed;
-  GetStruct()->on_root_layer_changed = render_handler_on_root_layer_changed;
-  GetStruct()->on_selection_changed = render_handler_on_selection_changed;
-  GetStruct()->on_cursor_update = render_handler_on_cursor_update;
-  GetStruct()->on_complete_swap_with_new_size =
-      render_handler_on_complete_swap_with_new_size;
-  GetStruct()->on_resize_not_work = render_handler_on_resize_not_work;
-  GetStruct()->on_overscroll = render_handler_on_overscroll;
-  GetStruct()->on_editable_changed = render_handler_on_editable_changed;
-  GetStruct()->on_over_scroll_fling_velocity =
-      render_handler_on_over_scroll_fling_velocity;
-  GetStruct()->on_over_scroll_fling_end =
-      render_handler_on_over_scroll_fling_end;
-  GetStruct()->on_scroll_state = render_handler_on_scroll_state;
-  GetStruct()->filter_scroll_event = render_handler_filter_scroll_event;
-  GetStruct()->on_native_embed_gesture_event =
-      render_handler_on_native_embed_gesture_event;
-  GetStruct()->on_native_embed_lifecycle_change =
-      render_handler_on_native_embed_lifecycle_change;
-  GetStruct()->notify_select_all_clicked =
-      render_handler_notify_select_all_clicked;
-  GetStruct()->release_resize_hold = render_handler_release_resize_hold;
-  GetStruct()->on_update_text_input_state_called =
-      render_handler_on_update_text_input_state_called;
-  GetStruct()->get_word_selection = render_handler_get_word_selection;
-  GetStruct()->create_overlay = render_handler_create_overlay;
-  GetStruct()->on_overlay_state_changed =
-      render_handler_on_overlay_state_changed;
-  GetStruct()->get_visible_viewport_rect =
-      render_handler_get_visible_viewport_rect;
-  GetStruct()->send_dynamic_frame_loss_event =
-      render_handler_send_dynamic_frame_loss_event;
-  GetStruct()->on_resize_scrollable_viewport =
-      render_handler_on_resize_scrollable_viewport;
-  GetStruct()->set_fill_content = render_handler_set_fill_content;
-  GetStruct()->set_gesture_event_result =
-      render_handler_set_gesture_event_result;
-  GetStruct()->start_vibra_feedback = render_handler_start_vibra_feedback;
-  GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
-  GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
+  GetStruct()->set_gesture_event_result = render_handler_set_gesture_event_result;
 }
 
 // DESTRUCTOR - Do not edit by hand.

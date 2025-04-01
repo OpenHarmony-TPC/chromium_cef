@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f8d63e2a2ba174b0f7ffb1ae66052288c28b6c43$
+// $hash=09a4dcefc71b4554d12a950d4c8879c0e2fd2521$
 //
 
 #include "libcef_dll/cpptoc/views/textfield_cpptoc.h"
+
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
 #include "libcef_dll/cpptoc/views/panel_cpptoc.h"
@@ -1396,6 +1397,25 @@ textfield_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK textfield_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
+          ->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK textfield_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1442,6 +1462,26 @@ textfield_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK textfield_get_theme_color(struct _cef_view_t* self,
+                                                   int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefTextfieldCppToC::Get(reinterpret_cast<cef_textfield_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1738,9 +1778,11 @@ CefTextfieldCppToC::CefTextfieldCppToC() {
   GetStruct()->base.is_focusable = textfield_is_focusable;
   GetStruct()->base.is_accessibility_focusable =
       textfield_is_accessibility_focusable;
+  GetStruct()->base.has_focus = textfield_has_focus;
   GetStruct()->base.request_focus = textfield_request_focus;
   GetStruct()->base.set_background_color = textfield_set_background_color;
   GetStruct()->base.get_background_color = textfield_get_background_color;
+  GetStruct()->base.get_theme_color = textfield_get_theme_color;
   GetStruct()->base.convert_point_to_screen = textfield_convert_point_to_screen;
   GetStruct()->base.convert_point_from_screen =
       textfield_convert_point_from_screen;

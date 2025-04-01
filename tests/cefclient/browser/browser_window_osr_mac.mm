@@ -4,6 +4,7 @@
 
 #include "tests/cefclient/browser/browser_window_osr_mac.h"
 
+#import <AppKit/NSAccessibility.h>
 #include <Cocoa/Cocoa.h>
 #include <OpenGL/gl.h>
 #import <objc/runtime.h>
@@ -19,7 +20,9 @@
 #include "tests/shared/browser/geometry_util.h"
 #include "tests/shared/browser/main_message_loop.h"
 
-#import <AppKit/NSAccessibility.h>
+// Begin disable NSOpenGL deprecation warnings.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 @interface BrowserOpenGLView
     : NSOpenGLView <NSDraggingSource, NSDraggingDestination, NSAccessibility> {
@@ -74,6 +77,8 @@ class ScopedGLContext {
     }
   }
 
+  NSOpenGLContext* context() const { return context_; }
+
  private:
   NSOpenGLContext* context_;
   const bool swap_buffers_;
@@ -119,9 +124,9 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
 
     [self resetDragDrop];
 
-    NSArray* types = [NSArray
-        arrayWithObjects:kCEFDragDummyPboardType, NSStringPboardType,
-                         NSFilenamesPboardType, NSPasteboardTypeString, nil];
+    NSArray* types = [NSArray arrayWithObjects:kCEFDragDummyPboardType,
+                                               NSPasteboardTypeFileURL,
+                                               NSPasteboardTypeString, nil];
     [self registerForDraggedTypes:types];
   }
 
@@ -654,7 +659,7 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
   mouseEvent.x = client::DeviceToLogical(point.x, device_scale_factor);
   mouseEvent.y = client::DeviceToLogical(point.y, device_scale_factor);
 
-  mouseEvent.modifiers = static_cast<uint32>([NSEvent modifierFlags]);
+  mouseEvent.modifiers = static_cast<uint32_t>([NSEvent modifierFlags]);
 }
 
 - (int)getModifiersForEvent:(NSEvent*)event {
@@ -998,7 +1003,7 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
   }
 
   // URL.
-  if ([type isEqualToString:NSURLPboardType]) {
+  if ([type isEqualToString:NSPasteboardTypeURL]) {
     DCHECK(current_drag_data_->IsLink());
     NSString* strUrl =
         [NSString stringWithUTF8String:current_drag_data_->GetLinkURL()
@@ -1023,19 +1028,19 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
     CefRefPtr<CefStreamWriter> writer =
         CefStreamWriter::CreateForHandler(handler.get());
     current_drag_data_->GetFileContents(writer);
-    DCHECK_EQ(handler->GetDataSize(), static_cast<int64>(size));
+    DCHECK_EQ(handler->GetDataSize(), static_cast<int64_t>(size));
 
     [pboard setData:[NSData dataWithBytes:handler->GetData()
                                    length:handler->GetDataSize()]
             forType:fileUTI_];
 
     // Plain text.
-  } else if ([type isEqualToString:NSStringPboardType]) {
+  } else if ([type isEqualToString:NSPasteboardTypeString]) {
     NSString* strTitle =
         [NSString stringWithUTF8String:current_drag_data_->GetFragmentText()
                                            .ToString()
                                            .c_str()];
-    [pboard setString:strTitle forType:NSStringPboardType];
+    [pboard setString:strTitle forType:NSPasteboardTypeString];
 
   } else if ([type isEqualToString:kCEFDragDummyPboardType]) {
     // The dummy type _was_ promised and someone decided to call the bluff.
@@ -1122,7 +1127,7 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
 
   // URL (and title).
   if (current_drag_data_->IsLink()) {
-    [pasteboard_ addTypes:@[ NSURLPboardType, kNSURLTitlePboardType ]
+    [pasteboard_ addTypes:@[ NSPasteboardTypeURL, kNSURLTitlePboardType ]
                     owner:self];
   }
 
@@ -1149,9 +1154,15 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
       CFRelease(mimeTypeCF);
       // File (HFS) promise.
       NSArray* fileUTIList = @[ fileUTI_ ];
-      [pasteboard_ addTypes:@[ NSFilesPromisePboardType ] owner:self];
+      NSString* NSPasteboardTypeFileURLPromise =
+#if __has_feature(objc_arc)
+          (__bridge NSString*)kPasteboardTypeFileURLPromise;
+#else
+          (NSString*)kPasteboardTypeFileURLPromise;
+#endif
+      [pasteboard_ addTypes:@[ NSPasteboardTypeFileURLPromise ] owner:self];
       [pasteboard_ setPropertyList:fileUTIList
-                           forType:NSFilesPromisePboardType];
+                           forType:NSPasteboardTypeFileURLPromise];
 
       [pasteboard_ addTypes:fileUTIList owner:self];
     }
@@ -1159,7 +1170,7 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
 
   // Plain text.
   if (!current_drag_data_->GetFragmentText().empty()) {
-    [pasteboard_ addTypes:@[ NSStringPboardType ] owner:self];
+    [pasteboard_ addTypes:@[ NSPasteboardTypeString ] owner:self];
   }
 }
 
@@ -1171,14 +1182,14 @@ NSPoint ConvertPointFromWindowToScreen(NSWindow* window, NSPoint point) {
   NSArray* types = [pboard types];
 
   // Get plain text.
-  if ([types containsObject:NSStringPboardType]) {
+  if ([types containsObject:NSPasteboardTypeString]) {
     data->SetFragmentText(
-        [[pboard stringForType:NSStringPboardType] UTF8String]);
+        [[pboard stringForType:NSPasteboardTypeString] UTF8String]);
   }
 
   // Get files.
-  if ([types containsObject:NSFilenamesPboardType]) {
-    NSArray* files = [pboard propertyListForType:NSFilenamesPboardType];
+  if ([types containsObject:NSPasteboardTypeFileURL]) {
+    NSArray* files = [pboard propertyListForType:NSPasteboardTypeFileURL];
     if ([files isKindOfClass:[NSArray class]] && [files count]) {
       for (NSUInteger i = 0; i < [files count]; i++) {
         NSString* filename = [files objectAtIndex:i];
@@ -1375,6 +1386,10 @@ class BrowserWindowOsrMacImpl {
                const void* buffer,
                int width,
                int height);
+  void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
+                          CefRenderHandler::PaintElementType type,
+                          const CefRenderHandler::RectList& dirtyRects,
+                          const CefAcceleratedPaintInfo& info);
   void OnCursorChange(CefRefPtr<CefBrowser> browser,
                       CefCursorHandle cursor,
                       cef_cursor_type_t type,
@@ -1440,6 +1455,14 @@ void BrowserWindowOsrMacImpl::CreateBrowser(
   window_info.SetAsWindowless(
       CAST_NSVIEW_TO_CEF_WINDOW_HANDLE(native_browser_view_));
 
+  window_info.shared_texture_enabled =
+      renderer_.settings().shared_texture_enabled;
+  window_info.external_begin_frame_enabled =
+      renderer_.settings().external_begin_frame_enabled;
+
+  // Windowless rendering requires Alloy style.
+  DCHECK_EQ(CEF_RUNTIME_STYLE_ALLOY, window_info.runtime_style);
+
   // Create the browser asynchronously.
   CefBrowserHost::CreateBrowser(window_info, browser_window_.client_handler_,
                                 browser_window_.client_handler_->startup_url(),
@@ -1453,6 +1476,15 @@ void BrowserWindowOsrMacImpl::GetPopupConfig(CefWindowHandle temp_handle,
   CEF_REQUIRE_UI_THREAD();
 
   windowInfo.SetAsWindowless(temp_handle);
+
+  // Windowless rendering requires Alloy style.
+  DCHECK_EQ(CEF_RUNTIME_STYLE_ALLOY, windowInfo.runtime_style);
+
+  windowInfo.shared_texture_enabled =
+      renderer_.settings().shared_texture_enabled;
+  windowInfo.external_begin_frame_enabled =
+      renderer_.settings().external_begin_frame_enabled;
+
   client = browser_window_.client_handler_;
 }
 
@@ -1549,8 +1581,10 @@ void BrowserWindowOsrMacImpl::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
   REQUIRE_MAIN_THREAD();
 
   // Detach |this| from the ClientHandlerOsr.
-  static_cast<ClientHandlerOsr*>(browser_window_.client_handler_.get())
-      ->DetachOsrDelegate();
+  auto handler =
+      ClientHandlerOsr::GetForClient(browser_window_.client_handler_);
+  CHECK(handler);
+  handler->DetachOsrDelegate();
 }
 
 bool BrowserWindowOsrMacImpl::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
@@ -1714,6 +1748,46 @@ void BrowserWindowOsrMacImpl::OnPaint(
     browser->GetHost()->Invalidate(PET_POPUP);
     painting_popup_ = false;
   }
+  renderer_.Render();
+}
+
+void BrowserWindowOsrMacImpl::OnAcceleratedPaint(
+    CefRefPtr<CefBrowser> browser,
+    CefRenderHandler::PaintElementType type,
+    const CefRenderHandler::RectList& dirtyRects,
+    const CefAcceleratedPaintInfo& info) {
+  CEF_REQUIRE_UI_THREAD();
+  REQUIRE_MAIN_THREAD();
+
+  if (!native_browser_view_) {
+    return;
+  }
+
+  ScopedGLContext scoped_gl_context(native_browser_view_, true);
+
+  IOSurfaceRef io_surface = (IOSurfaceRef)info.shared_texture_io_surface;
+
+  GLuint rectTexture;
+  glGenTextures(1, &rectTexture);
+  glEnable(GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, rectTexture);
+
+  CGLContextObj cgl_context = CGLGetCurrentContext();
+
+  GLsizei width = (GLsizei)IOSurfaceGetWidth(io_surface);
+  GLsizei height = (GLsizei)IOSurfaceGetHeight(io_surface);
+
+  CGLTexImageIOSurface2D(cgl_context, GL_TEXTURE_RECTANGLE_ARB, GL_RGBA8, width,
+                         height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+                         io_surface, 0);
+
+  glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  renderer_.OnAcceleratedPaint(browser, type, dirtyRects, rectTexture, width,
+                               height);
   renderer_.Render();
 }
 
@@ -1943,6 +2017,14 @@ void BrowserWindowOsrMac::OnPaint(CefRefPtr<CefBrowser> browser,
   impl_->OnPaint(browser, type, dirtyRects, buffer, width, height);
 }
 
+void BrowserWindowOsrMac::OnAcceleratedPaint(
+    CefRefPtr<CefBrowser> browser,
+    CefRenderHandler::PaintElementType type,
+    const CefRenderHandler::RectList& dirtyRects,
+    const CefAcceleratedPaintInfo& info) {
+  impl_->OnAcceleratedPaint(browser, type, dirtyRects, info);
+}
+
 void BrowserWindowOsrMac::OnCursorChange(
     CefRefPtr<CefBrowser> browser,
     CefCursorHandle cursor,
@@ -1984,3 +2066,6 @@ void BrowserWindowOsrMac::UpdateAccessibilityLocation(
 }
 
 }  // namespace client
+
+// End disable NSOpenGL deprecation warnings.
+#pragma clang diagnostic pop

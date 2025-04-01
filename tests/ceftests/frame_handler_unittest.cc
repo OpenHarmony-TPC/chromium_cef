@@ -21,9 +21,6 @@
 
 namespace {
 
-// Must match CefFrameHostImpl::kInvalidFrameId.
-const int kInvalidFrameId = -4;
-
 // Tracks callback status for a single frame object.
 struct FrameStatus {
   // Callbacks in expected order. Not all callbacks are executed in all cases
@@ -84,23 +81,17 @@ struct FrameStatus {
   static std::string GetFrameDebugString(CefRefPtr<CefFrame> frame) {
     // Match the logic in frame_util::GetFrameDebugString.
     // Specific formulation of the frame ID is an implementation detail that
-    // should generally not be relied upon, but this decomposed format makes the
+    // should generally not be relied upon, but a consistent format makes the
     // debug logging easier to follow.
-    uint64 frame_id = frame->GetIdentifier();
-    uint32_t process_id = frame_id >> 32;
-    uint32_t routing_id = std::numeric_limits<uint32_t>::max() & frame_id;
-    std::stringstream ss;
-    ss << (frame->IsMain() ? "main" : " sub") << "[" << process_id << ","
-       << routing_id << "]";
-    return ss.str();
+    return frame->GetIdentifier();
   }
 
-  FrameStatus(CefRefPtr<CefFrame> frame)
+  explicit FrameStatus(CefRefPtr<CefFrame> frame)
       : frame_id_(frame->GetIdentifier()),
         is_main_(frame->IsMain()),
         ident_str_(GetFrameDebugString(frame)) {}
 
-  int64 frame_id() const { return frame_id_; }
+  std::string frame_id() const { return frame_id_; }
   bool is_main() const { return is_main_; }
 
   bool AllQueriesDelivered(std::string* msg = nullptr) const {
@@ -122,7 +113,7 @@ struct FrameStatus {
   }
 
   bool IsSame(CefRefPtr<CefFrame> frame) const {
-    return frame->GetIdentifier() == frame_id();
+    return frame->GetIdentifier().ToString() == frame_id();
   }
 
   bool IsLoaded(std::string* msg = nullptr) const {
@@ -225,7 +216,8 @@ struct FrameStatus {
     bool got_match = false;
 
     if (old_frame && new_frame) {
-      EXPECT_NE(old_frame->GetIdentifier(), new_frame->GetIdentifier());
+      EXPECT_STRNE(old_frame->GetIdentifier().ToString().c_str(),
+                   new_frame->GetIdentifier().ToString().c_str());
     }
 
     if (old_frame && IsSame(old_frame)) {
@@ -400,10 +392,22 @@ struct FrameStatus {
 
     for (int i = 0; i <= CALLBACK_LAST; ++i) {
       if (i < current_callback && IsExpectedCallback(i)) {
+        if (i == FRAME_ATTACHED &&
+            (current_callback == MAIN_FRAME_CHANGED_ASSIGNED ||
+             current_callback == LOAD_START || current_callback == LOAD_END)) {
+          // Timing of OnFrameAttached is flaky. See issue #3817.
+          continue;
+        }
         EXPECT_TRUE(got_callback_[i])
             << "inside " << func << " should already have gotten "
             << GetCallbackName(i);
       } else {
+        if (current_callback == FRAME_ATTACHED &&
+            (i == MAIN_FRAME_CHANGED_ASSIGNED || i == LOAD_START ||
+             i == LOAD_END)) {
+          // Timing of OnFrameAttached is flaky. See issue #3817.
+          continue;
+        }
         EXPECT_FALSE(got_callback_[i])
             << "inside " << func << " should not already have gotten "
             << GetCallbackName(i);
@@ -420,6 +424,11 @@ struct FrameStatus {
       EXPECT_FALSE(browser->IsValid()) << func;
     }
 
+    const auto browser_id = browser->GetIdentifier();
+    EXPECT_GT(browser_id, 0) << func;
+    auto get_browser = CefBrowserHost::GetBrowserByIdentifier(browser_id);
+    EXPECT_TRUE(get_browser && get_browser->IsSame(browser)) << func;
+
     // Note that this might not be the same main frame as us when navigating
     // cross-origin, because the new main frame object is assigned to the
     // browser before the CefFrameHandler callbacks related to main frame change
@@ -431,8 +440,10 @@ struct FrameStatus {
     auto main_frame = browser->GetMainFrame();
     if (expect_valid) {
       EXPECT_TRUE(main_frame) << func;
-      EXPECT_TRUE(main_frame->IsValid()) << func;
-      EXPECT_TRUE(main_frame->IsMain()) << func;
+      if (main_frame) {
+        EXPECT_TRUE(main_frame->IsValid()) << func;
+        EXPECT_TRUE(main_frame->IsMain()) << func;
+      }
     } else {
       // GetMainFrame() returns nullptr after OnBeforeClose.
       EXPECT_FALSE(main_frame) << func;
@@ -486,7 +497,7 @@ struct FrameStatus {
     }
   }
 
-  const int64 frame_id_;
+  const std::string frame_id_;
   const bool is_main_;
   const std::string ident_str_;
 
@@ -510,7 +521,7 @@ const char kOrderMainUrl[] = "https://tests-frame-handler/main-order.html";
 
 class OrderMainTestHandler : public RoutingTestHandler, public CefFrameHandler {
  public:
-  OrderMainTestHandler(CompletionState* completion_state = nullptr)
+  explicit OrderMainTestHandler(CompletionState* completion_state = nullptr)
       : RoutingTestHandler(completion_state) {}
 
   CefRefPtr<CefFrameHandler> GetFrameHandler() override {
@@ -569,14 +580,16 @@ class OrderMainTestHandler : public RoutingTestHandler, public CefFrameHandler {
     got_before_close_ = true;
 
     EXPECT_TRUE(current_main_frame_);
-    current_main_frame_->OnBeforeClose(browser);
+    if (current_main_frame_) {
+      current_main_frame_->OnBeforeClose(browser);
+    }
 
     RoutingTestHandler::OnBeforeClose(browser);
   }
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -801,7 +814,8 @@ const char kOrderMainUrlPrefix[] = "https://tests-frame-handler";
 
 class NavigateOrderMainTestHandler : public OrderMainTestHandler {
  public:
-  NavigateOrderMainTestHandler(bool cross_origin, int additional_nav_ct = 2)
+  explicit NavigateOrderMainTestHandler(bool cross_origin,
+                                        int additional_nav_ct = 2)
       : cross_origin_(cross_origin), additional_nav_ct_(additional_nav_ct) {}
 
   void RunTest() override {
@@ -900,8 +914,8 @@ class FrameStatusMap {
 
     EXPECT_LT(size(), expected_frame_ct_);
 
-    const int64 id = frame->GetIdentifier();
-    EXPECT_NE(kInvalidFrameId, id);
+    const std::string& id = frame->GetIdentifier();
+    EXPECT_TRUE(!id.empty());
     EXPECT_EQ(frame_map_.find(id), frame_map_.end());
 
     FrameStatus* status = new FrameStatus(frame);
@@ -912,15 +926,15 @@ class FrameStatusMap {
   FrameStatus* GetFrameStatus(CefRefPtr<CefFrame> frame) const {
     EXPECT_UI_THREAD();
 
-    const int64 id = frame->GetIdentifier();
-    EXPECT_NE(kInvalidFrameId, id);
+    const std::string& id = frame->GetIdentifier();
+    EXPECT_TRUE(!id.empty());
     Map::const_iterator it = frame_map_.find(id);
     EXPECT_NE(it, frame_map_.end());
     return it->second;
   }
 
   void RemoveFrameStatus(CefRefPtr<CefFrame> frame) {
-    const int64 id = frame->GetIdentifier();
+    const std::string& id = frame->GetIdentifier();
     Map::iterator it = frame_map_.find(id);
     EXPECT_NE(it, frame_map_.end());
     frame_map_.erase(it);
@@ -1017,7 +1031,8 @@ class FrameStatusMap {
   size_t size() const { return frame_map_.size(); }
 
  private:
-  using Map = std::map<int64, FrameStatus*>;
+  // Map of frame ID to status object.
+  using Map = std::map<std::string, FrameStatus*>;
   Map frame_map_;
 
   // The expected number of sub-frames.
@@ -1063,7 +1078,7 @@ class OrderSubTestHandler : public NavigateOrderMainTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -1590,7 +1605,7 @@ class PopupOrderMainTestHandler : public OrderMainTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -1643,6 +1658,7 @@ class ParentOrderMainTestHandler : public OrderMainTestHandler {
   bool OnBeforePopup(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
+      int popup_id,
       const CefString& target_url,
       const CefString& target_frame_name,
       CefLifeSpanHandler::WindowOpenDisposition target_disposition,
@@ -1666,6 +1682,8 @@ class ParentOrderMainTestHandler : public OrderMainTestHandler {
 
   void OnAfterCreated(CefRefPtr<CefBrowser> browser) override {
     OrderMainTestHandler::OnAfterCreated(browser);
+
+    GrantPopupPermission(browser->GetHost()->GetRequestContext(), GetMainURL());
 
     // Create the popup ASAP.
     browser->GetMainFrame()->ExecuteJavaScript(
@@ -1691,7 +1709,7 @@ class ParentOrderMainTestHandler : public OrderMainTestHandler {
 };
 
 void RunOrderMainPopupTest(bool cross_origin) {
-  TestHandler::CompletionState completion_state(/*count=*/2);
+  TestHandler::CompletionState completion_state(/*total=*/2);
   TestHandler::Collection collection(&completion_state);
 
   CefRefPtr<PopupOrderMainTestHandler> popup_handler =

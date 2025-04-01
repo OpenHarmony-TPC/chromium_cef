@@ -1,5 +1,5 @@
 diff --git chrome/browser/ui/bookmarks/bookmark_stats.cc chrome/browser/ui/bookmarks/bookmark_stats.cc
-index 45f661faa6e0b..777a1f6c333b6 100644
+index bd47b3f13aa2a..0f4f3c47d2647 100644
 --- chrome/browser/ui/bookmarks/bookmark_stats.cc
 +++ chrome/browser/ui/bookmarks/bookmark_stats.cc
 @@ -21,7 +21,9 @@ bool IsBookmarkBarLocation(BookmarkLaunchLocation location) {
@@ -14,10 +14,10 @@ index 45f661faa6e0b..777a1f6c333b6 100644
               ? profile_metrics::BrowserProfileType::kRegular
               : profile_metrics::BrowserProfileType::kIncognito;
 diff --git chrome/browser/ui/views/incognito_clear_browsing_data_dialog.cc chrome/browser/ui/views/incognito_clear_browsing_data_dialog.cc
-index f3a5093abe7ca..f2bcc7b3c1f4c 100644
+index 3ac5ebf1b49b5..d41cffecb5603 100644
 --- chrome/browser/ui/views/incognito_clear_browsing_data_dialog.cc
 +++ chrome/browser/ui/views/incognito_clear_browsing_data_dialog.cc
-@@ -30,7 +30,9 @@ IncognitoClearBrowsingDataDialog::IncognitoClearBrowsingDataDialog(
+@@ -32,7 +32,9 @@ IncognitoClearBrowsingDataDialog::IncognitoClearBrowsingDataDialog(
        dialog_type_(type),
        incognito_profile_(incognito_profile) {
    DCHECK(incognito_profile_);
@@ -25,7 +25,7 @@ index f3a5093abe7ca..f2bcc7b3c1f4c 100644
 +  DCHECK(incognito_profile_->IsIncognitoProfile() ||
 +         (incognito_profile_->IsOffTheRecord() &&
 +          incognito_profile_->GetOTRProfileID().IsUniqueForCEF()));
-   SetButtons(ui::DIALOG_BUTTON_NONE);
+   SetButtons(static_cast<int>(ui::mojom::DialogButton::kNone));
    SetShowCloseButton(true);
  
 diff --git chrome/browser/ui/views/incognito_clear_browsing_data_dialog_coordinator.cc chrome/browser/ui/views/incognito_clear_browsing_data_dialog_coordinator.cc
@@ -44,7 +44,7 @@ index caa20ec03434a..2a3ca921445c1 100644
        avatar_toolbar_button, GetBrowser().profile(), type);
    DCHECK_EQ(nullptr, bubble_tracker_.view());
 diff --git chrome/browser/ui/views/profiles/incognito_menu_view.cc chrome/browser/ui/views/profiles/incognito_menu_view.cc
-index f5f266328283d..672609d94d1b7 100644
+index 00510c991e657..830db4087c274 100644
 --- chrome/browser/ui/views/profiles/incognito_menu_view.cc
 +++ chrome/browser/ui/views/profiles/incognito_menu_view.cc
 @@ -36,7 +36,9 @@
@@ -55,19 +55,19 @@ index f5f266328283d..672609d94d1b7 100644
 +  DCHECK(browser->profile()->IsIncognitoProfile() ||
 +         (browser->profile()->IsOffTheRecord() &&
 +          browser->profile()->GetOTRProfileID().IsUniqueForCEF()));
-   GetViewAccessibility().OverrideName(GetAccessibleWindowTitle());
+   GetViewAccessibility().SetName(GetAccessibleWindowTitle(),
+                                  ax::mojom::NameFrom::kAttribute);
  
-   base::RecordAction(base::UserMetricsAction("IncognitoMenu_Show"));
 diff --git chrome/browser/ui/views/profiles/profile_menu_coordinator.cc chrome/browser/ui/views/profiles/profile_menu_coordinator.cc
-index a315cdc513f1d..036236798652c 100644
+index 58026d48e15a6..acb3b51f86943 100644
 --- chrome/browser/ui/views/profiles/profile_menu_coordinator.cc
 +++ chrome/browser/ui/views/profiles/profile_menu_coordinator.cc
-@@ -45,7 +45,9 @@ void ProfileMenuCoordinator::Show(bool is_source_accelerator) {
-       feature_engagement::kIPHProfileSwitchFeature);
+@@ -52,7 +52,9 @@ void ProfileMenuCoordinator::Show(bool is_source_accelerator) {
  
    std::unique_ptr<ProfileMenuViewBase> bubble;
--  if (browser.profile()->IsIncognitoProfile()) {
-+  if (browser.profile()->IsIncognitoProfile() ||
+   bool is_incognito = browser.profile()->IsIncognitoProfile();
+-  if (is_incognito) {
++  if (is_incognito ||
 +         (browser.profile()->IsOffTheRecord() &&
 +          browser.profile()->GetOTRProfileID().IsUniqueForCEF())) {
      bubble =

@@ -9,17 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a84d40fb61c9d65e54dff4577c97760b9d808420$
+// $hash=78b6ea5be9077164a1d7ea6143601040b124f1c0$
 //
 
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/process_message_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/urlrequest_cpptoc.h"
 #include "libcef_dll/cpptoc/v8context_cpptoc.h"
 #include "libcef_dll/ctocpp/domvisitor_ctocpp.h"
-#include "libcef_dll/ctocpp/get_images_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/string_visitor_ctocpp.h"
 #include "libcef_dll/ctocpp/urlrequest_client_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -113,6 +113,20 @@ void CEF_CALLBACK frame_paste(struct _cef_frame_t* self) {
 
   // Execute
   CefFrameCppToC::Get(self)->Paste();
+}
+
+void CEF_CALLBACK frame_paste_and_match_style(struct _cef_frame_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefFrameCppToC::Get(self)->PasteAndMatchStyle();
 }
 
 void CEF_CALLBACK frame_del(struct _cef_frame_t* self) {
@@ -312,21 +326,22 @@ cef_string_userfree_t CEF_CALLBACK frame_get_name(struct _cef_frame_t* self) {
   return _retval.DetachToUserFree();
 }
 
-int64 CEF_CALLBACK frame_get_identifier(struct _cef_frame_t* self) {
+cef_string_userfree_t CEF_CALLBACK
+frame_get_identifier(struct _cef_frame_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
   if (!self) {
-    return 0;
+    return NULL;
   }
 
   // Execute
-  int64 _retval = CefFrameCppToC::Get(self)->GetIdentifier();
+  CefString _retval = CefFrameCppToC::Get(self)->GetIdentifier();
 
-  // Return type: simple
-  return _retval;
+  // Return type: string
+  return _retval.DetachToUserFree();
 }
 
 struct _cef_frame_t* CEF_CALLBACK frame_get_parent(struct _cef_frame_t* self) {
@@ -474,100 +489,6 @@ frame_send_process_message(struct _cef_frame_t* self,
       target_process, CefProcessMessageCppToC::Unwrap(message));
 }
 
-void CEF_CALLBACK
-frame_load_header_url(struct _cef_frame_t* self,
-                      const cef_string_t* url,
-                      const cef_string_t* additionalHttpHeaders) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Unverified params: url, additionalHttpHeaders
-
-  // Execute
-  CefFrameCppToC::Get(self)->LoadHeaderUrl(CefString(url),
-                                           CefString(additionalHttpHeaders));
-}
-
-void CEF_CALLBACK frame_get_images(struct _cef_frame_t* self,
-                                   cef_get_images_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback);
-  if (!callback) {
-    return;
-  }
-
-  // Execute
-  CefFrameCppToC::Get(self)->GetImages(
-      CefGetImagesCallbackCToCpp::Wrap(callback));
-}
-
-void CEF_CALLBACK frame_post_url(struct _cef_frame_t* self,
-                                 const cef_string_t* url,
-                                 size_t post_dataCount,
-                                 char const* post_data) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
-    return;
-  }
-  // Unverified params: post_data
-
-  // Translate param: post_data; type: simple_vec_byref_const
-  std::vector<char> post_dataList;
-  if (post_dataCount > 0) {
-    for (size_t i = 0; i < post_dataCount; ++i) {
-      char post_dataVal = post_data[i];
-      post_dataList.push_back(post_dataVal);
-    }
-  }
-
-  // Execute
-  CefFrameCppToC::Get(self)->PostURL(CefString(url), post_dataList);
-}
-
-void CEF_CALLBACK frame_load_urlwith_user_gesture(struct _cef_frame_t* self,
-                                                  const cef_string_t* url,
-                                                  int user_gesture) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
-    return;
-  }
-
-  // Execute
-  CefFrameCppToC::Get(self)->LoadURLWithUserGesture(
-      CefString(url), user_gesture ? true : false);
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -579,6 +500,7 @@ CefFrameCppToC::CefFrameCppToC() {
   GetStruct()->cut = frame_cut;
   GetStruct()->copy = frame_copy;
   GetStruct()->paste = frame_paste;
+  GetStruct()->paste_and_match_style = frame_paste_and_match_style;
   GetStruct()->del = frame_del;
   GetStruct()->select_all = frame_select_all;
   GetStruct()->view_source = frame_view_source;
@@ -598,10 +520,6 @@ CefFrameCppToC::CefFrameCppToC() {
   GetStruct()->visit_dom = frame_visit_dom;
   GetStruct()->create_urlrequest = frame_create_urlrequest;
   GetStruct()->send_process_message = frame_send_process_message;
-  GetStruct()->load_header_url = frame_load_header_url;
-  GetStruct()->get_images = frame_get_images;
-  GetStruct()->post_url = frame_post_url;
-  GetStruct()->load_urlwith_user_gesture = frame_load_urlwith_user_gesture;
 }
 
 // DESTRUCTOR - Do not edit by hand.

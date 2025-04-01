@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=7056ac5b8b078c1446c94c1003cc7217ab825c72$
+// $hash=cacfa45dda332eb2841b671a67983e26d46d0a5b$
 //
 
 #include "libcef_dll/cpptoc/write_handler_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -45,7 +46,7 @@ size_t CEF_CALLBACK write_handler_write(struct _cef_write_handler_t* self,
 }
 
 int CEF_CALLBACK write_handler_seek(struct _cef_write_handler_t* self,
-                                    int64 offset,
+                                    int64_t offset,
                                     int whence) {
   shutdown_checker::AssertNotShutdown();
 
@@ -63,7 +64,7 @@ int CEF_CALLBACK write_handler_seek(struct _cef_write_handler_t* self,
   return _retval;
 }
 
-int64 CEF_CALLBACK write_handler_tell(struct _cef_write_handler_t* self) {
+int64_t CEF_CALLBACK write_handler_tell(struct _cef_write_handler_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -74,7 +75,7 @@ int64 CEF_CALLBACK write_handler_tell(struct _cef_write_handler_t* self) {
   }
 
   // Execute
-  int64 _retval = CefWriteHandlerCppToC::Get(self)->Tell();
+  int64_t _retval = CefWriteHandlerCppToC::Get(self)->Tell();
 
   // Return type: simple
   return _retval;

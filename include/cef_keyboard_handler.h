@@ -38,6 +38,7 @@
 #define CEF_INCLUDE_CEF_KEYBOARD_HANDLER_H_
 #pragma once
 
+#include "arkweb/build/features/features.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 
@@ -75,12 +76,14 @@ class CefKeyboardHandler : public virtual CefBaseRefCounted {
                           CefEventHandle os_event) {
     return false;
   }
-#if defined(OHOS_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   ///
-  /// This interface is invoked to notify the upper-layer application whether the key is used
+  /// This interface is invoked to notify the upper-layer application whether
+  /// the key is used
   ///
   /*--cef()--*/
-  virtual void KeyboardReDispatch(const CefKeyEvent& event,  bool isUsed) {}
+  virtual void KeyboardReDispatch(const CefKeyEvent& event, bool isUsed) {}
 #endif
 };
 

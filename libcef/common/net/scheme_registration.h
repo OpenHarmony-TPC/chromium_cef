@@ -9,12 +9,9 @@
 #include <string>
 #include <vector>
 
-#include "content/public/common/content_client.h"
+#include "arkweb/build/features/features.h"
 
 namespace scheme {
-
-// Add internal schemes.
-void AddInternalSchemes(content::ContentClient::Schemes* schemes);
 
 // Returns true if the specified |scheme| is handled internally.
 bool IsInternalHandledScheme(const std::string& scheme);
@@ -25,11 +22,10 @@ bool IsStandardScheme(const std::string& scheme);
 // Returns true if the specified |scheme| is a registered CORS enabled scheme.
 bool IsCorsEnabledScheme(const std::string& scheme);
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
 // Add schemes that support code cache.
 void AddSchemesSupportCodeCache(const std::string& scheme);
 #endif
-
 }  // namespace scheme
 
 #endif  // CEF_LIBCEF_COMMON_NET_SCHEME_REGISTRATION_H_

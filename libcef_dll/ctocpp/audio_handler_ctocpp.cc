@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b58a09c2dabadf34934f18f780a74f0f62a8ddfa$
+// $hash=ded90e79e3f8b2c2657b013dc90a2305692ea565$
 //
 
 #include "libcef_dll/ctocpp/audio_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -73,7 +74,7 @@ NO_SANITIZE("cfi-icall")
 void CefAudioHandlerCToCpp::OnAudioStreamPacket(CefRefPtr<CefBrowser> browser,
                                                 const float** data,
                                                 int frames,
-                                                int64 pts) {
+                                                int64_t pts) {
   shutdown_checker::AssertNotShutdown();
 
   cef_audio_handler_t* _struct = GetStruct();

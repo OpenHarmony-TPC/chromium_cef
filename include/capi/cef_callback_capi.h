@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=854a4bf3d9b39ca7ad87e5436773a63c18c64b97$
+// $hash=46bc048bec64590735298a95633167d66e445844$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CALLBACK_CAPI_H_
@@ -80,37 +80,6 @@ typedef struct _cef_completion_callback_t {
   ///
   void(CEF_CALLBACK* on_complete)(struct _cef_completion_callback_t* self);
 } cef_completion_callback_t;
-
-///
-/// Callback structure used to select a client certificate for authentication.
-///
-typedef struct _cef_select_client_certificate_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Chooses the specified certificate for client certificate authentication.
-  /// NULL value means that no client certificate should be used.
-  ///
-  void(CEF_CALLBACK* select)(
-      struct _cef_select_client_certificate_callback_t* self,
-      const cef_string_t* private_key_file,
-      const cef_string_t* cert_chain_file);
-
-  ///
-  /// Cancel the select cert request.
-  ///
-  void(CEF_CALLBACK* cancel)(
-      struct _cef_select_client_certificate_callback_t* self);
-
-  ///
-  /// Ignore the select cert request.
-  ///
-  void(CEF_CALLBACK* ignore)(
-      struct _cef_select_client_certificate_callback_t* self);
-} cef_select_client_certificate_callback_t;
 
 #ifdef __cplusplus
 }

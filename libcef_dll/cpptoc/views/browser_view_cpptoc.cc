@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f0759e132185f8e6f0ee9e947f7e5ece3dddd5e7$
+// $hash=f6c0c1dc3de70dab819ba42db591025c48667379$
 //
 
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/dictionary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
@@ -145,6 +146,25 @@ browser_view_set_prefer_accelerators(struct _cef_browser_view_t* self,
   // Execute
   CefBrowserViewCppToC::Get(self)->SetPreferAccelerators(
       prefer_accelerators ? true : false);
+}
+
+cef_runtime_style_t CEF_CALLBACK
+browser_view_get_runtime_style(struct _cef_browser_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_RUNTIME_STYLE_DEFAULT;
+  }
+
+  // Execute
+  cef_runtime_style_t _retval =
+      CefBrowserViewCppToC::Get(self)->GetRuntimeStyle();
+
+  // Return type: simple
+  return _retval;
 }
 
 cef_browser_view_t* CEF_CALLBACK
@@ -944,6 +964,25 @@ browser_view_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK browser_view_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefBrowserViewCppToC::Get(reinterpret_cast<cef_browser_view_t*>(self))
+          ->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK browser_view_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -990,6 +1029,26 @@ browser_view_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefBrowserViewCppToC::Get(reinterpret_cast<cef_browser_view_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK browser_view_get_theme_color(struct _cef_view_t* self,
+                                                      int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefBrowserViewCppToC::Get(reinterpret_cast<cef_browser_view_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1215,6 +1274,7 @@ CefBrowserViewCppToC::CefBrowserViewCppToC() {
   GetStruct()->get_browser = browser_view_get_browser;
   GetStruct()->get_chrome_toolbar = browser_view_get_chrome_toolbar;
   GetStruct()->set_prefer_accelerators = browser_view_set_prefer_accelerators;
+  GetStruct()->get_runtime_style = browser_view_get_runtime_style;
   GetStruct()->base.as_browser_view = browser_view_as_browser_view;
   GetStruct()->base.as_button = browser_view_as_button;
   GetStruct()->base.as_panel = browser_view_as_panel;
@@ -1258,9 +1318,11 @@ CefBrowserViewCppToC::CefBrowserViewCppToC() {
   GetStruct()->base.is_focusable = browser_view_is_focusable;
   GetStruct()->base.is_accessibility_focusable =
       browser_view_is_accessibility_focusable;
+  GetStruct()->base.has_focus = browser_view_has_focus;
   GetStruct()->base.request_focus = browser_view_request_focus;
   GetStruct()->base.set_background_color = browser_view_set_background_color;
   GetStruct()->base.get_background_color = browser_view_get_background_color;
+  GetStruct()->base.get_theme_color = browser_view_get_theme_color;
   GetStruct()->base.convert_point_to_screen =
       browser_view_convert_point_to_screen;
   GetStruct()->base.convert_point_from_screen =

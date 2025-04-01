@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ba3f1cba485d1c29dca30290c91eb83516e1b820$
+// $hash=19b44051658f9e6419dc37d33ed9a70239b5f857$
 //
 
 #include "libcef_dll/ctocpp/request_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/auth_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
@@ -20,10 +21,10 @@
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/select_client_certificate_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/sslinfo_cpptoc.h"
+#include "libcef_dll/cpptoc/unresponsive_process_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/x509certificate_cpptoc.h"
 #include "libcef_dll/ctocpp/resource_request_handler_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
-#include "libcef_dll/transfer_util.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
@@ -264,8 +265,6 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
     bool isProxy,
     const CefString& host,
     int port,
-    const std::vector<CefString>& key_types,
-    const std::vector<CefString>& principals,
     const X509CertificateList& certificates,
     CefRefPtr<CefSelectClientCertificateCallback> callback) {
   shutdown_checker::AssertNotShutdown();
@@ -293,18 +292,6 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
     return false;
   }
 
-  // Translate param: key_types; type: string_vec_byref_const
-  cef_string_list_t key_typesList = cef_string_list_alloc();
-  DCHECK(key_typesList);
-  if (key_typesList) {
-    transfer_string_list_contents(key_types, key_typesList);
-  }
-  // Translate param: principals; type: string_vec_byref_const
-  cef_string_list_t principalsList = cef_string_list_alloc();
-  DCHECK(principalsList);
-  if (principalsList) {
-    transfer_string_list_contents(principals, principalsList);
-  }
   // Translate param: certificates; type: refptr_vec_diff_byref_const
   const size_t certificatesCount = certificates.size();
   cef_x509certificate_t** certificatesList = NULL;
@@ -321,17 +308,9 @@ bool CefRequestHandlerCToCpp::OnSelectClientCertificate(
   // Execute
   int _retval = _struct->on_select_client_certificate(
       _struct, CefBrowserCppToC::Wrap(browser), isProxy, host.GetStruct(), port,
-      key_typesList, principalsList, certificatesCount, certificatesList,
+      certificatesCount, certificatesList,
       CefSelectClientCertificateCallbackCppToC::Wrap(callback));
 
-  // Restore param:key_types; type: string_vec_byref_const
-  if (key_typesList) {
-    cef_string_list_free(key_typesList);
-  }
-  // Restore param:principals; type: string_vec_byref_const
-  if (principalsList) {
-    cef_string_list_free(principalsList);
-  }
   // Restore param:certificates; type: refptr_vec_diff_byref_const
   if (certificatesList) {
     delete[] certificatesList;
@@ -363,9 +342,67 @@ void CefRequestHandlerCToCpp::OnRenderViewReady(CefRefPtr<CefBrowser> browser) {
 }
 
 NO_SANITIZE("cfi-icall")
+bool CefRequestHandlerCToCpp::OnRenderProcessUnresponsive(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefUnresponsiveProcessCallback> callback) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_render_process_unresponsive)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return false;
+  }
+  // Verify param: callback; type: refptr_diff
+  DCHECK(callback.get());
+  if (!callback.get()) {
+    return false;
+  }
+
+  // Execute
+  int _retval = _struct->on_render_process_unresponsive(
+      _struct, CefBrowserCppToC::Wrap(browser),
+      CefUnresponsiveProcessCallbackCppToC::Wrap(callback));
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefRequestHandlerCToCpp::OnRenderProcessResponsive(
+    CefRefPtr<CefBrowser> browser) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_request_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, on_render_process_responsive)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->on_render_process_responsive(_struct,
+                                        CefBrowserCppToC::Wrap(browser));
+}
+
+NO_SANITIZE("cfi-icall")
 void CefRequestHandlerCToCpp::OnRenderProcessTerminated(
     CefRefPtr<CefBrowser> browser,
-    TerminationStatus status) {
+    TerminationStatus status,
+    int error_code,
+    const CefString& error_string) {
   shutdown_checker::AssertNotShutdown();
 
   cef_request_handler_t* _struct = GetStruct();
@@ -380,10 +417,16 @@ void CefRequestHandlerCToCpp::OnRenderProcessTerminated(
   if (!browser.get()) {
     return;
   }
+  // Verify param: error_string; type: string_byref_const
+  DCHECK(!error_string.empty());
+  if (error_string.empty()) {
+    return;
+  }
 
   // Execute
-  _struct->on_render_process_terminated(
-      _struct, CefBrowserCppToC::Wrap(browser), status);
+  _struct->on_render_process_terminated(_struct,
+                                        CefBrowserCppToC::Wrap(browser), status,
+                                        error_code, error_string.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")
@@ -407,165 +450,6 @@ void CefRequestHandlerCToCpp::OnDocumentAvailableInMainFrame(
   // Execute
   _struct->on_document_available_in_main_frame(_struct,
                                                CefBrowserCppToC::Wrap(browser));
-}
-
-NO_SANITIZE("cfi-icall")
-bool CefRequestHandlerCToCpp::ShouldOverrideUrlLoading(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& url,
-    const CefString& method,
-    bool user_gesture,
-    bool is_redirect,
-    bool is_outermost_main_frame) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_request_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, should_override_url_loading)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return false;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
-    return false;
-  }
-  // Verify param: method; type: string_byref_const
-  DCHECK(!method.empty());
-  if (method.empty()) {
-    return false;
-  }
-
-  // Execute
-  int _retval = _struct->should_override_url_loading(
-      _struct, CefBrowserCppToC::Wrap(browser), url.GetStruct(),
-      method.GetStruct(), user_gesture, is_redirect, is_outermost_main_frame);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-bool CefRequestHandlerCToCpp::OnAllCertificateError(
-    CefRefPtr<CefBrowser> browser,
-    cef_errorcode_t cert_error,
-    const CefString& request_url,
-    const CefString& origin_url,
-    const CefString& referrer,
-    bool is_main_frame_request,
-    bool is_fatal_error,
-    CefRefPtr<CefSSLInfo> ssl_info,
-    CefRefPtr<CefCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_request_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_all_certificate_error)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return false;
-  }
-  // Verify param: request_url; type: string_byref_const
-  DCHECK(!request_url.empty());
-  if (request_url.empty()) {
-    return false;
-  }
-  // Verify param: origin_url; type: string_byref_const
-  DCHECK(!origin_url.empty());
-  if (origin_url.empty()) {
-    return false;
-  }
-  // Verify param: referrer; type: string_byref_const
-  DCHECK(!referrer.empty());
-  if (referrer.empty()) {
-    return false;
-  }
-  // Verify param: ssl_info; type: refptr_diff
-  DCHECK(ssl_info.get());
-  if (!ssl_info.get()) {
-    return false;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return false;
-  }
-
-  // Execute
-  int _retval = _struct->on_all_certificate_error(
-      _struct, CefBrowserCppToC::Wrap(browser), cert_error,
-      request_url.GetStruct(), origin_url.GetStruct(), referrer.GetStruct(),
-      is_main_frame_request, is_fatal_error, CefSSLInfoCppToC::Wrap(ssl_info),
-      CefCallbackCppToC::Wrap(callback));
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRequestHandlerCToCpp::OnRenderProcessNotResponding(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& referrer,
-    int pid,
-    int reason) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_request_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_render_process_not_responding)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: referrer; type: string_byref_const
-  DCHECK(!referrer.empty());
-  if (referrer.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_render_process_not_responding(_struct,
-                                            CefBrowserCppToC::Wrap(browser),
-                                            referrer.GetStruct(), pid, reason);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRequestHandlerCToCpp::OnRenderProcessResponding(
-    CefRefPtr<CefBrowser> browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_request_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_render_process_responding)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_render_process_responding(_struct,
-                                        CefBrowserCppToC::Wrap(browser));
 }
 
 // CONSTRUCTOR - Do not edit by hand.

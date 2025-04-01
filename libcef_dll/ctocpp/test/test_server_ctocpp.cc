@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=968a2858141da53370bb7d59298ca9dba4a7c45a$
+// $hash=335ba2623eec3e7d910dbe2e5fc8ce58cd00c1f9$
 //
 
 #include "libcef_dll/ctocpp/test/test_server_ctocpp.h"
+
 #include "libcef_dll/cpptoc/test/test_server_handler_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -20,7 +21,7 @@
 
 NO_SANITIZE("cfi-icall")
 CefRefPtr<CefTestServer> CefTestServer::CreateAndStart(
-    uint16 port,
+    uint16_t port,
     bool https_server,
     cef_test_cert_type_t https_cert_type,
     CefRefPtr<CefTestServerHandler> handler) {

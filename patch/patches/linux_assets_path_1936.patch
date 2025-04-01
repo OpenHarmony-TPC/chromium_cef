@@ -1,8 +1,8 @@
 diff --git content/browser/child_process_launcher_helper_linux.cc content/browser/child_process_launcher_helper_linux.cc
-index 1b4f9c8e3b79a..0a6e83421a6d6 100644
+index add20a2f81d66..97071092ff768 100644
 --- content/browser/child_process_launcher_helper_linux.cc
 +++ content/browser/child_process_launcher_helper_linux.cc
-@@ -183,7 +183,7 @@ ZygoteCommunication* ChildProcessLauncherHelper::GetZygoteForLaunch() {
+@@ -191,7 +191,7 @@ ZygoteCommunication* ChildProcessLauncherHelper::GetZygoteForLaunch() {
  base::File OpenFileToShare(const base::FilePath& path,
                             base::MemoryMappedFile::Region* region) {
    base::FilePath exe_dir;
@@ -12,10 +12,10 @@ index 1b4f9c8e3b79a..0a6e83421a6d6 100644
    base::File file(exe_dir.Append(path),
                    base::File::FLAG_OPEN | base::File::FLAG_READ);
 diff --git sandbox/linux/suid/client/setuid_sandbox_host.cc sandbox/linux/suid/client/setuid_sandbox_host.cc
-index 84fd365da0283..88f3adf813eca 100644
+index cdabcf3e5b2c7..2a12480efb68c 100644
 --- sandbox/linux/suid/client/setuid_sandbox_host.cc
 +++ sandbox/linux/suid/client/setuid_sandbox_host.cc
-@@ -120,7 +120,7 @@ bool SetuidSandboxHost::IsDisabledViaEnvironment() {
+@@ -125,7 +125,7 @@ bool SetuidSandboxHost::IsDisabledViaEnvironment() {
  base::FilePath SetuidSandboxHost::GetSandboxBinaryPath() {
    base::FilePath sandbox_binary;
    base::FilePath exe_dir;
@@ -25,13 +25,13 @@ index 84fd365da0283..88f3adf813eca 100644
      if (base::PathExists(sandbox_candidate))
        sandbox_binary = sandbox_candidate;
 diff --git ui/ozone/common/egl_util.cc ui/ozone/common/egl_util.cc
-index 021bcad8c3084..a37406d408718 100644
+index 5414f048a..1a289015e 100644
 --- ui/ozone/common/egl_util.cc
 +++ ui/ozone/common/egl_util.cc
-@@ -127,7 +127,7 @@ bool LoadDefaultEGLGLES2Bindings(
+@@ -139,7 +139,7 @@ bool LoadDefaultEGLGLES2Bindings(
    if (implementation.gl == gl::kGLImplementationEGLANGLE) {
      base::FilePath module_path;
- #if !BUILDFLAG(IS_FUCHSIA)
+ #if !BUILDFLAG(IS_FUCHSIA) && !BUILDFLAG(IS_OHOS)
 -    if (!base::PathService::Get(base::DIR_MODULE, &module_path))
 +    if (!base::PathService::Get(base::DIR_ASSETS, &module_path))
        return false;

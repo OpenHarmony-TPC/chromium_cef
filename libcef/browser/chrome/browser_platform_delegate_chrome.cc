@@ -2,10 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/chrome/browser_platform_delegate_chrome.h"
+#include "cef/libcef/browser/chrome/browser_platform_delegate_chrome.h"
 
-#include "libcef/browser/views/view_util.h"
-
+#include "cef/libcef/browser/views/view_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_window.h"
@@ -115,13 +114,8 @@ void CefBrowserPlatformDelegateChrome::ViewText(const std::string& text) {
 }
 
 CefEventHandle CefBrowserPlatformDelegateChrome::GetEventHandle(
-    const content::NativeWebKeyboardEvent& event) const {
+    const input::NativeWebKeyboardEvent& event) const {
   return native_delegate_->GetEventHandle(event);
-}
-
-bool CefBrowserPlatformDelegateChrome::IsPrintPreviewSupported() const {
-  return chrome_browser_ && !chrome_browser_->profile()->GetPrefs()->GetBoolean(
-                                prefs::kPrintPreviewDisabled);
 }
 
 CefWindowHandle CefBrowserPlatformDelegateChrome::GetParentWindowHandle()
@@ -143,6 +137,9 @@ gfx::NativeWindow CefBrowserPlatformDelegateChrome::GetNativeWindow() const {
   if (chrome_browser_ && chrome_browser_->window()) {
     return chrome_browser_->window()->GetNativeWindow();
   }
-  DCHECK(false);
+  if (web_contents_) {
+    return web_contents_->GetTopLevelNativeWindow();
+  }
+  NOTIMPLEMENTED();
   return gfx::NativeWindow();
 }

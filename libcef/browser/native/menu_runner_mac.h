@@ -6,9 +6,7 @@
 #define CEF_LIBCEF_BROWSER_NATIVE_MENU_RUNNER_MAC_H_
 #pragma once
 
-#include "libcef/browser/menu_runner.h"
-
-#include "base/mac/scoped_nsobject.h"
+#include "cef/libcef/browser/menu_runner.h"
 
 #if __OBJC__
 @class MenuControllerCocoa;
@@ -28,7 +26,7 @@ class CefMenuRunnerMac : public CefMenuRunner {
   void CancelContextMenu() override;
 
  private:
-  base::scoped_nsobject<MenuControllerCocoa> menu_controller_;
+  MenuControllerCocoa* __strong menu_controller_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NATIVE_MENU_RUNNER_MAC_H_

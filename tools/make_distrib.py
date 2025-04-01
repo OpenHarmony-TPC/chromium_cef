@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from bazel_util import bazel_substitute, bazel_last_error, bazel_set_quiet
 from cef_version import VersionFormatter
 from date_util import *
 from exec_util import exec_cmd
@@ -122,7 +123,7 @@ def create_readme():
 
   # format the file
   data = header_data + '\n\n' + mode_data
-  if mode != 'sandbox':
+  if mode != 'sandbox' and mode != 'tools':
     data += '\n\n' + redistrib_data
   data += '\n\n' + footer_data
   data = data.replace('$CEF_URL$', cef_url)
@@ -149,7 +150,7 @@ def create_readme():
                    'section of this document for licensing terms and conditions.'
   elif mode == 'minimal':
     distrib_type = 'Minimal'
-    distrib_desc = 'This distribution contains the minimial components necessary to build and\n' \
+    distrib_desc = 'This distribution contains the minimal components necessary to build and\n' \
                    'distribute an application using CEF on the ' + platform_str + ' platform. Please see\n' \
                    'the LICENSING section of this document for licensing terms and conditions.'
   elif mode == 'client':
@@ -165,6 +166,9 @@ def create_readme():
     distrib_type = 'Sandbox'
     distrib_desc = 'This distribution contains only the cef_sandbox static library. Please see\n' \
                    'the LICENSING section of this document for licensing terms and conditions.'
+  elif mode == 'tools':
+    distrib_type = 'Tools'
+    distrib_desc = 'This distribution contains additional tools for building CEF-based applications.'
 
   data = data.replace('$DISTRIB_TYPE$', distrib_type)
   data = data.replace('$DISTRIB_DESC$', distrib_desc)
@@ -230,6 +234,186 @@ def transfer_gypi_files(src_dir, gypi_paths, gypi_path_prefix, dst_dir, quiet):
     dst_path = os.path.dirname(dst)
     make_dir(dst_path, quiet)
     copy_file(src, dst, quiet)
+
+
+def extract_toolchain_cmd(build_dir,
+                          exe_name,
+                          require_toolchain,
+                          require_cmd=True):
+  """ Extract a toolchain command from the ninja configuration file. """
+  toolchain_ninja = os.path.join(build_dir, 'toolchain.ninja')
+  if not os.path.isfile(toolchain_ninja):
+    if not require_toolchain:
+      return None, None
+    raise Exception('Missing file: %s' % toolchain_ninja)
+
+  data = read_file(toolchain_ninja)
+
+  cmd = None
+  path = None
+
+  # Looking for a value like:
+  #   command = python3 ../../v8/tools/run.py ./exe_name --arg1 --arg2
+  # OR (for cross-compile):
+  #   command = python3 ../../v8/tools/run.py ./clang_arch1_arch2/exe_name --arg1 --arg2
+  findstr = '/%s ' % exe_name
+  start = data.find(findstr)
+  if start >= 0:
+    # Extract the command-line arguments.
+    after_start = start + len(findstr)
+    end = data.find('\n', after_start)
+    if end >= after_start:
+      cmd = data[after_start:end].strip()
+      print('%s command:' % exe_name, cmd)
+      if cmd != '' and not re.match(r"^[0-9a-zA-Z\_\- ./=]{1,}$", cmd):
+        cmd = None
+
+    # Extract the relative file path.
+    dot = start - 1
+    while data[dot].isalnum() or data[dot] == '_':
+      dot -= 1
+    path = data[dot + 1:start]
+    print('%s path:' % exe_name, path)
+    if path != '' and not re.match(r"^(win_)?clang_[0-9a-z_]{1,}$", path):
+      path = None
+
+  if require_cmd and (cmd is None or path is None):
+    raise Exception('Failed to extract %s command from %s' % (exe_name,
+                                                              toolchain_ninja))
+
+  return cmd, path
+
+
+def get_exe_name(exe_name):
+  return exe_name + ('.exe' if platform == 'windows' else '')
+
+
+def get_script_name(script_name):
+  return script_name + ('.bat' if platform == 'windows' else '.sh')
+
+
+def transfer_tools_files(script_dir, build_dirs, output_dir):
+  for build_dir in build_dirs:
+    is_debug = build_dir.find('Debug') >= 0
+    dst_dir_name = 'Debug' if is_debug else 'Release'
+    dst_dir = os.path.join(output_dir, dst_dir_name)
+
+    # Retrieve the binary path and command-line arguments.
+    # See issue #3734 for the expected format.
+    mksnapshot_name = 'mksnapshot'
+    tool_cmd, tool_dir = extract_toolchain_cmd(
+        build_dir, mksnapshot_name, require_toolchain=not options.allowpartial)
+    if tool_cmd is None:
+      sys.stdout.write("No %s build toolchain for %s.\n" % (dst_dir_name,
+                                                            mksnapshot_name))
+      continue
+
+    if options.allowpartial and not path_exists(
+        os.path.join(build_dir, tool_dir, get_exe_name(mksnapshot_name))):
+      sys.stdout.write("No %s build of %s.\n" % (dst_dir_name, mksnapshot_name))
+      continue
+
+    # yapf: disable
+    binaries = [
+        {'path': get_exe_name(mksnapshot_name)},
+        {'path': get_exe_name('v8_context_snapshot_generator')},
+    ]
+    # yapf: disable
+
+    # Transfer binaries.
+    copy_files_list(os.path.join(build_dir, tool_dir), dst_dir, binaries)
+
+    # Evaluate command-line arguments and remove relative paths. Copy any input files
+    # into the distribution.
+    # - Example input path : ../../v8/tools/builtins-pgo/profiles/x64-rl.profile
+    # - Example output path: gen/v8/embedded.S
+    parsed_cmd = []
+    for cmd in tool_cmd.split(' '):
+      if cmd.find('/') > 0:
+        file_name = os.path.split(cmd)[1]
+        if len(file_name) == 0:
+          raise Exception('Failed to parse %s command component: %s' % (mksnapshot_name, cmd))
+        if cmd.startswith('../../'):
+          file_path = os.path.realpath(os.path.join(build_dir, cmd))
+          # Validate input file/path.
+          if not file_path.startswith(src_dir):
+            raise Exception('Invalid %s command input file: %s' % (mksnapshot_name, file_path))
+          if not os.path.isfile(file_path):
+            raise Exception('Missing %s command input file: %s' % (mksnapshot_name, file_path))
+          # Transfer input file.
+          copy_file(file_path, os.path.join(dst_dir, file_name), options.quiet)
+        cmd = file_name
+      parsed_cmd.append(cmd)
+
+    # Write command-line arguments file.
+    write_file(os.path.join(dst_dir, 'mksnapshot_cmd.txt'), ' '.join(parsed_cmd))
+
+  # yapf: disable
+  files = [
+      {'path': get_script_name('run_mksnapshot')},
+  ]
+  # yapf: disable
+
+  # Transfer other tools files.
+  copy_files_list(os.path.join(script_dir, 'distrib', 'tools'), output_dir, files)
+
+
+def copy_bazel_file_with_substitution(path, target_path, variables, relative_path):
+  data = read_file(path)
+  bazel_set_quiet(True)
+  result = bazel_substitute(data, variables, path_relative_to=relative_path, label=path)
+  last_error = bazel_last_error()
+  bazel_set_quiet(False)
+  if not last_error is None:
+    raise Exception(last_error)
+  if not options.quiet:
+    sys.stdout.write('Writing %s file.\n' % target_path)
+  write_file(target_path, result)
+
+
+def transfer_bazel_files(bazel_dir, output_dir, variables, require_parent_dir):
+  # All input files.
+  bazel_files = get_files(os.path.join(bazel_dir, '*')) + get_files(os.path.join(bazel_dir, '.*'))
+
+  # Map of path component to required platform.
+  platform_map = {
+    'linux': 'linux',
+    'mac': 'mac',
+    'win': 'windows',
+  }
+
+  for path in bazel_files:
+    name = os.path.split(path)[1]
+
+    # |name| uses hyphens to indicate directory components.
+    directory_parts = name.split('-')[:-1]
+
+    # Skip files that don't apply for the current platform.
+    skip = False
+    for part in directory_parts:
+      if part in platform_map and platform_map[part] != platform:
+        skip = True
+        break
+    if skip:
+      sys.stdout.write('Skipping %s file.\n' % path)
+      continue
+
+    target_path = os.path.join(output_dir, name.replace('-', '/'))
+    target_dir = os.path.split(target_path)[0]
+    if not os.path.isdir(target_dir):
+      parent_dir = os.path.split(target_dir)[0]
+      if not os.path.isdir(parent_dir) and require_parent_dir:
+        # Don't write tests/* files if the tests/ directory is missing.
+        sys.stdout.write('Skipping %s file.\n' % path)
+        continue
+      make_dir(target_dir)
+    if target_path.endswith('.in'):
+      # Copy with variable substitution.
+      relative_path = '/'.join(directory_parts)
+      copy_bazel_file_with_substitution(path, target_path[:-3], variables, relative_path)
+    else:
+      # Copy as-is.
+      copy_file(path, target_path, options.quiet)
 
 
 def normalize_headers(file, new_path=''):
@@ -367,8 +551,8 @@ def combine_libs(platform, build_dir, libs, dest_lib):
   """ Combine multiple static libraries into a single static library. """
   intermediate_obj = None
   if platform == 'windows':
-    cmdline = 'msvs_env.bat win%s "%s" combine_libs.py -o "%s"' % (
-        platform_arch, sys.executable, dest_lib)
+    cmdline = 'msvs_env.bat win%s "%s" combine_libs.py -b "%s" -o "%s"' % (
+        platform_arch, sys.executable, build_dir, dest_lib)
   elif platform == 'mac':
     # Find CEF_EXPORT symbols from libcef_sandbox.a (include/cef_sandbox_mac.h)
     # Export only symbols that include these strings.
@@ -400,6 +584,8 @@ def combine_libs(platform, build_dir, libs, dest_lib):
     for path in get_files(lib_path):  # Expand wildcards in |lib_path|.
       if not path_exists(path):
         raise Exception('File not found: ' + path)
+      if platform == 'windows':
+        path = os.path.relpath(path, build_dir)
       cmdline += ' "%s"' % path
   run(cmdline, os.path.join(cef_dir, 'tools'))
 
@@ -497,6 +683,12 @@ parser.add_option(
     default=False,
     help='don\'t create archives for output directories')
 parser.add_option(
+    '--no-sandbox',
+    action='store_true',
+    dest='nosandbox',
+    default=False,
+    help='don\'t create cef_sandbox files')
+parser.add_option(
     '--ninja-build',
     action='store_true',
     dest='ninjabuild',
@@ -538,6 +730,12 @@ parser.add_option(
     dest='sandbox',
     default=False,
     help='include only the cef_sandbox static library (macOS and Windows only)')
+parser.add_option(
+    '--tools',
+    action='store_true',
+    dest='tools',
+    default=False,
+    help='include only the tools')
 parser.add_option(
     '--ozone',
     action='store_true',
@@ -595,10 +793,10 @@ if options.ozone and platform != 'linux':
 script_dir = os.path.dirname(__file__)
 
 # CEF root directory
-cef_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+cef_dir = os.path.realpath(os.path.join(script_dir, os.pardir))
 
 # src directory
-src_dir = os.path.abspath(os.path.join(cef_dir, os.pardir))
+src_dir = os.path.realpath(os.path.join(cef_dir, os.pardir))
 
 if not git.is_checkout(cef_dir):
   raise Exception('Not a valid checkout: %s' % (cef_dir))
@@ -618,9 +816,9 @@ chromium_rev = git.get_hash(src_dir)
 date = get_date()
 
 # format version strings
-formatter = VersionFormatter()
-cef_ver = formatter.get_version_string()
-chromium_ver = formatter.get_chromium_version_string()
+version_formatter = VersionFormatter()
+cef_ver = version_formatter.get_version_string()
+chromium_ver = version_formatter.get_chromium_version_string()
 
 # list of output directories to be archived
 archive_dirs = []
@@ -663,6 +861,9 @@ elif options.client:
 elif options.sandbox:
   mode = 'sandbox'
   output_dir_name = output_dir_name + '_sandbox'
+elif options.tools:
+  mode = 'tools'
+  output_dir_name = output_dir_name + '_tools'
 else:
   mode = 'standard'
 
@@ -730,6 +931,7 @@ if mode == 'standard' or mode == 'minimal':
 
   # Transfer generated include files.
   generated_includes = [
+      'cef_color_ids.h',
       'cef_command_ids.h',
       'cef_config.h',
       'cef_pack_resources.h',
@@ -737,9 +939,10 @@ if mode == 'standard' or mode == 'minimal':
   ]
   for include in generated_includes:
     # Debug and Release build should be the same so grab whichever exists.
-    src_path = os.path.join(build_dir_release, 'includes', 'include', include)
+    rel_path = os.path.join('includes', 'cef', 'include', include)
+    src_path = os.path.join(build_dir_release, rel_path)
     if not os.path.exists(src_path):
-      src_path = os.path.join(build_dir_debug, 'includes', 'include', include)
+      src_path = os.path.join(build_dir_debug, rel_path)
       if not os.path.exists(src_path):
         raise Exception('Missing generated header file: %s' % include)
     copy_file(src_path, os.path.join(include_dir, include), options.quiet)
@@ -818,8 +1021,6 @@ if mode == 'standard':
                         'tests/cefclient/', cefclient_dir, options.quiet)
     transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_resources'], \
                         'tests/cefclient/', cefclient_dir, options.quiet)
-    transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_resources_extensions_set_page_color'], \
-                        'tests/cefclient/', cefclient_dir, options.quiet)
 
   # transfer common cefsimple files
   transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_common'], \
@@ -880,14 +1081,17 @@ if not options.nodocs:
   else:
     sys.stdout.write("ERROR: No docs generated.\n")
 
-if platform == 'windows':
+if mode == 'tools':
+  transfer_tools_files(script_dir, (build_dir_debug, build_dir_release),
+                       output_dir)
+elif platform == 'windows':
   libcef_dll = 'libcef.dll'
-  libcef_dll_lib = '%s.lib' % libcef_dll
-  libcef_dll_pdb = '%s.pdb' % libcef_dll
   # yapf: disable
   binaries = [
       {'path': 'chrome_elf.dll'},
       {'path': 'd3dcompiler_47.dll'},
+      {'path': 'dxcompiler.dll', 'conditional': True},
+      {'path': 'dxil.dll', 'conditional': True},
       {'path': libcef_dll},
       {'path': 'libEGL.dll'},
       {'path': 'libGLESv2.dll'},
@@ -897,6 +1101,15 @@ if platform == 'windows':
       {'path': 'vk_swiftshader_icd.json'},
       {'path': 'vulkan-1.dll'},
   ]
+  pdb_files = [
+      {'path': 'chrome_elf.dll.pdb'},
+      {'path': 'dxcompiler.dll.pdb', 'conditional': True},
+      {'path': '%s.pdb' % libcef_dll},
+      {'path': 'libEGL.dll.pdb'},
+      {'path': 'libGLESv2.dll.pdb'},
+      {'path': 'vk_swiftshader.dll.pdb'},
+      {'path': 'vulkan-1.dll.pdb'},
+  ]
   # yapf: enable
 
   if mode == 'client':
@@ -904,7 +1117,7 @@ if platform == 'windows':
         'path': 'cefsimple.exe' if platform_arch == 'arm64' else 'cefclient.exe'
     })
   else:
-    binaries.append({'path': libcef_dll_lib, 'out_path': 'libcef.lib'})
+    binaries.append({'path': '%s.lib' % libcef_dll, 'out_path': 'libcef.lib'})
 
   # yapf: disable
   resources = [
@@ -920,15 +1133,18 @@ if platform == 'windows':
   sandbox_libs = [
       'obj\\base\\base.lib',
       'obj\\base\\base_static.lib',
+      'obj\\base\\third_party\\cityhash\\cityhash\\*.obj',
       'obj\\base\\third_party\\double_conversion\\double_conversion.lib',
-      'obj\\base\\third_party\\dynamic_annotations\\dynamic_annotations.lib',
+      'obj\\base\\third_party\\superfasthash\\superfasthash\\*.obj',
       'obj\\base\\win\\pe_image.lib',
       cef_sandbox_lib,
       'obj\\sandbox\\common\\*.obj',
       'obj\\sandbox\\win\\sandbox.lib',
+      'obj\\sandbox\\win\\service_resolver\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\base\\**\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\debugging\\**\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\numeric\\**\\*.obj',
+      'obj\\third_party\\abseil-cpp\\absl\\strings\\**\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\synchronization\\**\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\time\\**\\*.obj',
       'obj\\third_party\\abseil-cpp\\absl\\types\\**\\*.obj',
@@ -936,7 +1152,7 @@ if platform == 'windows':
 
   # Generate the cef_sandbox.lib merged library. A separate *_sandbox build
   # should exist when GN is_official_build=true.
-  if mode in ('standard', 'minimal', 'sandbox'):
+  if mode in ('standard', 'minimal', 'sandbox') and not options.nosandbox:
     dirs = {
         'Debug': (build_dir_debug + '_sandbox', build_dir_debug),
         'Release': (build_dir_release + '_sandbox', build_dir_release)
@@ -966,9 +1182,7 @@ if platform == 'windows':
         symbol_output_dir = create_output_dir(
             output_dir_name + '_debug_symbols', options.outputdir)
         # transfer contents
-        copy_file(
-            os.path.join(build_dir, libcef_dll_pdb), symbol_output_dir,
-            options.quiet)
+        copy_files_list(build_dir, symbol_output_dir, pdb_files)
     else:
       sys.stdout.write("No Debug build files.\n")
 
@@ -986,9 +1200,7 @@ if platform == 'windows':
         symbol_output_dir = create_output_dir(
             output_dir_name + '_release_symbols', options.outputdir)
         # transfer contents
-        copy_file(
-            os.path.join(build_dir, libcef_dll_pdb), symbol_output_dir,
-            options.quiet)
+        copy_files_list(build_dir, symbol_output_dir, pdb_files)
     else:
       sys.stdout.write("No Release build files.\n")
 
@@ -1018,26 +1230,25 @@ if platform == 'windows':
                         'tests/shared/', shared_dir, options.quiet)
 
     # transfer cefclient files
-    transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_win'], \
-                        'tests/cefclient/', cefclient_dir, options.quiet)
-    transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_resources_win'], \
+    transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_win'] +
+                        cef_paths2['cefclient_sources_resources_win'] +
+                        cef_paths2['cefclient_sources_resources_win_rc'],
                         'tests/cefclient/', cefclient_dir, options.quiet)
 
     # transfer cefsimple files
-    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_win'], \
-                        'tests/cefsimple/', cefsimple_dir, options.quiet)
-    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_resources_win'], \
+    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_win'] +
+                        cef_paths2['cefsimple_sources_resources_win'] +
+                        cef_paths2['cefsimple_sources_resources_win_rc'],
                         'tests/cefsimple/', cefsimple_dir, options.quiet)
 
     # transfer ceftests files
-    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_win'], \
-                        'tests/ceftests/', ceftests_dir, options.quiet)
-    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_resources_win'], \
+    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_win'] +
+                        cef_paths2['ceftests_sources_resources_win'] +
+                        cef_paths2['ceftests_sources_resources_win_rc'],
                         'tests/ceftests/', ceftests_dir, options.quiet)
 
 elif platform == 'mac':
   framework_name = 'Chromium Embedded Framework'
-  framework_dsym = '%s.dSYM' % framework_name
   cefclient_app = 'cefclient.app'
 
   cef_sandbox_lib = 'obj/cef/libcef_sandbox.a'
@@ -1049,10 +1260,16 @@ elif platform == 'mac':
       'obj/buildtools/third_party/libc++/libc++/*.o',
       'obj/buildtools/third_party/libc++abi/libc++abi/*.o',
   ]
+  dsym_dirs = [
+      '%s.dSYM' % framework_name,
+      'libEGL.dylib.dSYM',
+      'libGLESv2.dylib.dSYM',
+      'libvk_swiftshader.dylib.dSYM',
+  ]
 
   # Generate the cef_sandbox.a merged library. A separate *_sandbox build
   # should exist when GN is_official_build=true.
-  if mode in ('standard', 'minimal', 'sandbox'):
+  if mode in ('standard', 'minimal', 'sandbox') and not options.nosandbox:
     dirs = {
         'Debug': (build_dir_debug + '_sandbox', build_dir_debug),
         'Release': (build_dir_release + '_sandbox', build_dir_release)
@@ -1090,9 +1307,10 @@ elif platform == 'mac':
         # The real dSYM already exists, just copy it to the output directory.
         # dSYMs are only generated when is_official_build=true or enable_dsyms=true.
         # See //build/config/mac/symbols.gni.
-        copy_dir(
-            os.path.join(build_dir, framework_dsym),
-            os.path.join(symbol_output_dir, framework_dsym), options.quiet)
+        for dsym in dsym_dirs:
+          copy_dir(
+              os.path.join(build_dir, dsym),
+              os.path.join(symbol_output_dir, dsym), options.quiet)
     else:
       sys.stdout.write("No Debug build files.\n")
 
@@ -1129,9 +1347,10 @@ elif platform == 'mac':
         # The real dSYM already exists, just copy it to the output directory.
         # dSYMs are only generated when is_official_build=true or enable_dsyms=true.
         # See //build/config/mac/symbols.gni.
-        copy_dir(
-            os.path.join(build_dir, framework_dsym),
-            os.path.join(symbol_output_dir, framework_dsym), options.quiet)
+        for dsym in dsym_dirs:
+          copy_dir(
+              os.path.join(build_dir, dsym),
+              os.path.join(symbol_output_dir, dsym), options.quiet)
     else:
       sys.stdout.write("No Release build files.\n")
 
@@ -1163,9 +1382,9 @@ elif platform == 'mac':
     transfer_gypi_files(cef_dir, cef_paths2['cefclient_sources_mac'], \
                         'tests/cefclient/', cefclient_dir, options.quiet)
 
-    # transfer cefclient/resources/mac files
-    copy_dir(os.path.join(cef_dir, 'tests/cefclient/resources/mac'), \
-             os.path.join(cefclient_dir, 'resources/mac'), \
+    # transfer cefclient/mac files
+    copy_dir(os.path.join(cef_dir, 'tests/cefclient/mac'), \
+             os.path.join(cefclient_dir, 'mac'), \
              options.quiet)
 
     # transfer cefsimple files
@@ -1185,9 +1404,9 @@ elif platform == 'mac':
     transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_mac_helper'], \
                         'tests/ceftests/', ceftests_dir, options.quiet)
 
-    # transfer ceftests/resources/mac files
-    copy_dir(os.path.join(cef_dir, 'tests/ceftests/resources/mac'), \
-             os.path.join(ceftests_dir, 'resources/mac'), \
+    # transfer ceftests/mac files
+    copy_dir(os.path.join(cef_dir, 'tests/ceftests/mac'), \
+             os.path.join(ceftests_dir, 'mac'), \
              options.quiet)
 
 elif platform == 'linux':
@@ -1281,6 +1500,24 @@ elif platform == 'linux':
     # transfer ceftests files
     transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_linux'], \
                         'tests/ceftests/', ceftests_dir, options.quiet)
+
+if mode == 'standard' or mode == 'minimal':
+  variables = {
+      'version_long': version_formatter.get_version_string(),
+      'version_short': version_formatter.get_short_version_string(),
+      'version_plist': version_formatter.get_plist_version_string(),
+  }
+  variables.update(cef_paths2)
+
+  copy_dir(
+      os.path.join(cef_dir, 'bazel'),
+      os.path.join(output_dir, 'bazel'), options.quiet)
+
+  transfer_bazel_files(
+      os.path.join(script_dir, 'distrib', 'bazel'),
+      output_dir,
+      variables,
+      require_parent_dir=(mode != 'standard'))
 
 if not options.noarchive:
   # create an archive for each output directory

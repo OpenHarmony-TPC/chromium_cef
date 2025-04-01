@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=6d373a96eb48e4669d6792c1c2b80029f7d95f83$
+// $hash=46a6432f66cce88d8597c3d070681b09a712dc54$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CRASH_UTIL_CAPI_H_
@@ -90,7 +90,7 @@ extern "C" {
 /// If "AppName" is set on Windows then crash report information (metrics,
 /// database and dumps) will be stored locally on disk under the
 /// "C:\Users\[CurrentUser]\AppData\Local\[AppName]\User Data" folder. On other
-/// platforms the cef_settings_t.user_data_path value will be used.
+/// platforms the cef_settings_t.root_cache_path value will be used.
 ///
 /// If "ExternalHandler" is set on Windows then the specified exe will be
 /// launched as the crashpad-handler instead of re-launching the main process

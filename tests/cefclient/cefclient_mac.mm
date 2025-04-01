@@ -4,6 +4,7 @@
 // found in the LICENSE file.
 
 #import <Cocoa/Cocoa.h>
+
 #include "include/cef_app.h"
 #import "include/cef_application_mac.h"
 #include "include/cef_command_ids.h"
@@ -40,16 +41,22 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   return nil;
 }
 
+void RemoveMenuItem(NSMenu* menu, SEL action_selector) {
+  NSMenuItem* item = GetMenuItemWithAction(menu, action_selector);
+  if (item) {
+    [menu removeItem:item];
+  }
+}
+
 }  // namespace
 
 // Receives notifications from the application. Will delete itself when done.
 @interface ClientAppDelegate : NSObject <NSApplicationDelegate> {
  @private
-  bool with_controls_;
   bool with_osr_;
 }
 
-- (id)initWithControls:(bool)with_controls andOsr:(bool)with_osr;
+- (id)initWithOsr:(bool)with_osr;
 - (void)createApplication:(id)object;
 - (void)tryToTerminateApplication:(NSApplication*)app;
 - (void)testsItemSelected:(int)command_id;
@@ -57,6 +64,7 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 - (IBAction)menuTestsGetSource:(id)sender;
 - (IBAction)menuTestsWindowNew:(id)sender;
 - (IBAction)menuTestsWindowPopup:(id)sender;
+- (IBAction)menuTestsWindowDialog:(id)sender;
 - (IBAction)menuTestsRequest:(id)sender;
 - (IBAction)menuTestsZoomIn:(id)sender;
 - (IBAction)menuTestsZoomOut:(id)sender;
@@ -70,6 +78,7 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 - (IBAction)menuTestsMuteAudio:(id)sender;
 - (IBAction)menuTestsUnmuteAudio:(id)sender;
 - (IBAction)menuTestsOtherTests:(id)sender;
+- (IBAction)menuTestsDumpWithoutCrashing:(id)sender;
 - (void)enableAccessibility:(bool)bEnable;
 @end
 
@@ -154,9 +163,8 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 
 @implementation ClientAppDelegate
 
-- (id)initWithControls:(bool)with_controls andOsr:(bool)with_osr {
+- (id)initWithOsr:(bool)with_osr {
   if (self = [super init]) {
-    with_controls_ = with_controls;
     with_osr_ = with_osr;
   }
   return self;
@@ -206,29 +214,26 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   // Set the delegate for application events.
   [application setDelegate:self];
 
-  if (!with_osr_) {
-    // Remove the OSR-related menu items when OSR is disabled.
-    NSMenuItem* tests_menu = GetMenuBarMenuWithTag(8);
-    if (tests_menu) {
-      NSMenuItem* set_fps_item = GetMenuItemWithAction(
-          tests_menu.submenu, @selector(menuTestsSetFPS:));
-      if (set_fps_item) {
-        [tests_menu.submenu removeItem:set_fps_item];
-      }
-      NSMenuItem* set_scale_factor_item = GetMenuItemWithAction(
-          tests_menu.submenu, @selector(menuTestsSetScaleFactor:));
-      if (set_scale_factor_item) {
-        [tests_menu.submenu removeItem:set_scale_factor_item];
-      }
+  auto* main_context = client::MainContext::Get();
+
+  NSMenuItem* tests_menu = GetMenuBarMenuWithTag(8);
+  if (tests_menu) {
+    if (!with_osr_) {
+      // Remove the OSR-related menu items when not using OSR.
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsSetFPS:));
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsSetScaleFactor:));
+    }
+    if (!main_context->UseViewsGlobal()) {
+      // Remove the Views-related menu items when not using Views.
+      RemoveMenuItem(tests_menu.submenu, @selector(menuTestsWindowDialog:));
     }
   }
 
   auto window_config = std::make_unique<client::RootWindowConfig>();
-  window_config->with_controls = with_controls_;
   window_config->with_osr = with_osr_;
 
   // Create the first window.
-  client::MainContext::Get()->GetRootWindowManager()->CreateRootWindow(
+  main_context->GetRootWindowManager()->CreateRootWindow(
       std::move(window_config));
 }
 
@@ -260,6 +265,10 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
 
 - (IBAction)menuTestsWindowPopup:(id)sender {
   [self testsItemSelected:ID_TESTS_WINDOW_POPUP];
+}
+
+- (IBAction)menuTestsWindowDialog:(id)sender {
+  [self testsItemSelected:ID_TESTS_WINDOW_DIALOG];
 }
 
 - (IBAction)menuTestsRequest:(id)sender {
@@ -314,13 +323,20 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
   [self testsItemSelected:ID_TESTS_OTHER_TESTS];
 }
 
+- (IBAction)menuTestsDumpWithoutCrashing:(id)sender {
+  [self testsItemSelected:ID_TESTS_DUMP_WITHOUT_CRASHING];
+}
+
+- (scoped_refptr<client::RootWindow>)getActiveRootWindow {
+  return client::MainContext::Get()
+      ->GetRootWindowManager()
+      ->GetActiveRootWindow();
+}
+
 - (CefRefPtr<CefBrowser>)getActiveBrowser {
-  auto root_window =
-      client::MainContext::Get()->GetRootWindowManager()->GetActiveRootWindow();
-  if (root_window) {
+  if (auto root_window = [self getActiveRootWindow]) {
     return root_window->GetBrowser();
   }
-
   return nullptr;
 }
 
@@ -497,6 +513,15 @@ NSMenuItem* GetMenuItemWithAction(NSMenu* menu, SEL action_selector) {
             << [sender tag];
 }
 
+// Called when the user clicks the app dock icon while the application is
+// already running.
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)theApplication
+                    hasVisibleWindows:(BOOL)flag {
+  if (auto root_window = [self getActiveRootWindow]) {
+    root_window->Show(client::RootWindow::ShowNormal);
+  }
+  return NO;
+}
 @end
 
 namespace client {
@@ -560,16 +585,22 @@ int RunMain(int argc, char* argv[]) {
       message_loop.reset(new MainMessageLoopStd);
     }
 
-    // Initialize CEF.
-    context->Initialize(main_args, settings, app, nullptr);
+    // Initialize the CEF browser process. May return false if initialization
+    // fails or if early exit is desired (for example, due to process singleton
+    // relaunch behavior).
+    if (!context->Initialize(main_args, settings, app, nullptr)) {
+      return CefGetExitCode();
+    }
 
     // Register scheme handlers.
     test_runner::RegisterSchemeHandlers();
 
     // Create the application delegate and window.
     ClientAppDelegate* delegate = [[ClientAppDelegate alloc]
-        initWithControls:!command_line->HasSwitch(switches::kHideControls)
-                  andOsr:settings.windowless_rendering_enabled ? true : false];
+        initWithOsr:settings.windowless_rendering_enabled ? true : false];
+    // Set as the delegate for application events.
+    NSApp.delegate = delegate;
+
     [delegate performSelectorOnMainThread:@selector(createApplication:)
                                withObject:nil
                             waitUntilDone:NO];
