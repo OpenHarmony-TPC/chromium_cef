@@ -73,6 +73,10 @@
 #include "ui/events/gesture_detection/gesture_configuration.h"
 #include "ui/gfx/text_elider.h"
 
+#ifdef OHOS_AI
+#include "cef/libcef/browser/image_impl.h"
+#endif
+
 // static
 std::unordered_map<gfx::AcceleratedWidget, ui::Compositor*>
     CefRenderWidgetHostViewOSR::compositor_map_;
@@ -1734,15 +1738,20 @@ void CefRenderWidgetHostViewOSR::ChangeVisibilityOfQuickMenu() {
 #endif
 
 #ifdef OHOS_AI
-bool CefRenderWidgetHostViewOSR::CloseImageOverlaySelection() {
+void CefRenderWidgetHostViewOSR::CloseImageOverlaySelection() {
+  if (!overlay_in_progress_)
+    return;
   if (browser_impl_ && browser_impl_->GetClient()) {
     CefRefPtr<CefContextMenuHandler> handler =
         browser_impl_->GetClient()->GetContextMenuHandler();
     if (handler) {
-      return handler->CloseImageOverlaySelection();
+      bool result = handler->CloseImageOverlaySelection();
+      if (result) {
+        LOG(INFO) << "CefRenderWidgetHostViewOSR::CloseImageOverlaySelection success";
+        OnDestroyImageAnalyzerOverlay();
+      }
     }
   }
-  return false;
 }
 #endif
 
@@ -3579,7 +3588,7 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
     if (input_event.GetType() ==
         blink::WebInputEvent::Type::kGestureScrollBegin) {
 #ifdef OHOS_AI
-        is_scrolling_ = true;
+      is_scrolling_ = true;
 #endif
       is_scroll_consumed_ = false;
       selection_controller_client_->OnScrollStarted();
@@ -3595,11 +3604,7 @@ CefRenderWidgetHostViewOSR::FilterInputEvent(
       selection_controller_client_->OnScrollCompleted();
       handler->OnScrollState(browser_impl_.get(), false);
 #ifdef OHOS_AI
-      if (render_widget_host_ && overlay_in_progress_) {
-        gfx::Rect image_rect = render_widget_host_->GetImageRect();
-        CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
-        handler->OnOverlayStateChanged(browser_impl_.get(), cef_image_rect);
-      }
+      NotifyOverlayStateChanged();
 #endif
     } else if (input_event.GetType() ==
                blink::WebInputEvent::Type::kGestureScrollUpdate &&
@@ -3880,6 +3885,28 @@ void CefRenderWidgetHostViewOSR::OnSafeInsetsChange(
 #endif
 
 #ifdef OHOS_AI
+void CefRenderWidgetHostViewOSR::CreateOverlay(
+    const gfx::ImageSkia& image,
+    const gfx::Rect& image_rect,
+    const gfx::Point& touch_point) {
+  if (IsScrolling()) {
+    OnDestroyImageAnalyzerOverlay();
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+
+  if (handler.get()) {
+    CefRefPtr<CefImage> cef_image(new CefImageImpl(image));
+    CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(),
+                           image_rect.height());
+    CefPoint cef_touch_point(touch_point.x(), touch_point.y());
+    LOG(INFO) << "CefRenderWidgetHostViewOSR::CreateOverlay";
+    handler->CreateOverlay(browser_impl_, cef_image, cef_image_rect,
+                           cef_touch_point);
+  }
+}
+
 bool CefRenderWidgetHostViewOSR::IsScrolling() {
   return is_scrolling_;
 }
@@ -3905,6 +3932,25 @@ float CefRenderWidgetHostViewOSR::GetPageScaleFactor() {
 void CefRenderWidgetHostViewOSR::OnFoldStatusChanged(uint32_t foldstatus) {
   if (render_widget_host_) {
     render_widget_host_->OnFoldStatusChanged(foldstatus);
+  }
+}
+
+void CefRenderWidgetHostViewOSR::OnOverlayStateChanged(const gfx::Rect& image_rect) {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::OnOverlayStateChanged";
+  if (browser_impl_.get()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->client()->GetRenderHandler();
+    if (handler && render_widget_host_ && overlay_in_progress_) {
+      CefRect cef_image_rect(image_rect.x(), image_rect.y(), image_rect.width(), image_rect.height());
+      handler->OnOverlayStateChanged(browser_impl_.get(), cef_image_rect);
+    }
+  }
+}
+
+void CefRenderWidgetHostViewOSR::NotifyOverlayStateChanged() {
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::NotifyOverlayStateChanged";
+  if (overlay_in_progress_ && render_widget_host_) {
+    render_widget_host_->NotifyOverlayStateChanged();
   }
 }
 #endif

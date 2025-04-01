@@ -161,7 +161,7 @@ class CefRenderWidgetHostViewOSR
 #endif
 
 #ifdef OHOS_AI
-  bool CloseImageOverlaySelection();
+  void CloseImageOverlaySelection();
 #endif
 
   void EnsureSurfaceSynchronizedForWebTest() override;
@@ -483,11 +483,16 @@ class CefRenderWidgetHostViewOSR
 #endif
 
 #ifdef OHOS_AI
+  void CreateOverlay(const gfx::ImageSkia& image,
+                     const gfx::Rect& image_rect,
+                     const gfx::Point& touch_point);
   bool IsScrolling();
   void OnTextSelected(bool flag);
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
   void OnFoldStatusChanged(uint32_t foldstatus);
+  void OnOverlayStateChanged(const gfx::Rect& image_rect);
+  void NotifyOverlayStateChanged();
 #endif
 
 #ifdef OHOS_DRAG_DROP

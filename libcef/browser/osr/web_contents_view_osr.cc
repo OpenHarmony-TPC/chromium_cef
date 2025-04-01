@@ -206,12 +206,25 @@ void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
 #endif
 
 #ifdef OHOS_AI
-bool CefWebContentsViewOSR::CloseImageOverlaySelection() {
+void CefWebContentsViewOSR::CloseImageOverlaySelection() {
   auto* rwhv = GetView();
   if (rwhv) {
-    return rwhv->CloseImageOverlaySelection();
+    rwhv->CloseImageOverlaySelection();
   }
-  return false;
+}
+
+void CefWebContentsViewOSR::OnOverlayStateChanged(const gfx::Rect& image_rect) {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->OnOverlayStateChanged(image_rect);
+  }
+}
+
+void CefWebContentsViewOSR::OnOverlayZoomChanged() {
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->NotifyOverlayStateChanged();
+  }
 }
 #endif
 
@@ -359,17 +372,9 @@ void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
 void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
                                           const gfx::Rect& image_rect,
                                           const gfx::Point& touch_point) {
-  CefRenderWidgetHostViewOSR* view = GetView();
-  if (!view) {
-    return;
-  }
-  if (view->IsScrolling()) {
-    view->OnDestroyImageAnalyzerOverlay();
-    return;
-  }
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get()) {
-    browser->CreateOverlay(image, image_rect, touch_point);
+  auto* rwhv = GetView();
+  if (rwhv) {
+    rwhv->CreateOverlay(image, image_rect, touch_point);
   }
 }
 #endif
