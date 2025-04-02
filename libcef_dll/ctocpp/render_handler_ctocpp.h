@@ -150,7 +150,10 @@ class CefRenderHandlerCToCpp
   void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) override;
   void OnScrollStart(CefRefPtr<CefBrowser> browser,
                          const float x,
-                         const float y) override;  
+                         const float y) override;
+  void GetScreenOffset(CefRefPtr<CefBrowser> browser,
+                            double& x,
+                            double& y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_
