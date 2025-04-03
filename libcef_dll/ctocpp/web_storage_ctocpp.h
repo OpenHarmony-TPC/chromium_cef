@@ -55,6 +55,7 @@ class CefWebStorageCToCpp : public CefCToCppRefCounted<CefWebStorageCToCpp,
                    CefRefPtr<CefGetPasswordCallback> callback) override;
   void GetSavedPasswordsInfo(
       CefRefPtr<CefGetSavedPasswordsCallback> callback) override;
+  void MigratePasswordsInfo() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_WEB_STORAGE_CTOCPP_H_
