@@ -270,6 +270,7 @@ class CefRenderWidgetHostViewOSR
   void SetDrawRect(const gfx::Rect& rect);
   bool GetPendingSizeStatus();
   void SetFitContentMode(int mode);
+  void SetNativeInnerWeb(bool isInnerWeb);
   int32_t is_fit_content_ = 0;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
