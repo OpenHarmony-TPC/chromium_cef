@@ -622,7 +622,7 @@ void MigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_imp
   base::Value json_array(base::Value::Type::LIST);
   for (auto& form : results) {
     size++;
-    int ret = ShouldMigratePassword(form.get(), web_storage_impl);
+    bool ret = ShouldMigratePassword(form.get(), web_storage_impl);
     if (ret == false && size != results.size()) {
       continue;
     }
