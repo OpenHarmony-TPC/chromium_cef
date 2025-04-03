@@ -583,6 +583,7 @@ class AlloyBrowserHostImpl : public CefBrowserHostBase,
   void SetDrawMode(int mode) override;
   bool GetPendingSizeStatus() override;
   void SetFitContentMode(int mode) override;
+  void SetNativeInnerWeb(bool isInnerWeb) override;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 #if defined(OHOS_RENDERER_ANR_DUMP)
   void OnDumpJavaScriptStackCallback(

@@ -376,6 +376,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void AdvanceFocusForIME(int focusType) override;
   void SetNativeEmbedMode(bool flag) override;
   void MaximizeResize() override;
+  void SetNativeInnerWeb(bool isInnerWeb) override;
   /* ohos webview end */
 #endif
 #ifdef OHOS_NAVIGATION
