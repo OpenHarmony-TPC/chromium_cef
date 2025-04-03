@@ -1891,6 +1891,11 @@ typedef struct _cef_browser_host_t {
   void(CEF_CALLBACK* set_draw_mode)(struct _cef_browser_host_t* self, int mode);
 
   ///
+  /// Set inner web
+  ///
+  void(CEF_CALLBACK* set_native_inner_web)(struct _cef_browser_host_t* self, bool isInnerWeb);
+
+  ///
   /// Create the Web print document adapter of the UI framework
   ///
   void(CEF_CALLBACK* create_web_print_document_adapter)(
