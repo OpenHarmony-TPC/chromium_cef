@@ -3554,10 +3554,17 @@ void CefBrowserHostBase::SetFileAccess(bool flag) {
 
 void CefBrowserHostBase::SetDisallowSandboxFileAccessFromFileUrl(bool disallow) {
   base::AutoLock lock_scope(state_lock_);
+<<<<<<< HEAD
   if (dis_allow_sandbox_file_access_from_file_url_ == disallow) {
     return;
   }
   dis_allow_sandbox_file_access_from_file_url_  = flag;
+=======
+  if (disallow_sandbox_file_access_from_file_url_ == disallow) {
+    return;
+  }
+  disallow_sandbox_file_access_from_file_url_  = flag;
+>>>>>>> e65c7c42d093973bc668b08e366dd4bbd33436b4
 }
 
 void CefBrowserHostBase::SetBlockNetwork(bool flag) {
