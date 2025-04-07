@@ -158,6 +158,12 @@ std::string GetAcceptLanguageListSetting(CefBrowserContext* browser_context,
 
 const char kUserPrefsFileName[] = "UserPrefs.json";
 const char kLocalPrefsFileName[] = "LocalPrefs.json";
+#if defined(OHOS_EX_PASSWORD)
+const char kMigratePasswordsReady[] = "migrate_passwords_ready";
+const char kMigratePasswordsToPasswordVault[] = "migrate_passwords_to_password_vault";
+const char kMigrationCounct[] = "migration_count";
+const char kMigrationDataBackupCompletion[] = "migration_data_backup_completion";
+#endif
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
@@ -254,6 +260,12 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
     RegisterSubresourceFilterPersistentPrefs(persistent_prefs);
     RegisterUserSubresourceFilterPersistentPrefs(persistent_prefs);
 #endif
+#if defined(OHOS_EX_PASSWORD)
+    persistent_prefs.insert(browser_prefs::kMigratePasswordsReady);
+    persistent_prefs.insert(browser_prefs::kMigratePasswordsToPasswordVault);
+    persistent_prefs.insert(browser_prefs::kMigrationCounct);
+    persistent_prefs.insert(browser_prefs::kMigrationDataBackupCompletion);
+#endif
 #else
     scoped_refptr<CefPrefStore> cef_pref_store = new CefPrefStore();
     cef_pref_store->SetInitializationCompleted();
@@ -295,6 +307,13 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #ifdef OHOS_ARKWEB_ADBLOCK
   subresource_filter::IndexedRulesetVersion::RegisterPrefs(registry.get());
   subresource_filter::UserIndexedRulesetVersion::RegisterPrefs(registry.get());
+#endif
+
+#ifdef OHOS_EX_PASSWORD
+  registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsReady, false);
+  registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsToPasswordVault, false);
+  registry->RegisterIntegerPref(browser_prefs::kMigrationCounct, 0);
+  registry->RegisterBooleanPref(browser_prefs::kMigrationDataBackupCompletion, false);
 #endif
 
   // Some preferences are specific to CEF and others are defined in Chromium.
