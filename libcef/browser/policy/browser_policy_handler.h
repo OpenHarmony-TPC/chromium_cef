@@ -39,14 +39,19 @@ class BrowserPolicyHandler {
   PolicyBundle GetPolicyBundle();
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
+  bool IsProvidingPolicy() { return is_providing_policy_; }
 
  private:
-  const int kInvalidPolicyVersion = -1;
+  static constexpr int kInvalidPolicyVersion = -1;
+  static constexpr int kIndicatingNoPolicyVersion = 0;
+  static constexpr char kBrowserPolicyFileName[] =
+      "BrowserEnterprisePolicy.json";
   bool SetPolicy(const std::string& policy, int version);
   PolicyBundle bundle_;
   base::FilePath policy_file_path_;
   int current_version_ = kInvalidPolicyVersion;
   base::ObserverList<Observer>::Unchecked observers_;
+  bool is_providing_policy_ = false;
 };
 }  // namespace policy
 
