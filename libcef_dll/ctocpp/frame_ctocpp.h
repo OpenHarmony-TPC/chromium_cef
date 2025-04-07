@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=900dd9bbe2064a0e0f4159422962af1d113d83b9$
+// $hash=15ea4aa67b0535061854dc3a10c72fb10581157b$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_
@@ -20,7 +20,6 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_frame_capi.h"
 #include "include/capi/cef_urlrequest_capi.h"
@@ -46,6 +45,7 @@ class CefFrameCToCpp
   void Cut() override;
   void Copy() override;
   void Paste() override;
+  void PasteAndMatchStyle() override;
   void Delete() override;
   void SelectAll() override;
   void ViewSource() override;
@@ -59,7 +59,7 @@ class CefFrameCToCpp
   bool IsMain() override;
   bool IsFocused() override;
   CefString GetName() override;
-  int64 GetIdentifier() override;
+  CefString GetIdentifier() override;
   CefRefPtr<CefFrame> GetParent() override;
   CefString GetURL() override;
   CefRefPtr<CefBrowser> GetBrowser() override;
@@ -70,12 +70,6 @@ class CefFrameCToCpp
       CefRefPtr<CefURLRequestClient> client) override;
   void SendProcessMessage(CefProcessId target_process,
                           CefRefPtr<CefProcessMessage> message) override;
-  void LoadHeaderUrl(const CefString& url,
-                     const CefString& additionalHttpHeaders) override;
-  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
-  void PostURL(const CefString& url,
-               const std::vector<char>& post_data) override;
-  void LoadURLWithUserGesture(const CefString& url, bool user_gesture) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_FRAME_CTOCPP_H_

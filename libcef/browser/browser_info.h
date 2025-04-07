@@ -10,15 +10,15 @@
 #include <set>
 #include <unordered_map>
 
-#include "include/internal/cef_ptr.h"
-#include "libcef/common/values_impl.h"
-
 #include "base/containers/unique_ptr_adapters.h"
 #include "base/functional/callback.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
 #include "base/memory/weak_ptr.h"
 #include "base/synchronization/lock.h"
 #include "base/values.h"
+#include "cef/include/internal/cef_ptr.h"
+#include "cef/libcef/common/values_impl.h"
 #include "content/public/browser/global_routing_id.h"
 #include "content/public/browser/render_frame_host.h"
 
@@ -37,6 +37,7 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
   CefBrowserInfo(int browser_id,
                  bool is_popup,
                  bool is_windowless,
+                 bool print_preview_enabled,
                  CefRefPtr<CefDictionaryValue> extra_info);
 
   CefBrowserInfo(const CefBrowserInfo&) = delete;
@@ -45,30 +46,38 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
   int browser_id() const { return browser_id_; }
   bool is_popup() const { return is_popup_; }
   bool is_windowless() const { return is_windowless_; }
+  bool print_preview_enabled() const { return print_preview_enabled_; }
   CefRefPtr<CefDictionaryValue> extra_info() const { return extra_info_; }
 
-  // May return NULL if the browser has not yet been created or if the browser
-  // has been destroyed.
+  // May return nullptr if the browser has not yet been created (before
+  // SetBrowser) or if the browser has been destroyed (after BrowserDestroyed).
   CefRefPtr<CefBrowserHostBase> browser() const;
 
-  // Set or clear the browser. Called from CefBrowserHostBase InitializeBrowser
-  // (to set) and DestroyBrowser (to clear).
+  // Returns true if the browser has been created (after SetBrowser) and is not
+  // yet closing (before SetClosing or WebContentsDestroyed).
+  bool IsValid() const;
+
+  // Returns true if the browser is closing (after SetClosing or
+  // WebContentsDestroyed).
+  bool IsClosing() const;
+
+  // Called from CefBrowserHostBase constructor.
   void SetBrowser(CefRefPtr<CefBrowserHostBase> browser);
 
-  // Called after OnBeforeClose and before SetBrowser(nullptr). This will cause
-  // browser() and GetMainFrame() to return nullptr as expected by
-  // CefFrameHandler callbacks. Note that this differs from calling
-  // SetBrowser(nullptr) because the WebContents has not yet been destroyed and
-  // further frame-related callbacks are expected.
+  // Called from CefBrowserHostBase::OnBeforeClose.
   void SetClosing();
+
+  // Called from CefBrowserHostBase::DestroyWebContents.
+  void WebContentsDestroyed();
+
+  // Called from CefBrowserHostBase::DestroyBrowser.
+  void BrowserDestroyed();
 
   // Ensure that a frame record exists for |host|. Called for the main frame
   // when the RenderView is created, or for a sub-frame when the associated
   // RenderFrame is created in the renderer process.
-  // Called from CefBrowserContentsDelegate::RenderFrameCreated (is_guest_view =
-  // false) or CefMimeHandlerViewGuestDelegate::OnGuestAttached (is_guest_view =
-  // true).
-  void MaybeCreateFrame(content::RenderFrameHost* host, bool is_guest_view);
+  // Called from CefBrowserContentsDelegate::RenderFrameCreated.
+  void MaybeCreateFrame(content::RenderFrameHost* host);
 
   // Used to track state changes such as entering/exiting the BackForwardCache.
   // Called from CefBrowserContentsDelegate::RenderFrameHostStateChanged.
@@ -100,28 +109,22 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
       const content::GlobalRenderFrameHostId& parent_global_id);
 
   // Returns the frame object matching the specified host or nullptr if no match
-  // is found. Nullptr will also be returned if a guest view match is found
-  // because we don't create frame objects for guest views. If |is_guest_view|
-  // is non-nullptr it will be set to true in this case. Must be called on the
-  // UI thread.
+  // is found. Must be called on the UI thread.
   CefRefPtr<CefFrameHostImpl> GetFrameForHost(
       const content::RenderFrameHost* host,
-      bool* is_guest_view = nullptr,
       bool prefer_speculative = false) const;
 
-  // Returns the frame object matching the specified ID or nullptr if no match
-  // is found. Nullptr will also be returned if a guest view match is found
-  // because we don't create frame objects for guest views. If |is_guest_view|
-  // is non-nullptr it will be set to true in this case. Safe to call from any
-  // thread.
+  // Returns the frame object matching the specified ID/token or nullptr if no
+  // match is found. Safe to call from any thread.
   CefRefPtr<CefFrameHostImpl> GetFrameForGlobalId(
       const content::GlobalRenderFrameHostId& global_id,
-      bool* is_guest_view = nullptr,
+      bool prefer_speculative = false) const;
+  CefRefPtr<CefFrameHostImpl> GetFrameForGlobalToken(
+      const content::GlobalRenderFrameHostToken& global_token,
       bool prefer_speculative = false) const;
 
-  // Returns all non-speculative frame objects that currently exist. Guest views
-  // will be excluded because they don't have a frame object. Safe to call from
-  // any thread.
+  // Returns all non-speculative frame objects that currently exist. Safe to
+  // call from any thread.
   using FrameHostList = std::set<CefRefPtr<CefFrameHostImpl>>;
   FrameHostList GetAllFrames() const;
 
@@ -130,7 +133,9 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
     friend class CefBrowserInfo;
     friend class base::RefCounted<NavigationLock>;
 
+    // All usage is via friend declaration. NOLINTNEXTLINE
     NavigationLock();
+    // All usage is via friend declaration. NOLINTNEXTLINE
     ~NavigationLock();
 
     base::OnceClosure pending_action_;
@@ -174,9 +179,7 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
       return frame_ && is_main_frame_ && !is_speculative_ && !is_in_bfcache_;
     }
 
-    content::RenderFrameHost* host_;
     content::GlobalRenderFrameHostId global_id_;
-    bool is_guest_view_;
     bool is_main_frame_;
     bool is_speculative_;
     bool is_in_bfcache_ = false;
@@ -195,9 +198,10 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
 
   void RemoveAllFrames(CefRefPtr<CefBrowserHostBase> old_browser);
 
-  int browser_id_;
-  bool is_popup_;
-  bool is_windowless_;
+  const int browser_id_;
+  const bool is_popup_;
+  const bool is_windowless_;
+  const bool print_preview_enabled_;
   CefRefPtr<CefDictionaryValue> extra_info_;
 
   // Navigation will be blocked while |navigation_lock_| exists.
@@ -215,16 +219,16 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
 
    protected:
     friend class CefBrowserInfo;
-    CefBrowserInfo* const browser_info_;
+    const raw_ptr<CefBrowserInfo> browser_info_;
     CefRefPtr<CefFrameHandler> frame_handler_;
-    std::unique_ptr<base::AutoLock> browser_info_lock_scope_;
+    std::unique_ptr<base::MovableAutoLock> browser_info_lock_scope_;
     std::queue<FrameNotifyOnceAction> queue_;
   };
 
   mutable base::Lock notification_lock_;
 
   // These members must be protected by |notification_lock_|.
-  NotificationStateLock* notification_state_lock_ = nullptr;
+  raw_ptr<NotificationStateLock> notification_state_lock_ = nullptr;
   CefRefPtr<CefFrameHandler> frame_handler_;
 
   mutable base::Lock lock_;
@@ -245,6 +249,11 @@ class CefBrowserInfo : public base::RefCountedThreadSafe<CefBrowserInfo> {
                                         FrameInfo*,
                                         content::GlobalRenderFrameHostIdHasher>;
   FrameIDMap frame_id_map_;
+
+  // Map of global token to global ID.
+  using FrameTokenToIdMap = std::map<content::GlobalRenderFrameHostToken,
+                                     content::GlobalRenderFrameHostId>;
+  FrameTokenToIdMap frame_token_to_id_map_;
 
   // The current main frame.
   CefRefPtr<CefFrameHostImpl> main_frame_;

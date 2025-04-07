@@ -3,25 +3,26 @@
 // source code is governed by a BSD-style license that can be found in the
 // LICENSE file.
 
-#include "libcef/browser/net_service/browser_urlrequest_impl.h"
+#include "cef/libcef/browser/net_service/browser_urlrequest_impl.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/net_service/url_loader_factory_getter.h"
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
-#include "libcef/common/response_impl.h"
-#include "libcef/common/task_runner_impl.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/memory/weak_ptr.h"
 #include "base/strings/string_util.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/net_service/url_loader_factory_getter.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
+#include "cef/libcef/common/request_impl.h"
+#include "cef/libcef/common/response_impl.h"
+#include "cef/libcef/common/task_runner_impl.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/storage_partition_impl.h"
 #include "content/public/browser/browser_context.h"
@@ -34,6 +35,10 @@
 #include "services/network/public/cpp/simple_url_loader.h"
 #include "services/network/public/cpp/simple_url_loader_stream_consumer.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "libcef/common/arkweb_request_impl_ext.h"
+#endif
 
 namespace {
 
@@ -59,7 +64,7 @@ bool IsValidRequestID(int32_t request_id) {
 // Manages the mapping of request IDs to request objects.
 class RequestManager {
  public:
-  RequestManager() {}
+  RequestManager() = default;
 
   RequestManager(const RequestManager&) = delete;
   RequestManager& operator=(const RequestManager&) = delete;
@@ -87,9 +92,9 @@ class RequestManager {
     map_.erase(it);
   }
 
-  absl::optional<CefBrowserURLRequest::RequestInfo> Get(int32_t request_id) {
+  std::optional<CefBrowserURLRequest::RequestInfo> Get(int32_t request_id) {
     if (request_id > kInitialRequestID) {
-      return absl::nullopt;
+      return std::nullopt;
     }
 
     base::AutoLock lock_scope(lock_);
@@ -97,7 +102,7 @@ class RequestManager {
     if (it != map_.end()) {
       return it->second;
     }
-    return absl::nullopt;
+    return std::nullopt;
   }
 
  private:
@@ -129,14 +134,22 @@ class CefBrowserURLRequest::Context
           CefRefPtr<CefRequestContext> request_context)
       : url_request_(url_request),
         frame_(frame),
+#if BUILDFLAG(IS_ARKWEB)
+        request_(request),
+#else
         request_(static_cast<CefRequestImpl*>(request.get())),
+#endif
         client_(client),
         request_context_(request_context),
         task_runner_(CefTaskRunnerImpl::GetCurrentTaskRunner()),
         response_(new CefResponseImpl()),
         weak_ptr_factory_(this) {
     // Mark the request/response objects as read-only.
+#if BUILDFLAG(IS_ARKWEB)
+    request_->AsArkWebRequestExt()->SetReadOnly(true);
+#else
     request_->SetReadOnly(true);
+#endif
     response_->SetReadOnly(true);
   }
   ~Context() override = default;
@@ -202,14 +215,8 @@ class CefBrowserURLRequest::Context
       scoped_refptr<base::SequencedTaskRunner> task_runner) {
     CEF_REQUIRE_UIT();
 
-    // Get or create the request context and browser context.
-    CefRefPtr<CefRequestContextImpl> request_context_impl =
-        CefRequestContextImpl::GetOrCreateForRequestContext(request_context);
-    CHECK(request_context_impl);
-    CefBrowserContext* cef_browser_context =
-        request_context_impl->GetBrowserContext();
-    CHECK(cef_browser_context);
-    auto browser_context = cef_browser_context->AsBrowserContext();
+    auto* browser_context =
+        CefRequestContextImpl::GetBrowserContext(request_context);
     CHECK(browser_context);
 
     scoped_refptr<net_service::URLLoaderFactoryGetter> loader_factory_getter;
@@ -223,7 +230,7 @@ class CefBrowserURLRequest::Context
       // The request will be associated with this frame/browser if it's valid,
       // otherwise the request will be canceled.
       content::RenderFrameHost* rfh =
-          static_cast<CefFrameHostImpl*>(frame.get())->GetRenderFrameHost();
+          frame.get()->AsCefFrameHostImpl()->GetRenderFrameHost();
       if (rfh) {
         loader_factory_getter =
             net_service::URLLoaderFactoryGetter::Create(rfh, browser_context);
@@ -237,7 +244,8 @@ class CefBrowserURLRequest::Context
       url_loader_network_observer =
           static_cast<content::StoragePartitionImpl*>(
               browser_context->GetDefaultStoragePartition())
-              ->CreateAuthCertObserverForServiceWorker();
+              ->CreateAuthCertObserverForServiceWorker(
+                  content::ChildProcessHost::kInvalidUniqueID);
     }
 
     task_runner->PostTask(
@@ -276,8 +284,12 @@ class CefBrowserURLRequest::Context
     auto loader_factory = loader_factory_getter_->GetURLLoaderFactory();
 
     auto resource_request = std::make_unique<network::ResourceRequest>();
+#if BUILDFLAG(IS_ARKWEB)
+    request_->AsArkWebRequestExt()->Get(resource_request.get(), false);
+#else
     static_cast<CefRequestImpl*>(request_.get())
         ->Get(resource_request.get(), false);
+#endif
 
     // Behave the same as a subresource load.
     resource_request->resource_type =
@@ -305,7 +317,7 @@ class CefBrowserURLRequest::Context
     auto request_body = resource_request->request_body;
     resource_request->request_body = nullptr;
 
-    std::string content_type;
+    std::optional<std::string> content_type;
     std::string method = resource_request->method;
     if (request_body) {
       if (method == "GET" || method == "HEAD") {
@@ -313,12 +325,20 @@ class CefBrowserURLRequest::Context
         method = "POST";
         resource_request->method = method;
 
+#if BUILDFLAG(IS_ARKWEB)
+        request_->AsArkWebRequestExt()->SetReadOnly(false);
+#else
         request_->SetReadOnly(false);
+#endif
         request_->SetMethod(method);
+#if BUILDFLAG(IS_ARKWEB)
+        request_->AsArkWebRequestExt()->SetReadOnly(true);
+#else
         request_->SetReadOnly(true);
+#endif
       }
-      resource_request->headers.GetHeader(net::HttpRequestHeaders::kContentType,
-                                          &content_type);
+      content_type = resource_request->headers.GetHeader(
+          net::HttpRequestHeaders::kContentType);
     }
 
     loader_ = network::SimpleURLLoader::Create(std::move(resource_request),
@@ -334,25 +354,30 @@ class CefBrowserURLRequest::Context
         const auto& element = (*request_body->elements())[0];
         if (element.type() == network::DataElement::Tag::kFile) {
           const auto& file_element = element.As<network::DataElementFile>();
-          if (content_type.empty()) {
+          if (!content_type.has_value() || content_type->empty()) {
             const auto& extension = file_element.path().Extension();
             if (!extension.empty()) {
               // Requests should not block on the disk! On POSIX this goes to
               // disk. http://code.google.com/p/chromium/issues/detail?id=59849
               base::ScopedAllowBlockingForTesting allow_blocking;
               // Also remove the leading period.
-              net::GetMimeTypeFromExtension(extension.substr(1), &content_type);
+              std::string extension_content_type;
+              if (net::GetMimeTypeFromExtension(extension.substr(1),
+                                                &extension_content_type)) {
+                content_type = extension_content_type;
+              }
             }
           }
-          loader_->AttachFileForUpload(file_element.path(), content_type);
+          loader_->AttachFileForUpload(file_element.path(),
+                                       content_type.value_or(std::string()));
         } else if (element.type() == network::DataElement::Tag::kBytes) {
           const auto& bytes_element = element.As<network::DataElementBytes>();
           const auto& bytes = bytes_element.bytes();
-          if (content_type.empty()) {
+          if (!content_type.has_value() || content_type->empty()) {
             content_type = net_service::kContentTypeApplicationFormURLEncoded;
           }
           loader_->AttachStringForUpload(
-              std::string(bytes_element.AsStringPiece()), content_type);
+              std::string(bytes_element.AsStringPiece()), *content_type);
 
           if (request_flags & UR_FLAG_REPORT_UPLOAD_PROGRESS) {
             // Report the expected upload data size.
@@ -504,7 +529,7 @@ class CefBrowserURLRequest::Context
   }
 
   // SimpleURLLoaderStreamConsumer methods:
-  void OnDataReceived(base::StringPiece string_piece,
+  void OnDataReceived(std::string_view string_piece,
                       base::OnceClosure resume) override {
     DCHECK(CalledOnValidThread());
     DCHECK_EQ(status_, UR_IO_PENDING);
@@ -587,7 +612,11 @@ class CefBrowserURLRequest::Context
   // Members only accessed on the initialization thread.
   CefRefPtr<CefBrowserURLRequest> url_request_;
   CefRefPtr<CefFrame> frame_;
+#if BUILDFLAG(IS_ARKWEB)
+  CefRefPtr<CefRequest> request_;
+#else
   CefRefPtr<CefRequestImpl> request_;
+#endif
   CefRefPtr<CefURLRequestClient> client_;
   CefRefPtr<CefRequestContext> request_context_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;
@@ -600,8 +629,8 @@ class CefBrowserURLRequest::Context
   CefURLRequest::Status status_ = UR_IO_PENDING;
   CefRefPtr<CefResponseImpl> response_;
   bool response_was_cached_ = false;
-  int64 upload_data_size_ = 0;
-  int64 download_data_size_ = -1;
+  int64_t upload_data_size_ = 0;
+  int64_t download_data_size_ = -1;
   bool got_upload_progress_complete_ = false;
   bool cleanup_immediately_ = false;
 
@@ -612,16 +641,16 @@ class CefBrowserURLRequest::Context
 // CefBrowserURLRequest -------------------------------------------------------
 
 // static
-absl::optional<CefBrowserURLRequest::RequestInfo>
+std::optional<CefBrowserURLRequest::RequestInfo>
 CefBrowserURLRequest::FromRequestID(int32_t request_id) {
   if (IsValidRequestID(request_id)) {
     return g_manager.Get().Get(request_id);
   }
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 // static
-absl::optional<CefBrowserURLRequest::RequestInfo>
+std::optional<CefBrowserURLRequest::RequestInfo>
 CefBrowserURLRequest::FromRequestID(
     const content::GlobalRequestID& request_id) {
   return FromRequestID(request_id.request_id);
@@ -632,10 +661,11 @@ CefBrowserURLRequest::CefBrowserURLRequest(
     CefRefPtr<CefRequest> request,
     CefRefPtr<CefURLRequestClient> client,
     CefRefPtr<CefRequestContext> request_context) {
-  context_.reset(new Context(this, frame, request, client, request_context));
+  context_ =
+      std::make_unique<Context>(this, frame, request, client, request_context);
 }
 
-CefBrowserURLRequest::~CefBrowserURLRequest() {}
+CefBrowserURLRequest::~CefBrowserURLRequest() = default;
 
 bool CefBrowserURLRequest::Start() {
   if (!VerifyContext()) {

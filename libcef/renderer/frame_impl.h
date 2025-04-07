@@ -9,20 +9,15 @@
 #include <queue>
 #include <string>
 
-#include "include/cef_frame.h"
-#include "include/cef_v8.h"
-#include "libcef/renderer/blink_glue.h"
-
 #include "base/memory/weak_ptr.h"
 #include "base/timer/timer.h"
+#include "cef/include/cef_frame.h"
+#include "cef/include/cef_v8.h"
 #include "cef/libcef/common/mojom/cef.mojom.h"
+#include "cef/libcef/renderer/blink_glue.h"
 #include "mojo/public/cpp/bindings/pending_receiver.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "third_party/blink/public/web/web_element.h"
-#endif  // BUILDFLAG(IS_OHOS)
 
 namespace base {
 class ListValue;
@@ -36,18 +31,20 @@ class WebLocalFrame;
 class GURL;
 
 class CefBrowserImpl;
+class ArkwebFrameExtImpl;
 
 // Implementation of CefFrame. CefFrameImpl objects are owned by the
 // CefBrowerImpl and will be detached when the browser is notified that the
 // associated renderer WebFrame will close.
 class CefFrameImpl
-    : public CefFrame,
+    : public virtual CefFrame,
       public cef::mojom::RenderFrame,
       public blink_glue::CefExecutionContextLifecycleStateObserver {
  public:
-  CefFrameImpl(CefBrowserImpl* browser,
-               blink::WebLocalFrame* frame,
-               int64_t frame_id);
+#if BUILDFLAG(IS_ARKWEB)
+  friend class ArkwebFrameExtImpl;
+#endif
+  CefFrameImpl(CefBrowserImpl* browser, blink::WebLocalFrame* frame);
 
   CefFrameImpl(const CefFrameImpl&) = delete;
   CefFrameImpl& operator=(const CefFrameImpl&) = delete;
@@ -61,6 +58,7 @@ class CefFrameImpl
   void Cut() override;
   void Copy() override;
   void Paste() override;
+  void PasteAndMatchStyle() override;
   void Delete() override;
   void SelectAll() override;
   void ViewSource() override;
@@ -74,7 +72,7 @@ class CefFrameImpl
   bool IsMain() override;
   bool IsFocused() override;
   CefString GetName() override;
-  int64 GetIdentifier() override;
+  CefString GetIdentifier() override;
   CefRefPtr<CefFrame> GetParent() override;
   CefString GetURL() override;
   CefRefPtr<CefBrowser> GetBrowser() override;
@@ -91,46 +89,43 @@ class CefFrameImpl
   void OnWasShown();
   void OnDidCommitProvisionalLoad();
   void OnDidFinishLoad();
-  void OnDraggableRegionsChanged();
   void OnContextCreated(v8::Local<v8::Context> context);
   void OnContextReleased();
   void OnDetached();
 
   blink::WebLocalFrame* web_frame() const { return frame_; }
-
-#if BUILDFLAG(IS_OHOS)
-  void GetImages(CefRefPtr<CefGetImagesCallback> callback) override;
-  void LoadHeaderUrl(const CefString& url,
-                     const CefString& additionalHttpHeaders) override;
+  void LoadRequest(cef::mojom::RequestParamsPtr params) override;
+#if BUILDFLAG(IS_ARKWEB)
   void OnFocusedNodeChanged(const blink::WebElement& element);
-#endif  // BUILDFLAG(IS_OHOS)
+#endif  // BUILDFLAG(IS_ARKWEB)
 
-#if BUILDFLAG(IS_OHOS)
-  void TerminateRenderProcess() override;
-#endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void GetHitData(
+      cef::mojom::RenderFrame::GetHitDataCallback callback) override;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
-#ifdef OHOS_SCROLLBAR
-  void UpdatePixelRatio(float ratio) override;
+#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
+  void SetOptimizeParserBudgetEnabled(bool enable) override;
 #endif
 
-#ifdef OHOS_POST_URL
-  void PostURL(const CefString& url,
-               const std::vector<char>& post_data) override;
-#endif  // defined(OHOS_POST_URL)
+#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
+  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
+#endif  // #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
 
-#ifdef OHOS_NETWORK_LOAD
-  void LoadURLWithUserGesture(const CefString& url, bool user_gesture = false) override;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual bool ShouldOverrideUrlLoading(const CefString& url,
+                                        const CefString& request_method,
+                                        bool user_gesture,
+                                        bool is_redirect,
+                                        bool is_outermost_main_frame) {}
 #endif
-
-#if BUILDFLAG(IS_OHOS)
-  bool ShouldOverrideUrlLoading(const CefString& url,
-                                const CefString& request_method,
-                                bool user_gesture,
-                                bool is_redirect,
-                                bool is_outermost_main_frame);
-#endif  // BUILDFLAG(IS_OHOS)
 
  private:
+  // Called for draggable region changes due to navigation. This is in addition
+  // to the standard notifications delivered via
+  // WebContentsDelegate::DraggableRegionsChanged.
+  void OnDraggableRegionsChanged();
+
   // Execute an action on the associated WebLocalFrame. This will queue the
   // action if the JavaScript context is not yet created.
   using LocalFrameAction =
@@ -154,6 +149,13 @@ class CefFrameImpl
   // Called if the BrowserFrame connection attempt times out.
   void OnBrowserFrameTimeout();
 
+  // Called if the BrowserFrame connection is disconnected.
+  void OnBrowserFrameDisconnect(uint32_t custom_reason,
+                                const std::string& description);
+  // Called if the RenderFrame connection is disconnected.
+  void OnRenderFrameDisconnect(uint32_t custom_reason,
+                               const std::string& description);
+
   enum class DisconnectReason {
     DETACHED,
     BROWSER_FRAME_DETACHED,
@@ -165,7 +167,7 @@ class CefFrameImpl
   // Called if/when a disconnect occurs. This may occur due to frame navigation,
   // destruction, or insertion into the bfcache (when the browser-side frame
   // representation is destroyed and closes the connection).
-  void OnDisconnect(DisconnectReason reason);
+  void OnDisconnect(DisconnectReason reason, const std::string& description);
 
   // Send an action to the remote BrowserFrame. This will queue the action if
   // the remote frame is not yet attached.
@@ -173,15 +175,42 @@ class CefFrameImpl
   void SendToBrowserFrame(const std::string& function_name,
                           BrowserFrameAction action);
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  struct CefHitData {
+    int type;
+    CefString extra_data;
+    CefHitData() : type(0), extra_data("") {}
+  };
+  void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
+  GURL GetChildImageUrlFromElement(const blink::WebElement& element);
+  blink::WebElement GetImgChild(const blink::WebNode& node);
+  GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
+  GURL GetAbsoluteUrl(const blink::WebNode& node,
+                      const std::u16string& url_fragment);
+  void PopulateHitTestData(const GURL& absolute_link_url,
+                           const GURL& absolute_image_url,
+                           bool is_editable,
+                           cef::mojom::HitDataParamsPtr& data);
+  bool RemovePrefixAndAssignIfMatches(const std::string_view prefix,
+                                      const GURL& url,
+                                      std::string* dest);
+  void DistinguishAndAssignSrcLinkType(const GURL& url,
+                                       cef::mojom::HitDataParamsPtr& data);
+  void SetScrollable(bool enable) override;
+  CefHitData cef_hit_data_;
+  bool is_update_ = false;
+  bool scroll_enabled_ = true;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
   void MaybeInitializeScriptContext();
 
   // cef::mojom::RenderFrame methods:
-  void FrameAttachedAck() override;
+  void FrameAttachedAck(bool allow) override;
   void FrameDetached() override;
   void SendMessage(const std::string& name,
                    base::Value::List arguments) override;
   void SendSharedMemoryRegion(const std::string& name,
-                              base::ReadOnlySharedMemoryRegion region) override;
+                              base::WritableSharedMemoryRegion region) override;
   void SendCommand(const std::string& command) override;
   void SendCommandWithResponse(
       const std::string& command,
@@ -190,7 +219,6 @@ class CefFrameImpl
   void SendJavaScript(const std::u16string& jsCode,
                       const std::string& scriptUrl,
                       int32_t startLine) override;
-  void LoadRequest(cef::mojom::RequestParamsPtr params) override;
   void DidStopLoading() override;
   void MoveOrResizeStarted() override;
 
@@ -198,85 +226,17 @@ class CefFrameImpl
   void ContextLifecycleStateChanged(
       blink::mojom::blink::FrameLifecycleState state) override;
 
-  std::string GetDebugString() const;
-
-#if BUILDFLAG(IS_OHOS)
-  void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
-  void SetInitialScale(float initialScale) override;
-#ifdef OHOS_NETWORK_CONNINFO
-  void SetJsOnlineProperty(bool network_up) override;
-#endif
-  void PutZoomingForTextFactor(float factor) override;
-  void GetImageForContextNode() override;
-  void GetImagesWithResponse(
-      cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) override;
-  void RemoveCache() override;
-#ifdef OHOS_PAGE_UP_DOWN
-  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
-#ifdef OHOS_GET_SCROLL_OFFSET
-  void GetScrollOffset(
-      cef::mojom::RenderFrame::GetScrollOffsetCallback callback) override;
-#endif
-#endif  // #ifdef OHOS_PAGE_UP_DOWN
-
-#if defined(OHOS_INPUT_EVENTS)
-  struct CefHitData {
-    int type;
-    CefString extra_data;
-  };
-  void ScrollTo(float x, float y) override;
-  void ScrollBy(float delta_x, float delta_y) override;
-  void SlideScroll(float vx, float vy) override;
-  void ZoomBy(float delta,
-              float width,
-              float height) override;
-  void GetHitData(
-      cef::mojom::RenderFrame::GetHitDataCallback callback) override;
-  void SetOverscrollMode(int mode) override;
-  void SetScrollable(bool enable) override;
-  void UpdateDrawRect() override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
-#if defined(OHOS_GET_SCROLL_OFFSET)
-  void GetOverScrollOffset(
-      cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) override;
-#endif
-#endif  // defined(OHOS_INPUT_EVENTS)
-
-  GURL GetAbsoluteUrl(const blink::WebNode& node,
-                      const std::u16string& url_fragment);
-  GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
-  blink::WebElement GetImgChild(const blink::WebNode& node);
-  GURL GetChildImageUrlFromElement(const blink::WebElement& element);
-  bool RemovePrefixAndAssignIfMatches(const std::string prefix,
-                                      const GURL& url,
-                                      std::string* dest);
-  void DistinguishAndAssignSrcLinkType(const GURL& url,
-                                       cef::mojom::HitDataParamsPtr& data);
-  void PopulateHitTestData(const GURL& absolute_link_url,
-                           const GURL& absolute_image_url,
-                           bool is_editable,
-                           cef::mojom::HitDataParamsPtr& data);
-#endif  // BUILDFLAG(IS_OHOS)
-
-#if defined(OHOS_INPUT_EVENTS)
-  bool is_update_ = false;
-  CefHitData cef_hit_data_;
-  bool scroll_enabled_ = true;
-#endif  // defined(OHOS_INPUT_EVENTS)
-
-  // #ifdef OHOS_CLIPBOARD
-  int total_mem_ = -1;
-  // #endif OHOS_CLIPBOARD
   CefBrowserImpl* browser_;
   blink::WebLocalFrame* frame_;
-  const int64 frame_id_;
+  const std::string frame_debug_str_;
 
   bool did_commit_provisional_load_ = false;
   bool did_initialize_script_context_ = false;
 
   bool context_created_ = false;
   std::queue<std::pair<std::string, LocalFrameAction>> queued_context_actions_;
+
+  bool attach_denied_ = false;
 
   // Number of times that browser reconnect has been attempted.
   size_t browser_connect_retry_ct_ = 0;
@@ -288,6 +248,11 @@ class CefFrameImpl
     CONNECTION_ACKED,
     RECONNECT_PENDING,
   } browser_connection_state_ = ConnectionState::DISCONNECTED;
+
+  static std::string GetDisconnectDebugString(ConnectionState connection_state,
+                                              bool frame_is_valid,
+                                              DisconnectReason reason,
+                                              const std::string& description);
 
   base::OneShotTimer browser_connect_timer_;
 

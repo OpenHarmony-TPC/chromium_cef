@@ -2,8 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/renderer/frame_impl.h"
+#include "cef/libcef/renderer/frame_impl.h"
 
+#include "arkweb/build/features/features.h"
 #include "build/build_config.h"
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
@@ -17,38 +18,24 @@
 #endif
 #endif
 
-#if BUILDFLAG(IS_OHOS)
-#include <signal.h>
-#endif
-
-#include "include/cef_urlrequest.h"
-#include "libcef/common/app_manager.h"
-#include "libcef/common/frame_util.h"
-#include "libcef/common/net/http_header_utils.h"
-#include "libcef/common/process_message_impl.h"
-#include "libcef/common/process_message_smr_impl.h"
-#include "libcef/common/request_impl.h"
-#include "libcef/common/string_util.h"
-#include "libcef/renderer/blink_glue.h"
-#include "libcef/renderer/browser_impl.h"
-#include "libcef/renderer/dom_document_impl.h"
-#include "libcef/renderer/render_frame_util.h"
-#include "libcef/renderer/thread_util.h"
-#include "libcef/renderer/v8_impl.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "base/process/process.h"
-#endif
-
-#ifdef OHOS_SCROLLBAR
-#include "base/ohos/sys_info_utils.h"
-#endif
-
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/include/cef_urlrequest.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/frame_util.h"
+#include "cef/libcef/common/net/http_header_utils.h"
+#include "cef/libcef/common/process_message_impl.h"
+#include "cef/libcef/common/process_message_smr_impl.h"
+#include "cef/libcef/common/request_impl.h"
+#include "cef/libcef/common/string_util.h"
+#include "cef/libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/browser_impl.h"
+#include "cef/libcef/renderer/dom_document_impl.h"
+#include "cef/libcef/renderer/render_frame_util.h"
+#include "cef/libcef/renderer/thread_util.h"
+#include "cef/libcef/renderer/v8_impl.h"
 #include "content/renderer/render_frame_impl.h"
-#include "third_party/blink/public/mojom/frame/frame.mojom-blink.h"
-#include "third_party/blink/public/mojom/frame/lifecycle.mojom-blink.h"
+#include "third_party/blink/public/platform/scheduler/web_agent_group_scheduler.h"
 #include "third_party/blink/public/platform/web_data.h"
 #include "third_party/blink/public/platform/web_string.h"
 #include "third_party/blink/public/platform/web_url.h"
@@ -62,22 +49,16 @@
 #include "third_party/blink/public/web/web_view.h"
 #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "third_party/blink/public/platform/web_cache.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "base/strings/stringprintf.h"
+#include "base/strings/utf_string_conversions.h"
+#include "libcef/common/arkweb_request_impl_ext.h"
 #include "third_party/blink/public/web/web_element_collection.h"
-#include "third_party/blink/public/web/web_frame_widget.h"
 #include "third_party/blink/public/web/web_hit_test_result.h"
-#include "third_party/skia/include/core/SkBitmap.h"
-#include "ui/base/resource/resource_bundle.h"
-#include "third_party/blink/public/web/web_settings.h"
 #endif
 
-#ifdef OHOS_CLIPBOARD
-#include "base/process/process_metrics.h"
-#include "skia/ext/image_operations.h"
-#endif
-#ifdef OHOS_NETWORK_CONNINFO
-#include "third_party/blink/public/platform/web_network_state_notifier.h"
+#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
+#include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
 #endif
 
 namespace {
@@ -96,19 +77,14 @@ const std::string kAddressPrefix = "geo:0,0?q=";
 const std::string kEmailPrefix = "mailto:";
 const std::string kPhoneNumberPrefix = "tel:";
 
-#ifdef OHOS_PAGE_UP_DOWN
+#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
 // The amount of content to overlap between two screens when using
 // pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
 // animated scroll speed.
 static int STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC = 480;
 // Time for the longest scroll animation.
 static int MAX_SCROLL_ANIMATION_DURATION_MILLISEC = 750;
-#endif  // #ifdef OHOS_PAGE_UP_DOWN
-
-#if defined(OHOS_INPUT_EVENTS)
-static int DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC = 600;
-static double POSITION_RATIO = 138.9;
-#endif  // defined(OHOS_INPUT_EVENTS)
+#endif  // ARKWEB_PAGE_UP_DOWN
 
 enum HitTestDataType {
   kUnknown = 0,
@@ -120,84 +96,24 @@ enum HitTestDataType {
   kSrcImageLink = 8,
   kEditText = 9,
 };
+#endif
 
-#ifdef OHOS_PAGE_UP_DOWN
-int computeDurationInMilliSec(int dx, int dy) {
-  int distance = std::max(std::abs(dx), std::abs(dy));
-  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
-  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
-}
-#endif  // #ifdef OHOS_PAGE_UP_DOWN
-
-#if defined(OHOS_INPUT_EVENTS)
-float computeSlidePosition(float v) {
-  return (v * POSITION_RATIO / 1000);
-}
-#endif  // defined(OHOS_INPUT_EVENTS)
-#endif  // BUILDFLAG(IS_OHOS)
-
-#ifdef OHOS_CLIPBOARD
-const int kMaxContextImageNodeSizeIfDownScale = 1024;
-// 2GB
-const int kNeedImageDownScaleSysMemKB = 2097152;
-
-int GetSystemTotalMem() {
-  base::SystemMemoryInfoKB meminfo;
-  if (base::GetSystemMemoryInfo(&meminfo)) {
-    return meminfo.total;
-  }
-  LOG(WARNING) << "Get sys meminfo failed";
-  return -1;
+std::string GetDebugString(blink::WebLocalFrame* frame) {
+  return "frame " + render_frame_util::GetIdentifier(frame);
 }
 
-bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem) {
-  if (total_mem > kNeedImageDownScaleSysMemKB) {
-    return false;
-  }
-  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
-      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
-    return false;
-  }
-  return true;
+v8::Isolate* GetFrameIsolate(blink::WebLocalFrame* frame) {
+  return frame->GetAgentGroupScheduler()->Isolate();
 }
-
-SkBitmap Downscale(const SkBitmap& image, int total_mem) {
-  if (image.isNull()) {
-    return SkBitmap();
-  }
-
-  gfx::Size image_size(image.width(), image.height());
-  if (!NeedsDownscale(image_size, total_mem)) {
-    return image;
-  }
-
-  gfx::SizeF scaled_size = gfx::SizeF(image_size);
-
-  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.width());
-  }
-
-  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
-    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
-                      scaled_size.height());
-  }
-
-  return skia::ImageOperations::Resize(image,
-                                       skia::ImageOperations::RESIZE_GOOD,
-                                       static_cast<int>(scaled_size.width()),
-                                       static_cast<int>(scaled_size.height()));
-}
-#endif  // #ifdef OHOS_CLIPBOARD
 
 }  // namespace
 
-CefFrameImpl::CefFrameImpl(CefBrowserImpl* browser,
-                           blink::WebLocalFrame* frame,
-                           int64_t frame_id)
-    : browser_(browser), frame_(frame), frame_id_(frame_id) {}
+CefFrameImpl::CefFrameImpl(CefBrowserImpl* browser, blink::WebLocalFrame* frame)
+    : browser_(browser),
+      frame_(frame),
+      frame_debug_str_(GetDebugString(frame)) {}
 
-CefFrameImpl::~CefFrameImpl() {}
+CefFrameImpl::~CefFrameImpl() = default;
 
 bool CefFrameImpl::IsValid() {
   CEF_REQUIRE_RT_RETURN(false);
@@ -223,6 +139,10 @@ void CefFrameImpl::Copy() {
 
 void CefFrameImpl::Paste() {
   SendCommand("Paste");
+}
+
+void CefFrameImpl::PasteAndMatchStyle() {
+  SendCommand("PasteAndMatchStyle");
 }
 
 void CefFrameImpl::Delete() {
@@ -263,7 +183,11 @@ void CefFrameImpl::LoadRequest(CefRefPtr<CefRequest> request) {
   }
 
   auto params = cef::mojom::RequestParams::New();
+#if BUILDFLAG(IS_ARKWEB)
+  request->AsArkWebRequestExt()->Get(params);
+#else
   static_cast<CefRequestImpl*>(request.get())->Get(params);
+#endif
   LoadRequest(std::move(params));
 }
 
@@ -314,10 +238,14 @@ CefString CefFrameImpl::GetName() {
   return name;
 }
 
-int64 CefFrameImpl::GetIdentifier() {
-  CEF_REQUIRE_RT_RETURN(0);
+CefString CefFrameImpl::GetIdentifier() {
+  CefString identifier;
+  CEF_REQUIRE_RT_RETURN(identifier);
 
-  return frame_id_;
+  if (frame_) {
+    identifier = render_frame_util::GetIdentifier(frame_);
+  }
+  return identifier;
 }
 
 CefRefPtr<CefFrame> CefFrameImpl::GetParent() {
@@ -354,7 +282,7 @@ CefRefPtr<CefV8Context> CefFrameImpl::GetV8Context() {
   CEF_REQUIRE_RT_RETURN(nullptr);
 
   if (frame_) {
-    v8::Isolate* isolate = blink::MainThreadIsolate();
+    v8::Isolate* isolate = GetFrameIsolate(frame_);
     v8::HandleScope handle_scope(isolate);
     return new CefV8ContextImpl(isolate, frame_->MainWorldScriptContext());
   } else {
@@ -418,7 +346,7 @@ void CefFrameImpl::SendProcessMessage(CefProcessId target_process,
     SendToBrowserFrame(
         __FUNCTION__,
         base::BindOnce(
-            [](const CefString& name, base::ReadOnlySharedMemoryRegion region,
+            [](const CefString& name, base::WritableSharedMemoryRegion region,
                const BrowserFrameType& render_frame) {
               render_frame->SendSharedMemoryRegion(name, std::move(region));
             },
@@ -474,9 +402,8 @@ void CefFrameImpl::OnDidFinishLoad() {
 }
 
 void CefFrameImpl::OnDraggableRegionsChanged() {
-  // Match the behavior in ChromeRenderFrameObserver::DraggableRegionsChanged.
   // Only the main frame is allowed to control draggable regions, to avoid other
-  // frames manipulate the regions in the browser process.
+  // frames trying to manipulate the regions in the browser process.
   if (frame_->Parent() != nullptr) {
     return;
   }
@@ -489,17 +416,17 @@ void CefFrameImpl::OnDraggableRegionsChanged() {
 
     regions.reserve(webregions.size());
     for (const auto& webregion : webregions) {
-      auto region = cef::mojom::DraggableRegionEntry::New(webregion.bounds,
-                                                          webregion.draggable);
-      render_frame->ConvertViewportToWindow(&region->bounds);
-      regions.push_back(std::move(region));
+      auto region = cef::mojom::DraggableRegionEntry::New(
+          render_frame->ConvertViewportToWindow(webregion.bounds),
+          webregion.draggable);
+      regions.emplace_back(std::move(region));
     }
   }
 
   using RegionsArg =
-      absl::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>>;
+      std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>>;
   RegionsArg regions_arg =
-      regions.empty() ? absl::nullopt : absl::make_optional(std::move(regions));
+      regions.empty() ? std::nullopt : std::make_optional(std::move(regions));
 
   SendToBrowserFrame(
       __FUNCTION__,
@@ -535,18 +462,17 @@ void CefFrameImpl::OnDetached() {
   // keep |this| alive until after this method returns.
   CefRefPtr<CefFrameImpl> self = this;
 
+  browser_->FrameDetached(frame_);
   frame_ = nullptr;
 
-  browser_->FrameDetached(frame_id_);
-
-  OnDisconnect(DisconnectReason::DETACHED);
+  OnDisconnect(DisconnectReason::DETACHED, std::string());
 
   browser_ = nullptr;
 
   // In case we never attached.
   while (!queued_browser_actions_.empty()) {
     auto& action = queued_browser_actions_.front();
-    LOG(WARNING) << action.first << " sent to detached " << GetDebugString()
+    LOG(WARNING) << action.first << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     queued_browser_actions_.pop();
   }
@@ -554,7 +480,7 @@ void CefFrameImpl::OnDetached() {
   // In case we're destroyed without the context being created.
   while (!queued_context_actions_.empty()) {
     auto& action = queued_context_actions_.front();
-    LOG(WARNING) << action.first << " sent to detached " << GetDebugString()
+    LOG(WARNING) << action.first << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     queued_context_actions_.pop();
   }
@@ -565,8 +491,7 @@ void CefFrameImpl::ExecuteOnLocalFrame(const std::string& function_name,
   CEF_REQUIRE_RT_RETURN_VOID();
 
   if (!context_created_) {
-    queued_context_actions_.push(
-        std::make_pair(function_name, std::move(action)));
+    queued_context_actions_.emplace(function_name, std::move(action));
     MaybeInitializeScriptContext();
     return;
   }
@@ -574,7 +499,7 @@ void CefFrameImpl::ExecuteOnLocalFrame(const std::string& function_name,
   if (frame_) {
     std::move(action).Run(frame_);
   } else {
-    LOG(WARNING) << function_name << " sent to detached " << GetDebugString()
+    LOG(WARNING) << function_name << " sent to detached " << frame_debug_str_
                  << " will be ignored";
   }
 }
@@ -597,18 +522,20 @@ void CefFrameImpl::ConnectBrowserFrame(ConnectReason reason) {
             "RETRY %zu/%zu", browser_connect_retry_ct_, kConnectionRetryMaxCt);
         break;
     }
-    VLOG(1) << GetDebugString() << " connection request (reason=" << reason_str
+    VLOG(1) << frame_debug_str_ << " connection request (reason=" << reason_str
             << ")";
   }
 
   // Don't attempt to connect an invalid or bfcache'd frame. If a bfcache'd
   // frame returns to active status a reconnect will be triggered via
   // OnWasShown().
-  if (!frame_ || blink_glue::IsInBackForwardCache(frame_)) {
+  if (!frame_ || attach_denied_ || blink_glue::IsInBackForwardCache(frame_)) {
     browser_connection_state_ = ConnectionState::DISCONNECTED;
     browser_connect_timer_.Stop();
-    VLOG(1) << GetDebugString() << " connection retry canceled (reason="
-            << (frame_ ? "BFCACHED" : "INVALID") << ")";
+    VLOG(1) << frame_debug_str_ << " connection retry canceled (reason="
+            << (frame_ ? (attach_denied_ ? "ATTACH_DENIED" : "BFCACHED")
+                       : "INVALID")
+            << ")";
     return;
   }
 
@@ -629,9 +556,8 @@ void CefFrameImpl::ConnectBrowserFrame(ConnectReason reason) {
   // connection.
   browser_frame->FrameAttached(receiver_.BindNewPipeAndPassRemote(),
                                reattached);
-  receiver_.set_disconnect_handler(
-      base::BindOnce(&CefFrameImpl::OnDisconnect, this,
-                     DisconnectReason::RENDER_FRAME_DISCONNECT));
+  receiver_.set_disconnect_with_reason_handler(
+      base::BindOnce(&CefFrameImpl::OnRenderFrameDisconnect, this));
 }
 
 const mojo::Remote<cef::mojom::BrowserFrame>& CefFrameImpl::GetBrowserFrame(
@@ -643,22 +569,84 @@ const mojo::Remote<cef::mojom::BrowserFrame>& CefFrameImpl::GetBrowserFrame(
     auto render_frame = content::RenderFrameImpl::FromWebFrame(frame_);
     if (render_frame) {
       // Triggers creation of a CefBrowserFrame in the browser process.
-      render_frame->GetBrowserInterfaceBroker()->GetInterface(
+      render_frame->GetBrowserInterfaceBroker().GetInterface(
           browser_frame_.BindNewPipeAndPassReceiver());
-      browser_frame_.set_disconnect_handler(
-          base::BindOnce(&CefFrameImpl::OnDisconnect, this,
-                         DisconnectReason::BROWSER_FRAME_DISCONNECT));
+      browser_frame_.set_disconnect_with_reason_handler(
+          base::BindOnce(&CefFrameImpl::OnBrowserFrameDisconnect, this));
     }
   }
   return browser_frame_;
 }
 
 void CefFrameImpl::OnBrowserFrameTimeout() {
-  LOG(ERROR) << GetDebugString() << " connection timeout";
-  OnDisconnect(DisconnectReason::CONNECT_TIMEOUT);
+  LOG(ERROR) << frame_debug_str_ << " connection timeout";
+  OnDisconnect(DisconnectReason::CONNECT_TIMEOUT, std::string());
 }
 
-void CefFrameImpl::OnDisconnect(DisconnectReason reason) {
+void CefFrameImpl::OnBrowserFrameDisconnect(uint32_t custom_reason,
+                                            const std::string& description) {
+  OnDisconnect(DisconnectReason::BROWSER_FRAME_DISCONNECT, description);
+}
+
+void CefFrameImpl::OnRenderFrameDisconnect(uint32_t custom_reason,
+                                           const std::string& description) {
+  OnDisconnect(DisconnectReason::RENDER_FRAME_DISCONNECT, description);
+}
+
+// static
+std::string CefFrameImpl::GetDisconnectDebugString(
+    ConnectionState connection_state,
+    bool frame_is_valid,
+    DisconnectReason reason,
+    const std::string& description) {
+  std::string reason_str;
+  switch (reason) {
+    case DisconnectReason::DETACHED:
+      reason_str = "DETACHED";
+      break;
+    case DisconnectReason::BROWSER_FRAME_DETACHED:
+      reason_str = "BROWSER_FRAME_DETACHED";
+      break;
+    case DisconnectReason::CONNECT_TIMEOUT:
+      reason_str = "CONNECT_TIMEOUT";
+      break;
+    case DisconnectReason::RENDER_FRAME_DISCONNECT:
+      reason_str = "RENDER_FRAME_DISCONNECT";
+      break;
+    case DisconnectReason::BROWSER_FRAME_DISCONNECT:
+      reason_str = "BROWSER_FRAME_DISCONNECT";
+      break;
+  };
+
+  std::string state_str;
+  switch (connection_state) {
+    case ConnectionState::DISCONNECTED:
+      state_str = "DISCONNECTED";
+      break;
+    case ConnectionState::CONNECTION_PENDING:
+      state_str = "CONNECTION_PENDING";
+      break;
+    case ConnectionState::CONNECTION_ACKED:
+      state_str = "CONNECTION_ACKED";
+      break;
+    case ConnectionState::RECONNECT_PENDING:
+      state_str = "RECONNECT_PENDING";
+      break;
+  }
+
+  if (!frame_is_valid) {
+    state_str += ", FRAME_INVALID";
+  }
+
+  if (!description.empty()) {
+    state_str += ", " + description;
+  }
+
+  return "(reason=" + reason_str + ", current_state=" + state_str + ")";
+}
+
+void CefFrameImpl::OnDisconnect(DisconnectReason reason,
+                                const std::string& description) {
   // Ignore multiple calls in close proximity (which may occur if both
   // |browser_frame_| and |receiver_| disconnect). |frame_| will be nullptr
   // when called from/after OnDetached().
@@ -667,49 +655,16 @@ void CefFrameImpl::OnDisconnect(DisconnectReason reason) {
     return;
   }
 
-  if (VLOG_IS_ON(1)) {
-    std::string reason_str;
-    switch (reason) {
-      case DisconnectReason::DETACHED:
-        reason_str = "DETACHED";
-        break;
-      case DisconnectReason::BROWSER_FRAME_DETACHED:
-        reason_str = "BROWSER_FRAME_DETACHED";
-        break;
-      case DisconnectReason::CONNECT_TIMEOUT:
-        reason_str = "CONNECT_TIMEOUT";
-        break;
-      case DisconnectReason::RENDER_FRAME_DISCONNECT:
-        reason_str = "RENDER_FRAME_DISCONNECT";
-        break;
-      case DisconnectReason::BROWSER_FRAME_DISCONNECT:
-        reason_str = "BROWSER_FRAME_DISCONNECT";
-        break;
-    };
-
-    std::string state_str;
-    switch (browser_connection_state_) {
-      case ConnectionState::DISCONNECTED:
-        state_str = "DISCONNECTED";
-        break;
-      case ConnectionState::CONNECTION_PENDING:
-        state_str = "CONNECTION_PENDING";
-        break;
-      case ConnectionState::CONNECTION_ACKED:
-        state_str = "CONNECTION_ACKED";
-        break;
-      case ConnectionState::RECONNECT_PENDING:
-        state_str = "RECONNECT_PENDING";
-        break;
-    }
-
-    if (!frame_) {
-      state_str += ", FRAME_INVALID";
-    }
-
-    VLOG(1) << GetDebugString() << " disconnected (reason=" << reason_str
-            << ", current_state=" << state_str << ")";
+  if (attach_denied_) {
+    VLOG(1) << frame_debug_str_ << " connection attach denied";
+    return;
   }
+
+  const auto connection_state = browser_connection_state_;
+  const bool frame_is_valid = !!frame_;
+  VLOG(1) << frame_debug_str_ << " disconnected "
+          << GetDisconnectDebugString(connection_state, frame_is_valid, reason,
+                                      description);
 
   browser_frame_.reset();
   receiver_.reset();
@@ -720,7 +675,7 @@ void CefFrameImpl::OnDisconnect(DisconnectReason reason) {
   // intentionally detached.
   if (frame_ && reason != DisconnectReason::BROWSER_FRAME_DETACHED) {
     if (browser_connect_retry_ct_++ < kConnectionRetryMaxCt) {
-      VLOG(1) << GetDebugString() << " connection retry scheduled";
+      VLOG(1) << frame_debug_str_ << " connection retry scheduled";
 
       // Retry after a delay in case the frame is currently navigating, being
       // destroyed, or entering the bfcache. In the navigation case the retry
@@ -735,17 +690,22 @@ void CefFrameImpl::OnDisconnect(DisconnectReason reason) {
                          ConnectReason::RETRY));
     } else {
       // Trigger a crash in official builds.
-      LOG(ERROR) << "Connection retry failure for frame "
-                 << frame_util::GetFrameDebugString(frame_id_);
+#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
+      LOG(ERROR) << frame_debug_str_ << " connection retry failed "
+#else
+      LOG(FATAL) << frame_debug_str_ << " connection retry failed "
+#endif  // BUILDFLAG(ARKWEB_BUGFIX_CRASH)
+                 << GetDisconnectDebugString(connection_state, frame_is_valid,
+                                             reason, description);
     }
   }
 }
 
 void CefFrameImpl::SendToBrowserFrame(const std::string& function_name,
                                       BrowserFrameAction action) {
-  if (!frame_) {
-    // We've been detached.
-    LOG(WARNING) << function_name << " sent to detached " << GetDebugString()
+  if (!frame_ || attach_denied_) {
+    // We're detached.
+    LOG(WARNING) << function_name << " sent to detached " << frame_debug_str_
                  << " will be ignored";
     return;
   }
@@ -753,8 +713,7 @@ void CefFrameImpl::SendToBrowserFrame(const std::string& function_name,
   if (browser_connection_state_ != ConnectionState::CONNECTION_ACKED) {
     // Queue actions until we're notified by the browser that it's ready to
     // handle them.
-    queued_browser_actions_.push(
-        std::make_pair(function_name, std::move(action)));
+    queued_browser_actions_.emplace(function_name, std::move(action));
     return;
   }
 
@@ -786,17 +745,26 @@ void CefFrameImpl::MaybeInitializeScriptContext() {
   // via DidCommitProvisionalLoad prior to https://crrev.com/5150754880a.
   // Otherwise, a script context may never be created for a frame that doesn't
   // contain JS code.
-  v8::HandleScope handle_scope(blink::MainThreadIsolate());
+  v8::HandleScope handle_scope(GetFrameIsolate(frame_));
   frame_->MainWorldScriptContext();
 }
 
-void CefFrameImpl::FrameAttachedAck() {
+void CefFrameImpl::FrameAttachedAck(bool allow) {
   // Sent from the browser process in response to ConnectBrowserFrame() sending
   // FrameAttached().
   CHECK_EQ(ConnectionState::CONNECTION_PENDING, browser_connection_state_);
   browser_connection_state_ = ConnectionState::CONNECTION_ACKED;
   browser_connect_retry_ct_ = 0;
   browser_connect_timer_.Stop();
+
+  if (!allow) {
+    // This will be followed by a connection disconnect from the browser side.
+    attach_denied_ = true;
+    while (!queued_browser_actions_.empty()) {
+      queued_browser_actions_.pop();
+    }
+    return;
+  }
 
   auto& browser_frame = GetBrowserFrame();
   CHECK(browser_frame);
@@ -810,7 +778,7 @@ void CefFrameImpl::FrameAttachedAck() {
 void CefFrameImpl::FrameDetached() {
   // Sent from the browser process in response to CefFrameHostImpl::Detach().
   CHECK_EQ(ConnectionState::CONNECTION_ACKED, browser_connection_state_);
-  OnDisconnect(DisconnectReason::BROWSER_FRAME_DETACHED);
+  OnDisconnect(DisconnectReason::BROWSER_FRAME_DETACHED, std::string());
 }
 
 void CefFrameImpl::SendMessage(const std::string& name,
@@ -828,7 +796,7 @@ void CefFrameImpl::SendMessage(const std::string& name,
 
 void CefFrameImpl::SendSharedMemoryRegion(
     const std::string& name,
-    base::ReadOnlySharedMemoryRegion region) {
+    base::WritableSharedMemoryRegion region) {
   if (auto app = CefAppManager::Get()->GetApplication()) {
     if (auto handler = app->GetRenderProcessHandler()) {
       CefRefPtr<CefProcessMessage> message(
@@ -837,6 +805,130 @@ void CefFrameImpl::SendSharedMemoryRegion(
     }
   }
 }
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+bool CefFrameImpl::RemovePrefixAndAssignIfMatches(std::string_view prefix,
+                                                  const GURL& url,
+                                                  std::string* dest) {
+  const std::string_view spec(url.possibly_invalid_spec());
+
+  if (base::StartsWith(spec, prefix)) {
+    url::RawCanonOutputW<1024> output;
+    url::DecodeURLEscapeSequences(spec.substr(prefix.length()),
+                                  url::DecodeURLMode::kUTF8OrIsomorphic,
+                                  &output);
+    *dest = base::UTF16ToUTF8(output.view());
+    return true;
+  }
+  return false;
+}
+
+void CefFrameImpl::DistinguishAndAssignSrcLinkType(
+    const GURL& url,
+    cef::mojom::HitDataParamsPtr& data) {
+  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
+                                     &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kGeo;
+  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kPhone;
+  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kEmail;
+  } else {
+    data->type = HitTestDataType::kSrcLink;
+    data->extra_data_for_type = url.possibly_invalid_spec();
+    if (!data->extra_data_for_type.empty()) {
+      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
+    }
+  }
+}
+void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
+                                       const GURL& absolute_image_url,
+                                       bool is_editable,
+                                       cef::mojom::HitDataParamsPtr& data) {
+  if (!absolute_image_url.is_empty()) {
+    data->img_src = absolute_image_url;
+  }
+
+  const bool is_javascript_scheme =
+      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
+  const bool has_link_url = !absolute_link_url.is_empty();
+  const bool has_image_url = !absolute_image_url.is_empty();
+  if (has_link_url && !has_image_url && !is_javascript_scheme) {
+    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
+  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
+    data->type = HitTestDataType::kSrcImageLink;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+    if (absolute_link_url.is_valid()) {
+      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
+    }
+  } else if (!has_link_url && has_image_url) {
+    data->type = HitTestDataType::kImage;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+  } else if (is_editable) {
+    data->type = HitTestDataType::kEditText;
+    DCHECK_EQ(0u, data->extra_data_for_type.length());
+  }
+}
+GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
+                                  const std::u16string& url_fragment) {
+  return GURL(node.GetDocument().CompleteURL(
+      blink::WebString::FromUTF16(url_fragment)));
+}
+
+GURL CefFrameImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
+  if (element.IsNull()) {
+    return GURL();
+  }
+  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
+}
+blink::WebElement CefFrameImpl::GetImgChild(const blink::WebNode& node) {
+  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
+  DCHECK(!collection.IsNull());
+  return collection.FirstItem();
+}
+
+GURL CefFrameImpl::GetChildImageUrlFromElement(
+    const blink::WebElement& element) {
+  const blink::WebElement child_img = GetImgChild(element);
+  if (child_img.IsNull()) {
+    return GURL();
+  }
+  return GetAbsoluteSrcUrl(child_img);
+}
+
+void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SendHitEvent webview is NULL";
+    return;
+  }
+  const blink::WebHitTestResult result =
+      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
+                                   gfx::Size(params->width, params->height));
+  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
+  GURL absolute_image_url = result.AbsoluteImageURL();
+  if (!result.UrlElement().IsNull()) {
+    data->anchor_text = result.UrlElement().TextContent().Utf16();
+    data->href = result.UrlElement().GetAttribute("href").Utf16();
+    if (absolute_image_url.is_empty()) {
+      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
+    }
+  }
+
+  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
+                      result.IsContentEditable(), data);
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_hit_data_.type = data->type;
+  cef_hit_data_.extra_data = data->extra_data_for_type;
+  is_update_ = true;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 void CefFrameImpl::SendCommand(const std::string& command) {
   ExecuteOnLocalFrame(
@@ -922,6 +1014,23 @@ void CefFrameImpl::MoveOrResizeStarted() {
   }
 }
 
+#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
+void CefFrameImpl::SetOptimizeParserBudgetEnabled(bool enable) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "SetOptimizeParserBudgetEnabled. render_frame is nullptr.";
+    return;
+  }
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SetOptimizeParserBudgetEnabled webview is NULL";
+    return;
+  }
+  blink::SetOptimizeParserBudgetEnabled(enable);
+}
+#endif
+
 void CefFrameImpl::ContextLifecycleStateChanged(
     blink::mojom::blink::FrameLifecycleState state) {
   if (state == blink::mojom::FrameLifecycleState::kFrozen && IsMain() &&
@@ -930,75 +1039,15 @@ void CefFrameImpl::ContextLifecycleStateChanged(
   }
 }
 
-std::string CefFrameImpl::GetDebugString() const {
-  return "frame " + frame_util::GetFrameDebugString(frame_id_);
-}
-
-#if BUILDFLAG(IS_OHOS)
-void CefFrameImpl::TerminateRenderProcess() {
-  base::ProcessId realPid = base::GetCurrentRealPid();
-  LOG(INFO) << "TerminateRenderProcess start in render side, pid: "
-    << getpid() <<", propid: " << realPid;
-  // try to kill render process by pid
-  if (kill(getpid(), SIGTERM) != 0) {
-    LOG(ERROR) << "Unable to terminate pid: " << getpid();
-    return;
-  }
-  // if not, kill by procpid
-  if (kill(realPid, SIGTERM) != 0) {
-    LOG(ERROR) << "Unable to terminate getprocpid: " << realPid;
-    return;
-  }
-  LOG(INFO) << "TerminateRenderProcess end in render side";
-}
-#endif
-
-#ifdef OHOS_SCROLLBAR
-void CefFrameImpl::UpdatePixelRatio(float ratio) {
-  LOG(INFO) << "UpdatePixelRatio in render side SetPixelRatio:" << ratio;
-  base::ohos::SetPixelRatio(ratio);
-}
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-void CefFrameImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
-  NOTREACHED() << "GetImages cannot be called from the renderer process";
-}
-
-void CefFrameImpl::LoadHeaderUrl(const CefString& url,
-                                 const CefString& additionalHttpHeaders) {
-  CEF_REQUIRE_RT_RETURN_VOID();
-
-  if (!frame_) {
-    return;
-  }
-
-  auto params = cef::mojom::RequestParams::New();
-  params->url = GURL(url.ToString());
-  params->method = "GET";
-  params->headers = additionalHttpHeaders;
-  LoadRequest(std::move(params));
-}
-
-void CefFrameImpl::PostURL(const CefString& url,
-                           const std::vector<char>& post_data) {
-  // todo(ohos) : impl this function then remove todo
-}
-
-#ifdef OHOS_NETWORK_LOAD
-void CefFrameImpl::LoadURLWithUserGesture(const CefString& url, bool user_gesture) {
-  // todo(ohos) : impl this function then remove todo
-}
-#endif
-
+#if BUILDFLAG(IS_ARKWEB)
 void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   if (element.IsNull() || is_update_) {
     LOG(INFO) << "FocusedHitDataChange element is NULL or no need to report.";
     is_update_ = false;
     return;
   }
-#endif  // defined(OHOS_INPUT_EVENTS)
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
   data->href = element.GetAttribute("href").Utf16();
@@ -1011,257 +1060,41 @@ void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
   PopulateHitTestData(absolute_link_url, absolute_image_url,
                       element.IsEditable(), data);
 
-#if defined(OHOS_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
-#endif  // defined(OHOS_INPUT_EVENTS)
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+}
+#endif  // BUILDFLAG(IS_ARKWEB)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void CefFrameImpl::GetHitData(
+    cef::mojom::RenderFrame::GetHitDataCallback callback) {
+  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
 }
 
-void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SendHitEvent webview is NULL";
-    return;
-  }
-  const blink::WebHitTestResult result =
-      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
-                                   gfx::Size(params->width, params->height));
-  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
-  GURL absolute_image_url = result.AbsoluteImageURL();
-  if (!result.UrlElement().IsNull()) {
-    data->anchor_text = result.UrlElement().TextContent().Utf16();
-    data->href = result.UrlElement().GetAttribute("href").Utf16();
-    if (absolute_image_url.is_empty()) {
-      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
-    }
-  }
-
-  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
-                      result.IsContentEditable(), data);
-
-#if defined(OHOS_INPUT_EVENTS)
-  cef_hit_data_.type = data->type;
-  cef_hit_data_.extra_data = data->extra_data_for_type;
-  is_update_ = true;
-#endif  // defined(OHOS_INPUT_EVENTS)
+void CefFrameImpl::SetScrollable(bool enable) {
+  scroll_enabled_ = enable;
 }
-
-void CefFrameImpl::RemoveCache() {
-  blink::WebCache::Clear();
-}
-
-void CefFrameImpl::SetInitialScale(float initialScale) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SetInitialScale webview is NULL";
-    return;
-  }
-  webview->SetInitialPageScaleOverride(initialScale);
-}
-
-#ifdef OHOS_NETWORK_CONNINFO
-void CefFrameImpl::SetJsOnlineProperty(bool network_up) {
-  LOG(INFO) << "SetJsOnlineProperty:" << network_up;
-  blink::WebNetworkStateNotifier::SetOnLine(network_up);
-}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+// Enable deprecation warnings on Windows. See http://crbug.com/585142.
+#if BUILDFLAG(IS_WIN)
+#if defined(__clang__)
+#pragma GCC diagnostic pop
+#else
+#pragma warning(pop)
 #endif
-
-void CefFrameImpl::PutZoomingForTextFactor(float factor) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-
-  if (!webview) {
-    return;
-  }
-  // Hide selection and autofill popups.
-  webview->CancelPagePopup();
-
-  render_frame->GetWebFrame()->FrameWidget()->SetTextZoomFactor(factor);
+#endif
+#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
+int computeDurationInMilliSec(int dx, int dy) {
+  int distance = std::max(std::abs(dx), std::abs(dy));
+  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
+  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
 }
 
-void CefFrameImpl::GetImageForContextNode() {
-  if (!frame_) {
-    LOG(ERROR) << "GetImageForContextNode frame is nullptr";
-    return;
-  }
-  if (total_mem_ == -1) {
-    total_mem_ = GetSystemTotalMem();
-  }
-
-  cef::mojom::GetImageForContextNodeParamsPtr params =
-      cef::mojom::GetImageForContextNodeParams::New();
-  blink::WebNode context_node = frame_->ContextMenuNode();
-  std::vector<uint8_t> image_data;
-  gfx::Size original_size;
-  std::string image_extension;
-
-  if (context_node.IsNull() || !context_node.IsElementNode() ||
-      context_node.To<blink::WebElement>().ImageContents().drawsNothing()) {
-    LOG(WARNING) << "Context node is null or is not element node, or image draws nothing";
-    SendToBrowserFrame(__FUNCTION__,
-                       base::BindOnce(
-                           [](cef::mojom::GetImageForContextNodeParamsPtr data,
-                              const BrowserFrameType& browser_frame) {
-                             browser_frame->OnGetImageForContextNodeNull();
-                           },
-                           std::move(params)));
-    return;
-  }
-
-  blink::WebElement web_element = context_node.To<blink::WebElement>();
-  original_size = web_element.GetImageSize();
-
-  SkBitmap image = web_element.ImageContents();
-  SkBitmap resize_image = Downscale(image, total_mem_);
-  if (resize_image.drawsNothing()) {
-    LOG(ERROR) << "GetImageForContextNode fail, image is null or image is empty";
-    return;
-  }
-
-  image_extension = "." + web_element.ImageExtension();
-  params->width = resize_image.width();
-  params->height = resize_image.height();
-  params->image = resize_image;
-  params->image_extension = image_extension;
-  LOG(DEBUG) << "GetImageForContextNode, image width: " << resize_image.width()
-             << ", height: " << resize_image.height();
-  SendToBrowserFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](cef::mojom::GetImageForContextNodeParamsPtr data,
-             const BrowserFrameType& browser_frame) {
-            browser_frame->OnGetImageForContextNode(std::move(data));
-          },
-          std::move(params)));
-}
-
-GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
-                                  const std::u16string& url_fragment) {
-  return GURL(node.GetDocument().CompleteURL(
-      blink::WebString::FromUTF16(url_fragment)));
-}
-
-GURL CefFrameImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
-  if (element.IsNull()) {
-    return GURL();
-  }
-  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
-}
-
-blink::WebElement CefFrameImpl::GetImgChild(const blink::WebNode& node) {
-  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
-  DCHECK(!collection.IsNull());
-  return collection.FirstItem();
-}
-
-GURL CefFrameImpl::GetChildImageUrlFromElement(
-    const blink::WebElement& element) {
-  const blink::WebElement child_img = GetImgChild(element);
-  if (child_img.IsNull()) {
-    return GURL();
-  }
-  return GetAbsoluteSrcUrl(child_img);
-}
-
-bool CefFrameImpl::RemovePrefixAndAssignIfMatches(const std::string prefix,
-                                                  const GURL& url,
-                                                  std::string* dest) {
-  const base::StringPiece spec(url.possibly_invalid_spec());
-
-  if (base::StartsWith(spec, prefix)) {
-    url::RawCanonOutputW<1024> output;
-    url::DecodeURLEscapeSequences(
-        spec.data() + prefix.length(), spec.length() - prefix.length(),
-        url::DecodeURLMode::kUTF8OrIsomorphic, &output);
-    *dest =
-        base::UTF16ToUTF8(base::StringPiece16(output.data(), output.length()));
-    return true;
-  }
-  return false;
-}
-
-void CefFrameImpl::DistinguishAndAssignSrcLinkType(
-    const GURL& url,
-    cef::mojom::HitDataParamsPtr& data) {
-  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
-                                     &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kGeo;
-  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kPhone;
-  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kEmail;
-  } else {
-    data->type = HitTestDataType::kSrcLink;
-    data->extra_data_for_type = url.possibly_invalid_spec();
-    if (!data->extra_data_for_type.empty()) {
-      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
-    }
-  }
-}
-
-void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
-                                       const GURL& absolute_image_url,
-                                       bool is_editable,
-                                       cef::mojom::HitDataParamsPtr& data) {
-  if (!absolute_image_url.is_empty()) {
-    data->img_src = absolute_image_url;
-  }
-
-  const bool is_javascript_scheme =
-      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
-  const bool has_link_url = !absolute_link_url.is_empty();
-  const bool has_image_url = !absolute_image_url.is_empty();
-  if (has_link_url && !has_image_url && !is_javascript_scheme) {
-    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
-  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
-    data->type = HitTestDataType::kSrcImageLink;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-    if (absolute_link_url.is_valid()) {
-      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
-    }
-  } else if (!has_link_url && has_image_url) {
-    data->type = HitTestDataType::kImage;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-  } else if (is_editable) {
-    data->type = HitTestDataType::kEditText;
-    DCHECK_EQ(0u, data->extra_data_for_type.length());
-  }
-}
-
-void CefFrameImpl::GetImagesWithResponse(
-    cef::mojom::RenderFrame::GetImagesWithResponseCallback callback) {
-  ExecuteOnLocalFrame(
-      __FUNCTION__,
-      base::BindOnce(
-          [](cef::mojom::RenderFrame::GetImagesWithResponseCallback callback,
-             blink::WebLocalFrame* frame) {
-            blink::WebElementCollection collection =
-                frame->GetDocument().GetElementsByHTMLTagName("img");
-            DCHECK(!collection.IsNull());
-            bool response = !(collection.FirstItem()).IsNull();
-            std::move(callback).Run(response);
-          },
-          std::move(callback)));
-}
-
-#ifdef OHOS_PAGE_UP_DOWN
 void CefFrameImpl::ScrollPageUpDown(bool is_up,
                                     bool is_half,
                                     float view_height) {
-#if defined(OHOS_INPUT_EVENTS)
-  if (!scroll_enabled_) {
-    LOG(DEBUG) << "can not ScrollPageUpDown, scroll is disabled";
-    return;
-  }
-#endif  // defined(OHOS_INPUT_EVENTS)
-
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webview = render_frame->GetWebView();
@@ -1288,164 +1121,4 @@ void CefFrameImpl::ScrollPageUpDown(bool is_up,
   webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
                         base::Milliseconds(computeDurationInMilliSec(0, dy)));
 }
-
-#ifdef OHOS_GET_SCROLL_OFFSET
-void CefFrameImpl::GetScrollOffset(
-    cef::mojom::RenderFrame::GetScrollOffsetCallback callback) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webView = render_frame->GetWebView();
-  if (!webView) {
-    LOG(ERROR) << "GetScrollOffset get webView failed";
-    return;
-  }
-  auto scroll_offset = webView->GetScrollOffset();
-  std::move(callback).Run(scroll_offset.x(), scroll_offset.y());
-}
-#endif
-#endif  // #ifdef OHOS_PAGE_UP_DOWN
-
-
-#if defined(OHOS_INPUT_EVENTS)
-void CefFrameImpl::ScrollTo(float x, float y) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollto get webview failed";
-    return;
-  }
-  webview->SetScrollOffset(gfx::PointF(x, y));
-}
-
-void CefFrameImpl::ScrollBy(float delta_x, float delta_y) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollby get webview failed";
-    return;
-  }
-  auto scroll_offset = webview->GetScrollOffset();
-  webview->SetScrollOffset(
-      gfx::PointF(delta_x + scroll_offset.x(), delta_y + scroll_offset.y()));
-}
-
-void CefFrameImpl::SlideScroll(float vx, float vy) {
-  if (!scroll_enabled_) {
-    LOG(DEBUG) << "can not SlideScroll, scroll is disabled";
-    return;
-  }
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollby get webview failed";
-    return;
-  }
-  float dx = vx == 0 ? 0 : computeSlidePosition(vx);
-  float dy = vy == 0 ? 0 : computeSlidePosition(vy);
-  auto scroll_offset = webview->GetScrollOffset();
-  webview->SmoothScroll(
-      dx + scroll_offset.x(), dy + scroll_offset.y(),
-      base::Milliseconds(DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC));
-}
-
-void CefFrameImpl::ZoomBy(float delta,
-                          float width,
-                          float height) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  render_frame->SetZoomLevel(delta, gfx::Point(width / 2, height / 2));
-}
-
-void CefFrameImpl::GetHitData(
-    cef::mojom::RenderFrame::GetHitDataCallback callback) {
-  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
-}
-
-void CefFrameImpl::SetOverscrollMode(int mode) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  render_frame->SetOverscrollMode(mode);
-}
-
-void CefFrameImpl::SetScrollable(bool enable) {
-  scroll_enabled_ = enable;
-}
-
-void CefFrameImpl::UpdateDrawRect() {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "UpdateDrawRect get webview failed";
-    return;
-  }
-  webview->UpdateDrawRect();
-}
-
-void CefFrameImpl::ScrollToWithAnime(float x, float y, int32_t duration) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrolltowithanime get webview failed";
-    return;
-  }
-  webview->SmoothScroll(x, y, base::Milliseconds(duration));
-}
-
-void CefFrameImpl::ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scrollbywithanime get webview failed";
-    return;
-  }
-  auto scroll_offset = webview->GetScrollOffset();
-  webview->SmoothScroll(delta_x + scroll_offset.x(),
-                        delta_y + scroll_offset.y(),
-                        base::Milliseconds(duration));
-}
-
-#if defined(OHOS_GET_SCROLL_OFFSET)
-void CefFrameImpl::GetOverScrollOffset(
-    cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-
-  auto overScroll_offset = render_frame->GetOverScrollOffset();
-  std::move(callback).Run(overScroll_offset.x(), overScroll_offset.y());
-}
-#endif
-#endif  // defined(OHOS_INPUT_EVENTS)
-
-bool CefFrameImpl::ShouldOverrideUrlLoading(const CefString& url,
-                                            const CefString& request_method,
-                                            bool user_gesture,
-                                            bool is_redirect,
-                                            bool is_outermost_main_frame) {
-  bool override = false;
-  if (auto& browser_frame = GetBrowserFrame()) {
-    browser_frame->ShouldOverrideUrlLoading(url.ToString(),
-                                            request_method.ToString(),
-                                            user_gesture,
-                                            is_redirect,
-                                            is_outermost_main_frame,
-                                            &override);
-  }
-  
-  return override;
-}
-#endif  // BUILDFLAG(IS_OHOS)
-
-// Enable deprecation warnings on Windows. See http://crbug.com/585142.
-#if BUILDFLAG(IS_WIN)
-#if defined(__clang__)
-#pragma GCC diagnostic pop
-#else
-#pragma warning(pop)
-#endif
-#endif
+#endif  // #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)

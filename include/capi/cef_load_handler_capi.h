@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=85b029a1f06dc57ea9ef6c616c8c81e93296463d$
+// $hash=dd511e34cd27075002a0be352c7ebe0a63349a08$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_LOAD_HANDLER_CAPI_H_
@@ -42,12 +42,11 @@
 
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_browser_capi.h"
-#include "include/capi/cef_callback_capi.h"
 #include "include/capi/cef_first_meaningful_paint_details_capi.h"
 #include "include/capi/cef_frame_capi.h"
-#include "include/capi/cef_largest_contentful_paint_details_capi.h"
+#if BUILDFLAG(ARKWEB_NAVIGATION)
 #include "include/capi/cef_load_committed_details_capi.h"
-#include "include/capi/cef_response_capi.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,60 +124,6 @@ typedef struct _cef_load_handler_t {
                                     const cef_string_t* failedUrl);
 
   ///
-  /// OnLoadErrorWithRequest
-  ///
-  void(CEF_CALLBACK* on_load_error_with_request)(
-      struct _cef_load_handler_t* self,
-      struct _cef_request_t* request,
-      int is_main_frame,
-      int has_user_gesture,
-      int error_code,
-      const cef_string_t* error_text);
-
-  ///
-  /// OnHttpError
-  ///
-  void(CEF_CALLBACK* on_http_error)(struct _cef_load_handler_t* self,
-                                    struct _cef_request_t* request,
-                                    int is_main_frame,
-                                    int has_user_gesture,
-                                    struct _cef_response_t* response);
-
-  ///
-  /// OnRefreshAccessedHistory
-  ///
-  void(CEF_CALLBACK* on_refresh_accessed_history)(
-      struct _cef_load_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      const cef_string_t* url,
-      int isReload);
-
-  ///
-  /// Notify the body that is loading the Http response to make it visible, old
-  /// pages are no longer rendered.
-  ///
-  void(CEF_CALLBACK* on_page_visible)(struct _cef_load_handler_t* self,
-                                      struct _cef_browser_t* browser,
-                                      const cef_string_t* url,
-                                      int success);
-
-  ///
-  /// OnDataResubmission.
-  ///
-  void(CEF_CALLBACK* on_data_resubmission)(struct _cef_load_handler_t* self,
-                                           struct _cef_browser_t* browser,
-                                           struct _cef_callback_t* callback);
-
-  ///
-  /// Called when the first content rendering of web page.
-  ///
-  void(CEF_CALLBACK* on_first_contentful_paint)(
-      struct _cef_load_handler_t* self,
-      int64_t navigationStartTick,
-      int64_t firstContentfulPaintMs);
-
-  ///
   /// Called when the first meaningful paint rendering of web page.
   ///
   void(CEF_CALLBACK* on_first_meaningful_paint)(
@@ -192,27 +137,27 @@ typedef struct _cef_load_handler_t {
       struct _cef_load_handler_t* self,
       struct _cef_largest_contentful_paint_details_t* details);
 
+#if BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
+  ///
+  // OnRefreshAccessedHistory
+  ///
+  void(CEF_CALLBACK* on_refresh_accessed_history)(
+      struct _cef_load_handler_t* self,
+      struct _cef_browser_t* browser,
+      struct _cef_frame_t* frame,
+      const cef_string_t* url,
+      int isReload);
+#endif  // BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
+
+#if BUILDFLAG(ARKWEB_NAVIGATION)
   ///
   /// Called when the navigation entry has been committed.
   ///
   void(CEF_CALLBACK* on_navigation_entry_committed)(
       struct _cef_load_handler_t* self,
       struct _cef_load_committed_details_t* details);
+#endif  // #if BUILDFLAG(ARKWEB_NAVIGATION)
 
-  ///
-  /// Called when received website security risk check result.
-  ///
-  void(CEF_CALLBACK* on_safe_browsing_check_result)(
-      struct _cef_load_handler_t* self,
-      int threat_type);
-
-  ///
-  /// Called when tracker's cookie is prevented.
-  ///
-  void(CEF_CALLBACK* on_intelligent_tracking_prevention_result)(
-      struct _cef_load_handler_t* self,
-      const cef_string_t* website_host,
-      const cef_string_t* tracker_host);
 } cef_load_handler_t;
 
 #ifdef __cplusplus

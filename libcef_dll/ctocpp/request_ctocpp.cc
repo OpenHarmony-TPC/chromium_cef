@@ -9,12 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e059ed67a8918f59146ca5547fadaba885cb66d3$
+// $hash=e4c27505eec2a9b0327bc6e182f73ca4c1496809$
 //
 
 #include "libcef_dll/ctocpp/request_ctocpp.h"
+
 #include "libcef_dll/ctocpp/post_data_ctocpp.h"
-#include "libcef_dll/ctocpp/post_data_stream_ctocpp.h"
 #include "libcef_dll/transfer_util.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -433,7 +433,7 @@ CefRequest::TransitionType CefRequestCToCpp::GetTransitionType() {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") uint64 CefRequestCToCpp::GetIdentifier() {
+NO_SANITIZE("cfi-icall") uint64_t CefRequestCToCpp::GetIdentifier() {
   cef_request_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_identifier)) {
     return 0;
@@ -442,71 +442,10 @@ NO_SANITIZE("cfi-icall") uint64 CefRequestCToCpp::GetIdentifier() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  uint64 _retval = _struct->get_identifier(_struct);
+  uint64_t _retval = _struct->get_identifier(_struct);
 
   // Return type: simple
   return _retval;
-}
-
-NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::IsMainFrame() {
-  cef_request_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_main_frame)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_main_frame(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::IsRedirect() {
-  cef_request_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_redirect)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_redirect(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") bool CefRequestCToCpp::HasUserGesture() {
-  cef_request_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, has_user_gesture)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->has_user_gesture(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefPostDataStream> CefRequestCToCpp::GetUploadStream() {
-  cef_request_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_upload_stream)) {
-    return nullptr;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_post_data_stream_t* _retval = _struct->get_upload_stream(_struct);
-
-  // Return type: refptr_same
-  return CefPostDataStreamCToCpp::Wrap(_retval);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

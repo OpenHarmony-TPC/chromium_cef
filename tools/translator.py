@@ -99,7 +99,7 @@ header = obj_header()
 header.set_root_directory(cpp_header_dir)
 excluded_files = ['cef_api_hash.h', 'cef_application_mac.h', 'cef_version.h']
 header.add_directory(cpp_header_dir, excluded_files)
-header.add_directory(cpp_header_test_dir)
+# header.add_directory(cpp_header_test_dir)
 header.add_directory(cpp_header_views_dir)
 
 # Track the number of files that were written.

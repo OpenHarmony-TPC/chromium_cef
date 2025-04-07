@@ -6,60 +6,52 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_
 #pragma once
 
-#include "include/cef_browser.h"
-#include "include/cef_client.h"
-#include "include/views/cef_browser_view.h"
-#include "libcef/browser/browser_contents_delegate.h"
-#include "libcef/browser/browser_info.h"
-#include "libcef/browser/browser_platform_delegate.h"
-#include "libcef/browser/devtools/devtools_manager.h"
-#include "libcef/browser/file_dialog_manager.h"
-#include "libcef/browser/frame_host_impl.h"
-#include "libcef/browser/media_stream_registrar.h"
-#include "libcef/browser/request_context_impl.h"
-
+#include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
-#include "extensions/common/mojom/view_type.mojom.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include <map>
-#include <set>
-#include <unordered_map>
-
-#include "include/cef_image.h"
-#include "include/cef_permission_request.h"
-#include "include/cef_task.h"
-#include "libcef/browser/permission/alloy_permission_request_handler.h"
+#include "cef/include/cef_browser.h"
+#include "cef/include/cef_client.h"
+#include "cef/include/cef_unresponsive_process_callback.h"
+#include "cef/include/views/cef_browser_view.h"
+#include "cef/libcef/browser/browser_contents_delegate.h"
+#include "cef/libcef/browser/browser_info.h"
+#include "cef/libcef/browser/browser_platform_delegate.h"
+#include "cef/libcef/browser/devtools/devtools_protocol_manager.h"
+#include "cef/libcef/browser/devtools/devtools_window_runner.h"
+#include "cef/libcef/browser/file_dialog_manager.h"
+#include "cef/libcef/browser/frame_host_impl.h"
+#include "cef/libcef/browser/javascript_dialog_manager.h"
+#include "cef/libcef/browser/media_stream_registrar.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/features/features.h"
+#include "ohos_cef_ext/libcef/browser/arkweb_browser_contents_delegate_ext.h"
+#include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
+#if BUILDFLAG(ARKWEB_PERMISSION)
+#include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
 #endif
-
-#include "components/download/public/common/download_item.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "components/js_injection/browser/js_communication_host.h"
-#endif //IS_OHOS
-
-#ifdef OHOS_DEVTOOLS
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "include/cef_devtools_message_handler_delegate.h"
-#endif // OHOS_DEVTOOLS
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace extensions {
 class Extension;
 }
 
-#if BUILDFLAG(IS_OHOS)
-class AlloyPermissionRequestHandler;
-#endif
+class RenderViewContextMenuObserver;
 
 // Parameters that are passed to the runtime-specific Create methods.
 struct CefBrowserCreateParams {
-  CefBrowserCreateParams() {}
+  CefBrowserCreateParams() = default;
 
-  // Copy constructor used with the chrome runtime only.
+  // Copy constructor used with Chrome style only.
   CefBrowserCreateParams(const CefBrowserCreateParams& that) {
     operator=(that);
   }
   CefBrowserCreateParams& operator=(const CefBrowserCreateParams& that) {
+    DCHECK(that.IsChromeStyle());
+
     // Not all parameters can be copied.
     client = that.client;
     url = that.url;
@@ -67,17 +59,32 @@ struct CefBrowserCreateParams {
     request_context = that.request_context;
     extra_info = that.extra_info;
     if (that.window_info) {
-      MaybeSetWindowInfo(*that.window_info);
+      MaybeSetWindowInfo(*that.window_info, /*allow_alloy_style=*/false,
+                         /*allow_chrome_style=*/true);
     }
     browser_view = that.browser_view;
     return *this;
   }
 
+  // Initialize |window_info| with expected defaults before passing to a client
+  // callback. |opener| will be non-nullptr for popups, DevTools windows, etc.
+  static void InitWindowInfo(CefWindowInfo* window_info,
+                             CefBrowserHostBase* opener);
+
   // Set |window_info| if appropriate (see below).
-  void MaybeSetWindowInfo(const CefWindowInfo& window_info);
+  void MaybeSetWindowInfo(const CefWindowInfo& window_info,
+                          bool allow_alloy_style,
+                          bool allow_chrome_style);
+
+  // Returns true if |window_info| indicates creation of a Chrome style window.
+  static bool IsChromeStyle(const CefWindowInfo* window_info);
+  bool IsChromeStyle() const;
+
+  // Returns true if parameters indicate windowless (off-screen) rendering.
+  bool IsWindowless() const;
 
   // Platform-specific window creation info. Will be nullptr for Views-hosted
-  // browsers except when using the Chrome runtime with a native parent handle.
+  // browsers except when using Chrome style with a native parent handle.
   std::unique_ptr<CefWindowInfo> window_info;
 
   // The BrowserView that will own a Views-hosted browser. Will be nullptr for
@@ -89,6 +96,10 @@ struct CefBrowserCreateParams {
   // PopupWebContentsCreated).
   bool popup_with_views_hosted_opener = false;
 
+  // True if this browser is a popup and has an Alloy style opener. Only used
+  // with Chrome style.
+  bool popup_with_alloy_style_opener = false;
+
   // Client implementation. May be nullptr.
   CefRefPtr<CefClient> client;
 
@@ -99,8 +110,6 @@ struct CefBrowserCreateParams {
   // Browser settings.
   CefBrowserSettings settings;
 
-  // Other browser that opened this DevTools browser. Will be nullptr for non-
-  // DevTools browsers. Currently used with the alloy runtime only.
   CefRefPtr<CefBrowserHostBase> devtools_opener;
 
   // Request context to use when creating the browser. If nullptr the global
@@ -110,43 +119,24 @@ struct CefBrowserCreateParams {
   // Extra information that will be passed to
   // CefRenderProcessHandler::OnBrowserCreated.
   CefRefPtr<CefDictionaryValue> extra_info;
-
-  // Used when explicitly creating the browser as an extension host via
-  // ProcessManager::CreateBackgroundHost. Currently used with the alloy
-  // runtime only.
-  const extensions::Extension* extension = nullptr;
-  extensions::mojom::ViewType extension_host_type =
-      extensions::mojom::ViewType::kInvalid;
 };
 
-#if BUILDFLAG(IS_OHOS)
-class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
- public:
-  WebMessageReceiverImpl() = default;
-  ~WebMessageReceiverImpl();
-
-  // WebMessagePort::MessageReceiver implementation:
-  bool OnMessage(blink::WebMessagePort::Message message) override;
-
-  void SetOnMessageCallback(CefRefPtr<CefWebMessageReceiver> callback);
-  void ConvertBlinkMsgToCefValue(blink::WebMessagePort::Message& message,
-                                 CefRefPtr<CefValue> data);
-
- private:
-  CefRefPtr<CefWebMessageReceiver> callback_;
-};
+class AlloyBrowserHostImpl;
+class ChromeBrowserHostImpl;
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO) || BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
+class ArkWebBrowserHostExtImpl;
 #endif
 
 // Base class for CefBrowserHost implementations. Includes functionality that is
-// shared by the alloy and chrome runtimes. All methods are thread-safe unless
+// shared by Alloy and Chrome styles. All methods are thread-safe unless
 // otherwise indicated.
-class CefBrowserHostBase : public CefBrowserHost,
-                           public CefBrowser,
+class CefBrowserHostBase : virtual public CefBrowserHost,
+                           virtual public CefBrowser,
                            public CefBrowserContentsDelegate::Observer
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_PERMISSION)
     ,
                            public CefBrowserPermissionRequestDelegate
-#endif
+#endif  // ARKWEB_PERMISSION
 {
  public:
   // Interface to implement for observers that wish to be informed of changes
@@ -158,13 +148,27 @@ class CefBrowserHostBase : public CefBrowserHost,
     virtual void OnBrowserDestroyed(CefBrowserHostBase* browser) = 0;
 
    protected:
-    virtual ~Observer() {}
+    ~Observer() override = default;
   };
+
+  CefRefPtr<CefBrowserHostBase> AsCefBrowserHostBase() override { return this; }
+
+  virtual CefRefPtr<AlloyBrowserHostImpl> AsAlloyBrowserHostImpl() {
+    return nullptr;
+  }
+  virtual CefRefPtr<ChromeBrowserHostImpl> AsChromeBrowserHostImpl() {
+    return nullptr;
+  }
 
   // Create a new CefBrowserHost instance of the current runtime type with
   // owned WebContents.
   static CefRefPtr<CefBrowserHostBase> Create(
       CefBrowserCreateParams& create_params);
+
+  // Safe conversion from CefBrowserHostBase to CefBrowserHostBase.
+  // Use this method instead of static_cast.
+  static CefRefPtr<CefBrowserHostBase> FromBrowser(
+      CefRefPtr<CefBrowser> browser);
 
   // Returns the browser associated with the specified RenderViewHost.
   static CefRefPtr<CefBrowserHostBase> GetBrowserForHost(
@@ -178,14 +182,32 @@ class CefBrowserHostBase : public CefBrowserHost,
   // Returns the browser associated with the specified global ID.
   static CefRefPtr<CefBrowserHostBase> GetBrowserForGlobalId(
       const content::GlobalRenderFrameHostId& global_id);
+  // Returns the browser associated with the specified global token.
+  static CefRefPtr<CefBrowserHostBase> GetBrowserForGlobalToken(
+      const content::GlobalRenderFrameHostToken& global_token);
   // Returns the browser associated with the specified top-level window.
   static CefRefPtr<CefBrowserHostBase> GetBrowserForTopLevelNativeWindow(
       gfx::NativeWindow owning_window);
+  // Returns the browser associated with the specified browser ID.
+  static CefRefPtr<CefBrowserHostBase> GetBrowserForBrowserId(int browser_id);
 
   // Returns the browser most likely to be focused. This may be somewhat iffy
   // with windowless browsers as there is no guarantee that the client has only
   // one browser focused at a time.
   static CefRefPtr<CefBrowserHostBase> GetLikelyFocusedBrowser();
+#ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
+  static void GetPermissionStatusAsync(const CefString& origin,
+                                       cef_permission_status_query_callback_t callback);
+  void AskNotificationPermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskNotificationPermission(const CefString& origin) override;
+#endif // #ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO) || BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
+  // Get a ArkWebBrowserHostExtImpl object.
+  virtual CefRefPtr<ArkWebBrowserHostExtImpl> AsArkWebBrowserHostExtImpl() {
+    return nullptr;
+  }
+#endif
 
   CefBrowserHostBase(
       const CefBrowserSettings& settings,
@@ -208,17 +230,47 @@ class CefBrowserHostBase : public CefBrowserHost,
   // the UI thread only.
   virtual bool WillBeDestroyed() const = 0;
 
-  // Called on the UI thread after the associated WebContents is destroyed.
-  // Also called from CefBrowserInfoManager::DestroyAllBrowsers if the browser
-  // was not properly shut down.
+  // Called on the UI thread to complete WebContents tear-down. In most cases
+  // this will be called via WebContentsObserver::WebContentsDestroyed. Any
+  // remaining objects that reference the WebContents (including RFH, etc)
+  // should be cleared in this callback.
+  virtual void DestroyWebContents(content::WebContents* web_contents);
+
+  // Called on the UI thread to complete CefBrowserHost tear-down.
+  //
+  // With Chrome style the WebContents is owned by the Browser's TabStripModel
+  // and will usually be destroyed first: CloseBrowser -> (async) DoCloseBrowser
+  // -> [TabStripModel deletes the WebContents] -> OnWebContentsDestroyed ->
+  // DestroyWebContents -> (async) DestroyBrowser.
+  //
+  // With Alloy style the WebContents is owned by the
+  // CefBrowserPlatformDelegateAlloy and will usually be destroyed at the same
+  // time: CloseBrowser -> [OS/platform logic] -> (async) DestroyBrowser ->
+  // [CefBrowserPlatformDelegateAlloy deletes the WebContents]
+  // -> WebContentsDestroyed -> DestoyWebContents.
+  //
+  // There are a few exceptions to the above rules:
+  // 1. If the CefBrowserHost still exists at CefShutdown, in which case
+  //    DestroyBrowser will be called first via
+  //    CefBrowserInfoManager::DestroyAllBrowsers.
+  // 2. If a popup WebContents is still pending when the parent WebContents is
+  //    destroyed, in which case WebContentsDestroyed will be called first via
+  //    the parent WebContents destructor.
   virtual void DestroyBrowser();
 
   // CefBrowserHost methods:
   CefRefPtr<CefBrowser> GetBrowser() override;
   CefRefPtr<CefClient> GetClient() override;
   CefRefPtr<CefRequestContext> GetRequestContext() override;
+  bool CanZoom(cef_zoom_command_t command) override;
+  void Zoom(cef_zoom_command_t command) override;
+  double GetDefaultZoomLevel() override;
+  double GetZoomLevel() override;
+  void SetZoomLevel(double zoomLevel) override;
   bool HasView() override;
+  bool IsReadyToBeClosed() override;
   void SetFocus(bool focus) override;
+  int GetOpenerIdentifier() override;
   void RunFileDialog(FileDialogMode mode,
                      const CefString& title,
                      const CefString& default_file_path,
@@ -227,15 +279,19 @@ class CefBrowserHostBase : public CefBrowserHost,
   void StartDownload(const CefString& url) override;
   void DownloadImage(const CefString& image_url,
                      bool is_favicon,
-                     uint32 max_image_size,
+                     uint32_t max_image_size,
                      bool bypass_cache,
                      CefRefPtr<CefDownloadImageCallback> callback) override;
   void Print() override;
   void PrintToPDF(const CefString& path,
                   const CefPdfPrintSettings& settings,
                   CefRefPtr<CefPdfPrintCallback> callback) override;
-  void CreateToPDF(const CefPdfPrintSettings& settings,
-                   CefRefPtr<CefPdfValueCallback> callback) override;
+  void ShowDevTools(const CefWindowInfo& windowInfo,
+                    CefRefPtr<CefClient> client,
+                    const CefBrowserSettings& settings,
+                    const CefPoint& inspect_element_at) override;
+  void CloseDevTools() override;
+  bool HasDevTools() override;
   void ReplaceMisspelling(const CefString& word) override;
   void AddWordToDictionary(const CefString& word) override;
   void SendKeyEvent(const CefKeyEvent& event) override;
@@ -244,7 +300,6 @@ class CefBrowserHostBase : public CefBrowserHost,
                            bool mouseUp,
                            int clickCount) override;
   void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave) override;
-  void SendTouchpadFlingEvent(const CefMouseEvent& event, double vx, double vy) override;
   void SendMouseWheelEvent(const CefMouseEvent& event,
                            int deltaX,
                            int deltaY) override;
@@ -258,123 +313,20 @@ class CefBrowserHostBase : public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void NotifyMoveOrResizeStarted() override;
-
-#ifdef OHOS_DEVTOOLS
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
   void ShowDevToolsWith(
-      CefRefPtr<CefBrowserHost> frontend_browser,
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
       const CefPoint& inspect_element_at) override {}
-#endif // OHOS_DEVTOOLS
-
-#if BUILDFLAG(IS_OHOS)
-  /* ohos webview begin */
-  void PostTaskToUIThread(CefRefPtr<CefTask> task) override;
-  void SetWebPreferences(const CefBrowserSettings& browser_settings) override;
-  void PutUserAgent(const CefString& ua) override;
-  CefString DefaultUserAgent() override;
-  void UpdateBrowserSettings(const CefBrowserSettings& browser_settings);
-  void RegisterNativeJSProxy(const CefString& object_name,
-                             const std::vector<CefString>& method_list,
-                             const int32_t object_id,
-                             bool is_async,
-                             const CefString& permission) override;
-
-#ifdef OHOS_ARKWEB_ADBLOCK
-  void UpdateAdblockEasyListRules(
-      long adBlockEasyListVersion) override;
-
-  bool IsAdsBlockEnabled() override;
-
-  bool IsAdsBlockEnabledForCurPage() override;
-
-  void EnableAdsBlock(bool enable) override;
-
-  void SetAdBlockEnabledForSite(
-      bool is_adblock_enabled,
-      int main_frame_tree_node_id) override;
-#endif
-
-  void RegisterArkJSfunction(const CefString& object_name,
-                             const std::vector<CefString>& method_list,
-                             const std::vector<CefString>& async_method_list,
-                             const int32_t object_id,
-                             const CefString& permission) override;
-  void UnregisterArkJSfunction(
-      const CefString& object_name,
-      const std::vector<CefString>& method_list) override;
-  void CallH5Function(int32_t routing_id,
-                      int32_t h5_object_id,
-                      const CefString& h5_method_name,
-                      const std::vector<CefRefPtr<CefValue>>& args) override;
-  void OnWebPreferencesChanged();
-  bool CanStoreWebArchive() override;
-  void ReloadOriginalUrl() override;
-  void StoreWebArchive(
-      const CefString& base_name,
-      bool auto_name,
-      CefRefPtr<CefStoreWebArchiveResultCallback> callback) override;
-  void GetImageForContextNode() override;
-  void GetImageFromCache(const CefString& url) override;
-  void SetBrowserUserAgentString(const CefString& user_agent) override;
-  void ExitFullScreen() override;
-  void GetRootBrowserAccessibilityManager(void** manager) override;
-#ifdef OHOS_I18N
-  void UpdateLocale(const CefString& locale) override;
-#endif  // OHOS_I18N
-#ifdef OHOS_NETWORK_CONNINFO
-  CefString GetOriginalUrl() override;
-  void PutNetworkAvailable(bool available) override;
-#endif
-  void RemoveCache(bool include_disk_files) override;
-  void SetVirtualKeyBoardArg(int32_t width,
-                             int32_t height,
-                             double keyboard) override;
-  bool ShouldVirtualKeyboardOverlay() override;
-  void JavaScriptOnDocumentStart(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) override;
-  void RemoveJavaScriptOnDocumentStart() override;
-  void JavaScriptOnDocumentEnd(
-      const CefString& script,
-      const std::vector<CefString>& script_rules) override;
-  void RemoveJavaScriptOnDocumentEnd() override;
-  void SetDrawRect(int x, int y, int width, int height) override;
-  void SetDrawMode(int mode) override;
-  void SetFitContentMode(int mode) override;
-  bool GetPendingSizeStatus() override;
-  void SetZoomLevel(double zoomLevel) override;
-  double GetZoomLevel() override;
-  void SetBrowserZoomLevel(double zoom_factor) override;
-  void UpdateBrowserControlsState(int constraints,
-                                  int current,
-                                  bool animate) override;
-  void UpdateBrowserControlsHeight(int height, bool animate) override;
-
-  void StartCamera() override;
-  void StopCamera() override;
-  void CloseCamera() override;
-  void SetNWebId(int NWebID) override;
-  void PrecompileJavaScript(const std::string& url,
-                            const std::string& script,
-                            CefRefPtr<CefCacheOptions> cacheOptions,
-                            CefRefPtr<CefPrecompileCallback> callback) override;
-  void AdvanceFocusForIME(int focusType) override;
-  void SetNativeEmbedMode(bool flag) override;
-  /* ohos webview end */
-#endif
-#ifdef OHOS_NAVIGATION
-  CefRefPtr<CefBinaryValue> GetWebState() override;
-  bool RestoreWebState(const CefRefPtr<CefBinaryValue> state) override;
-#endif
-
-#ifdef OHOS_RENDER_PROCESS_MODE
-void NotifyNeedsReload(bool needs_reload) override;
-bool NeedsReload() override;
-#endif
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+  bool IsFullscreen() override;
+  void ExitFullscreen(bool will_cause_resize) override;
+  bool IsRenderProcessUnresponsive() override;
+  cef_runtime_style_t GetRuntimeStyle() override;
 
   // CefBrowser methods:
   bool IsValid() override;
-  CefRefPtr<CefBrowserHost> GetHost() override;
+  // CefRefPtr<CefBrowserHost> GetHost() override { return this; }
   bool CanGoBack() override;
   void GoBack() override;
   bool CanGoForward() override;
@@ -389,211 +341,29 @@ bool NeedsReload() override;
   bool IsPopup() override;
   CefRefPtr<CefFrame> GetMainFrame() override;
   CefRefPtr<CefFrame> GetFocusedFrame() override;
-  CefRefPtr<CefFrame> GetFrame(int64 identifier) override;
-  CefRefPtr<CefFrame> GetFrame(const CefString& name) override;
+  CefRefPtr<CefFrame> GetFrameByIdentifier(
+      const CefString& identifier) override;
+  CefRefPtr<CefFrame> GetFrameByName(const CefString& name) override;
   size_t GetFrameCount() override;
-  void GetFrameIdentifiers(std::vector<int64>& identifiers) override;
+  void GetFrameIdentifiers(std::vector<CefString>& identifiers) override;
   void GetFrameNames(std::vector<CefString>& names) override;
-
-#if BUILDFLAG(IS_OHOS)
-  int GetSecurityLevel() override;
-  void DeleteHistory() override;
-  void SetFocusOnWeb() override;
-  bool CanGoBackOrForward(int num_steps) override;
-  void GoBackOrForward(int num_steps) override;
-  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate()
-      override;
-  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions() override;
-
-  CefString Title() override;
-  void SetInitialScale(float scale) override;
-  void SetVirtualPixelRatio(float ratio) override;
-  float GetVirtualPixelRatio() override;
-  int PageLoadProgress() override;
-  float Scale() override;
-  void LoadWithDataAndBaseUrl(const CefString& baseUrl,
-                              const CefString& data,
-                              const CefString& mimeType,
-                              const CefString& encoding,
-                              const CefString& historyUrl) override;
-
-  void LoadWithData(const CefString& data,
-                    const CefString& mimeType,
-                    const CefString& encoding) override;
-
-  void ExecuteJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
-                         base::Value result);
-
-  void ExecuteExtensionJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
-                                  base::Value result);
-
-  void ExecuteJavaScript(const std::string& code,
-                         CefRefPtr<CefJavaScriptResultCallback> callback,
-                         bool extention) override;
-
-  void ExecuteJavaScriptExt(const int fd,
-                            const uint64 scriptLength,
-                            CefRefPtr<CefJavaScriptResultCallback> callback,
-                            bool extention) override;
-
-  void ResumeDownload(const CefString& url,
-                      const CefString& full_path,
-                      int64 received_bytes,
-                      int64 total_bytes,
-                      const CefString& etag,
-                      const CefString& mime_type,
-                      const CefString& last_modified,
-                      const CefString& received_slices_string) override;
-#if defined(OHOS_EX_DOWNLOAD)
-  CefRefPtr<CefDownloadItem> GetDownloadItem(uint32 item_id) override;
-#endif
-  void WasOccluded(bool occluded) override;
-  void OnWindowShow() override;
-  void OnWindowHide() override;
-  void OnOnlineRenderToForeground() override;
-  void WasKeyboardResized() override;
-  void SetWindowId(int window_id, int nweb_id) override;
-  void SetWakeLockHandler(int32_t windowId, CefRefPtr<CefSetLockCallback> callback) override;
-#if defined(OHOS_PRINT)
-  void SetToken(void* token) override;
-  void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                     void** webPrintDocumentAdapter) override;
-  void SetPrintBackground(bool enable) override;
-  bool GetPrintBackground() override;
-#endif // defined(OHOS_PRINT)
-  void SetEnableLowerFrameRate(bool enabled) override;
-  void SetAudioResumeInterval(int resumeInterval) override;
-  void SetAudioExclusive(bool audioExclusive) override;
-  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list) override;
-  void NotifyForNextTouchEvent() override;
-#if defined(OHOS_INPUT_EVENTS)
-  void ScrollFocusedEditableNodeIntoView() override;
-#endif
-#ifdef OHOS_PAGE_UP_DOWN
-  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
-#ifdef OHOS_GET_SCROLL_OFFSET
-  void GetScrollOffset(float* offset_x, float* offset_y) override;
-#endif
-#endif  // OHOS_PAGE_UP_DOWN
-#if defined(OHOS_INPUT_EVENTS)
-  void ScrollTo(float x, float y) override;
-  void ScrollBy(float delta_x, float delta_y) override;
-  void SlideScroll(float vx, float vy) override;
-  void ZoomBy(float delta, float width, float height) override;
-  void GetHitData(int& type, CefString& extra_data) override;
-  uint64_t GetCurrentTimestamp();
-  void SetOverscrollMode(int overScrollMode) override;
-  void SetScrollable(bool enable, int scrollType) override;
-  void UpdateDrawRect() override;
-  void ScrollToWithAnime(float x, float y, int32_t duration) override;
-  void ScrollByWithAnime(float delta_x, float delta_y, int32_t duration) override;
-#if defined(OHOS_GET_SCROLL_OFFSET)
-  void GetOverScrollOffset(float* offset_x, float* offset_y) override;
-#endif
-#endif  // defined(OHOS_INPUT_EVENTS)
-#ifdef OHOS_NETWORK_CONNINFO
-  void SetFileAccess(bool falg) override;
-  void SetBlockNetwork(bool falg) override;
-  void SetCacheMode(int falg) override;
-  void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
-#endif
-  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-  bool Discard() override { return false; }
-  bool Restore() override { return false; }
-  // #ifdef OHOS_EX_FREE_COPY
-  void SelectAndCopy() override;
-  bool ShouldShowFreeCopy() override;
-  // #endif
-  int GetNWebId() override;
-#ifdef OHOS_ITP
-  void EnableIntelligentTrackingPrevention(bool enable) override;
-  bool IsIntelligentTrackingPreventionEnabled() override;
-#endif
-#endif  // BUILDFLAG(IS_OHOS)
-
-#if defined(OHOS_MEDIA_POLICY)
-  void CloseMedia() override;
-  void StopMedia() override;
-  void ResumeMedia() override;
-  void PauseMedia() override;
-  int GetMediaPlaybackState() override;
-#endif // defined(OHOS_MEDIA_POLICY)
-
-#if defined(OHOS_NO_STATE_PREFETCH)
-  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
-#endif  // defined(OHOS_NO_STATE_PREFETCH)
-
-#if defined(OHOS_MSGPORT)
-  void CreateWebMessagePorts(std::vector<CefString>& ports) override;
-  void PostWebMessage(CefString& message,
-                      std::vector<CefString>& ports,
-                      CefString& targetUri) override;
-  void ClosePort(CefString& port_handle) override;
-  bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
-                                 blink::WebMessagePort::Message& message);
-  void PostPortMessage(const CefString& port_handle,
-                       CefRefPtr<CefValue> message) override;
-  void SetPortMessageCallback(
-      const CefString& port_handle,
-      CefRefPtr<CefWebMessageReceiver> callback) override;
-  void DestroyAllWebMessagePorts() override;
-#endif  // defined(OHOS_MSGPORT)
-
-  void SetAutofillCallback(CefRefPtr<CefWebMessageReceiver> callback) override;
-  void FillAutofillData(CefRefPtr<CefValue> message) override;
-
-#if defined(OHOS_PASSWORD_AUTOFILL)
-  void ProcessAutofillCancel(const std::string& fillContent) override;
-  void AutoFillWithIMFEvent(bool is_username,
-                            bool is_other_account,
-                            bool is_new_password,
-                            const std::string& content) override;
-#endif
-
-  // #if defined(OHOS_NWEB_EX)
-  // NOTE: Keep the previous line commented, add NWebEx APIs below.
-  bool ShouldShowLoadingUI() override;
-
-  void SetForceEnableZoom(bool forceEnableZoom) override;
-  bool GetForceEnableZoom() override;
-  // #ifdef OHOS_EX_BLANK_TARGET_POPUP_INTERCEPT
-  void SetEnableBlankTargetPopupIntercept(bool enableBlankTargetPopup) override;
-  // #endif
-  // if defined(OHOS_EX_PASSWORD)
-  void PasswordSuggestionSelected(int list_index) override;
-  bool GetSavePasswordAutomatically() override;
-  void SetSavePasswordAutomatically(bool enable) override;
-  void SaveOrUpdatePassword(bool is_update) override;
-  bool GetSavePassword() override;
-  void SetSavePassword(bool enable) override;
-  // #endif // defined(OHOS_EX_PASSWORD)
-  // if defined(OHOS_EX_TOPCONTROLS)
-  int GetTopControlsOffset() override;
-  int GetShrinkViewportHeight() override;
-  // #endif
-  // #endif // defined(OHOS_NWEB_EX)
-
-#if BUILDFLAG(IS_OHOS)
-bool TerminateRenderProcess() override;
-#endif
-
-#if BUILDFLAG(IS_OHOS)
-  bool IsSafeBrowsingEnabled() override;
-  void EnableSafeBrowsing(bool enable) override;
-#endif
+  void SetAccessibilityState(cef_state_t accessibility_state) override;
 
   // CefBrowserContentsDelegate::Observer methods:
   void OnStateChanged(CefBrowserContentsState state_changed) override;
   void OnWebContentsDestroyed(content::WebContents* web_contents) override;
 
-  // Returns the frame associated with the specified RenderFrameHost.
+  // Returns the frame object matching the specified |host| or nullptr if no
+  // match is found. Must be called on the UI thread.
   CefRefPtr<CefFrame> GetFrameForHost(const content::RenderFrameHost* host);
 
-  // Returns the frame associated with the specified global ID. See
-  // documentation on RenderFrameHost::GetFrameTreeNodeId() for why the global
-  // ID is preferred.
+  // Returns the frame associated with the specified global ID/token. See
+  // documentation on RenderFrameHost::GetFrameTreeNodeId/Token() for why the
+  // global ID/token is preferred.
   CefRefPtr<CefFrame> GetFrameForGlobalId(
       const content::GlobalRenderFrameHostId& global_id);
+  CefRefPtr<CefFrame> GetFrameForGlobalToken(
+      const content::GlobalRenderFrameHostToken& global_token);
 
   // Manage observer objects. The observer must either outlive this object or
   // be removed before destruction. Must be called on the UI thread.
@@ -618,19 +388,30 @@ bool TerminateRenderProcess() override;
                      const ui::SelectFileDialog::FileTypeInfo* file_types,
                      int file_type_index,
                      const base::FilePath::StringType& default_extension,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
                      gfx::NativeWindow owning_window,
-                     void* params);
+                     std::vector<std::u16string> accept_types,
+                     bool use_media_capture);
+#else
+                     gfx::NativeWindow owning_window);
+#endif
   void SelectFileListenerDestroyed(ui::SelectFileDialog::Listener* listener);
+
+  // Called from AlloyBrowserHostImpl::GetJavaScriptDialogManager and
+  // ChromeBrowserDelegate::GetJavaScriptDialogManager.
+  content::JavaScriptDialogManager* GetJavaScriptDialogManager();
 
   // Called from CefBrowserInfoManager::MaybeAllowNavigation.
   virtual bool MaybeAllowNavigation(content::RenderFrameHost* opener,
-                                    bool is_guest_view,
                                     const content::OpenURLParams& params);
 
   // Helpers for executing client callbacks. Must be called on the UI thread.
   void OnAfterCreated();
   void OnBeforeClose();
   void OnBrowserDestroyed();
+
+  void EnableVideoAssistant(bool enable) override;
+  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
 
   // Thread-safe accessors.
   const CefBrowserSettings& settings() const { return settings_; }
@@ -644,7 +425,11 @@ bool TerminateRenderProcess() override;
   SkColor GetBackgroundColor() const;
 
   // Returns true if windowless rendering is enabled.
-  virtual bool IsWindowless() const;
+  virtual bool IsWindowless() const = 0;
+
+  // Returns the runtime style of this browser.
+  virtual bool IsAlloyStyle() const = 0;
+  bool IsChromeStyle() const { return !IsAlloyStyle(); }
 
   // Accessors that must be called on the UI thread.
   content::WebContents* GetWebContents() const;
@@ -652,10 +437,27 @@ bool TerminateRenderProcess() override;
   CefBrowserPlatformDelegate* platform_delegate() const {
     return platform_delegate_.get();
   }
-  CefBrowserContentsDelegate* contents_delegate() const {
-    return contents_delegate_.get();
+  CefBrowserContentsDelegate* contents_delegate() {
+    return &contents_delegate_;
   }
   CefMediaStreamRegistrar* GetMediaStreamRegistrar();
+  CefDevToolsWindowRunner* GetDevToolsWindowRunner();
+
+  CefRefPtr<CefUnresponsiveProcessCallback> unresponsive_process_callback()
+      const {
+    return unresponsive_process_callback_;
+  }
+  void set_unresponsive_process_callback(
+      CefRefPtr<CefUnresponsiveProcessCallback> callback) {
+    unresponsive_process_callback_ = callback;
+  }
+
+  RenderViewContextMenuObserver* context_menu_observer() const {
+    return context_menu_observer_;
+  }
+  void set_context_menu_observer(RenderViewContextMenuObserver* observer) {
+    context_menu_observer_ = observer;
+  }
 
   // Returns the Widget owner for the browser window. Only used with windowed
   // browsers.
@@ -682,109 +484,86 @@ bool TerminateRenderProcess() override;
   // Returns true if this browser is currently visible.
   virtual bool IsVisible() const;
 
-#if BUILDFLAG(IS_OHOS)
+  // Returns the next popup ID for use with OnBeforePopup. Must be called on
+  // the UI thread.
+  int GetNextPopupId();
+
+#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
+  bool NeedToFireBeforeUnloadOrUnloadEvents() override;
+  void DispatchBeforeUnload() override;
+#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
+
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  std::string GetCustomUserAgent();
+#endif
+
+#if BUILDFLAG(ARKWEB_PERMISSION)
+  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate();
+  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions();
   AlloyPermissionRequestHandler* GetPermissionRequestHandler() {
     return permission_request_handler_.get();
   }
-
-  // CefBrowserPermissionRequestDelegate methods:
+  void PopupGeolocationPrompt(std::string origin,
+                              cef_permission_callback_t callback);
+  void RemoveGeolocationPrompt(std::string origin);
+  void OnGeolocationShow(std::string origin);
   void AskGeolocationPermission(const CefString& origin,
                                 cef_permission_callback_t callback) override;
   void AbortAskGeolocationPermission(const CefString& origin) override;
   void NotifyGeolocationPermission(bool value,
                                    const CefString& origin) override;
-#if defined(OHOS_SENSOR)
+#if BUILDFLAG(ARKWEB_SENSOR)
   void AskSensorsPermission(const CefString& origin,
-                                cef_permission_callback_t callback) override;
+                            cef_permission_callback_t callback) override;
   void AbortAskSensorsPermission(const CefString& origin) override;
-#endif // defined(OHOS_SENSOR)
+#endif
   void AskProtectedMediaIdentifierPermission(
       const CefString& origin,
-      cef_permission_callback_t callback) override;
+      cef_permission_callback_t callback) override {}
   void AbortAskProtectedMediaIdentifierPermission(
-      const CefString& origin) override;
+      const CefString& origin) override {}
   void AskMIDISysexPermission(const CefString& origin,
                               cef_permission_callback_t callback) override;
   void AbortAskMIDISysexPermission(const CefString& origin) override;
 
-  void AskClipboardReadWritePermission(const CefString& origin,
-                              cef_permission_callback_t callback) override;
+  void AskClipboardReadWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
   void AbortAskClipboardReadWritePermission(const CefString& origin) override;
-  // Geolocation API support
-  void PopupGeolocationPrompt(std::string origin,
-                              cef_permission_callback_t callback);
-  void RemoveGeolocationPrompt(std::string origin);
-  void OnGeolocationShow(std::string origin);
 
-  bool IsBase64Encoded(std::string encoding);
-  std::string GetDataURI(const std::string& data);
+  void AskClipboardSanitizedWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) override;
+  void AbortAskClipboardSanitizedWritePermission(
+      const CefString& origin) override;
 
-  void SetNativeWindow(cef_native_window_t window) override;
-  uint32_t GetAcceleratedWidget(bool isPopup) override;
+  void AskAudioCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskAudioCapturePermission(const CefString& origin) override;
+  void AskVideoCapturePermission(const CefString& origin,
+                                 cef_permission_callback_t callback) override;
+  void AbortAskVideoCapturePermission(const CefString& origin) override;
+#endif  // ARKWEB_PERMISSION
 
-  void SetWebDebuggingAccess(bool isEnableDebug) override;
-  bool GetWebDebuggingAccess() override;
-
-#ifdef OHOS_SCROLLBAR
-  void UpdatePixelRatio(float ratio);
+#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
+  bool IsIframe() override { return false; }
+  void ReloadFocusedFrame() override {}
 #endif
 
-#ifdef OHOS_NETWORK_CONNINFO
-  bool GetFileAccess();
-  bool GetBlockNetwork();
-  int GetCacheMode();
-  std::vector<std::string> GetGrantFileAccessDirs();
-  bool file_access_ = false;
-  bool network_blocked_ = false;
-  int cache_mode_ = 0;
-  std::vector<CefString> file_access_dirs_list_{};
-#endif
+  void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
+  void RegisterScreenCaptureDelegateListener(
+      CefRefPtr<CefScreenCaptureCallback> listener) override;
 
-#if defined(OHOS_SECURE_JAVASCRIPT_PROXY)
-  CefString GetLastJavascriptProxyCallingFrameUrl() override;
-#endif
-#endif  // IS_OHOS
-
-#ifdef OHOS_DISPLAY_CUTOUT
-  void OnSafeInsetsChange(int left, int top, int right, int bottom) override;
-#endif
-
-#ifdef OHOS_AI
-  void OnTextSelected(bool flag) override;
-  float GetPageScaleFactor() override;
-#endif
-
-#ifdef OHOS_URL_TRUST_LIST
-  int SetUrlTrustListWithErrMsg(
-    const CefString& urlTrustList, CefString& detailErrMsg) override;
-#endif
-
-#if defined(OHOS_SOFTWARE_COMPOSITOR)
-  bool WebPageSnapshot(const char* id,
-                       int width,
-                       int height,
-                       cef_web_snapshot_callback_t callback)override;
-#endif
-
-#ifdef OHOS_BFCACHE
-  void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override;
-#endif
-
-  void SetPopupWindow(cef_native_window_t popupWindow) override;
-
-#ifdef OHOS_USERAGENT
-  std::string GetCustomUserAgent();
-#endif
-
-  void ScaleGestureChangeV2(int type, float scale, float originScale, float centerX, float centerY) override;
-
-protected:
-  bool EnsureDevToolsManager();
+ protected:
+  bool EnsureDevToolsProtocolManager();
   void InitializeDevToolsRegistrationOnUIThread(
       CefRefPtr<CefRegistration> registration);
 
   // Called from LoadMainFrameURL to perform the actual navigation.
   virtual bool Navigate(const content::OpenURLParams& params);
+
+  // Called from ShowDevTools to perform the actual show.
+  void ShowDevToolsOnUIThread(std::unique_ptr<CefShowDevToolsParams> params);
 
   // Create the CefFileDialogManager if it doesn't already exist.
   bool EnsureFileDialogManager();
@@ -796,9 +575,12 @@ protected:
   scoped_refptr<CefBrowserInfo> browser_info_;
   CefRefPtr<CefRequestContextImpl> request_context_;
   const bool is_views_hosted_;
+  int opener_id_ = 0;
 
   // Only accessed on the UI thread.
-  std::unique_ptr<CefBrowserContentsDelegate> contents_delegate_;
+  ArkWebBrowserContentsDelegateExt contents_delegate_;
+  CefRefPtr<CefUnresponsiveProcessCallback> unresponsive_process_callback_;
+  raw_ptr<RenderViewContextMenuObserver> context_menu_observer_ = nullptr;
 
   // Observers that want to be notified of changes to this object.
   // Only accessed on the UI thread.
@@ -807,109 +589,49 @@ protected:
   // Used for creating and managing file dialogs.
   std::unique_ptr<CefFileDialogManager> file_dialog_manager_;
 
+  // Used for creating and managing JavaScript dialogs.
+  std::unique_ptr<CefJavaScriptDialogManager> javascript_dialog_manager_;
+
   // Volatile state accessed from multiple threads. All access must be protected
   // by |state_lock_|.
   base::Lock state_lock_;
   bool is_loading_ = false;
-
-#if !BUILDFLAG(IS_OHOS)
   bool can_go_back_ = false;
   bool can_go_forward_ = false;
-#endif
-
   bool has_document_ = false;
   bool is_fullscreen_ = false;
   CefRefPtr<CefFrameHostImpl> focused_frame_;
 
-  // Used for creating and managing DevTools instances.
-  std::unique_ptr<CefDevToolsManager> devtools_manager_;
+  // Used for managing DevTools instances without a frontend.
+  std::unique_ptr<CefDevToolsProtocolManager> devtools_protocol_manager_;
+
+  // Used for creating and running the DevTools window frontend.
+  std::unique_ptr<CefDevToolsWindowRunner> devtools_window_runner_;
 
   std::unique_ptr<CefMediaStreamRegistrar> media_stream_registrar_;
 
- private:
-#if BUILDFLAG(IS_OHOS)
-  js_injection::JsCommunicationHost* GetJsCommunicationHost();
-  void StoreWebArchiveInternal(
-      CefRefPtr<CefStoreWebArchiveResultCallback> callback,
-      const CefString& path);
+  int next_popup_id_ = 1;
 
-  // ResumeDownloadWithId is callback param in DownloadManager::GetNextId to
-  // resume an interrupted download.
-  void ResumeDownloadWithId(
-      const GURL &url, const base::FilePath &full_path, int64 received_bytes,
-      int64 total_bytes, const std::string &etag, const std::string &mime_type,
-      const std::string &last_modified,
-      std::vector<download::DownloadItem::ReceivedSlice> received_slices,
-      uint32_t next_id);
-
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  friend class ArkWebBrowserHostExtImpl;
+  friend class ArkWebBrowserHostExt;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_PERMISSION)
   bool UseLegacyGeolocationPermissionAPI();
-
-  oh_code_cache::NextOp WriteResponseCache(
-      const std::string& url,
-      const std::string& script,
-      std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions);
-
-  void OnDidWriteResponseCache(const std::string& url,
-                               const std::string& script,
-                               std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
-                               CefRefPtr<CefPrecompileCallback> callback,
-                               oh_code_cache::NextOp nextOp);
-
-  void GenerateCodeCache(const std::string& url,
-                         const std::string& script,
-                         std::shared_ptr<oh_code_cache::CacheOptions> cacheOptions,
-                         CefRefPtr<CefPrecompileCallback> callback);
-
-  void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
-
-  void SetPortMessageCallbackInternal(
-    const CefString& portHandle,
-    CefRefPtr<CefWebMessageReceiver> callback);
-  void PostPortMessageInternal(const CefString& portHandle,
-                                          CefRefPtr<CefValue> data);
-
+  CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
+  std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
   // GURL is supplied by the content layer as requesting frame.
   // Callback is supplied by the content layer, and is invoked with the result
   // from the permission prompt.
   typedef std::pair<std::string, cef_permission_callback_t> OriginCallback;
   // The first element in the list is always the currently pending request.
   std::list<OriginCallback> unhandled_geolocation_prompts_;
+#endif  // BUILDFLAG(ARKWEB_PERMISSION)
 
-  using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
-  using PortHandle = std::pair<uint64_t, uint64_t>;
-  base::Lock web_message_lock_;
-  std::map<PortHandle, MessagePipe> portMap_ GUARDED_BY(web_message_lock_);
-  std::set<std::string> postedPorts_ GUARDED_BY(web_message_lock_);
-  std::unordered_map<std::string, std::shared_ptr<WebMessageReceiverImpl>>
-      receiverMap_ GUARDED_BY(web_message_lock_);
-  scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
-          base::ThreadPool::CreateSequencedTaskRunner({});
-
-#if defined(OHOS_INPUT_EVENTS)
-  uint64_t last_zoom_time_ = 0;
-  bool scrollable_ = true;
-  int scrollType_ = -1;
-#endif  // defined(OHOS_INPUT_EVENTS)
-
-  CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
-  std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
-
-  cef_accelerated_widget_t widget_;
-  cef_accelerated_widget_t popup_widget_;
-  bool is_web_debugging_access_ = false;
-  float virtual_pixel_ratio_ = 2.0;
-  base::WeakPtrFactory<CefBrowserHostBase> weak_ptr_factory_;
-  std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
-  std::map<std::string, int> document_start_script_result_map_;
-  std::map<std::string, int> document_end_script_result_map_;
-#ifdef OHOS_ITP
-  mutable base::Lock lock_;
-  bool intelligent_tracking_prevention_cookies_enabled_ GUARDED_BY(lock_) = false;
-#endif
-#ifdef OHOS_USERAGENT
+ private:
+#if BUILDFLAG(ARKWEB_USERAGENT)
   std::string custom_user_agent_;
 #endif
-#endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
 };
 

@@ -58,7 +58,7 @@ class CefResourceSkipCallback : public virtual CefBaseRefCounted {
   /// <= 0 the request will fail with ERR_REQUEST_RANGE_NOT_SATISFIABLE.
   ///
   /*--cef(capi_name=cont)--*/
-  virtual void Continue(int64 bytes_skipped) = 0;
+  virtual void Continue(int64_t bytes_skipped) = 0;
 };
 
 ///
@@ -136,13 +136,18 @@ class CefResourceHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                                  int64& response_length,
+                                  int64_t& response_length,
                                   CefString& redirectUrl) = 0;
 
-#if BUILDFLAG(IS_OHOS)
-  virtual const std::string& GetResponseData() {static const std::string data; return data;}
-  virtual size_t GetResponseDataBuffer(char* data, size_t dest_size) {return 0;}
-  virtual size_t GetResponseDataBufferSize() {return 0;}
+#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
+  virtual const std::string GetResponseData() {
+    static const std::string data;
+    return data;
+  }
+  virtual size_t GetResponseDataBuffer(char* data, size_t dest_size) {
+    return 0;
+  }
+  virtual size_t GetResponseDataBufferSize() { return 0; }
 #endif
 
   ///
@@ -155,8 +160,8 @@ class CefResourceHandler : public virtual CefBaseRefCounted {
   /// method will be called in sequence but not from a dedicated thread.
   ///
   /*--cef()--*/
-  virtual bool Skip(int64 bytes_to_skip,
-                    int64& bytes_skipped,
+  virtual bool Skip(int64_t bytes_to_skip,
+                    int64_t& bytes_skipped,
                     CefRefPtr<CefResourceSkipCallback> callback) {
     bytes_skipped = -2;
     return false;

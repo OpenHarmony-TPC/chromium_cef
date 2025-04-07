@@ -5,9 +5,10 @@
 #ifndef CEF_LIBCEF_BROWSER_VIEWS_BROWSER_PLATFORM_DELEGATE_VIEWS_H_
 #define CEF_LIBCEF_BROWSER_VIEWS_BROWSER_PLATFORM_DELEGATE_VIEWS_H_
 
-#include "libcef/browser/alloy/browser_platform_delegate_alloy.h"
-#include "libcef/browser/native/browser_platform_delegate_native.h"
-#include "libcef/browser/views/browser_view_impl.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/alloy/browser_platform_delegate_alloy.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
 
 // Implementation of Views-based browser functionality.
 class CefBrowserPlatformDelegateViews
@@ -33,14 +34,7 @@ class CefBrowserPlatformDelegateViews
   CefWindowHandle GetHostWindowHandle() const override;
   views::Widget* GetWindowWidget() const override;
   CefRefPtr<CefBrowserView> GetBrowserView() const override;
-  void PopupWebContentsCreated(
-      const CefBrowserSettings& settings,
-      CefRefPtr<CefClient> client,
-      content::WebContents* new_web_contents,
-      CefBrowserPlatformDelegate* new_platform_delegate,
-      bool is_devtools) override;
-  void PopupBrowserCreated(CefBrowserHostBase* new_browser,
-                           bool is_devtools) override;
+  void SetBrowserView(CefRefPtr<CefBrowserView> browser_view) override;
   SkColor GetBackgroundColor() const override;
   void WasResized() override;
   void SendKeyEvent(const CefKeyEvent& event) override;
@@ -57,10 +51,9 @@ class CefBrowserPlatformDelegateViews
   gfx::Point GetScreenPoint(const gfx::Point& view,
                             bool want_dip_coords) const override;
   void ViewText(const std::string& text) override;
-  bool HandleKeyboardEvent(
-      const content::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(const input::NativeWebKeyboardEvent& event) override;
   CefEventHandle GetEventHandle(
-      const content::NativeWebKeyboardEvent& event) const override;
+      const input::NativeWebKeyboardEvent& event) const override;
   std::unique_ptr<CefMenuRunner> CreateMenuRunner() override;
   bool IsViewsHosted() const override;
   gfx::Point GetDialogPosition(const gfx::Size& size) override;
@@ -72,10 +65,14 @@ class CefBrowserPlatformDelegateViews
                                   bool want_dip_coords) const override;
 
  private:
-  void SetBrowserView(CefRefPtr<CefBrowserViewImpl> browser_view);
-
   std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate_;
-  CefRefPtr<CefBrowserViewImpl> browser_view_;
+
+  // Holding a weak reference here because we want the CefBrowserViewImpl to be
+  // destroyed first if all references are released by the client.
+  // CefBrowserViewImpl destruction will then trigger destruction of any
+  // associated CefBrowserHostBase (which owns this CefBrowserPlatformDelegate
+  // object).
+  base::WeakPtr<CefBrowserViewImpl> browser_view_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_VIEWS_BROWSER_PLATFORM_DELEGATE_VIEWS_H_

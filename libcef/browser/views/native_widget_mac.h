@@ -6,8 +6,8 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_NATIVE_WIDGET_MAC_H_
 #pragma once
 
-#include "include/internal/cef_ptr.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/include/internal/cef_ptr.h"
 #include "ui/views/widget/native_widget_mac.h"
 
 class BrowserView;
@@ -46,9 +46,13 @@ class CefNativeWidgetMac : public views::NativeWidgetMac {
 
  private:
   const CefRefPtr<CefWindow> window_;
-  CefWindowDelegate* const window_delegate_;
+  const raw_ptr<CefWindowDelegate> window_delegate_;
 
-  BrowserView* browser_view_ = nullptr;
+  // Returns true if the CefWindow is fully initialized.
+  bool IsCefWindowInitialized() const;
+
+  raw_ptr<BrowserView, AcrossTasksDanglingUntriaged> browser_view_ = nullptr;
+  bool initialized_ = false;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_VIEWS_NATIVE_WIDGET_MAC_H_

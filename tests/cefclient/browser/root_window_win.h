@@ -24,8 +24,8 @@ namespace client {
 class RootWindowWin : public RootWindow, public BrowserWindow::Delegate {
  public:
   // Constructor may be called on any thread.
-  RootWindowWin();
-  ~RootWindowWin();
+  explicit RootWindowWin(bool use_alloy_style);
+  ~RootWindowWin() override;
 
   // RootWindow methods.
   void Init(RootWindow::Delegate* delegate,
@@ -47,7 +47,6 @@ class RootWindowWin : public RootWindow, public BrowserWindow::Delegate {
   CefRefPtr<CefBrowser> GetBrowser() const override;
   ClientWindowHandle GetWindowHandle() const override;
   bool WithWindowlessRendering() const override;
-  bool WithExtension() const override;
 
  private:
   void ContinueInitOnUIThread(std::unique_ptr<RootWindowConfig> config,
@@ -100,6 +99,7 @@ class RootWindowWin : public RootWindow, public BrowserWindow::Delegate {
   void OnDestroyed();
 
   // BrowserWindow::Delegate methods.
+  bool UseAlloyStyle() const override { return IsAlloyStyle(); }
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser) override;
   void OnBrowserWindowDestroyed() override;
   void OnSetAddress(const std::string& url) override;
@@ -121,13 +121,11 @@ class RootWindowWin : public RootWindow, public BrowserWindow::Delegate {
   bool with_controls_ = false;
   bool always_on_top_ = false;
   bool with_osr_ = false;
-  bool with_extension_ = false;
   bool is_popup_ = false;
   CefRect initial_bounds_;
   cef_show_state_t initial_show_state_ = CEF_SHOW_STATE_NORMAL;
   std::unique_ptr<BrowserWindow> browser_window_;
   CefBrowserSettings browser_settings_;
-  bool initialized_ = false;
 
   // Main window.
   HWND hwnd_ = nullptr;

@@ -1,90 +1,5 @@
-diff --git chrome/browser/plugins/plugin_info_host_impl.cc chrome/browser/plugins/plugin_info_host_impl.cc
-index 95cd290b601a3..89e8ab892e5ea 100644
---- chrome/browser/plugins/plugin_info_host_impl.cc
-+++ chrome/browser/plugins/plugin_info_host_impl.cc
-@@ -140,6 +140,10 @@ bool IsPluginLoadingAccessibleResourceInWebView(
-     extensions::ExtensionRegistry* extension_registry,
-     int process_id,
-     const GURL& resource) {
-+  // May be nullptr if using CEF Alloy with extensions disabled.
-+  if (!extension_registry)
-+    return false;
-+
-   extensions::WebViewRendererState* renderer_state =
-       extensions::WebViewRendererState::GetInstance();
-   std::string partition_id;
-diff --git chrome/browser/plugins/plugin_utils.cc chrome/browser/plugins/plugin_utils.cc
-index 8b3f569882aeb..afc8007a6228b 100644
---- chrome/browser/plugins/plugin_utils.cc
-+++ chrome/browser/plugins/plugin_utils.cc
-@@ -70,6 +70,13 @@ PluginUtils::GetMimeTypeToExtensionIdMap(
-     content::BrowserContext* browser_context) {
-   base::flat_map<std::string, std::string> mime_type_to_extension_id_map;
- #if BUILDFLAG(ENABLE_EXTENSIONS)
-+  // May be nullptr if using CEF Alloy with extensions disabled.
-+  extensions::ExtensionRegistry* registry =
-+      extensions::ExtensionRegistry::Get(browser_context);
-+  if (!registry) {
-+    return mime_type_to_extension_id_map;
-+  }
-+
-   Profile* profile = Profile::FromBrowserContext(browser_context);
-   if (extensions::ChromeContentBrowserClientExtensionsPart::
-           AreExtensionsDisabledForProfile(profile)) {
-@@ -80,9 +87,6 @@ PluginUtils::GetMimeTypeToExtensionIdMap(
-       MimeTypesHandler::GetMIMETypeAllowlist();
-   // Go through the allowed extensions and try to use them to intercept
-   // the URL request.
--  extensions::ExtensionRegistry* registry =
--      extensions::ExtensionRegistry::Get(browser_context);
--  DCHECK(registry);
-   for (const std::string& extension_id : allowlist) {
-     const extensions::Extension* extension =
-         registry->enabled_extensions().GetByID(extension_id);
-diff --git chrome/renderer/chrome_content_renderer_client.cc chrome/renderer/chrome_content_renderer_client.cc
-index c5c1deb4a388c..6606f5bd417ca 100644
---- chrome/renderer/chrome_content_renderer_client.cc
-+++ chrome/renderer/chrome_content_renderer_client.cc
-@@ -985,6 +985,7 @@ WebPlugin* ChromeContentRendererClient::CreatePlugin(
- 
-     if ((status == chrome::mojom::PluginStatus::kUnauthorized ||
-          status == chrome::mojom::PluginStatus::kBlocked) &&
-+        content_settings_agent_delegate &&
-         content_settings_agent_delegate->IsPluginTemporarilyAllowed(
-             identifier)) {
-       status = chrome::mojom::PluginStatus::kAllowed;
-@@ -1152,7 +1153,8 @@ WebPlugin* ChromeContentRendererClient::CreatePlugin(
-         render_frame->GetRemoteAssociatedInterfaces()->GetInterface(
-             plugin_auth_host.BindNewEndpointAndPassReceiver());
-         plugin_auth_host->BlockedUnauthorizedPlugin(group_name, identifier);
--        content_settings_agent->DidBlockContentType(content_type);
-+        if (content_settings_agent)
-+          content_settings_agent->DidBlockContentType(content_type);
-         break;
-       }
-       case chrome::mojom::PluginStatus::kBlocked: {
-@@ -1161,7 +1163,8 @@ WebPlugin* ChromeContentRendererClient::CreatePlugin(
-             l10n_util::GetStringFUTF16(IDS_PLUGIN_BLOCKED, group_name));
-         placeholder->AllowLoading();
-         RenderThread::Get()->RecordAction(UserMetricsAction("Plugin_Blocked"));
--        content_settings_agent->DidBlockContentType(content_type);
-+        if (content_settings_agent)
-+          content_settings_agent->DidBlockContentType(content_type);
-         break;
-       }
-       case chrome::mojom::PluginStatus::kBlockedByPolicy: {
-@@ -1171,7 +1174,8 @@ WebPlugin* ChromeContentRendererClient::CreatePlugin(
-                                        group_name));
-         RenderThread::Get()->RecordAction(
-             UserMetricsAction("Plugin_BlockedByPolicy"));
--        content_settings_agent->DidBlockContentType(content_type);
-+        if (content_settings_agent)
-+          content_settings_agent->DidBlockContentType(content_type);
-         break;
-       }
-     }
 diff --git content/browser/browser_plugin/browser_plugin_embedder.h content/browser/browser_plugin/browser_plugin_embedder.h
-index ad5f1925735fd..a871f4a7792a7 100644
+index ea2891a279371..595e5b8eb2cb6 100644
 --- content/browser/browser_plugin/browser_plugin_embedder.h
 +++ content/browser/browser_plugin/browser_plugin_embedder.h
 @@ -15,6 +15,7 @@
@@ -93,9 +8,9 @@ index ad5f1925735fd..a871f4a7792a7 100644
  #include "base/memory/raw_ptr.h"
 +#include "content/common/content_export.h"
  
- namespace content {
- 
-@@ -26,7 +27,7 @@ struct NativeWebKeyboardEvent;
+ namespace input {
+ struct NativeWebKeyboardEvent;
+@@ -29,7 +30,7 @@ class WebContentsImpl;
  
  // TODO(wjmaclean): Get rid of "BrowserPlugin" in the name of this class.
  // Perhaps "WebContentsEmbedderDelegate" would be better?
@@ -105,18 +20,18 @@ index ad5f1925735fd..a871f4a7792a7 100644
    BrowserPluginEmbedder(const BrowserPluginEmbedder&) = delete;
    BrowserPluginEmbedder& operator=(const BrowserPluginEmbedder&) = delete;
 diff --git content/browser/browser_plugin/browser_plugin_guest.cc content/browser/browser_plugin/browser_plugin_guest.cc
-index 2e47c128f4d5c..c27d76a8227f9 100644
+index 9c2b92be1dd07..adfda85e74ea8 100644
 --- content/browser/browser_plugin/browser_plugin_guest.cc
 +++ content/browser/browser_plugin/browser_plugin_guest.cc
-@@ -81,6 +81,8 @@ void BrowserPluginGuest::InitInternal(WebContentsImpl* owner_web_contents) {
-       GetWebContents()->GetOrCreateWebPreferences();
-   prefs.navigate_on_drag_drop = false;
-   GetWebContents()->SetWebPreferences(prefs);
-+
-+  owner_web_contents_ = owner_web_contents;
+@@ -49,6 +49,8 @@ std::unique_ptr<WebContentsImpl> BrowserPluginGuest::CreateNewGuestWindow(
  }
  
- BrowserPluginGuest::~BrowserPluginGuest() = default;
+ void BrowserPluginGuest::InitInternal(WebContentsImpl* owner_web_contents) {
++  owner_web_contents_ = owner_web_contents;
++
+   RenderWidgetHostImpl* rwhi =
+       GetWebContents()->GetPrimaryMainFrame()->GetRenderWidgetHost();
+   DCHECK(rwhi);
 diff --git content/browser/browser_plugin/browser_plugin_guest.h content/browser/browser_plugin/browser_plugin_guest.h
 index 7f3083029d45e..94a5cbed96a10 100644
 --- content/browser/browser_plugin/browser_plugin_guest.h

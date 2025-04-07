@@ -2,52 +2,38 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/context.h"
+#include "cef/libcef/browser/context.h"
 
-#include "libcef/browser/browser_info_manager.h"
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/trace_subscriber.h"
-#include "libcef/common/cef_switches.h"
+#include <memory>
 
+#include "arkweb/build/features/features.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/run_loop.h"
 #include "base/task/current_thread.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/libcef/browser/request_context_impl.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/trace_subscriber.h"
+#include "cef/libcef/common/cef_switches.h"
 #include "components/network_session_configurator/common/network_switches.h"
-#include "content/public/browser/notification_service.h"
-#include "content/public/browser/notification_types.h"
 #include "ui/base/ui_base_switches.h"
 
 #if BUILDFLAG(IS_WIN)
 #include "base/debug/alias.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/include/internal/cef_win.h"
 #include "chrome/chrome_elf/chrome_elf_main.h"
 #include "chrome/install_static/initialize_from_primary_module.h"
-#include "include/internal/cef_win.h"
 #endif
-
-#if defined(OHOS_HTTP_DNS)
-#include "cef/libcef/browser/net_service/net_helpers.h"
-#include "content/public/browser/network_service_instance.h"
-#include "services/network/public/mojom/network_service.mojom.h"
-#endif  // defined(OHOS_HTTP_DNS)
-
-// used by OHOS_EX_DOWNLOAD
-#include "cef/libcef/browser/net_service/net_helpers.h"
-#include "content/public/browser/browser_context.h"
-#include "content/public/browser/download_manager_delegate.h"
-#include "content/public/browser/network_service_instance.h"
-#include "libcef/browser/download_manager_delegate.h"
-#include "libcef/browser/download_resume_util.h"
-#include "libcef/browser/received_slice_helper.h"
-#include "services/network/public/mojom/network_service.mojom.h"
-#include "libcef/browser/download_item_impl.h"
 
 namespace {
 
 CefContext* g_context = nullptr;
+
+// Invalid value before CefInitialize is called.
+int g_exit_code = -1;
 
 #if DCHECK_IS_ON()
 // When the process terminates check if CefShutdown() has been called.
@@ -82,7 +68,6 @@ void InitCrashReporter() {
 }
 
 #endif  // BUILDFLAG(IS_WIN)
-
 bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
   // Windowed browser colors must be fully opaque.
   if (!is_windowless && CefColorGetA(cef_in) != SK_AlphaOPAQUE) {
@@ -95,14 +80,14 @@ bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
     return true;
   }
 
-#if defined(OHOS_BACKGROUND_COLOR)
-  *sk_out = SkColorSetARGB(CefColorGetA(cef_in), CefColorGetR(cef_in), CefColorGetG(cef_in),
-                           CefColorGetB(cef_in));
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  *sk_out = SkColorSetARGB(CefColorGetA(cef_in), CefColorGetR(cef_in),
+                           CefColorGetG(cef_in), CefColorGetB(cef_in));
 #else
   // Ignore the alpha component.
   *sk_out = SkColorSetRGB(CefColorGetR(cef_in), CefColorGetG(cef_in),
                           CefColorGetB(cef_in));
-#endif // defined(OHOS_BACKGROUND_COLOR)
+#endif  // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
   return true;
 }
 
@@ -121,13 +106,28 @@ base::FilePath NormalizePath(const cef_string_t& path_str,
     path = path.StripTrailingSeparators();
   }
 
-  if (!path.empty() && !path.IsAbsolute()) {
-    LOG(ERROR) << "The " << name << " directory (" << path.value()
-               << ") is not an absolute path. Defaulting to empty.";
-    if (has_error) {
-      *has_error = true;
+  if (!path.empty()) {
+    if (!path.IsAbsolute()) {
+      LOG(ERROR) << "The " << name << " directory (" << path.value()
+                 << ") is not an absolute path. Defaulting to empty.";
+      if (has_error) {
+        *has_error = true;
+      }
+      return base::FilePath();
     }
-    path = base::FilePath();
+
+#if BUILDFLAG(IS_POSIX)
+    // Always resolve symlinks to absolute paths. This avoids issues with
+    // mismatched paths when mixing Chromium and OS filesystem functions.
+    // See https://crbug.com/40229712.
+    base::ScopedAllowBlockingForTesting allow_blocking;
+    const base::FilePath& resolved_path = base::MakeAbsoluteFilePath(path);
+    if (!resolved_path.empty()) {
+      return resolved_path;
+    } else if (errno != 0 && errno != ENOENT) {
+      PLOG(ERROR) << "realpath(" << path.value() << ") failed";
+    }
+#endif  // BUILDFLAG(IS_POSIX)
   }
 
   return path;
@@ -329,8 +329,23 @@ bool CefInitialize(const CefMainArgs& args,
   g_context = new CefContext();
 
   // Initialize the global context.
-  return g_context->Initialize(args, settings, application,
-                               windows_sandbox_info);
+  const bool initialized =
+      g_context->Initialize(args, settings, application, windows_sandbox_info);
+  g_exit_code = g_context->exit_code();
+
+  if (!initialized) {
+    // Initialization failed. Delete the global context object.
+    delete g_context;
+    g_context = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+int CefGetExitCode() {
+  DCHECK_NE(g_exit_code, -1) << "invalid call to CefGetExitCode";
+  return g_exit_code;
 }
 
 void CefShutdown() {
@@ -438,120 +453,11 @@ void CefSetOSModalLoop(bool osModalLoop) {
 }
 #endif  // BUILDFLAG(IS_WIN)
 
-void CefApplyHttpDns() {
-#if defined(OHOS_HTTP_DNS)
-  if (!net_service::NetHelpers::HasValidDnsOverHttpConfig()) {
-    LOG(WARNING) << __func__ << " User input mal mode:"
-                 << net_service::NetHelpers::doh_mode;
-    return;
-  }
-
-  network::mojom::NetworkService* network_service =
-      content::GetNetworkService();
-  if (network_service) {
-    auto config = net::DnsOverHttpsServerConfig::FromString(
-        net_service::NetHelpers::DnsOverHttpServerConfig());
-    if (config.has_value()) {
-      network_service->ConfigureStubHostResolver(
-          true, net_service::NetHelpers::DnsOverHttpMode(),
-          net::DnsOverHttpsConfig({{std::move(*config)}}), true);
-    } else {
-      LOG(INFO) << __func__ << "server config is invalid";
-    }
-  } else {
-    LOG(INFO) << __func__
-              << "will apply doh config after network service created";
-  }
-#endif  // defined(OHOS_HTTP_DNS)
-}
-
-void CefSetDownloadHandler(CefRefPtr<CefDownloadHandler> download_handler) {
-#if defined(OHOS_EX_DOWNLOAD)
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  LOG(INFO) << "set download_handler for all browser contexts, browser context "
-               "all size:"
-            << browser_context_all.size();
-  if (browser_context_all.size() > 0) {
-    for (CefBrowserContext* context : browser_context_all) {
-      content::BrowserContext* browser_context = context->AsBrowserContext();
-      browser_context->GetDownloadManager();
-      content::DownloadManagerDelegate* download_manager_delegate =
-          browser_context->GetDownloadManagerDelegate();
-      CefDownloadManagerDelegate* cef_download_manager_delegate =
-          static_cast<CefDownloadManagerDelegate*>(download_manager_delegate);
-      cef_download_manager_delegate->SetDownloadHandler(download_handler);
-    }
-  }
-#endif  //  OHOS_EX_DOWNLOAD
-}
-
-CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid){
-  LOG(DEBUG) << "get download item for " << guid;
-  for(auto& context: CefBrowserContext::GetAll()){
-    content::DownloadManager* manager = context->AsBrowserContext()->GetDownloadManager();
-    if(!manager){
-      continue;
-    }
-    download::DownloadItem* item = manager->GetDownloadByGuid(guid);
-    if(item){
-      CefRefPtr<CefDownloadItemImpl> download_item(
-            new CefDownloadItemImpl(item));
-      return download_item;
-    }
-  }
-  return nullptr;
-}
-
-void CefResumeDownload(const CefString& guid,
-                       const CefString& url,
-                       const CefString& full_path,
-                       int64 received_bytes,
-                       int64 total_bytes,
-                       const CefString& etag,
-                       const CefString& mime_type,
-                       const CefString& last_modified,
-                       const CefString& received_slices_string) {
-#if defined(OHOS_EX_DOWNLOAD)
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  if (browser_context_all.size() > 0) {
-    //  use first browser context to resume
-    CefBrowserContext* context = browser_context_all[0];
-    content::BrowserContext* browser_context = context->AsBrowserContext();
-    content::DownloadManager* manager = browser_context->GetDownloadManager();
-    if (!manager) {
-      LOG(ERROR) << "download manager not exists, resume download failed";
-      return;
-    }
-    GURL gurl = GURL(url.ToString());
-    if (gurl.is_empty() || !gurl.is_valid()) {
-      LOG(ERROR) << "download url is not valid, resume download failed, url:"
-                 << url.ToString();
-      return;
-    }
-    base::FilePath file_full_path =
-        base::FilePath::FromUTF8Unsafe(full_path.ToString());
-
-    std::vector<download::DownloadItem::ReceivedSlice> received_slices =
-        received_slice_helper::FromString(received_slices_string.ToString());
-    manager->GetNextId(base::BindOnce(
-        &download_resume_util::ResumeDownloadWithId, manager, guid.ToString(),
-        std::move(gurl), std::move(file_full_path), received_bytes, total_bytes,
-        etag.ToString(), mime_type.ToString(), last_modified.ToString(),
-        received_slices));
-  } else {
-    LOG(ERROR) << "browser contexts is empty, resume download failed";
-  }
-#endif  //  OHOS_EX_DOWNLOAD
-}
-
 // CefContext
 
-CefContext::CefContext()
-    : initialized_(false), shutting_down_(false), init_thread_id_(0) {}
+CefContext::CefContext() = default;
 
-CefContext::~CefContext() {}
+CefContext::~CefContext() = default;
 
 // static
 CefContext* CefContext::Get() {
@@ -591,18 +497,28 @@ bool CefContext::Initialize(const CefMainArgs& args,
                       "browser_subprocess_path");
   NormalizePathAndSet(settings_.framework_dir_path, "framework_dir_path");
   NormalizePathAndSet(settings_.main_bundle_path, "main_bundle_path");
-  NormalizePathAndSet(settings_.user_data_path, "user_data_path");
   NormalizePathAndSet(settings_.resources_dir_path, "resources_dir_path");
   NormalizePathAndSet(settings_.locales_dir_path, "locales_dir_path");
 
-  browser_info_manager_.reset(new CefBrowserInfoManager);
+  browser_info_manager_ = std::make_unique<CefBrowserInfoManager>();
 
-  main_runner_.reset(new CefMainRunner(settings_.multi_threaded_message_loop,
-                                       settings_.external_message_pump));
-  return main_runner_->Initialize(
+  main_runner_ = std::make_unique<CefMainRunner>(
+      settings_.multi_threaded_message_loop, settings_.external_message_pump);
+  LOG(INFO) << "CefContext::Initialize";
+
+  const bool initialized = main_runner_->Initialize(
       &settings_, application, args, windows_sandbox_info, &initialized_,
       base::BindOnce(&CefContext::OnContextInitialized,
                      base::Unretained(this)));
+  exit_code_ = main_runner_->exit_code();
+
+  if (!initialized) {
+    shutting_down_ = true;
+    FinalizeShutdown();
+    return false;
+  }
+
+  return true;
 }
 
 void CefContext::RunMessageLoop() {
@@ -660,7 +576,7 @@ CefTraceSubscriber* CefContext::GetTraceSubscriber() {
     return nullptr;
   }
   if (!trace_subscriber_.get()) {
-    trace_subscriber_.reset(new CefTraceSubscriber());
+    trace_subscriber_ = std::make_unique<CefTraceSubscriber>();
   }
   return trace_subscriber_.get();
 }
@@ -676,34 +592,37 @@ void CefContext::PopulateGlobalRequestContextSettings(
   settings->persist_session_cookies =
       settings_.persist_session_cookies ||
       command_line->HasSwitch(switches::kPersistSessionCookies);
-  settings->persist_user_preferences =
-      settings_.persist_user_preferences ||
-      command_line->HasSwitch(switches::kPersistUserPreferences);
 
   CefString(&settings->cookieable_schemes_list) =
       CefString(&settings_.cookieable_schemes_list);
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
-
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   settings->incognito_mode = false;
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
 #endif
 }
 
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 void CefContext::PopulateGlobalOTRRequestContextSettings(
     CefRequestContextSettings* settings) {
   // This value was already normalized in Initialize.
   CefString(&settings->cache_path) = CefString("");
 
   settings->persist_session_cookies = false;
-  settings->persist_user_preferences = false;
 
   CefString(&settings->cookieable_schemes_list) =
       CefString(&settings_.cookieable_schemes_list);
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
   settings->incognito_mode = true;
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  settings->global_request_context = nullptr;
+#endif
 }
 #endif
 
@@ -731,7 +650,7 @@ bool CefContext::HasObserver(Observer* observer) const {
 
 void CefContext::OnContextInitialized() {
   CEF_REQUIRE_UIT();
-
+  LOG(INFO) << "CefContext::OnContextInitialized, application_" << application_;
   if (application_) {
     // Notify the handler after the global browser context has initialized.
     CefRefPtr<CefRequestContext> request_context =
@@ -746,21 +665,21 @@ void CefContext::OnContextInitialized() {
           }
         },
         application_));
-
-#ifdef OHOS_INCOGNITO_MODE
-    CefRefPtr<CefRequestContext> otr_request_context =
-        CefRequestContext::GetGlobalOTRContext();
-    auto incognito_impl =
-        static_cast<CefRequestContextImpl*>(otr_request_context.get());
-    incognito_impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
-        [](CefRefPtr<CefApp> app) {
-          CefRefPtr<CefBrowserProcessHandler> handler =
-              app->GetBrowserProcessHandler();
-          if (handler) {
-            handler->OnContextInitializedForIncognitoMode();
-          }
-        },
-        application_));
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+    if (CefRefPtr<CefRequestContext> otr_request_context =
+            CefRequestContext::GetGlobalOTRContext()) {
+      auto incognito_impl =
+          static_cast<CefRequestContextImpl*>(otr_request_context.get());
+      incognito_impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
+          [](CefRefPtr<CefApp> app) {
+            CefRefPtr<CefBrowserProcessHandler> handler =
+                app->GetBrowserProcessHandler();
+            if (handler) {
+              handler->OnContextInitializedForIncognitoMode();
+            }
+          },
+          application_));
+    }
 #endif
   }
 }

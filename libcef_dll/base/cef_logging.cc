@@ -7,6 +7,7 @@
 
 #if defined(OS_WIN)
 #include <windows.h>
+
 #include <algorithm>
 #include <sstream>
 #elif defined(OS_POSIX)
@@ -15,7 +16,6 @@
 #include <string.h>
 #endif
 
-#include "build/build_config.h"
 #include "include/internal/cef_string_types.h"
 
 namespace cef {
@@ -68,7 +68,6 @@ wrap_posix_strerror_r(char* (*strerror_r_ptr)(int, char*, size_t),
 // guarantee that they are handled. This is compiled on all POSIX platforms, but
 // it will only be used on Linux if the POSIX strerror_r implementation is
 // being used (see below).
-#if !BUILDFLAG(IS_OHOS)
 static void POSSIBLY_UNUSED wrap_posix_strerror_r(int (*strerror_r_ptr)(int,
                                                                         char*,
                                                                         size_t),
@@ -111,7 +110,6 @@ static void POSSIBLY_UNUSED wrap_posix_strerror_r(int (*strerror_r_ptr)(int,
   }
   errno = old_errno;
 }
-#endif
 
 void safe_strerror_r(int err, char* buf, size_t len) {
   if (buf == NULL || len <= 0) {
@@ -121,9 +119,7 @@ void safe_strerror_r(int err, char* buf, size_t len) {
   // appropriate overloaded function based on the function type of strerror_r.
   // The other one will be elided from the translation unit since both are
   // static.
-#if !BUILDFLAG(IS_OHOS)
   wrap_posix_strerror_r(&strerror_r, err, buf, len);
-#endif
 }
 
 std::string safe_strerror(int err) {
@@ -261,12 +257,25 @@ ErrnoLogMessage::~ErrnoLogMessage() {
 }  // namespace cef
 
 std::ostream& operator<<(std::ostream& out, const wchar_t* wstr) {
-  std::wstring tmp_str(wstr);
-  if (!tmp_str.empty()) {
+  const auto length = wstr ? std::char_traits<wchar_t>::length(wstr) : 0U;
+  if (length > 0) {
     cef_string_utf8_t str = {0};
-    cef_string_wide_to_utf8(wstr, tmp_str.size(), &str);
+    cef_string_wide_to_utf8(wstr, length, &str);
     out << str.str;
     cef_string_utf8_clear(&str);
   }
   return out;
 }
+
+#if defined(WCHAR_T_IS_32_BIT)
+std::ostream& operator<<(std::ostream& out, const char16_t* wstr) {
+  const auto length = wstr ? std::char_traits<char16_t>::length(wstr) : 0U;
+  if (length > 0) {
+    cef_string_utf8_t str = {0};
+    cef_string_utf16_to_utf8(wstr, length, &str);
+    out << str.str;
+    cef_string_utf8_clear(&str);
+  }
+  return out;
+}
+#endif

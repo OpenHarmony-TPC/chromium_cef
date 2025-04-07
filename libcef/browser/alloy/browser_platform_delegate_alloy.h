@@ -6,13 +6,17 @@
 #ifndef CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 #define CEF_LIBCEF_BROWSER_ALLOY_BROWSER_PLATFORM_DELEGATE_ALLOY_H_
 
-#include "libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
-#include "libcef/browser/browser_platform_delegate.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/alloy/dialogs/alloy_web_contents_dialog_helper.h"
+#include "cef/libcef/browser/browser_platform_delegate.h"
 #include "components/find_in_page/find_notification_details.h"
 #include "content/public/browser/web_contents.h"
 #include "ui/gfx/geometry/size.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "ui/accessibility/platform/browser_accessibility_manager.h"
+#endif
 
 // Implementation of Alloy-based browser functionality.
 class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
@@ -33,14 +37,8 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
                       const blink::mojom::WindowFeatures& window_features,
                       bool user_gesture,
                       bool* was_blocked) override;
-  bool ShouldAllowRendererInitiatedCrossProcessNavigation(
-      bool is_main_frame_navigation) override;
   void RenderViewReady() override;
   void BrowserCreated(CefBrowserHostBase* browser) override;
-  void CreateExtensionHost(const extensions::Extension* extension,
-                           const GURL& url,
-                           extensions::mojom::ViewType host_type) override;
-  extensions::ExtensionHost* GetExtensionHost() const override;
   void BrowserDestroyed(CefBrowserHostBase* browser) override;
   web_modal::WebContentsModalDialogHost* GetWebContentsModalDialogHost()
       const override;
@@ -48,23 +46,21 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(IS_WIN) || (BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_MAC))
   void NotifyMoveOrResizeStarted() override;
 #endif
-  bool PreHandleGestureEvent(content::WebContents* source,
-                             const blink::WebGestureEvent& event) override;
-  bool IsNeverComposited(content::WebContents* web_contents) override;
+  bool IsAlloyStyle() const override { return true; }
   void SetAutoResizeEnabled(bool enabled,
-                            const CefSize &min_size,
-                            const CefSize &max_size) override;
+                            const CefSize& min_size,
+                            const CefSize& max_size) override;
+#if BUILDFLAG(IS_ARKWEB)
   void SetAccessibilityState(cef_state_t accessibility_state) override;
-#if BUILDFLAG(IS_OHOS)
-  content::BrowserAccessibilityManager*
-  GetRootBrowserAccessibilityManager() override;
+  ui::BrowserAccessibilityManager* GetRootBrowserAccessibilityManager()
+      override;
 #endif
-  bool IsPrintPreviewSupported() const override;
-  void Find(const CefString &searchText,
+
+  void Find(const CefString& searchText,
             bool forward,
             bool matchCase,
             bool findNext
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
             ,
             bool newSession
 #endif
@@ -81,19 +77,34 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   const find_in_page::FindNotificationDetails& last_search_result() const {
     return last_search_result_;
   }
-
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void SendTouchEventToRender(const CefTouchEvent& event);
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_PRINT)
+  void SetToken(void* token) override;
+  void CreateWebPrintDocumentAdapter(const CefString& jobName,
+                                     void** webPrintDocumentAdapter) override;
+  void SetPrintBackground(bool enable) override;
+  bool GetPrintBackground() override;
+#endif  // BUILDFLAG(ARKWEB_PRINT)
+
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   void WebContentsDestroyed(content::WebContents* web_contents) override;
 #endif
-#if defined(OHOS_PRINT)
-void SetToken(void* token) override;
-void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                   void** webPrintDocumentAdapter) override;
-void SetPrintBackground(bool enable) override;
-bool GetPrintBackground() override;
-#endif // defined(OHOS_PRINT)
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void OnShareFile(const std::string& filePath,
+                   const std::string& utdTypeId) override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
+  void OnOnlineRenderToForeground() override {}
+#endif
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  void WasOccluded(bool occluded) override {}
+#endif
 
  protected:
   CefBrowserPlatformDelegateAlloy();
@@ -106,10 +117,11 @@ bool GetPrintBackground() override;
  private:
   void SetOwnedWebContents(content::WebContents* owned_contents);
 
-  void DestroyExtensionHost();
-  void OnExtensionHostDeleted();
-
   void ConfigureAutoResize();
+
+  // Attach all the associated helpers that are needed for the WebContents. It
+  // is safe to call this on a WebContents that was already attached.
+  void AttachHelpers(content::WebContents* web_contents);
 
   // Non-nullptr if this object owns the WebContents. Will be nullptr for popup
   // browsers between the calls to WebContentsCreated() and AddNewContents(),
@@ -123,10 +135,6 @@ bool GetPrintBackground() override;
   // The last find result. This object contains details about the number of
   // matches, the find selection rectangle, etc.
   find_in_page::FindNotificationDetails last_search_result_;
-
-  // Used when the browser is hosting an extension.
-  extensions::ExtensionHost* extension_host_ = nullptr;
-  bool is_background_host_ = false;
 
   // Used with auto-resize.
   bool auto_resize_enabled_ = false;

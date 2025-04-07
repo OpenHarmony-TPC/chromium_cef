@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=b214f8cc0015a8db54ce30a6b200ee17476ea2ba$
+// $hash=d98482eba93dcd8b6a6f69b2732162733c73203d$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_AUDIO_HANDLER_CAPI_H_
@@ -93,7 +93,7 @@ typedef struct _cef_audio_handler_t {
                                              struct _cef_browser_t* browser,
                                              const float** data,
                                              int frames,
-                                             int64 pts);
+                                             int64_t pts);
 
   ///
   /// Called on the UI thread when the stream has stopped. OnAudioSteamStopped

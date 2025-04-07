@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_VIEW_IMPL_H_
 #pragma once
 
+#include "base/memory/raw_ptr.h"
 // CEF exposes views framework functionality via a hierarchy of CefView and
 // related objects. While the goal is to accurately represent views framework
 // capabilities there is not always a direct 1:1 mapping between the CEF
@@ -284,20 +285,20 @@
 //     * Build CEF using Ninja.
 //
 
-#include "include/views/cef_browser_view.h"
-#include "include/views/cef_button.h"
-#include "include/views/cef_panel.h"
-#include "include/views/cef_scroll_view.h"
-#include "include/views/cef_textfield.h"
-#include "include/views/cef_view.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/views/view_adapter.h"
-#include "libcef/browser/views/view_util.h"
-
 #include "base/json/json_writer.h"
 #include "base/logging.h"
 #include "base/values.h"
+#include "cef/include/views/cef_browser_view.h"
+#include "cef/include/views/cef_button.h"
+#include "cef/include/views/cef_panel.h"
+#include "cef/include/views/cef_scroll_view.h"
+#include "cef/include/views/cef_textfield.h"
+#include "cef/include/views/cef_view.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/view_adapter.h"
+#include "cef/libcef/browser/views/view_util.h"
+#include "ui/gfx/color_palette.h"
+#include "ui/views/accessibility/view_accessibility.h"
 #include "ui/views/background.h"
 #include "ui/views/border.h"
 #include "ui/views/view.h"
@@ -400,9 +401,11 @@ CEF_VIEW_IMPL_T class CefViewImpl : public CefViewAdapter, public CefViewClass {
   void SetFocusable(bool focusable) override;
   bool IsFocusable() override;
   bool IsAccessibilityFocusable() override;
+  bool HasFocus() override;
   void RequestFocus() override;
   void SetBackgroundColor(cef_color_t color) override;
   cef_color_t GetBackgroundColor() override;
+  cef_color_t GetThemeColor(int color_id) override;
   bool ConvertPointToScreen(CefPoint& point) override;
   bool ConvertPointFromScreen(CefPoint& point) override;
   bool ConvertPointToWindow(CefPoint& point) override;
@@ -442,7 +445,7 @@ CEF_VIEW_IMPL_T class CefViewImpl : public CefViewAdapter, public CefViewClass {
 
   // Unowned reference to the views::View wrapped by this object. Will be
   // nullptr before the View is created and after the View is destroyed.
-  ViewsViewClass* root_view_ref_;
+  raw_ptr<ViewsViewClass> root_view_ref_;
 };
 
 CEF_VIEW_IMPL_T CefString CEF_VIEW_IMPL_D::GetTypeString() {
@@ -654,33 +657,50 @@ CEF_VIEW_IMPL_T bool CEF_VIEW_IMPL_D::IsEnabled() {
 
 CEF_VIEW_IMPL_T void CEF_VIEW_IMPL_D::SetFocusable(bool focusable) {
   CEF_REQUIRE_VALID_RETURN_VOID();
-  root_view()->SetFocusBehavior(focusable ? views::View::FocusBehavior::ALWAYS
-                                          : views::View::FocusBehavior::NEVER);
+  content_view()->SetFocusBehavior(focusable
+                                       ? views::View::FocusBehavior::ALWAYS
+                                       : views::View::FocusBehavior::NEVER);
 }
 
 CEF_VIEW_IMPL_T bool CEF_VIEW_IMPL_D::IsFocusable() {
   CEF_REQUIRE_VALID_RETURN(false);
-  return root_view()->IsFocusable();
+  return content_view()->IsFocusable();
 }
 
 CEF_VIEW_IMPL_T bool CEF_VIEW_IMPL_D::IsAccessibilityFocusable() {
   CEF_REQUIRE_VALID_RETURN(false);
-  return root_view()->IsAccessibilityFocusable();
+  return content_view()->GetViewAccessibility().IsAccessibilityFocusable();
+}
+
+CEF_VIEW_IMPL_T bool CEF_VIEW_IMPL_D::HasFocus() {
+  CEF_REQUIRE_VALID_RETURN(false);
+  return content_view()->HasFocus();
 }
 
 CEF_VIEW_IMPL_T void CEF_VIEW_IMPL_D::RequestFocus() {
   CEF_REQUIRE_VALID_RETURN_VOID();
-  root_view()->RequestFocus();
+  content_view()->RequestFocus();
 }
 
 CEF_VIEW_IMPL_T void CEF_VIEW_IMPL_D::SetBackgroundColor(cef_color_t color) {
   CEF_REQUIRE_VALID_RETURN_VOID();
-  content_view()->SetBackground(views::CreateSolidBackground(color));
+  root_view()->SetBackground(views::CreateSolidBackground(color));
 }
 
 CEF_VIEW_IMPL_T cef_color_t CEF_VIEW_IMPL_D::GetBackgroundColor() {
-  CEF_REQUIRE_VALID_RETURN(0U);
-  return content_view()->background()->get_color();
+  CEF_REQUIRE_VALID_RETURN(gfx::kPlaceholderColor);
+  // May return an empty value.
+  const auto& color =
+      view_util::GetBackgroundColor(root_view(), /*allow_transparency=*/true);
+  if (color) {
+    return *color;
+  }
+  return SK_ColorTRANSPARENT;
+}
+
+CEF_VIEW_IMPL_T cef_color_t CEF_VIEW_IMPL_D::GetThemeColor(int color_id) {
+  CEF_REQUIRE_VALID_RETURN(gfx::kPlaceholderColor);
+  return view_util::GetColor(root_view(), color_id);
 }
 
 CEF_VIEW_IMPL_T bool CEF_VIEW_IMPL_D::ConvertPointToScreen(CefPoint& point) {

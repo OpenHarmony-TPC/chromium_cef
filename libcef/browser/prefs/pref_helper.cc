@@ -2,13 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/prefs/pref_helper.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/values_impl.h"
+#include "cef/libcef/browser/prefs/pref_helper.h"
 
 #include "base/notreached.h"
 #include "base/strings/stringprintf.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/values_impl.h"
 #include "components/prefs/pref_service.h"
 
 namespace pref_helper {
@@ -42,12 +41,14 @@ const char* GetTypeString(base::Value::Type type) {
 }  // namespace
 
 bool HasPreference(PrefService* pref_service, const CefString& name) {
-  return (pref_service->FindPreference(name) != nullptr);
+  return (pref_service->FindPreference(std::string_view(name.ToString())) !=
+          nullptr);
 }
 
 CefRefPtr<CefValue> GetPreference(PrefService* pref_service,
                                   const CefString& name) {
-  const PrefService::Preference* pref = pref_service->FindPreference(name);
+  const PrefService::Preference* pref =
+      pref_service->FindPreference(std::string_view(name.ToString()));
   if (!pref) {
     return nullptr;
   }
@@ -66,7 +67,8 @@ CefRefPtr<CefDictionaryValue> GetAllPreferences(PrefService* pref_service,
 }
 
 bool CanSetPreference(PrefService* pref_service, const CefString& name) {
-  const PrefService::Preference* pref = pref_service->FindPreference(name);
+  const PrefService::Preference* pref =
+      pref_service->FindPreference(std::string_view(name.ToString()));
   return (pref && pref->IsUserModifiable());
 }
 
@@ -76,7 +78,8 @@ bool SetPreference(PrefService* pref_service,
                    CefString& error) {
   // The below validation logic should match PrefService::SetUserPrefValue.
 
-  const PrefService::Preference* pref = pref_service->FindPreference(name);
+  const PrefService::Preference* pref =
+      pref_service->FindPreference(std::string_view(name.ToString()));
   if (!pref) {
     error = "Trying to modify an unregistered preference";
     return false;
@@ -89,7 +92,7 @@ bool SetPreference(PrefService* pref_service,
 
   if (!value.get()) {
     // Reset the preference to its default value.
-    pref_service->ClearPref(name);
+    pref_service->ClearPref(std::string_view(name.ToString()));
     return true;
   }
 
@@ -111,7 +114,7 @@ bool SetPreference(PrefService* pref_service,
   }
 
   // PrefService will make a DeepCopy of |impl_value|.
-  pref_service->Set(name, *impl_value);
+  pref_service->Set(std::string_view(name.ToString()), *impl_value);
   return true;
 }
 

@@ -12,7 +12,7 @@ BrowserWindowOsrWin::BrowserWindowOsrWin(BrowserWindow::Delegate* delegate,
                                          bool with_controls,
                                          const std::string& startup_url,
                                          const OsrRendererSettings& settings)
-    : BrowserWindow(delegate), osr_hwnd_(nullptr), device_scale_factor_(0) {
+    : BrowserWindow(delegate) {
   osr_window_ = new OsrWindowWin(this, settings);
   client_handler_ =
       new ClientHandlerOsr(this, osr_window_.get(), with_controls, startup_url);
@@ -25,6 +25,9 @@ void BrowserWindowOsrWin::CreateBrowser(
     CefRefPtr<CefDictionaryValue> extra_info,
     CefRefPtr<CefRequestContext> request_context) {
   REQUIRE_MAIN_THREAD();
+
+  // Windowless rendering requires Alloy style.
+  DCHECK(delegate_->UseAlloyStyle());
 
   // Create the new browser and native window on the UI thread.
   RECT wnd_rect = {rect.x, rect.y, rect.x + rect.width, rect.y + rect.height};
@@ -47,6 +50,9 @@ void BrowserWindowOsrWin::GetPopupConfig(CefWindowHandle temp_handle,
 
   // Don't activate the hidden browser on creation.
   windowInfo.ex_style |= WS_EX_NOACTIVATE;
+
+  // Windowless rendering requires Alloy style.
+  DCHECK_EQ(CEF_RUNTIME_STYLE_ALLOY, windowInfo.runtime_style);
 
   client = client_handler_;
 }

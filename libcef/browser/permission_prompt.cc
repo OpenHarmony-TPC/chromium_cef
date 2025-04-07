@@ -2,14 +2,12 @@
 // 2016 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/browser/permission_prompt.h"
-
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/features/runtime.h"
+#include "cef/libcef/browser/permission_prompt.h"
 
 #include "base/logging.h"
 #include "base/memory/weak_ptr.h"
 #include "base/notreached.h"
+#include "cef/libcef/browser/browser_host_base.h"
 #include "chrome/browser/ui/permission_bubble/permission_prompt.h"
 
 namespace permission_prompt {
@@ -125,6 +123,19 @@ class CefPermissionPrompt : public permissions::PermissionPrompt {
       const override {
     return permissions::PermissionPromptDisposition::CUSTOM_MODAL_DIALOG;
   }
+  std::optional<gfx::Rect> GetViewBoundsInScreen() const override {
+    return std::nullopt;
+  }
+  bool ShouldFinalizeRequestAfterDecided() const override { return true; }
+  std::vector<permissions::ElementAnchoredBubbleVariant> GetPromptVariants()
+      const override {
+    return {};
+  }
+  std::optional<permissions::feature_params::PermissionElementPromptPosition>
+  GetPromptPosition() const override {
+    return std::nullopt;
+  }
+  bool IsAskPrompt() const override { return true; }
 
  private:
   // We don't expose AcceptThisTime() because it's a special case for
@@ -179,14 +190,14 @@ void ExecuteResult(CefRefPtr<CefBrowserHostBase> browser,
 cef_permission_request_types_t GetCefRequestType(
     permissions::RequestType type) {
   switch (type) {
-    case permissions::RequestType::kAccessibilityEvents:
-      return CEF_PERMISSION_TYPE_ACCESSIBILITY_EVENTS;
     case permissions::RequestType::kArSession:
       return CEF_PERMISSION_TYPE_AR_SESSION;
     case permissions::RequestType::kCameraPanTiltZoom:
       return CEF_PERMISSION_TYPE_CAMERA_PAN_TILT_ZOOM;
     case permissions::RequestType::kCameraStream:
       return CEF_PERMISSION_TYPE_CAMERA_STREAM;
+    case permissions::RequestType::kCapturedSurfaceControl:
+      return CEF_PERMISSION_TYPE_CAPTURED_SURFACE_CONTROL;
     case permissions::RequestType::kClipboard:
       return CEF_PERMISSION_TYPE_CLIPBOARD;
     case permissions::RequestType::kDiskQuota:
@@ -195,6 +206,10 @@ cef_permission_request_types_t GetCefRequestType(
       return CEF_PERMISSION_TYPE_LOCAL_FONTS;
     case permissions::RequestType::kGeolocation:
       return CEF_PERMISSION_TYPE_GEOLOCATION;
+    case permissions::RequestType::kHandTracking:
+      return CEF_PERMISSION_TYPE_HAND_TRACKING;
+    case permissions::RequestType::kIdentityProvider:
+      return CEF_PERMISSION_TYPE_IDENTITY_PROVIDER;
     case permissions::RequestType::kIdleDetection:
       return CEF_PERMISSION_TYPE_IDLE_DETECTION;
     case permissions::RequestType::kMicStream:
@@ -205,24 +220,28 @@ cef_permission_request_types_t GetCefRequestType(
       return CEF_PERMISSION_TYPE_MULTIPLE_DOWNLOADS;
     case permissions::RequestType::kNotifications:
       return CEF_PERMISSION_TYPE_NOTIFICATIONS;
+    case permissions::RequestType::kKeyboardLock:
+      return CEF_PERMISSION_TYPE_KEYBOARD_LOCK;
+    case permissions::RequestType::kPointerLock:
+      return CEF_PERMISSION_TYPE_POINTER_LOCK;
 #if BUILDFLAG(IS_WIN)
     case permissions::RequestType::kProtectedMediaIdentifier:
       return CEF_PERMISSION_TYPE_PROTECTED_MEDIA_IDENTIFIER;
 #endif
     case permissions::RequestType::kRegisterProtocolHandler:
       return CEF_PERMISSION_TYPE_REGISTER_PROTOCOL_HANDLER;
-    case permissions::RequestType::kSecurityAttestation:
-      return CEF_PERMISSION_TYPE_SECURITY_ATTESTATION;
     case permissions::RequestType::kStorageAccess:
       return CEF_PERMISSION_TYPE_STORAGE_ACCESS;
     case permissions::RequestType::kTopLevelStorageAccess:
       return CEF_PERMISSION_TYPE_TOP_LEVEL_STORAGE_ACCESS;
-    case permissions::RequestType::kU2fApiRequest:
-      return CEF_PERMISSION_TYPE_U2F_API_REQUEST;
     case permissions::RequestType::kVrSession:
       return CEF_PERMISSION_TYPE_VR_SESSION;
+    case permissions::RequestType::kWebAppInstallation:
+      return CEF_PERMISSION_TYPE_WEB_APP_INSTALLATION;
     case permissions::RequestType::kWindowManagement:
       return CEF_PERMISSION_TYPE_WINDOW_MANAGEMENT;
+    case permissions::RequestType::kFileSystemAccess:
+      return CEF_PERMISSION_TYPE_FILE_SYSTEM_ACCESS;
   }
 
   DCHECK(false);
@@ -232,7 +251,7 @@ cef_permission_request_types_t GetCefRequestType(
 uint32_t GetRequestedPermissions(
     permissions::PermissionPrompt::Delegate* delegate) {
   uint32_t permissions = CEF_PERMISSION_TYPE_NONE;
-  for (const auto* request : delegate->Requests()) {
+  for (const auto& request : delegate->Requests()) {
     permissions |= GetCefRequestType(request->request_type());
   }
   return permissions;
@@ -244,7 +263,11 @@ std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPromptImpl(
     bool* default_handling) {
   CEF_REQUIRE_UIT();
 
+  bool is_alloy_style = false;
+
   if (auto browser = CefBrowserHostBase::GetBrowserForContents(web_contents)) {
+    is_alloy_style = browser->IsAlloyStyle();
+
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetPermissionHandler()) {
         auto permission_prompt =
@@ -278,13 +301,13 @@ std::unique_ptr<permissions::PermissionPrompt> CreatePermissionPromptImpl(
     }
   }
 
-  if (cef::IsAlloyRuntimeEnabled()) {
+  if (is_alloy_style) {
     LOG(INFO) << "Implement OnShowPermissionPrompt to override default IGNORE "
                  "handling of permission prompts.";
   }
 
-  // Proceed with default handling. This will be IGNORE with the Alloy runtime
-  // and default UI prompt with the Chrome runtime.
+  // Proceed with default handling. This will be IGNORE with Alloy style and
+  // default UI prompt with Chrome style.
   *default_handling = true;
   return nullptr;
 }

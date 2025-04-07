@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=eebcbcb2d20231144218b0188c05e3b37a827749$
+// $hash=159a01a2a985ef78d25232459778a7ef2af4b751$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_RESOURCE_REQUEST_HANDLER_CAPI_H_
@@ -97,20 +97,6 @@ typedef struct _cef_resource_request_handler_t {
       struct _cef_frame_t* frame,
       struct _cef_request_t* request,
       struct _cef_callback_t* callback);
-
-  ///
-  /// Called on the IO thread before a resource is loaded. The |browser| and
-  /// |frame| values represent the source of the request, and may be NULL for
-  /// requests originating from service workers or cef_urlrequest_t. To allow
-  /// the resource to load using the default network loader return NULL. To
-  /// specify a handler for the resource return a cef_resource_handler_t object.
-  /// The |request| object cannot not be modified in this callback.
-  ///
-  struct _cef_resource_handler_t*(CEF_CALLBACK* get_resource_handler)(
-      struct _cef_resource_request_handler_t* self,
-      struct _cef_browser_t* browser,
-      struct _cef_frame_t* frame,
-      struct _cef_request_t* request);
 
   ///
   /// Called on the IO thread when a resource load is redirected. The |browser|
@@ -188,7 +174,7 @@ typedef struct _cef_resource_request_handler_t {
       struct _cef_request_t* request,
       struct _cef_response_t* response,
       cef_urlrequest_status_t status,
-      int64 received_content_length);
+      int64_t received_content_length);
 
   ///
   /// Called on the IO thread to handle requests for URLs with an unknown

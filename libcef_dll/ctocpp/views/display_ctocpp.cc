@@ -9,11 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=705575e7f868a4667306b1949dce05e1ad39f09d$
+// $hash=700deacdc1aaea681d23c6b26539f8c305d8a6de$
 //
 
 #include "libcef_dll/ctocpp/views/display_ctocpp.h"
+
 #include <algorithm>
+
 #include "libcef_dll/shutdown_checker.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -164,7 +166,7 @@ CefRect CefDisplay::ConvertScreenRectFromPixels(const CefRect& rect) {
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
-NO_SANITIZE("cfi-icall") int64 CefDisplayCToCpp::GetID() {
+NO_SANITIZE("cfi-icall") int64_t CefDisplayCToCpp::GetID() {
   shutdown_checker::AssertNotShutdown();
 
   cef_display_t* _struct = GetStruct();
@@ -175,7 +177,7 @@ NO_SANITIZE("cfi-icall") int64 CefDisplayCToCpp::GetID() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = _struct->get_id(_struct);
+  int64_t _retval = _struct->get_id(_struct);
 
   // Return type: simple
   return _retval;

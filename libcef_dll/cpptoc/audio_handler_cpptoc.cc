@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=221ccbf7fd0cb53ade0e9a108314e103c675e4f4$
+// $hash=63f55ceeec4a649ad2331bb0304557b7c0e4cb31$
 //
 
 #include "libcef_dll/cpptoc/audio_handler_cpptoc.h"
+
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -96,7 +97,7 @@ audio_handler_on_audio_stream_packet(struct _cef_audio_handler_t* self,
                                      struct _cef_browser_t* browser,
                                      const float** data,
                                      int frames,
-                                     int64 pts) {
+                                     int64_t pts) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

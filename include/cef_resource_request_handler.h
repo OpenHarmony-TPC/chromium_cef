@@ -38,6 +38,7 @@
 #define CEF_INCLUDE_CEF_RESOURCE_REQUEST_HANDLER_H_
 #pragma once
 
+#include "cef/ohos_cef_ext/include/arkweb_request_ext.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_callback.h"
@@ -47,22 +48,11 @@
 #include "include/cef_response.h"
 #include "include/cef_response_filter.h"
 
-#include "include/cef_scheme.h"
-
 class CefCookieAccessFilter;
 
-///
-/// CefInterceptCallback
-///
-/*--cef(source=library)--*/
-class CefInterceptCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Continue.
-  ///
-  /*--cef(capi_name=cont)--*/
-  virtual void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) {}
-};
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+class ArkWebResourceRequestHandlerExt;
+#endif
 
 ///
 /// Implement this interface to handle events related to browser requests. The
@@ -74,6 +64,14 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
  public:
   typedef cef_return_value_t ReturnValue;
   typedef cef_urlrequest_status_t URLRequestStatus;
+
+  ///
+  /// Get a AsArkWebResourceRequestHandlerExt object. ARKWEB_NETWORK_BASE
+  ///
+  virtual CefRefPtr<ArkWebResourceRequestHandlerExt>
+  AsArkWebResourceRequestHandlerExt() {
+    return nullptr;
+  }
 
   ///
   /// Called on the IO thread before a resource request is loaded. The |browser|
@@ -118,7 +116,6 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
   /// a handler for the resource return a CefResourceHandler object. The
   /// |request| object cannot not be modified in this callback.
   ///
-  /*--cef(optional_param=browser,optional_param=frame)--*/
   virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
@@ -202,7 +199,7 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
                                       CefRefPtr<CefRequest> request,
                                       CefRefPtr<CefResponse> response,
                                       URLRequestStatus status,
-                                      int64 received_content_length) {}
+                                      int64_t received_content_length) {}
 
   ///
   /// Called on the IO thread to handle requests for URLs with an unknown
@@ -219,18 +216,6 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
                                    CefRefPtr<CefFrame> frame,
                                    CefRefPtr<CefRequest> request,
                                    bool& allow_os_execution) {}
-
-  ///
-  /// GetResourceHandlerByIO.
-  ///
-  /*--cef(optional_param=browser,optional_param=frame)--*/
-  virtual void GetResourceHandlerByIO(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefInterceptCallback> callback,
-      CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
-      const CefString& scheme) {}
 };
 
 ///

@@ -2,16 +2,16 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/browser/browser_message_loop.h"
-#include "libcef/common/app_manager.h"
+#include "cef/libcef/browser/browser_message_loop.h"
 
 #include "base/memory/ptr_util.h"
 #include "base/message_loop/message_pump.h"
 #include "base/message_loop/message_pump_for_ui.h"
+#include "cef/libcef/common/app_manager.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "base/mac/scoped_nsautorelease_pool.h"
-#include "base/message_loop/message_pump_mac.h"
+#include "base/apple/scoped_nsautorelease_pool.h"
+#include "base/message_loop/message_pump_apple.h"
 #endif
 
 #include "content/public/browser/browser_thread.h"
@@ -30,14 +30,11 @@ class MessagePumpExternal : public base::MessagePumpForUI {
     base::TimeTicks start = base::TimeTicks::Now();
     while (true) {
 #if BUILDFLAG(IS_MAC)
-      base::mac::ScopedNSAutoreleasePool autorelease_pool;
+      base::apple::ScopedNSAutoreleasePool autorelease_pool;
 #endif
 
       base::TimeTicks next_run_time;  // is_null()
-      const bool has_more_work = DirectRunWork(delegate, &next_run_time);
-      if (!has_more_work) {
-        break;
-      }
+      DirectRunWork(delegate, &next_run_time);
 
       if (next_run_time.is_null()) {
         // We have more work that should run immediately.
@@ -63,10 +60,9 @@ class MessagePumpExternal : public base::MessagePumpForUI {
   }
 
  private:
-  static bool DirectRunWork(Delegate* delegate,
+  static void DirectRunWork(Delegate* delegate,
                             base::TimeTicks* next_run_time) {
     bool more_immediate_work = false;
-    bool more_idle_work = false;
     bool more_delayed_work = false;
 
     Delegate::NextWorkInfo next_work_info = delegate->DoWork();
@@ -85,11 +81,8 @@ class MessagePumpExternal : public base::MessagePumpForUI {
     }
 
     if (!more_immediate_work && !more_delayed_work) {
-      // DoIdleWork() returns true if idle work was all done.
-      more_idle_work = !delegate->DoIdleWork();
+      delegate->DoIdleWork();
     }
-
-    return more_immediate_work || more_idle_work || more_delayed_work;
   }
 
   const float max_time_slice_;
@@ -115,7 +108,7 @@ std::unique_ptr<base::MessagePump> MessagePumpFactoryForUI() {
   }
 
 #if BUILDFLAG(IS_MAC)
-  return base::MessagePumpMac::Create();
+  return base::message_pump_apple::Create();
 #else
   return std::make_unique<base::MessagePumpForUI>();
 #endif

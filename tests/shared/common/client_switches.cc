@@ -4,8 +4,7 @@
 
 #include "tests/shared/common/client_switches.h"
 
-namespace client {
-namespace switches {
+namespace client::switches {
 
 // CEF and Chromium support a wide range of command-line switches. This file
 // only contains command-line switches specific to the cefclient application.
@@ -44,16 +43,21 @@ const char kAlwaysOnTop[] = "always-on-top";
 const char kHideTopMenu[] = "hide-top-menu";
 const char kSslClientCertificate[] = "ssl-client-certificate";
 const char kCRLSetsPath[] = "crl-sets-path";
-const char kLoadExtension[] = "load-extension";
 const char kNoActivate[] = "no-activate";
-const char kEnableChromeRuntime[] = "enable-chrome-runtime";
 const char kShowChromeToolbar[] = "show-chrome-toolbar";
 const char kInitialShowState[] = "initial-show-state";
-const char kHideChromeStatusBubble[] = "hide-chrome-status-bubble";
 const char kUseDefaultPopup[] = "use-default-popup";
 const char kUseClientDialogs[] = "use-client-dialogs";
 const char kUseTestHttpServer[] = "use-test-http-server";
 const char kShowWindowButtons[] = "show-window-buttons";
+const char kUseWindowModalDialog[] = "use-window-modal-dialog";
+const char kUseBottomControls[] = "use-bottom-controls";
+const char kHidePipFrame[] = "hide-pip-frame";
+const char kHideChromeBubbles[] = "hide-chrome-bubbles";
+const char kHideWindowOnClose[] = "hide-window-on-close";
+const char kAcceptsFirstMouse[] = "accepts-first-mouse";
+const char kUseAlloyStyle[] = "use-alloy-style";
+const char kUseChromeStyleWindow[] = "use-chrome-style-window";
+const char kShowOverlayBrowser[] = "show-overlay-browser";
 
-}  // namespace switches
-}  // namespace client
+}  // namespace client::switches

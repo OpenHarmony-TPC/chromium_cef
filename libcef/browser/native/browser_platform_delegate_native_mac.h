@@ -5,7 +5,13 @@
 #ifndef CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_MAC_H_
 #define CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_MAC_H_
 
-#include "libcef/browser/native/browser_platform_delegate_native.h"
+#include "cef/libcef/browser/native/browser_platform_delegate_native.h"
+
+#if defined(__OBJC__)
+@class CefWindowDelegate;
+#else
+class CefWindowDelegate;
+#endif
 
 namespace content {
 class RenderWidgetHostViewMac;
@@ -37,16 +43,16 @@ class CefBrowserPlatformDelegateNativeMac
   gfx::Point GetScreenPoint(const gfx::Point& view,
                             bool want_dip_coords) const override;
   void ViewText(const std::string& text) override;
-  bool HandleKeyboardEvent(
-      const content::NativeWebKeyboardEvent& event) override;
+  bool HandleKeyboardEvent(const input::NativeWebKeyboardEvent& event) override;
   CefEventHandle GetEventHandle(
-      const content::NativeWebKeyboardEvent& event) const override;
+      const input::NativeWebKeyboardEvent& event) const override;
   std::unique_ptr<CefJavaScriptDialogRunner> CreateJavaScriptDialogRunner()
       override;
   std::unique_ptr<CefMenuRunner> CreateMenuRunner() override;
+  bool IsPrintPreviewSupported() const override;
 
   // CefBrowserPlatformDelegateNative methods:
-  content::NativeWebKeyboardEvent TranslateWebKeyEvent(
+  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
       const CefKeyEvent& key_event) const override;
   blink::WebMouseEvent TranslateWebClickEvent(
       const CefMouseEvent& mouse_event,
@@ -67,7 +73,9 @@ class CefBrowserPlatformDelegateNativeMac
   content::RenderWidgetHostViewMac* GetHostView() const;
 
   // True if the host window has been created.
-  bool host_window_created_;
+  bool host_window_created_ = false;
+
+  CefWindowDelegate* __strong window_delegate_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_MAC_H_

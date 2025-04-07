@@ -9,23 +9,21 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d972ac7626b2eb67c8583ae2beef965daff91297$
+// $hash=2ef28289570e9eba45c5e2bb87c94e7e8e51ed0e$
 //
 
 #include "libcef_dll/ctocpp/render_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
 #include "libcef_dll/cpptoc/drag_data_cpptoc.h"
-#include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/ctocpp/accessibility_handler_ctocpp.h"
-#include "libcef_dll/ctocpp/gesture_event_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
-#include "libcef_dll/transfer_util.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<
-    CefAccessibilityHandler> CefRenderHandlerCToCpp::GetAccessibilityHandler() {
+CefRefPtr<CefAccessibilityHandler>
+CefRenderHandlerCToCpp::GetAccessibilityHandler() {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -242,10 +240,11 @@ void CefRenderHandlerCToCpp::OnPaint(CefRefPtr<CefBrowser> browser,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
-                                                PaintElementType type,
-                                                const RectList& dirtyRects,
-                                                void* shared_handle) {
+void CefRenderHandlerCToCpp::OnAcceleratedPaint(
+    CefRefPtr<CefBrowser> browser,
+    PaintElementType type,
+    const RectList& dirtyRects,
+    const CefAcceleratedPaintInfo& info) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -258,11 +257,6 @@ void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
   // Verify param: browser; type: refptr_diff
   DCHECK(browser.get());
   if (!browser.get()) {
-    return;
-  }
-  // Verify param: shared_handle; type: simple_byaddr
-  DCHECK(shared_handle);
-  if (!shared_handle) {
     return;
   }
 
@@ -281,7 +275,7 @@ void CefRenderHandlerCToCpp::OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
 
   // Execute
   _struct->on_accelerated_paint(_struct, CefBrowserCppToC::Wrap(browser), type,
-                                dirtyRectsCount, dirtyRectsList, shared_handle);
+                                dirtyRectsCount, dirtyRectsList, &info);
 
   // Restore param:dirtyRects; type: simple_vec_byref_const
   if (dirtyRectsList) {
@@ -493,11 +487,33 @@ void CefRenderHandlerCToCpp::OnTextSelectionChanged(
 }
 
 NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetVisibleViewportRect(
+    CefRefPtr<CefBrowser> browser,
+    CefRect& rect) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_visible_viewport_rect)) {
+    return;
+  }
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+ 
+  // Execute
+  _struct->get_visible_viewport_rect(_struct, CefBrowserCppToC::Wrap(browser),
+                                     &rect);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     CefRefPtr<CefBrowser> browser,
-    TextInputInfo text_input_info,
-    bool is_need_reset_listener,
-    const AttributesMap& attributes) {
+    TextInputMode input_mode) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -513,672 +529,24 @@ void CefRenderHandlerCToCpp::OnVirtualKeyboardRequested(
     return;
   }
 
-  // Translate param: attributes; type: string_map_single_byref_const
-  cef_string_map_t attributesMap = cef_string_map_alloc();
-  DCHECK(attributesMap);
-  if (attributesMap) {
-    transfer_string_map_contents(attributes, attributesMap);
-  }
-
   // Execute
   _struct->on_virtual_keyboard_requested(
-      _struct, CefBrowserCppToC::Wrap(browser), text_input_info,
-      is_need_reset_listener, attributesMap);
-
-  // Restore param:attributes; type: string_map_single_byref_const
-  if (attributesMap) {
-    cef_string_map_free(attributesMap);
-  }
+      _struct, CefBrowserCppToC::Wrap(browser), input_mode);
 }
 
 NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnTouchSelectionChanged(
-    const CefTouchHandleState& insert_handle,
-    const CefTouchHandleState& start_selection_handle,
-    const CefTouchHandleState& end_selection_handle,
-    bool need_report) {
+void CefRenderHandlerCToCpp::SetGestureEventResult(bool result) {
   shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_touch_selection_changed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_touch_selection_changed(_struct, &insert_handle,
-                                      &start_selection_handle,
-                                      &end_selection_handle, need_report);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
-                                                int height,
-                                                int width) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_root_layer_changed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_root_layer_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                                 height, width);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnSelectionChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& text,
-    const CefRange& selected_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_selection_changed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Unverified params: text, selected_range
-
-  // Execute
-  _struct->on_selection_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                                text.GetStruct(), &selected_range);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnCursorUpdate(CefRefPtr<CefBrowser> browser,
-                                            const CefRect& rect) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_cursor_update)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_cursor_update(_struct, CefBrowserCppToC::Wrap(browser), &rect);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnCompleteSwapWithNewSize() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_complete_swap_with_new_size)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_complete_swap_with_new_size(_struct);
-}
-
-NO_SANITIZE("cfi-icall") void CefRenderHandlerCToCpp::OnResizeNotWork() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_resize_not_work)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_resize_not_work(_struct);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnOverscroll(CefRefPtr<CefBrowser> browser,
-                                          const float x,
-                                          const float y) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_overscroll)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_overscroll(_struct, CefBrowserCppToC::Wrap(browser), x, y);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnEditableChanged(CefRefPtr<CefBrowser> browser,
-                                               bool is_editable_node) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_editable_changed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_editable_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                               is_editable_node);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnOverScrollFlingVelocity(
-    CefRefPtr<CefBrowser> browser,
-    const float x,
-    const float y,
-    bool is_fling) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_over_scroll_fling_velocity)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_over_scroll_fling_velocity(
-      _struct, CefBrowserCppToC::Wrap(browser), x, y, is_fling);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnOverScrollFlingEnd(
-    CefRefPtr<CefBrowser> browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_over_scroll_fling_end)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_over_scroll_fling_end(_struct, CefBrowserCppToC::Wrap(browser));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnScrollState(CefRefPtr<CefBrowser> browser,
-                                           bool scroll_state) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_scroll_state)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_scroll_state(_struct, CefBrowserCppToC::Wrap(browser),
-                           scroll_state);
-}
-
-NO_SANITIZE("cfi-icall")
-bool CefRenderHandlerCToCpp::FilterScrollEvent(CefRefPtr<CefBrowser> browser,
-                                               const float x,
-                                               const float y,
-                                               const float fling_x,
-                                               const float fling_y) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, filter_scroll_event)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return false;
-  }
-
-  // Execute
-  int _retval = _struct->filter_scroll_event(
-      _struct, CefBrowserCppToC::Wrap(browser), x, y, fling_x, fling_y);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnNativeEmbedGestureEvent(
-    CefRefPtr<CefBrowser> browser,
-    const CefEmbedTouchEvent& event,
-    CefRefPtr<CefGestureEventCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_native_embed_gesture_event)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: callback; type: refptr_same
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_native_embed_gesture_event(
-      _struct, CefBrowserCppToC::Wrap(browser), &event,
-      CefGestureEventCallbackCToCpp::Unwrap(callback));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnNativeEmbedLifecycleChange(
-    CefRefPtr<CefBrowser> browser,
-    const CefNativeEmbedData& info) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_native_embed_lifecycle_change)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_native_embed_lifecycle_change(
-      _struct, CefBrowserCppToC::Wrap(browser), &info);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::NotifySelectAllClicked(bool select_all) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, notify_select_all_clicked)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->notify_select_all_clicked(_struct, select_all);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, release_resize_hold)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->release_resize_hold(_struct, CefBrowserCppToC::Wrap(browser));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnUpdateTextInputStateCalled(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& text,
-    const CefRange& selected_range,
-    const CefRange& compositon_range) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_update_text_input_state_called)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(!text.empty());
-  if (text.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_update_text_input_state_called(
-      _struct, CefBrowserCppToC::Wrap(browser), text.GetStruct(),
-      &selected_range, &compositon_range);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::GetWordSelection(CefRefPtr<CefBrowser> browser,
-                                              const CefString& text,
-                                              int8_t offset,
-                                              CefPoint& select) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_word_selection)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: text; type: string_byref_const
-  DCHECK(!text.empty());
-  if (text.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->get_word_selection(_struct, CefBrowserCppToC::Wrap(browser),
-                              text.GetStruct(), offset, &select);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::CreateOverlay(CefRefPtr<CefBrowser> browser,
-                                           CefRefPtr<CefImage> cef_image,
-                                           const CefRect& cef_image_rect,
-                                           const CefPoint& cef_touch_point) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, create_overlay)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: cef_image; type: refptr_diff
-  DCHECK(cef_image.get());
-  if (!cef_image.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->create_overlay(_struct, CefBrowserCppToC::Wrap(browser),
-                          CefImageCppToC::Wrap(cef_image), &cef_image_rect,
-                          &cef_touch_point);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnOverlayStateChanged(
-    CefRefPtr<CefBrowser> browser,
-    const CefRect& cef_image_rect) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_overlay_state_changed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_overlay_state_changed(_struct, CefBrowserCppToC::Wrap(browser),
-                                    &cef_image_rect);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::GetVisibleViewportRect(
-    CefRefPtr<CefBrowser> browser,
-    CefRect& rect) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_visible_viewport_rect)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->get_visible_viewport_rect(_struct, CefBrowserCppToC::Wrap(browser),
-                                     &rect);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SendDynamicFrameLossEvent(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& sceneId,
-    bool isStart) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_dynamic_frame_loss_event)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: sceneId; type: string_byref_const
-  DCHECK(!sceneId.empty());
-  if (sceneId.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->send_dynamic_frame_loss_event(
-      _struct, CefBrowserCppToC::Wrap(browser), sceneId.GetStruct(), isStart);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnResizeScrollableViewport(
-    CefRefPtr<CefBrowser> browser) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_resize_scrollable_viewport)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_resize_scrollable_viewport(_struct,
-                                         CefBrowserCppToC::Wrap(browser));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SetFillContent(const std::string& content) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_fill_content)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: content; type: std_string_byref_const
-  DCHECK(!content.empty());
-  if (content.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->set_fill_content(_struct, content.c_str());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::SetGestureEventResult(const bool result) {
-  shutdown_checker::AssertNotShutdown();
-
+ 
   cef_render_handler_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, set_gesture_event_result)) {
     return;
   }
-
+ 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
+ 
   // Execute
   _struct->set_gesture_event_result(_struct, result);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::StartVibraFeedback(
-    const std::string& vibratorType) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, start_vibra_feedback)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: vibratorType; type: std_string_byref_const
-  DCHECK(!vibratorType.empty());
-  if (vibratorType.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->start_vibra_feedback(_struct, vibratorType.c_str());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
-                                                CefSize& size) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_device_pixel_size)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->get_device_pixel_size(_struct, CefBrowserCppToC::Wrap(browser),
-                                 &size);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
-                                                  int32_t eventType) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_render_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_accessibility_event)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_accessibility_event(_struct, accessibilityId, eventType);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

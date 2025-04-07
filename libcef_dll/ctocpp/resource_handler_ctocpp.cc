@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d70ddb54a99cc08a13b3878ae203fadf1cdccc6c$
+// $hash=56fe664d94b17f6211ceade5c527e47929f54b77$
 //
 
 #include "libcef_dll/ctocpp/resource_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/callback_cpptoc.h"
 #include "libcef_dll/cpptoc/request_cpptoc.h"
 #include "libcef_dll/cpptoc/resource_read_callback_cpptoc.h"
@@ -96,7 +97,7 @@ bool CefResourceHandlerCToCpp::ProcessRequest(CefRefPtr<CefRequest> request,
 NO_SANITIZE("cfi-icall")
 void CefResourceHandlerCToCpp::GetResponseHeaders(
     CefRefPtr<CefResponse> response,
-    int64& response_length,
+    int64_t& response_length,
     CefString& redirectUrl) {
   shutdown_checker::AssertNotShutdown();
 
@@ -121,8 +122,8 @@ void CefResourceHandlerCToCpp::GetResponseHeaders(
 
 NO_SANITIZE("cfi-icall")
 bool CefResourceHandlerCToCpp::Skip(
-    int64 bytes_to_skip,
-    int64& bytes_skipped,
+    int64_t bytes_to_skip,
+    int64_t& bytes_skipped,
     CefRefPtr<CefResourceSkipCallback> callback) {
   shutdown_checker::AssertNotShutdown();
 

@@ -1,78 +1,44 @@
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_H_
 #define CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_H_
 #pragma once
 
-#include <set>
+#include <memory>
 
-#include "libcef/browser/browser_host_base.h"
-
-#include "base/memory/weak_ptr.h"
-#include "components/download/public/common/download_item.h"
-#include "content/public/browser/download_manager.h"
 #include "content/public/browser/download_manager_delegate.h"
 
-#if defined(OHOS_EX_DOWNLOAD)
-#include "base/compiler_specific.h"
-#include "cef/include/cef_download_handler.h"
-#endif  //  OHOS_EX_DOWNLOAD
+namespace content {
+class DownloadManager;
+}  // namespace content
 
-class AlloyBrowserHostImpl;
+namespace cef {
 
-class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
-                                   public content::DownloadManager::Observer,
-                                   public content::DownloadManagerDelegate,
-                                   public CefBrowserHostBase::Observer {
+class DownloadManagerDelegate : public content::DownloadManagerDelegate {
  public:
-  explicit CefDownloadManagerDelegate(content::DownloadManager* manager);
+  // Called from the ChromeDownloadManagerDelegate constructor for Chrome
+  // bootstrap. Alloy bootstrap uses AlloyDownloadManagerDelegate directly.
+  static std::unique_ptr<DownloadManagerDelegate> Create(
+      content::DownloadManager* download_manager);
 
-  CefDownloadManagerDelegate(const CefDownloadManagerDelegate&) = delete;
-  CefDownloadManagerDelegate& operator=(const CefDownloadManagerDelegate&) =
-      delete;
-
-  ~CefDownloadManagerDelegate() override;
-#if defined(OHOS_EX_DOWNLOAD)
-  void SetDownloadHandler(CefRefPtr<CefDownloadHandler> handler);
-#endif  //  OHOS_EX_DOWNLOAD
  private:
-  // DownloadItem::Observer methods.
-  void OnDownloadUpdated(download::DownloadItem* item) override;
-  void OnDownloadDestroyed(download::DownloadItem* item) override;
-
-  // DownloadManager::Observer methods.
-  void OnDownloadCreated(content::DownloadManager* manager,
-                         download::DownloadItem* item) override;
-  void ManagerGoingDown(content::DownloadManager* manager) override;
-
-  // DownloadManagerDelegate methods.
-  bool DetermineDownloadTarget(
-      download::DownloadItem* item,
-      content::DownloadTargetCallback* callback) override;
-  void GetNextId(content::DownloadIdCallback callback) override;
-  std::string ApplicationClientIdForFileScanning() override;
-
-  // CefBrowserHostBase::Observer methods.
-  void OnBrowserDestroyed(CefBrowserHostBase* browser) override;
-
-  AlloyBrowserHostImpl* GetOrAssociateBrowser(download::DownloadItem* item);
-  AlloyBrowserHostImpl* GetBrowser(download::DownloadItem* item);
-
-  content::DownloadManager* manager_;
-  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
-
-  // Map of DownloadItem to originating AlloyBrowserHostImpl. Maintaining this
-  // map is necessary because DownloadItem::GetWebContents() may return NULL if
-  // the browser navigates while the download is in progress.
-  using ItemBrowserMap =
-      std::map<download::DownloadItem*, AlloyBrowserHostImpl*>;
-  ItemBrowserMap item_browser_map_;
-
-#if defined(OHOS_EX_DOWNLOAD)
-  CefRefPtr<CefDownloadHandler> download_handler_per_context_ = nullptr;
-#endif  //  OHOS_EX_DOWNLOAD
+  // Allow deletion via std::unique_ptr only.
+  friend std::default_delete<DownloadManagerDelegate>;
 };
+
+}  // namespace cef
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_H_

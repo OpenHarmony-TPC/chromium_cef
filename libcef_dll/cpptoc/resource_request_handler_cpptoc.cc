@@ -9,12 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9fdaf3258539b98a1795f5b590719f513d86dbc0$
+// $hash=dc2a9024d3201b2be95f1062f9fad8164e5ec4b5$
 //
 
 #include "libcef_dll/cpptoc/resource_request_handler_cpptoc.h"
+
 #include "libcef_dll/cpptoc/cookie_access_filter_cpptoc.h"
-#include "libcef_dll/cpptoc/resource_handler_cpptoc.h"
 #include "libcef_dll/cpptoc/response_filter_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/callback_ctocpp.h"
@@ -88,35 +88,6 @@ resource_request_handler_on_before_resource_load(
 
   // Return type: simple
   return _retval;
-}
-
-cef_resource_handler_t* CEF_CALLBACK
-resource_request_handler_get_resource_handler(
-    struct _cef_resource_request_handler_t* self,
-    cef_browser_t* browser,
-    cef_frame_t* frame,
-    cef_request_t* request) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-  // Verify param: request; type: refptr_diff
-  DCHECK(request);
-  if (!request) {
-    return NULL;
-  }
-  // Unverified params: browser, frame
-
-  // Execute
-  CefRefPtr<CefResourceHandler> _retval =
-      CefResourceRequestHandlerCppToC::Get(self)->GetResourceHandler(
-          CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame),
-          CefRequestCToCpp::Wrap(request));
-
-  // Return type: refptr_same
-  return CefResourceHandlerCppToC::Wrap(_retval);
 }
 
 void CEF_CALLBACK resource_request_handler_on_resource_redirect(
@@ -234,7 +205,7 @@ void CEF_CALLBACK resource_request_handler_on_resource_load_complete(
     cef_request_t* request,
     struct _cef_response_t* response,
     cef_urlrequest_status_t status,
-    int64 received_content_length) {
+    int64_t received_content_length) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
@@ -308,8 +279,6 @@ CefResourceRequestHandlerCppToC::CefResourceRequestHandlerCppToC() {
       resource_request_handler_get_cookie_access_filter;
   GetStruct()->on_before_resource_load =
       resource_request_handler_on_before_resource_load;
-  GetStruct()->get_resource_handler =
-      resource_request_handler_get_resource_handler;
   GetStruct()->on_resource_redirect =
       resource_request_handler_on_resource_redirect;
   GetStruct()->on_resource_response =

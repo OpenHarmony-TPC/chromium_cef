@@ -72,32 +72,4 @@ class CefCompletionCallback : public virtual CefBaseRefCounted {
   virtual void OnComplete() = 0;
 };
 
-#if BUILDFLAG(IS_OHOS)
-///
-/// Callback interface used to select a client certificate for authentication.
-///
-/*--cef(source=library)--*/
-class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Chooses the specified certificate for client certificate authentication.
-  /// NULL value means that no client certificate should be used.
-  ///
-  /*--cef(optional_param=cert)--*/
-  virtual void Select(const CefString& private_key_file,
-                      const CefString& cert_chain_file) = 0;
-
-  ///
-  /// Cancel the select cert request.
-  ///
-  /*--cef()--*/
-  virtual void Cancel() = 0;
-
-  ///
-  /// Ignore the select cert request.
-  ///
-  /*--cef()--*/
-  virtual void Ignore() = 0;
-};
-#endif  // BUILDFLAG(IS_OHOS)
 #endif  // CEF_INCLUDE_CEF_CALLBACK_H_

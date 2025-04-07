@@ -2,21 +2,71 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/media_access_query.h"
-
-#include "include/cef_permission_handler.h"
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/media_capture_devices_dispatcher.h"
-#include "libcef/browser/media_stream_registrar.h"
-#include "libcef/common/cef_switches.h"
+#include "cef/libcef/browser/media_access_query.h"
 
 #include "base/command_line.h"
 #include "base/functional/callback_helpers.h"
+#include "cef/include/cef_permission_handler.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/media_stream_registrar.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
 
 namespace media_access_query {
 
 namespace {
+
+const blink::MediaStreamDevice* FindDefaultDeviceWithId(
+    const blink::MediaStreamDevices& devices,
+    const std::string& device_id) {
+  if (devices.empty()) {
+    return nullptr;
+  }
+
+  blink::MediaStreamDevices::const_iterator iter = devices.begin();
+  for (; iter != devices.end(); ++iter) {
+    if (iter->id == device_id) {
+      return &(*iter);
+    }
+  }
+
+  return &(*devices.begin());
+}
+
+// Helper for picking the device that was requested for an OpenDevice request.
+// If the device requested is not available it will revert to using the first
+// available one instead or will return an empty list if no devices of the
+// requested kind are present. Called on the UI thread.
+void GetRequestedDevice(const std::string& requested_device_id,
+                        bool audio,
+                        bool video,
+                        blink::MediaStreamDevices* devices) {
+  CEF_REQUIRE_UIT();
+  DCHECK(audio || video);
+
+  auto* dispatcher = MediaCaptureDevicesDispatcher::GetInstance();
+
+  if (audio) {
+    const blink::MediaStreamDevices& audio_devices =
+        dispatcher->GetAudioCaptureDevices();
+    const blink::MediaStreamDevice* const device =
+        FindDefaultDeviceWithId(audio_devices, requested_device_id);
+    if (device) {
+      devices->push_back(*device);
+    }
+  }
+  if (video) {
+    const blink::MediaStreamDevices& video_devices =
+        dispatcher->GetVideoCaptureDevices();
+    const blink::MediaStreamDevice* const device =
+        FindDefaultDeviceWithId(video_devices, requested_device_id);
+    if (device) {
+      devices->push_back(*device);
+    }
+  }
+}
 
 class CefMediaAccessQuery {
  public:
@@ -131,37 +181,42 @@ class CefMediaAccessQuery {
     blink::MediaStreamDevices audio_devices;
     blink::MediaStreamDevices video_devices;
 
-    if (device_audio_requested()) {
+    if (device_audio_requested() &&
+        !request_.requested_audio_device_ids.empty() &&
+        !request_.requested_audio_device_ids.front().empty()) {
       // Pick the desired device or fall back to the first available of the
       // given type.
-      CefMediaCaptureDevicesDispatcher::GetInstance()->GetRequestedDevice(
-          request_.requested_audio_device_id, true, false, &audio_devices);
+      GetRequestedDevice(request_.requested_audio_device_ids.front(), true,
+                         false, &audio_devices);
     }
 
-    if (device_video_requested()) {
+    if (device_video_requested() &&
+        !request_.requested_video_device_ids.empty() &&
+        !request_.requested_video_device_ids.front().empty()) {
       // Pick the desired device or fall back to the first available of the
       // given type.
-      CefMediaCaptureDevicesDispatcher::GetInstance()->GetRequestedDevice(
-          request_.requested_video_device_id, false, true, &video_devices);
+      GetRequestedDevice(request_.requested_video_device_ids.front(), false,
+                         true, &video_devices);
     }
 
     if (desktop_audio_requested()) {
-      audio_devices.push_back(blink::MediaStreamDevice(
-          request_.audio_type, "loopback", "System Audio"));
+      audio_devices.emplace_back(request_.audio_type, "loopback",
+                                 "System Audio");
     }
 
     if (desktop_video_requested()) {
       content::DesktopMediaID media_id;
-      if (request_.requested_video_device_id.empty()) {
+      if (!request_.requested_video_device_ids.empty() &&
+          !request_.requested_video_device_ids.front().empty()) {
+        media_id = content::DesktopMediaID::Parse(
+            request_.requested_video_device_ids.front());
+      } else {
         media_id =
             content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
                                     -1 /* webrtc::kFullDesktopScreenId */);
-      } else {
-        media_id =
-            content::DesktopMediaID::Parse(request_.requested_video_device_id);
       }
-      video_devices.push_back(blink::MediaStreamDevice(
-          request_.video_type, media_id.ToString(), "Screen"));
+      video_devices.emplace_back(request_.video_type, media_id.ToString(),
+                                 "Screen");
     }
 
     blink::mojom::StreamDevicesSetPtr stream_devices_set =
@@ -296,7 +351,7 @@ bool CheckCommandLinePermission() {
 
 bool CheckMediaAccessPermission(CefBrowserHostBase* browser,
                                 content::RenderFrameHost* render_frame_host,
-                                const GURL& security_origin,
+                                const url::Origin& security_origin,
                                 blink::mojom::MediaStreamType type) {
   // Always allowed here. RequestMediaAccessPermission will be called.
   return true;

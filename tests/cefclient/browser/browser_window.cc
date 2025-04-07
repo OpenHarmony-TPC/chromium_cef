@@ -9,8 +9,7 @@
 
 namespace client {
 
-BrowserWindow::BrowserWindow(Delegate* delegate)
-    : delegate_(delegate), is_closing_(false) {
+BrowserWindow::BrowserWindow(Delegate* delegate) : delegate_(delegate) {
   DCHECK(delegate_);
 }
 
@@ -28,6 +27,10 @@ CefRefPtr<CefBrowser> BrowserWindow::GetBrowser() const {
 bool BrowserWindow::IsClosing() const {
   REQUIRE_MAIN_THREAD();
   return is_closing_;
+}
+
+bool BrowserWindow::UseAlloyStyle() const {
+  return delegate_->UseAlloyStyle();
 }
 
 void BrowserWindow::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {

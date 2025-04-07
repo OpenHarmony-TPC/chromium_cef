@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=65d47b1b0f255e2059db8833b70aa89e84b2b742$
+// $hash=56284b2ec6d395bdc435e2441de5efef66d8b7a8$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_PROCESS_HANDLER_CTOCPP_H_
@@ -41,8 +41,12 @@ class CefBrowserProcessHandlerCToCpp
   void OnContextInitialized() override;
   void OnBeforeChildProcessLaunch(
       CefRefPtr<CefCommandLine> command_line) override;
-  void OnScheduleMessagePumpWork(int64 delay_ms) override;
+  bool OnAlreadyRunningAppRelaunch(CefRefPtr<CefCommandLine> command_line,
+                                   const CefString& current_directory) override;
+  void OnScheduleMessagePumpWork(int64_t delay_ms) override;
   CefRefPtr<CefClient> GetDefaultClient() override;
+  CefRefPtr<CefRequestContextHandler> GetDefaultRequestContextHandler()
+      override;
   void OnContextInitializedForIncognitoMode() override;
 };
 

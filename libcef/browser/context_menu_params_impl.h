@@ -6,14 +6,13 @@
 #define CEF_LIBCEF_BROWSER_CONTEXT_MENU_PARAMS_IMPL_H_
 #pragma once
 
-#include "include/cef_context_menu_handler.h"
-#include "libcef/common/value_base.h"
-
+#include "cef/include/cef_context_menu_handler.h"
+#include "cef/libcef/common/value_base.h"
 #include "content/public/browser/context_menu_params.h"
 
 // CefContextMenuParams implementation. This class is not thread safe.
 class CefContextMenuParamsImpl
-    : public CefValueBase<CefContextMenuParams, content::ContextMenuParams> {
+    : public CefValueBase<CefContextMenuParamsExt, content::ContextMenuParams> {
  public:
   explicit CefContextMenuParamsImpl(content::ContextMenuParams* value);
 
@@ -42,12 +41,13 @@ class CefContextMenuParamsImpl
   EditStateFlags GetEditStateFlags() override;
   bool IsCustomMenu() override;
 
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
   InputFieldType GetInputFieldType() override;
   SourceType GetSourceType() override;
-#endif  // #ifdef OHOS_CLIPBOARD
+  InputFieldType ConventInputField(blink::mojom::FormControlType formType);
+#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
-#ifdef OHOS_DRAG_DROP
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   void GetImageRect(int& x, int& y, int& w, int& h) override;
 #endif
 };

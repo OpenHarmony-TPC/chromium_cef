@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/audio_loopback_stream_creator.h"
+#include "cef/libcef/browser/audio_loopback_stream_creator.h"
 
 #include <memory>
 #include <utility>
@@ -39,7 +39,7 @@ class StreamCreatedCallbackAdapter final
   StreamCreatedCallbackAdapter& operator=(const StreamCreatedCallbackAdapter&) =
       delete;
 
-  ~StreamCreatedCallbackAdapter() override {}
+  ~StreamCreatedCallbackAdapter() override = default;
 
   // blink::mojom::RendererAudioInputStreamFactoryClient implementation.
   void StreamCreated(
@@ -48,7 +48,7 @@ class StreamCreatedCallbackAdapter final
           client_receiver,
       media::mojom::ReadOnlyAudioDataPipePtr data_pipe,
       bool initially_muted,
-      const absl::optional<base::UnguessableToken>& stream_id) override {
+      const std::optional<base::UnguessableToken>& stream_id) override {
     DCHECK(!initially_muted);  // Loopback streams shouldn't be started muted.
     callback_.Run(std::move(stream), std::move(client_receiver),
                   std::move(data_pipe));

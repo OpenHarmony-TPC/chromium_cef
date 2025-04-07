@@ -2,30 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/window_impl.h"
+#include "cef/libcef/browser/views/window_impl.h"
 
-#include "libcef/browser/browser_util.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/views/display_impl.h"
-#include "libcef/browser/views/fill_layout_impl.h"
-#include "libcef/browser/views/layout_util.h"
-#include "libcef/browser/views/view_util.h"
-#include "libcef/browser/views/window_view.h"
+#include <memory>
 
 #include "base/i18n/rtl.h"
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/browser_event_util.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/browser_view_impl.h"
+#include "cef/libcef/browser/views/display_impl.h"
+#include "cef/libcef/browser/views/fill_layout_impl.h"
+#include "cef/libcef/browser/views/layout_util.h"
+#include "cef/libcef/browser/views/view_util.h"
+#include "cef/libcef/browser/views/widget.h"
+#include "cef/libcef/browser/views/window_view.h"
+#include "components/constrained_window/constrained_window_views.h"
+#include "ui/base/mojom/menu_source_type.mojom.h"
 #include "ui/base/test/ui_controls.h"
 #include "ui/compositor/compositor.h"
 #include "ui/gfx/geometry/rect.h"
 #include "ui/views/controls/button/menu_button.h"
 #include "ui/views/controls/menu/menu_runner.h"
+#include "ui/views/controls/webview/webview.h"
 
 #if defined(USE_AURA)
-#include "ui/aura/test/ui_controls_factory_aura.h"
 #include "ui/aura/window.h"
-#include "ui/base/test/ui_controls_aura.h"
 #endif  // defined(USE_AURA)
 
 #if BUILDFLAG(IS_WIN)
+#include "ui/aura/test/ui_controls_aurawin.h"
 #include "ui/display/win/screen_win.h"
 #endif
 
@@ -88,7 +94,7 @@ class CefUnhandledKeyEventHandler : public ui::EventHandler {
     }
 
     CefKeyEvent cef_event;
-    if (browser_util::GetCefKeyEvent(*event, cef_event) &&
+    if (GetCefKeyEvent(*event, cef_event) &&
         window_impl_->OnKeyEvent(cef_event)) {
       event->StopPropagation();
     }
@@ -96,11 +102,11 @@ class CefUnhandledKeyEventHandler : public ui::EventHandler {
 
  private:
   // Members are guaranteed to outlive this object.
-  CefWindowImpl* window_impl_;
-  views::Widget* widget_;
+  raw_ptr<CefWindowImpl> window_impl_;
+  raw_ptr<views::Widget> widget_;
 
   // |window_| is the event target that is associated with this class.
-  aura::Window* window_;
+  raw_ptr<aura::Window> window_;
 };
 
 #endif  // defined(USE_AURA)
@@ -121,16 +127,41 @@ CefRefPtr<CefWindowImpl> CefWindowImpl::Create(
   CefRefPtr<CefWindowImpl> window = new CefWindowImpl(delegate);
   window->Initialize();
   window->CreateWidget(parent_widget);
-  if (delegate) {
-    delegate->OnWindowCreated(window.get());
-  }
   return window;
 }
 
 void CefWindowImpl::Show() {
   CEF_REQUIRE_VALID_RETURN_VOID();
   if (widget_) {
+    shown_as_browser_modal_ = false;
     widget_->Show();
+  }
+}
+
+void CefWindowImpl::ShowAsBrowserModalDialog(
+    CefRefPtr<CefBrowserView> browser_view) {
+  CEF_REQUIRE_VALID_RETURN_VOID();
+  if (widget_) {
+    auto* browser_view_impl =
+        static_cast<CefBrowserViewImpl*>(browser_view.get());
+
+    // |browser_view| must belong to the host widget.
+    auto* host_widget = cef_window_view()->host_widget();
+    CHECK(host_widget &&
+          browser_view_impl->root_view()->GetWidget() == host_widget);
+
+    if (auto web_view = browser_view_impl->web_view()) {
+      if (auto web_contents = web_view->web_contents()) {
+        shown_as_browser_modal_ = true;
+        constrained_window::ShowModalDialog(widget_->GetNativeWindow(),
+                                            web_contents);
+
+        // NativeWebContentsModalDialogManagerViews::ManageDialog() disables
+        // movement. That has no impact on native frames but interferes with
+        // draggable regions.
+        widget_->set_movement_disabled(false);
+      }
+    }
   }
 }
 
@@ -230,7 +261,24 @@ void CefWindowImpl::Restore() {
 void CefWindowImpl::SetFullscreen(bool fullscreen) {
   CEF_REQUIRE_VALID_RETURN_VOID();
   if (widget_ && fullscreen != widget_->IsFullscreen()) {
+    if (CefWidget::GetForWidget(widget_)->ToggleFullscreenMode()) {
+      // Received special handling.
+      return;
+    }
+
+    // Call the Widget method directly with Alloy style, or Chrome style
+    // when no BrowserView exists.
     widget_->SetFullscreen(fullscreen);
+
+    // Use a synchronous callback notification on Windows/Linux. Chrome style
+    // on Windows/Linux gets notified synchronously via ChromeBrowserDelegate
+    // callbacks when a BrowserView exists. MacOS (both runtime styles) gets
+    // notified asynchronously via CefNativeWidgetMac callbacks.
+#if !BUILDFLAG(IS_MAC)
+    if (delegate()) {
+      delegate()->OnWindowFullscreenTransition(this, /*is_completed=*/true);
+    }
+#endif
   }
 }
 
@@ -256,6 +304,16 @@ bool CefWindowImpl::IsFullscreen() {
     return widget_->IsFullscreen();
   }
   return false;
+}
+
+CefRefPtr<CefView> CefWindowImpl::GetFocusedView() {
+  CEF_REQUIRE_VALID_RETURN(nullptr);
+  if (widget_ && widget_->GetFocusManager()) {
+    if (auto* focused_view = widget_->GetFocusManager()->GetFocusedView()) {
+      return view_util::GetFor(focused_view, /*find_known_parent=*/true);
+    }
+  }
+  return nullptr;
 }
 
 void CefWindowImpl::SetTitle(const CefString& title) {
@@ -305,10 +363,11 @@ CefRefPtr<CefImage> CefWindowImpl::GetWindowAppIcon() {
 
 CefRefPtr<CefOverlayController> CefWindowImpl::AddOverlayView(
     CefRefPtr<CefView> view,
-    cef_docking_mode_t docking_mode) {
+    cef_docking_mode_t docking_mode,
+    bool can_activate) {
   CEF_REQUIRE_VALID_RETURN(nullptr);
   if (root_view()) {
-    return root_view()->AddOverlayView(view, docking_mode);
+    return root_view()->AddOverlayView(view, docking_mode, can_activate);
   }
   return nullptr;
 }
@@ -411,6 +470,11 @@ void CefWindowImpl::SetBackgroundColor(cef_color_t color) {
 }
 
 bool CefWindowImpl::CanWidgetClose() {
+  if (shown_as_browser_modal_) {
+    // Always allow the close for browser modal dialogs to avoid an infinite
+    // loop in WebContentsModalDialogManager::CloseAllDialogs().
+    return true;
+  }
   if (delegate()) {
     return delegate()->CanClose(this);
   }
@@ -454,8 +518,8 @@ bool CefWindowImpl::AcceleratorPressed(const ui::Accelerator& accelerator) {
 }
 
 bool CefWindowImpl::CanHandleAccelerators() const {
-  if (delegate() && widget_) {
-    return widget_->IsActive();
+  if (delegate() && widget_ && root_view()) {
+    return root_view()->CanHandleAccelerators();
   }
   return false;
 }
@@ -488,17 +552,17 @@ void CefWindowImpl::ShowMenu(views::MenuButton* menu_button,
   // We'll send the MenuClosed notification manually for better accuracy.
   menu_model_->set_auto_notify_menu_closed(false);
 
-  menu_runner_.reset(new views::MenuRunner(
+  menu_runner_ = std::make_unique<views::MenuRunner>(
       menu_model_impl->model(),
       menu_button ? views::MenuRunner::HAS_MNEMONICS
                   : views::MenuRunner::CONTEXT_MENU,
-      base::BindRepeating(&CefWindowImpl::MenuClosed, this)));
+      base::BindRepeating(&CefWindowImpl::MenuClosed, this));
 
   menu_runner_->RunMenuAt(
       widget_, menu_button ? menu_button->button_controller() : nullptr,
       gfx::Rect(gfx::Point(screen_point.x, screen_point.y), gfx::Size()),
       static_cast<views::MenuAnchorPosition>(anchor_position),
-      ui::MENU_SOURCE_NONE);
+      ui::mojom::MenuSourceType::kNone);
 }
 
 void CefWindowImpl::MenuClosed() {
@@ -562,7 +626,7 @@ CefWindowHandle CefWindowImpl::GetWindowHandle() {
   return view_util::GetWindowHandle(widget_);
 }
 
-void CefWindowImpl::SendKeyPress(int key_code, uint32 event_flags) {
+void CefWindowImpl::SendKeyPress(int key_code, uint32_t event_flags) {
   CEF_REQUIRE_VALID_RETURN_VOID();
   InitializeUITesting();
 
@@ -570,7 +634,6 @@ void CefWindowImpl::SendKeyPress(int key_code, uint32 event_flags) {
   if (!native_window) {
     return;
   }
-
 #if !BUILDFLAG(IS_OHOS)
   ui_controls::SendKeyPress(native_window,
                             static_cast<ui::KeyboardCode>(key_code),
@@ -578,7 +641,7 @@ void CefWindowImpl::SendKeyPress(int key_code, uint32 event_flags) {
                             !!(event_flags & EVENTFLAG_SHIFT_DOWN),
                             !!(event_flags & EVENTFLAG_ALT_DOWN),
                             false);  // Command key is not supported by Aura.
-#endif                               // !BUILDFLAG(IS_OHOS)
+#endif
 }
 
 void CefWindowImpl::SendMouseMove(int screen_x, int screen_y) {
@@ -589,7 +652,7 @@ void CefWindowImpl::SendMouseMove(int screen_x, int screen_y) {
   gfx::Point point(screen_x, screen_y);
 #if !BUILDFLAG(IS_OHOS)
   ui_controls::SendMouseMove(point.x(), point.y());
-#endif  // !BUILDFLAG(IS_OHOS)
+#endif
 }
 
 void CefWindowImpl::SendMouseEvents(cef_mouse_button_type_t button,
@@ -619,14 +682,15 @@ void CefWindowImpl::SendMouseEvents(cef_mouse_button_type_t button,
 
 #if !BUILDFLAG(IS_OHOS)
   ui_controls::SendMouseEvents(type, state);
-#endif  // !BUILDFLAG(IS_OHOS)
+#endif
 }
 
 void CefWindowImpl::SetAccelerator(int command_id,
                                    int key_code,
                                    bool shift_pressed,
                                    bool ctrl_pressed,
-                                   bool alt_pressed) {
+                                   bool alt_pressed,
+                                   bool high_priority) {
   CEF_REQUIRE_VALID_RETURN_VOID();
   if (!widget_) {
     return;
@@ -655,7 +719,10 @@ void CefWindowImpl::SetAccelerator(int command_id,
   views::FocusManager* focus_manager = widget_->GetFocusManager();
   DCHECK(focus_manager);
   focus_manager->RegisterAccelerator(
-      accelerator, ui::AcceleratorManager::kNormalPriority, this);
+      accelerator,
+      high_priority ? ui::AcceleratorManager::kHighPriority
+                    : ui::AcceleratorManager::kNormalPriority,
+      this);
 }
 
 void CefWindowImpl::RemoveAccelerator(int command_id) {
@@ -691,15 +758,42 @@ void CefWindowImpl::RemoveAllAccelerators() {
   focus_manager->UnregisterAccelerators(this);
 }
 
+void CefWindowImpl::SetThemeColor(int color_id, cef_color_t color) {
+  CEF_REQUIRE_VALID_RETURN_VOID();
+  if (root_view()) {
+    view_util::SetColor(root_view(), color_id, color);
+  }
+}
+
+void CefWindowImpl::ThemeChanged() {
+  CEF_REQUIRE_VALID_RETURN_VOID();
+  if (widget_) {
+    widget_->ThemeChanged();
+  }
+}
+
+cef_runtime_style_t CefWindowImpl::GetRuntimeStyle() {
+  CEF_REQUIRE_VALID_RETURN(CEF_RUNTIME_STYLE_DEFAULT);
+  if (auto* window_view = cef_window_view()) {
+    return window_view->IsAlloyStyle() ? CEF_RUNTIME_STYLE_ALLOY
+                                       : CEF_RUNTIME_STYLE_CHROME;
+  }
+  return CEF_RUNTIME_STYLE_DEFAULT;
+}
+
+CefWindowView* CefWindowImpl::cef_window_view() const {
+  return static_cast<CefWindowView*>(root_view());
+}
+
 CefWindowImpl::CefWindowImpl(CefRefPtr<CefWindowDelegate> delegate)
-    : ParentClass(delegate), widget_(nullptr), destroyed_(false) {}
+    : ParentClass(delegate) {}
 
 CefWindowView* CefWindowImpl::CreateRootView() {
   return new CefWindowView(delegate(), this);
 }
 
 void CefWindowImpl::InitializeRootView() {
-  static_cast<CefWindowView*>(root_view())->Initialize();
+  cef_window_view()->Initialize();
 }
 
 void CefWindowImpl::CreateWidget(gfx::AcceleratedWidget parent_widget) {
@@ -718,4 +812,10 @@ void CefWindowImpl::CreateWidget(gfx::AcceleratedWidget parent_widget) {
   // keep an owned reference.
   std::unique_ptr<views::View> view_ptr = view_util::PassOwnership(this);
   [[maybe_unused]] views::View* view = view_ptr.release();
+
+  initialized_ = true;
+
+  if (delegate()) {
+    delegate()->OnWindowCreated(this);
+  }
 }

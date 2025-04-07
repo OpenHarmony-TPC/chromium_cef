@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/native/cursor_util.h"
+#include "cef/libcef/browser/native/cursor_util.h"
 
-#import "base/mac/scoped_nsobject.h"
+#include "cef/include/internal/cef_types_mac.h"
 #import "ui/base/cocoa/cursor_utils.h"
 
 namespace cursor_util {
@@ -15,14 +15,16 @@ class ScopedCursorHandleImpl : public ScopedCursorHandle {
  public:
   explicit ScopedCursorHandleImpl(NSCursor* native_cursor) {
     if (native_cursor) {
-      cursor_.reset([native_cursor retain]);
+      cursor_ = native_cursor;
     }
   }
 
-  cef_cursor_handle_t GetCursorHandle() override { return cursor_.get(); }
+  cef_cursor_handle_t GetCursorHandle() override {
+    return CAST_NSCURSOR_TO_CEF_CURSOR_HANDLE(cursor_);
+  }
 
  private:
-  base::scoped_nsobject<NSCursor> cursor_;
+  NSCursor* __strong cursor_;
 };
 
 }  // namespace

@@ -74,11 +74,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // Specify CEF global settings here.
   CefSettings settings;
 
-  if (command_line->HasSwitch("enable-chrome-runtime")) {
-    // Enable experimental Chrome runtime. See issue #2969 for details.
-    settings.chrome_runtime = true;
-  }
-
 #if !defined(CEF_USE_SANDBOX)
   settings.no_sandbox = true;
 #endif
@@ -88,8 +83,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
   // CEF has initialized.
   CefRefPtr<SimpleApp> app(new SimpleApp);
 
-  // Initialize CEF.
-  CefInitialize(main_args, settings, app.get(), sandbox_info);
+  // Initialize the CEF browser process. May return false if initialization
+  // fails or if early exit is desired (for example, due to process singleton
+  // relaunch behavior).
+  if (!CefInitialize(main_args, settings, app.get(), sandbox_info)) {
+    return CefGetExitCode();
+  }
 
   // Run the CEF message loop. This will block until CefQuitMessageLoop() is
   // called.

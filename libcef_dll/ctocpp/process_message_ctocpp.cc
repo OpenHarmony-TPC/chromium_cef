@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/ctocpp/process_message_ctocpp.h"
+
 #include "libcef_dll/ctocpp/list_value_ctocpp.h"
 #include "libcef_dll/ctocpp/shared_memory_region_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -130,8 +131,8 @@ CefRefPtr<CefListValue> CefProcessMessageCToCpp::GetArgumentList() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<
-    CefSharedMemoryRegion> CefProcessMessageCToCpp::GetSharedMemoryRegion() {
+CefRefPtr<CefSharedMemoryRegion>
+CefProcessMessageCToCpp::GetSharedMemoryRegion() {
   shutdown_checker::AssertNotShutdown();
 
   cef_process_message_t* _struct = GetStruct();

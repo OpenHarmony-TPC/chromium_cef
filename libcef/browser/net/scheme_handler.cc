@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include "libcef/browser/net/chrome_scheme_handler.h"
 #include "libcef/browser/net/devtools_scheme_handler.h"
 #include "libcef/common/net/scheme_registration.h"
 #include "libcef/features/runtime.h"
@@ -16,9 +15,9 @@
 namespace scheme {
 
 void RegisterInternalHandlers(CefIOThreadState* iothread_state) {
-  if (!cef::IsAlloyRuntimeEnabled()) {
+  /*if (!cef::IsAlloyRuntimeEnabled()) {
     return;
-  }
+  }*/
 
   scheme::RegisterChromeDevToolsHandler(iothread_state);
 }

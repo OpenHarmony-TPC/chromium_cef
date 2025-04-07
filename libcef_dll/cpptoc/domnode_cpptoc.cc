@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=914f2f992822d4abfee573ca8a88d99d76b04610$
+// $hash=608e3e6b4dd3aae0953c7a112276cfa0ddf1646d$
 //
 
 #include "libcef_dll/cpptoc/domnode_cpptoc.h"
+
 #include "libcef_dll/cpptoc/domdocument_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
@@ -96,7 +97,7 @@ int CEF_CALLBACK domnode_is_form_control_element(struct _cef_domnode_t* self) {
 
   DCHECK(self);
   if (!self) {
-    return 0;
+    return DOM_NODE_TYPE_UNSUPPORTED;
   }
 
   // Execute
@@ -106,7 +107,7 @@ int CEF_CALLBACK domnode_is_form_control_element(struct _cef_domnode_t* self) {
   return _retval;
 }
 
-cef_string_userfree_t CEF_CALLBACK
+cef_dom_form_control_type_t CEF_CALLBACK
 domnode_get_form_control_element_type(struct _cef_domnode_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -114,14 +115,15 @@ domnode_get_form_control_element_type(struct _cef_domnode_t* self) {
 
   DCHECK(self);
   if (!self) {
-    return NULL;
+    return DOM_FORM_CONTROL_TYPE_UNSUPPORTED;
   }
 
   // Execute
-  CefString _retval = CefDOMNodeCppToC::Get(self)->GetFormControlElementType();
+  cef_dom_form_control_type_t _retval =
+      CefDOMNodeCppToC::Get(self)->GetFormControlElementType();
 
-  // Return type: string
-  return _retval.DetachToUserFree();
+  // Return type: simple
+  return _retval;
 }
 
 int CEF_CALLBACK domnode_is_same(struct _cef_domnode_t* self,

@@ -6,11 +6,10 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_SCROLL_VIEW_IMPL_H_
 #pragma once
 
-#include "include/views/cef_scroll_view.h"
-#include "include/views/cef_view_delegate.h"
-
-#include "libcef/browser/views/scroll_view_view.h"
-#include "libcef/browser/views/view_impl.h"
+#include "cef/include/views/cef_scroll_view.h"
+#include "cef/include/views/cef_view_delegate.h"
+#include "cef/libcef/browser/views/scroll_view_view.h"
+#include "cef/libcef/browser/views/view_impl.h"
 
 class CefScrollViewImpl
     : public CefViewImpl<CefScrollViewView, CefScrollView, CefViewDelegate> {
@@ -43,7 +42,7 @@ class CefScrollViewImpl
   // Create a new implementation object.
   // Always call Initialize() after creation.
   // |delegate| may be nullptr.
-  CefScrollViewImpl(CefRefPtr<CefViewDelegate> delegate);
+  explicit CefScrollViewImpl(CefRefPtr<CefViewDelegate> delegate);
 
   // CefViewImpl methods:
   CefScrollViewView* CreateRootView() override;

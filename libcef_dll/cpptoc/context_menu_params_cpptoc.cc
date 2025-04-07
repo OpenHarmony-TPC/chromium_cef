@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=16d5a4219c58a0e44f69a265f688928b6991e85b$
+// $hash=4443e4353cc88c89717a37ad62b2b6b157d59e41$
 //
 
 #include "libcef_dll/cpptoc/context_menu_params_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -404,111 +405,6 @@ context_menu_params_is_custom_menu(struct _cef_context_menu_params_t* self) {
   return _retval;
 }
 
-cef_context_menu_input_field_type_t CEF_CALLBACK
-context_menu_params_get_input_field_type(
-    struct _cef_context_menu_params_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return CM_INPUTFIELDTYPE_NONE;
-  }
-
-  // Execute
-  cef_context_menu_input_field_type_t _retval =
-      CefContextMenuParamsCppToC::Get(self)->GetInputFieldType();
-
-  // Return type: simple
-  return _retval;
-}
-
-cef_context_menu_source_type_t CEF_CALLBACK
-context_menu_params_get_source_type(struct _cef_context_menu_params_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return CM_SOURCETYPE_NONE;
-  }
-
-  // Execute
-  cef_context_menu_source_type_t _retval =
-      CefContextMenuParamsCppToC::Get(self)->GetSourceType();
-
-  // Return type: simple
-  return _retval;
-}
-
-void CEF_CALLBACK
-context_menu_params_get_image_rect(struct _cef_context_menu_params_t* self,
-                                   int* x,
-                                   int* y,
-                                   int* w,
-                                   int* h) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Verify param: x; type: string_vec_byref
-  DCHECK(x);
-  if (!x) {
-    return;
-  }
-  // Verify param: y; type: string_vec_byref
-  DCHECK(y);
-  if (!y) {
-    return;
-  }
-  // Verify param: w; type: string_vec_byref
-  DCHECK(w);
-  if (!w) {
-    return;
-  }
-  // Verify param: h; type: string_vec_byref
-  DCHECK(h);
-  if (!h) {
-    return;
-  }
-
-  // Translate param: x; type: string_vec_byref
-  int xVal = x ? *x : 0;
-  // Translate param: y; type: string_vec_byref
-  int yVal = y ? *y : 0;
-  // Translate param: w; type: string_vec_byref
-  int wVal = w ? *w : 0;
-  // Translate param: h; type: string_vec_byref
-  int hVal = h ? *h : 0;
-
-  // Execute
-  CefContextMenuParamsCppToC::Get(self)->GetImageRect(xVal, yVal, wVal, hVal);
-
-  // Restore param: x; type: string_vec_byref
-  if (x) {
-    *x = xVal;
-  }
-  // Restore param: y; type: string_vec_byref
-  if (y) {
-    *y = yVal;
-  }
-  // Restore param: w; type: string_vec_byref
-  if (w) {
-    *w = wVal;
-  }
-  // Restore param: h; type: string_vec_byref
-  if (h) {
-    *h = hVal;
-  }
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -538,9 +434,6 @@ CefContextMenuParamsCppToC::CefContextMenuParamsCppToC() {
       context_menu_params_is_spell_check_enabled;
   GetStruct()->get_edit_state_flags = context_menu_params_get_edit_state_flags;
   GetStruct()->is_custom_menu = context_menu_params_is_custom_menu;
-  GetStruct()->get_input_field_type = context_menu_params_get_input_field_type;
-  GetStruct()->get_source_type = context_menu_params_get_source_type;
-  GetStruct()->get_image_rect = context_menu_params_get_image_rect;
 }
 
 // DESTRUCTOR - Do not edit by hand.

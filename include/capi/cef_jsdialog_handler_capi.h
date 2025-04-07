@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=bc8a01a42dc1ebf9e092e926f74733fbf4bf4d8c$
+// $hash=288e4080d93a92a87bf237581b4e9803a84e7147$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_JSDIALOG_HANDLER_CAPI_H_
@@ -109,7 +109,7 @@ typedef struct _cef_jsdialog_handler_t {
   /// if the application will use a custom dialog or if the callback has been
   /// executed immediately. Custom dialogs may be either modal or modeless. If a
   /// custom dialog is used the application must execute |callback| once the
-  /// custom dialog is dismissed.
+  /// custom dialog is dismissed. IS_OHOS extended
   ///
   int(CEF_CALLBACK* on_before_unload_dialog)(
       struct _cef_jsdialog_handler_t* self,

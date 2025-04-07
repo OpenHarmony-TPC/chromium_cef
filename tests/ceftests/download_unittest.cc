@@ -34,9 +34,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
   DownloadSchemeHandler(DelayCallback delay_callback,
                         TrackCallback* got_download_request)
       : delay_callback_(std::move(delay_callback)),
-        got_download_request_(got_download_request),
-        should_delay_(false),
-        offset_(0) {}
+        got_download_request_(got_download_request) {}
 
   bool Open(CefRefPtr<CefRequest> request,
             bool& handle_request,
@@ -51,7 +49,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
       content_disposition_ = kTestContentDisposition;
       should_delay_ = true;
     } else {
-      EXPECT_TRUE(false);  // Not reached.
+      EXPECT_TRUE(IgnoreURL(url)) << url;
 
       // Cancel immediately.
       handle_request = true;
@@ -64,7 +62,7 @@ class DownloadSchemeHandler : public CefResourceHandler {
   }
 
   void GetResponseHeaders(CefRefPtr<CefResponse> response,
-                          int64& response_length,
+                          int64_t& response_length,
                           CefString& redirectUrl) override {
     response_length = content_.size();
 
@@ -128,11 +126,11 @@ class DownloadSchemeHandler : public CefResourceHandler {
 
   DelayCallback delay_callback_;
   TrackCallback* got_download_request_;
-  bool should_delay_;
+  bool should_delay_ = false;
   std::string content_;
   std::string mime_type_;
   std::string content_disposition_;
-  size_t offset_;
+  size_t offset_ = 0;
   CefRefPtr<CefResourceReadCallback> read_callback_;
 
   IMPLEMENT_REFCOUNTING(DownloadSchemeHandler);
@@ -182,14 +180,14 @@ class DownloadTestHandler : public TestHandler {
                       const std::string& rc_cache_path)
       : test_mode_(test_mode),
         rc_mode_(rc_mode),
-        rc_cache_path_(rc_cache_path),
-        download_id_(0),
-        verified_results_(false) {}
+        rc_cache_path_(rc_cache_path) {}
 
   bool is_clicked() const {
     return test_mode_ == CLICKED || test_mode_ == CLICKED_INVALID ||
            test_mode_ == CLICKED_BLOCKED;
   }
+
+  bool is_clicked_invalid() const { return test_mode_ == CLICKED_INVALID; }
 
   bool is_clicked_and_downloaded() const { return test_mode_ == CLICKED; }
 
@@ -199,6 +197,24 @@ class DownloadTestHandler : public TestHandler {
   }
 
   void RunTest() override {
+    if (!is_clicked() || is_clicked_and_downloaded()) {
+      // Create a new temporary directory.
+      EXPECT_TRUE(temp_dir_.CreateUniqueTempDir());
+      test_path_ =
+          client::file_util::JoinPath(temp_dir_.GetPath(), kTestFileName);
+    }
+
+    CreateTestRequestContext(
+        rc_mode_, rc_cache_path_,
+        base::BindOnce(&DownloadTestHandler::RunTestContinue, this));
+
+    // Time out the test after a reasonable period of time.
+    SetTestTimeout();
+  }
+
+  void RunTestContinue(CefRefPtr<CefRequestContext> request_context) {
+    EXPECT_UI_THREAD();
+
     DelayCallbackVendor delay_callback_vendor;
     if (test_mode_ == NAVIGATED || test_mode_ == PENDING) {
       delay_callback_vendor = base::BindRepeating(
@@ -212,20 +228,11 @@ class DownloadTestHandler : public TestHandler {
         new DownloadSchemeHandlerFactory(delay_callback_vendor,
                                          &got_download_request_);
 
-    CefRefPtr<CefRequestContext> request_context =
-        CreateTestRequestContext(rc_mode_, rc_cache_path_);
     if (request_context) {
       request_context->RegisterSchemeHandlerFactory("https", kTestDomain,
                                                     scheme_factory);
     } else {
       CefRegisterSchemeHandlerFactory("https", kTestDomain, scheme_factory);
-    }
-
-    if (!is_clicked() || is_clicked_and_downloaded()) {
-      // Create a new temporary directory.
-      EXPECT_TRUE(temp_dir_.CreateUniqueTempDir());
-      test_path_ =
-          client::file_util::JoinPath(temp_dir_.GetPath(), kTestFileName);
     }
 
     if (test_mode_ == NAVIGATED) {
@@ -254,9 +261,6 @@ class DownloadTestHandler : public TestHandler {
 
     // Create the browser
     CreateBrowser(kTestStartUrl, request_context);
-
-    // Time out the test after a reasonable period of time.
-    SetTestTimeout();
   }
 
   void OnLoadEnd(CefRefPtr<CefBrowser> browser,
@@ -275,7 +279,7 @@ class DownloadTestHandler : public TestHandler {
       SendClick(browser,
                 test_mode_ == CLICKED_INVALID ? EVENTFLAG_ALT_DOWN : 0);
 
-      if (is_clicked() && !is_clicked_and_downloaded()) {
+      if (is_clicked_invalid()) {
         // Destroy the test after a bit because there will be no further
         // callbacks.
         CefPostDelayedTask(
@@ -339,10 +343,17 @@ class DownloadTestHandler : public TestHandler {
     EXPECT_STREQ(download_url_.c_str(), url.ToString().c_str());
     EXPECT_STREQ("GET", request_method.ToString().c_str());
 
+    if (is_clicked() && !is_clicked_and_downloaded()) {
+      // Destroy the test after a bit because there will be no further
+      // callbacks.
+      CefPostDelayedTask(
+          TID_UI, base::BindOnce(&DownloadTestHandler::DestroyTest, this), 200);
+    }
+
     return test_mode_ != CLICKED_BLOCKED;
   }
 
-  void OnBeforeDownload(
+  bool OnBeforeDownload(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefDownloadItem> download_item,
       const CefString& suggested_name,
@@ -373,7 +384,7 @@ class DownloadTestHandler : public TestHandler {
     EXPECT_FALSE(download_item->IsInterrupted());
     EXPECT_EQ(CEF_DOWNLOAD_INTERRUPT_REASON_NONE,
               download_item->GetInterruptReason());
-    EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+    EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
               download_item->GetTotalBytes());
     EXPECT_EQ(0UL, download_item->GetFullPath().length());
     EXPECT_STREQ(kTestDownloadUrl, download_item->GetURL().ToString().c_str());
@@ -392,6 +403,8 @@ class DownloadTestHandler : public TestHandler {
     } else if (test_mode_ == PENDING) {
       ContinuePendingIfReady();
     }
+
+    return true;
   }
 
   void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
@@ -438,9 +451,9 @@ class DownloadTestHandler : public TestHandler {
 
       EXPECT_FALSE(download_item->IsInProgress());
       EXPECT_EQ(100, download_item->GetPercentComplete());
-      EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
                 download_item->GetReceivedBytes());
-      EXPECT_EQ(static_cast<int64>(sizeof(kTestContent) - 1),
+      EXPECT_EQ(static_cast<int64_t>(sizeof(kTestContent) - 1),
                 download_item->GetTotalBytes());
 
       DestroyTest();
@@ -499,7 +512,10 @@ class DownloadTestHandler : public TestHandler {
       CefRegisterSchemeHandlerFactory("https", kTestDomain, nullptr);
     }
 
-    if (is_clicked()) {
+    if (is_clicked_invalid()) {
+      // No CanDownload for invalid protocol links.
+      EXPECT_FALSE(got_can_download_);
+    } else if (is_clicked()) {
       EXPECT_TRUE(got_can_download_);
     } else {
       EXPECT_FALSE(got_can_download_);
@@ -564,8 +580,8 @@ class DownloadTestHandler : public TestHandler {
   std::string download_url_;
   CefScopedTempDir temp_dir_;
   std::string test_path_;
-  uint32 download_id_;
-  bool verified_results_;
+  uint32_t download_id_ = 0;
+  bool verified_results_ = false;
   bool destroyed_ = false;
 
   TrackCallback got_download_request_;

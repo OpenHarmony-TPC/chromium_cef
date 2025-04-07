@@ -43,11 +43,10 @@
 #include "include/cef_frame.h"
 #include "include/cef_menu_model.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "include/cef_image.h"
-#endif
-
 class CefContextMenuParams;
+
+class CefContextMenuHandlerExt;
+class CefContextMenuParamsExt;
 
 ///
 /// Callback interface used for continuation of custom context menu display.
@@ -162,6 +161,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   /// that represent the state of the quick menu. Return true if the menu will
   /// be handled and execute |callback| either synchronously or asynchronously
   /// with the selected command ID. Return false to cancel the menu.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual bool RunQuickMenu(CefRefPtr<CefBrowser> browser,
@@ -170,19 +170,7 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
                             const CefSize& size,
                             const CefRect& select_bounds,
                             QuickMenuEditStateFlags edit_state_flags,
-                            CefRefPtr<CefRunQuickMenuCallback> callback,
-                            bool is_mouse_trigger,
-                            bool is_long_press_actived) {
-    return false;
-  }
-
-  ///
-  /// UpdateClippedSelectionBounds.
-  ///
-  /*--cef()--*/
-  virtual bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
-                                            CefRefPtr<CefFrame> frame,
-                                            const CefRect& select_bounds) {
+                            CefRefPtr<CefRunQuickMenuCallback> callback) {
     return false;
   }
 
@@ -203,42 +191,15 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /// Called when the quick menu for a windowless browser is dismissed
   /// irregardless of whether the menu was canceled or a command was selected.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
-                                    CefRefPtr<CefFrame> frame,
-                                    bool is_mouse_trigger) {}
+                                    CefRefPtr<CefFrame> frame) {}
 
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// Called when GetImageForContextNode function get image for
-  /// context menu.
-  ///
-  /*--cef()--*/
-  virtual void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
-                                        CefRefPtr<CefImage> image) {}
-
-  ///
-  /// Called when GetImageFromCache function to get image from
-  /// memory cache.
-  ///
-  /*--cef()--*/
-  virtual void OnGetImageFromCache(CefRefPtr<CefImage> image) {}
-
-  ///
-  /// Called when you need to temporarily hide/restore the handle menu.
-  ///
-  /*--cef()--*/
-  virtual void HideHandleAndQuickMenuIfNecessary(bool hide) {}
-#endif
-
-#if defined(OHOS_CLIPBOARD)
-  ///
-  /// Called when you click on the selected area.
-  ///
-  /*--cef()--*/
-  virtual void ChangeVisibilityOfQuickMenu() {}
-#endif
+  virtual CefRefPtr<CefContextMenuHandlerExt> AsCefContextMenuHandlerExt() {
+    return nullptr;
+  }
 };
 
 ///
@@ -392,30 +353,11 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsCustomMenu() = 0;
 
-#if BUILDFLAG(IS_OHOS)
-  typedef cef_context_menu_input_field_type_t InputFieldType;
-  typedef cef_context_menu_source_type_t SourceType;
-
-  ///
-  /// Returns the input field type of context node that the context menu was
-  /// invoked on.
-  ///
-  /*--cef(default_retval=CM_INPUTFIELDTYPE_NONE)--*/
-  virtual InputFieldType GetInputFieldType() = 0;
-
-  ///
-  /// Returns the source type of context node that the context menu was invoked
-  /// on.
-  ///
-  /*--cef(default_retval=CM_SOURCETYPE_NONE)--*/
-  virtual SourceType GetSourceType() = 0;
-
-  ///
-  /// Returns ImageRect.
-  ///
-  /*--cef()--*/
-  virtual void GetImageRect(int& x, int& y, int& w, int& h) = 0;
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual CefRefPtr<CefContextMenuParamsExt> AsCefCefContextMenuParamsExt() {
+    return nullptr;
+  }
 };
+
+#include "ohos_cef_ext/include/cef_context_menu_handler_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_CONTEXT_MENU_HANDLER_H_

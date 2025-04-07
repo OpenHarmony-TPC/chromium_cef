@@ -6,9 +6,9 @@
 #define CEF_LIBCEF_BROWSER_CHROME_CHROME_BROWSER_CONTEXT_H_
 #pragma once
 
-#include "libcef/browser/browser_context.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/browser_context.h"
 #include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/profiles/profile_observer.h"
 
@@ -23,6 +23,9 @@ class ChromeBrowserContext : public CefBrowserContext, public ProfileObserver {
   ChromeBrowserContext(const ChromeBrowserContext&) = delete;
   ChromeBrowserContext& operator=(const ChromeBrowserContext&) = delete;
 
+  // Returns a ChromeBrowserContext for the specified |profile|.
+  static ChromeBrowserContext* GetOrCreateForProfile(Profile* profile);
+
   void InitializeAsync(base::OnceClosure initialized_cb);
 
   // CefBrowserContext overrides.
@@ -31,17 +34,36 @@ class ChromeBrowserContext : public CefBrowserContext, public ProfileObserver {
   bool IsInitialized() const override;
   void StoreOrTriggerInitCallback(base::OnceClosure callback) override;
   void Shutdown() override;
+  void AddVisitedURLs(const GURL& url,
+                      const std::vector<GURL>& redirect_chain,
+                      ui::PageTransition transition) override;
 
   // ProfileObserver overrides.
   void OnProfileWillBeDestroyed(Profile* profile) override;
 
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
+  void OnWebViewShow();
+  void OnContextInitialized();
+#endif
  private:
   ~ChromeBrowserContext() override;
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
+  void ScheduleUpdateCloudControl(content::BrowserContext* context);
+#endif
 
-  void ProfileCreated(Profile::CreateStatus status, Profile* profile);
+  enum class CreateStatus {
+    // Default to creating a new/unique OffTheRecord profile.
+    kDefault,
+    // Profile created but before initializing extensions and promo resources.
+    kCreated,
+    // Profile is created, extensions and promo resources are initialized.
+    kInitialized,
+  };
+
+  void ProfileCreated(CreateStatus status, Profile* profile);
 
   base::OnceClosure initialized_cb_;
-  Profile* profile_ = nullptr;
+  raw_ptr<Profile> profile_ = nullptr;
   bool should_destroy_ = false;
 
   bool destroyed_ = false;

@@ -1,0 +1,143 @@
+diff --git chrome/browser/download/chrome_download_manager_delegate.cc chrome/browser/download/chrome_download_manager_delegate.cc
+index b6552a9ba..4f0f46c47 100644
+--- chrome/browser/download/chrome_download_manager_delegate.cc
++++ chrome/browser/download/chrome_download_manager_delegate.cc
+@@ -31,6 +31,7 @@
+ #include "base/time/time.h"
+ #include "build/build_config.h"
+ #include "build/chromeos_buildflags.h"
++#include "cef/libcef/features/features.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/download/bubble/download_bubble_prefs.h"
+ #include "chrome/browser/download/download_core_service.h"
+@@ -159,6 +160,10 @@
+ #include "chrome/browser/ash/policy/skyvault/skyvault_rename_handler.h"
+ #endif
+ 
++#if BUILDFLAG(ENABLE_CEF)
++#include "cef/libcef/browser/download_manager_delegate.h"
++#endif
++
+ using content::BrowserThread;
+ using content::DownloadManager;
+ using download::DownloadItem;
+@@ -491,6 +495,11 @@ ChromeDownloadManagerDelegate::ChromeDownloadManagerDelegate(Profile* profile)
+   download_message_bridge_ = std::make_unique<DownloadMessageBridge>();
+ #endif
+ 
++#if BUILDFLAG(ENABLE_CEF)
++  cef_delegate_ =
++      cef::DownloadManagerDelegate::Create(profile_->GetDownloadManager());
++#endif
++
+ #if BUILDFLAG(IS_OHOS)
+   // The default path obtained without kDownloadDefault Directory is'/'and does not have read and write permissions
+   if (download_prefs_->DownloadPath().value() == "/") {
+@@ -558,6 +567,9 @@ void ChromeDownloadManagerDelegate::Shutdown() {
+     download_manager_->RemoveObserver(this);
+     download_manager_ = nullptr;
+   }
++#if BUILDFLAG(ENABLE_CEF)
++  cef_delegate_.reset();
++#endif
+ }
+ 
+ void ChromeDownloadManagerDelegate::OnDownloadCanceledAtShutdown(
+@@ -626,6 +638,12 @@ bool ChromeDownloadManagerDelegate::DetermineDownloadTarget(
+     ReportPDFLoadStatus(PDFLoadStatus::kTriggeredNoGestureDriveByDownload);
+   }
+ 
++#if BUILDFLAG(ENABLE_CEF)
++  if (cef_delegate_->DetermineDownloadTarget(download, callback)) {
++    return true;
++  }
++#endif
++
+   DownloadTargetDeterminer::CompletionCallback target_determined_callback =
+       base::BindOnce(&ChromeDownloadManagerDelegate::OnDownloadTargetDetermined,
+                      weak_ptr_factory_.GetWeakPtr(), download->GetId(),
+@@ -1119,8 +1138,11 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
+   Browser* browser =
+       web_contents ? chrome::FindBrowserWithTab(web_contents) : nullptr;
+   std::unique_ptr<chrome::ScopedTabbedBrowserDisplayer> browser_displayer;
+-  if (!browser ||
+-      !browser->CanSupportWindowFeature(Browser::FEATURE_TABSTRIP)) {
++  if (!browser
++#if !BUILDFLAG(ENABLE_CEF)
++      || !browser->CanSupportWindowFeature(Browser::FEATURE_TABSTRIP)
++#endif
++    ) {
+     browser_displayer =
+         std::make_unique<chrome::ScopedTabbedBrowserDisplayer>(profile_);
+     browser = browser_displayer->browser();
+diff --git chrome/browser/download/chrome_download_manager_delegate.h chrome/browser/download/chrome_download_manager_delegate.h
+index 7ae09b406f344..801d6c846e744 100644
+--- chrome/browser/download/chrome_download_manager_delegate.h
++++ chrome/browser/download/chrome_download_manager_delegate.h
+@@ -19,6 +19,7 @@
+ #include "base/task/sequenced_task_runner.h"
+ #include "base/unguessable_token.h"
+ #include "build/build_config.h"
++#include "cef/libcef/features/features.h"
+ #include "chrome/browser/download/download_completion_blocker.h"
+ #include "chrome/browser/download/download_target_determiner_delegate.h"
+ #include "components/download/public/common/download_danger_type.h"
+@@ -58,6 +59,12 @@ class CrxInstallError;
+ }
+ #endif
+ 
++#if BUILDFLAG(ENABLE_CEF)
++namespace cef {
++class DownloadManagerDelegate;
++}
++#endif
++
+ // This is the Chrome side helper for the download system.
+ class ChromeDownloadManagerDelegate
+     : public content::DownloadManagerDelegate,
+@@ -401,6 +408,10 @@ class ChromeDownloadManagerDelegate
+   // Whether a file picker dialog is showing.
+   bool is_file_picker_showing_;
+ 
++#if BUILDFLAG(ENABLE_CEF)
++  std::unique_ptr<cef::DownloadManagerDelegate> cef_delegate_;
++#endif
++
+   base::WeakPtrFactory<ChromeDownloadManagerDelegate> weak_ptr_factory_{this};
+ };
+ 
+diff --git chrome/browser/download/download_prefs.cc chrome/browser/download/download_prefs.cc
+index 7b6876be4..a95cfb7fd 100644
+--- chrome/browser/download/download_prefs.cc
++++ chrome/browser/download/download_prefs.cc
+@@ -23,6 +23,7 @@
+ #include "base/strings/utf_string_conversions.h"
+ #include "build/build_config.h"
+ #include "build/chromeos_buildflags.h"
++#include "cef/libcef/features/runtime.h"
+ #include "chrome/browser/download/chrome_download_manager_delegate.h"
+ #include "chrome/browser/download/download_core_service_factory.h"
+ #include "chrome/browser/download/download_core_service_impl.h"
+@@ -64,6 +65,10 @@
+ #include "chrome/browser/flags/android/chrome_feature_list.h"
+ #endif
+ 
++#if BUILDFLAG(ENABLE_ALLOY_BOOTSTRAP)
++#include "cef/libcef/browser/alloy/alloy_download_util.h"
++#endif
++
+ #if BUILDFLAG(IS_OHOS)
+ #include "ohos/adapter/context_path/context_path_adapter.h"
+ #include "ohos/adapter/permission_manager/permission_manager_adapter.h"
+@@ -410,6 +415,11 @@ DownloadPrefs* DownloadPrefs::FromDownloadManager(
+ // static
+ DownloadPrefs* DownloadPrefs::FromBrowserContext(
+     content::BrowserContext* context) {
++#if BUILDFLAG(ENABLE_ALLOY_BOOTSTRAP)
++  if (cef::IsAlloyRuntimeEnabled()) {
++    return alloy::GetDownloadPrefsFromBrowserContext(context);
++  }
++#endif
+   return FromDownloadManager(context->GetDownloadManager());
+ }
+ 

@@ -6,13 +6,14 @@
 #ifndef LIBCEF_BROWSER_PRINTING_PRINT_DIALOG_LINUX_H_
 #define LIBCEF_BROWSER_PRINTING_PRINT_DIALOG_LINUX_H_
 
-#include "include/cef_print_handler.h"
-#include "libcef/browser/browser_host_base.h"
-
 #include "base/files/file_path.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/ref_counted.h"
 #include "base/task/sequenced_task_runner_helpers.h"
+#include "cef/include/cef_print_handler.h"
+#include "cef/libcef/browser/browser_host_base.h"
 #include "content/public/browser/browser_thread.h"
+#include "printing/buildflags/buildflags.h"
 #include "printing/print_dialog_linux_interface.h"
 #include "ui/linux/linux_ui.h"
 
@@ -40,7 +41,7 @@ class CefPrintingContextLinuxDelegate
   void SetDefaultDelegate(ui::PrintingContextLinuxDelegate* delegate);
 
  private:
-  ui::PrintingContextLinuxDelegate* default_delegate_ = nullptr;
+  raw_ptr<ui::PrintingContextLinuxDelegate> default_delegate_ = nullptr;
 };
 
 // Needs to be freed on the UI thread to clean up its member variables.
@@ -56,6 +57,9 @@ class CefPrintDialogLinux : public printing::PrintDialogLinuxInterface,
   void UseDefaultSettings() override;
   void UpdateSettings(
       std::unique_ptr<printing::PrintSettings> settings) override;
+#if BUILDFLAG(ENABLE_OOP_PRINTING_NO_OOP_BASIC_PRINT_DIALOG)
+  void LoadPrintSettings(const printing::PrintSettings& settings) override;
+#endif
   void ShowDialog(
       gfx::NativeView parent_view,
       bool has_selection,
@@ -96,7 +100,7 @@ class CefPrintDialogLinux : public printing::PrintDialogLinuxInterface,
   // Printing dialog callback.
   PrintingContextLinux::PrintSettingsCallback callback_;
 
-  PrintingContextLinux* context_;
+  raw_ptr<PrintingContextLinux> context_;
   CefRefPtr<CefBrowserHostBase> browser_;
   CefRefPtr<CefPrintHandler> handler_;
 

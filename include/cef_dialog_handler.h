@@ -41,6 +41,7 @@
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 
+class CefDialogHandlerExt;
 ///
 /// Callback interface for asynchronous continuation of file dialog requests.
 ///
@@ -62,42 +63,6 @@ class CefFileDialogCallback : public virtual CefBaseRefCounted {
   virtual void Cancel() = 0;
 };
 
-#if BUILDFLAG(IS_OHOS)
-///
-/// Callback interface for asynchronous continuation of <select> selection.
-///
-/*--cef(source=library)--*/
-class CefSelectPopupCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Continue the <select> selection. |indices| should be the 0-based array
-  /// index of the value selected from the <select> array passed to
-  /// CefDialogHandler::ShowSelectPopup.
-  ///
-  /*--cef(capi_name=cont)--*/
-  virtual void Continue(const std::vector<int>& indices) = 0;
-
-  ///
-  /// Cancel <select> selection.
-  ///
-  /*--cef()--*/
-  virtual void Cancel() = 0;
-};
-
-///
-/// Callback interface for asynchronous continuation of datetime chooser.
-///
-/*--cef(source=library)--*/
-class CefDateTimeChooserCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Notify the date time chooser result.
-  ///
-  /*--cef(capi_name=cont)--*/
-  virtual void Continue(bool success, double dialog_value) = 0;
-};
-#endif  // BUILDFLAG(IS_OHOS)
-
 ///
 /// Implement this interface to handle dialog events. The methods of this class
 /// will be called on the browser process UI thread.
@@ -113,99 +78,54 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   /// empty to show the default title ("Open" or "Save" depending on the mode).
   /// |default_file_path| is the path with optional directory and/or file name
   /// component that should be initially selected in the dialog.
-  /// |accept_filters| are used to restrict the selectable file types and may
-  /// any combination of (a) valid lower-cased MIME types (e.g. "text/*" or
-  /// "image/*"), (b) individual file extensions (e.g. ".txt" or ".png"), or (c)
-  /// combined description and file extension delimited using "|" and ";" (e.g.
-  /// "Image Types|.png;.gif;.jpg"). To display a custom dialog return true and
-  /// execute |callback| either inline or at a later time. To display the
-  /// default dialog return false.
+  /// |accept_filters| are used to restrict the selectable file types and may be
+  /// any combination of valid lower-cased MIME types (e.g. "text/*" or
+  /// "image/*") and individual file extensions (e.g. ".txt" or ".png").
+  /// |accept_extensions| provides the semicolon-delimited expansion of MIME
+  /// types to file extensions (if known, or empty string otherwise).
+  /// |accept_descriptions| provides the descriptions for MIME types (if known,
+  /// or empty string otherwise). For example, the "image/*" mime type might
+  /// have extensions ".png;.jpg;.bmp;..." and description "Image Files".
+  /// |accept_filters|, |accept_extensions| and |accept_descriptions| will all
+  /// be the same size. To display a custom dialog return true and execute
+  /// |callback| either inline or at a later time. To display the default dialog
+  /// return false. If this method returns false it may be called an additional
+  /// time for the same dialog (both before and after MIME type expansion).
   ///
-  /*--cef(optional_param=title,optional_param=default_file_path,
-          optional_param=accept_filters)--*/
   virtual bool OnFileDialog(CefRefPtr<CefBrowser> browser,
                             FileDialogMode mode,
                             const CefString& title,
                             const CefString& default_file_path,
                             const std::vector<CefString>& accept_filters,
+                            const std::vector<CefString>& accept_extensions,
+                            const std::vector<CefString>& accept_descriptions,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
                             bool capture,
+                            const std::vector<CefString>& mime_filters,
+#endif
                             CefRefPtr<CefFileDialogCallback> callback) {
     return false;
   }
 
-#if BUILDFLAG(IS_OHOS)
+  virtual CefRefPtr<CefDialogHandlerExt> AsArkDialogHandler() {
+    return nullptr;
+  }
+
   ///
-  /// Show <select> popup menu.
+  /// Handles the BeforeUnload event.
   ///
   /*--cef()--*/
-  virtual void OnSelectPopupMenu(
-      CefRefPtr<CefBrowser> browser,
-      const CefRect& bounds,
-      int item_height,
-      double item_font_size,
-      int selected_item,
-      const std::vector<CefSelectPopupItem>& menu_items,
-      bool right_aligned,
-      bool allow_multiple_selection,
-      CefRefPtr<CefSelectPopupCallback> callback) {}
+  virtual void OnBeforeUnloadFired(CefRefPtr<CefBrowser> browser,
+                                   bool proceed) {}
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   ///
-  /// Show <input type="date"> or <input type="datatime">
-  ///
-  virtual void OnDateTimeChooserPopup(
-      CefRefPtr<CefBrowser> browser,
-      const CefDateTimeChooser& date_time_chooser,
-      const std::vector<CefDateTimeSuggestion>& suggestion,
-      CefRefPtr<CefDateTimeChooserCallback> callback) {}
-
-  ///
-  /// Close date chooser popup.
-  ///
-  virtual void OnDateTimeChooserClose() {}
-
-  ///
-  /// hide password Autofill popup menu.
+  /// Share file.
   ///
   /*--cef()--*/
-  virtual void OnHideAutofillPopup() {}
-
-  ///
-  /// Show adblock num.
-  ///
-  /*--cef()--*/
-  virtual void OnAdsBlocked(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& main_frame_url,
-      const std::map<CefString, CefString>& subresource_blocked,
-      bool is_site_first_report) {}
-
-  ///
-  /// Show password Autofill popup menu.
-  ///
-  /*--cef()--*/
-  virtual void OnShowAutofillPopup(
-      CefRefPtr<CefBrowser> browser,
-      const CefRect& bounds,
-      bool right_aligned,
-      const std::vector<CefAutofillPopupItem>& menu_items,
-      bool is_password_popup_type) {}
-
-  ///
-  /// Called when notify ui to show password dialog to query user to save
-  /// password.
-  ///
-  /*--cef()--*/
-  virtual void ShowPasswordDialog(bool is_update, const CefString& url) {}
-
-  ///
-  /// trigger adblock switch from ui.
-  ///
-  /*--cef()--*/
-  virtual bool TrigAdBlockEnabledForSiteFromUi(
-      CefRefPtr<CefBrowser> browser,
-      const CefString& main_frame_url,
-      int main_frame_tree_node_id) { return false;}
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual void OnShareFile(const std::string& file_path,
+                           const std::string& utd_type_id) {}
+#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_DIALOG_HANDLER_H_

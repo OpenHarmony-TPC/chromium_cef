@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=11dccd26014f62d554480900e11ec2c6024f710c$
+// $hash=c63fac0c620ead3525405feb5cc9db561e1a508a$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_REQUEST_CONTEXT_CAPI_H_
@@ -44,11 +44,9 @@
 #include "include/capi/cef_callback_capi.h"
 #include "include/capi/cef_cookie_capi.h"
 #include "include/capi/cef_data_base_capi.h"
-#include "include/capi/cef_extension_capi.h"
-#include "include/capi/cef_extension_handler_capi.h"
 #include "include/capi/cef_media_router_capi.h"
 #include "include/capi/cef_preference_capi.h"
-#include "include/capi/cef_web_storage_capi.h"
+#include "include/capi/cef_values_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -143,6 +141,12 @@ typedef struct _cef_request_context_t {
       struct _cef_completion_callback_t* callback);
 
   ///
+  // Returns the web data base for this object.
+  ///
+  struct _cef_data_base_t*(CEF_CALLBACK* get_data_base)(
+      struct _cef_request_context_t* self);
+
+  ///
   /// Register a scheme handler factory for the specified |scheme_name| and
   /// optional |domain_name|. An NULL |domain_name| value for a standard scheme
   /// will cause the factory to match all domain names. The |domain_name| value
@@ -190,6 +194,18 @@ typedef struct _cef_request_context_t {
       struct _cef_completion_callback_t* callback);
 
   ///
+  /// Clears the client authentication certificate Cache that were added as part
+  /// of handling cef_request_handler_t::on_select_client_certificate(). If
+  /// |callback| is non-NULL it will be executed on the UI thread after
+  /// completion.
+  ///
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+  void(CEF_CALLBACK* clear_client_authentication_cache)(
+      struct _cef_request_context_t* self,
+      struct _cef_completion_callback_t* callback);
+#endif  // ARKWEB_CERT_AUTHENTICATION
+
+  ///
   /// Clears all active and idle connections that Chromium currently has. This
   /// is only recommended if you have released all other CEF objects but don't
   /// yet want to call cef_shutdown(). If |callback| is non-NULL it will be
@@ -208,95 +224,6 @@ typedef struct _cef_request_context_t {
                                    struct _cef_resolve_callback_t* callback);
 
   ///
-  /// Load an extension.
-  ///
-  /// If extension resources will be read from disk using the default load
-  /// implementation then |root_directory| should be the absolute path to the
-  /// extension resources directory and |manifest| should be NULL. If extension
-  /// resources will be provided by the client (e.g. via cef_request_handler_t
-  /// and/or cef_extension_handler_t) then |root_directory| should be a path
-  /// component unique to the extension (if not absolute this will be internally
-  /// prefixed with the PK_DIR_RESOURCES path) and |manifest| should contain the
-  /// contents that would otherwise be read from the "manifest.json" file on
-  /// disk.
-  ///
-  /// The loaded extension will be accessible in all contexts sharing the same
-  /// storage (HasExtension returns true (1)). However, only the context on
-  /// which this function was called is considered the loader (DidLoadExtension
-  /// returns true (1)) and only the loader will receive
-  /// cef_request_context_handler_t callbacks for the extension.
-  ///
-  /// cef_extension_handler_t::OnExtensionLoaded will be called on load success
-  /// or cef_extension_handler_t::OnExtensionLoadFailed will be called on load
-  /// failure.
-  ///
-  /// If the extension specifies a background script via the "background"
-  /// manifest key then cef_extension_handler_t::OnBeforeBackgroundBrowser will
-  /// be called to create the background browser. See that function for
-  /// additional information about background scripts.
-  ///
-  /// For visible extension views the client application should evaluate the
-  /// manifest to determine the correct extension URL to load and then pass that
-  /// URL to the cef_browser_host_t::CreateBrowser* function after the extension
-  /// has loaded. For example, the client can look for the "browser_action"
-  /// manifest key as documented at
-  /// https://developer.chrome.com/extensions/browserAction. Extension URLs take
-  /// the form "chrome-extension://<extension_id>/<path>".
-  ///
-  /// Browsers that host extensions differ from normal browsers as follows:
-  ///  - Can access chrome.* JavaScript APIs if allowed by the manifest. Visit
-  ///    chrome://extensions-support for the list of extension APIs currently
-  ///    supported by CEF.
-  ///  - Main frame navigation to non-extension content is blocked.
-  ///  - Pinch-zooming is disabled.
-  ///  - CefBrowserHost::GetExtension returns the hosted extension.
-  ///  - CefBrowserHost::IsBackgroundHost returns true for background hosts.
-  ///
-  /// See https://developer.chrome.com/extensions for extension implementation
-  /// and usage documentation.
-  ///
-  void(CEF_CALLBACK* load_extension)(struct _cef_request_context_t* self,
-                                     const cef_string_t* root_directory,
-                                     struct _cef_dictionary_value_t* manifest,
-                                     struct _cef_extension_handler_t* handler);
-
-  ///
-  /// Returns true (1) if this context was used to load the extension identified
-  /// by |extension_id|. Other contexts sharing the same storage will also have
-  /// access to the extension (see HasExtension). This function must be called
-  /// on the browser process UI thread.
-  ///
-  int(CEF_CALLBACK* did_load_extension)(struct _cef_request_context_t* self,
-                                        const cef_string_t* extension_id);
-
-  ///
-  /// Returns true (1) if this context has access to the extension identified by
-  /// |extension_id|. This may not be the context that was used to load the
-  /// extension (see DidLoadExtension). This function must be called on the
-  /// browser process UI thread.
-  ///
-  int(CEF_CALLBACK* has_extension)(struct _cef_request_context_t* self,
-                                   const cef_string_t* extension_id);
-
-  ///
-  /// Retrieve the list of all extensions that this context has access to (see
-  /// HasExtension). |extension_ids| will be populated with the list of
-  /// extension ID values. Returns true (1) on success. This function must be
-  /// called on the browser process UI thread.
-  ///
-  int(CEF_CALLBACK* get_extensions)(struct _cef_request_context_t* self,
-                                    cef_string_list_t extension_ids);
-
-  ///
-  /// Returns the extension matching |extension_id| or NULL if no matching
-  /// extension is accessible in this context (see HasExtension). This function
-  /// must be called on the browser process UI thread.
-  ///
-  struct _cef_extension_t*(CEF_CALLBACK* get_extension)(
-      struct _cef_request_context_t* self,
-      const cef_string_t* extension_id);
-
-  ///
   /// Returns the MediaRouter object associated with this context.  If
   /// |callback| is non-NULL it will be executed asnychronously on the UI thread
   /// after the manager's context has been initialized.
@@ -306,12 +233,96 @@ typedef struct _cef_request_context_t {
       struct _cef_completion_callback_t* callback);
 
   ///
-  /// Returns the web data base for this object.
+  /// Returns the current value for |content_type| that applies for the
+  /// specified URLs. If both URLs are NULL the default value will be returned.
+  /// Returns nullptr if no value is configured. Must be called on the browser
+  /// process UI thread.
   ///
-  struct _cef_data_base_t*(CEF_CALLBACK* get_data_base)(
+  struct _cef_value_t*(CEF_CALLBACK* get_website_setting)(
+      struct _cef_request_context_t* self,
+      const cef_string_t* requesting_url,
+      const cef_string_t* top_level_url,
+      cef_content_setting_types_t content_type);
+
+  ///
+  /// Sets the current value for |content_type| for the specified URLs in the
+  /// default scope. If both URLs are NULL, and the context is not incognito,
+  /// the default value will be set. Pass nullptr for |value| to remove the
+  /// default value for this content type.
+  ///
+  /// WARNING: Incorrect usage of this function may cause instability or
+  /// security issues in Chromium. Make sure that you first understand the
+  /// potential impact of any changes to |content_type| by reviewing the related
+  /// source code in Chromium. For example, if you plan to modify
+  /// CEF_CONTENT_SETTING_TYPE_POPUPS, first review and understand the usage of
+  /// ContentSettingsType::POPUPS in Chromium:
+  /// https://source.chromium.org/search?q=ContentSettingsType::POPUPS
+  ///
+  void(CEF_CALLBACK* set_website_setting)(
+      struct _cef_request_context_t* self,
+      const cef_string_t* requesting_url,
+      const cef_string_t* top_level_url,
+      cef_content_setting_types_t content_type,
+      struct _cef_value_t* value);
+
+  ///
+  /// Returns the current value for |content_type| that applies for the
+  /// specified URLs. If both URLs are NULL the default value will be returned.
+  /// Returns CEF_CONTENT_SETTING_VALUE_DEFAULT if no value is configured. Must
+  /// be called on the browser process UI thread.
+  ///
+  cef_content_setting_values_t(CEF_CALLBACK* get_content_setting)(
+      struct _cef_request_context_t* self,
+      const cef_string_t* requesting_url,
+      const cef_string_t* top_level_url,
+      cef_content_setting_types_t content_type);
+
+  ///
+  /// Sets the current value for |content_type| for the specified URLs in the
+  /// default scope. If both URLs are NULL, and the context is not incognito,
+  /// the default value will be set. Pass CEF_CONTENT_SETTING_VALUE_DEFAULT for
+  /// |value| to use the default value for this content type.
+  ///
+  /// WARNING: Incorrect usage of this function may cause instability or
+  /// security issues in Chromium. Make sure that you first understand the
+  /// potential impact of any changes to |content_type| by reviewing the related
+  /// source code in Chromium. For example, if you plan to modify
+  /// CEF_CONTENT_SETTING_TYPE_POPUPS, first review and understand the usage of
+  /// ContentSettingsType::POPUPS in Chromium:
+  /// https://source.chromium.org/search?q=ContentSettingsType::POPUPS
+  ///
+  void(CEF_CALLBACK* set_content_setting)(
+      struct _cef_request_context_t* self,
+      const cef_string_t* requesting_url,
+      const cef_string_t* top_level_url,
+      cef_content_setting_types_t content_type,
+      cef_content_setting_values_t value);
+
+  ///
+  /// Sets the Chrome color scheme for all browsers that share this request
+  /// context. |variant| values of SYSTEM, LIGHT and DARK change the underlying
+  /// color mode (e.g. light vs dark). Other |variant| values determine how
+  /// |user_color| will be applied in the current color mode. If |user_color| is
+  /// transparent (0) the default color will be used.
+  ///
+  void(CEF_CALLBACK* set_chrome_color_scheme)(
+      struct _cef_request_context_t* self,
+      cef_color_variant_t variant,
+      cef_color_t user_color);
+
+  ///
+  /// Returns the current Chrome color scheme mode (SYSTEM, LIGHT or DARK). Must
+  /// be called on the browser process UI thread.
+  ///
+  cef_color_variant_t(CEF_CALLBACK* get_chrome_color_scheme_mode)(
       struct _cef_request_context_t* self);
 
   ///
+  /// Returns the current Chrome color scheme color, or transparent (0) for the
+  /// default color. Must be called on the browser process UI thread.
+  ///
+  cef_color_t(CEF_CALLBACK* get_chrome_color_scheme_color)(
+      struct _cef_request_context_t* self);
   /// Returns the web strorage for this object. If |callback| is non-NULL it
   /// will be executed asnychronously on the UI thread after the manager's
   /// storage has been initialized.
@@ -319,16 +330,12 @@ typedef struct _cef_request_context_t {
   struct _cef_web_storage_t*(CEF_CALLBACK* get_web_storage)(
       struct _cef_request_context_t* self,
       struct _cef_completion_callback_t* callback);
-
   ///
-  /// Clears the client authentication certificate Cache that were added as part
-  /// of handling cef_request_handler_t::on_select_client_certificate(). If
-  /// |callback| is non-NULL it will be executed on the UI thread after
-  /// completion.
+  /// Returns the current Chrome color scheme variant. Must be called on the
+  /// browser process UI thread.
   ///
-  void(CEF_CALLBACK* clear_client_authentication_cache)(
-      struct _cef_request_context_t* self,
-      struct _cef_completion_callback_t* callback);
+  cef_color_variant_t(CEF_CALLBACK* get_chrome_color_scheme_variant)(
+      struct _cef_request_context_t* self);
 
   ///
   /// Returns the adsblock manager for this object.
@@ -342,12 +349,6 @@ typedef struct _cef_request_context_t {
 /// Returns the global context object.
 ///
 CEF_EXPORT cef_request_context_t* cef_request_context_get_global_context(void);
-
-///
-/// Returns the global off-the-record context object.
-///
-CEF_EXPORT cef_request_context_t* cef_request_context_get_global_otrcontext(
-    void);
 
 ///
 /// Creates a new context object with the specified |settings| and optional

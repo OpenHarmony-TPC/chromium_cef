@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9764aceccf59006b32d3cee6ea419518893474d4$
+// $hash=04e1e7f7b7c3170ba02ab0e1f623a774da489fec$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_REQUEST_CONTEXT_CTOCPP_H_
@@ -20,7 +20,6 @@
 #error This file can be included wrapper-side only
 #endif
 
-#include <vector>
 #include "include/capi/cef_request_context_capi.h"
 #include "include/capi/cef_request_context_handler_capi.h"
 #include "include/capi/cef_scheme_capi.h"
@@ -56,25 +55,41 @@ class CefRequestContextCToCpp
       CefRefPtr<CefCompletionCallback> callback) override;
   void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) override;
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+  void ClearClientAuthenticationCache(
+      CefRefPtr<CefCompletionCallback> callback) override;
+#endif // ARKWEB_CERT_AUTHENTICATION
+  CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
+      CefRefPtr<CefCompletionCallback> callback) override;
   void CloseAllConnections(CefRefPtr<CefCompletionCallback> callback) override;
   void ResolveHost(const CefString& origin,
                    CefRefPtr<CefResolveCallback> callback) override;
-  void LoadExtension(const CefString& root_directory,
-                     CefRefPtr<CefDictionaryValue> manifest,
-                     CefRefPtr<CefExtensionHandler> handler) override;
-  bool DidLoadExtension(const CefString& extension_id) override;
-  bool HasExtension(const CefString& extension_id) override;
-  bool GetExtensions(std::vector<CefString>& extension_ids) override;
-  CefRefPtr<CefExtension> GetExtension(const CefString& extension_id) override;
   CefRefPtr<CefMediaRouter> GetMediaRouter(
       CefRefPtr<CefCompletionCallback> callback) override;
-  CefRefPtr<CefDataBase> GetDataBase() override;
   CefRefPtr<CefWebStorage> GetWebStorage(
       CefRefPtr<CefCompletionCallback> callback) override;
-  void ClearClientAuthenticationCache(
-      CefRefPtr<CefCompletionCallback> callback) override;
-  CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
-      CefRefPtr<CefCompletionCallback> callback) override;
+  CefRefPtr<CefValue> GetWebsiteSetting(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type) override;
+  void SetWebsiteSetting(const CefString& requesting_url,
+                         const CefString& top_level_url,
+                         cef_content_setting_types_t content_type,
+                         CefRefPtr<CefValue> value) override;
+  cef_content_setting_values_t GetContentSetting(
+      const CefString& requesting_url,
+      const CefString& top_level_url,
+      cef_content_setting_types_t content_type) override;
+  void SetContentSetting(const CefString& requesting_url,
+                         const CefString& top_level_url,
+                         cef_content_setting_types_t content_type,
+                         cef_content_setting_values_t value) override;
+  void SetChromeColorScheme(cef_color_variant_t variant,
+                            cef_color_t user_color) override;
+  cef_color_variant_t GetChromeColorSchemeMode() override;
+  cef_color_t GetChromeColorSchemeColor() override;
+  cef_color_variant_t GetChromeColorSchemeVariant() override;
+  CefRefPtr<CefDataBase> GetDataBase() override;
 
   // CefPreferenceManager methods.
   bool HasPreference(const CefString& name) override;

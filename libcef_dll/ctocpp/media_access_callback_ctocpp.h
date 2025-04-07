@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=20260dd4ae027c53e25fec4b9ebbc6dfd890a5d6$
+// $hash=64a1329d5896b3ef47ff018ef5043b5e4668382c$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_MEDIA_ACCESS_CALLBACK_CTOCPP_H_
@@ -35,7 +35,7 @@ class CefMediaAccessCallbackCToCpp
   virtual ~CefMediaAccessCallbackCToCpp();
 
   // CefMediaAccessCallback methods.
-  void Continue(uint32 allowed_permissions) override;
+  void Continue(uint32_t allowed_permissions) override;
   void Cancel() override;
 };
 

@@ -6,12 +6,11 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_BUTTON_VIEW_H_
 #pragma once
 
-#include "include/views/cef_button_delegate.h"
-
-#include "libcef/browser/thread_util.h"
-#include "libcef/browser/views/view_view.h"
-
 #include "base/logging.h"
+#include "cef/include/views/cef_button_delegate.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/browser/views/view_view.h"
+#include "ui/gfx/color_utils.h"
 #include "ui/views/animation/ink_drop.h"
 #include "ui/views/controls/button/button.h"
 
@@ -41,12 +40,27 @@ CEF_BUTTON_VIEW_T class CefButtonView : public CEF_VIEW_VIEW_D {
     return button;
   }
 
+  // views::View methods:
+  void OnThemeChanged() override;
+
   // views::Button methods:
   void StateChanged(views::Button::ButtonState old_state) override;
 
   // LabelButtonEx methods:
   void ButtonPressed(const ui::Event& event) override;
 };
+
+CEF_BUTTON_VIEW_T void CEF_BUTTON_VIEW_D::OnThemeChanged() {
+  ParentClass::OnThemeChanged();
+
+  auto* inkdrop = views::InkDrop::Get(this);
+  if (inkdrop->ink_drop_mode() != views::InkDropHost::InkDropMode::OFF) {
+    // Never returns an empty value.
+    const auto& color =
+        view_util::GetBackgroundColor(this, /*allow_transparent=*/false);
+    inkdrop->SetBaseColor(color_utils::BlendTowardMaxContrast(*color, 0x61));
+  }
+}
 
 CEF_BUTTON_VIEW_T void CEF_BUTTON_VIEW_D::StateChanged(
     views::Button::ButtonState old_state) {

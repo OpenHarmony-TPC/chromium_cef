@@ -2,13 +2,12 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/devtools/devtools_controller.h"
-
-#include "libcef/browser/devtools/devtools_util.h"
-#include "libcef/browser/thread_util.h"
+#include "cef/libcef/browser/devtools/devtools_controller.h"
 
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
+#include "cef/libcef/browser/devtools/devtools_util.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "content/public/browser/devtools_agent_host.h"
 
 CefDevToolsController::CefDevToolsController(
@@ -29,7 +28,7 @@ CefDevToolsController::~CefDevToolsController() {
 }
 
 bool CefDevToolsController::SendDevToolsMessage(
-    const base::StringPiece& message) {
+    const std::string_view& message) {
   CEF_REQUIRE_UIT();
   if (!EnsureAgentHost()) {
     return false;
@@ -100,8 +99,8 @@ void CefDevToolsController::DispatchProtocolMessage(
     return;
   }
 
-  base::StringPiece str_message(reinterpret_cast<const char*>(message.data()),
-                                message.size());
+  std::string_view str_message(reinterpret_cast<const char*>(message.data()),
+                               message.size());
   if (!devtools_util::ProtocolParser::IsValidMessage(str_message)) {
     LOG(WARNING) << "Invalid message: " << str_message.substr(0, 100);
     return;

@@ -38,7 +38,6 @@
 #define CEF_INCLUDE_CEF_FRAME_H_
 #pragma once
 
-#include "build/build_config.h"
 #include "include/cef_base.h"
 #include "include/cef_dom.h"
 #include "include/cef_process_message.h"
@@ -50,23 +49,8 @@ class CefBrowser;
 class CefURLRequest;
 class CefURLRequestClient;
 class CefV8Context;
-
-#if BUILDFLAG(IS_OHOS)
-///
-/// Interface to implement to be notified of asynchronous completion via
-/// CefFrameHostImpl::GetImages.
-///
-/*--cef(source=client)--*/
-class CefGetImagesCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion. |num_deleted| will be the
-  /// number of cookies that were deleted.
-  ///
-  /*--cef()--*/
-  virtual void GetImages(bool response) = 0;
-};
-#endif  // BUILDFLAG(IS_OHOS)
+class ArkwebFrameExt;
+class CefFrameHostImpl;
 
 ///
 /// Class used to represent a frame in the browser window. When used in the
@@ -112,6 +96,12 @@ class CefFrame : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void Paste() = 0;
+
+  ///
+  /// Execute paste and match style in this frame.
+  ///
+  /*--cef()--*/
+  virtual void PasteAndMatchStyle() = 0;
 
   ///
   /// Execute delete in this frame.
@@ -198,11 +188,11 @@ class CefFrame : public virtual CefBaseRefCounted {
   virtual CefString GetName() = 0;
 
   ///
-  /// Returns the globally unique identifier for this frame or < 0 if the
+  /// Returns the globally unique identifier for this frame or empty if the
   /// underlying frame does not yet exist.
   ///
   /*--cef()--*/
-  virtual int64 GetIdentifier() = 0;
+  virtual CefString GetIdentifier() = 0;
 
   ///
   /// Returns the parent of this frame or NULL if this is the main (top-level)
@@ -269,36 +259,10 @@ class CefFrame : public virtual CefBaseRefCounted {
   virtual void SendProcessMessage(CefProcessId target_process,
                                   CefRefPtr<CefProcessMessage> message) = 0;
 
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// Loads the given URL with additional HTTP headers, specified as a map
-  /// from name to value. Note that if this map contains any of the headers that
-  /// are set by default by this WebView, such as those controlling caching,
-  /// accept types or the User-Agent, their values may be overridden by this
-  /// WebView's defaults.
-  ///
-  /*--cef(optional_param=url, optional_param=additionalHttpHeaders)--*/
-  virtual void LoadHeaderUrl(const CefString& url,
-                             const CefString& additionalHttpHeaders) = 0;
+  virtual CefRefPtr<ArkwebFrameExt> AsArkWebFrame() { return nullptr; }
 
-  ///
-  /// web has image or not
-  ///
-  /*--cef()--*/
-  virtual void GetImages(CefRefPtr<CefGetImagesCallback> callback) = 0;
-
-  ///
-  /// PostUrl
-  ///
-  /*--cef(optional_param=post_data)--*/
-  virtual void PostURL(const CefString& url,
-                       const std::vector<char>& post_data) = 0;
-
-  ///
-  /// LoadURLWithUserGesture
-  ///
-  /*--cef()--*/
-  virtual void LoadURLWithUserGesture(const CefString& url, bool user_gesture) = 0;
-#endif
+  virtual CefRefPtr<CefFrameHostImpl> AsCefFrameHostImpl() { return nullptr; }
 };
+
+#include "ohos_cef_ext/include/arkweb_frame_ext.h"
 #endif  // CEF_INCLUDE_CEF_FRAME_H_

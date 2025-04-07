@@ -2,7 +2,7 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/common/values_impl.h"
+#include "cef/libcef/common/values_impl.h"
 
 #include <algorithm>
 #include <vector>
@@ -66,7 +66,7 @@ CefRefPtr<CefValue> CefValueImpl::GetOrCreateRefOrCopy(
   return new CefValueImpl(value->Clone());
 }
 
-CefValueImpl::CefValueImpl() {}
+CefValueImpl::CefValueImpl() = default;
 
 CefValueImpl::CefValueImpl(base::Value value) {
   SetValue(std::move(value));
@@ -81,11 +81,11 @@ CefValueImpl::CefValueImpl(CefRefPtr<CefDictionaryValue> value)
 CefValueImpl::CefValueImpl(CefRefPtr<CefListValue> value)
     : list_value_(value) {}
 
-CefValueImpl::~CefValueImpl() {}
+CefValueImpl::~CefValueImpl() = default;
 
 void CefValueImpl::SetValue(base::Value value) {
   base::AutoLock lock_scope(lock_);
-  SetValueInternal(absl::make_optional(std::move(value)));
+  SetValueInternal(std::make_optional(std::move(value)));
 }
 
 base::Value CefValueImpl::CopyValue() {
@@ -334,7 +334,7 @@ double CefValueImpl::GetDouble() {
   return ret_value;
 }
 
-CefString CefValueImpl::GetString() {
+std::string CefValueImpl::GetStdString() {
   base::AutoLock lock_scope(lock_);
 
   std::string ret_value;
@@ -344,7 +344,7 @@ CefString CefValueImpl::GetString() {
   return ret_value;
 }
 
-std::string CefValueImpl::GetStdString() {
+CefString CefValueImpl::GetString() {
   base::AutoLock lock_scope(lock_);
 
   std::string ret_value;
@@ -401,26 +401,26 @@ bool CefValueImpl::SetStdString(const std::string& value) {
 
 bool CefValueImpl::SetBinary(CefRefPtr<CefBinaryValue> value) {
   base::AutoLock lock_scope(lock_);
-  SetValueInternal(absl::nullopt);
+  SetValueInternal(std::nullopt);
   binary_value_ = value;
   return true;
 }
 
 bool CefValueImpl::SetDictionary(CefRefPtr<CefDictionaryValue> value) {
   base::AutoLock lock_scope(lock_);
-  SetValueInternal(absl::nullopt);
+  SetValueInternal(std::nullopt);
   dictionary_value_ = value;
   return true;
 }
 
 bool CefValueImpl::SetList(CefRefPtr<CefListValue> value) {
   base::AutoLock lock_scope(lock_);
-  SetValueInternal(absl::nullopt);
+  SetValueInternal(std::nullopt);
   list_value_ = value;
   return true;
 }
 
-void CefValueImpl::SetValueInternal(absl::optional<base::Value> value) {
+void CefValueImpl::SetValueInternal(std::optional<base::Value> value) {
   lock_.AssertAcquired();
 
   value_.reset(nullptr);
@@ -508,8 +508,8 @@ CefRefPtr<CefBinaryValue> CefBinaryValue::Create(const void* data,
     return nullptr;
   }
 
-  return new CefBinaryValueImpl(static_cast<char*>(const_cast<void*>(data)),
-                                data_size);
+  const auto ptr = static_cast<const uint8_t*>(data);
+  return new CefBinaryValueImpl(base::make_span(ptr, data_size));
 }
 
 // static
@@ -540,12 +540,11 @@ CefBinaryValueImpl::CefBinaryValueImpl(base::Value* value, bool will_delete)
                          will_delete ? kOwnerWillDelete : kOwnerNoDelete,
                          nullptr) {}
 
-CefBinaryValueImpl::CefBinaryValueImpl(char* data, size_t data_size)
-    : CefBinaryValueImpl(
-          new base::Value(std::vector<char>(data, data + data_size)),
-          nullptr,
-          kOwnerWillDelete,
-          nullptr) {}
+CefBinaryValueImpl::CefBinaryValueImpl(base::span<const uint8_t> value)
+    : CefBinaryValueImpl(new base::Value(value),
+                         nullptr,
+                         kOwnerWillDelete,
+                         nullptr) {}
 
 base::Value CefBinaryValueImpl::CopyValue() {
   CEF_VALUE_VERIFY_RETURN(false, base::Value());
@@ -620,6 +619,11 @@ bool CefBinaryValueImpl::IsEqual(CefRefPtr<CefBinaryValue> that) {
 CefRefPtr<CefBinaryValue> CefBinaryValueImpl::Copy() {
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
   return new CefBinaryValueImpl(const_value().Clone());
+}
+
+const void* CefBinaryValueImpl::GetRawData() {
+  CEF_VALUE_VERIFY_RETURN(false, nullptr);
+  return const_value().GetBlob().data();
 }
 
 size_t CefBinaryValueImpl::GetSize() {
@@ -806,7 +810,7 @@ bool CefDictionaryValueImpl::Clear() {
 
 bool CefDictionaryValueImpl::HasKey(const CefString& key) {
   CEF_VALUE_VERIFY_RETURN(false, 0);
-  return const_value().GetDict().contains(base::StringPiece(key));
+  return const_value().GetDict().contains(std::string_view(key.ToString()));
 }
 
 bool CefDictionaryValueImpl::GetKeys(KeyList& keys) {
@@ -828,7 +832,7 @@ CefValueType CefDictionaryValueImpl::GetType(const CefString& key) {
   CEF_VALUE_VERIFY_RETURN(false, VTYPE_INVALID);
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value) {
     switch (value->type()) {
       case base::Value::Type::NONE:
@@ -857,7 +861,7 @@ CefRefPtr<CefValue> CefDictionaryValueImpl::GetValue(const CefString& key) {
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value) {
     return CefValueImpl::GetOrCreateRefOrCopy(const_cast<base::Value*>(value),
                                               mutable_value_unchecked(),
@@ -873,7 +877,7 @@ bool CefDictionaryValueImpl::GetBool(const CefString& key) {
   bool ret_value = false;
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_bool()) {
     ret_value = value->GetBool();
   }
@@ -887,7 +891,7 @@ int CefDictionaryValueImpl::GetInt(const CefString& key) {
   int ret_value = 0;
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_int()) {
     ret_value = value->GetInt();
   }
@@ -901,7 +905,7 @@ double CefDictionaryValueImpl::GetDouble(const CefString& key) {
   double ret_value = 0;
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_double()) {
     ret_value = value->GetDouble();
   }
@@ -915,7 +919,7 @@ CefString CefDictionaryValueImpl::GetString(const CefString& key) {
   std::string ret_value;
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_string()) {
     ret_value = value->GetString();
   }
@@ -928,7 +932,7 @@ CefRefPtr<CefBinaryValue> CefDictionaryValueImpl::GetBinary(
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_blob()) {
     base::Value* binary_value = const_cast<base::Value*>(value);
     return CefBinaryValueImpl::GetOrCreateRef(
@@ -943,7 +947,7 @@ CefRefPtr<CefDictionaryValue> CefDictionaryValueImpl::GetDictionary(
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_dict()) {
     base::Value* dict_value = const_cast<base::Value*>(value);
     return CefDictionaryValueImpl::GetOrCreateRef(
@@ -957,7 +961,7 @@ CefRefPtr<CefListValue> CefDictionaryValueImpl::GetList(const CefString& key) {
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
 
   const base::Value* value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (value && value->is_list()) {
     base::Value* list_value = const_cast<base::Value*>(value);
     return CefListValueImpl::GetOrCreateRef(
@@ -1047,21 +1051,14 @@ bool CefDictionaryValueImpl::SetList(const CefString& key,
 }
 
 bool CefDictionaryValueImpl::RemoveInternal(const CefString& key) {
-  // The ExtractKey() call below which removes the Value from the dictionary
+  // The Extract() call below which removes the Value from the dictionary
   // will return a new Value object with the moved contents of the Value that
-  // exists in the implementation std::map. Consequently we use FindKey() to
-  // retrieve the actual Value pointer as it current exists first, for later
+  // exists in the implementation std::map. Consequently we use Find() to
+  // retrieve the actual Value pointer as it current exists first, for
   // comparison purposes.
   const base::Value* actual_value =
-      const_value().GetDict().Find(base::StringPiece(key));
+      const_value().GetDict().Find(std::string_view(key.ToString()));
   if (!actual_value) {
-    return false;
-  }
-
-  // |actual_value| is no longer valid after this call.
-  absl::optional<base::Value> out_value =
-      mutable_value()->GetDict().Extract(base::StringPiece(key));
-  if (!out_value.has_value()) {
     return false;
   }
 
@@ -1069,9 +1066,14 @@ bool CefDictionaryValueImpl::RemoveInternal(const CefString& key) {
   controller()->Remove(const_cast<base::Value*>(actual_value), true);
 
   // Only list and dictionary types may have dependencies.
-  if (out_value->is_list() || out_value->is_dict()) {
+  if (actual_value->is_list() || actual_value->is_dict()) {
     controller()->RemoveDependencies(const_cast<base::Value*>(actual_value));
   }
+
+  // |actual_value| is no longer valid after this call.
+  std::optional<base::Value> out_value =
+      mutable_value()->GetDict().Extract(std::string_view(key.ToString()));
+  DCHECK(out_value.has_value());
 
   return true;
 }
@@ -1086,8 +1088,8 @@ base::Value* CefDictionaryValueImpl::SetInternal(
   // base::Value now uses move semantics which means that Set() will move the
   // contents of the passed-in base::Value instead of keeping the same object.
   // Set() then returns the actual Value pointer as it currently exists.
-  base::Value* actual_value =
-      mutable_value()->GetDict().Set(base::StringPiece(key), std::move(*value));
+  base::Value* actual_value = mutable_value()->GetDict().Set(
+      std::string_view(key.ToString()), std::move(*value));
   CHECK(actual_value);
 
   // |value| will be deleted when this method returns. Update the controller to
@@ -1503,21 +1505,21 @@ bool CefListValueImpl::RemoveInternal(size_t index) {
   // The std::move() call below which removes the Value from the list will
   // return a new Value object with the moved contents of the Value that exists
   // in the implementation std::vector. Consequently we use operator[] to
-  // retrieve the actual Value pointer as it current exists first, for later
+  // retrieve the actual Value pointer as it current exists first, for
   // comparison purposes.
   const base::Value& actual_value = list[index];
-
-  // |actual_value| is no longer valid after this call.
-  auto out_value = std::move(list[index]);
-  list.erase(list.begin() + index);
 
   // Remove the value.
   controller()->Remove(const_cast<base::Value*>(&actual_value), true);
 
   // Only list and dictionary types may have dependencies.
-  if (out_value.is_list() || out_value.is_dict()) {
+  if (actual_value.is_list() || actual_value.is_dict()) {
     controller()->RemoveDependencies(const_cast<base::Value*>(&actual_value));
   }
+
+  // |actual_value| is no longer valid after this call.
+  auto out_value = std::move(list[index]);
+  list.erase(list.begin() + index);
 
   return true;
 }

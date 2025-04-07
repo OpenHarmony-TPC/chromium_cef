@@ -2,43 +2,34 @@
 // 2011 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/common/resource_util.h"
+#include "cef/libcef/common/resource_util.h"
 
 #if BUILDFLAG(IS_LINUX)
 #include <dlfcn.h>
 #endif
 
-#include "libcef/features/runtime.h"
-
+#include "arkweb/build/features/features.h"
+#include "base/base_paths.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
-#include "base/files/file_util.h"
-#include "base/notreached.h"
+#include "base/logging.h"
 #include "base/path_service.h"
-#include "chrome/common/chrome_constants.h"
 #include "chrome/common/chrome_paths.h"
-#include "chrome/common/chrome_paths_internal.h"
 #include "chrome/common/chrome_switches.h"
-#include "ui/base/layout.h"
 
-#if BUILDFLAG(IS_MAC)
-#include "base/mac/foundation_util.h"
-#include "libcef/common/util_mac.h"
-#endif
-
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_LINUX)
 #include "base/environment.h"
 #include "base/nix/xdg_util.h"
 #endif
 
-#if BUILDFLAG(IS_WIN)
-#include "base/win/registry.h"
+#if BUILDFLAG(IS_MAC)
+#include "cef/libcef/common/util_mac.h"
 #endif
 
-#if defined(OHOS_CRASHPAD)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
 #include "base/base_switches.h"
 #include "base/logging.h"
-#endif // defined(OHOS_CRASHPAD)
+#endif  // BUILDFLAG(ARKWEB_CRASHPAD)
 
 namespace resource_util {
 
@@ -99,18 +90,16 @@ base::FilePath GetUserDataPath(CefSettings* settings,
                                const base::CommandLine* command_line) {
   // |settings| will be non-nullptr in the main process only.
   if (settings) {
-    // With the Chrome runtime Profile paths must always be relative to the
-    // user data directory, so defaulting to |root_cache_path| first is
-    // appropriate.
-    CefString user_data_path;
-    if (cef::IsChromeRuntimeEnabled() && settings->root_cache_path.length > 0) {
-      user_data_path = CefString(&settings->root_cache_path);
+    CefString root_cache_path;
+    if (settings->root_cache_path.length > 0) {
+      root_cache_path = CefString(&settings->root_cache_path);
     }
-    if (user_data_path.empty() && settings->user_data_path.length > 0) {
-      user_data_path = CefString(&settings->user_data_path);
-    }
-    if (!user_data_path.empty()) {
-      return base::FilePath(user_data_path);
+    if (!root_cache_path.empty()) {
+      return base::FilePath(root_cache_path);
+    } else {
+      LOG(WARNING) << "Please customize CefSettings.root_cache_path for your "
+                      "application. Use of the default value may lead to "
+                      "unintended process singleton behavior.";
     }
   }
 
@@ -133,70 +122,12 @@ base::FilePath GetUserDataPath(CefSettings* settings,
   return result;
 }
 
-// Consider downloads 'dangerous' if they go to the home directory on Linux and
-// to the desktop on any platform.
-// From chrome/browser/download/download_prefs.cc.
-bool DownloadPathIsDangerous(const base::FilePath& download_path) {
-#if !BUILDFLAG(IS_OHOS)
-#if BUILDFLAG(IS_LINUX)
-  base::FilePath home_dir = base::GetHomeDir();
-  if (download_path == home_dir) {
-    return true;
-  }
-#endif
-
-  base::FilePath desktop_dir;
-  if (!base::PathService::Get(base::DIR_USER_DESKTOP, &desktop_dir)) {
-    DCHECK(false);
-    return false;
-  }
-  return (download_path == desktop_dir);
-#else
-  // chrome/browser/download/download_prefs.cc: DownloadPathIsDangerous, have no
-  // destop dir
-  return false;
-#endif
-}
-
-bool GetDefaultDownloadDirectory(base::FilePath* result) {
-  // This will return the safe download directory if necessary.
-  return chrome::GetUserDownloadsDirectory(result);
-}
-
-bool GetDefaultDownloadSafeDirectory(base::FilePath* result) {
-  // Start with the default download directory.
-  if (!GetDefaultDownloadDirectory(result)) {
-    return false;
-  }
-
-  if (DownloadPathIsDangerous(*result)) {
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
-    // Explicitly switch to the safe download directory.
-    return chrome::GetUserDownloadsDirectorySafe(result);
-#else
-    // No viable alternative on macOS.
-    return false;
-#endif
-  }
-
-  return true;
-}
-
 }  // namespace
 
 #if BUILDFLAG(IS_MAC)
 
 base::FilePath GetResourcesDir() {
   return util_mac::GetFrameworkResourcesDirectory();
-}
-
-// Use a "~/Library/Logs/<app name>_debug.log" file where <app name> is the name
-// of the running executable.
-base::FilePath GetDefaultLogFilePath() {
-  std::string exe_name = util_mac::GetMainProcessPath().BaseName().value();
-  return base::mac::GetUserLibraryPath()
-      .Append(FILE_PATH_LITERAL("Logs"))
-      .Append(FILE_PATH_LITERAL(exe_name + "_debug.log"));
 }
 
 #else  // !BUILDFLAG(IS_MAC)
@@ -207,31 +138,7 @@ base::FilePath GetResourcesDir() {
   return pak_dir;
 }
 
-// Use a "debug.log" file in the running executable's directory.
-base::FilePath GetDefaultLogFilePath() {
-  base::FilePath log_path;
-#if BUILDFLAG(IS_OHOS)
-  base::PathService::Get(base::DIR_OHOS_APP_DATA, &log_path);
-#else
-  base::PathService::Get(base::DIR_EXE, &log_path);
-#endif
-  return log_path.Append(FILE_PATH_LITERAL("debug.log"));
-}
-
 #endif  // !BUILDFLAG(IS_MAC)
-
-void OverrideDefaultDownloadDir() {
-  base::FilePath dir_default_download;
-  base::FilePath dir_default_download_safe;
-  if (GetDefaultDownloadDirectory(&dir_default_download)) {
-    base::PathService::Override(chrome::DIR_DEFAULT_DOWNLOADS,
-                                dir_default_download);
-  }
-  if (GetDefaultDownloadSafeDirectory(&dir_default_download_safe)) {
-    base::PathService::Override(chrome::DIR_DEFAULT_DOWNLOADS_SAFE,
-                                dir_default_download_safe);
-  }
-}
 
 void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line) {
@@ -242,21 +149,30 @@ void OverrideUserDataDir(CefSettings* settings,
   base::PathService::Override(base::DIR_CACHE,
                               user_data_path.Append("cache/web"));
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
-#if defined(OHOS_CRASHPAD)
+#if BUILDFLAG(ARKWEB_CRASHPAD)
   // log path need to get by interface
-  base::PathService::Override(base::DIR_OHOS_CRASHPAD, user_data_path.Append("../log/crashpad"));
+  base::PathService::Override(base::DIR_OHOS_CRASHPAD,
+                              user_data_path.Append("../log/crashpad"));
   base::FilePath bundle_dir;
   if (command_line->HasSwitch(switches::kBundleInstallationDir)) {
-    bundle_dir = command_line->GetSwitchValuePath(switches::kBundleInstallationDir);
+    bundle_dir =
+        command_line->GetSwitchValuePath(switches::kBundleInstallationDir);
   }
   if (!bundle_dir.empty()) {
     base::PathService::Override(base::DIR_OHOS_APP_INSTALLATION, bundle_dir);
   } else {
-    LOG(ERROR) << "crashpad OverrideUserDataDir, get Bundle installation dir failed";
+    LOG(ERROR)
+        << "crashpad OverrideUserDataDir, get Bundle installation dir failed";
   }
-#endif // defined(OHOS_CRASHPAD)
+#endif  // BUILDFLAG(ARKWEB_CRASHPAD)
+#endif
+
+#if BUILDFLAG(IS_ARKWEB)
+  base::PathService::Override(chrome::DIR_USER_DATA,
+                              user_data_path.Append("cache/web"));
 #else
   base::PathService::Override(chrome::DIR_USER_DATA, user_data_path);
+#endif
 
   // Path used for crash dumps.
   base::PathService::Override(chrome::DIR_CRASH_DUMPS, user_data_path);
@@ -267,15 +183,6 @@ void OverrideUserDataDir(CefSettings* settings,
       user_data_path.Append(FILE_PATH_LITERAL("Dictionaries")),
       false,  // May not be an absolute path.
       true);  // Create if necessary.
-#endif
-}
-
-// Same as ui::ResourceBundle::IsScaleFactorSupported.
-bool IsScaleFactorSupported(ui::ResourceScaleFactor scale_factor) {
-  const auto& supported_scale_factors = ui::GetSupportedResourceScaleFactors();
-  return std::find(supported_scale_factors.begin(),
-                   supported_scale_factors.end(),
-                   scale_factor) != supported_scale_factors.end();
 }
 
 #if BUILDFLAG(IS_LINUX)

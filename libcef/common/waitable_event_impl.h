@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_COMMON_WAITABLE_EVENT_IMPL_H_
 #pragma once
 
-#include "include/cef_waitable_event.h"
-
 #include "base/synchronization/waitable_event.h"
+#include "cef/include/cef_waitable_event.h"
 
 class CefWaitableEventImpl : public CefWaitableEvent {
  public:
@@ -22,7 +21,7 @@ class CefWaitableEventImpl : public CefWaitableEvent {
   void Signal() override;
   bool IsSignaled() override;
   void Wait() override;
-  bool TimedWait(int64 max_ms) override;
+  bool TimedWait(int64_t max_ms) override;
 
  private:
   base::WaitableEvent event_;

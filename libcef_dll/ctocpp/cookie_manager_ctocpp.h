@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e4359ad07b108653e62ec907b034b9dd4db907de$
+// $hash=1a4a29bff51db7c760d25fa697b7f9c44dcda0f7$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
@@ -27,33 +27,33 @@
 // Wrap a C structure with a C++ class.
 // This class may be instantiated and accessed wrapper-side only.
 class CefCookieManagerCToCpp
-    : public CefCToCppRefCounted<CefCookieManagerCToCpp, CefCookieManager,
+    : public CefCToCppRefCounted<CefCookieManagerCToCpp,
+                                 CefCookieManager,
                                  cef_cookie_manager_t> {
-public:
+ public:
   CefCookieManagerCToCpp();
   virtual ~CefCookieManagerCToCpp();
 
   // CefCookieManager methods.
   bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor,
                        bool is_sync) override;
-  bool VisitUrlCookies(const CefString &url, bool includeHttpOnly,
+  bool VisitUrlCookies(const CefString& url,
+                       bool includeHttpOnly,
                        CefRefPtr<CefCookieVisitor> visitor,
                        bool is_sync,
                        bool is_from_ndk) override;
-  bool SetCookie(const CefString &url, const CefCookie &cookie,
-                 CefRefPtr<CefSetCookieCallback> callback, bool is_sync,
-                 const CefString &str_cookie, bool includeHttpOnly) override;
-  bool DeleteCookies(const CefString &url, const CefString &cookie_name,
+  bool SetCookie(const CefString& url,
+                 const CefCookie& cookie,
+                 CefRefPtr<CefSetCookieCallback> callback,
+                 bool is_sync,
+                 const CefString& str_cookie,
+                 bool includeHttpOnly) override;
+  bool DeleteCookies(const CefString& url,
+                     const CefString& cookie_name,
                      bool is_session,
                      CefRefPtr<CefDeleteCookiesCallback> callback,
                      bool is_sync) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
-  bool IsAcceptCookieAllowed() override;
-  void PutAcceptCookieEnabled(bool accept) override;
-  bool IsThirdPartyCookieAllowed() override;
-  void PutAcceptThirdPartyCookieEnabled(bool accept) override;
-  bool IsFileURLSchemeCookiesAllowed() override;
-  void PutAcceptFileURLSchemeCookiesEnabled(bool allow) override;
 };
 
-#endif // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_
+#endif  // CEF_LIBCEF_DLL_CTOCPP_COOKIE_MANAGER_CTOCPP_H_

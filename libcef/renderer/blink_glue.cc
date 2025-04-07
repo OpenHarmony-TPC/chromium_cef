@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/blink_glue.h"
 
 #include "third_party/blink/public/mojom/v8_cache_options.mojom-blink.h"
 #include "third_party/blink/public/platform/web_string.h"
@@ -13,7 +13,6 @@
 #include "third_party/blink/public/web/web_local_frame_client.h"
 #include "third_party/blink/public/web/web_node.h"
 #include "third_party/blink/public/web/web_view_client.h"
-
 #include "third_party/blink/renderer/bindings/core/v8/sanitize_script_errors.h"
 #include "third_party/blink/renderer/bindings/core/v8/script_evaluation_result.h"
 #include "third_party/blink/renderer/bindings/core/v8/v8_binding_for_core.h"
@@ -28,9 +27,7 @@
 #include "third_party/blink/renderer/core/frame/local_dom_window.h"
 #include "third_party/blink/renderer/core/frame/local_frame.h"
 #include "third_party/blink/renderer/core/frame/settings.h"
-#include "third_party/blink/renderer/core/frame/visual_viewport.h"
 #include "third_party/blink/renderer/core/frame/web_local_frame_impl.h"
-#include "third_party/blink/renderer/core/geometry/dom_rect.h"
 #include "third_party/blink/renderer/core/loader/frame_load_request.h"
 #include "third_party/blink/renderer/core/page/page.h"
 #include "third_party/blink/renderer/core/script/classic_script.h"
@@ -85,7 +82,7 @@ void GoBack(blink::WebView* view) {
       blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
       blink::To<blink::LocalFrame>(core_frame)
           ->GetLocalFrameHostRemote()
-          .GoToEntryAtOffset(-1, /*has_user_gesture=*/true, absl::nullopt);
+          .GoToEntryAtOffset(-1, /*has_user_gesture=*/true, std::nullopt);
     }
   }
 }
@@ -101,7 +98,7 @@ void GoForward(blink::WebView* view) {
       blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
       blink::To<blink::LocalFrame>(core_frame)
           ->GetLocalFrameHostRemote()
-          .GoToEntryAtOffset(1, /*has_user_gesture=*/true, absl::nullopt);
+          .GoToEntryAtOffset(1, /*has_user_gesture=*/true, std::nullopt);
     }
   }
 }
@@ -114,48 +111,6 @@ bool IsInBackForwardCache(blink::WebLocalFrame* frame) {
       ->IsInBackForwardCache();
 }
 
-#if BUILDFLAG(IS_OHOS)
-bool CanGoBackOrForward(blink::WebView* view, int num_steps) {
-  if (!view) {
-    return false;
-  }
-  if (num_steps == 0) {
-    return true;
-  }
-  if (num_steps > 0 && view->HistoryForwardListCount() >= num_steps) {
-    return true;
-  }
-  if (num_steps < 0 && view->HistoryBackListCount() >= -num_steps) {
-    return true;
-  }
-  return false;
-}
-
-void GoBackOrForward(blink::WebView* view, int num_steps) {
-  if (!view) {
-    return;
-  }
-
-  blink::WebFrame* main_frame = view->MainFrame();
-  if (main_frame && main_frame->IsWebLocalFrame()) {
-    if (num_steps > 0 && view->HistoryForwardListCount() > 0) {
-      blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
-      blink::To<blink::LocalFrame>(core_frame)
-          ->GetLocalFrameHostRemote()
-          .GoToEntryAtOffset(num_steps, true /* has_user_gesture */,
-                             absl::nullopt);
-    }
-    if (num_steps < 0 && view->HistoryBackListCount() > 0) {
-      blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*main_frame);
-      blink::To<blink::LocalFrame>(core_frame)
-          ->GetLocalFrameHostRemote()
-          .GoToEntryAtOffset(num_steps, true /* has_user_gesture */,
-                             absl::nullopt);
-    }
-  }
-}
-#endif
-
 blink::WebString DumpDocumentText(blink::WebLocalFrame* frame) {
   // We use the document element's text instead of the body text here because
   // not all documents have a body, such as XML documents.
@@ -167,57 +122,6 @@ blink::WebString DumpDocumentText(blink::WebLocalFrame* frame) {
   blink::Element* web_element = document_element.Unwrap<blink::Element>();
   return blink::WebString(web_element->innerText());
 }
-
-#if BUILDFLAG(IS_OHOS)
-gfx::Size GetContentSize(blink::WebLocalFrame* frame) {
-  blink::WebDocument web_document = frame->GetDocument();
-  if (web_document.IsNull()) {
-    return gfx::Size();
-  }
-
-  blink::WebElement web_document_element = web_document.DocumentElement();
-  if (web_document_element.IsNull()) {
-    return gfx::Size();
-  }
-  blink::Element* document_element =
-      web_document_element.Unwrap<blink::Element>();
-
-  blink::Document* document = web_document.Unwrap<blink::Document>();
-  bool inQuirksMode = document->InQuirksMode();
-
-  int width = 0;
-  int height = 0;
-  if (inQuirksMode) {
-    width = document_element->scrollWidth();
-    height = document_element->scrollHeight();
-  } else {
-    int body_height = 0;
-    blink::WebElement web_body = web_document.Body();
-    if (!web_body.IsNull()) {
-      blink::Element* body = web_body.Unwrap<blink::Element>();
-      blink::DOMRect* body_dom_rect = body->getBoundingClientRect();
-      gfx::Rect body_rect = body_dom_rect->ToEnclosingRect();
-      body_height = body->scrollHeight() + body_rect.y();
-    }
-    width = document_element->OffsetWidth();
-    height = std::max({document_element->OffsetHeight(), body_height});
-  }
-
-  blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*frame);
-  float page_scale = blink::To<blink::LocalFrame>(core_frame)
-                         ->GetPage()
-                         ->GetVisualViewport().Scale();
-
-  return gfx::Size(width * page_scale, height * page_scale);
-}
-
-gfx::Size GetVisualViewportSize(blink::WebLocalFrame* frame) {
-  blink::Frame* core_frame = blink::WebFrame::ToCoreFrame(*frame);
-  return blink::To<blink::LocalFrame>(core_frame)
-      ->GetPage()
-      ->GetVisualViewport().Size();
-}
-#endif
 
 blink::WebString DumpDocumentMarkup(blink::WebLocalFrame* frame) {
   return blink::CreateMarkup(
@@ -313,7 +217,7 @@ v8::Local<v8::Value> ExecuteV8ScriptAndReturnValue(
   // The Rethrow() message is unused due to kDoNotSanitize but it still needs
   // to be non-nullopt for exceptions to be re-thrown as expected.
   auto result = blink::V8ScriptRunner::CompileAndRunScript(
-      blink::ScriptState::From(context), script,
+      blink::ScriptState::From(context->GetIsolate(), context), script,
       blink::ExecuteScriptPolicy::kExecuteScriptWhenScriptsDisabled,
       blink::V8ScriptRunner::RethrowErrorsOption::Rethrow(""));
 
@@ -364,7 +268,8 @@ RegisterExecutionContextLifecycleStateObserver(
 
   class Registration : public CefObserverRegistration {
    public:
-    Registration(blink::Persistent<Observer> observer) : observer_(observer) {}
+    explicit Registration(blink::Persistent<Observer> observer)
+        : observer_(observer) {}
 
    private:
     blink::Persistent<Observer> observer_;
@@ -379,12 +284,13 @@ void RegisterURLSchemeAsSupportingFetchAPI(const blink::WebString& scheme) {
 }
 
 struct CefScriptForbiddenScope::Impl {
+  STACK_ALLOCATED_IGNORE()
   blink::ScriptForbiddenScope scope_;
 };
 
 CefScriptForbiddenScope::CefScriptForbiddenScope() : impl_(new Impl()) {}
 
-CefScriptForbiddenScope::~CefScriptForbiddenScope() {}
+CefScriptForbiddenScope::~CefScriptForbiddenScope() = default;
 
 bool ResponseWasCached(const blink::WebURLResponse& response) {
   return response.ToResourceResponse().WasCached();

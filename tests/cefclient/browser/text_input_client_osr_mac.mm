@@ -6,6 +6,7 @@
 // content/browser/renderer_host/render_widget_host_view_mac.mm from Chromium.
 
 #include "text_input_client_osr_mac.h"
+
 #include "include/cef_client.h"
 
 #define ColorBLACK 0xFF000000  // Same as Blink SKColor.
@@ -43,7 +44,7 @@ void ExtractUnderlines(NSAttributedString* string,
       if (NSColor* colorAttr =
               [attrs objectForKey:NSUnderlineColorAttributeName]) {
         color = CefColorFromNSColor(
-            [colorAttr colorUsingColorSpaceName:NSDeviceRGBColorSpace]);
+            [colorAttr colorUsingColorSpace:NSColorSpace.deviceRGBColorSpace]);
       }
       cef_composition_underline_t line = {
           {static_cast<uint32_t>(range.location),

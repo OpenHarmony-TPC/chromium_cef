@@ -2,18 +2,20 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/server_impl.h"
+#include "cef/libcef/browser/server_impl.h"
 
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/request_impl.h"
-#include "libcef/common/task_runner_impl.h"
+#include <memory>
 
+#include "arkweb/build/features/features.h"
 #include "base/format_macros.h"
 #include "base/functional/bind.h"
 #include "base/memory/ptr_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/thread.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/request_impl.h"
+#include "cef/libcef/common/task_runner_impl.h"
 #include "net/base/net_errors.h"
 #include "net/http/http_request_headers.h"
 #include "net/server/http_server_request_info.h"
@@ -21,6 +23,10 @@
 #include "net/socket/server_socket.h"
 #include "net/socket/tcp_server_socket.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "libcef/common/arkweb_request_impl_ext.h"
+#endif
 
 #define CEF_CURRENTLY_ON_HT() CurrentlyOnHandlerThread()
 #define CEF_REQUIRE_HT() DCHECK(CEF_CURRENTLY_ON_HT())
@@ -46,9 +52,10 @@ std::unique_ptr<std::string> CreateUniqueString(const void* data,
                                                 size_t data_size) {
   std::unique_ptr<std::string> ptr;
   if (data && data_size > 0) {
-    ptr.reset(new std::string(static_cast<const char*>(data), data_size));
+    ptr = std::make_unique<std::string>(static_cast<const char*>(data),
+                                        data_size);
   } else {
-    ptr.reset(new std::string());
+    ptr = std::make_unique<std::string>();
   }
   return ptr;
 }
@@ -85,7 +92,11 @@ CefRefPtr<CefRequest> CreateRequest(const std::string& address,
     }
   }
 
+#if BUILDFLAG(IS_ARKWEB)
+  CefRefPtr<CefRequestImpl> request = new ArkWebRequestImplExt();
+#else
   CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
+#endif
   request->Set((is_websocket ? "ws://" : "http://") + address + info.path,
                info.method, post_data, header_map);
   if (!referer.empty()) {
@@ -155,7 +166,7 @@ class AcceptWebSocketCallback : public CefCallback {
 
 // static
 void CefServer::CreateServer(const CefString& address,
-                             uint16 port,
+                             uint16_t port,
                              int backlog,
                              CefRefPtr<CefServerHandler> handler) {
   CefRefPtr<CefServerImpl> server(new CefServerImpl(handler));
@@ -165,11 +176,11 @@ void CefServer::CreateServer(const CefString& address,
 // CefServerImpl
 
 struct CefServerImpl::ConnectionInfo {
-  ConnectionInfo() : is_websocket(false), is_websocket_pending(false) {}
+  ConnectionInfo() = default;
 
   // True if this connection is a WebSocket connection.
-  bool is_websocket;
-  bool is_websocket_pending;
+  bool is_websocket = false;
+  bool is_websocket_pending = false;
 };
 
 CefServerImpl::CefServerImpl(CefRefPtr<CefServerHandler> handler)
@@ -178,7 +189,7 @@ CefServerImpl::CefServerImpl(CefRefPtr<CefServerHandler> handler)
 }
 
 void CefServerImpl::Start(const std::string& address,
-                          uint16 port,
+                          uint16_t port,
                           int backlog) {
   DCHECK(!address.empty());
   CEF_POST_TASK(CEF_UIT, base::BindOnce(&CefServerImpl::StartOnUIThread, this,
@@ -280,7 +291,7 @@ void CefServerImpl::SendHttp500Response(int connection_id,
 void CefServerImpl::SendHttpResponse(int connection_id,
                                      int response_code,
                                      const CefString& content_type,
-                                     int64 content_length,
+                                     int64_t content_length,
                                      const HeaderMap& extra_headers) {
   if (!CEF_CURRENTLY_ON_HT()) {
     CEF_POST_TASK_HT(base::BindOnce(&CefServerImpl::SendHttpResponse, this,
@@ -540,7 +551,7 @@ void CefServerImpl::OnClose(int connection_id) {
 }
 
 void CefServerImpl::StartOnUIThread(const std::string& address,
-                                    uint16 port,
+                                    uint16_t port,
                                     int backlog) {
   CEF_REQUIRE_UIT();
   DCHECK(!thread_);
@@ -562,14 +573,14 @@ void CefServerImpl::StartOnUIThread(const std::string& address,
 }
 
 void CefServerImpl::StartOnHandlerThread(const std::string& address,
-                                         uint16 port,
+                                         uint16_t port,
                                          int backlog) {
   CEF_REQUIRE_HT();
 
   std::unique_ptr<net::ServerSocket> socket(
       new net::TCPServerSocket(nullptr, net::NetLogSource()));
   if (socket->ListenWithAddressAndPort(address, port, backlog) == net::OK) {
-    server_.reset(new net::HttpServer(std::move(socket), this));
+    server_ = std::make_unique<net::HttpServer>(std::move(socket), this);
 
     net::IPEndPoint ip_address;
     if (server_->GetLocalAddress(&ip_address) == net::OK) {

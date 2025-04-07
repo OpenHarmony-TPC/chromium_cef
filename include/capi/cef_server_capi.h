@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=c6ace1eb5f5d3d2de0bb8e6c8d5807d798312ba0$
+// $hash=b85c5d4060c951571f122e519e7dc7e9a4c4e629$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_SERVER_CAPI_H_
@@ -153,7 +153,7 @@ typedef struct _cef_server_t {
                                          int connection_id,
                                          int response_code,
                                          const cef_string_t* content_type,
-                                         int64 content_length,
+                                         int64_t content_length,
                                          cef_string_multimap_t extra_headers);
 
   ///
@@ -203,7 +203,7 @@ typedef struct _cef_server_t {
 /// server lifespan.
 ///
 CEF_EXPORT void cef_server_create(const cef_string_t* address,
-                                  uint16 port,
+                                  uint16_t port,
                                   int backlog,
                                   struct _cef_server_handler_t* handler);
 

@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/native/menu_runner_views_aura.h"
+#include "cef/libcef/browser/native/menu_runner_views_aura.h"
 
-#include "libcef/browser/alloy/alloy_browser_host_impl.h"
+#include <memory>
 
 #include "base/strings/string_util.h"
+#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
+#include "ui/base/mojom/menu_source_type.mojom.h"
 #include "ui/gfx/geometry/point.h"
 
-CefMenuRunnerViewsAura::CefMenuRunnerViewsAura() {}
+CefMenuRunnerViewsAura::CefMenuRunnerViewsAura() = default;
 
 bool CefMenuRunnerViewsAura::RunContextMenu(
     AlloyBrowserHostImpl* browser,
@@ -27,14 +29,15 @@ bool CefMenuRunnerViewsAura::RunContextMenu(
     widget = browser->GetWindowWidget();
   }
 
-  menu_.reset(
-      new views::MenuRunner(model->model(), views::MenuRunner::CONTEXT_MENU));
+  menu_ = std::make_unique<views::MenuRunner>(model->model(),
+                                              views::MenuRunner::CONTEXT_MENU);
 
   gfx::Point screen_point = browser->GetScreenPoint(
       gfx::Point(params.x, params.y), /*want_dip_coords=*/true);
 
   menu_->RunMenuAt(widget, nullptr, gfx::Rect(screen_point, gfx::Size()),
-                   views::MenuAnchorPosition::kTopRight, ui::MENU_SOURCE_NONE,
+                   views::MenuAnchorPosition::kTopRight,
+                   ui::mojom::MenuSourceType::kNone,
                    /*native_view_for_gestures=*/nullptr, parent_widget);
 
   return true;

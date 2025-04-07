@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d92eaa0a8b0d1d96db4a586ec37f3239c09031ca$
+// $hash=2c3b8a886e7955b9eb9d36f22cdf222897c18b16$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_DELEGATE_CTOCPP_H_
@@ -51,9 +51,13 @@ class CefBrowserViewDelegateCToCpp
   bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
                                  CefRefPtr<CefBrowserView> popup_browser_view,
                                  bool is_devtools) override;
-  ChromeToolbarType GetChromeToolbarType() override;
+  ChromeToolbarType GetChromeToolbarType(
+      CefRefPtr<CefBrowserView> browser_view) override;
+  bool UseFramelessWindowForPictureInPicture(
+      CefRefPtr<CefBrowserView> browser_view) override;
   bool OnGestureCommand(CefRefPtr<CefBrowserView> browser_view,
                         cef_gesture_command_t gesture_command) override;
+  cef_runtime_style_t GetBrowserRuntimeStyle() override;
 
   // CefViewDelegate methods.
   CefSize GetPreferredSize(CefRefPtr<CefView> view) override;
@@ -71,6 +75,7 @@ class CefBrowserViewDelegateCToCpp
                        const CefRect& new_bounds) override;
   void OnFocus(CefRefPtr<CefView> view) override;
   void OnBlur(CefRefPtr<CefView> view) override;
+  void OnThemeChanged(CefRefPtr<CefView> view) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_BROWSER_VIEW_DELEGATE_CTOCPP_H_

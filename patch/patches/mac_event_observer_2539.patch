@@ -1,9 +1,9 @@
 diff --git content/browser/scheduler/responsiveness/native_event_observer_mac.mm content/browser/scheduler/responsiveness/native_event_observer_mac.mm
-index 4aecdd08b7de4..4f5e588a37865 100644
+index d7f32cb53ea3a..2bab5de59657f 100644
 --- content/browser/scheduler/responsiveness/native_event_observer_mac.mm
 +++ content/browser/scheduler/responsiveness/native_event_observer_mac.mm
-@@ -12,13 +12,15 @@ namespace content {
- namespace responsiveness {
+@@ -11,13 +11,15 @@
+ namespace content::responsiveness {
  
  void NativeEventObserver::RegisterObserver() {
 -  DCHECK([NSApp conformsToProtocol:@protocol(NativeEventProcessor)]);

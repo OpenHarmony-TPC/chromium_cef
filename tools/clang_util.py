@@ -15,10 +15,14 @@ root_dir = os.path.join(script_dir, os.pardir)
 if sys.platform == 'win32':
   # Force use of the clang-format version bundled with depot_tools.
   clang_format_exe = 'clang-format.bat'
+elif sys.platform == 'linux':
+  # is_ohos
+  clang_format_exe = os.path.join(root_dir, os.pardir, 'buildtools', 'linux64', 'clang-format')
+  print('clang-format:' + clang_format_exe)
+  if os.path.exists(clang_format_exe) == False:
+      clang_format_exe = 'clang-format'
 else:
-  clang_format_exe = os.path.join(root_dir, '..', 'buildtools', 'linux64',\
-      'clang-format')
-
+  clang_format_exe = 'clang-format'
 
 def clang_format(file_name, file_contents):
   # -assume-filename is necessary to find the .clang-format file and determine

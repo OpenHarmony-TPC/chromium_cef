@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c821f6ba0426bc3c508b8edfc56369a80d39bce7$
+// $hash=0d9f8c7c00d7b2e59b4fbf35927a53ce335a8304$
 //
 
 #include "libcef_dll/ctocpp/views/panel_ctocpp.h"
+
 #include "libcef_dll/cpptoc/views/panel_delegate_cpptoc.h"
 #include "libcef_dll/cpptoc/views/view_delegate_cpptoc.h"
 #include "libcef_dll/ctocpp/views/box_layout_ctocpp.h"
@@ -957,6 +958,23 @@ NO_SANITIZE("cfi-icall") bool CefPanelCToCpp::IsAccessibilityFocusable() {
   return _retval ? true : false;
 }
 
+NO_SANITIZE("cfi-icall") bool CefPanelCToCpp::HasFocus() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_view_t* _struct = reinterpret_cast<cef_view_t*>(GetStruct());
+  if (CEF_MEMBER_MISSING(_struct, has_focus)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->has_focus(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
 NO_SANITIZE("cfi-icall") void CefPanelCToCpp::RequestFocus() {
   shutdown_checker::AssertNotShutdown();
 
@@ -998,6 +1016,24 @@ NO_SANITIZE("cfi-icall") cef_color_t CefPanelCToCpp::GetBackgroundColor() {
 
   // Execute
   cef_color_t _retval = _struct->get_background_color(_struct);
+
+  // Return type: simple
+  return _retval;
+}
+
+NO_SANITIZE("cfi-icall")
+cef_color_t CefPanelCToCpp::GetThemeColor(int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_view_t* _struct = reinterpret_cast<cef_view_t*>(GetStruct());
+  if (CEF_MEMBER_MISSING(_struct, get_theme_color)) {
+    return 0;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  cef_color_t _retval = _struct->get_theme_color(_struct, color_id);
 
   // Return type: simple
   return _retval;

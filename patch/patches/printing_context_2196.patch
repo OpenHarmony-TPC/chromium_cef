@@ -1,8 +1,8 @@
 diff --git chrome/browser/printing/printer_query.cc chrome/browser/printing/printer_query.cc
-index 0b6ff160cc053..987d9cf9b43c0 100644
+index 402be34ab888c..28769289c6b46 100644
 --- chrome/browser/printing/printer_query.cc
 +++ chrome/browser/printing/printer_query.cc
-@@ -122,6 +122,7 @@ PrinterQuery::PrinterQuery(content::GlobalRenderFrameHostId rfh_id)
+@@ -124,6 +124,7 @@ PrinterQuery::PrinterQuery(content::GlobalRenderFrameHostId rfh_id)
        rfh_id_(rfh_id),
        cookie_(PrintSettings::NewCookie()) {
    DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -11,12 +11,12 @@ index 0b6ff160cc053..987d9cf9b43c0 100644
  
  PrinterQuery::~PrinterQuery() {
 diff --git printing/printing_context.h printing/printing_context.h
-index 2fb3aef0797f2..73248cd2d2039 100644
+index 63f170c950504..962e60d23da59 100644
 --- printing/printing_context.h
 +++ printing/printing_context.h
-@@ -180,6 +180,13 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
- 
-   int job_id() const { return job_id_; }
+@@ -215,6 +215,13 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
+   void SetJobId(int job_id);
+ #endif
  
 +  void set_render_ids(int render_process_id, int render_frame_id) {
 +    render_process_id_ = render_process_id;
@@ -26,16 +26,16 @@ index 2fb3aef0797f2..73248cd2d2039 100644
 +  int render_frame_id() const { return render_frame_id_; }
 +
   protected:
-   explicit PrintingContext(Delegate* delegate);
+   PrintingContext(Delegate* delegate, ProcessBehavior process_behavior);
  
-@@ -224,6 +231,10 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
-   // The job id for the current job. The value is 0 if no jobs are active.
-   int job_id_;
+@@ -248,6 +255,10 @@ class COMPONENT_EXPORT(PRINTING) PrintingContext {
+   // management.
+   int job_id_ = kNoPrintJobId;
  
 +  // Routing IDs for the frame that owns this object.
 +  int render_process_id_ = 0;
 +  int render_frame_id_ = 0;
 +
   private:
- #if BUILDFLAG(ENABLE_OOP_PRINTING)
-   // If this instance of PrintingContext should skip making any system calls
+   const ProcessBehavior process_behavior_;
+ };

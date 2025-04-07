@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=3e119d2c8c0919dc6f2e0a48deff9d9768a6587a$
+// $hash=fd37d01fdcf8c3de25e36d428ca38781c4749586$
 //
 
 #include "libcef_dll/cpptoc/shared_memory_region_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -55,9 +56,11 @@ shared_memory_region_size(struct _cef_shared_memory_region_t* self) {
   return _retval;
 }
 
-const void* CEF_CALLBACK
+void* CEF_CALLBACK
 shared_memory_region_memory(struct _cef_shared_memory_region_t* self) {
   shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   DCHECK(self);
   if (!self) {
@@ -65,9 +68,9 @@ shared_memory_region_memory(struct _cef_shared_memory_region_t* self) {
   }
 
   // Execute
-  const void* _retval = CefSharedMemoryRegionCppToC::Get(self)->Memory();
+  void* _retval = CefSharedMemoryRegionCppToC::Get(self)->Memory();
 
-  // Return type: simple
+  // Return type: simple_byaddr
   return _retval;
 }
 

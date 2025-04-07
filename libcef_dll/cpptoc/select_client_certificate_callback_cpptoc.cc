@@ -9,10 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f6a610c87ad81581de761abe2e1c08332d81ac42$
+// $hash=6c310f130eeac636f3b3485f5d5365539ed50559$
 //
 
 #include "libcef_dll/cpptoc/select_client_certificate_callback_cpptoc.h"
+
+#include "libcef_dll/cpptoc/x509certificate_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -21,8 +23,7 @@ namespace {
 
 void CEF_CALLBACK select_client_certificate_callback_select(
     struct _cef_select_client_certificate_callback_t* self,
-    const cef_string_t* private_key_file,
-    const cef_string_t* cert_chain_file) {
+    struct _cef_x509certificate_t* cert) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -31,50 +32,11 @@ void CEF_CALLBACK select_client_certificate_callback_select(
   if (!self) {
     return;
   }
-  // Verify param: private_key_file; type: string_byref_const
-  DCHECK(private_key_file);
-  if (!private_key_file) {
-    return;
-  }
-  // Verify param: cert_chain_file; type: string_byref_const
-  DCHECK(cert_chain_file);
-  if (!cert_chain_file) {
-    return;
-  }
+  // Unverified params: cert
 
   // Execute
   CefSelectClientCertificateCallbackCppToC::Get(self)->Select(
-      CefString(private_key_file), CefString(cert_chain_file));
-}
-
-void CEF_CALLBACK select_client_certificate_callback_cancel(
-    struct _cef_select_client_certificate_callback_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefSelectClientCertificateCallbackCppToC::Get(self)->Cancel();
-}
-
-void CEF_CALLBACK select_client_certificate_callback_ignore(
-    struct _cef_select_client_certificate_callback_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefSelectClientCertificateCallbackCppToC::Get(self)->Ignore();
+      CefX509CertificateCppToC::Unwrap(cert));
 }
 
 }  // namespace
@@ -84,8 +46,6 @@ void CEF_CALLBACK select_client_certificate_callback_ignore(
 CefSelectClientCertificateCallbackCppToC::
     CefSelectClientCertificateCallbackCppToC() {
   GetStruct()->select = select_client_certificate_callback_select;
-  GetStruct()->cancel = select_client_certificate_callback_cancel;
-  GetStruct()->ignore = select_client_certificate_callback_ignore;
 }
 
 // DESTRUCTOR - Do not edit by hand.

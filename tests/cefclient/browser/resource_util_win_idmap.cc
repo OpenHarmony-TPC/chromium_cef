@@ -13,17 +13,11 @@ int GetResourceId(const char* resource_name) {
   static struct _resource_map {
     const char* name;
     int id;
-  } resource_map[] = {{"binding.html", IDS_BINDING_HTML},
+  } resource_map[] = {{"binary_transfer.html", IDS_BINARY_TRANSFER_HTML},
+                      {"binding.html", IDS_BINDING_HTML},
                       {"dialogs.html", IDS_DIALOGS_HTML},
                       {"draggable.html", IDS_DRAGGABLE_HTML},
-                      {"extensions/set_page_color/icon.png",
-                       IDS_EXTENSIONS_SET_PAGE_COLOR_ICON_PNG},
-                      {"extensions/set_page_color/manifest.json",
-                       IDS_EXTENSIONS_SET_PAGE_COLOR_MANIFEST_JSON},
-                      {"extensions/set_page_color/popup.html",
-                       IDS_EXTENSIONS_SET_PAGE_COLOR_POPUP_HTML},
-                      {"extensions/set_page_color/popup.js",
-                       IDS_EXTENSIONS_SET_PAGE_COLOR_POPUP_JS},
+                      {"hang.html", IDS_HANG_HTML},
                       {"ipc_performance.html", IDS_IPC_PERFORMANCE_HTML},
                       {"localstorage.html", IDS_LOCALSTORAGE_HTML},
                       {"logo.png", IDS_LOGO_PNG},
@@ -39,6 +33,7 @@ int GetResourceId(const char* resource_name) {
                       {"preferences.html", IDS_PREFERENCES_HTML},
                       {"response_filter.html", IDS_RESPONSE_FILTER_HTML},
                       {"server.html", IDS_SERVER_HTML},
+                      {"task_manager.html", IDS_TASK_MANAGER_HTML},
                       {"transparency.html", IDS_TRANSPARENCY_HTML},
                       {"urlrequest.html", IDS_URLREQUEST_HTML},
                       {"websocket.html", IDS_WEBSOCKET_HTML},
@@ -48,9 +43,9 @@ int GetResourceId(const char* resource_name) {
                       {"xmlhttprequest.html", IDS_XMLHTTPREQUEST_HTML},
                       {"xmlhttprequest.html", IDS_XMLHTTPREQUEST_HTML}};
 
-  for (size_t i = 0; i < sizeof(resource_map) / sizeof(_resource_map); ++i) {
-    if (!strcmp(resource_map[i].name, resource_name)) {
-      return resource_map[i].id;
+  for (auto& i : resource_map) {
+    if (!strcmp(i.name, resource_name)) {
+      return i.id;
     }
   }
 

@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {

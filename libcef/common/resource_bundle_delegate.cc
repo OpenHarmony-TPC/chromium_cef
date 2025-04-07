@@ -1,24 +1,19 @@
-#include "libcef/common/resource_bundle_delegate.h"
+#include "cef/libcef/common/resource_bundle_delegate.h"
 
-#include "libcef/common/app_manager.h"
+#include "cef/libcef/common/app_manager.h"
+
+CefResourceBundleDelegate::CefResourceBundleDelegate() = default;
 
 base::FilePath CefResourceBundleDelegate::GetPathForResourcePack(
     const base::FilePath& pack_path,
     ui::ResourceScaleFactor scale_factor) {
-  // Only allow the cef pack file to load.
-  if (!pack_loading_disabled_ && allow_pack_file_load_) {
-    return pack_path;
-  }
-  return base::FilePath();
+  return pack_path;
 }
 
 base::FilePath CefResourceBundleDelegate::GetPathForLocalePack(
     const base::FilePath& pack_path,
     const std::string& locale) {
-  if (!pack_loading_disabled_) {
-    return pack_path;
-  }
-  return base::FilePath();
+  return pack_path;
 }
 
 gfx::Image CefResourceBundleDelegate::GetImageNamed(int resource_id) {
@@ -29,21 +24,26 @@ gfx::Image CefResourceBundleDelegate::GetNativeImageNamed(int resource_id) {
   return gfx::Image();
 }
 
+bool CefResourceBundleDelegate::HasDataResource(int resource_id) const {
+  // This has no impact on the loading of resources in ResourceBundle.
+  return false;
+}
+
 base::RefCountedMemory* CefResourceBundleDelegate::LoadDataResourceBytes(
     int resource_id,
     ui::ResourceScaleFactor scale_factor) {
   return nullptr;
 }
 
-absl::optional<std::string> CefResourceBundleDelegate::LoadDataResourceString(
+std::optional<std::string> CefResourceBundleDelegate::LoadDataResourceString(
     int resource_id) {
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 bool CefResourceBundleDelegate::GetRawDataResource(
     int resource_id,
     ui::ResourceScaleFactor scale_factor,
-    base::StringPiece* value) const {
+    std::string_view* value) const {
   auto application = CefAppManager::Get()->GetApplication();
   if (application) {
     CefRefPtr<CefResourceBundleHandler> handler =
@@ -55,15 +55,15 @@ bool CefResourceBundleDelegate::GetRawDataResource(
         if (handler->GetDataResourceForScale(
                 resource_id, static_cast<cef_scale_factor_t>(scale_factor),
                 data, data_size)) {
-          *value = base::StringPiece(static_cast<char*>(data), data_size);
+          *value = std::string_view(static_cast<char*>(data), data_size);
         }
       } else if (handler->GetDataResource(resource_id, data, data_size)) {
-        *value = base::StringPiece(static_cast<char*>(data), data_size);
+        *value = std::string_view(static_cast<char*>(data), data_size);
       }
     }
   }
 
-  return (pack_loading_disabled_ || !value->empty());
+  return !value->empty();
 }
 
 bool CefResourceBundleDelegate::GetLocalizedString(
@@ -81,5 +81,5 @@ bool CefResourceBundleDelegate::GetLocalizedString(
     }
   }
 
-  return (pack_loading_disabled_ || !value->empty());
+  return !value->empty();
 }

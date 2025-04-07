@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9db5c4827781c1b56ccb381a581c2e4a7d72f9f4$
+// $hash=b26fcfda58a3ca8fc49bd4aa1f1454283e033dca$
 //
 
 #include "include/capi/cef_app_capi.h"
@@ -25,7 +25,6 @@
 #include "include/capi/cef_task_capi.h"
 #include "include/capi/cef_trace_capi.h"
 #include "include/capi/cef_v8_capi.h"
-#include "include/capi/test/cef_test_helpers_capi.h"
 #include "include/cef_app.h"
 #include "include/cef_crash_util.h"
 #include "include/cef_file_util.h"
@@ -39,14 +38,11 @@
 #include "include/cef_task.h"
 #include "include/cef_trace.h"
 #include "include/cef_v8.h"
-#include "include/test/cef_test_helpers.h"
 #include "libcef_dll/cpptoc/binary_value_cpptoc.h"
 #include "libcef_dll/cpptoc/command_line_cpptoc.h"
-#include "libcef_dll/cpptoc/frame_cpptoc.h"
 #include "libcef_dll/cpptoc/value_cpptoc.h"
 #include "libcef_dll/ctocpp/app_ctocpp.h"
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
-#include "libcef_dll/ctocpp/download_handler_ctocpp.h"
 #include "libcef_dll/ctocpp/end_tracing_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/scheme_handler_factory_ctocpp.h"
 #include "libcef_dll/ctocpp/task_ctocpp.h"
@@ -119,15 +115,25 @@ CEF_EXPORT int cef_initialize(const cef_main_args_t* args,
   return _retval;
 }
 
+CEF_EXPORT int cef_get_exit_code() {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = CefGetExitCode();
+
+  // Return type: simple
+  return _retval;
+}
+
 CEF_EXPORT void cef_shutdown() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  CefShutdown();
 
 #if DCHECK_IS_ON()
   shutdown_checker::SetIsShutdown();
 #endif
-
-  // Execute
-  CefShutdown();
 }
 
 CEF_EXPORT void cef_do_message_loop_work() {
@@ -149,82 +155,6 @@ CEF_EXPORT void cef_quit_message_loop() {
 
   // Execute
   CefQuitMessageLoop();
-}
-
-CEF_EXPORT void cef_apply_http_dns() {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  CefApplyHttpDns();
-}
-
-CEF_EXPORT void cef_set_download_handler(
-    struct _cef_download_handler_t* download_handler) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: download_handler; type: refptr_diff
-  DCHECK(download_handler);
-  if (!download_handler) {
-    return;
-  }
-
-  // Execute
-  CefSetDownloadHandler(CefDownloadHandlerCToCpp::Wrap(download_handler));
-}
-
-CEF_EXPORT void cef_resume_download(
-    const cef_string_t* guid,
-    const cef_string_t* url,
-    const cef_string_t* full_path,
-    int64 received_bytes,
-    int64 total_bytes,
-    const cef_string_t* etag,
-    const cef_string_t* mime_type,
-    const cef_string_t* last_modified,
-    const cef_string_t* received_slices_string) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: guid; type: string_byref_const
-  DCHECK(guid);
-  if (!guid) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(url);
-  if (!url) {
-    return;
-  }
-  // Verify param: full_path; type: string_byref_const
-  DCHECK(full_path);
-  if (!full_path) {
-    return;
-  }
-  // Verify param: etag; type: string_byref_const
-  DCHECK(etag);
-  if (!etag) {
-    return;
-  }
-  // Verify param: mime_type; type: string_byref_const
-  DCHECK(mime_type);
-  if (!mime_type) {
-    return;
-  }
-  // Verify param: last_modified; type: string_byref_const
-  DCHECK(last_modified);
-  if (!last_modified) {
-    return;
-  }
-  // Verify param: received_slices_string; type: string_byref_const
-  DCHECK(received_slices_string);
-  if (!received_slices_string) {
-    return;
-  }
-
-  // Execute
-  CefResumeDownload(CefString(guid), CefString(url), CefString(full_path),
-                    received_bytes, total_bytes, CefString(etag),
-                    CefString(mime_type), CefString(last_modified),
-                    CefString(received_slices_string));
 }
 
 CEF_EXPORT int cef_crash_reporting_enabled() {
@@ -907,7 +837,7 @@ CEF_EXPORT int cef_post_task(cef_thread_id_t threadId,
 
 CEF_EXPORT int cef_post_delayed_task(cef_thread_id_t threadId,
                                      struct _cef_task_t* task,
-                                     int64 delay_ms) {
+                                     int64_t delay_ms) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: task; type: refptr_diff
@@ -952,11 +882,11 @@ CEF_EXPORT int cef_end_tracing(const cef_string_t* tracing_file,
   return _retval;
 }
 
-CEF_EXPORT int64 cef_now_from_system_trace_time() {
+CEF_EXPORT int64_t cef_now_from_system_trace_time() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = CefNowFromSystemTraceTime();
+  int64_t _retval = CefNowFromSystemTraceTime();
 
   // Return type: simple
   return _retval;
@@ -986,34 +916,4 @@ CEF_EXPORT int cef_register_extension(const cef_string_t* extension_name,
 
   // Return type: bool
   return _retval;
-}
-
-CEF_EXPORT void cef_execute_java_script_with_user_gesture_for_tests(
-    struct _cef_frame_t* frame,
-    const cef_string_t* javascript) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: frame; type: refptr_same
-  DCHECK(frame);
-  if (!frame) {
-    return;
-  }
-  // Unverified params: javascript
-
-  // Execute
-  CefExecuteJavaScriptWithUserGestureForTests(CefFrameCppToC::Unwrap(frame),
-                                              CefString(javascript));
-}
-
-CEF_EXPORT void cef_set_data_directory_for_tests(const cef_string_t* dir) {
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: dir; type: string_byref_const
-  DCHECK(dir);
-  if (!dir) {
-    return;
-  }
-
-  // Execute
-  CefSetDataDirectoryForTests(CefString(dir));
 }

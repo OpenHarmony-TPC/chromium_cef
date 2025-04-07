@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e0450b29c0edddd58924cac0fd693f0bb4f5b510$
+// $hash=9df59c0b0b963fe281e59bd0a2369e524c6e1989$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_STREAM_READER_CTOCPP_H_
@@ -35,8 +35,8 @@ class CefStreamReaderCToCpp : public CefCToCppRefCounted<CefStreamReaderCToCpp,
 
   // CefStreamReader methods.
   size_t Read(void* ptr, size_t size, size_t n) override;
-  int Seek(int64 offset, int whence) override;
-  int64 Tell() override;
+  int Seek(int64_t offset, int whence) override;
+  int64_t Tell() override;
   int Eof() override;
   bool MayBlock() override;
 };

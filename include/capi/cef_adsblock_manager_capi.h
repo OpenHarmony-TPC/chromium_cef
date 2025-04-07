@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=ddc16a0a9e0cd300df381f54686493870d627bf8$
+// $hash=acb10ab8be4ebd3f9aefd90f9db072163ce0ad84$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_ADSBLOCK_MANAGER_CAPI_H_
@@ -60,7 +60,7 @@ typedef struct _cef_ads_block_manager_t {
   /// Set Ads Block ruleset file, containing easylist rules.
   ///
   void(CEF_CALLBACK* set_ads_block_rules)(struct _cef_ads_block_manager_t* self,
-                                          const cef_string_t*& rulesFile,
+                                          const cef_string_t* rulesFile,
                                           int replace);
 
   ///
@@ -68,14 +68,14 @@ typedef struct _cef_ads_block_manager_t {
   ///
   void(CEF_CALLBACK* add_ads_block_disallowed_list)(
       struct _cef_ads_block_manager_t* self,
-      cef_string_list_t& domainSuffixes);
+      cef_string_list_t domainSuffixes);
 
   ///
   /// Remove items from Ads Block disallowed list.
   ///
   void(CEF_CALLBACK* remove_ads_block_disallowed_list)(
       struct _cef_ads_block_manager_t* self,
-      cef_string_list_t& domainSuffixes);
+      cef_string_list_t domainSuffixes);
 
   ///
   /// Clear Ads Block disallowed list.
@@ -88,14 +88,14 @@ typedef struct _cef_ads_block_manager_t {
   ///
   void(CEF_CALLBACK* add_ads_block_allowed_list)(
       struct _cef_ads_block_manager_t* self,
-      cef_string_list_t& domainSuffixes);
+      cef_string_list_t domainSuffixes);
 
   ///
   /// Remove items from Ads Block allowed list.
   ///
   void(CEF_CALLBACK* remove_ads_block_allowed_list)(
       struct _cef_ads_block_manager_t* self,
-      cef_string_list_t& domainSuffixes);
+      cef_string_list_t domainSuffixes);
 
   ///
   /// Clear Ads Block allow list.

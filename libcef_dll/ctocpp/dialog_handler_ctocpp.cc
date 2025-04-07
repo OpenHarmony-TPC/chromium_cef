@@ -9,287 +9,35 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f141018cb91f13b379e6bc51e714ae6059fda99e$
+// $hash=80fe2ea348e1d3e908eb7b410ca857ebe9f6cdaa$
 //
 
 #include "libcef_dll/ctocpp/dialog_handler_ctocpp.h"
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
-#include "libcef_dll/cpptoc/file_dialog_callback_cpptoc.h"
-#include "libcef_dll/cpptoc/select_popup_callback_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
-#include "libcef_dll/transfer_util.h"
-
-// VIRTUAL METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-bool CefDialogHandlerCToCpp::OnFileDialog(
+void CefDialogHandlerCToCpp::OnBeforeUnloadFired(
     CefRefPtr<CefBrowser> browser,
-    FileDialogMode mode,
-    const CefString& title,
-    const CefString& default_file_path,
-    const std::vector<CefString>& accept_filters,
-    bool capture,
-    CefRefPtr<CefFileDialogCallback> callback) {
+    bool proceed) {
   shutdown_checker::AssertNotShutdown();
 
   cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_file_dialog)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return false;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return false;
-  }
-  // Unverified params: title, default_file_path, accept_filters
-
-  // Translate param: accept_filters; type: string_vec_byref_const
-  cef_string_list_t accept_filtersList = cef_string_list_alloc();
-  DCHECK(accept_filtersList);
-  if (accept_filtersList) {
-    transfer_string_list_contents(accept_filters, accept_filtersList);
-  }
-
-  // Execute
-  int _retval = _struct->on_file_dialog(
-      _struct, CefBrowserCppToC::Wrap(browser), mode, title.GetStruct(),
-      default_file_path.GetStruct(), accept_filtersList, capture,
-      CefFileDialogCallbackCppToC::Wrap(callback));
-
-  // Restore param:accept_filters; type: string_vec_byref_const
-  if (accept_filtersList) {
-    cef_string_list_free(accept_filtersList);
-  }
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefDialogHandlerCToCpp::OnSelectPopupMenu(
-    CefRefPtr<CefBrowser> browser,
-    const CefRect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    const std::vector<CefSelectPopupItem>& menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection,
-    CefRefPtr<CefSelectPopupCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_select_popup_menu)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return;
-  }
-
-  // Translate param: menu_items; type: simple_vec_byref_const
-  const size_t menu_itemsCount = menu_items.size();
-  cef_select_popup_item_t* menu_itemsList = NULL;
-  if (menu_itemsCount > 0) {
-    menu_itemsList = new cef_select_popup_item_t[menu_itemsCount];
-    DCHECK(menu_itemsList);
-    if (menu_itemsList) {
-      for (size_t i = 0; i < menu_itemsCount; ++i) {
-        menu_itemsList[i] = menu_items[i];
-      }
-    }
-  }
-
-  // Execute
-  _struct->on_select_popup_menu(_struct, CefBrowserCppToC::Wrap(browser),
-                                &bounds, item_height, item_font_size,
-                                selected_item, menu_itemsCount, menu_itemsList,
-                                right_aligned, allow_multiple_selection,
-                                CefSelectPopupCallbackCppToC::Wrap(callback));
-
-  // Restore param:menu_items; type: simple_vec_byref_const
-  if (menu_itemsList) {
-    delete[] menu_itemsList;
-  }
-}
-
-NO_SANITIZE("cfi-icall") void CefDialogHandlerCToCpp::OnHideAutofillPopup() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_hide_autofill_popup)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_hide_autofill_popup(_struct);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefDialogHandlerCToCpp::OnAdsBlocked(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& main_frame_url,
-    const std::map<CefString, CefString>& subresource_blocked,
-    bool is_site_first_report) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_ads_blocked)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: main_frame_url; type: string_byref_const
-  DCHECK(!main_frame_url.empty());
-  if (main_frame_url.empty()) {
-    return;
-  }
-
-  // Translate param: subresource_blocked; type: string_map_single_byref_const
-  cef_string_map_t subresource_blockedMap = cef_string_map_alloc();
-  DCHECK(subresource_blockedMap);
-  if (subresource_blockedMap) {
-    transfer_string_map_contents(subresource_blocked, subresource_blockedMap);
-  }
-
-  // Execute
-  _struct->on_ads_blocked(_struct, CefBrowserCppToC::Wrap(browser),
-                          main_frame_url.GetStruct(), subresource_blockedMap,
-                          is_site_first_report);
-
-  // Restore param:subresource_blocked; type: string_map_single_byref_const
-  if (subresource_blockedMap) {
-    cef_string_map_free(subresource_blockedMap);
-  }
-}
-
-NO_SANITIZE("cfi-icall")
-void CefDialogHandlerCToCpp::OnShowAutofillPopup(
-    CefRefPtr<CefBrowser> browser,
-    const CefRect& bounds,
-    bool right_aligned,
-    const std::vector<CefAutofillPopupItem>& menu_items,
-    bool is_password_popup_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_show_autofill_popup)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-
-  // Translate param: menu_items; type: simple_vec_byref_const
-  const size_t menu_itemsCount = menu_items.size();
-  cef_autofill_popup_item_t* menu_itemsList = NULL;
-  if (menu_itemsCount > 0) {
-    menu_itemsList = new cef_autofill_popup_item_t[menu_itemsCount];
-    DCHECK(menu_itemsList);
-    if (menu_itemsList) {
-      for (size_t i = 0; i < menu_itemsCount; ++i) {
-        menu_itemsList[i] = menu_items[i];
-      }
-    }
-  }
-
-  // Execute
-  _struct->on_show_autofill_popup(_struct, CefBrowserCppToC::Wrap(browser),
-                                  &bounds, right_aligned, menu_itemsCount,
-                                  menu_itemsList, is_password_popup_type);
-
-  // Restore param:menu_items; type: simple_vec_byref_const
-  if (menu_itemsList) {
-    delete[] menu_itemsList;
-  }
-}
-
-NO_SANITIZE("cfi-icall")
-void CefDialogHandlerCToCpp::ShowPasswordDialog(bool is_update,
-                                                const CefString& url) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, show_password_dialog)) {
+  if (CEF_MEMBER_MISSING(_struct, on_before_unload_fired)) {
     return;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
+  DCHECK(!browser.get());
+  if (browser.get()) {
     return;
   }
 
   // Execute
-  _struct->show_password_dialog(_struct, is_update, url.GetStruct());
+  _struct->on_before_unload_fired(_struct, CefBrowserCppToC::Wrap(browser), proceed);
 }
-
-NO_SANITIZE("cfi-icall")
-bool CefDialogHandlerCToCpp::TrigAdBlockEnabledForSiteFromUi(
-    CefRefPtr<CefBrowser> browser,
-    const CefString& main_frame_url,
-    int main_frame_tree_node_id) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_dialog_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, trig_ad_block_enabled_for_site_from_ui)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return false;
-  }
-  // Verify param: main_frame_url; type: string_byref_const
-  DCHECK(!main_frame_url.empty());
-  if (main_frame_url.empty()) {
-    return false;
-  }
-
-  // Execute
-  int _retval = _struct->trig_ad_block_enabled_for_site_from_ui(
-      _struct, CefBrowserCppToC::Wrap(browser), main_frame_url.GetStruct(),
-      main_frame_tree_node_id);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
 // CONSTRUCTOR - Do not edit by hand.
 
 CefDialogHandlerCToCpp::CefDialogHandlerCToCpp() {}

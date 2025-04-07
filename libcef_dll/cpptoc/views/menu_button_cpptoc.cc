@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=82aaa681d0ed57446e54a2c04a62adf18c284677$
+// $hash=d6f8f7a25fae4188fcced83882c2ec51f134e312$
 //
 
 #include "libcef_dll/cpptoc/views/menu_button_cpptoc.h"
+
 #include "libcef_dll/cpptoc/image_cpptoc.h"
 #include "libcef_dll/cpptoc/menu_model_cpptoc.h"
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
@@ -1230,6 +1231,25 @@ menu_button_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK menu_button_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefMenuButtonCppToC::Get(reinterpret_cast<cef_menu_button_t*>(self))
+          ->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK menu_button_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1276,6 +1296,26 @@ menu_button_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefMenuButtonCppToC::Get(reinterpret_cast<cef_menu_button_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK menu_button_get_theme_color(struct _cef_view_t* self,
+                                                     int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefMenuButtonCppToC::Get(reinterpret_cast<cef_menu_button_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1564,11 +1604,13 @@ CefMenuButtonCppToC::CefMenuButtonCppToC() {
   GetStruct()->base.base.base.is_focusable = menu_button_is_focusable;
   GetStruct()->base.base.base.is_accessibility_focusable =
       menu_button_is_accessibility_focusable;
+  GetStruct()->base.base.base.has_focus = menu_button_has_focus;
   GetStruct()->base.base.base.request_focus = menu_button_request_focus;
   GetStruct()->base.base.base.set_background_color =
       menu_button_set_background_color;
   GetStruct()->base.base.base.get_background_color =
       menu_button_get_background_color;
+  GetStruct()->base.base.base.get_theme_color = menu_button_get_theme_color;
   GetStruct()->base.base.base.convert_point_to_screen =
       menu_button_convert_point_to_screen;
   GetStruct()->base.base.base.convert_point_from_screen =

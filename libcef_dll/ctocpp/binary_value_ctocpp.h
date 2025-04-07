@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=a8726690daa66312339dba374461c87eea230d44$
+// $hash=7cc99eeb9f7da4b72a928aa26bad904ef1e8f43d$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BINARY_VALUE_CTOCPP_H_
@@ -39,6 +39,7 @@ class CefBinaryValueCToCpp : public CefCToCppRefCounted<CefBinaryValueCToCpp,
   bool IsSame(CefRefPtr<CefBinaryValue> that) override;
   bool IsEqual(CefRefPtr<CefBinaryValue> that) override;
   CefRefPtr<CefBinaryValue> Copy() override;
+  const void* GetRawData() override;
   size_t GetSize() override;
   size_t GetData(void* buffer, size_t buffer_size, size_t data_offset) override;
 };

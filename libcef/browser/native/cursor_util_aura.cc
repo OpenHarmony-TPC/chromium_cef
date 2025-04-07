@@ -2,10 +2,8 @@
 // 2012 The Chromium Authors. All rights reserved. Use of this source code is
 // governed by a BSD-style license that can be found in the LICENSE file.
 
-#include "libcef/browser/native/cursor_util.h"
-
-#include "libcef/browser/browser_host_base.h"
-
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/native/cursor_util.h"
 #include "content/common/cursors/webcursor.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "ui/base/cursor/cursor_factory.h"
@@ -16,8 +14,8 @@
 #include "ui/wm/core/cursor_loader.h"
 
 #if BUILDFLAG(IS_LINUX)
-#include "ui/ozone/buildflags.h"
-#if BUILDFLAG(OZONE_PLATFORM_X11)
+#include "ui/base/ozone_buildflags.h"
+#if BUILDFLAG(IS_OZONE_X11)
 #include "ui/base/x/x11_cursor.h"
 #elif BUILDFLAG(IS_OZONE)
 #include "ui/ozone/common/bitmap_cursor.h"
@@ -60,12 +58,13 @@ display::Display::Rotation OrientationAngleToRotation(
 // It would be better if CursorLoader took a ScreenInfo argument.
 // See https://crbug.com/1149906#c33.
 display::Display GetDisplay(CefRefPtr<CefBrowser> browser) {
-  if (auto web_contents =
-          static_cast<CefBrowserHostBase*>(browser.get())->GetWebContents()) {
+  auto browser_impl = CefBrowserHostBase::FromBrowser(browser);
+  if (auto web_contents = browser_impl->GetWebContents()) {
     if (auto view = web_contents->GetRenderWidgetHostView()) {
       // Windowless browsers always return nullptr from GetNativeView().
-      if (auto native_view = view->GetNativeView()) {
-        return display::Screen::GetScreen()->GetDisplayNearestView(native_view);
+      if (!browser_impl->IsWindowless()) {
+        return display::Screen::GetScreen()->GetDisplayNearestView(
+            view->GetNativeView());
       }
 
       // Make a minimal-effort fake Display object to satisfy the actual usage
@@ -93,7 +92,7 @@ scoped_refptr<ui::PlatformCursor> ToPlatformCursor(
   if (ui_cursor.type() == ui::mojom::CursorType::kCustom) {
     platform_cursor = ui::CursorFactory::GetInstance()->CreateImageCursor(
         ui::mojom::CursorType::kCustom, ui_cursor.custom_bitmap(),
-        ui_cursor.custom_hotspot());
+        ui_cursor.custom_hotspot(), ui_cursor.image_scale_factor());
   } else {
     cursor_loader.SetDisplay(GetDisplay(browser));
 
@@ -110,7 +109,7 @@ using CursorType = ui::WinCursor;
 inline cef_cursor_handle_t GetCursorHandleImpl(CursorType* cursor) {
   return cursor->hcursor();
 }
-#elif BUILDFLAG(OZONE_PLATFORM_X11)
+#elif BUILDFLAG(IS_OZONE_X11)
 // See https://crbug.com/1029142 for background.
 using CursorType = ui::X11Cursor;
 inline cef_cursor_handle_t GetCursorHandleImpl(CursorType* cursor) {

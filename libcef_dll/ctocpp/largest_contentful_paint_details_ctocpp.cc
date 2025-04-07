@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/ctocpp/largest_contentful_paint_details_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.

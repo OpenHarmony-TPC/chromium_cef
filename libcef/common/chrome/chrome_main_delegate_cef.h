@@ -8,14 +8,15 @@
 
 #include <memory>
 
-#include "include/cef_app.h"
-#include "libcef/common/app_manager.h"
-#include "libcef/common/chrome/chrome_content_client_cef.h"
-#include "libcef/common/main_runner_handler.h"
-#include "libcef/common/task_runner_manager.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/include/cef_app.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/chrome/chrome_content_client_cef.h"
+#include "cef/libcef/common/resource_bundle_delegate.h"
+#include "cef/libcef/common/task_runner_manager.h"
 #include "chrome/app/chrome_main_delegate.h"
 
+class CefMainRunner;
 class ChromeContentBrowserClientCef;
 class ChromeContentRendererClientCef;
 
@@ -26,7 +27,7 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
  public:
   // |runner| will be non-nullptr for the main process only, and will outlive
   // this object.
-  ChromeMainDelegateCef(CefMainRunnerHandler* runner,
+  ChromeMainDelegateCef(CefMainRunner* runner,
                         CefSettings* settings,
                         CefRefPtr<CefApp> application);
 
@@ -35,11 +36,13 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
 
   ~ChromeMainDelegateCef() override;
 
+ protected:
   // ChromeMainDelegate overrides.
-  absl::optional<int> BasicStartupComplete() override;
+  std::optional<int> BasicStartupComplete() override;
   void PreSandboxStartup() override;
-  absl::optional<int> PreBrowserMain() override;
-  absl::optional<int> PostEarlyInitialization(InvokedIn invoked_in) override;
+  void SandboxInitialized(const std::string& process_type) override;
+  std::optional<int> PreBrowserMain() override;
+  std::optional<int> PostEarlyInitialization(InvokedIn invoked_in) override;
   absl::variant<int, content::MainFunctionParams> RunProcess(
       const std::string& process_type,
       content::MainFunctionParams main_function_params) override;
@@ -49,8 +52,10 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
   content::ContentClient* CreateContentClient() override;
   content::ContentBrowserClient* CreateContentBrowserClient() override;
   content::ContentRendererClient* CreateContentRendererClient() override;
+  ui::ResourceBundle::Delegate* GetResourceBundleDelegate() override {
+    return &resource_bundle_delegate_;
+  }
 
- protected:
   // CefAppManager overrides.
   CefRefPtr<CefApp> GetApplication() override { return application_; }
   content::ContentClient* GetContentClient() override {
@@ -60,19 +65,6 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
   CefBrowserContext* CreateNewBrowserContext(
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) override;
-
-#if defined(OHOS_INCOGNITO_MODE)
-  CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() override {
-    return nullptr;
-  }
-
-  CefBrowserContext* CreateNewIncognitoBrowserContext(
-      const CefRequestContextSettings& settings,
-      base::OnceClosure initialized_cb) override {
-        return nullptr;
-  }
-#endif
-
   // CefTaskRunnerManager overrides.
   scoped_refptr<base::SingleThreadTaskRunner> GetBackgroundTaskRunner()
       override;
@@ -82,17 +74,21 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
       override;
   scoped_refptr<base::SingleThreadTaskRunner> GetRenderTaskRunner() override;
   scoped_refptr<base::SingleThreadTaskRunner> GetWebWorkerTaskRunner() override;
-
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+  CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() override;
+#endif
  private:
   ChromeContentBrowserClientCef* content_browser_client() const;
   ChromeContentRendererClientCef* content_renderer_client() const;
 
-  CefMainRunnerHandler* const runner_;
-  CefSettings* const settings_;
+  const raw_ptr<CefMainRunner> runner_;
+  const raw_ptr<CefSettings> settings_;
   CefRefPtr<CefApp> application_;
 
   // We use this instead of ChromeMainDelegate::chrome_content_client_.
   ChromeContentClientCef chrome_content_client_cef_;
+
+  CefResourceBundleDelegate resource_bundle_delegate_;
 };
 
 #endif  // CEF_LIBCEF_COMMON_CHROME_CHROME_MAIN_DELEGATE_CEF_

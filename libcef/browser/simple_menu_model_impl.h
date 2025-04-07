@@ -7,13 +7,13 @@
 #define CEF_LIBCEF_BROWSER_SIMPLE_MENU_MODEL_IMPL_H_
 #pragma once
 
+#include <optional>
 #include <vector>
 
-#include "include/cef_menu_model.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/threading/platform_thread.h"
-#include "third_party/abseil-cpp/absl/types/optional.h"
-#include "ui/base/models/simple_menu_model.h"
+#include "cef/include/cef_menu_model.h"
+#include "ui/menus/simple_menu_model.h"
 
 // Implementation of CefMenuModel that wraps an existing ui::SimpleMenuModel.
 class CefSimpleMenuModelImpl : public CefMenuModel {
@@ -24,10 +24,10 @@ class CefSimpleMenuModelImpl : public CefMenuModel {
    public:
     virtual void SetChecked(int command_id, bool checked) = 0;
     virtual void SetAccelerator(int command_id,
-                                absl::optional<ui::Accelerator> accel) = 0;
+                                std::optional<ui::Accelerator> accel) = 0;
 
    protected:
-    virtual ~StateDelegate() {}
+    virtual ~StateDelegate() = default;
   };
 
   // |delegate| should be the same that was used to create |model|.
@@ -155,15 +155,15 @@ class CefSimpleMenuModelImpl : public CefMenuModel {
 
   base::PlatformThreadId supported_thread_id_;
 
-  ui::SimpleMenuModel* model_;
-  ui::SimpleMenuModel::Delegate* const delegate_;
-  StateDelegate* const state_delegate_;
+  raw_ptr<ui::SimpleMenuModel> model_;
+  const raw_ptr<ui::SimpleMenuModel::Delegate> delegate_;
+  const raw_ptr<StateDelegate> state_delegate_;
   const bool is_owned_;
   const bool is_submenu_;
 
   // Keep the submenus alive until they're removed, or we're destroyed.
   using SubMenuMap =
-      std::map<ui::SimpleMenuModel*, CefRefPtr<CefSimpleMenuModelImpl>>;
+      std::map<raw_ptr<ui::SimpleMenuModel>, CefRefPtr<CefSimpleMenuModelImpl>>;
   SubMenuMap submenumap_;
 
   IMPLEMENT_REFCOUNTING(CefSimpleMenuModelImpl);

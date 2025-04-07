@@ -105,7 +105,7 @@ need to be translated for each locale.-->
     <output filename="cef_strings_vi.pak" type="data_package" lang="vi" />
     <output filename="cef_strings_zh-CN.pak" type="data_package" lang="zh-CN" />
     <output filename="cef_strings_zh-TW.pak" type="data_package" lang="zh-TW" />
-    <!-- <if expr="pp_ifdef('ohos_i18n')"> -->
+    <!-- <if expr="pp_ifdef('arkweb_i18n')"> -->
       <output filename="cef_strings_bo-CN.pak" type="data_package" lang="bo-CN" />
       <output filename="cef_strings_ug.pak" type="data_package" lang="ug" />
       <output filename="cef_strings_zh-HK.pak" type="data_package" lang="zh-HK" />

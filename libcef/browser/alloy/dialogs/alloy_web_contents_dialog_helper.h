@@ -7,6 +7,7 @@
 #pragma once
 
 #include "base/functional/callback_forward.h"
+#include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
 #include "components/web_modal/modal_dialog_host.h"
@@ -31,7 +32,7 @@ class AlloyWebContentsDialogHelper
 
   // web_modal::WebContentsModalDialogHost methods:
   gfx::NativeView GetHostView() const override;
-  gfx::AcceleratedWidget GetHostWidget() const override;
+  gfx::AcceleratedWidget GetAcceleratedWidget() const override;
   gfx::Point GetDialogPosition(const gfx::Size& size) override;
   gfx::Size GetMaximumDialogSize() override;
   void AddObserver(web_modal::ModalDialogHostObserver* observer) override;
@@ -40,7 +41,7 @@ class AlloyWebContentsDialogHelper
  private:
   void OnBoundsChanged();
 
-  CefBrowserPlatformDelegate* const browser_delegate_;
+  const raw_ptr<CefBrowserPlatformDelegate> browser_delegate_;
 
   // Used to notify WebContentsModalDialog.
   base::ObserverList<web_modal::ModalDialogHostObserver>::Unchecked

@@ -6,51 +6,50 @@
 #define CEF_TESTS_CEFCLIENT_BROWSER_DEFAULT_CLIENT_HANDLER_H_
 #pragma once
 
-#include "include/cef_client.h"
-#include "include/wrapper/cef_resource_manager.h"
+#include <optional>
+
+#include "tests/cefclient/browser/base_client_handler.h"
 
 namespace client {
 
-// Default client handler for unmanaged browser windows. Used with the Chrome
-// runtime only.
-class DefaultClientHandler : public CefClient,
-                             public CefRequestHandler,
-                             public CefResourceRequestHandler {
+// Default client handler for unmanaged browser windows. Used with Chrome
+// style only.
+class DefaultClientHandler : public BaseClientHandler {
  public:
-  DefaultClientHandler();
+  // If |use_alloy_style| is nullopt the global default will be used.
+  explicit DefaultClientHandler(
+      std::optional<bool> use_alloy_style = std::nullopt);
 
-  // CefClient methods
-  CefRefPtr<CefRequestHandler> GetRequestHandler() override { return this; }
+  // Returns the DefaultClientHandler for |client|, or nullptr if |client| is
+  // not a DefaultClientHandler.
+  static CefRefPtr<DefaultClientHandler> GetForClient(
+      CefRefPtr<CefClient> client);
 
-  // CefRequestHandler methods
-  CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
+ protected:
+  bool OnBeforePopup(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      bool is_navigation,
-      bool is_download,
-      const CefString& request_initiator,
-      bool& disable_default_handling) override;
-
-  // CefResourceRequestHandler methods
-  cef_return_value_t OnBeforeResourceLoad(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefCallback> callback) override;
-  CefRefPtr<CefResourceHandler> GetResourceHandler(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request) override;
-  CefRefPtr<CefResponseFilter> GetResourceResponseFilter(
-      CefRefPtr<CefBrowser> browser,
-      CefRefPtr<CefFrame> frame,
-      CefRefPtr<CefRequest> request,
-      CefRefPtr<CefResponse> response) override;
+      int popup_id,
+      const CefString& target_url,
+      const CefString& target_frame_name,
+      CefLifeSpanHandler::WindowOpenDisposition target_disposition,
+      bool user_gesture,
+      const CefPopupFeatures& popupFeatures,
+      CefWindowInfo& windowInfo,
+      CefRefPtr<CefClient>& client,
+      CefBrowserSettings& settings,
+      CefRefPtr<CefDictionaryValue>& extra_info,
+      bool* no_javascript_access) override;
+  void OnBeforePopupAborted(CefRefPtr<CefBrowser> browser,
+                            int popup_id) override;
+  void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
  private:
-  // Manages the registration and delivery of resources.
-  CefRefPtr<CefResourceManager> resource_manager_;
+  // Used to determine the object type.
+  virtual const void* GetTypeKey() const override { return &kTypeKey; }
+  static constexpr int kTypeKey = 0;
+
+  const bool use_alloy_style_;
 
   IMPLEMENT_REFCOUNTING(DefaultClientHandler);
   DISALLOW_COPY_AND_ASSIGN(DefaultClientHandler);

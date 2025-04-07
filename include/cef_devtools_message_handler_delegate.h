@@ -52,6 +52,7 @@ class CefDevToolsMessageHandlerDelegate : public virtual CefBaseRefCounted {
       const CefString& default_file_path,
       const std::vector<CefString>& accept_filters,
       bool capture,
+      const std::vector<CefString>& mime_filters,
       CefRefPtr<CefFileDialogCallback> callback) {
     return false;
   }

@@ -2,11 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/media_router/media_router_manager.h"
+#include "cef/libcef/browser/media_router/media_router_manager.h"
 
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/thread_util.h"
-
+#include "base/memory/raw_ptr.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/thread_util.h"
 #include "components/media_router/browser/media_router_factory.h"
 #include "components/media_router/browser/media_routes_observer.h"
 #include "components/media_router/browser/presentation_connection_message_observer.h"
@@ -35,7 +35,7 @@ class CefMediaRoutesObserver : public media_router::MediaRoutesObserver {
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
 };
 
 // Used to receive messages if PresentationConnection is not supported.
@@ -62,7 +62,7 @@ class CefPresentationConnectionMessageObserver
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
   const media_router::MediaRoute route_;
 };
 
@@ -119,7 +119,7 @@ class CefPresentationConnection : public blink::mojom::PresentationConnection {
   }
 
  private:
-  CefMediaRouterManager* const manager_;
+  const raw_ptr<CefMediaRouterManager> manager_;
   const media_router::MediaRoute route_;
 
   // Used to receive messages from the MRP.
@@ -189,10 +189,10 @@ void CefMediaRouterManager::CreateRoute(
     const url::Origin& origin,
     CreateRouteResultCallback callback) {
   GetMediaRouter()->CreateRoute(
-      source_id, sink_id, origin, nullptr /* web_contents */,
+      source_id, sink_id, origin, /*web_contents=*/nullptr,
       base::BindOnce(&CefMediaRouterManager::OnCreateRoute,
                      weak_ptr_factory_.GetWeakPtr(), std::move(callback)),
-      base::Milliseconds(kTimeoutMs), false /* incognito */);
+      base::Milliseconds(kTimeoutMs));
 }
 
 void CefMediaRouterManager::SendRouteMessage(

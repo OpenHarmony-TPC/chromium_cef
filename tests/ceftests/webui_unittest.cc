@@ -18,8 +18,7 @@ typedef std::vector<std::string> UrlList;
 
 class WebUITestHandler : public TestHandler {
  public:
-  explicit WebUITestHandler(const UrlList& url_list)
-      : url_list_(url_list), url_index_(0U), expected_error_code_(ERR_NONE) {
+  explicit WebUITestHandler(const UrlList& url_list) : url_list_(url_list) {
     CHECK(!url_list_.empty());
   }
 
@@ -114,10 +113,10 @@ class WebUITestHandler : public TestHandler {
   }
 
   UrlList url_list_;
-  size_t url_index_;
+  size_t url_index_ = 0U;
 
   std::string expected_url_;
-  int expected_error_code_;
+  int expected_error_code_ = ERR_NONE;
 
   TrackCallback got_loading_state_done_;
   TrackCallback got_load_error_;
@@ -177,7 +176,6 @@ void RunWebUITest(const std::string& url) {
 
 WEBUI_TEST(accessibility)
 WEBUI_TEST(blob_internals)
-WEBUI_TEST(extensions_support)
 WEBUI_TEST(gpu)
 WEBUI_TEST(histograms)
 WEBUI_TEST(indexeddb_internals)
@@ -190,7 +188,6 @@ WEBUI_TEST(system)
 WEBUI_TEST(tracing)
 WEBUI_TEST(version)
 WEBUI_TEST(webrtc_internals)
-WEBUI_TEST(webui_hosts)
 
 // Test hosts with multiple URLs.
 

@@ -4,23 +4,15 @@
 
 #ifndef CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_
-#ifdef OHOS_COOKIE
-#include "libcef/browser/net_service/cookie_manager_ohos_impl.h"
-#else
-#include "include/cef_cookie.h"
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/thread_util.h"
 
 #include "base/files/file_path.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include <atomic>
-#include "base/threading/thread.h"
-#endif
+#include "cef/include/cef_cookie.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/thread_util.h"
 
 // Implementation of the CefCookieManager interface. May be created on any
 // thread.
-class CefCookieManagerImpl : public CefCookieManager {
+class CefCookieManagerImpl : virtual public CefCookieManager {
  public:
   CefCookieManagerImpl();
 
@@ -48,40 +40,20 @@ class CefCookieManagerImpl : public CefCookieManager {
                  bool includeHttpOnly) override;
   bool DeleteCookies(const CefString& url,
                      const CefString& cookie_name,
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
                      bool is_session,
 #endif
                      CefRefPtr<CefDeleteCookiesCallback> callback,
                      bool is_sync) override;
   bool FlushStore(CefRefPtr<CefCompletionCallback> callback) override;
 
-#if BUILDFLAG(IS_OHOS)
-  bool IsAcceptCookieAllowed() override;
-  void PutAcceptCookieEnabled(bool accept) override;
-  bool IsThirdPartyCookieAllowed() override;
-  void PutAcceptThirdPartyCookieEnabled(bool accept) override;
-  bool IsFileURLSchemeCookiesAllowed() override;
-  void PutAcceptFileURLSchemeCookiesEnabled(bool allow) override;
-#endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
+  const CefBrowserContext::Getter& GetBrowserContextGetter() {
+    return browser_context_getter_;
+  }
+#endif
 
  private:
-#if BUILDFLAG(IS_OHOS)
-  bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor, bool sync);
-  bool VisitUrlCookiesInternal(const GURL& url,
-                               bool includeHttpOnly,
-                               CefRefPtr<CefCookieVisitor> visitor, bool sync, bool is_from_ndk);
-  bool SetCookieInternal(const GURL& url,
-                         const CefCookie& cookie,
-                         CefRefPtr<CefSetCookieCallback> callback,
-                         bool sync,
-                         const CefString& str_cookie
-                         bool includeHttpOnly);
-  bool DeleteCookiesInternal(const GURL& url,
-                             const CefString& cookie_name,
-                             bool is_session,
-                             CefRefPtr<CefDeleteCookiesCallback> callback,
-                             bool sync);
-#else
   bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor);
   bool VisitUrlCookiesInternal(const GURL& url,
                                bool includeHttpOnly,
@@ -91,50 +63,31 @@ class CefCookieManagerImpl : public CefCookieManager {
                          CefRefPtr<CefSetCookieCallback> callback);
   bool DeleteCookiesInternal(const GURL& url,
                              const CefString& cookie_name,
-                             bool is_session,
                              CefRefPtr<CefDeleteCookiesCallback> callback);
-#endif  // BUILDFLAG(IS_OHOS)
   bool FlushStoreInternal(CefRefPtr<CefCompletionCallback> callback);
 
-#if BUILDFLAG(IS_OHOS)
-  bool PutAcceptThirdPartyCookieEnabledInternal(bool accept);
-  void PutAcceptFileURLSchemeCookiesEnabledCompleted(bool allow,
-                                                     bool can_change_schemes);
-  bool PutAcceptFileURLSchemeCookiesEnabledInternal(bool allow);
-  void SetCookieCallbackImpl(CefRefPtr<CefSetCookieCallback> callback,
-                             net::CookieAccessResult access_result);
-  void GetCookiesCallbackImpl(
-      CefRefPtr<CefCookieVisitor> visitor,
-      const CefBrowserContext::Getter& browser_context_getter,
-      const net::CookieAccessResultList& include_cookies,
-      const net::CookieAccessResultList&);
-  void GetAllCookiesCallbackImpl(
-      CefRefPtr<CefCookieVisitor> visitor,
-      const CefBrowserContext::Getter& browser_context_getter,
-      const net::CookieList& cookies);
-  void DeleteCookiesCallbackImpl(CefRefPtr<CefDeleteCookiesCallback> callback,
-                                 uint32_t num_deleted);
-  void RunAsyncCompletionOnTaskRunner(
-      CefRefPtr<CefCompletionCallback> callback);
+#if BUILDFLAG(IS_ARKWEB)
+ protected:
+  // Only accessed on the UI thread. Will be non-null after Initialize().
+  CefBrowserContext::Getter browser_context_getter_;
+
+ private:
+#else
+  // Only accessed on the UI thread. Will be non-null after Initialize().
+  CefBrowserContext::Getter browser_context_getter_;
 #endif
 
+  bool initialized_ = false;
+  std::vector<base::OnceClosure> init_callbacks_;
+
+  IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
+
+ protected:
   // If the context is fully initialized execute |callback|, otherwise
   // store it until the context is fully initialized.
   void StoreOrTriggerInitCallback(base::OnceClosure callback);
 
   bool ValidContext() const;
-
-  // Only accessed on the UI thread. Will be non-null after Initialize().
-  CefBrowserContext::Getter browser_context_getter_;
-
-  bool initialized_ = false;
-  std::vector<base::OnceClosure> init_callbacks_;
-
-#if BUILDFLAG(IS_OHOS)
-  std::atomic<bool> allow_file_scheme_cookies_ = false;
-#endif
-
-  IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
 };
-#endif  // OHOS_COOKIE
+
 #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_

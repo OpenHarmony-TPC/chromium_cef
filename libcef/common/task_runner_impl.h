@@ -6,9 +6,8 @@
 #define CEF_LIBCEF_COMMON_TASK_RUNNER_IMPL_H_
 #pragma once
 
-#include "include/cef_task.h"
-
 #include "base/task/single_thread_task_runner.h"
+#include "cef/include/cef_task.h"
 
 class CefTaskRunnerImpl : public CefTaskRunner {
  public:
@@ -29,7 +28,7 @@ class CefTaskRunnerImpl : public CefTaskRunner {
   bool BelongsToCurrentThread() override;
   bool BelongsToThread(CefThreadId threadId) override;
   bool PostTask(CefRefPtr<CefTask> task) override;
-  bool PostDelayedTask(CefRefPtr<CefTask> task, int64 delay_ms) override;
+  bool PostDelayedTask(CefRefPtr<CefTask> task, int64_t delay_ms) override;
 
  private:
   scoped_refptr<base::SingleThreadTaskRunner> task_runner_;

@@ -27,7 +27,7 @@ constexpr char kPromptNavUrl[] = "https://permission-prompt-test/nav.html";
 
 class TestSetup {
  public:
-  TestSetup() {}
+  TestSetup() = default;
 
   // CONFIGURATION
 
@@ -67,7 +67,7 @@ class PermissionPromptTestHandler : public TestHandler,
                                     public CefPermissionHandler {
  public:
   PermissionPromptTestHandler(TestSetup* tr,
-                              uint32 request,
+                              uint32_t request,
                               cef_permission_request_result_t result)
       : test_setup_(tr), request_(request), result_(result) {}
 
@@ -200,9 +200,9 @@ class PermissionPromptTestHandler : public TestHandler,
 
   bool OnShowPermissionPrompt(
       CefRefPtr<CefBrowser> browser,
-      uint64 prompt_id,
+      uint64_t prompt_id,
       const CefString& requesting_origin,
-      uint32 requested_permissions,
+      uint32_t requested_permissions,
       CefRefPtr<CefPermissionPromptCallback> callback) override {
     EXPECT_UI_THREAD();
 
@@ -236,7 +236,7 @@ class PermissionPromptTestHandler : public TestHandler,
 
   void OnDismissPermissionPrompt(
       CefRefPtr<CefBrowser> browser,
-      uint64 prompt_id,
+      uint64_t prompt_id,
       cef_permission_request_result_t result) override {
     EXPECT_UI_THREAD();
     EXPECT_EQ(prompt_id_, prompt_id);
@@ -282,9 +282,9 @@ class PermissionPromptTestHandler : public TestHandler,
   }
 
   TestSetup* const test_setup_;
-  const uint32 request_;
+  const uint32_t request_;
   const cef_permission_request_result_t result_;
-  uint64 prompt_id_ = 0U;
+  uint64_t prompt_id_ = 0U;
 
   IMPLEMENT_REFCOUNTING(PermissionPromptTestHandler);
 };
@@ -324,8 +324,10 @@ TEST(PermissionPromptTest, WindowManagementNoGesture) {
   // prompts that are blocked.
   EXPECT_FALSE(test_setup.got_prompt);
   EXPECT_TRUE(test_setup.got_js_error);
-  EXPECT_STREQ("NotAllowedError: Permission decision deferred.",
-               test_setup.js_error_str.c_str());
+  EXPECT_STREQ(
+      "NotAllowedError: Transient activation is required to request "
+      "permission.",
+      test_setup.js_error_str.c_str());
   EXPECT_FALSE(test_setup.got_dismiss);
 }
 
@@ -425,7 +427,7 @@ TEST(PermissionPromptTest, WindowManagementResultDismiss) {
 
   EXPECT_TRUE(test_setup.got_prompt);
   EXPECT_TRUE(test_setup.got_js_error);
-  EXPECT_STREQ("NotAllowedError: Permission decision deferred.",
+  EXPECT_STREQ("NotAllowedError: Permission denied.",
                test_setup.js_error_str.c_str());
   EXPECT_TRUE(test_setup.got_dismiss);
 }
@@ -443,7 +445,7 @@ TEST(PermissionPromptTest, WindowManagementResultDismissAsync) {
 
   EXPECT_TRUE(test_setup.got_prompt);
   EXPECT_TRUE(test_setup.got_js_error);
-  EXPECT_STREQ("NotAllowedError: Permission decision deferred.",
+  EXPECT_STREQ("NotAllowedError: Permission denied.",
                test_setup.js_error_str.c_str());
   EXPECT_TRUE(test_setup.got_dismiss);
 }
@@ -460,7 +462,7 @@ TEST(PermissionPromptTest, WindowManagementResultIgnore) {
 
   EXPECT_TRUE(test_setup.got_prompt);
   EXPECT_TRUE(test_setup.got_js_error);
-  EXPECT_STREQ("NotAllowedError: Permission decision deferred.",
+  EXPECT_STREQ("NotAllowedError: Permission denied.",
                test_setup.js_error_str.c_str());
   EXPECT_TRUE(test_setup.got_dismiss);
 }
@@ -478,7 +480,7 @@ TEST(PermissionPromptTest, WindowManagementResultIgnoreAsync) {
 
   EXPECT_TRUE(test_setup.got_prompt);
   EXPECT_TRUE(test_setup.got_js_error);
-  EXPECT_STREQ("NotAllowedError: Permission decision deferred.",
+  EXPECT_STREQ("NotAllowedError: Permission denied.",
                test_setup.js_error_str.c_str());
   EXPECT_TRUE(test_setup.got_dismiss);
 }

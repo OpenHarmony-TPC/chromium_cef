@@ -3,52 +3,131 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/chrome/chrome_main_delegate_cef.h"
+#include "cef/libcef/common/chrome/chrome_main_delegate_cef.h"
 
 #include <tuple>
 
-#include "libcef/browser/chrome/chrome_browser_context.h"
-#include "libcef/browser/chrome/chrome_content_browser_client_cef.h"
-#include "libcef/common/cef_switches.h"
-#include "libcef/common/command_line_impl.h"
-#include "libcef/common/crash_reporting.h"
-#include "libcef/common/resource_util.h"
-#include "libcef/renderer/chrome/chrome_content_renderer_client_cef.h"
-
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "arkweb/chromium_ext/base/ohos/sys_info_utils_ext.h"
+#endif
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/lazy_instance.h"
+#include "base/path_service.h"
 #include "base/threading/threading_features.h"
+#include "cef/libcef/browser/chrome/chrome_browser_context.h"
+#include "cef/libcef/browser/chrome/chrome_content_browser_client_cef.h"
+#include "cef/libcef/browser/main_runner.h"
+#include "cef/libcef/common/cef_switches.h"
+#include "cef/libcef/common/command_line_impl.h"
+#include "cef/libcef/common/crash_reporting.h"
+#include "cef/libcef/common/resource_util.h"
+#include "cef/libcef/renderer/chrome/chrome_content_renderer_client_cef.h"
 #include "chrome/browser/metrics/chrome_feature_list_creator.h"
+#include "chrome/browser/policy/chrome_browser_policy_connector.h"
+#include "chrome/common/chrome_paths.h"
 #include "chrome/common/chrome_switches.h"
 #include "chrome/common/pref_names.h"
 #include "components/embedder_support/switches.h"
+#include "components/variations/service/buildflags.h"
 #include "content/public/common/content_switches.h"
+#include "net/base/features.h"
 #include "sandbox/policy/switches.h"
+#include "services/network/public/cpp/features.h"
 #include "third_party/blink/public/common/switches.h"
+#include "ui/base/ui_base_paths.h"
 #include "ui/base/ui_base_switches.h"
 
 #if BUILDFLAG(IS_MAC)
-#include "libcef/common/util_mac.h"
+#include "cef/libcef/common/util_mac.h"
 #elif BUILDFLAG(IS_POSIX)
-#include "libcef/common/util_linux.h"
+#include "cef/libcef/common/util_linux.h"
 #endif
 
-#if BUILDFLAG(IS_MAC)
-#include "libcef/common/util_mac.h"
+#if BUILDFLAG(ARKWEB_BFCACHE)
+#include "content/public/common/content_features.h"
 #endif
-
 namespace {
 
 base::LazyInstance<ChromeContentRendererClientCef>::DestructorAtExit
     g_chrome_content_renderer_client = LAZY_INSTANCE_INITIALIZER;
 
+void InitLogging(const base::CommandLine* command_line) {
+  logging::LogSeverity log_severity = logging::LOGGING_INFO;
+
+  std::string log_severity_str =
+      command_line->GetSwitchValueASCII(switches::kLogSeverity);
+  if (!log_severity_str.empty()) {
+    if (base::EqualsCaseInsensitiveASCII(log_severity_str,
+                                         switches::kLogSeverity_Verbose)) {
+      log_severity = logging::LOGGING_VERBOSE;
+    } else if (base::EqualsCaseInsensitiveASCII(
+                   log_severity_str, switches::kLogSeverity_Warning)) {
+      log_severity = logging::LOGGING_WARNING;
+    } else if (base::EqualsCaseInsensitiveASCII(log_severity_str,
+                                                switches::kLogSeverity_Error)) {
+      log_severity = logging::LOGGING_ERROR;
+    } else if (base::EqualsCaseInsensitiveASCII(log_severity_str,
+                                                switches::kLogSeverity_Fatal)) {
+      log_severity = logging::LOGGING_FATAL;
+    } else if (base::EqualsCaseInsensitiveASCII(
+                   log_severity_str, switches::kLogSeverity_Disable)) {
+      log_severity = LOGSEVERITY_DISABLE;
+    }
+  }
+
+  if (log_severity == LOGSEVERITY_DISABLE) {
+    // By default, ERROR and FATAL messages will always be output to stderr due
+    // to the kAlwaysPrintErrorLevel value in base/logging.cc. We change the log
+    // level here so that only FATAL messages are output.
+    logging::SetMinLogLevel(logging::LOGGING_FATAL);
+  } else {
+    logging::SetMinLogLevel(log_severity);
+  }
+
+  // Customization of items automatically prepended to log lines.
+  std::string log_items_str =
+      command_line->GetSwitchValueASCII(switches::kLogItems);
+  if (!log_items_str.empty()) {
+    bool enable_log_of_process_id, enable_log_of_thread_id,
+        enable_log_of_time_stamp, enable_log_of_tick_count;
+    enable_log_of_process_id = enable_log_of_thread_id =
+        enable_log_of_time_stamp = enable_log_of_tick_count = false;
+
+    for (const auto& cur_item_to_log :
+         base::SplitStringPiece(log_items_str, ",", base::TRIM_WHITESPACE,
+                                base::SPLIT_WANT_NONEMPTY)) {
+      // if "none" mode is present, all items are disabled.
+      if (base::EqualsCaseInsensitiveASCII(cur_item_to_log,
+                                           switches::kLogItems_None)) {
+        enable_log_of_process_id = enable_log_of_thread_id =
+            enable_log_of_time_stamp = enable_log_of_tick_count = false;
+        break;
+      } else if (base::EqualsCaseInsensitiveASCII(cur_item_to_log,
+                                                  switches::kLogItems_PId)) {
+        enable_log_of_process_id = true;
+      } else if (base::EqualsCaseInsensitiveASCII(cur_item_to_log,
+                                                  switches::kLogItems_TId)) {
+        enable_log_of_thread_id = true;
+      } else if (base::EqualsCaseInsensitiveASCII(
+                     cur_item_to_log, switches::kLogItems_TimeStamp)) {
+        enable_log_of_time_stamp = true;
+      } else if (base::EqualsCaseInsensitiveASCII(
+                     cur_item_to_log, switches::kLogItems_TickCount)) {
+        enable_log_of_tick_count = true;
+      }
+    }
+    logging::SetLogItems(enable_log_of_process_id, enable_log_of_thread_id,
+                         enable_log_of_time_stamp, enable_log_of_tick_count);
+  }
+}
+
 }  // namespace
 
-ChromeMainDelegateCef::ChromeMainDelegateCef(CefMainRunnerHandler* runner,
+ChromeMainDelegateCef::ChromeMainDelegateCef(CefMainRunner* runner,
                                              CefSettings* settings,
                                              CefRefPtr<CefApp> application)
-    : ChromeMainDelegate(base::TimeTicks::Now()),
+    : ChromeMainDelegate({.exe_entry_point_ticks = base::TimeTicks::Now()}),
       runner_(runner),
       settings_(settings),
       application_(application) {
@@ -59,8 +138,8 @@ ChromeMainDelegateCef::ChromeMainDelegateCef(CefMainRunnerHandler* runner,
 
 ChromeMainDelegateCef::~ChromeMainDelegateCef() = default;
 
-absl::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
-  // Returns false if startup should proceed.
+std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
+  // Returns no value if startup should proceed.
   auto result = ChromeMainDelegate::BasicStartupComplete();
   if (result.has_value()) {
     return result;
@@ -90,6 +169,39 @@ absl::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
 
     bool no_sandbox = settings_->no_sandbox ? true : false;
 
+    if (settings_->browser_subprocess_path.length > 0) {
+      base::FilePath file_path =
+          base::FilePath(CefString(&settings_->browser_subprocess_path));
+      if (!file_path.empty()) {
+        command_line->AppendSwitchPath(switches::kBrowserSubprocessPath,
+                                       file_path);
+
+#if BUILDFLAG(IS_WIN)
+        // The sandbox is not supported when using a separate subprocess
+        // executable on Windows.
+        no_sandbox = true;
+#endif
+      }
+    }
+
+#if BUILDFLAG(IS_MAC)
+    if (settings_->framework_dir_path.length > 0) {
+      base::FilePath file_path =
+          base::FilePath(CefString(&settings_->framework_dir_path));
+      if (!file_path.empty()) {
+        command_line->AppendSwitchPath(switches::kFrameworkDirPath, file_path);
+      }
+    }
+
+    if (settings_->main_bundle_path.length > 0) {
+      base::FilePath file_path =
+          base::FilePath(CefString(&settings_->main_bundle_path));
+      if (!file_path.empty()) {
+        command_line->AppendSwitchPath(switches::kMainBundlePath, file_path);
+      }
+    }
+#endif
+
     if (no_sandbox) {
       command_line->AppendSwitch(sandbox::policy::switches::kNoSandbox);
     }
@@ -111,10 +223,90 @@ absl::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       command_line->AppendSwitchASCII(switches::kLang, "en-US");
     }
 
+    if (!command_line->HasSwitch(switches::kLogFile) &&
+        settings_->log_file.length > 0) {
+      auto log_file = base::FilePath(CefString(&settings_->log_file));
+      command_line->AppendSwitchPath(switches::kLogFile, log_file);
+    }
+
+    if (!command_line->HasSwitch(switches::kLogSeverity) &&
+        settings_->log_severity != LOGSEVERITY_DEFAULT) {
+      std::string log_severity;
+      switch (settings_->log_severity) {
+        case LOGSEVERITY_VERBOSE:
+          log_severity = switches::kLogSeverity_Verbose;
+          break;
+        case LOGSEVERITY_INFO:
+          log_severity = switches::kLogSeverity_Info;
+          break;
+        case LOGSEVERITY_WARNING:
+          log_severity = switches::kLogSeverity_Warning;
+          break;
+        case LOGSEVERITY_ERROR:
+          log_severity = switches::kLogSeverity_Error;
+          break;
+        case LOGSEVERITY_FATAL:
+          log_severity = switches::kLogSeverity_Fatal;
+          break;
+        case LOGSEVERITY_DISABLE:
+          log_severity = switches::kLogSeverity_Disable;
+          break;
+        default:
+          break;
+      }
+      if (!log_severity.empty()) {
+        command_line->AppendSwitchASCII(switches::kLogSeverity, log_severity);
+      }
+    }
+
+    if (!command_line->HasSwitch(switches::kLogItems) &&
+        settings_->log_items != LOG_ITEMS_DEFAULT) {
+      std::string log_items_str;
+      if (settings_->log_items == LOG_ITEMS_NONE) {
+        log_items_str = std::string(switches::kLogItems_None);
+      } else {
+        std::vector<std::string_view> added_items;
+        if (settings_->log_items & LOG_ITEMS_FLAG_PROCESS_ID) {
+          added_items.emplace_back(switches::kLogItems_PId);
+        }
+        if (settings_->log_items & LOG_ITEMS_FLAG_THREAD_ID) {
+          added_items.emplace_back(switches::kLogItems_TId);
+        }
+        if (settings_->log_items & LOG_ITEMS_FLAG_TIME_STAMP) {
+          added_items.emplace_back(switches::kLogItems_TimeStamp);
+        }
+        if (settings_->log_items & LOG_ITEMS_FLAG_TICK_COUNT) {
+          added_items.emplace_back(switches::kLogItems_TickCount);
+        }
+        if (!added_items.empty()) {
+          log_items_str = base::JoinString(added_items, ",");
+        }
+      }
+      if (!log_items_str.empty()) {
+        command_line->AppendSwitchASCII(switches::kLogItems, log_items_str);
+      }
+    }
+
     if (settings_->javascript_flags.length > 0) {
       command_line->AppendSwitchASCII(
           blink::switches::kJavaScriptFlags,
           CefString(&settings_->javascript_flags).ToString());
+    }
+
+    if (settings_->resources_dir_path.length > 0) {
+      base::FilePath file_path =
+          base::FilePath(CefString(&settings_->resources_dir_path));
+      if (!file_path.empty()) {
+        command_line->AppendSwitchPath(switches::kResourcesDirPath, file_path);
+      }
+    }
+
+    if (settings_->locales_dir_path.length > 0) {
+      base::FilePath file_path =
+          base::FilePath(CefString(&settings_->locales_dir_path));
+      if (!file_path.empty()) {
+        command_line->AppendSwitchPath(switches::kLocalesDirPath, file_path);
+      }
     }
 
     if (settings_->remote_debugging_port >= 1024 &&
@@ -140,6 +332,48 @@ absl::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       disable_features.push_back(base::kEnableHangWatcher.name);
     }
 
+    if (base::ohos::ApplicationApiVersion() < 16) {
+      disable_features.push_back(
+          network::features::kOpaqueResponseBlockingV02.name);
+    }
+
+#if BUILDFLAG(IS_WIN)
+    {
+      const bool feature_enabled =
+#if BUILDFLAG(FIELDTRIAL_TESTING_ENABLED)
+          // May be enabled via the experiments platform is non-Official builds.
+          true;
+#else
+          net::features::kTcpSocketIoCompletionPortWin.default_state ==
+          base::FEATURE_ENABLED_BY_DEFAULT;
+#endif
+
+      if (feature_enabled) {
+        // Disable TcpSocketIoCompletionPortWin which breaks embedded test
+        // servers. See https://crbug.com/40287434#comment36
+        disable_features.push_back(
+            net::features::kTcpSocketIoCompletionPortWin.name);
+      }
+    }
+#endif  // BUILDFLAG(IS_WIN)
+
+#if BUILDFLAG(ARKWEB_BFCACHE)
+    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEnableBFCache)) {
+      disable_features.push_back(features::kBackForwardCache.name);
+    }
+#endif
+
+#if !BUILDFLAG(ARKWEB_BFCACHE)
+    if (features::kBackForwardCache.default_state ==
+        base::FEATURE_ENABLED_BY_DEFAULT) {
+      // Disable BackForwardCache globally so that
+      // blink::RuntimeEnabledFeatures::BackForwardCacheEnabled reports the
+      // correct value in the renderer process (see issue #3374).
+      disable_features.push_back(features::kBackForwardCache.name);
+    }
+#endif
+
     if (!disable_features.empty()) {
       DCHECK(!base::FeatureList::GetInstance());
       std::string disable_features_str =
@@ -164,11 +398,14 @@ absl::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
     std::ignore = commandLinePtr->Detach(nullptr);
   }
 
+  // Call as early as possible.
+  InitLogging(command_line);
+
 #if BUILDFLAG(IS_MAC)
   util_mac::BasicStartupComplete();
 #endif
 
-  return absl::nullopt;
+  return std::nullopt;
 }
 
 void ChromeMainDelegateCef::PreSandboxStartup() {
@@ -191,23 +428,67 @@ void ChromeMainDelegateCef::PreSandboxStartup() {
   // number in the app bundle path.
   resource_util::OverrideUserDataDir(settings_, command_line);
 
+  base::FilePath resources_dir;
+  if (command_line->HasSwitch(switches::kResourcesDirPath)) {
+    resources_dir =
+        command_line->GetSwitchValuePath(switches::kResourcesDirPath);
+  }
+  if (resources_dir.empty()) {
+    resources_dir = resource_util::GetResourcesDir();
+  }
+  if (!resources_dir.empty()) {
+    base::PathService::Override(chrome::DIR_RESOURCES, resources_dir);
+  }
+
+  if (command_line->HasSwitch(switches::kLocalesDirPath)) {
+    const auto& locales_dir =
+        command_line->GetSwitchValuePath(switches::kLocalesDirPath);
+    if (!locales_dir.empty()) {
+      base::PathService::Override(ui::DIR_LOCALES, locales_dir);
+    }
+  }
+
   ChromeMainDelegate::PreSandboxStartup();
 
   // Initialize crash reporting state for this process/module.
   // chrome::DIR_CRASH_DUMPS must be configured before calling this function.
   crash_reporting::PreSandboxStartup(*command_line, process_type);
+
+#if !BUILDFLAG(IS_WIN)
+  // Call after InitLogging() potentially changes values in
+  // chrome/app/chrome_main_delegate.cc.
+  InitLogging(command_line);
+#endif
 }
 
-absl::optional<int> ChromeMainDelegateCef::PreBrowserMain() {
+void ChromeMainDelegateCef::SandboxInitialized(
+    const std::string& process_type) {
+  ChromeMainDelegate::SandboxInitialized(process_type);
+
+#if BUILDFLAG(IS_WIN)
+  // Call after InitLogging() potentially changes values in
+  // chrome/app/chrome_main_delegate.cc.
+  InitLogging(base::CommandLine::ForCurrentProcess());
+#endif
+}
+
+std::optional<int> ChromeMainDelegateCef::PreBrowserMain() {
   // The parent ChromeMainDelegate implementation creates the NSApplication
   // instance on macOS, and we intentionally don't want to do that here.
   // TODO(macos): Do we need l10n_util::OverrideLocaleWithCocoaLocale()?
   runner_->PreBrowserMain();
-  return absl::nullopt;
+  return std::nullopt;
 }
 
-absl::optional<int> ChromeMainDelegateCef::PostEarlyInitialization(
+std::optional<int> ChromeMainDelegateCef::PostEarlyInitialization(
     InvokedIn invoked_in) {
+  // Configure this before ChromeMainDelegate::PostEarlyInitialization
+  // triggers ChromeBrowserPolicyConnector creation.
+  if (settings_ && settings_->chrome_policy_id.length > 0) {
+    policy::ChromeBrowserPolicyConnector::EnablePlatformPolicySupport(
+        CefString(&settings_->chrome_policy_id).ToString());
+  }
+
   const auto result = ChromeMainDelegate::PostEarlyInitialization(invoked_in);
   if (!result) {
     const auto* invoked_in_browser =
@@ -258,8 +539,8 @@ content::ContentClient* ChromeMainDelegateCef::CreateContentClient() {
 
 content::ContentBrowserClient*
 ChromeMainDelegateCef::CreateContentBrowserClient() {
-  // Match the logic in the parent ChromeMainDelegate implementation, but create
-  // our own object type.
+  // Match the logic in the parent ChromeMainDelegate implementation, but
+  // create our own object type.
   chrome_content_browser_client_ =
       std::make_unique<ChromeContentBrowserClientCef>();
   return chrome_content_browser_client_.get();
@@ -285,6 +566,17 @@ CefBrowserContext* ChromeMainDelegateCef::CreateNewBrowserContext(
   context->InitializeAsync(std::move(initialized_cb));
   return context;
 }
+
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+CefRefPtr<CefRequestContext>
+ChromeMainDelegateCef::GetGlobalOTRRequestContext() {
+  auto browser_client = content_browser_client();
+  if (browser_client) {
+    return browser_client->off_the_record_request_context();
+  }
+  return nullptr;
+}
+#endif
 
 scoped_refptr<base::SingleThreadTaskRunner>
 ChromeMainDelegateCef::GetBackgroundTaskRunner() {

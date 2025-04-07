@@ -2,31 +2,43 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/iothread_state.h"
-
-#include "libcef/browser/net/scheme_handler.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/net/scheme_registration.h"
+#include "cef/libcef/browser/iothread_state.h"
 
 #include "base/i18n/case_conversion.h"
 #include "base/logging.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/net/scheme_registration.h"
 #include "content/browser/resource_context_impl.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/global_routing_id.h"
+#include "url/gurl.h"
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "libcef/browser/net/scheme_handler.h"
 
 CefIOThreadState::CefIOThreadState() {
-  // Using base::Unretained() is safe because both this callback and possible
-  // deletion of |this| will execute on the IO thread, and this callback will
-  // be executed first.
   CEF_POST_TASK(CEF_IOT, base::BindOnce(&CefIOThreadState::InitOnIOThread,
                                         base::Unretained(this)));
 }
+#else
+CefIOThreadState::CefIOThreadState() = default;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
 
 CefIOThreadState::~CefIOThreadState() {
   CEF_REQUIRE_IOT();
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void CefIOThreadState::InitOnIOThread() {
+  CEF_REQUIRE_IOT();
+
+  // Add the default internal handlers.
+  scheme::RegisterInternalHandlers(this);
+}
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 void CefIOThreadState::AddHandler(
     const content::GlobalRenderFrameHostId& global_id,
@@ -82,9 +94,6 @@ void CefIOThreadState::ClearSchemeHandlerFactories() {
   CEF_REQUIRE_IOT();
 
   scheme_handler_factory_map_.clear();
-
-  // Restore the default internal handlers.
-  scheme::RegisterInternalHandlers(this);
 }
 
 CefRefPtr<CefSchemeHandlerFactory> CefIOThreadState::GetSchemeHandlerFactory(
@@ -119,11 +128,4 @@ CefRefPtr<CefSchemeHandlerFactory> CefIOThreadState::GetSchemeHandlerFactory(
   }
 
   return nullptr;
-}
-
-void CefIOThreadState::InitOnIOThread() {
-  CEF_REQUIRE_IOT();
-
-  // Add the default internal handlers.
-  scheme::RegisterInternalHandlers(this);
 }

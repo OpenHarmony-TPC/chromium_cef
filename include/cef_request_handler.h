@@ -48,25 +48,30 @@
 #include "include/cef_request.h"
 #include "include/cef_resource_request_handler.h"
 #include "include/cef_ssl_info.h"
+#include "include/cef_unresponsive_process_callback.h"
 #include "include/cef_x509_certificate.h"
 
+class CefSelectClientCertificateCallbackExt;
+class CefOpenAppLinkCallback;
+class CefRequestHandlerExt;
+
 ///
-/// Callback interface for asynchronous continuation of app link event.
+/// Callback interface used to select a client certificate for authentication.
 ///
 /*--cef(source=library)--*/
-class CefOpenAppLinkCallback : public virtual CefBaseRefCounted {
+class CefSelectClientCertificateCallback : public virtual CefBaseRefCounted {
  public:
   ///
-  /// Continue load in web.
+  /// Chooses the specified certificate for client certificate authentication.
+  /// NULL value means that no client certificate should be used.
   ///
-  /*--cef()--*/
-  virtual void Continue() = 0;
+  /*--cef(optional_param=cert)--*/
+  virtual void Select(CefRefPtr<CefX509Certificate> cert) {}
 
-  ///
-  /// Cancel load in web.
-  ///
-  /*--cef()--*/
-  virtual void Cancel() = 0;
+  virtual CefRefPtr<CefSelectClientCertificateCallbackExt>
+  AsCefSelectClientCertificateCallbackExt() {
+    return nullptr;
+  }
 };
 
 ///
@@ -196,8 +201,11 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
 
   ///
   /// Called on the UI thread when a client certificate is being requested for
-  /// authentication. Return false to use the default behavior and automatically
-  /// select the first certificate available. Return true and call
+  /// authentication. Return false to use the default behavior.  If the
+  /// |certificates| list is not empty the default behavior will be to display a
+  /// dialog for certificate selection. If the |certificates| list is empty then
+  /// the default behavior will be not to show a dialog and it will continue
+  /// without using any certificate. Return true and call
   /// CefSelectClientCertificateCallback::Select either in this method or at a
   /// later time to select a certificate. Do not call Select or call it with
   /// NULL to continue without using any certificate. |isProxy| indicates
@@ -206,6 +214,7 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /// list of certificates to choose from; this list has already been pruned by
   /// Chromium so that it only contains certificates from issuers that the
   /// server trusts.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual bool OnSelectClientCertificate(
@@ -213,8 +222,6 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
       bool isProxy,
       const CefString& host,
       int port,
-      const std::vector<CefString>& key_types,
-      const std::vector<CefString>& principals,
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) {
     return false;
@@ -229,13 +236,51 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   virtual void OnRenderViewReady(CefRefPtr<CefBrowser> browser) {}
 
   ///
+  /// Called on the browser process UI thread when the render process is
+  /// unresponsive as indicated by a lack of input event processing for at
+  /// least 15 seconds. Return false for the default behavior which is an
+  /// indefinite wait with Alloy style or display of the "Page
+  /// unresponsive" dialog with Chrome style. Return true and don't
+  /// execute the callback for an indefinite wait without display of the Chrome
+  /// style dialog. Return true and call CefUnresponsiveProcessCallback::Wait
+  /// either in this method or at a later time to reset the wait timer,
+  /// potentially triggering another call to this method if the process remains
+  /// unresponsive. Return true and call CefUnresponsiveProcessCallback::
+  /// Terminate either in this method or at a later time to terminate the
+  /// unresponsive process, resulting in a call to OnRenderProcessTerminated.
+  /// OnRenderProcessResponsive will be called if the process becomes responsive
+  /// after this method is called. This functionality depends on the hang
+  /// monitor which can be disabled by passing the `--disable-hang-monitor`
+  /// command-line flag.
+  ///
+  /*--cef()--*/
+  virtual bool OnRenderProcessUnresponsive(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefUnresponsiveProcessCallback> callback) {
+    return false;
+  }
+
+  ///
+  /// Called on the browser process UI thread when the render process becomes
+  /// responsive after previously being unresponsive. See documentation on
+  /// OnRenderProcessUnresponsive.
+  ///
+  /*--cef()--*/
+  virtual void OnRenderProcessResponsive(CefRefPtr<CefBrowser> browser) {}
+
+  ///
   /// Called on the browser process UI thread when the render process
-  /// terminates unexpectedly. |status| indicates how the process
-  /// terminated.
+  /// terminates unexpectedly. |status| indicates how the process terminated.
+  /// |error_code| and |error_string| represent the error that would be
+  /// displayed in Chrome's "Aw, Snap!" view. Possible |error_code| values
+  /// include cef_resultcode_t non-normal exit values and platform-specific
+  /// crash values (for example, a Posix signal or Windows hardware exception).
   ///
   /*--cef()--*/
   virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,
-                                         TerminationStatus status) {}
+                                         TerminationStatus status,
+                                         int error_code,
+                                         const CefString& error_string) {}
 
   ///
   /// Called on the browser process UI thread when the window.document object of
@@ -244,65 +289,11 @@ class CefRequestHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnDocumentAvailableInMainFrame(CefRefPtr<CefBrowser> browser) {}
 
-  ///
-  /// Called on the browser process UI thread when the url is about to be loaded
-  /// into the current Web.
-  ///
-  /*--cef()--*/
-  virtual bool ShouldOverrideUrlLoading(CefRefPtr<CefBrowser> browser,
-                                        const CefString& url,
-                                        const CefString& method,
-                                        bool user_gesture,
-                                        bool is_redirect,
-                                        bool is_outermost_main_frame) {
-    return false;
+  virtual CefRefPtr<CefRequestHandlerExt> AsCefRequestHandlerExt() {
+    return nullptr;
   }
-
-  ///
-  /// Called on the UI thread to handle requests for URLs with an invalid
-  /// SSL certificate. Return true and call CefCallback methods either in this
-  /// method or at a later time to continue or cancel the request. Return false
-  /// to cancel the request immediately. If
-  /// cef_settings_t.ignore_certificate_errors is set all invalid certificates
-  /// will be accepted without calling this method.
-  ///
-  /*--cef()--*/
-  virtual bool OnAllCertificateError(CefRefPtr<CefBrowser> browser,
-                                     cef_errorcode_t cert_error,
-                                     const CefString& request_url,
-                                     const CefString& origin_url,
-                                     const CefString& referrer,
-                                     bool is_main_frame_request,
-                                     bool is_fatal_error,
-                                     CefRefPtr<CefSSLInfo> ssl_info,
-                                     CefRefPtr<CefCallback> callback) {
-    return false;
-  }
-
-  ///
-  /// Called to open app link.
-  ///
-  /*--cef()--*/
-  virtual bool OnOpenAppLink(const CefString &url,
-                             CefRefPtr<CefOpenAppLinkCallback> callback) {
-    return false;
-  } 
-
-  ///
-  /// Called when render process not responding
-  ///
-  /*--cef()--*/
-  virtual void OnRenderProcessNotResponding(CefRefPtr<CefBrowser> browser,
-                                          const CefString& referrer,
-                                          int pid,
-                                          int reason) {}
-
-  ///
-  /// Called when render process responding again
-  ///
-  /*--cef()--*/
-  virtual void OnRenderProcessResponding(CefRefPtr<CefBrowser> browser) {}
-
 };
+
+#include "ohos_cef_ext/include/cef_request_handler_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_REQUEST_HANDLER_H_

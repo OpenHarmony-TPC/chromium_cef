@@ -13,6 +13,7 @@
 //
 
 #include "libcef_dll/ctocpp/preference_manager_ctocpp.h"
+
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/request_context_ctocpp.h"
 #include "libcef_dll/ctocpp/value_ctocpp.h"
@@ -20,8 +21,8 @@
 // STATIC METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<
-    CefPreferenceManager> CefPreferenceManager::GetGlobalPreferenceManager() {
+CefRefPtr<CefPreferenceManager>
+CefPreferenceManager::GetGlobalPreferenceManager() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute

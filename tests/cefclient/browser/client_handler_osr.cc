@@ -19,6 +19,16 @@ ClientHandlerOsr::ClientHandlerOsr(Delegate* delegate,
   DCHECK(osr_delegate_);
 }
 
+// static
+CefRefPtr<ClientHandlerOsr> ClientHandlerOsr::GetForClient(
+    CefRefPtr<CefClient> client) {
+  auto base = BaseClientHandler::GetForClient(client);
+  if (base && base->GetTypeKey() == &kTypeKey) {
+    return static_cast<ClientHandlerOsr*>(base.get());
+  }
+  return nullptr;
+}
+
 void ClientHandlerOsr::DetachOsrDelegate() {
   if (!CefCurrentlyOn(TID_UI)) {
     // Execute this method on the UI thread.
@@ -122,12 +132,12 @@ void ClientHandlerOsr::OnAcceleratedPaint(
     CefRefPtr<CefBrowser> browser,
     CefRenderHandler::PaintElementType type,
     const CefRenderHandler::RectList& dirtyRects,
-    void* share_handle) {
+    const CefAcceleratedPaintInfo& info) {
   CEF_REQUIRE_UI_THREAD();
   if (!osr_delegate_) {
     return;
   }
-  osr_delegate_->OnAcceleratedPaint(browser, type, dirtyRects, share_handle);
+  osr_delegate_->OnAcceleratedPaint(browser, type, dirtyRects, info);
 }
 
 bool ClientHandlerOsr::StartDragging(

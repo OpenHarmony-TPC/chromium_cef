@@ -68,15 +68,6 @@ void ClientAppBrowser::OnBeforeCommandLineProcessing(
       command_line->AppendSwitchWithValue("top-chrome-md", "non-material");
     }
 
-    if (!command_line->HasSwitch(switches::kCachePath) &&
-        !command_line->HasSwitch("disable-gpu-shader-disk-cache")) {
-      // Don't create a "GPUCache" directory when cache-path is unspecified.
-      command_line->AppendSwitch("disable-gpu-shader-disk-cache");
-    }
-
-    // Disable popup blocking for the chrome runtime.
-    command_line->AppendSwitch("disable-popup-blocking");
-
 #if defined(OS_MAC)
     // Disable the toolchain prompt on macOS.
     command_line->AppendSwitch("use-mock-keychain");
@@ -103,14 +94,19 @@ void ClientAppBrowser::OnContextInitialized() {
   }
 }
 
-void ClientAppBrowser::OnBeforeChildProcessLaunch(
-    CefRefPtr<CefCommandLine> command_line) {
+bool ClientAppBrowser::OnAlreadyRunningAppRelaunch(
+    CefRefPtr<CefCommandLine> command_line,
+    const CefString& current_directory) {
   for (auto& delegate : delegates_) {
-    delegate->OnBeforeChildProcessLaunch(this, command_line);
+    if (delegate->OnAlreadyRunningAppRelaunch(this, command_line,
+                                              current_directory)) {
+      return true;
+    }
   }
+  return false;
 }
 
-void ClientAppBrowser::OnScheduleMessagePumpWork(int64 delay) {
+void ClientAppBrowser::OnScheduleMessagePumpWork(int64_t delay) {
   // Only used when `--external-message-pump` is passed via the command-line.
   MainMessageLoopExternalPump* message_pump =
       MainMessageLoopExternalPump::Get();

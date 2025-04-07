@@ -21,7 +21,7 @@ class SingleQueryTestHandler : public SingleLoadTestHandler {
   };
 
   SingleQueryTestHandler(TestType type, bool sync_callback)
-      : test_type_(type), sync_callback_(sync_callback), query_id_(0) {}
+      : test_type_(type), sync_callback_(sync_callback) {}
 
   std::string GetMainHTML() override {
     std::string html;
@@ -136,7 +136,7 @@ class SingleQueryTestHandler : public SingleLoadTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -166,7 +166,7 @@ class SingleQueryTestHandler : public SingleLoadTestHandler {
 
   void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
                        CefRefPtr<CefFrame> frame,
-                       int64 query_id) override {
+                       int64_t query_id) override {
     AssertMainBrowser(browser);
     AssertMainFrame(frame);
     EXPECT_EQ(test_type_, CANCEL);
@@ -210,7 +210,7 @@ class SingleQueryTestHandler : public SingleLoadTestHandler {
   const TestType test_type_;
   const bool sync_callback_;
 
-  int64 query_id_;
+  int64_t query_id_ = 0;
   CefRefPtr<Callback> callback_;
 
   TrackCallback got_on_query_;
@@ -273,7 +273,7 @@ class SinglePersistentQueryTestHandler : public SingleLoadTestHandler {
   };
 
   SinglePersistentQueryTestHandler(TestType test_type, bool sync_callback)
-      : test_type_(test_type), sync_callback_(sync_callback), query_id_(0) {}
+      : test_type_(test_type), sync_callback_(sync_callback) {}
 
   std::string GetMainHTML() override {
     std::string html;
@@ -388,7 +388,7 @@ class SinglePersistentQueryTestHandler : public SingleLoadTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -422,7 +422,7 @@ class SinglePersistentQueryTestHandler : public SingleLoadTestHandler {
 
   void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
                        CefRefPtr<CefFrame> frame,
-                       int64 query_id) override {
+                       int64_t query_id) override {
     AssertMainBrowser(browser);
     AssertMainFrame(frame);
     EXPECT_EQ(query_id_, query_id);
@@ -468,7 +468,7 @@ class SinglePersistentQueryTestHandler : public SingleLoadTestHandler {
   const TestType test_type_;
   const bool sync_callback_;
 
-  int64 query_id_;
+  int64_t query_id_ = 0;
   CefRefPtr<Callback> callback_;
 
   TrackCallback got_on_query_;
@@ -519,7 +519,7 @@ namespace {
 // Test a single unhandled query in a single page load.
 class SingleUnhandledQueryTestHandler : public SingleLoadTestHandler {
  public:
-  SingleUnhandledQueryTestHandler() {}
+  SingleUnhandledQueryTestHandler() = default;
 
   std::string GetMainHTML() override {
     std::string html;
@@ -585,7 +585,7 @@ class SingleUnhandledQueryTestHandler : public SingleLoadTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -602,7 +602,7 @@ class SingleUnhandledQueryTestHandler : public SingleLoadTestHandler {
 
   void OnQueryCanceled(CefRefPtr<CefBrowser> browser,
                        CefRefPtr<CefFrame> frame,
-                       int64 query_id) override {
+                       int64_t query_id) override {
     EXPECT_FALSE(true);  // Not reached.
   }
 

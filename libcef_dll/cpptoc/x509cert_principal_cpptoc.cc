@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=976810a5208d56c0ab159371e5d670f312aa144b$
+// $hash=576edac053088a0f3923123ac0af2114d011d9bb$
 //
 
 #include "libcef_dll/cpptoc/x509cert_principal_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -112,35 +113,6 @@ x509cert_principal_get_country_name(struct _cef_x509cert_principal_t* self) {
   return _retval.DetachToUserFree();
 }
 
-void CEF_CALLBACK
-x509cert_principal_get_street_addresses(struct _cef_x509cert_principal_t* self,
-                                        cef_string_list_t addresses) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: addresses; type: string_vec_byref
-  DCHECK(addresses);
-  if (!addresses) {
-    return;
-  }
-
-  // Translate param: addresses; type: string_vec_byref
-  std::vector<CefString> addressesList;
-  transfer_string_list_contents(addresses, addressesList);
-
-  // Execute
-  CefX509CertPrincipalCppToC::Get(self)->GetStreetAddresses(addressesList);
-
-  // Restore param: addresses; type: string_vec_byref
-  cef_string_list_clear(addresses);
-  transfer_string_list_contents(addressesList, addresses);
-}
-
 void CEF_CALLBACK x509cert_principal_get_organization_names(
     struct _cef_x509cert_principal_t* self,
     cef_string_list_t names) {
@@ -199,35 +171,6 @@ void CEF_CALLBACK x509cert_principal_get_organization_unit_names(
   transfer_string_list_contents(namesList, names);
 }
 
-void CEF_CALLBACK
-x509cert_principal_get_domain_components(struct _cef_x509cert_principal_t* self,
-                                         cef_string_list_t components) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: components; type: string_vec_byref
-  DCHECK(components);
-  if (!components) {
-    return;
-  }
-
-  // Translate param: components; type: string_vec_byref
-  std::vector<CefString> componentsList;
-  transfer_string_list_contents(components, componentsList);
-
-  // Execute
-  CefX509CertPrincipalCppToC::Get(self)->GetDomainComponents(componentsList);
-
-  // Restore param: components; type: string_vec_byref
-  cef_string_list_clear(components);
-  transfer_string_list_contents(componentsList, components);
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -239,12 +182,10 @@ CefX509CertPrincipalCppToC::CefX509CertPrincipalCppToC() {
   GetStruct()->get_state_or_province_name =
       x509cert_principal_get_state_or_province_name;
   GetStruct()->get_country_name = x509cert_principal_get_country_name;
-  GetStruct()->get_street_addresses = x509cert_principal_get_street_addresses;
   GetStruct()->get_organization_names =
       x509cert_principal_get_organization_names;
   GetStruct()->get_organization_unit_names =
       x509cert_principal_get_organization_unit_names;
-  GetStruct()->get_domain_components = x509cert_principal_get_domain_components;
 }
 
 // DESTRUCTOR - Do not edit by hand.

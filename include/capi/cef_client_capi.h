@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=0814b0c8da2385498d0770cc58f5b5b9f1678958$
+// $hash=b83d54fc93c500a21b6b8f222b0f1b1a9f9c849b$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CLIENT_CAPI_H_
@@ -50,15 +50,12 @@
 #include "include/capi/cef_drag_handler_capi.h"
 #include "include/capi/cef_find_handler_capi.h"
 #include "include/capi/cef_focus_handler_capi.h"
-#include "include/capi/cef_form_handler_capi.h"
 #include "include/capi/cef_frame_handler_capi.h"
 #include "include/capi/cef_jsdialog_handler_capi.h"
 #include "include/capi/cef_keyboard_handler_capi.h"
 #include "include/capi/cef_life_span_handler_capi.h"
 #include "include/capi/cef_load_handler_capi.h"
-#include "include/capi/cef_media_handler_capi.h"
 #include "include/capi/cef_permission_handler_capi.h"
-#include "include/capi/cef_permission_request_capi.h"
 #include "include/capi/cef_print_handler_capi.h"
 #include "include/capi/cef_process_message_capi.h"
 #include "include/capi/cef_render_handler_capi.h"
@@ -95,19 +92,6 @@ typedef struct _cef_client_t {
   /// default implementation will be used.
   ///
   struct _cef_context_menu_handler_t*(CEF_CALLBACK* get_context_menu_handler)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Return the handler for dialogs. If no handler is provided the default
-  /// implementation will be used.
-  ///
-  struct _cef_dialog_handler_t*(CEF_CALLBACK* get_dialog_handler)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Return the handler for browser display state events.
-  ///
-  struct _cef_display_handler_t*(CEF_CALLBACK* get_display_handler)(
       struct _cef_client_t* self);
 
   ///
@@ -169,22 +153,10 @@ typedef struct _cef_client_t {
       struct _cef_client_t* self);
 
   ///
-  /// Return the handler for browser load status events.
-  ///
-  struct _cef_load_handler_t*(CEF_CALLBACK* get_load_handler)(
-      struct _cef_client_t* self);
-
-  ///
   /// Return the handler for printing on Linux. If a print handler is not
   /// provided then printing will not be supported on the Linux platform.
   ///
   struct _cef_print_handler_t*(CEF_CALLBACK* get_print_handler)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Return the handler for off-screen rendering events.
-  ///
-  struct _cef_render_handler_t*(CEF_CALLBACK* get_render_handler)(
       struct _cef_client_t* self);
 
   ///
@@ -206,81 +178,24 @@ typedef struct _cef_client_t {
       struct _cef_process_message_t* message);
 
   ///
-  /// Return the handler for browser geolocation permission request events.
+  /// notify application to show toast.
   ///
-  struct _cef_permission_request_t*(CEF_CALLBACK* get_permission_request)(
-      struct _cef_client_t* self);
+  void(CEF_CALLBACK* on_show_toast)(struct _cef_client_t* self,
+                                    double duration,
+                                    const cef_string_t* toast);
 
   ///
-  /// Return the handler for browser media events.
+  /// notify application to show video assistant.
   ///
-  struct _cef_media_handler_t*(CEF_CALLBACK* get_media_handler)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Returns the list of arguments NotifyJavaScriptResult.
-  ///
-  int(CEF_CALLBACK* notify_java_script_result)(struct _cef_client_t* self,
-                                               struct _cef_list_value_t* args,
-                                               const cef_string_t* method,
-                                               const cef_string_t* object_name,
-                                               struct _cef_list_value_t* result,
-                                               int32_t routing_id,
-                                               int32_t object_id);
-
-  ///
-  /// has javaScript object function.
-  ///
-  int(CEF_CALLBACK* has_java_script_object_methods)(
+  void(CEF_CALLBACK* on_show_video_assistant)(
       struct _cef_client_t* self,
-      int32_t object_id,
-      const cef_string_t* method_name);
+      const cef_string_t* videoAssistantItems);
 
   ///
-  /// get javaScript object functions.
+  /// notify application to report statistic log.
   ///
-  void(CEF_CALLBACK* get_java_script_object_methods)(
-      struct _cef_client_t* self,
-      int32_t object_id,
-      struct _cef_value_t* returned_method_names);
-
-  ///
-  /// remove javaScript object holder.
-  ///
-  void(CEF_CALLBACK* remove_java_script_object_holder)(
-      struct _cef_client_t* self,
-      int32_t holder,
-      int32_t object_id);
-
-  ///
-  /// remove transient javaScript object holder.
-  ///
-  void(CEF_CALLBACK* remove_transient_java_script_object)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Return the handler for browser form events.
-  ///
-  struct _cef_form_handler_t*(CEF_CALLBACK* get_form_handler)(
-      struct _cef_client_t* self);
-
-  ///
-  /// Called when top controls offset has been changed.
-  ///
-  void(CEF_CALLBACK* on_top_controls_changed)(struct _cef_client_t* self,
-                                              float top_controls_offset,
-                                              float top_content_offset);
-
-  ///
-  /// Return the height of top controls.
-  ///
-  int(CEF_CALLBACK* on_get_top_controls_height)(struct _cef_client_t* self);
-
-  ///
-  /// Return the shrink renderer size of top controls.
-  ///
-  int(CEF_CALLBACK* do_browser_controls_shrink_renderer_size)(
-      struct _cef_client_t* self);
+  void(CEF_CALLBACK* on_report_statistic_log)(struct _cef_client_t* self,
+                                              const cef_string_t* content);
 } cef_client_t;
 
 #ifdef __cplusplus

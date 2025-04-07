@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2025 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=12b01516d5e4cf877063602d4ab0779d7b8fbf41$
+// $hash=b4dfb222c1bd7993fa0e2451c1084b431904ca13$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -57,24 +57,13 @@ class CefContextMenuHandlerCToCpp
                     const CefSize& size,
                     const CefRect& select_bounds,
                     QuickMenuEditStateFlags edit_state_flags,
-                    CefRefPtr<CefRunQuickMenuCallback> callback,
-                    bool is_mouse_trigger,
-                    bool is_long_press_actived) override;
-  bool UpdateClippedSelectionBounds(CefRefPtr<CefBrowser> browser,
-                                    CefRefPtr<CefFrame> frame,
-                                    const CefRect& select_bounds) override;
+                    CefRefPtr<CefRunQuickMenuCallback> callback) override;
   bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,
                           CefRefPtr<CefFrame> frame,
                           int command_id,
                           EventFlags event_flags) override;
   void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            bool is_mouse_trigger) override;
-  void OnGetImageForContextNode(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefImage> image) override;
-  void OnGetImageFromCache(CefRefPtr<CefImage> image) override;
-  void HideHandleAndQuickMenuIfNecessary(bool hide) override;
-  void ChangeVisibilityOfQuickMenu() override;
+                            CefRefPtr<CefFrame> frame) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_

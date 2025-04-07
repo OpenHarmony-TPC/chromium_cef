@@ -12,7 +12,7 @@
 # distribution include:
 #
 # Linux:      Ninja, GCC 7.5.0+, Unix Makefiles
-# MacOS:      Ninja, Xcode 12.2 to 13.0
+# MacOS:      Ninja, Xcode 12.2 to 15.0
 # Windows:    Ninja, Visual Studio 2022
 #
 # Ninja is a cross-platform open-source tool for running fast builds using
@@ -36,7 +36,7 @@
 #
 # The below requirements must be met to build this CEF binary distribution.
 #
-# - CMake version 3.19 or newer.
+# - CMake version 3.21 or newer.
 #
 # - Linux requirements:
 #   Currently supported distributions include Debian 10 (Buster), Ubuntu 18
@@ -48,10 +48,9 @@
 #     libgtk3.0-dev     (required by the cefclient target only)
 #
 # - MacOS requirements:
-#   Xcode 12.2 to 13.4 building on MacOS 10.15.4 (Catalina) or newer. Only
-#   64-bit builds are supported. The Xcode command-line tools must also be
-#   installed. Newer Xcode versions may not have been been tested and are not
-#   recommended.
+#   Xcode 12.2 to 15.4 building on MacOS 11.0 (Big Sur) or newer. The Xcode
+#   command-line tools must also be installed. Newer Xcode versions may not have
+#   been been tested and are not recommended.
 #
 # - Windows requirements:
 #   Visual Studio 2022 building on Windows 10 or newer. Windows 10/11 64-bit is
@@ -143,7 +142,7 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release)
 project(cef)
 
 # Use folders in the resulting project files.
-set_property(GLOBAL PROPERTY OS_FOLDERS ON)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 
 #
@@ -240,16 +239,18 @@ PRINT_CEF_CONFIG()
 # Define the API documentation target.
 #
 
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-  add_custom_target(apidocs ALL
-    # Generate documentation in the docs/html directory.
-    COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
-    # Write a docs/index.html file.
-    COMMAND ${CMAKE_COMMAND} -E echo "<html><head><meta http-equiv=\"refresh\" content=\"0;URL='html/index.html'\"/></head></html>" > docs/index.html
-    WORKING_DIRECTORY "${CEF_ROOT}"
-    COMMENT "Generating API documentation with Doxygen..."
-    VERBATIM )
-else()
-  message(WARNING "Doxygen must be installed to generate API documentation.")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile")
+  find_package(Doxygen)
+  if(DOXYGEN_FOUND)
+    add_custom_target(apidocs ALL
+      # Generate documentation in the docs/html directory.
+      COMMAND "${DOXYGEN_EXECUTABLE}" Doxyfile
+      # Write a docs/index.html file.
+      COMMAND ${CMAKE_COMMAND} -E echo "<html><head><meta http-equiv=\"refresh\" content=\"0;URL='html/index.html'\"/></head></html>" > docs/index.html
+      WORKING_DIRECTORY "${CEF_ROOT}"
+      COMMENT "Generating API documentation with Doxygen..."
+      VERBATIM )
+  else()
+    message(WARNING "Doxygen must be installed to generate API documentation.")
+  endif()
 endif()

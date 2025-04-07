@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/common/cef_crash_report_upload_thread.h"
+#include "cef/libcef/common/cef_crash_report_upload_thread.h"
 
 #include "base/notreached.h"
-#include "libcef/common/cef_crash_report_utils.h"
+#include "cef/libcef/common/cef_crash_report_utils.h"
 #include "third_party/crashpad/crashpad/client/settings.h"
 
 using namespace crashpad;
@@ -19,7 +19,7 @@ CefCrashReportUploadThread::CefCrashReportUploadThread(
     : CrashReportUploadThread(database, url, options, std::move(callback)),
       max_uploads_(max_uploads) {}
 
-CefCrashReportUploadThread::~CefCrashReportUploadThread() {}
+CefCrashReportUploadThread::~CefCrashReportUploadThread() = default;
 
 void CefCrashReportUploadThread::ProcessPendingReports() {
   if (BackoffPending()) {

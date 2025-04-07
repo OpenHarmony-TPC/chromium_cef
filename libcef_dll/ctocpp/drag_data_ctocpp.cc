@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=987d78dab5462e7102ca48dad04744c3e765abd8$
+// $hash=dd85656b729d5b33a71060d6d17d4cad3ae24f66$
 //
 
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
+
 #include "libcef_dll/ctocpp/image_ctocpp.h"
 #include "libcef_dll/ctocpp/stream_writer_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
@@ -299,6 +300,38 @@ bool CefDragDataCToCpp::GetFileNames(std::vector<CefString>& names) {
     names.clear();
     transfer_string_list_contents(namesList, names);
     cef_string_list_free(namesList);
+  }
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+bool CefDragDataCToCpp::GetFilePaths(std::vector<CefString>& paths) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_drag_data_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_file_paths)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: paths; type: string_vec_byref
+  cef_string_list_t pathsList = cef_string_list_alloc();
+  DCHECK(pathsList);
+  if (pathsList) {
+    transfer_string_list_contents(paths, pathsList);
+  }
+
+  // Execute
+  int _retval = _struct->get_file_paths(_struct, pathsList);
+
+  // Restore param:paths; type: string_vec_byref
+  if (pathsList) {
+    paths.clear();
+    transfer_string_list_contents(pathsList, paths);
+    cef_string_list_free(pathsList);
   }
 
   // Return type: bool

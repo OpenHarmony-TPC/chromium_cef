@@ -4,11 +4,10 @@
 
 #include <sstream>
 
-#include "include/cef_parser.h"
-
 #include "base/base64.h"
 #include "base/strings/escape.h"
 #include "base/threading/thread_restrictions.h"
+#include "cef/include/cef_parser.h"
 #include "components/url_formatter/elide_url.h"
 #include "net/base/mime_util.h"
 #include "url/gurl.h"
@@ -118,12 +117,10 @@ CefString CefGetMimeType(const CefString& extension) {
 
 void CefGetExtensionsForMimeType(const CefString& mime_type,
                                  std::vector<CefString>& extensions) {
-  using VectorType = std::vector<base::FilePath::StringType>;
-  VectorType ext;
-  net::GetExtensionsForMimeType(mime_type, &ext);
-  VectorType::const_iterator it = ext.begin();
-  for (; it != ext.end(); ++it) {
-    extensions.push_back(*it);
+  std::vector<base::FilePath::StringType> buffer;
+  net::GetExtensionsForMimeType(mime_type.ToString(), &buffer);
+  for (const auto& extension : buffer) {
+    extensions.push_back(extension);
   }
 }
 
@@ -132,10 +129,8 @@ CefString CefBase64Encode(const void* data, size_t data_size) {
     return CefString();
   }
 
-  base::StringPiece input(static_cast<const char*>(data), data_size);
-  std::string output;
-  base::Base64Encode(input, &output);
-  return output;
+  std::string_view input(static_cast<const char*>(data), data_size);
+  return base::Base64Encode(input);
 }
 
 CefRefPtr<CefBinaryValue> CefBase64Decode(const CefString& data) {

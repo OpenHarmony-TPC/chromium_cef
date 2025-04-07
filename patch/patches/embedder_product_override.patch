@@ -1,8 +1,8 @@
 diff --git components/embedder_support/user_agent_utils.cc components/embedder_support/user_agent_utils.cc
-index 86e97af7108a5..1da2d83d72a23 100644
+index d46582b54b943..46331e763cf72 100644
 --- components/embedder_support/user_agent_utils.cc
 +++ components/embedder_support/user_agent_utils.cc
-@@ -17,6 +17,7 @@
+@@ -21,6 +21,7 @@
  #include "base/version.h"
  #include "build/branding_buildflags.h"
  #include "build/build_config.h"
@@ -10,7 +10,7 @@ index 86e97af7108a5..1da2d83d72a23 100644
  #include "components/embedder_support/pref_names.h"
  #include "components/embedder_support/switches.h"
  #include "components/policy/core/common/policy_pref_names.h"
-@@ -37,6 +38,10 @@
+@@ -41,6 +42,10 @@
  #include "base/win/windows_version.h"
  #endif  // BUILDFLAG(IS_WIN)
  
@@ -21,9 +21,9 @@ index 86e97af7108a5..1da2d83d72a23 100644
  namespace embedder_support {
  
  namespace {
-@@ -351,6 +356,14 @@ std::string GetMajorVersionForUserAgentString(
+@@ -332,6 +337,14 @@ blink::UserAgentBrandList ShuffleBrandList(
+ 
  std::string GetProductAndVersion(
-     ForceMajorVersionToMinorPosition force_major_to_minor,
      UserAgentReductionEnterprisePolicyState user_agent_reduction) {
 +#if BUILDFLAG(ENABLE_CEF)
 +  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
@@ -33,6 +33,6 @@ index 86e97af7108a5..1da2d83d72a23 100644
 +  }
 +#endif
 +
-   if (ShouldForceMajorVersionToMinorPosition(force_major_to_minor)) {
-     // Force major version to 99 and major version to minor version position.
-     if (ShouldReduceUserAgentMinorVersion(user_agent_reduction)) {
+   return ShouldReduceUserAgentMinorVersion(user_agent_reduction)
+              ? version_info::GetProductNameAndVersionForReducedUserAgent(
+                    blink::features::kUserAgentFrozenBuildVersion.Get())

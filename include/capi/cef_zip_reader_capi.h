@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=8d80b0222dda13ea8439d97cee5157e69b2839c9$
+// $hash=134a172de5a6674836b723af06baf792553bf9be$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_ZIP_READER_CAPI_H_
@@ -95,7 +95,7 @@ typedef struct _cef_zip_reader_t {
   ///
   /// Returns the uncompressed size of the file.
   ///
-  int64(CEF_CALLBACK* get_file_size)(struct _cef_zip_reader_t* self);
+  int64_t(CEF_CALLBACK* get_file_size)(struct _cef_zip_reader_t* self);
 
   ///
   /// Returns the last modified timestamp for the file.
@@ -126,7 +126,7 @@ typedef struct _cef_zip_reader_t {
   ///
   /// Returns the current offset in the uncompressed file contents.
   ///
-  int64(CEF_CALLBACK* tell)(struct _cef_zip_reader_t* self);
+  int64_t(CEF_CALLBACK* tell)(struct _cef_zip_reader_t* self);
 
   ///
   /// Returns true (1) if at end of the file contents.

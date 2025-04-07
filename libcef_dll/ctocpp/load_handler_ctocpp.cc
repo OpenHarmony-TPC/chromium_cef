@@ -9,18 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=55c4a854ec310901631baca8bffc29be77f57463$
+// $hash=abe22622a5b161e16c19d48b252b1d63f9a99fed$
 //
 
 #include "libcef_dll/ctocpp/load_handler_ctocpp.h"
+
 #include "libcef_dll/cpptoc/browser_cpptoc.h"
-#include "libcef_dll/cpptoc/callback_cpptoc.h"
-#include "libcef_dll/cpptoc/first_meaningful_paint_details_cpptoc.h"
 #include "libcef_dll/cpptoc/frame_cpptoc.h"
-#include "libcef_dll/cpptoc/largest_contentful_paint_details_cpptoc.h"
-#include "libcef_dll/cpptoc/load_committed_details_cpptoc.h"
-#include "libcef_dll/cpptoc/request_cpptoc.h"
-#include "libcef_dll/cpptoc/response_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
 // VIRTUAL METHODS - Body may be edited by hand.
@@ -74,7 +69,11 @@ void CefLoadHandlerCToCpp::OnLoadStart(CefRefPtr<CefBrowser> browser,
   if (!frame.get()) {
     return;
   }
-  // Unverified params: url
+  // Verify param: url; type: string_byref_const
+  DCHECK(!url.empty());
+  if (url.empty()) {
+    return;
+  }
 
   // Execute
   _struct->on_load_start(_struct, CefBrowserCppToC::Wrap(browser),
@@ -147,290 +146,6 @@ void CefLoadHandlerCToCpp::OnLoadError(CefRefPtr<CefBrowser> browser,
   _struct->on_load_error(_struct, CefBrowserCppToC::Wrap(browser),
                          CefFrameCppToC::Wrap(frame), errorCode,
                          errorText.GetStruct(), failedUrl.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
-                                                  bool is_main_frame,
-                                                  bool has_user_gesture,
-                                                  int error_code,
-                                                  const CefString& error_text) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_load_error_with_request)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: request; type: refptr_diff
-  DCHECK(request.get());
-  if (!request.get()) {
-    return;
-  }
-  // Verify param: error_text; type: string_byref_const
-  DCHECK(!error_text.empty());
-  if (error_text.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_load_error_with_request(_struct, CefRequestCppToC::Wrap(request),
-                                      is_main_frame, has_user_gesture,
-                                      error_code, error_text.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnHttpError(CefRefPtr<CefRequest> request,
-                                       bool is_main_frame,
-                                       bool has_user_gesture,
-                                       CefRefPtr<CefResponse> response) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_http_error)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: request; type: refptr_diff
-  DCHECK(request.get());
-  if (!request.get()) {
-    return;
-  }
-  // Verify param: response; type: refptr_diff
-  DCHECK(response.get());
-  if (!response.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_http_error(_struct, CefRequestCppToC::Wrap(request),
-                         is_main_frame, has_user_gesture,
-                         CefResponseCppToC::Wrap(response));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnRefreshAccessedHistory(
-    CefRefPtr<CefBrowser> browser,
-    CefRefPtr<CefFrame> frame,
-    const CefString& url,
-    bool isReload) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_refresh_accessed_history)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: frame; type: refptr_diff
-  DCHECK(frame.get());
-  if (!frame.get()) {
-    return;
-  }
-  // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_refresh_accessed_history(_struct, CefBrowserCppToC::Wrap(browser),
-                                       CefFrameCppToC::Wrap(frame),
-                                       url.GetStruct(), isReload);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnPageVisible(CefRefPtr<CefBrowser> browser,
-                                         const CefString& url,
-                                         bool success) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_page_visible)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Unverified params: url
-
-  // Execute
-  _struct->on_page_visible(_struct, CefBrowserCppToC::Wrap(browser),
-                           url.GetStruct(), success);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnDataResubmission(CefRefPtr<CefBrowser> browser,
-                                              CefRefPtr<CefCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_data_resubmission)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: browser; type: refptr_diff
-  DCHECK(browser.get());
-  if (!browser.get()) {
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_data_resubmission(_struct, CefBrowserCppToC::Wrap(browser),
-                                CefCallbackCppToC::Wrap(callback));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnFirstContentfulPaint(
-    int64_t navigationStartTick,
-    int64_t firstContentfulPaintMs) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_first_contentful_paint)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_first_contentful_paint(_struct, navigationStartTick,
-                                     firstContentfulPaintMs);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnFirstMeaningfulPaint(
-    CefRefPtr<CefFirstMeaningfulPaintDetails> details) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_first_meaningful_paint)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: details; type: refptr_diff
-  DCHECK(details.get());
-  if (!details.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_first_meaningful_paint(
-      _struct, CefFirstMeaningfulPaintDetailsCppToC::Wrap(details));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnLargestContentfulPaint(
-    CefRefPtr<CefLargestContentfulPaintDetails> details) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_largest_contentful_paint)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: details; type: refptr_diff
-  DCHECK(details.get());
-  if (!details.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_largest_contentful_paint(
-      _struct, CefLargestContentfulPaintDetailsCppToC::Wrap(details));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnNavigationEntryCommitted(
-    CefRefPtr<CefLoadCommittedDetails> details) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_navigation_entry_committed)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: details; type: refptr_diff
-  DCHECK(details.get());
-  if (!details.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_navigation_entry_committed(
-      _struct, CefLoadCommittedDetailsCppToC::Wrap(details));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnSafeBrowsingCheckResult(int threat_type) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_safe_browsing_check_result)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->on_safe_browsing_check_result(_struct, threat_type);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefLoadHandlerCToCpp::OnIntelligentTrackingPreventionResult(
-    const CefString& website_host,
-    const CefString& tracker_host) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_load_handler_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, on_intelligent_tracking_prevention_result)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: website_host; type: string_byref_const
-  DCHECK(!website_host.empty());
-  if (website_host.empty()) {
-    return;
-  }
-  // Verify param: tracker_host; type: string_byref_const
-  DCHECK(!tracker_host.empty());
-  if (tracker_host.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->on_intelligent_tracking_prevention_result(
-      _struct, website_host.GetStruct(), tracker_host.GetStruct());
 }
 
 // CONSTRUCTOR - Do not edit by hand.

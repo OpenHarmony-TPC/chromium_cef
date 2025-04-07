@@ -45,6 +45,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_drag_data.h"
 
+class ArkWebRenderHandlerExt;
 ///
 /// Implement this interface to handle events when window rendering is disabled.
 /// The methods of this class will be called on the UI thread.
@@ -57,17 +58,10 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   typedef cef_paint_element_type_t PaintElementType;
   typedef std::vector<CefRect> RectList;
   typedef cef_text_input_mode_t TextInputMode;
-  typedef cef_text_input_type_t TextInputType;
-#ifdef BUILDFLAG(IS_OHOS)
-  typedef cef_native_embed_data_t CefNativeEmbedData;
-  typedef cef_embed_touch_event_t CefEmbedTouchEvent;
-  typedef cef_embed_life_change_t CefEmbedLifeStatus;
-  typedef cef_embed_touch_type_t CefEmbedTouchType;
-  typedef std::map<CefString, CefString> AttributesMap;
-  typedef cef_text_input_action_t TextInputAction;
-  typedef cef_text_input_flags_t TextInputFlags;
-  typedef cef_text_input_info_t TextInputInfo;
-#endif
+
+  virtual CefRefPtr<ArkWebRenderHandlerExt> AsArkWebRenderHandler() {
+    return nullptr;
+  }
 
   ///
   /// Return the handler for accessibility notifications. If no handler is
@@ -163,16 +157,25 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// Called when an element has been rendered to the shared texture handle.
   /// |type| indicates whether the element is the view or the popup widget.
   /// |dirtyRects| contains the set of rectangles in pixel coordinates that need
-  /// to be repainted. |shared_handle| is the handle for a D3D11 Texture2D that
-  /// can be accessed via ID3D11Device using the OpenSharedResource method. This
-  /// method is only called when CefWindowInfo::shared_texture_enabled is set to
-  /// true, and is currently only supported on Windows.
+  /// to be repainted. |info| contains the shared handle; on Windows it is a
+  /// HANDLE to a texture that can be opened with D3D11 OpenSharedResource, on
+  /// macOS it is an IOSurface pointer that can be opened with Metal or OpenGL,
+  /// and on Linux it contains several planes, each with an fd to the underlying
+  /// system native buffer.
+  ///
+  /// The underlying implementation uses a pool to deliver frames. As a result,
+  /// the handle may differ every frame depending on how many frames are
+  /// in-progress. The handle's resource cannot be cached and cannot be accessed
+  /// outside of this callback. It should be reopened each time this callback is
+  /// executed and the contents should be copied to a texture owned by the
+  /// client application. The contents of |info| will be released back to the
+  /// pool after this callback returns.
   ///
   /*--cef()--*/
   virtual void OnAcceleratedPaint(CefRefPtr<CefBrowser> browser,
                                   PaintElementType type,
                                   const RectList& dirtyRects,
-                                  void* shared_handle) {}
+                                  const CefAcceleratedPaintInfo& info) {}
 
   ///
   /// Called to retrieve the size of the touch handle for the specified
@@ -256,14 +259,21 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// Called when an on-screen keyboard should be shown or hidden for the
   /// specified |browser|. |input_mode| specifies what kind of keyboard
   /// should be opened. If |input_mode| is CEF_TEXT_INPUT_MODE_NONE, any
-  /// existing keyboard for this browser should be hidden.|show_keyboard|
-  /// specifies whether to display the keyboard.
+  /// existing keyboard for this browser should be hidden.
   ///
   /*--cef()--*/
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
-                                          TextInputInfo text_input_info,
-                                          bool is_need_reset_listener,
-                                          const AttributesMap& attributes) {}
+                                          TextInputMode input_mode) {}
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// Called to retrieve the view rectangle in screen DIP coordinates. This
+  /// method must always provide a non-empty rectangle.
+  ///
+  /*--cef()--*/
+  virtual void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
+                                      CefRect& rect) {}
+#endif
 
   ///
   /// Called when touch selection is updated. The client is responsible for
@@ -275,210 +285,12 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
       const CefTouchHandleState& start_selection_handle,
       const CefTouchHandleState& end_selection_handle,
       bool need_report) {}
-
-  ///
-  /// Called when the RootLayer has changed.
-  ///
-  /*--cef()--*/
-  virtual void OnRootLayerChanged(CefRefPtr<CefBrowser> browser,
-                                  int height,
-                                  int width) {}
-
 #if BUILDFLAG(IS_OHOS)
-  ///
-  /// Called when text selection has changed for the specified |browser|.
-  /// |text| is the currently text and |selected_range| is
-  /// the character range.
-  ///
-  /*--cef(optional_param=text,optional_param=selected_range)--*/
-  virtual void OnSelectionChanged(CefRefPtr<CefBrowser> browser,
-                                  const CefString& text,
-                                  const CefRange& selected_range) {}
-
-  ///
-  /// Called when the cursor position has changed.
-  ///
-  /*--cef()--*/
-  virtual void OnCursorUpdate(CefRefPtr<CefBrowser> browser,
-                              const CefRect& rect) {}
-
-  ///
-  /// Called when swap buffer completed with new size.
-  ///
-  /*--cef()--*/
-  virtual void OnCompleteSwapWithNewSize() {}
-
-  ///
-  /// Called when resize not work.
-  ///
-  /*--cef()--*/
-  virtual void OnResizeNotWork() {}
-
-  ///
-  /// Called when over scroll.
-  ///
-  /*--cef()--*/
-  virtual void OnOverscroll(CefRefPtr<CefBrowser> browser,
-                            const float x,
-                            const float y) {}
-  ///
-  /// Called when editable status has been changed.
-  ///
-  /*--cef()--*/
-  virtual void OnEditableChanged(CefRefPtr<CefBrowser> browser,
-                                 bool is_editable_node) {}
-
-  ///
-  /// Called when over scroll.
-  ///
-  /*--cef()--*/
-  virtual void OnOverScrollFlingVelocity(CefRefPtr<CefBrowser> browser,
-                                         const float x,
-                                         const float y,
-                                         bool is_fling) {}
-
-  ///
-  /// Called when over scroll fling end.
-  ///
-  /*--cef()--*/
-  virtual void OnOverScrollFlingEnd(CefRefPtr<CefBrowser> browser) {}
-
-  ///
-  /// Called when scroll begin or end.
-  ///
-  /*--cef()--*/
-  virtual void OnScrollState(CefRefPtr<CefBrowser> browser,
-                             bool scroll_state) {}
-
-  ///
-  /// Called when scroll.
-  ///
-  /*--cef()--*/
-  virtual bool FilterScrollEvent(CefRefPtr<CefBrowser> browser,
-                                 const float x,
-                                 const float y,
-                                 const float fling_x,
-                                 const float fling_y) {
-    return false;
-  }
-  ///
-  /// Called when embed touch.
-  ///
-  /*--cef()--*/
-  virtual void OnNativeEmbedGestureEvent(CefRefPtr<CefBrowser> browser,
-                                   const CefEmbedTouchEvent& event,
-                                   CefRefPtr<CefGestureEventCallback> callback) {}
-  ///
-  /// Called when embed touch.
-  ///
-  /*--cef()--*/
-  virtual void OnNativeEmbedLifecycleChange(CefRefPtr<CefBrowser> browser,
-                                      const CefNativeEmbedData& info) {}
-  
-  ///
-  /// Called when embed visibility.
-  ///
-  /*--cef()--*/
-  virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
-                                      bool visibility) {}
-
-  ///
-  /// Called when select all is clicked.
-  ///
-  /*--cef()--*/
-  virtual void NotifySelectAllClicked(bool select_all) {}
-
-  ///
-  /// Called when scroll begin or end.
-  ///
-  /*--cef()--*/
-  virtual void ReleaseResizeHold(CefRefPtr<CefBrowser> browser) {}
-
-  ///
-  /// Called when text input state has changed for the specified |browser|.
-  ///
-  /*--cef()--*/
-  virtual void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
-                                            const CefString& text,
-                                            const CefRange& selected_range,
-                                            const CefRange& compositon_range) {}
-
-  ///
-  /// Called when selecting word.
-  ///
-  /*--cef()--*/
-  virtual void GetWordSelection(CefRefPtr<CefBrowser> browser,
-                                const CefString& text,
-                                int8_t offset,
-                                CefPoint& select) {}
-
-  ///
-  /// Called when creating overlay.
-  ///
-  /*--cef()--*/
-  virtual void CreateOverlay(CefRefPtr<CefBrowser> browser,
-                             CefRefPtr<CefImage> cef_image,
-                             const CefRect& cef_image_rect,
-                             const CefPoint& cef_touch_point) {}
-
-  ///
-  /// Called when overlay state is changed.
-  ///
-  /*--cef()--*/
-  virtual void OnOverlayStateChanged(CefRefPtr<CefBrowser> browser,
-                                     const CefRect& cef_image_rect) {}
-
-  ///
-  /// Called to retrieve the visible view rectangle in screen DIP coordinates. This
-  /// method must always provide a non-empty rectangle.
-  ///
-  /*--cef()--*/
-  virtual void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
-                                      CefRect& rect) {}
-
-  ///
-  /// SendDynamicFrameLossEvent
-  ///
-  /*--cef()--*/
-  virtual void SendDynamicFrameLossEvent(CefRefPtr<CefBrowser> browser,
-                                         const CefString& sceneId,
-                                         bool isStart) {}
-
-  ///
-  /// OnResizeScrollableViewport.
-  ///
-  /*--cef()--*/
-  virtual void OnResizeScrollableViewport(CefRefPtr<CefBrowser> browser) {}
-
-  ///
-  /// SetFillContent
-  ///
-  /*--cef()--*/
-  virtual void SetFillContent(const std::string& content) {}
-
   ///
   /// SetGestureEventResult
   ///
   /*--cef()--*/
   virtual void SetGestureEventResult(const bool result) {}
-
-  ///
-  /// Called when you need to start vibrator.
-  ///
-  /*--cef()--*/
-  virtual void StartVibraFeedback(const std::string& vibratorType) {}
-
-  ///
-  /// Get Device pixel size.
-  ///
-  /*--cef()--*/
-  virtual void GetDevicePixelSize(CefRefPtr<CefBrowser> browser, CefSize& size) {}
-
-  ///
-  /// Called when an accessibility event occurs.
-  ///
-  /*--cef()--*/
-  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
 #endif  // BUILDFLAG(IS_OHOS)
 };
 

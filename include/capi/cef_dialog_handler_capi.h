@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=a5c69bd82e92e1699b3e41dd067a4a64995f56bc$
+// $hash=c4d9098c533898127fa60e7d056482f948647032$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DIALOG_HANDLER_CAPI_H_
@@ -71,47 +71,6 @@ typedef struct _cef_file_dialog_callback_t {
 } cef_file_dialog_callback_t;
 
 ///
-/// Callback structure for asynchronous continuation of <select> selection.
-///
-typedef struct _cef_select_popup_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Continue the <select> selection. |indices| should be the 0-based array
-  /// index of the value selected from the <select> array passed to
-  /// cef_dialog_handler_t::ShowSelectPopup.
-  ///
-  void(CEF_CALLBACK* cont)(struct _cef_select_popup_callback_t* self,
-                           size_t indicesCount,
-                           int const* indices);
-
-  ///
-  /// Cancel <select> selection.
-  ///
-  void(CEF_CALLBACK* cancel)(struct _cef_select_popup_callback_t* self);
-} cef_select_popup_callback_t;
-
-///
-/// Callback structure for asynchronous continuation of datetime chooser.
-///
-typedef struct _cef_date_time_chooser_callback_t {
-  ///
-  /// Base structure.
-  ///
-  cef_base_ref_counted_t base;
-
-  ///
-  /// Notify the date time chooser result.
-  ///
-  void(CEF_CALLBACK* cont)(struct _cef_date_time_chooser_callback_t* self,
-                           int success,
-                           double dialog_value);
-} cef_date_time_chooser_callback_t;
-
-///
 /// Implement this structure to handle dialog events. The functions of this
 /// structure will be called on the browser process UI thread.
 ///
@@ -122,88 +81,11 @@ typedef struct _cef_dialog_handler_t {
   cef_base_ref_counted_t base;
 
   ///
-  /// Called to run a file chooser dialog. |mode| represents the type of dialog
-  /// to display. |title| to the title to be used for the dialog and may be NULL
-  /// to show the default title ("Open" or "Save" depending on the mode).
-  /// |default_file_path| is the path with optional directory and/or file name
-  /// component that should be initially selected in the dialog.
-  /// |accept_filters| are used to restrict the selectable file types and may
-  /// any combination of (a) valid lower-cased MIME types (e.g. "text/*" or
-  /// "image/*"), (b) individual file extensions (e.g. ".txt" or ".png"), or (c)
-  /// combined description and file extension delimited using "|" and ";" (e.g.
-  /// "Image Types|.png;.gif;.jpg"). To display a custom dialog return true (1)
-  /// and execute |callback| either inline or at a later time. To display the
-  /// default dialog return false (0).
+  /// Handles the BeforeUnload event.
   ///
-  int(CEF_CALLBACK* on_file_dialog)(
-      struct _cef_dialog_handler_t* self,
-      struct _cef_browser_t* browser,
-      cef_file_dialog_mode_t mode,
-      const cef_string_t* title,
-      const cef_string_t* default_file_path,
-      cef_string_list_t accept_filters,
-      int capture,
-      struct _cef_file_dialog_callback_t* callback);
-
-  ///
-  /// Show <select> popup menu.
-  ///
-  void(CEF_CALLBACK* on_select_popup_menu)(
-      struct _cef_dialog_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_rect_t* bounds,
-      int item_height,
-      double item_font_size,
-      int selected_item,
-      size_t menu_itemsCount,
-      cef_select_popup_item_t const* menu_items,
-      int right_aligned,
-      int allow_multiple_selection,
-      struct _cef_select_popup_callback_t* callback);
-
-  ///
-  /// hide password Autofill popup menu.
-  ///
-  void(CEF_CALLBACK* on_hide_autofill_popup)(
-      struct _cef_dialog_handler_t* self);
-
-  ///
-  /// Show adblock num.
-  ///
-  void(CEF_CALLBACK* on_ads_blocked)(struct _cef_dialog_handler_t* self,
-                                     struct _cef_browser_t* browser,
-                                     const cef_string_t* main_frame_url,
-                                     cef_string_map_t subresource_blocked,
-                                     int is_site_first_report);
-
-  ///
-  /// Show password Autofill popup menu.
-  ///
-  void(CEF_CALLBACK* on_show_autofill_popup)(
-      struct _cef_dialog_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_rect_t* bounds,
-      int right_aligned,
-      size_t menu_itemsCount,
-      cef_autofill_popup_item_t const* menu_items,
-      int is_password_popup_type);
-
-  ///
-  /// Called when notify ui to show password dialog to query user to save
-  /// password.
-  ///
-  void(CEF_CALLBACK* show_password_dialog)(struct _cef_dialog_handler_t* self,
-                                           int is_update,
-                                           const cef_string_t* url);
-
-  ///
-  /// trigger adblock switch from ui.
-  ///
-  int(CEF_CALLBACK* trig_ad_block_enabled_for_site_from_ui)(
-      struct _cef_dialog_handler_t* self,
-      struct _cef_browser_t* browser,
-      const cef_string_t* main_frame_url,
-      int main_frame_tree_node_id);
+  void(CEF_CALLBACK* on_before_unload_fired)(struct _cef_dialog_handler_t* self,
+                                             struct _cef_browser_t* browser,
+                                             bool proceed);
 } cef_dialog_handler_t;
 
 #ifdef __cplusplus

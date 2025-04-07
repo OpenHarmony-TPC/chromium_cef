@@ -8,13 +8,12 @@
 
 #include <vector>
 
-#include "include/cef_v8.h"
-#include "libcef/common/tracker.h"
-
 #include "base/location.h"
 #include "base/logging.h"
 #include "base/memory/ref_counted.h"
 #include "base/task/single_thread_task_runner.h"
+#include "cef/include/cef_v8.h"
+#include "cef/libcef/common/tracker.h"
 #include "v8/include/v8.h"
 
 class CefTrackNode;
@@ -42,7 +41,7 @@ void CefV8SetWorkerAttributes(int worker_id, const GURL& worker_url);
 // Used to detach handles when the associated context is released.
 class CefV8ContextState : public base::RefCounted<CefV8ContextState> {
  public:
-  CefV8ContextState() : valid_(true) {}
+  CefV8ContextState() = default;
 
   bool IsValid() { return valid_; }
   void Detach() {
@@ -64,9 +63,9 @@ class CefV8ContextState : public base::RefCounted<CefV8ContextState> {
  private:
   friend class base::RefCounted<CefV8ContextState>;
 
-  ~CefV8ContextState() {}
+  ~CefV8ContextState() = default;
 
-  bool valid_;
+  bool valid_ = true;
   CefTrackManager track_manager_;
 };
 
@@ -214,8 +213,8 @@ class CefV8ValueImpl : public CefV8Value {
   void InitUndefined();
   void InitNull();
   void InitBool(bool value);
-  void InitInt(int32 value);
-  void InitUInt(uint32 value);
+  void InitInt(int32_t value);
+  void InitUInt(uint32_t value);
   void InitDouble(double value);
   void InitDate(CefBaseTime value);
   void InitString(CefString& value);
@@ -241,8 +240,8 @@ class CefV8ValueImpl : public CefV8Value {
   bool IsPromise() override;
   bool IsSame(CefRefPtr<CefV8Value> value) override;
   bool GetBoolValue() override;
-  int32 GetIntValue() override;
-  uint32 GetUIntValue() override;
+  int32_t GetIntValue() override;
+  uint32_t GetUIntValue() override;
   double GetDoubleValue() override;
   CefBaseTime GetDateValue() override;
   CefString GetStringValue() override;
@@ -262,9 +261,7 @@ class CefV8ValueImpl : public CefV8Value {
                 CefRefPtr<CefV8Value> value,
                 PropertyAttribute attribute) override;
   bool SetValue(int index, CefRefPtr<CefV8Value> value) override;
-  bool SetValue(const CefString& key,
-                AccessControl settings,
-                PropertyAttribute attribute) override;
+  bool SetValue(const CefString& key, PropertyAttribute attribute) override;
   bool GetKeys(std::vector<CefString>& keys) override;
   bool SetUserData(CefRefPtr<CefBaseRefCounted> user_data) override;
   CefRefPtr<CefBaseRefCounted> GetUserData() override;
@@ -274,6 +271,8 @@ class CefV8ValueImpl : public CefV8Value {
   CefRefPtr<CefV8ArrayBufferReleaseCallback> GetArrayBufferReleaseCallback()
       override;
   bool NeuterArrayBuffer() override;
+  size_t GetArrayBufferByteLength() override;
+  void* GetArrayBufferData() override;
   CefString GetFunctionName() override;
   CefRefPtr<CefV8Handler> GetFunctionHandler() override;
   CefRefPtr<CefV8Value> ExecuteFunction(
@@ -325,10 +324,10 @@ class CefV8ValueImpl : public CefV8Value {
     CefTrackNode* tracker_;
 
     // True if the handle needs to persist due to it being passed into V8.
-    bool should_persist_;
+    bool should_persist_ = false;
 
     // True if the handle has been set as weak.
-    bool is_set_weak_;
+    bool is_set_weak_ = false;
   };
 
   v8::Isolate* isolate_;
@@ -348,8 +347,8 @@ class CefV8ValueImpl : public CefV8Value {
 
   union {
     bool bool_value_;
-    int32 int_value_;
-    uint32 uint_value_;
+    int32_t int_value_;
+    uint32_t uint_value_;
     double double_value_;
     cef_basetime_t date_value_;
     cef_string_t string_value_;
@@ -405,10 +404,10 @@ class CefV8StackFrameImpl : public CefV8StackFrame {
   CefString script_name_;
   CefString script_name_or_source_url_;
   CefString function_name_;
-  int line_number_;
-  int column_;
-  bool is_eval_;
-  bool is_constructor_;
+  int line_number_ = 0;
+  int column_ = 0;
+  bool is_eval_ = false;
+  bool is_constructor_ = false;
 
   IMPLEMENT_REFCOUNTING(CefV8StackFrameImpl);
 };

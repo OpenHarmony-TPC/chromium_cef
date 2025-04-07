@@ -39,13 +39,14 @@
 #pragma once
 
 #include <vector>
-#include "build/build_config.h"
+
 #include "include/cef_base.h"
 #include "include/cef_callback.h"
 
 class CefCookieVisitor;
 class CefSetCookieCallback;
 class CefDeleteCookiesCallback;
+class CefCookieManagerExt;
 
 ///
 /// Class used for managing cookies. The methods of this class may be called on
@@ -71,7 +72,9 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /// will be stored  in memory otherwise. If |callback|
   /// is non-NULL it will be executed asnychronously on the UI thread after the
   /// manager's storage has been initialized. Using this method is equivalent to
-  /// calling CefRequestContext::GetGlobalOTRContext()->GetDefaultCookieManager().
+  /// calling
+  /// CefRequestContext::GetGlobalOTRContext()->GetDefaultCookieManager().
+  /// IS_OHOS extended
   ///
   /*--cef(optional_param=callback)--*/
   static CefRefPtr<CefCookieManager> GetGlobalIncognitoManager(
@@ -84,7 +87,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool VisitAllCookies(CefRefPtr<CefCookieVisitor> visitor,
-                               bool is_sync) = 0;
+                               bool is_sync) = 0;  // IS_OHOS extended
 
   ///
   /// Visit a subset of cookies on the UI thread. The results are filtered by
@@ -92,6 +95,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /// HTTP-only cookies will also be included in the results. The returned
   /// cookies are ordered by longest path, then by earliest creation date.
   /// Returns false if cookies cannot be accessed.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual bool VisitUrlCookies(const CefString& url,
@@ -108,6 +112,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /// such characters are found. If |callback| is non-NULL it will be executed
   /// asnychronously on the UI thread after the cookie has been set. Returns
   /// false if an invalid URL is specified or if cookies cannot be accessed.
+  /// IS_OHOS extended
   ///
   /*--cef(optional_param=callback)--*/
   virtual bool SetCookie(const CefString& url,
@@ -127,6 +132,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /// cookies have been deleted. Returns false if a non-empty invalid URL is
   /// specified or if cookies cannot be accessed. Cookies can alternately be
   /// deleted using the Visit*Cookies() methods.
+  /// IS_OHOS extended
   ///
   /*--cef(optional_param=url,optional_param=cookie_name,
           optional_param=callback)--*/
@@ -147,51 +153,16 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   ///
   /// Convert string cookie to CefCookie. The method will return true when
   /// excuted success, otherwise return false.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   static bool CreateCefCookie(const CefString& url,
                               const CefString& value,
                               CefCookie& cef_cookie);
 
-  ///
-  /// Get whether this cookie manager can accpet and send cookies. Returns false
-  /// if can't.
-  ///
-  /*--cef()--*/
-  virtual bool IsAcceptCookieAllowed() = 0;
-
-  ///
-  /// Set whether this cookie manager can accpet and send cookies.
-  ///
-  /*--cef()--*/
-  virtual void PutAcceptCookieEnabled(bool accept) = 0;
-
-  ///
-  /// Gets whether cookies of third parties are allowed to be set. Returns false
-  /// if can't.
-  ///
-  /*--cef()--*/
-  virtual bool IsThirdPartyCookieAllowed() = 0;
-
-  ///
-  /// Set whether cookies of third parties are allowed to be set.
-  ///
-  /*--cef()--*/
-  virtual void PutAcceptThirdPartyCookieEnabled(bool accept) = 0;
-
-  ///
-  /// Get whether this cookie manager can accpet and send cookies for file
-  /// scheme URL. Returns false if can't.
-  ///
-  /*--cef()--*/
-  virtual bool IsFileURLSchemeCookiesAllowed() = 0;
-
-  ///
-  /// Set whether this cookie manager can accpet and send cookies for file
-  /// scheme URL.
-  ///
-  /*--cef()--*/
-  virtual void PutAcceptFileURLSchemeCookiesEnabled(bool allow) = 0;
+  virtual CefRefPtr<CefCookieManagerExt> AsCefCookieManagerExt() {
+    return nullptr;
+  }
 };
 
 ///
@@ -218,6 +189,7 @@ class CefCookieVisitor : public virtual CefBaseRefCounted {
   /// Method that will be called when all cookies have been visited, contenate
   /// them into one string line. The string cookie line will be passed into this
   /// method.
+  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual void SetCookieLine(const CefString& cookieLine) {}
@@ -252,5 +224,7 @@ class CefDeleteCookiesCallback : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnComplete(int num_deleted) = 0;
 };
+
+#include "ohos_cef_ext/include/cef_cookie_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_COOKIE_H_

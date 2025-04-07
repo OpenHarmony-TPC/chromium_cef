@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=9ec8f43a509317ec1eead47556f83ce953f041b8$
+// $hash=3ec9c298cd10893df63c6f7fd360968a5560a48c$
 //
 
 #include "libcef_dll/cpptoc/views/panel_cpptoc.h"
+
 #include "libcef_dll/cpptoc/views/box_layout_cpptoc.h"
 #include "libcef_dll/cpptoc/views/browser_view_cpptoc.h"
 #include "libcef_dll/cpptoc/views/button_cpptoc.h"
@@ -1039,6 +1040,24 @@ int CEF_CALLBACK panel_is_accessibility_focusable(struct _cef_view_t* self) {
   return _retval;
 }
 
+int CEF_CALLBACK panel_has_focus(struct _cef_view_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval =
+      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))->HasFocus();
+
+  // Return type: bool
+  return _retval;
+}
+
 void CEF_CALLBACK panel_request_focus(struct _cef_view_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -1083,6 +1102,26 @@ cef_color_t CEF_CALLBACK panel_get_background_color(struct _cef_view_t* self) {
   cef_color_t _retval =
       CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
           ->GetBackgroundColor();
+
+  // Return type: simple
+  return _retval;
+}
+
+cef_color_t CEF_CALLBACK panel_get_theme_color(struct _cef_view_t* self,
+                                               int color_id) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  cef_color_t _retval =
+      CefPanelCppToC::Get(reinterpret_cast<cef_panel_t*>(self))
+          ->GetThemeColor(color_id);
 
   // Return type: simple
   return _retval;
@@ -1353,9 +1392,11 @@ CefPanelCppToC::CefPanelCppToC() {
   GetStruct()->base.is_focusable = panel_is_focusable;
   GetStruct()->base.is_accessibility_focusable =
       panel_is_accessibility_focusable;
+  GetStruct()->base.has_focus = panel_has_focus;
   GetStruct()->base.request_focus = panel_request_focus;
   GetStruct()->base.set_background_color = panel_set_background_color;
   GetStruct()->base.get_background_color = panel_get_background_color;
+  GetStruct()->base.get_theme_color = panel_get_theme_color;
   GetStruct()->base.convert_point_to_screen = panel_convert_point_to_screen;
   GetStruct()->base.convert_point_from_screen = panel_convert_point_from_screen;
   GetStruct()->base.convert_point_to_window = panel_convert_point_to_window;

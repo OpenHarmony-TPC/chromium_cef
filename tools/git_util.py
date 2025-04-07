@@ -138,7 +138,7 @@ def git_apply_patch_file(patch_path, patch_dir):
     sys.stdout.write('... patch directory is not a repository root.\n')
     return 'fail'
 
-  config = '-p0 --ignore-whitespace'
+  config = '-p1 --ignore-whitespace'
 
   # Output patch contents.
   cmd = '%s apply %s --numstat' % (git_exe, config)

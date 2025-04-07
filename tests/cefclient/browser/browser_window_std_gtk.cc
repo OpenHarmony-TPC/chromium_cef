@@ -4,11 +4,10 @@
 
 #include "tests/cefclient/browser/browser_window_std_gtk.h"
 
+#include <X11/Xlib.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
-
-#include <X11/Xlib.h>
 #undef Success     // Definition conflicts with cef_message_router.h
 #undef RootWindow  // Definition conflicts with root_window.h
 
@@ -106,6 +105,10 @@ void BrowserWindowStdGtk::CreateBrowser(
   CefWindowInfo window_info;
   window_info.SetAsChild(GetXWindowForWidget(parent_handle), rect);
 
+  if (delegate_->UseAlloyStyle()) {
+    window_info.runtime_style = CEF_RUNTIME_STYLE_ALLOY;
+  }
+
   CefBrowserHost::CreateBrowser(window_info, client_handler_,
                                 client_handler_->startup_url(), settings,
                                 extra_info, request_context);
@@ -119,6 +122,11 @@ void BrowserWindowStdGtk::GetPopupConfig(CefWindowHandle temp_handle,
 
   // The window will be properly sized after the browser is created.
   windowInfo.SetAsChild(temp_handle, CefRect());
+
+  if (delegate_->UseAlloyStyle()) {
+    windowInfo.runtime_style = CEF_RUNTIME_STYLE_ALLOY;
+  }
+
   client = client_handler_;
 }
 

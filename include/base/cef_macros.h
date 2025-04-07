@@ -32,8 +32,6 @@
 #define CEF_INCLUDE_BASE_CEF_MACROS_H_
 #pragma once
 
-#include "build/build_config.h"
-
 #if !defined(USING_CHROMIUM_INCLUDES)
 // The following is substantially similar to the Chromium implementation.
 // If the Chromium implementation diverges the below implementation should be
@@ -44,7 +42,7 @@
 // https://chromium.googlesource.com/chromium/src/+/lkgr/styleguide/c++/c++-dos-and-donts.md#explicitly-declare-class-copyability_movability
 
 // DEPRECATED: See above. Makes a class uncopyable.
-#if BUILDFLAG(IS_OHOS)
+#if defined(OS_OHOS)
 // NOTE(ohos): Duplicated with OHOS NDK's macro name.
 // #define DISALLOW_COPY(TypeName) TypeName(const TypeName&) = delete
 #else

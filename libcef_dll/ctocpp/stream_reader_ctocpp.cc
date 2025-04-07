@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=ec98b14c134c8dc61af07882b1e1c789669d703a$
+// $hash=94270c201288f8ce936e462935d5ed9e8855ed11$
 //
 
 #include "libcef_dll/ctocpp/stream_reader_ctocpp.h"
+
 #include "libcef_dll/cpptoc/read_handler_cpptoc.h"
 #include "libcef_dll/shutdown_checker.h"
 
@@ -107,7 +108,7 @@ size_t CefStreamReaderCToCpp::Read(void* ptr, size_t size, size_t n) {
 }
 
 NO_SANITIZE("cfi-icall")
-int CefStreamReaderCToCpp::Seek(int64 offset, int whence) {
+int CefStreamReaderCToCpp::Seek(int64_t offset, int whence) {
   shutdown_checker::AssertNotShutdown();
 
   cef_stream_reader_t* _struct = GetStruct();
@@ -124,7 +125,7 @@ int CefStreamReaderCToCpp::Seek(int64 offset, int whence) {
   return _retval;
 }
 
-NO_SANITIZE("cfi-icall") int64 CefStreamReaderCToCpp::Tell() {
+NO_SANITIZE("cfi-icall") int64_t CefStreamReaderCToCpp::Tell() {
   shutdown_checker::AssertNotShutdown();
 
   cef_stream_reader_t* _struct = GetStruct();
@@ -135,7 +136,7 @@ NO_SANITIZE("cfi-icall") int64 CefStreamReaderCToCpp::Tell() {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = _struct->tell(_struct);
+  int64_t _retval = _struct->tell(_struct);
 
   // Return type: simple
   return _retval;

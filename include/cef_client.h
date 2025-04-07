@@ -38,6 +38,7 @@
 #define CEF_INCLUDE_CEF_CLIENT_H_
 #pragma once
 
+#include "cef/ohos_cef_ext/include/arkweb_display_handler_ext.h"
 #include "include/cef_audio_handler.h"
 #include "include/cef_base.h"
 #include "include/cef_command_handler.h"
@@ -49,7 +50,6 @@
 #include "include/cef_find_handler.h"
 #include "include/cef_focus_handler.h"
 #include "include/cef_frame_handler.h"
-#include "include/cef_form_handler.h"
 #include "include/cef_jsdialog_handler.h"
 #include "include/cef_keyboard_handler.h"
 #include "include/cef_life_span_handler.h"
@@ -59,17 +59,13 @@
 #include "include/cef_process_message.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_request_handler.h"
+#include "include/cef_web_extension_api_handler.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "include/cef_media_handler.h"
-#include "include/cef_permission_request.h"
-#endif
-
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
-#include "include/cef_custom_media_player_delegate.h"
-#include "include/cef_custom_media_info.h"
-#include "include/cef_media_player_listener.h"
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
+class ArkWebClientExt;
+class ArkWebLoadHandlerExt;
+class ArkWebRenderHandlerExt;
+class CefDialogHandlerExt;
+class ArkWebDisplayHandlerExt;
 
 ///
 /// Implement this interface to provide handler implementations.
@@ -77,6 +73,7 @@
 /*--cef(source=client,no_debugct_check)--*/
 class CefClient : public virtual CefBaseRefCounted {
  public:
+  virtual CefRefPtr<ArkWebClientExt> AsArkWebClient() { return nullptr; }
   ///
   /// Return the handler for audio rendering events.
   ///
@@ -90,12 +87,7 @@ class CefClient : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual CefRefPtr<CefCommandHandler> GetCommandHandler() { return nullptr; }
 
-  ///
-  /// Return the handler for context menus. If no handler is provided the
-  /// default implementation will be used.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() {
+  virtual CefRefPtr<CefContextMenuHandlerExt> GetContextMenuHandler() {
     return nullptr;
   }
 
@@ -103,14 +95,14 @@ class CefClient : public virtual CefBaseRefCounted {
   /// Return the handler for dialogs. If no handler is provided the default
   /// implementation will be used.
   ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefDialogHandler> GetDialogHandler() { return nullptr; }
+  virtual CefRefPtr<CefDialogHandlerExt> GetDialogHandler() { return nullptr; }
 
   ///
   /// Return the handler for browser display state events.
   ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() { return nullptr; }
+  virtual CefRefPtr<ArkWebDisplayHandlerExt> GetDisplayHandler() {
+    return nullptr;
+  }
 
   ///
   /// Return the handler for download events. If no handler is returned
@@ -175,8 +167,7 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /// Return the handler for browser load status events.
   ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefLoadHandler> GetLoadHandler() { return nullptr; }
+  virtual CefRefPtr<ArkWebLoadHandlerExt> GetLoadHandler() { return nullptr; }
 
   ///
   /// Return the handler for printing on Linux. If a print handler is not
@@ -188,8 +179,9 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /// Return the handler for off-screen rendering events.
   ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefRenderHandler> GetRenderHandler() { return nullptr; }
+  virtual CefRefPtr<ArkWebRenderHandlerExt> GetRenderHandler() {
+    return nullptr;
+  }
 
   ///
   /// Return the handler for browser request events.
@@ -210,112 +202,34 @@ class CefClient : public virtual CefBaseRefCounted {
     return false;
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   ///
-  /// Return the handler for browser geolocation permission request events.
+  /// Return the handler for web extension api. If no handler is provided the
+  /// default implementation will be used.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefPermissionRequest> GetPermissionRequest() {
+  virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
     return nullptr;
   }
-
-  ///
-  /// Return the handler for browser media events.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefMediaHandler> GetMediaHandler() { return nullptr; }
-
-  ///
-  /// Returns the list of arguments NotifyJavaScriptResult.
-  ///
-  /*--cef()--*/
-  virtual int NotifyJavaScriptResult(CefRefPtr<CefListValue> args,
-                                     const CefString& method,
-                                     const CefString& object_name,
-                                     CefRefPtr<CefListValue> result,
-                                     int32_t routing_id,
-                                     int32_t object_id) {
-    return 0;
-  }
-
-  ///
-  /// Returns the list of arguments NotifyJavaScriptResultFlowbuf.
-  ///
-  /*--cef()--*/
-  ///
-  /// NotifyJavaScriptResultFlowbuf.
-  ///
-  virtual int NotifyJavaScriptResultFlowbuf(CefRefPtr<CefListValue> args,
-                                            const CefString& method,
-                                            const CefString& object_name,
-                                            int fd,
-                                            CefRefPtr<CefListValue> result,
-                                            int32_t routing_id,
-                                            int32_t object_id) {
-    return 0;
-  }
-
-  ///
-  /// has javaScript object method.
-  ///
-  /*--cef()--*/
-  virtual bool HasJavaScriptObjectMethods(int32_t object_id,
-                                          const CefString& method_name) {
-    return false;
-  }
-
-  ///
-  /// get javaScript object methods.
-  ///
-  /*--cef()--*/
-  virtual void GetJavaScriptObjectMethods(
-      int32_t object_id,
-      CefRefPtr<CefValue> returned_method_names) {}
-
-  ///
-  /// remove javaScript object holder.
-  ///
-  /*--cef()--*/
-  virtual void RemoveJavaScriptObjectHolder(int32_t holder, int32_t object_id) {
-  }
-
-  ///
-  /// remove transient javaScript object holder.
-  ///
-  /*--cef()--*/
-  virtual void RemoveTransientJavaScriptObject() {}
-
-  ///
-  /// Return the handler for browser form events.
-  ///
-  /*--cef()--*/
-  virtual CefRefPtr<CefFormHandler> GetFormHandler() { return nullptr; }
-
-  ///
-  /// Called when top controls offset has been changed.
-  ///
-  /*--cef()--*/
-  virtual void OnTopControlsChanged(float top_controls_offset,
-                                    float top_content_offset) {}
-
-  ///
-  /// Return the height of top controls.
-  ///
-  /*--cef()--*/
-  virtual int OnGetTopControlsHeight() { return 0; }
-
-  ///
-  /// Return the shrink renderer size of top controls.
-  ///
-  /*--cef()--*/
-  virtual bool DoBrowserControlsShrinkRendererSize() { return false; }
 #endif
 
-#if defined(OHOS_CUSTOM_VIDEO_PLAYER)
-  virtual CefOwnPtr<CefCustomMediaPlayerDelegate> OnCreateCustomMediaPlayer(
-      CefOwnPtr<CefMediaPlayerListener> listener,
-      const CefCustomMediaInfo& media_info) { return nullptr; }
-#endif // OHOS_CUSTOM_VIDEO_PLAYER
+  ///
+  /// notify application to show toast.
+  ///
+  /*--cef()--*/
+  virtual void OnShowToast(double duration, const CefString& toast) {}
+
+  ///
+  /// notify application to show video assistant.
+  ///
+  /*--cef()--*/
+  virtual void OnShowVideoAssistant(const CefString& videoAssistantItems) {}
+
+  ///
+  /// notify application to report statistic log.
+  ///
+  /*--cef()--*/
+  virtual void OnReportStatisticLog(const CefString& content) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

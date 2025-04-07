@@ -9,15 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=359bac132f6ec31b8d06616809e23cec83a19688$
+// $hash=dc4a732c55736b6784496acb7a0ed47ff366a0bf$
 //
 
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
-#include <algorithm>
-#include "libcef_dll/ctocpp/browser_host_ctocpp.h"
-#include "libcef_dll/ctocpp/browser_permission_request_delegate_ctocpp.h"
+
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
-#include "libcef_dll/ctocpp/geolocation_acess_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
@@ -38,23 +35,6 @@ NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsValid() {
 
   // Return type: bool
   return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") CefRefPtr<CefBrowserHost> CefBrowserCToCpp::GetHost() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_host)) {
-    return nullptr;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_browser_host_t* _retval = _struct->get_host(_struct);
-
-  // Return type: refptr_same
-  return CefBrowserHostCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::CanGoBack() {
@@ -289,29 +269,37 @@ CefRefPtr<CefFrame> CefBrowserCToCpp::GetFocusedFrame() {
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefFrame> CefBrowserCToCpp::GetFrame(int64 identifier) {
+CefRefPtr<CefFrame> CefBrowserCToCpp::GetFrameByIdentifier(
+    const CefString& identifier) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_frame_byident)) {
+  if (CEF_MEMBER_MISSING(_struct, get_frame_by_identifier)) {
     return nullptr;
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
+  // Verify param: identifier; type: string_byref_const
+  DCHECK(!identifier.empty());
+  if (identifier.empty()) {
+    return nullptr;
+  }
+
   // Execute
-  cef_frame_t* _retval = _struct->get_frame_byident(_struct, identifier);
+  cef_frame_t* _retval =
+      _struct->get_frame_by_identifier(_struct, identifier.GetStruct());
 
   // Return type: refptr_same
   return CefFrameCToCpp::Wrap(_retval);
 }
 
 NO_SANITIZE("cfi-icall")
-CefRefPtr<CefFrame> CefBrowserCToCpp::GetFrame(const CefString& name) {
+CefRefPtr<CefFrame> CefBrowserCToCpp::GetFrameByName(const CefString& name) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_frame)) {
+  if (CEF_MEMBER_MISSING(_struct, get_frame_by_name)) {
     return nullptr;
   }
 
@@ -320,7 +308,7 @@ CefRefPtr<CefFrame> CefBrowserCToCpp::GetFrame(const CefString& name) {
   // Unverified params: name
 
   // Execute
-  cef_frame_t* _retval = _struct->get_frame(_struct, name.GetStruct());
+  cef_frame_t* _retval = _struct->get_frame_by_name(_struct, name.GetStruct());
 
   // Return type: refptr_same
   return CefFrameCToCpp::Wrap(_retval);
@@ -344,7 +332,8 @@ NO_SANITIZE("cfi-icall") size_t CefBrowserCToCpp::GetFrameCount() {
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::GetFrameIdentifiers(std::vector<int64>& identifiers) {
+void CefBrowserCToCpp::GetFrameIdentifiers(
+    std::vector<CefString>& identifiers) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_t* _struct = GetStruct();
@@ -354,33 +343,21 @@ void CefBrowserCToCpp::GetFrameIdentifiers(std::vector<int64>& identifiers) {
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
-  // Translate param: identifiers; type: simple_vec_byref
-  size_t identifiersSize = identifiers.size();
-  size_t identifiersCount = std::max(GetFrameCount(), identifiersSize);
-  int64* identifiersList = NULL;
-  if (identifiersCount > 0) {
-    identifiersList = new int64[identifiersCount];
-    DCHECK(identifiersList);
-    if (identifiersList) {
-      memset(identifiersList, 0, sizeof(int64) * identifiersCount);
-    }
-    if (identifiersList && identifiersSize > 0) {
-      for (size_t i = 0; i < identifiersSize; ++i) {
-        identifiersList[i] = identifiers[i];
-      }
-    }
+  // Translate param: identifiers; type: string_vec_byref
+  cef_string_list_t identifiersList = cef_string_list_alloc();
+  DCHECK(identifiersList);
+  if (identifiersList) {
+    transfer_string_list_contents(identifiers, identifiersList);
   }
 
   // Execute
-  _struct->get_frame_identifiers(_struct, &identifiersCount, identifiersList);
+  _struct->get_frame_identifiers(_struct, identifiersList);
 
-  // Restore param:identifiers; type: simple_vec_byref
-  identifiers.clear();
-  if (identifiersCount > 0 && identifiersList) {
-    for (size_t i = 0; i < identifiersCount; ++i) {
-      identifiers.push_back(identifiersList[i]);
-    }
-    delete[] identifiersList;
+  // Restore param:identifiers; type: string_vec_byref
+  if (identifiersList) {
+    identifiers.clear();
+    transfer_string_list_contents(identifiersList, identifiers);
+    cef_string_list_free(identifiersList);
   }
 }
 
@@ -413,591 +390,40 @@ void CefBrowserCToCpp::GetFrameNames(std::vector<CefString>& names) {
   }
 }
 
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefBrowserPermissionRequestDelegate> CefBrowserCToCpp::
-    GetPermissionRequestDelegate() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_permission_request_delegate)) {
-    return nullptr;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_browser_permission_request_delegate_t* _retval =
-      _struct->get_permission_request_delegate(_struct);
-
-  // Return type: refptr_same
-  return CefBrowserPermissionRequestDelegateCToCpp::Wrap(_retval);
-}
-
-NO_SANITIZE("cfi-icall")
-CefRefPtr<CefGeolocationAcess> CefBrowserCToCpp::GetGeolocationPermissions() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_geolocation_permissions)) {
-    return nullptr;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  cef_geolocation_acess_t* _retval =
-      _struct->get_geolocation_permissions(_struct);
-
-  // Return type: refptr_same
-  return CefGeolocationAcessCToCpp::Wrap(_retval);
-}
-
-NO_SANITIZE("cfi-icall")
-bool CefBrowserCToCpp::CanGoBackOrForward(int num_steps) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_go_back_or_forward)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->can_go_back_or_forward(_struct, num_steps);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::GoBackOrForward(int num_steps) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, go_back_or_forward)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->go_back_or_forward(_struct, num_steps);
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::DeleteHistory() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, delete_history)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->delete_history(_struct);
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::SelectAndCopy() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, select_and_copy)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->select_and_copy(_struct);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowFreeCopy() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, should_show_free_copy)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->should_show_free_copy(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::PasswordSuggestionSelected(int list_index) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, password_suggestion_selected)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->password_suggestion_selected(_struct, list_index);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::UpdateBrowserControlsState(int constraints,
-                                                  int current,
-                                                  bool animate) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, update_browser_controls_state)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->update_browser_controls_state(_struct, constraints, current,
-                                         animate);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::UpdateBrowserControlsHeight(int height, bool animate) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, update_browser_controls_height)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->update_browser_controls_height(_struct, height, animate);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::PrefetchPage(CefString& url,
-                                    CefString& additionalHttpHeaders) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, prefetch_page)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->prefetch_page(_struct, url.GetWritableStruct(),
-                         additionalHttpHeaders.GetWritableStruct());
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::ReloadOriginalUrl() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, reload_original_url)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->reload_original_url(_struct);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::CanStoreWebArchive() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, can_store_web_archive)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->can_store_web_archive(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetBrowserUserAgentString(const CefString& user_agent) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_browser_user_agent_string)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: user_agent; type: string_byref_const
-  DCHECK(!user_agent.empty());
-  if (user_agent.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->set_browser_user_agent_string(_struct, user_agent.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::ShouldShowLoadingUI() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, should_show_loading_ui)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->should_show_loading_ui(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetForceEnableZoom(bool forceEnableZoom) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_force_enable_zoom)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_force_enable_zoom(_struct, forceEnableZoom);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetForceEnableZoom() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_force_enable_zoom)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->get_force_enable_zoom(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") int CefBrowserCToCpp::GetNWebId() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_nweb_id)) {
-    return 0;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->get_nweb_id(_struct);
-
-  // Return type: simple
-  return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetEnableBlankTargetPopupIntercept(
-    bool enableBlankTargetPopup) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_enable_blank_target_popup_intercept)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_enable_blank_target_popup_intercept(_struct,
-                                                   enableBlankTargetPopup);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetSavePasswordAutomatically() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_save_password_automatically)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->get_save_password_automatically(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetSavePasswordAutomatically(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_save_password_automatically)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_save_password_automatically(_struct, enable);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SaveOrUpdatePassword(bool is_update) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, save_or_update_password)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->save_or_update_password(_struct, is_update);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::GetSavePassword() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_save_password)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->get_save_password(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::SetSavePassword(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_save_password)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_save_password(_struct, enable);
-}
-
-NO_SANITIZE("cfi-icall") int CefBrowserCToCpp::GetSecurityLevel() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_security_level)) {
-    return 0;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->get_security_level(_struct);
-
-  // Return type: simple
-  return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::EnableSafeBrowsing(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, enable_safe_browsing)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->enable_safe_browsing(_struct, enable);
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsSafeBrowsingEnabled() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_safe_browsing_enabled)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_safe_browsing_enabled(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::EnableIntelligentTrackingPrevention(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, enable_intelligent_tracking_prevention)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->enable_intelligent_tracking_prevention(_struct, enable);
-}
-
-NO_SANITIZE("cfi-icall")
-bool CefBrowserCToCpp::IsIntelligentTrackingPreventionEnabled() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_intelligent_tracking_prevention_enabled)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_intelligent_tracking_prevention_enabled(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsAdsBlockEnabled() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_ads_block_enabled)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_ads_block_enabled(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") bool CefBrowserCToCpp::IsAdsBlockEnabledForCurPage() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_ads_block_enabled_for_cur_page)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_ads_block_enabled_for_cur_page(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserCToCpp::EnableAdsBlock(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, enable_ads_block)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->enable_ads_block(_struct, enable);
-}
-
-NO_SANITIZE("cfi-icall")
-int CefBrowserCToCpp::SetUrlTrustListWithErrMsg(const CefString& urlTrustList,
-                                                CefString& detailErrMsg) {
-// WARNING - CHANGED ATTRIBUTES
-//   REMOVED: CefString &detailErrMsg
-//   REMOVED: const CefString &urlTrustList
-//   ADDED:   const CefString& urlTrustList
-//   ADDED:   CefString& detailErrMsg
-#pragma message("Warning: " __FILE__ \
-                ": SetUrlTrustListWithErrMsg prototype has changed")
-
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_url_trust_list_with_err_msg)) {
-    return -1;
-  }
-
-  // Execute
-  return _struct->set_url_trust_list_with_err_msg(
-      _struct, urlTrustList.GetStruct(), detailErrMsg.GetWritableStruct());
-}
-
-cef_accelerated_widget_t CefBrowserCToCpp::GetAcceleratedWidget(bool isPopup) {
-  return 0;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetBackForwardCacheOptions(int32_t size,
-                                                  int32_t timeToLive) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_back_forward_cache_options)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_back_forward_cache_options(_struct, size, timeToLive);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserCToCpp::SetAdBlockEnabledForSite(bool is_adblock_enabled,
-                                                int main_frame_tree_node_id) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_ad_block_enabled_for_site)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_ad_block_enabled_for_site(_struct, is_adblock_enabled,
-                                         main_frame_tree_node_id);
-}
-
 // CONSTRUCTOR - Do not edit by hand.
+
+NO_SANITIZE("cfi-icall")
+bool CefBrowserCToCpp::NeedToFireBeforeUnloadOrUnloadEvents() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, need_to_fire_before_unload_events)) {
+    return false;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  int _retval = _struct->need_to_fire_before_unload_events(_struct);
+
+  // Return type: bool
+  return _retval ? true : false;
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserCToCpp::DispatchBeforeUnload() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, dispatch_before_unload)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->dispatch_before_unload(_struct);
+}
 
 CefBrowserCToCpp::CefBrowserCToCpp() {}
 

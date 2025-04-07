@@ -3,20 +3,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/file_dialog_manager.h"
+#include "cef/libcef/browser/file_dialog_manager.h"
 
 #include <utility>
 
-#include "include/cef_dialog_handler.h"
-#include "libcef/browser/browser_host_base.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/thread_util.h"
-
+#include "base/memory/raw_ptr.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/include/cef_dialog_handler.h"
+#include "cef/libcef/browser/browser_host_base.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/ohos_cef_ext/include/arkweb_dialog_handler_ext.h"
 #include "chrome/browser/file_select_helper.h"
 #include "content/public/browser/file_select_listener.h"
 #include "content/public/browser/render_frame_host.h"
 #include "ui/shell_dialogs/select_file_policy.h"
+#include "ui/shell_dialogs/selected_file_info.h"
 
 using blink::mojom::FileChooserParams;
 
@@ -90,8 +92,8 @@ void RunFileDialogDismissed(CefRefPtr<CefRunFileDialogCallback> callback,
                             const std::vector<base::FilePath>& file_paths) {
   std::vector<CefString> paths;
   if (file_paths.size() > 0) {
-    for (size_t i = 0; i < file_paths.size(); ++i) {
-      paths.push_back(file_paths[i].value());
+    for (const auto& file_path : file_paths) {
+      paths.push_back(file_path.value());
     }
   }
   callback->OnFileDialogDismissed(paths);
@@ -117,7 +119,7 @@ FileChooserParams SelectFileToFileChooserParams(
     const ui::SelectFileDialog::FileTypeInfo* file_types) {
   FileChooserParams params;
 
-  absl::optional<FileChooserParams::Mode> mode;
+  std::optional<FileChooserParams::Mode> mode;
   switch (type) {
     case ui::SelectFileDialog::Type::SELECT_UPLOAD_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
@@ -131,14 +133,14 @@ FileChooserParams SelectFileToFileChooserParams(
     case ui::SelectFileDialog::Type::SELECT_OPEN_MULTI_FILE:
       mode = FileChooserParams::Mode::kOpenMultiple;
       break;
- #if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
     case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
       break;
     case ui::SelectFileDialog::Type::SELECT_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
       break;
- #endif
+#endif
     default:
       NOTIMPLEMENTED();
       return params;
@@ -148,16 +150,20 @@ FileChooserParams SelectFileToFileChooserParams(
   params.title = title;
   params.default_file_name = default_path;
 
-  // Note that this translation will lose any mime-type based filters that
-  // may have existed in the original FileChooserParams::accept_types if this
-  // dialog was created via FileSelectHelper::RunFileChooser.
   if (file_types) {
-    // A list of allowed extensions. For example, it might be
+    // |file_types| comes from FileSelectHelper::GetFileTypesFromAcceptType.
+    // |extensions| is a list of allowed extensions. For example, it might be
     //   { { "htm", "html" }, { "txt" } }
-    for (auto& vec : file_types->extensions) {
-      for (auto& ext : vec) {
-        params.accept_types.push_back(
-            FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
+    for (size_t i = 0; i < file_types->extensions.size(); ++i) {
+      if (file_types->extension_mimetypes.size() > i &&
+          !file_types->extension_mimetypes[i].empty()) {
+        // Use the original mime type.
+        params.accept_types.push_back(file_types->extension_mimetypes[i]);
+      } else if (file_types->extensions[i].size() == 1) {
+        // Use the single file extension. We ignore the "Custom Files" filter
+        // which is the only instance of multiple file extensions.
+        params.accept_types.push_back(FilePathTypeToString16(
+            FILE_PATH_LITERAL(".") + file_types->extensions[i][0]));
       }
     }
   }
@@ -206,9 +212,8 @@ class CefFileSelectListener : public content::FileSelectListener {
 class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
  public:
   CefSelectFileDialogListener(ui::SelectFileDialog::Listener* listener,
-                              void* params,
                               base::OnceClosure callback)
-      : listener_(listener), params_(params), callback_(std::move(callback)) {}
+      : listener_(listener), callback_(std::move(callback)) {}
 
   CefSelectFileDialogListener(const CefSelectFileDialogListener&) = delete;
   CefSelectFileDialogListener& operator=(const CefSelectFileDialogListener&) =
@@ -223,7 +228,7 @@ class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
       // Don't execute the listener.
       Destroy();
     } else {
-      FileSelectionCanceled(params_);
+      FileSelectionCanceled();
     }
   }
 
@@ -232,45 +237,22 @@ class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
  private:
   ~CefSelectFileDialogListener() override = default;
 
-  void FileSelected(const base::FilePath& path,
-                    int index,
-                    void* params) override {
-    DCHECK_EQ(params, params_);
+  void FileSelected(const ui::SelectedFileInfo& file, int index) override {
     executing_ = true;
-    listener_->FileSelected(path, index, params);
+    listener_.ExtractAsDangling()->FileSelected(file, index);
     Destroy();
   }
 
-  void FileSelectedWithExtraInfo(const ui::SelectedFileInfo& file,
-                                 int index,
-                                 void* params) override {
-    DCHECK_EQ(params, params_);
+  void MultiFilesSelected(
+      const std::vector<ui::SelectedFileInfo>& files) override {
     executing_ = true;
-    listener_->FileSelectedWithExtraInfo(file, index, params);
+    listener_.ExtractAsDangling()->MultiFilesSelected(files);
     Destroy();
   }
 
-  void MultiFilesSelected(const std::vector<base::FilePath>& files,
-                          void* params) override {
-    DCHECK_EQ(params, params_);
+  void FileSelectionCanceled() override {
     executing_ = true;
-    listener_->MultiFilesSelected(files, params);
-    Destroy();
-  }
-
-  void MultiFilesSelectedWithExtraInfo(
-      const std::vector<ui::SelectedFileInfo>& files,
-      void* params) override {
-    DCHECK_EQ(params, params_);
-    executing_ = true;
-    listener_->MultiFilesSelectedWithExtraInfo(files, params);
-    Destroy();
-  }
-
-  void FileSelectionCanceled(void* params) override {
-    DCHECK_EQ(params, params_);
-    executing_ = true;
-    listener_->FileSelectionCanceled(params);
+    listener_.ExtractAsDangling()->FileSelectionCanceled();
     Destroy();
   }
 
@@ -279,8 +261,7 @@ class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
     delete this;
   }
 
-  ui::SelectFileDialog::Listener* const listener_;
-  void* const params_;
+  raw_ptr<ui::SelectFileDialog::Listener> listener_;
   base::OnceClosure callback_;
 
   // Used to avoid re-entrancy from Cancel().
@@ -295,7 +276,8 @@ CefFileDialogManager::~CefFileDialogManager() = default;
 void CefFileDialogManager::Destroy() {
   if (dialog_listener_) {
     // Cancel the listener and delete related objects.
-    SelectFileDoneByListenerCallback(/*listener_destroyed=*/false);
+    SelectFileDoneByListenerCallback(/*listener=*/nullptr,
+                                     /*listener_destroyed=*/false);
   }
   DCHECK(!dialog_);
   DCHECK(!dialog_listener_);
@@ -353,8 +335,10 @@ void CefFileDialogManager::RunFileChooser(
   // handled here there will be another call to the delegate from RunSelectFile.
   // It might be better to execute the delegate only the single time here, but
   // we don't currently have sufficient state in RunSelectFile to know that the
-  // delegate has already been executed.
-  callback = MaybeRunDelegate(params, std::move(callback));
+  // delegate has already been executed. Also, we haven't retrieved file
+  // extension data at this point.
+  callback = MaybeRunDelegate(params, Extensions(), Descriptions(),
+                              std::move(callback));
   if (callback.is_null()) {
     // The delegate kept the callback.
     return;
@@ -396,29 +380,29 @@ void CefFileDialogManager::RunSelectFile(
     const ui::SelectFileDialog::FileTypeInfo* file_types,
     int file_type_index,
     const base::FilePath::StringType& default_extension,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
     gfx::NativeWindow owning_window,
-    void* params) {
+    std::vector<std::u16string> accept_types,
+    bool use_media_capture) {
+#else
+    gfx::NativeWindow owning_window) {
+#endif
   CEF_REQUIRE_UIT();
 
   active_listeners_.insert(listener);
 
-  // This will not be an exact representation of the original params.
   auto chooser_params =
       SelectFileToFileChooserParams(type, title, default_path, file_types);
-#ifdef OHOS_FILE_UPLOAD
-  typedef std::pair<std::vector<std::u16string>, bool> AcceptTypes;
-  AcceptTypes accept_types =
-      std::make_pair(std::vector<std::u16string>(), false);
-
-  if (params)
-    accept_types = *(reinterpret_cast<AcceptTypes*>(params));
-  chooser_params.use_media_capture = accept_types.second;
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  chooser_params.mime_types = accept_types;
+  chooser_params.use_media_capture = use_media_capture;
 #endif
-  auto callback =
-      base::BindOnce(&CefFileDialogManager::SelectFileDoneByDelegateCallback,
-                     weak_ptr_factory_.GetWeakPtr(), base::Unretained(listener),
-                     base::Unretained(params));
-  callback = MaybeRunDelegate(chooser_params, std::move(callback));
+  auto callback = base::BindOnce(
+      &CefFileDialogManager::SelectFileDoneByDelegateCallback,
+      weak_ptr_factory_.GetWeakPtr(), base::UnsafeDangling(listener));
+  callback = MaybeRunDelegate(chooser_params, file_types->extensions,
+                              file_types->extension_description_overrides,
+                              std::move(callback));
   if (callback.is_null()) {
     // The delegate kept the callback.
     return;
@@ -449,10 +433,11 @@ void CefFileDialogManager::RunSelectFile(
 
   // This object will delete itself.
   dialog_listener_ = new CefSelectFileDialogListener(
-      listener, params,
+      listener,
       base::BindOnce(&CefFileDialogManager::SelectFileDoneByListenerCallback,
                      weak_ptr_factory_.GetWeakPtr(),
-                     /*listener_destroyed=*/false));
+                     base::UnsafeDangling(listener),
+                     /*listener_destroyed=*/true));
 
   // This call will not be intercepted by CefSelectFileDialogFactory due to the
   // |run_from_cef=true| flag.
@@ -460,9 +445,9 @@ void CefFileDialogManager::RunSelectFile(
   dialog_ = ui::SelectFileDialog::Create(dialog_listener_, std::move(policy),
                                          /*run_from_cef=*/true);
 
-#if defined(OHOS_BUGFIX_CRASH)
+#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
   if (!dialog_) {
-    LOG(INFO) << "app hasn't onFileSelectShow event, return";
+    LOG(ERROR) << "app hasn't onFileSelectShow event, return";
     return;
   }
 #endif
@@ -474,7 +459,7 @@ void CefFileDialogManager::RunSelectFile(
   }
 
   dialog_->SelectFile(type, title, default_path, file_types, file_type_index,
-                      default_extension, owning_window, params);
+                      default_extension, owning_window);
 }
 
 void CefFileDialogManager::SelectFileListenerDestroyed(
@@ -484,9 +469,9 @@ void CefFileDialogManager::SelectFileListenerDestroyed(
 
   // This notification will arrive from whomever owns |listener|, so we don't
   // want to execute any |listener| methods after this point.
-  if (dialog_listener_ && listener == dialog_listener_->listener()) {
+  if (dialog_listener_) {
     // Cancel the currently active dialog.
-    SelectFileDoneByListenerCallback(/*listener_destroyed=*/true);
+    SelectFileDoneByListenerCallback(listener, /*listener_destroyed=*/true);
   } else {
     // Any future SelectFileDoneByDelegateCallback call for |listener| becomes a
     // no-op.
@@ -497,7 +482,15 @@ void CefFileDialogManager::SelectFileListenerDestroyed(
 CefFileDialogManager::RunFileChooserCallback
 CefFileDialogManager::MaybeRunDelegate(
     const blink::mojom::FileChooserParams& params,
+    const Extensions& extensions,
+    const Descriptions& descriptions,
     RunFileChooserCallback callback) {
+  // |extensions| and |descriptions| may be empty, or may contain 1 additional
+  // entry for the "Custom Files" filter.
+  DCHECK(extensions.empty() || extensions.size() >= params.accept_types.size());
+  DCHECK(descriptions.empty() ||
+         descriptions.size() >= params.accept_types.size());
+
   if (auto client = browser_->client()) {
     if (auto handler = browser_->client()->GetDialogHandler()) {
       int mode = FILE_DIALOG_OPEN;
@@ -519,23 +512,64 @@ CefFileDialogManager::MaybeRunDelegate(
           break;
       }
 
-      std::vector<std::u16string>::const_iterator it;
-
       std::vector<CefString> accept_filters;
-      it = params.accept_types.begin();
-      for (; it != params.accept_types.end(); ++it) {
-        accept_filters.push_back(*it);
+      for (auto& accept_type : params.accept_types) {
+        accept_filters.push_back(accept_type);
+      }
+
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+      std::vector<CefString> mime_filters;
+      for (auto& mime_type : params.mime_types) {
+        mime_filters.push_back(mime_type);
+      }
+#endif
+
+      std::vector<CefString> accept_extensions;
+      std::vector<CefString> accept_descriptions;
+      if (extensions.empty()) {
+        // We don't know the expansion of mime type values at this time,
+        // so only include the single file extensions.
+        for (auto& accept_type : params.accept_types) {
+          accept_extensions.push_back(
+              accept_type.ends_with(u"/*") ? std::u16string() : accept_type);
+        }
+        // Empty descriptions.
+        accept_descriptions.resize(params.accept_types.size());
+      } else {
+        // There may be 1 additional entry in |extensions| and |descriptions|
+        // that we want to ignore (for the "Custom Files" filter).
+        for (size_t i = 0; i < params.accept_types.size(); ++i) {
+          const auto& extension_list = extensions[i];
+          std::u16string ext_str;
+          for (auto& ext : extension_list) {
+            if (!ext_str.empty()) {
+              ext_str += u";";
+            }
+            ext_str += FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext);
+          }
+          accept_extensions.push_back(ext_str);
+          if (descriptions.size() == extensions.size()) {
+            accept_descriptions.push_back(descriptions[i]);
+          }
+        }
       }
 
       CefRefPtr<CefFileDialogCallbackImpl> callbackImpl(
           new CefFileDialogCallbackImpl(std::move(callback)));
       const bool handled = handler->OnFileDialog(
-          browser_, static_cast<cef_file_dialog_mode_t>(mode), params.title,
-          params.default_file_name.value(), accept_filters,
-          params.use_media_capture, callbackImpl.get());
+          browser_.get(), static_cast<cef_file_dialog_mode_t>(mode),
+          params.title, params.default_file_name.value(), accept_filters,
+          accept_extensions, accept_descriptions,
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+          params.use_media_capture, mime_filters,
+#endif
+          callbackImpl.get());
       if (!handled) {
         // May return nullptr if the client has already executed the callback.
         callback = callbackImpl->Disconnect();
+        LOG_IF(ERROR, callback.is_null())
+            << "Should return true from OnFileDialog when executing the "
+               "callback";
       }
     }
   }
@@ -544,8 +578,7 @@ CefFileDialogManager::MaybeRunDelegate(
 }
 
 void CefFileDialogManager::SelectFileDoneByDelegateCallback(
-    ui::SelectFileDialog::Listener* listener,
-    void* params,
+    MayBeDangling<ui::SelectFileDialog::Listener> listener,
     const std::vector<base::FilePath>& paths) {
   CEF_REQUIRE_UIT();
 
@@ -555,21 +588,26 @@ void CefFileDialogManager::SelectFileDoneByDelegateCallback(
     return;
   }
 
-  active_listeners_.erase(listener);
+  active_listeners_.erase(listener.get());
 
   if (paths.empty()) {
-    listener->FileSelectionCanceled(params);
+    listener->FileSelectionCanceled();
   } else if (paths.size() == 1) {
-    listener->FileSelected(paths[0], /*index=*/0, params);
+    listener->FileSelected(ui::SelectedFileInfo(paths[0]), /*index=*/0);
   } else {
-    listener->MultiFilesSelected(paths, params);
+    listener->MultiFilesSelected(ui::FilePathListToSelectedFileInfoList(paths));
   }
   // |listener| is likely deleted at this point.
 }
 
 void CefFileDialogManager::SelectFileDoneByListenerCallback(
+    MayBeDangling<ui::SelectFileDialog::Listener> listener,
     bool listener_destroyed) {
   CEF_REQUIRE_UIT();
+
+  // |listener| will be provided iff |listener_destroyed=true|, as
+  // |dialog_listener_->listener()| will return nullptr at this point.
+  DCHECK(!listener || listener_destroyed);
 
   // Avoid re-entrancy of this method. CefSelectFileDialogListener callbacks to
   // the delegated listener may result in an immediate call to
@@ -585,14 +623,15 @@ void CefFileDialogManager::SelectFileDoneByListenerCallback(
   DCHECK(dialog_);
   DCHECK(dialog_listener_);
 
-  active_listeners_.erase(dialog_listener_->listener());
+  active_listeners_.erase(listener ? listener.get()
+                                   : dialog_listener_->listener());
 
   // Clear |dialog_listener_| before calling Cancel() to avoid re-entrancy.
   auto dialog_listener = dialog_listener_;
   dialog_listener_ = nullptr;
   dialog_listener->Cancel(listener_destroyed);
 
-#if defined(OHOS_BUGFIX_CRASH)
+#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
   if (dialog_ != nullptr) {
     // There should be no further listener callbacks after this call.
     dialog_->ListenerDestroyed();
@@ -602,5 +641,5 @@ void CefFileDialogManager::SelectFileDoneByListenerCallback(
   // There should be no further listener callbacks after this call.
   dialog_->ListenerDestroyed();
   dialog_ = nullptr;
-#endif
+#endif  // BUILDFLAG(ARKWEB_BUGFIX_CRASH)
 }

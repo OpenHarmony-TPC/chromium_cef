@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=29f4656baa83a774356e06eb26570286e0662755$
+// $hash=09ea98cc6bfbc87b8bfc9d30c24a3713e1a63be7$
 //
 
 #include "libcef_dll/ctocpp/waitable_event_ctocpp.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 // STATIC METHODS - Body may be edited by hand.
@@ -94,7 +95,8 @@ NO_SANITIZE("cfi-icall") void CefWaitableEventCToCpp::Wait() {
   _struct->wait(_struct);
 }
 
-NO_SANITIZE("cfi-icall") bool CefWaitableEventCToCpp::TimedWait(int64 max_ms) {
+NO_SANITIZE("cfi-icall")
+bool CefWaitableEventCToCpp::TimedWait(int64_t max_ms) {
   shutdown_checker::AssertNotShutdown();
 
   cef_waitable_event_t* _struct = GetStruct();

@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=e93e5d01406f0539f79ccdd66f0c12049da5bd70$
+// $hash=398d0c16437a05d58807df64539cf202774d28c2$
 //
 
 #include "libcef_dll/cpptoc/permission_handler_cpptoc.h"
+
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
 #include "libcef_dll/ctocpp/media_access_callback_ctocpp.h"
@@ -28,7 +29,7 @@ int CEF_CALLBACK permission_handler_on_request_media_access_permission(
     cef_browser_t* browser,
     cef_frame_t* frame,
     const cef_string_t* requesting_origin,
-    uint32 requested_permissions,
+    uint32_t requested_permissions,
     cef_media_access_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -73,9 +74,9 @@ int CEF_CALLBACK permission_handler_on_request_media_access_permission(
 int CEF_CALLBACK permission_handler_on_show_permission_prompt(
     struct _cef_permission_handler_t* self,
     cef_browser_t* browser,
-    uint64 prompt_id,
+    uint64_t prompt_id,
     const cef_string_t* requesting_origin,
-    uint32 requested_permissions,
+    uint32_t requested_permissions,
     cef_permission_prompt_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
 
@@ -113,7 +114,7 @@ int CEF_CALLBACK permission_handler_on_show_permission_prompt(
 void CEF_CALLBACK permission_handler_on_dismiss_permission_prompt(
     struct _cef_permission_handler_t* self,
     cef_browser_t* browser,
-    uint64 prompt_id,
+    uint64_t prompt_id,
     cef_permission_request_result_t result) {
   shutdown_checker::AssertNotShutdown();
 

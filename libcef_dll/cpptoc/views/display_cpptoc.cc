@@ -9,11 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=94e96ba6408659e52498c98a5d92faf6daf2b143$
+// $hash=285123c4bb95c4219f59e57cc289e786c7f49209$
 //
 
 #include "libcef_dll/cpptoc/views/display_cpptoc.h"
+
 #include <algorithm>
+
 #include "libcef_dll/shutdown_checker.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
@@ -216,7 +218,7 @@ namespace {
 
 // MEMBER FUNCTIONS - Body may be edited by hand.
 
-int64 CEF_CALLBACK display_get_id(struct _cef_display_t* self) {
+int64_t CEF_CALLBACK display_get_id(struct _cef_display_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -227,7 +229,7 @@ int64 CEF_CALLBACK display_get_id(struct _cef_display_t* self) {
   }
 
   // Execute
-  int64 _retval = CefDisplayCppToC::Get(self)->GetID();
+  int64_t _retval = CefDisplayCppToC::Get(self)->GetID();
 
   // Return type: simple
   return _retval;

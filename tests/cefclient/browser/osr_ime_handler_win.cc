@@ -4,11 +4,12 @@
 
 // Implementation based on ui/base/ime/win/imm32_manager.cc from Chromium.
 
+#include "tests/cefclient/browser/osr_ime_handler_win.h"
+
 #include <msctf.h>
 #include <windowsx.h>
 
 #include "include/base/cef_build.h"
-#include "tests/cefclient/browser/osr_ime_handler_win.h"
 #include "tests/cefclient/browser/resource.h"
 #include "tests/shared/browser/geometry_util.h"
 #include "tests/shared/browser/main_message_loop.h"
@@ -70,7 +71,7 @@ void GetCompositionUnderlines(
     uint32_t target_end,
     std::vector<CefCompositionUnderline>& underlines) {
   int clause_size = ::ImmGetCompositionString(imc, GCS_COMPCLAUSE, nullptr, 0);
-  int clause_length = clause_size / sizeof(uint32);
+  int clause_length = clause_size / sizeof(uint32_t);
   if (clause_length) {
     std::vector<uint32_t> clause_data(clause_length);
 
@@ -97,9 +98,8 @@ void GetCompositionUnderlines(
 }  // namespace
 
 OsrImeHandlerWin::OsrImeHandlerWin(HWND hwnd)
-    : is_composing_(false),
-      input_language_id_(LANG_USER_DEFAULT),
-      system_caret_(false),
+    : input_language_id_(LANG_USER_DEFAULT),
+
       cursor_index_(std::numeric_limits<uint32_t>::max()),
       hwnd_(hwnd) {
   ime_rect_ = {-1, -1, 0, 0};

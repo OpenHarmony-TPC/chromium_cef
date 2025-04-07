@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=443a3f497b5e3b51094debaa69648ff2768c92a1$
+// $hash=15033c6ea2726198b5a7065db9246904357c83a1$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_DRAG_DATA_CAPI_H_
@@ -148,6 +148,13 @@ typedef struct _cef_drag_data_t {
   ///
   int(CEF_CALLBACK* get_file_names)(struct _cef_drag_data_t* self,
                                     cef_string_list_t names);
+
+  ///
+  /// Retrieve the list of file paths that are being dragged into the browser
+  /// window.
+  ///
+  int(CEF_CALLBACK* get_file_paths)(struct _cef_drag_data_t* self,
+                                    cef_string_list_t paths);
 
   ///
   /// Set the link URL that is being dragged.

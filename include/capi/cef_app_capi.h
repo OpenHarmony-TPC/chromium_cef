@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=eadf7b3b90074e9b8a67aea85be1c85321fb5430$
+// $hash=608f4520d7901b6e18bf9164c9460f1b75bad8f4$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_APP_CAPI_H_
@@ -91,11 +91,9 @@ typedef struct _cef_app_t {
       struct _cef_scheme_registrar_t* registrar);
 
   ///
-  /// Return the handler for resource bundle events. If
-  /// cef_settings_t.pack_loading_disabled is true (1) a handler must be
-  /// returned. If no handler is returned resources will be loaded from pack
-  /// files. This function is called by the browser and render processes on
-  /// multiple threads.
+  /// Return the handler for resource bundle events. If no handler is returned
+  /// resources will be loaded from pack files. This function is called by the
+  /// browser and render processes on multiple threads.
   ///
   struct _cef_resource_bundle_handler_t*(
       CEF_CALLBACK* get_resource_bundle_handler)(struct _cef_app_t* self);
@@ -133,10 +131,13 @@ CEF_EXPORT int cef_execute_process(const cef_main_args_t* args,
 
 ///
 /// This function should be called on the main application thread to initialize
-/// the CEF browser process. The |application| parameter may be NULL. A return
-/// value of true (1) indicates that it succeeded and false (0) indicates that
-/// it failed. The |windows_sandbox_info| parameter is only used on Windows and
-/// may be NULL (see cef_sandbox_win.h for details).
+/// the CEF browser process. The |application| parameter may be NULL. Returns
+/// true (1) if initialization succeeds. Returns false (0) if initialization
+/// fails or if early exit is desired (for example, due to process singleton
+/// relaunch behavior). If this function returns false (0) then the application
+/// should exit immediately without calling any other CEF functions except,
+/// optionally, CefGetErrorCode. The |windows_sandbox_info| parameter is only
+/// used on Windows and may be NULL (see cef_sandbox_win.h for details).
 ///
 CEF_EXPORT int cef_initialize(const cef_main_args_t* args,
                               const struct _cef_settings_t* settings,
@@ -144,8 +145,20 @@ CEF_EXPORT int cef_initialize(const cef_main_args_t* args,
                               void* windows_sandbox_info);
 
 ///
+/// This function can optionally be called on the main application thread after
+/// CefInitialize to retrieve the initialization exit code. When CefInitialize
+/// returns true (1) the exit code will be 0 (CEF_RESULT_CODE_NORMAL_EXIT).
+/// Otherwise, see cef_resultcode_t for possible exit code values including
+/// browser process initialization errors and normal early exit conditions (such
+/// as CEF_RESULT_CODE_NORMAL_EXIT_PROCESS_NOTIFIED for process singleton
+/// relaunch behavior).
+///
+CEF_EXPORT int cef_get_exit_code(void);
+
+///
 /// This function should be called on the main application thread to shut down
-/// the CEF browser process before the application exits.
+/// the CEF browser process before the application exits. Do not call any other
+/// CEF functions after calling this function.
 ///
 CEF_EXPORT void cef_shutdown(void);
 
@@ -182,35 +195,6 @@ CEF_EXPORT void cef_run_message_loop(void);
 /// application thread and only if cef_run_message_loop() was used.
 ///
 CEF_EXPORT void cef_quit_message_loop(void);
-
-///
-/// This function should be called on the main application thread.
-///
-CEF_EXPORT void cef_apply_http_dns(void);
-
-///
-/// This function should be called on the main application thread.
-///
-CEF_EXPORT void cef_set_download_handler(
-    struct _cef_download_handler_t* download_handler);
-
-///
-/// This function should be called on the main application thread.
-///
-CEF_EXPORT void cef_resume_download(const cef_string_t* guid,
-                                    const cef_string_t* url,
-                                    const cef_string_t* full_path,
-                                    int64 received_bytes,
-                                    int64 total_bytes,
-                                    const cef_string_t* etag,
-                                    const cef_string_t* mime_type,
-                                    const cef_string_t* last_modified,
-                                    const cef_string_t* received_slices_string);
-
-///
-/// This function should be called on the main application thread.
-///
-CEF_EXPORT struct _cef_download_item_t* cef_get_download_item(const char* guid);
 
 #ifdef __cplusplus
 }

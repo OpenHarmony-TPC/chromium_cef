@@ -9,10 +9,11 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d901d43eb44685070a2eb1826137a4d714717940$
+// $hash=5160d214e700202d344ac83c7979e890419ac810$
 //
 
 #include "libcef_dll/cpptoc/download_item_cpptoc.h"
+
 #include "libcef_dll/shutdown_checker.h"
 
 namespace {
@@ -88,7 +89,44 @@ int CEF_CALLBACK download_item_is_canceled(struct _cef_download_item_t* self) {
   return _retval;
 }
 
-int64 CEF_CALLBACK
+int CEF_CALLBACK
+download_item_is_interrupted(struct _cef_download_item_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return 0;
+  }
+
+  // Execute
+  bool _retval = CefDownloadItemCppToC::Get(self)->IsInterrupted();
+
+  // Return type: bool
+  return _retval;
+}
+
+cef_download_interrupt_reason_t CEF_CALLBACK
+download_item_get_interrupt_reason(struct _cef_download_item_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return CEF_DOWNLOAD_INTERRUPT_REASON_NONE;
+  }
+
+  // Execute
+  cef_download_interrupt_reason_t _retval =
+      CefDownloadItemCppToC::Get(self)->GetInterruptReason();
+
+  // Return type: simple
+  return _retval;
+}
+
+int64_t CEF_CALLBACK
 download_item_get_current_speed(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -100,7 +138,7 @@ download_item_get_current_speed(struct _cef_download_item_t* self) {
   }
 
   // Execute
-  int64 _retval = CefDownloadItemCppToC::Get(self)->GetCurrentSpeed();
+  int64_t _retval = CefDownloadItemCppToC::Get(self)->GetCurrentSpeed();
 
   // Return type: simple
   return _retval;
@@ -124,7 +162,7 @@ download_item_get_percent_complete(struct _cef_download_item_t* self) {
   return _retval;
 }
 
-int64 CEF_CALLBACK
+int64_t CEF_CALLBACK
 download_item_get_total_bytes(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -136,13 +174,13 @@ download_item_get_total_bytes(struct _cef_download_item_t* self) {
   }
 
   // Execute
-  int64 _retval = CefDownloadItemCppToC::Get(self)->GetTotalBytes();
+  int64_t _retval = CefDownloadItemCppToC::Get(self)->GetTotalBytes();
 
   // Return type: simple
   return _retval;
 }
 
-int64 CEF_CALLBACK
+int64_t CEF_CALLBACK
 download_item_get_received_bytes(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
@@ -154,7 +192,7 @@ download_item_get_received_bytes(struct _cef_download_item_t* self) {
   }
 
   // Execute
-  int64 _retval = CefDownloadItemCppToC::Get(self)->GetReceivedBytes();
+  int64_t _retval = CefDownloadItemCppToC::Get(self)->GetReceivedBytes();
 
   // Return type: simple
   return _retval;
@@ -214,7 +252,7 @@ download_item_get_full_path(struct _cef_download_item_t* self) {
   return _retval.DetachToUserFree();
 }
 
-uint32 CEF_CALLBACK download_item_get_id(struct _cef_download_item_t* self) {
+uint32_t CEF_CALLBACK download_item_get_id(struct _cef_download_item_t* self) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -225,7 +263,7 @@ uint32 CEF_CALLBACK download_item_get_id(struct _cef_download_item_t* self) {
   }
 
   // Execute
-  uint32 _retval = CefDownloadItemCppToC::Get(self)->GetId();
+  uint32_t _retval = CefDownloadItemCppToC::Get(self)->GetId();
 
   // Return type: simple
   return _retval;
@@ -321,200 +359,6 @@ download_item_get_mime_type(struct _cef_download_item_t* self) {
   return _retval.DetachToUserFree();
 }
 
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_original_mime_type(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetOriginalMimeType();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_guid(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetGuid();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-int CEF_CALLBACK download_item_get_state(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  int _retval = CefDownloadItemCppToC::Get(self)->GetState();
-
-  // Return type: simple
-  return _retval;
-}
-
-int CEF_CALLBACK download_item_is_paused(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefDownloadItemCppToC::Get(self)->IsPaused();
-
-  // Return type: bool
-  return _retval;
-}
-
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_method(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetMethod();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-int CEF_CALLBACK
-download_item_get_last_error_code(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  int _retval = CefDownloadItemCppToC::Get(self)->GetLastErrorCode();
-
-  // Return type: simple
-  return _retval;
-}
-
-int CEF_CALLBACK download_item_is_pending(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefDownloadItemCppToC::Get(self)->IsPending();
-
-  // Return type: bool
-  return _retval;
-}
-
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_last_modified_time(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetLastModifiedTime();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_etag(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetETag();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-cef_string_userfree_t CEF_CALLBACK
-download_item_get_received_slices(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return NULL;
-  }
-
-  // Execute
-  CefString _retval = CefDownloadItemCppToC::Get(self)->GetReceivedSlices();
-
-  // Return type: string
-  return _retval.DetachToUserFree();
-}
-
-int CEF_CALLBACK download_item_get_nweb_id(struct _cef_download_item_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  int _retval = CefDownloadItemCppToC::Get(self)->GetNWebId();
-
-  // Return type: simple
-  return _retval;
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -524,6 +368,8 @@ CefDownloadItemCppToC::CefDownloadItemCppToC() {
   GetStruct()->is_in_progress = download_item_is_in_progress;
   GetStruct()->is_complete = download_item_is_complete;
   GetStruct()->is_canceled = download_item_is_canceled;
+  GetStruct()->is_interrupted = download_item_is_interrupted;
+  GetStruct()->get_interrupt_reason = download_item_get_interrupt_reason;
   GetStruct()->get_current_speed = download_item_get_current_speed;
   GetStruct()->get_percent_complete = download_item_get_percent_complete;
   GetStruct()->get_total_bytes = download_item_get_total_bytes;
@@ -537,17 +383,6 @@ CefDownloadItemCppToC::CefDownloadItemCppToC() {
   GetStruct()->get_suggested_file_name = download_item_get_suggested_file_name;
   GetStruct()->get_content_disposition = download_item_get_content_disposition;
   GetStruct()->get_mime_type = download_item_get_mime_type;
-  GetStruct()->get_original_mime_type = download_item_get_original_mime_type;
-  GetStruct()->get_guid = download_item_get_guid;
-  GetStruct()->get_state = download_item_get_state;
-  GetStruct()->is_paused = download_item_is_paused;
-  GetStruct()->get_method = download_item_get_method;
-  GetStruct()->get_last_error_code = download_item_get_last_error_code;
-  GetStruct()->is_pending = download_item_is_pending;
-  GetStruct()->get_last_modified_time = download_item_get_last_modified_time;
-  GetStruct()->get_etag = download_item_get_etag;
-  GetStruct()->get_received_slices = download_item_get_received_slices;
-  GetStruct()->get_nweb_id = download_item_get_nweb_id;
 }
 
 // DESTRUCTOR - Do not edit by hand.

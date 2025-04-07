@@ -42,13 +42,7 @@
 #include "include/cef_browser.h"
 #include "include/cef_frame.h"
 
-#if BUILDFLAG(IS_OHOS)
-#include "include/cef_callback.h"
-#include "include/cef_load_committed_details.h"
-#include "include/cef_first_meaningful_paint_details.h"
-#include "include/cef_largest_contentful_paint_details.h"
-#include "include/cef_response.h"
-#endif
+class ArkWebLoadHandlerExt;
 
 ///
 /// Implement this interface to handle events related to browser load status.
@@ -86,11 +80,11 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
   /// navigations that fail or are canceled before commit. For notification of
   /// overall browser load status use OnLoadingStateChange instead.
   ///
-  /*--cef(optional_param=url)--*/
-   virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
-                            CefRefPtr<CefFrame> frame,
-                            const CefString& url,
-                            TransitionType transition_type) {}
+  /*--cef()--*/
+  virtual void OnLoadStart(CefRefPtr<CefBrowser> browser,
+                           CefRefPtr<CefFrame> frame,
+                           const CefString& url,
+                           TransitionType transition_type) {}
 
   ///
   /// Called when the browser is done loading a frame. The |frame| value will
@@ -122,103 +116,11 @@ class CefLoadHandler : public virtual CefBaseRefCounted {
                            const CefString& errorText,
                            const CefString& failedUrl) {}
 
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// OnLoadErrorWithRequest
-  ///
-  /*--cef()--*/
-  virtual void OnLoadErrorWithRequest(CefRefPtr<CefRequest> request,
-                                      bool is_main_frame,
-                                      bool has_user_gesture,
-                                      int error_code,
-                                      const CefString& error_text) {}
-
-  ///
-  /// OnHttpError
-  ///
-  /*--cef()--*/
-  virtual void OnHttpError(CefRefPtr<CefRequest> request,
-                           bool is_main_frame,
-                           bool has_user_gesture,
-                           CefRefPtr<CefResponse> response) {}
-
-  ///
-  /// OnRefreshAccessedHistory
-  ///
-  /*--cef()--*/
-  virtual void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
-                                        CefRefPtr<CefFrame> frame,
-                                        const CefString& url,
-                                        bool isReload) {}
-
-  ///
-  /// Notify the body that is loading the Http response to make it visible,
-  /// old pages are no longer rendered.
-  ///
-  /*--cef(optional_param=url)--*/
-  virtual void OnPageVisible(CefRefPtr<CefBrowser> browser,
-                             const CefString& url,
-                             bool success) {}
-
-  ///
-  /// OnDataResubmission.
-  ///
-  /*--cef(optional_param=url)--*/
-  virtual void OnDataResubmission(CefRefPtr<CefBrowser> browser,
-                                  CefRefPtr<CefCallback> callback) {}
-
-  ///
-  /// Called when the first content rendering of web page.
-  ///
-  /*--cef()--*/
-  virtual void OnFirstContentfulPaint(int64_t navigationStartTick,
-                                      int64_t firstContentfulPaintMs) {}
-
-  ///
-  /// Called when the first meaningful paint rendering of web page.
-  ///
-  /*--cef()--*/
-  virtual void OnFirstMeaningfulPaint(
-      CefRefPtr<CefFirstMeaningfulPaintDetails> details) {}
-
-  ///
-  /// Called when the largest contentful paint rendering of web page.
-  ///
-  /*--cef()--*/
-  virtual void OnLargestContentfulPaint(
-      CefRefPtr<CefLargestContentfulPaintDetails> details) {}
-
-  ///
-  /// Called when the navigation entry has been committed.
-  ///
-  /*--cef()--*/
-  virtual void OnNavigationEntryCommitted(
-      CefRefPtr<CefLoadCommittedDetails> details) {}
-
-
-  ///
-  /// Called when received website security risk check result.
-  ///
-  /*--cef()--*/
-  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
-
-  ///
-  /// Called when tracker's cookie is prevented.
-  ///
-  /*--cef()--*/
-  virtual void OnIntelligentTrackingPreventionResult(
-      const CefString& website_host,
-      const CefString& tracker_host) {}
-
-#ifdef OHOS_BFCACHE
-  ///
-  /// Called when page load from bfcache.
-  ///
-  /*--cef()--*/
-  virtual void UpdateFavicon(CefRefPtr<CefBrowser> browser) {}
-#endif
-
-#endif  // BUILDFLAG(IS_OHOS)
+  virtual CefRefPtr<ArkWebLoadHandlerExt> AsArkWebLoadHandlerExt() {
+    return nullptr;
+  }
 };
+
+#include "ohos_cef_ext/include/arkweb_load_handler_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_LOAD_HANDLER_H_

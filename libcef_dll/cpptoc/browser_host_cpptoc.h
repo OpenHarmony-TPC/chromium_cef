@@ -30,12 +30,12 @@
 
 // Wrap a C++ class with a C structure.
 // This class may be instantiated and accessed DLL-side only.
-class CefBrowserHostCppToC
-    : public CefCppToCRefCounted<CefBrowserHostCppToC, CefBrowserHost,
-                                 cef_browser_host_t> {
-public:
+class CefBrowserHostCppToC : public CefCppToCRefCounted<CefBrowserHostCppToC,
+                                                        CefBrowserHost,
+                                                        cef_browser_host_t> {
+ public:
   CefBrowserHostCppToC();
   virtual ~CefBrowserHostCppToC();
 };
 
-#endif // CEF_LIBCEF_DLL_CPPTOC_BROWSER_HOST_CPPTOC_H_
+#endif  // CEF_LIBCEF_DLL_CPPTOC_BROWSER_HOST_CPPTOC_H_

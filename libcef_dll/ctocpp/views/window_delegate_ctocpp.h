@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=41dcda4aae3be14392a53a81ebe70e3be7dd5006$
+// $hash=ef831469d4dd59c3a20f0dfee3e8e945a52d7637$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_VIEWS_WINDOW_DELEGATE_CTOCPP_H_
@@ -44,15 +44,19 @@ class CefWindowDelegateCToCpp
                                  bool active) override;
   void OnWindowBoundsChanged(CefRefPtr<CefWindow> window,
                              const CefRect& new_bounds) override;
+  void OnWindowFullscreenTransition(CefRefPtr<CefWindow> window,
+                                    bool is_completed) override;
   CefRefPtr<CefWindow> GetParentWindow(CefRefPtr<CefWindow> window,
                                        bool* is_menu,
                                        bool* can_activate_menu) override;
+  bool IsWindowModalDialog(CefRefPtr<CefWindow> window) override;
   CefRect GetInitialBounds(CefRefPtr<CefWindow> window) override;
   cef_show_state_t GetInitialShowState(CefRefPtr<CefWindow> window) override;
   bool IsFrameless(CefRefPtr<CefWindow> window) override;
   bool WithStandardWindowButtons(CefRefPtr<CefWindow> window) override;
   bool GetTitlebarHeight(CefRefPtr<CefWindow> window,
                          float* titlebar_height) override;
+  cef_state_t AcceptsFirstMouse(CefRefPtr<CefWindow> window) override;
   bool CanResize(CefRefPtr<CefWindow> window) override;
   bool CanMaximize(CefRefPtr<CefWindow> window) override;
   bool CanMinimize(CefRefPtr<CefWindow> window) override;
@@ -60,8 +64,11 @@ class CefWindowDelegateCToCpp
   bool OnAccelerator(CefRefPtr<CefWindow> window, int command_id) override;
   bool OnKeyEvent(CefRefPtr<CefWindow> window,
                   const CefKeyEvent& event) override;
-  void OnWindowFullscreenTransition(CefRefPtr<CefWindow> window,
-                                    bool is_completed) override;
+  void OnThemeColorsChanged(CefRefPtr<CefWindow> window,
+                            bool chrome_theme) override;
+  cef_runtime_style_t GetWindowRuntimeStyle() override;
+  bool GetLinuxWindowProperties(CefRefPtr<CefWindow> window,
+                                CefLinuxWindowProperties& properties) override;
 
   // CefPanelDelegate methods.
 
@@ -81,6 +88,7 @@ class CefWindowDelegateCToCpp
                        const CefRect& new_bounds) override;
   void OnFocus(CefRefPtr<CefView> view) override;
   void OnBlur(CefRefPtr<CefView> view) override;
+  void OnThemeChanged(CefRefPtr<CefView> view) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_VIEWS_WINDOW_DELEGATE_CTOCPP_H_

@@ -2,21 +2,23 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#include "cef/libcef/common/request_impl.h"
+
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "libcef/common/net/http_header_utils.h"
-#include "libcef/common/net_service/net_service_util.h"
-#include "libcef/common/request_impl.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/strings/string_split.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/libcef/common/net/http_header_utils.h"
+#include "cef/libcef/common/net_service/net_service_util.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/common/content_switches.h"
@@ -44,13 +46,9 @@
 #include "third_party/blink/public/platform/web_url_request_util.h"
 #include "third_party/blink/public/web/web_security_policy.h"
 
-#if defined(OHOS_SCHEME_HANDLER)
-#include "base/datashare_uri_utils.h"
-#include "base/files/file.h"
-#include "net/base/io_buffer.h"
-#include "services/network/chunked_data_pipe_upload_data_stream.h"
-#include "services/network/data_pipe_element_reader.h"
-#endif  // defined(OHOS_SCHEME_HANDLER)
+#if BUILDFLAG(IS_ARKWEB)
+#include "libcef/common/arkweb_request_impl_ext.h"
+#endif
 
 namespace {
 
@@ -87,7 +85,7 @@ int GetCacheControlHeaderPolicy(CefRequest::HeaderMap headerMap) {
   if (!line.empty()) {
     HttpHeaderUtils::MakeASCIILower(&line);
 
-    std::vector<base::StringPiece> pieces = base::SplitStringPiece(
+    std::vector<std::string_view> pieces = base::SplitStringPiece(
         line, ",", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
     for (const auto& piece : pieces) {
       if (base::EqualsCaseInsensitiveASCII(piece,
@@ -164,109 +162,6 @@ void GetHeaderMap(const CefRequest::HeaderMap& source,
   }
 }
 
-#if defined(OHOS_SCHEME_HANDLER)
-// A subclass of net::UploadBytesElementReader which owns
-// ResourceRequestBody.
-class BytesElementReader : public net::UploadBytesElementReader {
- public:
-  BytesElementReader(network::ResourceRequestBody* resource_request_body,
-                     const network::DataElementBytes& element)
-      : net::UploadBytesElementReader(element.AsStringPiece().data(),
-                                      element.AsStringPiece().size()),
-        resource_request_body_(resource_request_body) {}
-
-  BytesElementReader(const BytesElementReader&) = delete;
-  BytesElementReader& operator=(const BytesElementReader&) = delete;
-
-  ~BytesElementReader() override {}
-
- private:
-  scoped_refptr<network::ResourceRequestBody> resource_request_body_;
-};
-
-// A subclass of net::UploadFileElementReader which owns
-// ResourceRequestBody.
-// This class is necessary to ensure the BlobData and any attached shareable
-// files survive until upload completion.
-class FileElementReader : public net::UploadFileElementReader {
- public:
-  FileElementReader(network::ResourceRequestBody* resource_request_body,
-                    base::TaskRunner* task_runner,
-                    const network::DataElementFile& element,
-                    base::File&& file)
-      : net::UploadFileElementReader(task_runner,
-                                     std::move(file),
-                                     element.path(),
-                                     element.offset(),
-                                     element.length(),
-                                     element.expected_modification_time()),
-        resource_request_body_(resource_request_body) {}
-
-  FileElementReader(const FileElementReader&) = delete;
-  FileElementReader& operator=(const FileElementReader&) = delete;
-
-  ~FileElementReader() override {}
-
- private:
-  scoped_refptr<network::ResourceRequestBody> resource_request_body_;
-};
-
-std::unique_ptr<net::UploadDataStream> CreateUploadDataStream(
-    network::ResourceRequestBody* body,
-    std::vector<base::File>& opened_files,
-    base::SequencedTaskRunner* file_task_runner) {
-  // In the case of a chunked upload, there will just be one element.
-  if (body->elements()->size() == 1) {
-    if (body->elements()->begin()->type() ==
-        network::mojom::DataElementDataView::Tag::kChunkedDataPipe) {
-      auto& element =
-          body->elements_mutable()->at(0).As<network::DataElementChunkedDataPipe>();
-      const bool has_null_source = element.read_only_once().value();
-      auto upload_data_stream =
-          std::make_unique<network::ChunkedDataPipeUploadDataStream>(
-              body, element.ReleaseChunkedDataPipeGetter(), has_null_source, true);
-      if (element.read_only_once()) {
-        upload_data_stream->EnableCache();
-      }
-      body->elements_mutable()->clear();
-      return upload_data_stream;
-    }
-  }
-
-  auto opened_file = opened_files.begin();
-  std::vector<std::unique_ptr<net::UploadElementReader>> element_readers;
-  for (const auto& element : *body->elements()) {
-    switch (element.type()) {
-      case network::mojom::DataElementDataView::Tag::kBytes:
-        element_readers.push_back(std::make_unique<BytesElementReader>(
-            body, element.As<network::DataElementBytes>()));
-        break;
-      case network::mojom::DataElementDataView::Tag::kFile:
-        DCHECK(opened_file != opened_files.end());
-        element_readers.push_back(std::make_unique<FileElementReader>(
-            body, file_task_runner, element.As<network::DataElementFile>(),
-            std::move(*opened_file++)));
-        break;
-      case network::mojom::DataElementDataView::Tag::kDataPipe: {
-        element_readers.push_back(std::make_unique<network::DataPipeElementReader>(
-            body,
-            element.As<network::DataElementDataPipe>().CloneDataPipeGetter()));
-        break;
-      }
-      case network::mojom::DataElementDataView::Tag::kChunkedDataPipe: {
-        // This shouldn't happen, as the traits logic should ensure that if
-        // there's a chunked pipe, there's one and only one element.
-        NOTREACHED();
-        break;
-      }
-    }
-  }
-  DCHECK(opened_file == opened_files.end());
-
-  return std::make_unique<net::ElementsUploadDataStream>(
-      std::move(element_readers), body->identifier());
-}
-#endif  // defined(OHOS_SCHEME_HANDLER)
 }  // namespace
 
 #define CHECK_READONLY_RETURN(val)          \
@@ -281,14 +176,15 @@ std::unique_ptr<net::UploadDataStream> CreateUploadDataStream(
     return;                                 \
   }
 
-#define SETBOOLFLAG(obj, flags, method, FLAG) \
-  obj.method((flags & (FLAG)) == (FLAG))
-
 // CefRequest -----------------------------------------------------------------
 
 // static
 CefRefPtr<CefRequest> CefRequest::Create() {
+#if BUILDFLAG(IS_ARKWEB)
+  CefRefPtr<CefRequest> request(new ArkWebRequestImplExt());
+#else
   CefRefPtr<CefRequest> request(new CefRequestImpl());
+#endif
   return request;
 }
 
@@ -303,23 +199,6 @@ CefRequestImpl::CefRequestImpl() {
   base::AutoLock lock_scope(lock_);
   Reset();
 }
-
-#if defined(OHOS_SCHEME_HANDLER)
-CefRefPtr<CefPostDataStream> CefRequestImpl::GetUploadStream() {
-  base::AutoLock lock_scope(lock_);
-  return postdata_stream_;
-}
-
-bool CefRequestImpl::IsRedirect() {
-  base::AutoLock lock_scope(lock_);
-  return is_redirect_;
-}
-
-bool CefRequestImpl::HasUserGesture() {
-  base::AutoLock lock_scope(lock_);
-  return has_user_gesture_;
-}
-#endif  // defined(OHOS_SCHEME_HANDLER)
 
 bool CefRequestImpl::IsReadOnly() {
   base::AutoLock lock_scope(lock_);
@@ -339,20 +218,6 @@ void CefRequestImpl::SetURL(const CefString& url) {
     Changed(kChangedUrl);
     url_ = new_url;
   }
-}
-
-void CefRequestImpl::SetFrameUrl(const CefString& frame_url) {
-  base::AutoLock lock_scope(lock_);
-  CHECK_READONLY_RETURN_VOID();
-  const GURL& frame_gurl = GURL(frame_url.ToString());
-  if (frame_url_ != frame_gurl) {
-    frame_url_ = frame_gurl;
-  }
-}
-
-CefString CefRequestImpl::GetFrameUrl() {
-  base::AutoLock lock_scope(lock_);
-  return frame_url_.spec();
 }
 
 CefString CefRequestImpl::GetMethod() {
@@ -531,20 +396,13 @@ CefRequestImpl::TransitionType CefRequestImpl::GetTransitionType() {
   return transition_type_;
 }
 
-uint64 CefRequestImpl::GetIdentifier() {
+uint64_t CefRequestImpl::GetIdentifier() {
   base::AutoLock lock_scope(lock_);
   return identifier_;
 }
 
-#ifdef OHOS_NETWORK_CONNINFO
-bool CefRequestImpl::IsMainFrame() {
-  base::AutoLock lock_scope(lock_);
-  return (destination_ == network::mojom::RequestDestination::kDocument);
-}
-#endif
-
 void CefRequestImpl::Set(const network::ResourceRequest* request,
-                         uint64 identifier) {
+                         uint64_t identifier) {
   base::AutoLock lock_scope(lock_);
   CHECK_READONLY_RETURN_VOID();
 
@@ -573,11 +431,6 @@ void CefRequestImpl::Set(const network::ResourceRequest* request,
   if (request->request_body) {
     postdata_ = CefPostData::Create();
     static_cast<CefPostDataImpl*>(postdata_.get())->Set(*request->request_body);
-#if defined(OHOS_SCHEME_HANDLER)
-    postdata_stream_ = CefPostDataStream::Create();
-    static_cast<CefPostDataStreamImpl*>(postdata_stream_.get())->Set(
-        request->request_body.get());
-#endif  // defined(OHOS_SCHEME_HANDLER)
   }
 
   site_for_cookies_ = request->site_for_cookies;
@@ -585,10 +438,6 @@ void CefRequestImpl::Set(const network::ResourceRequest* request,
   resource_type_ = static_cast<cef_resource_type_t>(request->resource_type);
   transition_type_ =
       static_cast<cef_transition_type_t>(request->transition_type);
-#if defined(OHOS_SCHEME_HANDLER)
-  has_user_gesture_ = request->has_user_gesture;
-  is_redirect_ = false;
-#endif  // defined(OHOS_SCHEME_HANDLER)
 }
 
 void CefRequestImpl::Get(network::ResourceRequest* request,
@@ -769,10 +618,12 @@ void CefRequestImpl::Get(const cef::mojom::RequestParamsPtr& params,
   }
   request.SetCacheMode(GetFetchCacheMode(flags));
 
-  SETBOOLFLAG(request, params->load_flags, SetAllowStoredCredentials,
-              UR_FLAG_ALLOW_STORED_CREDENTIALS);
-  SETBOOLFLAG(request, params->load_flags, SetReportUploadProgress,
-              UR_FLAG_REPORT_UPLOAD_PROGRESS);
+  request.SetCredentialsMode(
+      (params->load_flags & UR_FLAG_ALLOW_STORED_CREDENTIALS)
+          ? network::mojom::CredentialsMode::kInclude
+          : network::mojom::CredentialsMode::kOmit);
+  request.SetReportUploadProgress(params->load_flags &
+                                  UR_FLAG_REPORT_UPLOAD_PROGRESS);
 }
 
 void CefRequestImpl::Get(cef::mojom::RequestParamsPtr& params) const {
@@ -949,7 +800,7 @@ void CefRequestImpl::Changed(uint8_t changes) {
 
   if (backup_on_change_) {
     if (!backup_) {
-      backup_.reset(new Backup());
+      backup_ = std::make_unique<Backup>();
     }
 
     // Set the backup values if not already set.
@@ -974,7 +825,7 @@ void CefRequestImpl::Changed(uint8_t changes) {
     }
     if ((changes & kChangedHeaderMap) &&
         !(backup_->backups_ & kChangedHeaderMap)) {
-      backup_->headermap_.reset(new HeaderMap());
+      backup_->headermap_ = std::make_unique<HeaderMap>();
       if (!headermap_.empty()) {
         backup_->headermap_->insert(headermap_.begin(), headermap_.end());
       }
@@ -1042,243 +893,6 @@ void CefRequestImpl::Reset() {
   changes_ = kChangedNone;
 }
 
-#ifdef OHOS_NETWORK_CONNINFO
-void CefRequestImpl::SetDestination(
-    network::mojom::RequestDestination destination) {
-  base::AutoLock lock_scope(lock_);
-  destination_ = destination;
-}
-#endif
-#if defined(OHOS_SCHEME_HANDLER)
-// CefPostDataStream ----------------------------------------------------------
-
-// static
-CefRefPtr<CefPostDataStream> CefPostDataStream::Create() {
-  CefRefPtr<CefPostDataStream> postdata_stream(new CefPostDataStreamImpl());
-  return postdata_stream;
-}
-
-// CefPostDataStreamImpl ------------------------------------------------------
-
-CefPostDataStreamImpl::CefPostDataStreamImpl() {
-
-}
-
-CefPostDataStreamImpl::~CefPostDataStreamImpl() {
-  if (is_data_pipe_ && upload_stream_) {
-    content::GetIOThreadTaskRunner({})->DeleteSoon(FROM_HERE, std::move(upload_stream_));
-  }
-}
-
-void CefPostDataStreamImpl::Reset() {
-  read_callback_ = nullptr;
-  init_callback_ = nullptr;
-}
-
-void CefPostDataStreamImpl::GetChunkedDataPipeGetter(
-        network::ResourceRequestBody* body) {
-  LOG(INFO) << "scheme_handler get chunked data pip getter initialated_: " << initialated_;
-  if (body && upload_stream_ && !initialated_) {
-    body->SetToChunkedDataPipe(
-            static_cast<network::ChunkedDataPipeUploadDataStream*>(upload_stream_.get())
-                ->ReleaseChunkedDataPipeGetter(),
-            network::ResourceRequestBody::ReadOnlyOnce(HasNullSource()));
-  }
-}
-
-void CefPostDataStreamImpl::Set(network::ResourceRequestBody* body) {
-  std::vector<base::File> open_files;
-  if (body) {
-    for (const auto& element : *(body->elements())) {
-      if (element.type() == network::DataElement::Tag::kFile) {
-        const auto& file_element = element.As<network::DataElementFile>();
-        std::string real_path = base::GetRealPath(base::FilePath(file_element.path()));
-        LOG(INFO) << "scheme_handler file path: " << file_element.path() << " real path: " << real_path;
-        open_files.push_back(base::File(base::FilePath(real_path), base::File::FLAG_OPEN | base::File::FLAG_READ));
-      }
-
-      if (element.type() == network::DataElement::Tag::kDataPipe ||
-              element.type() == network::DataElement::Tag::kChunkedDataPipe) {
-        is_data_pipe_ = true;
-      }
-    }
-    scoped_refptr<base::SequencedTaskRunner> task_runner =
-        base::ThreadPool::CreateSequencedTaskRunner(
-            {base::MayBlock(), base::TaskPriority::USER_VISIBLE});
-    upload_stream_ = CreateUploadDataStream(body, open_files, task_runner.get());
-  }
-}
-
-void CefPostDataStreamImpl::SetReadCallback(
-        CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
-  read_callback_ = read_callback;
-}
-
-void CefPostDataStreamImpl::OnStreamInitialized(int rv) {
-  if (init_callback_) {
-    init_callback_->OnInitComplete(rv);
-  } else {
-    LOG(ERROR) << "scheme_handler_init_callback is nullptr.";
-  }
-}
-
-void CefPostDataStreamImpl::Init(CefRefPtr<CefPostDataStreamInitCallback> init_callback) {
-  initialated_ = true;
-  init_callback_ = init_callback;
-  if (upload_stream_) {
-    int rv = upload_stream_->Init(
-          base::BindOnce(&CefPostDataStreamImpl::OnStreamInitialized,
-                         base::Unretained(this)),
-          net::NetLogWithSource());
-    if (rv == net::ERR_IO_PENDING) {
-      return;
-    }
-    OnStreamInitialized(rv);
-  } else {
-    OnStreamInitialized(-2);
-  }
-}
-
-void CefPostDataStreamImpl::ReadOnTaskRunner(
-        void* buffer,
-        int buf_len,
-        base::WaitableEvent* event) {
-  scoped_refptr<net::WrappedIOBuffer> upload_buffer =
-      base::MakeRefCounted<net::WrappedIOBuffer>(
-          reinterpret_cast<char*>(buffer));
-  if (upload_stream_) {
-    int rv = upload_stream_->Read(
-        upload_buffer.get(),buf_len,
-        base::BindOnce(&CefPostDataStreamImpl::OnStreamRead,
-                       base::Unretained(this), upload_buffer, event));
-    if (rv == net::ERR_IO_PENDING) {
-      last_read_rv_ = rv;
-      return;
-    }
-    last_read_rv_ = rv;
-    event->Signal();
-  } else {
-    last_read_rv_ = -2;
-    event->Signal();
-  }
-}
-
-void CefPostDataStreamImpl::ReadAsync(
-    void* buffer,
-    int buf_len,
-    CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
-  scoped_refptr<net::WrappedIOBuffer> upload_buffer =
-      base::MakeRefCounted<net::WrappedIOBuffer>(
-          reinterpret_cast<char*>(buffer));
-  if (upload_stream_) {
-    int rv = upload_stream_->Read(
-        upload_buffer.get(),buf_len,
-        base::BindOnce(&CefPostDataStreamImpl::OnStreamReadAsync,
-                       base::Unretained(this), upload_buffer, read_callback));
-    if (rv == net::ERR_IO_PENDING) {
-      return;
-    }
-    OnStreamReadAsync(upload_buffer, read_callback, rv);
-  } else {
-    OnStreamReadAsync(upload_buffer, read_callback, -2);
-  }
-}
-
-void CefPostDataStreamImpl::Read(
-    void* buffer,
-    int buf_len,
-    CefRefPtr<CefPostDataStreamReadCallback> read_callback) {
-  if (base::SequencedTaskRunner::HasCurrentDefault() || IsInMemory() || IsChunked()) {
-    ReadAsync(buffer, buf_len, read_callback);
-  } else {
-    if (sequenced_task_runner_) {
-      base::WaitableEvent* completion = new base::WaitableEvent();
-      sequenced_task_runner_->PostTask(
-           FROM_HERE, base::BindOnce(&CefPostDataStreamImpl::ReadOnTaskRunner,
-                                     this, buffer, buf_len, completion));
-      completion->Wait();
-      delete completion;
-      read_callback->OnReadComplete((char*)buffer, last_read_rv_);
-    } else {
-      read_callback->OnReadComplete((char*)buffer, -2);
-    }
-  }
-}
- 
-void CefPostDataStreamImpl::OnStreamReadAsync(
-    scoped_refptr<net::WrappedIOBuffer> buffer,
-    CefRefPtr<CefPostDataStreamReadCallback> read_callback,
-    int rv) {
-  if (read_callback) {
-   read_callback->OnReadComplete(buffer->data(), rv);
-  }
-}
-
-void CefPostDataStreamImpl::OnStreamRead(
-    scoped_refptr<net::WrappedIOBuffer> buffer,
-    base::WaitableEvent* event,
-    int rv) {
-  last_read_rv_ = rv;
-  if (event) {
-    event->Signal();
-  }
-}
-
-uint64_t CefPostDataStreamImpl::GetSize() {
-  if (upload_stream_) {
-    return upload_stream_->size();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return -1;
-  }
-}
-
-uint64_t CefPostDataStreamImpl::GetPosition() {
-  if (upload_stream_) {
-    return upload_stream_->position();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return -1;
-  }
-}
-
-bool CefPostDataStreamImpl::IsChunked() {
-  if (upload_stream_) {
-    return upload_stream_->is_chunked();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return false;
-  }
-}
-
-bool CefPostDataStreamImpl::HasNullSource() {
-  if (upload_stream_) {
-    return upload_stream_->has_null_source();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return false;
-  }
-}
-
-bool CefPostDataStreamImpl::IsEOF() {
-  if (upload_stream_) {
-    return upload_stream_->IsEOF();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return false;
-  }
-}
-
-bool CefPostDataStreamImpl::IsInMemory() {
-  if (upload_stream_) {
-    return upload_stream_->IsInMemory();
-  } else {
-    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return false;
-  }
-}
-#endif  // defined(OHOS_SCHEME_HANDLER)
-
 // CefPostData ----------------------------------------------------------------
 
 // static
@@ -1289,11 +903,7 @@ CefRefPtr<CefPostData> CefPostData::Create() {
 
 // CefPostDataImpl ------------------------------------------------------------
 
-CefPostDataImpl::CefPostDataImpl()
-    : read_only_(false),
-      has_excluded_elements_(false),
-      track_changes_(false),
-      has_changes_(false) {}
+CefPostDataImpl::CefPostDataImpl() = default;
 
 bool CefPostDataImpl::IsReadOnly() {
   base::AutoLock lock_scope(lock_);
@@ -1450,11 +1060,7 @@ CefRefPtr<CefPostDataElement> CefPostDataElement::Create() {
 
 // CefPostDataElementImpl -----------------------------------------------------
 
-CefPostDataElementImpl::CefPostDataElementImpl()
-    : type_(PDE_TYPE_EMPTY),
-      read_only_(false),
-      track_changes_(false),
-      has_changes_(false) {
+CefPostDataElementImpl::CefPostDataElementImpl() {
   memset(&data_, 0, sizeof(data_));
 }
 
@@ -1622,3 +1228,11 @@ void CefPostDataElementImpl::Cleanup() {
   type_ = PDE_TYPE_EMPTY;
   memset(&data_, 0, sizeof(data_));
 }
+
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+void CefRequestImpl::SetDestination(
+    network::mojom::RequestDestination destination) {
+  base::AutoLock lock_scope(lock_);
+  destination_ = destination;
+}
+#endif

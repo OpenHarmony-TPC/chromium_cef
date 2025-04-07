@@ -6,12 +6,11 @@
 #define CEF_LIBCEF_COMMON_DRAG_DATA_IMPL_H_
 #pragma once
 
-#include "include/cef_drag_data.h"
-#include "include/cef_image.h"
-
 #include <vector>
 
 #include "base/synchronization/lock.h"
+#include "cef/include/cef_drag_data.h"
+#include "cef/include/cef_image.h"
 #include "content/public/common/drop_data.h"
 
 // Implementation of CefDragData.
@@ -37,6 +36,7 @@ class CefDragDataImpl : public CefDragData {
   CefString GetFileName() override;
   size_t GetFileContents(CefRefPtr<CefStreamWriter> writer) override;
   bool GetFileNames(std::vector<CefString>& names) override;
+  bool GetFilePaths(std::vector<CefString>& paths) override;
   void SetLinkURL(const CefString& url) override;
   void SetLinkTitle(const CefString& title) override;
   void SetLinkMetadata(const CefString& data) override;
@@ -49,15 +49,17 @@ class CefDragDataImpl : public CefDragData {
   CefRefPtr<CefImage> GetImage() override;
   CefPoint GetImageHotspot() override;
   bool HasImage() override;
-#ifdef OHOS_DRAG_DROP
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
   bool IsImageFileContents() override;
 #endif
+
   // This method is not safe. Use Lock/Unlock to get mutually exclusive access.
   content::DropData* drop_data() { return &data_; }
 
 #if BUILDFLAG(IS_OHOS)
   size_t GetImageFileSize() override;
 #endif
+
 #if BUILDFLAG(IS_OHOS)
   void SetReadOnly(bool read_only) override;
 #else

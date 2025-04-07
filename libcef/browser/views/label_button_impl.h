@@ -6,14 +6,12 @@
 #define CEF_LIBCEF_BROWSER_VIEWS_LABEL_BUTTON_IMPL_H_
 #pragma once
 
-#include "include/views/cef_button.h"
-#include "include/views/cef_label_button.h"
-#include "include/views/cef_menu_button.h"
-
-#include "libcef/browser/image_impl.h"
-#include "libcef/browser/views/button_impl.h"
-
 #include "base/logging.h"
+#include "cef/include/views/cef_button.h"
+#include "cef/include/views/cef_label_button.h"
+#include "cef/include/views/cef_menu_button.h"
+#include "cef/libcef/browser/image_impl.h"
+#include "cef/libcef/browser/views/button_impl.h"
 #include "ui/views/controls/button/label_button.h"
 
 // Helpers for template boiler-plate.
@@ -80,8 +78,9 @@ CEF_LABEL_BUTTON_IMPL_T void CEF_LABEL_BUTTON_IMPL_D::SetImage(
   if (image) {
     image_skia = static_cast<CefImageImpl*>(image.get())->AsImageSkia();
   }
-  ParentClass::root_view()->SetImage(
-      static_cast<views::Button::ButtonState>(button_state), image_skia);
+  ParentClass::root_view()->SetImageModel(
+      static_cast<views::Button::ButtonState>(button_state),
+      ui::ImageModel::FromImageSkia(image_skia));
 }
 
 CEF_LABEL_BUTTON_IMPL_T CefRefPtr<CefImage> CEF_LABEL_BUTTON_IMPL_D::GetImage(

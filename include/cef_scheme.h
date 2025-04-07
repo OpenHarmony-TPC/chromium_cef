@@ -66,7 +66,7 @@ bool CefRegisterSchemeHandlerFactory(
     const CefString& scheme_name,
     const CefString& domain_name,
     CefRefPtr<CefSchemeHandlerFactory> factory,
-    bool incognito_mode);
+    bool incognito_mode);  // IS_OHOS extended incognito_mode
 
 ///
 /// Clear all scheme handler factories registered with the global request
@@ -75,7 +75,8 @@ bool CefRegisterSchemeHandlerFactory(
 /// CefRequestContext::GetGlobalContext()->ClearSchemeHandlerFactories().
 ///
 /*--cef()--*/
-bool CefClearSchemeHandlerFactories(bool incognito_mode);
+bool CefClearSchemeHandlerFactories(
+    bool incognito_mode);  // IS_OHOS extended incognito_mode
 
 ///
 /// Class that manages custom scheme registrations.

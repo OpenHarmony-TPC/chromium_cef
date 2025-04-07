@@ -8,11 +8,11 @@
 
 #include <list>
 
-#include "include/cef_app.h"
-#include "include/cef_request_context.h"
-
+#include "arkweb/build/features/features.h"
 #include "base/functional/callback.h"
 #include "build/build_config.h"
+#include "cef/include/cef_app.h"
+#include "cef/include/cef_request_context.h"
 #include "content/public/common/content_client.h"
 
 class CefBrowserContext;
@@ -36,7 +36,7 @@ class CefAppManager {
   // (url/url_util.h) via ContentClient::AddAdditionalSchemes which calls
   // AddCustomScheme, and second with Blink (SchemeRegistry) via
   // ContentRendererClient::WebKitInitialized which calls GetCustomSchemes.
-  void AddCustomScheme(CefSchemeInfo* scheme_info);
+  void AddCustomScheme(const CefSchemeInfo* scheme_info);
   bool HasCustomScheme(const std::string& scheme_name);
 
   using SchemeInfoList = std::list<CefSchemeInfo>;
@@ -53,13 +53,8 @@ class CefAppManager {
   virtual CefBrowserContext* CreateNewBrowserContext(
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) = 0;
-
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   virtual CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() = 0;
-
-  virtual CefBrowserContext* CreateNewIncognitoBrowserContext(
-      const CefRequestContextSettings& settings,
-      base::OnceClosure initialized_cb) = 0;
 #endif
 
 #if BUILDFLAG(IS_WIN)
@@ -72,7 +67,7 @@ class CefAppManager {
   virtual ~CefAppManager();
 
  private:
-#ifdef OHOS_NETWORK_LOAD
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   std::vector<std::string> CustomSchemeCmdLineSplit(std::string str,
                                                     const char split);
   void RenderAddCustomSchemes();

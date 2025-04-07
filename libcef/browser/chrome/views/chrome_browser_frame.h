@@ -6,6 +6,13 @@
 #define CEF_LIBCEF_BROWSER_CHROME_VIEWS_CHROME_BROWSER_FRAME_H_
 #pragma once
 
+#include <map>
+
+#include "base/memory/raw_ptr.h"
+#include "base/memory/weak_ptr.h"
+#include "cef/libcef/browser/views/color_provider_tracker.h"
+#include "cef/libcef/browser/views/widget.h"
+#include "chrome/browser/themes/theme_service_observer.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/frame/browser_frame.h"
 
@@ -86,24 +93,72 @@
 // modifications.
 
 class BrowserView;
+class CefWindowView;
 
 // Widget for a Views-hosted Chrome browser. Created in
-// CefWindowView::CreateWidget() when the Chrome runtime is enabled.
-class ChromeBrowserFrame : public BrowserFrame {
+// CefWindowView::CreateWidget() with Chrome style.
+class ChromeBrowserFrame : public BrowserFrame,
+                           public CefWidget,
+                           public CefColorProviderTracker::Observer,
+                           public ThemeServiceObserver {
  public:
-  ChromeBrowserFrame() {}
+  explicit ChromeBrowserFrame(CefWindowView* window_view);
+  ~ChromeBrowserFrame() override;
+
   ChromeBrowserFrame(const ChromeBrowserFrame&) = delete;
   ChromeBrowserFrame& operator=(const ChromeBrowserFrame&) = delete;
 
+  // Called from ChromeBrowserView::InitBrowser after |browser| creation.
   void Init(BrowserView* browser_view, std::unique_ptr<Browser> browser);
+
+  // CefWidget methods:
+  bool IsAlloyStyle() const override { return false; }
+  views::Widget* GetWidget() override { return this; }
+  const views::Widget* GetWidget() const override { return this; }
+  void Initialized() override;
+  bool IsInitialized() const override { return initialized_; }
+  void AddAssociatedProfile(Profile* profile) override;
+  void RemoveAssociatedProfile(Profile* profile) override;
+  Profile* GetThemeProfile() const override;
+  bool ToggleFullscreenMode() override;
+
+  // BrowserFrame methods:
+  void UserChangedTheme(BrowserThemeChangeType theme_change_type) override;
 
   // views::Widget methods:
   views::internal::RootView* CreateRootView() override;
   std::unique_ptr<views::NonClientFrameView> CreateNonClientFrameView()
       override;
+  void Activate() override;
+
+  // NativeWidgetDelegate methods:
+  void OnNativeWidgetDestroyed() override;
+
+  // ui::NativeThemeObserver methods:
+  void OnNativeThemeUpdated(ui::NativeTheme* observed_theme) override;
+  ui::ColorProviderKey GetColorProviderKey() const override;
+
+  // ThemeServiceObserver methods:
+  void OnThemeChanged() override;
 
  private:
-  Browser* browser_ = nullptr;
+  // CefColorProviderTracker::Observer methods:
+  void OnColorProviderCacheResetMissed() override;
+
+  void NotifyThemeColorsChanged(bool chrome_theme);
+
+  raw_ptr<CefWindowView> window_view_;
+
+  bool initialized_ = false;
+  bool native_theme_change_ = false;
+
+  // Map of Profile* to count.
+  using ProfileMap = std::map<raw_ptr<Profile>, size_t>;
+  ProfileMap associated_profiles_;
+
+  CefColorProviderTracker color_provider_tracker_{this};
+
+  base::WeakPtrFactory<ChromeBrowserFrame> weak_ptr_factory_{this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CHROME_VIEWS_CHROME_BROWSER_FRAME_H_

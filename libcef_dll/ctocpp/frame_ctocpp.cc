@@ -9,12 +9,12 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=4defe58ed0565aaa01faf14da4dfa5b35015906c$
+// $hash=d5d7d1577311729c9db2209af72abc2e0126dfa5$
 //
 
 #include "libcef_dll/ctocpp/frame_ctocpp.h"
+
 #include "libcef_dll/cpptoc/domvisitor_cpptoc.h"
-#include "libcef_dll/cpptoc/get_images_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/string_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/urlrequest_client_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
@@ -111,6 +111,20 @@ NO_SANITIZE("cfi-icall") void CefFrameCToCpp::Paste() {
 
   // Execute
   _struct->paste(_struct);
+}
+
+NO_SANITIZE("cfi-icall") void CefFrameCToCpp::PasteAndMatchStyle() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_frame_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, paste_and_match_style)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->paste_and_match_style(_struct);
 }
 
 NO_SANITIZE("cfi-icall") void CefFrameCToCpp::Delete() {
@@ -316,21 +330,23 @@ NO_SANITIZE("cfi-icall") CefString CefFrameCToCpp::GetName() {
   return _retvalStr;
 }
 
-NO_SANITIZE("cfi-icall") int64 CefFrameCToCpp::GetIdentifier() {
+NO_SANITIZE("cfi-icall") CefString CefFrameCToCpp::GetIdentifier() {
   shutdown_checker::AssertNotShutdown();
 
   cef_frame_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, get_identifier)) {
-    return 0;
+    return CefString();
   }
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  int64 _retval = _struct->get_identifier(_struct);
+  cef_string_userfree_t _retval = _struct->get_identifier(_struct);
 
-  // Return type: simple
-  return _retval;
+  // Return type: string
+  CefString _retvalStr;
+  _retvalStr.AttachToUserFree(_retval);
+  return _retvalStr;
 }
 
 NO_SANITIZE("cfi-icall") CefRefPtr<CefFrame> CefFrameCToCpp::GetParent() {
@@ -479,109 +495,6 @@ void CefFrameCToCpp::SendProcessMessage(CefProcessId target_process,
   // Execute
   _struct->send_process_message(_struct, target_process,
                                 CefProcessMessageCToCpp::Unwrap(message));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefFrameCToCpp::LoadHeaderUrl(const CefString& url,
-                                   const CefString& additionalHttpHeaders) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_frame_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, load_header_url)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Unverified params: url, additionalHttpHeaders
-
-  // Execute
-  _struct->load_header_url(_struct, url.GetStruct(),
-                           additionalHttpHeaders.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefFrameCToCpp::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_frame_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, get_images)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->get_images(_struct, CefGetImagesCallbackCppToC::Wrap(callback));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefFrameCToCpp::PostURL(const CefString& url,
-                             const std::vector<char>& post_data) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_frame_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, post_url)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
-    return;
-  }
-  // Unverified params: post_data
-
-  // Translate param: post_data; type: simple_vec_byref_const
-  const size_t post_dataCount = post_data.size();
-  char* post_dataList = NULL;
-  if (post_dataCount > 0) {
-    post_dataList = new char[post_dataCount];
-    DCHECK(post_dataList);
-    if (post_dataList) {
-      for (size_t i = 0; i < post_dataCount; ++i) {
-        post_dataList[i] = post_data[i];
-      }
-    }
-  }
-
-  // Execute
-  _struct->post_url(_struct, url.GetStruct(), post_dataCount, post_dataList);
-
-  // Restore param:post_data; type: simple_vec_byref_const
-  if (post_dataList) {
-    delete[] post_dataList;
-  }
-}
-
-NO_SANITIZE("cfi-icall")
-void CefFrameCToCpp::LoadURLWithUserGesture(const CefString& url,
-                                            bool user_gesture) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_frame_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, load_urlwith_user_gesture)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: url; type: string_byref_const
-  DCHECK(!url.empty());
-  if (url.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->load_urlwith_user_gesture(_struct, url.GetStruct(), user_gesture);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

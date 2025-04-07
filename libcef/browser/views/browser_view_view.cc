@@ -2,29 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/views/browser_view_view.h"
+#include "cef/libcef/browser/views/browser_view_view.h"
 
-#include <optional>
-
-#include "libcef/browser/views/browser_view_impl.h"
-
-namespace {
-
-std::optional<cef_gesture_command_t> GetGestureCommand(
-    ui::GestureEvent* event) {
-#if defined(OS_MAC)
-  if (event->details().type() == ui::ET_GESTURE_SWIPE) {
-    if (event->details().swipe_left()) {
-      return cef_gesture_command_t::CEF_GESTURE_COMMAND_BACK;
-    } else if (event->details().swipe_right()) {
-      return cef_gesture_command_t::CEF_GESTURE_COMMAND_FORWARD;
-    }
-  }
-#endif
-  return std::nullopt;
-}
-
-}  // namespace
+#include "cef/libcef/browser/views/browser_view_impl.h"
 
 CefBrowserViewView::CefBrowserViewView(CefBrowserViewDelegate* cef_delegate,
                                        Delegate* browser_view_delegate)
@@ -49,8 +29,6 @@ void CefBrowserViewView::ViewHierarchyChanged(
         SetSize(size);
       }
     }
-
-    browser_view_delegate_->OnBrowserViewAdded();
   }
 }
 
@@ -60,7 +38,18 @@ void CefBrowserViewView::OnBoundsChanged(const gfx::Rect& previous_bounds) {
 }
 
 void CefBrowserViewView::OnGestureEvent(ui::GestureEvent* event) {
-  if (auto command = GetGestureCommand(event)) {
-    browser_view_delegate_->OnGestureCommand(*command);
+  if (browser_view_delegate_->OnGestureEvent(event)) {
+    return;
   }
+  ParentClass::OnGestureEvent(event);
+}
+
+void CefBrowserViewView::AddedToWidget() {
+  ParentClass::AddedToWidget();
+  browser_view_delegate_->AddedToWidget();
+}
+
+void CefBrowserViewView::RemovedFromWidget() {
+  ParentClass::RemovedFromWidget();
+  browser_view_delegate_->RemovedFromWidget();
 }

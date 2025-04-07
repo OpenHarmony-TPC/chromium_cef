@@ -2,12 +2,11 @@
 // reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
-#include "libcef/common/waitable_event_impl.h"
-
-#include "include/cef_task.h"
+#include "cef/libcef/common/waitable_event_impl.h"
 
 #include "base/notreached.h"
 #include "base/time/time.h"
+#include "cef/include/cef_task.h"
 
 namespace {
 
@@ -55,7 +54,7 @@ void CefWaitableEventImpl::Wait() {
   event_.Wait();
 }
 
-bool CefWaitableEventImpl::TimedWait(int64 max_ms) {
+bool CefWaitableEventImpl::TimedWait(int64_t max_ms) {
   if (!AllowWait()) {
     return false;
   }

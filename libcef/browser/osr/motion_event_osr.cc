@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/browser/osr/motion_event_osr.h"
-#include "base/logging.h"
+#include "cef/libcef/browser/osr/motion_event_osr.h"
+
 #include <algorithm>
 
 #include "ui/events/base_event_utils.h"
@@ -36,7 +36,7 @@ CefMotionEventOSR::CefMotionEventOSR() {
   std::fill(id_map_, id_map_ + blink::WebTouchEvent::kTouchesLengthCap, -1);
 }
 
-CefMotionEventOSR::~CefMotionEventOSR() {}
+CefMotionEventOSR::~CefMotionEventOSR() = default;
 
 int CefMotionEventOSR::GetSourceDeviceId(size_t pointer_index) const {
   if (IsValidIndex(pointer_index)) {
@@ -73,7 +73,7 @@ bool CefMotionEventOSR::OnTouch(const CefTouchEvent& touch) {
       break;
 
     case CEF_TET_MOVED: {
-#ifdef OHOS_CLIPBOARD
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
       if (!from_overlay_) {
         // Discard if touch is stationary.
         int index = FindPointerIndexOfId(id);
@@ -176,9 +176,9 @@ int CefMotionEventOSR::AddId(int id) {
 }
 
 void CefMotionEventOSR::RemoveId(int id) {
-  for (int i = 0; i < blink::WebTouchEvent::kTouchesLengthCap; i++) {
-    if (id_map_[i] == id) {
-      id_map_[i] = -1;
+  for (int& i : id_map_) {
+    if (i == id) {
+      i = -1;
     }
   }
 }
@@ -202,8 +202,9 @@ void CefMotionEventOSR::UpdateTouch(const CefTouchEvent& touch, int id) {
 void CefMotionEventOSR::UpdateCachedAction(const CefTouchEvent& touch, int id) {
   DCHECK(GetPointerCount());
   if (touch.type == CEF_TET_PRESSED || touch.type == CEF_TET_RELEASED) {
-    LOG(DEBUG) << "CefMotionEventOSR::UpdateCachedAction actiontype=" << GetAction()
-      << " pointercount=" << GetPointerCount() << " touchtype=" << touch.type;
+    LOG(INFO) << "CefMotionEventOSR::UpdateCachedAction actiontype="
+              << GetAction() << " pointercount=" << GetPointerCount()
+              << " touchtype=" << touch.type;
   }
   switch (touch.type) {
     case CEF_TET_PRESSED:

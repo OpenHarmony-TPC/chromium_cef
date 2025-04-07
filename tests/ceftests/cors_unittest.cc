@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <set>
+#include <sstream>
 #include <vector>
 
 #include "include/base/cef_callback.h"
@@ -22,21 +23,19 @@ namespace {
 // Browser-side app delegate.
 class CorsBrowserTest : public client::ClientAppBrowser::Delegate {
  public:
-  CorsBrowserTest() {}
+  CorsBrowserTest() = default;
 
   void OnContextInitialized(CefRefPtr<client::ClientAppBrowser> app) override {
-    if (IsChromeRuntimeEnabled()) {
-      // Disable InsecureFormNavigationThrottle which blocks 307 redirect of
-      // POST requests from HTTPS to custom non-standard scheme causing the
-      // CorsTest.RedirectPost307HttpSchemeToCustomNonStandardScheme test to
-      // fail.
-      CefRefPtr<CefValue> value = CefValue::Create();
-      value->SetBool(false);
-      CefString error;
-      bool result = CefRequestContext::GetGlobalContext()->SetPreference(
-          "profile.mixed_forms_warnings", value, error);
-      CHECK(result) << error.ToString();
-    }
+    // Disable InsecureFormNavigationThrottle which blocks 307 redirect of
+    // POST requests from HTTPS to custom non-standard scheme causing the
+    // CorsTest.RedirectPost307HttpSchemeToCustomNonStandardScheme test to
+    // fail.
+    CefRefPtr<CefValue> value = CefValue::Create();
+    value->SetBool(false);
+    CefString error;
+    bool result = CefRequestContext::GetGlobalContext()->SetPreference(
+        "profile.mixed_forms_warnings", value, error);
+    CHECK(result) << error.ToString();
   }
 
  private:
@@ -67,6 +66,14 @@ enum class HandlerType {
 std::string GetOrigin(HandlerType handler) {
   switch (handler) {
     case HandlerType::SERVER:
+      // TODO: Only call test_server::GetOrigin() after test server
+      // initialization.
+      if (!kUseHttpsServerScheme) {
+        std::stringstream ss;
+        ss << "http://" << test_server::kHttpServerAddress << ":"
+           << test_server::kHttpServerPort;
+        return ss.str();
+      }
       return test_server::GetOrigin(kUseHttpsServerScheme);
     case HandlerType::HTTP_SCHEME:
       // Use HTTPS because requests from HTTP to the loopback address will be
@@ -147,7 +154,7 @@ struct Resource {
   int success_query_ct = 0;
   int failure_query_ct = 0;
 
-  Resource() {}
+  Resource() = default;
   Resource(HandlerType request_handler,
            const std::string& request_path,
            const std::string& mime_type = kMimeTypeHtml,
@@ -457,7 +464,7 @@ class CorsTestHandler : public RoutingTestHandler {
 
   bool OnQuery(CefRefPtr<CefBrowser> browser,
                CefRefPtr<CefFrame> frame,
-               int64 query_id,
+               int64_t query_id,
                const CefString& request,
                bool persistent,
                CefRefPtr<Callback> callback) override {
@@ -578,7 +585,7 @@ class CorsTestHandler : public RoutingTestHandler {
     CEF_REQUIRE_UI_THREAD();
     DCHECK(setup_->clear_cookies);
     test_request::GetAllCookies(
-        CefCookieManager::GetGlobalManager(nullptr), /*delete_cookies=*/true,
+        CefCookieManager::GetGlobalManager(nullptr), /*deleteCookies=*/true,
         base::BindOnce(&CorsTestHandler::ClearedCookies, this));
   }
 
@@ -704,7 +711,7 @@ TEST(CorsTest, BasicCustomStandardSchemeWithQuery) {
 namespace {
 
 struct CookieTestSetup : TestSetup {
-  CookieTestSetup() {}
+  CookieTestSetup() = default;
 
   bool expect_cookie = false;
 
@@ -724,13 +731,13 @@ struct CookieTestSetup : TestSetup {
 };
 
 struct CookieResource : Resource {
-  CookieResource() {}
+  CookieResource() = default;
 
   bool expect_cookie = false;
 
   void InitSetCookie() {
     response->SetHeaderByName("Set-Cookie", kDefaultCookie,
-                              /*override=*/true);
+                              /*overwrite=*/true);
   }
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
@@ -821,9 +828,10 @@ void SetupIframeRequest(CookieTestSetup* setup,
           !has_same_origin || IsNonStandardType(iframe_handler)
               ? "null"
               : GetOrigin(iframe_handler);
-      setup->AddConsoleMessage("SecurityError: Blocked a frame with origin \"" +
-                               origin +
-                               "\" from accessing a cross-origin frame.");
+      setup->AddConsoleMessage(
+          "SecurityError: Failed to read a named property 'document' from "
+          "'Window': Blocked a frame with origin \"" +
+          origin + "\" from accessing a cross-origin frame.");
     }
 
     if (has_same_origin && main_handler == iframe_handler &&
@@ -966,7 +974,7 @@ const char kSubUnsafeHeaderName[] = "x-unsafe-header";
 const char kSubUnsafeHeaderValue[] = "not-safe";
 
 struct SubResource : CookieResource {
-  SubResource() {}
+  SubResource() = default;
 
   std::string main_origin;
   bool supports_cors = false;
@@ -1515,7 +1523,7 @@ enum class RedirectMode {
 };
 
 struct RedirectGetResource : CookieResource {
-  RedirectGetResource() {}
+  RedirectGetResource() = default;
 
   bool VerifyRequest(CefRefPtr<CefRequest> request) const override {
     if (!CookieResource::VerifyRequest(request)) {
@@ -1541,7 +1549,7 @@ void SetupRedirectResponse(RedirectMode mode,
   }
 
   response->SetHeaderByName("Location", redirect_url,
-                            /*override=*/false);
+                            /*overwrite=*/false);
 }
 
 // Test redirect requests.
@@ -1653,7 +1661,7 @@ CORS_TEST_REDIRECT_GET_ALL(307, MODE_307)
 namespace {
 
 struct PostResource : CookieResource {
-  PostResource() {}
+  PostResource() = default;
 
   bool expect_downgrade_to_get = false;
   bool was_redirected = false;

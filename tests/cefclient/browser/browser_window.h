@@ -23,6 +23,10 @@ class BrowserWindow : public ClientHandler::Delegate {
   // methods of this class will be called on the main thread.
   class Delegate {
    public:
+    // Returns true if the window should use Alloy style. Safe to call on any
+    // thread.
+    virtual bool UseAlloyStyle() const = 0;
+
     // Called when the browser has been created.
     virtual void OnBrowserCreated(CefRefPtr<CefBrowser> browser) = 0;
 
@@ -54,7 +58,7 @@ class BrowserWindow : public ClientHandler::Delegate {
         const std::vector<CefDraggableRegion>& regions) = 0;
 
    protected:
-    virtual ~Delegate() {}
+    virtual ~Delegate() = default;
   };
 
   // Create a new browser and native window.
@@ -119,6 +123,8 @@ class BrowserWindow : public ClientHandler::Delegate {
   explicit BrowserWindow(Delegate* delegate);
 
   // ClientHandler::Delegate methods.
+  bool UseViews() const override { return false; }
+  bool UseAlloyStyle() const override;
   void OnBrowserCreated(CefRefPtr<CefBrowser> browser) override;
   void OnBrowserClosing(CefRefPtr<CefBrowser> browser) override;
   void OnBrowserClosed(CefRefPtr<CefBrowser> browser) override;
@@ -135,7 +141,7 @@ class BrowserWindow : public ClientHandler::Delegate {
   Delegate* delegate_;
   CefRefPtr<CefBrowser> browser_;
   CefRefPtr<ClientHandler> client_handler_;
-  bool is_closing_;
+  bool is_closing_ = false;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(BrowserWindow);

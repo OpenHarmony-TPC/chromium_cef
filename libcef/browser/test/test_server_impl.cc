@@ -2,14 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be found
 // in the LICENSE file.
 
-#include "libcef/browser/test/test_server_impl.h"
-
-#include "libcef/common/net/http_header_utils.h"
+#include "cef/libcef/browser/test/test_server_impl.h"
 
 #include "base/logging.h"
 #include "base/strings/string_util.h"
 #include "base/task/single_thread_task_runner.h"
 #include "base/threading/thread_checker.h"
+#include "cef/libcef/common/net/http_header_utils.h"
 #include "net/http/http_request_headers.h"
 #include "net/test/embedded_test_server/embedded_test_server.h"
 #include "net/test/embedded_test_server/http_response.h"
@@ -33,9 +32,9 @@ class CefTestServerConnectionImpl : public CefTestServerConnection {
                            size_t data_size) override {
     auto response = std::make_unique<BasicHttpResponse>();
     response->set_code(net::HTTP_OK);
-    response->set_content_type(base::StringPiece(content_type.ToString()));
+    response->set_content_type(std::string_view(content_type.ToString()));
     response->set_content(
-        base::StringPiece(reinterpret_cast<const char*>(data), data_size));
+        std::string_view(reinterpret_cast<const char*>(data), data_size));
     SendBasicHttpResponse(std::move(response));
   }
 
@@ -48,8 +47,8 @@ class CefTestServerConnectionImpl : public CefTestServerConnection {
   void SendHttp500Response(const CefString& error_message) override {
     auto response = std::make_unique<BasicHttpResponse>();
     response->set_code(net::HTTP_INTERNAL_SERVER_ERROR);
-    response->set_content_type(base::StringPiece("text/html"));
-    response->set_content(base::StringPiece(error_message.ToString()));
+    response->set_content_type(std::string_view("text/html"));
+    response->set_content(std::string_view(error_message.ToString()));
     SendBasicHttpResponse(std::move(response));
   }
 
@@ -60,9 +59,9 @@ class CefTestServerConnectionImpl : public CefTestServerConnection {
                         const HeaderMap& extra_headers) override {
     auto response = std::make_unique<BasicHttpResponse>();
     response->set_code(static_cast<net::HttpStatusCode>(response_code));
-    response->set_content_type(base::StringPiece(content_type.ToString()));
+    response->set_content_type(std::string_view(content_type.ToString()));
     response->set_content(
-        base::StringPiece(reinterpret_cast<const char*>(data), data_size));
+        std::string_view(reinterpret_cast<const char*>(data), data_size));
     for (const auto& [key, value] : extra_headers) {
       response->AddCustomHeader(key.ToString(), value.ToString());
     }
@@ -175,7 +174,7 @@ class CefTestServerImpl::Context {
     DCHECK(!test_server_);
   }
 
-  bool Start(uint16 port,
+  bool Start(uint16_t port,
              bool https_server,
              cef_test_cert_type_t https_cert_type) {
     DCHECK(thread_checker_.CalledOnValidThread());
@@ -252,7 +251,7 @@ class CefTestServerImpl::Context {
   EmbeddedTestServerHandle test_server_handle_;
 };
 
-bool CefTestServerImpl::Start(uint16 port,
+bool CefTestServerImpl::Start(uint16_t port,
                               bool https_server,
                               cef_test_cert_type_t https_cert_type,
                               CefRefPtr<CefTestServerHandler> handler) {
@@ -281,7 +280,7 @@ CefString CefTestServerImpl::GetOrigin() {
 
 // static
 CefRefPtr<CefTestServer> CefTestServer::CreateAndStart(
-    uint16 port,
+    uint16_t port,
     bool https_server,
     cef_test_cert_type_t https_cert_type,
     CefRefPtr<CefTestServerHandler> handler) {

@@ -9,11 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=34677bf6a4b8053a309f718457a9510ab27f73a7$
+// $hash=ebe934a0127d55ef4837fc5a93230a236217627a$
 //
 
 #include "libcef_dll/cpptoc/ads_block_manager_cpptoc.h"
+
 #include "libcef_dll/ctocpp/completion_callback_ctocpp.h"
+#include "libcef_dll/transfer_util.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
@@ -38,38 +40,71 @@ namespace {
 
 void CEF_CALLBACK
 ads_block_manager_set_ads_block_rules(struct _cef_ads_block_manager_t* self,
-                                      const cef_string_t*& rulesFile,
+                                      const cef_string_t* rulesFile,
                                       int replace) {
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &rulesFile
-#pragma message("Warning: " __FILE__ \
-                ": ads_block_manager_set_ads_block_rules is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: rulesFile; type: string_byref_const
+  DCHECK(rulesFile);
+  if (!rulesFile) {
+    return;
+  }
+
+  // Execute
+  CefAdsBlockManagerCppToC::Get(self)->SetAdsBlockRules(CefString(rulesFile),
+                                                        replace ? true : false);
 }
 
 void CEF_CALLBACK ads_block_manager_add_ads_block_disallowed_list(
     struct _cef_ads_block_manager_t* self,
-    cef_string_list_t& domainSuffixes) {
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message(         \
-    "Warning: " __FILE__ \
-    ": ads_block_manager_add_ads_block_disallowed_list is not implemented")
-  // END DELETE BEFORE MODIFYING
+    cef_string_list_t domainSuffixes) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: domainSuffixes; type: string_vec_byref_const
+  DCHECK(domainSuffixes);
+  if (!domainSuffixes) {
+    return;
+  }
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  std::vector<CefString> domainSuffixesList;
+  transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+
+  // Execute
+  CefAdsBlockManagerCppToC::Get(self)->AddAdsBlockDisallowedList(
+      domainSuffixesList);
 }
 
 void CEF_CALLBACK ads_block_manager_remove_ads_block_disallowed_list(
     struct _cef_ads_block_manager_t* self,
-    cef_string_list_t& domainSuffixes) {
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message(         \
-    "Warning: " __FILE__ \
-    ": ads_block_manager_remove_ads_block_disallowed_list is not implemented")
-  // END DELETE BEFORE MODIFYING
+    cef_string_list_t domainSuffixes) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: domainSuffixes; type: string_vec_byref_const
+  DCHECK(domainSuffixes);
+  if (!domainSuffixes) {
+    return;
+  }
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  std::vector<CefString> domainSuffixesList;
+  transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+
+  // Execute
+  CefAdsBlockManagerCppToC::Get(self)->RemoveAdsBlockDisallowedList(
+      domainSuffixesList);
 }
 
 void CEF_CALLBACK ads_block_manager_clear_ads_block_disallowed_list(
@@ -87,26 +122,50 @@ void CEF_CALLBACK ads_block_manager_clear_ads_block_disallowed_list(
 
 void CEF_CALLBACK ads_block_manager_add_ads_block_allowed_list(
     struct _cef_ads_block_manager_t* self,
-    cef_string_list_t& domainSuffixes) {
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message(         \
-    "Warning: " __FILE__ \
-    ": ads_block_manager_add_ads_block_allowed_list is not implemented")
-  // END DELETE BEFORE MODIFYING
+    cef_string_list_t domainSuffixes) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: domainSuffixes; type: string_vec_byref_const
+  DCHECK(domainSuffixes);
+  if (!domainSuffixes) {
+    return;
+  }
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  std::vector<CefString> domainSuffixesList;
+  transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+
+  // Execute
+  CefAdsBlockManagerCppToC::Get(self)->AddAdsBlockAllowedList(
+      domainSuffixesList);
 }
 
 void CEF_CALLBACK ads_block_manager_remove_ads_block_allowed_list(
     struct _cef_ads_block_manager_t* self,
-    cef_string_list_t& domainSuffixes) {
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message(         \
-    "Warning: " __FILE__ \
-    ": ads_block_manager_remove_ads_block_allowed_list is not implemented")
-  // END DELETE BEFORE MODIFYING
+    cef_string_list_t domainSuffixes) {
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: domainSuffixes; type: string_vec_byref_const
+  DCHECK(domainSuffixes);
+  if (!domainSuffixes) {
+    return;
+  }
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  std::vector<CefString> domainSuffixesList;
+  transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+
+  // Execute
+  CefAdsBlockManagerCppToC::Get(self)->RemoveAdsBlockAllowedList(
+      domainSuffixesList);
 }
 
 void CEF_CALLBACK ads_block_manager_clear_ads_block_allowed_list(

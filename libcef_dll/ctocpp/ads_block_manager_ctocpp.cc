@@ -9,11 +9,13 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b47a69a759727fa7a85bbbb3e8862e24c64792ec$
+// $hash=2ac4abefe4e706d1710d2066f37bfc0fca3bd020$
 //
 
 #include "libcef_dll/ctocpp/ads_block_manager_ctocpp.h"
+
 #include "libcef_dll/cpptoc/completion_callback_cpptoc.h"
+#include "libcef_dll/transfer_util.h"
 
 // STATIC METHODS - Body may be edited by hand.
 
@@ -42,11 +44,16 @@ void CefAdsBlockManagerCToCpp::SetAdsBlockRules(const CefString& rulesFile,
     return;
   }
 
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &rulesFile
-#pragma message("Warning: " __FILE__ ": SetAdsBlockRules is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: rulesFile; type: string_byref_const
+  DCHECK(!rulesFile.empty());
+  if (rulesFile.empty()) {
+    return;
+  }
+
+  // Execute
+  _struct->set_ads_block_rules(_struct, rulesFile.GetStruct(), replace);
 }
 
 NO_SANITIZE("cfi-icall")
@@ -57,12 +64,22 @@ void CefAdsBlockManagerCToCpp::AddAdsBlockDisallowedList(
     return;
   }
 
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message("Warning: " __FILE__ \
-                ": AddAdsBlockDisallowedList is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  cef_string_list_t domainSuffixesList = cef_string_list_alloc();
+  DCHECK(domainSuffixesList);
+  if (domainSuffixesList) {
+    transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+  }
+
+  // Execute
+  _struct->add_ads_block_disallowed_list(_struct, domainSuffixesList);
+
+  // Restore param:domainSuffixes; type: string_vec_byref_const
+  if (domainSuffixesList) {
+    cef_string_list_free(domainSuffixesList);
+  }
 }
 
 NO_SANITIZE("cfi-icall")
@@ -73,12 +90,22 @@ void CefAdsBlockManagerCToCpp::RemoveAdsBlockDisallowedList(
     return;
   }
 
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message("Warning: " __FILE__ \
-                ": RemoveAdsBlockDisallowedList is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  cef_string_list_t domainSuffixesList = cef_string_list_alloc();
+  DCHECK(domainSuffixesList);
+  if (domainSuffixesList) {
+    transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+  }
+
+  // Execute
+  _struct->remove_ads_block_disallowed_list(_struct, domainSuffixesList);
+
+  // Restore param:domainSuffixes; type: string_vec_byref_const
+  if (domainSuffixesList) {
+    cef_string_list_free(domainSuffixesList);
+  }
 }
 
 NO_SANITIZE("cfi-icall")
@@ -102,12 +129,22 @@ void CefAdsBlockManagerCToCpp::AddAdsBlockAllowedList(
     return;
   }
 
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message("Warning: " __FILE__ \
-                ": AddAdsBlockAllowedList is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  cef_string_list_t domainSuffixesList = cef_string_list_alloc();
+  DCHECK(domainSuffixesList);
+  if (domainSuffixesList) {
+    transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+  }
+
+  // Execute
+  _struct->add_ads_block_allowed_list(_struct, domainSuffixesList);
+
+  // Restore param:domainSuffixes; type: string_vec_byref_const
+  if (domainSuffixesList) {
+    cef_string_list_free(domainSuffixesList);
+  }
 }
 
 NO_SANITIZE("cfi-icall")
@@ -118,12 +155,22 @@ void CefAdsBlockManagerCToCpp::RemoveAdsBlockAllowedList(
     return;
   }
 
-// BEGIN DELETE BEFORE MODIFYING
-// AUTO-GENERATED CONTENT
-// COULD NOT IMPLEMENT DUE TO: &domainSuffixes
-#pragma message("Warning: " __FILE__ \
-                ": RemoveAdsBlockAllowedList is not implemented")
-  // END DELETE BEFORE MODIFYING
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Translate param: domainSuffixes; type: string_vec_byref_const
+  cef_string_list_t domainSuffixesList = cef_string_list_alloc();
+  DCHECK(domainSuffixesList);
+  if (domainSuffixesList) {
+    transfer_string_list_contents(domainSuffixes, domainSuffixesList);
+  }
+
+  // Execute
+  _struct->remove_ads_block_allowed_list(_struct, domainSuffixesList);
+
+  // Restore param:domainSuffixes; type: string_vec_byref_const
+  if (domainSuffixesList) {
+    cef_string_list_free(domainSuffixesList);
+  }
 }
 
 NO_SANITIZE("cfi-icall")

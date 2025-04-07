@@ -2,35 +2,42 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#include "libcef/browser/request_context_impl.h"
-#include "libcef/browser/browser_context.h"
-#include "libcef/browser/context.h"
-#include "libcef/browser/prefs/pref_helper.h"
-#include "libcef/browser/thread_util.h"
-#include "libcef/common/app_manager.h"
-#include "libcef/common/task_runner_impl.h"
+#include "cef/libcef/browser/request_context_impl.h"
 
+#include "arkweb/build/features/features.h"
 #include "base/atomic_sequence_num.h"
 #include "base/logging.h"
 #include "base/strings/stringprintf.h"
+#include "cef/libcef/browser/browser_context.h"
+#include "cef/libcef/browser/context.h"
+#include "cef/libcef/browser/prefs/pref_helper.h"
+#include "cef/libcef/browser/thread_util.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/common/task_runner_impl.h"
+#include "cef/libcef/common/values_impl.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
+#include "chrome/browser/themes/theme_service.h"
+#include "chrome/browser/themes/theme_service_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/child_process_host.h"
 #include "content/public/browser/ssl_host_state_delegate.h"
+#include "libcef/browser/alloy/alloy_client_cert_lookup_table.h"
+#include "libcef/browser/net_service/cookie_manager_impl_ext.h"
 #include "mojo/public/cpp/bindings/receiver.h"
 #include "mojo/public/cpp/bindings/remote.h"
+#include "net/cert/cert_database.h"
 #include "net/dns/host_resolver.h"
 #include "services/network/public/cpp/resolve_host_client_base.h"
+#include "services/network/public/mojom/clear_data_filter.mojom.h"
 #include "services/network/public/mojom/network_context.mojom.h"
-
-#if BUILDFLAG(IS_OHOS)
-#include "libcef/browser/alloy/alloy_client_cert_lookup_table.h"
-#include "net/cert/cert_database.h"
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+#include "cef/ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl.h"
 #endif
-
-#if defined(OHOS_INCOGNITO_MODE)
-#include "libcef/browser/net_database/cef_incognito_data_base_impl.h"
+#if BUILDFLAG(ARKWEB_EDM_POLICY)
+#include "components/policy/core/common/policy_loader_ohos.h"
 #endif
 
 using content::BrowserThread;
@@ -39,12 +46,12 @@ namespace {
 
 base::AtomicSequenceNumber g_next_id;
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
 void NotifyClientCertificatesChanged() {
   LOG(INFO) << "CefRequestContextImpl::NotifyClientCertificatesChanged";
-  net::CertDatabase::GetInstance()->NotifyObserversCertDBChanged();
+  net::CertDatabase::GetInstance()->NotifyObserversClientCertStoreChanged();
 }
-#endif
+#endif  // ARKWEB_CERT_AUTHENTICATION
 
 class ResolveHostHelper : public network::ResolveHostClientBase {
  public:
@@ -62,7 +69,7 @@ class ResolveHostHelper : public network::ResolveHostClientBase {
 
     host_resolver_.set_disconnect_handler(base::BindOnce(
         &ResolveHostHelper::OnComplete, base::Unretained(this), net::ERR_FAILED,
-        net::ResolveErrorInfo(net::ERR_FAILED), absl::nullopt, absl::nullopt));
+        net::ResolveErrorInfo(net::ERR_FAILED), std::nullopt, std::nullopt));
 
     host_resolver_->ResolveHost(
         network::mojom::HostResolverHost::NewHostPortPair(
@@ -74,8 +81,8 @@ class ResolveHostHelper : public network::ResolveHostClientBase {
  private:
   void OnComplete(int result,
                   const net::ResolveErrorInfo& resolve_error_info,
-                  const absl::optional<net::AddressList>& resolved_addresses,
-                  const absl::optional<net::HostResolverEndpointResults>&
+                  const std::optional<net::AddressList>& resolved_addresses,
+                  const std::optional<net::HostResolverEndpointResults>&
                       endpoint_results_with_metadat) override {
     CEF_REQUIRE_UIT();
 
@@ -102,6 +109,17 @@ class ResolveHostHelper : public network::ResolveHostClientBase {
   mojo::Receiver<network::mojom::ResolveHostClient> receiver_{this};
 };
 
+CefBrowserContext* GetCefBrowserContext(
+    CefRefPtr<CefRequestContext> request_context) {
+  CEF_REQUIRE_UIT();
+  CefRefPtr<CefRequestContextImpl> request_context_impl =
+      CefRequestContextImpl::GetOrCreateForRequestContext(request_context);
+  CHECK(request_context_impl);
+  auto* cef_browser_context = request_context_impl->GetBrowserContext();
+  CHECK(cef_browser_context);
+  return cef_browser_context;
+}
+
 }  // namespace
 
 // CefBrowserContext
@@ -116,10 +134,10 @@ CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalContext() {
 
   CefRequestContextImpl::Config config;
   config.is_global = true;
-  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
 }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 // static
 CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalOTRContext() {
   // Verify that the context is in a valid state.
@@ -131,7 +149,7 @@ CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalOTRContext() {
   CefRequestContextImpl::Config config;
   config.is_global = true;
   config.incognito_mode = true;
-  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
 }
 #endif
 
@@ -149,7 +167,7 @@ CefRefPtr<CefRequestContext> CefRequestContext::CreateContext(
   config.settings = settings;
   config.handler = handler;
   config.unique_id = g_next_id.GetNext();
-  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
 }
 
 // static
@@ -170,7 +188,7 @@ CefRefPtr<CefRequestContext> CefRequestContext::CreateContext(
   config.other = static_cast<CefRequestContextImpl*>(other.get());
   config.handler = handler;
   config.unique_id = g_next_id.GetNext();
-  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
 }
 
 // CefRequestContextImpl
@@ -193,12 +211,13 @@ CefRequestContextImpl::CreateGlobalRequestContext(
   Config config;
   config.is_global = true;
   config.settings = settings;
-  CefRefPtr<CefRequestContextImpl> impl = new CefRequestContextImpl(config);
+  CefRefPtr<CefRequestContextImpl> impl =
+      new CefRequestContextImpl(std::move(config));
   impl->Initialize();
   return impl;
 }
 
-#if defined(OHOS_INCOGNITO_MODE)
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 // static
 CefRefPtr<CefRequestContextImpl>
 CefRequestContextImpl::CreateGlobalOTRRequestContext(
@@ -207,7 +226,8 @@ CefRequestContextImpl::CreateGlobalOTRRequestContext(
   config.is_global = true;
   config.settings = settings;
   config.incognito_mode = true;
-  CefRefPtr<CefRequestContextImpl> impl = new CefRequestContextImpl(config);
+  CefRefPtr<CefRequestContextImpl> impl =
+      new CefRequestContextImpl(std::move(config));
   impl->Initialize();
   return impl;
 }
@@ -217,10 +237,11 @@ CefRequestContextImpl::CreateGlobalOTRRequestContext(
 CefRefPtr<CefRequestContextImpl>
 CefRequestContextImpl::GetOrCreateForRequestContext(
     CefRefPtr<CefRequestContext> request_context
-#if defined(OHOS_INCOGNITO_MODE)
-    , bool incognito_mode
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+    ,
+    bool incognito_mode
 #endif
-    ) {
+) {
   if (request_context.get()) {
     // Use the context from the provided CefRequestContext.
     return static_cast<CefRequestContextImpl*>(request_context.get());
@@ -229,8 +250,39 @@ CefRequestContextImpl::GetOrCreateForRequestContext(
   // Use the global context.
   Config config;
   config.is_global = true;
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   config.incognito_mode = incognito_mode;
-  return CefRequestContextImpl::GetOrCreateRequestContext(config);
+#endif
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
+}
+
+// static
+CefRefPtr<CefRequestContextImpl>
+CefRequestContextImpl::GetOrCreateForBrowserContext(
+    CefBrowserContext* browser_context,
+    CefRefPtr<CefRequestContextHandler> handler) {
+  DCHECK(browser_context);
+
+  Config config;
+  config.browser_context = browser_context;
+  config.handler = handler;
+  config.unique_id = g_next_id.GetNext();
+  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
+}
+
+content::BrowserContext* CefRequestContextImpl::GetBrowserContext(
+    CefRefPtr<CefRequestContext> request_context) {
+  auto* browser_context =
+      GetCefBrowserContext(request_context)->AsBrowserContext();
+  CHECK(browser_context);
+  return browser_context;
+}
+
+Profile* CefRequestContextImpl::GetProfile(
+    CefRefPtr<CefRequestContext> request_context) {
+  auto* profile = GetCefBrowserContext(request_context)->AsProfile();
+  CHECK(profile);
+  return profile;
 }
 
 bool CefRequestContextImpl::VerifyBrowserContext() const {
@@ -262,9 +314,14 @@ void CefRequestContextImpl::ExecuteWhenBrowserContextInitialized(
             std::move(callback)));
     return;
   }
+  LOG(INFO) << "CefRequestContextImpl::ExecuteWhenBrowserContextInitialized, "
+               "not on ui";
 
-  EnsureBrowserContext();
   browser_context()->StoreOrTriggerInitCallback(std::move(callback));
+
+#if BUILDFLAG(ARKWEB_EDM_POLICY)
+  policy::PolicyLoaderOhos::TryChoosePolicySource();
+#endif
 }
 
 void CefRequestContextImpl::GetBrowserContext(
@@ -371,27 +428,24 @@ CefString CefRequestContextImpl::GetCachePath() {
 
 CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
     CefRefPtr<CefCompletionCallback> callback) {
-#if defined(OHOS_COOKIE) && defined(OHOS_INCOGNITO_MODE)
-  if (config_.incognito_mode) {
-    CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager =
-        CefIncognitoCookieManagerImpl::GetInstance();
-    InitializeIncognitoCookieManagerInternal(cookie_manager, callback);
-    return cookie_manager;
-  } else {
-    CefRefPtr<CefCookieManagerImpl> cookie_manager =
-        CefCookieManagerImpl::GetInstance();
-    InitializeCookieManagerInternal(cookie_manager, callback);
-    return cookie_manager;
-  }
-#else
   CefRefPtr<CefCookieManagerImpl> cookie_manager = new CefCookieManagerImpl();
   InitializeCookieManagerInternal(cookie_manager, callback);
   return cookie_manager.get();
-#endif // defined(OHOS_COOKIE)
 }
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+CefRefPtr<CefCookieManagerExt> CefRequestContextImpl::GetCookieManagerExt(
+    bool support_incognito,
+    CefRefPtr<CefCompletionCallback> callback) {
+  CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(support_incognito);
+  InitializeCookieManagerInternal(cookie_manager, callback);
+  return cookie_manager.get();
+}
+#endif  // BUILDFLAG(ARKWEB_COOKIE)
+
 CefRefPtr<CefAdsBlockManager> CefRequestContextImpl::GetAdsBlockManager(
-  CefRefPtr<CefCompletionCallback> callback) {
+    CefRefPtr<CefCompletionCallback> callback) {
   CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager =
       CefAdsBlockManagerImpl::GetInstance();
   InitializeAdsBlockManagerInternal(adsblock_manager, callback);
@@ -406,9 +460,26 @@ void CefRequestContextImpl::InitializeAdsBlockManagerInternal(
                         [](CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
                            CefRefPtr<CefCompletionCallback> callback,
                            CefBrowserContext::Getter browser_context_getter) {
-                          adsblock_manager->Initialize(browser_context_getter, callback);
+                          adsblock_manager->Initialize(browser_context_getter,
+                                                       callback);
                         },
                         adsblock_manager, callback));
+}
+
+CefRefPtr<CefDataBase> CefRequestContextImpl::GetDataBase() {
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+  if (config_.incognito_mode) {
+    CefRefPtr<CefIncognitoDataBaseImpl> data_base =
+        new CefIncognitoDataBaseImpl();
+    return data_base;
+  } else {
+    CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
+    return data_base;
+  }
+#else
+  CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
+  return data_base.get();
+#endif
 }
 
 bool CefRequestContextImpl::RegisterSchemeHandlerFactory(
@@ -502,6 +573,18 @@ void CefRequestContextImpl::ClearCertificateExceptions(
                      this, callback));
 }
 
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+void CefRequestContextImpl::ClearClientAuthenticationCache(
+    CefRefPtr<CefCompletionCallback> callback) {
+  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCache";
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(
+          &CefRequestContextImpl::ClearClientAuthenticationCacheInternal, this,
+          callback));
+}
+#endif  // ARKWEB_CERT_AUTHENTICATION
+
 void CefRequestContextImpl::ClearHttpAuthCredentials(
     CefRefPtr<CefCompletionCallback> callback) {
   GetBrowserContext(
@@ -526,57 +609,6 @@ void CefRequestContextImpl::ResolveHost(
                                    this, origin, callback));
 }
 
-void CefRequestContextImpl::LoadExtension(
-    const CefString& root_directory,
-    CefRefPtr<CefDictionaryValue> manifest,
-    CefRefPtr<CefExtensionHandler> handler) {
-  GetBrowserContext(content::GetUIThreadTaskRunner({}),
-                    base::BindOnce(
-                        [](const CefString& root_directory,
-                           CefRefPtr<CefDictionaryValue> manifest,
-                           CefRefPtr<CefExtensionHandler> handler,
-                           CefRefPtr<CefRequestContextImpl> self,
-                           CefBrowserContext::Getter browser_context_getter) {
-                          auto browser_context = browser_context_getter.Run();
-                          if (browser_context) {
-                            browser_context->LoadExtension(
-                                root_directory, manifest, handler, self);
-                          }
-                        },
-                        root_directory, manifest, handler,
-                        CefRefPtr<CefRequestContextImpl>(this)));
-}
-
-bool CefRequestContextImpl::DidLoadExtension(const CefString& extension_id) {
-  CefRefPtr<CefExtension> extension = GetExtension(extension_id);
-  // GetLoaderContext() will return NULL for internal extensions.
-  return extension && IsSame(extension->GetLoaderContext());
-}
-
-bool CefRequestContextImpl::HasExtension(const CefString& extension_id) {
-  return !!GetExtension(extension_id);
-}
-
-bool CefRequestContextImpl::GetExtensions(
-    std::vector<CefString>& extension_ids) {
-  extension_ids.clear();
-
-  if (!VerifyBrowserContext()) {
-    return false;
-  }
-
-  return browser_context()->GetExtensions(extension_ids);
-}
-
-CefRefPtr<CefExtension> CefRequestContextImpl::GetExtension(
-    const CefString& extension_id) {
-  if (!VerifyBrowserContext()) {
-    return nullptr;
-  }
-
-  return browser_context()->GetExtension(extension_id);
-}
-
 CefRefPtr<CefMediaRouter> CefRequestContextImpl::GetMediaRouter(
     CefRefPtr<CefCompletionCallback> callback) {
   CefRefPtr<CefMediaRouterImpl> media_router = new CefMediaRouterImpl();
@@ -584,32 +616,210 @@ CefRefPtr<CefMediaRouter> CefRequestContextImpl::GetMediaRouter(
   return media_router.get();
 }
 
+CefRefPtr<CefValue> CefRequestContextImpl::GetWebsiteSetting(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type) {
+  if (!VerifyBrowserContext()) {
+    return nullptr;
+  }
+
+  auto* settings_map = HostContentSettingsMapFactory::GetForProfile(
+      browser_context()->AsProfile());
+  if (!settings_map) {
+    return nullptr;
+  }
+
+  // Either or both URLs may be invalid.
+  GURL requesting_gurl(requesting_url.ToString());
+  GURL top_level_gurl(top_level_url.ToString());
+
+  content_settings::SettingInfo info;
+  base::Value value = settings_map->GetWebsiteSetting(
+      requesting_gurl, top_level_gurl,
+      static_cast<ContentSettingsType>(content_type), &info);
+  if (value.is_none()) {
+    return nullptr;
+  }
+
+  return new CefValueImpl(std::move(value));
+}
+
+void CefRequestContextImpl::SetWebsiteSetting(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type,
+    CefRefPtr<CefValue> value) {
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(&CefRequestContextImpl::SetWebsiteSettingInternal, this,
+                     requesting_url, top_level_url, content_type, value));
+}
+
+cef_content_setting_values_t CefRequestContextImpl::GetContentSetting(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type) {
+  // Verify that our enums match Chromium's values.
+  static_assert(
+      static_cast<int>(CEF_CONTENT_SETTING_VALUE_NUM_VALUES) ==
+          static_cast<int>(CONTENT_SETTING_NUM_SETTINGS),
+      "Mismatched enum found for CEF_CONTENT_SETTING_VALUE_NUM_VALUES");
+
+  if (!VerifyBrowserContext()) {
+    return CEF_CONTENT_SETTING_VALUE_DEFAULT;
+  }
+
+  auto* settings_map = HostContentSettingsMapFactory::GetForProfile(
+      browser_context()->AsProfile());
+  if (!settings_map) {
+    return CEF_CONTENT_SETTING_VALUE_DEFAULT;
+  }
+
+  ContentSetting value = ContentSetting::CONTENT_SETTING_DEFAULT;
+
+  if (requesting_url.empty() && top_level_url.empty()) {
+    value = settings_map->GetDefaultContentSetting(
+        static_cast<ContentSettingsType>(content_type),
+        /*provider_id=*/nullptr);
+  } else {
+    GURL requesting_gurl(requesting_url.ToString());
+    GURL top_level_gurl(top_level_url.ToString());
+    if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
+      value = settings_map->GetContentSetting(
+          requesting_gurl, top_level_gurl,
+          static_cast<ContentSettingsType>(content_type));
+    }
+  }
+
+  return static_cast<cef_content_setting_values_t>(value);
+}
+
+void CefRequestContextImpl::SetContentSetting(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type,
+    cef_content_setting_values_t value) {
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(&CefRequestContextImpl::SetContentSettingInternal, this,
+                     requesting_url, top_level_url, content_type, value));
+}
+
+void CefRequestContextImpl::SetChromeColorScheme(cef_color_variant_t variant,
+                                                 cef_color_t user_color) {
+  GetBrowserContext(
+      content::GetUIThreadTaskRunner({}),
+      base::BindOnce(&CefRequestContextImpl::SetChromeColorSchemeInternal, this,
+                     variant, user_color));
+}
+
+cef_color_variant_t CefRequestContextImpl::GetChromeColorSchemeMode() {
+  if (!VerifyBrowserContext()) {
+    return CEF_COLOR_VARIANT_SYSTEM;
+  }
+
+  const auto* theme_service =
+      ThemeServiceFactory::GetForProfile(browser_context()->AsProfile());
+  switch (theme_service->GetBrowserColorScheme()) {
+    case ThemeService::BrowserColorScheme::kSystem:
+      return CEF_COLOR_VARIANT_SYSTEM;
+    case ThemeService::BrowserColorScheme::kLight:
+      return CEF_COLOR_VARIANT_LIGHT;
+    case ThemeService::BrowserColorScheme::kDark:
+      return CEF_COLOR_VARIANT_DARK;
+  }
+
+  DCHECK(false);  // Not reached.
+  return CEF_COLOR_VARIANT_SYSTEM;
+}
+
+cef_color_t CefRequestContextImpl::GetChromeColorSchemeColor() {
+  if (!VerifyBrowserContext()) {
+    return 0;
+  }
+
+  const auto* theme_service =
+      ThemeServiceFactory::GetForProfile(browser_context()->AsProfile());
+  if (const auto& user_color = theme_service->GetUserColor()) {
+    return *user_color;
+  }
+
+  return 0;
+}
+
+cef_color_variant_t CefRequestContextImpl::GetChromeColorSchemeVariant() {
+  if (!VerifyBrowserContext()) {
+    return CEF_COLOR_VARIANT_SYSTEM;
+  }
+
+  const auto* theme_service =
+      ThemeServiceFactory::GetForProfile(browser_context()->AsProfile());
+  switch (theme_service->GetBrowserColorVariant()) {
+    case ui::mojom::BrowserColorVariant::kSystem:
+      return CEF_COLOR_VARIANT_SYSTEM;
+    case ui::mojom::BrowserColorVariant::kTonalSpot:
+      return CEF_COLOR_VARIANT_TONAL_SPOT;
+    case ui::mojom::BrowserColorVariant::kNeutral:
+      return CEF_COLOR_VARIANT_NEUTRAL;
+    case ui::mojom::BrowserColorVariant::kVibrant:
+      return CEF_COLOR_VARIANT_VIBRANT;
+    case ui::mojom::BrowserColorVariant::kExpressive:
+      return CEF_COLOR_VARIANT_EXPRESSIVE;
+  }
+
+  DCHECK(false);  // Not reached.
+  return CEF_COLOR_VARIANT_SYSTEM;
+}
+
 void CefRequestContextImpl::OnRenderFrameCreated(
     const content::GlobalRenderFrameHostId& global_id,
-    bool is_main_frame,
-    bool is_guest_view) {
-  browser_context_->OnRenderFrameCreated(this, global_id, is_main_frame,
-                                         is_guest_view);
+    bool is_main_frame) {
+  browser_context_->OnRenderFrameCreated(this, global_id, is_main_frame);
 }
 
 void CefRequestContextImpl::OnRenderFrameDeleted(
     const content::GlobalRenderFrameHostId& global_id,
-    bool is_main_frame,
-    bool is_guest_view) {
-  browser_context_->OnRenderFrameDeleted(this, global_id, is_main_frame,
-                                         is_guest_view);
+    bool is_main_frame) {
+  browser_context_->OnRenderFrameDeleted(this, global_id, is_main_frame);
 }
 
 // static
 CefRefPtr<CefRequestContextImpl>
-CefRequestContextImpl::GetOrCreateRequestContext(const Config& config) {
+CefRequestContextImpl::GetOrCreateRequestContext(Config&& config) {
+  if (config.browser_context) {
+    // CefBrowserContext is only accessed on the UI thread.
+    CEF_REQUIRE_UIT();
+    DCHECK(!config.is_global);
+    DCHECK(!config.other);
+
+    // Retrieve any request context that currently exists for the browser
+    // context. If |config.handler| is nullptr, and the returned request context
+    // does not have a handler, then we can just return that existing context.
+    // Otherwise, we'll need to create a new request context with
+    // |config.handler|.
+    if (auto other = config.browser_context->GetAnyRequestContext(
+            /*prefer_no_handler=*/!config.handler)) {
+      if (!config.handler && !other->GetHandler()) {
+        // Safe to return the existing context.
+        return other;
+      }
+
+      // Use the existing request context as a starting point. It may be the
+      // global context. This is functionally equivalent to calling
+      // `CefRequestContext::CreateContext(other, handler)`.
+      config.other = other;
+    }
+  }
+
   if (config.is_global ||
       (config.other && config.other->IsGlobal() && !config.handler)) {
-#if BUILDFLAG(IS_OHOS)
-    return config.incognito_mode ? static_cast<CefRequestContextImpl*>(
-        CefAppManager::Get()->GetGlobalOTRRequestContext().get()) :
-        static_cast<CefRequestContextImpl*>(
-        CefAppManager::Get()->GetGlobalRequestContext().get());
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+    return config.incognito_mode
+               ? static_cast<CefRequestContextImpl*>(
+                     CefAppManager::Get()->GetGlobalOTRRequestContext().get())
+               : static_cast<CefRequestContextImpl*>(
+                     CefAppManager::Get()->GetGlobalRequestContext().get());
 #else
     // Return the singleton global context.
     return static_cast<CefRequestContextImpl*>(
@@ -617,8 +827,8 @@ CefRequestContextImpl::GetOrCreateRequestContext(const Config& config) {
 #endif
   }
 
-  // The new context will be initialized later by EnsureBrowserContext().
-  CefRefPtr<CefRequestContextImpl> context = new CefRequestContextImpl(config);
+  CefRefPtr<CefRequestContextImpl> context =
+      new CefRequestContextImpl(std::move(config));
 
   // Initialize ASAP so that any tasks blocked on initialization will execute.
   if (CEF_CURRENTLY_ON_UIT()) {
@@ -632,8 +842,8 @@ CefRequestContextImpl::GetOrCreateRequestContext(const Config& config) {
 }
 
 CefRequestContextImpl::CefRequestContextImpl(
-    const CefRequestContextImpl::Config& config)
-    : config_(config) {}
+    CefRequestContextImpl::Config&& config)
+    : config_(std::move(config)) {}
 
 void CefRequestContextImpl::Initialize() {
   CEF_REQUIRE_UIT();
@@ -644,6 +854,9 @@ void CefRequestContextImpl::Initialize() {
     // Share storage with |config_.other|.
     browser_context_ = config_.other->browser_context();
     CHECK(browser_context_);
+  } else if (config_.browser_context) {
+    browser_context_ = config_.browser_context;
+    config_.browser_context = nullptr;
   }
 
   if (!browser_context_) {
@@ -669,19 +882,8 @@ void CefRequestContextImpl::Initialize() {
     // empty then this new instance will become the globally registered
     // CefBrowserContext for that path. Otherwise, this new instance will
     // be a completely isolated "incognito mode" context.
-#if BUILDFLAG(IS_OHOS)
-    if (config_.incognito_mode) {
-      browser_context_ =
-          CefAppManager::Get()->CreateNewIncognitoBrowserContext(
-              config_.settings, std::move(initialized_cb));      
-    } else {
-      browser_context_ = CefAppManager::Get()->CreateNewBrowserContext(
-          config_.settings, std::move(initialized_cb));
-    }
-#else
     browser_context_ = CefAppManager::Get()->CreateNewBrowserContext(
         config_.settings, std::move(initialized_cb));
-#endif
   } else {
     // Share the same settings as the existing context.
     config_.settings = browser_context_->settings();
@@ -692,9 +894,10 @@ void CefRequestContextImpl::Initialize() {
   browser_context_->AddCefRequestContext(this);
 
   if (config_.other) {
-    // Clear the reference to |config_.other| after setting
-    // |request_context_getter_|. This is the reverse order of checks in
-    // IsSharedWith().
+    // Clear the reference to |config_.other| after adding the new assocation
+    // with |browser_context_| as this may result in |other| being released
+    // and we don't want the browser context to be destroyed prematurely.
+    // This is the also the reverse order of checks in IsSharingWith().
     config_.other = nullptr;
   }
 }
@@ -707,14 +910,6 @@ void CefRequestContextImpl::BrowserContextInitialized() {
         base::BindOnce(&CefRequestContextHandler::OnRequestContextInitialized,
                        config_.handler, CefRefPtr<CefRequestContext>(this)));
   }
-}
-
-void CefRequestContextImpl::EnsureBrowserContext() {
-  CEF_REQUIRE_UIT();
-  if (!browser_context()) {
-    Initialize();
-  }
-  DCHECK(browser_context());
 }
 
 void CefRequestContextImpl::ClearCertificateExceptionsInternal(
@@ -737,6 +932,32 @@ void CefRequestContextImpl::ClearCertificateExceptionsInternal(
   }
 }
 
+#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
+void CefRequestContextImpl::ClearClientAuthenticationCacheInternal(
+    CefRefPtr<CefCompletionCallback> callback,
+    CefBrowserContext::Getter browser_context_getter) {
+  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCacheInternal";
+  auto browser_context = browser_context_getter.Run();
+  if (!browser_context) {
+    return;
+  }
+
+  AlloyClientCertLookupTable::Clear();
+
+  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::IO)) {
+    NotifyClientCertificatesChanged();
+  } else {
+    content::GetIOThreadTaskRunner({})->PostTask(
+        FROM_HERE, base::BindOnce(&NotifyClientCertificatesChanged));
+  }
+
+  if (callback) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&CefCompletionCallback::OnComplete, callback));
+  }
+}
+#endif  // ARKWEB_CERT_AUTHENTICATION
+
 void CefRequestContextImpl::ClearHttpAuthCredentialsInternal(
     CefRefPtr<CefCompletionCallback> callback,
     CefBrowserContext::Getter browser_context_getter) {
@@ -747,6 +968,7 @@ void CefRequestContextImpl::ClearHttpAuthCredentialsInternal(
 
   browser_context->GetNetworkContext()->ClearHttpAuthCache(
       /*start_time=*/base::Time(), /*end_time=*/base::Time::Max(),
+      /*filter=*/nullptr,
       base::BindOnce(&CefCompletionCallback::OnComplete, callback));
 }
 
@@ -776,6 +998,152 @@ void CefRequestContextImpl::ResolveHostInternal(
   helper->Start(browser_context, origin);
 }
 
+void CefRequestContextImpl::SetWebsiteSettingInternal(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type,
+    CefRefPtr<CefValue> value,
+    CefBrowserContext::Getter browser_context_getter) {
+  auto browser_context = browser_context_getter.Run();
+  if (!browser_context) {
+    return;
+  }
+
+  auto* settings_map = HostContentSettingsMapFactory::GetForProfile(
+      browser_context->AsProfile());
+  if (!settings_map) {
+    return;
+  }
+
+  // Starts as a NONE value.
+  base::Value new_value;
+  if (value && value->IsValid()) {
+    new_value = static_cast<CefValueImpl*>(value.get())->CopyValue();
+  }
+
+  if (requesting_url.empty() && top_level_url.empty()) {
+    settings_map->SetWebsiteSettingCustomScope(
+        ContentSettingsPattern::Wildcard(), ContentSettingsPattern::Wildcard(),
+        static_cast<ContentSettingsType>(content_type), std::move(new_value));
+  } else {
+    GURL requesting_gurl(requesting_url.ToString());
+    GURL top_level_gurl(top_level_url.ToString());
+    if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
+      settings_map->SetWebsiteSettingDefaultScope(
+          requesting_gurl, top_level_gurl,
+          static_cast<ContentSettingsType>(content_type), std::move(new_value));
+    }
+  }
+}
+
+void CefRequestContextImpl::SetContentSettingInternal(
+    const CefString& requesting_url,
+    const CefString& top_level_url,
+    cef_content_setting_types_t content_type,
+    cef_content_setting_values_t value,
+    CefBrowserContext::Getter browser_context_getter) {
+  auto browser_context = browser_context_getter.Run();
+  if (!browser_context) {
+    return;
+  }
+
+  auto* settings_map = HostContentSettingsMapFactory::GetForProfile(
+      browser_context->AsProfile());
+  if (!settings_map) {
+    return;
+  }
+
+  if (requesting_url.empty() && top_level_url.empty()) {
+    settings_map->SetDefaultContentSetting(
+        static_cast<ContentSettingsType>(content_type),
+        static_cast<ContentSetting>(value));
+  } else {
+    GURL requesting_gurl(requesting_url.ToString());
+    GURL top_level_gurl(top_level_url.ToString());
+    if (requesting_gurl.is_valid() || top_level_gurl.is_valid()) {
+      settings_map->SetContentSettingDefaultScope(
+          requesting_gurl, top_level_gurl,
+          static_cast<ContentSettingsType>(content_type),
+          static_cast<ContentSetting>(value));
+    }
+  }
+}
+
+void CefRequestContextImpl::SetChromeColorSchemeInternal(
+    cef_color_variant_t variant,
+    cef_color_t user_color,
+    CefBrowserContext::Getter browser_context_getter) {
+  auto* browser_context = browser_context_getter.Run();
+  if (!browser_context) {
+    return;
+  }
+
+  auto* theme_service =
+      ThemeServiceFactory::GetForProfile(browser_context->AsProfile());
+
+  // Possibly set the color scheme.
+  std::optional<ThemeService::BrowserColorScheme> color_scheme;
+  switch (variant) {
+    case CEF_COLOR_VARIANT_SYSTEM:
+      color_scheme = ThemeService::BrowserColorScheme::kSystem;
+      break;
+    case CEF_COLOR_VARIANT_LIGHT:
+      color_scheme = ThemeService::BrowserColorScheme::kLight;
+      break;
+    case CEF_COLOR_VARIANT_DARK:
+      color_scheme = ThemeService::BrowserColorScheme::kDark;
+      break;
+    default:
+      break;
+  }
+
+  if (color_scheme && *color_scheme != theme_service->GetBrowserColorScheme()) {
+    // Color scheme has changed.
+    // Based on CustomizeColorSchemeModeHandler::SetColorSchemeMode.
+    theme_service->SetBrowserColorScheme(*color_scheme);
+  }
+
+  // Returns nullopt if the current color is SK_ColorTRANSPARENT.
+  const auto& current_color = theme_service->GetUserColor();
+
+  // Possibly set the user color.
+  if (user_color == 0) {
+    if (current_color) {
+      // User color is not currently transparent.
+      // Based on ThemeColorPickerHandler::SetDefaultColor.
+      theme_service->SetUserColor(SK_ColorTRANSPARENT);
+      theme_service->UseDeviceTheme(false);
+    }
+  } else {
+    ui::mojom::BrowserColorVariant ui_variant;
+    switch (variant) {
+      case CEF_COLOR_VARIANT_NEUTRAL:
+        ui_variant = ui::mojom::BrowserColorVariant::kNeutral;
+        break;
+      case CEF_COLOR_VARIANT_VIBRANT:
+        ui_variant = ui::mojom::BrowserColorVariant::kVibrant;
+        break;
+      case CEF_COLOR_VARIANT_EXPRESSIVE:
+        ui_variant = ui::mojom::BrowserColorVariant::kExpressive;
+        break;
+      case CEF_COLOR_VARIANT_SYSTEM:
+        ui_variant = ui::mojom::BrowserColorVariant::kSystem;
+        break;
+      default:
+        ui_variant = ui::mojom::BrowserColorVariant::kTonalSpot;
+        break;
+    }
+
+    if (!current_color || *current_color != user_color ||
+        ui_variant != theme_service->GetBrowserColorVariant()) {
+      // User color and/or variant has changed.
+      // Based on ThemeColorPickerHandler::SetSeedColor.
+      theme_service->SetUserColorAndBrowserColorVariant(user_color, ui_variant);
+      theme_service->UseDeviceTheme(false);
+    }
+  }
+}
+
 void CefRequestContextImpl::InitializeCookieManagerInternal(
     CefRefPtr<CefCookieManagerImpl> cookie_manager,
     CefRefPtr<CefCompletionCallback> callback) {
@@ -789,22 +1157,6 @@ void CefRequestContextImpl::InitializeCookieManagerInternal(
                         },
                         cookie_manager, callback));
 }
-
-#if defined(OHOS_INCOGNITO_MODE)
-void CefRequestContextImpl::InitializeIncognitoCookieManagerInternal(
-    CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
-    CefRefPtr<CefCompletionCallback> callback) {
-  GetBrowserContext(content::GetUIThreadTaskRunner({}),
-                    base::BindOnce(
-                        [](CefRefPtr<CefIncognitoCookieManagerImpl> cookie_manager,
-                           CefRefPtr<CefCompletionCallback> callback,
-                           CefBrowserContext::Getter browser_context_getter) {
-                          cookie_manager->Initialize(browser_context_getter,
-                                                     callback);
-                        },
-                        cookie_manager, callback));
-}
-#endif
 
 void CefRequestContextImpl::InitializeMediaRouterInternal(
     CefRefPtr<CefMediaRouterImpl> media_router,
@@ -824,64 +1176,13 @@ CefBrowserContext* CefRequestContextImpl::browser_context() const {
   return browser_context_;
 }
 
-#if BUILDFLAG(IS_OHOS)
-CefRefPtr<CefDataBase> CefRequestContextImpl::GetDataBase() {
-#if defined(OHOS_INCOGNITO_MODE)
-  if (config_.incognito_mode) {
-    CefRefPtr<CefIncognitoDataBaseImpl> data_base =
-        new CefIncognitoDataBaseImpl();
-    return data_base;
-  } else {
-    CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
-    return data_base;
-  }
-#else
-  CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
-  return data_ba
-#endif
-}
-
+#if BUILDFLAG(ARKWEB_WEBSTORAGE)
 CefRefPtr<CefWebStorage> CefRequestContextImpl::GetWebStorage(
     CefRefPtr<CefCompletionCallback> callback) {
   CefRefPtr<CefWebStorageImpl> web_storage = new CefWebStorageImpl();
   InitializeWebStorageInternal(web_storage, callback);
   return web_storage.get();
 }
-
-void CefRequestContextImpl::ClearClientAuthenticationCache(
-    CefRefPtr<CefCompletionCallback> callback) {
-  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCache";
-  GetBrowserContext(
-      content::GetUIThreadTaskRunner({}),
-      base::BindOnce(
-          &CefRequestContextImpl::ClearClientAuthenticationCacheInternal, this,
-          callback));
-}
-
-void CefRequestContextImpl::ClearClientAuthenticationCacheInternal(
-    CefRefPtr<CefCompletionCallback> callback,
-    CefBrowserContext::Getter browser_context_getter) {
-  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCacheInternal";
-  auto browser_context = browser_context_getter.Run();
-  if (!browser_context) {
-    return;
-  }
-
-  AlloyClientCertLookupTable::Clear();
-
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::IO)) {
-    NotifyClientCertificatesChanged();
-  } else {
-    content::GetIOThreadTaskRunner({})->PostTask(
-        FROM_HERE, base::BindOnce(&NotifyClientCertificatesChanged));
-  }
-
-  if (callback) {
-    CEF_POST_TASK(CEF_UIT,
-                  base::BindOnce(&CefCompletionCallback::OnComplete, callback));
-  }
-}
-
 void CefRequestContextImpl::InitializeWebStorageInternal(
     CefRefPtr<CefWebStorageImpl> web_storage,
     CefRefPtr<CefCompletionCallback> callback) {
@@ -895,4 +1196,4 @@ void CefRequestContextImpl::InitializeWebStorageInternal(
                         },
                         web_storage, callback));
 }
-#endif
+#endif  // #if BUILDFLAG(ARKWEB_WEBSTORAGE)

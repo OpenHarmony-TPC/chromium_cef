@@ -3,19 +3,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "libcef/renderer/browser_impl.h"
+#include "cef/libcef/renderer/browser_impl.h"
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "libcef/common/app_manager.h"
-#include "libcef/renderer/blink_glue.h"
-#include "libcef/renderer/render_frame_util.h"
-#include "libcef/renderer/render_manager.h"
-#include "libcef/renderer/thread_util.h"
-
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "cef/libcef/common/app_manager.h"
+#include "cef/libcef/renderer/blink_glue.h"
+#include "cef/libcef/renderer/render_frame_util.h"
+#include "cef/libcef/renderer/render_manager.h"
+#include "cef/libcef/renderer/thread_util.h"
+#include "cef/ohos_cef_ext/libcef/renderer/arkweb_frame_impl_ext.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/renderer/document_state.h"
 #include "content/renderer/navigation_state.h"
@@ -28,10 +29,10 @@
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
-
-#if BUILDFLAG(IS_OHOS)
-const char* CONTENT_SIZE_MESSAGE = "ContentSize.Message";
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
+#include "content/public/browser/navigation_controller.h"
 #endif
+
 // CefBrowserImpl static methods.
 // -----------------------------------------------------------------------------
 
@@ -55,10 +56,10 @@ bool CefBrowserImpl::IsValid() {
   return !!GetWebView();
 }
 
-CefRefPtr<CefBrowserHost> CefBrowserImpl::GetHost() {
+/*CefRefPtr<CefBrowserHost> CefBrowserImpl::GetHost() {
   DCHECK(false) << "GetHost cannot be called from the render process";
   return nullptr;
-}
+}*/
 
 bool CefBrowserImpl::CanGoBack() {
   CEF_REQUIRE_RT_RETURN(false);
@@ -140,8 +141,7 @@ int CefBrowserImpl::GetIdentifier() {
 bool CefBrowserImpl::IsSame(CefRefPtr<CefBrowser> that) {
   CEF_REQUIRE_RT_RETURN(false);
 
-  CefBrowserImpl* impl = static_cast<CefBrowserImpl*>(that.get());
-  return (impl == this);
+  return (that.get() == this);
 }
 
 bool CefBrowserImpl::IsPopup() {
@@ -183,13 +183,14 @@ CefRefPtr<CefFrame> CefBrowserImpl::GetFocusedFrame() {
   return nullptr;
 }
 
-CefRefPtr<CefFrame> CefBrowserImpl::GetFrame(int64 identifier) {
+CefRefPtr<CefFrame> CefBrowserImpl::GetFrameByIdentifier(
+    const CefString& identifier) {
   CEF_REQUIRE_RT_RETURN(nullptr);
 
   return GetWebFrameImpl(identifier).get();
 }
 
-CefRefPtr<CefFrame> CefBrowserImpl::GetFrame(const CefString& name) {
+CefRefPtr<CefFrame> CefBrowserImpl::GetFrameByName(const CefString& name) {
   CEF_REQUIRE_RT_RETURN(nullptr);
 
   blink::WebView* web_view = GetWebView();
@@ -237,7 +238,7 @@ size_t CefBrowserImpl::GetFrameCount() {
   return count;
 }
 
-void CefBrowserImpl::GetFrameIdentifiers(std::vector<int64>& identifiers) {
+void CefBrowserImpl::GetFrameIdentifiers(std::vector<CefString>& identifiers) {
   CEF_REQUIRE_RT_RETURN_VOID();
 
   if (identifiers.size() > 0) {
@@ -278,80 +279,56 @@ void CefBrowserImpl::GetFrameNames(std::vector<CefString>& names) {
 CefBrowserImpl::CefBrowserImpl(blink::WebView* web_view,
                                int browser_id,
                                bool is_popup,
-                               bool is_windowless)
+                               bool is_windowless,
+                               bool print_preview_enabled)
     : blink::WebViewObserver(web_view),
       browser_id_(browser_id),
       is_popup_(is_popup),
-      is_windowless_(is_windowless) {}
+      is_windowless_(is_windowless),
+      print_preview_enabled_(print_preview_enabled) {}
 
-CefBrowserImpl::~CefBrowserImpl() {}
+CefBrowserImpl::~CefBrowserImpl() = default;
 
 CefRefPtr<CefFrameImpl> CefBrowserImpl::GetWebFrameImpl(
     blink::WebLocalFrame* frame) {
   DCHECK(frame);
-  int64_t frame_id = render_frame_util::GetIdentifier(frame);
+  const auto& frame_token = frame->GetLocalFrameToken();
 
   // Frames are re-used between page loads. Only add the frame to the map once.
-  FrameMap::const_iterator it = frames_.find(frame_id);
+  FrameMap::const_iterator it = frames_.find(frame_token);
   if (it != frames_.end()) {
     return it->second;
   }
 
-  CefRefPtr<CefFrameImpl> framePtr(new CefFrameImpl(this, frame, frame_id));
-  frames_.insert(std::make_pair(frame_id, framePtr));
+  CefRefPtr<CefFrameImpl> framePtr(new ArkwebFrameExtImpl(this, frame));
+  frames_.insert(std::make_pair(frame_token, framePtr));
 
   return framePtr;
 }
 
-CefRefPtr<CefFrameImpl> CefBrowserImpl::GetWebFrameImpl(int64_t frame_id) {
-  if (frame_id == blink_glue::kInvalidFrameId) {
-    if (GetWebView()) {
-      blink::WebFrame* main_frame = GetWebView()->MainFrame();
-      if (main_frame && main_frame->IsWebLocalFrame()) {
-        return GetWebFrameImpl(main_frame->ToWebLocalFrame());
-      }
-    }
+CefRefPtr<CefFrameImpl> CefBrowserImpl::GetWebFrameImpl(
+    const std::string& identifier) {
+  const auto& frame_token =
+      render_frame_util::ParseFrameTokenFromIdentifier(identifier);
+  if (!frame_token) {
     return nullptr;
   }
 
   // Check if we already know about the frame.
-  FrameMap::const_iterator it = frames_.find(frame_id);
+  FrameMap::const_iterator it = frames_.find(*frame_token);
   if (it != frames_.end()) {
     return it->second;
   }
 
   if (GetWebView()) {
     // Check if the frame exists but we don't know about it yet.
-    for (blink::WebFrame* frame = GetWebView()->MainFrame(); frame;
-         frame = frame->TraverseNext()) {
-      if (frame->IsWebLocalFrame() &&
-          render_frame_util::GetIdentifier(frame->ToWebLocalFrame()) ==
-              frame_id) {
-        return GetWebFrameImpl(frame->ToWebLocalFrame());
-      }
+    if (auto* local_frame =
+            blink::WebLocalFrame::FromFrameToken(*frame_token)) {
+      return GetWebFrameImpl(local_frame);
     }
   }
 
   return nullptr;
-}
-
-void CefBrowserImpl::AddFrameObject(int64_t frame_id,
-                                    CefTrackNode* tracked_object) {
-  CefRefPtr<CefTrackManager> manager;
-
-  if (!frame_objects_.empty()) {
-    FrameObjectMap::const_iterator it = frame_objects_.find(frame_id);
-    if (it != frame_objects_.end()) {
-      manager = it->second;
-    }
-  }
-
-  if (!manager.get()) {
-    manager = new CefTrackManager();
-    frame_objects_.insert(std::make_pair(frame_id, manager));
-  }
-
-  manager->Add(tracked_object);
 }
 
 // RenderViewObserver methods.
@@ -370,22 +347,8 @@ void CefBrowserImpl::OnDestruct() {
   CefRenderManager::Get()->OnBrowserDestroyed(this);
 }
 
-void CefBrowserImpl::FrameDetached(int64_t frame_id) {
-  if (!frames_.empty()) {
-    // Remove the frame from the map.
-    FrameMap::iterator it = frames_.find(frame_id);
-    if (it != frames_.end()) {
-      frames_.erase(it);
-    }
-  }
-
-  if (!frame_objects_.empty()) {
-    // Remove any tracked objects associated with the frame.
-    FrameObjectMap::iterator it = frame_objects_.find(frame_id);
-    if (it != frame_objects_.end()) {
-      frame_objects_.erase(it);
-    }
-  }
+void CefBrowserImpl::FrameDetached(blink::WebLocalFrame* frame) {
+  frames_.erase(frame->GetLocalFrameToken());
 }
 
 void CefBrowserImpl::OnLoadingStateChange(bool isLoading) {
@@ -414,7 +377,8 @@ void CefBrowserImpl::OnLoadingStateChange(bool isLoading) {
                                              canGoBack, canGoForward);
 
           auto main_frame = GetMainFrame();
-          load_handler->OnLoadStart(this, main_frame, main_frame->GetURL(), TT_EXPLICIT);
+          load_handler->OnLoadStart(this, main_frame, main_frame->GetURL(),
+                                    TT_EXPLICIT);
           load_handler->OnLoadEnd(this, main_frame, 0);
 
           was_in_bfcache_ = false;
@@ -422,8 +386,8 @@ void CefBrowserImpl::OnLoadingStateChange(bool isLoading) {
 
         load_handler->OnLoadingStateChange(this, isLoading, canGoBack,
                                            canGoForward);
-        last_loading_state_.reset(
-            new LoadingState(isLoading, canGoBack, canGoForward));
+        last_loading_state_ =
+            std::make_unique<LoadingState>(isLoading, canGoBack, canGoForward);
       }
     }
   }
@@ -435,106 +399,3 @@ void CefBrowserImpl::OnEnterBFCache() {
   was_in_bfcache_ = true;
   last_loading_state_.reset();
 }
-
-#if BUILDFLAG(IS_OHOS)
-bool CefBrowserImpl::CanGoBackOrForward(int num_steps) {
-  CEF_REQUIRE_RT_RETURN(false);
-
-  return blink_glue::CanGoBackOrForward(GetWebView(), num_steps);
-}
-
-void CefBrowserImpl::GoBackOrForward(int num_steps) {
-  CEF_REQUIRE_RT_RETURN_VOID();
-
-  blink_glue::GoBackOrForward(GetWebView(), num_steps);
-}
-
-void CefBrowserImpl::DeleteHistory() {
-  CEF_REQUIRE_RT_RETURN_VOID();
-}
-
-CefRefPtr<CefBrowserPermissionRequestDelegate>
-CefBrowserImpl::GetPermissionRequestDelegate() {
-  return nullptr;
-}
-
-CefRefPtr<CefGeolocationAcess> CefBrowserImpl::GetGeolocationPermissions() {
-  return nullptr;
-}
-
-bool CefBrowserImpl::CanStoreWebArchive() {
-  // Not reached.
-  return false;
-}
-
-void CefBrowserImpl::ReloadOriginalUrl() {
-  CEF_REQUIRE_RT_RETURN_VOID();
-
-  if (GetWebView()) {
-    blink::WebFrame* main_frame = GetWebView()->MainFrame();
-    if (main_frame && main_frame->IsWebLocalFrame()) {
-      main_frame->ToWebLocalFrame()->StartReload(
-          blink::WebFrameLoadType::kReload);
-    }
-  }
-}
-#endif
-
-// #if defined(OHOS_NWEB_EX)
-// NOTE: Keep the previous line commented, add NWebEx APIs below.
-bool CefBrowserImpl::ShouldShowLoadingUI() {
-  CEF_REQUIRE_RT_RETURN(false);
-  return false;
-}
-// #endif  // defined(OHOS_NWEB_EX)
-
-#if BUILDFLAG(IS_OHOS)
-void CefBrowserImpl::DidUpdateMainFrameLayout() {
-  needs_contents_size_update_ = true;
-}
-
-void CefBrowserImpl::DidCommitCompositorFrame() {
-
-  if (!needs_contents_size_update_)
-    return;
-  needs_contents_size_update_ = false;
-
-  blink::WebFrame* main_frame = GetWebView()->MainFrame();
-  blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();
-
-  gfx::Size contents_size = main_frame->ToWebLocalFrame()->DocumentSize();
-
-  if (contents_size.IsEmpty()) {
-    contents_size = GetWebView()->ContentsPreferredMinimumSize();
-  }
-
-  int content_width = contents_size.width();
-  int content_height = contents_size.height();
-
-  gfx::Size viewport_size = blink_glue::GetVisualViewportSize(web_local_frame);
-
-  if (content_width != content_width_ || content_height != content_height_ || viewport_size.width() != viewport_width_ || viewport_size.height() != viewport_height_) {
-    content_width_ = content_width;
-    content_height_ = content_height;
-    viewport_width_ = viewport_size.width();
-    viewport_height_ = viewport_size.height();
-    CefRefPtr<CefProcessMessage> message = CefProcessMessage::Create(CONTENT_SIZE_MESSAGE);
-    message->GetArgumentList()->SetInt(0, content_width_);
-    message->GetArgumentList()->SetInt(1, content_height_);
-    message->GetArgumentList()->SetInt(2, viewport_size.width());
-    message->GetArgumentList()->SetInt(3, viewport_size.height());
-    auto web_frame = GetMainFrame();
-    LOG(DEBUG) << "Fit content SendProcessMessage Content width: "
-               << content_width << ",height: " << content_height
-               << ". Viewport width:" << viewport_size.width()
-               << ",height:" << viewport_size.height();
-    if (web_frame) {
-      web_frame->SendProcessMessage(PID_BROWSER, message);
-    }
-  }
-}
-
-cef_accelerated_widget_t CefBrowserImpl::GetAcceleratedWidget(bool isPopup) {
-  return 0;
-}
-#endif
