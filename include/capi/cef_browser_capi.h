@@ -1781,6 +1781,13 @@ typedef struct _cef_browser_host_t {
                                       int falg);
 
   ///
+  /// Set whether webview can allow sandbox file access from file url
+  ///
+  void(CEF_CALLBACK* set_disallow_sandbox_file_access_from_file_url)(
+                                      struct _cef_browser_host_t* self,
+                                      int disallow);
+
+  ///
   /// Set whether webview can access network
   ///
   void(CEF_CALLBACK* set_block_network)(struct _cef_browser_host_t* self,

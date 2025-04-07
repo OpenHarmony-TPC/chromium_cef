@@ -238,6 +238,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void ScrollBy(float delta_x, float delta_y) override;
   void SlideScroll(float vx, float vy) override;
   void SetFileAccess(bool falg) override;
+  void SetDisallowSandboxFileAccessFromFileUrl(bool disallow) override;
   void SetBlockNetwork(bool falg) override;
   void SetCacheMode(int falg) override;
   void SetShouldFrameSubmissionBeforeDraw(bool should) override;
