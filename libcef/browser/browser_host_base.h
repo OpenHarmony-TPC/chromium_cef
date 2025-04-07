@@ -515,6 +515,7 @@ bool NeedsReload() override;
 #ifdef OHOS_NETWORK_CONNINFO
   void SetFileAccess(bool falg) override;
   void SetBlockNetwork(bool falg) override;
+  void SetDisallowSandboxFileAccessFromFileUrl(bool disallow) override;
   void SetCacheMode(int falg) override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
 #endif
@@ -765,10 +766,12 @@ bool TerminateRenderProcess() override;
 #ifdef OHOS_NETWORK_CONNINFO
   bool GetFileAccess();
   bool GetBlockNetwork();
+  bool GetDisallowSandboxFileAccessFromFileUrl();
   int GetCacheMode();
   std::vector<std::string> GetGrantFileAccessDirs();
   bool file_access_ = false;
   bool network_blocked_ = false;
+  bool dis_allow_sandbox_file_access_from_file_url_ = false;
   int cache_mode_ = 0;
   std::vector<CefString> file_access_dirs_list_{};
 #endif
