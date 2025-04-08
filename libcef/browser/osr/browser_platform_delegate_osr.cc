@@ -684,7 +684,11 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
           gfx::PointF(client_pt), &transformed_pt);
 
   if (target_rwh != current_rwh_for_drag_.get()) {
+#ifdef OHOS_DRAG_DROP
+    if (current_rwh_for_drag_ && web_contents->GetRenderWidgetHostView()) {
+#else
     if (current_rwh_for_drag_) {
+#endif
       gfx::PointF transformed_leave_point(client_pt);
       gfx::PointF transformed_screen_point(screen_pt);
       static_cast<content::RenderWidgetHostViewBase*>(
