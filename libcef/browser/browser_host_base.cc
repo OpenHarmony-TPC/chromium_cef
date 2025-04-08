@@ -3557,7 +3557,7 @@ void CefBrowserHostBase::SetDisallowSandboxFileAccessFromFileUrl(bool disallow) 
   if (dis_allow_sandbox_file_access_from_file_url_ == disallow) {
     return;
   }
-  dis_allow_sandbox_file_access_from_file_url_  = flag;
+  dis_allow_sandbox_file_access_from_file_url_  = disallow;
 }
 
 void CefBrowserHostBase::SetBlockNetwork(bool flag) {
