@@ -264,6 +264,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void SetNativeEmbedMode(bool flag) override;
   void SetDrawRect(int x, int y, int width, int height) override;
   void SetDrawMode(int mode) override;
+  void SetNativeInnerWeb(bool isInnerWeb) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
   void SetOverscrollMode(int mode) override;

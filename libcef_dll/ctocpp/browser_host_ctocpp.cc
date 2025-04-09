@@ -2834,6 +2834,21 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::SetDrawMode(int mode) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetNativeInnerWeb(bool isInnerWeb) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_native_inner_web)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_native_inner_web(_struct, isInnerWeb);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::CreateWebPrintDocumentAdapter(
     const CefString& jobName,
     void** webPrintDocumentAdapter) {
