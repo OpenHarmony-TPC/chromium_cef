@@ -193,7 +193,7 @@ void IconHelper::DownloadFaviconCallback(
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
       auto& current_image = entry->GetFavicon().image;
-      base::ThreadPool::PostDelayedTask(
+      base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
         FROM_HERE,
         base::BindOnce([](gfx::Image&&){}, std::move(current_image)),
         base::Seconds(5)
