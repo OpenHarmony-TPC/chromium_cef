@@ -1478,6 +1478,44 @@ render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
 }
 
+void CEF_CALLBACK
+render_handler_get_screen_offset(struct _cef_render_handler_t* self,
+                                 cef_browser_t* browser,
+                                 double* x,
+                                 double* y) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+
+  // Translate param: x; type simple_byref
+  double xVal = x? *x : 0;
+  // Translate param: x; type simple_byref
+  double yVal = y? *y : 0;
+
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetScreenOffset(
+      CefBrowserCToCpp::Wrap(browser), xVal, yVal);
+
+  // Restore param: x; type: simple_byref
+  if (x) {
+    *x = xVal;
+  }
+  // Restore param: y; type: simple_byref
+  if (y) {
+    *y = yVal;
+  }
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1547,6 +1585,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
   GetStruct()->get_visible_rect_to_web = render_handler_get_visible_rect_to_web;
   GetStruct()->on_scroll_start = render_handler_on_scroll_start;
   GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
+  GetStruct()->get_screen_offset = render_handler_get_screen_offset;
 }
 
 // DESTRUCTOR - Do not edit by hand.

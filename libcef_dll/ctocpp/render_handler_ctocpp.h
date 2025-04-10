@@ -149,6 +149,9 @@ class CefRenderHandlerCToCpp
                          const float x,
                          const float y) override;  
   void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override; 
+  void GetScreenOffset(CefRefPtr<CefBrowser> browser,
+                            double& x,
+                            double& y) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_RENDER_HANDLER_CTOCPP_H_

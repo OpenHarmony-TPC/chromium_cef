@@ -481,14 +481,22 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_scroll_start)(struct _cef_render_handler_t* self,
                                       struct _cef_browser_t* browser,
                                          const float x,
-                                         const float y);                                         
+                                         const float y);
 
   ///
   /// Called when an accessibility event occurs.
   ///
   void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
                                              int64_t accessibilityId,
-                                             int32_t eventType);                                     
+                                             int32_t eventType);
+
+  ///
+  /// Get screen offset.
+  ///
+  void(CEF_CALLBACK* get_screen_offset)(struct _cef_render_handler_t* self,
+                                        struct _cef_browser_t* browser,
+                                        double* x,
+                                        double* y);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

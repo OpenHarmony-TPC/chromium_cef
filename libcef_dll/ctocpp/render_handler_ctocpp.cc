@@ -1198,6 +1198,29 @@ void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
   _struct->on_accessibility_event(_struct, accessibilityId, eventType);
 }
 
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetScreenOffset(CefRefPtr<CefBrowser> browser,
+                                               double& x,
+                                               double& y) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_screen_offset)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_screen_offset(_struct, CefBrowserCppToC::Wrap(browser), &x, &y);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}

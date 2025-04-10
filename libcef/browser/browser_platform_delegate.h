@@ -346,6 +346,9 @@ class CefBrowserPlatformDelegate {
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering.
   virtual void NotifyScreenInfoChanged();
+#if BUILDFLAG(IS_OHOS)
+  virtual void NotifyScreenInfoChangedV2();
+#endif
 
   // Invalidate the view. Only used with windowless rendering.
   virtual void Invalidate(cef_paint_element_type_t type);
