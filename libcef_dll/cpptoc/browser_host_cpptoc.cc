@@ -3068,6 +3068,21 @@ void CEF_CALLBACK browser_host_set_draw_mode(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->SetDrawMode(mode);
 }
 
+void CEF_CALLBACK browser_host_set_native_inner_web(struct _cef_browser_host_t* self,
+                                                    bool isInnerWeb) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetNativeInnerWeb(isInnerWeb);
+}
+
 void CEF_CALLBACK
 browser_host_create_web_print_document_adapter(struct _cef_browser_host_t* self,
                                                const cef_string_t* jobName,
@@ -4422,6 +4437,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_remove_java_script_on_head_ready;
   GetStruct()->set_draw_rect = browser_host_set_draw_rect;
   GetStruct()->set_draw_mode = browser_host_set_draw_mode;
+  GetStruct()->set_native_inner_web = browser_host_set_native_inner_web;
   GetStruct()->create_web_print_document_adapter =
       browser_host_create_web_print_document_adapter;
   GetStruct()->set_overscroll_mode = browser_host_set_overscroll_mode;

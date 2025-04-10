@@ -130,6 +130,7 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
     is_view_focus_failed_ = false;
   }
 #endif
+  SetNativeInnerWeb(isInnerWeb_);
 #endif
 }
 
@@ -1114,6 +1115,14 @@ void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view)
     view->WasKeyboardResized();
+}
+
+void CefBrowserPlatformDelegateOsr::SetNativeInnerWeb(bool isInnerWeb) {
+  isInnerWeb_ = isInnerWeb;
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->SetNativeInnerWeb(isInnerWeb);
+  }
 }
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 #ifdef OHOS_HTML_SELECT

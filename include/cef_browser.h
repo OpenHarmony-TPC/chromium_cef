@@ -1895,6 +1895,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetDrawMode(int mode) = 0;
 
   ///
+  /// Set the native innner web
+  ///
+  /*--cef()--*/
+  virtual void SetNativeInnerWeb(bool isInnerWeb) = 0;
+
+  ///
   /// Create the Web print document adapter of the UI framework
   ///
   /*--cef()--*/

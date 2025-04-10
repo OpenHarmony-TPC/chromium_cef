@@ -1808,6 +1808,10 @@ void CefBrowserHostBase::SetDrawRect(int x, int y, int width, int height) {
   // todo(ohos):impl this function then remove todo
 }
 
+void CefBrowserHostBase::SetNativeInnerWeb(bool isInnerWeb) {
+  // todo(ohos):impl this function then remove todo
+}
+
 void CefBrowserHostBase::SetDrawMode(int mode) {
   // todo(ohos):impl this function then remove todo
 }

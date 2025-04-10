@@ -2808,6 +2808,11 @@ bool AlloyBrowserHostImpl::GetPendingSizeStatus() {
   }
   return false;
 }
+
+void AlloyBrowserHostImpl::SetNativeInnerWeb(bool isInnerWeb) {
+  if (platform_delegate_)
+    platform_delegate_->SetNativeInnerWeb(isInnerWeb);
+}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #if BUILDFLAG(IS_OHOS)

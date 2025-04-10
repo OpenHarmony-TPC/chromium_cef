@@ -1390,6 +1390,14 @@ void CefRenderWidgetHostViewOSR::SetFitContentMode(int mode) {
 bool CefRenderWidgetHostViewOSR::GetPendingSizeStatus() {
   return false;
 }
+
+void CefRenderWidgetHostViewOSR::SetNativeInnerWeb(bool isInnerWeb) {
+  if (auto compositor = CefRenderWidgetHostViewOSR::GetCompositor(
+            browser_impl_->GetAcceleratedWidget())) {
+    compositor->SetNativeInnerWeb(isInnerWeb);
+  }
+}
+
 #endif
 
 #if !BUILDFLAG(IS_MAC)
