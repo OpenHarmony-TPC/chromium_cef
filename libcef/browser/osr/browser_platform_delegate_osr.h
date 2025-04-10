@@ -124,9 +124,11 @@ class CefBrowserPlatformDelegateOsr
   void SetDrawMode(int mode) override;
   bool GetPendingSizeStatus() override;
   void SetFitContentMode(int mode) override;
+  void SetNativeInnerWeb(bool isInnerWeb) override;
   int drawMode_ = 0;
   gfx::Rect drawRect_{0, 0, 0, 0};
   int fit_content_mode_ = 0;
+  bool isInnerWeb_ = false;
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT

@@ -424,6 +424,7 @@ class CefBrowserPlatformDelegate {
   virtual void SetDrawMode(int mode) {}
   virtual bool GetPendingSizeStatus() { return false; }
   virtual void SetFitContentMode(int mode) {}
+  virtual void SetNativeInnerWeb(bool isInnerWeb) {}
 #endif  // defined(OHOS_COMPOSITE_RENDER)
 
 #ifdef OHOS_HTML_SELECT
