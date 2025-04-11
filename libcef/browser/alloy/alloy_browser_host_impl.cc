@@ -995,6 +995,29 @@ void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
 #endif
 }
 
+#if BUILDFLAG(IS_OHOS)
+void AlloyBrowserHostImpl::NotifyScreenInfoChangedV2() {
+  if (!IsWindowless()) {
+    DCHECK(false) << "Window rendering is not disabled";
+    return;
+  }
+
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImpl::NotifyScreenInfoChangedV2, this));
+    return;
+  }
+
+  if (platform_delegate_) {
+    platform_delegate_->NotifyScreenInfoChangedV2();
+  }
+#if BUILDFLAG(IS_OHOS)
+  base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
+#endif
+}
+#endif
+
 void AlloyBrowserHostImpl::Invalidate(PaintElementType type) {
   if (!IsWindowless()) {
     DCHECK(false) << "Window rendering is not disabled";

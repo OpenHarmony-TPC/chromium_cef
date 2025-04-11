@@ -394,6 +394,9 @@ class CefRenderWidgetHostViewOSR
       const absl::optional<viz::LocalSurfaceId>& child_local_surface_id);
 #endif  // defined(OHOS_COMPOSITE_RENDER)
   void OnScreenInfoChanged();
+#if BUILDFLAG(IS_OHOS)
+  void OnScreenInfoChangedV2();
+#endif
   void Invalidate(CefBrowserHost::PaintElementType type);
   void SendExternalBeginFrame();
   void SendKeyEvent(const content::NativeWebKeyboardEvent& event);

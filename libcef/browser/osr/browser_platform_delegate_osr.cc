@@ -533,6 +533,15 @@ void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   }
 }
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChangedV2() {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->OnScreenInfoChangedV2();
+  }
+}
+#endif
+
 void CefBrowserPlatformDelegateOsr::Invalidate(cef_paint_element_type_t type) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {

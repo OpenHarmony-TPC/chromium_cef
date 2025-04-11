@@ -300,6 +300,11 @@ void CefBrowserPlatformDelegate::NotifyForNextTouchEvent() {
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {
   DCHECK(false);
 }
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserPlatformDelegate::NotifyScreenInfoChangedV2() {
+  DCHECK(false);
+}
+#endif
 
 void CefBrowserPlatformDelegate::Invalidate(cef_paint_element_type_t type) {
   DCHECK(false);
