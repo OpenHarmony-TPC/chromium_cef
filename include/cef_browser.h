@@ -1629,7 +1629,7 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// Close the web message port.
   ///
   /*--cef()--*/
-  virtual void ClosePort(CefString& port_handle) = 0;
+  virtual void ClosePort(const CefString& port_handle) = 0;
 
   ///
   /// Destroy all web message ports.

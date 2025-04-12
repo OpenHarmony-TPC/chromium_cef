@@ -556,7 +556,7 @@ bool NeedsReload() override;
   void PostWebMessage(CefString& message,
                       std::vector<CefString>& ports,
                       CefString& targetUri) override;
-  void ClosePort(CefString& port_handle) override;
+  void ClosePort(const CefString& port_handle) override;
   bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
                                  blink::WebMessagePort::Message& message);
   void PostPortMessage(const CefString& port_handle,
@@ -939,6 +939,7 @@ bool TerminateRenderProcess() override;
 
   void OnDidGenerateCodeCache(CefRefPtr<CefPrecompileCallback> callback, int32_t result);
 
+  void ClosePortInternal(const CefString& portHandle);
   void SetPortMessageCallbackInternal(
     const CefString& portHandle,
     CefRefPtr<CefWebMessageReceiver> callback);
