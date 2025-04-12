@@ -195,7 +195,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void PostWebMessage(CefString& message,
                       std::vector<CefString>& ports,
                       CefString& targetUri) override;
-  void ClosePort(CefString& port_handle) override;
+  void ClosePort(const CefString& port_handle) override;
   void DestroyAllWebMessagePorts() override;
   void PostPortMessage(const CefString& port_handle,
                        CefRefPtr<CefValue> message) override;
