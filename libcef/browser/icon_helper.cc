@@ -192,7 +192,13 @@ void IconHelper::DownloadFaviconCallback(
     if (entry) {
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
-      entry->GetFavicon().image = gfx::Image::CreateFrom1xBitmap(bitmap);
+      auto& current_image = entry->GetFavicon().image;
+      base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
+        FROM_HERE,
+        base::BindOnce([](gfx::Image&&){}, std::move(current_image)),
+        base::Seconds(5)
+      );
+      current_image = gfx::Image::CreateFrom1xBitmap(bitmap);
     }
   }
 #endif
