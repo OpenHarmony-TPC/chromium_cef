@@ -10,6 +10,7 @@
 #include "content/public/common/content_switches.h"
 #include "base/functional/callback.h"
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
 #include "components/permissions/permission_util.h"
 #include "content/public/browser/permission_controller.h"
 #include "content/public/browser/render_frame_host.h"
@@ -109,7 +110,7 @@ class AlloyPermissionManager::UnhandledRequest {
   bool IsCancelled() const { return cancelled_; }
 
   std::vector<PermissionType> permissions_;
-  content::RenderFrameHost* render_frame_host_;
+  raw_ptr<content::RenderFrameHost> render_frame_host_;
   GURL requesting_origin_;
   RequestPermissionsCallback callback_;
   std::vector<PermissionStatus> results_;
