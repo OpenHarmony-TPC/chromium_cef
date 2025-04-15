@@ -124,7 +124,7 @@ class LoadingPredictor : public KeyedService,
                                  std::unique_ptr<std::string> responce_body);
 
   LoadingPredictorConfig config_;
-  content::BrowserContext* context_;
+  raw_ptr<content::BrowserContext> context_;
   std::unique_ptr<PreconnectManager> preconnect_manager_;
   std::map<GURL, base::TimeTicks> active_hints_;
   std::set<NavigationID> active_navigations_;
