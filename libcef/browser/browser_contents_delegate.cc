@@ -439,7 +439,7 @@ class DataResubmissionCallbackImpl : public CefCallback {
   }
 
  private:
-  content::WebContents* contents_;
+  raw_ptr<content::WebContents> contents_;
 
   IMPLEMENT_REFCOUNTING(DataResubmissionCallbackImpl);
 };

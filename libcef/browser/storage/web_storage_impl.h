@@ -148,7 +148,7 @@ class CefWebStorageImpl : public CefWebStorage {
     void RequestAndMigrateAutofillableLogins();
 
    protected:
-    CefWebStorageImpl* web_storage_impl_;
+    raw_ptr<CefWebStorageImpl> web_storage_impl_;
 
    private:
     base::WeakPtrFactory<OhPasswordStoreConsumer> weak_ptr_factory_{this};
