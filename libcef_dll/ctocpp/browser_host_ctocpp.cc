@@ -2030,7 +2030,7 @@ void CefBrowserHostCToCpp::PostWebMessage(CefString& message,
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::ClosePort(CefString& port_handle) {
+void CefBrowserHostCToCpp::ClosePort(const CefString& port_handle) {
   shutdown_checker::AssertNotShutdown();
 
   cef_browser_host_t* _struct = GetStruct();
@@ -2041,7 +2041,7 @@ void CefBrowserHostCToCpp::ClosePort(CefString& port_handle) {
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->close_port(_struct, port_handle.GetWritableStruct());
+  _struct->close_port(_struct, port_handle.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")
