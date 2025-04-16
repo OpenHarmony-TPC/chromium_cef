@@ -2624,17 +2624,9 @@ void CefBrowserHostBase::PostWebMessage(CefString& message,
 // in the std::map<std::pair<uint64_t, uint64_t>, std::pair<WebMessagePort,
 // WebMessagePort>> portMap_; first is the paif of port_handles. second is the
 // WebMessagePort of the pipe.
-void CefBrowserHostBase::ClosePort(CefString& portHandle) {
-  if (!CEF_CURRENTLY_ON_UIT()) {
-    CHECK(false) << "called on invalid thread";
-    return;
-  }
+void CefBrowserHostBase::ClosePortInternal(const CefString& portHandle) {
   base::AutoLock msg_lock(web_message_lock_);
-  LOG(DEBUG) << "ClosePort ClosePort";
-  auto web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "ClosePort GetWebContents null";
-  }
+  LOG(DEBUG) << "ClosePort Start";
 
   // find port and close, then erase the item in map
   blink::WebMessagePort port;
@@ -2662,6 +2654,12 @@ void CefBrowserHostBase::ClosePort(CefString& portHandle) {
 
   postedPorts_.erase(portHandle.ToString());
   LOG(DEBUG) << "ClosePort end";
+}
+
+void CefBrowserHostBase::ClosePort(const CefString& portHandle) {
+    sequenced_task_runner_->PostTask(
+        FROM_HERE, base::BindOnce(&CefBrowserHostBase::ClosePortInternal,
+                                  this, portHandle));
 }
 
 bool CefBrowserHostBase::ConvertCefValueToBlinkMsg(
