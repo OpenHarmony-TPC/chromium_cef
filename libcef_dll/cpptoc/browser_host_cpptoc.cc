@@ -2233,7 +2233,7 @@ browser_host_post_web_message(struct _cef_browser_host_t* self,
 }
 
 void CEF_CALLBACK browser_host_close_port(struct _cef_browser_host_t* self,
-                                          cef_string_t* port_handle) {
+                                          const cef_string_t* port_handle) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING

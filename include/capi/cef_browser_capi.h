@@ -1601,7 +1601,7 @@ typedef struct _cef_browser_host_t {
   /// Close the web message port.
   ///
   void(CEF_CALLBACK* close_port)(struct _cef_browser_host_t* self,
-                                 cef_string_t* port_handle);
+                                 const cef_string_t* port_handle);
 
   ///
   /// Destroy all web message ports.
