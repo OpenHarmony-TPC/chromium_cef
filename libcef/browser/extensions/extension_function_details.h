@@ -140,7 +140,7 @@ class CefExtensionFunctionDetails {
  private:
   // The function for which these details have been created. Must outlive the
   // CefExtensionFunctionDetails instance.
-  raw_ptr<ExtensionFunction>* function_;
+  raw_ptr<ExtensionFunction> function_;
 
   mutable CefRefPtr<CefExtension> cef_extension_;
 
