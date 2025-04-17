@@ -96,10 +96,11 @@ class PrintDocumentAdapterImpl
     auto main_task_runner = content::GetUIThreadTaskRunner({});
     if (!main_task_runner) {
       LOG(ERROR) << "failed to get main_task_runner";
+      return;
     }
 
     main_task_runner->PostTask(
-      FROM_HERE, base:BindOnce(&OnStartLayoutWriteOnUIThread,
+        FROM_HERE, base::BindOnce(&OnStartLayoutWriteOnUIThread,
                                rfhId_, printAttrs));
   }
 
@@ -110,11 +111,12 @@ class PrintDocumentAdapterImpl
     auto main_task_runner = content::GetUIThreadTaskRunner({});
     if (!main_task_runner) {
       LOG(ERROR) << "failed to get main_task_runner";
+      return;
     }
 
     main_task_runner->PostTask(
-      FROM_HERE, base:BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                               jobId, state, isCalledOnJobStateChanged));
+        FROM_HERE, base:BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
+                                 jobId, state, isCalledOnJobStateChanged));
 
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
@@ -178,11 +180,12 @@ class ApplicationPrintDocumentAdapterImpl
     auto main_task_runner = content::GetUIThreadTaskRunner({});
     if (!main_task_runner) {
       LOG(ERROR) << "failed to get main_task_runner";
+      return;
     }
 
     main_task_runner->PostTask(
-      FROM_HERE, base:BindOnce(&OnStartLayoutWriteOnUIThread,
-                               rfhId_, printAttrs, isCalledBeforeEvent));
+        FROM_HERE, base::BindOnce(&OnStartLayoutWriteOnUIThread, rfhId_,
+                                  printAttrs, isCalledBeforeEvent));
     if (!isCalledBeforeEvent) {
       isCalledBeforeEvent = true;
     }
@@ -195,12 +198,12 @@ class ApplicationPrintDocumentAdapterImpl
     auto main_task_runner = content::GetUIThreadTaskRunner({});
     if (!main_task_runner) {
       LOG(ERROR) << "failed to get main_task_runner";
+      return;
     }
 
     main_task_runner->PostTask(
-      FROM_HERE, base:BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                               jobId, state, isCalledOnJobStateChanged));
-
+        FROM_HERE, base:BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
+                                 jobId, state, isCalledOnJobStateChanged));
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
     }
@@ -210,7 +213,7 @@ class ApplicationPrintDocumentAdapterImpl
   static void OnStartLayoutWriteOnUIThread(
       content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
       bool isCalledBeforeEvent) {
-    LOG(INFO) << "OhosPrintManager OnStartLayoutWriteOnUIThread.";
+    LOG(INFO) << "Application OhosPrintManager OnStartLayoutWriteOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
@@ -227,7 +230,7 @@ class ApplicationPrintDocumentAdapterImpl
   static void OnJobStateChangedOnUIThread(
       content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
       uint32_t state, bool isCalledOnJobStateChanged) {
-    LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
+    LOG(INFO) << "Application OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
@@ -364,8 +367,7 @@ void OhosPrintManager::DidDispatchPrintEventImpl(bool isBefore) {
   GetPrintRenderFrame(rfh)->DidDispatchPrintEvent(isBefore);
 }
 
-void OhosPrintManager::PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
-                                     bool isApplication) {
+void OhosPrintManager::PrintPageImpl(bool isApplication) {
   LOG(INFO) << "OhosPrintManager::PrintPageImpl isApplication = "
             << isApplication;
   auto webcontents = weak_ptr_web_contents_;
