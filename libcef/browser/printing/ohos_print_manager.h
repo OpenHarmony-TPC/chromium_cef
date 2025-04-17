@@ -57,7 +57,6 @@ class OhosPrintManager : public printing::PrintManager,
 
   static OhosPrintManager* GetOhosPrintManagerToUse(
       content::GlobalRenderFrameHostId rfhId);
-
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
@@ -90,6 +89,8 @@ class OhosPrintManager : public printing::PrintManager,
                            UpdatePrintSettingsCallback callback) override;
   void SetPrintBackground(bool enable);
   bool GetPrintBackground();
+  void OhosPrintManager::SetRfhId(content::GlobalRenderFrameHostId rfhId);
+  content::GlobalRenderFrameHostId OhosPrintManager::GetRfhId();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;

@@ -139,13 +139,13 @@ class PrintDocumentAdapterImpl
 
   static void OnJobStateChangedOnUIThread(
       content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-      uint32_t state, bool isCalledOnJobStateChanged) {
+      uint32_t state, bool isCalled) {
     LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
       ohosPrintManager->SetPrintStatus(false, state);
-      if (!isCalledOnJobStateChanged) {
+      if (!isCalled) {
         ohosPrintManager->RunPrintRequestedCallbackImpl(jobId);
       }
     } else {
@@ -212,12 +212,12 @@ class ApplicationPrintDocumentAdapterImpl
  private:
   static void OnStartLayoutWriteOnUIThread(
       content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
-      bool isCalledBeforeEvent) {
+      bool isCalled) {
     LOG(INFO) << "Application OhosPrintManager OnStartLayoutWriteOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
-      if (!isCalledBeforeEvent) {
+      if (!isCalled) {
         ohosPrintManager->DidDispatchPrintEventImpl(true);
       }
       ohosPrintManager->SetPrintAttrs(printAttrs);
@@ -229,13 +229,13 @@ class ApplicationPrintDocumentAdapterImpl
 
   static void OnJobStateChangedOnUIThread(
       content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-      uint32_t state, bool isCalledOnJobStateChanged) {
+      uint32_t state, bool isCalled) {
     LOG(INFO) << "Application OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
       ohosPrintManager->SetPrintStatus(false, state);
-      if (!isCalledOnJobStateChanged) {
+      if (!isCalled) {
         ohosPrintManager->DidDispatchPrintEventImpl(false);
       }
     } else {
