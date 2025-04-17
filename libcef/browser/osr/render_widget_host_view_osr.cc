@@ -74,6 +74,7 @@
 #include "ohos_adapter_helper.h"
 #include "ui/events/gesture_detection/gesture_configuration.h"
 #include "ui/gfx/text_elider.h"
+#include "libcef/browser/browser_util.h"
 
 #ifdef OHOS_AI
 #include "cef/libcef/browser/image_impl.h"
@@ -1319,6 +1320,21 @@ void CefRenderWidgetHostViewOSR::UpdateTooltipUnderCursor(
     handler->OnTooltip(browser_impl_.get(), tooltip);
   }
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+void CefRenderWidgetHostViewOSR::KeyboardReDispatch(
+    const content::NativeWebKeyboardEvent& event, bool isUsed) {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefKeyEvent cef_event;
+    browser_util::GetCefKeyEvent(event, cef_event);
+    CefRefPtr<CefKeyboardHandler> handler =
+        browser_impl_->GetClient()->GetKeyboardHandler();
+    if (handler.get()) {
+      handler->KeyboardReDispatch(cef_event, isUsed);
+    }
+  }
+}
+#endif
 
 gfx::Size CefRenderWidgetHostViewOSR::GetCompositorViewportPixelSize() {
 #ifdef OHOS_EX_TOPCONTROLS
