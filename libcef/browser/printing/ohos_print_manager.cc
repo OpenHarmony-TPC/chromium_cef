@@ -123,7 +123,7 @@ class PrintDocumentAdapterImpl
 
  private:
   static void OnStartLayoutWriteOnUIThread(
-    content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs) {
+      content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs) {
     LOG(INFO) << "OhosPrintManager OnStartLayoutWriteOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
@@ -136,8 +136,8 @@ class PrintDocumentAdapterImpl
   }
 
   static void OnJobStateChangedOnUIThread(
-    content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-    uint32_t state, bool isCalledOnJobStateChanged) {
+      content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
+      uint32_t state, bool isCalledOnJobStateChanged) {
     LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
@@ -208,8 +208,8 @@ class ApplicationPrintDocumentAdapterImpl
 
  private:
   static void OnStartLayoutWriteOnUIThread(
-    content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
-    bool isCalledBeforeEvent) {
+      content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
+      bool isCalledBeforeEvent) {
     LOG(INFO) << "OhosPrintManager OnStartLayoutWriteOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
@@ -225,8 +225,8 @@ class ApplicationPrintDocumentAdapterImpl
   }
 
   static void OnJobStateChangedOnUIThread(
-    content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
-    uint32_t state, bool isCalledOnJobStateChanged) {
+      content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
+      uint32_t state, bool isCalledOnJobStateChanged) {
     LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
