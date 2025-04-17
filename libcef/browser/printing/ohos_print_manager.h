@@ -89,8 +89,8 @@ class OhosPrintManager : public printing::PrintManager,
                            UpdatePrintSettingsCallback callback) override;
   void SetPrintBackground(bool enable);
   bool GetPrintBackground();
-  void OhosPrintManager::SetRfhId(content::GlobalRenderFrameHostId rfhId);
-  content::GlobalRenderFrameHostId OhosPrintManager::GetRfhId();
+  void SetRfhId(content::GlobalRenderFrameHostId rfhId);
+  content::GlobalRenderFrameHostId GetRfhId();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
