@@ -22,6 +22,7 @@
 #include <memory>
  
 #include "include/cef_web_extension_tab_api_handler.h"
+#include "base/memory/raw_ptr.h"
  
 class CefWebExtensionTabManager {
  public:
@@ -36,7 +37,7 @@ class CefWebExtensionTabManager {
   static std::unique_ptr<CefWebExtensionTabManager> instance;
   static std::mutex mtx;
  
-  CefWebExtensionTabApiHandler* cef_webext_tab_handler_;
+  raw_ptr<CefWebExtensionTabApiHandler> cef_webext_tab_handler_;
 };
  
 #endif  // CEF_LIBCEF_BROWSER_WEBEXTENSION_TAB_MANAGER_H_

@@ -12,6 +12,7 @@
 #include "base/functional/callback_forward.h"
 #include "chrome/common/extensions/api/tabs.h"
 #include "ui/gfx/native_widget_types.h"
+#include "base/memory/raw_ptr.h"
 
 class Profile;
 class ExtensionFunction;
@@ -139,7 +140,7 @@ class CefExtensionFunctionDetails {
  private:
   // The function for which these details have been created. Must outlive the
   // CefExtensionFunctionDetails instance.
-  ExtensionFunction* function_;
+  raw_ptr<ExtensionFunction> function_;
 
   mutable CefRefPtr<CefExtension> cef_extension_;
 
