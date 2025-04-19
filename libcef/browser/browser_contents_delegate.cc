@@ -28,15 +28,15 @@
 #include "third_party/blink/public/mojom/widget/platform_widget.mojom-test-utils.h"
 
 #if BUILDFLAG(IS_OHOS)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
 #include "libcef/common/request_impl.h"
 #include "net/http/http_request_headers.h"
 #include "ui/events/keycodes/keyboard_codes_posix.h"
 #endif
 
 #ifdef OHOS_EX_UA
-#include "base/command_line.h"
 #include "content/browser/renderer_host/navigation_request.h"
-#include "content/public/common/content_switches.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
@@ -62,6 +62,67 @@ constexpr base::TimeDelta kEffectiveUserEscapeDuration =
 #endif
 
 #ifdef OHOS_EX_UA
+bool IsIllegalUrl(const GURL& url) {
+  return url.is_empty() || !url.is_valid() || !url.has_host();
+}
+
+std::string GetDomainAndRegistry(const GURL& url) {
+  auto domain = net::registry_controlled_domains::GetDomainAndRegistry(
+      url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
+  return base::ToLowerASCII(domain);
+}
+
+void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
+                                  const std::string& user_agent) {
+  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, user_agent);
+  if (!navigation->IsInMainFrame()) {
+    return;
+  }
+
+  if (auto* web_contents = navigation->GetWebContents()) {
+    web_contents->SetUserAgentOverride(
+        blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+  }
+}
+
+nweb_ex::UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
+                                    const std::string& host,
+                                    std::string& user_agent) {
+  if (auto* web_contents = navigation->GetWebContents()) {
+    std::string custom_ua = web_contents->GetCustomUA();
+    if (!custom_ua.empty()) {
+      user_agent = custom_ua;
+      return nweb_ex::UserAgentOverridePolicy::CUSTOM;
+    }
+  }
+
+  return nweb_ex::AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
+      host, user_agent);
+}
+
+// Return the host of referrer_url only when the main frame
+// is not reloaded or triggered by user gestures or serverd from
+// back_forward_cache.
+std::string GetHostOfReferrerUrlIfNeed(content::NavigationHandle* navigation,
+                                       bool is_reload) {
+  if (!navigation->IsInMainFrame() || navigation->HasUserGesture() ||
+      navigation->IsServedFromBackForwardCache() || is_reload) {
+    return std::string();
+  }
+
+  const GURL referrer_url = navigation->GetReferrer().url;
+  if (IsIllegalUrl(referrer_url)) {
+    return std::string();
+  }
+
+  if (GetDomainAndRegistry(referrer_url) ==
+      GetDomainAndRegistry(navigation->GetURL())) {
+    return referrer_url.host();
+  }
+
+  return std::string();
+}
+
 void MaybeSetUserAgentOverrideForMainFrame(
     content::NavigationHandle* navigation) {
   if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
@@ -78,44 +139,34 @@ void MaybeSetUserAgentOverrideForMainFrame(
   }
 
   const GURL& url = navigation->GetURL();
-  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
+  if (IsIllegalUrl(url)) {
     return;
   }
 
+  bool is_reload = false;
+  std::string final_ua;
   std::string host = url.host();
-  if (!navigation->HasUserGesture()) {
-    const GURL referrer_url = navigation->GetReferrer().url;
-    if (referrer_url.is_valid() && !referrer_url.is_empty() &&
-        referrer_url.has_host()) {
-      std::string referrer_sld =
-          net::registry_controlled_domains::GetDomainAndRegistry(
-              referrer_url,
-              net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-      std::string sld = net::registry_controlled_domains::GetDomainAndRegistry(
-          url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-      if (referrer_sld == sld) {
-        host = referrer_url.host();
-      }
+
+  auto match_type = MatchUserAgent(navigation, url.host(), final_ua);
+  if (match_type >= nweb_ex::UserAgentOverridePolicy::APP_DEFAULT) {
+    is_reload =
+        PageTransitionCoreTypeIs(navigation->GetPageTransition(),
+                                 ui::PageTransition::PAGE_TRANSITION_RELOAD);
+    std::string referer_host = GetHostOfReferrerUrlIfNeed(navigation, is_reload);
+    if (!referer_host.empty()) {
+      host = referer_host;
+      MatchUserAgent(navigation, host, final_ua);
     }
   }
-  std::string final_ua =
-      nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
-  LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
+
+  LOG(DEBUG) << __func__ << " host " << host << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
-             << ", is_main_frame " << navigation->IsInMainFrame()
-             << ", is_reload " << is_reload;
+             << ", main_frame " << navigation->IsInMainFrame() << ", reload "
+             << is_reload << ", serverd_from_bfcache "
+             << navigation->IsServedFromBackForwardCache() << ", match_type "
+             << match_type;
 
-  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
-  if (!navigation->IsInMainFrame()) {
-    return;
-  }
-
-  content::WebContents* web_contents = navigation->GetWebContents();
-  if (!web_contents) {
-    return;
-  }
-  web_contents->SetUserAgentOverride(
-      blink::UserAgentOverride::UserAgentOnly(final_ua), true);
+  UpdateUserAgentForNavigation(navigation, final_ua);
 }
 #endif  // OHOS_EX_UA
 
@@ -778,14 +829,53 @@ void CefBrowserContentsDelegate::DidStartNavigation(
       icon_helper_->SetMainFrameDocumentOnLoadCompleted(false);
     }
 #endif  // defined(OHOS_FAVICON)
+  }
 
 #ifdef OHOS_EX_UA
     // |final_ua| may be added to the navigation of the mainframe and iframe.
     MaybeSetUserAgentOverrideForMainFrame(navigation);
 #endif  // OHOS_EX_UA
-  }
 }
 #endif  // defined(OHOS_WPT)
+
+#if defined(OHOS_EX_UA)
+void CefBrowserContentsDelegate::DidRedirectNavigation(
+    content::NavigationHandle* navigation) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNwebExUa) || !navigation) {
+    return;
+  }
+
+  const auto& redirect_chain = navigation->GetRedirectChain();
+  constexpr int kLeastLengthForRedirectChain = 2;
+  if (redirect_chain.size() < kLeastLengthForRedirectChain) {
+    return;
+  }
+
+  const auto& current_url = navigation->GetURL();
+  const auto& prev_redirect_url = redirect_chain[redirect_chain.size() - 2];
+  if (IsIllegalUrl(current_url) || IsIllegalUrl(prev_redirect_url)) {
+    return;
+  }
+
+  std::string final_ua;
+  if (MatchUserAgent(navigation, current_url.host(), final_ua) >=
+      nweb_ex::UserAgentOverridePolicy::APP_DEFAULT) {
+    if (GetDomainAndRegistry(current_url) ==
+        GetDomainAndRegistry(prev_redirect_url)) {
+      MatchUserAgent(navigation, prev_redirect_url.host(), final_ua);
+    }
+  }
+
+  LOG(DEBUG) << __func__ << " host " << current_url.host() << ", final_ua "
+             << final_ua << ", user_gesture " << navigation->HasUserGesture()
+             << ", main_frame " << navigation->IsInMainFrame()
+             << ", serverd_from_bfcache "
+             << navigation->IsServedFromBackForwardCache();
+
+  UpdateUserAgentForNavigation(navigation, final_ua);
+}
+#endif  // defined(OHOS_EX_UA)
 
 #if defined(OHOS_FAVICON)
 void CefBrowserContentsDelegate::DocumentOnLoadCompletedInPrimaryMainFrame() {
