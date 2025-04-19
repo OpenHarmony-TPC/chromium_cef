@@ -964,7 +964,7 @@ void CefFrameImpl::UpdatePixelRatio(float ratio) {
 
 #if BUILDFLAG(IS_OHOS)
 void CefFrameImpl::SetIsFling(bool is_fling) {
-  LOG(INFO) << "UpdatePixelRatio in render side SetPixelRatio:" << ratio;
+  LOG(INFO) << "SetIsFling in render side:" << is_fling;
   soc_perf::SocPerUtil::is_slide = is_fling;
 }
 #endif
