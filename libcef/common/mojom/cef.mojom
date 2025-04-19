@@ -184,6 +184,9 @@ interface RenderFrame {
 
   [EnableIf=ohos_scrollbar]
   UpdatePixelRatio(float ratio);
+
+  [EnableIf=is_ohos]
+  SetIsFling(bool is_fling);
 };
 
 // Interface for communicating with a frame in the browser process.

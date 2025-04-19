@@ -75,6 +75,7 @@
 #include "ui/events/gesture_detection/gesture_configuration.h"
 #include "ui/gfx/text_elider.h"
 #include "libcef/browser/browser_util.h"
+#include "libcef/common/soc_perf_util.h"
 
 #ifdef OHOS_AI
 #include "cef/libcef/browser/image_impl.h"
@@ -2610,6 +2611,9 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
   if (is_fling_) {
     return;
   }
+  if (browser_impl_) {
+    browser_impl_->SetIsFling(false);
+  }
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
   if (base::ohos::IsPcDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
@@ -2680,6 +2684,9 @@ void CefRenderWidgetHostViewOSR::OnTouchMove() {
     return;
   }
   isBoosting_ = true;
+  if (browser_impl_) {
+    browser_impl_->SetIsFling(true);
+  }
   BoostingPreiodly();
 }
 #endif
@@ -3793,6 +3800,9 @@ void CefRenderWidgetHostViewOSR::DidStopFlinging() {
     CHECK(handler);
     handler->OnOverScrollFlingEnd(browser_impl_.get());
     is_fling_ = false;
+    if (browser_impl_) {
+      browser_impl_->SetIsFling(false);
+    }
   }
 }
 
@@ -3892,6 +3902,9 @@ void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
                                   0, 0, web_event.data.fling_start.velocity_x,
                                   web_event.data.fling_start.velocity_y);
     is_fling_ = true;
+    if (browser_impl_) {
+      browser_impl_->SetIsFling(true);
+    }
   }
 }
 

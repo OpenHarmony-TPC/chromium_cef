@@ -2977,6 +2977,17 @@ void CefBrowserHostBase::UpdatePixelRatio(float ratio) {
 }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+void CefBrowserHostBase::SetIsFling(bool is_fling) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->SetIsFling(is_fling);
+  } else {
+    LOG(ERROR) << "main frame is invalid";
+  } 
+}
+#endif
+
 float CefBrowserHostBase::Scale() {
   auto web_contents = GetWebContents();
   if (web_contents) {

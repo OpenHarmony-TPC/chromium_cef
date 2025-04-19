@@ -138,6 +138,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void UpdatePixelRatio(float ratio);
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+void SetIsFling(bool is_fling);
+#endif
+
   void ExecuteJavaScriptWithUserGestureForTests(const CefString& javascript);
 
   // Returns the RFH associated with this frame. Must be called on the UI
