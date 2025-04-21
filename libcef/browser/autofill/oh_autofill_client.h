@@ -201,8 +201,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   void SuggestionSelected(int position);
 
 #if defined(OHOS_PASSWORD_AUTOFILL)
-  void SetPasswordPopupHider(OhAutofillManager* manager) {
-    password_popup_hider_ = manager;
+  void SetPasswordPopupStatus(bool status) {
+    need_hide_password_popup_ = status;
   }
 #endif
 
@@ -230,7 +230,7 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
       autocomplete_history_manager_;
   CefRefPtr<CefWebMessageReceiver> callback_;
 #if defined(OHOS_PASSWORD_AUTOFILL)
-  OhAutofillManager* password_popup_hider_ = nullptr;
+  bool need_hide_password_popup_ = false;
 #endif
 
 #if DCHECK_IS_ON()
