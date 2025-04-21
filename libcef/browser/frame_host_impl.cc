@@ -600,6 +600,16 @@ void CefFrameHostImpl::UpdatePixelRatio(float ratio) {
 }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+void CefFrameHostImpl::SetIsFling(bool is_fling) {
+  LOG(INFO) << "SetIsFling in browser CefFrameHostImpl:" << is_fling;
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](bool is_fling, const RenderFrameType& render_frame) {
+                      render_frame->SetIsFling(is_fling);
+                    }, is_fling));
+}
+#endif
+
 void CefFrameHostImpl::ExecuteJavaScriptWithUserGestureForTests(
     const CefString& javascript) {
   if (!CEF_CURRENTLY_ON_UIT()) {

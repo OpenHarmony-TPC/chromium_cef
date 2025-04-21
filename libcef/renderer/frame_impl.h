@@ -113,6 +113,10 @@ class CefFrameImpl
   void UpdatePixelRatio(float ratio) override;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  void SetIsFling(bool is_fling)override;
+#endif
+
 #ifdef OHOS_POST_URL
   void PostURL(const CefString& url,
                const std::vector<char>& post_data) override;

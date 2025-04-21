@@ -759,6 +759,7 @@ bool TerminateRenderProcess() override;
 
   void SetWebDebuggingAccess(bool isEnableDebug) override;
   bool GetWebDebuggingAccess() override;
+  void SetIsFling(bool is_fling);
 
 #ifdef OHOS_SCROLLBAR
   void UpdatePixelRatio(float ratio);

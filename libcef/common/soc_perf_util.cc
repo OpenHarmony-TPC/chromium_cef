@@ -17,6 +17,7 @@
 namespace soc_perf {
 bool SocPerUtil::boost_started = false;
 bool SocPerUtil::boost_finished = false;
+bool SocPerUtil::is_slide = false;
 base::Time SocPerUtil::first_time_boost_timestamp;
 base::Time SocPerUtil::last_time_boost_timestamp;
 
@@ -73,6 +74,9 @@ void SocPerUtil::TryRunSocPerf() {
 }
 
 void SocPerUtil::StartBoost() {
+  if (base::ohos::IsMobileDevice() && is_slide) {
+    return;
+  }
   if (boost_finished) {
     return;
   }

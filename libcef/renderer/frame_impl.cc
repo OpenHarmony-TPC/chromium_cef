@@ -35,6 +35,7 @@
 #include "libcef/renderer/render_frame_util.h"
 #include "libcef/renderer/thread_util.h"
 #include "libcef/renderer/v8_impl.h"
+#include "libcef/common/soc_perf_util.h"
 
 #if BUILDFLAG(IS_OHOS)
 #include "base/process/process.h"
@@ -958,6 +959,13 @@ void CefFrameImpl::TerminateRenderProcess() {
 void CefFrameImpl::UpdatePixelRatio(float ratio) {
   LOG(INFO) << "UpdatePixelRatio in render side SetPixelRatio:" << ratio;
   base::ohos::SetPixelRatio(ratio);
+}
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+void CefFrameImpl::SetIsFling(bool is_fling) {
+  LOG(INFO) << "SetIsFling in render side:" << is_fling;
+  soc_perf::SocPerUtil::is_slide = is_fling;
 }
 #endif
 

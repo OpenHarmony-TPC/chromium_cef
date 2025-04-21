@@ -15,6 +15,7 @@ class SocPerUtil {
   static void EnableFlingBoost();
   static void DisableFlingBoost();
   static void StartBoost();
+  static bool is_slide;
 
  private:
   static void TryRunSocPerf();
