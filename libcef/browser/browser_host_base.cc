@@ -4591,7 +4591,7 @@ void CefBrowserHostBase::GetPermissionStatusAsync(
 }
 #endif // OHOS_NOTIFICATION
 
-void CefBrowserHostBase::OnbrowserForeground() {
+void CefBrowserHostBase::OnBrowserForeground() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
@@ -4600,8 +4600,8 @@ void CefBrowserHostBase::OnbrowserForeground() {
   LOG(INFO) << "CefBrowserHostBase::OnBrowserForeground";
   web_contents->OnBrowserForeground();
 }
-
-void CefBrowserHostBase::OnbrowserBackground() {
+ 
+void CefBrowserHostBase::OnBrowserBackground() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";

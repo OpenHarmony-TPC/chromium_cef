@@ -4302,35 +4302,34 @@ browser_host_maximize_resize(struct _cef_browser_host_t* self) {
   // Execute
   CefBrowserHostCppToC::Get(self)->MaximizeResize();
 
-  void CEF_CALLBACK
-  browser_host_foreground(struct _cef_browser_host_t* self) {
-    shutdown_checker::AssertNotShutdown();
-
-    // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-    DCHECK(self);
-    if (!self) {
-      return;
-    }
-
-    // Execute
-    CefBrowserHostCppToC::Get(self)->OnBrowserForeground();
+void CEF_CALLBACK
+browser_host_foreground(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  DCHECK(self);
+  if (!self) {
+    return;
   }
-
-  void CEF_CALLBACK
-  browser_host_background(struct _cef_browser_host_t* self) {
-    shutdown_checker::AssertNotShutdown();
-
-    // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-    DCHECK(self);
-    if (!self) {
-      return;
-    }
-
-    // Execute
-    CefBrowserHostCppToC::Get(self)->OnBrowserBackground();
+ 
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnBrowserForeground();
+}
+ 
+void CEF_CALLBACK
+browser_host_background(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  DCHECK(self);
+  if (!self) {
+    return;
   }
+ 
+  // Execute
+  CefBrowserHostCppToC::Get(self)->OnBrowserBackground();
 }
 }  // namespace
 

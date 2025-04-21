@@ -4040,34 +4040,35 @@ void CefBrowserHostCToCpp::SetDisallowSandboxFileAccessFromFileUrl(bool disallow
 }
 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::OnbrowserForeground() {
+void CefBrowserHostCToCpp::OnBrowserForeground() {
   shutdown_checker::AssertNotShutdown();
-
+ 
   cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_browser_foreground)) {
     return;
   }
-
-  //AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
   // Execute
   _struct->on_browser_foreground(_struct);
 }
-
+ 
 NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::OnbrowserBackround() {
+void CefBrowserHostCToCpp::OnBrowserBackground() {
   shutdown_checker::AssertNotShutdown();
-
+ 
   cef_browser_host_t* _struct = GetStruct();
   if (CEF_MEMBER_MISSING(_struct, on_browser_background)) {
     return;
   }
-
-  //AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
   // Execute
   _struct->on_browser_background(_struct);
 }
+
 
 // CONSTRUCTOR - Do not edit by hand.
 
