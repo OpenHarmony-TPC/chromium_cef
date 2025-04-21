@@ -4301,6 +4301,36 @@ browser_host_maximize_resize(struct _cef_browser_host_t* self) {
 
   // Execute
   CefBrowserHostCppToC::Get(self)->MaximizeResize();
+
+  void CEF_CALLBACK
+  browser_host_foreground(struct _cef_browser_host_t* self) {
+    shutdown_checker::AssertNotShutdown();
+
+    // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+    DCHECK(self);
+    if (!self) {
+      return;
+    }
+
+    // Execute
+    CefBrowserHostCppToC::Get(self)->OnBrowserForeground();
+  }
+
+  void CEF_CALLBACK
+  browser_host_background(struct _cef_browser_host_t* self) {
+    shutdown_checker::AssertNotShutdown();
+
+    // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+    DCHECK(self);
+    if (!self) {
+      return;
+    }
+
+    // Execute
+    CefBrowserHostCppToC::Get(self)->OnBrowserBackground();
+  }
 }
 }  // namespace
 
@@ -4552,6 +4582,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
       browser_host_put_web_media_avsession_enabled;
   GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
   GetStruct()->maximize_resize = browser_host_maximize_resize;
+  GetStruct()->on_browser_foreground = browser_host_foreground;
+  GetStruct()->on_browser_background = browser_host_background;
 }
 
 // DESTRUCTOR - Do not edit by hand.

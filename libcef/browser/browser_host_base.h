@@ -990,6 +990,8 @@ bool TerminateRenderProcess() override;
 #endif
 #endif  // IS_OHOS
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
+void OnbrowserBackground() override;
+void OnbrowserForeground() override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_

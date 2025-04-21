@@ -2305,6 +2305,16 @@ typedef struct _cef_browser_host_t {
   /// Web maximize resize optimize.
   ///
   void(CEF_CALLBACK* maximize_resize)(struct _cef_browser_host_t* self);
+
+  ///
+  /// Notify browser is foreground.
+  ///
+  void(CEF_CALLBACK* on_browser_foreground)(struct  _cef_browser_host_t* self);
+
+  ///
+  /// Notify browser is background.
+  ///
+  void(CEF_CALLBACK* on_browser_background)(struct  _cef_browser_host_t* self);
 } cef_browser_host_t;
 
 ///

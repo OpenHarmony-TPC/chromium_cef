@@ -2339,5 +2339,17 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void SetEnableHalfFrameRate(bool enabled) = 0;
+
+  ///
+  /// Notify browser is foreground.
+  ///
+  /*--cef()--*/
+  virtual void OnbrowserForeground() = 0;
+  
+  ///
+  /// Notify browser is background.
+  ///
+  /*--cef()--*/
+  virtual void OnbrowserBackground() = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
