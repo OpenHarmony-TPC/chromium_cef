@@ -128,6 +128,10 @@ class CefNavigationEntry : public virtual CefBaseRefCounted {
                           int& pixel_width,
                           int& pixel_height) = 0;
 #endif  // BUILDFLAG(IS_OHOS)
+
+#ifdef OHOS_BFCACHE
+  virtual bool GetFaviconUrl(CefString& url) {return false;};
+#endif  // OHOS_BFCACHE
 };
 
 #endif  // CEF_INCLUDE_CEF_NAVIGATION_ENTRY_H_

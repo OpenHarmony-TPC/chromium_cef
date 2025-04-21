@@ -98,3 +98,16 @@ bool CefNavigationEntryImpl::GetFavicon(void** pixel_data,
   return true;
 }
 #endif
+
+#ifdef OHOS_BFCACHE
+bool CefNavigationEntryImpl::GetFaviconUrl(CefString& url) {
+  CEF_VALUE_VERIFY_RETURN(false, false);
+  auto favicon_status = mutable_value()->GetFavicon();
+  if (!favicon_status.valid) {
+    return false;
+  }
+  CefString image_url(favicon_status.url.spec());
+  url = image_url;
+  return true;
+}
+#endif  // OHOS_BFCACHE
