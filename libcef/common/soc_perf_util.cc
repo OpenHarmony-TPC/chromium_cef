@@ -74,7 +74,7 @@ void SocPerUtil::TryRunSocPerf() {
 }
 
 void SocPerUtil::StartBoost() {
-  if (is_slide) {
+  if (base::ohos::IsMobileDevice() && is_slide) {
     return;
   }
   if (boost_finished) {
