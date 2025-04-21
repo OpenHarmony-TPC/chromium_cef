@@ -40,6 +40,9 @@ class CefNavigationEntryImpl
                   int& pixel_width,
                   int& pixel_height) override;
 #endif
+#ifdef OHOS_BFCACHE
+  bool GetFaviconUrl(CefString& url) override;
+#endif  // OHOS_BFCACHE
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NAVIGATION_ENTRY_IMPL_H_
