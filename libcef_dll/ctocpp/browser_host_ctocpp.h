@@ -360,8 +360,8 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
 #endif // OHOS_MEDIA_AVSESSION
   void CustomWebMediaPlayer(bool enable) override;
   void MaximizeResize() override;
-  void OnbrowserForeground() override;
-  void OnbrowserBackground() override;
+  void OnBrowserForeground() override;
+  void OnBrowserBackground() override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

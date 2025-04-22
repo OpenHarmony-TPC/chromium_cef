@@ -2344,12 +2344,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /// Notify browser is foreground.
   ///
   /*--cef()--*/
-  virtual void OnbrowserForeground() = 0;
+  virtual void OnBrowserForeground() = 0;
   
   ///
   /// Notify browser is background.
   ///
   /*--cef()--*/
-  virtual void OnbrowserBackground() = 0;
+  virtual void OnBrowserBackground() = 0;
 };
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_
