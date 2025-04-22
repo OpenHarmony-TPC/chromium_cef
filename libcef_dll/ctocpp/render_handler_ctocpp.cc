@@ -1118,6 +1118,30 @@ void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
   // Execute
   _struct->on_accessibility_event(_struct, accessibilityId, eventType);
 }
+
+NO_SANITIZE("cfi-icall")
+void CefRenderHandlerCToCpp::GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
+                                                CefSize& size) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_render_handler_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_device_pixel_size)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser.get());
+  if (!browser.get()) {
+    return;
+  }
+
+  // Execute
+  _struct->get_device_pixel_size(_struct, CefBrowserCppToC::Wrap(browser),
+                                 &size);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefRenderHandlerCToCpp::CefRenderHandlerCToCpp() {}

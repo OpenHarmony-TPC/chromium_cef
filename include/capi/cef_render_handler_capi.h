@@ -454,6 +454,13 @@ typedef struct _cef_render_handler_t {
   void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
                                              int64_t accessibilityId,
                                              int32_t eventType);
+
+  ///
+  /// Get Device pixel size.
+  ///
+  void(CEF_CALLBACK* get_device_pixel_size)(struct _cef_render_handler_t* self,
+                                            struct _cef_browser_t* browser,
+                                            cef_size_t* size);
 } cef_render_handler_t;
 
 #ifdef __cplusplus

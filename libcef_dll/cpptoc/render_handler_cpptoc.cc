@@ -1342,6 +1342,42 @@ render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
   CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
 }
 
+void CEF_CALLBACK
+render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
+                                     cef_browser_t* browser,
+                                     cef_size_t* size) {
+  shutdown_checker::AssertNotShutdown();
+ 
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+ 
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: browser; type: refptr_diff
+  DCHECK(browser);
+  if (!browser) {
+    return;
+  }
+  // Verify param: size; type: simple_byref
+  DCHECK(size);
+  if (!size) {
+    return;
+  }
+ 
+  // Translate param: size; type: simple_byref
+  CefSize sizeVal = size ? *size : CefSize();
+ 
+  // Execute
+  CefRenderHandlerCppToC::Get(self)->GetDevicePixelSize(
+      CefBrowserCToCpp::Wrap(browser), sizeVal);
+ 
+  // Restore param: size; type: simple_byref
+  if (size) {
+    *size = sizeVal;
+  }
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1407,6 +1443,7 @@ CefRenderHandlerCppToC::CefRenderHandlerCppToC() {
       render_handler_on_resize_scrollable_viewport;
   GetStruct()->set_fill_content = render_handler_set_fill_content;
   GetStruct()->on_accessibility_event = render_handler_on_accessibility_event;
+  GetStruct()->get_device_pixel_size = render_handler_get_device_pixel_size;
 }
 
 // DESTRUCTOR - Do not edit by hand.
