@@ -4301,6 +4301,7 @@ browser_host_maximize_resize(struct _cef_browser_host_t* self) {
 
   // Execute
   CefBrowserHostCppToC::Get(self)->MaximizeResize();
+}
 
 void CEF_CALLBACK
 browser_host_foreground(struct _cef_browser_host_t* self) {
