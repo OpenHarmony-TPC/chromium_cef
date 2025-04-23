@@ -1021,8 +1021,7 @@ void OhPasswordManagerClient::NotifyAutofillPopupShow(bool is_show) {
   auto autofill_client =
       autofill::OhAutofillClient::FromWebContents(web_contents());
   if (autofill_client) {
-    autofill_client->SetPasswordPopupHider(is_show ? autofill_manager
-                                                   : nullptr);
+    autofill_client->SetPasswordPopupStatus(is_show);
   }
 }
 
