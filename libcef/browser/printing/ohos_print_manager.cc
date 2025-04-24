@@ -509,8 +509,8 @@ void OhosPrintManager::DidPrintDocument(
     std::move(callback).Run(false);
     return;
   }
-  DCHECK(pdf_writing_done_callback());
 
+  DCHECK(pdf_writing_done_callback());
   task_runner_->PostTaskAndReplyWithResult(
       FROM_HERE, base::BindOnce(&SaveDataToFd, fd_, number_pages(), data),
       base::BindOnce(&OhosPrintManager::OnDidPrintDocumentWritingDone,
