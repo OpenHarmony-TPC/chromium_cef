@@ -117,7 +117,6 @@ class PrintDocumentAdapterImpl
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
                                   jobId, state, isCalledOnJobStateChanged));
-
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
     }
@@ -399,7 +398,6 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
     } else {
       LOG(ERROR) << "failed to get rfh from id for pdf print";
     }
-    
     return;
   }
   if (isApplication) {
