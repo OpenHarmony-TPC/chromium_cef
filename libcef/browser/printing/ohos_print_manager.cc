@@ -50,6 +50,7 @@ constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS = 0;
 constexpr int PRINT_JOB_CREATE_FILE_COMPLETED_FAILED = 1;
 
 constexpr int PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED = 5;
+
 constexpr int LIMITED_PRINT_RANGE = 5;
 constexpr int LIMITED_PRINT_DURATION = 10000;
 const std::string PROTOCOL_PATH = "://";
@@ -442,6 +443,7 @@ void OhosPrintManager::UpdateParam(
   DCHECK(callback);
   settings_ = std::move(settings);
   fd_ = file_descriptor;
+
   set_pdf_writing_done_callback(std::move(callback));
   // Set a valid dummy cookie value.
   set_cookie(1);
@@ -507,7 +509,6 @@ void OhosPrintManager::DidPrintDocument(
     std::move(callback).Run(false);
     return;
   }
-
   DCHECK(pdf_writing_done_callback());
 
   task_runner_->PostTaskAndReplyWithResult(

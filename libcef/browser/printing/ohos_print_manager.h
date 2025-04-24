@@ -51,10 +51,8 @@ class OhosPrintManager : public printing::PrintManager,
       mojo::PendingAssociatedReceiver<printing::mojom::PrintManagerHost>
           receiver,
       content::RenderFrameHost* rfh);
-
   static content::RenderFrameHost* GetRenderFrameHostToUse(
       content::WebContents* contents);
-
   static OhosPrintManager* GetOhosPrintManagerToUse(
       content::GlobalRenderFrameHostId rfhId);
   // printing::PrintManager:
