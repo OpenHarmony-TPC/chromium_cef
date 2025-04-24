@@ -170,6 +170,10 @@ void OnActivateContent() override;
   void DidStartNavigation(content::NavigationHandle* navigation) override;
 #endif  // defined(OHOS_WPT)
 
+#if defined(OHOS_EX_UA)
+  void DidRedirectNavigation(content::NavigationHandle* navigation) override;
+#endif  // defined(OHOS_EX_UA)
+
 #if defined(OHOS_FAVICON)
   void DocumentOnLoadCompletedInPrimaryMainFrame() override;
 #endif  // defined(OHOS_FAVICON)
