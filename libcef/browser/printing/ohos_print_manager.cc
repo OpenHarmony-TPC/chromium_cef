@@ -101,7 +101,7 @@ class PrintDocumentAdapterImpl
 
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnStartLayoutWriteOnUIThread,
-                               rfhId_, printAttrs));
+                                  rfhId_, printAttrs));
   }
 
   void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
@@ -116,7 +116,7 @@ class PrintDocumentAdapterImpl
 
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                                 jobId, state, isCalledOnJobStateChanged));
+                                  jobId, state, isCalledOnJobStateChanged));
 
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
@@ -203,7 +203,7 @@ class ApplicationPrintDocumentAdapterImpl
 
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
-                                 jobId, state, isCalledOnJobStateChanged));
+                                  jobId, state, isCalledOnJobStateChanged));
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
     }
@@ -230,7 +230,7 @@ class ApplicationPrintDocumentAdapterImpl
   static void OnJobStateChangedOnUIThread(
       content::GlobalRenderFrameHostId rfhId, const std::string& jobId,
       uint32_t state, bool isCalled) {
-    LOG(INFO) << "Application OhosPrintManager OnJobStateChangedOnUIThread.";
+    LOG(INFO) << "OhosPrintManager OnJobStateChangedOnUIThread.";
 
     auto* ohosPrintManager = OhosPrintManager::GetOhosPrintManagerToUse(rfhId);
     if (ohosPrintManager) {
