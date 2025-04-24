@@ -118,7 +118,6 @@ class PrintDocumentAdapterImpl
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
                                   jobId, state, isCalledOnJobStateChanged));
-
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
     }
