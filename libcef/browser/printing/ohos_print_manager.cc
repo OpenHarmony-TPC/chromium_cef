@@ -117,7 +117,6 @@ class PrintDocumentAdapterImpl
     main_task_runner->PostTask(
         FROM_HERE, base::BindOnce(&OnJobStateChangedOnUIThread, rfhId_,
                                   jobId, state, isCalledOnJobStateChanged));
-
     if (!isCalledOnJobStateChanged) {
       isCalledOnJobStateChanged = true;
     }
@@ -401,7 +400,6 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
     }
     return;
   }
-
   if (isApplication) {
     auto* app_rfh = GetRenderFrameHostToUse(webcontents.get());
     if (app_rfh) {
