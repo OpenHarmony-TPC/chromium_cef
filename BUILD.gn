@@ -1217,6 +1217,18 @@ source_set("libcef_static") {
   }
   #endif // OHOS_DEVTOOLS
 
+  #if defined(OHOS_EX_HTTPS_UPGRADES)
+  if (defined(ohos_ex_https_upgrades) && ohos_ex_https_upgrades) {
+    sources += [
+      "libcef/browser/ssl/ohos_https_upgrades_interceptor.h",
+      "libcef/browser/ssl/ohos_https_upgrades_interceptor.cc",
+      "libcef/browser/ssl/ohos_https_upgrades_navigation_throttle.h",
+      "libcef/browser/ssl/ohos_https_upgrades_navigation_throttle.cc",
+      "libcef/browser/ssl/ohos_https_upgrades_util.h",
+      "libcef/browser/ssl/ohos_https_upgrades_util.cc",
+    ]
+  }
+
 #if defined(OHOS_LOGGER_REPORT)
   sources += [
     "include/cef_logger_callback_api_handler.h",
