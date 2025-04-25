@@ -3996,6 +3996,22 @@ NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::MaximizeResize() {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetDisallowSandboxFileAccessFromFileUrl(bool disallow) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+
+  if (CEF_MEMBER_MISSING(_struct, set_disallow_sandbox_file_access_from_file_url)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_disallow_sandbox_file_access_from_file_url(_struct, disallow);
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
   shutdown_checker::AssertNotShutdown();
 

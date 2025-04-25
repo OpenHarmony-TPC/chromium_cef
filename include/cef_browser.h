@@ -1809,6 +1809,12 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   virtual void SetFileAccess(bool falg) = 0;
 
   ///
+  /// Set whether webview can allow sandbox file access from file url
+  ///
+  /*--cef()--*/
+  virtual void SetDisallowSandboxFileAccessFromFileUrl(bool disallow) = 0;
+
+  ///
   /// Set whether webview can access network
   ///
   /*--cef()--*/

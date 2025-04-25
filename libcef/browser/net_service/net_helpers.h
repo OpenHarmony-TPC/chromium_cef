@@ -22,6 +22,7 @@ struct NetHelperSetting {
   bool block_network;
   int cache_mode;
   std::vector<std::string> file_access_dirs_list;
+  bool disallow_sandbox_file_access_from_file_url;
 };
 #endif
 
