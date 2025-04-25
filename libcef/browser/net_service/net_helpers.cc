@@ -42,6 +42,9 @@ int UpdateCacheLoadFlags(int load_flags, int cache_control_flags) {
 static const std::string APP_READ_ONLY_PATH =
     "/data/storage/el1/bundle/entry/resources/resfile/";
 
+static const std::string APP_STORAGE_SANDBOX_PATH =
+    "/data/storage";
+
 bool NetHelpers::allow_content_access = false;
 bool NetHelpers::allow_file_access = false;
 bool NetHelpers::is_network_blocked = false;
@@ -221,6 +224,15 @@ bool IsSpecialFileUrl(const GURL& url) {
   return false;
 }
 
+bool IsAppStorageSandboxUrl(const GURL& url) {
+  if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
+    return false;
+  }
+
+  return base::StartsWith(url.path(), APP_STORAGE_SANDBOX_PATH,
+                       base::CompareCase::SENSITIVE);
+}
+
 bool IsInFileAccessList(const GURL& url, const std::vector<std::string>& pass_dir) {
   if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
     return false;
@@ -270,6 +282,13 @@ bool IsURLBlocked(const GURL& url
     }
     return !result;
   }
+
+#ifdef OHOS_NETWORK_CONNINFO
+  if (setting.file_access &&
+      setting.disallow_sandbox_file_access_from_file_url) {
+    return IsAppStorageSandboxUrl(url) && !IsSpecialFileUrl(url);
+  }
+#endif
 
   // Part of implementation of NWebPreference.allowFileAccess.
 #ifdef OHOS_NETWORK_CONNINFO
