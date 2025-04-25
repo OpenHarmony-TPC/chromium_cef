@@ -3634,6 +3634,11 @@ bool CefBrowserHostBase::GetBlockNetwork() {
   return network_blocked_;
 }
 
+bool CefBrowserHostBase::GetDisallowSandboxFileAccessFromFileUrl() {
+  base::AutoLock lock_scope(state_lock_);
+  return dis_allow_sandbox_file_access_from_file_url_;
+}
+
 int CefBrowserHostBase::GetCacheMode() {
   base::AutoLock lock_scope(state_lock_);
   return cache_mode_;
