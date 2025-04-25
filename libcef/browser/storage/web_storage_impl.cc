@@ -21,8 +21,6 @@
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/json/json_writer.h"
-#include "base/ohos/nweb_engine_event_logger.h"
-#include "base/ohos/nweb_engine_event_logger_code.h"
 #include "base/task/sequenced_task_runner.h"
 #include "base/task/bind_post_task.h"
 #include "base/task/task_traits.h"
@@ -473,10 +471,6 @@ bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter
   base::FilePath migrate_backup_path = cache_path.Append(FILE_PATH_LITERAL(MigrateBackupDir));
   if (!base::PathExists(migrate_path)) {
     LOG(INFO) << "[Autofill] Migrate directory not exist.";
-    std::string err_msg = "Migrate directory not exist, error_code:" +
-                          std::to_string(base::ohos::DIRECTORY_OR_FILE_NOT_EXIST);
-    base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                  base::ohos::kPasswordManagerError, err_msg);
     g_browser_process->local_state()->SetBoolean(browser_prefs::kMigratePasswordsToPasswordVault, true);
     g_browser_process->local_state()->CommitPendingWrite();
     return false;
@@ -586,10 +580,6 @@ bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<C
   for (size_t j = 0; j <= kMaxDiconnectCount; j++) {
     if (!migration_manager_adapter->SendMigrationRequest(shared_json)) {
       LOG(ERROR) << "[Autofill] Connect PasswordVault failed.";
-      std::string err_msg = "Connect PasswordVault failed, error_code:" +
-                            std::to_string(base::ohos::PASSWORD_VAULT_CONNECT_FAILED);
-      base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                    base::ohos::kPasswordManagerError, err_msg);
       migration_listener->SetMigrationErrorCode(MIGRATION_SERVICE_ABILITY_DISABLE);
       CEF_POST_TASK(CEF_IOT, base::BindOnce(&SetMigrationPasswordPrefs));
       return false;
@@ -600,25 +590,13 @@ bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<C
     }
     if (migration_listener->GetMigrationErrorCode() == MIGRATION_STORAGE_FAILED) {
       LOG(ERROR) << "[Autofill] PasswordVault storage failed.";
-      std::string err_msg = "PasswordVault storage failed, error_code:" +
-                            std::to_string(base::ohos::PASSWORD_IMPORT_FAILED);
-      base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                    base::ohos::kPasswordManagerError, err_msg);
       return false;
     } else if (migration_listener->GetMigrationErrorCode() == MIGRATION_NOT_SET_SCREEN_LOCK) {
       LOG(ERROR) << "[Autofill] The screen lock password not set.";
-      std::string err_msg = "The screen lock password not set, error_code:" +
-                            std::to_string(base::ohos::PASSWORD_IMPORT_FAILED);
-      base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                    base::ohos::kPasswordManagerError, err_msg);
       return false;
     } else if (migration_listener->GetMigrationErrorCode() == MIGRATION_DISCONNECT) {
       if (j == kMaxDiconnectCount) {
         LOG(ERROR) << "[Autofill] Disconnect count over max.";
-        std::string err_msg = "Disconnect count over max, error_code:" +
-                              std::to_string(base::ohos::PASSWORD_VAULT_CONNECT_FAILED);
-        base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                      base::ohos::kPasswordManagerError, err_msg);
         return false;
       }
       base::PlatformThread::Sleep(base::Seconds(kMigrateDelayTime * std::pow(kMigrateDelayBase, j)));
@@ -695,11 +673,6 @@ void OnMigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_i
     CEF_POST_TASK(CEF_IOT, base::BindOnce(&SetMigrationPasswordPrefs));
     LOG(INFO) << "[Autofill] Migrate password to passwordVault success, migration total count:"
       << results.size() << ", success count:" << migration_listener->GetMigrationSuccessCount();
-    std::string err_msg = "Migrate password to passwordVault success, error_code:" +
-      std::to_string(base::ohos::MIGRATE_SUCCESS) + ", migration total count:" + std::to_string(results.size()) +
-      ", success count:" + std::to_string(migration_listener->GetMigrationSuccessCount());
-    base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
-                                  base::ohos::kPasswordManagerError, err_msg);
   }
 }
  
