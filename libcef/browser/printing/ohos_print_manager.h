@@ -55,6 +55,8 @@ class OhosPrintManager : public printing::PrintManager,
   static content::RenderFrameHost* GetRenderFrameHostToUse(
       content::WebContents* contents);
 
+  static OhosPrintManager* GetOhosPrintManagerToUse(
+      content::GlobalRenderFrameHostId rfhId);
   // printing::PrintManager:
   void PdfWritingDone(int page_count) override;
 
@@ -65,17 +67,11 @@ class OhosPrintManager : public printing::PrintManager,
                    int file_descriptor,
                    PdfWritingDoneCallback callback);
   bool PrintNow();
-  void PrintPage(bool isApplication);
-  void PrintPageImpl(base::WeakPtr<content::WebContents> webcontents,
-                     bool isApplication);
-  void DidDispatchPrintEvent(bool isBefore);
-  void DidDispatchPrintEventImpl(base::WeakPtr<content::WebContents> webcontents,
-                                 bool isBefore);
+  void PrintPageImpl(bool isApplication);
+  void DidDispatchPrintEventImpl(bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
-  void RunPrintRequestedCallback(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
-  void SetPrintStatusOnUIThread(bool is_print_now, uint32_t state);
   void SetPrintStatus(bool is_print_now, uint32_t status);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
@@ -93,6 +89,8 @@ class OhosPrintManager : public printing::PrintManager,
                            UpdatePrintSettingsCallback callback) override;
   void SetPrintBackground(bool enable);
   bool GetPrintBackground();
+  void SetRfhId(content::GlobalRenderFrameHostId rfhId);
+  content::GlobalRenderFrameHostId GetRfhId();
 
  private:
   friend class content::WebContentsUserData<OhosPrintManager>;
@@ -136,10 +134,10 @@ class OhosPrintManager : public printing::PrintManager,
   bool should_print_background_ = true;
   bool is_print_now_ = false;
   bool is_print_disable_ = false;
-  content::RenderFrameHost* pdf_rfh_ = nullptr;
+  content::GlobalRenderFrameHostId rfh_id_;
+  content::GlobalRenderFrameHostId pdf_rfh_id_;
   static std::unordered_map<std::string, PrintAttrs> printAttrsMap_;
   static std::string print_job_id_;
-  static content::RenderFrameHost* rfh_;
   static std::unordered_map<uint32_t, void*> printTokenMap_;
   PrintRequestedCallback printRequestedCallback_;
 
