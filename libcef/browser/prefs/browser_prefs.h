@@ -32,6 +32,8 @@ extern const char kUserPrefsFileName[];
 #if defined(OHOS_EX_PASSWORD)
 extern const char kMigratePasswordsReady[];
 extern const char kMigratePasswordsToPasswordVault[];
+extern const char kMigrationCounct[];
+extern const char kMigrationDataBackupCompletion[];
 #endif
 
 // Register preferences specific to CEF.

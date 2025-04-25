@@ -25,6 +25,7 @@
 #include "ohos_adapter_helper.h"
  
 enum WebStorageMigration {
+  MIGRATION_SERVICE_ABILITY_DISABLE = -2,
   MIGRATION_STORAGE_FAILED = -1,
   MIGRATION_DISCONNECT = 0,
   MIGRATION_SUCCESS,
@@ -175,6 +176,7 @@ public:
                         const std::vector<int32_t>& codeList) override;
   void SetMigrationFinish(bool isFinish) { migration_finished_ = isFinish; }
   bool GetMigrationFinish() { return migration_finished_; }
+  int32_t SetMigrationErrorCode(int32_t errorCode) { return migration_error_code_ = errorCode; }
   int32_t GetMigrationErrorCode() { return migration_error_code_; }
   uint32_t GetMigrationSuccessCount() { return migration_success_count_; }
   uint32_t GetMigrationDisconnectCount() { return migration_disconnect_count_; }
