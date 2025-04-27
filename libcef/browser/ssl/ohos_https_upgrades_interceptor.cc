@@ -141,7 +141,6 @@ void OhosHttpsUpgradesInterceptor::MaybeCreateLoader(
   auto* tab_helper = HttpsOnlyModeTabHelper::FromWebContents(web_contents);
   if (!tab_helper) {
     HttpsOnlyModeTabHelper::CreateForWebContents(web_contents);
-    tab_helper = HttpsOnlyModeTabHelper::FromWebContents(web_contents);
   }
 
   // Exclude HTTPS URLs.
