@@ -2728,12 +2728,21 @@ void CefRenderWidgetHostViewOSR::UpdateFrameRate() {
 }
 
 gfx::Size CefRenderWidgetHostViewOSR::SizeInPixels() {
-#ifdef OHOS_EX_TOPCONTROLS
-  return gfx::ScaleToCeiledSize(GetPhysicalViewBounds().size(),
-                                GetDeviceScaleFactor());
-#else
-  return gfx::ScaleToCeiledSize(GetViewBounds().size(), GetDeviceScaleFactor());
-#endif
+  if (IsPopupWidget()) {
+    return gfx::ScaleToCeiledSize(popup_position_.size(),
+                                  GetDeviceScaleFactor());
+  }
+
+  CefSize size {};
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<CefRenderHandler> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    CHECK(handler);
+    handler->GetDevicePixelSize(browser_impl_.get(), size);
+  } else {
+    LOG(WARNING) << "cannot get device pixel size, return zero";
+  }
+  return gfx::Size(size.width, size.height);
 }
 
 #if BUILDFLAG(IS_MAC)
