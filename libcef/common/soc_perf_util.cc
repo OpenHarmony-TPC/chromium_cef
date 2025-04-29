@@ -10,6 +10,10 @@
 #include "ohos_adapter_helper.h"
 #include "soc_perf_client_adapter.h"
 
+#if BUILDFLAG(IS_OHOS)
+#include "base/ohos/sys_info_utils.h"
+#endif
+
 namespace soc_perf {
 bool SocPerUtil::boost_started = false;
 bool SocPerUtil::boost_finished = false;
@@ -18,22 +22,37 @@ base::Time SocPerUtil::last_time_boost_timestamp;
 
 namespace {
 const int SOC_PERF_CONFIG_ID = 10020;
-const int SOC_PERF_WEB_GUSTURE_ID = 10012;
+const int SOC_PERF_WEB_GESTURE_ID = 10012;
+#if BUILDFLAG(IS_OHOS)
+const int SOC_PERF_WEB_SLIDE_SCROLL = 10097;
+#endif
 const int MAX_BOOST_RUN_TIME_IN_SECOND = 10;
 const int REST_TIME_IN_SECOND = 2;
 }  // namespace
 
 void SocPerUtil::EnableFlingBoost() {
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+#if BUILDFLAG(IS_OHOS)
+  if (base::ohos::IsPcDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
+#endif
   TRACE_EVENT0("power", "SocPerUtil::EnableFlingBoost");
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GUSTURE_ID, true);
+      ->ApplySocPerfConfigByIdEx(socPerfId, true);
 }
 
 void SocPerUtil::DisableFlingBoost() {
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+#if BUILDFLAG(IS_OHOS)
+  if (base::ohos::IsPcDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
+#endif
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GUSTURE_ID, false);
+      ->ApplySocPerfConfigByIdEx(socPerfId, false);
 }
 
 void SocPerUtil::TryRunSocPerf() {
