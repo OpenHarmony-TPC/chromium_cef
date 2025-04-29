@@ -572,6 +572,11 @@ void InterceptedRequest::Restart() {
 
   const GURL original_url = request_.url;
 #if defined(OHOS_EX_DOWNLOAD)
+#if defined(OHOS_NETWORK_LOAD)
+  if (proxied_client_receiver_.is_bound()) {
+    proxied_client_receiver_.Pause();
+  }
+#endif
   factory_->request_handler_->OnBeforeRequest(
       id_, &request_, request_was_redirected_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
@@ -887,6 +892,11 @@ void InterceptedRequest::ResumeReadingBodyFromNet() {
 void InterceptedRequest::BeforeRequestReceived(const GURL& original_url,
                                                bool intercept_request,
                                                bool intercept_only) {
+#if defined(OHOS_NETWORK_LOAD)
+  if (proxied_client_receiver_.is_bound()) {
+    proxied_client_receiver_.Resume();
+  }
+#endif
   intercept_request_ = intercept_request;
   intercept_only_ = intercept_only;
 
