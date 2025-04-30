@@ -102,6 +102,7 @@ const float kDefaultScaleFactor = 1.0;
 #if BUILDFLAG(IS_OHOS)
 #if defined(OHOS_PERFORMANCE_JITTER)
 const int SOC_PERF_WEB_GESTURE_ID = 10012;
+const int SOC_PERF_WEB_SLIDE_SCROLL = 10097;
 const int TOUCH_DOWN_DELAY_TIME = 200;
 const int TOUCH_UP_DURATION_TIME = 100;
 
@@ -2499,18 +2500,26 @@ void CefRenderWidgetHostViewOSR::StopBoosting() {
   if (is_fling_) {
     return;
   }
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+  if (base::ohos::IsPcDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
     .CreateSocPerfClientAdapter()
-    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, false);
+    ->ApplySocPerfConfigByIdEx(socPerfId, false);
 }
 
 void CefRenderWidgetHostViewOSR::BoostingPreiodly() {
   if(pointer_state_.GetPointerCount() == 0) {
     return;
   }
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+  if (base::ohos::IsPcDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
     .CreateSocPerfClientAdapter()
-    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+    ->ApplySocPerfConfigByIdEx(socPerfId, true);
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&CefRenderWidgetHostViewOSR::BoostingPreiodly,
     weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
@@ -2533,9 +2542,13 @@ void CefRenderWidgetHostViewOSR::OnTouchDown() {
     return;
   }
   if (isBoosting_) {
+    int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+    if (base::ohos::IsPcDevice()) {
+      socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+    }
     OHOS::NWeb::OhosAdapterHelper::GetInstance()
       .CreateSocPerfClientAdapter()
-      ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+      ->ApplySocPerfConfigByIdEx(socPerfId, true);
     CEF_POST_DELAYED_TASK(CEF_UIT,
       base::BindOnce(&CefRenderWidgetHostViewOSR::OnTouchDown,
       weak_ptr_factory_.GetWeakPtr()), TOUCH_DOWN_DELAY_TIME);
