@@ -23,7 +23,6 @@
 #include <string>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/synchronization/lock.h"
 #include "cef/include/cef_frame.h"
@@ -36,6 +35,10 @@
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "ui/base/page_transition_types.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 class ArkwebFrameHostExtImpl : public ArkwebFrameExt, public CefFrameHostImpl {
  public:

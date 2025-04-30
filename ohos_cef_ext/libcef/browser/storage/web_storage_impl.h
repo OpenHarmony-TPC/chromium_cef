@@ -8,12 +8,15 @@
 #include <atomic>
 #include <queue>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/threading/thread.h"
 #include "include/cef_web_storage.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/thread_util.h"
 #include "storage/browser/quota/quota_manager.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "components/password_manager/core/browser/password_form.h"

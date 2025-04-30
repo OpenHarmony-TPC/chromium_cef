@@ -6,9 +6,12 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_EXT_H_
 #pragma once
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "cef/include/cef_base.h"
 #include "cef/libcef/browser/browser_contents_delegate.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_FAVICON)
 #include "ohos_cef_ext/libcef/browser/arkweb_icon_helper_ext.h"

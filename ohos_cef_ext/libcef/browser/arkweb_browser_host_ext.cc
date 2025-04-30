@@ -21,7 +21,6 @@
 #include <tuple>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/logging.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 #include "cef/libcef/browser/browser_platform_delegate.h"
@@ -49,6 +48,11 @@
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
 #include "cef/ohos_cef_ext/libcef/browser/javascript/oh_javascript_injector.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
@@ -64,7 +68,7 @@
 #if BUILDFLAG(IS_ARKWEB)
 #include "libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
 #endif
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_received_slice_helper_ext.h"
 #include "components/download/public/common/download_item.h"
 #include "components/search_engines/template_url_data.h"

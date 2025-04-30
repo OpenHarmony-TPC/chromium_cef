@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
@@ -18,6 +17,11 @@
 #include "content/public/browser/touch_selection_controller_client_manager.h"
 #include "ui/touch_selection/touch_selection_controller.h"
 #include "ui/touch_selection/touch_selection_menu_runner.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "cef/include/cef_context_menu_handler.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
