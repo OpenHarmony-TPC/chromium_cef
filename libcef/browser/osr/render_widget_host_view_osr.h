@@ -261,6 +261,7 @@ class CefRenderWidgetHostViewOSR
   void OnDidNavigateMainFrameToNewPage() override;
   void AdvanceFocusForIME(int focusType);
   void ScrollBy(float delta_x, float delta_y);
+  void KeyboardReDispatch(const content::NativeWebKeyboardEvent& event, bool isUsed) override;
 #endif
 
 #if defined(OHOS_COMPOSITE_RENDER)
