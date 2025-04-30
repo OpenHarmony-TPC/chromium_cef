@@ -1398,7 +1398,8 @@ render_handler_get_device_pixel_size(struct _cef_render_handler_t* self,
 void CEF_CALLBACK
 render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
                                       int64_t accessibilityId,
-                                      int32_t eventType) {
+                                      int32_t eventType,
+                                      const cef_string_t* argument) {
   shutdown_checker::AssertNotShutdown();
 
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
@@ -1409,7 +1410,8 @@ render_handler_on_accessibility_event(struct _cef_render_handler_t* self,
   }
 
   // Execute
-  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(accessibilityId, eventType);
+  CefRenderHandlerCppToC::Get(self)->OnAccessibilityEvent(
+      accessibilityId, eventType, CefString(argument));
 }
 
 void CEF_CALLBACK
