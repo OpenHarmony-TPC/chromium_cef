@@ -2193,7 +2193,6 @@ void CefRenderWidgetHostViewOSR::OnScreenInfoChanged() {
 #if BUILDFLAG(IS_OHOS)
 void CefRenderWidgetHostViewOSR::OnScreenInfoChangedV2() {
   TRACE_EVENT0("cef", "CefRenderWidgetHostViewOSR::OnScreenInfoChangedV2");
-  SetViewBounds();
   if (!render_widget_host_) {
     return;
   }
