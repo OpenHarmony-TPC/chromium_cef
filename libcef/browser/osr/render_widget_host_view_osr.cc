@@ -1462,11 +1462,14 @@ void CefRenderWidgetHostViewOSR::SendInternalBeginFrame() {
   }
 }
 
-void CefRenderWidgetHostViewOSR::SendAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {
+void CefRenderWidgetHostViewOSR::SendAccessibilityEvent(
+    int64_t accessibilityId,
+    int32_t eventType,
+    const std::string &argument) {
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-  handler->OnAccessibilityEvent(accessibilityId, eventType);
+  handler->OnAccessibilityEvent(accessibilityId, eventType, argument);
 }
 
 void CefRenderWidgetHostViewOSR::SetDrawRect(const gfx::Rect& rect) {

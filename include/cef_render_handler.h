@@ -478,7 +478,7 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   /// Called when an accessibility event occurs.
   ///
   /*--cef()--*/
-  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) {}
+  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType, const CefString& argument) {}
 
   ///
   /// Get the visible area relative to the web.

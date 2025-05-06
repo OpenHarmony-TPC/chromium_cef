@@ -1167,7 +1167,8 @@ void CefRenderHandlerCToCpp::GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
 
 NO_SANITIZE("cfi-icall")
 void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
-                                                  int32_t eventType) {
+                                                  int32_t eventType,
+                                                  const CefString& argument) {
   shutdown_checker::AssertNotShutdown();
 
   cef_render_handler_t* _struct = GetStruct();
@@ -1178,7 +1179,8 @@ void CefRenderHandlerCToCpp::OnAccessibilityEvent(int64_t accessibilityId,
   // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
 
   // Execute
-  _struct->on_accessibility_event(_struct, accessibilityId, eventType);
+  _struct->on_accessibility_event(_struct, accessibilityId, eventType,
+                                  argument.GetStruct());
 }
 
 NO_SANITIZE("cfi-icall")

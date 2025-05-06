@@ -146,7 +146,9 @@ class CefRenderHandlerCToCpp
   void StartVibraFeedback(const std::string& vibratorType) override;
   void GetDevicePixelSize(CefRefPtr<CefBrowser> browser,
                           CefSize& size) override;
-  void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType) override;
+  void OnAccessibilityEvent(int64_t accessibilityId,
+                            int32_t eventType,
+                            const CefString& argument) override;
   void GetVisibleRectToWeb(int& visibleX, int& visibleY, int& visibleWidth, int& visibleHeight) override;
   void OnScrollStart(CefRefPtr<CefBrowser> browser,
                          const float x,

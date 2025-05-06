@@ -481,7 +481,8 @@ typedef struct _cef_render_handler_t {
   ///
   void(CEF_CALLBACK* on_accessibility_event)(struct _cef_render_handler_t* self,
                                              int64_t accessibilityId,
-                                             int32_t eventType);
+                                             int32_t eventType,
+                                             const cef_string_t* argument);
 
   ///
   /// Get the visible area relative to the web.
