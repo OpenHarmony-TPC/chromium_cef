@@ -9,7 +9,6 @@
 #include <set>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
 #include "cef/libcef/browser/osr/touch_handle_drawable_osr.h"
@@ -23,6 +22,11 @@
 #include "ui/gfx/geometry/point_conversions.h"
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_editing_controller.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
 #endif

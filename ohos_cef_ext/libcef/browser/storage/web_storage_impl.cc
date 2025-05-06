@@ -6,7 +6,6 @@
 
 #include <sstream>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "content/public/browser/browser_context.h"
@@ -15,6 +14,10 @@
 #include "third_party/blink/public/common/storage_key/storage_key.h"
 #include "third_party/blink/public/mojom/quota/quota_types.mojom.h"
 #include "url/gurl.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
 #include "base/task/bind_post_task.h"

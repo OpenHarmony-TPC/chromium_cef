@@ -7,7 +7,6 @@
 #include <memory>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/context.h"
@@ -41,6 +40,10 @@
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
 #include "ui/base/page_transition_types.h"
 #include "url/origin.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "cef/ohos_cef_ext/include/arkweb_load_handler_ext.h"

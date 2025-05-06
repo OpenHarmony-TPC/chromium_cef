@@ -5,11 +5,14 @@
 #include "cef/libcef/browser/prefs/renderer_prefs.h"
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "cef/libcef/common/cef_switches.h"
 #include "content/public/common/content_switches.h"
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"

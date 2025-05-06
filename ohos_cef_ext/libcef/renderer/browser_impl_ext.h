@@ -14,13 +14,16 @@
 #include <vector>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
 #include "cef/libcef/renderer/browser_impl.h"
 #include "cef/libcef/renderer/frame_impl.h"
 #include "third_party/blink/public/common/tokens/tokens.h"
 #include "third_party/blink/public/web/web_view_observer.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 class CefBrowserImplOrigin;
 

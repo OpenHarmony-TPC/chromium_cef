@@ -6,7 +6,6 @@
 
 #include <memory>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/threading/thread_restrictions.h"
 #include "cef/libcef/browser/prefs/browser_prefs.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -18,6 +17,10 @@
 #include "chrome/browser/profiles/off_the_record_profile_impl.h"
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 namespace {
 

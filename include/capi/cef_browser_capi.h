@@ -41,7 +41,6 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/capi/cef_base_capi.h"
 #include "include/capi/cef_devtools_message_observer_capi.h"
 #include "include/capi/cef_drag_data_capi.h"
@@ -50,6 +49,10 @@
 #include "include/capi/cef_navigation_entry_capi.h"
 #include "include/capi/cef_registration_capi.h"
 #include "include/capi/cef_request_context_capi.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_PRECOMPILE)
 #include "include/internal/cef_string_map.h"

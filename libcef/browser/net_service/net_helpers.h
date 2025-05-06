@@ -6,14 +6,18 @@
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_NET_HELPERS_H_
 
 #include "arkweb/build/features/features.h"
+#include "build/build_config.h"
 
 #if BUILDFLAG(ARKWEB_CUSTOM_DNS)
 #include <map>
 #include <vector>
 #endif
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "net/dns/public/secure_dns_mode.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 #include "cef/include/cef_download_handler.h"
@@ -86,7 +90,7 @@ class NETHELPERS_EXPORT NetHelpers {
   static int doh_mode;
   static std::string doh_config;
 #endif
-#if BUILDFLAG(ARKWEB_EXT_NETWORK_CONNECTION)
+#if BUILDFLAG(ARKWEB_EX_NETWORK_CONNECTION)
   static int network;
 #endif
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)

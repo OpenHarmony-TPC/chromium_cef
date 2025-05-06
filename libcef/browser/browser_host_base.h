@@ -7,7 +7,6 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
@@ -28,6 +27,11 @@
 #include "cef/libcef/features/features.h"
 #include "ohos_cef_ext/libcef/browser/arkweb_browser_contents_delegate_ext.h"
 #include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_PERMISSION)
 #include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
 #endif

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
@@ -37,6 +36,11 @@
 #include "cef/libcef/browser/media_stream_registrar.h"
 #include "cef/libcef/browser/request_context_impl.h"
 #include "cef/libcef/features/features.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 #include "cef/ohos_cef_ext/include/arkweb_browser_ext.h"
 #endif

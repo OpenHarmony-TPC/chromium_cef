@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback_helpers.h"
@@ -62,6 +61,11 @@
 #include "libcef/browser/alloy/render_process_state_handler.h"
 #include "net/base/net_errors.h"
 #include "ui/events/base_event_utils.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)

@@ -18,13 +18,16 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/cef_client.h"
 #include "include/cef_form_handler.h"
 #include "include/cef_media_handler.h"
 #include "include/cef_permission_request.h"
 #include "include/cef_web_client_extension_handler.h"
 #include "include/cef_web_extension_api_handler.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
 #include "include/cef_custom_media_info.h"

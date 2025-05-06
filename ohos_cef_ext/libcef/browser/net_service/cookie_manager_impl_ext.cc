@@ -10,7 +10,6 @@
 #include "libcef/browser/net_service/cookie_manager_impl_ext.h"
 
 #include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
@@ -39,6 +38,10 @@
 #include "services/network/public/mojom/cookie_manager.mojom.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "url/gurl.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "base/command_line.h"

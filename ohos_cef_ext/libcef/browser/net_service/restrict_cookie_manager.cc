@@ -9,7 +9,6 @@
 #include <utility>
 #include <vector>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/ptr_util.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
@@ -18,6 +17,10 @@
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
 #include "net_helpers.h"
 #include "url/gurl.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "base/command_line.h"

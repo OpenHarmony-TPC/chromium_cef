@@ -12,7 +12,6 @@
 #include "libcef/browser/prefs/renderer_prefs.h"
 #include "libcef/common/cef_switches.h"
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_number_conversions.h"
@@ -66,6 +65,10 @@
 #include "net/http/http_util.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/ui_base_switches.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(IS_WIN)
 #include "components/os_crypt/sync/os_crypt.h"
