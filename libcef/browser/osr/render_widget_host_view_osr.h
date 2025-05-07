@@ -820,11 +820,11 @@ class CefRenderWidgetHostViewOSR
   bool is_scrolling_ = false;
 #endif
   int32_t needFocusViewport_ = 0;
-  base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 #if BUILDFLAG(IS_OHOS)
   base::CancelableOnceClosure setReleaseResizeHoldDelayedTask_;
   gfx::Size current_size_in_pixel_ = {0, 0};
 #endif
+  base::WeakPtrFactory<CefRenderWidgetHostViewOSR> weak_ptr_factory_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_RENDER_WIDGET_HOST_VIEW_OSR_H_
