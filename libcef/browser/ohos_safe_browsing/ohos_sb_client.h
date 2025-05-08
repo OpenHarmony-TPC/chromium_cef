@@ -26,6 +26,7 @@
 
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_threat_type.h"
+#include "base/memory/raw_ptr.h"
 
 namespace ohos_safe_browsing {
 
@@ -111,7 +112,7 @@ class OhosSbClient : public content::WebContentsObserver {
   
   void NotifySafeBrowsingCheckResult(OHSBThreatType threat_type);
 
-  PrefService* prefs_;
+  raw_ptr<PrefService> prefs_;
   bool incognito_mode_{false};
 };
 
