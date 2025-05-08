@@ -13,6 +13,7 @@
 #include "content/browser/renderer_host/navigation_entry_impl.h"
 
 #include "url/gurl.h"
+#include "base/memory/raw_ptr.h"
 
 namespace content {
 class WebContents;
@@ -45,12 +46,12 @@ class SbControllerClient : public SecurityInterstitialControllerClient {
 
 protected:
   const std::string GetExtendedReportingPrefName() const override;
-  content::WebContents* web_contents_;
+  raw_ptr<content::WebContents> web_contents_;
 
 private:
   static std::unique_ptr<MetricsHelper> GetMetricsHelper(const GURL& url);
 
-  PrefService* prefs_;
+  raw_ptr<PrefService> prefs_;
   const std::string app_locale_;
   GURL url_;
   bool incognito_mode_{false};
