@@ -108,6 +108,9 @@ class OhosHttpsUpgradesInterceptor : public content::URLLoaderRequestInterceptor
   // Used to access the WebContents for the navigation.
   int frame_tree_node_id_;
 
+  // URLs seen by the interceptor, used to detect a redirect loop.
+  std::set<GURL> urls_seen_;
+
   // Receiver for the URLLoader interface.
   mojo::Receiver<network::mojom::URLLoader> receiver_{this};
 
