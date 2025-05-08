@@ -236,6 +236,16 @@ void OhosHttpsUpgradesInterceptor::MaybeCreateLoaderOnHstsQueryCompleted(
     std::move(callback).Run({});
     return;
   }
+  
+  // For non-strict modes, skip attempting to upgrade URLs with non-default
+  // ports, as these are unlikely to succeed (the server needs to support HTTP
+  // and HTTPS on the same port, or the URL needs to be incorrectly have an
+  // HTTP scheme but with the server's HTTPS port).
+  if (tentative_resource_request.url.has_port()) {
+    std::move(callback).Run({});
+    return;
+  }
+
   StatefulSSLHostStateDelegate* state =
           StatefulSSLHostStateDelegateFactory::GetForProfile(profile);
   auto* storage_partition =
@@ -286,6 +296,32 @@ void OhosHttpsUpgradesInterceptor::MaybeCreateLoaderOnHstsQueryCompleted(
 
     return;
   }
+
+  // If the request URL is in the set of URLs that HttpsUpgradesInterceptor has
+  // already processed, skip upgrading and trigger fallback to HTTP to avoid a
+  // redirect loop.
+  if (base::Contains(urls_seen_, tentative_resource_request.url)) {
+     if (state) {
+        state->AllowHttpForHost(
+            tab_helper->fallback_url().host(),
+            web_contents->GetPrimaryMainFrame()->GetStoragePartition());
+      }
+    tab_helper->set_is_navigation_upgraded(false);
+    tab_helper->set_is_navigation_fallback(true);
+    tab_helper->add_failed_upgrade(tab_helper->fallback_url());
+
+    // Note: If `fallback_url` is the same as the request URL, this
+    // could skip doing an additional redirect, but then the NavigationThrottle
+    // doesn't have the ability to act on this navigation request and apply
+    // the HTTPS-First Mode interstitial. If we add a better way to "fast fail"
+    // navigations directly to the interstitial, then we could probably use that
+    // here as well as an optimization.
+    std::move(callback).Run(CreateRedirectHandler(tab_helper->fallback_url()));
+    return;
+  }
+
+  // Not a redirect loop. Add the current request URL to the set of URLs seen.
+  urls_seen_.insert(tentative_resource_request.url);
 
   // Mark navigation as upgraded.
   tab_helper->set_is_navigation_upgraded(true);
