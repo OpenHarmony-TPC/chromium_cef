@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include "base/memory/raw_ptr.h"
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
 #include "ohos_nweb/src/capi/nweb_icon_size.h"
@@ -90,7 +91,7 @@ class IconHelper : public virtual CefBaseRefCounted {
   GURL last_page_url_;
 #endif  // defined(OHOS_FAVICON)
 
-  content::WebContents* web_contents_ = nullptr;
+  raw_ptr<content::WebContents> web_contents_ = nullptr;
   CefRefPtr<CefDisplayHandler> handler_ = nullptr;
   CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
