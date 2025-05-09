@@ -185,10 +185,10 @@ class OhAutofillManager : public AutofillManager {
 
   void StartNewLoggingSession();
   bool has_server_prediction_ = false;
-  base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
   bool is_show_ = false;
   bool is_password_popup_show_ = false;
   std::unique_ptr<FormData> form_;
+  base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
 };
 
 }  // namespace autofill
