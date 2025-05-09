@@ -2917,7 +2917,6 @@ void CefRenderWidgetHostViewOSR::OnGestureEvent(
     return;
   }
 #if defined(OHOS_INPUT_EVENTS)
-  SetFocusOnGestureEvent(gesture);
   FilterScrollEventImpl(gesture);
 #endif
 #if BUILDFLAG(IS_OHOS) && defined(OHOS_PERFORMANCE_JITTER)
@@ -3907,30 +3906,6 @@ void CefRenderWidgetHostViewOSR::FilterScrollEventImpl(
     if (browser_impl_) {
       browser_impl_->SetIsFling(true);
     }
-  }
-}
-
-void CefRenderWidgetHostViewOSR::SetFocusOnGestureEvent(
-    const ui::GestureEventData& gesture) {
-  blink::WebGestureEvent web_event =
-      ui::CreateWebGestureEventFromGestureEventData(gesture);
-  if (!browser_impl_ || !browser_impl_->client()) {
-    LOG(ERROR) << "get browser_impl client failed.";
-    return;
-  }
-  CefRefPtr<CefFocusHandler> handler =
-      browser_impl_->client()->GetFocusHandler();
-  if (!handler) {
-    LOG(ERROR) << "get handler failed.";
-    return;
-  }
-  if (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap ||
-      web_event.GetType() == blink::WebInputEvent::Type::kGestureLongPress) {
-    LOG(INFO) << "set focus on the gesture event of "
-              << (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap
-                      ? "gestureTap"
-                      : "gestureLongPress");
-    handler->OnSetFocus(browser_impl_.get(), FOCUS_SOURCE_GESTURE);
   }
 }
 #endif  // defined(OHOS_INPUT_EVENTS)

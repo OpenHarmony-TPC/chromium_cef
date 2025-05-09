@@ -2308,12 +2308,6 @@ typedef enum {
   /// The source is a system-generated focus event.
   ///
   FOCUS_SOURCE_SYSTEM,
-#if defined(OHOS_INPUT_EVENTS)
-  ///
-  /// The source is a user gesture focus event.
-  ///
-  FOCUS_SOURCE_GESTURE,
-#endif
 } cef_focus_source_t;
 
 ///
