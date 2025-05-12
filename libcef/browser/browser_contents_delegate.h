@@ -297,12 +297,13 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   base::TimeTicks last_user_escape_time_;
 
   content::WebContents* tab_with_exclusive_access_ = nullptr;
-
-  base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
 #endif
 
 #ifdef OHOS_NETWORK_LOAD
   bool observe_need_report_title_ = false;
+#endif
+#if BUILDFLAG(IS_OHOS)
+  base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
 #endif
 };
 
