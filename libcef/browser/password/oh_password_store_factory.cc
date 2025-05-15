@@ -17,12 +17,13 @@
 #if defined(OHOS_EX_PASSWORD)
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/logging.h"
 #endif
 
 using password_manager::PasswordStore;
 
 #if defined(OHOS_EX_PASSWORD)
-constexpr base::FilePath::CharType kNWebMigrateDir[] = FILE_PATH_LITERAL("migrate");
+constexpr base::FilePath::CharType kNWebMigrateDir[] = FILE_PATH_LITERAL("migrate_bak");
 #endif
 
 // static
@@ -66,6 +67,8 @@ scoped_refptr<PasswordStore> OhPasswordStoreFactory::BuildServiceInstanceFor(
   base::FilePath migrate_path = db_path.Append(FILE_PATH_LITERAL(kNWebMigrateDir));
   if (base::PathExists(migrate_path)) {
     db_path = migrate_path;
+  } else {
+    LOG(WARNING) << "[Autofill] create db, migrate_bak dir is not exist.";
   }
 #endif
 
