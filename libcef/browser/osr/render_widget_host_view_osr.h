@@ -58,7 +58,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_touch_selection_controller_client_osr_ext.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 #include "arkweb/chromium_ext/content/browser/ohos/overscroll_controller_ohos.h"
 #include "arkweb/chromium_ext/ui/ohos/overscroll_refresh_handler.h"
 #endif
@@ -116,7 +116,7 @@ class CefRenderWidgetHostViewOSR
       public ui::CompositorDelegate,
       public content::TextInputManager::Observer,
       public ui::GestureProviderClient
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
     ,
       public ui::OverscrollRefreshHandler
 #endif
@@ -639,7 +639,7 @@ class CefRenderWidgetHostViewOSR
   bool is_fling_ = false;
   bool has_touch_point_ = false;
 #endif
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   std::unique_ptr<content::OverscrollControllerOHOS> overscroll_controller_;
   virtual void CreateOverscrollControllerIfPossible() {}
   virtual void OnFocusInternal() {}

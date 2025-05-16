@@ -265,7 +265,7 @@ void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 void CefWebContentsViewOSR::DidStopRefresh() {
   if (ArkWebRenderWidgetHostViewOSRExt* view = GetView()) {
     view->AsArkWebRenderWidgetHostViewOSRExt()->DidStopRefresh();

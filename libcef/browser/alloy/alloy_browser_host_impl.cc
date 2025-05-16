@@ -37,7 +37,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
 #endif
 
-#include "arkweb/build/features/features.h"
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "chrome/common/webui_url_constants.h"
@@ -1451,7 +1450,9 @@ void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
     LOG(ERROR) << "The mouse wheel event can no longer be zoomed in or out.";
     return;
   }
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   SetBrowserZoomLevel(tempZoomFactor);
+#endif // BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
 #else
   zoom::PageZoom::Zoom(
       web_contents(), zoom_in ? content::PAGE_ZOOM_IN : content::PAGE_ZOOM_OUT);

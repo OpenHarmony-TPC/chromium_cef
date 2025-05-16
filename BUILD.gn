@@ -93,7 +93,6 @@
 # https://chromium.googlesource.com/chromium/src/+/master/tools/gn/docs/language.md
 #
 
-import("//arkweb/ohos_nweb_ex/build/features/features.gni")
 import("//base/allocator/allocator.gni")
 import("//build/config/features.gni")
 import("//build/config/locales.gni")
@@ -119,7 +118,11 @@ import("//ui/gl/features.gni")
 import("//v8/gni/v8.gni")
 import("//cef/ohos_cef_ext/cef_arkweb_extension.gni")
 import("//arkweb/build/features/features.gni")
-import("//arkweb/ohos_nweb_ex/build/features/features.gni")
+
+if (defined(is_arkweb_ext) && is_arkweb_ext) {
+  import("//arkweb/ohos_nweb_ex/build/features/features.gni")
+}
+
 if (is_clang) {
   import("//build/config/clang/clang.gni")
 }
@@ -888,18 +891,17 @@ source_set("libcef_static") {
     "//chrome/app/chrome_main_delegate.h",
   ]
 
-#if BUILDFLAG(ARKWEB_AUTOFILL)
-  sources += [
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.cc",
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.h",
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.cc",
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.h",
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.cc",
-    "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h",
-  ]
-#endif // BUILDFLAG(ARKWEB_AUTOFILL)
+  if (arkweb_autofill) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.h",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.h",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.cc",
+      "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h",
+    ]
+  }
 
-#if defined(ARKWEB_DEVTOOLS)
   if (defined(arkweb_devtools) && arkweb_devtools) {
     sources += [
       "include/cef_devtools_message_handler_delegate.h",
@@ -918,7 +920,6 @@ source_set("libcef_static") {
       "libcef/browser/net/scheme_handler.h",
     ]
   }
-#endif // ARKWEB_DEVTOOLS
 
   configs += [
     "libcef/features:config",
@@ -1061,42 +1062,39 @@ source_set("libcef_static") {
   ]
   deps += [ "//components/js_injection/browser" ]
 
-#if defined(ARKWEB_CUSTOM_VIDEO_PLAYER)
   if (defined(arkweb_custom_video_player) && arkweb_custom_video_player) {
     sources += [
       "ohos_cef_ext/libcef/browser/alloy/custom_media_player_proxy.cc",
       "ohos_cef_ext/libcef/browser/alloy/custom_media_player_proxy.h",
     ]
   }
-#endif // ARKWEB_CUSTOM_VIDEO_PLAYER
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  sources += [
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor.cc",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor.h",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.cc",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.h",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.cc",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.h",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.cc",
-    "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.h",
-    "ohos_cef_ext/libcef/browser/predictors/navigation_id.cc",
-    "ohos_cef_ext/libcef/browser/predictors/navigation_id.h",
-    "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.cc",
-    "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.h",
-    "ohos_cef_ext/libcef/browser/predictors/predictor_database.cc",
-    "ohos_cef_ext/libcef/browser/predictors/predictor_database.h",
-    "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.cc",
-    "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.h",
-    "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.cc",
-    "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.h",
-    "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.cc",
-    "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.h",
-  ]
-  deps += [ "//components/no_state_prefetch/renderer" ]
-#endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+  if (defined(arkweb_no_state_prefetch) && arkweb_no_state_prefetch) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_config.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_factory.h",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.cc",
+      "ohos_cef_ext/libcef/browser/predictors/loading_predictor_tab_helper.h",
+      "ohos_cef_ext/libcef/browser/predictors/navigation_id.cc",
+      "ohos_cef_ext/libcef/browser/predictors/navigation_id.h",
+      "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.cc",
+      "ohos_cef_ext/libcef/browser/predictors/preconnect_manager.h",
+      "ohos_cef_ext/libcef/browser/predictors/predictor_database.cc",
+      "ohos_cef_ext/libcef/browser/predictors/predictor_database.h",
+      "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.cc",
+      "ohos_cef_ext/libcef/browser/predictors/proxy_lookup_client_impl.h",
+      "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.cc",
+      "ohos_cef_ext/libcef/browser/predictors/resolve_host_client_impl.h",
+      "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.cc",
+      "ohos_cef_ext/libcef/browser/predictors/resource_prefetch_predictor.h",
+    ]
+    deps += [ "//components/no_state_prefetch/renderer" ]
+  }
 
-  #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   if (defined(arkweb_ext_exception_list) && arkweb_ext_exception_list) {
     sources += [
       "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer_factory.h",
@@ -1105,7 +1103,6 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/content_settings/oh_host_content_settings_observer.cc",
     ]
   }
-  #endif
 
 
   if (defined(arkweb_nweb_ex) && arkweb_nweb_ex) {
@@ -1124,16 +1121,13 @@ source_set("libcef_static") {
     cflags = [ "-DOHOS_FUZZ_COMPILE_ERROR_FIX" ]
   }
 
-#if BUILDFLAG(ARKWEB_NOTIFICATION)
   if (defined(arkweb_notification) && arkweb_notification) {
     sources += [ 
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.cc",
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.h",
     ]
   } 
-#endif
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
     sources += [
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
@@ -1176,7 +1170,6 @@ source_set("libcef_static") {
       "//ohos_nweb:nweb_config",
     ]
   }
-#endif
 
   if (arkweb_itp) {
     if (!is_arkweb_ext) {
@@ -1319,7 +1312,7 @@ source_set("libcef_static") {
     ]
   }
 
-  if (arkweb_ext_pull_to_refresh) {
+  if (defined(arkweb_pull_to_refresh) && arkweb_pull_to_refresh) {
     deps += ["//arkweb/chromium_ext/ui/ohos"]
   }
 

@@ -677,7 +677,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
     }
   }
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (overscroll_controller_) {
     overscroll_controller_->Enable();
   }
@@ -723,7 +723,7 @@ void CefRenderWidgetHostViewOSR::Hide() {
   }
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (overscroll_controller_) {
     overscroll_controller_->Enable();
   }
@@ -1817,7 +1817,7 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
   }
 
   if (surface_id_updated) {
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
     delegated_frame_host_->EmbedSurface(GetCurrentLocalSurfaceId(),
                                         GetPhysicalViewBounds().size(),
                                         deadline_policy);
@@ -2335,7 +2335,7 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
 
     widget->SetActive(false);
     widget->LostFocus();
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
     LostFocusInternal();
 #endif
   }
@@ -2789,7 +2789,7 @@ bool CefRenderWidgetHostViewOSR::SetVisibleViewportSize() {
 gfx::Size CefRenderWidgetHostViewOSR::GetPhysicalVisibleViewportSize() {
   if (current_visible_view_bounds_.width() == 0 &&
       current_visible_view_bounds_.height() == 0) {
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
     return GetPhysicalViewBounds().size();
 #else
     return GetViewBounds().size();
@@ -2804,7 +2804,7 @@ gfx::Size CefRenderWidgetHostViewOSR::GetPhysicalVisibleViewportSize() {
 
 gfx::Size CefRenderWidgetHostViewOSR::GetVisibleViewportSize() {
   gfx::Size bounds = GetPhysicalVisibleViewportSize();
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   bounds.set_height(bounds.height() - GetShrinkViewportHeight());
 #endif
   return bounds;
@@ -2833,7 +2833,7 @@ bool CefRenderWidgetHostViewOSR::SetRootLayerSize(bool force) {
     return false;
   }
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   GetRootLayer()->SetBounds(gfx::Rect(GetPhysicalViewBounds().size()));
 #else
   GetRootLayer()->SetBounds(gfx::Rect(GetViewBounds().size()));

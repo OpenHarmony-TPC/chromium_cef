@@ -134,13 +134,13 @@ int CefDownloadItemImplExt::GetNWebId() {
 }
 
 CefRefPtr<CefValue> CefDownloadItemImplExt::GetContentDispositionCefValue() {
-#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
   CefRefPtr<CefValue> data = CefValue::Create();
   data->SetStdString(const_value().GetContentDisposition());
   return data;
 #else
-  return CefRefPtr<CefValue>(new CefValue());
+  return CefValue::Create();
 #endif  //  ARKWEB_EXT_DOWNLOAD
 }
 

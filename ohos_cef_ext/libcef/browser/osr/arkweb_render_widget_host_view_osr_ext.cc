@@ -107,7 +107,7 @@ const int32_t DEFAULT_PINCH_FINGER = 2;
 #include "cef/libcef/browser/image_impl.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 #include "arkweb/chromium_ext/content/browser/ohos/overscroll_controller_ohos.h"
 #include "arkweb/chromium_ext/ui/ohos/overscroll_refresh.h"
 #include "components/security_interstitials/content/security_interstitial_tab_helper.h"
@@ -183,7 +183,7 @@ ArkWebRenderWidgetHostViewOSRExt::ArkWebRenderWidgetHostViewOSRExt(
   OnTopControlsHeightChanged();
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   CreateOverscrollControllerIfPossible();
 #endif
 }
@@ -482,7 +482,7 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTextSelectionChanged(
 void ArkWebRenderWidgetHostViewOSRExt::
     OnRenderFrameMetadataChangedBeforeActivation(
         const cc::RenderFrameMetadata& metadata) {
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (overscroll_controller_) {
     overscroll_controller_->OnFrameMetadataUpdated(
         metadata.page_scale_factor, metadata.device_scale_factor,
@@ -851,7 +851,7 @@ void ArkWebRenderWidgetHostViewOSRExt::DidOverscroll(
     handler->AsArkWebRenderHandler()->OnOverScrollFlingVelocity(
         browser_impl_.get(), fling_velocity_x, fling_velocity_y, is_fling);
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
     if (overscroll_controller_) {
       overscroll_controller_->OnOverscrolled(params);
     }
@@ -931,7 +931,7 @@ ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (FilterInputEventForPullToRefresh(input_event)) {
     return blink::mojom::InputEventResultState::kConsumed;
   }
@@ -1419,7 +1419,7 @@ void ArkWebRenderWidgetHostViewOSRExt::ChangeVisibilityOfQuickMenu() {
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 bool ArkWebRenderWidgetHostViewOSRExt::FilterInputEventForPullToRefresh(
     const blink::WebInputEvent& input_event) {
   if (overscroll_controller_ &&
@@ -1592,7 +1592,7 @@ void ArkWebRenderWidgetHostViewOSRExt::DidStopRefresh() {
     overscroll_controller_->DidStopRefresh();
   }
 }
-#endif  // BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#endif  // BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 
 #if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
 void ArkWebRenderWidgetHostViewOSRExt::TransformPointToRootSurface(
