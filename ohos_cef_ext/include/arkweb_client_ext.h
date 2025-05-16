@@ -153,7 +153,7 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   }
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   ///
   /// Notify the action of pull to refresh.
   ///

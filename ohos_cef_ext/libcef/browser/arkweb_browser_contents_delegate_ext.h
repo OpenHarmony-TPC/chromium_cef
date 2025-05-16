@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_EXT_H_
 #pragma once
 
+#include "build/build_config.h"
 #include "cef/include/cef_base.h"
 #include "cef/libcef/browser/browser_contents_delegate.h"
 

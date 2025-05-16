@@ -36,11 +36,6 @@
 #include "cef/libcef/browser/media_stream_registrar.h"
 #include "cef/libcef/browser/request_context_impl.h"
 #include "cef/libcef/features/features.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 #include "cef/ohos_cef_ext/include/arkweb_browser_ext.h"
 #endif
@@ -49,6 +44,10 @@
 #include "cef/include/cef_image.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "components/download/public/common/download_item_impl.h"
@@ -197,7 +196,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                       int32_t h5_object_id,
                       const CefString& h5_method_name,
                       const std::vector<CefRefPtr<CefValue>>& args) override;
-#if BUILDFLAG(ARKWEB_NWEB_EX)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   bool CanStoreWebArchive() override;
 #endif
   void ReloadOriginalUrl() override;
@@ -252,8 +251,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetFitContentMode(int mode) override;
   bool GetPendingSizeStatus() override;
 
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   void SetBrowserZoomLevel(double zoom_factor) override;
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   void OnZoomChanged(
       const zoom::ZoomController::ZoomChangedEventData& data) override;
   void OnZoomControllerDestroyed(
@@ -425,10 +424,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_TERMINATE_RENDER)
   bool TerminateRenderProcess() override;
 #endif
-  #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   void ShowFreeCopyMenu() override;
   bool ShouldShowFreeCopyMenu() override;
-  #endif
   int GetNWebId() override;
 #if BUILDFLAG(ARKWEB_ITP)
   void EnableIntelligentTrackingPrevention(bool enable) override;

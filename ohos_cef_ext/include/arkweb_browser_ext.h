@@ -199,10 +199,12 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   virtual void ReloadOriginalUrl() = 0;
 
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   ///
-  /// Can save current page as a archive.
+  /// Can save current page as an archive.
   ///
   virtual bool CanStoreWebArchive() = 0;
+#endif
 
   ///
   /// Set user agent for current page.
@@ -289,6 +291,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   virtual int GetSecurityLevel() = 0;
 
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
   /// Get the shrink viewport height.
   ///
@@ -303,6 +306,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Get the shrink viewport height.
   ///
   virtual void ClearForwardList() = 0;
+#endif
 
   ///
   /// Enable the ability to intelligent tracking prevention, default disabled.
@@ -867,6 +871,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual int GetShrinkViewportHeight() = 0;
 
+#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
   /// Get the shrink viewport height.
   ///
@@ -881,6 +886,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get the shrink viewport height.
   ///
   virtual void ClearForwardList() = 0;
+#endif
 
   ///
   /// Set background print enable.
