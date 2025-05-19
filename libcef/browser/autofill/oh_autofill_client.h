@@ -1,6 +1,17 @@
-// Copyright 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #ifndef CEF_LIBCEF_BROWSER_AUTOFILL_OH_AUTOFILL_CLIENT_H_
 #define CEF_LIBCEF_BROWSER_AUTOFILL_OH_AUTOFILL_CLIENT_H_
@@ -14,20 +25,18 @@
 #include "base/memory/raw_ptr.h"
 #include "chrome/browser/ui/autofill/autofill_popup_controller_impl.h"
 #include "components/autofill/content/browser/content_autofill_client.h"
+#include "components/autofill/content/browser/content_autofill_driver.h"
+#include "components/autofill/core/browser/autocomplete_history_manager.h"
+#include "components/autofill/core/browser/autofill_trigger_details.h"
 #include "components/autofill/core/browser/payments/legal_message_line.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 #include "include/cef_browser.h"
 
-#include "libcef/browser/autofill/oh_autofill_manager.h"
-
 namespace autofill {
 class AutocompleteHistoryManager;
-class AutofillDriver;
-class AutofillPopupDelegate;
-struct CardUnmaskPromptOptions;
-class CreditCard;
-class FormStructure;
+class AutofillSuggestionDelegate;
+class OhAutofillManager;
 class PersonalDataManager;
 class StrikeDatabase;
 }  // namespace autofill
@@ -44,7 +53,6 @@ namespace syncer {
 class SyncService;
 }
 
-class PersonalDataManager;
 class PrefService;
 
 namespace autofill {
@@ -56,8 +64,7 @@ namespace autofill {
 // context, we cannot enable this feature via UserPrefs. Rather, we always
 // keep the feature enabled at the pref service, and control it via
 // the delegates.
-class OhAutofillClient : public autofill::ContentAutofillClient,
-                         public content::WebContentsObserver {
+class OhAutofillClient : public autofill::ContentAutofillClient {
  public:
   static OhAutofillClient* FromWebContents(content::WebContents* web_contents) {
     return static_cast<OhAutofillClient*>(
@@ -68,12 +75,13 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   // DriverInitCallback to use:
   // - autofill::BrowserDriverInitHook() (to be used before Android O) or
   // - android_webview::AndroidDriverInitHook() (to be used as of Android O).
-  static void CreateForWebContents(content::WebContents* contents,
-                                   bool use_android_autofill_manager);
+  static void CreateForWebContents(content::WebContents* contents);
   OhAutofillClient(const OhAutofillClient&) = delete;
   OhAutofillClient& operator=(const OhAutofillClient&) = delete;
 
   ~OhAutofillClient() override;
+
+  base::WeakPtr<AutofillClient> GetWeakPtr() override;
 
   void SetSaveFormData(bool enabled);
   bool GetSaveFormData() const;
@@ -84,18 +92,16 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   }
   void FillData(CefRefPtr<CefValue> data);
   bool OnAutofillEvent(const std::string& json_str);
-  bool IsOffTheRecord() override;
+  bool IsOffTheRecord() const override;
   scoped_refptr<network::SharedURLLoaderFactory> GetURLLoaderFactory() override;
-  autofill::AutofillDownloadManager* GetDownloadManager() override;
-  autofill::PersonalDataManager* GetPersonalDataManager() override;
-  autofill::AutocompleteHistoryManager* GetAutocompleteHistoryManager()
-      override;
+  PersonalDataManager* GetPersonalDataManager() override;
+  AutocompleteHistoryManager* GetAutocompleteHistoryManager() override;
   PrefService* GetPrefs() override;
   const PrefService* GetPrefs() const override;
   syncer::SyncService* GetSyncService() override;
   signin::IdentityManager* GetIdentityManager() override;
+  const signin::IdentityManager* GetIdentityManager() const override;
   autofill::FormDataImporter* GetFormDataImporter() override;
-  autofill::payments::PaymentsClient* GetPaymentsClient() override;
   autofill::StrikeDatabase* GetStrikeDatabase() override;
   ukm::UkmRecorder* GetUkmRecorder() override;
   ukm::SourceId GetUkmSourceId() override;
@@ -105,130 +111,74 @@ class OhAutofillClient : public autofill::ContentAutofillClient,
   security_state::SecurityLevel GetSecurityLevelForUmaHistograms() override;
   const translate::LanguageState* GetLanguageState() override;
   translate::TranslateDriver* GetTranslateDriver() override;
-  void ShowAutofillSettings(autofill::PopupType popup_type) override;
-  void ShowUnmaskPrompt(
-      const autofill::CreditCard& card,
-      const autofill::CardUnmaskPromptOptions& card_unmask_prompt_options,
-      base::WeakPtr<autofill::CardUnmaskDelegate> delegate) override;
-  void OnUnmaskVerificationResult(PaymentsRpcResult result) override;
-
-  std::vector<std::string> GetAllowedMerchantsForVirtualCards() override;
-  std::vector<std::string> GetAllowedBinRangesForVirtualCards() override;
-  void ShowLocalCardMigrationDialog(
-      base::OnceClosure show_migration_dialog_closure) override;
-  void ConfirmMigrateLocalCardToCloud(
-      const LegalMessageLines& legal_message_lines,
-      const std::string& user_email,
-      const std::vector<MigratableCreditCard>& migratable_credit_cards,
-      LocalCardMigrationCallback start_migrating_cards_callback) override;
-  void ShowLocalCardMigrationResults(
-      const bool has_server_error,
-      const std::u16string& tip_message,
-      const std::vector<MigratableCreditCard>& migratable_credit_cards,
-      MigrationDeleteCardCallback delete_local_card_callback) override;
-  void ConfirmSaveIBANLocally(const IBAN& iban,
-                              bool should_show_prompt,
-                              LocalSaveIBANPromptCallback callback) override;
-  void ShowWebauthnOfferDialog(
-      WebauthnDialogCallback offer_dialog_callback) override;
-  void ShowWebauthnVerifyPendingDialog(
-      WebauthnDialogCallback verify_pending_dialog_callback) override;
-  void UpdateWebauthnOfferDialogWithError() override;
-  bool CloseWebauthnDialog() override;
-  void ConfirmSaveUpiIdLocally(
-      const std::string& upi_id,
-      base::OnceCallback<void(bool accept)> callback) override;
-  void OfferVirtualCardOptions(
-      const std::vector<CreditCard*>& candidates,
-      base::OnceCallback<void(const std::string&)> callback) override;
-  void ConfirmSaveCreditCardLocally(
-      const autofill::CreditCard& card,
-      SaveCreditCardOptions options,
-      LocalSaveCardPromptCallback callback) override;
-  void ConfirmSaveCreditCardToCloud(
-      const autofill::CreditCard& card,
-      const autofill::LegalMessageLines& legal_message_lines,
-      SaveCreditCardOptions options,
-      UploadSaveCardPromptCallback callback) override;
-  void CreditCardUploadCompleted(bool card_saved) override;
-  void ConfirmCreditCardFillAssist(const autofill::CreditCard& card,
-                                   base::OnceClosure callback) override;
+  void ShowAutofillSettings(autofill::SuggestionType suggestion_type) override;
   void ConfirmSaveAddressProfile(
       const autofill::AutofillProfile& profile,
       const autofill::AutofillProfile* original_profile,
-      SaveAddressProfilePromptOptions options,
+      bool is_migration_to_account,
       AddressProfileSavePromptCallback callback) override;
-  bool HasCreditCardScanFeature() override;
-  void ScanCreditCard(CreditCardScanCallback callback) override;
-  bool IsTouchToFillCreditCardSupported() override;
-  bool ShowTouchToFillCreditCard(
-      base::WeakPtr<autofill::TouchToFillDelegate> delegate,
-      base::span<const autofill::CreditCard> cards_to_suggest) override;
-  void HideTouchToFillCreditCard() override;
-  void ShowAutofillPopup(
+  void ShowEditAddressProfileDialog(
+      const autofill::AutofillProfile& profile,
+      AddressProfileSavePromptCallback on_user_decision_callback) override;
+  void ShowDeleteAddressProfileDialog(
+      const autofill::AutofillProfile& profile,
+      AddressProfileDeleteDialogCallback delete_dialog_callback) override;
+  SuggestionUiSessionId ShowAutofillSuggestions(
       const autofill::AutofillClient::PopupOpenArgs& open_args,
-      base::WeakPtr<autofill::AutofillPopupDelegate> delegate) override;
-  void UpdateAutofillPopupDataListValues(
-      const std::vector<std::u16string>& values,
-      const std::vector<std::u16string>& labels) override;
-  std::vector<autofill::Suggestion> GetPopupSuggestions() const override;
-  void PinPopupView() override;
-  autofill::AutofillClient::PopupOpenArgs GetReopenPopupArgs() const override;
-  void UpdatePopup(const std::vector<autofill::Suggestion>& suggestions,
-                   autofill::PopupType popup_type) override;
-  void HideAutofillPopup(autofill::PopupHidingReason reason) override;
+      base::WeakPtr<autofill::AutofillSuggestionDelegate> delegate) override;
+  void UpdateAutofillDataListValues(
+      base::span<const autofill::SelectOption> datalist) override;
+  void PinAutofillSuggestions() override;
+  void HideAutofillSuggestions(
+      autofill::SuggestionHidingReason reason) override;
   bool IsAutocompleteEnabled() const override;
   bool IsPasswordManagerEnabled() override;
-  void PropagateAutofillPredictions(
-      autofill::AutofillDriver* driver,
-      const std::vector<autofill::FormStructure*>& forms) override;
-  void DidFillOrPreviewForm(autofill::mojom::RendererFormDataAction action,
-                            autofill::AutofillTriggerSource trigger_source,
-                            bool is_refill) override;
-  void DidFillOrPreviewField(const std::u16string& autofilled_value,
-                             const std::u16string& profile_full_name) override;
+  void DidFillOrPreviewForm(
+      autofill::mojom::ActionPersistence action_persistence,
+      autofill::AutofillTriggerSource trigger_source,
+      bool is_refill) override;
   bool IsContextSecure() const override;
-  void ExecuteCommand(int id) override;
-  void OpenPromoCodeOfferDetailsURL(const GURL& url) override;
   autofill::FormInteractionsFlowId GetCurrentFormInteractionsFlowId() override;
 
-  // RiskDataLoader:
-  void LoadRiskData(
-      base::OnceCallback<void(const std::string&)> callback) override;
+  std::unique_ptr<autofill::AutofillManager> CreateManager(
+      base::PassKey<autofill::ContentAutofillDriver> pass_key,
+      autofill::ContentAutofillDriver& driver) override;
 
-  void Dismissed();
-  void SuggestionSelected(int position);
-
-#if defined(OHOS_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   void SetPasswordPopupHider(OhAutofillManager* manager) {
     password_popup_hider_ = manager;
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_DATALIST)
+  using SelectedCallback = base::OnceCallback<void(std::u16string text)>;
+  void ShowAutofillPopup(
+      const autofill::AutofillClient::PopupOpenArgs& open_args,
+      SelectedCallback callback);
+  void HideAutofillPopup();
+  void SuggestionSelected(int position);
+#endif
+
+ protected:
+  // Protected for testing.
+  explicit OhAutofillClient(content::WebContents* web_contents);
+
  private:
-  // `use_android_autofill_manager` determines which DriverInitCallback to use
-  // for the ContentAutofillDriverFactory: autofill::BrowserDriverInitHook() or
-  // android_webview::AndroidDriverInitHook().
-  OhAutofillClient(content::WebContents* web_contents,
-                   bool use_autofill_manager);
   friend class content::WebContentsUserData<OhAutofillClient>;
 
-  void ShowAutofillPopupImpl(
-      const gfx::RectF& element_bounds,
-      bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions,
-      autofill::PopupType popup_type);
   content::WebContents& GetWebContents() const;
 
   bool save_form_data_ = false;
   std::vector<autofill::Suggestion> suggestions_;
-  base::WeakPtr<autofill::AutofillPopupDelegate> delegate_;
-  std::unique_ptr<autofill::AutofillDownloadManager> download_manager_;
-  std::unique_ptr<autofill::PersonalDataManager> personaldata_manager_;
-  std::unique_ptr<autofill::AutocompleteHistoryManager>
-      autocomplete_history_manager_;
+  base::WeakPtr<autofill::AutofillSuggestionDelegate> delegate_;
   CefRefPtr<CefWebMessageReceiver> callback_;
-#if defined(OHOS_PASSWORD_AUTOFILL)
+  std::unique_ptr<AutocompleteHistoryManager> autocomplete_history_manager_;
+#if BUILDFLAG(ARKWEB_DATALIST)
+  SelectedCallback selected_callback_;
+#endif
+
+  base::WeakPtrFactory<OhAutofillClient> weak_ptr_factory_{this};
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   OhAutofillManager* password_popup_hider_ = nullptr;
 #endif
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,8 @@
 #include "base/memory/weak_ptr.h"
 #include "components/autofill/core/browser/autofill_manager.h"
 #include "components/autofill/core/common/dense_set.h"
-#include "libcef/browser/autofill/oh_autofill_provider.h"
+#include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h"
+#include "third_party/abseil-cpp/absl/types/optional.h"
 
 namespace autofill {
 
@@ -39,10 +40,12 @@ class ContentAutofillDriver;
 //
 // Other embedders (which don't want to use OhAutofillManager) shall use
 // other implementations.
-void OhDriverInitHook(AutofillClient* client, ContentAutofillDriver* driver);
 // This class forwards AutofillManager calls to AutofillProvider.
-class OhAutofillManager : public AutofillManager {
+class OhAutofillManager : public AutofillManager,
+                          public AutofillManager::Observer {
  public:
+  explicit OhAutofillManager(AutofillDriver* driver);
+
   OhAutofillManager(const OhAutofillManager&) = delete;
   OhAutofillManager& operator=(const OhAutofillManager&) = delete;
 
@@ -52,33 +55,17 @@ class OhAutofillManager : public AutofillManager {
     return weak_ptr_factory_.GetWeakPtr();
   }
   base::WeakPtr<AutofillManager> GetWeakPtr() override;
-  CreditCardAccessManager* GetCreditCardAccessManager() override;
 
   bool ShouldClearPreviewedForm() override;
-
-  void FillCreditCardFormImpl(const FormData& form,
-                              const FormFieldData& field,
-                              const CreditCard& credit_card,
-                              const std::u16string& cvc,
-                              AutofillTriggerSource trigger_source) override;
-  void FillProfileFormImpl(const FormData& form,
-                           const FormFieldData& field,
-                           const autofill::AutofillProfile& profile,
-                           AutofillTriggerSource trigger_source) override;
-
-  void OnFocusNoLongerOnFormImpl(bool had_interacted_form) override;
 
   void OnDidFillAutofillFormDataImpl(const FormData& form,
                                      const base::TimeTicks timestamp) override;
 
-  void OnDidPreviewAutofillFormDataImpl() override {}
   void OnDidEndTextFieldEditingImpl() override {}
   void OnHidePopupImpl() override;
   void OnSelectFieldOptionsDidChangeImpl(const FormData& form) override {}
 
   void Reset() override;
-  void OnContextMenuShownInField(const FormGlobalId& form_global_id,
-                                 const FieldGlobalId& field_global_id) override;
 
   void ReportAutofillWebOTPMetrics(bool used_web_otp) override {}
 
@@ -89,7 +76,7 @@ class OhAutofillManager : public AutofillManager {
   // |triggered_origin| is the origin of the field from which the autofill is
   // triggered; this affects the security policy for cross-frame fills. See
   // AutofillDriver::FillOrPreviewForm() for further details.
-  void FillOrPreviewForm(mojom::RendererFormDataAction action,
+  void FillOrPreviewForm(mojom::ActionPersistence action,
                          const FormData& form,
                          const FieldTypeGroup field_type_group,
                          const url::Origin& triggered_origin);
@@ -104,7 +91,13 @@ class OhAutofillManager : public AutofillManager {
   bool isFocusField(const FormFieldData& field_data,
                     const FormFieldData& field);
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
+  void OnCaretMovedInFormFieldImpl(const FormData& form,
+                                   const FieldGlobalId& field_id,
+                                   const gfx::Rect& caret_bounds) override {}
+
+  void OnFocusOnNonFormFieldImpl() override;
+
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   void ForwardDataToPasswordManager(const std::string& page_url,
                                     const std::string& username,
                                     const std::string& password,
@@ -117,60 +110,48 @@ class OhAutofillManager : public AutofillManager {
   absl::optional<std::string> QueryPopupShowAndGetHideStr();
 #endif
 
+#if BUILDFLAG(ARKWEB_DATALIST)
+  void SuggestionSelected(const FieldGlobalId& field_id, std::u16string text);
+#endif
+
  protected:
-  friend void OhDriverInitHook(AutofillClient* client,
-                               ContentAutofillDriver* driver);
+  // friend void OhDriverInitHook(AutofillClient* client,
+  //                              ContentAutofillDriver* driver);
 
   OhAutofillManager(AutofillDriver* driver, AutofillClient* client);
 
   void OnFormSubmittedImpl(const FormData& form,
-                           bool known_success,
                            mojom::SubmissionSource source) override;
 
   void OnTextFieldDidChangeImpl(const FormData& form,
-                                const FormFieldData& field,
-                                const gfx::RectF& bounding_box,
+                                const FieldGlobalId& field_id,
                                 const base::TimeTicks timestamp) override;
 
   void OnTextFieldDidScrollImpl(const FormData& form,
-                                const FormFieldData& field,
-                                const gfx::RectF& bounding_box) override;
+                                const FieldGlobalId& field_id) override;
 
   void OnAskForValuesToFillImpl(
       const FormData& form,
-      const FormFieldData& field,
-      const gfx::RectF& bounding_box,
-      AutoselectFirstSuggestion autoselect_first_suggestion,
-      FormElementWasClicked form_element_was_clicked) override;
+      const FieldGlobalId& field_id,
+      const gfx::Rect& bounding_box,
+      AutofillSuggestionTriggerSource trigger_source) override;
 
   void OnFocusOnFormFieldImpl(const FormData& form,
-                              const FormFieldData& field,
-                              const gfx::RectF& bounding_box) override;
+                              const FieldGlobalId& field_id) override;
 
   void OnSelectControlDidChangeImpl(const FormData& form,
-                                    const FormFieldData& field,
-                                    const gfx::RectF& bounding_box) override;
+                                    const FieldGlobalId& field_id) override;
 
-  void OnJavaScriptChangedAutofilledValueImpl(
-      const FormData& form,
-      const FormFieldData& field,
-      const std::u16string& old_value) override {}
+  void OnJavaScriptChangedAutofilledValueImpl(const FormData& form,
+                                              const FieldGlobalId& field_id,
+                                              const std::u16string& old_value,
+                                              bool formatting_only) override {}
   bool ShouldParseForms() override;
 
   void OnBeforeProcessParsedForms() override {}
 
   void OnFormProcessed(const FormData& form,
                        const FormStructure& form_structure) override;
-
-  void OnAfterProcessParsedForms(
-      const DenseSet<FormType>& form_types) override {}
-
-  void PropagateAutofillPredictions(
-      const std::vector<FormStructure*>& forms) override;
-
-  void OnServerRequestError(FormSignature form_signature,
-                            AutofillDownloadManager::RequestType request_type,
-                            int http_error) override;
 
  protected:
 #ifdef UNIT_TEST
@@ -181,14 +162,17 @@ class OhAutofillManager : public AutofillManager {
 #endif  // UNIT_TEST
 
  private:
+#ifndef OHOS_FUZZ_COMPILE_ERROR_FIX
   AutofillProvider* GetAutofillProvider();
-
+#endif
   void StartNewLoggingSession();
   bool has_server_prediction_ = false;
   base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
   bool is_show_ = false;
   bool is_password_popup_show_ = false;
   std::unique_ptr<FormData> form_;
+  base::ScopedObservation<AutofillManager, AutofillManager::Observer>
+      autofill_manager_observation{this};
 };
 
 }  // namespace autofill
