@@ -1,16 +1,28 @@
-// Copyright 2014 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "libcef/browser/autofill/oh_autofill_client.h"
 
 #include <utility>
 
+#include "arkweb/build/features/features.h"
 #include "base/check_op.h"
 #include "base/notreached.h"
-#include "components/autofill/core/browser/autofill_download_manager.h"
+#include "chrome/browser/autofill/personal_data_manager_factory.h"
+#include "chrome/browser/browser_process.h"
 #include "components/autofill/core/browser/payments/legal_message_line.h"
-#include "components/autofill/core/browser/ui/autofill_popup_delegate.h"
 #include "components/autofill/core/browser/ui/suggestion.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -22,44 +34,39 @@
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
+#include "libcef/browser/autofill/oh_autofill_manager.h"
 #include "ui/gfx/geometry/rect_f.h"
-
-#include "chrome/browser/browser_process.h"
-
-#if defined(OHOS_EX_PASSWORD)
-#include "base/base_switches.h"
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
-#endif
 
 using content::WebContents;
 
 namespace autofill {
 
-void OhAutofillClient::CreateForWebContents(content::WebContents* contents,
-                                            bool use_autofill_manager) {
+void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
   DCHECK(contents);
   if (!ContentAutofillClient::FromWebContents(contents)) {
-    contents->SetUserData(UserDataKey(), base::WrapUnique(new OhAutofillClient(
-                                             contents, use_autofill_manager)));
+    contents->SetUserData(UserDataKey(),
+                          base::WrapUnique(new OhAutofillClient(contents)));
   }
-#if DCHECK_IS_ON()
-  DCHECK_EQ(use_autofill_manager,
-            FromWebContents(contents)->use_autofill_manager_);
-#endif
 }
 
+OhAutofillClient::OhAutofillClient(content::WebContents* web_contents)
+    : autofill::ContentAutofillClient(web_contents) {}
+
 OhAutofillClient::~OhAutofillClient() {
-  HideAutofillPopup(autofill::PopupHidingReason::kTabGone);
+  HideAutofillSuggestions(autofill::SuggestionHidingReason::kTabGone);
+}
+
+base::WeakPtr<autofill::AutofillClient> OhAutofillClient::GetWeakPtr() {
+  return weak_ptr_factory_.GetWeakPtr();
 }
 
 void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
-#if defined(OHOS_AUTOFILL)
-  std::string json_str = data->GetStdString();
+#if BUILDFLAG(ARKWEB_AUTOFILL)
+  std::string json_str = data->GetString();
   content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
   autofill::ContentAutofillDriver* driver =
       autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
-  auto mgr = static_cast<OhAutofillManager*>(driver->oh_autofill_manager());
+  auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
   if (mgr) {
     mgr->FillData(json_str);
   }
@@ -83,8 +90,9 @@ bool OhAutofillClient::GetSaveFormData() const {
   return save_form_data_;
 }
 
-bool OhAutofillClient::IsOffTheRecord() {
-  return GetWebContents().GetBrowserContext()->IsOffTheRecord();
+bool OhAutofillClient::IsOffTheRecord() const {
+  auto* mutable_this = const_cast<OhAutofillClient*>(this);
+  return mutable_this->GetWebContents().GetBrowserContext()->IsOffTheRecord();
 }
 
 scoped_refptr<network::SharedURLLoaderFactory>
@@ -95,30 +103,14 @@ OhAutofillClient::GetURLLoaderFactory() {
       ->GetURLLoaderFactoryForBrowserProcess();
 }
 
-autofill::AutofillDownloadManager* OhAutofillClient::GetDownloadManager() {
-  if (!download_manager_) {
-    // Lazy initialization to avoid virtual function calls in the constructor.
-    download_manager_ = std::make_unique<autofill::AutofillDownloadManager>(
-        this, GetChannel(), GetLogManager());
-  }
-  return download_manager_.get();
+PersonalDataManager* OhAutofillClient::GetPersonalDataManager() {
+  return nullptr;
 }
 
-autofill::PersonalDataManager* OhAutofillClient::GetPersonalDataManager() {
-  if (!personaldata_manager_) {
-    personaldata_manager_ = std::make_unique<autofill::PersonalDataManager>(
-        g_browser_process->GetApplicationLocale());
-  }
-  return personaldata_manager_.get();
-}
-
-autofill::AutocompleteHistoryManager*
-OhAutofillClient::GetAutocompleteHistoryManager() {
-  // autofillClient::GetSingleFieldFormFillRouter need create an object,
-  // otherwise null pointer reference,actually not use functions.
+AutocompleteHistoryManager* OhAutofillClient::GetAutocompleteHistoryManager() {
   if (!autocomplete_history_manager_) {
     autocomplete_history_manager_ =
-        std::make_unique<autofill::AutocompleteHistoryManager>();
+        std::make_unique<AutocompleteHistoryManager>();
   }
   return autocomplete_history_manager_.get();
 }
@@ -143,11 +135,11 @@ signin::IdentityManager* OhAutofillClient::GetIdentityManager() {
   return nullptr;
 }
 
-autofill::FormDataImporter* OhAutofillClient::GetFormDataImporter() {
+const signin::IdentityManager* OhAutofillClient::GetIdentityManager() const {
   return nullptr;
 }
 
-autofill::payments::PaymentsClient* OhAutofillClient::GetPaymentsClient() {
+autofill::FormDataImporter* OhAutofillClient::GetFormDataImporter() {
   return nullptr;
 }
 
@@ -191,132 +183,44 @@ translate::TranslateDriver* OhAutofillClient::GetTranslateDriver() {
   return nullptr;
 }
 
-void OhAutofillClient::ShowAutofillSettings(autofill::PopupType popup_type) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::ShowUnmaskPrompt(
-    const autofill::CreditCard& card,
-    const autofill::CardUnmaskPromptOptions& card_unmask_prompt_options,
-    base::WeakPtr<autofill::CardUnmaskDelegate> delegate) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::OnUnmaskVerificationResult(PaymentsRpcResult result) {
-  NOTIMPLEMENTED();
-}
-
-std::vector<std::string>
-OhAutofillClient::GetAllowedMerchantsForVirtualCards() {
-  return std::vector<std::string>();
-}
-
-std::vector<std::string>
-OhAutofillClient::GetAllowedBinRangesForVirtualCards() {
-  return std::vector<std::string>();
-}
-
-void OhAutofillClient::ShowLocalCardMigrationDialog(
-    base::OnceClosure show_migration_dialog_closure) {}
-
-void OhAutofillClient::ConfirmMigrateLocalCardToCloud(
-    const LegalMessageLines& legal_message_lines,
-    const std::string& user_email,
-    const std::vector<MigratableCreditCard>& migratable_credit_cards,
-    LocalCardMigrationCallback start_migrating_cards_callback) {}
-
-void OhAutofillClient::ShowLocalCardMigrationResults(
-    const bool has_server_error,
-    const std::u16string& tip_message,
-    const std::vector<MigratableCreditCard>& migratable_credit_cards,
-    MigrationDeleteCardCallback delete_local_card_callback) {}
-
-void OhAutofillClient::ConfirmSaveIBANLocally(
-    const IBAN& iban,
-    bool should_show_prompt,
-    LocalSaveIBANPromptCallback callback) {}
-
-void OhAutofillClient::ShowWebauthnOfferDialog(
-    WebauthnDialogCallback offer_dialog_callback) {}
-
-void OhAutofillClient::ShowWebauthnVerifyPendingDialog(
-    WebauthnDialogCallback verify_pending_dialog_callback) {}
-
-void OhAutofillClient::UpdateWebauthnOfferDialogWithError() {}
-
-bool OhAutofillClient::CloseWebauthnDialog() {
-  return false;
-}
-
-void OhAutofillClient::ConfirmSaveUpiIdLocally(
-    const std::string& upi_id,
-    base::OnceCallback<void(bool accept)> callback) {}
-
-void OhAutofillClient::OfferVirtualCardOptions(
-    const std::vector<CreditCard*>& candidates,
-    base::OnceCallback<void(const std::string&)> callback) {}
-
-void OhAutofillClient::ConfirmSaveCreditCardLocally(
-    const autofill::CreditCard& card,
-    SaveCreditCardOptions options,
-    LocalSaveCardPromptCallback callback) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::ConfirmSaveCreditCardToCloud(
-    const autofill::CreditCard& card,
-    const autofill::LegalMessageLines& legal_message_lines,
-    SaveCreditCardOptions options,
-    UploadSaveCardPromptCallback callback) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::CreditCardUploadCompleted(bool card_saved) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::ConfirmCreditCardFillAssist(
-    const autofill::CreditCard& card,
-    base::OnceClosure callback) {
+void OhAutofillClient::ShowAutofillSettings(
+    autofill::SuggestionType suggestion_type) {
   NOTIMPLEMENTED();
 }
 
 void OhAutofillClient::ConfirmSaveAddressProfile(
     const autofill::AutofillProfile& profile,
     const autofill::AutofillProfile* original_profile,
-    SaveAddressProfilePromptOptions options,
+    bool is_migration_to_account,
     AddressProfileSavePromptCallback callback) {
   NOTIMPLEMENTED();
 }
 
-bool OhAutofillClient::HasCreditCardScanFeature() {
-  return false;
-}
-
-void OhAutofillClient::ScanCreditCard(CreditCardScanCallback callback) {
+void OhAutofillClient::ShowEditAddressProfileDialog(
+    const autofill::AutofillProfile& profile,
+    AddressProfileSavePromptCallback on_user_decision_callback) {
   NOTIMPLEMENTED();
 }
 
-bool OhAutofillClient::IsTouchToFillCreditCardSupported() {
-  return false;
+void OhAutofillClient::ShowDeleteAddressProfileDialog(
+    const autofill::AutofillProfile& profile,
+    AddressProfileDeleteDialogCallback delete_dialog_callback) {
+  NOTIMPLEMENTED();
 }
 
-bool OhAutofillClient::ShowTouchToFillCreditCard(
-    base::WeakPtr<autofill::TouchToFillDelegate> delegate,
-    base::span<const autofill::CreditCard> cards_to_suggest) {
-  NOTREACHED();
-  return false;
+autofill::AutofillClient::SuggestionUiSessionId
+OhAutofillClient::ShowAutofillSuggestions(
+    const autofill::AutofillClient::PopupOpenArgs& open_args,
+    base::WeakPtr<autofill::AutofillSuggestionDelegate> delegate) {
+  NOTIMPLEMENTED();
+  return SuggestionUiSessionId();
 }
 
-void OhAutofillClient::HideTouchToFillCreditCard() {
-  NOTREACHED();
-}
-
+#if BUILDFLAG(ARKWEB_DATALIST)
 void OhAutofillClient::ShowAutofillPopup(
     const autofill::AutofillClient::PopupOpenArgs& open_args,
-    base::WeakPtr<autofill::AutofillPopupDelegate> delegate) {
+    SelectedCallback callback) {
   suggestions_ = open_args.suggestions;
-  delegate_ = delegate;
 
   // Convert element_bounds to be in screen space.
   gfx::Rect client_area = GetWebContents().GetContainerBounds();
@@ -326,49 +230,42 @@ void OhAutofillClient::ShowAutofillPopup(
   LOG(INFO) << "showAutofillPopup client_area" << client_area.ToString()
             << ", element_bounds_in_screen_space"
             << element_bounds_in_screen_space.ToString();
-  ShowAutofillPopupImpl(element_bounds_in_screen_space,
-                        open_args.text_direction == base::i18n::RIGHT_TO_LEFT,
-                        open_args.suggestions, delegate->GetPopupType());
+  selected_callback_ = std::move(callback);
+  GetWebContents().ShowAutofillPopup(
+      element_bounds_in_screen_space,
+      open_args.text_direction == base::i18n::RIGHT_TO_LEFT,
+      open_args.suggestions, false);
 }
 
-void OhAutofillClient::UpdateAutofillPopupDataListValues(
-    const std::vector<std::u16string>& values,
-    const std::vector<std::u16string>& labels) {
-  // Leaving as an empty method since updating autofill popup window
-  // dynamically does not seem to be a useful feature for android webview.
-  // See crrev.com/18102002 if need to implement.
-}
-
-std::vector<autofill::Suggestion> OhAutofillClient::GetPopupSuggestions()
-    const {
-  NOTIMPLEMENTED();
-  return {};
-}
-
-void OhAutofillClient::PinPopupView() {
-  NOTIMPLEMENTED();
-}
-
-autofill::AutofillClient::PopupOpenArgs OhAutofillClient::GetReopenPopupArgs()
-    const {
-  NOTIMPLEMENTED();
-  return {};
-}
-
-void OhAutofillClient::UpdatePopup(
-    const std::vector<autofill::Suggestion>& suggestions,
-    autofill::PopupType popup_type) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::HideAutofillPopup(autofill::PopupHidingReason reason) {
-  delegate_.reset();
-#if defined(OHOS_EX_PASSWORD) || (OHOS_DATALIST)
+void OhAutofillClient::HideAutofillPopup() {
   GetWebContents().HideAutofillPopup();
+}
+
+void OhAutofillClient::SuggestionSelected(int position) {
+  if (position < 0 || position > static_cast<int>(suggestions_.size()) - 1) {
+    LOG(WARNING) << "parameter is invalid, position: " << position;
+    return;
+  }
+  std::move(selected_callback_).Run(suggestions_[position].main_text.value);
+}
 #endif
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
-  if (password_popup_hider_ && reason == PopupHidingReason::kTabGone) {
+void OhAutofillClient::UpdateAutofillDataListValues(
+    base::span<const autofill::SelectOption> datalist) {
+  // Leaving as an empty method since updating autofill popup window
+  // dynamically does not seem to be a useful feature when delegating to Android
+  // APIs.
+}
+
+void OhAutofillClient::PinAutofillSuggestions() {
+  NOTIMPLEMENTED();
+}
+
+void OhAutofillClient::HideAutofillSuggestions(
+    autofill::SuggestionHidingReason reason) {
+  delegate_.reset();
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  if (password_popup_hider_ && reason == SuggestionHidingReason::kTabGone) {
     auto hidePopupStr = password_popup_hider_->QueryPopupShowAndGetHideStr();
     if (hidePopupStr.has_value() && OnAutofillEvent(hidePopupStr.value())) {
       LOG(INFO) << "visibility changed, the password autofill popup is hidden";
@@ -387,18 +284,10 @@ bool OhAutofillClient::IsPasswordManagerEnabled() {
   return false;
 }
 
-void OhAutofillClient::PropagateAutofillPredictions(
-    autofill::AutofillDriver* driver,
-    const std::vector<autofill::FormStructure*>& forms) {}
-
 void OhAutofillClient::DidFillOrPreviewForm(
-    autofill::mojom::RendererFormDataAction action,
+    autofill::mojom::ActionPersistence action_persistence,
     autofill::AutofillTriggerSource trigger_source,
     bool is_refill) {}
-
-void OhAutofillClient::DidFillOrPreviewField(
-    const std::u16string& autofilled_value,
-    const std::u16string& profile_full_name) {}
 
 bool OhAutofillClient::IsContextSecure() const {
   content::SSLStatus ssl_status;
@@ -419,14 +308,6 @@ bool OhAutofillClient::IsContextSecure() const {
            content::SSLStatus::RAN_INSECURE_CONTENT);
 }
 
-void OhAutofillClient::ExecuteCommand(int id) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::OpenPromoCodeOfferDetailsURL(const GURL& url) {
-  NOTIMPLEMENTED();
-}
-
 autofill::FormInteractionsFlowId
 OhAutofillClient::GetCurrentFormInteractionsFlowId() {
   // Currently not in use here. See `ChromeAutofillClient` for a proper
@@ -434,71 +315,10 @@ OhAutofillClient::GetCurrentFormInteractionsFlowId() {
   return {};
 }
 
-void OhAutofillClient::LoadRiskData(
-    base::OnceCallback<void(const std::string&)> callback) {
-  NOTIMPLEMENTED();
-}
-
-void OhAutofillClient::Dismissed() {}
-
-void OhAutofillClient::SuggestionSelected(int position) {
-#if defined(OHOS_EX_PASSWORD)
-  if (position < 0 || position > static_cast<int>(suggestions_.size()) - 1) {
-    LOG(WARNING) << " parameter is invalid, position: " << position;
-    return;
-  }
-#endif
-  if (delegate_) {
-    delegate_->DidAcceptSuggestion(suggestions_[position], position);
-  }
-}
-
-void DriverInit(AutofillClient* client, const std::string& app_locale,
-                ContentAutofillDriver* driver) {
-  autofill::BrowserDriverInitHook(client, app_locale, driver);
-#if defined(OHOS_AUTOFILL)
-  autofill::OhDriverInitHook(client, driver);
-#endif
-}
-
-// Ownership: The native object is created (if autofill enabled) and owned by
-// AwContents. The native object creates the java peer which handles most
-// autofill functionality at the java side. The java peer is owned by Java
-// AwContents. The native object only maintains a weak ref to it.
-OhAutofillClient::OhAutofillClient(WebContents* contents,
-                                   bool use_autofill_manager)
-    : autofill::ContentAutofillClient(
-          contents,
-          use_autofill_manager
-              ? base::BindRepeating(&autofill::OhDriverInitHook, this)
-              : base::BindRepeating(&autofill::DriverInit,
-                                    this,
-                                    g_browser_process->GetApplicationLocale()))
-#if DCHECK_IS_ON()
-      ,
-      use_autofill_manager_(use_autofill_manager)
-#endif
-{
-}
-
-void OhAutofillClient::ShowAutofillPopupImpl(
-    const gfx::RectF& element_bounds,
-    bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions,
-    autofill::PopupType popup_type) {
-#if defined(OHOS_DATALIST)
-  if(popup_type != autofill::PopupType::kPasswords) {
-    GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions, false);
-    return;
-  }
-#endif
-
-#if defined(OHOS_EX_PASSWORD)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExPassword) && popup_type == autofill::PopupType::kPasswords) {
-    GetWebContents().ShowAutofillPopup(element_bounds, is_rtl, suggestions, true);
-  }
-#endif
+std::unique_ptr<autofill::AutofillManager> OhAutofillClient::CreateManager(
+    base::PassKey<autofill::ContentAutofillDriver> pass_key,
+    autofill::ContentAutofillDriver& driver) {
+  return base::WrapUnique(new autofill::OhAutofillManager(&driver));
 }
 
 content::WebContents& OhAutofillClient::GetWebContents() const {

@@ -127,19 +127,21 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void AbortAskGeolocationPermission(const CefString& origin) = 0;
-#if defined(OHOS_SENSOR)
+
+#if BUILDFLAG(ARKWEB_SENSOR)
   ///
   /// Handle the Sensors permission requests.
   ///
   /*--cef()--*/
   virtual void AskSensorsPermission(const CefString& origin,
-                                        cef_permission_callback_t callback) = 0;
+                                    cef_permission_callback_t callback) = 0;
   ///
   /// Cancel the Sensors permission requests.
   ///
   /*--cef()--*/
   virtual void AbortAskSensorsPermission(const CefString& origin) = 0;
-#endif // defined(OHOS_SENSOR)
+#endif  // BUILDFLAG(ARKWEB_SENSOR)
+
   ///
   /// Handle the Protected Media Identifier permission requests.
   ///
@@ -169,13 +171,15 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   /// Handle the Clipboard Read dWrite permission requests.
   ///
   /*--cef()--*/
-  virtual void AskClipboardReadWritePermission(const CefString& origin,
-                                      cef_permission_callback_t callback) = 0;
+  virtual void AskClipboardReadWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) = 0;
   ///
   /// Cancel the Clipboard Read Write permission requests.
   ///
   /*--cef()--*/
-  virtual void AbortAskClipboardReadWritePermission(const CefString& origin) = 0;
+  virtual void AbortAskClipboardReadWritePermission(
+      const CefString& origin) = 0;
 
   ///
   /// The callback for the Geolocation permission requests.
@@ -183,6 +187,60 @@ class CefBrowserPermissionRequestDelegate : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void NotifyGeolocationPermission(bool value,
                                            const CefString& origin) = 0;
+
+  ///
+  /// Handle the Audio Capture permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskAudioCapturePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Audio Capturepermission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskAudioCapturePermission(const CefString& origin) = 0;
+
+  ///
+  /// Handle the Video Capture permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskVideoCapturePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Video Capturepermission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskVideoCapturePermission(const CefString& origin) = 0;
+
+  ///
+  /// Handle the Clipboard Sanitized permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskClipboardSanitizedWritePermission(
+      const CefString& origin,
+      cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Clipboard Read Sanitezed permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskClipboardSanitizedWritePermission(
+      const CefString& origin) = 0;
+#if BUILDFLAG(ARKWEB_NOTIFICATION)
+  ///
+  /// Handle the Notification permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AskNotificationPermission(const CefString& origin,
+                                         cef_permission_callback_t callback) = 0;
+  ///
+  /// Cancel the Notification permission requests.
+  ///
+  /*--cef()--*/
+  virtual void AbortAskNotificationPermission(const CefString& origin) = 0;
+#endif // ARKWEB_NOTIFICATION
+
 };
 
 ///

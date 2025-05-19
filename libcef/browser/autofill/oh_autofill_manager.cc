@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #include "libcef/browser/autofill/oh_autofill_manager.h"
 
 #include <locale>
@@ -25,16 +26,18 @@
 #include "base/json/json_reader.h"
 #include "base/json/json_writer.h"
 #include "base/memory/ptr_util.h"
+#include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "components/android_autofill/browser/autofill_provider.h"
 #include "components/autofill/content/browser/content_autofill_driver.h"
 #include "components/autofill/content/renderer/autofill_agent.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
-#include "libcef/browser/autofill/oh_autofill_client.h"
 #include "libcef/browser/browser_host_base.h"
-#if defined(OHOS_PASSWORD_AUTOFILL)
-#include "libcef/browser/password/oh_password_manager_client.h"
+#include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.h"
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+#include "chrome/browser/password_manager/chrome_password_manager_client.h"
+using OhPasswordManagerClient = ChromePasswordManagerClient;
 #endif
 
 namespace {
@@ -53,34 +56,22 @@ const std::string KEY_PLACEHOLDER = "placeholder";
 const std::string KEY_VALUE = "value";
 const std::string VALUE_OFF = "off";
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 const std::string KEY_USERNAME = "username";
 const std::string KEY_PASSWORD = "password";
 const std::string KEY_RETURN_PAGE_URL = "autofill_viewdata_origin_pageurl";
 const std::string KEY_RETURN_OTHER_ACCOUNT = "autofill_viewdata_other_account";
 #endif
-} // namespace
+}  // namespace
 
 namespace autofill {
 
 using base::TimeTicks;
 
-void OhDriverInitHook(AutofillClient* client, ContentAutofillDriver* driver) {
-#if defined(OHOS_AUTOFILL)
-  driver->set_oh_autofill_manager(
-      base::WrapUnique(new OhAutofillManager(driver, client)));
-#else
-  driver->set_autofill_manager(
-      base::WrapUnique(new OhAutofillManager(driver, client)));
-#endif
-  driver->GetAutofillAgent()->SetUserGestureRequired(false);
-  driver->GetAutofillAgent()->SetFocusRequiresScroll(false);
-}
-
-OhAutofillManager::OhAutofillManager(AutofillDriver* driver,
-                                     AutofillClient* client)
-    : AutofillManager(driver, client) {
+OhAutofillManager::OhAutofillManager(AutofillDriver* driver)
+    : AutofillManager(driver) {
   StartNewLoggingSession();
+  autofill_manager_observation.Observe(this);
 }
 
 OhAutofillManager::~OhAutofillManager() = default;
@@ -89,70 +80,67 @@ base::WeakPtr<AutofillManager> OhAutofillManager::GetWeakPtr() {
   return weak_ptr_factory_.GetWeakPtr();
 }
 
-CreditCardAccessManager* OhAutofillManager::GetCreditCardAccessManager() {
-  return nullptr;
-}
-
-std::string OhAutofillManager::GetAttributeOrUniqueId(const FormFieldData& field) {
-  auto attribute = field.autocomplete_attribute;
-  if (!attribute.empty() || field.unique_renderer_id.is_null()) {
+std::string OhAutofillManager::GetAttributeOrUniqueId(
+    const FormFieldData& field) {
+  auto attribute = field.autocomplete_attribute();
+  if (!attribute.empty() || field.renderer_id().is_null()) {
     return attribute;
   }
-  auto unique_renderer_id = base::NumberToString(field.unique_renderer_id.value());
-  return unique_renderer_id;
+  auto renderer_id = base::NumberToString(field.renderer_id().value());
+  return renderer_id;
 }
 
 bool OhAutofillManager::isFocusField(const FormFieldData& field_data,
                                      const FormFieldData& field) {
-  if (field_data.unique_renderer_id.is_null() || field.unique_renderer_id.is_null()) {
-      return false;
+  if (field_data.renderer_id().is_null() || field.renderer_id().is_null()) {
+    return false;
   }
-  return field_data.unique_renderer_id.value() == field.unique_renderer_id.value();
+  return field_data.renderer_id().value() == field.renderer_id().value();
 }
 
 absl::optional<std::string> OhAutofillManager::FormDataToJson(
     const FormData& form,
     const FormFieldData& field,
     const std::string& event) {
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   auto browser = CefBrowserHostBase::GetBrowserForHost(rfh);
   if (!browser) {
     return absl::nullopt;
   }
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
-  if (IsUsernamePasswordFormField(form.unique_renderer_id,
-                                  field.unique_renderer_id)) {
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
+  if (IsUsernamePasswordFormField(form.renderer_id(), field.renderer_id())) {
     return absl::nullopt;
   }
 #endif
 
-  float ratio = browser->GetVirtualPixelRatio();
-  auto offset = content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
+  float ratio = browser->GetHost()->GetVirtualPixelRatio();
+  auto offset =
+      content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
 
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, event));
 
-  for (const FormFieldData& field_data : form.fields) {
+  for (const FormFieldData& field_data : form.fields()) {
     base::Value::List list;
     auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(
-        KEY_FOUCS,
-        isFocusField(field_data, field) ? 1 : 0));
+        KEY_FOUCS, isFocusField(field_data, field) ? 1 : 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
-        static_cast<int32_t>((field_data.bounds.x() + offset.x()) * ratio)));
+        static_cast<int32_t>((field_data.bounds().x() + offset.x()) * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_Y,
-        static_cast<int32_t>((field_data.bounds.y() + offset.y()) * ratio)));
+        static_cast<int32_t>((field_data.bounds().y() + offset.y()) * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_RECT_W, static_cast<int32_t>(field_data.bounds.width() * ratio)));
+        KEY_RECT_W, static_cast<int32_t>(field_data.bounds().width() * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_RECT_H, static_cast<int32_t>(field_data.bounds.height() * ratio)));
+        KEY_RECT_H,
+        static_cast<int32_t>(field_data.bounds().height() * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_PLACEHOLDER, base::UTF16ToUTF8(base::StringPiece16(field_data.placeholder))));
-    list.Append(base::Value::Dict().Set(
-        KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
+        KEY_PLACEHOLDER, base::UTF16ToUTF8(field_data.placeholder())));
+    list.Append(base::Value::Dict().Set(KEY_VALUE,
+                                        base::UTF16ToUTF8(field_data.value())));
 
     auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
@@ -161,8 +149,9 @@ absl::optional<std::string> OhAutofillManager::FormDataToJson(
   return base::WriteJson(view_data_list);
 }
 
-absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormData& form) {
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(
+    const FormData& form) {
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   auto browser = CefBrowserHostBase::GetBrowserForHost(rfh);
   if (!browser) {
     return absl::nullopt;
@@ -175,35 +164,40 @@ absl::optional<std::string> OhAutofillManager::FormDataToJsonForSave(const FormD
   // Chromium does not assign values to FormFieldData.bounds in save scenario,
   // but oh-autofill-system requires valid bounds to pass code check,
   // so using the cached FormFieldData.bounds
-  if (form.fields.size() != form_->fields.size()) {
+  if (form.fields().size() != form_->fields().size()) {
     return absl::nullopt;
   }
 
-  float ratio = browser->GetVirtualPixelRatio();
-  auto offset = content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
+  float ratio = browser->GetHost()->GetVirtualPixelRatio();
+  auto offset =
+      content::WebContents::FromRenderFrameHost(rfh)->GetContainerBounds();
 
   base::Value::List view_data_list;
   view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_SAVE));
 
   int32_t index = 0;
-  for (const FormFieldData& field_data : form.fields) {
+  for (const FormFieldData& field_data : form.fields()) {
     base::Value::List list;
     auto key = GetAttributeOrUniqueId(field_data);
     list.Append(base::Value::Dict().Set(KEY_FOUCS, 0));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_X,
-        static_cast<int32_t>((form_->fields[index].bounds.x() + offset.x()) * ratio)));
+        static_cast<int32_t>(
+            (form_->fields()[index].bounds().x() + offset.x()) * ratio)));
     list.Append(base::Value::Dict().Set(
         KEY_RECT_Y,
-        static_cast<int32_t>((form_->fields[index].bounds.y() + offset.y()) * ratio)));
+        static_cast<int32_t>(
+            (form_->fields()[index].bounds().y() + offset.y()) * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_RECT_W, static_cast<int32_t>(form_->fields[index].bounds.width() * ratio)));
+        KEY_RECT_W,
+        static_cast<int32_t>(form_->fields()[index].bounds().width() * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_RECT_H, static_cast<int32_t>(form_->fields[index].bounds.height() * ratio)));
+        KEY_RECT_H, static_cast<int32_t>(
+                        form_->fields()[index].bounds().height() * ratio)));
     list.Append(base::Value::Dict().Set(
-        KEY_PLACEHOLDER, base::UTF16ToUTF8(base::StringPiece16(field_data.placeholder))));
-    list.Append(base::Value::Dict().Set(
-        KEY_VALUE, base::UTF16ToUTF8(base::StringPiece16(field_data.value))));
+        KEY_PLACEHOLDER, base::UTF16ToUTF8(field_data.placeholder())));
+    list.Append(base::Value::Dict().Set(KEY_VALUE,
+                                        base::UTF16ToUTF8(field_data.value())));
 
     auto dict = base::Value::Dict().Set(key, std::move(list));
     view_data_list.Append(std::move(dict));
@@ -226,16 +220,18 @@ void OhAutofillManager::FillDataWithId(const base::Value::Dict* dict) {
         continue;
       }
       uint32_t i = static_cast<uint32_t>(index.value());
-      uint32_t size = static_cast<uint32_t>(form_->fields.size());
+      uint32_t size = static_cast<uint32_t>(form_->fields().size());
       if (i > size) {
-          continue;
+        continue;
       }
-      FormFieldData& field_data = form_->fields[i - 1];
-      if (GetAttributeOrUniqueId(field_data) == VALUE_OFF || !field_data.is_visible) {
-          continue;
+      const FormFieldData& field_data = form_->fields()[i - 1];
+      if (GetAttributeOrUniqueId(field_data) == VALUE_OFF ||
+          !field_data.is_visible()) {
+        continue;
       }
-      driver()->RendererShouldFillFieldWithValue(form_->fields[i].global_id(),
-                                                 base::UTF8ToUTF16(*str));
+      driver().ApplyFieldAction(
+          mojom::FieldActionType::kReplaceAll, mojom::ActionPersistence::kFill,
+          field_data.global_id(), base::UTF8ToUTF16(*str));
     }
   }
 }
@@ -245,17 +241,17 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   if (!root.has_value()) {
     return;
   }
-
   const base::Value::Dict* root_dict = root->GetIfDict();
   if (!root_dict) {
     return;
   }
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
   const std::string* username = root_dict->FindString(KEY_USERNAME);
   const std::string* password = root_dict->FindString(KEY_PASSWORD);
   const std::string* page_url = root_dict->FindString(KEY_RETURN_PAGE_URL);
-  bool is_other_account = root_dict->FindBool(KEY_RETURN_OTHER_ACCOUNT).value_or(false);
+  bool is_other_account =
+      root_dict->FindBool(KEY_RETURN_OTHER_ACCOUNT).value_or(false);
   if (username || password) {
     ForwardDataToPasswordManager(page_url ? *page_url : std::string(),
                                  username ? *username : std::string(),
@@ -268,29 +264,30 @@ void OhAutofillManager::FillData(const std::string& json_str) {
   if (form_ == nullptr) {
     return;
   }
-
-  for (const FormFieldData& field_data : form_->fields) {
-    const std::string* value = root_dict->FindString(field_data.autocomplete_attribute);
-    if (!value || value->empty() || GetAttributeOrUniqueId(field_data) == VALUE_OFF ||
-        !field_data.is_visible) {
+  for (const FormFieldData& field_data : form_->fields()) {
+    const std::string* value =
+        root_dict->FindString(field_data.autocomplete_attribute());
+    if (!value || value->empty() ||
+        GetAttributeOrUniqueId(field_data) == VALUE_OFF ||
+        !field_data.is_visible()) {
       continue;
     }
-    driver()->RendererShouldFillFieldWithValue(field_data.global_id(),
-                                               base::UTF8ToUTF16(*value));
+    driver().ApplyFieldAction(
+        mojom::FieldActionType::kReplaceAll, mojom::ActionPersistence::kFill,
+        field_data.global_id(), base::UTF8ToUTF16(*value));
   }
   FillDataWithId(root_dict);
   is_show_ = false;
 }
 
-#if defined(OHOS_PASSWORD_AUTOFILL)
+#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
 void OhAutofillManager::ForwardDataToPasswordManager(
     const std::string& page_url,
     const std::string& username,
     const std::string& password,
     bool is_other_account) {
   LOG(INFO) << "autofill fill data, forward to password_manager";
-  auto* rfh =
-      static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     LOG(ERROR) << "rfh is nullptr or not active";
     return;
@@ -312,8 +309,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
                                                     FieldRendererId field_id) {
-  auto* rfh =
-      static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     LOG(ERROR) << "rfh is nullptr or not active";
     return false;
@@ -351,28 +347,9 @@ bool OhAutofillManager::ShouldClearPreviewedForm() {
   return false;
 }
 
-void OhAutofillManager::FillCreditCardFormImpl(
-    const FormData& form,
-    const FormFieldData& field,
-    const CreditCard& credit_card,
-    const std::u16string& cvc,
-    AutofillTriggerSource trigger_source) {
-  NOTREACHED();
-}
-
-void OhAutofillManager::FillProfileFormImpl(
-    const FormData& form,
-    const FormFieldData& field,
-    const autofill::AutofillProfile& profile,
-    AutofillTriggerSource trigger_source) {
-  NOTREACHED();
-}
-
 void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
-                                            bool known_success,
                                             mojom::SubmissionSource source) {
-  LOG(INFO) << "OnFormSubmittedImpl";
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     return;
   }
@@ -394,11 +371,9 @@ void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
 }
 
 void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
-                                                 const FormFieldData& field,
-                                                 const gfx::RectF& bounding_box,
+                                                 const FieldGlobalId& field_id,
                                                  const TimeTicks timestamp) {
-  LOG(INFO) << "OnTextFieldDidChangeImpl";
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     return;
   }
@@ -413,7 +388,9 @@ void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
     return;
   }
 
-  auto json_str = FormDataToJson(form, field, EVENT_UPDATE);
+  const FormFieldData* field = form.FindFieldByGlobalId(field_id);
+
+  auto json_str = FormDataToJson(form, *field, EVENT_UPDATE);
   if (json_str.has_value()) {
     autofill_client->OnAutofillEvent(json_str.value());
   }
@@ -421,27 +398,27 @@ void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
 
 void OhAutofillManager::OnTextFieldDidScrollImpl(
     const FormData& form,
-    const FormFieldData& field,
-    const gfx::RectF& bounding_box) {
+    const FieldGlobalId& field_id) {
   LOG(INFO) << "OnTextFieldDidScrollImpl";
 }
 
 void OhAutofillManager::OnAskForValuesToFillImpl(
     const FormData& form,
-    const FormFieldData& field,
-    const gfx::RectF& bounding_box,
-    AutoselectFirstSuggestion autoselect_first_suggestion,
-    FormElementWasClicked form_element_was_clicked) {
+    const FieldGlobalId& field_id,
+    const gfx::Rect& bounding_box,
+    AutofillSuggestionTriggerSource trigger_source) {
   LOG(INFO) << "OnAskForValuesToFillImpl";
 
   if (is_show_) {
     // Handle this event in OnTextFieldDidChangeImpl
+#if !BUILDFLAG(ARKWEB_DATALIST)
     return;
+#endif
   } else {
     form_ = std::make_unique<FormData>(form);
   }
 
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     return;
   }
@@ -456,33 +433,49 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
     return;
   }
 
-  auto json_str = FormDataToJson(form, field, EVENT_FILL);
+  const FormFieldData* field = form.FindFieldByGlobalId(field_id);
+  auto json_str = FormDataToJson(form, *field, EVENT_FILL);
   if (json_str.has_value()) {
     is_show_ = true;
     autofill_client->OnAutofillEvent(json_str.value());
   }
+
+#if BUILDFLAG(ARKWEB_DATALIST)
+  std::vector<autofill::Suggestion> suggestions;
+  for (SelectOption option : field->datalist_options()) {
+    suggestions.push_back(autofill::Suggestion(option.value));
+  }
+  if (suggestions.size() == 0) {
+    autofill_client->HideAutofillPopup();
+  } else {
+    autofill::AutofillClient::PopupOpenArgs open_args =
+        autofill::AutofillClient::PopupOpenArgs(
+            gfx::RectF(bounding_box.x(), bounding_box.y(), bounding_box.width(),
+                       bounding_box.height()),
+            base::i18n::TextDirection::LEFT_TO_RIGHT, suggestions,
+            autofill::AutofillSuggestionTriggerSource::kOpenTextDataListChooser,
+            /*form_control_ax_id=*/0, autofill::PopupAnchorType::kField);
+    autofill_client->ShowAutofillPopup(
+        open_args, base::BindOnce(&OhAutofillManager::SuggestionSelected,
+                                  weak_ptr_factory_.GetWeakPtr(), field_id));
+  }
+#endif
 }
 
 void OhAutofillManager::OnFocusOnFormFieldImpl(const FormData& form,
-                                               const FormFieldData& field,
-                                               const gfx::RectF& bounding_box) {
+                                               const FieldGlobalId& field_id) {
   LOG(INFO) << "OnFocusOnFormFieldImpl";
 }
 
 void OhAutofillManager::OnSelectControlDidChangeImpl(
     const FormData& form,
-    const FormFieldData& field,
-    const gfx::RectF& bounding_box) {
+    const FieldGlobalId& field_id) {
   LOG(INFO) << "OnSelectControlDidChangeImpl";
 }
 
 bool OhAutofillManager::ShouldParseForms() {
   LOG(INFO) << "ShouldParseForms";
   return true;
-}
-
-void OhAutofillManager::OnFocusNoLongerOnFormImpl(bool had_interacted_form) {
-  LOG(INFO) << "OnFocusNoLongerOnFormImpl";
 }
 
 void OhAutofillManager::OnDidFillAutofillFormDataImpl(
@@ -492,7 +485,7 @@ void OhAutofillManager::OnDidFillAutofillFormDataImpl(
 }
 
 void OhAutofillManager::OnHidePopupImpl() {
-  auto* rfh = static_cast<ContentAutofillDriver*>(driver())->render_frame_host();
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     LOG(ERROR) << "rfh is nullptr or not active";
     return;
@@ -531,21 +524,9 @@ void OhAutofillManager::OnHidePopupImpl() {
   is_password_popup_show_ = false;
 }
 
-void OhAutofillManager::PropagateAutofillPredictions(
-    const std::vector<FormStructure*>& forms) {
-  LOG(INFO) << "PropagateAutofillPredictions";
-}
-
 void OhAutofillManager::OnFormProcessed(const FormData& form,
                                         const FormStructure& form_structure) {
   LOG(INFO) << "OnFormProcessed";
-}
-
-void OhAutofillManager::OnServerRequestError(
-    FormSignature form_signature,
-    AutofillDownloadManager::RequestType request_type,
-    int http_error) {
-  LOG(INFO) << "OnServerRequestError";
 }
 
 void OhAutofillManager::Reset() {
@@ -559,16 +540,10 @@ void OhAutofillManager::Reset() {
   has_server_prediction_ = false;
 }
 
-void OhAutofillManager::OnContextMenuShownInField(
-    const FormGlobalId& form_global_id,
-    const FieldGlobalId& field_global_id) {
-  // Not relevant for Android. Only called via context menu in Desktop.
-  NOTREACHED();
-}
-
+#ifndef OHOS_FUZZ_COMPILE_ERROR_FIX
 AutofillProvider* OhAutofillManager::GetAutofillProvider() {
   if (auto* rfh =
-          static_cast<ContentAutofillDriver*>(driver())->render_frame_host()) {
+          static_cast<ContentAutofillDriver&>(driver()).render_frame_host()) {
     if (rfh->IsActive()) {
       if (auto* web_contents = content::WebContents::FromRenderFrameHost(rfh)) {
         return AutofillProvider::FromWebContents(web_contents);
@@ -577,8 +552,13 @@ AutofillProvider* OhAutofillManager::GetAutofillProvider() {
   }
   return nullptr;
 }
+#endif
 
-void OhAutofillManager::FillOrPreviewForm(mojom::RendererFormDataAction action,
+void OhAutofillManager::OnFocusOnNonFormFieldImpl() {
+  LOG(INFO) << "OnFocusOnNonFormFieldImpl";
+}
+
+void OhAutofillManager::FillOrPreviewForm(mojom::ActionPersistence action,
                                           const FormData& form,
                                           FieldTypeGroup field_type_group,
                                           const url::Origin& triggered_origin) {
@@ -586,5 +566,12 @@ void OhAutofillManager::FillOrPreviewForm(mojom::RendererFormDataAction action,
 }
 
 void OhAutofillManager::StartNewLoggingSession() {}
+
+#if BUILDFLAG(ARKWEB_DATALIST)
+void OhAutofillManager::SuggestionSelected(const FieldGlobalId& field_id,
+                                           std::u16string text) {
+  driver().RendererShouldAcceptDataListSuggestion(field_id, text);
+}
+#endif
 
 }  // namespace autofill
