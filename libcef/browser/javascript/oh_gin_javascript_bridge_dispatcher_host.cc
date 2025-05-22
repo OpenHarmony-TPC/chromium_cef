@@ -39,7 +39,7 @@ class ValueConvertState {
     }
 
    private:
-    ValueConvertState* state_;
+    raw_ptr<ValueConvertState> state_;
   };
 
   explicit ValueConvertState()
