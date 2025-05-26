@@ -13,7 +13,7 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/thread_util.h"
-#include "cef/ohos_cef_ext/include/arkweb_dialog_handler_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_file_dialog_manager_utils.h"
 #include "chrome/browser/file_select_helper.h"
 #include "content/public/browser/file_select_listener.h"
 #include "content/public/browser/render_frame_host.h"
@@ -135,8 +135,6 @@ FileChooserParams SelectFileToFileChooserParams(
       break;
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
     case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
-      mode = FileChooserParams::Mode::kUploadFolder;
-      break;
     case ui::SelectFileDialog::Type::SELECT_FOLDER:
       mode = FileChooserParams::Mode::kUploadFolder;
       break;
@@ -269,7 +267,11 @@ class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
 };
 
 CefFileDialogManager::CefFileDialogManager(CefBrowserHostBase* browser)
-    : browser_(browser) {}
+    : browser_(browser) {
+#if BUILDFLAG(IS_ARKWEB)
+    arkweb_browser_info_manager_utils_ = std::make_unique<ArkwebFileDialogManagerUtils>(this);
+#endif
+  }
 
 CefFileDialogManager::~CefFileDialogManager() = default;
 
@@ -446,10 +448,7 @@ void CefFileDialogManager::RunSelectFile(
                                          /*run_from_cef=*/true);
 
 #if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
-  if (!dialog_) {
-    LOG(ERROR) << "app hasn't onFileSelectShow event, return";
-    return;
-  }
+  if (!arkweb_browser_info_manager_utils_->CheckDialogValidity()) return;
 #endif
 
   // With windowless rendering use the parent handle specified by the client.
@@ -517,13 +516,6 @@ CefFileDialogManager::MaybeRunDelegate(
         accept_filters.push_back(accept_type);
       }
 
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-      std::vector<CefString> mime_filters;
-      for (auto& mime_type : params.mime_types) {
-        mime_filters.push_back(mime_type);
-      }
-#endif
-
       std::vector<CefString> accept_extensions;
       std::vector<CefString> accept_descriptions;
       if (extensions.empty()) {
@@ -538,6 +530,12 @@ CefFileDialogManager::MaybeRunDelegate(
       } else {
         // There may be 1 additional entry in |extensions| and |descriptions|
         // that we want to ignore (for the "Custom Files" filter).
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+        const auto& extension_list = extensions[extensions.size() - 1];
+        for (auto& ext : extension_list) {
+            accept_extensions.push_back(FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
+        }
+#else
         for (size_t i = 0; i < params.accept_types.size(); ++i) {
           const auto& extension_list = extensions[i];
           std::u16string ext_str;
@@ -552,6 +550,7 @@ CefFileDialogManager::MaybeRunDelegate(
             accept_descriptions.push_back(descriptions[i]);
           }
         }
+#endif
       }
 
       CefRefPtr<CefFileDialogCallbackImpl> callbackImpl(
@@ -561,7 +560,8 @@ CefFileDialogManager::MaybeRunDelegate(
           params.title, params.default_file_name.value(), accept_filters,
           accept_extensions, accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-          params.use_media_capture, mime_filters,
+          params.use_media_capture, 
+          arkweb_browser_info_manager_utils_->ConvertMimeTypesToFilters(params),
 #endif
           callbackImpl.get());
       if (!handled) {
@@ -632,11 +632,7 @@ void CefFileDialogManager::SelectFileDoneByListenerCallback(
   dialog_listener->Cancel(listener_destroyed);
 
 #if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
-  if (dialog_ != nullptr) {
-    // There should be no further listener callbacks after this call.
-    dialog_->ListenerDestroyed();
-    dialog_ = nullptr;
-  }
+  arkweb_browser_info_manager_utils_->HandleDialogDestruction();
 #else
   // There should be no further listener callbacks after this call.
   dialog_->ListenerDestroyed();

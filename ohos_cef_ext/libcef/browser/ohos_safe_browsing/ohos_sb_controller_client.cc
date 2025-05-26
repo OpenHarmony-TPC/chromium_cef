@@ -10,7 +10,9 @@
 #include "components/security_interstitials/core/metrics_helper.h"
 #include "content/browser/renderer_host/navigation_controller_impl.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/common/referrer.h"
+#include "libcef/browser/ohos_safe_browsing/ohos_sb_malicious_allowlist.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
 constexpr char kDefaultPageUrl[] = "about:blank";
@@ -44,6 +46,14 @@ std::unique_ptr<MetricsHelper> SbControllerClient::GetMetricsHelper(
 }
 
 void SbControllerClient::GoBack() {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx) &&
+      !SecurityInterstitialControllerClient::CanGoBack()) {
+    LOG(INFO) << "SbControllerClient::GoBack Close";
+    web_contents_->Close();
+    return;
+  }
+
   SecurityInterstitialControllerClient::GoBackAfterNavigationCommitted();
   return;
 }
@@ -60,10 +70,8 @@ void SbControllerClient::Reload() {
     return;
   }
 
-  ScopedListPrefUpdate(
-      prefs_, incognito_mode_ ? ohos_safe_browsing::kIncognitoMaliciousAllowList
-                              : ohos_safe_browsing::kMaliciousAllowList)
-      ->Append(url_.has_host() ? url_.host() : url_.spec());
+  ohos_safe_browsing::MaliciousAllowlist::GetInstance().AddToAllowlist(
+      url_.has_host() ? url_.host() : url_.spec(), incognito_mode_);
   web_contents_->GetController().Reload(content::ReloadType::NORMAL, true);
 }
 

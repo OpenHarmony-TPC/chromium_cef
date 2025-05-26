@@ -34,8 +34,8 @@
 #include "base/strings/utf_string_conversions.h"
 #if BUILDFLAG(ARKWEB_TERMINATE_RENDER)
 #include "arkweb/chromium_ext/base/ohos/sys_info_utils_ext.h"
+#include "arkweb/chromium_ext/base/process/process_handle_posix_ex.h"
 #include "base/process/process.h"
-#include "base/process/process_handle.h"
 #endif
 #include "cef/include/cef_urlrequest.h"
 #include "cef/libcef/common/app_manager.h"
@@ -67,8 +67,10 @@
 #include "third_party/blink/public/web/web_script_source.h"
 #include "third_party/blink/public/web/web_view.h"
 #if BUILDFLAG(IS_ARKWEB)
+#include "libcef/common/arkweb_request_impl_ext.h"
 #include "third_party/blink/public/web/web_element_collection.h"
 #include "third_party/blink/public/web/web_frame_widget.h"
+#include "third_party/blink/public/web/web_hit_test_result.h"
 #endif
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "base/process/process_metrics.h"
@@ -82,6 +84,10 @@
 #include "third_party/blink/public/platform/web_network_state_notifier.h"
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+#include "cef/ohos_cef_ext/libcef/common/soc_perf_util.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 static int DEFAULT_SCROLL_ANIMATION_DURATION_MILLISEC = 600;
 static double POSITION_RATIO = 138.9;
@@ -89,7 +95,34 @@ static double POSITION_RATIO = 138.9;
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 #include "third_party/blink/public/platform/web_cache.h"
 #endif
+#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
+#include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
+#endif
+#if BUILDFLAG(IS_ARKWEB)
+const std::string kAddressPrefix = "geo:0,0?q=";
+const std::string kEmailPrefix = "mailto:";
+const std::string kPhoneNumberPrefix = "tel:";
 
+#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
+// The amount of content to overlap between two screens when using
+// pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
+// animated scroll speed.
+static int STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC = 480;
+// Time for the longest scroll animation.
+static int MAX_SCROLL_ANIMATION_DURATION_MILLISEC = 750;
+#endif  // ARKWEB_PAGE_UP_DOWN
+
+enum HitTestDataType {
+  kUnknown = 0,
+  kPhone = 2,
+  kGeo = 3,
+  kEmail = 4,
+  kImage = 5,
+  kSrcLink = 7,
+  kSrcImageLink = 8,
+  kEditText = 9,
+};
+#endif
 #if BUILDFLAG(IS_OHOS)
 void ArkwebFrameExtImpl::GetImages(CefRefPtr<CefGetImagesCallback> callback) {
   NOTREACHED() << "GetImages cannot be called from the renderer process";
@@ -175,10 +208,16 @@ int GetSystemTotalMem() {
   return -1;
 }
 
-bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem) {
+bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem, int32_t command_id) {
   if (total_mem > kNeedImageDownScaleSysMemKB) {
     return false;
   }
+ 
+  // only image copy need down scale
+  if (command_id != MENU_ID_IMAGE_COPY) {
+    return false;
+  }
+
   if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
       original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
     return false;
@@ -186,18 +225,17 @@ bool NeedsDownscale(const gfx::Size& original_image_size, int total_mem) {
   return true;
 }
 
-SkBitmap Downscale(const SkBitmap& image, int total_mem) {
+SkBitmap Downscale(const SkBitmap& image, int total_mem, int32_t command_id) {
   if (image.isNull()) {
     return SkBitmap();
   }
 
   gfx::Size image_size(image.width(), image.height());
-  if (!NeedsDownscale(image_size, total_mem)) {
+  if (!NeedsDownscale(image_size, total_mem, command_id)) {
     return image;
   }
 
   gfx::SizeF scaled_size = gfx::SizeF(image_size);
-
   if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
     scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
                       scaled_size.width());
@@ -254,7 +292,7 @@ void ArkwebFrameExtImpl::GetImageForContextNode(int command_id) {
   original_size = web_element.GetImageSize();
 
   SkBitmap image = web_element.ImageContents();
-  SkBitmap resize_image = Downscale(image, total_mem_);
+  SkBitmap resize_image = Downscale(image, total_mem_, command_id);
   image_extension = "." + web_element.ImageExtension();
   params->width = resize_image.width();
   params->height = resize_image.height();
@@ -408,10 +446,16 @@ void ArkwebFrameExtImpl::SetOverscrollMode(int mode) {
 void ArkwebFrameExtImpl::GetScrollOffset(
     cef::mojom::RenderFrame::GetScrollOffsetCallback callback) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "GetScrollOffset get render frame failed";
+    std::move(callback).Run(0.0f, 0.0f);
+    return;
+  }
   DCHECK(render_frame->IsMainFrame());
   blink::WebView* webView = render_frame->GetWebView();
   if (!webView) {
     LOG(ERROR) << "GetScrollOffset get webView failed";
+    std::move(callback).Run(0.0f, 0.0f);
     return;
   }
   auto scroll_offset = webView->GetScrollOffset();
@@ -421,6 +465,11 @@ void ArkwebFrameExtImpl::GetScrollOffset(
 void ArkwebFrameExtImpl::GetOverScrollOffset(
     cef::mojom::RenderFrame::GetOverScrollOffsetCallback callback) {
   auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "GetOverScrollOffset get render frame failed";
+    std::move(callback).Run(0.0f, 0.0f);
+    return;
+  }
   DCHECK(render_frame->IsMainFrame());
 
   auto overScroll_offset = render_frame->GetOverScrollOffset();
@@ -457,5 +506,283 @@ void ArkwebFrameExtImpl::UpdatePixelRatio(float ratio) {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void ArkwebFrameExtImpl::RemoveCache() {
   blink::WebCache::Clear();
+}
+#endif
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+bool ArkwebFrameExtImpl::RemovePrefixAndAssignIfMatches(std::string_view prefix,
+                                                        const GURL& url,
+                                                        std::string* dest) {
+  const std::string_view spec(url.possibly_invalid_spec());
+ 
+  if (base::StartsWith(spec, prefix)) {
+    url::RawCanonOutputW<1024> output;
+    url::DecodeURLEscapeSequences(spec.substr(prefix.length()),
+                                  url::DecodeURLMode::kUTF8OrIsomorphic,
+                                  &output);
+    *dest = base::UTF16ToUTF8(output.view());
+    return true;
+  }
+  return false;
+}
+ 
+void ArkwebFrameExtImpl::DistinguishAndAssignSrcLinkType(
+    const GURL& url,
+    cef::mojom::HitDataParamsPtr& data) {
+  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
+                                     &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kGeo;
+  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kPhone;
+  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
+                                            &data->extra_data_for_type)) {
+    data->type = HitTestDataType::kEmail;
+  } else {
+    data->type = HitTestDataType::kSrcLink;
+    data->extra_data_for_type = url.possibly_invalid_spec();
+    if (!data->extra_data_for_type.empty()) {
+      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
+    }
+  }
+}
+void ArkwebFrameExtImpl::PopulateHitTestData(
+    const GURL& absolute_link_url,
+    const GURL& absolute_image_url,
+    bool is_editable,
+    cef::mojom::HitDataParamsPtr& data) {
+  if (!absolute_image_url.is_empty()) {
+    data->img_src = absolute_image_url;
+  }
+ 
+  const bool is_javascript_scheme =
+      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
+  const bool has_link_url = !absolute_link_url.is_empty();
+  const bool has_image_url = !absolute_image_url.is_empty();
+  if (has_link_url && !has_image_url && !is_javascript_scheme) {
+    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
+  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
+    data->type = HitTestDataType::kSrcImageLink;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+    if (absolute_link_url.is_valid()) {
+      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
+    }
+  } else if (!has_link_url && has_image_url) {
+    data->type = HitTestDataType::kImage;
+    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
+  } else if (is_editable) {
+    data->type = HitTestDataType::kEditText;
+    DCHECK_EQ(0u, data->extra_data_for_type.length());
+  }
+}
+GURL ArkwebFrameExtImpl::GetAbsoluteUrl(const blink::WebNode& node,
+                                        const std::u16string& url_fragment) {
+  return GURL(node.GetDocument().CompleteURL(
+      blink::WebString::FromUTF16(url_fragment)));
+}
+ 
+GURL ArkwebFrameExtImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
+  if (element.IsNull()) {
+    return GURL();
+  }
+  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
+}
+blink::WebElement ArkwebFrameExtImpl::GetImgChild(const blink::WebNode& node) {
+  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
+  DCHECK(!collection.IsNull());
+  return collection.FirstItem();
+}
+ 
+GURL ArkwebFrameExtImpl::GetChildImageUrlFromElement(
+    const blink::WebElement& element) {
+  const blink::WebElement child_img = GetImgChild(element);
+  if (child_img.IsNull()) {
+    return GURL();
+  }
+  return GetAbsoluteSrcUrl(child_img);
+}
+ 
+void ArkwebFrameExtImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SendHitEvent webview is NULL";
+    return;
+  }
+  const blink::WebHitTestResult result =
+      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
+                                   gfx::Size(params->width, params->height));
+  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
+  GURL absolute_image_url = result.AbsoluteImageURL();
+  if (!result.UrlElement().IsNull()) {
+    data->anchor_text = result.UrlElement().TextContent().Utf16();
+    data->href = result.UrlElement().GetAttribute("href").Utf16();
+    if (absolute_image_url.is_empty()) {
+      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
+    }
+  }
+ 
+  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
+                      result.IsContentEditable(), data);
+ 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_hit_data_.type = data->type;
+  cef_hit_data_.extra_data = data->extra_data_for_type;
+  is_update_ = true;
+  SendToBrowserFrame(__FUNCTION__,
+                     base::BindOnce(
+                         [](const int32_t type, const std::string extra_data,
+                            const BrowserFrameType& render_frame) {
+                           render_frame->UpdateHitTestData(type, extra_data);
+                         },
+                         cef_hit_data_.type, cef_hit_data_.extra_data));
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
+void ArkwebFrameExtImpl::SetOptimizeParserBudgetEnabled(bool enable) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "SetOptimizeParserBudgetEnabled. render_frame is nullptr.";
+    return;
+  }
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(INFO) << "SetOptimizeParserBudgetEnabled webview is NULL";
+    return;
+  }
+  blink::SetOptimizeParserBudgetEnabled(enable);
+}
+#endif
+#if BUILDFLAG(IS_ARKWEB)
+void ArkwebFrameExtImpl::OnFocusedNodeChanged(
+    const blink::WebElement& element) {
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  if (element.IsNull() || is_update_) {
+    LOG(INFO) << "FocusedHitDataChange element is NULL or no need to report.";
+    is_update_ = false;
+    return;
+  }
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+ 
+  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
+  data->href = element.GetAttribute("href").Utf16();
+  data->anchor_text = element.TextContent().Utf16();
+  GURL absolute_link_url;
+  if (element.IsLink()) {
+    absolute_link_url = GetAbsoluteUrl(element, data->href);
+  }
+  GURL absolute_image_url = GetChildImageUrlFromElement(element);
+  PopulateHitTestData(absolute_link_url, absolute_image_url,
+                      element.IsEditable(), data);
+ 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_hit_data_.type = data->type;
+  cef_hit_data_.extra_data = data->extra_data_for_type;
+  SendToBrowserFrame(__FUNCTION__,
+                     base::BindOnce(
+                         [](const int32_t type, const std::string extra_data,
+                            const BrowserFrameType& render_frame) {
+                           render_frame->UpdateHitTestData(type, extra_data);
+                         },
+                         cef_hit_data_.type, cef_hit_data_.extra_data));
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+}
+#endif  // BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void ArkwebFrameExtImpl::GetHitData(
+    cef::mojom::RenderFrame::GetHitDataCallback callback) {
+  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
+}
+ 
+void ArkwebFrameExtImpl::SetFocusByPosition(
+    float x,
+    float y,
+    cef::mojom::RenderFrame::SetFocusByPositionCallback callback) {
+  LOG(INFO) << "SetFocusByPosition in cef frame";
+  bool isEditable = false;
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "render_frame NULL";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  if (!render_frame->IsMainFrame()) {
+    LOG(ERROR) << "IsMainFrame false";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "webview is NULL";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  const blink::WebHitTestResult result =
+      webview->HitTestResultForTap(gfx::Point(x, y), gfx::Size(1, 1));
+  if (result.IsContentEditable() && result.GetNode().IsElementNode()) {
+    isEditable = true;
+    const blink::WebElement webElement =
+        result.GetNode().To<blink::WebElement>();
+    if (!webElement.Focused() && webElement.IsFocusable()) {
+      std::move(callback).Run(isEditable);
+      LOG(INFO) << "can focus and do Focus";
+      // focus must be async so as not to block the thread
+      blink_glue::PenTouchInputFocus(result.GetNode());
+      return;
+    }
+  }
+  std::move(callback).Run(isEditable);
+  LOG(INFO) << "SetFocusByPosition cef frame done. isEditable:"
+            << (isEditable ? "true" : "false");
+}
+ 
+void ArkwebFrameExtImpl::SetScrollable(bool enable) {
+  scroll_enabled_ = enable;
+}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
+int computeDurationInMilliSec(int dx, int dy) {
+  int distance = std::max(std::abs(dx), std::abs(dy));
+  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
+  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
+}
+ 
+void ArkwebFrameExtImpl::ScrollPageUpDown(bool is_up,
+                                          bool is_half,
+                                          float view_height) {
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  DCHECK(render_frame->IsMainFrame());
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "scorll page up down get webview failed";
+    return;
+  }
+  auto scroll_offset = webview->GetScrollOffset();
+  float dy;
+  if (is_up) {
+    dy = is_half ? (-view_height / 2) : -scroll_offset.y();
+  } else {
+    if (!is_half) {
+      float bottom_y = webview->GetScrollBottom();
+      if (bottom_y <= 0) {
+        LOG(ERROR) << "get scroll bottom offset failed.";
+        return;
+      }
+      dy = bottom_y - scroll_offset.y();
+    } else {
+      dy = view_height / 2;
+    }
+  }
+  webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
+                        base::Milliseconds(computeDurationInMilliSec(0, dy)));
+}
+#endif  // #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+void ArkwebFrameExtImpl::SetIsFling(bool is_fling) {
+  LOG(DEBUG) << "SetIsFling in render side:" << is_fling;
+  soc_perf::SocPerUtil::is_slide = is_fling;
 }
 #endif

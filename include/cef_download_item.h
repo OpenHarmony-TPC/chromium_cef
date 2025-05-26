@@ -39,7 +39,6 @@
 #pragma once
 
 #include "include/cef_base.h"
-#include "include/cef_download_item_ext.h"
 
 class CefDownloadItemExt;
 

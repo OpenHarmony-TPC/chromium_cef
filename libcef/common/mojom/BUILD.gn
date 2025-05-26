@@ -39,6 +39,7 @@ mojom("mojom") {
     enabled_features += [ "arkweb_resource_interception" ]
     enabled_features += [ "arkweb_optimize_parser_budget" ]
     enabled_features += [ "arkweb_scrollbar" ]
+    enabled_features += [ "arkweb_performance_scheduling" ]
 
   }
 }

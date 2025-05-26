@@ -48,7 +48,7 @@
 
 #if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
 #include "base/logging.h"
-#include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
+#include "arkweb/chromium_ext/third_party/blink/renderer/platform/weborigin/scheme_registry_utils.h"
 #endif
 
 namespace {
@@ -266,7 +266,7 @@ void CefRenderManager::WebKitInitialized() {
       if (info.is_code_cache_enabled) {
         LOG(DEBUG) << "Render manager register the scheme:"
                    << info.scheme_name.c_str() << " supported code cache.";
-        blink::SchemeRegistry::
+        blink::SchemeRegistryUtils::
             RegisterURLSchemeAsSupportingCodeCacheWithResponseTime(
                 String(info.scheme_name));
       }

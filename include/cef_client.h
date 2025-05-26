@@ -59,13 +59,17 @@
 #include "include/cef_process_message.h"
 #include "include/cef_render_handler.h"
 #include "include/cef_request_handler.h"
-#include "include/cef_web_extension_api_handler.h"
+#include "cef/ohos_cef_ext/include/cef_safe_browsing_detection_callback.h"
+
 
 class ArkWebClientExt;
 class ArkWebLoadHandlerExt;
 class ArkWebRenderHandlerExt;
 class CefDialogHandlerExt;
 class ArkWebDisplayHandlerExt;
+class CefMediaPlayerListenerForVAST;
+class CefMediaPlayerController;
+class CefWebExtensionApiHandler;
 
 ///
 /// Implement this interface to provide handler implementations.
@@ -207,7 +211,6 @@ class CefClient : public virtual CefBaseRefCounted {
   /// Return the handler for web extension api. If no handler is provided the
   /// default implementation will be used.
   ///
-  /*--cef()--*/
   virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
     return nullptr;
   }
@@ -230,6 +233,30 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnReportStatisticLog(const CefString& content) {}
+
+#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+  ///
+  /// Return the interface for listening to the full-screen video.
+  ///
+  virtual CefOwnPtr<CefMediaPlayerListenerForVAST> OnFullScreenOverlayEnter(
+      CefOwnPtr<CefMediaPlayerController> media_player_controller,
+      const std::string& extra_info) { return nullptr; }
+
+#endif // ARKWEB_VIDEO_ASSISTANT
+
+  ///
+  /// Detect whether the website has security risks.
+  ///
+  /*--cef()--*/
+  virtual void HandleSafeBrowsingDetection(int detectMode,
+                                           int detectSwitch,
+                                           const CefString& url) {}
+ 
+  ///
+  /// Set the callback for detecting whether the website has security risks.
+  ///
+  virtual void SetSafeBrowsingDetectionCallback(
+      CefRefPtr<CefSafeBrowsingDetectionCallback> callback) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_

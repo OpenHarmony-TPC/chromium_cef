@@ -58,8 +58,19 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   int32_t routing_id = -1;
   int32_t object_id = -1;
   bool msg_correct = false;
+  bool isAsyncThread = false;
   if (message.is_sync()) {
     msg_correct = iter.ReadInt(&routing_id) && iter.ReadInt(&object_id);
+    std::string url;
+    std::string method_name;
+    if (iter.ReadString(&url) && iter.ReadString(&method_name)) {
+      base::AutoReset<int32_t> routingId(&current_routing_id_,
+                                         message.routing_id());
+      scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
+      if (host) {
+        host->OnHasAsyncThreadMethod(object_id, method_name, &isAsyncThread);
+      }
+    }
   } else {
     msg_correct = iter.ReadInt(&object_id);
   }
@@ -71,7 +82,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
   }
 #if BUILDFLAG(CONTENT_ENABLE_LEGACY_IPC)
   if (message.HasAttachments()) {
-    if (msg_correct && !message.is_sync() &&
+    if (msg_correct && (!message.is_sync() || isAsyncThread) &&
         object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
       async_task_runner_->PostTask(
           FROM_HERE, base::BindOnce(base::IgnoreResult(
@@ -86,7 +97,7 @@ bool OhGinJavascriptBridgeMessageFilter::OnMessageReceived(
                         base::WrapRefCounted(this), message));
     }
   } else {
-    if (msg_correct && !message.is_sync() &&
+    if (msg_correct && (!message.is_sync() || isAsyncThread) &&
         object_id >= OhGinJavascriptBridgeDispatcherHost::MIN_NATIVE_OBJ_ID) {
       async_task_runner_->PostTask(
           FROM_HERE,

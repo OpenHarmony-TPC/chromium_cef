@@ -7,9 +7,6 @@
 
 #include <tuple>
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-#include "arkweb/chromium_ext/base/ohos/sys_info_utils_ext.h"
-#endif
 #include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/lazy_instance.h"
@@ -33,7 +30,6 @@
 #include "content/public/common/content_switches.h"
 #include "net/base/features.h"
 #include "sandbox/policy/switches.h"
-#include "services/network/public/cpp/features.h"
 #include "third_party/blink/public/common/switches.h"
 #include "ui/base/ui_base_paths.h"
 #include "ui/base/ui_base_switches.h"
@@ -44,12 +40,17 @@
 #include "cef/libcef/common/util_linux.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_BFCACHE)
-#include "content/public/common/content_features.h"
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#include "cef/ohos_cef_ext/libcef/common/chrome/chrome_main_delegate_cef_for_include.cc"
 #endif
+
 namespace {
 
+#if BUILDFLAG(IS_ARKWEB)
+base::LazyInstance<ArkWebContentRendererClientCefExt>::DestructorAtExit
+#else
 base::LazyInstance<ChromeContentRendererClientCef>::DestructorAtExit
+#endif
     g_chrome_content_renderer_client = LAZY_INSTANCE_INITIALIZER;
 
 void InitLogging(const base::CommandLine* command_line) {
@@ -332,7 +333,7 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       disable_features.push_back(base::kEnableHangWatcher.name);
     }
 
-    if (base::ohos::ApplicationApiVersion() < 16) {
+    if (base::ohos::ApplicationApiVersion() < 20) {
       disable_features.push_back(
           network::features::kOpaqueResponseBlockingV02.name);
     }
@@ -365,13 +366,7 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
 #endif
 
 #if !BUILDFLAG(ARKWEB_BFCACHE)
-    if (features::kBackForwardCache.default_state ==
-        base::FEATURE_ENABLED_BY_DEFAULT) {
-      // Disable BackForwardCache globally so that
-      // blink::RuntimeEnabledFeatures::BackForwardCacheEnabled reports the
-      // correct value in the renderer process (see issue #3374).
-      disable_features.push_back(features::kBackForwardCache.name);
-    }
+    ManageBackForwardCacheExt(disable_features);
 #endif
 
     if (!disable_features.empty()) {
@@ -566,17 +561,6 @@ CefBrowserContext* ChromeMainDelegateCef::CreateNewBrowserContext(
   context->InitializeAsync(std::move(initialized_cb));
   return context;
 }
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-CefRefPtr<CefRequestContext>
-ChromeMainDelegateCef::GetGlobalOTRRequestContext() {
-  auto browser_client = content_browser_client();
-  if (browser_client) {
-    return browser_client->off_the_record_request_context();
-  }
-  return nullptr;
-}
-#endif
 
 scoped_refptr<base::SingleThreadTaskRunner>
 ChromeMainDelegateCef::GetBackgroundTaskRunner() {

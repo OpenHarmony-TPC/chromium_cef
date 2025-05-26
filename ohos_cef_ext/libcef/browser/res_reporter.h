@@ -7,6 +7,8 @@
 
 #include <vector>
 
+#include "base/memory/raw_ptr.h"
+
 using InitFunc = void (*)();
 using ResAddRtg = void (*)(std::vector<int>);
 using ResFetchBegin = void (*)();
@@ -26,7 +28,7 @@ class ResReporter {
   bool LoadLibrary();
   void CloseLibrary();
   void* LoadSymbol(const char* symName);
-  void* resSchedHandle_ = nullptr;
+  raw_ptr<void> resSchedHandle_ = nullptr;
   bool resSchedSoLoaded_ = false;
 
   InitFunc initFunc_ = nullptr;

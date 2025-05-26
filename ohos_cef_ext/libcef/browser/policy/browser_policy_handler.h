@@ -23,8 +23,6 @@
 
 namespace policy {
 
-bool ShouldUseBrowserPolicy(bool& result);
-
 class BrowserPolicyHandler {
  public:
   class Observer {
@@ -35,6 +33,8 @@ class BrowserPolicyHandler {
     virtual ~Observer() = default;
   };
   static BrowserPolicyHandler* GetInstance();
+  void MaybeInitFromPersistentPrefs();
+  void InitPolicyFromFile(const base::FilePath& cache_path);
   void SetPolicyAndNotify(const std::string& policy, int version);
   PolicyBundle GetPolicyBundle();
   void AddObserver(Observer* observer);
@@ -43,8 +43,8 @@ class BrowserPolicyHandler {
  private:
   const int kInvalidPolicyVersion = -1;
   bool SetPolicy(const std::string& policy, int version);
-  void MaybeInitFromPersistentPrefs();
   PolicyBundle bundle_;
+  base::FilePath policy_file_path_;
   int current_version_ = kInvalidPolicyVersion;
   base::ObserverList<Observer>::Unchecked observers_;
 };

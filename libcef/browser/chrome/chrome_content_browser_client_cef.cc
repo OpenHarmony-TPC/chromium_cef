@@ -10,9 +10,6 @@
 #include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/path_service.h"
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-#include "base/timer/timer.h"
-#endif
 #include "cef/libcef/browser/browser_frame.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info_manager.h"
@@ -50,15 +47,9 @@
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
 
-#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
-#include "components/site_isolation/site_isolation_policy.h"
-#include "content/public/browser/site_isolation_mode.h"
+#if !BUILDFLAG(IS_MAC)
+#include "cef/libcef/browser/chrome/chrome_web_contents_view_delegate_cef.h"
 #endif
-
-#if BUILDFLAG(ARKWEB_COOKIE)
-#include "cef/ohos_cef_ext/include/cef_cookie_ext.h"
-#include "cef/ohos_cef_ext/libcef/browser/net_service/cookie_manager_impl_ext.h"
-#endif  // BUILDFLAG(ARKWEB_COOKIE)
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "base/files/file_util.h"
@@ -70,43 +61,17 @@
 #include "content/public/browser/shared_cors_origin_access_list.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-#include "libcef/browser/report_manager.h"
-#endif
-
-#if !BUILDFLAG(IS_MAC)
-#include "cef/libcef/browser/chrome/chrome_web_contents_view_delegate_cef.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
-#include "libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
-bool g_siteIsolationMode = false;
-#endif
-
-#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-#include "components/performance_manager/embedder/binders.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_CA)
-#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#include "base/base_switches.h"
 #include "third_party/bounds_checking_function/include/securec.h"
 constexpr int32_t APPLICATION_API_10 = 10;
 #endif
 
-#include "chrome/common/chrome_constants.h"
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "cef/ohos_cef_ext/libcef/browser/ark_web_certificate_query.h"
+#endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
 namespace {
-
-#if BUILDFLAG(ARKWEB_MAX_CACHE_SIZE)
-constexpr int64_t LARGE_CAPACITY_DEVICE_THRESHOLD =
-    static_cast<int64_t>(100) * 1024 * 1024 * 1024;
-constexpr int32_t LARGE_CAPACITY_DEVICE_CACHE_SIZE = 100 * 1024 * 1024;
-constexpr int32_t SMALL_CAPACITY_DEVICE_CACHE_SIZE = 20 * 1024 * 1024;
-constexpr char WEB_CACHE_PATH[] = "/data/storage/el2/base/cache/web";
-#endif
 
 class CefSelectClientCertificateCallbackImpl
     : public CefSelectClientCertificateCallbackExt {
@@ -137,10 +102,6 @@ class CefSelectClientCertificateCallbackImpl
     }
   }
 
-  void Cancel() override {}
-
-  void Ignore() override {}
-
   [[nodiscard]] std::unique_ptr<content::ClientCertificateDelegate>
   DisconnectDelegate() {
     CEF_REQUIRE_UIT();
@@ -167,265 +128,6 @@ class CefSelectClientCertificateCallbackImpl
     }
   }
 
-#if BUILDFLAG(IS_ARKWEB)
-  static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKey(
-      bssl::UniquePtr<EVP_PKEY> key) {
-    if (!key) {
-      return nullptr;
-    }
-
-    return base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
-        std::make_unique<SSLPlatformKey>(std::move(key)),
-        net::GetSSLPlatformKeyTaskRunner());
-  }
-
-  static net::ClientCertIdentityList ClientCertIdentityListFromCertificateList(
-      const net::CertificateList& certs) {
-    net::ClientCertIdentityList result;
-    for (const auto& cert : certs) {
-      result.push_back(std::make_unique<ClientCertIdentityOhos>(cert, nullptr));
-    }
-
-    return result;
-  }
-
-  static void AcquirePrivateKey(
-      std::unique_ptr<content::ClientCertificateDelegate> delegate,
-      CefRefPtr<CefX509Certificate> cert,
-      const std::string& private_key_file,
-      std::string& pkcs8) {
-#if BUILDFLAG(ARKWEB_CA)
-    scoped_refptr<net::SSLPrivateKey> ssl_private_key = nullptr;
-    if (GetApplicationApiVersion() < APPLICATION_API_10) {
-      CBS cbs;
-      CBS_init(&cbs, reinterpret_cast<const uint8_t*>(pkcs8.data()),
-               pkcs8.size());
-      bssl::UniquePtr<EVP_PKEY> pkey(EVP_parse_private_key(&cbs));
-      if (!pkey || CBS_len(&cbs) != 0) {
-        LOG(ERROR) << "AcquirePrivateKey: EVP parse private key failed, pkey = "
-                   << pkey << ", CBS length = " << CBS_len(&cbs);
-        return;
-      }
-
-      ssl_private_key = WrapOpenSSLPrivateKey(std::move(pkey));
-      if (!ssl_private_key) {
-        LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
-        return;
-      }
-    } else {
-      ssl_private_key = WrapOpenSSLPrivateKeyOHOS(private_key_file);
-      if (!ssl_private_key) {
-        LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
-        return;
-      }
-    }
-#else
-    CBS cbs;
-    CBS_init(&cbs, reinterpret_cast<const uint8_t*>(pkcs8.data()),
-             pkcs8.size());
-    bssl::UniquePtr<EVP_PKEY> pkey(EVP_parse_private_key(&cbs));
-    if (!pkey || CBS_len(&cbs) != 0) {
-      LOG(ERROR) << "AcquirePrivateKey: EVP parse private key failed, pkey = "
-                 << pkey << ", CBS length = " << CBS_len(&cbs);
-      return;
-    }
-
-    scoped_refptr<net::SSLPrivateKey> ssl_private_key =
-        WrapOpenSSLPrivateKey(std::move(pkey));
-    if (!ssl_private_key) {
-      LOG(ERROR) << "AcquirePrivateKey: ssl private key parse failed";
-      return;
-    }
-#endif
-    RunWithPrivateKey(std::move(delegate), cert, ssl_private_key);
-  }
-
-  static void RunSelectNow(
-      std::unique_ptr<content::ClientCertificateDelegate> delegate,
-      const std::string& private_key_file,
-      const std::string& cert_chain_file,
-      const std::string& host,
-      int port) {
-    LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunSelectNow";
-    CEF_REQUIRE_UIT();
-#if BUILDFLAG(ARKWEB_CA)
-    net::CertificateList certsList;
-    if (GetApplicationApiVersion() < APPLICATION_API_10) {
-      // Client certificate file read
-      std::string cert_data;
-      base::FilePath src_root_cert;
-      base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_cert);
-      if (!base::ReadFileToString(src_root_cert.AppendASCII(cert_chain_file),
-                                  &cert_data)) {
-        LOG(ERROR) << "RunSelectNow: read cert file to string failed";
-        return;
-      }
-
-      // Convert the client certificates file to X509
-      certsList = net::X509Certificate::CreateCertificateListFromBytes(
-          base::as_bytes(base::make_span(cert_data)),
-          net::X509Certificate::FORMAT_AUTO);
-      if (certsList.empty()) {
-        LOG(ERROR) << "RunSelectNow: certs list is empty";
-        return;
-      }
-    } else {
-      // Get client certificate from ohos cert manager
-      auto RootCertDataAdapter =
-          OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
-      if (RootCertDataAdapter == nullptr) {
-        LOG(ERROR) << "RunSelectNow: root cert data adapter is null";
-        return;
-      }
-      char* uri = new char[private_key_file.length() + 1];
-      if (uri == nullptr) {
-        LOG(ERROR) << "RunSelectNow: new uri memory failed";
-        return;
-      }
-
-      uint32_t i = 0;
-      for (; i < private_key_file.length(); i++) {
-        uri[i] = private_key_file[i];
-      }
-      uri[i] = '\0';
-
-      auto certMaxSize = RootCertDataAdapter->GetAppCertMaxSize();
-      uint8_t* certData = new uint8_t[certMaxSize];
-      if (certData == nullptr) {
-        LOG(ERROR) << "RunSelectNow: new cert data memory failed";
-        delete[] uri;
-        return;
-      }
-
-      if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
-        delete[] uri;
-        delete[] certData;
-        return;
-      }
-      uint32_t len = 0;
-      RootCertDataAdapter->GetAppCert((uint8_t*)uri, certData, &len);
-      if (len == 0) {
-        LOG(ERROR) << "RunSelectNow: get app cert failed";
-        delete[] uri;
-        delete[] certData;
-        return;
-      }
-
-      certsList = net::X509Certificate::CreateCertificateListFromBytes(
-          base::as_bytes(
-              base::make_span(static_cast<const uint8_t*>(certData), len)),
-          net::X509Certificate::FORMAT_AUTO);
-      if (certsList.empty()) {
-        LOG(ERROR) << "RunSelectNow: certs list is empty";
-        delete[] uri;
-        delete[] certData;
-        return;
-      }
-
-      delete[] uri;
-      delete[] certData;
-    }
-#else
-    // Client certificate file read
-    std::string cert_data;
-    base::FilePath src_root_cert;
-    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_cert);
-    if (!base::ReadFileToString(src_root_cert.AppendASCII(cert_chain_file),
-                                &cert_data)) {
-      LOG(ERROR) << "RunSelectNow: read cert file to string failed";
-      return;
-    }
-
-    // Convert the client certificates file to X509
-    net::CertificateList certsList =
-        net::X509Certificate::CreateCertificateListFromBytes(
-            base::as_bytes(base::make_span(cert_data)),
-            net::X509Certificate::FORMAT_AUTO);
-    if (certsList.empty()) {
-      LOG(ERROR) << "RunSelectNow: certs list is empty";
-      return;
-    }
-#endif
-
-    auto client_certs = ClientCertIdentityListFromCertificateList(certsList);
-    CefRequestHandler::X509CertificateList certs;
-    for (net::ClientCertIdentityList::iterator iter = client_certs.begin();
-         iter != client_certs.end(); iter++) {
-      certs.push_back(new CefX509CertificateImpl(std::move(*iter)));
-    }
-
-    std::vector<bssl::UniquePtr<CRYPTO_BUFFER>> intermediates;
-    for (size_t i = 1; i < certsList.size(); ++i) {
-      intermediates.push_back(bssl::UpRef(certsList[i]->cert_buffer()));
-    }
-
-    scoped_refptr<net::X509Certificate> cert_X509(
-        net::X509Certificate::CreateFromBuffer(
-            bssl::UpRef(certsList[0]->cert_buffer()),
-            std::move(intermediates)));
-
-    // Save the converted X509 format certificate
-    CefX509CertificateImpl* certImpl =
-        static_cast<CefX509CertificateImpl*>(certs[0].get());
-    certImpl->setClientCert(cert_X509);
-
-    // Private key file read
-    std::string prikey_data;
-#if BUILDFLAG(ARKWEB_CA)
-    if (GetApplicationApiVersion() < APPLICATION_API_10) {
-      base::FilePath src_root_prikey;
-      base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_prikey);
-      if (!base::ReadFileToString(src_root_prikey.AppendASCII(private_key_file),
-                                  &prikey_data)) {
-        LOG(ERROR) << "RunSelectNow: private key file to string failed";
-        return;
-      }
-    }
-#else
-    base::FilePath src_root_prikey;
-    base::PathService::Get(base::DIR_SOURCE_ROOT, &src_root_prikey);
-    if (!base::ReadFileToString(src_root_prikey.AppendASCII(private_key_file),
-                                &prikey_data)) {
-      LOG(ERROR) << "RunSelectNow: private key file to string failed";
-      return;
-    }
-#endif
-
-    AcquirePrivateKey(std::move(delegate), certs[0], private_key_file,
-                      prikey_data);
-    return;
-  }
-
-#if BUILDFLAG(ARKWEB_CA)
-  static int32_t GetApplicationApiVersion() {
-    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kOhosAppApiVersion)) {
-      LOG(ERROR) << "kOhosAppApiVersion not exist";
-      return -1;
-    }
-    std::string apiVersion =
-        base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-            switches::kOhosAppApiVersion);
-    if (apiVersion.empty()) {
-      return -1;
-    }
-    return std::stoi(apiVersion);
-  }
-
-  static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKeyOHOS(
-      const std::string& private_key_file) {
-    if (!private_key_file.c_str()) {
-      LOG(ERROR) << "WrapOpenSSLPrivateKey, private key file is null";
-      return nullptr;
-    }
-
-    return base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
-        std::make_unique<SSLPlatformKeyOHOS>(private_key_file),
-        net::GetSSLPlatformKeyTaskRunner());
-  }
-#endif
-#endif
-
   static void RunWithPrivateKey(
       std::unique_ptr<content::ClientCertificateDelegate> delegate,
       CefRefPtr<CefX509Certificate> cert,
@@ -441,6 +143,10 @@ class CefSelectClientCertificateCallbackImpl
       delegate->ContinueWithCertificate(nullptr, nullptr);
     }
   }
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_content_browser_client_cef_for_include_before.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
   std::unique_ptr<content::ClientCertificateDelegate> delegate_;
 
@@ -479,49 +185,14 @@ void HandleExternalProtocolHelper(
       isolation_info, nullptr);
 }
 
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-class PopupWindowCallbackImpl : public CefCallback {
- public:
-  explicit PopupWindowCallbackImpl(
-      content::mojom::FrameHost::GetCreateNewWindowCallback callback)
-      : callback_(std::move(callback)),
-        task_runner_(base::SequencedTaskRunner::GetCurrentDefault()) {}
-
-  ~PopupWindowCallbackImpl() override {}
-
-  void Continue() override {
-    if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
-      task_runner_->PostTask(
-          FROM_HERE, base::BindOnce(&PopupWindowCallbackImpl::Continue, this));
-      return;
-    }
-    LOG(INFO) << "PopupWindowCallbackImpl Continue";
-    if (!callback_.is_null()) {
-      std::move(callback_).Run(content::mojom::CreateNewWindowStatus::kSuccess);
-    }
-  }
-
-  void Cancel() override {
-    if (task_runner_ && !task_runner_->RunsTasksInCurrentSequence()) {
-      task_runner_->PostTask(
-          FROM_HERE, base::BindOnce(&PopupWindowCallbackImpl::Cancel, this));
-      return;
-    }
-    LOG(INFO) << "PopupWindowCallbackImpl Cancel";
-    if (!callback_.is_null()) {
-      std::move(callback_).Run(content::mojom::CreateNewWindowStatus::kBlocked);
-    }
-  }
-
- private:
-  content::mojom::FrameHost::GetCreateNewWindowCallback callback_;
-  scoped_refptr<base::SequencedTaskRunner> task_runner_;
-
-  IMPLEMENT_REFCOUNTING(PopupWindowCallbackImpl);
-};
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
-
 }  // namespace
+
+#if BUILDFLAG(IS_ARKWEB)
+// KEEP THIS HEADER FILE INCLUDED AFTER THE ANONYMOUS NAMESPACE.
+// ChromeContentBrowserClientCef's implementation depends on functions in this
+// file.
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_content_browser_client_cef_for_include_after.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
 ChromeContentBrowserClientCef::ChromeContentBrowserClientCef() = default;
 ChromeContentBrowserClientCef::~ChromeContentBrowserClientCef() = default;
@@ -719,40 +390,6 @@ base::OnceClosure ChromeContentBrowserClientCef::SelectClientCertificate(
   return base::OnceClosure();
 }
 
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-bool ChromeContentBrowserClientCef::CanCreateWindow(
-    content::RenderFrameHost* opener,
-    const GURL& target_url,
-    WindowOpenDisposition disposition,
-    bool user_gesture,
-    content::mojom::FrameHost::GetCreateNewWindowCallback callback) {
-  CEF_REQUIRE_UIT();
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(opener);
-  CefRefPtr<CefBrowserHostBase> browser_host =
-      CefBrowserHostBase::GetBrowserForContents(web_contents);
-  if (!browser_host) {
-    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
-    return false;
-  }
-  if (!browser_host->settings().javascript_can_open_windows_automatically &&
-      !user_gesture) {
-    LOG(INFO) << "javascript_can_open_windows_automatically false";
-    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
-    return false;
-  }
-  if (!browser_host->settings().supports_multiple_windows) {
-    LOG(INFO) << "supports_multiple_windows is false";
-    std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
-    return false;
-  }
-  CefRefPtr<PopupWindowCallbackImpl> callbackImpl =
-      new PopupWindowCallbackImpl(std::move(callback));
-  return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
-      opener, target_url, disposition, user_gesture, callbackImpl);
-}
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
-
 bool ChromeContentBrowserClientCef::CanCreateWindow(
     content::RenderFrameHost* opener,
     const GURL& opener_url,
@@ -768,23 +405,8 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
     bool opener_suppressed,
     bool* no_javascript_access) {
 #if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(opener);
-  CefRefPtr<CefBrowserHostBase> browser_host =
-      CefBrowserHostBase::GetBrowserForContents(web_contents);
-  if (!browser_host->settings().supports_multiple_windows) {
-    if (browser_host->settings().javascript_can_open_windows_automatically ||
-        user_gesture) {
-      LOG(INFO) << "allow load url";
-      return true;
-    }
-    LOG(INFO) << "supports_multiple_windows is false";
-    return false;
-  }
-  if (!browser_host->settings().javascript_can_open_windows_automatically &&
-      !user_gesture) {
-    LOG(INFO) << "javascript_can_open_windows_automatically false";
-    return false;
+  if (auto can_create = ArkWebInnerCanCreateWindow(opener, user_gesture)) {
+    return *can_create;
   }
 #else
   // The chrome layer has popup blocker, extensions, etc.
@@ -1013,9 +635,7 @@ ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
 
 #if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
-  throttles.push_back(
-      ohos_safe_browsing::UrlTrustListNavigationThrottle::Create(
-          navigation_handle));
+  ArkWebInnerCreateThrottlesForNavigation(navigation_handle, throttles);
 #endif
 
   return throttles;
@@ -1036,48 +656,9 @@ bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
     return false;
   }
 
-#if BUILDFLAG(ARKWEB_CACHE)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kHttpCacheMaxSize)) {
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kEnableNwebEx)) {
-      // In order to make better use of cache, we use the same strategy as
-      // chromium for httpcache.
-      // Determined by DiskCache itself.
-      network_context_params->http_cache_max_size = 0;
-    } else {
-#if BUILDFLAG(ARKWEB_MAX_CACHE_SIZE)
-      int64_t totalDiskSpace =
-          base::SysInfo::AmountOfTotalDiskSpace(base::FilePath(WEB_CACHE_PATH));
-      if (totalDiskSpace >= LARGE_CAPACITY_DEVICE_THRESHOLD) {
-        LOG(DEBUG)
-            << "Set http cache max size to 100MB for large capacity device.";
-        network_context_params->http_cache_max_size =
-            LARGE_CAPACITY_DEVICE_CACHE_SIZE;
-      } else {
-        LOG(DEBUG)
-            << "Set http cache max size to 20MB for samll capacity device.";
-        network_context_params->http_cache_max_size =
-            SMALL_CAPACITY_DEVICE_CACHE_SIZE;
-      }
-#else
-      network_context_params->http_cache_max_size = 100 * 1024 * 1024;
-#endif
-    }
-  }
-#endif  // BUILDFLAG(ARKWEB_CACHE)
-
-#if BUILDFLAG(ARKWEB_COOKIE)
-  mojo::PendingRemote<network::mojom::CookieManager> cookie_manager_remote;
-  network_context_params->cookie_manager =
-      cookie_manager_remote.InitWithNewPipeAndPassReceiver();
-  CefRefPtr<CefCookieManagerExt> cookie_manager =
-      CefCookieManagerExt::GetGlobalManager(nullptr);
-  if (cookie_manager) {
-    static_cast<CefCookieManagerImplExt*>(cookie_manager.get())
-        ->SetNetWorkCookieManager(std::move(cookie_manager_remote));
-  }
-#endif  // BUILDFLAG(ARKWEB_COOKIE)
+#if BUILDFLAG(IS_ARKWEB)
+  ArkWebInnerConfigureNetworkContextParamsBefore(context, network_context_params);
+#endif  // BUILDFLAG(IS_ARKWEB)
 
   ChromeContentBrowserClient::ConfigureNetworkContextParams(
       context, in_memory, relative_partition_path, network_context_params,
@@ -1085,24 +666,10 @@ bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
 
   auto cef_context = CefBrowserContext::FromBrowserContext(context);
 
-// TODO(ARKWEB) Check later
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  network_context_params->file_paths =
-      ::network::mojom::NetworkContextFilePaths::New();
-  base::FilePath cache_path;
-  if (context->IsOffTheRecord() || context->GetPath().empty()) {
-    network_context_params->http_cache_enabled = false;
-  } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
-    network_context_params->file_paths->data_directory = cache_path;
-    network_context_params->file_paths->cookie_database_name =
-        base::FilePath(chrome::kCookieFilename);
+#if BUILDFLAG(IS_ARKWEB)
+  ArkWebInnerConfigureNetworkContextParamsAfter(context, network_context_params);
+#endif  // BUILDFLAG(IS_ARKWEB)
 
-    network_context_params->http_cache_enabled = true;
-    // TODO(ARKWEB)
-    network_context_params->file_paths->http_cache_directory =
-        cache_path.AppendASCII(chrome::kCacheDirname);
-  }
-#endif
   network_context_params->cookieable_schemes =
       cef_context ? cef_context->GetCookieableSchemes()
                   : CefBrowserContext::GetGlobalCookieableSchemes();
@@ -1126,9 +693,16 @@ ChromeContentBrowserClientCef::CreateLoginDelegate(
   if (!web_contents || base::CommandLine::ForCurrentProcess()->HasSwitch(
                            switches::kDisableChromeLoginPrompt)) {
     // Delegate auth callbacks to GetAuthCredentials.
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    return std::make_unique<net_service::LoginDelegate>(
+        auth_info, web_contents, request_id,
+        is_request_for_primary_main_frame_navigation, url, response_headers,
+        std::move(auth_required_callback));
+#else
     return std::make_unique<net_service::LoginDelegate>(
         auth_info, web_contents, request_id, url,
         std::move(auth_required_callback));
+#endif
   }
 
   return ChromeContentBrowserClient::CreateLoginDelegate(
@@ -1148,8 +722,7 @@ void ChromeContentBrowserClientCef::ExposeInterfacesToRenderer(
   CefBrowserManager::ExposeInterfacesToRenderer(registry, associated_registry,
                                                 host);
 #if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-  CefReportManager::ExposeInterfacesToRenderer(registry, associated_registry,
-                                               host);
+  ArkWebInnerExposeInterfacesToRenderer(registry, associated_registry, host);
 #endif
 }
 
@@ -1162,11 +735,7 @@ void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForFrame(
   CefBrowserFrame::RegisterBrowserInterfaceBindersForFrame(render_frame_host,
                                                            map);
 #if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-  auto* registry =
-      performance_manager::PerformanceManagerRegistry::GetInstance();
-  if (registry) {
-    registry->GetBinders().ExposeInterfacesToRenderFrame(map);
-  }
+  ArkWebInnerRegisterBrowserInterfaceBindersForFrame(map);
 #endif
 }
 
@@ -1190,13 +759,6 @@ CefRefPtr<CefRequestContextImpl>
 ChromeContentBrowserClientCef::request_context() const {
   return browser_main_parts_->request_context();
 }
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-CefRefPtr<CefRequestContextImpl>
-ChromeContentBrowserClientCef::off_the_record_request_context() const {
-  return browser_main_parts_->off_the_record_request_context();
-}
-#endif
 
 scoped_refptr<base::SingleThreadTaskRunner>
 ChromeContentBrowserClientCef::background_task_runner() const {
@@ -1222,16 +784,5 @@ std::unique_ptr<content::WebContentsViewDelegate>
 ChromeContentBrowserClientCef::CreateWebContentsViewDelegate(
     content::WebContents* web_contents) {
   return std::make_unique<ChromeWebContentsViewDelegateCef>(web_contents);
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
-bool ChromeContentBrowserClientCef::ShouldDisableSiteIsolation(
-    content::SiteIsolationMode site_isolation_mode) {
-  if (g_siteIsolationMode) {
-    return site_isolation::SiteIsolationPolicy::
-        ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
-  }
-  return true;
 }
 #endif

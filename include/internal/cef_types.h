@@ -49,39 +49,15 @@
 #include "include/internal/cef_types_mac.h"
 #elif defined(OS_LINUX) || defined(OS_OHOS)
 #include "include/internal/cef_types_linux.h"
+#include "build/build_config.h"
 #endif
 
-#if defined(OS_OHOS)
-#include <map>
-
-#include "build/build_config.h"
-#include "include/base/cef_callback.h"
-#endif  // BUILDFLAG(IS_OHOS)
-
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/internal/arkweb_cef_types_pre_ext.h"
+#endif
 // 32-bit ARGB color value, not premultiplied. The color components are always
 // in a known order. Equivalent to the SkColor type.
 typedef uint32_t cef_color_t;
-
-#if BUILDFLAG(IS_OHOS)
-// Permission request callback.
-typedef base::RepeatingCallback<void(bool)> cef_permission_callback_t;
-
-// Web snapshot callback.
-typedef base::OnceCallback<void(const char*, bool, void*, int, int)>
-    cef_web_snapshot_callback_t;
-
-// cef accelerated widget type
-typedef uint32_t cef_accelerated_widget_t;
-
-// cef native window type
-typedef void* cef_native_window_t;
-
-#if BUILDFLAG(ARKWEB_NOTIFICATION)
-// Permission status query callback.
-typedef base::RepeatingCallback<void(int32_t)> cef_permission_status_query_callback_t;
-#endif // ARKWEB_NOTIFICATION
-
-#endif  // BUILDFLAG(IS_OHOS)
 
 // Return the alpha byte from a cef_color_t value.
 #define CefColorGetA(color) (((color) >> 24) & 0xFF)
@@ -758,9 +734,6 @@ typedef struct _cef_browser_settings_t {
   bool contextmenu_customization_enabled;
   cef_color_t scrollbar_color;
   bool is_safe_browsing_enable;
-  cef_state_t native_embed_mode_enabled;
-  cef_string_t embed_tag;
-  cef_string_t embed_tag_type;
   bool scroll_enabled;
   int draw_mode;
   cef_state_t text_autosizing_enabled;
@@ -768,6 +741,20 @@ typedef struct _cef_browser_settings_t {
   bool force_zero_layout_height;
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
+
+#if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
+  double border_radius_top_left;
+  double border_radius_top_right;
+  double border_radius_bottom_left;
+  double border_radius_bottom_right;
+#endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_state_t native_embed_mode_enabled;
+  cef_state_t intrinsic_size_enabled;
+  cef_state_t css_display_change_enabled;
+  cef_string_t embed_tag;
+  cef_string_t embed_tag_type;
+#endif  // BUILDFLAG(ARKWEB_SAME_LAYER)
 
 #if BUILDFLAG(ARKWEB_CSS_FONT)
   float font_weight_scale;
@@ -1921,19 +1908,6 @@ typedef enum {
   JSDIALOGTYPE_PROMPT,
 } cef_jsdialog_type_t;
 
-#if BUILDFLAG(IS_OHOS)
-///
-// Screen orientation types.
-///
-typedef enum {
-  UNDEFINED,
-  PORTRAIT_PRIMARY,
-  PORTRAIT_SECONDARY,
-  LANDSCAPE_PRIMARY,
-  LANDSCAPE_SECONDARY
-} cef_screen_orientation_type_t;
-#endif  // BUILDFLAG(IS_OHOS)
-
 ///
 /// Screen information used when window rendering is disabled. This structure is
 /// passed as a parameter to CefRenderHandler::GetScreenInfo and should be
@@ -2129,7 +2103,26 @@ typedef struct _cef_mouse_event_t {
   ///
   int raw_y;
 
+  ///
+  /// event source. See cef_event_source_t for values.
+  ///
+  int32_t source;
+
 } cef_mouse_event_t;
+
+typedef enum {
+  CEF_EST_UNKNOWN = 0,
+  CEF_EST_FINGER = 1,
+  CEF_EST_PEN = 2,
+  CEF_EST_RUBBER = 3,
+  CEF_EST_BRUSH = 4,
+  CEF_EST_PENCIL = 5,
+  CEF_EST_AIRBRUSH = 6,
+  CEF_EST_MOUSE = 7,
+  CEF_EST_LENS = 8,
+  CEF_EST_TOUCHPAD = 9,
+  CEF_EST_JOYSTICK = 10,
+} cef_event_source_t;
 
 ///
 /// Touch points states types.
@@ -2247,7 +2240,7 @@ typedef enum {
   EVENTFLAG_IS_RIGHT = 1 << 11,
   EVENTFLAG_ALTGR_DOWN = 1 << 12,
   EVENTFLAG_IS_REPEAT = 1 << 13,
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   EVENTFLAG_BACK_MOUSE_BUTTON = 1 << 14,
   EVENTFLAG_FORWARD_MOUSE_BUTTON = 1 << 15,
 #endif  // BUILDFLAG(IS_OHOS)
@@ -4129,463 +4122,10 @@ typedef struct _cef_task_info_t {
   /// has this value set to true because it is the aggregate of all processes).
   int is_gpu_memory_inflated;
 } cef_task_info_t;
-#if BUILDFLAG(IS_OHOS)
-///
-// Supported context menu input field types. These constants match their
-// equivalents in Chromium's ContextMenuDataInputFieldType and should not be
-// renumbered.
-///
-typedef enum {
-  ///
-  /// Not an input field.
-  ///
-  CM_INPUTFIELDTYPE_NONE,
 
-  ///
-  /// type = text, search, email, url
-  ///
-  CM_INPUTFIELDTYPE_PLAINTEXT,
-
-  ///
-  /// type = password
-  ///
-  CM_INPUTFIELDTYPE_PASSWORD,
-
-  ///
-  /// type = number
-  ///
-  CM_INPUTFIELDTYPE_NUMBER,
-
-  ///
-  /// type = tel
-  ///
-  CM_INPUTFIELDTYPE_TELEPHONE,
-
-  ///
-  /// type = <etc.>
-  ///
-  CM_INPUTFIELDTYPE_OTHER,
-} cef_context_menu_input_field_type_t;
-
-///
-// Supported context menu source types. These constants match their equivalents
-// in Chromium's ui::MenuSourceType and should not be renumbered.
-///
-typedef enum {
-  ///
-  /// type = none
-  ///
-  CM_SOURCETYPE_NONE,
-
-  ///
-  /// type = mouse
-  ///
-  CM_SOURCETYPE_MOUSE,
-
-  ///
-  /// type = keyboard
-  ///
-  CM_SOURCETYPE_KEYBOARD,
-
-  ///
-  /// type = touch
-  ///
-  CM_SOURCETYPE_TOUCH,
-
-  ///
-  /// type = touch edit menu
-  ///
-  CM_SOURCETYPE_TOUCH_EDIT_MENU,
-
-  ///
-  /// type = long press
-  ///
-  CM_SOURCETYPE_LONG_PRESS,
-
-  ///
-  /// type = long tap
-  ///
-  CM_SOURCETYPE_LONG_TAP,
-
-  ///
-  /// type = number
-  ///
-  CM_SOURCETYPE_TOUCH_HANDLE,
-
-  ///
-  /// type = stylus
-  ///
-  CM_SOURCETYPE_STYLUS,
-
-  ///
-  /// type = adjust selection
-  ///
-  CM_SOURCETYPE_ADJUST_SELECTION,
-
-  ///
-  /// type = selection reset
-  ///
-  CM_SOURCETYPE_SELECTION_RESET,
-} cef_context_menu_source_type_t;
-
-///
-// Supported text direction. See text_direction.mojom.
-///
-typedef enum {
-  ///
-  /// type = unknown direction
-  ///
-  UNKNOWN,
-
-  ///
-  /// type = right to left
-  ///
-  RTL,
-
-  ///
-  /// type = left to right
-  ///
-  LTR,
-} cef_text_direction_t;
-
-///
-// Supported <select> item type. See popup_menu.mojom.
-///
-typedef enum {
-  ///
-  /// type = kOption
-  ///
-  OPTION,
-
-  ///
-  /// type = kCheckableOption
-  ///
-  CHECKABLE_OPTION,
-
-  ///
-  /// type = kGruop
-  ///
-  GROUP,
-
-  ///
-  /// type = kSeparator
-  ///
-  SEPARATOR,
-
-  ///
-  /// type = kSubMenu
-  ///
-  SubMenu,
-} cef_select_popup_item_type_t;
-
-///
-// Supported <select> item.
-///
-typedef struct _cef_select_popup_item_t {
-  ///
-  /// label name of item.
-  ///
-  cef_string_t label;
-
-  ///
-  /// tool tip of item.
-  ///
-  cef_string_t tool_tip;
-
-  ///
-  /// type of item.
-  ///
-  cef_select_popup_item_type_t type;
-
-  ///
-  /// action of item.
-  ///
-  uint32_t action;
-
-  ///
-  /// text direction of item.
-  ///
-  cef_text_direction_t text_direction;
-
-  ///
-  /// whether item is enabled.
-  ///
-  bool enabled;
-
-  ///
-  /// whether item has text direction overridel
-  ///
-  bool has_text_direction_override;
-
-  ///
-  /// whether item is checked.
-  ///
-  bool checked;
-} cef_select_popup_item_t;
-
-///
-// Type of an <input>.
-///
-typedef enum {
-  CEF_TEXT_INPUT_TYPE_NONE,
-  CEF_TEXT_INPUT_TYPE_TEXT,
-  CEF_TEXT_INPUT_TYPE_PASSWORD,
-  CEF_TEXT_INPUT_TYPE_SEARCH,
-  CEF_TEXT_INPUT_TYPE_EMAIL,
-  CEF_TEXT_INPUT_TYPE_NUMBER,
-  CEF_TEXT_INPUT_TYPE_TELEPHONE,
-  CEF_TEXT_INPUT_TYPE_URL,
-  CEF_TEXT_INPUT_TYPE_DATE,
-  CEF_TEXT_INPUT_TYPE_DATE_TIME,
-  CEF_TEXT_INPUT_TYPE_DATE_TIME_LOCAL,
-  CEF_TEXT_INPUT_TYPE_MONTH,
-  CEF_TEXT_INPUT_TYPE_TIME,
-  CEF_TEXT_INPUT_TYPE_WEEK,
-  CEF_TEXT_INPUT_TYPE_TEXT_AREA,
-  CEF_TEXT_INPUT_TYPE_CONTENT_EDITABLE,
-  CEF_TEXT_INPUT_TYPE_DATE_TIME_FIELD,
-  CEF_TEXT_INPUT_TYPE_TYPE_NULL,
-  CEF_TEXT_INPUT_TYPE_MAX = CEF_TEXT_INPUT_TYPE_TYPE_NULL,
-} cef_text_input_type_t;
-
-///
-// Supported date time chooser.
-///
-typedef struct _cef_date_time_chooser_t {
-  ///
-  /// date time chooser type.
-  ///
-  cef_text_input_type_t dialog_type;
-
-  ///
-  /// select date time.
-  ///
-  double dialog_value;
-
-  ///
-  /// minimum date time.
-  ///
-  double minimum;
-
-  ///
-  /// minimum date time.
-  ///
-  double maximum;
-
-  ///
-  /// select step.
-  ///
-  double step;
-} cef_date_time_chooser_t;
-
-///
-// Support date time suggestion.
-///
-typedef struct _cef_date_time_suggestion_t {
-  ///
-  /// The date/time value represented as a double.
-  ///
-  double value;
-
-  ///
-  /// The localized value to be shown to the user.
-  ///
-  cef_string_t localized_value;
-
-  ///
-  /// The label for the suggestion.
-  ///
-  cef_string_t label;
-} cef_date_time_suggestion_t;
-
-typedef enum {
-  CAPTURE_INVAILD_MODE = -1,
-  CAPTURE_HOME_SCREEN_MODE = 0,
-  CAPTURE_SPECIFIED_SCREEN_MODE = 1,
-  CAPTURE_SPECIFIED_WINDOW_MODE = 2
-} cef_screen_capture_mode_t;
-
-///
-// Supported autofill item.
-///
-typedef struct _cef_autofill_popup_item_t {
-  ///
-  /// value name of item.
-  ///
-  cef_string_t label;
-
-  ///
-  /// sub label value of item.
-  ///
-  cef_string_t sublabel;
-
-  ///
-  /// id of item.
-  ///
-  uint32_t unique_id;
-} cef_autofill_popup_item_t;
-
-///
-/// Media playing state.
-///
-typedef enum {
-  ///
-  /// media is playing
-  ///
-  PLAYING,
-
-  ///
-  /// media is paused
-  ///
-  PAUSE,
-
-  ///
-  /// media playing reached end of the stream
-  ///
-  END_OF_STREAM,
-
-  ///
-  /// media playing is interrupted because of media player gone
-  ///
-  PLAYER_GONE,
-} cef_media_playing_state_t;
-
-///
-/// Media type.
-///
-typedef enum {
-  VIDEO,
-  AUDIO,
-} cef_media_type_t;
-
-///
-// embed life change.
-///
-typedef enum {
-  CREATE = 0,
-  UPDATE = 1,
-  DESTROY = 2,
-  ENTER_BFCACHE = 3,
-  LEAVE_BFCACHE = 4,
-} cef_embed_life_change_t;
-
-///
-// Structure native embed data.
-///
-typedef struct _cef_native_embed_t {
-  std::string id;
-  int32_t width;
-  int32_t height;
-  std::string type;
-  std::string src;
-  std::string url;
-  std::string tag;
-  std::map<std::string, std::string> params;
-  int32_t x;
-  int32_t y;
-} cef_native_embed_t;
-
-///
-// Structure native embed data.
-///
-typedef struct _cef_native_embed_data_t {
-  cef_embed_life_change_t status;
-  std::string surfaceId;
-  std::string embedId;
-  cef_native_embed_t info;
-} cef_native_embed_data_t;
-
-///
-// Touch type.
-///
-typedef enum {
-  DOWN,
-  UP,
-  MOVE,
-  CANCEL,
-  PULL_DOWN,
-  PULL_UP,
-  PULL_MOVE,
-  PULL_IN_WINDOW,
-  PULL_OUT_WINDOW,
-  TOUCH_UNKNOWN,
-} cef_embed_touch_type_t;
-
-///
-// Structure embed touch data.
-///
-typedef struct _cef_embed_touch_event_t {
-  std::string embedId;
-  int32_t id = 0;
-  float x = 0.0f;
-  float y = 0.0f;
-  float screenX = 0.0f;
-  float screenY = 0.0f;
-  cef_embed_touch_type_t type;
-  float offsetX = 0.0f;
-  float offsetY = 0.0f;
-} cef_embed_touch_event_t;
-
-///
-// Navigation entry types.
-///
-typedef enum {
-  NAVIGATION_TYPE_UNKNOWN = 0,
-  NAVIGATION_TYPE_MAIN_FRAME_NEW_ENTRY = 1,
-  NAVIGATION_TYPE_MAIN_FRAME_EXISTING_ENTRY = 2,
-  NAVIGATION_TYPE_NEW_SUBFRAME = 4,
-  NAVIGATION_TYPE_AUTO_SUBFRAME = 5,
-} cef_navigation_entry_type_t;
-
-///
-// Type action of an <input>.
-///
-typedef enum {
-  CEF_TEXT_INPUT_ACTION_DEFAULT,
-  CEF_TEXT_INPUT_ACTION_ENTER,
-  CEF_TEXT_INPUT_ACTION_DONE,
-  CEF_TEXT_INPUT_ACTION_GO,
-  CEF_TEXT_INPUT_ACTION_NEXT,
-  CEF_TEXT_INPUT_ACTION_PREVIOUS,
-  CEF_TEXT_INPUT_ACTION_SEARCH,
-  CEF_TEXT_INPUT_ACTION_SEND,
-  CEF_TEXT_INPUT_ACTION_MAX = CEF_TEXT_INPUT_ACTION_SEND,
-} cef_text_input_action_t;
-
-///
-// Type flag of an <input>.
-///
-typedef enum {
-  CEF_TEXT_INPUT_FLAG_NONE = 0,
-  CEF_TEXT_INPUT_FLAG_AUTOCOMPLETE_ON = 1 << 0,
-  CEF_TEXT_INPUT_FLAG_AUTOCOMPLETE_OFF = 1 << 1,
-  CEF_TEXT_INPUT_FLAG_AUTOCORRECT_ON = 1 << 2,
-  CEF_TEXT_INPUT_FLAG_AUTOCORRECT_OFF = 1 << 3,
-  CEF_TEXT_INPUT_FLAG_SPELLCHECK_ON = 1 << 4,
-  CEF_TEXT_INPUT_FLAG_SPELLCHECK_OFF = 1 << 5,
-  CEF_TEXT_INPUT_FLAG_AUTOCAPITALIZE_NONE = 1 << 6,
-  CEF_TEXT_INPUT_FLAG_AUTOCAPITALIZE_CHARACTERS = 1 << 7,
-  CEF_TEXT_INPUT_FLAG_AUTOCAPITALIZE_WORDS = 1 << 8,
-  CEF_TEXT_INPUT_FLAG_AUTOCAPITALIZE_SENTENCES = 1 << 9,
-  CEF_TEXT_INPUT_FLAG_HAVE_NEXT_FOCUSABLE_ELEMENT = 1 << 10,
-  CEF_TEXT_INPUT_FLAG_HAVE_PREVIOUS_FOCUSABLE_ELEMENT = 1 << 11,
-  CEF_TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD = 1 << 12,
-  CEF_TEXT_INPUT_FLAG_VERTICAL = 1 << 13
-} cef_text_input_flags_t;
-
-///
-// Structure text input state info.
-///
-typedef struct _cef_text_input_info_t {
-  int node_id = 0;
-  bool show_keyboard = false;
-  cef_text_input_mode_t input_mode = CEF_TEXT_INPUT_MODE_NONE;
-  cef_text_input_type_t input_type = CEF_TEXT_INPUT_TYPE_NONE;
-  cef_text_input_action_t input_action = CEF_TEXT_INPUT_ACTION_DEFAULT;
-  cef_text_input_flags_t input_flags = CEF_TEXT_INPUT_FLAG_NONE;
-  bool always_hide_ime = false;
-} cef_text_input_info_t;
-#endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/internal/arkweb_cef_types_after_ext.h"
+#endif
 
 #ifdef __cplusplus
 }

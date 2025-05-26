@@ -100,6 +100,9 @@ class OhGinJavascriptBridgeDispatcherHost
   void OnHasMethod(int32_t object_id,
                    const std::string& method_name,
                    bool* result);
+  void OnHasAsyncThreadMethod(int32_t object_id,
+                   const std::string& method_name,
+                   bool* result);
   void OnInvokeMethod(int routing_id,
                       int32_t object_id,
                       const std::string& document_url,

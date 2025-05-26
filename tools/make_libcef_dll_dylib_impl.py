@@ -10,7 +10,7 @@ import os
 # Other headers that export C API functions.
 OTHER_HEADERS = [
     'cef_api_hash.h',
-    '../ohos_cef_ext/include/cef_version.h',
+    'cef_version.h',
     'internal/cef_dump_without_crashing_internal.h',
     'internal/cef_logging_internal.h',
     'internal/cef_string_list.h',

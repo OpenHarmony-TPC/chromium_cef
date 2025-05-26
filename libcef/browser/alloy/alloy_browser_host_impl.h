@@ -16,9 +16,6 @@
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
 #include "cef/include/cef_frame.h"
-#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-#include "cef/include/internal/cef_types.h"
-#endif
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info.h"
 #include "cef/libcef/browser/frame_host_impl.h"
@@ -29,20 +26,10 @@
 #include "content/public/browser/web_contents_observer.h"
 #include "ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-#include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
-#include "include/cef_custom_media_player_delegate.h"
-#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-#include "components/autofill/core/browser/ui/suggestion.h"
-#endif
-
 class CefAudioCapturer;
 class CefBrowserInfo;
+class AlloyBrowserHostImplExt;
+class AlloyBrowserHostImplUtils;
 
 #if !BUILDFLAG(ARKWEB_ZOOM)
 class SiteInstance;
@@ -63,15 +50,9 @@ class SiteInstance;
 // messages sent using AlloyBrowserHostImpl::Send() will be forwarded to the
 // RenderViewHost (after posting to the UI thread if necessary). Use
 // WebContentsObserver::routing_id() when sending IPC messages.
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
 class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
                              public content::WebContentsDelegate,
                              public content::WebContentsObserver
-#else
-class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
-                             public content::WebContentsDelegate,
-                             public content::WebContentsObserver
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 {
  public:
   // Used for handling the response to command messages.
@@ -80,10 +61,16 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
     virtual void OnResponse(const std::string& response) = 0;
   };
 
+  AlloyBrowserHostImplUtils* implUtils;
+
   ~AlloyBrowserHostImpl() override;
 
   CefRefPtr<AlloyBrowserHostImpl> AsAlloyBrowserHostImpl() override {
     return this;
+  }
+
+  virtual CefRefPtr<AlloyBrowserHostImplExt> AsAlloyBrowserHostImplExt() {
+    return nullptr;
   }
 
   // Create a new AlloyBrowserHostImpl instance with owned WebContents.
@@ -118,25 +105,16 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
             bool matchCase,
             bool findNext) override;
   void StopFinding(bool clearSelection) override;
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  void WasOccluded(bool occluded) override;
-  void SetEnableLowerFrameRate(bool enabled) override;
+  void SetEnableHalfFrameRate(bool enabled) override;
 #endif
-#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
-  void UpdateVSyncFrequency();
-  void ResetVSyncFrequency();
-#endif
+
   void NotifyScreenInfoChanged() override;
+
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
@@ -163,9 +141,7 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-#if BUILDFLAG(IS_ARKWEB)
-  void GetRootBrowserAccessibilityManager(void** manager) override;
-#endif
+
 
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
@@ -215,11 +191,6 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
 
   bool ShowContextMenu(const content::ContextMenuParams& params);
 
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-  bool IsIframe() override;
-  void ReloadFocusedFrame() override;
-#endif
-
   enum DestructionState {
     DESTRUCTION_STATE_NONE = 0,
     DESTRUCTION_STATE_PENDING,
@@ -256,10 +227,6 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
                               const std::u16string& message,
                               int32_t line_no,
                               const std::u16string& source_id) override;
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  bool WebHandleKeyboardEvent(content::WebContents* source,
-                              const input::NativeWebKeyboardEvent& event);
-#endif
   void ContentsZoomChange(bool zoom_in) override;
   void BeforeUnloadFired(content::WebContents* source,
                          bool proceed,
@@ -340,17 +307,6 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
       const std::vector<blink::mojom::DraggableRegionPtr>& regions,
       content::WebContents* contents) override;
 
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  void OnNativeEmbedStatusUpdate(
-      const content::NativeEmbedInfo& native_embed_info,
-      content::NativeEmbedInfo::TagState state) override;
-  void OnNativeEmbedFirstFramePaint(
-      int32_t native_embed_id,
-      const std::string& embed_id_attribute) override;
-  void OnLayerRectVisibilityChange(const std::string& embed_id,
-                                   bool visibility) override;
-#endif
-
   // content::WebContentsObserver methods.
   using content::WebContentsObserver::BeforeUnloadFired;
   void DidFinishNavigation(
@@ -363,138 +319,28 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
       ui::AXLocationAndScrollUpdates& details) override;
   void WebContentsDestroyed() override;
 
-#if BUILDFLAG(ARKWEB_FOCUS)
-  void ActivateContents(content::WebContents* contents) override;
-#endif  // BUILDFLAG(ARKWEB_FOCUS)
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  void SetNativeEmbedMode(bool flag) override;
+#if BUILDFLAG(ARKWEB_PIP)
+  void SetPipNativeWindow(int delegate_id,
+                          int child_id,
+                          int frame_routing_id,
+                          cef_native_window_t window) override;
+  void OnPip(int status,
+             int delegate_id,
+             int child_id,
+             int frame_routing_id,
+             int width,
+             int height) override;
+  void SendPipEvent(int delegate_id,
+                    int child_id,
+                    int frame_routing_id,
+                    int event) override;
+  void OnPipEvent(int event) override;
+  void SetPipActive(bool active);
 #endif
-#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-  void OnFormEditingStateChanged(bool state, uint64_t form_id) override;
-  void MediaStartedPlaying(
-      const content::WebContentsObserver::MediaPlayerInfo& video_type,
-      const content::MediaPlayerId& id) override;
-  void MediaStoppedPlaying(
-      const content::WebContentsObserver::MediaPlayerInfo& video_type,
-      const content::MediaPlayerId& id,
-      content::WebContentsObserver::MediaStoppedReason reason) override;
-  void MediaPlayerGone(
-      const content::WebContentsObserver::MediaPlayerInfo& video_type,
-      const content::MediaPlayerId& id) override;
-#endif
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  void SetTouchInsertHandleMenuShow(bool show) {
-    web_contents()->SetTouchInsertHandleMenuShow(show);
-  }
-
-  bool GetTouchInsertHandleMenuShow() {
-    return web_contents()->GetTouchInsertHandleMenuShow();
-  }
-
-  bool HandleContextMenu(content::RenderFrameHost& render_frame_host,
-                         const content::ContextMenuParams& params) override;
-
-  void UpdateZoomSupportEnabled();
-#endif
-
-#if BUILDFLAG(ARKWEB_PRINT)
-  void SetToken(void* token) override;
-  void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                     void** webPrintDocumentAdapter) override;
-  void SetPrintBackground(bool enable) override;
-  bool GetPrintBackground() override;
-#endif
-
-#if BUILDFLAG(ARKWEB_DISCARD)
-  bool Discard() override;
-  bool Restore() override;
-#endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-  void ShowPopupMenu(
-      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-      const gfx::Rect& bounds,
-      int item_height,
-      double item_font_size,
-      int selected_item,
-      std::vector<blink::mojom::MenuItemPtr> menu_items,
-      bool right_aligned,
-      bool allow_multiple_selection);
-#endif  // ARKWEB_HTML_SELECT
-
-#if BUILDFLAG(ARKWEB_CSS_INPUT_TIME)
-  void OpenDateTimeChooser() override;
-  void CloseDateTimeChooser() override;
-#endif  // ARKWEB_CSS_INPUT_TIME
-
-#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
-  std::unique_ptr<content::CustomMediaPlayer> CreateCustomMediaPlayer(
-      std::unique_ptr<content::CustomMediaPlayerListener> listener,
-      const content::MediaInfo& media_info) override;
-#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
-
-#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-  void OnShowToast(double duration, const std::string& toast) override;
-  void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
-  void OnReportStatisticLog(const std::string& content) override;
-#endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  // Shows the repost form confirmation dialog box.
-  void ShowRepostFormWarningDialog(content::WebContents* source) override;
-#endif  // ARKWEB_NETWORK_BASE
-
-#if BUILDFLAG(ARKWEB_ADBLOCK)
-  void OnAdsBlocked(const std::string& main_frame_url,
-                    const std::map<std::string, int32_t>& subresource_blocked,
-                    bool is_site_first_report) override;
-
-  bool TrigAdBlockEnabledForSiteFromUi(const std::string& main_frame_url,
-                                       int main_frame_tree_node_id) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) override;
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
-
-  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
-  void WebExtensionUpdateTab(
-      int32_t tab_id,
-      const NWebExtensionTabUpdateProperties* update_properties) override;
-  void ExtensionSetTabId(int tab_id) override;
-  int ExtensionGetTabId() const override;
-  void WebExtensionTabActivated(int tab_id, int window_id) override;
- 
-  void WebExtensionActionClicked(
-      std::string extensionId,
-      const NWebExtensionTab* tab) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  void OnShareFile(const std::string& filePath,
-                   const std::string& utdTypeId) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-  void OnBeforeUnloadFired(bool proceed) override;
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-  void OnShowAutofillPopup(const gfx::RectF& element_bounds,
-                           bool is_rtl,
-                           const std::vector<autofill::Suggestion>& suggestions,
-                           bool is_password_popup_type) override;
-  void OnHideAutofillPopup() override;
-#endif
-
  private:
   friend class CefBrowserPlatformDelegateAlloy;
+  friend class AlloyBrowserHostImplExt;
+  friend class AlloyBrowserHostImplUtils;
 
   static CefRefPtr<AlloyBrowserHostImpl> CreateInternal(
       const CefBrowserSettings& settings,
@@ -522,13 +368,6 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
   void StartAudioCapturer();
   void OnRecentlyAudibleTimerFired();
 
-#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
-  void OnDumpJavaScriptStackCallback(
-      int pid,
-      content::RendererIsUnresponsiveReason reason,
-      const std::string& stack);
-#endif
-
   CefWindowHandle opener_window_handle_ = kNullWindowHandle;
   const bool is_windowless_;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;
@@ -551,60 +390,6 @@ class AlloyBrowserHostImpl : virtual public ArkWebBrowserHostExtImpl,
   // starts running when a tab stops being audible, and is canceled if it starts
   // being audible again before it fires.
   std::unique_ptr<base::OneShotTimer> recently_audible_timer_;
-
-#if BUILDFLAG(IS_OHOS)
-  void OnWindowShow() override;
-  void OnWindowHide() override;
-  void OnOnlineRenderToForeground() override;
-  void SetWindowId(int window_id, int nweb_id) override;
-  void RenderViewReady() override;
-  void InactiveUnloadOldProcess(base::ProcessId pid);
-  int nweb_id_ = -1;
-  int window_id_ = -1;
-  base::ProcessId last_pid_ = -1;
-  void SetVisible(int32_t nweb_id, bool visible);
-  static int32_t ltpo_strategy_;
-#endif
-
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  void ReportWindowStatus(bool first_view_ready);
-  bool is_hidden_ = false;
-#endif
-
-#if BUILDFLAG(ARKWEB_REPORT_RENDER_STATE)
-  base::ProcessId GetRenderProcessId();
-#endif
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-  void WasKeyboardResized() override;
-  void SetDrawRect(int x, int y, int width, int height) override;
-  void SetDrawMode(int mode) override;
-  bool GetPendingSizeStatus() override;
-  void SetFitContentMode(int mode) override;
-  void SetShouldFrameSubmissionBeforeDraw(bool should) override;
-  std::string GetCurrentLanguage() override;
-#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-
-#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-  std::unique_ptr<content::VideoAssistant> CreateVideoAssistant() override;
-  void PopluateVideoAssistantConfig(
-      const std::string& url,
-      media::mojom::VideoAssistantConfigPtr& config) override;
-#endif  // ARKWEB_VIDEO_ASSISTANT
-
-#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
-  bool has_video_playing_ = false;
-  bool has_touch_event_ = false;
-  bool set_lower_frame_rate_ = false;
-  int video_stream_cnt_ = 0;
-  static constexpr int WAIT_TOUCH_EVENT_DELAY_TIME = 3000 /*ms*/;
-#endif
-#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-  bool start_play_ = false;
-#endif
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  int tab_id_ = -1;
-#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_H_

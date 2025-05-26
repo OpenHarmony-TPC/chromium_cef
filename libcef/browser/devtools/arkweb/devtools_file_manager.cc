@@ -217,45 +217,20 @@ void CefDevToolsFileManager::Save(const std::string& url,
     SaveAsFileSelected(url, content, std::move(saveCallback), it->second);
     return;
   }
-
-  const base::Value::Dict& file_map =
-      prefs_->GetDict(prefs::kDevToolsEditedFiles);
   base::FilePath initial_path;
+  GURL gurl(url);
+  std::string suggested_file_name =
+      gurl.is_valid() ? gurl.ExtractFileName() : url;
 
-  if (const base::Value* path_value = file_map.Find(base::MD5String(url))) {
-    //absl::optional<base::FilePath> path = base::ValueToFilePath(*path_value);
-    std::optional<base::FilePath> path = base::ValueToFilePath(*path_value);
-    if (path) {
-      initial_path = std::move(*path);
-    }
+  if (suggested_file_name.length() > 64) {
+    suggested_file_name = suggested_file_name.substr(0, 64);
   }
-
-  if (initial_path.empty()) {
-    GURL gurl(url);
-    std::string suggested_file_name =
-        gurl.is_valid() ? gurl.ExtractFileName() : url;
-
-    if (suggested_file_name.length() > 64) {
-      suggested_file_name = suggested_file_name.substr(0, 64);
-    }
-
-    if (!g_last_save_path.Pointer()->empty()) {
-      initial_path = g_last_save_path.Pointer()->DirName().AppendASCII(
-          suggested_file_name);
-    } else {
-      // Use the temp directory. It may be an empty value.
-      base::PathService::Get(base::DIR_TEMP, &initial_path);
-      initial_path = initial_path.AppendASCII(suggested_file_name);
-    }
-  }
+  initial_path = initial_path.AppendASCII(suggested_file_name);
 
   blink::mojom::FileChooserParams params;
   params.mode = blink::mojom::FileChooserParams::Mode::kSave;
   if (!initial_path.empty()) {
     params.default_file_name = initial_path;
-    if (!initial_path.Extension().empty()) {
-      params.accept_types.push_back(CefString(initial_path.Extension()));
-    }
   }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)

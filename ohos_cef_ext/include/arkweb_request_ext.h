@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -169,7 +169,7 @@ class ArkWebCefPostDataStream : public virtual CefBaseRefCounted {
   virtual bool IsInMemory() = 0;
 
   ///
-  /// Reset
+  /// Reset();
   ///
   virtual void Reset() = 0;
 

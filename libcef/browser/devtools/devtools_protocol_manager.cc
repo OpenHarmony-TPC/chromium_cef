@@ -11,7 +11,7 @@
 #include "content/public/browser/web_contents.h"
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-#include "cef/libcef/browser/devtools/arkweb/devtools_frontend.h"
+#include "cef/ohos_cef_ext/libcef/browser/devtools/devtools_protocol_manager_for_include.cc"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace {
@@ -103,7 +103,7 @@ class CefDevToolsRegistrationImpl : public CefRegistration,
 
 CefDevToolsProtocolManager::CefDevToolsProtocolManager(
     CefBrowserHostBase* inspected_browser)
-    : inspected_browser_(inspected_browser), weak_ptr_factory_(this) {
+    : inspected_browser_(inspected_browser) {
   CEF_REQUIRE_UIT();
 }
 
@@ -177,36 +177,3 @@ bool CefDevToolsProtocolManager::EnsureController() {
   }
   return true;
 }
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-void CefDevToolsProtocolManager::OnFrontEndDestroyed() {
-  devtools_frontend_ = nullptr;
-}
-
-void CefDevToolsProtocolManager::ShowDevToolsWith(
-    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
-    const CefPoint& inspect_element_at) {
-  CEF_REQUIRE_UIT();
-  if (devtools_frontend_) {
-    if (!inspect_element_at.IsEmpty()) {
-      devtools_frontend_->InspectElementAt(inspect_element_at.x,
-                                           inspect_element_at.y);
-    }
-    devtools_frontend_->Focus();
-    return;
-  }
-
-  //if (cef::IsChromeRuntimeEnabled()) {
-  if (false) {
-    NOTIMPLEMENTED();
-  } else {
-    auto* web_contents = inspected_browser_.get()->GetWebContents();
-    devtools_frontend_ = CefDevToolsFrontend::ShowWith(
-        frontend_browser, std::move(devtools_message_handler),
-        web_contents, inspect_element_at,
-        base::BindOnce(&CefDevToolsProtocolManager::OnFrontEndDestroyed,
-                       weak_ptr_factory_.GetWeakPtr()));
-  }
-}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)

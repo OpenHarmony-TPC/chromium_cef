@@ -7,6 +7,7 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
@@ -27,11 +28,6 @@
 #include "cef/libcef/features/features.h"
 #include "ohos_cef_ext/libcef/browser/arkweb_browser_contents_delegate_ext.h"
 #include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_PERMISSION)
 #include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
 #endif
@@ -416,6 +412,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
 
   void EnableVideoAssistant(bool enable) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
+  void CustomWebMediaPlayer(bool enable) override;
 
   // Thread-safe accessors.
   const CefBrowserSettings& settings() const { return settings_; }
@@ -554,9 +551,13 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void ReloadFocusedFrame() override {}
 #endif
 
+#if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
   void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
+  void SetScreenCapturePickerShow() override;
+  void DisableSessionReuse() override;
   void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) override;
+#endif  // defined(ARKWEB_EX_SCREEN_CAPTURE)
 
  protected:
   bool EnsureDevToolsProtocolManager();

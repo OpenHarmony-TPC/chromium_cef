@@ -21,6 +21,7 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "content/public/browser/browser_context.h"
+#include "base/memory/raw_ptr.h"
 
 class OhHostContentSettingsObserver : public KeyedService,
                                       public content_settings::Observer {
@@ -43,7 +44,7 @@ class OhHostContentSettingsObserver : public KeyedService,
       const OhHostContentSettingsObserver&) = delete;
 
  private:
-  content::BrowserContext* context_;
+  raw_ptr<content::BrowserContext> context_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_CONTENT_SETTINGS_OH_HOST_CONTENT_SETTINGS_OBSERVER_H_

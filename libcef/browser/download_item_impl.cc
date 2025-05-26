@@ -7,8 +7,6 @@
 #include "cef/libcef/common/time_util.h"
 #include "components/download/public/common/download_item.h"
 #include "url/gurl.h"
-// TODO:
-#undef OHOS_EX_DOWNLOAD
 
 CefDownloadItemImpl::CefDownloadItemImpl(download::DownloadItem* value)
     : CefValueBase<CefDownloadItem, download::DownloadItem>(

@@ -5,9 +5,6 @@
 
 #include "cef/libcef/browser/net_service/stream_reader_url_loader.h"
 
-#include <regex>
-
-#include "arkweb/build/features/features.h"
 #include "base/functional/bind.h"
 #include "base/functional/callback.h"
 #include "base/strings/string_number_conversions.h"
@@ -19,24 +16,19 @@
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/net_service/net_service_util.h"
 #include "content/public/browser/browser_thread.h"
-#include "net/base/features.h"
 #include "net/base/io_buffer.h"
 #include "net/http/http_status_code.h"
 #include "net/http/http_util.h"
-#include "services/network/public/cpp/features.h"
 #include "services/network/public/cpp/url_loader_completion_status.h"
 
-#if BUILDFLAG(ARKWEB_PERFORMANCE_NETWORK_TRACE)
-#include "base/trace_event/trace_event.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "ohos_cef_ext/libcef/browser/net_service/stream_reader_url_loader_utils.h"
 #endif
 
 namespace net_service {
 
 namespace {
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-constexpr int32_t NET_STATUS_CODE_400 = 400;
-#endif
 using OnInputStreamOpenedCallback =
     base::OnceCallback<void(std::unique_ptr<StreamReaderURLLoader::Delegate>,
                             std::unique_ptr<InputStream>)>;
@@ -511,9 +503,15 @@ StreamReaderURLLoader::StreamReaderURLLoader(
   // All InputStream work will be performed on this task runner.
   stream_work_task_runner_ =
       base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock()});
+#if BUILDFLAG(IS_ARKWEB)
+  loader_utils_ = new StreamReaderURLLoaderUtils(this);
+#endif
 }
 
 StreamReaderURLLoader::~StreamReaderURLLoader() {
+#if BUILDFLAG(IS_ARKWEB)
+  delete loader_utils_;
+#endif
   if (open_cancel_callback_) {
     // Release the Delegate held by OpenInputStreamWrapper.
     std::move(open_cancel_callback_).Run();
@@ -550,11 +548,9 @@ void StreamReaderURLLoader::Continue() {
                           base::Unretained(this)));
 
 #if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-  bool is_sync_mode = false;  // TODO(HUAWEI)
-  LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders "
-                "request_id_="
-             << request_id_ << ", is_sync_mode=" << is_sync_mode;
-  if (!is_sync_mode || !TryTransferDataWithSharedMemory()) {
+  LOG(DEBUG) << "intercept StreamReaderURLLoader::ContinueWithResponseHeaders request_id_=" << request_id_
+    << ", request_.is_sync_mode=" << request_.is_sync_mode;
+  if (!request_.is_sync_mode || !loader_utils_->TryTransferDataWithSharedMemory()) {
     ReadMore();
   }
 #else
@@ -659,16 +655,6 @@ void StreamReaderURLLoader::OnReaderSkipCompleted(int64_t bytes_skipped) {
   }
 }
 
-#if BUILDFLAG(ARKWEB_API_PER)
-bool checkResponseDataID(const std::string& identity) {
-  if (identity.empty() || identity.length() > kResponseDataIDMaxLength) {
-    return false;
-  }
-  static std::regex pattern(R"(\d+)");
-  return std::regex_match(identity, pattern);
-}
-#endif
-
 void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                             int64_t expected_content_length) {
   DCHECK(thread_checker_.CalledOnValidThread());
@@ -699,35 +685,14 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
   pending_response->response_start = base::TimeTicks::Now();
 
 #if BUILDFLAG(ARKWEB_API_PER)
-  // When user custom resource responses via 'onInterceptRequest',
-  // they can set 'ResponseDataID' value in the reponse header.
-  // This value will be utilized to generate codecache for interupt js resource.
-  //
-  // 'ResponseDataID': A string of 13 pure digits representing response data ID.
-  // When response data changes, a different 'ResponseDataID' must be set.
-  const auto& it = extra_headers.find(kResponseDataID);
-  if (it != extra_headers.end()) {
-    auto identity = it->second;
-    if (checkResponseDataID(identity)) {
-      pending_response->response_time =
-          base::Time::FromMillisecondsSinceUnixEpoch(std::stod(identity));
-      LOG(INFO) << "ResponseDataID have set";
-    } else {
-      LOG(WARNING) << "ResponseDataID[" << (identity)
-                   << "] not a reasonable value!";
-    }
-  }
+  loader_utils_->HandleResponseDataID(pending_response, extra_headers);
 #endif
 
   auto headers = MakeResponseHeaders(
       status_code, status_text, mime_type, charset, content_length,
       extra_headers, false /* allow_existing_header_override */);
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if (status_code >= NET_STATUS_CODE_400) {
-    if (!mime_type.empty()) {
-      headers->SetHeader(net::HttpRequestHeaders::kContentType, mime_type);
-    }
-  }
+  loader_utils_->CheckStatusCode(status_code, mime_type, headers);
 #endif
   pending_response->headers = headers;
 
@@ -759,53 +724,6 @@ void StreamReaderURLLoader::HeadersComplete(int orig_status_code,
                                 std::nullopt, std::nullopt);
   }
 }
-
-#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-bool StreamReaderURLLoader::TryTransferDataWithSharedMemory() {
-  size_t bufferSize = response_delegate_->GetResponseDataBufferSize();
-  if (bufferSize <= 0) {
-    LOG(DEBUG) << "shared-memory buffer size <= 0";
-    return false;
-  }
-
-  auto buffer = mojo::SharedBufferHandle::Create(bufferSize);
-  if (!buffer.is_valid()) {
-    LOG(ERROR) << "shared-memory create buffer err";
-    return false;
-  }
-  base::WritableSharedMemoryRegion writable_region =
-      mojo::UnwrapWritableSharedMemoryRegion(std::move(buffer));
-  base::WritableSharedMemoryMapping shared_memory_mapping =
-      writable_region.Map();
-  if (!shared_memory_mapping.IsValid()) {
-    LOG(ERROR) << "shared-memory mapping err";
-    return false;
-  }
-
-  char* memory = shared_memory_mapping.GetMemoryAs<char>();
-
-  size_t size = response_delegate_->GetResponseDataBuffer(memory, bufferSize);
-  LOG(DEBUG) << "shared-memory+++ GetResponseDataBuffer buffer size=" << size;
-  if (size <= 0) {
-    LOG(ERROR) << "shared-memory GetResponseDataBuffer size <= 0";
-    return false;
-  }
-
-  base::ReadOnlySharedMemoryRegion read_only_region =
-      base::WritableSharedMemoryRegion::ConvertToReadOnly(
-          std::move(writable_region));
-  if (!read_only_region.IsValid()) {
-    LOG(ERROR) << "shared-memory: convert to read only err";
-    return false;
-  }
-  client_->OnTransferDataWithSharedMemory(std::move(read_only_region),
-                                          bufferSize);
-  LOG(DEBUG) << "shared-memory--- GetResponseDataBuffer buffer size="
-             << bufferSize;
-
-  return true;
-}
-#endif
 
 void StreamReaderURLLoader::ContinueWithResponseHeaders(
     network::mojom::URLResponseHeadPtr pending_response,
@@ -852,12 +770,7 @@ void StreamReaderURLLoader::ContinueWithResponseHeaders(
     mojo::ScopedDataPipeConsumerHandle consumer_handle;
 #if BUILDFLAG(ARKWEB_API_PER)
     MojoCreateDataPipeOptions options;
-    options.struct_size = sizeof(MojoCreateDataPipeOptions);
-    options.flags = MOJO_CREATE_DATA_PIPE_FLAG_NONE;
-    options.element_num_bytes = 1;
-    options.capacity_num_bytes =
-        network::features::GetDataPipeDefaultAllocationSize(
-            network::features::DataPipeAllocationSize::kLargerSizeIfPossible);
+    loader_utils_->CreatePipeOptions(options);
     if (CreateDataPipe(&options /*options*/, producer_handle_,
 #else
     if (CreateDataPipe(nullptr /*options*/, producer_handle_,

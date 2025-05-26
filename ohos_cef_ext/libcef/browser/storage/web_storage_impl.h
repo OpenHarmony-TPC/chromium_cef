@@ -8,6 +8,7 @@
 #include <atomic>
 #include <queue>
 
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/threading/thread.h"
 #include "include/cef_web_storage.h"
 #include "libcef/browser/browser_context.h"
@@ -21,8 +22,17 @@
 #include "components/password_manager/core/browser/password_store/statistics_table.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#if BUILDFLAG(ARKWEB_EXT_PASSWORD)
+#include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
+
+enum WebStorageMigration {
+  MIGRATION_SERVICE_ABILITY_DISABLE = -2,
+  MIGRATION_STORAGE_FAILED = -1,
+  MIGRATION_DISCONNECT = 0,
+  MIGRATION_SUCCESS,
+  MIGRATION_DUPLICATE_DATA = 304,
+  MIGRATION_NOT_SET_SCREEN_LOCK = 503
+};
 #endif
 
 // Implementation of the CefWebStorage interface. May be created on any
@@ -57,6 +67,7 @@ class CefWebStorageImpl : public CefWebStorage {
                    CefRefPtr<CefGetPasswordCallback> callback) override;
   void GetSavedPasswordsInfo(
       CefRefPtr<CefGetSavedPasswordsCallback> callback) override;
+  void MigratePasswordsInfo() override;
 
   using GetOriginsCallback =
       base::OnceCallback<void(const std::vector<std::string>&,
@@ -92,6 +103,7 @@ class CefWebStorageImpl : public CefWebStorage {
   void GetPasswordInternal(const CefString& url,
                            const CefString& username,
                            CefRefPtr<CefGetPasswordCallback> callback);
+  void MigratePasswordsInfoInternal();
   void GetPasswordCallbackImpl(CefRefPtr<CefGetPasswordCallback> callback,
                                const std::u16string& password);
   void GetSavedPasswordsCallbackImpl(
@@ -134,9 +146,10 @@ class CefWebStorageImpl : public CefWebStorage {
         override;
     void RequestAutofillableLogins(
         CefRefPtr<CefGetSavedPasswordsCallback> callback);
+    void RequestAndMigrateAutofillableLogins();
 
    protected:
-    CefWebStorageImpl* web_storage_impl_;
+    raw_ptr<CefWebStorageImpl> web_storage_impl_;
 
    private:
     base::WeakPtrFactory<OhPasswordStoreConsumer> weak_ptr_factory_{this};
@@ -154,5 +167,30 @@ class CefWebStorageImpl : public CefWebStorage {
   base::WeakPtrFactory<CefWebStorageImpl> weak_factory_{this};
   IMPLEMENT_REFCOUNTING(CefWebStorageImpl);
 };
+
+#if BUILDFLAG(ARKWEB_EXT_PASSWORD)
+class MigrationCallback : public OHOS::NWeb::MigrationListenerAdapter {
+public:
+  MigrationCallback() {}
+  void OnMigrationReply(int32_t errorCode, int32_t succussCount, const std::vector<int32_t>& errorIndex,
+                        const std::vector<int32_t>& codeList) override;
+  void SetMigrationFinish(bool isFinish) { migration_finished_ = isFinish; }
+  bool GetMigrationFinish() { return migration_finished_; }
+  int32_t SetMigrationErrorCode(int32_t errorCode) { return migration_error_code_ = errorCode; }
+  int32_t GetMigrationErrorCode() { return migration_error_code_; }
+  uint32_t GetMigrationSuccessCount() { return migration_success_count_; }
+  uint32_t GetMigrationDisconnectCount() { return migration_disconnect_count_; }
+  std::vector<int32_t> GetMigrationErrorIndex() { return error_index_; }
+  std::vector<int32_t> GetMigrationCodeList() { return code_list_; }
+ 
+private:
+  bool migration_finished_ = false;
+  int32_t migration_error_code_ = MIGRATION_SUCCESS;
+  uint32_t migration_success_count_ = 0;
+  uint32_t migration_disconnect_count_ = 0;
+  std::vector<int32_t> error_index_ = {};
+  std::vector<int32_t> code_list_ = {};
+};
+#endif
 
 #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_WEB_STORAGE_IMPL_H_

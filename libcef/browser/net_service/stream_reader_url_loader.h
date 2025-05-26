@@ -22,10 +22,7 @@
 namespace net_service {
 
 class InputStreamReader;
-
-static const char kResponseDataID[] = "ResponseDataID";
-// length of unix timestamp accurate to milliseconds
-static const int kResponseDataIDMaxLength = 13;
+class StreamReaderURLLoaderUtils;
 
 // Abstract class representing an input stream. All methods are called in
 // sequence on a worker thread, but not necessarily on the same thread.
@@ -110,6 +107,7 @@ class ResourceResponse {
 // android_stream_reader_url_loader.h
 class StreamReaderURLLoader : public network::mojom::URLLoader {
  public:
+  friend class StreamReaderURLLoaderUtils;
   // Delegate abstraction for obtaining input streams. All methods are called
   // on the IO thread unless otherwise indicated.
   class Delegate : public ResourceResponse {
@@ -159,9 +157,6 @@ class StreamReaderURLLoader : public network::mojom::URLLoader {
 
   void OnReaderSkipCompleted(int64_t bytes_skipped);
   void HeadersComplete(int status_code, int64_t expected_content_length);
-#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-  bool TryTransferDataWithSharedMemory();
-#endif
   void ContinueWithResponseHeaders(
       network::mojom::URLResponseHeadPtr pending_response,
       int32_t result,
@@ -204,6 +199,7 @@ class StreamReaderURLLoader : public network::mojom::URLLoader {
   bool need_client_callback_ = false;
   bool got_client_callback_ = false;
 
+  StreamReaderURLLoaderUtils* loader_utils_;
   base::WeakPtrFactory<StreamReaderURLLoader> weak_factory_;
 };
 

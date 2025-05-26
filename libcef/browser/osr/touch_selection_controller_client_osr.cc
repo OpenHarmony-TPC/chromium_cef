@@ -9,6 +9,7 @@
 #include <set>
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
 #include "cef/libcef/browser/osr/touch_handle_drawable_osr.h"
@@ -22,11 +23,6 @@
 #include "ui/gfx/geometry/point_conversions.h"
 #include "ui/gfx/geometry/size_conversions.h"
 #include "ui/touch_selection/touch_editing_controller.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
 #endif
@@ -36,6 +32,8 @@
 #include "base/command_line.h"
 #include "content/public/common/content_switches.h"
 #endif
+
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
 
 namespace {
 
@@ -130,20 +128,7 @@ CefTouchSelectionControllerClientOSR::~CefTouchSelectionControllerClientOSR() {
 void CefTouchSelectionControllerClientOSR::CloseQuickMenuAndHideHandles() {
   LOG(INFO) << "Close Quick Menu And Hide Hanles.";
   CloseQuickMenu();
-#if BUILDFLAG(ARKWEB_MENU)
-  auto controller = rwhv_->selection_controller();
-  if (controller) {
-    if (!controller->GetInsertHandle() ||
-        !controller->GetInsertHandle()->GetEnabled()) {
-      rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
-    } else if (controller->GetInsertHandle()->GetEnabled()) {
-      rwhv_->selection_controller()->SetTemporarilyHidden(true);
-      NotifyTouchSelectionChanged(true);
-    }
-  }
-#else
   rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
-#endif  // #if BUILDFLAG(ARKWEB_MENU)
 }
 
 void CefTouchSelectionControllerClientOSR::OnWindowMoved() {
@@ -168,13 +153,6 @@ void CefTouchSelectionControllerClientOSR::OnTouchUp() {
 void CefTouchSelectionControllerClientOSR::OnScrollStarted() {
   scroll_in_progress_ = true;
   rwhv_->selection_controller()->SetTemporarilyHidden(true);
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-  if (handles_hidden_by_selection_ui_) {
-    LOG(INFO) << "scroll starts when the handle menu is hidden";
-    UpdateQuickMenuByHandlesHidden();
-    return;
-  }
-#endif
   UpdateQuickMenu();
 }
 
@@ -182,29 +160,11 @@ void CefTouchSelectionControllerClientOSR::OnScrollCompleted() {
   scroll_in_progress_ = false;
   active_client_->DidScroll();
   rwhv_->selection_controller()->SetTemporarilyHidden(false);
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-  if (handles_hidden_by_selection_ui_) {
-    LOG(INFO) << "scroll completed when the handle menu is hidden";
-    UpdateQuickMenuByHandlesHidden();
-    return;
-  }
-#endif
   UpdateQuickMenu();
 }
 
 bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
     const content::ContextMenuParams& params) {
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-  bool is_browser = base::CommandLine::ForCurrentProcess() &&
-                    base::CommandLine::ForCurrentProcess()->HasSwitch(
-                        switches::kEnableNwebExFreeCopy);
-  bool has_select = !rwhv_->GetSelectedText().empty();
-  if (is_browser && !has_select && params.selection_text.empty() &&
-      !params.is_editable) {
-    quick_menu_requested_ = false;
-    return false;
-  }
-#endif
   if ((params.source_type == ui::mojom::MenuSourceType::kLongPress ||
        params.source_type == ui::mojom::MenuSourceType::kLongTap) &&
       params.is_editable && params.selection_text.empty() &&
@@ -218,21 +178,7 @@ bool CefTouchSelectionControllerClientOSR::HandleContextMenu(
       params.source_type == ui::mojom::MenuSourceType::kLongPress ||
       params.source_type == ui::mojom::MenuSourceType::kLongTap ||
       params.source_type == ui::mojom::MenuSourceType::kTouch;
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-  if (is_browser) {
-    from_touch = from_touch || params.source_type ==
-                                   ui::mojom::MenuSourceType::kSelectAndCopy;
-  }
-#endif
   if (from_touch && !params.selection_text.empty()) {
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-    if (is_browser) {
-      if (params.source_type == ui::mojom::MenuSourceType::kSelectAndCopy) {
-        quick_menu_requested_ = true;
-      }
-      SelectionTextNotEmpty(!params.selection_text.empty());
-    }
-#endif
     return true;
   }
 
@@ -340,29 +286,13 @@ void CefTouchSelectionControllerClientOSR::TemporarilyCloseQuickMenu() {
   if (auto handler = browser->client()->GetContextMenuHandler()) {
     handler->AsCefContextMenuHandlerExt()->OnQuickMenuDismissed(
         browser.get(), browser->GetFocusedFrame(), false);
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-    handles_hidden_by_selection_ui_ = false;
-    NotifyTouchSelectionChanged(false);
-#endif
   }
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  LOG(INFO) << "Close Quick Menu Now.";
-  if (browser->web_contents()) {
-    browser->web_contents()->SetShowingContextMenu(false);
-  }
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 }
 
 void CefTouchSelectionControllerClientOSR::CloseQuickMenu() {
   TemporarilyCloseQuickMenu();
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-  if (base::CommandLine::ForCurrentProcess() &&
-      base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExFreeCopy)) {
-    SelectionTextNotEmpty(false);
-  }
-#endif
 }
+
 void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
@@ -374,11 +304,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
     auto client_bounds = gfx::RectF(rwhv_->GetViewBounds());
     origin.SetToMax(client_bounds.origin());
     bottom_right.SetToMin(client_bounds.bottom_right());
-#if !BUILDFLAG(ARKWEB_CLIPBOARD)
-    if (origin.x() > bottom_right.x() || origin.y() > bottom_right.y()) {
-      return;
-    }
-#endif  // !BUILDFLAG(ARKWEB_CLIPBOARD)
     gfx::Vector2dF diagonal = bottom_right - origin;
     gfx::SizeF size(diagonal.x(), diagonal.y());
 
@@ -395,52 +320,6 @@ void CefTouchSelectionControllerClientOSR::ShowQuickMenu() {
             weak_ptr_factory_.GetWeakPtr())));
 
     quick_menu_running_ = true;
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-    handles_hidden_by_selection_ui_ = false;
-#endif
-#if BUILDFLAG(ARKWEB_VIBRATE)
-    ui::TouchSelectionController* controller = GetTouchSelectionController();
-    bool isLongPressSelectionActive = false;
-    if (controller) {
-      isLongPressSelectionActive = controller->IsLongPressDragSelectionActive();
-      LOG(INFO) << "The selection long press active is "
-                << isLongPressSelectionActive << ", clipped_selection_bounds:"
-                << clipped_selection_bounds_.ToString();
-    }
-    if (!handler->AsCefContextMenuHandlerExt()->RunQuickMenu(
-            browser, browser->GetFocusedFrame(),
-            {static_cast<int>(std::round(origin.x())),
-             static_cast<int>(std::round(origin.y()))},
-            {static_cast<int>(std::round(size.width())),
-             static_cast<int>(std::round(size.height()))},
-            {clipped_selection_bounds_.x(), clipped_selection_bounds_.y(),
-             clipped_selection_bounds_.width(),
-             clipped_selection_bounds_.height()},
-            static_cast<CefContextMenuHandler::QuickMenuEditStateFlags>(
-                quickmenuflags),
-            callbackImpl, false, isLongPressSelectionActive)) {
-      callbackImpl->Disconnect();
-      if (browser) {
-        if (auto client = browser->client()) {
-          if (auto render = client->GetRenderHandler()) {
-            render->NotifySelectAllClicked(false);
-          }
-        }
-      }
-      CloseQuickMenu();
-#endif  // BUILDFLAG(ARKWEB_VIBRATE)
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-    } else {
-      LOG(INFO) << "Show Handle Quick Menu Success";
-      if (!browser) {
-        return;
-      }
-      if (browser->web_contents()) {
-        browser->web_contents()->SetShowingContextMenu(true);
-      }
-      browser->SetTouchInsertHandleMenuShow(false);
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
-    }
   }
 }
 
@@ -448,11 +327,7 @@ void CefTouchSelectionControllerClientOSR::UpdateQuickMenu() {
   // Hide the quick menu if there is any. This should happen even if the menu
   // should be shown again, in order to update its location or content.
   if (quick_menu_running_) {
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-    TemporarilyCloseQuickMenu();
-#else
     CloseQuickMenu();
-#endif
   } else {
     quick_menu_timer_.Stop();
   }
@@ -579,7 +454,11 @@ void CefTouchSelectionControllerClientOSR::InternalClient::OnDragUpdate(
 
 std::unique_ptr<ui::TouchHandleDrawable>
 CefTouchSelectionControllerClientOSR::CreateDrawable() {
+#if BUILDFLAG(IS_ARKWEB)
+  return std::make_unique<ArkWebCefTouchHandleDrawableOSRExt>(rwhv_);
+#else
   return std::make_unique<CefTouchHandleDrawableOSR>(rwhv_);
+#endif
 }
 
 void CefTouchSelectionControllerClientOSR::DidScroll() {}
@@ -599,16 +478,6 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
   bool editable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_NONE;
   bool readable = rwhv_->GetTextInputType() != ui::TEXT_INPUT_TYPE_PASSWORD;
   bool has_selection = !rwhv_->GetSelectedText().empty();
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  bool has_text =
-      !rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->GetText().empty();
-#endif
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExFreeCopy)) {
-    has_selection = has_selection || isSelectionTextNotEmpty_;
-  }
-#endif
   switch (command_id) {
     case QM_EDITFLAG_CAN_ELLIPSIS:
       return true;  // Always allowed to show the ellipsis button.
@@ -617,33 +486,13 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
     case QM_EDITFLAG_CAN_COPY:
       return readable && has_selection;
     case QM_EDITFLAG_CAN_PASTE: {
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-      bool can_paste = false;
-      if (!editable) {
-        LOG(INFO) << "This area is not editable.";
-        return can_paste;
-      }
-      can_paste = ui::Clipboard::GetForCurrentThread()->HasPasteData();
-      return can_paste;
-#else
       std::u16string result;
       ui::DataTransferEndpoint data_dst = ui::DataTransferEndpoint(
           ui::EndpointType::kDefault, /*notify_if_restricted=*/false);
       ui::Clipboard::GetForCurrentThread()->ReadText(
           ui::ClipboardBuffer::kCopyPaste, &data_dst, &result);
       return editable && !result.empty();
-#endif  // if BUILDFLAG(ARKWEB_CLIPBOARD)
     }
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-    case QM_EDITFLAG_CAN_SELECT_ALL:
-      if (!editable && readable) {
-        return true;
-      }
-      if (editable && has_text) {
-        return true;
-      }
-      return false;
-#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
     default:
       return false;
   }
@@ -651,23 +500,7 @@ bool CefTouchSelectionControllerClientOSR::IsCommandIdEnabled(
 
 void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
                                                           int event_flags) {
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-  SetSelectAllClicked(command_id);
-#endif
-
-#if !BUILDFLAG(ARKWEB_CLIPBOARD)
-  if (command_id == kInvalidCommandId) {
-    LOG(ERROR) << "Quick menu command id is invaild";
-    return;
-  }
-#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
-
-#if BUILDFLAG(ARKWEB_MENU)
-  if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
-      command_id != QM_EDITFLAG_CAN_SELECT_ALL) {
-#else
   if (command_id != QM_EDITFLAG_CAN_ELLIPSIS) {
-#endif  // BUILDFLAG(ARKWEB_MENU)
     rwhv_->selection_controller()->HideAndDisallowShowingAutomatically();
   }
 
@@ -684,10 +517,6 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
       return;
     }
   }
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  absl::optional<std::u16string> value;
-  LOG(INFO) << "Quick menu command id = " << command_id;
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
   switch (command_id) {
     case QM_EDITFLAG_CAN_CUT:
@@ -695,61 +524,20 @@ void CefTouchSelectionControllerClientOSR::ExecuteCommand(int command_id,
       break;
     case QM_EDITFLAG_CAN_COPY:
       host_delegate->Copy();
-#if BUILDFLAG(ARKWEB_NAVIGATION)
-      browser->web_contents()->CollapseSelection();
-#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
       break;
     case QM_EDITFLAG_CAN_PASTE:
       host_delegate->Paste();
       break;
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-    case QM_EDITFLAG_CAN_SELECT_ALL:
-      host_delegate->SelectAll();
-      CloseQuickMenu();
-      ShowQuickMenu();
-      break;
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_ELLIPSIS:
       CloseQuickMenu();
       RunContextMenu();
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-      browser->web_contents()->CollapseSelection();
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
       break;
     default:
       // Invalid command, do nothing.
       // Also reached when callback is destroyed/cancelled.
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-      browser->web_contents()->CollapseSelection();
-#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
       break;
   }
 }
-
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-void CefTouchSelectionControllerClientOSR::SetSelectAllClicked(int command_id) {
-  if (!rwhv_) {
-    return;
-  }
-  auto browser = rwhv_->browser_impl();
-  if (!browser) {
-    return;
-  }
-  auto client = browser->client();
-  if (!client) {
-    return;
-  }
-  auto render = client->GetRenderHandler();
-  if (!render) {
-    return;
-  }
-  if (command_id == QM_EDITFLAG_CAN_SELECT_ALL) {
-    render->NotifySelectAllClicked(true);
-  } else {
-    render->NotifySelectAllClicked(false);
-  }
-}
-#endif  // #ifdef ARKWEB_DRAG_DROP
 
 void CefTouchSelectionControllerClientOSR::RunContextMenu() {
   const gfx::RectF anchor_rect =
@@ -774,10 +562,3 @@ bool CefTouchSelectionControllerClientOSR::ShouldShowQuickMenu() {
 std::u16string CefTouchSelectionControllerClientOSR::GetSelectedText() {
   return rwhv_->GetSelectedText();
 }
-
-#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
-void CefTouchSelectionControllerClientOSR::SelectionTextNotEmpty(
-    bool has_selection) {
-  isSelectionTextNotEmpty_ = has_selection;
-}
-#endif

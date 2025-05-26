@@ -18,9 +18,9 @@
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_context_for_include.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
 namespace {
 
@@ -32,7 +32,6 @@ Profile* GetPrimaryUserProfile() {
   // From ProfileManager::GetActiveUserOrOffTheRecordProfile.
   base::FilePath default_profile_dir = profile_manager->user_data_dir().Append(
       profile_manager->GetInitialProfileDir());
-
   return profile_manager->GetProfile(default_profile_dir);
 }
 
@@ -244,18 +243,3 @@ void ChromeBrowserContext::OnProfileWillBeDestroyed(Profile* profile) {
   profile_ = nullptr;
   destroyed_ = true;
 }
-
-#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
-void ChromeBrowserContext::OnWebViewShow() {
-  ScheduleUpdateCloudControl(this->AsBrowserContext());
-}
-
-void ChromeBrowserContext::OnContextInitialized() {
-  ScheduleUpdateCloudControl(this->AsBrowserContext());
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && !BUILDFLAG(ARKWEB_NWEB_EX)
-void ChromeBrowserContext::ScheduleUpdateCloudControl(
-    content::BrowserContext* context) {}
-#endif

@@ -20,6 +20,7 @@ class WebContents;
 class AlloyBrowserHostImpl;
 class ArkWebRenderWidgetHostViewOSRExt;
 class CefTouchSelectionControllerClientOSR;
+class ArkWebCefWebContentsViewOSRExt;
 
 // An implementation of WebContentsView for off-screen rendering.
 class CefWebContentsViewOSR : public content::WebContentsView,
@@ -33,6 +34,8 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   CefWebContentsViewOSR& operator=(const CefWebContentsViewOSR&) = delete;
 
   ~CefWebContentsViewOSR() override;
+
+  virtual ArkWebCefWebContentsViewOSRExt *AsArkWebCefWebContentsViewOSRExt() { return nullptr; }
 
   void WebContentsCreated(content::WebContents* web_contents);
   content::WebContents* web_contents() const { return web_contents_; }
@@ -75,13 +78,6 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   // RenderViewHostDelegateView methods.
   void ShowContextMenu(content::RenderFrameHost& render_frame_host,
                        const content::ContextMenuParams& params) override;
-#if BUILDFLAG(ARKWEB_AI)
-  bool CloseImageOverlaySelection() override;
-#endif  // BUILDFLAG(ARKWEB_AI)
-
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-  gfx::Rect GetVisibleRectToWeb() override;
-#endif
 
   void StartDragging(const content::DropData& drop_data,
                      const url::Origin& source_origin,
@@ -98,46 +94,11 @@ class CefWebContentsViewOSR : public content::WebContentsView,
   void TakeFocus(bool reverse) override;
   void FullscreenStateChanged(bool is_fullscreen) override {}
 
-#if BUILDFLAG(ARKWEB_AI)
-  void CreateOverlay(const gfx::ImageSkia& image,
-                     const gfx::Rect& image_rect,
-                     const gfx::Point& touch_point) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-  void OnSafeInsetsChange(const gfx::Insets& safe_insets) override;
-#endif
-#if BUILDFLAG(ARKWEB_MENU)
-  void MouseSelectMenuShow(bool show) override;
-  void ChangeVisibilityOfQuickMenu() override;
-#endif
-
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
-  virtual content::WebContents* GetWebContents() override;
-  void DidStopRefresh() override;
-#endif
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-  int GetTopControlsHeight() override;
-  bool DoBrowserControlsShrinkRendererSize() const override;
-  void UpdateBrowserControlsHeight(int height, bool animate) override;
-#endif
-
-#if BUILDFLAG(USE_EXTERNAL_POPUP_MENU)
-  void ShowPopupMenu(
-      content::RenderFrameHost* render_frame_host,
-      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-      const gfx::Rect& bounds,
-      int item_height,
-      double item_font_size,
-      int selected_item,
-      std::vector<blink::mojom::MenuItemPtr> menu_items,
-      bool right_aligned,
-      bool allow_multiple_selection) override;
-#endif
   void DestroyBackForwardTransitionAnimationManager() override {}
 
  private:
+  friend ArkWebCefWebContentsViewOSRExt;
+
   ArkWebRenderWidgetHostViewOSRExt* GetView() const;
   AlloyBrowserHostImpl* GetBrowser() const;
   CefTouchSelectionControllerClientOSR* GetSelectionControllerClient() const;
@@ -152,5 +113,9 @@ class CefWebContentsViewOSR : public content::WebContentsView,
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;
 };
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_web_contents_view_osr_ext.h"
+#endif
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_WEB_CONTENTS_VIEW_OSR_H_

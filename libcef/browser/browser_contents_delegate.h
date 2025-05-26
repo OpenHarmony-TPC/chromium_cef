@@ -180,6 +180,10 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   friend class ArkWebBrowserContentsDelegateExt;
 #endif  // BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  virtual bool HandleUserKeyEvent(const input::NativeWebKeyboardEvent& event) = 0;
+#endif
+
  private:
   CefRefPtr<CefClient> client() const;
   CefRefPtr<CefBrowser> browser() const;
@@ -224,13 +228,16 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
 
   // True if the focus is currently on an editable field on the page.
   bool focus_on_editable_field_ = false;
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-  base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string last_did_finish_load_url_;
 #endif
 #if BUILDFLAG(ARKWEB_FAVICON)
   // Store web site icon.
   CefRefPtr<IconHelper> icon_helper_;
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
+#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+  base::WeakPtrFactory<CefBrowserContentsDelegate> weak_factory_{this};
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_H_

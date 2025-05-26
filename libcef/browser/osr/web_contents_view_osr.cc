@@ -23,6 +23,8 @@
 #include "content/public/common/content_switches.h"
 #endif
 
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
+
 CefWebContentsViewOSR::CefWebContentsViewOSR(SkColor background_color,
                                              bool use_shared_texture,
                                              bool use_external_begin_frame)
@@ -37,11 +39,7 @@ void CefWebContentsViewOSR::WebContentsCreated(
   DCHECK(!web_contents_);
   web_contents_ = web_contents;
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
-  LOG(INFO) << "CefWebContentsViewOSR::WebContentsCreated";
-  if (auto* registry =
-          performance_manager::PerformanceManagerRegistry::GetInstance()) {
-    registry->MaybeCreatePageNodeForWebContents(web_contents_);
-  }
+  AsArkWebCefWebContentsViewOSRExt()->WebContentsMaybeCreatePageNode();
 #endif
 
   RenderViewCreated();
@@ -148,27 +146,6 @@ void CefWebContentsViewOSR::ShowContextMenu(
   }
 }
 
-#if BUILDFLAG(ARKWEB_AI)
-bool CefWebContentsViewOSR::CloseImageOverlaySelection() {
-  auto* rwhv = GetView();
-  if (rwhv) {
-    return rwhv->AsArkWebRenderWidgetHostViewOSRExt()
-        ->CloseImageOverlaySelection();
-  }
-  return false;
-}
-#endif  // BUILDFLAG(ARKWEB_AI)
-
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-gfx::Rect CefWebContentsViewOSR::GetVisibleRectToWeb() {
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get()) {
-    return browser->GetVisibleRectToWeb();
-  }
-  return gfx::Rect();
-}
-#endif
-
 void CefWebContentsViewOSR::StartDragging(
     const content::DropData& drop_data,
     const url::Origin& source_origin,
@@ -183,11 +160,7 @@ void CefWebContentsViewOSR::StartDragging(
     browser->StartDragging(drop_data, allowed_ops, image, cursor_offset,
                            event_info, source_rwh);
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-    CefRenderWidgetHostViewOSR* view = GetView();
-    if (view) {
-      view->AsArkWebRenderWidgetHostViewOSRExt()
-          ->SetTextHandlesTemporarilyHiddenByDrag(true, true);
-    }
+  AsArkWebCefWebContentsViewOSRExt()->SetTextHandlesTemporarilyHiddenByDrag();
 #endif
   } else if (web_contents_) {
     static_cast<content::WebContentsImpl*>(web_contents_)
@@ -225,132 +198,3 @@ CefWebContentsViewOSR::GetSelectionControllerClient() const {
   ArkWebRenderWidgetHostViewOSRExt* view = GetView();
   return view ? view->selection_controller_client() : nullptr;
 }
-
-#if BUILDFLAG(ARKWEB_AI)
-void CefWebContentsViewOSR::CreateOverlay(const gfx::ImageSkia& image,
-                                          const gfx::Rect& image_rect,
-                                          const gfx::Point& touch_point) {
-  ArkWebRenderWidgetHostViewOSRExt* view = GetView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->CreateOverlay(image, image_rect,
-                                                              touch_point);
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-void CefWebContentsViewOSR::OnSafeInsetsChange(const gfx::Insets& safe_insets) {
-  if (web_contents_) {
-    content::WebContentsImpl* web_contents_impl =
-        static_cast<content::WebContentsImpl*>(web_contents_);
-    if (web_contents_impl) {
-      web_contents_impl->SetDisplayCutoutSafeArea(safe_insets);
-    }
-  }
-}
-#endif
-#if BUILDFLAG(ARKWEB_MENU)
-void CefWebContentsViewOSR::MouseSelectMenuShow(bool show) {
-  auto* rwhv = GetView();
-  if (rwhv) {
-    rwhv->MouseSelectMenuShow(show);
-  }
-}
-
-void CefWebContentsViewOSR::ChangeVisibilityOfQuickMenu() {
-  auto* rwhv = GetView();
-  if (rwhv) {
-    rwhv->ChangeVisibilityOfQuickMenu();
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
-void CefWebContentsViewOSR::DidStopRefresh() {
-  if (ArkWebRenderWidgetHostViewOSRExt* view = GetView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->DidStopRefresh();
-  }
-}
-
-content::WebContents* CefWebContentsViewOSR::GetWebContents() {
-  return web_contents_;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-int CefWebContentsViewOSR::GetTopControlsHeight() {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExTopControls)) {
-    return 0;
-  }
-
-  int top_controls_height = top_controls_height_;
-
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get() && browser->GetClient()) {
-    top_controls_height =
-        browser->GetClient()->AsArkWebClient()->OnGetTopControlsHeight();
-  }
-  if (top_controls_height != top_controls_height_) {
-    LOG(INFO) << "browser controls height changed:" << top_controls_height_
-              << "->" << top_controls_height;
-    top_controls_height_ = top_controls_height;
-    if (CefRenderWidgetHostViewOSR* view = GetView()) {
-      view->OnTopControlsHeightChanged();
-    }
-  }
-
-  return top_controls_height_;
-}
-
-bool CefWebContentsViewOSR::DoBrowserControlsShrinkRendererSize() const {
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-  if (browser.get() && browser->GetClient()) {
-    return browser->GetClient()
-        ->AsArkWebClient()
-        ->DoBrowserControlsShrinkRendererSize();
-  }
-  return false;
-}
-
-void CefWebContentsViewOSR::UpdateBrowserControlsHeight(int height,
-                                                        bool animate) {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExTopControls) ||
-      height == top_controls_height_) {
-    return;
-  }
-
-  LOG(INFO) << "browser controls height changed:" << top_controls_height_
-            << "->" << height;
-  top_controls_height_ = height;
-
-  if (CefRenderWidgetHostViewOSR* view = GetView()) {
-    view->OnTopControlsHeightChanged();
-    view->SynchronizeVisualProperties(cc::DeadlinePolicy::UseDefaultDeadline(),
-                                      absl::nullopt);
-  }
-}
-#endif  // BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-
-#if BUILDFLAG(USE_EXTERNAL_POPUP_MENU)
-void CefWebContentsViewOSR::ShowPopupMenu(
-    content::RenderFrameHost* render_frame_host,
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection) {
-  CefRefPtr<AlloyBrowserHostImpl> browser = GetBrowser();
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-  if (browser.get()) {
-    browser->ShowPopupMenu(std::move(popup_client), bounds, item_height,
-                           item_font_size, selected_item, std::move(menu_items),
-                           right_aligned, allow_multiple_selection);
-  }
-#endif  // #if BUILDFLAG(ARKWEB_HTML_SELECT)
-}
-#endif

@@ -80,6 +80,18 @@ class CefGestureEventCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// Interface to implement to be notified of asynchronous completion via
+/// CefBrowserHostBase::SetMouseEventResult().
+///
+class CefMouseEventCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called upon completion.
+  ///
+  virtual void ContinueTask(bool result, bool stopPropagation) = 0;
+};
+
+///
 /// Interface to implement to be notified of asynchronous web message channel.
 ///
 class CefWebMessageReceiver : public virtual CefBaseRefCounted {
@@ -199,12 +211,10 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   virtual void ReloadOriginalUrl() = 0;
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
   ///
-  /// Can save current page as an archive.
+  /// Can save current page as a archive.
   ///
   virtual bool CanStoreWebArchive() = 0;
-#endif
 
   ///
   /// Set user agent for current page.
@@ -291,7 +301,6 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   virtual int GetSecurityLevel() = 0;
 
-#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
   /// Get the shrink viewport height.
   ///
@@ -306,7 +315,6 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Get the shrink viewport height.
   ///
   virtual void ClearForwardList() = 0;
-#endif
 
   ///
   /// Enable the ability to intelligent tracking prevention, default disabled.
@@ -472,6 +480,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void SetFocusOnWeb() = 0;
 
   ///
+  /// Send a isNeedSecurityLayer bool to the browser.
+  ///
+  /*--cef()--*/
+  virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) = 0;
+
+  ///
   /// UpdateLocale
   ///
   virtual void UpdateLocale(const CefString& locale) = 0;
@@ -604,7 +618,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// Close the web message port.
   ///
-  virtual void ClosePort(CefString& port_handle) = 0;
+  virtual void ClosePort(const CefString& port_handle) = 0;
 
   ///
   /// Destroy all web message ports.
@@ -628,6 +642,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Gets the latest hitdata
   ///
   virtual void GetHitData(int& type, CefString& extra_data) = 0;
+
+  ///
+  /// Gets the latest hitdata
+  ///
+  /*--cef()--*/
+  virtual void GetLastHitData(int& type, CefString& extra_data) = 0;
 
   ///
   /// Set the inital page scale
@@ -755,6 +775,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void SetFileAccess(bool falg) = 0;
 
   ///
+  /// Set whether webview can diallow sandbox file access from file url
+  ///
+  virtual void SetDisallowSandboxFileAccessFromFileUrl(bool falg) = 0;
+
+  ///
   /// Set whether webview can access network
   ///
   virtual void SetBlockNetwork(bool falg) = 0;
@@ -801,7 +826,8 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void JavaScriptOnDocumentStart(
       const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) = 0;
 
   ///
   /// RemoveJavaScriptOnDocumentStart
@@ -813,7 +839,8 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void JavaScriptOnDocumentEnd(
       const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) = 0;
 
   ///
   /// RemoveJavaScriptOnDocumentEnd
@@ -849,6 +876,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void SetBrowserZoomLevel(double zoomFactor) = 0;
 
+  ///
+  /// Get last selected text by parameters carried when showing context menu.
+  ///
+  virtual std::string GetSelectedTextFromContextParam() = 0;
+
 #if BUILDFLAG(ARKWEB_DISCARD)
   ///
   /// Discard a webview window
@@ -871,7 +903,6 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual int GetShrinkViewportHeight() = 0;
 
-#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
   /// Get the shrink viewport height.
   ///
@@ -886,7 +917,6 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get the shrink viewport height.
   ///
   virtual void ClearForwardList() = 0;
-#endif
 
   ///
   /// Set background print enable.
@@ -1127,6 +1157,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /*--cef()--*/
   virtual void SetNativeEmbedMode(bool flag) = 0;
+
+  ///
+  /// Set the native innner web
+  ///
+  /*--cef()--*/
+  virtual void SetNativeInnerWeb(bool isInnerWeb) = 0;
 #endif
   ///
   /// request autofill from IMF event.
@@ -1143,7 +1179,8 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /*--cef()--*/
   virtual void JavaScriptOnHeadReady(
       const CefString& script,
-      const std::vector<CefString>& script_rules) = 0;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) = 0;
 
   ///
   /// RemoveJavaScriptOnHeadReady
@@ -1184,6 +1221,29 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /*--cef()--*/
   virtual void PutWebMediaAVSessionEnabled(bool enable) = 0;
 #endif  // ARKWEB_MEDIA_AVSESSION
+
+#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
+  ///
+  /// Set if half the frame rate.
+  ///
+  virtual void SetEnableHalfFrameRate(bool enabled) = 0;
+#endif
+  ///
+  /// Set focus by position.
+  ///
+  virtual bool SetFocusByPosition(float x, float y) = 0;
+
+#if BUILDFLAG(ARKWEB_AI)
+  /// 
+  /// get data detector select text
+  ///
+  virtual std::string GetDataDetectorSelectText() = 0;
+
+  ///
+  /// On data detector select text.
+  ///
+  virtual void OnDataDetectorSelectText() = 0;
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

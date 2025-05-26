@@ -20,6 +20,9 @@
 namespace content {
 class WebContents;
 }
+#if BUILDFLAG(ARKWEB_WEBRTC)
+class AlloyMediaAccessRequest;
+#endif // BUILDFLAG(ARKWEB_WEBRTC)
 
 class AlloyPermissionManager : public content::PermissionControllerDelegate {
  public:
@@ -76,6 +79,9 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
   void AbortPermissionRequests();
 
  private:
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  friend class AlloyMediaAccessRequest;
+#endif // BUILDFLAG(ARKWEB_WEBRTC)
   class UnhandledRequest;
   using UnhandledRequestsMap = base::IDMap<std::unique_ptr<UnhandledRequest>>;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
@@ -110,6 +116,7 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
   UnhandledQuerysMap unhandled_querys_;
  
   std::map<GURL, int32_t> notification_permission_;
+  std::map<GURL, int32_t> geolocation_permission_;
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
   base::WeakPtrFactory<AlloyPermissionManager> weak_ptr_factory_{this};

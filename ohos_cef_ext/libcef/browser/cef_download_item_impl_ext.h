@@ -1,7 +1,3 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #ifndef CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_EXT_H_
 #define CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_EXT_H_
 #pragma once
@@ -31,7 +27,7 @@ class CefDownloadItemImplExt : public CefDownloadItemExt,
   CefString GetReceivedSlices() override;
   int GetNWebId() override;
   CefRefPtr<CefDownloadItemExt> AsArkDownloadItem() override;
-  CefRefPtr<CefValue> GetContentDispositionCefValue() override;
+  CefRefPtr<CefValue> GetOriginContentDisposition() override;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_ITEM_IMPL_H_

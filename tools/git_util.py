@@ -134,9 +134,9 @@ def git_apply_patch_file(patch_path, patch_dir):
     patch_string = patch_string.replace(b'\r\n', b'\n')
 
   # Git apply fails silently if not run relative to a respository root.
-  if not is_checkout(patch_dir):
-    sys.stdout.write('... patch directory is not a repository root.\n')
-    return 'fail'
+  #if not is_checkout(patch_dir):
+    #sys.stdout.write('... patch directory is not a repository root.\n')
+    #return 'fail'
 
   config = '-p1 --ignore-whitespace'
 

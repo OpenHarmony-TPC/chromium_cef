@@ -3,6 +3,7 @@
 // can be found in the LICENSE file.
 
 #include "cef/libcef/browser/request_context_impl.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_request_context_impl_ext.h"
 
 #include "arkweb/build/features/features.h"
 #include "base/atomic_sequence_num.h"
@@ -36,22 +37,12 @@
 #if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 #include "cef/ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl.h"
 #endif
-#if BUILDFLAG(ARKWEB_EDM_POLICY)
-#include "components/policy/core/common/policy_loader_ohos.h"
-#endif
 
 using content::BrowserThread;
 
 namespace {
 
 base::AtomicSequenceNumber g_next_id;
-
-#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-void NotifyClientCertificatesChanged() {
-  LOG(INFO) << "CefRequestContextImpl::NotifyClientCertificatesChanged";
-  net::CertDatabase::GetInstance()->NotifyObserversClientCertStoreChanged();
-}
-#endif  // ARKWEB_CERT_AUTHENTICATION
 
 class ResolveHostHelper : public network::ResolveHostClientBase {
  public:
@@ -137,22 +128,6 @@ CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalContext() {
   return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
 }
 
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-// static
-CefRefPtr<CefRequestContext> CefRequestContext::GetGlobalOTRContext() {
-  // Verify that the context is in a valid state.
-  if (!CONTEXT_STATE_VALID()) {
-    NOTREACHED() << "context not valid";
-    return nullptr;
-  }
-
-  CefRequestContextImpl::Config config;
-  config.is_global = true;
-  config.incognito_mode = true;
-  return CefRequestContextImpl::GetOrCreateRequestContext(std::move(config));
-}
-#endif
-
 // static
 CefRefPtr<CefRequestContext> CefRequestContext::CreateContext(
     const CefRequestContextSettings& settings,
@@ -212,26 +187,14 @@ CefRequestContextImpl::CreateGlobalRequestContext(
   config.is_global = true;
   config.settings = settings;
   CefRefPtr<CefRequestContextImpl> impl =
+#if BUILDFLAG(IS_ARKWEB)
+      new ArkWebRequestContextImplExt(std::move(config));
+#else
       new CefRequestContextImpl(std::move(config));
-  impl->Initialize();
-  return impl;
-}
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-// static
-CefRefPtr<CefRequestContextImpl>
-CefRequestContextImpl::CreateGlobalOTRRequestContext(
-    const CefRequestContextSettings& settings) {
-  Config config;
-  config.is_global = true;
-  config.settings = settings;
-  config.incognito_mode = true;
-  CefRefPtr<CefRequestContextImpl> impl =
-      new CefRequestContextImpl(std::move(config));
-  impl->Initialize();
-  return impl;
-}
 #endif
+  impl->Initialize();
+  return impl;
+}
 
 // static
 CefRefPtr<CefRequestContextImpl>
@@ -317,11 +280,12 @@ void CefRequestContextImpl::ExecuteWhenBrowserContextInitialized(
   LOG(INFO) << "CefRequestContextImpl::ExecuteWhenBrowserContextInitialized, "
                "not on ui";
 
-  browser_context()->StoreOrTriggerInitCallback(std::move(callback));
+  if (!browser_context()) {
+    LOG(ERROR) << "browser_context is nullptr";
+    return;
+  }
 
-#if BUILDFLAG(ARKWEB_EDM_POLICY)
-  policy::PolicyLoaderOhos::TryChoosePolicySource();
-#endif
+  browser_context()->StoreOrTriggerInitCallback(std::move(callback));
 }
 
 void CefRequestContextImpl::GetBrowserContext(
@@ -433,55 +397,6 @@ CefRefPtr<CefCookieManager> CefRequestContextImpl::GetCookieManager(
   return cookie_manager.get();
 }
 
-#if BUILDFLAG(ARKWEB_COOKIE)
-CefRefPtr<CefCookieManagerExt> CefRequestContextImpl::GetCookieManagerExt(
-    bool support_incognito,
-    CefRefPtr<CefCompletionCallback> callback) {
-  CefRefPtr<CefCookieManagerImplExt> cookie_manager =
-      CefCookieManagerImplExt::GetInstance(support_incognito);
-  InitializeCookieManagerInternal(cookie_manager, callback);
-  return cookie_manager.get();
-}
-#endif  // BUILDFLAG(ARKWEB_COOKIE)
-
-CefRefPtr<CefAdsBlockManager> CefRequestContextImpl::GetAdsBlockManager(
-    CefRefPtr<CefCompletionCallback> callback) {
-  CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager =
-      CefAdsBlockManagerImpl::GetInstance();
-  InitializeAdsBlockManagerInternal(adsblock_manager, callback);
-  return adsblock_manager;
-}
-
-void CefRequestContextImpl::InitializeAdsBlockManagerInternal(
-    CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
-    CefRefPtr<CefCompletionCallback> callback) {
-  GetBrowserContext(content::GetUIThreadTaskRunner({}),
-                    base::BindOnce(
-                        [](CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
-                           CefRefPtr<CefCompletionCallback> callback,
-                           CefBrowserContext::Getter browser_context_getter) {
-                          adsblock_manager->Initialize(browser_context_getter,
-                                                       callback);
-                        },
-                        adsblock_manager, callback));
-}
-
-CefRefPtr<CefDataBase> CefRequestContextImpl::GetDataBase() {
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  if (config_.incognito_mode) {
-    CefRefPtr<CefIncognitoDataBaseImpl> data_base =
-        new CefIncognitoDataBaseImpl();
-    return data_base;
-  } else {
-    CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
-    return data_base;
-  }
-#else
-  CefRefPtr<CefDataBaseImpl> data_base = new CefDataBaseImpl();
-  return data_base.get();
-#endif
-}
-
 bool CefRequestContextImpl::RegisterSchemeHandlerFactory(
     const CefString& scheme_name,
     const CefString& domain_name,
@@ -572,18 +487,6 @@ void CefRequestContextImpl::ClearCertificateExceptions(
       base::BindOnce(&CefRequestContextImpl::ClearCertificateExceptionsInternal,
                      this, callback));
 }
-
-#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-void CefRequestContextImpl::ClearClientAuthenticationCache(
-    CefRefPtr<CefCompletionCallback> callback) {
-  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCache";
-  GetBrowserContext(
-      content::GetUIThreadTaskRunner({}),
-      base::BindOnce(
-          &CefRequestContextImpl::ClearClientAuthenticationCacheInternal, this,
-          callback));
-}
-#endif  // ARKWEB_CERT_AUTHENTICATION
 
 void CefRequestContextImpl::ClearHttpAuthCredentials(
     CefRefPtr<CefCompletionCallback> callback) {
@@ -828,7 +731,11 @@ CefRequestContextImpl::GetOrCreateRequestContext(Config&& config) {
   }
 
   CefRefPtr<CefRequestContextImpl> context =
+#if BUILDFLAG(IS_ARKWEB)
+      new ArkWebRequestContextImplExt(std::move(config));
+#else
       new CefRequestContextImpl(std::move(config));
+#endif
 
   // Initialize ASAP so that any tasks blocked on initialization will execute.
   if (CEF_CURRENTLY_ON_UIT()) {
@@ -931,32 +838,6 @@ void CefRequestContextImpl::ClearCertificateExceptionsInternal(
                   base::BindOnce(&CefCompletionCallback::OnComplete, callback));
   }
 }
-
-#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-void CefRequestContextImpl::ClearClientAuthenticationCacheInternal(
-    CefRefPtr<CefCompletionCallback> callback,
-    CefBrowserContext::Getter browser_context_getter) {
-  LOG(INFO) << "CefRequestContextImpl::ClearClientAuthenticationCacheInternal";
-  auto browser_context = browser_context_getter.Run();
-  if (!browser_context) {
-    return;
-  }
-
-  AlloyClientCertLookupTable::Clear();
-
-  if (content::BrowserThread::CurrentlyOn(content::BrowserThread::IO)) {
-    NotifyClientCertificatesChanged();
-  } else {
-    content::GetIOThreadTaskRunner({})->PostTask(
-        FROM_HERE, base::BindOnce(&NotifyClientCertificatesChanged));
-  }
-
-  if (callback) {
-    CEF_POST_TASK(CEF_UIT,
-                  base::BindOnce(&CefCompletionCallback::OnComplete, callback));
-  }
-}
-#endif  // ARKWEB_CERT_AUTHENTICATION
 
 void CefRequestContextImpl::ClearHttpAuthCredentialsInternal(
     CefRefPtr<CefCompletionCallback> callback,
@@ -1175,25 +1056,3 @@ void CefRequestContextImpl::InitializeMediaRouterInternal(
 CefBrowserContext* CefRequestContextImpl::browser_context() const {
   return browser_context_;
 }
-
-#if BUILDFLAG(ARKWEB_WEBSTORAGE)
-CefRefPtr<CefWebStorage> CefRequestContextImpl::GetWebStorage(
-    CefRefPtr<CefCompletionCallback> callback) {
-  CefRefPtr<CefWebStorageImpl> web_storage = new CefWebStorageImpl();
-  InitializeWebStorageInternal(web_storage, callback);
-  return web_storage.get();
-}
-void CefRequestContextImpl::InitializeWebStorageInternal(
-    CefRefPtr<CefWebStorageImpl> web_storage,
-    CefRefPtr<CefCompletionCallback> callback) {
-  GetBrowserContext(content::GetUIThreadTaskRunner({}),
-                    base::BindOnce(
-                        [](CefRefPtr<CefWebStorageImpl> web_storage,
-                           CefRefPtr<CefCompletionCallback> callback,
-                           CefBrowserContext::Getter browser_context_getter) {
-                          web_storage->Initialize(browser_context_getter,
-                                                  callback);
-                        },
-                        web_storage, callback));
-}
-#endif  // #if BUILDFLAG(ARKWEB_WEBSTORAGE)

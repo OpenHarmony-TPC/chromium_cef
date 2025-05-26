@@ -12,11 +12,9 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
-#if BUILDFLAG(ARKWEB_PREFS)
-#include "cef/ohos_cef_ext/libcef/browser/prefs/arkweb_browser_prefs_ext.h"
-#include "chrome/browser/prefs/pref_service_syncable_util.h"
-#include "components/sync_preferences/pref_service_syncable.h"
-#endif  // ARKWEB_PREFS
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/prefs/browser_prefs_for_include.cc"
+#endif
 
 namespace browser_prefs {
 
@@ -92,11 +90,12 @@ void SetInitialProfilePrefs(Profile* profile) {
     // LanguagePrefs::UpdateAcceptLanguagesPref().
     prefs->SetString(language::prefs::kSelectedLanguages, accept_language_list);
   }
+#if BUILDFLAG(ARKWEB_EXT_UA)
+  UpdateCloudUAConfigAfterBrowserContextInitForInclude(profile);
+#endif      
 
 #if BUILDFLAG(ARKWEB_PREFS)
-  auto* pref_service_syncable = PrefServiceSyncableFromProfile(profile);
-  arkweb_browser_prefs_ext::RegisterProfilePrefs(
-      pref_service_syncable->GetPrefRegistrySyncable());
+  RegisterProfilePrefsForInclude(profile);
 #endif  // ARKWEB_PREFS
 }
 

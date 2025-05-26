@@ -1,15 +1,7 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// Based on cookie_manger_impl.h originally written by
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file. 
-
 #ifndef COOKIE_MANAGER_IMPL_EXT_H_
 #define COOKIE_MANAGER_IMPL_EXT_H_
 #pragma once
+#include "base/feature_list.h"
 #include "base/files/file_path.h"
 #include "base/threading/thread.h"
 #include "cef/libcef/browser/net_service/cookie_manager_impl.h"
@@ -21,6 +13,10 @@
 #include "net/cookies/cookie_store.h"
 #include "services/network/cookie_manager.h"
 #include "services/network/public/mojom/cookie_manager.mojom.h"
+
+BASE_FEATURE(kArkwebLoadCookiesOnAsyncThread,
+             "ArkwebLoadCookiesOnAsyncThread",
+             base::FEATURE_ENABLED_BY_DEFAULT);
 
 class CefCookieManagerImplExt : public CefCookieManagerImpl,
                                 public CefCookieManagerExt {
@@ -77,7 +73,21 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
                      bool is_session,
                      CefRefPtr<CefDeleteCookiesCallback> callback,
                      bool is_sync) override;
+
   static CefRefPtr<CefCookieManagerImplExt> GetInstance(bool support_incognito);
+
+  void LoadCookiesCallback(net::CookieStore::GetCookieListCallback callback,
+                           const net::CookieAccessResultList& include_cookies,
+                           const net::CookieAccessResultList&);
+
+  // If LoadCookiesOnAsyncThread is not support, false will return.
+  void LoadCookiesOnAsyncThread(
+      const GURL& url,
+      const net::CookieOptions& options,
+      net::CookiePartitionKeyCollection cookie_partition_key_collection,
+      net::CookieStore::GetCookieListCallback callback);
+
+  bool SupportAsyncThreadCookieLoad();
 
  private:
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
@@ -157,5 +167,6 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
   std::queue<base::OnceClosure> tasks_;
   base::Thread cookie_store_task_thread_;
   base::Thread cookie_store_backend_thread_;
+  mutable bool remote_network_cookie_manager_inited_{false};
 };
 #endif  // COOKIE_MANAGER_IMPL_EXT_H_

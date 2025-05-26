@@ -50,15 +50,7 @@
 #include "third_party/blink/renderer/platform/runtime_enabled_features.h"
 
 #if BUILDFLAG(IS_ARKWEB)
-#include "base/strings/stringprintf.h"
-#include "base/strings/utf_string_conversions.h"
 #include "libcef/common/arkweb_request_impl_ext.h"
-#include "third_party/blink/public/web/web_element_collection.h"
-#include "third_party/blink/public/web/web_hit_test_result.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
-#include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
 #endif
 
 namespace {
@@ -71,32 +63,6 @@ constexpr auto kConnectionRetryDelay = base::Seconds(1);
 
 // Length of time to wait for the browser connection ACK before timing out.
 constexpr auto kConnectionTimeout = base::Seconds(10);
-
-#if BUILDFLAG(IS_OHOS)
-const std::string kAddressPrefix = "geo:0,0?q=";
-const std::string kEmailPrefix = "mailto:";
-const std::string kPhoneNumberPrefix = "tel:";
-
-#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
-// The amount of content to overlap between two screens when using
-// pageUp/pageDown methiods. static int PAGE_SCROLL_OVERLAP = 24; Standard
-// animated scroll speed.
-static int STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC = 480;
-// Time for the longest scroll animation.
-static int MAX_SCROLL_ANIMATION_DURATION_MILLISEC = 750;
-#endif  // ARKWEB_PAGE_UP_DOWN
-
-enum HitTestDataType {
-  kUnknown = 0,
-  kPhone = 2,
-  kGeo = 3,
-  kEmail = 4,
-  kImage = 5,
-  kSrcLink = 7,
-  kSrcImageLink = 8,
-  kEditText = 9,
-};
-#endif
 
 std::string GetDebugString(blink::WebLocalFrame* frame) {
   return "frame " + render_frame_util::GetIdentifier(frame);
@@ -806,130 +772,6 @@ void CefFrameImpl::SendSharedMemoryRegion(
   }
 }
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-bool CefFrameImpl::RemovePrefixAndAssignIfMatches(std::string_view prefix,
-                                                  const GURL& url,
-                                                  std::string* dest) {
-  const std::string_view spec(url.possibly_invalid_spec());
-
-  if (base::StartsWith(spec, prefix)) {
-    url::RawCanonOutputW<1024> output;
-    url::DecodeURLEscapeSequences(spec.substr(prefix.length()),
-                                  url::DecodeURLMode::kUTF8OrIsomorphic,
-                                  &output);
-    *dest = base::UTF16ToUTF8(output.view());
-    return true;
-  }
-  return false;
-}
-
-void CefFrameImpl::DistinguishAndAssignSrcLinkType(
-    const GURL& url,
-    cef::mojom::HitDataParamsPtr& data) {
-  if (RemovePrefixAndAssignIfMatches(kAddressPrefix, url,
-                                     &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kGeo;
-  } else if (RemovePrefixAndAssignIfMatches(kPhoneNumberPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kPhone;
-  } else if (RemovePrefixAndAssignIfMatches(kEmailPrefix, url,
-                                            &data->extra_data_for_type)) {
-    data->type = HitTestDataType::kEmail;
-  } else {
-    data->type = HitTestDataType::kSrcLink;
-    data->extra_data_for_type = url.possibly_invalid_spec();
-    if (!data->extra_data_for_type.empty()) {
-      data->href = base::UTF8ToUTF16(data->extra_data_for_type);
-    }
-  }
-}
-void CefFrameImpl::PopulateHitTestData(const GURL& absolute_link_url,
-                                       const GURL& absolute_image_url,
-                                       bool is_editable,
-                                       cef::mojom::HitDataParamsPtr& data) {
-  if (!absolute_image_url.is_empty()) {
-    data->img_src = absolute_image_url;
-  }
-
-  const bool is_javascript_scheme =
-      absolute_link_url.SchemeIs(url::kJavaScriptScheme);
-  const bool has_link_url = !absolute_link_url.is_empty();
-  const bool has_image_url = !absolute_image_url.is_empty();
-  if (has_link_url && !has_image_url && !is_javascript_scheme) {
-    DistinguishAndAssignSrcLinkType(absolute_link_url, data);
-  } else if (has_link_url && has_image_url && !is_javascript_scheme) {
-    data->type = HitTestDataType::kSrcImageLink;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-    if (absolute_link_url.is_valid()) {
-      data->href = base::UTF8ToUTF16(absolute_link_url.possibly_invalid_spec());
-    }
-  } else if (!has_link_url && has_image_url) {
-    data->type = HitTestDataType::kImage;
-    data->extra_data_for_type = data->img_src.possibly_invalid_spec();
-  } else if (is_editable) {
-    data->type = HitTestDataType::kEditText;
-    DCHECK_EQ(0u, data->extra_data_for_type.length());
-  }
-}
-GURL CefFrameImpl::GetAbsoluteUrl(const blink::WebNode& node,
-                                  const std::u16string& url_fragment) {
-  return GURL(node.GetDocument().CompleteURL(
-      blink::WebString::FromUTF16(url_fragment)));
-}
-
-GURL CefFrameImpl::GetAbsoluteSrcUrl(const blink::WebElement& element) {
-  if (element.IsNull()) {
-    return GURL();
-  }
-  return GetAbsoluteUrl(element, element.GetAttribute("src").Utf16());
-}
-blink::WebElement CefFrameImpl::GetImgChild(const blink::WebNode& node) {
-  blink::WebElementCollection collection = node.GetElementsByHTMLTagName("img");
-  DCHECK(!collection.IsNull());
-  return collection.FirstItem();
-}
-
-GURL CefFrameImpl::GetChildImageUrlFromElement(
-    const blink::WebElement& element) {
-  const blink::WebElement child_img = GetImgChild(element);
-  if (child_img.IsNull()) {
-    return GURL();
-  }
-  return GetAbsoluteSrcUrl(child_img);
-}
-
-void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SendHitEvent webview is NULL";
-    return;
-  }
-  const blink::WebHitTestResult result =
-      webview->HitTestResultForTap(gfx::Point(params->x, params->y),
-                                   gfx::Size(params->width, params->height));
-  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
-  GURL absolute_image_url = result.AbsoluteImageURL();
-  if (!result.UrlElement().IsNull()) {
-    data->anchor_text = result.UrlElement().TextContent().Utf16();
-    data->href = result.UrlElement().GetAttribute("href").Utf16();
-    if (absolute_image_url.is_empty()) {
-      absolute_image_url = GetChildImageUrlFromElement(result.UrlElement());
-    }
-  }
-
-  PopulateHitTestData(result.AbsoluteLinkURL(), absolute_image_url,
-                      result.IsContentEditable(), data);
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_hit_data_.type = data->type;
-  cef_hit_data_.extra_data = data->extra_data_for_type;
-  is_update_ = true;
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
 void CefFrameImpl::SendCommand(const std::string& command) {
   ExecuteOnLocalFrame(
       __FUNCTION__,
@@ -1014,23 +856,6 @@ void CefFrameImpl::MoveOrResizeStarted() {
   }
 }
 
-#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
-void CefFrameImpl::SetOptimizeParserBudgetEnabled(bool enable) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  if (!render_frame) {
-    LOG(ERROR) << "SetOptimizeParserBudgetEnabled. render_frame is nullptr.";
-    return;
-  }
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(INFO) << "SetOptimizeParserBudgetEnabled webview is NULL";
-    return;
-  }
-  blink::SetOptimizeParserBudgetEnabled(enable);
-}
-#endif
-
 void CefFrameImpl::ContextLifecycleStateChanged(
     blink::mojom::blink::FrameLifecycleState state) {
   if (state == blink::mojom::FrameLifecycleState::kFrozen && IsMain() &&
@@ -1039,44 +864,6 @@ void CefFrameImpl::ContextLifecycleStateChanged(
   }
 }
 
-#if BUILDFLAG(IS_ARKWEB)
-void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  if (element.IsNull() || is_update_) {
-    LOG(INFO) << "FocusedHitDataChange element is NULL or no need to report.";
-    is_update_ = false;
-    return;
-  }
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-  cef::mojom::HitDataParamsPtr data = cef::mojom::HitDataParams::New();
-  data->href = element.GetAttribute("href").Utf16();
-  data->anchor_text = element.TextContent().Utf16();
-  GURL absolute_link_url;
-  if (element.IsLink()) {
-    absolute_link_url = GetAbsoluteUrl(element, data->href);
-  }
-  GURL absolute_image_url = GetChildImageUrlFromElement(element);
-  PopulateHitTestData(absolute_link_url, absolute_image_url,
-                      element.IsEditable(), data);
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_hit_data_.type = data->type;
-  cef_hit_data_.extra_data = data->extra_data_for_type;
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-}
-#endif  // BUILDFLAG(IS_ARKWEB)
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefFrameImpl::GetHitData(
-    cef::mojom::RenderFrame::GetHitDataCallback callback) {
-  std::move(callback).Run(cef_hit_data_.type, cef_hit_data_.extra_data);
-}
-
-void CefFrameImpl::SetScrollable(bool enable) {
-  scroll_enabled_ = enable;
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
 #if defined(__clang__)
@@ -1085,40 +872,3 @@ void CefFrameImpl::SetScrollable(bool enable) {
 #pragma warning(pop)
 #endif
 #endif
-#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
-int computeDurationInMilliSec(int dx, int dy) {
-  int distance = std::max(std::abs(dx), std::abs(dy));
-  int duration = distance * 1000 / STD_SCROLL_ANIMATION_SPEED_PIX_PER_SEC;
-  return std::min(duration, MAX_SCROLL_ANIMATION_DURATION_MILLISEC);
-}
-
-void CefFrameImpl::ScrollPageUpDown(bool is_up,
-                                    bool is_half,
-                                    float view_height) {
-  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
-  DCHECK(render_frame->IsMainFrame());
-  blink::WebView* webview = render_frame->GetWebView();
-  if (!webview) {
-    LOG(ERROR) << "scorll page up down get webview failed";
-    return;
-  }
-  auto scroll_offset = webview->GetScrollOffset();
-  float dy;
-  if (is_up) {
-    dy = is_half ? (-view_height / 2) : -scroll_offset.y();
-  } else {
-    if (!is_half) {
-      float bottom_y = webview->GetScrollBottom();
-      if (bottom_y <= 0) {
-        LOG(ERROR) << "get scroll bottom offset failed.";
-        return;
-      }
-      dy = bottom_y - scroll_offset.y();
-    } else {
-      dy = view_height / 2;
-    }
-  }
-  webview->SmoothScroll(scroll_offset.x(), scroll_offset.y() + dy,
-                        base::Milliseconds(computeDurationInMilliSec(0, dy)));
-}
-#endif  // #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)

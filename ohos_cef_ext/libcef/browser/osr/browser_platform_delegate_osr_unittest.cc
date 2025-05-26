@@ -15,9 +15,15 @@
 
 #define protected public
 #include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
+#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
 
 #include "arkweb/build/features/features.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "components/input/native_web_keyboard_event.h"
+#include "third_party/blink/public/common/input/web_mouse_event.h"
+#include "third_party/blink/public/common/input/web_mouse_wheel_event.h"
+#include "third_party/blink/public/common/input/web_mouse_event.h"
+#include "third_party/blink/public/common/input/web_gesture_event.h"
 
 namespace {
 std::shared_ptr<CefBrowserPlatformDelegateOsr> g_platform_delegate;
@@ -26,7 +32,7 @@ std::shared_ptr<CefBrowserPlatformDelegateOsr> g_platform_delegate;
 class CefBrowserPlatformDelegateNativeMock
     : public CefBrowserPlatformDelegateNative {
  public:
-  content::NativeWebKeyboardEvent TranslateWebKeyEvent(
+  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
       const CefKeyEvent& key_event) const override;
   blink::WebMouseEvent TranslateWebClickEvent(
       const CefMouseEvent& mouse_event,
@@ -48,11 +54,11 @@ class CefBrowserPlatformDelegateNativeMock
   ~CefBrowserPlatformDelegateNativeMock() {}
 };
 
-content::NativeWebKeyboardEvent
+input::NativeWebKeyboardEvent
 CefBrowserPlatformDelegateNativeMock::TranslateWebKeyEvent(
     const CefKeyEvent& key_event) const {
   gfx::NativeEvent native_event = nullptr;
-  content::NativeWebKeyboardEvent nativewebkeyboard(native_event);
+  input::NativeWebKeyboardEvent nativewebkeyboard(native_event);
   return nativewebkeyboard;
 }
 
@@ -112,7 +118,7 @@ void CefBrowserPlatformDelegateOsrTest::TearDown(void) {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 TEST_F(CefBrowserPlatformDelegateOsrTest, OnNativeEmbedLifecycleChange) {
   ASSERT_NE(g_platform_delegate, nullptr);
-  CefRenderHandler::CefNativeEmbedData data_info;
+  ArkWebRenderHandlerExt::CefNativeEmbedData data_info;
   data_info.status = CREATE;
   data_info.surfaceId = "";
   data_info.embedId = "";

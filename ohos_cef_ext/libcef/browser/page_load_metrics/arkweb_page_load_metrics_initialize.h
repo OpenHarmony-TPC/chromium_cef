@@ -1,9 +1,4 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// Based on page_load_metrics_initialize.h originally written by
-// Copyright (c) 2012 The Chromium Embedded Framework Authors.
+// Copyright (c) 2024 Huawei Device Co., Ltd.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 

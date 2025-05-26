@@ -24,12 +24,8 @@
 #include "services/service_manager/public/cpp/interface_provider.h"
 
 #if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/ark_web_frame_host_impl.h"
 #include "libcef/common/arkweb_request_impl_ext.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-#include "base/strings/escape.h"
-#include "cef/ohos_cef_ext/libcef/common/net/url_util_ex.h"
 #endif
 
 namespace {
@@ -388,25 +384,18 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
                                          bool user_gesture
 #endif
 ) {
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   // Only known frame ids or kMainFrameId are supported.
   const auto frame_id = GetFrameId();
-  if (frame_id < CefFrameHostImpl::kMainFrameId) {
+  if (frame_id < ::kMainFrameId) {
     return;
   }
-
-  // Any necessary fixup will occur in LoadRequest.
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  GURL gurl = url_util::FixupGURL(url);
-  if (!base::StartsWith(url, "file:/") && gurl.SchemeIsFile()) {
-    std::string unscaped_url_str = base::UnescapeURLComponent(
-        gurl.spec(),
-        base::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS);
-    gurl = GURL(unscaped_url_str);
-  }
+  GURL gurl = ArkWebFixupFileUrl(url);
 #else
+  // Any necessary fixup will occur in LoadRequest.
   GURL gurl = url_util::MakeGURL(url, /*fixup=*/false);
 #endif
-  if (frame_id == CefFrameHostImpl::kMainFrameId) {
+  if (frame_id == ::kMainFrameId) {
     // Load via the browser using NavigationController.
     auto browser = GetBrowserHostBase();
     if (browser) {
@@ -418,14 +407,7 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
       params.user_gesture = user_gesture;
 #endif
 #if BUILDFLAG(ARKWEB_POST_URL)
-      if (method == "POST") {
-        if (post_data.size() <= 0) {
-          params.post_data = new network::ResourceRequestBody();
-        } else {
-          params.post_data = network::ResourceRequestBody::CreateFromBytes(
-              reinterpret_cast<const char*>(&post_data[0]), post_data.size());
-        }
-      }
+      ArkWebDealWithPostData(method, post_data, &params);
 #endif
       browser->LoadMainFrameURL(params);
     }
@@ -436,15 +418,7 @@ void CefFrameHostImpl::LoadURLWithExtras(const std::string& url,
         blink::mojom::Referrer::New(referrer.url, referrer.policy);
     params->headers = extra_headers;
 #if BUILDFLAG(ARKWEB_POST_URL)
-    if (method == "POST") {
-      params->method = method;
-      if (post_data.size() <= 0) {
-        params->upload_data = new network::ResourceRequestBody();
-      } else {
-        params->upload_data = network::ResourceRequestBody::CreateFromBytes(
-            reinterpret_cast<const char*>(&post_data[0]), post_data.size());
-      }
-    }
+    ArkWebDealWithPostUploadData(method, post_data, params);
 #endif
     LoadRequest(std::move(params));
   }
@@ -520,19 +494,6 @@ void CefFrameHostImpl::MaybeSendDidStopLoading() {
                       render_frame->DidStopLoading();
                     }));
 }
-
-#if BUILDFLAG(ARKWEB_SCREEN_ROTATION)
-void CefFrameHostImpl::UpdatePixelRatio(float ratio) {
-  LOG(INFO) << "UpdatePixelRatio in browser CefFrameHostImpl start, ratio:"
-            << ratio;
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](float ratio, const RenderFrameType& render_frame) {
-                          render_frame->UpdatePixelRatio(ratio);
-                        },
-                        ratio));
-}
-#endif
 
 void CefFrameHostImpl::ExecuteJavaScriptWithUserGestureForTests(
     const CefString& javascript) {
@@ -671,20 +632,10 @@ void CefFrameHostImpl::MaybeReAttach(
   // We expect a reconnect to be triggered via FrameAttached().
 }
 
-// kMainFrameId must be -1 to align with renderer expectations.
-const int64_t CefFrameHostImpl::kMainFrameId = -1;
-const int64_t CefFrameHostImpl::kFocusedFrameId = -2;
-const int64_t CefFrameHostImpl::kUnspecifiedFrameId = -3;
-const int64_t CefFrameHostImpl::kInvalidFrameId = -4;
 // This equates to (TT_EXPLICIT | TT_DIRECT_LOAD_FLAG).
 const ui::PageTransition CefFrameHostImpl::kPageTransitionExplicit =
     static_cast<ui::PageTransition>(ui::PAGE_TRANSITION_TYPED |
                                     ui::PAGE_TRANSITION_FROM_ADDRESS_BAR);
-
-int64_t CefFrameHostImpl::GetFrameId() const {
-  base::AutoLock lock_scope(state_lock_);
-  return is_main_frame_ ? kMainFrameId : frame_id_;
-}
 
 scoped_refptr<CefBrowserInfo> CefFrameHostImpl::GetBrowserInfo() const {
   base::AutoLock lock_scope(state_lock_);
@@ -828,50 +779,6 @@ std::string CefFrameHostImpl::GetDebugString() const {
          (is_main_frame_ ? " (main)" : " (sub)");
 }
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-std::string CefFrameHostImpl::GetRefererValue(std::string headers) {
-  std::string refererValue = "";
-  std::string targetKeyword = "Referer: ";
-  size_t startPos = headers.find(targetKeyword);
-  if (startPos == std::string::npos) {
-    return refererValue;
-  }
-  size_t endPos = headers.find("\r\n", startPos);
-  refererValue =
-      headers.substr(startPos + targetKeyword.length(), endPos - startPos);
-  return refererValue;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefFrameHostImpl::SendHitEvent(float x,
-                                    float y,
-                                    float width,
-                                    float height) {
-  cef::mojom::HitEventParamsPtr hit_event = cef::mojom::HitEventParams::New();
-  hit_event->x = x;
-  hit_event->y = y;
-  hit_event->width = width;
-  hit_event->height = height;
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](cef::mojom::HitEventParamsPtr hit_event,
-                           const RenderFrameType& render_frame) {
-                          render_frame->SendHitEvent(std::move(hit_event));
-                        },
-                        std::move(hit_event)));
-}
-
-void CefFrameHostImpl::SetScrollable(bool enable) {
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](bool enable, const RenderFrameType& render_frame) {
-                          render_frame->SetScrollable(enable);
-                        },
-                        enable));
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
 void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
                                                  const CefString& javascript) {
   auto impl = frame.get()->AsCefFrameHostImpl();
@@ -879,14 +786,3 @@ void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
     impl->ExecuteJavaScriptWithUserGestureForTests(javascript);
   }
 }
-
-#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
-void CefFrameHostImpl::SetOptimizeParserBudgetEnabled(bool enable) {
-  SendToRenderFrame(__FUNCTION__,
-                    base::BindOnce(
-                        [](bool enable, const RenderFrameType& render_frame) {
-                          render_frame->SetOptimizeParserBudgetEnabled(enable);
-                        },
-                        enable));
-}
-#endif

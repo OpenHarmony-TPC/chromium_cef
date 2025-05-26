@@ -1532,6 +1532,61 @@ void CefBrowserHostCToCpp::RegisterScreenCaptureDelegateListener(
       _struct, CefScreenCaptureCallbackCppToC::Wrap(listener));
 }
 
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+
+  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->custom_web_media_player(_struct, enable);
+}
+
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SetPipNativeWindow(int delegate_id,
+                                              int child_id,
+                                              int frame_routing_id,
+                                              cef_native_window_t window) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, set_pip_native_window)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->set_pip_native_window(_struct, delegate_id,
+                                 child_id, frame_routing_id, window);
+}
+
+NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::SendPipEvent(int delegate_id,
+                                        int child_id,
+                                        int frame_routing_id,
+                                        int event) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, send_pip_event)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->send_pip_event(_struct, delegate_id,
+                          child_id, frame_routing_id, event);
+}
+
 // CONSTRUCTOR - Do not edit by hand.
 
 CefBrowserHostCToCpp::CefBrowserHostCToCpp() {}

@@ -6,8 +6,6 @@
 #define CEF_LIBCEF_BROWSER_CHROME_EXTENSIONS_CHROME_EXTENSION_UTIL_H_
 #pragma once
 
-#include "arkweb/build/features/features.h"
-
 namespace content {
 class WebContents;
 }  // namespace content
@@ -26,10 +24,6 @@ bool GetAlloyTabById(int tab_id,
 // Returns true if |contents| is owned by an Alloy style CefBrowserHost.
 // If |primary_only| is false then guest contents will also be matched.
 bool IsAlloyContents(content::WebContents* contents, bool primary_only);
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-content::WebContents* GetWebContentByTabId(int tab_id);
-#endif
 
 }  // namespace cef
 

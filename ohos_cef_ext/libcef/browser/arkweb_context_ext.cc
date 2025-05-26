@@ -1,6 +1,6 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include <memory>
 
@@ -19,16 +19,18 @@
 #include "components/network_session_configurator/common/network_switches.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/download_manager.h"
+// #include "content/public/browser/notification_service.h"
+// #include "content/public/browser/notification_types.h"
 #include "arkweb/build/features/features.h"
 #include "ui/base/ui_base_switches.h"
 
 #if BUILDFLAG(ARKWEB_HTTP_DNS)
-#include "cef/libcef/browser/net_service/net_helpers.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
 #include "content/public/browser/network_service_instance.h"
 #include "services/network/public/mojom/network_service.mojom.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
 #include "cef/libcef/browser/download_item_impl.h"
 #include "cef/libcef/browser/download_manager_delegate.h"
 #include "cef/libcef/browser/download_manager_delegate_impl.h"
@@ -140,4 +142,49 @@ void CefSetFileRenameOption(const int file_rename_option) {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   SetFileRenameOptions((download::FileRenameOptions)file_rename_option);
 #endif  //  BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+}
+
+void CefOnReadDownloadDataDoneOnUIThread(const std::string& guid,
+                                         CefRefPtr<CefReadDownloadDataCallback> callback,
+                                         const std::vector<uint8_t>& buffer) {
+  if (buffer.size() == 0) {
+    LOG(INFO) << "OnReadDownloadDataDone: buffer is nullptr.";
+    callback->OnReadDownloadDataDone(guid, nullptr);
+    return;
+  }
+  LOG(INFO) << "OnReadDownloadDataDone: buffer size: " << buffer.size();
+  CefRefPtr<CefBinaryValue> cefBuffer =
+          CefBinaryValue::Create(buffer.data(), buffer.size());
+  callback->OnReadDownloadDataDone(guid, cefBuffer);
+}
+
+void CefOnReadDownloadDataDone(const std::string& guid,
+                               CefRefPtr<CefReadDownloadDataCallback> callback,
+                               const std::vector<uint8_t>& buffer) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT, base::BindOnce(CefOnReadDownloadDataDoneOnUIThread, guid, callback, buffer));
+    return;
+  }
+  CefOnReadDownloadDataDoneOnUIThread(guid, callback, buffer);
+}
+
+void CefReadDownloaData(const std::string& guid,
+                        const int32_t read_size,
+                        CefRefPtr<CefReadDownloadDataCallback> callback) {
+  LOG(INFO) << "CefReadDownloaData start guid: " << guid
+            << ",read_size: " << read_size;
+  for (auto& context: CefBrowserContext::GetAll()) {
+    content::DownloadManager* manager = context->AsBrowserContext()->GetDownloadManager();
+    if (!manager) {
+      continue;
+    }
+    download::DownloadItem* item = manager->GetDownloadByGuid(guid);
+    if (item) {
+      LOG(INFO) << "CefReadDownloaData item exist";
+      item->ReadDownloadData(guid, read_size,
+                           base::BindOnce(&CefOnReadDownloadDataDone, guid, callback));
+      return;
+    }
+  }
+  callback->OnReadDownloadDataDone(guid, nullptr);
 }

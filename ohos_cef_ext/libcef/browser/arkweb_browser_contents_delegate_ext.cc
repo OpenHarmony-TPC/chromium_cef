@@ -15,6 +15,7 @@
 #include "chrome/common/chrome_result_codes.h"
 #include "components/input/native_web_keyboard_event.h"
 #include "content/browser/renderer_host/render_widget_host_impl.h"
+#include "content/browser/web_contents/web_contents_impl.h"
 #include "content/public/browser/focused_node_details.h"
 #include "content/public/browser/keyboard_event_processing_result.h"
 #include "content/public/browser/navigation_entry.h"
@@ -37,11 +38,10 @@
 #include "cef/ohos_cef_ext/include/arkweb_load_handler_ext.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_UA)
+#if BUILDFLAG(ARKWEB_USERAGENT)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
-#include "base/command_line.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_ua_config.h"
 #include "content/browser/renderer_host/navigation_request.h"
-#include "content/public/common/content_switches.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 #endif
 
@@ -50,8 +50,73 @@
 #include "ohos_cef_ext/libcef/browser/load_committed_details_impl.h"
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "include/cef_web_extension_api_handler.h"
+#endif
+
 namespace {
-#if BUILDFLAG(ARKWEB_EXT_UA)
+  
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+// The amount of time to disallow repeated pointer lock calls after the user
+// successfully escapes from one lock request.
+const int64_t kEffectiveUserEscapeDuration = 1250;
+#endif
+
+#if BUILDFLAG(ARKWEB_USERAGENT)
+bool IsIllegalUrl(const GURL& url) {
+  return url.is_empty() || !url.is_valid() || !url.has_host();
+}
+
+std::string GetDomainAndRegistry(const GURL& url) {
+  auto domain = net::registry_controlled_domains::GetDomainAndRegistry(
+      url, net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
+  return base::ToLowerASCII(domain);
+}
+
+void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
+                                  const std::string& user_agent) {
+  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, user_agent);
+  if (!navigation->IsInMainFrame()) {
+    return;
+  }
+
+  if (auto* web_contents = navigation->GetWebContents()) {
+    web_contents->SetUserAgentOverride(
+        blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+  }
+}
+
+UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
+                                       const std::string& host,
+                                       std::string& user_agent) {
+  if (auto* web_contents = navigation->GetWebContents()) {
+    std::string custom_ua = web_contents->GetCustomUA();
+    if (!custom_ua.empty()) {
+      user_agent = custom_ua;
+      return UserAgentOverridePolicy::CUSTOM;
+    }
+  }
+  std::string user_agent_no_nweb_ex = user_agent;
+  std::string user_agent_nweb_ex = user_agent;
+  auto match_type_no_nweb_ex =
+      AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
+          host, user_agent_no_nweb_ex);
+  auto match_type_nweb_ex =
+      nweb_ex::AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
+          host, user_agent_nweb_ex);
+  LOG(DEBUG) << __func__ << " match_type_no_nweb_ex is "
+             << match_type_no_nweb_ex << " user_agent_no_nweb_ex is "
+             << user_agent_no_nweb_ex << " match_type_nweb_ex is "
+             << match_type_nweb_ex << " user_agent_nweb_ex is "
+             << user_agent_nweb_ex;
+  if (match_type_nweb_ex <= match_type_no_nweb_ex) {
+    user_agent = user_agent_nweb_ex;
+    return match_type_nweb_ex;
+  }
+  user_agent = user_agent_no_nweb_ex;
+  return match_type_no_nweb_ex;
+}
+
 // Return the host of referrer_url only when the main frame
 // is not reloaded or triggered by user gestures or serverd from
 // back_forward_cache.
@@ -63,19 +128,12 @@ std::string GetHostOfReferrerUrlIfNeed(content::NavigationHandle* navigation,
   }
 
   const GURL referrer_url = navigation->GetReferrer().url;
-  if (!referrer_url.is_valid() || referrer_url.is_empty() ||
-      !referrer_url.has_host()) {
+  if (IsIllegalUrl(referrer_url)) {
     return std::string();
   }
 
-  std::string referrer_sld =
-      net::registry_controlled_domains::GetDomainAndRegistry(
-          referrer_url,
-          net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-  std::string sld = net::registry_controlled_domains::GetDomainAndRegistry(
-      navigation->GetURL(),
-      net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-  if (referrer_sld == sld) {
+  if (GetDomainAndRegistry(referrer_url) ==
+      GetDomainAndRegistry(navigation->GetURL())) {
     return referrer_url.host();
   }
   return std::string();
@@ -83,9 +141,7 @@ std::string GetHostOfReferrerUrlIfNeed(content::NavigationHandle* navigation,
 
 void MaybeSetUserAgentOverrideForMainFrame(
     content::NavigationHandle* navigation) {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExUa) ||
-      !navigation) {
+  if (!navigation) {
     return;
   }
 
@@ -97,47 +153,38 @@ void MaybeSetUserAgentOverrideForMainFrame(
   }
 
   const GURL& url = navigation->GetURL();
-  if (url.is_empty() || !url.is_valid() || !url.has_host()) {
+  if (IsIllegalUrl(url)) {
     return;
   }
 
-  std::string host = url.host();
-  bool is_reload =
-      PageTransitionCoreTypeIs(navigation->GetPageTransition(),
-                               ui::PageTransition::PAGE_TRANSITION_RELOAD);
-  std::string host_of_referer_url =
-      GetHostOfReferrerUrlIfNeed(navigation, is_reload);
-  if (!host_of_referer_url.empty()) {
-    host = host_of_referer_url;
-  }
-  content::WebContents* web_contents = navigation->GetWebContents();
+  bool is_reload = false;
+
   std::string final_ua;
-  if (web_contents && !web_contents->GetCustomUA().empty()) {
-    final_ua = web_contents->GetCustomUA();
-    LOG(INFO) << "GetCustomUA: " << final_ua;
-  } else {
-    final_ua =
-      nweb_ex::AlloyBrowserUAConfig::GetInstance()->GetUserAgentForHost(host);
+  std::string host = url.host();
+
+  auto match_type = MatchUserAgent(navigation, url.host(), final_ua);
+  if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
+    is_reload =
+        PageTransitionCoreTypeIs(navigation->GetPageTransition(),
+                                 ui::PageTransition::PAGE_TRANSITION_RELOAD);
+    std::string referer_host =
+        GetHostOfReferrerUrlIfNeed(navigation, is_reload);
+    if (!referer_host.empty()) {
+      host = referer_host;
+      MatchUserAgent(navigation, host, final_ua);
+    }
   }
-  LOG(DEBUG) << "DidStartNavigation, host " << host << ", final_ua " << final_ua
+
+  LOG(DEBUG) << __func__ << " host " << host << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
-             << ", is_main_frame " << navigation->IsInMainFrame()
-             << ", is_reload " << is_reload
-             << ", is_serverd_from_back_forward_cache "
-             << navigation->IsServedFromBackForwardCache();
+             << ", main_frame " << navigation->IsInMainFrame() << ", reload "
+             << is_reload << ", serverd_from_bfcache "
+             << navigation->IsServedFromBackForwardCache() << ", match_type "
+             << match_type;
 
-  navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, final_ua);
-  if (!navigation->IsInMainFrame()) {
-    return;
-  }
-
-  if (!web_contents) {
-    return;
-  }
-  web_contents->SetUserAgentOverride(
-      blink::UserAgentOverride::UserAgentOnly(final_ua), true);
+  UpdateUserAgentForNavigation(navigation, final_ua);
 }
-#endif  // ARKWEB_EXT_UA
+#endif  // BUILDFLAG(ARKWEB_USERAGENT)
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -161,7 +208,7 @@ class DataResubmissionCallbackImpl : public CefCallback {
   }
 
  private:
-  content::WebContents* contents_;
+  raw_ptr<content::WebContents> contents_;
 
   IMPLEMENT_REFCOUNTING(DataResubmissionCallbackImpl);
 };
@@ -202,15 +249,53 @@ void ArkWebBrowserContentsDelegateExt::DidStartNavigation(
     if (navigation->IsInMainFrame() && !navigation->IsSameDocument()) {
       icon_helper_->SetMainFrameDocumentOnLoadCompleted(false);
     }
-#endif  // BUILDFLAG(ARKWEB_FAVICON)
-
-#if BUILDFLAG(ARKWEB_EXT_UA)
-    // |final_ua| may be added to the navigation of the mainframe and iframe.
-    MaybeSetUserAgentOverrideForMainFrame(navigation);
-#endif  // BUILDFLAG(ARKWEB_EXT_UA)
+#endif
   }
+
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  // |final_ua| may be added to the navigation of the mainframe and iframe.
+  MaybeSetUserAgentOverrideForMainFrame(navigation);
+#endif
 }
 #endif  // BUILDFLAG(ARKWEB_WPT)
+
+#if BUILDFLAG(ARKWEB_USERAGENT)
+void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
+    content::NavigationHandle* navigation) {
+  if (!navigation) {
+    return;
+  }
+
+  const auto& redirect_chain = navigation->GetRedirectChain();
+  constexpr int kLeastLengthForRedirectChain = 2;
+  if (redirect_chain.size() < kLeastLengthForRedirectChain) {
+    return;
+  }
+
+  const auto& current_url = navigation->GetURL();
+  const auto& prev_redirect_url = redirect_chain[redirect_chain.size() - 2];
+  if (IsIllegalUrl(current_url) || IsIllegalUrl(prev_redirect_url)) {
+    return;
+  }
+
+  std::string final_ua;
+  if (MatchUserAgent(navigation, current_url.host(), final_ua) >=
+      UserAgentOverridePolicy::APP_DEFAULT) {
+    if (GetDomainAndRegistry(current_url) ==
+        GetDomainAndRegistry(prev_redirect_url)) {
+      MatchUserAgent(navigation, prev_redirect_url.host(), final_ua);
+    }
+  }
+
+  LOG(DEBUG) << __func__ << " host " << current_url.host() << ", final_ua "
+             << final_ua << ", user_gesture " << navigation->HasUserGesture()
+             << ", main_frame " << navigation->IsInMainFrame()
+             << ", serverd_from_bfcache "
+             << navigation->IsServedFromBackForwardCache();
+
+  UpdateUserAgentForNavigation(navigation, final_ua);
+}
+#endif  // BUILDFLAG(ARKWEB_EXT_UA)
 
 #if BUILDFLAG(ARKWEB_FAVICON)
 void ArkWebBrowserContentsDelegateExt::
@@ -331,6 +416,153 @@ void ArkWebBrowserContentsDelegateExt::WebExtensionUpdateTab(
     if (auto handler = c->GetWebExtensionApiHandler()) {
       handler->OnUpdateTab(tab_id, update_properties);
     }
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+bool ArkWebBrowserContentsDelegateExt::IsPointerLocked() const {
+  return pointer_lock_state_ == POINTERLOCK_LOCKED ||
+         pointer_lock_state_ == POINTERLOCK_LOCKED_SILENTLY;
+}
+
+bool ArkWebBrowserContentsDelegateExt::IsPointerLockedSilently() const {
+  return pointer_lock_state_ == POINTERLOCK_LOCKED_SILENTLY;
+}
+
+void ArkWebBrowserContentsDelegateExt::SetTabWithExclusiveAccess(content::WebContents* tab) {
+  // Tab should never be replaced with another tab, or
+  // UpdateNotificationRegistrations would need updating.
+  DCHECK(tab_with_exclusive_access_ == tab ||
+         tab_with_exclusive_access_ == nullptr || tab == nullptr);
+  tab_with_exclusive_access_ = tab;
+}
+
+bool ArkWebBrowserContentsDelegateExt::HandleUserKeyEvent(
+    const input::NativeWebKeyboardEvent& event) {
+  if (event.windows_key_code != ui::VKEY_ESCAPE) {
+    return false;
+  }
+ 
+  if (IsPointerLocked()) {
+    if (tab_with_exclusive_access_) {
+      UnlockPointer();
+      SetTabWithExclusiveAccess(nullptr);
+      pointer_lock_state_ = POINTERLOCK_UNLOCKED;
+    }
+    last_user_escape_time_ = base::TimeTicks::Now();
+    return true;
+  }
+ 
+  return false;
+}
+
+void ArkWebBrowserContentsDelegateExt::RequestPointerLock(
+    content::WebContents* web_contents,
+    bool user_gesture,
+    bool last_unlocked_by_target) {
+  DCHECK(!IsPointerLocked());
+  if (!last_unlocked_by_target && !is_fullscreen()) {
+    if (!user_gesture) {
+      web_contents->GotResponseToPointerLockRequest(
+          blink::mojom::PointerLockResult::kRequiresUserGesture);
+      return;
+    }
+
+    base::TimeDelta userEscapeDuration = base::TimeTicks::Now() - last_user_escape_time_;
+    if (userEscapeDuration.InMilliseconds() < kEffectiveUserEscapeDuration) {
+      web_contents->GotResponseToPointerLockRequest(
+          blink::mojom::PointerLockResult::kUserRejected);
+      return;
+    }
+  }
+  SetTabWithExclusiveAccess(web_contents);
+
+  // Lock pointer.
+  if (web_contents->GotResponseToPointerLockRequest(
+          blink::mojom::PointerLockResult::kSuccess)) {
+    if (last_unlocked_by_target) {
+      pointer_lock_state_ = POINTERLOCK_LOCKED_SILENTLY;
+    } else {
+      pointer_lock_state_ = POINTERLOCK_LOCKED;
+    }
+  } else {
+    SetTabWithExclusiveAccess(nullptr);
+    pointer_lock_state_ = POINTERLOCK_UNLOCKED;
+  }
+}
+
+void ArkWebBrowserContentsDelegateExt::LostPointerLock() {
+  pointer_lock_state_ = POINTERLOCK_UNLOCKED;
+  SetTabWithExclusiveAccess(nullptr);
+}
+
+void ArkWebBrowserContentsDelegateExt::UnlockPointer() {
+  if (!tab_with_exclusive_access_) {
+    return;
+  }
+
+  content::RenderWidgetHostView* pointer_lock_view = nullptr;
+  content::RenderViewHost* rvh =
+      tab_with_exclusive_access_->GetPrimaryMainFrame()->GetRenderViewHost();
+  if (rvh) {
+    pointer_lock_view = rvh->GetWidget()->GetView();
+  }
+
+  if (pointer_lock_view) {
+    pointer_lock_view->UnlockPointer();
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+void ArkWebBrowserContentsDelegateExt::OnLoadStarted(CefRefPtr<CefFrame> frame,
+                                                     const CefString& url) {
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      // On the handler that loading has started.
+      handler->OnLoadStarted(frame, url);
+    }
+  }
+}
+
+void ArkWebBrowserContentsDelegateExt::OnLoadFinished(CefRefPtr<CefFrame> frame,
+                                                      const CefString& url) {
+  if (auto c = client()) {
+    if (auto handler = c->GetLoadHandler()) {
+      auto navigation_lock = browser_info_->CreateNavigationLock();
+      handler->OnLoadFinished(frame, url);
+    }
+  }
+}
+
+void ArkWebBrowserContentsDelegateExt::NavigationStateChanged(
+    content::WebContents* source,
+    content::InvalidateTypes changed_flags) {
+  bool is_popup_window = false;
+  bool has_accessed_initial_document = false;
+  if (auto browser = browser_info_->browser()) {
+    is_popup_window = browser->IsPopup();
+    if (browser->GetWebContents()) {
+      content::WebContentsImpl* web_contents_impl =
+          static_cast<content::WebContentsImpl*>(browser->GetWebContents());
+      if (web_contents_impl) {
+        has_accessed_initial_document =
+            web_contents_impl->HasAccessedInitialDocument();
+      }
+    }
+  }
+
+  bool should_synthesize_page_load =
+      is_popup_window && has_accessed_initial_document &&
+      (changed_flags == content::InvalidateTypes::INVALIDATE_TYPE_URL) &&
+      !did_synthesize_page_load_;
+  if (should_synthesize_page_load) {
+    auto main_frame = browser_info_->GetMainFrame();
+    OnLoadStarted(main_frame.get(), main_frame->GetURL());
+    OnLoadFinished(main_frame.get(), main_frame->GetURL());
+    did_synthesize_page_load_ = true;
   }
 }
 #endif

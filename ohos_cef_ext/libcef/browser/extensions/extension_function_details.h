@@ -10,6 +10,7 @@
 #include "base/functional/callback_forward.h"
 #include "chrome/common/extensions/api/tabs.h"
 #include "ui/gfx/native_widget_types.h"
+#include "base/memory/raw_ptr.h"
 
 class Profile;
 class ExtensionFunction;
@@ -70,10 +71,10 @@ class CefExtensionFunctionDetails {
   // information about the state of a browser tab. Depending on the
   // permissions of the extension, the object may or may not include sensitive
   // data such as the tab's URL.
-  api::tabs::Tab CreateTabObject(CefRefPtr<AlloyBrowserHostImpl> new_browser,
+  static api::tabs::Tab CreateTabObject(CefRefPtr<AlloyBrowserHostImpl> new_browser,
                                  int opener_browser_id,
                                  bool active,
-                                 int index) const;
+                                 int index);
 
   // Creates a tab MutedInfo object (see chrome/common/extensions/api/tabs.json)
   // with information about the mute state of a browser tab.
@@ -86,7 +87,7 @@ class CefExtensionFunctionDetails {
  private:
   // The function for which these details have been created. Must outlive the
   // CefExtensionFunctionDetails instance.
-  ExtensionFunction* function_;
+  raw_ptr<ExtensionFunction> function_;
 
   // Verifies correct usage of GetBrowserForTabId* methods.
   mutable bool get_browser_called_first_time_ = false;

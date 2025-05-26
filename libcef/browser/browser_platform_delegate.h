@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/callback_forward.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/include/cef_client.h"
@@ -23,23 +24,6 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/dragdrop/mojom/drag_drop_types.mojom-forward.h"
 #include "ui/base/window_open_disposition.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-#include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
-#endif  // ARKWEB_HTML_SELECT
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "ui/accessibility/platform/browser_accessibility_manager.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-#include "components/autofill/core/browser/ui/suggestion.h"
-#include "ui/gfx/geometry/rect_f.h"
-#endif
 
 class GURL;
 
@@ -56,9 +40,6 @@ class WindowFeatures;
 }  // namespace blink
 
 namespace content {
-#if BUILDFLAG(IS_ARKWEB)
-class BrowserAccessibilityManager;
-#endif
 struct DropData;
 class RenderViewHost;
 class RenderViewHostDelegateView;
@@ -97,12 +78,21 @@ struct CefBrowserCreateParams;
 class CefBrowserHostBase;
 class CefJavaScriptDialogRunner;
 class CefMenuRunner;
+#if BUILDFLAG(IS_ARKWEB)
+class ArkWebCefBrowserPlatformDelegateExt;
+#endif
 
 // Provides platform-specific implementations of browser functionality. All
 // methods are called on the browser process UI thread unless otherwise
 // indicated.
 class CefBrowserPlatformDelegate {
  public:
+#if BUILDFLAG(IS_ARKWEB)
+  virtual ArkWebCefBrowserPlatformDelegateExt* AsArkWebCefBrowserPlatformDelegateExt() {
+    return nullptr;
+  }
+  friend class ArkWebCefBrowserPlatformDelegateExt;
+#endif  // BUILDFLAG(IS_ARKWEB)
   CefBrowserPlatformDelegate(const CefBrowserPlatformDelegate&) = delete;
   CefBrowserPlatformDelegate& operator=(const CefBrowserPlatformDelegate&) =
       delete;
@@ -254,11 +244,6 @@ class CefBrowserPlatformDelegate {
                                    bool mouseUp,
                                    int clickCount);
   virtual void SendMouseMoveEvent(const CefMouseEvent& event, bool mouseLeave);
-#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
-  virtual void SendTouchpadFlingEvent(const CefMouseEvent& event,
-                                      double vx,
-                                      double vy);
-#endif
   virtual void SendMouseWheelEvent(const CefMouseEvent& event,
                                    int deltaX,
                                    int deltaY);
@@ -332,21 +317,6 @@ class CefBrowserPlatformDelegate {
   // rendering.
   virtual bool IsHidden() const;
 
-#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-  virtual void OnOnlineRenderToForeground();
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  // Send touch event list to the browser for a windowless browser.
-  virtual void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  // Notify the browser that it was occluded. Only used with windowless
-  // rendering.
-  virtual void WasOccluded(bool occluded);
-#endif
-
   // Notify the browser that screen information has changed. Only used with
   // windowless rendering.
   virtual void NotifyScreenInfoChanged();
@@ -406,12 +376,6 @@ class CefBrowserPlatformDelegate {
                                     const CefSize& min_size,
                                     const CefSize& max_size);
   virtual void SetAccessibilityState(cef_state_t accessibility_state);
-#if BUILDFLAG(IS_ARKWEB)
-  virtual ui::BrowserAccessibilityManager*
-  GetRootBrowserAccessibilityManager() {
-    return nullptr;
-  }
-#endif
 
   virtual bool IsPrintPreviewSupported() const;
   virtual void Find(const CefString& searchText,
@@ -424,124 +388,23 @@ class CefBrowserPlatformDelegate {
 #endif
   );
   virtual void StopFinding(bool clearSelection);
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-  virtual void WasKeyboardResized() {}
-  virtual void SetDrawRect(int x, int y, int width, int height) {}
-  virtual void SetDrawMode(int mode) {}
-  virtual bool GetPendingSizeStatus() { return false; }
-  virtual void SetFitContentMode(int mode) {}
-  virtual void SetShouldFrameSubmissionBeforeDraw(bool should) {}
-  virtual std::string GetCurrentLanguage(){};
-#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  virtual void OnNativeEmbedLifecycleChange(
-      const ArkWebRenderHandlerExt::CefNativeEmbedData& info) {}
-  virtual void OnNativeEmbedFirstFramePaint(
-      const content::NativeEmbedFirstPaintEvent& event) {}
-  virtual void SetNativeEmbedMode(bool flag) {}
-  virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
-                                             bool visibility) {}
+#if BUILDFLAG(ARKWEB_PIP)
+  virtual void OnPip(int status,
+                     int delegate_id,
+                     int child_id,
+                     int frame_routing_id,
+                     int width,
+                     int height) {}
+  virtual void SetPipNativeWindow(int delegate_id,
+                                  int child_id,
+                                  int frame_routing_id,
+                                  cef_native_window_t window);
+  virtual void SendPipEvent(int delegate_id,
+                            int child_id,
+                            int frame_routing_id,
+                            int event);
+  virtual void OnPipEvent(int event);
 #endif
-
-#if BUILDFLAG(ARKWEB_AI)
-  virtual void OnTextSelected(bool flag);
-  virtual void OnDestroyImageAnalyzerOverlay();
-  virtual void OnFoldStatusChanged(uint32_t foldStatus);
-  virtual float GetPageScaleFactor();
-#endif
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-  virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  virtual void AdvanceFocusForIME(int focusType) {}
-#endif
-
-#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
-  virtual bool WebPageSnapshot(const char* id,
-                               int width,
-                               int height,
-                               cef_web_snapshot_callback_t callback);
-#endif
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  virtual void SetVirtualKeyBoardArg(int32_t width,
-                                     int32_t height,
-                                     double keyboard) {}
-  virtual bool ShouldVirtualKeyboardOverlay() { return false; }
-  virtual void ScrollBy(float delta_x, float delta_y) {}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  virtual void SetScrollable(bool enable) {}
-#endif
-#if BUILDFLAG(ARKWEB_PRINT)
-  virtual void SetToken(void* token){};
-  virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
-                                             void** webPrintDocumentAdapter);
-  virtual void SetPrintBackground(bool enable) {}
-  virtual bool GetPrintBackground() { return false; }
-#endif  // BUILDFLAG(ARKWEB_PRINT)
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  virtual void ScrollFocusedEditableNodeIntoView();
-  virtual void ScaleGestureChangeV2(int type,
-                                    float scale,
-                                    float originScale,
-                                    float centerX,
-                                    float centerY);
-#endif
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-  virtual int GetTopControlsOffset();
-  virtual int GetShrinkViewportHeight();
-#endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-  virtual void ShowPopupMenu(
-      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-      const gfx::Rect& bounds,
-      int item_height,
-      double item_font_size,
-      int selected_item,
-      std::vector<blink::mojom::MenuItemPtr> menu_items,
-      bool right_aligned,
-      bool allow_multiple_selection);
-#endif  // BUILDFLAG(ARKWEB_HTML_SELECT)
-
-#if BUILDFLAG(ARKWEB_MAXIMIZE_RESIZE)
-  virtual void MaximizeResize() {}
-#endif  // ARKWEB_MAXIMIZE_RESIZE
-
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-  virtual void OnBeforeUnloadFired(bool proceed);
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  virtual void OnShareFile(const std::string& filePath,
-                           const std::string& utdTypeId);
-#endif
-
-#if BUILDFLAG(ARKWEB_ADBLOCK)
-  virtual void OnAdsBlocked(
-      const std::string& main_frame_url,
-      const std::map<std::string, int32_t>& subresource_blocked,
-      bool is_site_first_report);
-
-  virtual bool TrigAdBlockEnabledForSiteFromUi(
-      const std::string& main_frame_url,
-      int main_frame_tree_node_id);
-#endif  // BUILDFLAG(ARKWEB_ADBLOCK)
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-  virtual void OnShowAutofillPopup(
-      const gfx::RectF& element_bounds,
-      bool is_rtl,
-      const std::vector<autofill::Suggestion>& suggestions,
-      bool is_password_popup_type);
-  virtual void OnHideAutofillPopup();
-#endif  // BUILDFLAG(ARKWEB_DATALIST)
-
  protected:
   // Allow deletion via std::unique_ptr only.
   friend std::default_delete<CefBrowserPlatformDelegate>;
@@ -556,4 +419,7 @@ class CefBrowserPlatformDelegate {
   raw_ptr<CefBrowserHostBase> browser_ = nullptr;
 };
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#endif
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_H_

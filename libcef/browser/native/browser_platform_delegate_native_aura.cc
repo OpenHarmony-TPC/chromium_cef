@@ -220,10 +220,12 @@ ui::MouseWheelEvent CefBrowserPlatformDelegateNativeAura::TranslateUiWheelEvent(
   int flags = TranslateUiEventModifiers(mouse_event.modifiers);
   int changed_button_flags =
       TranslateUiChangedButtonFlags(mouse_event.modifiers);
+  if (mouse_event.source == CEF_EST_TOUCHPAD) {
+    flags |= ui::EF_PRECISION_SCROLLING_DELTA;
+  }
 
   return ui::MouseWheelEvent(offset, location, root_location, time_stamp,
-                             (ui::EF_PRECISION_SCROLLING_DELTA | flags),
-                             changed_button_flags);
+                             flags, changed_button_flags);
 }
 
 gfx::Vector2d CefBrowserPlatformDelegateNativeAura::GetUiWheelEventOffset(
@@ -269,6 +271,14 @@ int CefBrowserPlatformDelegateNativeAura::TranslateUiEventModifiers(
   if (cef_modifiers & EVENTFLAG_RIGHT_MOUSE_BUTTON) {
     result |= ui::EF_RIGHT_MOUSE_BUTTON;
   }
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  if (cef_modifiers & EVENTFLAG_BACK_MOUSE_BUTTON) {
+    result |= ui::EF_BACK_MOUSE_BUTTON;
+  }
+  if(cef_modifiers & EVENTFLAG_FORWARD_MOUSE_BUTTON) {
+    result |= ui::EF_FORWARD_MOUSE_BUTTON;
+  }
+#endif
   if (cef_modifiers & EVENTFLAG_COMMAND_DOWN) {
     result |= ui::EF_COMMAND_DOWN;
   }

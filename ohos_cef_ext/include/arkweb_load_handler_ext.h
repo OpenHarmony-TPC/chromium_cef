@@ -119,6 +119,20 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   virtual CefRefPtr<ArkWebLoadHandlerExt> AsArkWebLoadHandlerExt() {
     return this;
   }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// OnLoadStarted.
+  ///
+  virtual void OnLoadStarted(CefRefPtr<CefFrame> frame,
+                             const CefString& url) {}
+
+  ///
+  /// OnLoadFinished.
+  ///
+  virtual void OnLoadFinished(CefRefPtr<CefFrame> frame,
+                              const CefString& url) {}
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

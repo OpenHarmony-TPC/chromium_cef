@@ -122,7 +122,6 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
   ///
   /// Share file.
   ///
-  /*--cef()--*/
   virtual void OnShareFile(const std::string& file_path,
                            const std::string& utd_type_id) {}
 #endif

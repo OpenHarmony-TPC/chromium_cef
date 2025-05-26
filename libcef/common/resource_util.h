@@ -18,10 +18,6 @@ namespace resource_util {
 // etc).
 base::FilePath GetResourcesDir();
 
-// Returns the directory that contains resource files (*.bin, *.dat, *.pak,
-// etc).
-base::FilePath GetResourcesDir();
-
 void OverrideUserDataDir(CefSettings* settings,
                          const base::CommandLine* command_line);
 

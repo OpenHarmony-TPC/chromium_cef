@@ -43,6 +43,71 @@
 #endif
 #include "content/public/browser/browsing_data_remover.h"
 
+namespace {
+
+#ifdef OHOS_CLIPBOARD
+const int kMaxContextImageNodeSizeIfDownScale = 1024;
+ 
+bool NeedsDownScale(const gfx::Size& original_image_size, int32_t command_id) {
+  // only image copy need down scale
+  if (command_id != MENU_ID_IMAGE_COPY) {
+    return false;
+  }
+ 
+  if (original_image_size.width() <= kMaxContextImageNodeSizeIfDownScale &&
+      original_image_size.height() <= kMaxContextImageNodeSizeIfDownScale) {
+    return false;
+  }
+  LOG(DEBUG) << "The origin image size width: " << original_image_size.width()
+             << ", height: " << original_image_size.height();
+  return true;
+}
+ 
+SkBitmap DownScale(const SkBitmap& image, int32_t command_id) {
+  if (image.isNull()) {
+    return SkBitmap();
+  }
+ 
+  gfx::Size image_size(image.width(), image.height());
+  if (!NeedsDownScale(image_size, command_id)) {
+    return image;
+  }
+ 
+  gfx::SizeF scaled_size = gfx::SizeF(image_size);
+  if (scaled_size.width() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.width());
+  }
+ 
+  if (scaled_size.height() > kMaxContextImageNodeSizeIfDownScale) {
+    scaled_size.Scale(kMaxContextImageNodeSizeIfDownScale /
+                      scaled_size.height());
+  }
+ 
+  return skia::ImageOperations::Resize(image,
+                                       skia::ImageOperations::RESIZE_GOOD,
+                                       static_cast<int>(scaled_size.width()),
+                                       static_cast<int>(scaled_size.height()));
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string GetRefererValue(std::string headers) {
+  std::string refererValue = "";
+  std::string targetKeyword = "Referer: ";
+  size_t startPos = headers.find(targetKeyword);
+  if (startPos == std::string::npos) {
+    return refererValue;
+  }
+  size_t endPos = headers.find("\r\n", startPos);
+  refererValue =
+      headers.substr(startPos + targetKeyword.length(), endPos - startPos);
+  return refererValue;
+}
+#endif
+
+}  // namespace
+
 void ArkwebFrameHostExtImpl::PostURL(const CefString& url,
                                      const std::vector<char>& post_data) {
 #if BUILDFLAG(ARKWEB_POST_URL)
@@ -251,8 +316,20 @@ void ArkwebFrameHostExtImpl::OnGetImageFromCache(
     sk_sp<SkImage> sk_image = SkImages::DeferredFromEncodedData(sk_data);
     if (sk_image) {
       SkBitmap bitmap;
-      sk_image->asLegacyBitmap(&bitmap);
-      image_impl->AddBitmap(1.0, bitmap);
+      if (sk_image->asLegacyBitmap(&bitmap)) {
+#ifdef OHOS_CLIPBOARD
+        SkBitmap resize_image = DownScale(bitmap, command_id);
+        if (resize_image.colorType() == kBGRA_8888_SkColorType ||
+            resize_image.colorType() == kRGBA_8888_SkColorType) {
+              image_impl->AddBitmap(1.0, resize_image);
+        }
+#else
+        if (bitmap.colorType() == kBGRA_8888_SkColorType ||
+            bitmap.colorType() == kRGBA_8888_SkColorType) {
+              image_impl->AddBitmap(1.0, bitmap);
+        }
+#endif
+      }
     }
   }
   handler->AsCefContextMenuHandlerExt()->OnGetImageFromCache(image_impl,
@@ -426,6 +503,17 @@ void ArkwebFrameHostExtImpl::SetOverscrollMode(int mode) {
                         },
                         mode));
 }
+
+void ArkwebFrameHostExtImpl::UpdateHitTestData(int32_t type, const std::string& extra_data) {
+  hit_data_.type = type;
+  hit_data_.extra_data = extra_data;
+}
+
+void ArkwebFrameHostExtImpl::GetLastHitData(int& type, CefString& extra_data) {
+  type = hit_data_.type;
+  extra_data = hit_data_.extra_data;
+}
+
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
@@ -509,3 +597,31 @@ void ArkwebFrameHostExtImpl::RemoveCache(bool include_disk_files) {
             content::BrowsingDataRemover::ORIGIN_TYPE_PROTECTED_WEB);
   }
 }
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+bool ArkwebFrameHostExtImpl::SetFocusByPosition(float x, float y) {
+  if (is_temporary() || !render_frame_host_) {
+    LOG(ERROR) << "is_temporary or not render_frame_host_";
+    return false;
+  }
+
+  if (!render_frame_.is_bound()) {
+    LOG(ERROR) << "render_frame_.is_bound";
+    return false;
+  }
+  bool out_isEditable = false;
+  render_frame_->SetFocusByPosition(x, y, &out_isEditable);
+  LOG(INFO) << "received result from render:" << out_isEditable;
+  return out_isEditable;
+}
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+void ArkwebFrameHostExtImpl::SetIsFling(bool is_fling) {
+  LOG(DEBUG) << "SetIsFling in browser CefFrameHostImpl:" << is_fling;
+  SendToRenderFrame(__FUNCTION__,
+                    base::BindOnce([](bool is_fling, const RenderFrameType& render_frame) {
+                      render_frame->SetIsFling(is_fling);
+                    }, is_fling));
+}
+#endif

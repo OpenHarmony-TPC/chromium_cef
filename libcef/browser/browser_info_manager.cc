@@ -6,7 +6,6 @@
 
 #include <utility>
 
-#include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/task/sequenced_task_runner.h"
@@ -17,17 +16,12 @@
 #include "cef/libcef/common/cef_switches.h"
 #include "cef/libcef/common/frame_util.h"
 #include "cef/libcef/common/values_impl.h"
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_info_manager_utils.h"
 #include "content/public/browser/child_process_host.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
-
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-#include "chrome/browser/preloading/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
-#include "components/no_state_prefetch/browser/no_state_prefetch_contents.h"
-#include "components/no_state_prefetch/browser/no_state_prefetch_manager.h"
-#endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 
 namespace {
 
@@ -63,12 +57,20 @@ CefBrowserInfoManager::PendingPopup::~PendingPopup() {
 CefBrowserInfoManager::CefBrowserInfoManager() {
   DCHECK(!g_info_manager);
   g_info_manager = this;
+#if BUILDFLAG(IS_ARKWEB)
+  arkweb_browser_info_manager_utils_ = std::make_unique<ArkwebBrowserInfoManagerUtils>(this);
+#endif
 }
 
 CefBrowserInfoManager::~CefBrowserInfoManager() {
   DCHECK(browser_info_list_.empty());
   g_info_manager = nullptr;
 }
+#if BUILDFLAG(IS_ARKWEB)
+ArkwebBrowserInfoManagerUtils* CefBrowserInfoManager::GetUtils() {
+  return arkweb_browser_info_manager_utils_.get();
+}
+#endif
 
 // static
 CefBrowserInfoManager* CefBrowserInfoManager::GetInstance() {
@@ -113,46 +115,6 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::CreatePopupBrowserInfo(
 
   return browser_info;
 }
-
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-bool CefBrowserInfoManager::CanCreateWindow(content::RenderFrameHost* opener,
-                                            const GURL& target_url,
-                                            WindowOpenDisposition disposition,
-                                            bool user_gesture,
-                                            CefRefPtr<CefCallback> callback) {
-  CEF_REQUIRE_UIT();
-  content::Referrer referrer;
-  content::OpenURLParams params(target_url, referrer, disposition,
-                                ui::PAGE_TRANSITION_LINK,
-                                /*is_renderer_initiated=*/true);
-  params.user_gesture = user_gesture;
-
-  CefRefPtr<CefBrowserHostBase> browser;
-  if (!MaybeAllowNavigation(opener, params, browser) || !browser) {
-    LOG(INFO) << "not allow popup, cancel the popup";
-    callback->Cancel();
-    return false;
-  }
-
-  CefRefPtr<CefClient> client = browser->GetClient();
-  bool allow = true;
-  if (client.get()) {
-    CefRefPtr<CefLifeSpanHandler> handler = client->GetLifeSpanHandler();
-    if (handler.get()) {
-      CefRefPtr<CefFrame> opener_frame = browser->GetFrameForHost(opener);
-      DCHECK(opener_frame);
-      allow = !handler->OnPreBeforePopup(
-          browser.get(), opener_frame, target_url.spec(),
-          static_cast<cef_window_open_disposition_t>(disposition), user_gesture,
-          callback);
-    }
-  }
-  if (!allow) {
-    callback->Cancel();
-  }
-  return allow;
-}
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
 bool CefBrowserInfoManager::CanCreateWindow(
     content::RenderFrameHost* opener,
@@ -406,62 +368,14 @@ bool CefBrowserInfoManager::AddWebContents(content::WebContents* new_contents) {
   return false;
 }
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-bool CefBrowserInfoManager::IsPrerendering(
-    const content::GlobalRenderFrameHostToken& global_token) {
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  if (browser_context_all.size() == 0) {
-    return false;
-  }
-
-  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(rfh);
-  if (!web_contents) {
-    return false;
-  }
-
-  for (auto& context : CefBrowserContext::GetAll()) {
-    prerender::NoStatePrefetchManager* no_state_prefetch_manager =
-        prerender::NoStatePrefetchManagerFactory::GetForBrowserContext(
-            context->AsBrowserContext());
-    if (no_state_prefetch_manager) {
-      auto* no_state_prefetch_content =
-          no_state_prefetch_manager->GetNoStatePrefetchContents(web_contents);
-      if (no_state_prefetch_content) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-void CefBrowserInfoManager::CancelForPrerendering(
-    const content::GlobalRenderFrameHostToken& global_token,
-    int timeout_id) {
-  CEF_REQUIRE_UIT();
-  LOG(INFO) << "cancel for prerendering";
-  if (!g_info_manager) {
-    return;
-  }
-
-  if (!IsPrerendering(global_token)) {
-    return;
-  }
-
-  TimeoutNewBrowserInfoResponse(global_token, timeout_id);
-}
-#endif
-
 void CefBrowserInfoManager::OnGetNewBrowserInfo(
     const content::GlobalRenderFrameHostToken& global_token,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
   DCHECK(frame_util::IsValidGlobalToken(global_token));
   DCHECK(callback);
+
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info";
+  LOG(INFO) << "on get new browser info " << frame_util::GetFrameDebugString(global_token);
 #endif
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
@@ -491,11 +405,10 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   pending->callback_runner = callback_runner;
   pending_new_browser_info_map_.insert(
       std::make_pair(global_token, std::move(pending)));
-
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
   LOG(INFO) << "on get new browser info wait timeout";
   CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(&CefBrowserInfoManager::CancelForPrerendering,
+                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForPrerendering,
                                global_token, timeout_id));
 #endif
 
@@ -837,7 +750,11 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::GetBrowserInfoInternal(
 
   for (const auto& browser_info : browser_info_list_) {
     auto frame = browser_info->GetFrameForGlobalId(global_id);
+#if BUILDFLAG(IS_ARKWEB)
+    if (frame || browser_info->GetLastDeleteSpeculativeRFHId() == global_id) {
+#else
     if (frame) {
+#endif
       return browser_info;
     }
   }
@@ -855,7 +772,11 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::GetBrowserInfoInternal(
 
   for (const auto& browser_info : browser_info_list_) {
     auto frame = browser_info->GetFrameForGlobalToken(global_token);
+#if BUILDFLAG(IS_ARKWEB)
+    if (frame || browser_info->GetLastDeleteSpeculativeRFHToken() == global_token) {
+#else
     if (frame) {
+#endif
       return browser_info;
     }
   }

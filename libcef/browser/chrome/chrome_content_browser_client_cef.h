@@ -158,6 +158,9 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
   bool ShouldDisableSiteIsolation(
       content::SiteIsolationMode site_isolation_mode) override;
+
+  bool ShouldLockProcessToSite(content::BrowserContext* browser_context,
+                               const GURL& effective_url) override;
 #endif
 
   CefRefPtr<CefRequestContextImpl> request_context() const;

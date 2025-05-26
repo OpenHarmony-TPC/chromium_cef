@@ -265,16 +265,6 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
   virtual void OnVirtualKeyboardRequested(CefRefPtr<CefBrowser> browser,
                                           TextInputMode input_mode) {}
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  ///
-  /// Called to retrieve the view rectangle in screen DIP coordinates. This
-  /// method must always provide a non-empty rectangle.
-  ///
-  /*--cef()--*/
-  virtual void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
-                                      CefRect& rect) {}
-#endif
-
   ///
   /// Called when touch selection is updated. The client is responsible for
   /// rendering the touch handles.
@@ -285,13 +275,6 @@ class CefRenderHandler : public virtual CefBaseRefCounted {
       const CefTouchHandleState& start_selection_handle,
       const CefTouchHandleState& end_selection_handle,
       bool need_report) {}
-#if BUILDFLAG(IS_OHOS)
-  ///
-  /// SetGestureEventResult
-  ///
-  /*--cef()--*/
-  virtual void SetGestureEventResult(const bool result) {}
-#endif  // BUILDFLAG(IS_OHOS)
 };
 
 #endif  // CEF_INCLUDE_CEF_RENDER_HANDLER_H_

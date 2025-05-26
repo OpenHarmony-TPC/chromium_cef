@@ -145,8 +145,8 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
       autofill::ContentAutofillDriver& driver) override;
 
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  void SetPasswordPopupHider(OhAutofillManager* manager) {
-    password_popup_hider_ = manager;
+  void SetPasswordPopupStatus(bool status) {
+    need_hide_password_popup_ = status;
   }
 #endif
 
@@ -177,15 +177,16 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   SelectedCallback selected_callback_;
 #endif
 
-  base::WeakPtrFactory<OhAutofillClient> weak_ptr_factory_{this};
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  OhAutofillManager* password_popup_hider_ = nullptr;
+  bool need_hide_password_popup_ = false;
 #endif
 
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;
 #endif
   WEB_CONTENTS_USER_DATA_KEY_DECL();
+
+  base::WeakPtrFactory<OhAutofillClient> weak_ptr_factory_{this};
 };
 
 }  // namespace autofill

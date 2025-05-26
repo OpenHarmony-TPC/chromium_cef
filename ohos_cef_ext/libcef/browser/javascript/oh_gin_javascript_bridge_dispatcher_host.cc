@@ -38,7 +38,7 @@ class ValueConvertState {
     ~Level() { state_->maxRecursionDepth_++; }
 
    private:
-    ValueConvertState* state_;
+    raw_ptr<ValueConvertState> state_;
   };
 
   explicit ValueConvertState() : maxRecursionDepth_(MAX_RECURSION_DEPTH) {}
@@ -730,6 +730,28 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasMethod(
   }
 
   *result = client_->HasJavaScriptObjectMethods(object_id, method_name);
+}
+
+void OhGinJavascriptBridgeDispatcherHost::OnHasAsyncThreadMethod(
+    int32_t object_id,
+    const std::string& method_name,
+    bool* result) {
+  *result = false;
+  std::shared_lock<std::shared_mutex> lock(share_mutex_);
+  
+  // find in sync methods
+  if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
+    MethodPair p = sync_method_map_[object_id];
+    if (p.second.find(method_name) != p.second.end()) {
+      if (!client_) {
+        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
+                  "OnHasAsyncThreadMethod: client_ is null";
+        return;
+      }
+      *result = client_->HasNativeAsyncThreadJavaScriptMethods(p.first, method_name);
+      return;
+    }
+  }
 }
 
 std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(

@@ -1,7 +1,3 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #ifndef CEF_INCLUDE_CEF_DOWNLOAD_ITEM_EXT_H_
 #define CEF_INCLUDE_CEF_DOWNLOAD_ITEM_EXT_H_
 #pragma once
@@ -79,9 +75,9 @@ class CefDownloadItemExt : public virtual CefBaseRefCounted {
   virtual int GetNWebId() = 0;
 
   ///
-  /// Get content disposition cef value.
+  /// Returns the origin content disposition.
   ///
   /*--cef()--*/
-  virtual CefRefPtr<CefValue> GetContentDispositionCefValue() = 0;
+  virtual CefRefPtr<CefValue> GetOriginContentDisposition() = 0;
 };
 #endif

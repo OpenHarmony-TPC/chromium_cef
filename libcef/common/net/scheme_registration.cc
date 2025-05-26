@@ -62,9 +62,4 @@ bool IsCorsEnabledScheme(const std::string& scheme) {
   return base::Contains(url::GetCorsEnabledSchemes(), scheme);
 }
 
-#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
-void AddSchemesSupportCodeCache(const std::string& scheme) {
-  url::AddCodeCacheEnabledScheme(scheme.c_str());
-}
-#endif
 }  // namespace scheme

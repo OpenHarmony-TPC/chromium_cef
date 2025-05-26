@@ -68,7 +68,6 @@ class CefDownloadManagerDelegateImpl
   void ResetManager();
 
   raw_ptr<content::DownloadManager> manager_;
-  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
   const bool alloy_bootstrap_;
 
   // Map of DownloadItem to originating CefBrowserHostBase. Maintaining this
@@ -77,6 +76,8 @@ class CefDownloadManagerDelegateImpl
   using ItemBrowserMap =
       std::map<raw_ptr<download::DownloadItem>, raw_ptr<CefBrowserHostBase>>;
   ItemBrowserMap item_browser_map_;
+
+  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_IMPL_H_

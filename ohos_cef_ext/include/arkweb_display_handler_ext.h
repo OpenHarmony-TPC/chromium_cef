@@ -87,5 +87,18 @@ class ArkWebDisplayHandlerExt : public virtual CefDisplayHandler,
       bool precomposed,
       const std::vector<IconSize>& sizes) {}
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
+
+  ///
+  /// Called when the browser is about to display a pip. 
+  ///
+  virtual bool OnPip(CefRefPtr<CefBrowser> browser,
+                     int status,
+                     int delegate_id,
+                     int child_id,
+                     int frame_routing_id,
+                     int width,
+                     int height) {
+    return false;
+  }
 };
 #endif

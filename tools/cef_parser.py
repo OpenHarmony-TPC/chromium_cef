@@ -861,6 +861,9 @@ class obj_class:
     self.comment = comment
     self.includes = includes
     self.forward_declares = [ y for y in forward_declares if y not in (
+      "CefClient",
+      "CefBrowserHost", "CefResourceHandlerExt",
+      "ArkWebResourceRequestHandlerExt","CefMediaPlayerListenerForVAST","CefMediaPlayerController","CefWebExtensionApiHandler",
       "ArkWebBrowserExt", "ArkWebBrowserHostExt", "CefBrowserHostBase",
       "ArkWebClientExt", "ArkWebLoadHandlerExt", "ArkWebRenderHandlerExt",
       "ArkWebRequestImplExt","ArkwebFrameExt", "CefFrameHostImpl", "CefCookieManagerExt",

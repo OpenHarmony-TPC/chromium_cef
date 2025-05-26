@@ -212,7 +212,6 @@ std::unique_ptr<TypedArraySerializer> TypedArraySerializer::Create(
     return TypedArraySerializerImpl<double, double>::Create(typed_array);
   }
   NOTREACHED();
-  return nullptr;
 }
 
 }  // namespace

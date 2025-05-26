@@ -6,7 +6,6 @@
 
 #include <utility>
 
-#include "arkweb/build/features/features.h"
 #include "base/task/current_thread.h"
 #include "cef/libcef/browser/image_impl.h"
 #include "cef/libcef/browser/osr/osr_accessibility_util.h"
@@ -21,67 +20,11 @@
 #include "ui/display/screen.h"
 #include "ui/events/base_event_utils.h"
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-#include "cef/ohos_cef_ext/include/arkweb_dialog_handler_ext.h"
-#endif
-
 #if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/include/arkweb_render_handler_ext.h"
-#include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_web_contents_view_osr_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_utils.h"
 #endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-namespace {
-void ConvertSelectPopupItem(const blink::mojom::MenuItemPtr& menu_ptr,
-                            CefSelectPopupItem& menu_item) {
-  CefString label = CefString(menu_ptr->label.value_or(""));
-  CefString tool_tip = CefString(menu_ptr->tool_tip.value_or(""));
-  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
-  cef_string_set(tool_tip.c_str(), tool_tip.length(), &(menu_item.tool_tip),
-                 true);
-  menu_item.action = menu_ptr->action;
-  menu_item.enabled = menu_ptr->enabled;
-  menu_item.checked = menu_ptr->checked;
-  menu_item.type = static_cast<cef_select_popup_item_type_t>(menu_ptr->type);
-  menu_item.text_direction =
-      static_cast<cef_text_direction_t>(menu_ptr->text_direction);
-  menu_item.has_text_direction_override = menu_ptr->has_text_direction_override;
-}
-
-void ConvertAutofillPopupItem(const autofill::Suggestion& suggestion,
-                              CefAutofillPopupItem& menu_item) {
-  CefString label = CefString(base::UTF16ToUTF8(suggestion.main_text.value));
-  CefString sublabel = CefString(suggestion.minor_text.value);
-  cef_string_set(label.c_str(), label.length(), &(menu_item.label), true);
-  cef_string_set(sublabel.c_str(), sublabel.length(), &(menu_item.sublabel),
-                 true);
-}
-}  // namespace
-
-class CefSelectPopupCallbackImpl : public CefSelectPopupCallback {
- public:
-  explicit CefSelectPopupCallbackImpl(
-      mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client) {
-    popup_client_.Bind(std::move(popup_client));
-  }
-
-  void Continue(const std::vector<int>& indices) override {
-    if (popup_client_) {
-      popup_client_->DidAcceptIndices(indices);
-    }
-  }
-
-  void Cancel() override {
-    if (popup_client_) {
-      popup_client_->DidCancel();
-    }
-  }
-
- private:
-  mojo::Remote<blink::mojom::PopupMenuClient> popup_client_;
-  IMPLEMENT_REFCOUNTING(CefSelectPopupCallbackImpl);
-};
-#endif  // #if BUILDFLAG(ARKWEB_HTML_SELECT)
 
 CefBrowserPlatformDelegateOsr::CefBrowserPlatformDelegateOsr(
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
@@ -90,8 +33,11 @@ CefBrowserPlatformDelegateOsr::CefBrowserPlatformDelegateOsr(
     : native_delegate_(std::move(native_delegate)),
       use_shared_texture_(use_shared_texture),
       use_external_begin_frame_(use_external_begin_frame) {
+  cef_browser_platform_delegate_osr_utils_ = std::make_unique<CefBrowserPlatformDelegateOsrUtils>(this);
   native_delegate_->set_windowless_handler(this);
 }
+
+CefBrowserPlatformDelegateOsr::~CefBrowserPlatformDelegateOsr() = default;
 
 void CefBrowserPlatformDelegateOsr::CreateViewForWebContents(
     raw_ptr<content::WebContentsView>* view,
@@ -99,7 +45,11 @@ void CefBrowserPlatformDelegateOsr::CreateViewForWebContents(
   DCHECK(!view_osr_);
 
   // Use the OSR view instead of the default platform view.
+#if BUILDFLAG(IS_ARKWEB)
+  view_osr_ = new ArkWebCefWebContentsViewOSRExt(
+#else
   view_osr_ = new CefWebContentsViewOSR(
+#endif
       GetBackgroundColor(), use_shared_texture_, use_external_begin_frame_);
   *view = view_osr_;
   *delegate_view = view_osr_;
@@ -132,33 +82,8 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
   if (view_osr_) {
     view_osr_->RenderViewCreated();
   }
-
 #if BUILDFLAG(IS_OHOS)
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnSafeInsetsChange(
-        safe_insets_);
-  }
-#endif
-
-#if BUILDFLAG(ARKWEB_FOCUS)
-  if (is_view_focus_failed_ && view) {
-    LOG(INFO) << "RenderViewCreated request focus after failed:"
-              << focus_status_;
-    view->SetFocus(focus_status_);
-    is_view_focus_failed_ = false;
-  }
-#endif  // BUILDFLAG(ARKWEB_FOCUS)
-#if BUILDFLAG(ARKWEB_AI)
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnFoldStatusChanged(
-        fold_status_);
-  }
-#endif  // BUILDFLAG(ARKWEB_AI)
-#if BUILDFLAG(ARKWEB_SYNC_RENDER)
-  SetDrawMode(drawMode_);
-#endif
+  cef_browser_platform_delegate_osr_utils_->InitializeAndUpdateRenderView();
 #endif  // BUILDFLAG(IS_OHOS)
 }
 
@@ -203,15 +128,7 @@ void CefBrowserPlatformDelegateOsr::SendKeyEvent(const CefKeyEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-    // If the url content is empty when loadurl is loaded,
-    // the key information is thrown to other components.
-    CefRefPtr<CefKeyboardHandler> handler;
-    if (browser_ && browser_->client()) {
-      handler = browser_->client()->GetKeyboardHandler();
-    }
-    if (handler) {
-      handler->KeyboardReDispatch(event, false);
-    }
+  cef_browser_platform_delegate_osr_utils_->RedistributeKeyEventIfUrlEmpty(event);
 #endif
     return;
   }
@@ -228,25 +145,19 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     int clickCount) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
     return;
   }
-
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+#endif
   CefMouseEvent mouseEvent = event;
-  if (view->AsArkWebRenderWidgetHostViewOSRExt()
-          ->IsRequestUnadjustedMovement()) {
-    mouseEvent.x = mouseEvent.raw_x;
-    mouseEvent.y = mouseEvent.raw_y;
-  }
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseClickCoordinates(view, mouseEvent);
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
       mouseEvent, type, mouseUp, clickCount);
   view->SendMouseEvent(web_event);
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  blink::WebGestureEvent fling_cancel =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_cancel.data.fling_start.target_viewport = false;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-      fling_cancel);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingOnMouseClick(view, event);
 #endif
 }
 
@@ -255,49 +166,19 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     bool mouseLeave) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
     return;
   }
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+#endif
 
   CefMouseEvent mouseEvent = event;
-  if (view->AsArkWebRenderWidgetHostViewOSRExt()
-          ->IsRequestUnadjustedMovement()) {
-    mouseEvent.x = mouseEvent.raw_x;
-    mouseEvent.y = mouseEvent.raw_y;
-  }
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseMoveCoordinates(view, mouseEvent);
   blink::WebMouseEvent web_event =
       native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
   view->SendMouseEvent(web_event);
 }
-
-#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
-void CefBrowserPlatformDelegateOsr::SendTouchpadFlingEvent(
-    const CefMouseEvent& event,
-    double vx,
-    double vy) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view) {
-    return;
-  }
-
-  blink::WebGestureEvent fling_cancel =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_cancel.data.fling_start.target_viewport = false;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-      fling_cancel);
-
-  blink::WebGestureEvent fling_start =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_start.SetType(blink::WebInputEvent::Type::kGestureFlingStart);
-  fling_start.data.fling_start.velocity_x = vx;
-  fling_start.data.fling_start.velocity_y = vy;
-  fling_start.data.fling_start.target_viewport = false;
-  fling_start.SetSourceDevice(blink::mojom::GestureDevice::kTouchpad);
-
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-      fling_start);
-}
-#endif
 
 void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     const CefMouseEvent& event,
@@ -305,19 +186,12 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
     int deltaY) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
+    LOG(ERROR) << "SendMouseWheelEvent drop mouse event!!";
     return;
   }
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  if (view->render_widget_host() &&
-      !view->render_widget_host()->IsAutoscrollInProgress()) {
-    blink::WebGestureEvent fling_cancel =
-        native_delegate_->TranslateTouchpadFlingEvent(event);
-    fling_cancel.data.fling_start.target_viewport = false;
-    fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-        fling_cancel);
-  }
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view , event);
 #endif
 
   blink::WebMouseWheelEvent web_event =
@@ -328,38 +202,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
 void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
 #if BUILDFLAG(IS_ARKWEB)
-  if (!view) {
-    return;
-  }
-
-  CefTouchEvent event_adjust = event;
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-  if (event.type == CEF_TET_PRESSED) {
-    shrink_viewport_height_ = view->GetShrinkViewportHeight();
-  } else if (event.type == CEF_TET_CANCELLED) {
-    shrink_viewport_height_ = 0;
-  }
-  event_adjust.y -= shrink_viewport_height_;
-  if (event.type == CEF_TET_RELEASED) {
-    shrink_viewport_height_ = 0;
-  }
-#endif
-
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeEmbedMode(
-        native_embed_mode_);
-  }
-#endif
-
-  view->SendTouchEvent(event_adjust);
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  if (event.type == CEF_TET_PRESSED) {
-    SendTouchEventToRender(event_adjust);
-  }
-#endif
-
+  cef_browser_platform_delegate_osr_utils_->AdjustAndSendTouchEvent(view, event);
 #else   // BUILDFLAG(IS_ARKWEB)
   if (view) {
     view->SendTouchEvent(event);
@@ -370,14 +213,7 @@ void CefBrowserPlatformDelegateOsr::SendTouchEvent(const CefTouchEvent& event) {
 void CefBrowserPlatformDelegateOsr::SetFocus(bool setFocus) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
 #if BUILDFLAG(ARKWEB_FOCUS)
-  focus_status_ = setFocus;
-  if (view) {
-    view->SetFocus(setFocus);
-    is_view_focus_failed_ = false;
-  } else {
-    LOG(WARNING) << "CefBrowserPlatformDelegateOsr::SetFocus failed.";
-    is_view_focus_failed_ = true;
-  }
+  cef_browser_platform_delegate_osr_utils_->SetFocusAndUpdateStatus(setFocus, view);
 #else
   if (view) {
     view->SetFocus(setFocus);
@@ -389,7 +225,6 @@ gfx::Point CefBrowserPlatformDelegateOsr::GetScreenPoint(
     const gfx::Point& view,
     bool want_dip_coords) const {
   CefRefPtr<CefRenderHandler> handler = browser_->client()->GetRenderHandler();
-
   if (handler.get()) {
     int screenX = 0, screenY = 0;
     if (handler->GetScreenPoint(browser_.get(), view.x(), view.y(), screenX,
@@ -460,81 +295,6 @@ bool CefBrowserPlatformDelegateOsr::IsHidden() const {
   return true;
 }
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegateOsr::AdvanceFocusForIME(int focusType) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->AdvanceFocusForIME(focusType);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SendTouchEventList(
-    const std::vector<CefTouchEvent>& event_list) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view) {
-    return;
-  }
-
-  std::vector<CefTouchEvent> event_adjust_list = event_list;
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-  for (auto& event_adjust : event_adjust_list) {
-    if (event_adjust.type == CEF_TET_PRESSED) {
-      shrink_viewport_height_ = view->GetShrinkViewportHeight();
-    } else if (event_adjust.type == CEF_TET_CANCELLED) {
-      shrink_viewport_height_ = 0;
-    }
-    event_adjust.y -= shrink_viewport_height_;
-    if (event_adjust.type == CEF_TET_RELEASED) {
-      shrink_viewport_height_ = 0;
-    }
-  }
-#endif
-
-#if BUILDFLAG(ARKWEB_FIT_CONTENT)
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SetFitContentMode(
-      fit_content_mode_);
-#endif
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchEventList(
-      event_adjust_list);
-
-  for (auto& event_adjust : event_adjust_list) {
-    if (event_adjust.type == CEF_TET_PRESSED) {
-      SendTouchEventToRender(event_adjust);  //
-    }
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetScrollable(bool enable) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->SetScrollable(enable);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::ScrollBy(float delta_x, float delta_y) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->ScrollBy(delta_x, delta_y);
-  }
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-void CefBrowserPlatformDelegateOsr::WasOccluded(bool occluded) {
-  // The WebContentsImpl will notify the OSR view.
-  content::WebContentsImpl* web_contents =
-      static_cast<content::WebContentsImpl*>(web_contents_);
-  if (web_contents) {
-    if (occluded) {
-      web_contents->WasOccluded();
-    } else {
-      web_contents->WasShown();
-    }
-  }
-}
-#endif
-
 void CefBrowserPlatformDelegateOsr::NotifyScreenInfoChanged() {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (view) {
@@ -600,49 +360,6 @@ void CefBrowserPlatformDelegateOsr::ImeCancelComposition() {
   }
 }
 
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-bool CefBrowserPlatformDelegateOsr::GetCurRWH(
-    content::WebContentsImpl* web_contents,
-    const gfx::PointF& client_pt,
-    gfx::PointF* transformed_pt) {
-  auto event_router = web_contents->GetInputEventRouter();
-  if (!event_router) {
-    LOG(WARNING) << "DragDrop Get event router failed";
-    return false;
-  }
-  auto rvh = web_contents->GetRenderViewHost();
-  if (!rvh) {
-    LOG(WARNING) << "DragDrop Get render view host failed";
-    return false;
-  }
-  auto rvh_widget = rvh->GetWidget();
-  if (!rvh_widget) {
-    LOG(WARNING) << "DragDrop Get render widget failed";
-    return false;
-  }
-  auto root_view = rvh_widget->GetView();
-  if (!root_view) {
-    LOG(WARNING) << "DragDrop Get view failed";
-    return false;
-  }
-  auto* view = event_router->GetRenderWidgetHostViewInputAtPoint(
-      root_view, gfx::PointF(client_pt), transformed_pt);
-  if (!view) {
-    return false;
-  }
-  auto* current_rwh_for_drag = content::RenderWidgetHostImpl::From(
-      static_cast<content::RenderWidgetHostViewBase*>(view)
-          ->GetRenderWidgetHost());
-  if (!current_rwh_for_drag) {
-    LOG(WARNING) << "DragDrop Get render widget host failed ";
-    return false;
-  }
-
-  current_rwh_for_drag_ = current_rwh_for_drag->GetWeakPtr();
-  return true;
-}
-#endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
-
 void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
     CefRefPtr<CefDragData> drag_data,
     const CefMouseEvent& event,
@@ -660,7 +377,7 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragEnter(
   const gfx::Point client_pt(event.x, event.y);
   gfx::PointF transformed_pt;
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-  if (!GetCurRWH(web_contents, gfx::PointF(client_pt), &transformed_pt)) {
+  if (!(AsCefBrowserPlatformDelegateOsrExt()->GetCurRWH(web_contents, gfx::PointF(client_pt), &transformed_pt))) {
     LOG(WARNING) << "DragDrop Get render widget host failed";
     return;
   }
@@ -884,22 +601,7 @@ void CefBrowserPlatformDelegateOsr::StartDragging(
       browser_->GetClient()->GetRenderHandler();
   if (handler.get()) {
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-    CefImageImpl* image_impl = nullptr;
-    if (image.size().IsEmpty()) {
-      // An empty drag image is possible if the Javascript sets an empty drag
-      // image on purpose. Create a dummy 1x1 pixel image to avoid crashes when
-      // converting to cef image.
-      LOG(INFO) << "drag image is empty";
-      image_impl = new (std::nothrow) CefImageImpl();
-      if (image_impl) {
-        SkBitmap dummy_bitmap;
-        dummy_bitmap.allocN32Pixels(1, 1);
-        dummy_bitmap.eraseColor(0);
-        image_impl->AddBitmap(1.0, dummy_bitmap);
-      }
-    } else {
-      image_impl = new (std::nothrow) CefImageImpl(image);
-    }
+    CefImageImpl* image_impl = cef_browser_platform_delegate_osr_utils_->CreateDragImage(image);
     CefRefPtr<CefImage> cef_image(image_impl);
 #else
     CefRefPtr<CefImage> cef_image(new CefImageImpl(image));
@@ -995,13 +697,8 @@ void CefBrowserPlatformDelegateOsr::DragSourceSystemDragEnded() {
   web_contents->SystemDragEnded(drag_start_rwh_.get());
 
   drag_start_rwh_ = nullptr;
-
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()
-        ->SetTextHandlesTemporarilyHiddenByDrag(false, false);
-  }
+  cef_browser_platform_delegate_osr_utils_->RestoreTextHandlesAfterDrag();
 #endif
 }
 
@@ -1050,364 +747,3 @@ CefRenderWidgetHostViewOSR* CefBrowserPlatformDelegateOsr::GetOSRHostView()
 
   return nullptr;
 }
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-void CefBrowserPlatformDelegateOsr::OnShareFile(
-    const std::string& file_path,
-    const std::string& utd_type_id) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->OnShareFile(file_path, utd_type_id);
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-void CefBrowserPlatformDelegateOsr::WasKeyboardResized() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->WasKeyboardResized();
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetDrawMode(int mode) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  drawMode_ = mode;
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SetDrawMode(drawMode_);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetFitContentMode(int mode) {
-  fit_content_mode_ = mode;
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SetFitContentMode(mode);
-  }
-}
-
-bool CefBrowserPlatformDelegateOsr::GetPendingSizeStatus() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    return view->AsArkWebRenderWidgetHostViewOSRExt()->GetPendingSizeStatus();
-  }
-  return false;
-}
-
-void CefBrowserPlatformDelegateOsr::SetDrawRect(int x,
-                                                int y,
-                                                int width,
-                                                int height) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    drawRect_ = gfx::Rect(x, y, width, height);
-    LOG(DEBUG) << "CefBrowserPlatformDelegateOsr::SetDrawRect, drawRect:"
-               << drawRect_.ToString().c_str();
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SetDrawRect(drawRect_);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetShouldFrameSubmissionBeforeDraw(
-    bool should) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->SetShouldFrameSubmissionBeforeDraw(should);
-  }
-}
-
-std::string CefBrowserPlatformDelegateOsr::GetCurrentLanguage() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (!view) {
-    return "";
-  }
-  return view->AsArkWebRenderWidgetHostViewOSRExt()->GetCurrentLanguage();
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_AI)
-void CefBrowserPlatformDelegateOsr::OnTextSelected(bool flag) {
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnTextSelected(flag);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::OnDestroyImageAnalyzerOverlay() {
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnDestroyImageAnalyzerOverlay();
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::OnFoldStatusChanged(uint32_t foldStatus) {
-  fold_status_ = foldStatus;
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnFoldStatusChanged(foldStatus);
-  }
-}
-
-float CefBrowserPlatformDelegateOsr::GetPageScaleFactor() {
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    return view->AsArkWebRenderWidgetHostViewOSRExt()->GetPageScaleFactor();
-  }
-  return 1;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-void CefBrowserPlatformDelegateOsr::OnSafeInsetsChange(int left,
-                                                       int top,
-                                                       int right,
-                                                       int bottom) {
-  gfx::Insets safe_insets = gfx::Insets::TLBR(top, left, bottom, right);
-  if (safe_insets_ == safe_insets) {
-    return;
-  }
-  safe_insets_ = safe_insets;
-
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnSafeInsetsChange(
-        safe_insets_);
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
-bool CefBrowserPlatformDelegateOsr::WebPageSnapshot(
-    const char* id,
-    int width,
-    int height,
-    cef_web_snapshot_callback_t callback) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    return view->AsArkWebRenderWidgetHostViewOSRExt()->WebPageSnapshot(
-        id, width, height, std::move(callback));
-  }
-  return false;
-}
-#endif
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegateOsr::ScrollFocusedEditableNodeIntoView() {
-  content::WebContentsImpl* contents =
-      static_cast<content::WebContentsImpl*>(web_contents_);
-  if (!contents) {
-    LOG(ERROR) << "CefBrowserPlatformDelegateOsr::"
-                  "ScrollFocusedEditableNodeIntoView web_contents is null";
-    return;
-  }
-
-  auto* input_handler = contents->GetFocusedFrameWidgetInputHandler();
-  if (!input_handler) {
-    LOG(ERROR) << "CefBrowserPlatformDelegateOsr::"
-                  "ScrollFocusedEditableNodeIntoView input_handler is null";
-    return;
-  }
-  input_handler->ScrollFocusedEditableNodeIntoView();
-}
-
-void CefBrowserPlatformDelegateOsr::ScaleGestureChangeV2(int type,
-                                                         float scale,
-                                                         float originScale,
-                                                         float centerX,
-                                                         float centerY) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->ScaleGestureChangeV2(
-        type, scale, originScale, centerX, centerY);
-  }
-}
-#endif
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-void CefBrowserPlatformDelegateOsr::OnNativeEmbedLifecycleChange(
-    const ArkWebRenderHandlerExt::CefNativeEmbedData& info) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedLifecycleChange(
-        info);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::OnNativeEmbedFirstFramePaint(
-    const content::NativeEmbedFirstPaintEvent& event) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedFirstFramePaint(
-        event);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::SetNativeEmbedMode(bool flag) {
-  native_embed_mode_ = flag;
-}
-
-void CefBrowserPlatformDelegateOsr::OnNativeEmbedVisibilityChange(
-    const std::string& embed_id,
-    bool visibility) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedVisibilityChange(
-        embed_id, visibility);
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegateOsr::SetVirtualKeyBoardArg(int32_t width,
-                                                          int32_t height,
-                                                          double keyboard) {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->SetVirtualKeyBoardArg(
-        width, height, keyboard);
-  }
-}
-
-bool CefBrowserPlatformDelegateOsr::ShouldVirtualKeyboardOverlay() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view &&
-      view->AsArkWebRenderWidgetHostViewOSRExt()->GetVirtualKeyboardMode() ==
-          ui::mojom::VirtualKeyboardMode::kOverlaysContent) {
-    return true;
-  }
-  return false;
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-int CefBrowserPlatformDelegateOsr::GetTopControlsOffset() {
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    return view->GetTopControlsOffset();
-  }
-  return 0;
-}
-
-int CefBrowserPlatformDelegateOsr::GetShrinkViewportHeight() {
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    return view->GetShrinkViewportHeight();
-  }
-  return 0;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-void CefBrowserPlatformDelegateOsr::ShowPopupMenu(
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    std::vector<CefSelectPopupItem> item_list;
-    for (unsigned long i = 0; i < menu_items.size(); i++) {
-      CefSelectPopupItem menu_item;
-      ConvertSelectPopupItem(menu_items[i], menu_item);
-      item_list.push_back(menu_item);
-    }
-    CefRefPtr<CefSelectPopupCallback> callback =
-        new CefSelectPopupCallbackImpl(std::move(popup_client));
-    handler->AsArkDialogHandler()->OnSelectPopupMenu(
-        browser_->GetBrowser(),
-        CefRect(bounds.x(), bounds.y(), bounds.width(), bounds.height()),
-        item_height, item_font_size, selected_item, item_list, right_aligned,
-        allow_multiple_selection, callback);
-  }
-}
-#endif  // #if BUILDFLAG(ARKWEB_HTML_SELECT)
-
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-void CefBrowserPlatformDelegateOsr::OnBeforeUnloadFired(bool proceed) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->AsArkDialogHandler()->OnBeforeUnloadFired(browser_->GetBrowser(),
-                                                       proceed);
-  }
-}
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
-#if BUILDFLAG(ARKWEB_MAXIMIZE_RESIZE)
-void CefBrowserPlatformDelegateOsr::MaximizeResize() {
-  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
-  if (view && view->AsArkWebRenderWidgetHostViewOSRExt()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->MaximizeResize();
-  }
-}
-#endif  // ARKWEB_MAXIMIZE_RESIZE
-
-#if BUILDFLAG(ARKWEB_ADBLOCK)
-void CefBrowserPlatformDelegateOsr::OnAdsBlocked(
-    const std::string& main_frame_url,
-    const std::map<std::string, int32_t>& subresource_blocked,
-    bool is_site_first_report) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-
-  if (handler.get()) {
-    std::map<CefString, CefString> adsBlocked_str;
-    for (auto item : subresource_blocked) {
-      adsBlocked_str.insert(
-          {CefString(item.first), base::NumberToString(item.second)});
-    }
-
-    handler->AsArkDialogHandler()->OnAdsBlocked(
-        browser_->GetBrowser(), CefString(main_frame_url), adsBlocked_str,
-        is_site_first_report);
-  }
-}
-
-bool CefBrowserPlatformDelegateOsr::TrigAdBlockEnabledForSiteFromUi(
-    const std::string& main_frame_url,
-    int main_frame_tree_node_id) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-
-  if (handler.get()) {
-    return handler->AsArkDialogHandler()->TrigAdBlockEnabledForSiteFromUi(
-        browser_->GetBrowser(), CefString(main_frame_url),
-        main_frame_tree_node_id);
-  }
-
-  return false;
-}
-#endif  // BUILDFLAG(ARKWEB_ADBLOCK)
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-void CefBrowserPlatformDelegateOsr::OnShowAutofillPopup(
-    const gfx::RectF& element_bounds,
-    bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions,
-    bool is_password_popup_type) {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    std::vector<CefAutofillPopupItem> item_list;
-    for (auto& item : suggestions) {
-      CefAutofillPopupItem menu_item;
-      ConvertAutofillPopupItem(item, menu_item);
-      item_list.push_back(menu_item);
-    }
-    LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
-              << ", y: " << element_bounds.y()
-              << ", element_bounds width: " << element_bounds.width()
-              << ", element_bounds height:" << element_bounds.height();
-
-    handler->AsArkDialogHandler()->OnShowAutofillPopup(
-        browser_->GetBrowser(),
-        CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
-                element_bounds.height()),
-        is_rtl, item_list, is_password_popup_type);
-  }
-}
-
-void CefBrowserPlatformDelegateOsr::OnHideAutofillPopup() {
-  CefRefPtr<CefDialogHandler> handler =
-      browser_->GetClient()->GetDialogHandler();
-  if (handler.get()) {
-    handler->AsArkDialogHandler()->OnHideAutofillPopup();
-  }
-}
-#endif

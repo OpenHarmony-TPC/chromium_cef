@@ -535,6 +535,10 @@ struct CefBrowserSettingsTraits {
     cef_string_clear(&s->default_encoding);
   }
 
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/internal/cef_types_wrappers_head_for_include.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
+
   static inline void set(const struct_type* src,
                          struct_type* target,
                          bool copy) {
@@ -584,81 +588,13 @@ struct CefBrowserSettingsTraits {
     target->chrome_status_bubble = src->chrome_status_bubble;
     target->chrome_zoom_bubble = src->chrome_zoom_bubble;
 
-#if BUILDFLAG(ARKWEB_COPY_OPTION)
-    target->copy_option = src->copy_option;
-#endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
-
-#if BUILDFLAG(IS_OHOS)
-    /* ohos webview begin */
-    target->force_dark_mode_enabled = src->force_dark_mode_enabled;
-    target->javascript_can_open_windows_automatically =
-        src->javascript_can_open_windows_automatically;
-    target->loads_images_automatically = src->loads_images_automatically;
-    target->text_size_percent = src->text_size_percent;
-    target->allow_running_insecure_content =
-        src->allow_running_insecure_content;
-    target->strict_mixed_content_checking = src->strict_mixed_content_checking;
-    target->allow_mixed_content_upgrades = src->allow_mixed_content_upgrades;
-    target->geolocation_enabled = src->geolocation_enabled;
-    target->supports_double_tap_zoom = src->supports_double_tap_zoom;
-    target->supports_multi_touch_zoom = src->supports_multi_touch_zoom;
-    target->initialize_at_minimum_page_scale =
-        src->initialize_at_minimum_page_scale;
-    target->viewport_meta_enabled = src->viewport_meta_enabled;
-    target->user_gesture_required = src->user_gesture_required;
-    target->pinch_smooth_mode = src->pinch_smooth_mode;
-    target->hide_vertical_scrollbars = src->hide_vertical_scrollbars;
-    target->hide_horizontal_scrollbars = src->hide_horizontal_scrollbars;
-    target->contextmenu_customization_enabled =
-        src->contextmenu_customization_enabled;
-    target->scrollbar_color = src->scrollbar_color;
-    target->is_safe_browsing_enable = src->is_safe_browsing_enable;
-    target->native_embed_mode_enabled = src->native_embed_mode_enabled;
-    cef_string_set(src->embed_tag.str, src->embed_tag.length,
-                   &target->embed_tag, copy);
-    cef_string_set(src->embed_tag.str, src->embed_tag.length,
-                   &target->embed_tag_type, copy);
-    target->scroll_enabled = src->scroll_enabled;
-    target->draw_mode = src->draw_mode;
-    target->force_zero_layout_height = src->force_zero_layout_height;
-    /* ohos webview end */
-#endif  // BUILDFLAG(IS_OHOS)
-
-#if BUILDFLAG(ARKWEB_CSS_FONT)
-    target->font_weight_scale = src->font_weight_scale;
-#endif
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    target->incognito_mode = src->incognito_mode;
-#endif
-#if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
-    target->custom_video_player_enable = src->custom_video_player_enable;
-    target->custom_video_player_overlay = src->custom_video_player_overlay;
-#endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-    target->supports_multiple_windows = src->supports_multiple_windows;
-#endif  // ARKWEB_MULTI_WINDOW
-
-#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
-    target->record_whole_document = src->record_whole_document;
-#endif
-
-#if BUILDFLAG(ARKWEB_MEDIA_CAPABILITIES_ENHANCE)
-    target->usage_scenario = src->usage_scenario;
-#endif
-
-#if BUILDFLAG(ARKWEB_ACTIVE_POLICY)
-    target->delay_for_background_tab_freezing =
-        src->delay_for_background_tab_freezing;
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    target->universal_access_from_file_urls =
-        src->universal_access_from_file_urls;
-#endif
-#if BUILDFLAG(ARKWEB_RENDER_PROCESS_SHARE)
-    target->shared_render_process_token = src->shared_render_process_token;
-#endif
+    setForInclude(src, target, copy);
+#if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
+    target->border_radius_top_left = src->border_radius_top_left;
+    target->border_radius_top_right = src->border_radius_top_right;
+    target->border_radius_bottom_left = src->border_radius_bottom_left;
+    target->border_radius_bottom_right = src->border_radius_bottom_right;
+#endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
   }
 };
 
@@ -877,160 +813,9 @@ class CefAcceleratedPaintInfo : public cef_accelerated_paint_info_t {
       : cef_accelerated_paint_info_t(r) {}
 };
 
-#if BUILDFLAG(IS_OHOS)
-struct CefSelectPopupItemTraits {
-  typedef cef_select_popup_item_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-///
-// Class representing select popup item.
-///
-typedef CefStructBase<CefSelectPopupItemTraits> CefSelectPopupItem;
-
-struct CefEmbedTouchEventTraits {
-  typedef cef_embed_touch_event_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-using CefEmbedTouchEvent = CefStructBase<CefEmbedTouchEventTraits>;
-
-struct CefNativeEmbedDataTraits {
-  typedef cef_native_embed_data_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-using CefNativeEmbedData = CefStructBase<CefNativeEmbedDataTraits>;
-
-struct CefDateTimeChooserTraits {
-  typedef cef_date_time_chooser_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-struct CefAutofillPopupItemTraits {
-  typedef cef_autofill_popup_item_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-///
-// Class representing password autofill popup item.
-///
-typedef CefStructBase<CefAutofillPopupItemTraits> CefAutofillPopupItem;
-
-///
-// Class representing date time chooser.
-///
-class CefDateTimeChooser : public CefStructBase<CefDateTimeChooserTraits> {
- public:
-  typedef CefStructBase<CefDateTimeChooserTraits> parent;
-
-  CefDateTimeChooser() {}
-  CefDateTimeChooser(const cef_date_time_chooser_t& r) : parent(r) {}
-  CefDateTimeChooser(cef_text_input_type_t dialog_type,
-                     double dialog_value,
-                     double minumum,
-                     double maximum,
-                     double step) {
-    Set(dialog_type, dialog_value, minumum, maximum, step);
-  }
-
-  void Set(cef_text_input_type_t dialog_type_value,
-           double dialog_value_value,
-           double minumum_value,
-           double maximum_value,
-           double step_value) {
-    dialog_type = dialog_type_value;
-    dialog_value = dialog_value_value;
-    minimum = minumum_value;
-    maximum = maximum_value;
-    step = step_value;
-  }
-};
-
-struct CefDateTimeSuggestionTraits {
-  typedef cef_date_time_suggestion_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {}
-
-  static inline void set(const struct_type* src,
-                         struct_type* target,
-                         bool copy) {
-    *target = *src;
-  }
-};
-
-///
-// Class representing date time chooser.
-///
-class CefDateTimeSuggestion
-    : public CefStructBase<CefDateTimeSuggestionTraits> {
- public:
-  typedef CefStructBase<CefDateTimeSuggestionTraits> parent;
-
-  CefDateTimeSuggestion() {}
-  CefDateTimeSuggestion(const cef_date_time_suggestion_t& r) : parent(r) {}
-  CefDateTimeSuggestion(double value,
-                        cef_string_t localized_value,
-                        cef_string_t label) {
-    Set(value, localized_value, label);
-  }
-
-  void Set(double value_value,
-           cef_string_t localized_value_value,
-           cef_string_t label_value) {
-    value = value_value;
-    localized_value = localized_value_value;
-    label = label_value;
-  }
-};
-#endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/include/internal/cef_types_wrappers_for_include.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
 struct CefTaskInfoTraits {
   using struct_type = cef_task_info_t;

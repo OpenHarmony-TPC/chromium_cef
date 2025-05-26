@@ -5,15 +5,12 @@
 #include "cef/libcef/browser/chrome/extensions/chrome_extension_util.h"
 
 #include "cef/libcef/browser/browser_host_base.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/sessions/content/session_tab_helper.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
-#include "cef/libcef/browser/browser_info_manager.h"
-#endif
 
 namespace cef {
 
@@ -43,9 +40,15 @@ bool GetAlloyTabById(int tab_id,
       CHECK(rfh);
       auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
       CHECK(web_contents);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+      if (ArkWebExtensionIsNotTabId(web_contents, tab_id)) {
+        return;
+      }
+#else
       if (sessions::SessionTabHelper::IdForTab(web_contents).id() != tab_id) {
         return;
       }
+#endif // ARKWEB_ARKWEB_EXTENSIONS
 
       // We only consider Alloy style CefBrowserHosts in this loop. Otherwise,
       // we could end up returning a WebContents that shouldn't be exposed to
@@ -75,28 +78,5 @@ bool IsAlloyContents(content::WebContents* contents, bool primary_only) {
   }
   return false;
 }
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-content::WebContents* GetWebContentByTabId(int tab_id) {
-  AlloyBrowserHostImpl* browser = nullptr;
-
-  for (const auto& browser_info :
-       CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
-    auto current_browser =
-        browser_info->browser()->AsAlloyBrowserHostImpl().get();
-    if (current_browser && current_browser->ExtensionGetTabId() == tab_id &&
-        tab_id >= 0) {
-      browser = current_browser;
-      break;
-    }
-  }
-
-  if (browser) {
-    return browser->web_contents();
-  } else {
-    return nullptr;
-  }
-}
-#endif
 
 }  // namespace cef

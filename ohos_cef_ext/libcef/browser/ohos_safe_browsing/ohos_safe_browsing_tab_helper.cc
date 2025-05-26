@@ -112,6 +112,9 @@ OHSBThreatType TransformMappingType(std::string mapping_type) {
   if (mapping_type == "THREAT_WARNING") {
     return OHSBThreatType::THREAT_WARNING;
   }
+  if (mapping_type == "THREAT_UNPROCESS") {
+    return OHSBThreatType::THREAT_UNPROCESSED;
+  }
   return OHSBThreatType::THREAT_DEFAULT;
 }
 
@@ -210,6 +213,11 @@ SafeBrowsingTabHelper::SafeBrowsingTabHelper(content::WebContents* web_contents,
 
   sb_client_.reset(new SbClient(web_contents, pref_service, incognito_mode));
   browser_ = browser;
+
+  if (browser_) {
+    browser_->AsArkWebBrowserHostExtImpl()->SetSafeBrowsingDetectionCallback(this);
+    use_cloud_detection_ = false;
+  }
 }
 
 SafeBrowsingTabHelper::~SafeBrowsingTabHelper() = default;
@@ -262,9 +270,9 @@ void SafeBrowsingTabHelper::DidStartNavigation(
 
 void SafeBrowsingTabHelper::QuerySafeBrowsingResults(
     content::NavigationHandle* navigation_handle) {
-  if (!browser_->AsArkWebBrowserHostExtImpl()
-           ->IsSafeBrowsingDetectionEnabled()) {
-    LOG(DEBUG) << "SafeBrowsingDetection is not enabled";
+  if (browser_->AsArkWebBrowserHostExtImpl()
+          ->IsSafeBrowsingDetectionDisabled()) {
+    LOG(INFO) << "SafeBrowsingDetection is disabled";
     return;
   }
 
@@ -273,6 +281,16 @@ void SafeBrowsingTabHelper::QuerySafeBrowsingResults(
       net_service::URLLoaderFactoryGetter::Create(nullptr, GetBrowserContext());
   if (!loader_factory_getter) {
     LOG(ERROR) << "SafeBrowsing loader factory getter is null";
+    return;
+  }
+
+  if (browser_) {
+    browser_->AsArkWebBrowserHostExtImpl()->HandleSafeBrowsingDetection(
+        navigation_handle->GetURL().spec());
+    use_cloud_detection_ = false;
+  }
+
+  if (!use_cloud_detection_) {
     return;
   }
 
@@ -327,6 +345,29 @@ void SafeBrowsingTabHelper::QuerySafeBrowsingResults(
       base::BindOnce(&SafeBrowsingTabHelper::OnSimpleLoaderComplete,
                      base::Unretained(this), it, navigation_handle->GetURL(),
                      converted_url));
+}
+
+void SafeBrowsingTabHelper::OnDetectionResult(int code,
+                                              int policy,
+                                              const std::string& mappingType,
+                                              const std::string& url) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE, base::BindOnce(&SafeBrowsingTabHelper::OnDetectionResult,
+                                  weak_ptr_factory_.GetWeakPtr(), code, policy,
+                                  mappingType, url));
+    return;
+  }
+
+  if (policy >= OHSBPolicyType::POLICY_NO_PROMPT &&
+      policy <= OHSBPolicyType::POLICY_HALF_POPUP) {
+    LOG(INFO) << "SafeBrowsing SA detection with policy: " << policy
+              << ", code: " << code << ", type: " << mappingType;
+
+    OHSBThreatType threat_type = TransformMappingType(mappingType);
+    sb_client_->SetEvilUrlPolicyAndHwCode(GURL(url), policy, threat_type, code,
+                                          GURL(""));
+  }
 }
 
 void SafeBrowsingTabHelper::OnSimpleLoaderComplete(
