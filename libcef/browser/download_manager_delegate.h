@@ -61,7 +61,6 @@ class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
   AlloyBrowserHostImpl* GetBrowser(download::DownloadItem* item);
 
   content::DownloadManager* manager_;
-  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
 
   // Map of DownloadItem to originating AlloyBrowserHostImpl. Maintaining this
   // map is necessary because DownloadItem::GetWebContents() may return NULL if
@@ -73,6 +72,7 @@ class CefDownloadManagerDelegate : public download::DownloadItem::Observer,
 #if defined(OHOS_EX_DOWNLOAD)
   CefRefPtr<CefDownloadHandler> download_handler_per_context_ = nullptr;
 #endif  //  OHOS_EX_DOWNLOAD
+  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_H_
