@@ -64,4 +64,4 @@ void CefExtensionKeybindingRegistryViews::AddExtensionKeybindings(
 
     AddEventTarget(accelerator, extension->id(), iter->second.command_name());
   }
-};
+}

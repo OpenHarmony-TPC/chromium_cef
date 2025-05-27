@@ -33,6 +33,10 @@
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 
+#if BUILDFLAG(ARKWEB_ADBLOCK)
+#include "arkweb/chromium_ext/chrome/browser/browser_process_impl_ext.h"
+#endif
+
 using subresource_filter::kSafeBrowsingSubresourceFilter;
 using subresource_filter::kUserTopLevelDirectoryName;
 using subresource_filter::kUserUnindexedRulesetBaseDirectoryName;
@@ -120,7 +124,7 @@ bool UserUnindexedRulesetToIndexedRuleset(const base::FilePath& unindexed_file,
   }
 
   UserRulesetService* ruleset_service =
-      g_browser_process->subresource_filter_user_ruleset_service();
+      g_browser_process->AsBrowserProcessImplExt()->subresource_filter_user_ruleset_service();
   if (ruleset_service) {
     ruleset_service->IndexAndStoreAndPublishRulesetIfNeeded(ruleset_info);
   }

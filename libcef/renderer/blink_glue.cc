@@ -55,8 +55,6 @@ blink::ExecutionContext* GetExecutionContext(v8::Local<v8::Context> context) {
 
 }  // namespace
 
-const int64_t kInvalidFrameId = -1;
-
 bool CanGoBack(blink::WebView* view) {
   if (!view) {
     return false;
@@ -315,5 +313,7 @@ void StartNavigation(blink::WebLocalFrame* frame,
       ->Loader()
       .StartNavigation(frame_load_request, blink::WebFrameLoadType::kStandard);
 }
+
+#include "cef/ohos_cef_ext/libcef/renderer/blink_glue_for_include.cc"
 
 }  // namespace blink_glue

@@ -110,10 +110,6 @@ class OhAutofillManager : public AutofillManager,
   absl::optional<std::string> QueryPopupShowAndGetHideStr();
 #endif
 
-#if BUILDFLAG(ARKWEB_DATALIST)
-  void SuggestionSelected(const FieldGlobalId& field_id, std::u16string text);
-#endif
-
  protected:
   // friend void OhDriverInitHook(AutofillClient* client,
   //                              ContentAutofillDriver* driver);
@@ -166,13 +162,21 @@ class OhAutofillManager : public AutofillManager,
   AutofillProvider* GetAutofillProvider();
 #endif
   void StartNewLoggingSession();
+
+#if BUILDFLAG(ARKWEB_DATALIST)
+  void SuggestionSelected(const FieldGlobalId& field_id, std::u16string text);
+  void OnAskForValuesToFillImplForDatalist(const FormData& form,
+                                           const FieldGlobalId& field_id,
+                                           const gfx::Rect& bounding_box);
+#endif
+
   bool has_server_prediction_ = false;
-  base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
   bool is_show_ = false;
   bool is_password_popup_show_ = false;
   std::unique_ptr<FormData> form_;
   base::ScopedObservation<AutofillManager, AutofillManager::Observer>
       autofill_manager_observation{this};
+  base::WeakPtrFactory<OhAutofillManager> weak_ptr_factory_{this};
 };
 
 }  // namespace autofill

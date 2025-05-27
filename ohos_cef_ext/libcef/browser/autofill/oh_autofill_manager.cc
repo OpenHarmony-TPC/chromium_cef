@@ -302,8 +302,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
     LOG(ERROR) << "password_manager is nullptr";
     return;
   }
-
-  password_manager->FillData(page_url, username, password, is_other_account);
+  password_manager->AsChromePasswordManagerClientExt()->FillData(page_url, username, password, is_other_account);
   is_password_popup_show_ = false;
 }
 
@@ -326,9 +325,9 @@ bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
   }
 
   if (!form_id.is_null()) {
-    return password_manager->IsUsernamePasswordForm(form_id);
+    return password_manager->AsChromePasswordManagerClientExt()->IsUsernamePasswordForm(form_id);
   } else {
-    return password_manager->IsUsernamePasswordField(field_id);
+    return password_manager->AsChromePasswordManagerClientExt()->IsUsernamePasswordField(field_id);
   }
 }
 
@@ -349,6 +348,7 @@ bool OhAutofillManager::ShouldClearPreviewedForm() {
 
 void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
                                             mojom::SubmissionSource source) {
+  LOG(INFO) << "OnFormSubmittedImpl";
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     return;
@@ -373,6 +373,7 @@ void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
 void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
                                                  const FieldGlobalId& field_id,
                                                  const TimeTicks timestamp) {
+  LOG(INFO) << "OnTextFieldDidChangeImpl";
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
     return;
@@ -408,12 +409,13 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
     const gfx::Rect& bounding_box,
     AutofillSuggestionTriggerSource trigger_source) {
   LOG(INFO) << "OnAskForValuesToFillImpl";
+#if BUILDFLAG(ARKWEB_DATALIST)
+  OnAskForValuesToFillImplForDatalist(form, field_id, bounding_box);
+#endif
 
   if (is_show_) {
     // Handle this event in OnTextFieldDidChangeImpl
-#if !BUILDFLAG(ARKWEB_DATALIST)
     return;
-#endif
   } else {
     form_ = std::make_unique<FormData>(form);
   }
@@ -439,27 +441,6 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
     is_show_ = true;
     autofill_client->OnAutofillEvent(json_str.value());
   }
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-  std::vector<autofill::Suggestion> suggestions;
-  for (SelectOption option : field->datalist_options()) {
-    suggestions.push_back(autofill::Suggestion(option.value));
-  }
-  if (suggestions.size() == 0) {
-    autofill_client->HideAutofillPopup();
-  } else {
-    autofill::AutofillClient::PopupOpenArgs open_args =
-        autofill::AutofillClient::PopupOpenArgs(
-            gfx::RectF(bounding_box.x(), bounding_box.y(), bounding_box.width(),
-                       bounding_box.height()),
-            base::i18n::TextDirection::LEFT_TO_RIGHT, suggestions,
-            autofill::AutofillSuggestionTriggerSource::kOpenTextDataListChooser,
-            /*form_control_ax_id=*/0, autofill::PopupAnchorType::kField);
-    autofill_client->ShowAutofillPopup(
-        open_args, base::BindOnce(&OhAutofillManager::SuggestionSelected,
-                                  weak_ptr_factory_.GetWeakPtr(), field_id));
-  }
-#endif
 }
 
 void OhAutofillManager::OnFocusOnFormFieldImpl(const FormData& form,
@@ -572,6 +553,44 @@ void OhAutofillManager::SuggestionSelected(const FieldGlobalId& field_id,
                                            std::u16string text) {
   driver().RendererShouldAcceptDataListSuggestion(field_id, text);
 }
-#endif
+
+void OhAutofillManager::OnAskForValuesToFillImplForDatalist(
+    const FormData& form,
+    const FieldGlobalId& field_id,
+    const gfx::Rect& bounding_box) {
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    return;
+  }
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    return;
+  }
+  auto* autofill_client = OhAutofillClient::FromWebContents(contents);
+  if (!autofill_client) {
+    return;
+  }
+
+  std::vector<autofill::Suggestion> suggestions;
+  const FormFieldData* field = form.FindFieldByGlobalId(field_id);
+  for (SelectOption option : field->datalist_options()) {
+    suggestions.push_back(autofill::Suggestion(option.value));
+  }
+  if (suggestions.size() == 0) {
+    autofill_client->HideAutofillPopup();
+  } else {
+    autofill::AutofillClient::PopupOpenArgs open_args =
+        autofill::AutofillClient::PopupOpenArgs(
+            gfx::RectF(bounding_box.x(), bounding_box.y(), bounding_box.width(),
+                       bounding_box.height()),
+            base::i18n::TextDirection::LEFT_TO_RIGHT, suggestions,
+            autofill::AutofillSuggestionTriggerSource::kOpenTextDataListChooser,
+            /*form_control_ax_id=*/0, autofill::PopupAnchorType::kField);
+    autofill_client->ShowAutofillPopup(
+        open_args, base::BindOnce(&OhAutofillManager::SuggestionSelected,
+                                  weak_ptr_factory_.GetWeakPtr(), field_id));
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_DATALIST)
 
 }  // namespace autofill

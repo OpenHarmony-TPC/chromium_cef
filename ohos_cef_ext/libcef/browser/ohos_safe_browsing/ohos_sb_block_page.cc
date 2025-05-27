@@ -37,12 +37,17 @@ std::string SbBlockPage::GetHTMLContents() {
   webui::SetLoadTimeDataDefaults(controller()->GetApplicationLocale(),
                                  &load_time_data);
   std::string html;
-  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
+  if (policy_ == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
     html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
-        IDR_BLOCK_ERROR_OHOS_HTML_LARGE);
+        IDR_MINOR_CONTROL_HTML);
   } else {
-    html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
-        IDR_BLOCK_ERROR_OHOS_HTML_PHONE);
+    if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
+      html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
+          IDR_BLOCK_ERROR_OHOS_HTML_LARGE);
+    } else {
+      html = ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
+          IDR_BLOCK_ERROR_OHOS_HTML_PHONE);
+    }
   }
 
   webui::AppendWebUiCssTextDefaults(&html);
@@ -108,7 +113,11 @@ void SbBlockPage::PopulateInterstitialStrings(
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_FRAUD_INFO_TITLE));
   }
 
-  if (block_type_ == OHSBThreatType::THREAT_ILLEGAL) {
+  if (policy_ == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
+    load_time_data.Set(
+        "block_info_body",
+        l10n_util::GetStringUTF8(IDS_OHOS_MINOR_PROTECTION_NOTE));
+  } else if (block_type_ == OHSBThreatType::THREAT_ILLEGAL) {
     load_time_data.Set(
         "block_info_body",
         l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_ILLEGAL_INFO_BODY));
@@ -137,6 +146,8 @@ void SbBlockPage::PopulateInterstitialStrings(
                                         IDS_OHOS_BLOCK_PAGE_DONT_PROCEED));
   load_time_data.Set("proceed",
                      l10n_util::GetStringUTF8(IDS_OHOS_BLOCK_PAGE_PROCEED));
+  load_time_data.Set("settings",
+                     l10n_util::GetStringUTF8(IDS_OHOS_MINOR_PROTECTION_SETING_BUTTON));
 }
 
 void SbBlockPage::PopulateUrlTrustListInterstitialStrings(

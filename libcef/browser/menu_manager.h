@@ -1,5 +1,5 @@
-// reserved. Use of this source code is governed by a BSD-style license that can
 // Copyright (c) 2012 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
 // be found in the LICENSE file.
 
 #ifndef CEF_LIBCEF_BROWSER_MENU_MANAGER_H_
@@ -13,13 +13,6 @@
 #include "content/public/browser/context_menu_params.h"
 #include "content/public/browser/web_contents_observer.h"
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "chrome/browser/extensions/menu_manager.h"
-#include "ohos_nweb/src/capi/nweb_context_menus_on_clicked_data.h"
-#include "ohos_nweb/src/capi/web_extension_tab_items.h"
-#include "include/cef_extension_context_menus_handler.h"
-#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-
 namespace content {
 class RenderFrameHost;
 class WebContents;
@@ -31,17 +24,6 @@ class CefRunContextMenuCallback;
 class CefMenuManager : public CefMenuModelImpl::Delegate,
                        public content::WebContentsObserver {
  public:
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  static void OnClickedExtensionContextMenus(const std::string& extension_id,
-                                             ContextMenusOnClickedData& data,
-                                             std::optional<NWebExtensionTab>& tab);
-  static std::vector<NWebContextMenusItem> GetAllExtensionContextMenus(const std::vector<std::string>& extension_ids);
-  static void SetContextMenusHandler(CefExtensionContextMenusHandler* handler);
-  static void OnContextMenusCreate(const std::string& extension_id, extensions::MenuItem* menu_item);
-  static void OnContextMenusUpdate(const std::string& extension_id, extensions::MenuItem* menu_item);
-  static void OnContextMenusRemove(const std::string& extension_id, const std::string& menu_item_id);
-  static void OnContextMenusRemoveAll(const std::string& extension_id);
-#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   CefMenuManager(AlloyBrowserHostImpl* browser,
                  std::unique_ptr<CefMenuRunner> runner);
 
@@ -61,12 +43,6 @@ class CefMenuManager : public CefMenuModelImpl::Delegate,
   void CancelContextMenu();
 
  private:
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  static void GetFlattenedMenuItemSubtree(
-      std::vector<NWebContextMenusItem>& items,
-      const std::unique_ptr<extensions::MenuItem>& item);
-  static CefExtensionContextMenusHandler* context_menus_handler;
-#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   // CefMenuModelImpl::Delegate methods.
   void ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
                       int command_id,

@@ -39,6 +39,9 @@ class WebContentsView;
 
 class CefBrowserHostBase;
 class CefBrowserPlatformDelegate;
+#if BUILDFLAG(IS_ARKWEB)
+class ArkwebBrowserInfoManagerUtils;
+#endif
 
 // Singleton object for managing BrowserInfo instances.
 class CefBrowserInfoManager : public content::RenderProcessHostObserver {
@@ -52,6 +55,11 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
 
   // Returns this singleton instance of this class.
   static CefBrowserInfoManager* GetInstance();
+
+#if BUILDFLAG(IS_ARKWEB)
+  friend class ArkwebBrowserInfoManagerUtils;
+  ArkwebBrowserInfoManagerUtils* GetUtils();
+#endif
 
   // Called immediately before a new CefBrowserHost implementation is created
   // directly. In this case |is_popup| will be true only for DevTools browsers.
@@ -82,14 +90,6 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
                        bool user_gesture,
                        bool opener_suppressed,
                        bool* no_javascript_access);
-
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-  bool CanCreateWindow(content::RenderFrameHost* opener,
-                       const GURL& target_url,
-                       WindowOpenDisposition disposition,
-                       bool user_gesture,
-                       CefRefPtr<CefCallback> callback);
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
   // Called from ContentBrowserClient::CreateWindowResult if CanCreateWindow
   // returns true. See comments on PendingPopup for more information.
@@ -171,6 +171,10 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
   static bool IsExcludedFrameHost(content::RenderFrameHost* rfh);
 
  private:
+#if BUILDFLAG(IS_ARKWEB)
+  std::unique_ptr<ArkwebBrowserInfoManagerUtils> arkweb_browser_info_manager_utils_;
+#endif
+
   // RenderProcessHostObserver methods:
   void RenderProcessHostDestroyed(content::RenderProcessHost* host) override;
 
@@ -290,13 +294,6 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
   static void TimeoutNewBrowserInfoResponse(
       const content::GlobalRenderFrameHostToken& global_token,
       int timeout_id);
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  static bool IsPrerendering(
-      const content::GlobalRenderFrameHostToken& global_token);
-  static void CancelForPrerendering(
-      const content::GlobalRenderFrameHostToken& global_token,
-      int timeout_id);
-#endif
 
   mutable base::Lock browser_info_lock_;
 

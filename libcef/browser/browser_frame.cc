@@ -13,6 +13,9 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "mojo/public/cpp/bindings/self_owned_receiver.h"
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+#include "cef/ohos_cef_ext/libcef/browser/browser_frame_cc_for_include.cc"
+#endif
 
 CefBrowserFrame::CefBrowserFrame(
     content::RenderFrameHost* render_frame_host,
@@ -86,35 +89,3 @@ CefRefPtr<CefFrameHostImpl> CefBrowserFrame::GetFrameHost(
       render_frame_host(), prefer_speculative,
       /*browser_info=*/nullptr, is_excluded);
 }
-
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-void CefBrowserFrame::OnGetImageForContextNode(
-    cef::mojom::GetImageForContextNodeParamsPtr params,
-    int command_id) {
-  if (auto host = GetFrameHost(/*prefer_speculative=*/false)) {
-    host->OnGetImageForContextNode(std::move(params), command_id);
-  }
-}
-
-void CefBrowserFrame::OnGetImageForContextNodeNull(int command_id) {
-  if (auto host = GetFrameHost(/*prefer_speculative=*/false)) {
-    host->OnGetImageForContextNodeNull(command_id);
-  }
-#endif
-}
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-void CefBrowserFrame::ShouldOverrideUrlLoading(
-    const std::string& url,
-    const std::string& request_method,
-    bool user_gesture,
-    bool is_redirect,
-    bool is_outermost_main_frame,
-    cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback) {
-  if (auto host = GetFrameHost(/*prefer_speculative=*/false)) {
-    host->ShouldOverrideUrlLoading(url, request_method, user_gesture,
-                                   is_redirect, is_outermost_main_frame,
-                                   std::move(callback));
-  }
-}
-#endif

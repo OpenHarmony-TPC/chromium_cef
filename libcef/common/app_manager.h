@@ -16,11 +16,14 @@
 #include "content/public/common/content_client.h"
 
 class CefBrowserContext;
+class ArkWebAppManagerExt;
 struct CefSchemeInfo;
 
 // Exposes global application state in the main and render processes.
 class CefAppManager {
  public:
+  friend ArkWebAppManagerExt;
+  virtual ArkWebAppManagerExt *AsArkWebAppManagerExt() { return nullptr; }
   CefAppManager(const CefAppManager&) = delete;
   CefAppManager& operator=(const CefAppManager&) = delete;
 
@@ -67,12 +70,6 @@ class CefAppManager {
   virtual ~CefAppManager();
 
  private:
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::vector<std::string> CustomSchemeCmdLineSplit(std::string str,
-                                                    const char split);
-  void RenderAddCustomSchemes();
-#endif
-
   // Custom schemes handled by the client.
   SchemeInfoList scheme_info_list_;
   bool scheme_info_list_locked_ = false;

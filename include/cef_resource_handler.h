@@ -45,6 +45,8 @@
 #include "include/cef_request.h"
 #include "include/cef_response.h"
 
+class CefResourceHandlerExt;
+
 ///
 /// Callback for asynchronous continuation of CefResourceHandler::Skip().
 ///
@@ -86,6 +88,11 @@ class CefResourceReadCallback : public virtual CefBaseRefCounted {
 /*--cef(source=client)--*/
 class CefResourceHandler : public virtual CefBaseRefCounted {
  public:
+  friend class CefResourceHandlerExt;
+  virtual CefResourceHandlerExt* AsCefResourceHandlerExt()
+  {
+    return nullptr;
+  }
   ///
   /// Open the response stream. To handle the request immediately set
   /// |handle_request| to true and return true. To decide at a later time set
@@ -138,17 +145,6 @@ class CefResourceHandler : public virtual CefBaseRefCounted {
   virtual void GetResponseHeaders(CefRefPtr<CefResponse> response,
                                   int64_t& response_length,
                                   CefString& redirectUrl) = 0;
-
-#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-  virtual const std::string GetResponseData() {
-    static const std::string data;
-    return data;
-  }
-  virtual size_t GetResponseDataBuffer(char* data, size_t dest_size) {
-    return 0;
-  }
-  virtual size_t GetResponseDataBufferSize() { return 0; }
-#endif
 
   ///
   /// Skip response data when requested by a Range header. Skip over and discard

@@ -154,11 +154,20 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
   void RegisterScreenCaptureDelegateListener(
       CefRefPtr<CefScreenCaptureCallback> listener) override;
   void EnableVideoAssistant(bool enable) override;
+  void SetPipNativeWindow(int delegate_id,
+                          int child_id,
+                          int frame_routing_id,
+                          cef_native_window_t window) override;
+  void SendPipEvent(int delegate_id,
+                    int child_id,
+                    int frame_routing_id,
+                    int event) override;
   void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
 #if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
   bool IsIframe() override;
   void ReloadFocusedFrame() override;
 #endif
+  void CustomWebMediaPlayer(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_

@@ -7,12 +7,14 @@
 
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
+#include "include/cef_safe_browsing_detection_callback.h"
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_client.h"
 #include "net/traffic_annotation/network_traffic_annotation.h"
 #include "services/data_decoder/public/cpp/data_decoder.h"
 #include "services/network/public/cpp/network_connection_tracker.h"
 #include "services/network/public/cpp/simple_url_loader.h"
+#include "base/memory/raw_ptr.h"
 
 namespace content {
 class NavigationHandle;
@@ -24,13 +26,21 @@ namespace ohos_safe_browsing {
 using SBCheckCallback = base::OnceCallback<void(const GURL&, int hw_code)>;
 
 class SafeBrowsingTabHelper
-    : public content::WebContentsObserver,
+    : public CefSafeBrowsingDetectionCallback,
+      public content::WebContentsObserver,
       public content::WebContentsUserData<SafeBrowsingTabHelper>,
       public network::NetworkConnectionTracker::NetworkConnectionObserver {
  public:
   SafeBrowsingTabHelper(const SafeBrowsingTabHelper&) = delete;
   SafeBrowsingTabHelper& operator=(const SafeBrowsingTabHelper&) = delete;
   ~SafeBrowsingTabHelper() override;
+
+  IMPLEMENT_REFCOUNTING(SafeBrowsingTabHelper);
+
+  void OnDetectionResult(int code,
+                         int policy,
+                         const std::string& mappingType,
+                         const std::string& url) override;
 
   // content::WebContentsObserver:
   void DidStartNavigation(
@@ -64,11 +74,12 @@ class SafeBrowsingTabHelper
   raw_ptr<network::NetworkConnectionTracker> connection_tracker_;
   SBCheckList checks_running_;
   std::unique_ptr<SbClient> sb_client_;
-  CefBrowserHostBase* browser_{nullptr};
-
-  base::WeakPtrFactory<SafeBrowsingTabHelper> weak_ptr_factory_{this};
+  raw_ptr<CefBrowserHostBase> browser_ = nullptr ;
+  bool use_cloud_detection_ = false;
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
+
+  base::WeakPtrFactory<SafeBrowsingTabHelper> weak_ptr_factory_{this};
 };
 
 }  // namespace ohos_safe_browsing

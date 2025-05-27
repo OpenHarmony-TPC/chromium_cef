@@ -7,15 +7,12 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include "third_party/bounds_checking_function/include/securec.h"
 
 #include "base/files/file_util.h"
 #include "base/logging.h"
 #include "base/numerics/safe_conversions.h"
 #include "base/threading/thread_restrictions.h"
-
-#if BUILDFLAG(ARKWEB_SAFE_FUNCTION)
-#include "third_party/bounds_checking_function/include/securec.h"
-#endif
 
 // Static functions
 
@@ -162,14 +159,7 @@ size_t CefBytesReader::Read(void* ptr, size_t size, size_t n) {
   base::AutoLock lock_scope(lock_);
   size_t s = (data_.size() - offset_) / size;
   size_t ret = std::min(n, s);
-#if BUILDFLAG(ARKWEB_SAFE_FUNCTION)
-  if (memcpy_s(ptr, ret * size, data_.data() + offset_, ret * size) != EOK) {
-      LOG(ERROR) << "CefBytesReader::Read memcpy_s failed";
-    return 0;
-  }
-#else
-  memcpy(ptr, data_.data() + offset_, ret * size);
-#endif
+  (void)memcpy_s(ptr, ret * size, data_.data() + offset_, ret * size);
   offset_ += ret * size;
   return ret;
 }

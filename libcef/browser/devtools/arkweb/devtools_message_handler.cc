@@ -183,18 +183,13 @@ CefDevToolsMessageHandler::ShowFileChooser(
     accept_filters.push_back(*it);
   }
 
-  std::vector<CefString> mime_filters;
-  for (; it != params.mime_types.end(); ++it) {
-    mime_filters.push_back(*it);
-  }
-
   CefRefPtr<CefFileDialogCallbackImpl> callback_impl(
       new CefFileDialogCallbackImpl(std::move(callback)));
 
   bool handled = delegate_->ShowFileChooser(
       static_cast<cef_file_dialog_mode_t>(mode), params.title,
       params.default_file_name.value(), accept_filters,
-      params.use_media_capture, mime_filters, callback_impl.get());
+      params.use_media_capture, callback_impl.get());
   if (handled) {
     return CefFileDialogManager::RunFileChooserCallback();
   }

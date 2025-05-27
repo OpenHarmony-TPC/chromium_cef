@@ -19,6 +19,8 @@ struct ResourceRequest;
 
 namespace net_service::cookie_helper {
 
+CefBrowserContext* GetBrowserContext(const CefBrowserContext::Getter& getter);
+
 // Returns true if the scheme for |url| supports cookies. |cookieable_schemes|
 // is the optional list of schemes that the client has explicitly registered as
 // cookieable, which may intentionally exclude standard schemes.
@@ -44,6 +46,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
+                 bool is_off_the_record,
 #endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback);

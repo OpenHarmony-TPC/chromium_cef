@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "include/cef_extension_window_handler.h"
+#include "base/memory/raw_ptr.h"
 
 class CefWindowsManager {
   public:
@@ -36,7 +37,7 @@ class CefWindowsManager {
     static std::unique_ptr<CefWindowsManager> instance;
     static std::mutex mtx;
 
-    CefExtensionWindowHandler* cef_window_handler_;
+    raw_ptr<CefExtensionWindowHandler> cef_window_handler_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_WINDOWS_MANAGER_H_

@@ -1,6 +1,6 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+// Copyright (c) 2013 The Chromium Embedded Framework Authors. All rights
+// reserved. Use of this source code is governed by a BSD-style license that can
+// be found in the LICENSE file.
 
 #include "arkweb/build/features/features.h"
 #include "components/supervised_user/core/common/buildflags.h"
@@ -8,20 +8,28 @@
 #include "libcef/browser/browser_host_base.h"
 #include "libcef/browser/context.h"
 #include "libcef/browser/prefs/browser_prefs.h"
+// #include "libcef/browser/media_capture_devices_dispatcher.h"
 #include "libcef/browser/prefs/pref_registrar.h"
+// #include "libcef/browser/prefs/pref_store.h"
 #include "libcef/browser/prefs/renderer_prefs.h"
 #include "libcef/common/cef_switches.h"
+// #include "libcef/common/extensions/extensions_util.h"
 
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/task/thread_pool.h"
 #include "base/values.h"
+// #include "chrome/browser/accessibility/accessibility_ui.h"
 #include "chrome/browser/download/download_prefs.h"
+// #include "chrome/browser/media/media_device_id_salt.h"
 #include "chrome/browser/media/router/media_router_feature.h"
 #include "chrome/browser/media/webrtc/permission_bubble_media_access_handler.h"
 #include "chrome/browser/net/profile_network_context_service.h"
 #include "chrome/browser/net/system_network_context_manager.h"
+// #include "chrome/browser/prefetch/prefetch_prefs.h"
+// #include "cef/libcef/browser/prefs/renderer_prefs.h"
 #include "chrome/browser/prefs/chrome_command_line_pref_store.h"
 #include "chrome/browser/printing/print_preview_sticky_settings.h"
 #include "chrome/browser/profiles/profile.h"
@@ -66,11 +74,6 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/ui_base_switches.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#include "ohos_nweb_ex/overrides/cef/libcef/browser/cloud_control/model/changed_config_list_cache.h"
-#endif
-
 #if BUILDFLAG(IS_WIN)
 #include "components/os_crypt/sync/os_crypt.h"
 #endif
@@ -92,7 +95,9 @@
 #include "chrome/browser/policy/chrome_browser_policy_connector.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_ADBLOCK)
 #include "components/subresource_filter/core/browser/ruleset_version.h"
@@ -103,6 +108,8 @@
 #include "arkweb/chromium_ext/components/policy/core/common/policy_loader_ohos.h"
 #endif
 
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/cloud_control/model/changed_config_list_cache.h"
+
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 #include "ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
 #endif
@@ -112,8 +119,262 @@ namespace arkweb_browser_prefs_ext {
 const char kUserPrefsFileName[] = "UserPrefs.json";
 const char kLocalPrefsFileName[] = "LocalPrefs.json";
 
+// TODO
+// // Used to store command-line preferences, most of which will be evaluated in
+//     // the CommandLinePrefStore constructor. Preferences set in this manner
+//     cannot
+//     // be overridden by the user.
+//     scoped_refptr<ChromeCommandLinePrefStore> command_line_pref_store(new
+//     ChromeCommandLinePrefStore(command_line));
+//     renderer_prefs::SetCommandLinePrefDefaults(command_line_pref_store.get());
+//     factory.set_command_line_prefs(command_line_pref_store);
 
-#if defined(ARKWEB_CLOUD_CONTROL) && !BUILDFLAG(ARKWEB_NWEB_EX)
+//     // True if preferences will be stored on disk.
+//     const bool store_on_disk = !cache_path.empty() &&
+//     persist_user_preferences;
+
+//     scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner;
+//     if (store_on_disk) {
+//         // Get sequenced task runner for making sure that file operations are
+//         // executed in expected order (what was previously assured by the
+//         FILE
+//         // thread).
+//         sequenced_task_runner =
+//             base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock(),
+//             base::TaskShutdownBehavior::BLOCK_SHUTDOWN});
+//     }
+
+//     // Used to store user preferences.
+//     scoped_refptr<PersistentPrefStore> user_pref_store;
+//     if (store_on_disk) {
+//         const base::FilePath &pref_path = cache_path.AppendASCII(profile ?
+//         kUserPrefsFileName : kLocalPrefsFileName);
+//         scoped_refptr<JsonPrefStore> json_pref_store =
+//             new JsonPrefStore(pref_path, std::unique_ptr<PrefFilter>(),
+//             sequenced_task_runner);
+//         factory.set_user_prefs(json_pref_store.get());
+//     } else {
+//         sequenced_task_runner =
+//             base::ThreadPool::CreateSequencedTaskRunner({base::MayBlock(),
+//             base::TaskShutdownBehavior::BLOCK_SHUTDOWN});
+//         const base::FilePath &pref_path = cache_path.AppendASCII(profile ?
+//         kUserPrefsFileName : kLocalPrefsFileName); PrefNameSet
+//         persistent_prefs; persistent_prefs.insert(predictor::kVisitedUrls);
+//         factory.set_user_prefs(base::MakeRefCounted<SegregatedPrefStore>(base::MakeRefCounted<CefPrefStore>(),
+//             base::MakeRefCounted<JsonPrefStore>(pref_path),
+//             std::move(persistent_prefs)));
+//     }
+
+// #if BUILDFLAG(ENABLE_SUPERVISED_USERS)
+//     if (profile) {
+//         // Used to store supervised user preferences.
+//         auto *supervised_user_settings =
+//         SupervisedUserSettingsServiceFactory::GetForKey(profile->GetProfileKey());
+
+//         if (store_on_disk) {
+//             supervised_user_settings->Init(cache_path,
+//             sequenced_task_runner.get(), true);
+//         } else {
+//             scoped_refptr<CefPrefStore> cef_pref_store = new CefPrefStore();
+//             cef_pref_store->SetInitializationCompleted();
+//             supervised_user_settings->Init(cef_pref_store);
+//         }
+
+//         scoped_refptr<PrefStore> supervised_user_prefs =
+//             base::MakeRefCounted<SupervisedUserPrefStore>(supervised_user_settings);
+//         DCHECK(supervised_user_prefs->IsInitializationComplete());
+//         factory.set_supervised_user_prefs(supervised_user_prefs);
+//     }
+// #endif  // BUILDFLAG(ENABLE_SUPERVISED_USERS)
+
+//     // Registry that will be populated with all known preferences.
+//     Preferences
+//     // are registered with default values that may be changed via a
+//     *PrefStore. scoped_refptr<user_prefs::PrefRegistrySyncable> registry(new
+//     user_prefs::PrefRegistrySyncable());
+//     predictor::PredictorDatabase::RegisterPrefs(registry.get());
+
+//     // Some preferences are specific to CEF and others are defined in
+//     Chromium.
+//     // The preferred approach for registering preferences defined in Chromium
+//     is
+//     // as follows:
+//     //
+//     // 1. If a non-static RegisterProfilePrefs() method exists in a *Factory
+//     //    class then add a *Factory::GetInstance() call in
+//     //    EnsureBrowserContextKeyedServiceFactoriesBuilt().
+//     // 2. If a static RegisterPrefs() method exists then call that method in
+//     the
+//     //    "Default preferences" section below.
+//     // 3. If the default values are not appropriate but the set of registered
+//     //    preferences is otherwise fine then change the defaults by calling
+//     //    SetDefaultPrefValue after calling the existing registration method.
+//     // 4. If the original registration method contains many unused
+//     preferences or
+//     //    otherwise inappropiate logic (e.g. calls to objects that CEF
+//     doesn't
+//     //    use) then register the preferences directly instead of calling the
+//     //    existing registration method.
+
+//     // Default preferences.
+//     CefMediaCaptureDevicesDispatcher::RegisterPrefs(registry.get());
+//     certificate_transparency::prefs::RegisterPrefs(registry.get());
+//     flags_ui::PrefServiceFlagsStorage::RegisterPrefs(registry.get());
+//     media_router::RegisterLocalStatePrefs(registry.get());
+//     PrefProxyConfigTrackerImpl::RegisterPrefs(registry.get());
+//     ProfileNetworkContextService::RegisterLocalStatePrefs(registry.get());
+//     SSLConfigServiceManager::RegisterPrefs(registry.get());
+//     update_client::RegisterPrefs(registry.get());
+
+// #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+//   HostContentSettingsMap::RegisterProfilePrefs(registry.get());
+// #endif
+
+//     if (!profile) {
+//         component_updater::RegisterComponentUpdateServicePrefs(registry.get());
+//         domain_reliability::RegisterPrefs(registry.get());
+//         SystemNetworkContextManager::RegisterPrefs(registry.get());
+// #if BUILDFLAG(IS_WIN)
+//         OSCrypt::RegisterLocalPrefs(registry.get());
+// #endif
+//     }
+
+//     // Browser process preferences.
+//     // Based on chrome/browser/browser_process_impl.cc RegisterPrefs.
+//     registry->RegisterBooleanPref(prefs::kAllowCrossOriginAuthPrompt, false);
+
+//     // Browser UI preferences.
+//     // Based on chrome/browser/ui/browser_ui_prefs.cc RegisterBrowserPrefs.
+//     registry->RegisterBooleanPref(prefs::kAllowFileSelectionDialogs, true);
+
+//     // Based on chrome/browser/ui/browser_ui_prefs.cc
+//     RegisterBrowserUserPrefs.
+//     registry->RegisterBooleanPref(prefs::kPrintPreviewUseSystemDefaultPrinter,
+//     false);
+//     registry->RegisterBooleanPref(prefs::kWebRTCAllowLegacyTLSProtocols,
+//     false);
+
+//     // Profile preferences.
+//     // Based on chrome/browser/profiles/profiles_state.cc RegisterPrefs.
+//     registry->RegisterStringPref(prefs::kProfileLastUsed, std::string());
+
+//     if (profile) {
+//         // Call RegisterProfilePrefs() for all services listed by
+//         // EnsureBrowserContextKeyedServiceFactoriesBuilt().
+//         BrowserContextDependencyManager::GetInstance()->RegisterProfilePrefsForServices(registry.get());
+
+//         // Default profile preferences.
+//         AccessibilityUIMessageHandler::RegisterProfilePrefs(registry.get());
+//         extensions::ExtensionPrefs::RegisterProfilePrefs(registry.get());
+// #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+//         extensions::ExtensionsUI::RegisterProfilePrefs(registry.get());
+//         DevToolsWindow::RegisterProfilePrefs(registry.get());
+//         extensions::CommandService::RegisterProfilePrefs(registry.get());
+//         extensions::PermissionsManager::RegisterProfilePrefs(registry.get());
+//         ExtensionWebUI::RegisterProfilePrefs(registry.get());
+//         preinstalled_apps::RegisterProfilePrefs(registry.get());
+//         registry->RegisterStringPref(prefs::kPreinstalledApps, "install");
+// #endif
+//         HostContentSettingsMap::RegisterProfilePrefs(registry.get());
+//         language::LanguagePrefs::RegisterProfilePrefs(registry.get());
+//         media_router::RegisterProfilePrefs(registry.get());
+//         MediaDeviceIDSalt::RegisterProfilePrefs(registry.get());
+//         PermissionBubbleMediaAccessHandler::RegisterProfilePrefs(registry.get());
+//         permissions::PermissionActionsHistory::RegisterProfilePrefs(registry.get());
+//         permissions::PermissionHatsTriggerHelper::RegisterProfilePrefs(registry.get());
+//         prefetch::RegisterPredictionOptionsProfilePrefs(registry.get());
+//         privacy_sandbox::RegisterProfilePrefs(registry.get());
+//         ProfileNetworkContextService::RegisterProfilePrefs(registry.get());
+//         safe_browsing::RegisterProfilePrefs(registry.get());
+//         unified_consent::UnifiedConsentService::RegisterPrefs(registry.get());
+
+//         const std::string &locale =
+//         command_line->GetSwitchValueASCII(switches::kLang);
+//         DCHECK(!locale.empty());
+//         renderer_prefs::RegisterProfilePrefs(registry.get(), locale);
+
+//         // Print preferences.
+//         // Based on ProfileImpl::RegisterProfilePrefs.
+//         registry->RegisterBooleanPref(policy::policy_prefs::kForceGoogleSafeSearch,
+//         false); registry->RegisterIntegerPref(
+//             policy::policy_prefs::kForceYouTubeRestrict,
+//             safe_search_api::YOUTUBE_RESTRICT_OFF);
+//         registry->RegisterStringPref(prefs::kAllowedDomainsForApps,
+//         std::string());
+//         registry->RegisterBooleanPref(prefs::kPrintingEnabled, true);
+//         registry->RegisterBooleanPref(prefs::kPrintPreviewDisabled,
+//         !extensions::PrintPreviewEnabled());
+//         registry->RegisterStringPref(prefs::kPrintPreviewDefaultDestinationSelectionRules,
+//         std::string());
+//         registry->RegisterBooleanPref(prefs::kCloudPrintSubmitEnabled,
+//         false); registry->RegisterBooleanPref(prefs::kEnableMediaRouter,
+//         true);
+//         printing::PolicySettings::RegisterProfilePrefs(registry.get());
+//         printing::PrintPreviewStickySettings::RegisterProfilePrefs(registry.get());
+//         DownloadPrefs::RegisterProfilePrefs(registry.get());
+
+//         // Cache preferences.
+//         // Based on ProfileImpl::RegisterProfilePrefs.
+//         registry->RegisterFilePathPref(prefs::kDiskCacheDir, cache_path);
+//         registry->RegisterIntegerPref(prefs::kDiskCacheSize, 0);
+
+//         // Based on Profile::RegisterProfilePrefs.
+//         registry->RegisterBooleanPref(prefs::kSearchSuggestEnabled, false);
+//         registry->RegisterStringPref(prefs::kSessionExitType, std::string());
+
+//         // Based on ChromeContentBrowserClient::RegisterProfilePrefs.
+//         registry->RegisterBooleanPref(prefs::kAccessControlAllowMethodsInCORSPreflightSpecConformant,
+//         true);
+
+//         // Based on browser_prefs::RegisterProfilePrefs.
+//         registry->RegisterBooleanPref(prefs::kAccessibilityPdfOcrAlwaysActive,
+//         false);
+
+//         // Spell checking preferences.
+//         // Modify defaults from
+//         SpellcheckServiceFactory::RegisterProfilePrefs. std::string
+//         spellcheck_lang =
+//         command_line->GetSwitchValueASCII(switches::kOverrideSpellCheckLang);
+//         if (!spellcheck_lang.empty()) {
+//             registry->SetDefaultPrefValue(spellcheck::prefs::kSpellCheckDictionary,
+//             base::Value(spellcheck_lang));
+//         }
+//         const bool enable_spelling_service_ =
+//         command_line->HasSwitch(switches::kEnableSpellingService);
+//         registry->SetDefaultPrefValue(
+//             spellcheck::prefs::kSpellCheckUseSpellingService,
+//             base::Value(enable_spelling_service_));
+//         registry->SetDefaultPrefValue(spellcheck::prefs::kSpellCheckEnable,
+//         base::Value(!enable_spelling_service_));
+
+//         // DevTools preferences.
+//         // Based on DevToolsWindow::RegisterProfilePrefs.
+//         registry->RegisterDictionaryPref(prefs::kDevToolsPreferences);
+//         registry->RegisterDictionaryPref(prefs::kDevToolsEditedFiles);
+
+//         // Language preferences. Used by ProfileNetworkContextService and
+//         // InterceptedRequestHandlerWrapper.
+//         const std::string &accept_language_list =
+//             GetAcceptLanguageListSetting(CefBrowserContext::FromProfile(profile),
+//             /*browser=*/nullptr);
+//         if (!accept_language_list.empty()) {
+//             registry->SetDefaultPrefValue(language::prefs::kAcceptLanguages,
+//             base::Value(accept_language_list));
+//         }
+//         registry->RegisterListPref(prefs::kWebRtcLocalIpsAllowedUrls);
+
+//         // Always do this after all other profile prefs.
+//         RegisterProfilePrefs(registry.get());
+//     } else {
+//         // Always do this after all other local state prefs.
+//         RegisterLocalStatePrefs(registry.get());
+//     }
+
+//     // Build the PrefService that manages the PrefRegistry and PrefStores.
+//     return factory.CreateSyncable(registry.get());
+// }
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && !BUILDFLAG(ARKWEB_NWEB_EX)
 void RegisterCloudControlProfilePrefs(
     user_prefs::PrefRegistrySyncable* registry) {}
 
@@ -143,9 +404,7 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   }
 
   ohos_safe_browsing::RegisterProfilePrefs(registry);
-#if BUILDFLAG(IS_ARKWEB_EXT)
   cloud_control::ChangedConfigListCache::RegisterCloudControlPrefs(registry);
-#endif
 #if BUILDFLAG(ARKWEB_EDM_POLICY)
   policy::RegisterBrowserPolicyProfilePrefs(registry);
 #endif

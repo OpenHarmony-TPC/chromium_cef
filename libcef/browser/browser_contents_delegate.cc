@@ -38,7 +38,7 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_windows_api.h"
+#include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #endif
 
 using content::KeyboardEventProcessingResult;
@@ -196,19 +196,6 @@ void CefBrowserContentsDelegate::LoadingStateChanged(
                                     can_go_forward);
     }
   }
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  int32_t tab_id = browser()->AsArkWebBrowser()->ExtensionGetTabId();
-  if (tab_id >= 0) {
-    std::vector<std::string> changed_properties;
-    changed_properties.push_back(kTabsUpdateStatusKey);
-    std::unique_ptr<NWebExtensionTabChangeInfo> info =
-        std::make_unique<NWebExtensionTabChangeInfo>();
-    info->url = "";
-    extensions::cef::TabsWindowsAPI::Get(source->GetBrowserContext())
-        ->TabUpdated(tab_id, source, changed_properties, std::move(info));
-  }
-#endif
 }
 
 void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
@@ -309,6 +296,12 @@ KeyboardEventProcessingResult
 CefBrowserContentsDelegate::PreHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  // Forward keyboard events to the manager for fullscreen / mouse lock. This
+  // may consume the event (e.g., Esc exits fullscreen mode).
+  if (AsArkWebBrowserContentsDelegateExt()->HandleUserKeyEvent(event))
+    return KeyboardEventProcessingResult::HANDLED;
+#endif
   if (auto delegate = platform_delegate()) {
     if (auto c = client()) {
       if (auto handler = c->GetKeyboardHandler()) {
@@ -549,6 +542,13 @@ void CefBrowserContentsDelegate::DidStopLoading() {
   // functionality.
   for (const auto& frame : browser_info_->GetAllFrames()) {
     frame->MaybeSendDidStopLoading();
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    std::string url = web_contents()->GetLastCommittedURL().spec();
+    if (last_did_finish_load_url_ == url) {
+      AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, url);
+      last_did_finish_load_url_ = std::string();
+    }
+#endif
   }
 
   OnTitleChange(web_contents()->GetTitle());
@@ -622,13 +622,8 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
         // We won't get an OnLoadEnd notification from anywhere else.
         OnLoadEnd(frame.get(), navigation_handle->GetURL(), 0);
       }
-    }
-
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-    if (!navigation_handle->IsSameDocument()) {
-      content::RenderFrameHost* render_frame_host =
-          navigation_handle->GetRenderFrameHost();
-      if (render_frame_host) {
+      if (auto* render_frame_host = navigation_handle->GetRenderFrameHost()) {
         auto invokeVisualStateCallback = base::BindOnce(
             [](base::WeakPtr<CefBrowserContentsDelegate> self, const GURL url,
                bool success) {
@@ -643,12 +638,29 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
         render_frame_host->InsertVisualStateCallback(
             std::move(invokeVisualStateCallback));
       }
-    }
 #endif
+    }
+
     if (is_main_frame) {
       OnAddressChange(url);
     }
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    if (!navigation_handle->IsSameDocument()) {
+      AsArkWebBrowserContentsDelegateExt()->OnLoadStarted(frame.get(), frame->GetURL());
+
+      if (navigation_handle->IsServedFromBackForwardCache() &&
+          navigation_handle->IsInPrimaryMainFrame()) {
+        last_did_finish_load_url_ = navigation_handle->GetURL().spec();
+      }
+    }
+
+    // Primary main frame fragment navigation.
+    if (navigation_handle->IsInPrimaryMainFrame() &&
+        navigation_handle->IsSameDocument()) {
+      // Fragment navigation do not have a matching onPageStarted.
+      AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame.get(), frame->GetURL());
+    }
+
     bool isReload =
         PageTransitionCoreTypeIs(navigation_handle->GetPageTransition(),
                                  ui::PageTransition::PAGE_TRANSITION_RELOAD);
@@ -677,6 +689,17 @@ void CefBrowserContentsDelegate::DidFailLoad(
   frame->RefreshAttributes();
   OnLoadError(frame, validated_url, error_code);
   OnLoadEnd(frame, validated_url, error_code);
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  // Keep same behavior with webview onPageStareted and onPageFinished.
+  if (render_frame_host && render_frame_host->IsInPrimaryMainFrame()) {
+    if (error_code == net::ERR_ABORTED) {
+      AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, frame->GetURL());
+    } else if (error_code == net::ERR_HTTP_RESPONSE_CODE_FAILURE) {
+      AsArkWebBrowserContentsDelegateExt()->OnLoadStarted(frame, frame->GetURL());
+      AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, frame->GetURL());
+    }
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::DidFinishLoad(
@@ -697,6 +720,11 @@ void CefBrowserContentsDelegate::DidFinishLoad(
   }
 
   OnLoadEnd(frame, validated_url, http_status_code);
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (render_frame_host->IsInPrimaryMainFrame()) {
+    last_did_finish_load_url_ = frame->GetURL().ToString();
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::TitleWasSet(content::NavigationEntry* entry) {

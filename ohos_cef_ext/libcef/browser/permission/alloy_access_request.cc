@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "libcef/browser/permission/alloy_access_request.h"
-
 #include "libcef/browser/permission/alloy_permission_request_handler.h"
 
 #if BUILDFLAG(ARKWEB_WEBRTC)
@@ -11,7 +10,14 @@
 #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
 #include "content/public/browser/media_capture_devices.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+#include "media/audio/audio_device_description.h"
+#include "third_party/blink/public/common/permissions/permission_utils.h"
+#include "components/permissions/permission_util.h"
 #endif  // BUILDFLAG(ARKWEB_WEBRTC)
+
+namespace {
+  constexpr int32_t kSystemAudioSourceId = -2;
+}
 
 AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
                                        int resources,
@@ -85,18 +91,31 @@ void AlloySensorAccessRequest::ReportRequestResult(bool allowed) {
 #endif  // BUILDFLAG(ARKWEB_SENSOR)
 
 #if BUILDFLAG(ARKWEB_WEBRTC)
+std::map<GURL, int32_t> AlloyMediaAccessRequest::camera_permission_ = {};
+std::map<GURL, int32_t> AlloyMediaAccessRequest::microphone_permission_ = {};
+
 AlloyMediaAccessRequest::AlloyMediaAccessRequest(
     CefBrowserHostBase* const browser,
     const content::MediaStreamRequest& request,
     content::MediaResponseCallback callback)
-    : browser_(browser), request_(request), callback_(std::move(callback)) {}
+    : browser_(browser), request_(request), callback_(std::move(callback)) {
+  requesting_origin_ = GetMediaAccessRequestOriginAsURL();
+}
 
 AlloyMediaAccessRequest::~AlloyMediaAccessRequest() {
+  LOG(INFO) << "AlloyMediaAccessRequest::~AlloyMediaAccessRequest()";
   if (!callback_.is_null()) {
     std::move(callback_).Run(
         blink::mojom::StreamDevicesSet(),
         blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
         std::unique_ptr<content::MediaStreamUI>());
+  }
+
+  if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin_)) {
+    AlloyMediaAccessRequest::microphone_permission_.erase(requesting_origin_);
+  }
+  if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin_)) {
+    AlloyMediaAccessRequest::camera_permission_.erase(requesting_origin_);
   }
 }
 
@@ -115,9 +134,26 @@ int AlloyMediaAccessRequest::ResourceAcessId() {
               : 0);
 }
 
+GURL AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL() {
+  content::RenderFrameHost* renderFrameHost = content::RenderFrameHost::FromID(
+      request_.render_process_id, request_.render_frame_id);
+  
+  if (!renderFrameHost) {
+    LOG(ERROR) << "AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL, renderFrameHost is null";
+    return GURL();
+  }
+ 
+  return permissions::PermissionUtil::GetLastCommittedOriginAsURL(renderFrameHost);
+}
+
 void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
+  content::PermissionStatus status =
+      allowed ? content::PermissionStatus::GRANTED : content::PermissionStatus::DENIED;
+
   if (!allowed) {
     if (!callback_.is_null()) {
+      AlloyMediaAccessRequest::microphone_permission_[requesting_origin_] = (int32_t)content::PermissionStatus::DENIED;
+      AlloyMediaAccessRequest::camera_permission_[requesting_origin_] = (int32_t)content::PermissionStatus::DENIED;
       std::move(callback_).Run(
           blink::mojom::StreamDevicesSet(),
           blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
@@ -140,11 +176,21 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
 
   if (request_.audio_type ==
       blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE) {
+    if (!request_.requested_audio_device_ids.empty()) {
+      LOG(INFO) << "RequestMediaAccessPermission requested_audio_device_id: "
+                << request_.requested_audio_device_ids.front();
+    }
     blink::MediaStreamDevices devices =
         MediaCaptureDevicesDispatcher::GetInstance()->GetAudioCaptureDevices();
-    if (!devices.empty()) {
-      stream_devices.audio_device = devices[0];
-      result = blink::mojom::MediaStreamRequestResult::OK;
+    for (const auto &device: devices) {
+      if (request_.requested_audio_device_ids.empty()) {
+        break;
+      }
+      if (request_.requested_audio_device_ids.front() == device.id) {
+        stream_devices.audio_device = device;
+        result = blink::mojom::MediaStreamRequestResult::OK;
+        AlloyMediaAccessRequest::microphone_permission_[requesting_origin_] = (int32_t)status;
+      }
     }
   }
 
@@ -155,10 +201,16 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
                 << request_.requested_video_device_ids.front();
     }
     blink::MediaStreamDevices devices =
-        MediaCaptureDevicesDispatcher::GetInstance()->GetVideoCaptureDevices();
-    if (!devices.empty()) {
-      stream_devices.video_device = devices[0];
-      result = blink::mojom::MediaStreamRequestResult::OK;
+      MediaCaptureDevicesDispatcher::GetInstance()->GetVideoCaptureDevices();
+    for (const auto &device: devices) {
+      if (request_.requested_video_device_ids.empty()) {
+        break;
+      }
+      if (request_.requested_video_device_ids.front() == device.id) {
+        stream_devices.video_device = device;
+        result = blink::mojom::MediaStreamRequestResult::OK;
+        AlloyMediaAccessRequest::camera_permission_[requesting_origin_] = (int32_t)status;
+      }
     }
   }
   bool has_video = stream_devices.video_device.has_value();
@@ -177,7 +229,8 @@ AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(
       request_(request),
       callback_(std::move(callback)),
       mode_(cef_screen_capture_mode_t::CAPTURE_INVAILD_MODE),
-      sourceId_(-1) {}
+      sourceId_(-1),
+      audioSourceId_(kSystemAudioSourceId) {}
 
 AlloyScreenCaptureAccessRequest::~AlloyScreenCaptureAccessRequest() {
   if (!callback_.is_null()) {
@@ -229,12 +282,27 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     }
   }
 
+  content::DesktopMediaID media_audio_id;
+  if (request_.audio_type ==
+      blink::mojom::MediaStreamType::DISPLAY_AUDIO_CAPTURE) {
+    media_audio_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN, audioSourceId_);
+    blink::MediaStreamDevices devices;
+    stream_devices.audio_device =
+      blink::MediaStreamDevice(request_.audio_type, media_audio_id.ToString(), "System Audio");
+  }
+
   content::DesktopMediaID media_id;
   if (request_.requested_video_device_ids.empty() ||
       request_.requested_video_device_ids.front().empty()) {
     if (mode_ == cef_screen_capture_mode_t::CAPTURE_HOME_SCREEN_MODE) {
+#if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
+      auto web_contents = browser_->GetWebContents();
+      media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
+                                         web_contents->GetNWebId());
+#else
       media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
                                          -1 /* webrtc::kFullDesktopScreenId */);
+#endif
     } else if (mode_ ==
                cef_screen_capture_mode_t::CAPTURE_SPECIFIED_SCREEN_MODE) {
       media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,

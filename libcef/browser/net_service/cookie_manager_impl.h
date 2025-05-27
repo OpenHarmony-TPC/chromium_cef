@@ -54,6 +54,7 @@ class CefCookieManagerImpl : virtual public CefCookieManager {
 #endif
 
  private:
+  friend class CefCookieManagerImplExt;
   bool VisitAllCookiesInternal(CefRefPtr<CefCookieVisitor> visitor);
   bool VisitUrlCookiesInternal(const GURL& url,
                                bool includeHttpOnly,
@@ -66,28 +67,18 @@ class CefCookieManagerImpl : virtual public CefCookieManager {
                              CefRefPtr<CefDeleteCookiesCallback> callback);
   bool FlushStoreInternal(CefRefPtr<CefCompletionCallback> callback);
 
-#if BUILDFLAG(IS_ARKWEB)
- protected:
-  // Only accessed on the UI thread. Will be non-null after Initialize().
-  CefBrowserContext::Getter browser_context_getter_;
-
- private:
-#else
-  // Only accessed on the UI thread. Will be non-null after Initialize().
-  CefBrowserContext::Getter browser_context_getter_;
-#endif
-
-  bool initialized_ = false;
-  std::vector<base::OnceClosure> init_callbacks_;
-
-  IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
-
- protected:
   // If the context is fully initialized execute |callback|, otherwise
   // store it until the context is fully initialized.
   void StoreOrTriggerInitCallback(base::OnceClosure callback);
 
   bool ValidContext() const;
+  // Only accessed on the UI thread. Will be non-null after Initialize().
+  CefBrowserContext::Getter browser_context_getter_;
+
+  bool initialized_ = false;
+  std::vector<base::OnceClosure> init_callbacks_;
+
+  IMPLEMENT_REFCOUNTING(CefCookieManagerImpl);
 };
 
 #endif  // CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_IMPL_H_

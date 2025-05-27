@@ -1,7 +1,3 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_download_manager_delegate_ext.h"
 
 #include "base/files/file_util.h"
@@ -10,7 +6,7 @@
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
-#include "cef/libcef/browser/net_service/net_helpers.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 #include "chrome/common/chrome_constants.h"

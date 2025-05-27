@@ -20,6 +20,7 @@
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/web_contents.h"
+// #include "libcef/browser/cef_download_item_impl_ext.h"
 #include "net/base/filename_util.h"
 #include "third_party/blink/public/mojom/choosers/file_chooser.mojom.h"
 
@@ -90,7 +91,7 @@ class CefBeforeDownloadCallbackImpl : public CefBeforeDownloadCallback {
     return std::move(callback_);
   }
 
-#if BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ARKWEB)
   // TODO:
   void Cancel() override {}
   void Pause() override {}
@@ -284,8 +285,8 @@ CefDownloadManagerDelegateImpl::CefDownloadManagerDelegateImpl(
     DownloadManager* manager,
     bool alloy_bootstrap)
     : manager_(manager),
-      manager_ptr_factory_(manager),
-      alloy_bootstrap_(alloy_bootstrap) {
+      alloy_bootstrap_(alloy_bootstrap),
+      manager_ptr_factory_(manager) {
   DCHECK(manager);
   manager->AddObserver(this);
 
@@ -309,6 +310,16 @@ void CefDownloadManagerDelegateImpl::OnDownloadUpdated(DownloadItem* download) {
   }
 
   if (handler.get()) {
+#if !BUILDFLAG(IS_ARKWEB)
+    CefRefPtr<CefDownloadItemImpl> download_item(
+        new CefDownloadItemImpl(download));
+    CefRefPtr<CefDownloadItemCallback> callback(new CefDownloadItemCallbackImpl(
+        manager_ptr_factory_.GetWeakPtr(), download->GetId()));
+
+    handler->OnDownloadUpdated(browser.get(), download_item.get(), callback);
+
+    std::ignore = download_item->Detach(nullptr);
+#endif
   }
 }
 
@@ -392,6 +403,31 @@ bool CefDownloadManagerDelegateImpl::DetermineDownloadTarget(
   bool handled = false;
   CefRefPtr<CefDownloadHandler> handler = GetDownloadHandler(browser);
   if (handler) {
+#if !BUILDFLAG(IS_ARKWEB)
+    base::FilePath suggested_name = net::GenerateFileName(
+        item->GetURL(), item->GetContentDisposition(), std::string(),
+        item->GetSuggestedFilename(), item->GetMimeType(), "download");
+
+    CefRefPtr<CefDownloadItemImpl> download_item(new CefDownloadItemImpl(item));
+    CefRefPtr<CefBeforeDownloadCallbackImpl> callbackObj(
+        new CefBeforeDownloadCallbackImpl(manager_ptr_factory_.GetWeakPtr(),
+                                          item->GetId(), suggested_name,
+                                          std::move(*callback)));
+
+    handled =
+        handler->OnBeforeDownload(browser.get(), download_item.get(),
+                                  suggested_name.value(), callbackObj.get());
+    if (!handled && callbackObj->IsDetached()) {
+      LOG(ERROR) << "Should return true from OnBeforeDownload when executing "
+                    "the callback";
+      handled = true;
+    }
+    if (!handled) {
+      *callback = callbackObj->Detach();
+    }
+
+    std::ignore = download_item->Detach(nullptr);
+#endif
   }
 
   // Cancel by default with Alloy style.

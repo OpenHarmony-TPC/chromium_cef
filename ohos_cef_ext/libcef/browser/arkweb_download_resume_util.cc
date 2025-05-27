@@ -1,7 +1,3 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_download_resume_util.h"
 
 #include "base/time/time.h"
@@ -59,7 +55,8 @@ void ResumeDownloadWithId(
   if (download_item) {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
     download_item->SetUserData(
-        kNWebId, std::make_unique<download::DownloadItemImpl::NWebIdData>(-1));
+        kNWebId,
+        std::make_unique<download::ArkWebDownloadItemImplExt::NWebIdData>(-1));
 #endif  //  ARKWEB_EX_DOWNLOAD
     download_item->Resume(true /*is_user_resume*/);
   }

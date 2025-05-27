@@ -17,14 +17,12 @@
 
 #include <utility>
 
-#include "arkweb/build/features/features.h"
 #include "base/check_op.h"
 #include "base/notreached.h"
-#include "chrome/browser/autofill/personal_data_manager_factory.h"
-#include "chrome/browser/browser_process.h"
 #include "components/autofill/core/browser/payments/legal_message_line.h"
 #include "components/autofill/core/browser/ui/suggestion.h"
 #include "components/autofill/core/browser/webdata/autofill_webdata_service.h"
+#include "chrome/browser/autofill/personal_data_manager_factory.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 #include "components/prefs/pref_service_factory.h"
@@ -34,8 +32,11 @@
 #include "content/public/browser/ssl_status.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/browser/web_contents.h"
-#include "libcef/browser/autofill/oh_autofill_manager.h"
 #include "ui/gfx/geometry/rect_f.h"
+#include "arkweb/build/features/features.h"
+
+#include "chrome/browser/browser_process.h"
+#include "libcef/browser/autofill/oh_autofill_manager.h"
 
 using content::WebContents;
 
@@ -44,8 +45,8 @@ namespace autofill {
 void OhAutofillClient::CreateForWebContents(content::WebContents* contents) {
   DCHECK(contents);
   if (!ContentAutofillClient::FromWebContents(contents)) {
-    contents->SetUserData(UserDataKey(),
-                          base::WrapUnique(new OhAutofillClient(contents)));
+    contents->SetUserData(UserDataKey(), base::WrapUnique(new OhAutofillClient(
+                                             contents)));
   }
 }
 
@@ -62,10 +63,22 @@ base::WeakPtr<autofill::AutofillClient> OhAutofillClient::GetWeakPtr() {
 
 void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
 #if BUILDFLAG(ARKWEB_AUTOFILL)
+  if (!data) {
+    LOG(ERROR) << "data is null";
+    return;
+  }
   std::string json_str = data->GetString();
   content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
+  if (!rfh) {
+    LOG(ERROR) << "rfh is nullptr";
+    return;
+  }
   autofill::ContentAutofillDriver* driver =
       autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
+  if (!driver) {
+    LOG(ERROR) << "driver is nullptr";
+    return;
+  }
   auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
   if (mgr) {
     mgr->FillData(json_str);
@@ -107,7 +120,8 @@ PersonalDataManager* OhAutofillClient::GetPersonalDataManager() {
   return nullptr;
 }
 
-AutocompleteHistoryManager* OhAutofillClient::GetAutocompleteHistoryManager() {
+AutocompleteHistoryManager*
+OhAutofillClient::GetAutocompleteHistoryManager() {
   if (!autocomplete_history_manager_) {
     autocomplete_history_manager_ =
         std::make_unique<AutocompleteHistoryManager>();
@@ -135,7 +149,8 @@ signin::IdentityManager* OhAutofillClient::GetIdentityManager() {
   return nullptr;
 }
 
-const signin::IdentityManager* OhAutofillClient::GetIdentityManager() const {
+const signin::IdentityManager* OhAutofillClient::GetIdentityManager()
+    const {
   return nullptr;
 }
 
@@ -183,8 +198,7 @@ translate::TranslateDriver* OhAutofillClient::GetTranslateDriver() {
   return nullptr;
 }
 
-void OhAutofillClient::ShowAutofillSettings(
-    autofill::SuggestionType suggestion_type) {
+void OhAutofillClient::ShowAutofillSettings(autofill::SuggestionType suggestion_type) {
   NOTIMPLEMENTED();
 }
 
@@ -208,8 +222,7 @@ void OhAutofillClient::ShowDeleteAddressProfileDialog(
   NOTIMPLEMENTED();
 }
 
-autofill::AutofillClient::SuggestionUiSessionId
-OhAutofillClient::ShowAutofillSuggestions(
+autofill::AutofillClient::SuggestionUiSessionId OhAutofillClient::ShowAutofillSuggestions(
     const autofill::AutofillClient::PopupOpenArgs& open_args,
     base::WeakPtr<autofill::AutofillSuggestionDelegate> delegate) {
   NOTIMPLEMENTED();
@@ -261,17 +274,32 @@ void OhAutofillClient::PinAutofillSuggestions() {
   NOTIMPLEMENTED();
 }
 
-void OhAutofillClient::HideAutofillSuggestions(
-    autofill::SuggestionHidingReason reason) {
+void OhAutofillClient::HideAutofillSuggestions(autofill::SuggestionHidingReason reason) {
   delegate_.reset();
 #if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  if (password_popup_hider_ && reason == SuggestionHidingReason::kTabGone) {
-    auto hidePopupStr = password_popup_hider_->QueryPopupShowAndGetHideStr();
+  if (need_hide_password_popup_ && reason == SuggestionHidingReason::kTabGone) {
+    content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
+    if (!rfh) {
+      LOG(ERROR) << "rfh is nullptr";
+      return;
+    }
+    autofill::ContentAutofillDriver* driver =
+        autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
+    if (!driver) {
+      LOG(ERROR) << "driver is nullptr";
+      return;
+    }
+    auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
+    if (!mgr) {
+      LOG(ERROR) << "autofill_manager is nullptr";
+      return;
+    }
+    auto hidePopupStr = mgr->QueryPopupShowAndGetHideStr();
     if (hidePopupStr.has_value() && OnAutofillEvent(hidePopupStr.value())) {
       LOG(INFO) << "visibility changed, the password autofill popup is hidden";
-      password_popup_hider_->SetPasswordPopupShow(false);
+      mgr->SetPasswordPopupShow(false);
     }
-    password_popup_hider_ = nullptr;
+    need_hide_password_popup_ = false;
   }
 #endif
 }

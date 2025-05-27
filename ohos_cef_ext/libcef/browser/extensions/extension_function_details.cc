@@ -18,6 +18,7 @@
 #include "extensions/browser/extension_function.h"
 #include "extensions/browser/extension_function_dispatcher.h"
 #include "extensions/common/error_utils.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
 
 using content::RenderViewHost;
 using content::WebContents;
@@ -47,7 +48,7 @@ CefRefPtr<AlloyBrowserHostImpl> CefExtensionFunctionDetails::GetSenderBrowser()
 
 CefRefPtr<AlloyBrowserHostImpl> CefExtensionFunctionDetails::GetCurrentBrowser()
     const {
-  return nullptr;
+  return GetSenderBrowser();
 }
 
 bool CefExtensionFunctionDetails::CanAccessBrowser(
@@ -78,12 +79,12 @@ api::tabs::Tab CefExtensionFunctionDetails::CreateTabObject(
     CefRefPtr<AlloyBrowserHostImpl> new_browser,
     int opener_browser_id,
     bool active,
-    int index) const {
+    int index) {
   content::WebContents* contents = new_browser->web_contents();
 
   bool is_loading = contents->IsLoading();
   api::tabs::Tab tab_object;
-  tab_object.id = new_browser->GetIdentifier();
+  tab_object.id = new_browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
   tab_object.index = index;
   tab_object.window_id = *tab_object.id;
   tab_object.status = is_loading ? api::tabs::TabStatus::kLoading

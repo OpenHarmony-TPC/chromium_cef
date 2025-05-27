@@ -15,7 +15,9 @@
 namespace throttle {
 class OhosAppLinkThrottle : public blink::URLLoaderThrottle {
  public:
-  OhosAppLinkThrottle(content::FrameTreeNodeId frame_tree_node_id, bool is_client_redirect);
+  // explicit OhosAppLinkThrottle(content::FrameTreeNodeId frame_tree_node_id);
+  OhosAppLinkThrottle(content::FrameTreeNodeId frame_tree_node_id,
+                      bool is_client_redirect);
   OhosAppLinkThrottle(const OhosAppLinkThrottle&) = delete;
   OhosAppLinkThrottle& operator=(const OhosAppLinkThrottle&) = delete;
   ~OhosAppLinkThrottle() override;

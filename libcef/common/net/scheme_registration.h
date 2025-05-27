@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "arkweb/build/features/features.h"
+#include "ohos_cef_ext/libcef/common/net/scheme_registration_ex.h"
 
 namespace scheme {
 
@@ -22,10 +22,6 @@ bool IsStandardScheme(const std::string& scheme);
 // Returns true if the specified |scheme| is a registered CORS enabled scheme.
 bool IsCorsEnabledScheme(const std::string& scheme);
 
-#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
-// Add schemes that support code cache.
-void AddSchemesSupportCodeCache(const std::string& scheme);
-#endif
 }  // namespace scheme
 
 #endif  // CEF_LIBCEF_COMMON_NET_SCHEME_REGISTRATION_H_

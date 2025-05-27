@@ -1,11 +1,6 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Copyright 2021 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
-
-// Based on page_load_metrics_initialize.h originally written by
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file. 
 
 #ifndef CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_ALLOY_PAGE_LOAD_METRICS_MEMORY_TRACKER_FACTORY_H_
 #define CEF_LIBCEF_BROWSER_PAGE_LOAD_METRICS_ALLOY_PAGE_LOAD_METRICS_MEMORY_TRACKER_FACTORY_H_

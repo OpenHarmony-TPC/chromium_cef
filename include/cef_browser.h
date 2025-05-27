@@ -48,6 +48,7 @@
 #include "include/cef_navigation_entry.h"
 #include "include/cef_registration.h"
 #include "include/cef_request_context.h"
+#include "ohos_cef_ext/include/arkweb_browser_base_ext.h"
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 class CefDevToolsMessageHandlerDelegate;
@@ -297,39 +298,6 @@ class CefDownloadImageCallback : public virtual CefBaseRefCounted {
                                        CefRefPtr<CefImage> image) = 0;
 };
 
-#if BUILDFLAG(ARKWEB_PDF)
-///
-/// Callback interface for CefBrowserHost::CreateToPDF. The methods of this
-/// class will be called on the browser process UI thread.
-///
-/*--cef(source=client)--*/
-class CefPdfValueCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be executed when the PDF create has completed. |value|
-  /// is the output pdf data stream.
-  /// successfully or false otherwise.
-  ///
-  /*--cef()--*/
-  virtual void OnReceiveValue(const char* value, const long size) = 0;
-};
-#endif
-
-///
-/// callback for RegisterScreenCaptureDelegateListener().
-///
-/*--cef(source=client)--*/
-class CefScreenCaptureCallback : public virtual CefBaseRefCounted {
- public:
-  ///
-  /// Method that will be called upon completion.
-  ///
-  /*--cef()--*/
-  virtual void OnStateChange(int32_t nweb_id,
-                             const CefString& session_id,
-                             int32_t code) = 0;
-};
-
 ///
 /// Class used to represent the browser process aspects of a browser. The
 /// methods of this class can only be called in the browser process. They may be
@@ -337,7 +305,8 @@ class CefScreenCaptureCallback : public virtual CefBaseRefCounted {
 /// comments.
 ///
 /*--cef(source=library)--*/
-class CefBrowserHost : public virtual CefBaseRefCounted {
+class CefBrowserHost : public virtual CefBaseRefCounted,
+                       public virtual ArkwebBrowserHostBase {
  public:
   typedef cef_drag_operations_mask_t DragOperationsMask;
   typedef cef_file_dialog_mode_t FileDialogMode;
@@ -646,7 +615,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   ///
   /// Opend DevTools with frontend_browser.
   ///
-  /*--cef()--*/
   virtual void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
@@ -1126,61 +1094,23 @@ class CefBrowserHost : public virtual CefBaseRefCounted {
   /*--cef(default_retval=CEF_RUNTIME_STYLE_DEFAULT)--*/
   virtual cef_runtime_style_t GetRuntimeStyle() = 0;
 
-#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   ///
-  /// SetPopupWindow.
-  ///
-  /*--cef()--*/
-  virtual void SetPopupWindow(cef_native_window_t window) = 0;
-#endif
-
-#if BUILDFLAG(ARKWEB_PDF)
-  ///
-  /// Create pdf data stream.
+  /// Set pip native window.
   ///
   /*--cef()--*/
-  virtual void CreateToPDF(const CefPdfPrintSettings& settings,
-                           CefRefPtr<CefPdfValueCallback> callback) = 0;
-#endif
-  ///
-  /// set video assistant enable.
-  ///
-  /*--cef()--*/
-  virtual void EnableVideoAssistant(bool enable) = 0;
+  virtual void SetPipNativeWindow(int delegate_id,
+                                  int child_id,
+                                  int frame_routing_id,
+                                  cef_native_window_t window) = 0;
 
   ///
-  /// execute video assistant function.
+  /// Send pip evnet.
   ///
   /*--cef()--*/
-  virtual void ExecuteVideoAssistantFunction(const CefString& cmdId) = 0;
-
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-  ///
-  /// Get whether it is the iframe.
-  ///
-  /*--cef()--*/
-  virtual bool IsIframe() = 0;
-
-  ///
-  /// fresh focused frame for context menu.
-  ///
-  /*--cef()--*/
-  virtual void ReloadFocusedFrame() = 0;
-#endif
-
-  ///
-  ///  Close current screen capture.
-  ///
-  /*--cef()--*/
-  virtual void StopScreenCapture(int32_t nweb_id,
-                                 const CefString& session_id) = 0;
-
-  ///
-  ///  Register screen capture listener.
-  ///
-  /*--cef()--*/
-  virtual void RegisterScreenCaptureDelegateListener(
-      CefRefPtr<CefScreenCaptureCallback> listener) = 0;
+  virtual void SendPipEvent(int delegate_id,
+                            int child_id,
+                            int frame_routing_id,
+                            int event) = 0;
 };
 
 #include "ohos_cef_ext/include/arkweb_browser_ext.h"

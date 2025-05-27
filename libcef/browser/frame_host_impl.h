@@ -197,19 +197,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
     return frame_token_;
   }
 
-  // IS_OHOS
-  static const int64_t kMainFrameId;
-  static const int64_t kFocusedFrameId;
-  static const int64_t kUnspecifiedFrameId;
-  static const int64_t kInvalidFrameId;
-
   // PageTransition type for explicit navigations. This must pass the check in
   // ContentBrowserClient::IsExplicitNavigation for debug URLs (HandleDebugURL)
   // to work as expected.
   static const ui::PageTransition kPageTransitionExplicit;
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::string GetRefererValue(std::string headers);
-#endif
 
 #if BUILDFLAG(IS_ARKWEB)
   friend class ArkwebFrameHostExtImpl;

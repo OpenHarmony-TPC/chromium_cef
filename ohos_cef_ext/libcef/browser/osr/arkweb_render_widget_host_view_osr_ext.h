@@ -1,4 +1,5 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Copyright (c) 2014 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,6 +42,11 @@
 #include "ui/events/gesture_detection/gesture_configuration.h"
 #include "ui/events/velocity_tracker/motion_event_generic.h"
 #include "ui/gfx/geometry/rect.h"
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+#include "content/browser/ohos/software_compositor_host_ohos.h"
+#endif
+
+class ArkWebRenderWidgetHostViewOSRUtils;
 
 class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
  public:
@@ -57,6 +63,14 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       CefRenderWidgetHostViewOSR* parent_host_view);
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   using GestureEventCallbackTask = base::OnceCallback<void(bool)>;
+#endif
+#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
+  std::u16string GetLastSelectedTextFromContextParam() {
+    return mLastSelectedTextFromMenu;
+  }
+  void SetLastSelectedTextFromContextParam(std::u16string selectedText) {
+    mLastSelectedTextFromMenu = selectedText;
+  }
 #endif
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   void SetDrawMode(int mode);
@@ -77,6 +91,10 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void SetMultiTouchZoomSupportEnabled(bool enabled);
 #endif
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
+  void OnTouchMove();
+  void BoostingPreiodly();
+#endif
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   void DidNativeEmbedEvent(
       const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
@@ -88,6 +106,9 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                                      bool visibility);
   void OnNativeEmbedFirstFramePaint(
       const content::NativeEmbedFirstPaintEvent& event);
+  void DidNativeEmbedMouseEvent(const blink::mojom::NativeEmbedMouseEventPtr& mouseEvent) override;
+  void SetMouseEventResult(bool result, bool stopPropagation);
+  void SetNativeInnerWeb(bool isInnerWeb);
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -101,11 +122,15 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                      const gfx::Rect& image_rect,
                      const gfx::Point& touch_point);
   void OnTextSelected(bool flag);
-  void OnOverlayStateChanged();
   void OnDestroyImageAnalyzerOverlay();
   float GetPageScaleFactor();
   void OnFoldStatusChanged(uint32_t foldstatus);
-  bool CloseImageOverlaySelection();
+  void CloseImageOverlaySelection();
+  void OnOverlayStateChanged(const gfx::Rect& image_rect);
+  void NotifyOverlayStateChanged();
+  bool SetDataDetectorSelectText(const std::u16string& text);
+  std::string GetDataDetectorSelectText();
+  void OnDataDetectorSelectText();
 #endif
 #if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   void UpdateVSyncFrequency();
@@ -126,7 +151,6 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  // void WasResized() override;
   bool IsRequestUnadjustedMovement();
   blink::mojom::PointerLockResult LockPointer(
       bool request_unadjusted_movement) override;
@@ -148,16 +172,30 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                           const gfx::Rect& node_bounds_in_screen) override;
   void DidOverscroll(const ui::DidOverscrollParams& params) override;
   void OnDidNavigateMainFrameToNewPage();
+  void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 
   void DidStopFlinging() override;
   blink::mojom::InputEventResultState FilterInputEvent(
       const blink::WebInputEvent& input_event) override;
   void ScrollBy(float delta_x, float delta_y);
   bool GetScrollable() override { return scroll_enabled_; }
+  void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
+  void SendGestureEvent(const ui::GestureEventData& gesture);
+  // TextInputManager::Observer implementation.
+  void OnUpdateTextInputStateCalled(
+      content::TextInputManager* text_input_manager,
+      RenderWidgetHostViewBase* updated_view,
+      bool did_update_state) override;
 
   // ui::GestureProviderClient implementation.
   void OnGestureEvent(const ui::GestureEventData& gesture) override;
+
+  void KeyboardReDispatch(const input::NativeWebKeyboardEvent& event, bool isUsed) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_ZOOM)
+  bool RequiresDoubleTapGestureEvents() const override;
+#endif
 
 #if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
   void DynamicFrameLossEvent(const std::string& sceneId, bool isStart) override;
@@ -166,6 +204,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
+  void SetEnableHalfFrameRate(bool enabled);
+  void EvictFrameBackBuffers(bool invisible) override;
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -187,9 +227,12 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  void UpdateTextInputState(const ui::mojom::TextInputState* state) override {
-    OnUpdateTextInputStateCalledInner(state);
+  gfx::Size GetPhysicalVisibleViewportSize();
+  gfx::Size GetVisibleViewportSize() override;
+  void WasKeyboardResizedEx() override {
+    WasKeyboardResized();
   }
+  void WasKeyboardResized();
   void OnUpdateTextInputStateCalledInner(
       const ui::mojom::TextInputState* state);
   void ScaleGestureChangeV2(int type,
@@ -201,9 +244,11 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       const gfx::Rect& keyboard_rect) override;
   ui::mojom::VirtualKeyboardMode GetVirtualKeyboardMode() override;
   void SetVirtualKeyBoardArg(int32_t width, int32_t height, double keyboard);
-  void FilterScrollEventImpl(const ui::GestureEventData& gesture) override;
+  void FilterScrollEventImpl(const ui::GestureEventData& gesture);
+  void SetScrollable(bool enable);
   bool UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
+  void UpdateSecurityLayer(bool isNeedSecurityLayer);
 #endif
 
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
@@ -214,7 +259,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void ChangeVisibilityOfQuickMenu();
 #endif
 
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
   // ui::OverscrollRefreshHandler implementation
   bool PullToRefreshAction(ui::PullToRefreshAction action) override;
   void PullToRefreshUpdate(float x_delta, float y_delta) override;
@@ -229,9 +274,33 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void TransformPointToRootSurface(gfx::PointF* point) override;
   int GetShrinkViewportHeight() override;
   int GetTopControlsOffset() const override;
-  void OnTopControlsHeightChanged() override;
+  void OnTopControlsHeightChanged();
   void OnTopControlsChanged(float top_controls_offset,
-                            float top_content_offset) override;
+                            float top_content_offset);
+#endif
+
+#if BUILDFLAG(ARKWEB_FOCUS)
+  void Focus() override;
+  bool HasFocus() override;
+#endif
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  void UpdateBackgroundColor() override;
+#endif // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void UpdateCursor(const ui::Cursor& cursor) override;
+#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+  viz::FrameSinkId GetRootFrameSinkId() override;
+
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+  void OnRendererWidgetCreated() override;
+#endif
+#if BUILDFLAG(ARKWEB_ACCESSIBILITY)
+  void SendAccessibilityEvent(int64_t accessibilityId,
+                              int32_t eventType,
+                              const std::string& argument) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
@@ -241,13 +310,50 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void MaximizeResize();
   void RestoreRenderFit() override;
 #endif
+#if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
+  void OnScreenInfoChangedV2();
+#endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
+  void OnVsync();
+#endif
+#if BUILDFLAG(IS_OHOS)
+  ui::Compositor* GetCompositor() override;
+#endif
+#if BUILDFLAG(ARKWEB_PIP)
+  void SetPipActive(bool active);
+#endif
  private:
   bool is_popup = false;
 
+#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
+  std::u16string mLastSelectedTextFromMenu;
+#endif //BUILDFLAG(ARKWEB_EXT_FREE_COPY)
 #if BUILDFLAG(IS_ARKWEB)
-  void OnRootLayerChanged() override;
+  float page_scale_factor_ = 0.f;
+  gfx::Size viewport_size_in_pixels_;
+  float device_scale_factor_ = 1.0f;
+  void OnRootLayerChanged();
   void OnScaleChanged(float old_page_scale_factor,
-                      float new_page_scale_factor) override;
+                      float new_page_scale_factor);
+#endif
+#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
+  gfx::Rect clipped_selection_bounds_;
+  gfx::SizeF scrollable_viewport_size_;
+  std::unique_ptr<content::SoftwareCompositorHostOhos> software_compositor_;
+  gfx::SizeF root_layer_size_;
+#endif
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  int32_t node_id_ = -1;
+  int last_key_code_ = -1;
+  bool scroll_enabled_ = true;
+#endif
+#if BUILDFLAG(ARKWEB_AI)
+  bool overlay_in_progress_ = false;
+  std::u16string data_detector_select_text_ = std::u16string();
+#endif
+#if BUILDFLAG(ARKWEB_ZOOM)
+  std::string device_type_;
+  bool requires_double_tap_gesture_events_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_SYNC_RENDER)
   void UpdateDrawRect(const gfx::Rect& rect);
@@ -260,8 +366,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void OnScrollState(bool scroll_state);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
-  void CreateOverscrollControllerIfPossible() override;
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+  void CreateOverscrollControllerIfPossible();
   void OnFocusInternal() override;
   void LostFocusInternal() override;
 #endif
@@ -281,7 +387,11 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool is_tap_down_in_cursor_update_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_AI)
+  bool is_scrolling_ = false;
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
   bool pull_to_refreshing_ = false;
   float pull_to_refresh_offset_x_ = 0;
   float pull_to_refresh_offset_y_ = 0;
@@ -289,7 +399,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   std::unique_ptr<content::OverscrollControllerOHOS> overscroll_controller_;
 #endif
 
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(IS_ARKWEB)
   bool enable_nweb_ex_ = false;
 #endif
 

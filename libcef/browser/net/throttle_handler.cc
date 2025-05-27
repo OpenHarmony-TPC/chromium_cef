@@ -17,11 +17,10 @@
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 #include "libcef/common/arkweb_request_impl_ext.h"
-#include "ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "extensions/common/constants.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/net/ark_web_throttle_handler.cc"
 #endif
 
 namespace throttle {
@@ -35,11 +34,7 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
   const auto global_id = frame_util::GetGlobalId(navigation_handle);
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  // Record the url so that it can be preconnected at the next startup.
-  if (is_main_frame) {
-    predictor::VisitedUrlInfo url_info(navigation_handle->GetURL());
-    predictor::PredictorDatabase::GetInstance()->RecordVisitedUrl(url_info);
-  }
+  ArkWebRecordVisitedUrl(navigation_handle);
 #endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 
   // Identify the RenderFrameHost that originated the navigation.
@@ -66,15 +61,14 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
     return true;
   }
 
-  bool ignore_navigation = false;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  if (navigation_handle->GetURL().SchemeIs(extensions::kExtensionScheme)) {
+  if (ArkWebIsExtensionNavigation(navigation_handle)) {
     return false;
   }
-  if (navigation_handle->GetURL().SchemeIs(extensions::kArkwebExtensionScheme)) {
-    return false;
-  }
-#endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+  bool ignore_navigation = false;
+
   if (browser) {
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetRequestHandler()) {

@@ -126,7 +126,6 @@ void ProxyConfigMonitor::OnProxyConfigChanged(
         break;
       case net::ProxyConfigService::CONFIG_PENDING:
         NOTREACHED();
-        break;
     }
   }
 }

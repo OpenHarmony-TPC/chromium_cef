@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -70,6 +71,9 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   typedef cef_text_input_flags_t TextInputFlags;
   typedef cef_text_input_info_t TextInputInfo;
   typedef std::map<CefString, CefString> AttributesMap;
+  typedef cef_embed_mouse_event_t CefEmbedMouseEvent;
+  typedef cef_embed_mouse_type_t CefEmbedMouseType;
+  typedef cef_embed_mouse_button_t CefEmbedMouseButton;
 
   CefRefPtr<ArkWebRenderHandlerExt> AsArkWebRenderHandler() override {
     return this;
@@ -172,6 +176,14 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
       CefRefPtr<CefBrowser> browser,
       const CefEmbedTouchEvent& event,
       CefRefPtr<CefGestureEventCallback> callback) {}
+
+  ///
+  /// Called when embed mouse.
+  ///
+  virtual void OnNativeEmbedMouseEvent(CefRefPtr<CefBrowser> browser,
+                                   const CefEmbedMouseEvent& event,
+                                   CefRefPtr<CefMouseEventCallback> callback) {}
+
   ///
   /// Called when embed touch.
   ///
@@ -217,12 +229,24 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
                                      const CefRect& cef_image_rect) {}
 
   ///
+  /// Get data detector enable.
+  ///
+  virtual bool GetDataDetectorEnable() {}
+
+  ///
   /// Called when text input state has changed for the specified |browser|.
   ///
   virtual void OnUpdateTextInputStateCalled(CefRefPtr<CefBrowser> browser,
                                             const CefString& text,
                                             const CefRange& selected_range,
                                             const CefRange& compositon_range) {}
+
+  ///
+  /// Called to retrieve the view rectangle in screen DIP coordinates. This
+  /// method must always provide a non-empty rectangle.
+  ///
+  virtual void GetVisibleViewportRect(CefRefPtr<CefBrowser> browser,
+                                      CefRect& rect) {}
 
   ///
   /// OnResizeScrollableViewport.
@@ -249,6 +273,24 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
                                             TextInputInfo text_input_info,
                                             bool is_need_reset_listener,
                                             const AttributesMap& attributes) {}
+
+  ///
+  /// SetGestureEventResult
+  ///
+  /*--cef()--*/
+  virtual void SetGestureEventResult(const bool result) {}
+
+  ///
+  /// Called when an accessibility event occurs.
+  ///
+  /*--cef()--*/
+  virtual void OnAccessibilityEvent(int64_t accessibilityId, int32_t eventType, const CefString& argument) {}
+
+  ///
+  /// This interface is invoked to notify the upper-layer update security layer
+  ///
+  /*--cef()--*/
+  virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
 
 #if BUILDFLAG(ARKWEB_DSS)
   ///
@@ -285,6 +327,27 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   ///
   virtual void RestoreRenderFit() {}
 #endif  // ARKWEB_MAXIMIZE_RESIZE
+
+#if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
+  ///
+  /// Get Screen Offset.
+  ///
+  /*--cef()--*/
+  virtual void GetScreenOffset(CefRefPtr<CefBrowser> browser, double& x, double& y) {}
+#endif  // BUILDFLAG(ARKWEB_SCREEN_OFFSET)
+
+  ///
+  /// Called when scroll.
+  ///
+  /*--cef()--*/
+  virtual bool OnNestedScroll(CefRefPtr<CefBrowser> browser,
+                              float& x,
+                              float& y,
+                              float& fling_x,
+                              float& fling_y,
+                              bool& isAvailable) {
+    return false;
+  }
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_RENDER_HANDLER_EXT_H_

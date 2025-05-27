@@ -18,6 +18,7 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
@@ -44,10 +45,6 @@
 #include "cef/include/cef_image.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "components/download/public/common/download_item_impl.h"
@@ -196,7 +193,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                       int32_t h5_object_id,
                       const CefString& h5_method_name,
                       const std::vector<CefRefPtr<CefValue>>& args) override;
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+#if BUILDFLAG(ARKWEB_NWEB_EX)
   bool CanStoreWebArchive() override;
 #endif
   void ReloadOriginalUrl() override;
@@ -235,14 +232,17 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_JSPROXY)
   void JavaScriptOnDocumentStart(
       const CefString& script,
-      const std::vector<CefString>& script_rules) override;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) override;
   void RemoveJavaScriptOnDocumentStart() override;
   void JavaScriptOnDocumentEnd(
       const CefString& script,
-      const std::vector<CefString>& script_rules) override;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) override;
   void JavaScriptOnHeadReady(
       const CefString& script,
-      const std::vector<CefString>& script_rules) override;
+      const std::vector<CefString>& script_rules,
+      bool is_transfer_finished) override;
   void RemoveJavaScriptOnHeadReady() override;
   void RemoveJavaScriptOnDocumentEnd() override;
 #endif
@@ -251,8 +251,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetFitContentMode(int mode) override;
   bool GetPendingSizeStatus() override;
 
-  void SetBrowserZoomLevel(double zoom_factor) override;
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
+  void SetBrowserZoomLevel(double zoom_factor) override;
   void OnZoomChanged(
       const zoom::ZoomController::ZoomChangedEventData& data) override;
   void OnZoomControllerDestroyed(
@@ -369,6 +369,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool GetPrintBackground() override;
 #endif  // BUILDFLAG(ARKWEB_PRINT)
   void SetEnableLowerFrameRate(bool enabled) override;
+  void SetEnableHalfFrameRate(bool enabled) override;
   void SetAudioResumeInterval(int resumeInterval) override { /*TODO: IS_OHOS*/
   }
   void SetAudioExclusive(bool audioExclusive) override { /*TODO: IS_OHOS*/
@@ -391,6 +392,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SlideScroll(float vx, float vy) override;
   void ZoomBy(float delta, float width, float height) override;
   void GetHitData(int& type, CefString& extra_data) override;
+  void GetLastHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable, int scrollType) override;
@@ -411,6 +413,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   void SetFileAccess(bool flag) override;
   void SetBlockNetwork(bool flag) override;
+#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
+  void SetDisallowSandboxFileAccessFromFileUrl(bool flag) override;
+#endif
   void SetCacheMode(int flag) override;
   void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
@@ -424,8 +429,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_TERMINATE_RENDER)
   bool TerminateRenderProcess() override;
 #endif
+  #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   void ShowFreeCopyMenu() override;
   bool ShouldShowFreeCopyMenu() override;
+  std::string GetSelectedTextFromContextParam() override;
+  #endif
   int GetNWebId() override;
 #if BUILDFLAG(ARKWEB_ITP)
   void EnableIntelligentTrackingPrevention(bool enable) override;
@@ -448,7 +456,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void PostWebMessage(CefString& message,
                       std::vector<CefString>& ports,
                       CefString& targetUri) override;
-  void ClosePort(CefString& port_handle) override;
+  void ClosePort(const CefString& port_handle) override;
   bool ConvertCefValueToBlinkMsg(CefRefPtr<CefValue>& original,
                                  blink::WebMessagePort::Message& message);
   void PostPortMessage(const CefString& port_handle,
@@ -492,7 +500,12 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool IsSafeBrowsingEnabled() override;
   void EnableSafeBrowsing(bool enable) override;
   void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
-  bool IsSafeBrowsingDetectionEnabled() const;
+  bool IsSafeBrowsingDetectionDisabled() const;
+  void HandleSafeBrowsingDetection(const std::string& url);
+  int GetSafeBrowsingDetectionMode() const;
+  int GetSafeBrowsingDetectionSwitch() const;
+  void SetSafeBrowsingDetectionCallback(
+      CefRefPtr<CefSafeBrowsingDetectionCallback> callback);
 #endif  // BUILDFLAG(ARKWEB_SAFEBROWSING)
 
 #if BUILDFLAG(IS_OHOS)
@@ -513,21 +526,29 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetNativeWindow(cef_native_window_t window) override;
   uint32_t GetAcceleratedWidget(bool isPopup) override;
 
-  void SetWebDebuggingAccess(bool isEnableDebug) override { /*TODO: IS_OHOS*/
-  }
-  bool GetWebDebuggingAccess() override { /*TODO: IS_OHOS*/
-    return false;
-  }
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void SetWebDebuggingAccess(bool isEnableDebug) override;
+  bool GetWebDebuggingAccess() override;
+#endif
 #if BUILDFLAG(ARKWEB_SCREEN_ROTATION)
   void UpdatePixelRatio(float ratio);
+#endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  void SetIsFling(bool is_fling);
 #endif
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   bool GetFileAccess();
   bool GetBlockNetwork();
+#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
+  bool GetDisallowSandboxFileAccessFromFileUrl();
+#endif
   int GetCacheMode();
   std::vector<std::string> GetGrantFileAccessDirs();
   bool file_access_ = false;
   bool network_blocked_ = false;
+#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
+  bool disallow_sandbox_file_access_from_file_url_ = false;
+#endif
   int cache_mode_ = 0;
   std::vector<CefString> file_access_dirs_list_{};
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
@@ -549,6 +570,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void OnDestroyImageAnalyzerOverlay() override;
   void OnFoldStatusChanged(uint32_t foldStatus) override;
   float GetPageScaleFactor() override;
+  std::string GetDataDetectorSelectText() override;
+  void OnDataDetectorSelectText() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -587,6 +610,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetFocusOnWeb() override;
   bool IsNeedZoomChange(const input::NativeWebKeyboardEvent& event,
                         bool& zoom_in);
+  void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
 #endif  // ARKWEB_INPUT_EVENTS
 
 #if BUILDFLAG(ARKWEB_BFCACHE)
@@ -596,6 +620,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   void SetNativeEmbedMode(bool flag) override { /*TODO: ARKWEB_SAME_LAYER*/
   }
+  void SetNativeInnerWeb(bool isInnerWeb) override {}
 #endif
 
   void OnWebPreferencesChanged();
@@ -653,6 +678,23 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void MaximizeResize() override;
 #endif  // ARKWEB_MAXIMIZE_RESIZE
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  virtual void ExtensionSetTabId(int32_t tab_id) override {}
+  virtual int32_t ExtensionGetTabId() const override { return -1; }
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) override {}
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
+  virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
+  virtual void WebExtensionActionClicked(std::string extensionId,
+                                         const NWebExtensionTab* tab) override {
+  }
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
@@ -664,6 +706,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       receiverMap_ GUARDED_BY(web_message_lock_);
   scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_ =
       base::ThreadPool::CreateSequencedTaskRunner({});
+  void ClosePortInternal(const CefString& portHandle);
   void SetPortMessageCallbackInternal(
       const CefString& portHandle,
       CefRefPtr<CefWebMessageReceiver> callback);
@@ -674,7 +717,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void StoreWebArchiveInternal(
       CefRefPtr<CefStoreWebArchiveResultCallback> callback,
       const CefString& path);
-  base::WeakPtrFactory<ArkWebBrowserHostExtImpl> weak_ptr_factory_;
 #endif
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   js_injection::JsCommunicationHost* GetJsCommunicationHost();
@@ -705,20 +747,26 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                            bool mouseUp,
                            int clickCount) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  std::map<std::string, int> document_start_script_result_map_;
 #if BUILDFLAG(ARKWEB_JSPROXY)
-  std::map<std::string, int> document_end_script_result_map_;
   std::unique_ptr<js_injection::JsCommunicationHost> js_communication_host_;
-  std::map<std::string, int> head_ready_script_result_map_;
-#endif  // BUILDFLAG(ARKWEB_JSPROXY)
-#if BUILDFLAG(ARKWEB_ITP)
+#endif // BUILDFLAG(ARKWEB_JSPROXY)
   mutable base::Lock lock_;
+#if BUILDFLAG(ARKWEB_ITP)
   bool intelligent_tracking_prevention_cookies_enabled_ GUARDED_BY(lock_) =
       false;
 #endif
 #if BUILDFLAG(ARKWEB_MEDIA_AVSESSION)
   void PutWebMediaAVSessionEnabled(bool enable) override;
-#endif  // ARKWEB_MEDIA_AVSESSION
+#endif // ARKWEB_MEDIA_AVSESSION
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  bool is_web_debugging_access_ = false;
+#endif
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y) override;
+#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  base::WeakPtrFactory<ArkWebBrowserHostExtImpl> weak_ptr_factory_;
+#endif
 };
 
 #endif  // ARKWEB_BROWSER_BROWSER_HOST_EXT_H_

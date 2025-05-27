@@ -40,6 +40,8 @@
 #include "cef/ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
 #endif
 
+#include "cef/ohos_cef_ext/libcef/browser/arkweb_request_context_impl_ext.h"
+
 ChromeBrowserMainExtraPartsCef::ChromeBrowserMainExtraPartsCef() = default;
 
 ChromeBrowserMainExtraPartsCef::~ChromeBrowserMainExtraPartsCef() = default;
@@ -60,14 +62,18 @@ void ChromeBrowserMainExtraPartsCef::PostProfileInit(Profile* profile,
   global_request_context_ =
       CefRequestContextImpl::CreateGlobalRequestContext(settings);
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+  CefCookieManagerExt::GetGlobalManager(nullptr);
+#endif
 #if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   // Create the Global off the record request context.
   CefRequestContextSettings off_the_record_settings;
   CefContext::Get()->PopulateGlobalOTRRequestContextSettings(
       &off_the_record_settings);
   global_otr_request_context_ =
-      CefRequestContextImpl::CreateGlobalOTRRequestContext(
+      ArkWebRequestContextImplExt::CreateGlobalOTRRequestContext(
           off_the_record_settings);
+  CefCookieManagerExt::GetGlobalIncognitoManager(nullptr);
 #endif
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
@@ -157,6 +163,7 @@ void ChromeBrowserMainExtraPartsCef::PostCreateMainMessageLoop() {
   // Forward the product name (defaults to "Chromium").
   config->product_name = l10n_util::GetStringUTF8(IDS_PRODUCT_NAME);
   // OSCrypt may target keyring, which requires calls from the main thread.
+  // config->main_thread_runner = content::GetUIThreadTaskRunner({});
   // OSCrypt can be disabled in a special settings file.
   config->should_use_preference =
       command_line->HasSwitch(password_manager::kEnableEncryptionSelection);

@@ -1,4 +1,5 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Copyright (c) 2014 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2012 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -24,12 +25,21 @@
 #include "ohos_nweb/include/nweb_handler.h"
 #include "services/network/public/cpp/network_quality_tracker.h"
 #include "url/gurl.h"
+#if BUILDFLAG(ARKWEB_NETWORK_DFX)
+#include "ohos_nweb/src/sysevent/event_reporter.h"
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_DFX)
+int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
+#endif
+
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
 #include "ohos_nweb/src/sysevent/event_reporter.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
-int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
+// TODO: ARKWEB_REPORT_SYS_EVENT
+// int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
 #endif
 
 OhPageLoadMetricsObserver::OhPageLoadMetricsObserver() {
@@ -42,8 +52,13 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
     const GURL& currently_committed_url,
     bool started_in_foreground) {
   navigation_id_ = navigation_handle->GetNavigationId();
-#if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
+#if BUILDFLAG(ARKWEB_NETWORK_DFX)
   web_performance_timing_.navigation_id = navigation_id_;
+#endif
+
+#if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
+  // TODO: ARKWEB_REPORT_SYS_EVENT
+  // web_performance_timing_.navigation_id = navigation_id_;
 #endif
 
   return CONTINUE_OBSERVING;

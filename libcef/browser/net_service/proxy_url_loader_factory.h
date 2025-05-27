@@ -24,7 +24,7 @@
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "include/internal/cef_ptr.h"
-#include "libcef/browser/net_service/net_helpers.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
 
 class CefRequest;
 class CefResponse;
@@ -217,6 +217,7 @@ class ProxyURLLoaderFactory
 
  private:
   friend class InterceptedRequest;
+  friend class InterceptedRequestUtils;
   friend class ResourceContextData;
 
   ProxyURLLoaderFactory(

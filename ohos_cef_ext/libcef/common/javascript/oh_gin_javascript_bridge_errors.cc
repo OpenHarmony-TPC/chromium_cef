@@ -31,6 +31,5 @@ const char* OhGinJavascriptBridgeErrorToString(
       return "Jsb Permission Denied";
   }
   NOTREACHED();
-  return "Unknown error";
 }
 }  // namespace NWEB

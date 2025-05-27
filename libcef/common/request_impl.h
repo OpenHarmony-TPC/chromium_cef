@@ -85,26 +85,30 @@ class CefRequestImpl : public virtual CefRequest {
   uint64_t GetIdentifier() override;
 
   // Populate this object from the ResourceRequest object.
+#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   virtual void Set(const network::ResourceRequest* request,
                    uint64_t identifier);
+#else
+  void Set(const network::ResourceRequest* request, uint64_t identifier);
+#endif
 
   // Populate the ResourceRequest object from this object.
   // If |changed_only| is true then only the changed fields will be updated.
   void Get(network::ResourceRequest* request, bool changed_only) const;
 
+  // Populate this object from the RedirectInfo object.
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-  virtual
+  virtual void Set(const net::RedirectInfo& redirect_info);
+#else
+  void Set(const net::RedirectInfo& redirect_info);
 #endif
-      // Populate this object from the RedirectInfo object.
-      void
-      Set(const net::RedirectInfo& redirect_info);
 
   // Populate this object from the HttpRequestHeaders object.
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-  virtual
+  virtual void Set(const net::HttpRequestHeaders& headers);
+#else
+  void Set(const net::HttpRequestHeaders& headers);
 #endif
-      void
-      Set(const net::HttpRequestHeaders& headers);
 
   // Populate this object from the NavigationParams object.
   // Called from throttle_handler.cc NavigationOnUIThread().

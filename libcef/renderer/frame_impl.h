@@ -95,22 +95,6 @@ class CefFrameImpl
 
   blink::WebLocalFrame* web_frame() const { return frame_; }
   void LoadRequest(cef::mojom::RequestParamsPtr params) override;
-#if BUILDFLAG(IS_ARKWEB)
-  void OnFocusedNodeChanged(const blink::WebElement& element);
-#endif  // BUILDFLAG(IS_ARKWEB)
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  void GetHitData(
-      cef::mojom::RenderFrame::GetHitDataCallback callback) override;
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
-  void SetOptimizeParserBudgetEnabled(bool enable) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
-  void ScrollPageUpDown(bool is_up, bool is_half, float view_height) override;
-#endif  // #if BUILDFLAG(ARKWEB_PAGE_UP_DOWN)
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   virtual bool ShouldOverrideUrlLoading(const CefString& url,
@@ -174,33 +158,6 @@ class CefFrameImpl
   using BrowserFrameAction = base::OnceCallback<void(const BrowserFrameType&)>;
   void SendToBrowserFrame(const std::string& function_name,
                           BrowserFrameAction action);
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  struct CefHitData {
-    int type;
-    CefString extra_data;
-    CefHitData() : type(0), extra_data("") {}
-  };
-  void SendHitEvent(cef::mojom::HitEventParamsPtr params) override;
-  GURL GetChildImageUrlFromElement(const blink::WebElement& element);
-  blink::WebElement GetImgChild(const blink::WebNode& node);
-  GURL GetAbsoluteSrcUrl(const blink::WebElement& element);
-  GURL GetAbsoluteUrl(const blink::WebNode& node,
-                      const std::u16string& url_fragment);
-  void PopulateHitTestData(const GURL& absolute_link_url,
-                           const GURL& absolute_image_url,
-                           bool is_editable,
-                           cef::mojom::HitDataParamsPtr& data);
-  bool RemovePrefixAndAssignIfMatches(const std::string_view prefix,
-                                      const GURL& url,
-                                      std::string* dest);
-  void DistinguishAndAssignSrcLinkType(const GURL& url,
-                                       cef::mojom::HitDataParamsPtr& data);
-  void SetScrollable(bool enable) override;
-  CefHitData cef_hit_data_;
-  bool is_update_ = false;
-  bool scroll_enabled_ = true;
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   void MaybeInitializeScriptContext();
 

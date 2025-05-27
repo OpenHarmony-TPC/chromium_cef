@@ -1768,6 +1768,63 @@ void CEF_CALLBACK browser_host_register_screen_capture_delegate_listener(
   CefBrowserHostCppToC::Get(self)->RegisterScreenCaptureDelegateListener(
       CefScreenCaptureCallbackCToCpp::Wrap(listener));
 }
+
+void CEF_CALLBACK
+browser_host_custom_web_media_player(struct _cef_browser_host_t* self,
+                                     int enable) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CustomWebMediaPlayer(enable ? true : false);
+}
+
+void CEF_CALLBACK
+browser_host_set_pip_native_window(struct _cef_browser_host_t* self,
+                                   int delegate_id,
+                                   int child_id,
+                                   int frame_routing_id,
+                                   cef_native_window_t window) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SetPipNativeWindow(
+    delegate_id, child_id, frame_routing_id, window);
+}
+
+void CEF_CALLBACK
+browser_host_send_pip_event(struct _cef_browser_host_t* self,
+                            int delegate_id,
+                            int child_id,
+                            int frame_routing_id,
+                            int event) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->SendPipEvent(
+    delegate_id, child_id, frame_routing_id, event);
+}
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1862,6 +1919,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
   GetStruct()->register_screen_capture_delegate_listener =
       browser_host_register_screen_capture_delegate_listener;
+  GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
 }
 
 // DESTRUCTOR - Do not edit by hand.

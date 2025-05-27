@@ -24,6 +24,7 @@ struct GlobalRenderFrameHostId;
 }
 
 class CefBrowserContext;
+class ArkWebRequestContextImplExt;
 
 // Implementation of the CefRequestContext interface. All methods are thread-
 // safe unless otherwise indicated. Will be deleted on the UI thread.
@@ -34,18 +35,13 @@ class CefRequestContextImpl : public CefRequestContext {
 
   ~CefRequestContextImpl() override;
 
+  virtual ArkWebRequestContextImplExt *AsArkWebRequestContextImpl() { return nullptr; }
+
   // Creates the singleton global RequestContext. Called from
   // AlloyBrowserMainParts::PreMainMessageLoopRun and
   // ChromeBrowserMainExtraPartsCef::PostProfileInit.
   static CefRefPtr<CefRequestContextImpl> CreateGlobalRequestContext(
       const CefRequestContextSettings& settings);
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  // Creates the singleton global RequestContext in incognito mode. Called
-  // from AlloyBrowserMainParts::PreMainMessageLoopRun.
-  static CefRefPtr<CefRequestContextImpl> CreateGlobalOTRRequestContext(
-      const CefRequestContextSettings& settings);
-#endif
 
   // Returns a CefRequestContextImpl for the specified |request_context|.
   // Will return the global context if |request_context| is NULL.
@@ -107,14 +103,6 @@ class CefRequestContextImpl : public CefRequestContext {
   CefString GetCachePath() override;
   CefRefPtr<CefCookieManager> GetCookieManager(
       CefRefPtr<CefCompletionCallback> callback) override;
-#if BUILDFLAG(ARKWEB_COOKIE)
-  CefRefPtr<CefCookieManagerExt> GetCookieManagerExt(
-      bool support_incognito,
-      CefRefPtr<CefCompletionCallback> callback) override;
-#endif  // BUILDFLAG(ARKWEB_COOKIE)
-  CefRefPtr<CefAdsBlockManager> GetAdsBlockManager(
-      CefRefPtr<CefCompletionCallback> callback) override;
-  CefRefPtr<CefDataBase> GetDataBase() override;
   bool RegisterSchemeHandlerFactory(
       const CefString& scheme_name,
       const CefString& domain_name,
@@ -131,8 +119,6 @@ class CefRequestContextImpl : public CefRequestContext {
   void ClearCertificateExceptions(
       CefRefPtr<CefCompletionCallback> callback) override;
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-  void ClearClientAuthenticationCache(
-      CefRefPtr<CefCompletionCallback> callback) override;
 #endif  // ARKWEB_CERT_AUTHENTICATION
   void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) override;
@@ -175,12 +161,11 @@ class CefRequestContextImpl : public CefRequestContext {
   void OnRenderFrameDeleted(const content::GlobalRenderFrameHostId& global_id,
                             bool is_main_frame);
 #if BUILDFLAG(ARKWEB_WEBSTORAGE)
-  CefRefPtr<CefWebStorage> GetWebStorage(
-      CefRefPtr<CefCompletionCallback> callback) override;
 #endif
 
  private:
   friend class CefRequestContext;
+  friend ArkWebRequestContextImplExt;
 
   struct Config {
     // True if wrapping the global context.
@@ -218,16 +203,7 @@ class CefRequestContextImpl : public CefRequestContext {
   void ClearCertificateExceptionsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
-#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-  void ClearClientAuthenticationCacheInternal(
-      CefRefPtr<CefCompletionCallback> callback,
-      CefBrowserContext::Getter browser_context_getter);
-#endif  // ARKWEB_CERT_AUTHENTICATION
 
-#if BUILDFLAG(ARKWEB_WEBSTORAGE)
-  void InitializeWebStorageInternal(CefRefPtr<CefWebStorageImpl> web_storage,
-                                    CefRefPtr<CefCompletionCallback> callback);
-#endif
   void ClearHttpAuthCredentialsInternal(
       CefRefPtr<CefCompletionCallback> callback,
       CefBrowserContext::Getter browser_context_getter);
@@ -256,9 +232,6 @@ class CefRequestContextImpl : public CefRequestContext {
 
   void InitializeCookieManagerInternal(
       CefRefPtr<CefCookieManagerImpl> cookie_manager,
-      CefRefPtr<CefCompletionCallback> callback);
-  void InitializeAdsBlockManagerInternal(
-      CefRefPtr<CefAdsBlockManagerImpl> adsblock_manager,
       CefRefPtr<CefCompletionCallback> callback);
   void InitializeMediaRouterInternal(CefRefPtr<CefMediaRouterImpl> media_router,
                                      CefRefPtr<CefCompletionCallback> callback);

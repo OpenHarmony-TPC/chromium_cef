@@ -425,10 +425,6 @@ CefRefPtr<CefCookieManager> CefCookieManager::GetGlobalIncognitoManager(
 #if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   CefRefPtr<CefRequestContext> context =
       CefRequestContext::GetGlobalOTRContext();
-#if !BUILDFLAG(ARKWEB_COOKIE)
-  return context ? context->GetCookieManager(callback) : nullptr;
-#else
   return context ? context->GetCookieManagerExt(true, callback) : nullptr;
-#endif
 #endif
 }

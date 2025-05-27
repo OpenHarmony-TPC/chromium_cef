@@ -28,6 +28,10 @@
 #include "chrome/install_static/initialize_from_primary_module.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
+#include "cef/ohos_cef_ext/libcef/browser/context_for_include.cc"
+#endif
+
 namespace {
 
 CefContext* g_context = nullptr;
@@ -68,6 +72,7 @@ void InitCrashReporter() {
 }
 
 #endif  // BUILDFLAG(IS_WIN)
+
 bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
   // Windowed browser colors must be fully opaque.
   if (!is_windowless && CefColorGetA(cef_in) != SK_AlphaOPAQUE) {
@@ -451,6 +456,7 @@ void CefSetOSModalLoop(bool osModalLoop) {
 
   base::CurrentThread::Get()->set_os_modal_loop(osModalLoop);
 }
+
 #endif  // BUILDFLAG(IS_WIN)
 
 // CefContext
@@ -606,26 +612,6 @@ void CefContext::PopulateGlobalRequestContextSettings(
 #endif
 }
 
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-void CefContext::PopulateGlobalOTRRequestContextSettings(
-    CefRequestContextSettings* settings) {
-  // This value was already normalized in Initialize.
-  CefString(&settings->cache_path) = CefString("");
-
-  settings->persist_session_cookies = false;
-
-  CefString(&settings->cookieable_schemes_list) =
-      CefString(&settings_.cookieable_schemes_list);
-  settings->cookieable_schemes_exclude_defaults =
-      settings_.cookieable_schemes_exclude_defaults;
-  settings->incognito_mode = true;
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  settings->global_request_context = nullptr;
-#endif
-}
-#endif
-
 void CefContext::NormalizeRequestContextSettings(
     CefRequestContextSettings* settings) {
   // The |root_cache_path| value was already normalized in Initialize.
@@ -655,6 +641,11 @@ void CefContext::OnContextInitialized() {
     // Notify the handler after the global browser context has initialized.
     CefRefPtr<CefRequestContext> request_context =
         CefRequestContext::GetGlobalContext();
+#if BUILDFLAG(IS_ARKWEB)
+    if (!request_context) {
+      return;
+    }
+#endif
     auto impl = static_cast<CefRequestContextImpl*>(request_context.get());
     impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
         [](CefRefPtr<CefApp> app) {

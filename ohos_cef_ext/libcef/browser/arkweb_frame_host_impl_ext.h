@@ -23,6 +23,7 @@
 #include <string>
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/synchronization/lock.h"
 #include "cef/include/cef_frame.h"
@@ -35,10 +36,6 @@
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "ui/base/page_transition_types.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
 
 class ArkwebFrameHostExtImpl : public ArkwebFrameExt, public CefFrameHostImpl {
  public:
@@ -89,6 +86,9 @@ class ArkwebFrameHostExtImpl : public ArkwebFrameExt, public CefFrameHostImpl {
 #if BUILDFLAG(ARKWEB_TERMINATE_RENDER)
   void TerminateRenderProcess(bool& result);
 #endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+void SetIsFling(bool is_fling);
+#endif
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
   void GetImageForContextNode(int command_id);
   void OnGetImageForContextNode(
@@ -113,6 +113,8 @@ class ArkwebFrameHostExtImpl : public ArkwebFrameExt, public CefFrameHostImpl {
   void SlideScroll(float vx, float vy);
   void ZoomBy(float delta, float width, float height);
   void GetHitData(int& type, CefString& extra_data);
+  void GetLastHitData(int& type, CefString& extra_data);
+  void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
   void SetOverscrollMode(int mode);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
@@ -144,10 +146,21 @@ class ArkwebFrameHostExtImpl : public ArkwebFrameExt, public CefFrameHostImpl {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RemoveCache(bool include_disk_files);
 #endif
-
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y);
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(IS_ARKWEB)
  private:
   using RenderFrameType = mojo::Remote<cef::mojom::RenderFrame>;
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  struct CefHitData {
+    int type;
+    CefString extra_data;
+    CefHitData() : type(0), extra_data("") {}
+  };
+  CefHitData hit_data_;
+#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #endif
 };
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_EXT_H_

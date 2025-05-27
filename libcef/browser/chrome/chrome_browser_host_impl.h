@@ -132,21 +132,15 @@ class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
     return weak_ptr_factory_.GetWeakPtr();
   }
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  virtual void ExtensionSetTabId(int32_t tab_id) override {}
-  virtual int32_t ExtensionGetTabId() const override { return -1; }
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) override {}
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
-  virtual void WebExtensionActionClicked(
-      std::string extensionId,
-      const NWebExtensionTab* tab) override {}
+#if BUILDFLAG(ARKWEB_PIP)
+  void SetPipNativeWindow(int delegate_id,
+                          int child_id,
+                          int frame_routing_id,
+                          cef_native_window_t window) override {}
+  void SendPipEvent(int delegate_id,
+                    int child_id,
+                    int frame_routing_id,
+                    int event) override {}
 #endif
 
  protected:

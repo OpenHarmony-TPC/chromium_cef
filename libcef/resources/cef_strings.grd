@@ -110,6 +110,11 @@ need to be translated for each locale.-->
       <output filename="cef_strings_ug.pak" type="data_package" lang="ug" />
       <output filename="cef_strings_zh-HK.pak" type="data_package" lang="zh-HK" />
     <!-- </if> -->
+    <if expr="is_ohos">
+      <output filename="cef_strings_ka.pak" type="data_package" lang="ka" />
+      <output filename="cef_strings_mk.pak" type="data_package" lang="mk" />
+      <output filename="cef_strings_my.pak" type="data_package" lang="my" />
+    </if>
     <if expr="enable_pseudolocales">
       <output filename="cef_strings_ar-XB.pak" type="data_package" lang="ar-XB" />
       <output filename="cef_strings_en-XA.pak" type="data_package" lang="en-XA" />

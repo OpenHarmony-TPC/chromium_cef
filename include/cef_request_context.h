@@ -165,11 +165,7 @@ class CefRequestContext : public CefPreferenceManager {
     return nullptr;
   }
 #endif  // BUILDFLAG(ARKWEB_COOKIE)
-#if BUILDFLAG(ARKWEB_UNITTESTS)
-  virtual CefRefPtr<CefDataBase> GetDataBase() = 0;
-#else
-  virtual CefRefPtr<CefDataBase> GetDataBase();
-#endif
+  virtual CefRefPtr<CefDataBase> GetDataBase() {return nullptr;};
   ///
   /// Register a scheme handler factory for the specified |scheme_name| and
   /// optional |domain_name|. An empty |domain_name| value for a standard scheme
@@ -216,27 +212,8 @@ class CefRequestContext : public CefPreferenceManager {
   /*--cef(optional_param=callback)--*/
   virtual void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) = 0;
-
-  ///
-  /// Clears the client authentication certificate Cache that were added
-  /// as part of handling CefRequestHandler::OnSelectClientCertificate().
-  /// If |callback| is non-NULL it will be executed on the UI thread after
-  /// completion.
-  ///
-  /*--cef(optional_param=callback)--*/
-#if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
-  virtual void ClearClientAuthenticationCache(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
-#endif  // ARKWEB_CERT_AUTHENTICATION
-
 #if BUILDFLAG(ARKWEB_WEBSTORAGE)
-#if BUILDFLAG(ARKWEB_UNITTESTS)
-  virtual CefRefPtr<CefWebStorage> GetWebStorage(
-      CefRefPtr<CefCompletionCallback> callback) = 0;
-#else
-  virtual CefRefPtr<CefWebStorage> GetWebStorage(
-      CefRefPtr<CefCompletionCallback> callback);
-#endif
+#include "cef/include/cef_request_context_for_include.h"
 #endif  // #if BUILDFLAG(ARKWEB_WEBSTORAGE)
   ///
   /// Clears all active and idle connections that Chromium currently has.

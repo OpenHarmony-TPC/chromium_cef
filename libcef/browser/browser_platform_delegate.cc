@@ -23,6 +23,9 @@
 #include "content/public/browser/render_view_host.h"
 #include "content/public/browser/render_widget_host.h"
 #include "content/public/browser/render_widget_host_view.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/browser_platform_delegate_for_include.cc"
+#endif
 
 namespace {
 
@@ -307,15 +310,6 @@ void CefBrowserPlatformDelegate::SendMouseMoveEvent(const CefMouseEvent& event,
   NOTIMPLEMENTED();
 }
 
-#if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
-void CefBrowserPlatformDelegate::SendTouchpadFlingEvent(
-    const CefMouseEvent& event,
-    double vx,
-    double vy) {
-  NOTIMPLEMENTED();
-}
-#endif
-
 void CefBrowserPlatformDelegate::SendMouseWheelEvent(const CefMouseEvent& event,
                                                      int deltaX,
                                                      int deltaY) {
@@ -398,25 +392,6 @@ bool CefBrowserPlatformDelegate::IsHidden() const {
   DCHECK(false);
   return false;
 }
-
-#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-void CefBrowserPlatformDelegate::OnOnlineRenderToForeground() {
-  DCHECK(false);
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegate::SendTouchEventList(
-    const std::vector<CefTouchEvent>& event_list) {
-  DCHECK(false);
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-void CefBrowserPlatformDelegate::WasOccluded(bool occluded) {
-  DCHECK(false);
-}
-#endif
 
 void CefBrowserPlatformDelegate::NotifyScreenInfoChanged() {
   DCHECK(false);
@@ -612,81 +587,6 @@ void CefBrowserPlatformDelegate::StopFinding(bool clearSelection) {
   NOTIMPLEMENTED();
 }
 
-#if BUILDFLAG(ARKWEB_AI)
-void CefBrowserPlatformDelegate::OnTextSelected(bool flag) {
-  NOTIMPLEMENTED();
-}
-
-void CefBrowserPlatformDelegate::OnDestroyImageAnalyzerOverlay() {
-  NOTIMPLEMENTED();
-}
-
-void CefBrowserPlatformDelegate::OnFoldStatusChanged(uint32_t foldStatus) {
-  NOTIMPLEMENTED();
-}
-
-float CefBrowserPlatformDelegate::GetPageScaleFactor() {
-  return 1;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
-void CefBrowserPlatformDelegate::OnSafeInsetsChange(int left,
-                                                    int top,
-                                                    int right,
-                                                    int bottom) {
-  NOTIMPLEMENTED();
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
-bool CefBrowserPlatformDelegate::WebPageSnapshot(
-    const char* id,
-    int width,
-    int height,
-    cef_web_snapshot_callback_t callback) {
-  return false;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_PRINT)
-void CefBrowserPlatformDelegate::CreateWebPrintDocumentAdapter(
-    const CefString& jobName,
-    void** webPrintDocumentAdapter) {
-  NOTIMPLEMENTED();
-}
-#endif  // BUILDFLAG(ARKWEB_PRINT)
-
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-int CefBrowserPlatformDelegate::GetTopControlsOffset() {
-  return 0;
-}
-
-int CefBrowserPlatformDelegate::GetShrinkViewportHeight() {
-  return 0;
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_HTML_SELECT)
-void CefBrowserPlatformDelegate::ShowPopupMenu(
-    mojo::PendingRemote<blink::mojom::PopupMenuClient> popup_client,
-    const gfx::Rect& bounds,
-    int item_height,
-    double item_font_size,
-    int selected_item,
-    std::vector<blink::mojom::MenuItemPtr> menu_items,
-    bool right_aligned,
-    bool allow_multiple_selection) {
-  NOTIMPLEMENTED();
-}
-#endif  // ARKWEB_HTML_SELECT
-
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-void CefBrowserPlatformDelegate::OnBeforeUnloadFired(bool proceed) {
-  NOTIMPLEMENTED();
-}
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
 // static
 int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
     uint32_t cef_modifiers) {
@@ -736,55 +636,3 @@ int CefBrowserPlatformDelegate::TranslateWebEventModifiers(
   }
   return result;
 }
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-void CefBrowserPlatformDelegate::OnShareFile(const std::string& filePath,
-                                             const std::string& utdTypeId) {
-  NOTIMPLEMENTED();
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView() {
-  LOG(WARNING)
-      << "CefBrowserPlatformDelegate::ScrollFocusedEditableNodeIntoView";
-  DCHECK(false);
-}
-
-void CefBrowserPlatformDelegate::ScaleGestureChangeV2(int type,
-                                                      float scale,
-                                                      float originScale,
-                                                      float centerX,
-                                                      float centerY) {
-  DCHECK(false);
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_ADBLOCK)
-void CefBrowserPlatformDelegate::OnAdsBlocked(
-    const std::string& main_frame_url,
-    const std::map<std::string, int32_t>& subresource_blocked,
-    bool is_site_first_report) {
-  NOTIMPLEMENTED();
-}
-
-bool CefBrowserPlatformDelegate::TrigAdBlockEnabledForSiteFromUi(
-    const std::string& main_frame_url,
-    int main_frame_tree_node_id) {
-  return false;
-}
-#endif  // BUILDFLAG(ARKWEB_ADBLOCK)
-
-#if BUILDFLAG(ARKWEB_DATALIST)
-void CefBrowserPlatformDelegate::OnShowAutofillPopup(
-    const gfx::RectF& element_bounds,
-    bool is_rtl,
-    const std::vector<autofill::Suggestion>& suggestions,
-    bool is_password_popup_type) {
-  NOTIMPLEMENTED();
-}
-
-void CefBrowserPlatformDelegate::OnHideAutofillPopup() {
-  NOTIMPLEMENTED();
-}
-#endif

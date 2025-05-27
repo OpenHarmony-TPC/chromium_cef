@@ -12,6 +12,7 @@
 #include "cef/libcef/common/net_service/net_service_util.h"
 #include "cef/libcef/common/request_impl.h"
 #include "net/http/http_status_code.h"
+#include "arkweb/chromium_ext/cef/include/cef_resource_handler_ext.h"
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
@@ -524,7 +525,7 @@ class ResourceResponseWrapper : public ResourceResponse {
       static const std::string data;
       return data;
     }
-    static const std::string data = handler->GetResponseData();
+    static const std::string data = handler->AsCefResourceHandlerExt()->GetResponseData();
     return data;
   }
 
@@ -533,7 +534,7 @@ class ResourceResponseWrapper : public ResourceResponse {
     if (!handler) {
       return 0;
     }
-    return handler->GetResponseDataBuffer(data, dest_size);
+    return handler->AsCefResourceHandlerExt()->GetResponseDataBuffer(data, dest_size);
   }
 
   size_t GetResponseDataBufferSize() override {
@@ -541,7 +542,7 @@ class ResourceResponseWrapper : public ResourceResponse {
     if (!handler) {
       return 0;
     }
-    return handler->GetResponseDataBufferSize();
+    return handler->AsCefResourceHandlerExt()->GetResponseDataBufferSize();
   }
 #endif
 

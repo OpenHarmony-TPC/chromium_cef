@@ -1,4 +1,5 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
+// Copyright (c) 2012 The Chromium Embedded Framework Authors.
+// Portions copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,16 +15,13 @@
 #include <vector>
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
 #include "cef/libcef/renderer/browser_impl.h"
 #include "cef/libcef/renderer/frame_impl.h"
 #include "third_party/blink/public/common/tokens/tokens.h"
 #include "third_party/blink/public/web/web_view_observer.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
 
 class CefBrowserImplOrigin;
 
@@ -84,24 +82,31 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
                                 int main_frame_tree_node_id) override {}
 #endif
 
+  // #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
   void SetSavePasswordAutomatically(bool enable) override{}
   bool GetSavePasswordAutomatically() override { return false; }
   void SetSavePassword(bool enable) override {}
   bool GetSavePassword() override { return false; }
   void SaveOrUpdatePassword(bool is_update) override{}
   void PasswordSuggestionSelected(int list_index) override{}
+  // #endif
+  // #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   void ShowFreeCopyMenu() override{}
   bool ShouldShowFreeCopyMenu() override { return false; }
+  // #endif
   int GetNWebId() override { return -1; }
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+  //#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
   void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override {
   }
-#endif  // ARKWEB_NO_STATE_PREFETCH
+  //#endif  // ARKWEB_NO_STATE_PREFETCH
+  // #if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
   void SetForceEnableZoom(bool forceEnableZoom) override {}
   bool GetForceEnableZoom() override { return false; }
+  // #endif
 
+  // #if BUILDFLAG(ARKWEB_EXT_SECURITY_STATE)
   int GetSecurityLevel() override{ return 0; }
-
+  // #endif
 #endif
 
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
@@ -113,13 +118,14 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   void EnableIntelligentTrackingPrevention(bool enable) override {}
   bool IsIntelligentTrackingPreventionEnabled() override { return false; }
 #endif
-#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
+//#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
   int SetUrlTrustListWithErrMsg(
-  const CefString& urlTrustList, CefString& detailErrMsg) override {
+    const CefString& urlTrustList, CefString& detailErrMsg) override {
     return 0;
   }
-#endif
+//#endif
 
+  // #if BUILDFLAG(ARKWEB_NWEB_EX)
   // NOTE: Keep the previous line commented, add NWebEx APIs below.
   bool ShouldShowLoadingUI() override;
   // ARKWEB_EXT_TOPCONTROLS
@@ -127,6 +133,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
                                   int current,
                                   bool animate) override {}
   void UpdateBrowserControlsHeight(int height, bool animate) override {}
+  // #endif  // BUILDFLAG(ARKWEB_NWEB_EX)
 
 #if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   int InsertBackForwardEntry(int index, const CefString& url) override;
@@ -136,9 +143,9 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   void ClearForwardList() override;
 #endif
 
-#if BUILDFLAG(ARKWEB_BFCACHE)
+  // #if BUILDFLAG(ARKWEB_BFCACHE)
   void SetBackForwardCacheOptions(int32_t size, int32_t timeToLive) override {}
-#endif
+//#endif
 
  private:
 #if BUILDFLAG(IS_OHOS)
@@ -149,9 +156,9 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   int viewport_height_ = 0;
 #endif
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+//#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   int tab_id_;
-#endif
+//#endif
 };
 
 #endif  // ARKWEB_RENDERER_BROWSER_IMPL_H_

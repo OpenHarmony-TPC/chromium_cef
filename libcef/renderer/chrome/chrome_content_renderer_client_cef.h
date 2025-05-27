@@ -14,9 +14,16 @@
 #include "chrome/renderer/chrome_content_renderer_client.h"
 
 class CefRenderManager;
+class ArkWebContentRendererClientCefExt;
 
 // CEF override of ChromeContentRendererClient.
+#if BUILDFLAG(ARKWEB_ADBLOCK) || BUILDFLAG(ARKWEB_NETWORK_BASE) || \
+    BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+class ChromeContentRendererClientCef
+    : public ArkWebChromeContentRendererClientExt {
+#else
 class ChromeContentRendererClientCef : public ChromeContentRendererClient {
+#endif
  public:
   ChromeContentRendererClientCef();
 
@@ -26,6 +33,11 @@ class ChromeContentRendererClientCef : public ChromeContentRendererClient {
       const ChromeContentRendererClientCef&) = delete;
 
   ~ChromeContentRendererClientCef() override;
+
+  virtual ArkWebContentRendererClientCefExt*
+  AsArkWebContentRendererClientCef() {
+    return nullptr;
+  }
 
   // Render thread task runner.
   base::SingleThreadTaskRunner* render_task_runner() const {
@@ -46,37 +58,9 @@ class ChromeContentRendererClientCef : public ChromeContentRendererClient {
   void DevToolsAgentAttached() override;
   void DevToolsAgentDetached() override;
   void ExposeInterfacesToBrowser(mojo::BinderMap* binders) override;
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  std::unique_ptr<blink::WebPrescientNetworking> CreatePrescientNetworking(
-      content::RenderFrame* render_frame) override;
-  bool IsPrefetchOnly(content::RenderFrame* render_frame) override;
-#endif  // ARKWEB_NO_STATE_PREFETCH
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  bool HandleNavigation(content::RenderFrame* render_frame,
-                        blink::WebFrame* frame,
-                        const blink::WebURLRequest& request,
-                        blink::WebNavigationType type,
-                        blink::WebNavigationPolicy default_policy,
-                        bool is_redirect) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_SAFEBROWSING) && !BUILDFLAG(ARKWEB_NWEB_EX)
-  void PrepareErrorPage(content::RenderFrame* render_frame,
-                        const blink::WebURLError& error,
-                        const std::string& http_method,
-                        content::mojom::AlternativeErrorPageOverrideInfoPtr
-                            alternative_error_page_info,
-                        std::string* error_html) override;
-#endif
-#if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
-  void RunScriptsAtDocumentStart(content::RenderFrame* render_frame) override;
-  void RunScriptsAtDocumentEnd(content::RenderFrame* render_frame) override;
-#endif
-#if BUILDFLAG(ARKWEB_JSPROXY)
-  void RunScriptsAtHeadReady(content::RenderFrame* render_frame) override;
-#endif
  private:
+  friend class ArkWebContentRendererClientCefExt;
   void OnBrowserCreated(blink::WebView* web_view,
                         std::optional<bool> is_windowless);
 
@@ -84,5 +68,7 @@ class ChromeContentRendererClientCef : public ChromeContentRendererClient {
 
   scoped_refptr<base::SingleThreadTaskRunner> render_task_runner_;
 };
+
+#include "cef/ohos_cef_ext/libcef/renderer/arkweb_content_renderer_client_cef_ext.h"
 
 #endif  // CEF_LIBCEF_RENDERER_CHROME_CHROME_CONTENT_RENDERER_CLIENT_CEF_

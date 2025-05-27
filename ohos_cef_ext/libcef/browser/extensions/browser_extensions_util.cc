@@ -4,6 +4,8 @@
 
 #include "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h"
 #include "cef/libcef/browser/browser_info_manager.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
+
 namespace extensions {
 
 CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
@@ -23,7 +25,7 @@ CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
        CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
     CefRefPtr<AlloyBrowserHostImpl> current_browser = browser_info->browser()->AsAlloyBrowserHostImpl();
         // static_cast<AlloyBrowserHostImpl*>(browser_info->browser().get());
-    if (current_browser && current_browser->ExtensionGetTabId() == tab_id) {
+    if (current_browser && current_browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId() == tab_id) {
       // Make sure we're operating in the same CefBrowserContext.
       if (CefBrowserContext::FromBrowserContext(
               current_browser->GetBrowserContext()) == cef_browser_context) {

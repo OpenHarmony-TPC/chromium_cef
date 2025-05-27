@@ -50,23 +50,6 @@ class CefBrowserFrame
   CefRefPtr<CefFrameHostImpl> GetFrameHost(bool prefer_speculative,
                                            bool* is_excluded = nullptr) const;
 
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  void OnGetImageForContextNode(
-      cef::mojom::GetImageForContextNodeParamsPtr params,
-      int command_id) override;
-
-  void OnGetImageForContextNodeNull(int command_id) override;
-#endif
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  void ShouldOverrideUrlLoading(
-      const std::string& url,
-      const std::string& request_method,
-      bool user_gesture,
-      bool is_redirect,
-      bool is_outermost_main_frame,
-      cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback)
-      override;
-#endif
+#include "cef/ohos_cef_ext/libcef/browser/browser_frame_for_include.cc"
 };
-
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_FRAME_H_

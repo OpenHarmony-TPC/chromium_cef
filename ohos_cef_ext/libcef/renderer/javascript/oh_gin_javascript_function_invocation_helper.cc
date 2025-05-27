@@ -9,6 +9,7 @@
 
 #include <utility>
 
+#include "arkweb/build/features/features.h"
 #include "base/values.h"
 #include "content/public/renderer/v8_value_converter.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_errors.h"
@@ -18,6 +19,14 @@
 #include "third_party/bounds_checking_function/include/securec.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "v8/include/v8-exception.h"
+
+#if BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
+#include <unistd.h>
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#include "third_party/blink/renderer/core/render_mojom/render_mojom_client.h"
+const int MAIN_PROCESS_ID_MIN = 20000000;
+#endif  // BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
 
 namespace {
 
@@ -224,7 +233,18 @@ OhGinJavascriptFunctionInvocationHelper::InvokeJavascriptMethodFlowbuf(
   if (!flowbufferAdapter || (object->object_id() >= DEFAULT_ID)) {
     return InvokeJavascriptMethod(arguments, error, args, object);
   }
+
+#if BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
+  uid_t uid = getuid();
+  if (uid < MAIN_PROCESS_ID_MIN) {
+    blink::ResSchedReportClient report_client;
+    report_client.StartPerformanceBoost();
+  } else {
+    flowbufferAdapter->StartPerformanceBoost();
+  }
+#else
   flowbufferAdapter->StartPerformanceBoost();
+#endif  // BUILDFLAG(ARKWEB_RENDER_REMOVE_BINDER)
 
   int fd;
   auto ashmem = flowbufferAdapter->CreateAshmem(

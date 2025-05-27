@@ -65,7 +65,7 @@ class CefDevToolsProtocolManager {
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   void OnFrontEndDestroyed();
   CefDevToolsFrontend* devtools_frontend_ = nullptr;
-  base::WeakPtrFactory<CefDevToolsProtocolManager> weak_ptr_factory_;
+  base::WeakPtrFactory<CefDevToolsProtocolManager> weak_ptr_factory_{this};
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 };
 

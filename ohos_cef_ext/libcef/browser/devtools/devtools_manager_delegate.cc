@@ -139,6 +139,7 @@ class TCPServerSocketFactory : public content::DevToolsSocketFactory {
         new net::TCPServerSocket(nullptr, net::NetLogSource()));
     if (socket->ListenWithAddressAndPort(address_, port_, kBackLog) !=
         net::OK) {
+      LOG(INFO) << "TCPServerSocket listen port[" << port_ << "] failed";
       return std::unique_ptr<net::ServerSocket>();
     }
     return socket;
@@ -185,6 +186,25 @@ std::unique_ptr<content::DevToolsSocketFactory> CreateSocketFactory() {
       new TCPServerSocketFactory("127.0.0.1", port));
 #endif
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+std::unique_ptr<content::DevToolsSocketFactory> CreateSocketFactoryWithPort(
+    int32_t port)
+{
+  uint16_t valid_port = 0;
+  const int32_t min_valid_port_value = 1024;
+  const int32_t max_valid_port_value = 65535;
+  if (port >= min_valid_port_value && port <= max_valid_port_value) {
+    valid_port = static_cast<uint16_t>(port);
+  }
+  if (valid_port == 0) {
+    LOG(ERROR) << "Invalid http debugger port : " << port;
+    return nullptr;
+  }
+  return std::unique_ptr<content::DevToolsSocketFactory>(
+      new TCPServerSocketFactory("0.0.0.0", valid_port));
+}
+#endif // ARKWEB_DEVTOOLS
 #endif
 }  //  namespace
 
@@ -221,6 +241,36 @@ void CefDevToolsManagerDelegate::StartHttpHandler(
         base::OnceClosure());
   }
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+// static
+void CefDevToolsManagerDelegate::StartHttpHandlerWithPort(
+    content::BrowserContext* browser_context, int32_t port)
+{
+  std::unique_ptr<content::DevToolsSocketFactory> socket_factory =
+      CreateSocketFactoryWithPort(port);
+  if (!socket_factory) {
+    return;
+  }
+
+  LOG(INFO) << "start remote debugging server with port";
+  if (browser_context == nullptr) {
+    content::DevToolsAgentHost::StartRemoteDebuggingServer(
+        std::move(socket_factory), base::FilePath(), base::FilePath());
+  } else {
+    content::DevToolsAgentHost::StartRemoteDebuggingServer(
+        std::move(socket_factory), browser_context->GetPath(),
+        base::FilePath());
+  }
+
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (command_line.HasSwitch(switches::kRemoteDebuggingPipe)) {
+    content::DevToolsAgentHost::StartRemoteDebuggingPipeHandler(
+        base::OnceClosure());
+  }
+}
+#endif // ARKWEB_DEVTOOLS
 
 // static
 void CefDevToolsManagerDelegate::StopHttpHandler() {

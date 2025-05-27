@@ -17,16 +17,13 @@
 #define ARKWEB_INCLUDE_CEF_APP_EXT_H_
 #pragma once
 
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/cef_base.h"
 #include "include/cef_browser_process_handler.h"
 #include "include/cef_command_line.h"
 #include "include/cef_render_process_handler.h"
 #include "include/cef_resource_bundle_handler.h"
 #include "include/cef_scheme.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 ///
@@ -64,6 +61,30 @@ void CefSetFileRenameOption(const int file_rename_option);
 ///
 /*--cef()--*/
 CefRefPtr<CefDownloadItem> CefGetDownloadItem(const std::string& guid);
+
+///
+/// Interface to implement to be notified of asynchronous completion via
+/// CefBrowserHostBase::StoreWebArchive().
+///
+/*--cef(source=client)--*/
+class CefReadDownloadDataCallback : public virtual CefBaseRefCounted {
+ public:
+  ///
+  /// Method that will be called upon completion. |result| will either be the
+  /// filename under which the file was saved, or empty if saving the file
+  /// failed.
+  ///
+  /*--cef(optional_param=guid,optional_param=buffer)--*/
+  virtual void OnReadDownloadDataDone(const CefString& guid, const CefRefPtr<CefBinaryValue>& buffer) = 0;
+};
+
+///
+/// This function should be called on the main application thread.
+///
+/*--cef()--*/
+void CefReadDownloaData(const std::string& guid,
+                        const int32_t read_size,
+                        CefRefPtr<CefReadDownloadDataCallback> callback);
 #endif
 #endif  // BUILDFLAG(IS_ARKWEB)
 

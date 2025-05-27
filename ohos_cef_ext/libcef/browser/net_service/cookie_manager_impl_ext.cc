@@ -1,15 +1,7 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// Based on cookie_manger_impl.cc originally written by
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file. 
-
 #include "libcef/browser/net_service/cookie_manager_impl_ext.h"
 
 #include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
@@ -22,13 +14,13 @@
 #include "cef/libcef/browser/net_service/cookie_helper.h"
 #include "cef/libcef/browser/net_service/cookie_manager_impl.h"
 #include "cef/libcef/common/time_util.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/cookie_config/cookie_store_util.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/cookie_store_factory.h"
 #include "content/public/browser/storage_partition.h"
 #include "content/public/common/content_switches.h"
-#include "libcef/browser/net_service/net_helpers.h"
 #include "libcef/browser/request_context_impl.h"
 #include "libcef/common/net_service/net_service_util.h"
 #include "net/cookies/cookie_monster.h"
@@ -39,10 +31,6 @@
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "base/command_line.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
@@ -51,6 +39,9 @@
 #endif  // BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 
 using network::mojom::CookieManager;
+
+namespace {
+base::Lock g_lock;
 
 // Do not keep a reference to the object returned by this method.
 CefBrowserContext* GetBrowserContext(const CefBrowserContext::Getter& getter) {
@@ -87,8 +78,7 @@ void DeleteCanonicalCookie(CookieManager* cookie_manager,
 void ExecuteVisitor(CefRefPtr<CefCookieVisitor> visitor,
                     CookieManager* cookie_manager,
                     const std::vector<net::CanonicalCookie>& cookies) {
-  int total = cookies.size();
-  int count = 0;
+  int total = cookies.size(), count = 0;
   if (total == 0) {
     CefCookie cookie;
     bool deleteCookie = false;
@@ -171,6 +161,7 @@ bool GetCookieAccessResultInclude(
   }
   return is_include;
 }
+}  // namespace
 
 // Do not keep a reference to the object returned by this method.
 CookieManager* GetCookieManager(CefBrowserContext* browser_context) {
@@ -359,6 +350,7 @@ void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteComplete(
     std::move(complete).Run();
   }
   RunCookieTasks(base::NullCallback());
+  remote_network_cookie_manager_inited_ = true;
 }
 
 void CefCookieManagerImplExt::SetNetWorkCookieManagerRemoteAsync(
@@ -391,6 +383,7 @@ void CefCookieManagerImplExt::SetNetWorkCookieManager(
 // static
 CefRefPtr<CefCookieManagerImplExt> CefCookieManagerImplExt::GetInstance(
     bool support_incognito) {
+  base::AutoLock lock(g_lock);
   if (!support_incognito) {
     static CefRefPtr<CefCookieManagerImplExt> instance =
         new CefCookieManagerImplExt();
@@ -827,6 +820,19 @@ CefRefPtr<CefCookieManagerExt> CefCookieManagerExt::GetGlobalManager(
   return CefCookieManagerImplExt::GetInstance(false).get();
 }
 
+// static
+CefRefPtr<CefCookieManagerExt> CefCookieManagerExt::GetGlobalIncognitoManager(
+    CefRefPtr<CefCompletionCallback> callback) {
+  CefRefPtr<CefRequestContext> context = CefRequestContext::GetGlobalOTRContext();
+  if (context) {
+    return context->GetCookieManagerExt(true, callback);
+  }
+  if (callback) {
+    callback->OnComplete();
+  }
+  return CefCookieManagerImplExt::GetInstance(true).get();
+}
+
 bool CefCookieManager::CreateCefCookie(const CefString& url,
                                        const CefString& value,
                                        CefCookie& cef_cookie) {
@@ -884,4 +890,48 @@ void CefCookieManagerImplExt::DeleteCookiesCallbackImpl(
     return;
   }
   callback->OnComplete(num_deleted);
+}
+
+void CefCookieManagerImplExt::LoadCookiesCallback(
+    net::CookieStore::GetCookieListCallback callback,
+    const net::CookieAccessResultList& include_cookies,
+    const net::CookieAccessResultList& excluded_cookies) {
+  std::move(callback).Run(include_cookies, excluded_cookies);
+}
+
+void CefCookieManagerImplExt::LoadCookiesOnAsyncThread(
+    const GURL& url,
+    const net::CookieOptions& options,
+    net::CookiePartitionKeyCollection cookie_partition_key_collection,
+    net::CookieStore::GetCookieListCallback callback) {
+  if (!cookie_store_task_runner_->RunsTasksInCurrentSequence()) {
+    cookie_store_task_runner_->PostTask(
+        FROM_HERE,
+        base::BindOnce(base::IgnoreResult(
+                           &CefCookieManagerImplExt::LoadCookiesOnAsyncThread),
+                       base::Unretained(this), url, options,
+                       std::move(cookie_partition_key_collection),
+                       std::move(callback)));
+    return;
+  }
+
+  CookieManager* cookie_manager = GetNetworkCookieManager();
+  if (!cookie_manager) {
+    GetCookieStore()->GetCookieListWithOptionsAsync(
+        url, options, std::move(cookie_partition_key_collection),
+        base::BindOnce(&CefCookieManagerImplExt::LoadCookiesCallback,
+                       base::Unretained(this), std::move(callback)));
+    return;
+  }
+  LOG(DEBUG) << "CefCookieManagerImpl::LoadCookiesOnAsyncThread";
+  cookie_manager->GetCookieList(
+      url, options, cookie_partition_key_collection,
+      base::BindOnce(&CefCookieManagerImplExt::LoadCookiesCallback,
+                     base::Unretained(this), std::move(callback)));
+  return;
+}
+
+bool CefCookieManagerImplExt::SupportAsyncThreadCookieLoad() {
+  return remote_network_cookie_manager_inited_ &&
+         base::FeatureList::IsEnabled(kArkwebLoadCookiesOnAsyncThread);
 }

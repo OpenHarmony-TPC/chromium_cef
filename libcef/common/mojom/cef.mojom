@@ -138,6 +138,9 @@ interface RenderFrame {
   [EnableIf=arkweb_scrollbar]
   UpdatePixelRatio(float ratio);
 
+  [EnableIf=arkweb_performance_scheduling]
+  SetIsFling(bool is_fling);
+
 // Adjusts the javascript 'online' property value.
   [EnableIf=arkweb_network_conninfo]
   SetJsOnlineProperty(bool network_up);
@@ -163,6 +166,9 @@ interface RenderFrame {
  
   [EnableIf=arkweb_input_events, Sync]
   GetHitData() => (int32 type, string extra_data);
+
+  [EnableIf=arkweb_input_events, Sync]
+  SetFocusByPosition(float x, float y) => (bool isEditable);
 
   [EnableIf=arkweb_clipboard]
   GetImageForContextNode(int32 command_id);
@@ -216,6 +222,9 @@ interface BrowserFrame {
                            bool user_gesture,
                            bool is_redirect,
                            bool is_outermost_main_frame) => (bool result);
+
+  [EnableIf=is_ohos]
+  UpdateHitTestData(int32 type, string extra_data);
 };
 
 struct CrossOriginWhiteListEntry {

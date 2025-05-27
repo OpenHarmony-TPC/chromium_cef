@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/context.h"
@@ -41,22 +42,11 @@
 #include "ui/base/page_transition_types.h"
 #include "url/origin.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(IS_ARKWEB)
 #include "cef/ohos_cef_ext/include/arkweb_load_handler_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h"
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
-#include "net_helpers.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_ITP)
-#include "cef/ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_PREFETCH_POST)
@@ -73,7 +63,6 @@
 namespace net_service {
 
 namespace {
-#define POST_CACHE_KEY "ArkWebPostCacheKey"
 
 const int kLoadNoCookiesFlags =
     net::LOAD_DO_NOT_SEND_COOKIES | net::LOAD_DO_NOT_SAVE_COOKIES;
@@ -120,105 +109,6 @@ class RequestCallbackWrapper : public CefCallback {
 
   IMPLEMENT_REFCOUNTING(RequestCallbackWrapper);
 };
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-class OhosInterceptCallbackWrapper : public CefInterceptCallback {
- public:
-  using ResourceCallback =
-      base::OnceCallback<void(CefRefPtr<CefResourceHandler>)>;
-  explicit OhosInterceptCallbackWrapper(ResourceCallback callback)
-      : callback_(std::move(callback)),
-        work_thread_task_runner_(
-            base::SequencedTaskRunner::GetCurrentDefault()) {}
-
-  OhosInterceptCallbackWrapper(const OhosInterceptCallbackWrapper&) = delete;
-  OhosInterceptCallbackWrapper& operator=(const OhosInterceptCallbackWrapper&) =
-      delete;
-
-  ~OhosInterceptCallbackWrapper() override {
-    if (!callback_.is_null()) {
-      // Make sure it executes on the correct thread.
-      work_thread_task_runner_->PostTask(
-          FROM_HERE, base::BindOnce(std::move(callback_), nullptr));
-    }
-  }
-
-  void ContinueLoad(CefRefPtr<CefResourceHandler> resource_handler) override {
-    if (!work_thread_task_runner_->RunsTasksInCurrentSequence()) {
-      work_thread_task_runner_->PostTask(
-          FROM_HERE, base::BindOnce(&OhosInterceptCallbackWrapper::ContinueLoad,
-                                    this, resource_handler));
-      return;
-    }
-    if (!callback_.is_null()) {
-      std::move(callback_).Run(resource_handler);
-    }
-  }
-
- private:
-  ResourceCallback callback_;
-
-  scoped_refptr<base::SequencedTaskRunner> work_thread_task_runner_;
-
-  IMPLEMENT_REFCOUNTING(OhosInterceptCallbackWrapper);
-};
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-void OnRequestErrorInUiTask(CefRefPtr<CefBrowserHostBase> browser,
-                            CefRefPtr<CefFrame> frame,
-                            CefRefPtr<ArkWebRequestImplExt> request,
-                            bool has_user_gesture,
-                            int32_t error_code,
-                            cef_transition_type_t transition_type) {
-  if (!browser || !browser->GetHost() || !browser->browser_info() || !request) {
-    LOG(ERROR) << "OnRequestErrorInUiTask parame error";
-    return;
-  }
-  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
-  if (client) {
-    CefRefPtr<ArkWebLoadHandlerExt> load_handler = client->GetLoadHandler();
-    if (!load_handler) {
-      LOG(ERROR) << "OnRequestErrorInUiTask get load_handler failed";
-      return;
-    }
-    auto navigation_lock = browser->browser_info()->CreateNavigationLock();
-    LOG(DEBUG) << "OnRequestErrorInUiTask IsMainFrame: "
-               << request->IsMainFrame();
-    if (request->IsMainFrame()) {
-      load_handler->OnLoadStart(browser, frame, request->GetURL(),
-                                transition_type);
-    }
-    load_handler->OnLoadErrorWithRequest(request, request->IsMainFrame(),
-                                         has_user_gesture, error_code,
-                                         net::ErrorToShortString(error_code));
-  }
-}
-#endif
-
-#if BUILDFLAG(ARKWEB_ITP)
-void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
-                             CefString tracker_host,
-                             CefString website_host) {
-  if (!browser || !browser->GetHost()) {
-    LOG(ERROR)
-        << "ReportITPResultInUiTask for browser or browser_host is nullptr";
-    return;
-  }
-  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
-  if (!client) {
-    LOG(ERROR) << "ReportITPResultInUiTask for client is nullptr";
-    return;
-  }
-  CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
-  if (!load_handler) {
-    LOG(ERROR) << "ReportITPResultInUiTask for load_handler is nullptr";
-    return;
-  }
-  load_handler->AsArkWebLoadHandlerExt()->OnIntelligentTrackingPreventionResult(
-      website_host, tracker_host);
-}
-#endif  // BUILDFLAG(ARKWEB_ITP)
 
 class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
  public:
@@ -429,6 +319,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
             browser->AsArkWebBrowserHostExtImpl()->GetCustomUserAgent();
       }
 #endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      is_off_the_record_ =
+          browser_context ? browser_context->IsOffTheRecord() : false;
+#endif
       DCHECK(!user_agent_.empty());
     }
 
@@ -452,6 +346,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     CefRefPtr<CefFrame> frame_;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     CefRefPtr<CefFrame> real_frame_;
+    bool is_off_the_record_ = false;
 #endif
     scoped_refptr<CefIOThreadState> iothread_state_;
     CefBrowserContext::CookieableSchemes cookieable_schemes_;
@@ -516,7 +411,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
   InterceptedRequestHandlerWrapper()
       : init_helper_(base::MakeRefCounted<InitHelper>(this)),
-        weak_ptr_factory_(this) {}
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+        wrapper_helper_(
+            std::make_unique<ArkWebInterceptedRequestHandlerWrapperHelper>()),
+#endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
+        weak_ptr_factory_(this) {
+  }
 
   InterceptedRequestHandlerWrapper(const InterceptedRequestHandlerWrapper&) =
       delete;
@@ -787,7 +687,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     cookie_helper::LoadCookies(
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-        new_url,
+        new_url, init_state_->is_off_the_record_,
 #endif
         allow_cookie_callback, std::move(done_cookie_callback));
   }
@@ -819,19 +719,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     }
 
 #if BUILDFLAG(ARKWEB_ITP)
-    if (*allow == true) {
-      bool itp_cookies_enabled = IsIntelligentTrackingPreventionEnabled();
-      network::ResourceRequest* request = state->request_;
-      if (itp_cookies_enabled && request) {
-        bool third_party_cookie_access_policy =
-            ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
-                ->AllowGetCookies(*request, GetWebContentsLastCommittedURL());
-        if (!third_party_cookie_access_policy) {
-          ReportITPResult(*request);
-          *allow = false;
-          return;
-        }
-      }
+    if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(
+                               init_state_->browser_, state->request_, allow)) {
+      return;
     }
 #endif
   }
@@ -923,277 +813,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                                      std::move(callback), true);
     }
   }
-
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  void OnRequestError(int32_t request_id,
-                      const network::ResourceRequest& request,
-                      int error_code,
-                      bool safebrowsing_hit) override {
-    LOG(DEBUG) << "OnRequestError " << error_code;
-    if (init_state_ && error_code != net::ERR_ABORTED) {
-      CefRefPtr<ArkWebRequestImplExt> arkweb_request =
-          new ArkWebRequestImplExt();
-      arkweb_request->SetURL(CefString(request.url.spec()));
-      arkweb_request->SetMethod(CefString(request.method));
-      arkweb_request->Set(request.headers);
-      arkweb_request->SetDestination(request.destination);
-      CEF_POST_TASK(
-          CEF_UIT,
-          base::BindOnce(
-              &OnRequestErrorInUiTask, init_state_->browser_,
-              init_state_->frame_, arkweb_request, request.has_user_gesture,
-              error_code,
-              static_cast<cef_transition_type_t>(request.transition_type)));
-    }
-  }
-#endif
-
-  void GetOhosResourceHandlerResult(
-      int32_t request_id,
-      CefRefPtr<CefResourceHandler> resource_handler,
-      ShouldInterceptRequestResultCallback callback) {
-    CEF_REQUIRE_IOT();
-    RequestState* state = GetState(request_id);
-    if (!state || !state->request_) {
-      std::move(callback).Run(nullptr);
-      return;
-    }
-
-#if BUILDFLAG(ARKWEB_PRECOMPILE)
-    auto response_cache = oh_code_cache::ResponseCache::CreateResponseCache(
-        state->request_->url.spec());
-    if (response_cache != nullptr && response_cache->CanUseCache()) {
-      TRACE_EVENT1("net", "Response Cache InterceptRequest", "url",
-                   state->request_->url.spec().c_str());
-      LOG(DEBUG) << "Use intercept request with response cache. url: "
-                 << state->request_->url;
-      auto resource_response =
-          std::make_unique<oh_code_cache::ResourceResponse>(
-              std::move(response_cache));
-      std::move(callback).Run(std::move(resource_response));
-      return;
-    }
-#endif
-
-    if (!resource_handler && state->scheme_factory_) {
-      // Does the scheme factory want to handle the request?
-      resource_handler = state->scheme_factory_->Create(
-          init_state_->browser_, init_state_->frame_,
-          state->request_->url.scheme(), state->pending_request_.get());
-    }
-
-#if BUILDFLAG(ARKWEB_PREFETCH_POST)
-    std::optional<std::string> key =
-        state->request_->headers.GetHeader(POST_CACHE_KEY);
-    if (!resource_handler &&
-        state->request_->method == net::HttpRequestHeaders::kPostMethod &&
-        key.has_value()) {
-      // TRACE_EVENT0("net",
-      //              "GetOhosResourceHandlerResult get post prefetched cache");
-      state->request_->headers.RemoveHeader(POST_CACHE_KEY);
-      std::vector<CefBrowserContext*> browser_context_all =
-          CefBrowserContext::GetAll();
-      if (browser_context_all.size() != 0) {
-        CefBrowserContext* context = browser_context_all[0];
-        content::BrowserContext* browser_context = context->AsBrowserContext();
-        if (browser_context) {
-          ohos_predictors::LoadingPredictor* loading_predictor =
-              ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(
-                  browser_context);
-          resource_handler = loading_predictor->GetResourceHandler(
-              state->request_->url, key.value());
-        }
-      }
-    }
-#endif
-
-    std::unique_ptr<ResourceResponse> resource_response;
-    if (resource_handler) {
-      resource_response = CreateResourceResponse(request_id, resource_handler);
-      DCHECK(resource_response);
-      state->was_custom_handled_ = true;
-    } else {
-      // The request will be handled by the NetworkService. Remove the
-      // "Accept-Language" header here so that it can be re-added in
-      // URLRequestHttpJob::AddExtraHeaders with correct ordering applied.
-#if BUILDFLAG(ARKWEB_SCHEME_HANDLER)
-      // Get the chunked data pipe remote back.
-      if (state->pending_request_) {
-        CefRefPtr<ArkWebCefPostDataStream> post_data_stream =
-            state->pending_request_->AsArkWebRequestExt()->GetUploadStream();
-        if (post_data_stream && post_data_stream->IsChunked()) {
-          LOG(INFO) << "scheme_handler get the chunked stream back.";
-          post_data_stream->GetChunkedDataPipeGetter(
-              state->request_->request_body.get());
-        }
-      }
-#endif
-    }
-
-    // Continue the request.
-    std::move(callback).Run(std::move(resource_response));
-  }
-
-  void GetOhosResourceHandlerInUiTask(
-      int32_t request_id,
-      ShouldInterceptRequestResultCallback callback,
-      std::string url) {
-    LOG(INFO) << "Get Ohos ResourceHandler";
-    CEF_REQUIRE_UIT();
-    RequestState* state = GetState(request_id);
-    if (!state || !state->request_) {
-      std::move(callback).Run(nullptr);
-      return;
-    }
-    CefRefPtr<CefResourceHandler> resource_handler;
-
-    if (state->handler_) {
-      // Does the client want to handle the request?
-      resource_handler = state->handler_->GetResourceHandler(
-          init_state_->browser_, init_state_->frame_,
-          state->pending_request_.get());
-    }
-
-    // Try to get scheme handler from ets UI thread.
-    if (!resource_handler && state->scheme_factory_) {
-      // Does the scheme factory want to handle the request?
-      if (!url.starts_with("hwweb")) {
-        resource_handler = state->scheme_factory_->Create(
-            init_state_->browser_, init_state_->frame_,
-            state->request_->url.scheme(), state->pending_request_.get());
-      }
-    }
-
-    CEF_POST_TASK(
-        CEF_IOT,
-        base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResult,
-            weak_ptr_factory_.GetWeakPtr(), request_id, resource_handler,
-            std::move(callback)));
-  }
-
-  void GetOhosResourceHandlerResultInIO(
-      int32_t request_id,
-      ShouldInterceptRequestResultCallback callback,
-      CefRefPtr<CefResourceHandler> resource_handler) {
-    CEF_REQUIRE_IOT();
-    RequestState* state = GetState(request_id);
-    if (!state) {
-      std::move(callback).Run(nullptr);
-      return;
-    }
-    GetOhosResourceHandlerResult(request_id, resource_handler,
-                                 std::move(callback));
-  }
-
-  void GetOhosResourceHandlerStillInIO(
-      int32_t request_id,
-      ShouldInterceptRequestResultCallback callback) {
-    CEF_REQUIRE_IOT();
-    RequestState* state = GetState(request_id);
-    if (!state || !state->request_) {
-      std::move(callback).Run(nullptr);
-      return;
-    }
-    CefRefPtr<OhosInterceptCallbackWrapper> callback_ptr =
-        new OhosInterceptCallbackWrapper(base::BindOnce(
-            &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerResultInIO,
-            weak_ptr_factory_.GetWeakPtr(), request_id, std::move(callback)));
-
-    if (state->handler_) {
-      // Does the client want to handle the request?
-      state->pending_request_->AsArkWebRequestExt()->SetDestination(
-          state->request_->destination);
-      state->handler_->AsArkWebResourceRequestHandlerExt()
-          ->GetResourceHandlerByIO(init_state_->browser_, init_state_->frame_,
-                                   state->pending_request_.get(), callback_ptr,
-                                   state->scheme_factory_,
-                                   state->request_->url.scheme());
-    } else {
-      GetOhosResourceHandlerFromETS(
-          state->scheme_factory_, state->pending_request_.get(),
-          state->request_->url.scheme(), callback_ptr);
-    }
-  }
-
-  void GetOhosResourceHandlerFromETS(
-      CefRefPtr<CefSchemeHandlerFactory> scheme_factory,
-      CefRefPtr<CefRequest> request,
-      const CefString& scheme,
-      CefRefPtr<CefInterceptCallback> callback) {
-    if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
-      content::GetUIThreadTaskRunner({})->PostTask(
-          FROM_HERE,
-          base::BindOnce(
-              &InterceptedRequestHandlerWrapper::GetOhosResourceHandlerFromETS,
-              weak_ptr_factory_.GetWeakPtr(), scheme_factory, request, scheme,
-              callback));
-      return;
-    }
-
-    CefRefPtr<CefResourceHandler> resource_handler = nullptr;
-    if (scheme_factory) {
-      // Does the scheme factory want to handle the request?
-      resource_handler = scheme_factory->Create(
-          init_state_->browser_, init_state_->frame_, scheme, request);
-    }
-    callback->ContinueLoad(resource_handler);
-  }
-
-  void GetOhosResourceHandler(int32_t request_id,
-                              ShouldInterceptRequestResultCallback callback) {
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    RequestState* state = GetState(request_id);
-    if (state && state->request_) {
-      // Add fetch meta data headers.
-      bool old_flag = state->pending_request_->IsReadOnly();
-      state->pending_request_->SetReadOnly(false);
-      if (state->request_->request_initiator.has_value()) {
-        CefString frame_url =
-            init_state_->real_frame_ ? init_state_->real_frame_->GetURL() : "";
-        state->pending_request_->AsArkWebRequestExt()->SetFrameUrl(frame_url);
-      }
-
-      if (state->pending_request_->AsArkWebRequestExt()->GetResourceType() ==
-          RT_SUB_FRAME) {
-        CefRefPtr<CefFrame> parent_frame =
-            init_state_->real_frame_ ? init_state_->real_frame_->GetParent()
-                                     : nullptr;
-        CefString frame_url = "";
-        if (parent_frame) {
-          frame_url = parent_frame->GetURL();
-        }
-        state->pending_request_->AsArkWebRequestExt()->SetFrameUrl(frame_url);
-      }
-      bool has_user_activation = false;
-      if (state->request_->trusted_params) {
-        has_user_activation =
-            state->request_->trusted_params->has_user_activation;
-      }
-      std::map<std::string, std::string> headers =
-          network::GetFetchMetadataHeaders(
-              state->request_->url, state->request_->mode, has_user_activation,
-              state->request_->destination, state->request_->request_initiator);
-      for (auto& entry : headers) {
-        state->pending_request_->SetHeaderByName(entry.first, entry.second,
-                                                 false);
-      }
-      state->pending_request_->SetReadOnly(old_flag);
-    }
-#endif
-
-    CEF_REQUIRE_IOT();
-    GetOhosResourceHandlerStillInIO(request_id, std::move(callback));
-  }
-
-#if BUILDFLAG(ARKWEB_USERAGENT)
-  std::string GetCustomUserAgent() override {
-    if (init_state_) {
-      return init_state_->custom_user_agent_;
-    }
-    return "";
-  }
-#endif
 
   void ContinueShouldInterceptRequest(
       int32_t request_id,
@@ -1396,27 +1015,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     MaybeSaveCookies(request_id, state, headers, std::move(exec_callback));
   }
-
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  void RedirectSavedCookieDone(int32_t request_id,
-                               network::ResourceRequest* request,
-                               OnRequestResponseResultCallback callback,
-                               const GURL& new_url) {
-    auto exec_callback = base::BindOnce(
-        std::move(callback), ResponseMode::CONTINUE, nullptr, new_url);
-    RequestState* state = GetState(request_id);
-    if (!state) {
-      // The request may have been canceled while the async callback was
-      // pending.
-      std::move(exec_callback).Run();
-      return;
-    }
-    // Clear the cookie  first. we will get cookie for this redirect.
-    request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
-
-    MaybeLoadCookies(request_id, state, new_url, std::move(exec_callback));
-  }
-#endif
 
   void HandleResponse(int32_t request_id,
                       RequestState* state,
@@ -1630,60 +1228,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     RemoveState(request_id);
   }
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  void OnHttpError(int32_t request_id,
-                   CefRefPtr<CefRequest> request,
-                   bool is_main_frame,
-                   bool has_user_gesture,
-                   CefRefPtr<CefResponse> error_response) override {
-    CEF_REQUIRE_UIT();
-    if (!init_state_->browser_) {
-      return;
-    }
-    CefRefPtr<CefClient> client = init_state_->browser_->GetHost()->GetClient();
-    if (!client) {
-      return;
-    }
-    CefRefPtr<ArkWebLoadHandlerExt> load_handler = client->GetLoadHandler();
-    if (!load_handler) {
-      return;
-    }
-    load_handler->OnHttpError(request, is_main_frame, has_user_gesture,
-                              error_response);
-  }
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-  void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
-    CEF_REQUIRE_UIT();
-    if (!init_state_) {
-      // set the default value
-      setting.file_access = false;
-      setting.block_network = false;
-      setting.cache_mode = 0;
-      setting.file_access_dirs_list = std::vector<std::string>();
-      return;
-    }
-    if (!init_state_->browser_) {
-      // set the default value
-      setting.file_access = false;
-      setting.block_network = false;
-      setting.cache_mode = 0;
-      setting.file_access_dirs_list = std::vector<std::string>();
-      return;
-    }
-    setting.file_access =
-        init_state_->browser_->AsArkWebBrowserHostExtImpl()->GetFileAccess();
-    setting.block_network =
-        init_state_->browser_->AsArkWebBrowserHostExtImpl()->GetBlockNetwork();
-    setting.cache_mode =
-        init_state_->browser_->AsArkWebBrowserHostExtImpl()->GetCacheMode();
-    setting.file_access_dirs_list =
-        init_state_->browser_->AsArkWebBrowserHostExtImpl()
-            ->GetGrantFileAccessDirs();
-  }
-#endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-
  private:
   void CallHandlerOnComplete(RequestState* state,
                              const network::URLLoaderCompletionStatus& status) {
@@ -1863,38 +1407,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     return !scheme::IsInternalHandledScheme(request->url.scheme());
   }
 
-#if BUILDFLAG(ARKWEB_ITP)
-  bool IsIntelligentTrackingPreventionEnabled() {
-    if (!init_state_ || !init_state_->browser_) {
-      return false;
-    }
-    return init_state_->browser_->AsArkWebBrowserHostExtImpl()
-        ->IsIntelligentTrackingPreventionEnabled();
-  }
-
-  void ReportITPResult(const network::ResourceRequest& request) {
-    CEF_REQUIRE_IOT();
-    if (!init_state_ || !request.request_initiator || !request.url.has_host()) {
-      LOG(ERROR) << "ReportITPResult failed for param error";
-      return;
-    }
-
-    LOG(DEBUG) << "ReportITPResult";
-    CEF_POST_TASK(
-        CEF_UIT, base::BindOnce(&ReportITPResultInUiTask, init_state_->browser_,
-                                CefString(request.url.host()),
-                                CefString(request.request_initiator->host())));
-  }
-
-  GURL GetWebContentsLastCommittedURL() {
-    if (!init_state_ || !init_state_->browser_) {
-      return GURL();
-    }
-    return init_state_->browser_->AsArkWebBrowserHostExtImpl()
-        ->GetLastCommittedURL();
-  }
-#endif  // BUILDFLAG(ARKWEB_ITP)
-
   scoped_refptr<InitHelper> init_helper_;
   std::unique_ptr<InitState> init_state_;
 
@@ -1905,6 +1417,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
   using PendingRequests = std::vector<std::unique_ptr<PendingRequest>>;
   PendingRequests pending_requests_;
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/net_service/intercepted_request_handler_wrapper_for_include.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
   base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
 };

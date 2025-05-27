@@ -10,8 +10,7 @@
 #include "url/gurl.h"
 
 #if BUILDFLAG(ARKWEB_NAVIGATION)
-#include "content/public/browser/favicon_status.h"
-#include "third_party/skia/include/core/SkBitmap.h"
+#include "cef/ohos_cef_ext/libcef/browser/navigation_entry_impl_for_include.cc"
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
 CefNavigationEntryImpl::CefNavigationEntryImpl(content::NavigationEntry* value)
@@ -73,27 +72,3 @@ CefRefPtr<CefSSLStatus> CefNavigationEntryImpl::GetSSLStatus() {
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
   return new CefSSLStatusImpl(mutable_value()->GetSSL());
 }
-
-#if BUILDFLAG(ARKWEB_NAVIGATION)
-bool CefNavigationEntryImpl::GetFavicon(void** pixel_data,
-                                        int& color_type,
-                                        int& alpha_type,
-                                        int& pixel_width,
-                                        int& pixel_height) {
-  CEF_VALUE_VERIFY_RETURN(false, false);
-  auto favicon_status = mutable_value()->GetFavicon();
-  if (!favicon_status.valid) {
-    return false;
-  }
-  const SkBitmap* bitmap = favicon_status.image.ToSkBitmap();
-  if (!bitmap) {
-    return false;
-  }
-  color_type = bitmap->colorType();
-  alpha_type = bitmap->alphaType();
-  pixel_width = bitmap->width();
-  pixel_height = bitmap->height();
-  *pixel_data = bitmap->getPixels();
-  return true;
-}
-#endif  // BUILDFLAG(ARKWEB_NAVIGATION)

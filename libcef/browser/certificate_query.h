@@ -6,9 +6,6 @@
 #define CEF_LIBCEF_BROWSER_CERTIFICATE_QUERY_H_
 #pragma once
 
-#include <string>
-
-#include "arkweb/build/features/features.h"
 #include "base/functional/callback_forward.h"
 #include "content/public/browser/certificate_request_result_type.h"
 
@@ -26,23 +23,6 @@ namespace certificate_query {
 
 using CertificateErrorCallback =
     base::OnceCallback<void(content::CertificateRequestResultType)>;
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-// Called from ContentBrowserClient::AllowAllCertificateError.
-// |callback| will be returned if the request is unhandled and
-// |default_disallow| is false.
-[[nodiscard]] CertificateErrorCallback AllowAllCertificateError(
-    content::WebContents* web_contents,
-    int cert_error,
-    const net::SSLInfo& ssl_info,
-    const GURL& request_url,
-    bool is_main_frame_request,
-    bool strict_enforcement,
-    const GURL& origin_url,
-    const std::string& referrer,
-    CertificateErrorCallback callback,
-    bool default_disallow);
-#endif
 
 // Called from ContentBrowserClient::AllowCertificateError.
 // |callback| will be returned if the request is unhandled and

@@ -15,6 +15,7 @@
 #include "content/public/common/referrer.h"
 #include "libcef/browser/alloy/alloy_browser_host_impl.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.h"
+#include "libcef/browser/ohos_safe_browsing/ohos_sb_malicious_allowlist.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
 namespace {
@@ -70,15 +71,29 @@ void SbClient::NavigationEntryCommitted(
   BlockingPageInfo* blocking_page_info =
       BlockingPageInfo::FromWebContents(web_contents());
 
-  if (!blocking_page_info) {
+  if (!blocking_page_info || blocking_page_info->IsUrlEmpty()) {
     return;
   }
+  LOG(INFO) << "SafeBrowsing NavigationEntryCommitted ShowBlockingPage";
   ShowBlockingPage();
+  BlockingPageInfo::RemoveBlockingPageInfo(web_contents());
+}
+
+void SbClient::HandleChildModePolicy(OHSBThreatType block_type) {
+  if (block_type == OHSBThreatType::THREAT_WARNING) {
+    NotifySafeBrowsingCheckResult(OHSBThreatType::THREAT_RISK);
+    return;
+  }
+  NotifySafeBrowsingCheckResult(block_type);
 }
 
 void SbClient::ShowBlockingPage() {
-  if (!web_contents() || web_contents()->IsBeingDestroyed() ||
-      !web_contents()->IsSafeBrowsingDetectionEnabled()) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+    return;
+  }
+
+  if (web_contents()->IsSafeBrowsingDetectionDisabled()) {
+    LOG(INFO) << "SafeBrowsingDetection is disabled";
     return;
   }
 
@@ -98,6 +113,7 @@ void SbClient::ShowBlockingPage() {
   bool is_page_type_normal =
       (visible_entry->GetPageType() == content::PAGE_TYPE_NORMAL);
   if (!is_page_type_normal) {
+    LOG(WARNING) << "SafeBrowsing warning: page type is abnormal";
     return;
   }
   std::string lang = base::i18n::GetConfiguredLocale();
@@ -109,6 +125,14 @@ void SbClient::ShowBlockingPage() {
       bool is_display_block_page = false;
       int policy = blocking_page_info.info_policy;
       OHSBThreatType block_type = blocking_page_info.info_block_type;
+
+      LOG(INFO) << "SafeBrowsing ShowBlockingPage, policy: " << policy
+                << ", block_type: " << block_type;
+
+      if (policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
+        is_display_block_page = true;
+        HandleChildModePolicy(block_type);
+      }
 
       if (block_type == OHSBThreatType::THREAT_WARNING &&
           policy == OHSBPolicyType::POLICY_HALF_POPUP) {
@@ -123,8 +147,9 @@ void SbClient::ShowBlockingPage() {
         NotifySafeBrowsingCheckResult(block_type);
       }
 
-      if (InMaliciousAllowlist(prefs_, url.has_host() ? url.host() : url.spec(),
-                               incognito_mode_)) {
+      if (policy != OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS &&
+          MaliciousAllowlist::GetInstance().IsInAllowlist(
+              url.has_host() ? url.host() : url.spec(), incognito_mode_)) {
         LOG(WARNING) << "SafeBrowsing in malicious allowlist.";
         break;
       }
@@ -147,7 +172,9 @@ void SbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
   content::NavigationEntry* pending_entry =
       web_contents()->GetController().GetPendingEntry();
   if (!pending_entry && !web_contents()->IsWaitingForResponse()) {
+    LOG(INFO) << "SafeBrowsing SetEvilUrlPolicyAndHwCode ShowBlockingPage";
     ShowBlockingPage();
+    BlockingPageInfo::RemoveBlockingPageInfo(web_contents());
   }
 }
 
@@ -188,17 +215,32 @@ void SbClient::BlockingPageInfo::SetBlockingPageInfo(
   blocking_page_info->redirect_url_ = redirect_url;
   if (policy == OHSBPolicyType::POLICY_POPUP_AND_DANGER ||
       policy == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS ||
-      policy == OHSBPolicyType::POLICY_HALF_POPUP) {
+      policy == OHSBPolicyType::POLICY_HALF_POPUP ||
+      policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
     SbBlockingPageInfo info(url, block_type, hw_code, policy, redirect_url);
     blocking_page_info_cache.Put(url, info);
   }
+}
+
+void SbClient::BlockingPageInfo::RemoveBlockingPageInfo(
+    content::WebContents* web_contents)
+{
+  if (!web_contents) {
+    return;
+  }
+
+  web_contents->RemoveUserData(BlockingPageInfo::UserDataKey());
+
+  // The URL policy is changed, but the cache policy remains unchanged.
+  // So ShowBlockingPage is complete, and the cache is cleared.
+  blocking_page_info_cache.Clear();
 }
 
 void SbClient::DisplayBlockingPage(const GURL& url,
                                    int policy,
                                    OHSBThreatType block_type,
                                    const std::string& app_locale) {
-  LOG(INFO) << "SafeBrowsing " << __func__ << " url: " << url.spec()
+  LOG(INFO) << "SafeBrowsing " << __func__ << ", policy: " << policy
             << ", type: " << block_type;
   auto controller = std::make_unique<SbControllerClient>(
       web_contents(), prefs_, url, app_locale, incognito_mode_);
@@ -225,19 +267,23 @@ bool SbClient::IsBlockPageShowing() {
 
 void SbClient::NotifySafeBrowsingCheckResult(OHSBThreatType threat_type) {
   if (!web_contents()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckResult: web_contents is null";
     return;
   }
   CefRefPtr<AlloyBrowserHostImpl> browser =
       AlloyBrowserHostImpl::GetBrowserForContents(web_contents());
   if (!browser.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckResult: browser is null";
     return;
   }
   CefRefPtr<CefClient> client = browser->GetClient();
   if (!client.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckResult: client is null";
     return;
   }
   CefRefPtr<CefLoadHandler> load_handler = client->GetLoadHandler();
   if (!load_handler.get()) {
+    LOG(WARNING) << "NotifySafeBrowsingCheckResult: load_handler is null";
     return;
   }
   int type = static_cast<int>(threat_type);

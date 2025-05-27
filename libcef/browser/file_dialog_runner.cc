@@ -133,17 +133,7 @@ class CefSelectFileDialog final : public ui::SelectFileDialog {
   }
 
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-  void SetAcceptTypes(std::vector<std::u16string> types) override {
-    accept_types_ = std::move(types);
-  }
-
-  void SetUseMediaCapture(bool use_media_capture) override {
-    use_media_capture_ = use_media_capture;
-  }
-
-  void SetOpenWritable(bool open_writable) override {
-    open_writable_ = open_writable;
-  }
+#include "cef/ohos_cef_ext/libcef/browser/file_dialog_runner_for_include.cc"
 #endif
 
  private:

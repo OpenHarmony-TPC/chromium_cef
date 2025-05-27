@@ -28,10 +28,15 @@ class ArkWebTouchSelectionControllerClientOSRExt
   }
   explicit ArkWebTouchSelectionControllerClientOSRExt(
       CefRenderWidgetHostViewOSR* rwhv);
-
+  void CloseQuickMenuAndHideHandles();
+  // Called when touch scroll starts/completes to hide/show touch handles and
+  // the quick menu.
+  void OnScrollStarted() override;
+  void OnScrollCompleted() override;
+  bool HandleContextMenu(const content::ContextMenuParams& params) override;
 #if BUILDFLAG(ARKWEB_MENU)
   // CefTouchSelectionControllerClientOSR:
-  void SetTemporarilyHidden(bool hidden) override;
+  void SetTemporarilyHidden(bool hidden);
 
   void MouseSelectMenuShow(bool show);
   void ChangeVisibilityOfQuickMenu();
@@ -39,21 +44,20 @@ class ArkWebTouchSelectionControllerClientOSRExt
       const gfx::Rect& clipped_selection_bounds);
   bool NeedPopupInsertTouchHandleQuickMenu();
 #endif
-
+#if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
+  void SelectionTextNotEmpty(bool has_selection);
+#endif
 #if BUILDFLAG(ARKWEB_VIBRATE)
   bool IsInsertHandleShow();
 #endif  // BUILDFLAG(ARKWEB_VIBRATE)
-
+// ui::TouchSelectionControllerClient:
+void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   void HideHandleAndQuickMenuIfNecessary(bool hide_handles);
 #endif
- private:
 #if BUILDFLAG(ARKWEB_MENU)
-  // ui::TouchSelectionControllerClient:
-  void OnSelectionEvent(ui::SelectionEventType event) override;
-
   // CefTouchSelectionControllerClientOSR:
-  void NotifyTouchSelectionChanged(bool need_report) override;
+  void NotifyTouchSelectionChanged(bool need_report);
 
   bool IsVaildSelectionHandleMove();
   void ExecuteCommandMouse(int command_id, int event_flags);
@@ -61,14 +65,24 @@ class ArkWebTouchSelectionControllerClientOSRExt
       const gfx::Rect& clipped_selection_bounds);
 #endif  // BUILDFLAG(ARKWEB_MENU)
 
+#if BUILDFLAG(ARKWEB_MENU)
+  void SelectBetweenCoordinatesV2(const gfx::PointF& point,
+                                  bool is_base) final;
+#endif
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   // CefTouchSelectionControllerClientOSR:
-  void UpdateQuickMenuByHandlesHidden() override;
+  void UpdateQuickMenuByHandlesHidden();
+  void SetSelectAllClicked(int command_id);
 #endif
-
-  // Not owned, non-null for the lifetime of this object.
-  raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
-
+  void CloseQuickMenu() override;
+  void ShowQuickMenu() override;
+  void UpdateQuickMenu() override;
+  void TemporarilyCloseQuickMenu() override;
+  bool IsCommandIdEnabled(int command_id) const override;
+  void ExecuteCommand(int command_id, int event_flags) override;
+ private:
+  // // Not owned, non-null for the lifetime of this object.
+  // raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   bool handles_hidden_by_selection_ui_ = false;
 #endif
@@ -79,5 +93,10 @@ class ArkWebTouchSelectionControllerClientOSRExt
   base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
       weak_ptr_factory_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
+  int commandId_ = -1;
+  bool isCopy_ = false;
+#if BUILDFLAG(ARKWEB_AI)
+  bool isSelectionNotEmptyForAI_;
+#endif
 };
 #endif

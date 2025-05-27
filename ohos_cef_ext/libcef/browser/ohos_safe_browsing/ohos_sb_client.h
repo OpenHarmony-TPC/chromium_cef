@@ -14,6 +14,7 @@
 #include "content/public/browser/web_contents_user_data.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_block_page.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_threat_type.h"
+#include "base/memory/raw_ptr.h"
 
 namespace ohos_safe_browsing {
 
@@ -61,6 +62,10 @@ class SbClient : public content::WebContentsObserver {
                                     int hw_code,
                                     const GURL& redirect_url);
 
+    static void RemoveBlockingPageInfo(content::WebContents* web_contents);
+ 
+    bool IsUrlEmpty() const { return url_.is_empty(); }
+
    private:
     explicit BlockingPageInfo(content::WebContents* web_contents);
     friend class content::WebContentsUserData<BlockingPageInfo>;
@@ -73,6 +78,8 @@ class SbClient : public content::WebContentsObserver {
 
     WEB_CONTENTS_USER_DATA_KEY_DECL();
   };
+
+  void HandleChildModePolicy(OHSBThreatType block_type);
 
   void ShowBlockingPage();
 
@@ -104,7 +111,7 @@ class SbClient : public content::WebContentsObserver {
 
   void NotifySafeBrowsingCheckResult(OHSBThreatType threat_type);
 
-  PrefService* prefs_;
+  raw_ptr<PrefService> prefs_;
   bool incognito_mode_{false};
 };
 

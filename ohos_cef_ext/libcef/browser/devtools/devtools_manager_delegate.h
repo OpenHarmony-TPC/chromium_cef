@@ -14,6 +14,10 @@ class BrowserContext;
 class CefDevToolsManagerDelegate : public content::DevToolsManagerDelegate {
  public:
   static void StartHttpHandler(content::BrowserContext* browser_context);
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  static void StartHttpHandlerWithPort(
+      content::BrowserContext* browser_context, int32_t port);
+#endif // ARKWEB_DEVTOOLS
   static void StopHttpHandler();
 
   CefDevToolsManagerDelegate();

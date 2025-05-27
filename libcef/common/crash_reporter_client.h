@@ -12,7 +12,7 @@
 #include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
 #include "build/build_config.h"
-#include "cef/ohos_cef_ext/include/cef_version.h"
+#include "cef/include/cef_version.h"
 #include "components/crash/core/app/crash_reporter_client.h"
 
 // Global object that is instantiated in each process and configures crash

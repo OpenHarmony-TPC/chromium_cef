@@ -7,9 +7,11 @@
 #include <memory>
 #include <string>
 
+#include "base/base_switches.h"
 #include "base/command_line.h"
 #include "base/functional/callback.h"
 #include "base/logging.h"
+#include "base/memory/raw_ptr.h"
 #include "components/permissions/permission_util.h"
 #include "content/public/browser/permission_controller.h"
 #include "content/public/browser/render_frame_host.h"
@@ -18,6 +20,9 @@
 #include "content/public/common/content_switches.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
 
+#if BUILDFLAG(ARKWEB_WEBRTC)
+#include "libcef/browser/permission/alloy_access_request.h"
+#endif // BUILDFLAG(ARKWEB_WEBRTC)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "services/network/public/cpp/is_potentially_trustworthy.h"
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
@@ -90,7 +95,6 @@ class AlloyPermissionManager::UnhandledRequest {
     auto result = permission_index_map_.find(type);
     if (result == permission_index_map_.end()) {
       NOTREACHED();
-      return;
     }
     DCHECK(!IsCompleted());
     results_[result->second] = status;
@@ -101,7 +105,6 @@ class AlloyPermissionManager::UnhandledRequest {
     auto result = permission_index_map_.find(type);
     if (result == permission_index_map_.end()) {
       NOTREACHED();
-      return PermissionStatus::DENIED;
     }
     return results_[result->second];
   }
@@ -111,7 +114,7 @@ class AlloyPermissionManager::UnhandledRequest {
   bool IsCancelled() const { return cancelled_; }
 
   std::vector<PermissionType> permissions_;
-  content::RenderFrameHost* render_frame_host_;
+  raw_ptr<content::RenderFrameHost> render_frame_host_;
   GURL requesting_origin_;
   RequestPermissionsCallback callback_;
   std::vector<PermissionStatus> results_;
@@ -384,6 +387,9 @@ void AlloyPermissionManager::OnRequestResponseCallBack(
     if (permission == PermissionType::NOTIFICATIONS) {
       manager->notification_permission_[pending_request->requesting_origin_] = (int32_t)status;
     }
+    if (permission == PermissionType::GEOLOCATION) {
+      manager->geolocation_permission_[pending_request->requesting_origin_] = (int32_t)status;
+    }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
     it.GetCurrentValue()->SetPermissionStatus(permission, status);
     if (it.GetCurrentValue()->IsCompleted()) {
@@ -424,7 +430,36 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
         return PermissionStatus::DENIED;
       }
     }
+  } else if (permission == PermissionType::GEOLOCATION) {
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+        switches::kEnableNwebExPermission)) {
+      if (geolocation_permission_.count(requesting_origin)) {
+        return (PermissionStatus)geolocation_permission_[requesting_origin];
+      } else {
+        return PermissionStatus::DENIED;
+      }
+    }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  } else if (permission == PermissionType::AUDIO_CAPTURE) {
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+        switches::kEnableNwebExPermission)) {
+      if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
+        return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
+      } else {
+        return PermissionStatus::DENIED;
+      }
+    }
+  } else if (permission == PermissionType::VIDEO_CAPTURE) {
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+        switches::kEnableNwebExPermission)) {
+      if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
+        return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
+      } else {
+        return PermissionStatus::DENIED;
+      }
+    }
+#endif // BUILDFLAG(ARKWEB_WEBRTC)
   }
   return PermissionStatus::DENIED;
 }
@@ -633,7 +668,6 @@ void AlloyPermissionManager::AbortPermissionRequestByType(
     case PermissionType::WAKE_LOCK_SYSTEM:
     default:
       NOTREACHED() << "Invalid PermissionType.";
-      break;
   }
 }
 

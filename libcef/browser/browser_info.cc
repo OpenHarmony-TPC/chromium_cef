@@ -12,11 +12,14 @@
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/frame_util.h"
 #include "cef/libcef/common/values_impl.h"
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #include "content/browser/renderer_host/frame_tree_node.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/public/browser/render_process_host.h"
 #include "ipc/ipc_message.h"
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/browser_info_for_include.cc"
+#endif
 
 CefBrowserInfo::FrameInfo::~FrameInfo() {
 #if DCHECK_IS_ON()
@@ -270,12 +273,21 @@ void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
 
   browser_->request_context()->OnRenderFrameDeleted(global_id,
                                                     frame_info->is_main_frame_);
-
+#if BUILDFLAG(IS_ARKWEB)
+  if (frame_info->is_speculative_) {
+    last_delete_speculative_rfh_id_ = global_id;
+  }
+#endif
   // Remove from the lookup maps.
   frame_id_map_.erase(it);
 
   {
     auto it2 = frame_token_to_id_map_.find(host->GetGlobalFrameToken());
+#if BUILDFLAG(IS_ARKWEB)
+    if (frame_info->is_speculative_) {
+      last_delete_speculative_rfh_token_ = host->GetGlobalFrameToken();
+    }
+#endif
     DCHECK(it2 != frame_token_to_id_map_.end());
     frame_token_to_id_map_.erase(it2);
   }

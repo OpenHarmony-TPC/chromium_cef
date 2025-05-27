@@ -93,8 +93,7 @@ void IconHelper::OnUpdateFaviconURL(
       sizes.emplace_back(size.width(), size.height());
     }
     if (sizes.empty()) {
-      LOG(WARNING) << "No icon sizes available for URL: "
-                   << candidate->icon_url;
+      LOG(WARNING) << "No icon sizes available for URL: ***";
     }
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
@@ -117,7 +116,6 @@ void IconHelper::OnUpdateFaviconURL(
         break;
       default:
         NOTREACHED();
-        break;
     }
   }
 }
@@ -192,7 +190,13 @@ void IconHelper::DownloadFaviconCallback(
     if (entry) {
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
-      entry->GetFavicon().image = gfx::Image::CreateFrom1xBitmap(bitmap);
+      auto& current_image = entry->GetFavicon().image;
+      base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
+        FROM_HERE,
+        base::BindOnce([](gfx::Image&&){}, std::move(current_image)),
+        base::Seconds(5)
+      );
+      current_image = gfx::Image::CreateFrom1xBitmap(bitmap);
     }
   }
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)

@@ -21,26 +21,7 @@
 #include "third_party/blink/public/mojom/frame/find_in_page.mojom.h"
 
 #if BUILDFLAG(ARKWEB_PRINT)
-#include "cef/ohos_cef_ext/libcef/browser/printing/ohos_print_manager.h"
-#include "chrome/browser/printing/print_view_manager_common.h"
-#endif  // BUILDFLAG(ARKWEB_PRINT)
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
-#include "base/command_line.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_AUTOFILL)
-#include "base/base_switches.h"
-#include "base/command_line.h"
-#include "chrome/browser/browser_process.h"
-#include "components/autofill/content/browser/content_autofill_driver_factory.h"
-#include "components/autofill/core/browser/browser_autofill_manager.h"
-#include "content/browser/web_contents/web_contents_impl.h"
-#include "content/public/common/content_switches.h"
-#include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_client.h"
-#include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_manager.h"
-#include "ohos_cef_ext/libcef/browser/autofill/oh_autofill_provider.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/browser_platform_delegate_alloy_for_include.cc"
 #endif
 
 namespace {
@@ -152,17 +133,7 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
       std::make_unique<AlloyWebContentsDialogHelper>(web_contents_, this);
 
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExGetZoomLevel)) {
-    // Add observer for zoomcontroller.
-    CefRefPtr<AlloyBrowserHostImpl> delegate =
-        browser->AsAlloyBrowserHostImpl();
-    zoom::ZoomController* zoom_controller =
-        zoom::ZoomController::FromWebContents(web_contents_);
-    if (zoom_controller && delegate) {
-      zoom_controller->AddObserver(delegate.get());
-    }
-  }
+  HandleZoomLevelExt(browser, web_contents_);
 #endif
 
 #if BUILDFLAG(ARKWEB_AUTOFILL)
@@ -249,46 +220,6 @@ void CefBrowserPlatformDelegateAlloy::ConfigureAutoResize() {
   }
 }
 
-#if BUILDFLAG(IS_ARKWEB)
-void CefBrowserPlatformDelegateAlloy::SetAccessibilityState(
-    cef_state_t accessibility_state) {
-  // Do nothing if state is set to default. It'll be disabled by default and
-  // controlled by the commmand-line flags "force-renderer-accessibility" and
-  // "disable-renderer-accessibility".
-  if (accessibility_state == STATE_DEFAULT) {
-    return;
-  }
-
-  content::WebContentsImpl* web_contents_impl =
-      static_cast<content::WebContentsImpl*>(web_contents_);
-
-  if (!web_contents_impl) {
-    return;
-  }
-
-  ui::AXMode accMode;
-  // In windowless mode set accessibility to TreeOnly mode. Else native
-  // accessibility APIs, specific to each platform, are also created.
-  if (accessibility_state == STATE_ENABLED) {
-    accMode = IsWindowless() ? ui::kAXModeWebContentsOnly : ui::kAXModeComplete;
-    accMode = ui::kAXModeComplete;
-  }
-  web_contents_impl->SetAccessibilityMode(accMode);
-}
-
-ui::BrowserAccessibilityManager*
-CefBrowserPlatformDelegateAlloy::GetRootBrowserAccessibilityManager() {
-  content::WebContentsImpl* web_contents_impl =
-      static_cast<content::WebContentsImpl*>(web_contents_);
-
-  if (!web_contents_impl) {
-    return nullptr;
-  }
-  return web_contents_impl->GetRootBrowserAccessibilityManager();
-}
-
-#endif
-
 void CefBrowserPlatformDelegateAlloy::Find(const CefString& searchText,
                                            bool forward,
                                            bool matchCase,
@@ -358,106 +289,6 @@ void CefBrowserPlatformDelegateAlloy::SetOwnedWebContents(
   owned_web_contents_.reset(owned_contents);
 }
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
-    const CefTouchEvent& event) {
-  if (!browser_) {
-    return;
-  }
-  float ratio = browser_->GetHost()->GetVirtualPixelRatio();
-
-  if (ratio <= 0) {
-    LOG(ERROR) << "get ratio invalid: " << ratio;
-    return;
-  }
-  auto frame = browser_->GetMainFrame();
-  if (frame && frame->IsValid()) {
-    frame.get()->AsCefFrameHostImpl()->SendHitEvent(
-        event.x * ratio, event.y * ratio, event.radius_x * ratio,
-        event.radius_y * ratio);
-  }
-}
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_PRINT)
-void CefBrowserPlatformDelegateAlloy::SetToken(void* token) {
-  // this check no exit
-  // REQUIRE_ALLOY_RUNTIME();
-  content::RenderFrameHost* rfh_to_use =
-      printing::GetFrameToPrint(web_contents_);
-  if (!rfh_to_use) {
-    LOG(ERROR) << "rfh_to_use is nullptr";
-    return;
-  }
-  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
-      content::WebContents::FromRenderFrameHost(rfh_to_use));
-  if (!ohos_print_manager) {
-    LOG(ERROR) << "ohos_print_manager is nullptr";
-    return;
-  }
-
-  ohos_print_manager->SetToken(token);
-}
-
-void CefBrowserPlatformDelegateAlloy::CreateWebPrintDocumentAdapter(
-    const CefString& jobName,
-    void** webPrintDocumentAdapter) {
-  // this check no exit
-  // REQUIRE_ALLOY_RUNTIME();
-  content::RenderFrameHost* rfh_to_use =
-      printing::OhosPrintManager::GetRenderFrameHostToUse(web_contents_);
-  if (!rfh_to_use) {
-    LOG(ERROR) << "rfh_to_use is nullptr";
-    return;
-  }
-  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
-      content::WebContents::FromRenderFrameHost(rfh_to_use));
-  if (!ohos_print_manager) {
-    LOG(ERROR) << "ohos_print_manager is nullptr";
-    return;
-  }
-
-  ohos_print_manager->CreateWebPrintDocumentAdapter(jobName,
-                                                    webPrintDocumentAdapter);
-}
-
-void CefBrowserPlatformDelegateAlloy::SetPrintBackground(bool enable) {
-  // REQUIRE_ALLOY_RUNTIME();
-  content::RenderFrameHost* rfh_to_use =
-      printing::GetFrameToPrint(web_contents_);
-  if (!rfh_to_use) {
-    LOG(ERROR) << "rfh_to_use is nullptr";
-    return;
-  }
-  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
-      content::WebContents::FromRenderFrameHost(rfh_to_use));
-  if (!ohos_print_manager) {
-    LOG(ERROR) << "ohos_print_manager is nullptr";
-    return;
-  }
-
-  ohos_print_manager->SetPrintBackground(enable);
-}
-
-bool CefBrowserPlatformDelegateAlloy::GetPrintBackground() {
-  // REQUIRE_ALLOY_RUNTIME();
-  content::RenderFrameHost* rfh_to_use =
-      printing::GetFrameToPrint(web_contents_);
-  if (!rfh_to_use) {
-    LOG(ERROR) << "rfh_to_use is nullptr";
-    return false;
-  }
-  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
-      content::WebContents::FromRenderFrameHost(rfh_to_use));
-  if (!ohos_print_manager) {
-    LOG(ERROR) << "ohos_print_manager is nullptr";
-    return false;
-  }
-
-  return ohos_print_manager->GetPrintBackground();
-}
-#endif  // BUILDFLAG(ARKWEB_PRINT)
-
 void CefBrowserPlatformDelegateAlloy::AttachHelpers(
     content::WebContents* web_contents) {
   // If already attached, nothing to be done.
@@ -488,32 +319,3 @@ void CefBrowserPlatformDelegateAlloy::AttachHelpers(
   // Make the tab show up in the task manager.
   task_manager::WebContentsTags::CreateForTabContents(web_contents);
 }
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-void CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(
-    content::WebContents* web_contents) {
-  DCHECK(web_contents_ && web_contents_ == web_contents);
-  if (!web_contents) {
-    LOG(ERROR)
-        << "CefBrowserPlatformDelegateAlloy WebContentsDestroyed is null. ";
-    return;
-  }
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebExGetZoomLevel)) {
-    if (!browser_) {
-      return;
-    }
-    CefRefPtr<AlloyBrowserHostImpl> delegate =
-        browser_->AsAlloyBrowserHostImpl();
-    zoom::ZoomController* zoom_controller =
-        zoom::ZoomController::FromWebContents(web_contents);
-    if (zoom_controller && delegate) {
-      zoom_controller->RemoveObserver(delegate.get());
-    }
-  }
-#endif
-  CefBrowserPlatformDelegate::WebContentsDestroyed(web_contents);
-}
-#endif

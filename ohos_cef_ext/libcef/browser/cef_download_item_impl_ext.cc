@@ -1,7 +1,3 @@
-// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 
 #include "arkweb/build/features/features.h"
@@ -31,7 +27,8 @@ CefDownloadItemImplExt::CefDownloadItemImplExt(download::DownloadItem* value,
       static_cast<download::DownloadItemImpl*>(mutable_value());
   item_impl->SetUserData(
       kNWebId,
-      std::make_unique<download::DownloadItemImpl::NWebIdData>(nweb_id));
+      std::make_unique<download::ArkWebDownloadItemImplExt::NWebIdData>(
+          nweb_id));
 #endif  //  ARKWEB_EX_DOWNLOAD
 }
 
@@ -61,8 +58,8 @@ bool CefDownloadItemImplExt::IsPaused() {
 CefString CefDownloadItemImplExt::GetMethod() {
   CEF_VALUE_VERIFY_RETURN(false, CefString());
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
   std::string request_method = item_impl.GetRequestMethod();
   return request_method;
 #else
@@ -83,8 +80,8 @@ int CefDownloadItemImplExt::GetLastErrorCode() {
 bool CefDownloadItemImplExt::IsPending() {
   CEF_VALUE_VERIFY_RETURN(false, false);
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
-  const download::DownloadItemImpl& item_impl =
-      static_cast<const download::DownloadItemImpl&>(const_value());
+  const download::ArkWebDownloadItemImplExt& item_impl =
+      static_cast<const download::ArkWebDownloadItemImplExt&>(const_value());
   bool pending = item_impl.IsBeforeInProgress();
   return pending;
 #else
@@ -121,8 +118,8 @@ int CefDownloadItemImplExt::GetNWebId() {
       static_cast<const download::DownloadItemImpl&>(const_value());
   void* data_raw_ptr = item_impl.GetUserData(kNWebId);
   if (data_raw_ptr) {
-    download::DownloadItemImpl::NWebIdData* nweb_id_data_ptr =
-        (download::DownloadItemImpl::NWebIdData*)data_raw_ptr;
+    download::ArkWebDownloadItemImplExt::NWebIdData* nweb_id_data_ptr =
+        (download::ArkWebDownloadItemImplExt::NWebIdData*)data_raw_ptr;
     if (nweb_id_data_ptr) {
       return nweb_id_data_ptr->nweb_id_;
     }
@@ -133,14 +130,14 @@ int CefDownloadItemImplExt::GetNWebId() {
 #endif  //  ARKWEB_EX_DOWNLOAD
 }
 
-CefRefPtr<CefValue> CefDownloadItemImplExt::GetContentDispositionCefValue() {
-#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
+CefRefPtr<CefValue> CefDownloadItemImplExt::GetOriginContentDisposition() {
+#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
   CEF_VALUE_VERIFY_RETURN(false, nullptr);
   CefRefPtr<CefValue> data = CefValue::Create();
   data->SetStdString(const_value().GetContentDisposition());
   return data;
 #else
-  return CefValue::Create();
+  return CefRefPtr<CefValue>(new CefValue());
 #endif  //  ARKWEB_EXT_DOWNLOAD
 }
 

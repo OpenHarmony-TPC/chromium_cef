@@ -4,7 +4,7 @@
 
 #include "cef/libcef/browser/net_service/cookie_helper.h"
 
-#include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/net_service/net_service_util.h"
@@ -17,19 +17,14 @@
 #include "services/network/cookie_manager.h"
 #include "services/network/public/cpp/resource_request.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-#include "base/ranges/algorithm.h"
-#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-#include "components/content_settings/core/browser/host_content_settings_map.h"
+#include "cef/ohos_cef_ext/libcef/browser/net_service/arkweb_cookie_helper_ext.h"
+#endif
+#if BUILDFLAG(ARKWEB_COOKIE)
+#include "libcef/browser/net_service/cookie_manager_impl_ext.h"
 #endif
 
 namespace net_service::cookie_helper {
-
-namespace {
 
 // Do not keep a reference to the object returned by this method.
 CefBrowserContext* GetBrowserContext(const CefBrowserContext::Getter& getter) {
@@ -129,7 +124,9 @@ void GetCookieListCallback(const AllowCookieCallback& allow_cookie_callback,
                            DoneCookieCallback done_callback,
                            const net::CookieAccessResultList& included_cookies,
                            const net::CookieAccessResultList&) {
+#if !BUILDFLAG(ARKWEB_COOKIE)
   CEF_REQUIRE_UIT();
+#endif
   CEF_POST_TASK(CEF_IOT,
                 base::BindOnce(ContinueWithLoadedCookies, allow_cookie_callback,
                                std::move(done_callback), included_cookies));
@@ -238,8 +235,6 @@ void SaveCookiesOnUIThread(
           net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
 }
 
-}  // namespace
-
 bool IsCookieableScheme(
     const GURL& url,
     const std::optional<std::vector<std::string>>& cookieable_schemes) {
@@ -264,48 +259,11 @@ bool IsCookieableScheme(
   return url.SchemeIsHTTPOrHTTPS() || url.SchemeIsWSOrWSS();
 }
 
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-bool CanSaveOrLoadCookies(
-    const CefBrowserContext::Getter& browser_context_getter,
-    const network::ResourceRequest& request) {
-  auto cef_browser_context = GetBrowserContext(browser_context_getter);
-  auto browser_context =
-      cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
-  if (!browser_context) {
-    LOG(ERROR) << "Can not get browser_context.";
-    return true;
-  }
-
-  HostContentSettingsMap* host_content_settings_map =
-      HostContentSettingsMapFactory::GetForProfile(browser_context);
-  if (!host_content_settings_map) {
-    LOG(ERROR) << "Can not get host_content_settings_map.";
-    return true;
-  }
-
-  ContentSettingsForOneType cookie_settings =
-      host_content_settings_map->GetSettingsForOneType(
-          ContentSettingsType::COOKIES);
-
-  const auto& entry = base::ranges::find_if(
-      cookie_settings, [&](const ContentSettingPatternSource& entry) {
-        // The primary pattern is for the request URL; the secondary pattern
-        // is for the first-party URL (which is the top-frame origin [if
-        // available] or the site-for-cookies).
-        return !entry.IsExpired() &&
-               entry.primary_pattern.Matches(request.url) &&
-               entry.secondary_pattern.Matches(request.url);
-      });
-  const ContentSettingPatternSource* match =
-      (entry == cookie_settings.end() ? nullptr : &*entry);
-  return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
-}
-#endif
-
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
+                 bool is_off_the_record,
 #endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
@@ -342,6 +300,19 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
             isolation_info.IsMainFrameRequest()));
   }
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+  CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(is_off_the_record);
+  if (cookie_manager && cookie_manager->SupportAsyncThreadCookieLoad()) {
+    cookie_manager->LoadCookiesOnAsyncThread(
+        new_url.value_or(request.url),
+        GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+        std::move(partition_key_collection),
+        base::BindOnce(GetCookieListCallback, allow_cookie_callback,
+                       std::move(done_callback)));
+    return;
+  }
+#endif
   CEF_POST_TASK(
       CEF_UIT,
       base::BindOnce(

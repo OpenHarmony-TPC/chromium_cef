@@ -16,38 +16,11 @@
 #include "cef/libcef/browser/thread_util.h"
 #include "components/javascript_dialogs/tab_modal_dialog_manager.h"
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-#include <string>
-
-#include "base/base_switches.h"
-#include "base/command_line.h"
-#include "components/strings/grit/components_strings.h"
-#include "content/public/common/content_switches.h"
-#include "ui/base/l10n/l10n_util.h"
-#endif
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/ark_web_javascript_dialog_manager.h"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
 namespace {
-
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-constexpr int32_t API_TARGET_VERSION_12 = 12;
-// Same as API_VERSION_MOD in js_ui_ability.cpp of ability_runtime
-constexpr int32_t API_VERSION_MOD = 100;
-
-int32_t GetApiTargetVersion() {
-  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kOhosAppApiVersion)) {
-    LOG(ERROR) << "kOhosAppApiVersion not exist";
-    return -1;
-  }
-  std::string apiVersion =
-      base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
-          switches::kOhosAppApiVersion);
-  if (apiVersion.empty()) {
-    return -1;
-  }
-  return std::stoi(apiVersion) % API_VERSION_MOD;
-}
-#endif
 
 class CefJSDialogCallbackImpl : public CefJSDialogCallback {
  public:
@@ -214,17 +187,10 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
     bool is_reload,
     DialogClosedCallback callback) {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  static int32_t api_target_version = GetApiTargetVersion();
-  std::u16string message = u"Is it OK to leave/reload this page?";
-  if (api_target_version >= API_TARGET_VERSION_12) {
-    message = l10n_util::GetStringUTF16(IDS_BEFOREUNLOAD_MESSAGEBOX_MESSAGE);
-  }
-  const std::u16string& message_text = message;
+  const std::u16string& message_text = ArkWebGetBeforeUnloadDialogMessage();
 #else
   const std::u16string& message_text = u"Is it OK to leave/reload this page?";
 #endif
-
-  std::string url = web_contents ? web_contents->GetURL().spec() : "";
 
   // Always call DialogClosed().
   callback =
@@ -241,7 +207,7 @@ void CefJavaScriptDialogManager::RunBeforeUnloadDialog(
 
       // Execute the user callback.
       bool handled = handler->OnBeforeUnloadDialog(
-          browser_.get(), url, message_text, is_reload, callbackPtr.get());
+          browser_.get(), message_text, is_reload, callbackPtr.get());
       if (handled) {
         return;
       }

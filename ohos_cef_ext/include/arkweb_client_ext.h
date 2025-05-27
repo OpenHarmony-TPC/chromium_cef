@@ -18,16 +18,13 @@
 #pragma once
 
 #include "arkweb/build/features/features.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/cef_client.h"
 #include "include/cef_form_handler.h"
 #include "include/cef_media_handler.h"
 #include "include/cef_permission_request.h"
 #include "include/cef_web_client_extension_handler.h"
 #include "include/cef_web_extension_api_handler.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
 
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
 #include "include/cef_custom_media_info.h"
@@ -82,6 +79,14 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   ///
   virtual bool HasJavaScriptObjectMethods(int32_t object_id,
                                           const CefString& method_name) {
+    return false;
+  }
+
+  ///
+  /// has native javaScript object asyncThread method.
+  ///
+  virtual bool HasNativeAsyncThreadJavaScriptMethods(std::string& object_name,
+                                          const std::string& method_name) {
     return false;
   }
 
@@ -153,7 +158,7 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   }
 #endif
 
-#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
   ///
   /// Notify the action of pull to refresh.
   ///
