@@ -21,6 +21,7 @@
 #include "components/security_interstitials/core/metrics_helper.h"
 #include "content/browser/renderer_host/navigation_controller_impl.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/common/referrer.h"
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
 
@@ -56,7 +57,9 @@ std::unique_ptr<MetricsHelper> OhosSbControllerClient::GetMetricsHelper(
 }
 
 void OhosSbControllerClient::GoBack() {
-  if (!SecurityInterstitialControllerClient::CanGoBack()) {
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx) &&
+      !SecurityInterstitialControllerClient::CanGoBack()) {
     LOG(INFO) << "OhosSbControllerClient::GoBack Close";
     web_contents_->Close();
     return;
