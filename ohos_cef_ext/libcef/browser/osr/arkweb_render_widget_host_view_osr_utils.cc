@@ -153,11 +153,11 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
     }
   }
 #endif  // DISABLE_GPU
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (view_->overscroll_controller_) {
     view_->overscroll_controller_.reset();
   }
-#endif  // ARKWEB_EXT_PULL_TO_REFRESH
+#endif  // ARKWEB_PULL_TO_REFRESH
 }
 #endif  // ARKWEB_COMPOSITE_RENDER
 
@@ -383,7 +383,7 @@ bool ArkWebRenderWidgetHostViewOSRUtils::SetRootLayerSizeEx(
   return view_bounds_changed;
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (view_->overscroll_controller_) {
     view_->overscroll_controller_->Disable();
   }

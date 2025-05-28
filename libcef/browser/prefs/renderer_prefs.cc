@@ -10,6 +10,10 @@
 #include "third_party/blink/public/common/web_preferences/web_preferences.h"
 #include "cef/ohos_cef_ext/libcef/browser/prefs/renderer_prefs_for_include1.cc"
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 namespace renderer_prefs {
 
 void SetDefaultPrefs(blink::web_pref::WebPreferences& web) {

@@ -259,7 +259,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void ChangeVisibilityOfQuickMenu();
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   // ui::OverscrollRefreshHandler implementation
   bool PullToRefreshAction(ui::PullToRefreshAction action) override;
   void PullToRefreshUpdate(float x_delta, float y_delta) override;
@@ -270,7 +270,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       const blink::WebInputEvent& input_event);
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
   void TransformPointToRootSurface(gfx::PointF* point) override;
   int GetShrinkViewportHeight() override;
   int GetTopControlsOffset() const override;
@@ -366,7 +366,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void OnScrollState(bool scroll_state);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   void CreateOverscrollControllerIfPossible();
   void OnFocusInternal() override;
   void LostFocusInternal() override;
@@ -391,7 +391,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool is_scrolling_ = false;
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   bool pull_to_refreshing_ = false;
   float pull_to_refresh_offset_x_ = 0;
   float pull_to_refresh_offset_y_ = 0;

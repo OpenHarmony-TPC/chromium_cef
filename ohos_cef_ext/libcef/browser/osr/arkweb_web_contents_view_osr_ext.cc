@@ -138,7 +138,7 @@ void ArkWebCefWebContentsViewOSRExt::ChangeVisibilityOfQuickMenu()
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
 void ArkWebCefWebContentsViewOSRExt::DidStopRefresh()
 {
   if (ArkWebRenderWidgetHostViewOSRExt* view = GetView()) {

@@ -8,7 +8,10 @@
 #include <memory>
 #include <string>
 
+#include "arkweb/build/features/features.h"
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 class PrefRegistrySimple;
 class Profile;

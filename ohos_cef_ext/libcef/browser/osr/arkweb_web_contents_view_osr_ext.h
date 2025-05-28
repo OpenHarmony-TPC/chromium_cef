@@ -59,7 +59,7 @@ class ArkWebCefWebContentsViewOSRExt : public CefWebContentsViewOSR {
   void ChangeVisibilityOfQuickMenu() override;
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   virtual content::WebContents* GetWebContents() override;
   void DidStopRefresh() override;
 #endif

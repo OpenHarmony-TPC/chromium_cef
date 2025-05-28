@@ -6,7 +6,6 @@
 
 #include <sstream>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "components/keyed_service/core/service_access_type.h"
@@ -15,8 +14,11 @@
 #include "libcef/common/time_util.h"
 #include "third_party/blink/public/common/storage_key/storage_key.h"
 #include "third_party/blink/public/mojom/quota/quota_types.mojom.h"
-#include "url/gurl.h"
 #include "libcef/browser/password/oh_password_store_factory.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
 #include <algorithm>

@@ -8,7 +8,6 @@
 #include <atomic>
 #include <queue>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/threading/thread.h"
 #include "include/cef_web_storage.h"
 #include "libcef/browser/browser_context.h"
@@ -33,6 +32,10 @@ enum WebStorageMigration {
   MIGRATION_DUPLICATE_DATA = 304,
   MIGRATION_NOT_SET_SCREEN_LOCK = 503
 };
+#endif
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #endif
 
 // Implementation of the CefWebStorage interface. May be created on any

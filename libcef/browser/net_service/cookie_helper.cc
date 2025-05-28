@@ -4,7 +4,6 @@
 
 #include "cef/libcef/browser/net_service/cookie_helper.h"
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/functional/bind.h"
 #include "cef/libcef/browser/thread_util.h"
 #include "cef/libcef/common/net_service/net_service_util.h"
@@ -16,6 +15,10 @@
 #include "net/cookies/cookie_util.h"
 #include "services/network/cookie_manager.h"
 #include "services/network/public/cpp/resource_request.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "cef/ohos_cef_ext/libcef/browser/net_service/arkweb_cookie_helper_ext.h"

@@ -57,6 +57,10 @@
 #include "net/base/net_errors.h"
 #include "ui/events/base_event_utils.h"
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 #include "base/ohos/ltpo/include/sliding_observer.h"
 #endif

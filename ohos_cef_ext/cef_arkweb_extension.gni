@@ -219,21 +219,21 @@ arkweb_libcef_render_sources = [
   "//cef/ohos_cef_ext/libcef/renderer/blink_glue_ex.h",
 ]
 
-#if BUILDFLAG(ARKWEB_ADBLOCK)
-arkweb_adblock_placeholder_source = [ "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_delegate_ohos.cc" ]
+if (defined(arkweb_adblock) && arkweb_adblock) {
+  arkweb_adblock_placeholder_source = [ "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_delegate_ohos.cc" ]
 
-arkweb_adblock_source = [
-  "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_config_bridge.cc",
-  "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_config_bridge.h",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.cc",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_list.cc",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_list.h",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_ruleset_manager.cc",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_ruleset_manager.h",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.cc",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.h",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/user_adblock_ruleset_manager.cc",
-  "//cef/ohos_cef_ext/libcef/browser/subresource_filter/user_adblock_ruleset_manager.h",
-]
-#endif
+  arkweb_adblock_source = [
+    "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_config_bridge.cc",
+    "//cef/ohos_cef_ext/libcef/browser/adblock/adblock_config_bridge.h",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.cc",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_content_subresource_filter_web_contents_helper_factory.h",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_list.cc",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_list.h",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_ruleset_manager.cc",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_ruleset_manager.h",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.cc",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/adblock_safe_browsing_database_manager_impl.h",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/user_adblock_ruleset_manager.cc",
+    "//cef/ohos_cef_ext/libcef/browser/subresource_filter/user_adblock_ruleset_manager.h",
+  ]
+}
