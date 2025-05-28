@@ -2111,6 +2111,21 @@ void CefBrowserHostCToCpp::GetHitData(int& type, CefString& extra_data) {
 }
 
 NO_SANITIZE("cfi-icall")
+void CefBrowserHostCToCpp::GetLastHitData(int& type, CefString& extra_data) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, get_last_hit_data)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->get_last_hit_data(_struct, &type, extra_data.GetWritableStruct());
+}
+
+NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetInitialScale(float scale) {
   shutdown_checker::AssertNotShutdown();
 

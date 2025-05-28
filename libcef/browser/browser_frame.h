@@ -46,6 +46,7 @@ class CefBrowserFrame
       override;
 
 #if BUILDFLAG(IS_OHOS)
+  void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
   void OnGetImageForContextNode(
       cef::mojom::GetImageForContextNodeParamsPtr params, int command_id) override;
   void OnGetImageForContextNodeNull(int command_id) override;

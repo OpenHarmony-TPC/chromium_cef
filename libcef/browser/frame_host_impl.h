@@ -231,6 +231,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void SlideScroll(float vx, float vy);
   void ZoomBy(float delta, float width, float height);
   void GetHitData(int& type, CefString& extra_data);
+  void GetLastHitData(int& type, CefString& extra_data);
+  void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
   void SetOverscrollMode(int mode);
   void SetScrollable(bool enable);
   void UpdateDrawRect();
@@ -294,6 +296,13 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 #ifdef OHOS_NETWORK_LOAD
   std::string GetRefererValue(std::string headers);
 #endif
+
+  struct CefHitData {
+    int type;
+    CefString extra_data;
+    CefHitData() : type(0), extra_data("") {}
+  };
+  CefHitData hit_data_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_H_

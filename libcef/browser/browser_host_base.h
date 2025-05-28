@@ -499,6 +499,7 @@ class CefBrowserHostBase : public CefBrowserHost,
   void SlideScroll(float vx, float vy) override;
   void ZoomBy(float delta, float width, float height) override;
   void GetHitData(int& type, CefString& extra_data) override;
+  void GetLastHitData(int& type, CefString& extra_data) override;
   uint64_t GetCurrentTimestamp();
   void SetOverscrollMode(int overScrollMode) override;
   void SetScrollable(bool enable, int scrollType) override;
