@@ -15,7 +15,6 @@
 #include "libcef/common/cef_switches.h"
 // #include "libcef/common/extensions/extensions_util.h"
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/strings/string_number_conversions.h"
@@ -74,6 +73,11 @@
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/ui_base_switches.h"
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/cloud_control/model/changed_config_list_cache.h"
+#endif
+
 #if BUILDFLAG(IS_WIN)
 #include "components/os_crypt/sync/os_crypt.h"
 #endif
@@ -95,9 +99,7 @@
 #include "chrome/browser/policy/chrome_browser_policy_connector.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_NWEB_EX)
 #include "libcef/browser/ohos_safe_browsing/ohos_sb_prefs.h"
-#endif
 
 #if BUILDFLAG(ARKWEB_ADBLOCK)
 #include "components/subresource_filter/core/browser/ruleset_version.h"
@@ -107,8 +109,6 @@
 #if BUILDFLAG(ARKWEB_EDM_POLICY)
 #include "arkweb/chromium_ext/components/policy/core/common/policy_loader_ohos.h"
 #endif
-
-#include "ohos_nweb_ex/overrides/cef/libcef/browser/cloud_control/model/changed_config_list_cache.h"
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 #include "ohos_cef_ext/libcef/browser/predictors/predictor_database.h"
@@ -404,7 +404,9 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
   }
 
   ohos_safe_browsing::RegisterProfilePrefs(registry);
+#if BUILDFLAG(IS_ARKWEB_EXT)
   cloud_control::ChangedConfigListCache::RegisterCloudControlPrefs(registry);
+#endif
 #if BUILDFLAG(ARKWEB_EDM_POLICY)
   policy::RegisterBrowserPolicyProfilePrefs(registry);
 #endif

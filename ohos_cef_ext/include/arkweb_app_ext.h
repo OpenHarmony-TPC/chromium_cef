@@ -17,13 +17,16 @@
 #define ARKWEB_INCLUDE_CEF_APP_EXT_H_
 #pragma once
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "include/cef_base.h"
 #include "include/cef_browser_process_handler.h"
 #include "include/cef_command_line.h"
 #include "include/cef_render_process_handler.h"
 #include "include/cef_resource_bundle_handler.h"
 #include "include/cef_scheme.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(IS_ARKWEB)
 ///

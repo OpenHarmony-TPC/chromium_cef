@@ -493,7 +493,7 @@ void CefRenderWidgetHostViewOSR::ShowWithVisibility(
       video_consumer_->SetActive(true);
     }
   }
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (overscroll_controller_) { overscroll_controller_->Enable(); }
 #endif
 }
@@ -1469,7 +1469,7 @@ void CefRenderWidgetHostViewOSR::SendMouseEvent(
                                                         ui::LatencyInfo());
     }
   }
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   else { LOG(ERROR) << "SendMouseEvent event dropped because render_widget_host " << !!render_widget_host_; }
 #endif
 }
@@ -1686,7 +1686,7 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
 
     widget->SetActive(false);
     widget->LostFocus();
-#if BUILDFLAG(ARKWEB_EXT_PULL_TO_REFRESH)
+#if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
     LostFocusInternal();
 #endif
   }

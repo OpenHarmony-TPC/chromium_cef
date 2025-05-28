@@ -21,7 +21,6 @@
 #include <tuple>
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/logging.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 #include "cef/libcef/browser/browser_platform_delegate.h"
@@ -65,11 +64,14 @@
 #if BUILDFLAG(IS_ARKWEB)
 #include "libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
 #endif
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_received_slice_helper_ext.h"
 #include "components/download/public/common/download_item.h"
 #include "components/search_engines/template_url_data.h"
 #include "gpu/ipc/common/nweb_native_window_tracker.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 #include "chrome/browser/preloading/prefetch/no_state_prefetch/no_state_prefetch_manager_factory.h"
@@ -119,7 +121,7 @@
 #include "content/browser/web_contents/web_contents_impl.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_SECURITY_STATE)
+#if BUILDFLAG(ARKWEB_SECURITY_STATE)
 #include "components/security_state/content/content_utils.h"
 #include "components/security_state/core/security_state.h"
 #endif
@@ -134,7 +136,7 @@
 using OhPasswordManagerClient = ChromePasswordManagerClient;
 #endif
 
-#if BUILDFLAG(ARKWEB_NWEB_EX)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
 #include "content/public/common/url_constants.h"
 #include "net/base/mime_util.h"
 #endif
@@ -3186,7 +3188,7 @@ void ArkWebBrowserHostExtImpl::SetSafeBrowsingDetectionCallback(
 }
 #endif  // BUILDFLAG(ARKWEB_SAFEBROWSING)
 
-#if BUILDFLAG(ARKWEB_NWEB_EX)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
 bool ArkWebBrowserHostExtImpl::CanStoreWebArchive() {
   if (!CEF_CURRENTLY_ON_UIT()) {
     return false;

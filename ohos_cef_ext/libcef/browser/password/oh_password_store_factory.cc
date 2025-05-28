@@ -4,7 +4,6 @@
 
 #include "libcef/browser/password/oh_password_store_factory.h"
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/containers/contains.h"
 #include "base/path_service.h"
 #include "chrome/browser/browser_process.h"
@@ -15,6 +14,10 @@
 #include "components/password_manager/core/browser/password_store_factory_util.h"
 #include "content/public/browser/browser_context.h"
 #include "cef/libcef/browser/browser_context.h"
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
 #include "base/files/file_path.h"

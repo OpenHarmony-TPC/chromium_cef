@@ -30,7 +30,7 @@
 #include "services/network/public/mojom/network_service.mojom.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
+#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 #include "cef/libcef/browser/download_item_impl.h"
 #include "cef/libcef/browser/download_manager_delegate.h"
 #include "cef/libcef/browser/download_manager_delegate_impl.h"
