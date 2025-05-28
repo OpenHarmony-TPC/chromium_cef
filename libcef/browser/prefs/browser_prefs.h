@@ -34,6 +34,7 @@ extern const char kMigratePasswordsReady[];
 extern const char kMigratePasswordsToPasswordVault[];
 extern const char kMigrationCounct[];
 extern const char kMigrationDataBackupCompletion[];
+extern const char kMigrationQueryAssetfailure[];
 #endif
 
 // Register preferences specific to CEF.

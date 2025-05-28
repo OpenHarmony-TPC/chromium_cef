@@ -682,7 +682,13 @@ void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
   if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigratePasswordsToPasswordVault)) {
     return;
   }
- 
+
+  if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigrationQueryAssetfailure)) {
+    g_browser_process->local_state()->SetBoolean(browser_prefs::kMigrationQueryAssetfailure, false);
+    g_browser_process->local_state()->CommitPendingWrite();
+    return;
+  }
+
   base::ThreadPool::PostTask(
           FROM_HERE,
           {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
