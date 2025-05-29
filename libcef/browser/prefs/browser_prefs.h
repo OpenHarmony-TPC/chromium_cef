@@ -32,7 +32,7 @@ extern const char kUserPrefsFileName[];
 #if defined(OHOS_EX_PASSWORD)
 extern const char kMigratePasswordsReady[];
 extern const char kMigratePasswordsToPasswordVault[];
-extern const char kMigrationCounct[];
+extern const char kMigrationCount[];
 extern const char kMigrationDataBackupCompletion[];
 extern const char kMigrationQueryAssetfailure[];
 #endif
