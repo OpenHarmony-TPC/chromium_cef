@@ -302,6 +302,12 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
   ui::TouchSelectionController* controller = GetTouchSelectionController();
   switch (event) {
     case ui::SELECTION_HANDLES_SHOWN:
+      if (handles_hidden_by_selection_ui_) {
+        LOG(INFO) << "Selection Event handle shows, but handles hidden by ui.";
+        NotifyTouchSelectionChanged(true);
+        rwhv_->ResetGestureDetection(false);
+        break;
+      }
       quick_menu_requested_ = true;
       NotifyTouchSelectionChanged(false);
       UpdateQuickMenu();
