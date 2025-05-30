@@ -12,7 +12,10 @@
 #include <vector>
 #endif
 #include "arkweb/build/features/features.h"
+#include "build/build_config.h"
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
+#endif
 #include "net/dns/public/secure_dns_mode.h"
 
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)

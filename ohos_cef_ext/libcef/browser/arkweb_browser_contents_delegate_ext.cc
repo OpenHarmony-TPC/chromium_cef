@@ -39,7 +39,9 @@
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_ua_config.h"
 #include "content/browser/renderer_host/navigation_request.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
