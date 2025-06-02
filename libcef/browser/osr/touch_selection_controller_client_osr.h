@@ -116,7 +116,7 @@ class CefTouchSelectionControllerClientOSR
   // better not to send context menu request from the renderer in this case and
   // instead decide in the client about showing the quick menu in response to
   // selection events. (http://crbug.com/548245)
-  bool HandleContextMenu(const content::ContextMenuParams& params);
+  virtual bool HandleContextMenu(const content::ContextMenuParams& params);
 #endif
   void UpdateClientSelectionBounds(const gfx::SelectionBound& start,
                                    const gfx::SelectionBound& end);

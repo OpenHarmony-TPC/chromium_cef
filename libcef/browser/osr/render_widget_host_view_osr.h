@@ -356,11 +356,12 @@ class CefRenderWidgetHostViewOSR
 
   bool is_hidden() const { return !is_showing_; }
 
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
-  gfx::Rect GetPhysicalViewBounds();
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS) || BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
   virtual int GetShrinkViewportHeight() { return 0; }
   int GetTopControlsOffset() const override { return 0; }
+  gfx::Rect GetPhysicalViewBounds();
 #endif
+
  protected:
 #if BUILDFLAG(ARKWEB_FLING)
   void IgnorePendingWheelEndEvent();

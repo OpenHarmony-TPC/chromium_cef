@@ -1,5 +1,7 @@
 import("//arkweb/build/features/features.gni")
-import("//arkweb/ohos_nweb_ex/build/features/features.gni")
+if(defined(arkweb_nweb_ex) && arkweb_nweb_ex) {
+  import("//arkweb/ohos_nweb_ex/build/features/features.gni")
+}
 
 libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/include/arkweb_app_ext.h",
