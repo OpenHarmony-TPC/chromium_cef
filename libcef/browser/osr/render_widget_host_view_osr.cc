@@ -1271,7 +1271,7 @@ void CefRenderWidgetHostViewOSR::SynchronizeVisualProperties(
 
   if (surface_id_updated) {
     delegated_frame_host_->EmbedSurface(
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
         GetCurrentLocalSurfaceId(), GetPhysicalViewBounds().size(), deadline_policy);
 #else
         GetCurrentLocalSurfaceId(), GetViewBounds().size(), deadline_policy);

@@ -353,8 +353,10 @@ bool ArkWebRenderWidgetHostViewOSRUtils::SetRootLayerSizeEx(
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   view_->GetRootLayer()->SetBounds(
       gfx::Rect(view_->GetPhysicalViewBounds().size()));
+#endif
 #endif
 
 #ifdef DISABLE_GPU

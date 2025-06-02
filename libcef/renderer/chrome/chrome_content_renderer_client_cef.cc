@@ -21,6 +21,10 @@
 #include "cef/ohos_cef_ext/libcef/renderer/arkweb_content_settings_client.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_SAFEBROWSING) && !BUILDFLAG(ARKWEB_NWEB_EX)
+#include "cef/ohos_cef_ext/libcef/renderer/chrome_safe_browsing_error_page_controller_delegate_impl.h"
+#endif
+
 ChromeContentRendererClientCef::ChromeContentRendererClientCef()
     : render_manager_(new CefRenderManager) {}
 
