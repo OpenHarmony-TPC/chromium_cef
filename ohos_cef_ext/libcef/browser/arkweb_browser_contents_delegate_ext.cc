@@ -103,18 +103,6 @@ UserAgentOverridePolicy MatchUserAgent(content::NavigationHandle* navigation,
   auto match_type_no_nweb_ex =
       AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
           host, user_agent_no_nweb_ex);
-  auto match_type_nweb_ex =
-      nweb_ex::AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
-          host, user_agent_nweb_ex);
-  LOG(DEBUG) << __func__ << " match_type_no_nweb_ex is "
-             << match_type_no_nweb_ex << " user_agent_no_nweb_ex is "
-             << user_agent_no_nweb_ex << " match_type_nweb_ex is "
-             << match_type_nweb_ex << " user_agent_nweb_ex is "
-             << user_agent_nweb_ex;
-  if (match_type_nweb_ex <= match_type_no_nweb_ex) {
-    user_agent = user_agent_nweb_ex;
-    return match_type_nweb_ex;
-  }
   user_agent = user_agent_no_nweb_ex;
   return match_type_no_nweb_ex;
 }

@@ -204,6 +204,7 @@ void CefBrowserPlatformDelegateAlloy::WebContentsDestroyed(
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
 static void HandleZoomLevelExt(CefBrowserHostBase* browser, content::WebContents* web_contents) {
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kEnableNwebExGetZoomLevel)) {
@@ -216,3 +217,4 @@ static void HandleZoomLevelExt(CefBrowserHostBase* browser, content::WebContents
     }
   }
 }
+#endif

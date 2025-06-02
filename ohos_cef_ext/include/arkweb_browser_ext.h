@@ -781,7 +781,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// Set whether webview can diallow sandbox file access from file url
   ///
-  virtual void SetDisallowSandboxFileAccessFromFileUrl(bool falg) = 0;
+  virtual void SetDisallowSandboxFileAccessFromFileUrl(bool falg) {};
 
   ///
   /// Set whether webview can access network

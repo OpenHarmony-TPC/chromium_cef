@@ -14,7 +14,6 @@
  */
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"

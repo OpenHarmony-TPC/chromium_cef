@@ -6,7 +6,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/net_service/arkweb_cookie_helper_ext.h"
 
 #include "arkweb/build/features/features.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "content/public/browser/browser_context.h"
 #include "services/network/public/cpp/resource_request.h"
 

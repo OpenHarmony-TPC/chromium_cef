@@ -270,7 +270,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       const blink::WebInputEvent& input_event);
 #endif
 
-#if BUILDFLAG(ARKWEB_EX_TOPCONTROLS)
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
   void TransformPointToRootSurface(gfx::PointF* point) override;
   int GetShrinkViewportHeight() override;
   int GetTopControlsOffset() const override;
