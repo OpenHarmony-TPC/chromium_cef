@@ -155,8 +155,9 @@ const char kLocalPrefsFileName[] = "LocalPrefs.json";
 #if defined(OHOS_EX_PASSWORD)
 const char kMigratePasswordsReady[] = "migrate_passwords_ready";
 const char kMigratePasswordsToPasswordVault[] = "migrate_passwords_to_password_vault";
-const char kMigrationCounct[] = "migration_count";
+const char kMigrationCount[] = "migration_count";
 const char kMigrationDataBackupCompletion[] = "migration_data_backup_completion";
+const char kMigrationQueryAssetfailure[] = "migration_query_asset_failure";
 #endif
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
@@ -244,8 +245,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #if defined(OHOS_EX_PASSWORD)
     persistent_prefs.insert(browser_prefs::kMigratePasswordsReady);
     persistent_prefs.insert(browser_prefs::kMigratePasswordsToPasswordVault);
-    persistent_prefs.insert(browser_prefs::kMigrationCounct);
+    persistent_prefs.insert(browser_prefs::kMigrationCount);
     persistent_prefs.insert(browser_prefs::kMigrationDataBackupCompletion);
+    persistent_prefs.insert(browser_prefs::kMigrationQueryAssetfailure);
 #endif
 #else
     scoped_refptr<CefPrefStore> cef_pref_store = new CefPrefStore();
@@ -293,8 +295,9 @@ std::unique_ptr<PrefService> CreatePrefService(Profile* profile,
 #ifdef OHOS_EX_PASSWORD
   registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsReady, false);
   registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsToPasswordVault, false);
-  registry->RegisterIntegerPref(browser_prefs::kMigrationCounct, 0);
+  registry->RegisterIntegerPref(browser_prefs::kMigrationCount, 0);
   registry->RegisterBooleanPref(browser_prefs::kMigrationDataBackupCompletion, false);
+  registry->RegisterBooleanPref(browser_prefs::kMigrationQueryAssetfailure, false);
 #endif
 
   // Some preferences are specific to CEF and others are defined in Chromium.
