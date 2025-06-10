@@ -94,8 +94,6 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(DeveloperPrivateUpdateProfileConfigurationFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateShowPermissionsDialogFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateReloadFunction),
-    EXTENSION_FUNCTION_NAME(
-        DeveloperPrivateUpdateExtensionConfigurationFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateLoadUnpackedFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateInstallDroppedFileFunction),
     EXTENSION_FUNCTION_NAME(
@@ -108,6 +106,10 @@ const char* const kSupportedAPIs[] = {
     EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenDevToolsFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateOpenUrlFunction),
     EXTENSION_FUNCTION_NAME(DeveloperPrivateDeleteExtensionErrorsFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateRemoveHostPermissionFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateAddHostPermissionFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateRemoveUserSpecifiedSitesFunction),
+    EXTENSION_FUNCTION_NAME(DeveloperPrivateUpdateExtensionConfigurationFunction),
     "scripting",
     EXTENSION_FUNCTION_NAME(cefimpl::ScriptingExecuteScriptFunction),
     EXTENSION_FUNCTION_NAME(cefimpl::ScriptingInsertCSSFunction),
@@ -206,6 +208,10 @@ void ChromeFunctionRegistry::RegisterAll(ExtensionFunctionRegistry* registry) {
   registry->RegisterFunction<DeveloperPrivateOpenDevToolsFunction>();
   registry->RegisterFunction<DeveloperPrivateOpenUrlFunction>();
   registry->RegisterFunction<DeveloperPrivateDeleteExtensionErrorsFunction>();
+  registry->RegisterFunction<DeveloperPrivateRemoveHostPermissionFunction>();
+  registry->RegisterFunction<DeveloperPrivateAddHostPermissionFunction>();
+  registry->RegisterFunction<DeveloperPrivateRemoveUserSpecifiedSitesFunction>();
+  registry->RegisterFunction<DeveloperPrivateUpdateExtensionConfigurationFunction>();
   // webNavigation
   registry->RegisterFunction<cefimpl::WebNavigationGetFrameFunction>();
   registry->RegisterFunction<cefimpl::WebNavigationGetAllFramesFunction>();
