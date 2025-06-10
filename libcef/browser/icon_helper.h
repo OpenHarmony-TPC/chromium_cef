@@ -8,6 +8,7 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
@@ -48,13 +49,17 @@ class IconHelper : public virtual CefBaseRefCounted {
   void OnUpdateFaviconURL(
       content::RenderFrameHost* render_frame_host,
       const std::vector<blink::mojom::FaviconURLPtr>& candidates);
-  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate);
+  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id);
   void DownloadFaviconCallback(
+      int request_id,
       int id,
       int http_status_code,
       const GURL& image_url,
       const std::vector<SkBitmap>& bitmaps,
       const std::vector<gfx::Size>& original_bitmap_sizes);
+  void DownloadFaviconHandler(
+      const GURL& image_url,
+      const SkBitmap& bitmaps);
   void OnReceivedIcon(const void* data,
                       size_t width,
                       size_t height,
@@ -77,6 +82,21 @@ class IconHelper : public virtual CefBaseRefCounted {
   void SetLastPageUrl(const GURL& url);
 #endif  // defined(OHOS_FAVICON)
 
+#if defined(OHOS_NWEB_EX)
+  struct CallbackData {
+    float score;
+    GURL image_url;
+    SkBitmap bitmap;
+ 
+    CallbackData() {}
+ 
+    CallbackData(float score_num, const GURL& url,
+                 const SkBitmap& bmp)
+        : score(score_num), image_url(url),
+          bitmap(bmp) {}
+  };
+#endif
+
  private:
 #if defined(OHOS_WPT)
   void InsertFailedFaviconUrl(const GURL& icon_url);
@@ -98,6 +118,12 @@ class IconHelper : public virtual CefBaseRefCounted {
 #if defined(OHOS_WPT)
   std::unordered_set<size_t> failed_favicon_urls_set_;
 #endif  // defined(OHOS_WPT)
+
+#if defined(OHOS_NWEB_EX)
+  std::map<int, std::unordered_set<std::string>> pending_downloads_map_;
+  std::map<int, CallbackData> best_results_map_;
+  std::mutex mutex_;
+#endif
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(IconHelper);
 };

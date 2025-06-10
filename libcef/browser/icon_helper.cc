@@ -24,6 +24,15 @@
 #include "content/public/browser/navigation_handle.h"
 #endif  // defined(OHOS_FAVICON)
 
+#if defined(OHOS_NWEB_EX)
+#include "base/command_line.h"
+#include "base/ohos/sys_info_utils.h"
+#include "components/favicon_base/favicon_util.h"
+#include "components/favicon_base/select_favicon_frames.h"
+#include "content/public/common/content_switches.h"
+#include "ui/gfx/favicon_size.h"
+#endif
+
 namespace {
 
 constexpr int LARGEST_ICON_SIZE = 192;
@@ -51,6 +60,17 @@ cef_alpha_type_t TransformSkAlphaType(SkAlphaType alpha_type) {
       return CEF_ALPHA_TYPE_UNKNOWN;
   }
 }
+
+#if defined(OHOS_NWEB_EX)
+std::vector<int> GetDesiredPixelSizes() {
+  std::vector<int> pixel_sizes;
+  for (float scale_factor : favicon_base::GetFaviconScales()) {
+    pixel_sizes.push_back(
+        static_cast<int>(ceil(scale_factor * gfx::kFaviconSize)));
+  }
+  return pixel_sizes;
+}
+#endif
 
 }  // namespace
 
@@ -80,6 +100,8 @@ void IconHelper::OnUpdateFaviconURL(
     LOG(ERROR) << "Initialized value is invalid";
     return;
   }
+  static int request_id = 0;
+  request_id++;
   for (const auto& candidate : candidates) {
 #if defined(OHOS_WPT)
     if (!candidate->icon_url.is_valid() ||
@@ -98,7 +120,7 @@ void IconHelper::OnUpdateFaviconURL(
     }
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
-        DownloadFavicon(candidate);
+        DownloadFavicon(candidate, request_id);
         break;
       case blink::mojom::FaviconIconType::kTouchIcon:
         handler_->OnReceivedTouchIconUrl(
@@ -122,21 +144,27 @@ void IconHelper::OnUpdateFaviconURL(
   }
 }
 
-void IconHelper::DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate) {
+void IconHelper::DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id) {
   if (!web_contents_) {
     LOG(ERROR) << "WebContents is invalid";
     return;
   }
+ 
+#if defined(OHOS_NWEB_EX)
+  std::lock_guard<std::mutex> lock(mutex_);
+  pending_downloads_map_[request_id].insert(candidate->icon_url.spec());
+#endif
   web_contents_->DownloadImage(
       candidate->icon_url,
       true,               // Is a favicon
       gfx::Size(),        // No preferred size
       LARGEST_ICON_SIZE,  // Max bitmap size 192
       false,              // Normal cache policy
-      base::BindOnce(&IconHelper::DownloadFaviconCallback, this));
+      base::BindOnce(&IconHelper::DownloadFaviconCallback, this, request_id));
 }
 
 void IconHelper::DownloadFaviconCallback(
+    int request_id,
     int id,
     int http_status_code,
     const GURL& image_url,
@@ -160,11 +188,47 @@ void IconHelper::DownloadFaviconCallback(
 #endif  // defined(OHOS_FAVICON)
 
   std::vector<size_t> best_indices;
+#if defined(OHOS_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
+      base::ohos::IsPcDevice()) {
+    float current_score;
+    SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (best_results_map_[request_id].score < current_score) {
+      const auto& bitmap =
+          bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+      SkBitmap new_bitmap;
+      new_bitmap.allocPixels(bitmap.info());
+      bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
+      best_results_map_[request_id] = {current_score, image_url, new_bitmap};
+    }
+    std::unordered_set<std::string>& pending_urls = pending_downloads_map_[request_id];
+    pending_urls.erase(image_url.spec());
+    if (pending_urls.empty()) {
+      CallbackData data = best_results_map_[request_id];
+      DownloadFaviconHandler(data.image_url, data.bitmap);
+      pending_downloads_map_.erase(request_id);
+      best_results_map_.erase(request_id);
+    }
+    return;
+  } else {
+    SelectFaviconFrameIndices(original_bitmap_sizes,
+                              std::vector<int>(1U, LARGEST_ICON_SIZE),
+                              &best_indices, nullptr);
+  }
+#else
   SelectFaviconFrameIndices(original_bitmap_sizes,
                             std::vector<int>(1U, LARGEST_ICON_SIZE),
                             &best_indices, nullptr);
+#endif
   const auto& bitmap =
       bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+  DownloadFaviconHandler(image_url, bitmap);
+}
+ 
+void IconHelper::DownloadFaviconHandler(
+    const GURL& image_url,
+    const SkBitmap& bitmap) {
   if (bitmap.drawsNothing()) {
     return;
   }
