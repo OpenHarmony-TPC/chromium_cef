@@ -16,12 +16,12 @@
 #define CEF_LIBCEF_BROWSER_NET_SERVICE_COOKIE_MANAGER_OHOS_IMPL_H_
 
 #include <atomic>
-#include <queue>
 
 #include "include/cef_cookie.h"
 #include "libcef/browser/browser_context.h"
 #include "libcef/browser/thread_util.h"
 
+#include "base/containers/circular_deque.h"
 #include "base/files/file_path.h"
 #include "base/threading/thread.h"
 #include "mojo/public/cpp/bindings/pending_remote.h"
@@ -85,7 +85,7 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   net::CookieStore* GetCookieStore();
 
-  void RunCookieTasks(base::OnceClosure task);
+  void RunPendingCookieTasks();
   void RunCookieTaskAsync(base::OnceClosure task);
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceCallback<void(bool)>)> task,
@@ -172,7 +172,8 @@ class CefCookieManagerImpl : public CefCookieManager {
 
   base::FilePath cookie_store_path_;
 
-  std::queue<base::OnceClosure> tasks_;
+  base::Lock task_queue_lock_;
+  base::circular_deque<base::OnceClosure> tasks_ GUARDED_BY(task_queue_lock_);
 
   mojo::Remote<network::mojom::CookieManager> network_cookie_manager_;
 
