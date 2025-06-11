@@ -50,7 +50,7 @@ using network::mojom::CookieManager;
 namespace {
 
 // Always execute the callback asynchronously.
-void RunAsyncCompletionOnUIThread(CefRefPtr<CefCompletionCallback> callback) {
+void RunAsyncCompletionOnUIThread(const CefRefPtr<CefCompletionCallback>& callback) {
   if (!callback.get()) {
     return;
   }
