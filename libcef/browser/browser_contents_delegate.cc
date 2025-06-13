@@ -893,7 +893,9 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     LOG(INFO) << "load type = "
               << PageTransitionStripQualifier(
                      navigation_handle->GetPageTransition());
-    OnRefreshAccessedHistory(frame.get(), url, isReload);
+    if (navigation_handle->IsInPrimaryMainFrame()) {
+      OnRefreshAccessedHistory(frame.get(), url, isReload);
+    }
 #endif
   } else {
     // The navigation failed with an error. This may happen before commit
