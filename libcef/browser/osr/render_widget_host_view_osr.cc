@@ -550,14 +550,12 @@ CefRenderWidgetHostViewOSR::GetTouchSelectionControllerClientManager() {
   return selection_controller_client_.get();
 }
 
-#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
 gfx::Rect CefRenderWidgetHostViewOSR::GetPhysicalViewBounds() {
   if (IsPopupWidget()) {
     return popup_position_;
   }
   return current_view_bounds_;
 }
-#endif // BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
 
 gfx::Rect CefRenderWidgetHostViewOSR::GetViewBounds() {
 #if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
