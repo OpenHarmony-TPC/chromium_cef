@@ -198,7 +198,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                  const GURL& url,
                  int http_status_code);
   void OnLoadError(CefRefPtr<CefFrame> frame, const GURL& url, int error_code);
-  void OnTitleChange(const std::u16string& title);
+  void OnTitleChange(const std::u16string& title, bool isRealTitle);
   void OnFullscreenModeChange(bool fullscreen
 #if BUILDFLAG(ARKWEB_MEDIA)
                               ,
