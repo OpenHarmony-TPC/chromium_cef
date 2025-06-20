@@ -1496,7 +1496,9 @@ std::string ArkWebBrowserHostExtImpl::GetDataDetectorSelectText() {
 }
 
 void ArkWebBrowserHostExtImpl::OnDataDetectorSelectText() {
-  if (platform_delegate_) {
+  auto web_contents = GetWebContents();
+  if (web_contents && platform_delegate_) {
+    web_contents->SetShowingContextMenu(false);
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnDataDetectorSelectText();
   }
 }
