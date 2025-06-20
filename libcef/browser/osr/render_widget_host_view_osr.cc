@@ -1676,11 +1676,11 @@ void CefRenderWidgetHostViewOSR::SetFocus(bool focus) {
     if (browser_impl_) {
       browser_impl_->CancelContextMenu();
     }
-#endif
 
     if (selection_controller_client_) {
       selection_controller_client_->CloseQuickMenuAndHideHandles();
     }
+#endif
 
     widget->SetActive(false);
     widget->LostFocus();

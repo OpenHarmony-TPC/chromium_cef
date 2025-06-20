@@ -96,6 +96,16 @@ class CefContextMenuHandlerExt : virtual public CefContextMenuHandler {
   CefRefPtr<CefContextMenuHandlerExt> AsCefContextMenuHandlerExt() override {
     return this;
   }
+
+  #if BUILDFLAG(ARKWEB_MENU)
+    virtual void SetHandleVisibleCallback(
+        std::function<void(bool)> onHandleVisible) {}
+  
+    virtual void ShowMagnifier() {}
+  
+    virtual void HideMagnifier() {}
+  #endif
+
 };
 
 class CefContextMenuParamsExt : virtual public CefContextMenuParams {
