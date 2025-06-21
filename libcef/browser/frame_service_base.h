@@ -10,6 +10,9 @@
 #include "base/functional/bind.h"
 #include "base/logging.h"
 #include "base/memory/raw_ptr.h"
+#if BUILDFLAG(IS_ARKWEB)
+#include "base/memory/weak_ptr.h"
+#endif
 #include "base/threading/thread_checker.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
@@ -45,9 +48,15 @@ class FrameServiceBase : public Interface, public WebContentsObserver {
         render_frame_host_(render_frame_host),
         origin_(render_frame_host_->GetLastCommittedOrigin()),
         receiver_(this, std::move(pending_receiver)) {
+#if BUILDFLAG(IS_ARKWEB)
+    // |this| owns |receiver_|, so unretained is safe.
+    receiver_.set_disconnect_handler(
+        base::BindOnce(&FrameServiceBase::Close, weak_factory_.GetWeakPtr()));
+#else
     // |this| owns |receiver_|, so unretained is safe.
     receiver_.set_disconnect_handler(
         base::BindOnce(&FrameServiceBase::Close, base::Unretained(this)));
+#endif
   }
 
  protected:
@@ -120,6 +129,9 @@ class FrameServiceBase : public Interface, public WebContentsObserver {
   const raw_ptr<RenderFrameHost> render_frame_host_ = nullptr;
   const url::Origin origin_;
   mojo::Receiver<Interface> receiver_;
+#if BUILDFLAG(IS_ARKWEB)
+  base::WeakPtrFactory<FrameServiceBase> weak_factory_{this};
+#endif
 };
 
 }  // namespace content
