@@ -801,3 +801,9 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+CefRefPtr<CefDragData> CefBrowserPlatformDelegateOsrExt::GetDropData() {
+  return last_drag_data_;
+}
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)

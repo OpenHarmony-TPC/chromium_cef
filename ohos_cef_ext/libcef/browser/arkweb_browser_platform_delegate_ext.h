@@ -184,5 +184,9 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
       bool is_password_popup_type);
   virtual void OnHideAutofillPopup();
 #endif  // BUILDFLAG(ARKWEB_DATALIST)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  virtual CefRefPtr<CefDragData> GetDropData();
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 };
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_EXT_H_
