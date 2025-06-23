@@ -45,8 +45,6 @@
 #include "include/cef_request.h"
 #include "include/cef_response.h"
 
-class CefResourceHandlerExt;
-
 ///
 /// Callback for asynchronous continuation of CefResourceHandler::Skip().
 ///
@@ -88,11 +86,6 @@ class CefResourceReadCallback : public virtual CefBaseRefCounted {
 /*--cef(source=client)--*/
 class CefResourceHandler : public virtual CefBaseRefCounted {
  public:
-  friend class CefResourceHandlerExt;
-  virtual CefResourceHandlerExt* AsCefResourceHandlerExt()
-  {
-    return nullptr;
-  }
   ///
   /// Open the response stream. To handle the request immediately set
   /// |handle_request| to true and return true. To decide at a later time set

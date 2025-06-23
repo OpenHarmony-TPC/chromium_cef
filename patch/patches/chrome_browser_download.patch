@@ -1,5 +1,5 @@
 diff --git chrome/browser/download/chrome_download_manager_delegate.cc chrome/browser/download/chrome_download_manager_delegate.cc
-index b6552a9ba..4f0f46c47 100644
+index 16f38b6c8d6f9..97f54931c02dd 100644
 --- chrome/browser/download/chrome_download_manager_delegate.cc
 +++ chrome/browser/download/chrome_download_manager_delegate.cc
 @@ -31,6 +31,7 @@
@@ -21,19 +21,19 @@ index b6552a9ba..4f0f46c47 100644
  using content::BrowserThread;
  using content::DownloadManager;
  using download::DownloadItem;
-@@ -491,6 +495,11 @@ ChromeDownloadManagerDelegate::ChromeDownloadManagerDelegate(Profile* profile)
+@@ -517,6 +522,11 @@ ChromeDownloadManagerDelegate::ChromeDownloadManagerDelegate(Profile* profile)
+   download_dialog_bridge_ = std::make_unique<DownloadDialogBridge>();
    download_message_bridge_ = std::make_unique<DownloadMessageBridge>();
  #endif
- 
++
 +#if BUILDFLAG(ENABLE_CEF)
 +  cef_delegate_ =
 +      cef::DownloadManagerDelegate::Create(profile_->GetDownloadManager());
 +#endif
-+
- #if BUILDFLAG(IS_OHOS)
-   // The default path obtained without kDownloadDefault Directory is'/'and does not have read and write permissions
-   if (download_prefs_->DownloadPath().value() == "/") {
-@@ -558,6 +567,9 @@ void ChromeDownloadManagerDelegate::Shutdown() {
+ }
+ 
+ ChromeDownloadManagerDelegate::~ChromeDownloadManagerDelegate() {
+@@ -576,6 +586,9 @@ void ChromeDownloadManagerDelegate::Shutdown() {
      download_manager_->RemoveObserver(this);
      download_manager_ = nullptr;
    }
@@ -43,7 +43,7 @@ index b6552a9ba..4f0f46c47 100644
  }
  
  void ChromeDownloadManagerDelegate::OnDownloadCanceledAtShutdown(
-@@ -626,6 +638,12 @@ bool ChromeDownloadManagerDelegate::DetermineDownloadTarget(
+@@ -644,6 +657,12 @@ bool ChromeDownloadManagerDelegate::DetermineDownloadTarget(
      ReportPDFLoadStatus(PDFLoadStatus::kTriggeredNoGestureDriveByDownload);
    }
  
@@ -56,7 +56,7 @@ index b6552a9ba..4f0f46c47 100644
    DownloadTargetDeterminer::CompletionCallback target_determined_callback =
        base::BindOnce(&ChromeDownloadManagerDelegate::OnDownloadTargetDetermined,
                       weak_ptr_factory_.GetWeakPtr(), download->GetId(),
-@@ -1119,8 +1138,11 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
+@@ -1120,8 +1139,11 @@ void ChromeDownloadManagerDelegate::OpenDownload(DownloadItem* download) {
    Browser* browser =
        web_contents ? chrome::FindBrowserWithTab(web_contents) : nullptr;
    std::unique_ptr<chrome::ScopedTabbedBrowserDisplayer> browser_displayer;
@@ -105,39 +105,4 @@ index 7ae09b406f344..801d6c846e744 100644
 +
    base::WeakPtrFactory<ChromeDownloadManagerDelegate> weak_ptr_factory_{this};
  };
- 
-diff --git chrome/browser/download/download_prefs.cc chrome/browser/download/download_prefs.cc
-index 7b6876be4..a95cfb7fd 100644
---- chrome/browser/download/download_prefs.cc
-+++ chrome/browser/download/download_prefs.cc
-@@ -23,6 +23,7 @@
- #include "base/strings/utf_string_conversions.h"
- #include "build/build_config.h"
- #include "build/chromeos_buildflags.h"
-+#include "cef/libcef/features/runtime.h"
- #include "chrome/browser/download/chrome_download_manager_delegate.h"
- #include "chrome/browser/download/download_core_service_factory.h"
- #include "chrome/browser/download/download_core_service_impl.h"
-@@ -64,6 +65,10 @@
- #include "chrome/browser/flags/android/chrome_feature_list.h"
- #endif
- 
-+#if BUILDFLAG(ENABLE_ALLOY_BOOTSTRAP)
-+#include "cef/libcef/browser/alloy/alloy_download_util.h"
-+#endif
-+
- #if BUILDFLAG(IS_OHOS)
- #include "ohos/adapter/context_path/context_path_adapter.h"
- #include "ohos/adapter/permission_manager/permission_manager_adapter.h"
-@@ -410,6 +415,11 @@ DownloadPrefs* DownloadPrefs::FromDownloadManager(
- // static
- DownloadPrefs* DownloadPrefs::FromBrowserContext(
-     content::BrowserContext* context) {
-+#if BUILDFLAG(ENABLE_ALLOY_BOOTSTRAP)
-+  if (cef::IsAlloyRuntimeEnabled()) {
-+    return alloy::GetDownloadPrefsFromBrowserContext(context);
-+  }
-+#endif
-   return FromDownloadManager(context->GetDownloadManager());
- }
  

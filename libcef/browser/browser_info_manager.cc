@@ -16,7 +16,6 @@
 #include "cef/libcef/common/cef_switches.h"
 #include "cef/libcef/common/frame_util.h"
 #include "cef/libcef/common/values_impl.h"
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_info_manager_utils.h"
 #include "content/public/browser/child_process_host.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
@@ -57,20 +56,12 @@ CefBrowserInfoManager::PendingPopup::~PendingPopup() {
 CefBrowserInfoManager::CefBrowserInfoManager() {
   DCHECK(!g_info_manager);
   g_info_manager = this;
-#if BUILDFLAG(IS_ARKWEB)
-  arkweb_browser_info_manager_utils_ = std::make_unique<ArkwebBrowserInfoManagerUtils>(this);
-#endif
 }
 
 CefBrowserInfoManager::~CefBrowserInfoManager() {
   DCHECK(browser_info_list_.empty());
   g_info_manager = nullptr;
 }
-#if BUILDFLAG(IS_ARKWEB)
-ArkwebBrowserInfoManagerUtils* CefBrowserInfoManager::GetUtils() {
-  return arkweb_browser_info_manager_utils_.get();
-}
-#endif
 
 // static
 CefBrowserInfoManager* CefBrowserInfoManager::GetInstance() {
@@ -155,9 +146,6 @@ bool CefBrowserInfoManager::CanCreateWindow(
   // Start with the current browser's settings.
   pending_popup->client = client;
   pending_popup->settings = browser->settings();
-#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
-  pending_popup->extra_info = CefDictionaryValue::Create();
-#endif
 
   // With Chrome style, we want to use default popup Browser creation
   // for document picture-in-picture.
@@ -374,9 +362,6 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   DCHECK(frame_util::IsValidGlobalToken(global_token));
   DCHECK(callback);
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info " << frame_util::GetFrameDebugString(global_token);
-#endif
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
   base::AutoLock lock_scope(browser_info_lock_);
@@ -405,12 +390,6 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   pending->callback_runner = callback_runner;
   pending_new_browser_info_map_.insert(
       std::make_pair(global_token, std::move(pending)));
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info wait timeout";
-  CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForPrerendering,
-                               global_token, timeout_id));
-#endif
 
   // Register a timeout for the pending response so that the renderer process
   // doesn't hang forever. With Chrome style, timeouts may occur in cases
@@ -750,11 +729,7 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::GetBrowserInfoInternal(
 
   for (const auto& browser_info : browser_info_list_) {
     auto frame = browser_info->GetFrameForGlobalId(global_id);
-#if BUILDFLAG(IS_ARKWEB)
-    if (frame || browser_info->GetLastDeleteSpeculativeRFHId() == global_id) {
-#else
     if (frame) {
-#endif
       return browser_info;
     }
   }
@@ -772,11 +747,7 @@ scoped_refptr<CefBrowserInfo> CefBrowserInfoManager::GetBrowserInfoInternal(
 
   for (const auto& browser_info : browser_info_list_) {
     auto frame = browser_info->GetFrameForGlobalToken(global_token);
-#if BUILDFLAG(IS_ARKWEB)
-    if (frame || browser_info->GetLastDeleteSpeculativeRFHToken() == global_token) {
-#else
     if (frame) {
-#endif
       return browser_info;
     }
   }
@@ -836,9 +807,6 @@ void CefBrowserInfoManager::TimeoutNewBrowserInfoResponse(
     const content::GlobalRenderFrameHostToken& global_token,
     int timeout_id) {
   CEF_REQUIRE_UIT();
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info timeout";
-#endif
   if (!g_info_manager) {
     return;
   }

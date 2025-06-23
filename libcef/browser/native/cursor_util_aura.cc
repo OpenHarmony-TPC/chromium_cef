@@ -22,9 +22,6 @@
 #endif
 #endif  // BUILDFLAG(IS_LINUX)
 
-#if BUILDFLAG(IS_OHOS)
-#include "ui/ozone/common/bitmap_cursor.h"
-#endif
 #if BUILDFLAG(IS_WIN)
 #include "ui/base/win/win_cursor.h"
 #endif

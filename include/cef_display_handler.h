@@ -75,18 +75,17 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   /// Called when web content in the page has toggled fullscreen mode. If
   /// |fullscreen| is true the content will automatically be sized to fill the
   /// browser content area. If |fullscreen| is false the content will
-  /// automatically return to its original size and position. With the Alloy
-  /// runtime the client is responsible for triggering the fullscreen transition
-  /// (for example, by calling CefWindow::SetFullscreen when using Views). With
-  /// the Chrome runtime the fullscreen transition will be triggered
-  /// automatically. The CefWindowDelegate::OnWindowFullscreenTransition method
-  /// will be called during the fullscreen transition for notification purposes.
-  ///
+  /// automatically return to its original size and position. With Alloy style
+  /// the client is responsible for triggering the fullscreen transition (for
+  /// example, by calling CefWindow::SetFullscreen when using Views). With
+  /// Chrome style the fullscreen transition will be triggered automatically.
+  /// The CefWindowDelegate::OnWindowFullscreenTransition method will be called
+  /// during the fullscreen transition for notification purposes.
   ///
   /*--cef()--*/
   virtual void OnFullscreenModeChange(CefRefPtr<CefBrowser> browser,
-                                      bool fullscreen,
-                                      const CefSize& video_natural_size) {}
+                                      bool fullscreen) {}
+
   ///
   /// Called when the browser is about to display a tooltip. |text| contains the
   /// text that will be displayed in the tooltip. To handle the display of the
@@ -154,13 +153,6 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
                               const CefCursorInfo& custom_cursor_info) {
     return false;
   }
-
-  ///
-  /// Called when the page scale factor has inited.
-  ///
-  /*--cef()--*/
-  virtual void OnScaleInited(CefRefPtr<CefBrowser> browser,
-                             float page_scale_factor) {}
 
   ///
   /// Called when the browser's access to an audio and/or video source has

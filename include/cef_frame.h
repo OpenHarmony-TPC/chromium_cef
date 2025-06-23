@@ -49,8 +49,6 @@ class CefBrowser;
 class CefURLRequest;
 class CefURLRequestClient;
 class CefV8Context;
-class ArkwebFrameExt;
-class CefFrameHostImpl;
 
 ///
 /// Class used to represent a frame in the browser window. When used in the
@@ -258,11 +256,6 @@ class CefFrame : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void SendProcessMessage(CefProcessId target_process,
                                   CefRefPtr<CefProcessMessage> message) = 0;
-
-  virtual CefRefPtr<ArkwebFrameExt> AsArkWebFrame() { return nullptr; }
-
-  virtual CefRefPtr<CefFrameHostImpl> AsCefFrameHostImpl() { return nullptr; }
 };
 
-#include "ohos_cef_ext/include/arkweb_frame_ext.h"
 #endif  // CEF_INCLUDE_CEF_FRAME_H_

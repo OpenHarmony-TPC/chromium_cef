@@ -33,7 +33,7 @@
 // by hand. See the translator.README.txt file in the tools directory for
 // more information.
 //
-// $hash=e9eed56917218058c6ca7ee377919238c19631da$
+// $hash=a6442e6bc6e7d335717bf9fbcf7a6e061216d449$
 //
 
 #ifndef CEF_INCLUDE_CAPI_CEF_CONTEXT_MENU_HANDLER_CAPI_H_
@@ -170,7 +170,7 @@ typedef struct _cef_context_menu_handler_t {
   /// that represent the state of the quick menu. Return true (1) if the menu
   /// will be handled and execute |callback| either synchronously or
   /// asynchronously with the selected command ID. Return false (0) to cancel
-  /// the menu. IS_OHOS extended
+  /// the menu.
   ///
   int(CEF_CALLBACK* run_quick_menu)(
       struct _cef_context_menu_handler_t* self,
@@ -178,7 +178,6 @@ typedef struct _cef_context_menu_handler_t {
       struct _cef_frame_t* frame,
       const cef_point_t* location,
       const cef_size_t* size,
-      const cef_rect_t* select_bounds,
       cef_quick_menu_edit_state_flags_t edit_state_flags,
       struct _cef_run_quick_menu_callback_t* callback);
 
@@ -198,7 +197,6 @@ typedef struct _cef_context_menu_handler_t {
   ///
   /// Called when the quick menu for a windowless browser is dismissed
   /// irregardless of whether the menu was canceled or a command was selected.
-  /// IS_OHOS extended
   ///
   void(CEF_CALLBACK* on_quick_menu_dismissed)(
       struct _cef_context_menu_handler_t* self,

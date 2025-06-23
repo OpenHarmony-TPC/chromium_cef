@@ -38,7 +38,6 @@
 #define CEF_INCLUDE_CEF_RESOURCE_REQUEST_HANDLER_H_
 #pragma once
 
-#include "cef/ohos_cef_ext/include/arkweb_request_ext.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_callback.h"
@@ -50,10 +49,6 @@
 
 class CefCookieAccessFilter;
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-class ArkWebResourceRequestHandlerExt;
-#endif
-
 ///
 /// Implement this interface to handle events related to browser requests. The
 /// methods of this class will be called on the IO thread unless otherwise
@@ -64,14 +59,6 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
  public:
   typedef cef_return_value_t ReturnValue;
   typedef cef_urlrequest_status_t URLRequestStatus;
-
-  ///
-  /// Get a AsArkWebResourceRequestHandlerExt object. ARKWEB_NETWORK_BASE
-  ///
-  virtual CefRefPtr<ArkWebResourceRequestHandlerExt>
-  AsArkWebResourceRequestHandlerExt() {
-    return nullptr;
-  }
 
   ///
   /// Called on the IO thread before a resource request is loaded. The |browser|
@@ -116,6 +103,7 @@ class CefResourceRequestHandler : public virtual CefBaseRefCounted {
   /// a handler for the resource return a CefResourceHandler object. The
   /// |request| object cannot not be modified in this callback.
   ///
+  /*--cef(optional_param=browser,optional_param=frame)--*/
   virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
       CefRefPtr<CefBrowser> browser,
       CefRefPtr<CefFrame> frame,

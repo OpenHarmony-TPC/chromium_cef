@@ -12,8 +12,8 @@ import sys
 
 
 def make_version_header(header):
-  if not git.is_checkout('.'):
-    raise Exception('Not a valid checkout')
+  #if not git.is_checkout('.'):
+  #  raise Exception('Not a valid checkout')
 
   result = get_copyright(full=True, translator=False) + \
 """//

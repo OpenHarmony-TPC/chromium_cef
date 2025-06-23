@@ -112,18 +112,7 @@ parser.add_option(
     dest='patchdir',
     metavar='DIR',
     help='patch target directory')
-parser.add_option(
-    '--root-dir',
-    dest='rootdir',
-    metavar='DIR',
-    help='patch root directory')
 (options, args) = parser.parse_args()
-
-if not options.rootdir is None:
-  # Specify root directory
-  cef_dir = os.path.abspath(os.path.join(options.rootdir, 'src'))
-  cef_patch_dir = os.path.join(cef_dir, 'patch')
-  src_dir = os.path.abspath(os.path.join(options.rootdir))
 
 if not options.patchfile is None:
   apply_patch_file(options.patchfile, options.patchdir)

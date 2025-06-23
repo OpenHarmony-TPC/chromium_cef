@@ -19,9 +19,6 @@
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/render_widget_host_view.h"
 #include "third_party/blink/public/mojom/context_menu/context_menu.mojom.h"
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-#include "cef/ohos_cef_ext/libcef/browser/menu_manager_for_include.cc"
-#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
 
 namespace {
 
@@ -139,10 +136,6 @@ bool CefMenuManager::CreateContextMenu(
   params_ = params;
   model_->Clear();
 
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-  UpdateMenuEditStateFlags(params_);
-#endif  // #if BUILDFLAG(ARKWEB_CLIPBOARD)
-
   // Create the default menu model.
   CreateDefaultModel();
 
@@ -155,11 +148,7 @@ bool CefMenuManager::CreateContextMenu(
     CefRefPtr<CefContextMenuHandler> handler = client->GetContextMenuHandler();
     if (handler.get()) {
       CefRefPtr<CefContextMenuParamsImpl> paramsPtr(
-#if BUILDFLAG(IS_ARKWEB)
-          new ArkWebCefContextMenuParamsImplExt(&params_));
-#else
           new CefContextMenuParamsImpl(&params_));
-#endif
       CefRefPtr<CefFrame> frame = browser_->GetFocusedFrame();
 
       handler->OnBeforeContextMenu(browser_.get(), frame, paramsPtr.get(),
@@ -232,11 +221,7 @@ void CefMenuManager::ExecuteCommand(CefRefPtr<CefMenuModelImpl> source,
     CefRefPtr<CefContextMenuHandler> handler = client->GetContextMenuHandler();
     if (handler.get()) {
       CefRefPtr<CefContextMenuParamsImpl> paramsPtr(
-#if BUILDFLAG(IS_ARKWEB)
-          new ArkWebCefContextMenuParamsImplExt(&params_));
-#else
           new CefContextMenuParamsImpl(&params_));
-#endif
 
       bool handled = handler->OnContextMenuCommand(
           browser_.get(), browser_->GetFocusedFrame(), paramsPtr.get(),

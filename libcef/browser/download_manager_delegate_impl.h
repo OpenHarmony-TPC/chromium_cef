@@ -16,11 +16,6 @@
 #include "components/download/public/common/download_target_info.h"
 #include "content/public/browser/download_manager.h"
 
-#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
-#include "base/compiler_specific.h"
-#include "cef/include/cef_download_handler.h"
-#endif  //  ARKWEB_EX_DOWNLOAD
-
 class CefBrowserHostBase;
 
 class CefDownloadManagerDelegateImpl
@@ -39,11 +34,7 @@ class CefDownloadManagerDelegateImpl
 
   ~CefDownloadManagerDelegateImpl() override;
 
-#if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
- protected:
-#else
  private:
-#endif
   // DownloadItem::Observer methods.
   void OnDownloadUpdated(download::DownloadItem* item) override;
   void OnDownloadDestroyed(download::DownloadItem* item) override;
@@ -68,6 +59,7 @@ class CefDownloadManagerDelegateImpl
   void ResetManager();
 
   raw_ptr<content::DownloadManager> manager_;
+  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
   const bool alloy_bootstrap_;
 
   // Map of DownloadItem to originating CefBrowserHostBase. Maintaining this
@@ -76,8 +68,6 @@ class CefDownloadManagerDelegateImpl
   using ItemBrowserMap =
       std::map<raw_ptr<download::DownloadItem>, raw_ptr<CefBrowserHostBase>>;
   ItemBrowserMap item_browser_map_;
-
-  base::WeakPtrFactory<content::DownloadManager> manager_ptr_factory_;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DOWNLOAD_MANAGER_DELEGATE_IMPL_H_

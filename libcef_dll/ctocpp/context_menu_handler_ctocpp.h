@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=b4dfb222c1bd7993fa0e2451c1084b431904ca13$
+// $hash=dfb5ed505950e98cef811b7449be590ae292d160$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_CONTEXT_MENU_HANDLER_CTOCPP_H_
@@ -55,7 +55,6 @@ class CefContextMenuHandlerCToCpp
                     CefRefPtr<CefFrame> frame,
                     const CefPoint& location,
                     const CefSize& size,
-                    const CefRect& select_bounds,
                     QuickMenuEditStateFlags edit_state_flags,
                     CefRefPtr<CefRunQuickMenuCallback> callback) override;
   bool OnQuickMenuCommand(CefRefPtr<CefBrowser> browser,

@@ -45,9 +45,6 @@
 
 class CefContextMenuParams;
 
-class CefContextMenuHandlerExt;
-class CefContextMenuParamsExt;
-
 ///
 /// Callback interface used for continuation of custom context menu display.
 ///
@@ -161,14 +158,12 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   /// that represent the state of the quick menu. Return true if the menu will
   /// be handled and execute |callback| either synchronously or asynchronously
   /// with the selected command ID. Return false to cancel the menu.
-  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual bool RunQuickMenu(CefRefPtr<CefBrowser> browser,
                             CefRefPtr<CefFrame> frame,
                             const CefPoint& location,
                             const CefSize& size,
-                            const CefRect& select_bounds,
                             QuickMenuEditStateFlags edit_state_flags,
                             CefRefPtr<CefRunQuickMenuCallback> callback) {
     return false;
@@ -191,15 +186,10 @@ class CefContextMenuHandler : public virtual CefBaseRefCounted {
   ///
   /// Called when the quick menu for a windowless browser is dismissed
   /// irregardless of whether the menu was canceled or a command was selected.
-  /// IS_OHOS extended
   ///
   /*--cef()--*/
   virtual void OnQuickMenuDismissed(CefRefPtr<CefBrowser> browser,
                                     CefRefPtr<CefFrame> frame) {}
-
-  virtual CefRefPtr<CefContextMenuHandlerExt> AsCefContextMenuHandlerExt() {
-    return nullptr;
-  }
 };
 
 ///
@@ -352,12 +342,6 @@ class CefContextMenuParams : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual bool IsCustomMenu() = 0;
-
-  virtual CefRefPtr<CefContextMenuParamsExt> AsCefCefContextMenuParamsExt() {
-    return nullptr;
-  }
 };
-
-#include "ohos_cef_ext/include/cef_context_menu_handler_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_CONTEXT_MENU_HANDLER_H_

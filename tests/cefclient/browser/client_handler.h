@@ -9,7 +9,6 @@
 #include <set>
 #include <string>
 
-#include "cef/ohos_cef_ext/include/arkweb_display_handler_ext.h"
 #include "include/cef_client.h"
 #include "include/wrapper/cef_helpers.h"
 #include "tests/cefclient/browser/base_client_handler.h"
@@ -30,7 +29,7 @@ class ClientDownloadImageCallback;
 class ClientHandler : public BaseClientHandler,
                       public CefCommandHandler,
                       public CefContextMenuHandler,
-                      public ArkWebDisplayHandlerExt,
+                      public CefDisplayHandler,
                       public CefDownloadHandler,
                       public CefDragHandler,
                       public CefKeyboardHandler,
@@ -107,12 +106,10 @@ class ClientHandler : public BaseClientHandler,
 
   // CefClient methods
   CefRefPtr<CefCommandHandler> GetCommandHandler() override { return this; }
-  CefRefPtr<CefContextMenuHandlerExt> GetContextMenuHandler() override {
+  CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() override {
     return this;
   }
-  CefRefPtr<ArkWebDisplayHandlerExt> GetDisplayHandler() override {
-    return this;
-  }
+  CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
   CefRefPtr<CefDragHandler> GetDragHandler() override { return this; }
   CefRefPtr<CefKeyboardHandler> GetKeyboardHandler() override { return this; }
@@ -290,8 +287,6 @@ class ClientHandler : public BaseClientHandler,
       bool isProxy,
       const CefString& host,
       int port,
-      const std::vector<CefString>& key_types,
-      const std::vector<CefString>& principals,
       const X509CertificateList& certificates,
       CefRefPtr<CefSelectClientCertificateCallback> callback) override;
   void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser,

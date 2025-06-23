@@ -4,7 +4,6 @@
 
 #include "cef/libcef/browser/net/throttle_handler.h"
 
-#include "arkweb/build/features/features.h"
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 #include "cef/libcef/browser/frame_host_impl.h"
@@ -15,14 +14,6 @@
 #include "content/public/browser/navigation_throttle.h"
 #include "content/public/browser/page_navigator.h"
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-#include "libcef/common/arkweb_request_impl_ext.h"
-#endif
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/libcef/browser/net/ark_web_throttle_handler.cc"
-#endif
-
 namespace throttle {
 
 namespace {
@@ -32,10 +23,6 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
 
   const bool is_main_frame = navigation_handle->IsInMainFrame();
   const auto global_id = frame_util::GetGlobalId(navigation_handle);
-
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  ArkWebRecordVisitedUrl(navigation_handle);
-#endif  // BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 
   // Identify the RenderFrameHost that originated the navigation.
   const auto parent_global_id =
@@ -61,12 +48,6 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
     return true;
   }
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  if (ArkWebIsExtensionNavigation(navigation_handle)) {
-    return false;
-  }
-#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-
   bool ignore_navigation = false;
 
   if (browser) {
@@ -84,11 +65,7 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
           frame = browser->browser_info()->CreateTempSubFrame(parent_global_id);
         }
 
-#if BUILDFLAG(IS_ARKWEB)
-        CefRefPtr<CefRequestImpl> request = new ArkWebRequestImplExt();
-#else
         CefRefPtr<CefRequestImpl> request = new CefRequestImpl();
-#endif
         request->Set(navigation_handle);
         request->SetReadOnly(true);
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2025 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=c7458f64a0d7c8537dbdbcf34d11e62bf781428c$
+// $hash=d93ff6bc9c3a48dd0787bf61c1564ebc79739e90$
 //
 
 #include "libcef_dll/cpptoc/browser_host_cpptoc.h"
@@ -21,17 +21,14 @@
 #include "libcef_dll/cpptoc/registration_cpptoc.h"
 #include "libcef_dll/cpptoc/request_context_cpptoc.h"
 #include "libcef_dll/ctocpp/client_ctocpp.h"
-#include "libcef_dll/ctocpp/dev_tools_message_handler_delegate_ctocpp.h"
 #include "libcef_dll/ctocpp/dev_tools_message_observer_ctocpp.h"
 #include "libcef_dll/ctocpp/download_image_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/navigation_entry_visitor_ctocpp.h"
 #include "libcef_dll/ctocpp/pdf_print_callback_ctocpp.h"
-#include "libcef_dll/ctocpp/pdf_value_callback_ctocpp.h"
 #include "libcef_dll/ctocpp/run_file_dialog_callback_ctocpp.h"
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/template_util.h"
 #include "libcef_dll/transfer_util.h"
-#include "libcef_dll/ctocpp/screen_capture_callback_ctocpp.h"
 
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
@@ -648,46 +645,6 @@ browser_host_show_dev_tools(struct _cef_browser_host_t* self,
   CefBrowserHostCppToC::Get(self)->ShowDevTools(
       windowInfoObj, CefClientCToCpp::Wrap(client), settingsObj,
       inspect_element_atVal);
-}
-
-void CEF_CALLBACK browser_host_show_dev_tools_with(
-    struct _cef_browser_host_t* self,
-    struct _cef_browser_host_t* frontend_browser,
-    struct _cef_dev_tools_message_handler_delegate_t* delegate,
-    const cef_point_t* inspect_element_at) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: frontend_browser; type: refptr_same
-  DCHECK(frontend_browser);
-  if (!frontend_browser) {
-    return;
-  }
-  // Verify param: delegate; type: refptr_diff
-  DCHECK(delegate);
-  if (!delegate) {
-    return;
-  }
-  // Verify param: inspect_element_at; type: simple_byref_const
-  DCHECK(inspect_element_at);
-  if (!inspect_element_at) {
-    return;
-  }
-
-  // Translate param: inspect_element_at; type: simple_byref_const
-  CefPoint inspect_element_atVal =
-      inspect_element_at ? *inspect_element_at : CefPoint();
-
-  // Execute
-  /*CefBrowserHostCppToC::Get(self)->ShowDevToolsWith(
-      CefBrowserHostCppToC::Unwrap(frontend_browser),
-      CefDevToolsMessageHandlerDelegateCToCpp::Wrap(delegate),
-      inspect_element_atVal);*/
 }
 
 void CEF_CALLBACK
@@ -1599,232 +1556,6 @@ browser_host_get_runtime_style(struct _cef_browser_host_t* self) {
   return _retval;
 }
 
-void CEF_CALLBACK
-browser_host_set_popup_window(struct _cef_browser_host_t* self,
-                               cef_native_window_t window) {
-  shutdown_checker::AssertNotShutdown();
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Execute
-  CefBrowserHostCppToC::Get(self)->SetPopupWindow(window);
-}
-
-void CEF_CALLBACK
-browser_host_create_to_pdf(struct _cef_browser_host_t* self,
-                           const struct _cef_pdf_print_settings_t* settings,
-                           cef_pdf_value_callback_t* callback) {
-  shutdown_checker::AssertNotShutdown();
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: settings; type: struct_byref_const
-  DCHECK(settings);
-  if (!settings) {
-    return;
-  }
-  if (!template_util::has_valid_size(settings)) {
-    DCHECK(false) << "invalid settings->[base.]size";
-    return;
-  }
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback);
-  if (!callback) {
-    return;
-  }
- 
-  // Translate param: settings; type: struct_byref_const
-  CefPdfPrintSettings settingsObj;
-  if (settings) {
-    settingsObj.Set(*settings, false);
-  }
- 
-  // Execute
-  CefBrowserHostCppToC::Get(self)->CreateToPDF(
-      settingsObj, CefPdfValueCallbackCToCpp::Wrap(callback));
-}
-
-void CEF_CALLBACK
-browser_host_enable_video_assistant(struct _cef_browser_host_t* self,
-                                    int enable) {
-  shutdown_checker::AssertNotShutdown();
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
- 
-  // Execute
-  CefBrowserHostCppToC::Get(self)->EnableVideoAssistant(enable ? true : false);
-}
- 
-void CEF_CALLBACK
-browser_host_execute_video_assistant_function(struct _cef_browser_host_t* self,
-                                              const cef_string_t* cmdId) {
-  shutdown_checker::AssertNotShutdown();
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: cmdId; type: string_byref_const
-  DCHECK(cmdId);
-  if (!cmdId) {
-    return;
-  }
- 
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ExecuteVideoAssistantFunction(
-      CefString(cmdId));
-}
-
-
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-int CEF_CALLBACK browser_host_is_iframe(struct _cef_browser_host_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return 0;
-  }
-
-  // Execute
-  bool _retval = CefBrowserHostCppToC::Get(self)->IsIframe();
-
-  // Return type: bool
-  return _retval;
-}
-
-void CEF_CALLBACK
-browser_host_reload_focused_frame(struct _cef_browser_host_t* self) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->ReloadFocusedFrame();
-}
-#endif
-
-void CEF_CALLBACK
-browser_host_stop_screen_capture(struct _cef_browser_host_t* self,
-                                 int32_t nweb_id,
-                                 const cef_string_t* session_id) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: session_id; type: string_byref_const
-  DCHECK(session_id);
-  if (!session_id) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->StopScreenCapture(nweb_id, CefString(session_id));
-}
-
-void CEF_CALLBACK browser_host_register_screen_capture_delegate_listener(
-    struct _cef_browser_host_t* self,
-    cef_screen_capture_callback_t* listener) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-  // Verify param: listener; type: refptr_diff
-  DCHECK(listener);
-  if (!listener) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->RegisterScreenCaptureDelegateListener(
-      CefScreenCaptureCallbackCToCpp::Wrap(listener));
-}
-
-void CEF_CALLBACK
-browser_host_custom_web_media_player(struct _cef_browser_host_t* self,
-                                     int enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->CustomWebMediaPlayer(enable ? true : false);
-}
-
-void CEF_CALLBACK
-browser_host_set_pip_native_window(struct _cef_browser_host_t* self,
-                                   int delegate_id,
-                                   int child_id,
-                                   int frame_routing_id,
-                                   cef_native_window_t window) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->SetPipNativeWindow(
-    delegate_id, child_id, frame_routing_id, window);
-}
-
-void CEF_CALLBACK
-browser_host_send_pip_event(struct _cef_browser_host_t* self,
-                            int delegate_id,
-                            int child_id,
-                            int frame_routing_id,
-                            int event) {
-  shutdown_checker::AssertNotShutdown();
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  DCHECK(self);
-  if (!self) {
-    return;
-  }
-
-  // Execute
-  CefBrowserHostCppToC::Get(self)->SendPipEvent(
-    delegate_id, child_id, frame_routing_id, event);
-}
-
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1854,7 +1585,6 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->find = browser_host_find;
   GetStruct()->stop_finding = browser_host_stop_finding;
   GetStruct()->show_dev_tools = browser_host_show_dev_tools;
-  GetStruct()->show_dev_tools_with = browser_host_show_dev_tools_with;
   GetStruct()->close_dev_tools = browser_host_close_dev_tools;
   GetStruct()->has_dev_tools = browser_host_has_dev_tools;
   GetStruct()->send_dev_tools_message = browser_host_send_dev_tools_message;
@@ -1911,15 +1641,6 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->is_render_process_unresponsive =
       browser_host_is_render_process_unresponsive;
   GetStruct()->get_runtime_style = browser_host_get_runtime_style;
-  GetStruct()->set_popup_window = browser_host_set_popup_window;
-  GetStruct()->create_to_pdf = browser_host_create_to_pdf;
-  GetStruct()->enable_video_assistant = browser_host_enable_video_assistant;
-  GetStruct()->execute_video_assistant_function =
-      browser_host_execute_video_assistant_function;
-  GetStruct()->stop_screen_capture = browser_host_stop_screen_capture;
-  GetStruct()->register_screen_capture_delegate_listener =
-      browser_host_register_screen_capture_delegate_listener;
-  GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
 }
 
 // DESTRUCTOR - Do not edit by hand.

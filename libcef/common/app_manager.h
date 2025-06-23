@@ -8,7 +8,6 @@
 
 #include <list>
 
-#include "arkweb/build/features/features.h"
 #include "base/functional/callback.h"
 #include "build/build_config.h"
 #include "cef/include/cef_app.h"
@@ -16,14 +15,11 @@
 #include "content/public/common/content_client.h"
 
 class CefBrowserContext;
-class ArkWebAppManagerExt;
 struct CefSchemeInfo;
 
 // Exposes global application state in the main and render processes.
 class CefAppManager {
  public:
-  friend ArkWebAppManagerExt;
-  virtual ArkWebAppManagerExt *AsArkWebAppManagerExt() { return nullptr; }
   CefAppManager(const CefAppManager&) = delete;
   CefAppManager& operator=(const CefAppManager&) = delete;
 
@@ -56,9 +52,6 @@ class CefAppManager {
   virtual CefBrowserContext* CreateNewBrowserContext(
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) = 0;
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  virtual CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() = 0;
-#endif
 
 #if BUILDFLAG(IS_WIN)
   // Returns the module name (usually libcef.dll).

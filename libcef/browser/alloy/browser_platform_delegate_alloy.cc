@@ -20,10 +20,6 @@
 #include "pdf/pdf_features.h"
 #include "third_party/blink/public/mojom/frame/find_in_page.mojom.h"
 
-#if BUILDFLAG(ARKWEB_PRINT)
-#include "cef/ohos_cef_ext/libcef/browser/alloy/browser_platform_delegate_alloy_for_include.cc"
-#endif
-
 namespace {
 
 const char kAttachedHelpersUserDataKey[] = "CefAttachedHelpers";
@@ -40,14 +36,7 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
 
   if (!create_params.request_context) {
     // Using the global request context.
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    create_params.request_context =
-        create_params.settings.incognito_mode
-            ? CefRequestContext::GetGlobalOTRContext()
-            : CefRequestContext::GetGlobalContext();
-#else
     create_params.request_context = CefRequestContext::GetGlobalContext();
-#endif
   }
 
   auto* browser_context =
@@ -55,10 +44,7 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
   CHECK(browser_context);
 
   content::WebContents::CreateParams wc_create_params(browser_context, nullptr);
-#if BUILDFLAG(ARKWEB_RENDER_PROCESS_SHARE)
-  wc_create_params.shared_render_process_token =
-      CefString(&create_params.settings.shared_render_process_token);
-#endif
+
   if (IsWindowless()) {
     // Create the OSR view for the WebContents.
     CreateViewForWebContents(&wc_create_params.view,
@@ -131,18 +117,6 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
   // Used for print preview and JavaScript dialogs.
   web_contents_dialog_helper_ =
       std::make_unique<AlloyWebContentsDialogHelper>(web_contents_, this);
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-  HandleZoomLevelExt(browser, web_contents_);
-#endif
-
-#if BUILDFLAG(ARKWEB_AUTOFILL)
-  if (autofill::ContentAutofillDriverFactory::FromWebContents(web_contents_)) {
-    return;
-  }
-
-  autofill::OhAutofillClient::CreateForWebContents(web_contents_);
-#endif
 }
 
 void CefBrowserPlatformDelegateAlloy::BrowserDestroyed(
@@ -184,7 +158,7 @@ void CefBrowserPlatformDelegateAlloy::NotifyMoveOrResizeStarted() {
   // Dismiss any existing popups.
   auto frame = browser_->GetMainFrame();
   if (frame && frame->IsValid()) {
-    frame.get()->AsCefFrameHostImpl()->NotifyMoveOrResizeStarted();
+    static_cast<CefFrameHostImpl*>(frame.get())->NotifyMoveOrResizeStarted();
   }
 }
 #endif
@@ -223,12 +197,7 @@ void CefBrowserPlatformDelegateAlloy::ConfigureAutoResize() {
 void CefBrowserPlatformDelegateAlloy::Find(const CefString& searchText,
                                            bool forward,
                                            bool matchCase,
-                                           bool findNext
-#if BUILDFLAG(ARKWEB_FIND_IN_PAGE)
-                                           ,
-                                           bool newSession = false
-#endif
-) {
+                                           bool findNext) {
   if (!web_contents_) {
     return;
   }

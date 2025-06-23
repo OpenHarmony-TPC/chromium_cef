@@ -6,10 +6,9 @@
 #define CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_MAC_H_
 
 #include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
-#include "cef/ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_ext.h"
 
 // Windowless browser implementation for Mac OS X.
-class CefBrowserPlatformDelegateOsrMac : public CefBrowserPlatformDelegateOsrExt {
+class CefBrowserPlatformDelegateOsrMac : public CefBrowserPlatformDelegateOsr {
  public:
   explicit CefBrowserPlatformDelegateOsrMac(
       std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,

@@ -13,14 +13,6 @@
 #include "content/public/renderer/render_thread.h"
 #include "third_party/blink/public/web/web_view.h"
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-#include "components/no_state_prefetch/renderer/no_state_prefetch_client.h"
-#endif  // ARKWEB_NO_STATE_PREFETCH
-
-#if BUILDFLAG(ARKWEB_MIXED_CONTENT)
-#include "cef/ohos_cef_ext/libcef/renderer/arkweb_content_settings_client.h"
-#endif
-
 ChromeContentRendererClientCef::ChromeContentRendererClientCef()
     : render_manager_(new CefRenderManager) {}
 
@@ -53,10 +45,6 @@ void ChromeContentRendererClientCef::RenderFrameCreated(
   CefRenderFrameObserver* render_frame_observer =
       new CefRenderFrameObserver(render_frame);
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  AsArkWebContentRendererClientCef()->NoStatePrefetchRenderFrame(render_frame);
-#endif  // ARKWEB_NO_STATE_PREFETCH
-
   bool browser_created;
   std::optional<bool> is_windowless;
   std::optional<bool> print_preview_enabled;
@@ -73,15 +61,8 @@ void ChromeContentRendererClientCef::RenderFrameCreated(
     ChromePrintRenderFrameHelperDelegate::SetNextPrintPreviewEnabled(
         *print_preview_enabled);
   }
+
   ChromeContentRendererClient::RenderFrameCreated(render_frame);
-
-#if BUILDFLAG(ARKWEB_MIXED_CONTENT)
-  new ArkWebContentSettingsClient(render_frame);
-#endif
-
-#if BUILDFLAG(ARKWEB_SAFEBROWSING) && !BUILDFLAG(ARKWEB_NWEB_EX)
-  new ChromeSafeBrowsingErrorPageControllerDelegateImpl(render_frame);
-#endif
 }
 
 void ChromeContentRendererClientCef::WebViewCreated(
@@ -99,10 +80,6 @@ void ChromeContentRendererClientCef::WebViewCreated(
   if (browser_created) {
     OnBrowserCreated(web_view, is_windowless);
   }
-
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  new prerender::NoStatePrefetchClient(web_view);
-#endif  // ARKWEB_NO_STATE_PREFETCH
 }
 
 void ChromeContentRendererClientCef::DevToolsAgentAttached() {

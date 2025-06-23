@@ -10,8 +10,8 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <utility>
 
-#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/synchronization/lock.h"
 #include "cef/include/cef_frame.h"
@@ -20,9 +20,6 @@
 #include "mojo/public/cpp/bindings/receiver_set.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "ui/base/page_transition_types.h"
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-#include "base/memory/read_only_shared_memory_region.h"
-#endif
 
 namespace content {
 class RenderFrameHost;
@@ -33,7 +30,6 @@ class GURL;
 
 class CefBrowserInfo;
 class CefBrowserHostBase;
-class ArkwebFrameHostExtImpl;
 
 // Implementation of CefFrame. CefFrameHostImpl objects should always be created
 // or retrieved via CefBrowerInfo.
@@ -87,9 +83,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
                           CefRefPtr<CefProcessMessage> message) override;
 
   void SetFocused(bool focused);
-#if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
-  void SetOptimizeParserBudgetEnabled(bool enable);
-#endif
   void RefreshAttributes();
 
   // Notification that a move or resize of the renderer's containing window has
@@ -100,21 +93,10 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   void LoadRequest(cef::mojom::RequestParamsPtr params);
 
   // Load the specified URL.
-  void LoadURLWithExtras(
-      const std::string& url,
-      const content::Referrer& referrer,
-      ui::PageTransition transition,
-      const std::string& extra_headers
-#if BUILDFLAG(ARKWEB_POST_URL)
-      ,
-      const std::string& method = std::string(),
-      const std::vector<char>& post_data = std::vector<char>()
-#endif
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-          ,
-      bool user_gesture = false
-#endif
-  );
+  void LoadURLWithExtras(const std::string& url,
+                         const content::Referrer& referrer,
+                         ui::PageTransition transition,
+                         const std::string& extra_headers);
 
   // Send a command to the renderer for execution.
   void SendCommand(const std::string& command);
@@ -130,10 +112,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 
   // Called from CefBrowserHostBase::DidStopLoading.
   void MaybeSendDidStopLoading();
-
-#if BUILDFLAG(ARKWEB_SCREEN_ROTATION)
-  void UpdatePixelRatio(float ratio);
-#endif
 
   void ExecuteJavaScriptWithUserGestureForTests(const CefString& javascript);
 
@@ -163,15 +141,15 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // implicitly via CefBrowserInfo::browser() returning nullptr. If
   // |is_current_main_frame| is true then only the RenderFrameHost references
   // will be released as we want the frame object itself to remain valid.
-  // Returns true if the frame is completely detached for the first time.
-  bool Detach(DetachReason reason, bool is_current_main_frame);
+  // Returns (bool, bool) to indicate if frame detached and/or frame destroyed
+  // notifications should be triggered respectively.
+  std::pair<bool, bool> Detach(DetachReason reason, bool is_current_main_frame);
 
-  // A frame has swapped to active status from prerendering or the back-forward
-  // cache. We may need to re-attach if the RFH has changed. See
-  // https://crbug.com/1179502#c8 for additional background.
-  void MaybeReAttach(scoped_refptr<CefBrowserInfo> browser_info,
-                     content::RenderFrameHost* render_frame_host,
-                     bool require_detached);
+  // A new frame was created or a frame has swapped to active status from
+  // prerendering or the back-forward cache. Update internal state if the RFH
+  // has changed. See https://crbug.com/1179502#c8 for additional background.
+  void MaybeAttach(scoped_refptr<CefBrowserInfo> browser_info,
+                   content::RenderFrameHost* render_frame_host);
 
   // cef::mojom::BrowserFrame methods forwarded from CefBrowserFrame.
   void SendMessage(const std::string& name,
@@ -184,14 +162,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
       std::optional<std::vector<cef::mojom::DraggableRegionEntryPtr>> regions)
       override;
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  void SendHitEvent(float x, float y, float width, float height);
-  void SetScrollable(bool enable);
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-  virtual void PutZoomingForTextFactorEx(float factor) {}
-#endif
   bool is_temporary() const { return !frame_token_.has_value(); }
   std::optional<content::GlobalRenderFrameHostToken> frame_token() const {
     return frame_token_;
@@ -202,12 +172,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // to work as expected.
   static const ui::PageTransition kPageTransitionExplicit;
 
-#if BUILDFLAG(IS_ARKWEB)
-  friend class ArkwebFrameHostExtImpl;
-#endif
-
  private:
-  int64_t GetFrameId() const;
   scoped_refptr<CefBrowserInfo> GetBrowserInfo() const;
   CefRefPtr<CefBrowserHostBase> GetBrowserHostBase() const;
 
@@ -215,12 +180,12 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // remote frame is not yet attached.
   using RenderFrameType = mojo::Remote<cef::mojom::RenderFrame>;
   using RenderFrameAction = base::OnceCallback<void(const RenderFrameType&)>;
-#if !BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
   void SendToRenderFrame(const std::string& function_name,
                          RenderFrameAction action);
-#endif
 
   void OnRenderFrameDisconnect();
+
+  void DetachRenderFrame();
 
   std::string GetDebugString() const;
 
@@ -231,7 +196,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // from any thread. Any modification on the UI thread, or any access from
   // non-UI threads, must be protected by |state_lock_|.
   mutable base::Lock state_lock_;
-  int64_t frame_id_;
   scoped_refptr<CefBrowserInfo> browser_info_;
   bool is_focused_;
   CefString url_;
@@ -247,12 +211,6 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   mojo::Remote<cef::mojom::RenderFrame> render_frame_;
 
   IMPLEMENT_REFCOUNTING(CefFrameHostImpl);
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
- protected:
-  void SendToRenderFrame(const std::string& function_name,
-                         RenderFrameAction action);
-#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_H_

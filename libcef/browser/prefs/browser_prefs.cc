@@ -12,10 +12,6 @@
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/libcef/browser/prefs/browser_prefs_for_include.cc"
-#endif
-
 namespace browser_prefs {
 
 namespace {
@@ -90,13 +86,6 @@ void SetInitialProfilePrefs(Profile* profile) {
     // LanguagePrefs::UpdateAcceptLanguagesPref().
     prefs->SetString(language::prefs::kSelectedLanguages, accept_language_list);
   }
-#if BUILDFLAG(ARKWEB_EXT_UA)
-  UpdateCloudUAConfigAfterBrowserContextInitForInclude(profile);
-#endif      
-
-#if BUILDFLAG(ARKWEB_PREFS)
-  RegisterProfilePrefsForInclude(profile);
-#endif  // ARKWEB_PREFS
 }
 
 }  // namespace browser_prefs

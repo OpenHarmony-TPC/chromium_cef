@@ -210,10 +210,10 @@ index 51ed6bcf6b540..c6e1161140655 100644
    virtual gfx::Point GetDialogPosition(const gfx::Size& size) = 0;
    // Returns whether a dialog currently about to be shown should be activated.
 diff --git ui/views/window/dialog_delegate.cc ui/views/window/dialog_delegate.cc
-index 686632b1f..5df61dc5b 100644
+index bc119f10f749e..d81c1ce4e786f 100644
 --- ui/views/window/dialog_delegate.cc
 +++ ui/views/window/dialog_delegate.cc
-@@ -85,7 +85,8 @@ DialogDelegate::DialogDelegate() {
+@@ -87,10 +87,12 @@ DialogDelegate::DialogDelegate() {
  // static
  Widget* DialogDelegate::CreateDialogWidget(WidgetDelegate* delegate,
                                             gfx::NativeWindow context,
@@ -222,8 +222,13 @@ index 686632b1f..5df61dc5b 100644
 +                                           gfx::AcceleratedWidget parent_widget) {
    views::Widget* widget = new DialogWidget;
    views::Widget::InitParams params =
-       GetDialogWidgetInitParams(delegate, context, parent, gfx::Rect());
-@@ -97,17 +98,19 @@ Widget* DialogDelegate::CreateDialogWidget(WidgetDelegate* delegate,
+-      GetDialogWidgetInitParams(delegate, context, parent, gfx::Rect());
++      GetDialogWidgetInitParams(delegate, context, parent, gfx::Rect(),
++                                parent_widget);
+   widget->Init(std::move(params));
+   return widget;
+ }
+@@ -99,16 +101,18 @@ Widget* DialogDelegate::CreateDialogWidget(WidgetDelegate* delegate,
  Widget* DialogDelegate::CreateDialogWidget(
      std::unique_ptr<WidgetDelegate> delegate,
      gfx::NativeWindow context,
@@ -238,7 +243,7 @@ index 686632b1f..5df61dc5b 100644
 -bool DialogDelegate::CanSupportCustomFrame(gfx::NativeView parent) {
 +bool DialogDelegate::CanSupportCustomFrame(gfx::NativeView parent,
 +                                           gfx::AcceleratedWidget parent_widget) {
- #if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)) && \
+ #if (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)) && \
      BUILDFLAG(ENABLE_DESKTOP_AURA)
    // The new style doesn't support unparented dialogs on Linux desktop.
 -  return parent != nullptr;
@@ -246,7 +251,7 @@ index 686632b1f..5df61dc5b 100644
  #else
    return true;
  #endif
-@@ -118,14 +121,15 @@ Widget::InitParams DialogDelegate::GetDialogWidgetInitParams(
+@@ -119,7 +123,8 @@ Widget::InitParams DialogDelegate::GetDialogWidgetInitParams(
      WidgetDelegate* delegate,
      gfx::NativeWindow context,
      gfx::NativeView parent,
@@ -265,7 +270,7 @@ index 686632b1f..5df61dc5b 100644
  
    if (!dialog || dialog->use_custom_frame()) {
      params.opacity = Widget::InitParams::WindowOpacity::kTranslucent;
-@@ -138,6 +142,7 @@ Widget::InitParams DialogDelegate::GetDialogWidgetInitParams(
+@@ -142,6 +147,7 @@ Widget::InitParams DialogDelegate::GetDialogWidgetInitParams(
    }
    params.context = context;
    params.parent = parent;

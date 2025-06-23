@@ -35,7 +35,7 @@ class cef_api_hash:
     self.__debug_enabled = not (self.__debugdir is
                                 None) and len(self.__debugdir) > 0
 
-    self.platforms = ["windows", "mac", "linux", "ohos"]
+    self.platforms = ["windows", "mac", "linux"]
 
     self.platform_files = {
         # List of includes_win_capi from cef_paths2.gypi.
@@ -49,9 +49,6 @@ class cef_api_hash:
         ],
         # List of includes_linux_capi from cef_paths2.gypi.
         "linux": [
-            "internal/cef_types_linux.h",
-        ],
-		"ohos": [
             "internal/cef_types_linux.h",
         ]
     }

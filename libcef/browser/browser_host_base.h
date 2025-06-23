@@ -6,7 +6,6 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_
 #pragma once
 
-#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/observer_list.h"
 #include "base/synchronization/lock.h"
@@ -24,24 +23,6 @@
 #include "cef/libcef/browser/javascript_dialog_manager.h"
 #include "cef/libcef/browser/media_stream_registrar.h"
 #include "cef/libcef/browser/request_context_impl.h"
-#include "cef/libcef/features/features.h"
-#include "ohos_cef_ext/libcef/browser/arkweb_browser_contents_delegate_ext.h"
-#include "ohos_cef_ext/libcef/renderer/browser_impl_ext.h"
-
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_PERMISSION)
-#include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
-#endif
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-#include "include/cef_devtools_message_handler_delegate.h"
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
-namespace extensions {
-class Extension;
-}
 
 class RenderViewContextMenuObserver;
 
@@ -114,8 +95,6 @@ struct CefBrowserCreateParams {
   // Browser settings.
   CefBrowserSettings settings;
 
-  CefRefPtr<CefBrowserHostBase> devtools_opener;
-
   // Request context to use when creating the browser. If nullptr the global
   // request context will be used.
   CefRefPtr<CefRequestContext> request_context;
@@ -125,23 +104,12 @@ struct CefBrowserCreateParams {
   CefRefPtr<CefDictionaryValue> extra_info;
 };
 
-class AlloyBrowserHostImpl;
-class ChromeBrowserHostImpl;
-#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO) || BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
-class ArkWebBrowserHostExtImpl;
-#endif
-
 // Base class for CefBrowserHost implementations. Includes functionality that is
 // shared by Alloy and Chrome styles. All methods are thread-safe unless
 // otherwise indicated.
-class CefBrowserHostBase : virtual public CefBrowserHost,
-                           virtual public CefBrowser,
-                           public CefBrowserContentsDelegate::Observer
-#if BUILDFLAG(ARKWEB_PERMISSION)
-    ,
-                           public CefBrowserPermissionRequestDelegate
-#endif  // ARKWEB_PERMISSION
-{
+class CefBrowserHostBase : public CefBrowserHost,
+                           public CefBrowser,
+                           public CefBrowserContentsDelegate::Observer {
  public:
   // Interface to implement for observers that wish to be informed of changes
   // to the CefBrowserHostBase. All methods will be called on the UI thread.
@@ -154,15 +122,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
    protected:
     ~Observer() override = default;
   };
-
-  CefRefPtr<CefBrowserHostBase> AsCefBrowserHostBase() override { return this; }
-
-  virtual CefRefPtr<AlloyBrowserHostImpl> AsAlloyBrowserHostImpl() {
-    return nullptr;
-  }
-  virtual CefRefPtr<ChromeBrowserHostImpl> AsChromeBrowserHostImpl() {
-    return nullptr;
-  }
 
   // Create a new CefBrowserHost instance of the current runtime type with
   // owned WebContents.
@@ -199,19 +158,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   // with windowless browsers as there is no guarantee that the client has only
   // one browser focused at a time.
   static CefRefPtr<CefBrowserHostBase> GetLikelyFocusedBrowser();
-#ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
-  static void GetPermissionStatusAsync(const CefString& origin,
-                                       cef_permission_status_query_callback_t callback);
-  void AskNotificationPermission(const CefString& origin,
-                                 cef_permission_callback_t callback) override;
-  void AbortAskNotificationPermission(const CefString& origin) override;
-#endif // #ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
-#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO) || BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
-  // Get a ArkWebBrowserHostExtImpl object.
-  virtual CefRefPtr<ArkWebBrowserHostExtImpl> AsArkWebBrowserHostExtImpl() {
-    return nullptr;
-  }
-#endif
 
   CefBrowserHostBase(
       const CefBrowserSettings& settings,
@@ -317,12 +263,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void NotifyMoveOrResizeStarted() override;
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override {}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   bool IsFullscreen() override;
   void ExitFullscreen(bool will_cause_resize) override;
   bool IsRenderProcessUnresponsive() override;
@@ -330,7 +270,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
 
   // CefBrowser methods:
   bool IsValid() override;
-  // CefRefPtr<CefBrowserHost> GetHost() override { return this; }
+  CefRefPtr<CefBrowserHost> GetHost() override;
   bool CanGoBack() override;
   void GoBack() override;
   bool CanGoForward() override;
@@ -392,13 +332,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
                      const ui::SelectFileDialog::FileTypeInfo* file_types,
                      int file_type_index,
                      const base::FilePath::StringType& default_extension,
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-                     gfx::NativeWindow owning_window,
-                     std::vector<std::u16string> accept_types,
-                     bool use_media_capture);
-#else
                      gfx::NativeWindow owning_window);
-#endif
   void SelectFileListenerDestroyed(ui::SelectFileDialog::Listener* listener);
 
   // Called from AlloyBrowserHostImpl::GetJavaScriptDialogManager and
@@ -413,10 +347,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void OnAfterCreated();
   void OnBeforeClose();
   void OnBrowserDestroyed();
-
-  void EnableVideoAssistant(bool enable) override;
-  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
-  void CustomWebMediaPlayer(bool enable) override;
 
   // Thread-safe accessors.
   const CefBrowserSettings& settings() const { return settings_; }
@@ -493,76 +423,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   // the UI thread.
   int GetNextPopupId();
 
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-  bool NeedToFireBeforeUnloadOrUnloadEvents() override;
-  void DispatchBeforeUnload() override;
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
-
-#if BUILDFLAG(ARKWEB_USERAGENT)
-  std::string GetCustomUserAgent();
-#endif
-
-#if BUILDFLAG(ARKWEB_PERMISSION)
-  CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate();
-  CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions();
-  AlloyPermissionRequestHandler* GetPermissionRequestHandler() {
-    return permission_request_handler_.get();
-  }
-  void PopupGeolocationPrompt(std::string origin,
-                              cef_permission_callback_t callback);
-  void RemoveGeolocationPrompt(std::string origin);
-  void OnGeolocationShow(std::string origin);
-  void AskGeolocationPermission(const CefString& origin,
-                                cef_permission_callback_t callback) override;
-  void AbortAskGeolocationPermission(const CefString& origin) override;
-  void NotifyGeolocationPermission(bool value,
-                                   const CefString& origin) override;
-#if BUILDFLAG(ARKWEB_SENSOR)
-  void AskSensorsPermission(const CefString& origin,
-                            cef_permission_callback_t callback) override;
-  void AbortAskSensorsPermission(const CefString& origin) override;
-#endif
-  void AskProtectedMediaIdentifierPermission(
-      const CefString& origin,
-      cef_permission_callback_t callback) override {}
-  void AbortAskProtectedMediaIdentifierPermission(
-      const CefString& origin) override {}
-  void AskMIDISysexPermission(const CefString& origin,
-                              cef_permission_callback_t callback) override;
-  void AbortAskMIDISysexPermission(const CefString& origin) override;
-
-  void AskClipboardReadWritePermission(
-      const CefString& origin,
-      cef_permission_callback_t callback) override;
-  void AbortAskClipboardReadWritePermission(const CefString& origin) override;
-
-  void AskClipboardSanitizedWritePermission(
-      const CefString& origin,
-      cef_permission_callback_t callback) override;
-  void AbortAskClipboardSanitizedWritePermission(
-      const CefString& origin) override;
-
-  void AskAudioCapturePermission(const CefString& origin,
-                                 cef_permission_callback_t callback) override;
-  void AbortAskAudioCapturePermission(const CefString& origin) override;
-  void AskVideoCapturePermission(const CefString& origin,
-                                 cef_permission_callback_t callback) override;
-  void AbortAskVideoCapturePermission(const CefString& origin) override;
-#endif  // ARKWEB_PERMISSION
-
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-  bool IsIframe() override { return false; }
-  void ReloadFocusedFrame() override {}
-#endif
-
-#if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
-  void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
-  void SetScreenCapturePickerShow() override;
-  void DisableSessionReuse() override;
-  void RegisterScreenCaptureDelegateListener(
-      CefRefPtr<CefScreenCaptureCallback> listener) override;
-#endif  // defined(ARKWEB_EX_SCREEN_CAPTURE)
-
  protected:
   bool EnsureDevToolsProtocolManager();
   void InitializeDevToolsRegistrationOnUIThread(
@@ -587,7 +447,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   int opener_id_ = 0;
 
   // Only accessed on the UI thread.
-  ArkWebBrowserContentsDelegateExt contents_delegate_;
+  CefBrowserContentsDelegate contents_delegate_;
   CefRefPtr<CefUnresponsiveProcessCallback> unresponsive_process_callback_;
   raw_ptr<RenderViewContextMenuObserver> context_menu_observer_ = nullptr;
 
@@ -621,26 +481,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
 
   int next_popup_id_ = 1;
 
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  friend class ArkWebBrowserHostExtImpl;
-  friend class ArkWebBrowserHostExt;
-#endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-#if BUILDFLAG(ARKWEB_PERMISSION)
-  bool UseLegacyGeolocationPermissionAPI();
-  CefRefPtr<CefGeolocationAcess> geolocation_permissions_;
-  std::unique_ptr<AlloyPermissionRequestHandler> permission_request_handler_;
-  // GURL is supplied by the content layer as requesting frame.
-  // Callback is supplied by the content layer, and is invoked with the result
-  // from the permission prompt.
-  typedef std::pair<std::string, cef_permission_callback_t> OriginCallback;
-  // The first element in the list is always the currently pending request.
-  std::list<OriginCallback> unhandled_geolocation_prompts_;
-#endif  // BUILDFLAG(ARKWEB_PERMISSION)
-
  private:
-#if BUILDFLAG(ARKWEB_USERAGENT)
-  std::string custom_user_agent_;
-#endif
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
 };
 

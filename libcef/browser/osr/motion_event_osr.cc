@@ -73,23 +73,12 @@ bool CefMotionEventOSR::OnTouch(const CefTouchEvent& touch) {
       break;
 
     case CEF_TET_MOVED: {
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-      if (!from_overlay_) {
-        // Discard if touch is stationary.
-        int index = FindPointerIndexOfId(id);
-        if (IsValidIndex(index) &&
-            (touch.x == GetX(index) && touch.y == GetY(index))) {
-          return false;
-        }
-      }
-#else
       // Discard if touch is stationary.
       int index = FindPointerIndexOfId(id);
       if (IsValidIndex(index) &&
           (touch.x == GetX(index) && touch.y == GetY(index))) {
         return false;
       }
-#endif
     }
       [[fallthrough]];
     // No break.
@@ -201,11 +190,6 @@ void CefMotionEventOSR::UpdateTouch(const CefTouchEvent& touch, int id) {
 
 void CefMotionEventOSR::UpdateCachedAction(const CefTouchEvent& touch, int id) {
   DCHECK(GetPointerCount());
-  if (touch.type == CEF_TET_PRESSED || touch.type == CEF_TET_RELEASED) {
-    LOG(INFO) << "CefMotionEventOSR::UpdateCachedAction actiontype="
-              << GetAction() << " pointercount=" << GetPointerCount()
-              << " touchtype=" << touch.type;
-  }
   switch (touch.type) {
     case CEF_TET_PRESSED:
       if (GetPointerCount() == 1) {

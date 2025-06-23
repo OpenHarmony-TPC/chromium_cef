@@ -16,7 +16,6 @@
 #include "cef/libcef/renderer/render_frame_util.h"
 #include "cef/libcef/renderer/render_manager.h"
 #include "cef/libcef/renderer/thread_util.h"
-#include "cef/ohos_cef_ext/libcef/renderer/arkweb_frame_impl_ext.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/renderer/document_state.h"
 #include "content/renderer/navigation_state.h"
@@ -29,9 +28,6 @@
 #include "third_party/blink/public/web/web_local_frame.h"
 #include "third_party/blink/public/web/web_security_policy.h"
 #include "third_party/blink/public/web/web_view.h"
-#if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
-#include "content/public/browser/navigation_controller.h"
-#endif
 
 // CefBrowserImpl static methods.
 // -----------------------------------------------------------------------------
@@ -56,10 +52,10 @@ bool CefBrowserImpl::IsValid() {
   return !!GetWebView();
 }
 
-/*CefRefPtr<CefBrowserHost> CefBrowserImpl::GetHost() {
+CefRefPtr<CefBrowserHost> CefBrowserImpl::GetHost() {
   DCHECK(false) << "GetHost cannot be called from the render process";
   return nullptr;
-}*/
+}
 
 bool CefBrowserImpl::CanGoBack() {
   CEF_REQUIRE_RT_RETURN(false);
@@ -141,7 +137,8 @@ int CefBrowserImpl::GetIdentifier() {
 bool CefBrowserImpl::IsSame(CefRefPtr<CefBrowser> that) {
   CEF_REQUIRE_RT_RETURN(false);
 
-  return (that.get() == this);
+  CefBrowserImpl* impl = static_cast<CefBrowserImpl*>(that.get());
+  return (impl == this);
 }
 
 bool CefBrowserImpl::IsPopup() {
@@ -300,7 +297,7 @@ CefRefPtr<CefFrameImpl> CefBrowserImpl::GetWebFrameImpl(
     return it->second;
   }
 
-  CefRefPtr<CefFrameImpl> framePtr(new ArkwebFrameExtImpl(this, frame));
+  CefRefPtr<CefFrameImpl> framePtr(new CefFrameImpl(this, frame));
   frames_.insert(std::make_pair(frame_token, framePtr));
 
   return framePtr;
@@ -377,8 +374,7 @@ void CefBrowserImpl::OnLoadingStateChange(bool isLoading) {
                                              canGoBack, canGoForward);
 
           auto main_frame = GetMainFrame();
-          load_handler->OnLoadStart(this, main_frame, main_frame->GetURL(),
-                                    TT_EXPLICIT);
+          load_handler->OnLoadStart(this, main_frame, TT_EXPLICIT);
           load_handler->OnLoadEnd(this, main_frame, 0);
 
           was_in_bfcache_ = false;

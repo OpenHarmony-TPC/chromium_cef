@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "cef/libcef/browser/osr/browser_platform_delegate_osr_win.h"
-#include "cef/ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_ext.h"
 
 #include <utility>
 
@@ -11,7 +10,7 @@ CefBrowserPlatformDelegateOsrWin::CefBrowserPlatformDelegateOsrWin(
     std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
     bool use_shared_texture,
     bool use_external_begin_frame)
-    : CefBrowserPlatformDelegateOsrExt(std::move(native_delegate),
+    : CefBrowserPlatformDelegateOsr(std::move(native_delegate),
                                     use_shared_texture,
                                     use_external_begin_frame) {}
 

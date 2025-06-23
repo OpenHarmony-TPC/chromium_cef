@@ -9,7 +9,6 @@
 #include <string_view>
 #include <vector>
 
-#include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
 #include "build/build_config.h"
 #include "cef/include/cef_version.h"
@@ -50,7 +49,6 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
                                 std::wstring* special_build,
                                 std::wstring* channel_name) override;
   bool GetCrashDumpLocation(std::wstring* crash_dir) override;
-  bool GetCrashMetricsLocation(std::wstring* metrics_dir) override;
 #elif BUILDFLAG(IS_POSIX)
   void GetProductNameAndVersion(const char** product_name,
                                 const char** version) override;
@@ -82,11 +80,7 @@ class CefCrashReporterClient : public crash_reporter::CrashReporterClient {
                         const std::string_view& value);
 
  private:
-#if BUILDFLAG(ARKWEB_CRASHPAD)
-  bool has_crash_config_file_ = true;
-#else
   bool has_crash_config_file_ = false;
-#endif  // BUILDFLAG(ARKWEB_CRASHPAD)
 
   enum KeySize { SMALL_SIZE, MEDIUM_SIZE, LARGE_SIZE };
 

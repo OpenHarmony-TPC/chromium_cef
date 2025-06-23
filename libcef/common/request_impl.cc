@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/strings/string_split.h"
@@ -45,10 +44,6 @@
 #include "third_party/blink/public/platform/web_url_request.h"
 #include "third_party/blink/public/platform/web_url_request_util.h"
 #include "third_party/blink/public/web/web_security_policy.h"
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "libcef/common/arkweb_request_impl_ext.h"
-#endif
 
 namespace {
 
@@ -180,11 +175,7 @@ void GetHeaderMap(const CefRequest::HeaderMap& source,
 
 // static
 CefRefPtr<CefRequest> CefRequest::Create() {
-#if BUILDFLAG(IS_ARKWEB)
-  CefRefPtr<CefRequest> request(new ArkWebRequestImplExt());
-#else
   CefRefPtr<CefRequest> request(new CefRequestImpl());
-#endif
   return request;
 }
 
@@ -1228,11 +1219,3 @@ void CefPostDataElementImpl::Cleanup() {
   type_ = PDE_TYPE_EMPTY;
   memset(&data_, 0, sizeof(data_));
 }
-
-#if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-void CefRequestImpl::SetDestination(
-    network::mojom::RequestDestination destination) {
-  base::AutoLock lock_scope(lock_);
-  destination_ = destination;
-}
-#endif

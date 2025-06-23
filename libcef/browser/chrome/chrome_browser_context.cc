@@ -18,10 +18,6 @@
 #include "chrome/common/pref_names.h"
 #include "components/history/core/browser/history_service.h"
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_context_for_include.cc"
-#endif  // BUILDFLAG(IS_ARKWEB)
-
 namespace {
 
 // Match the default logic from ProfileManager::GetPrimaryUserProfile which was
@@ -230,10 +226,6 @@ void ChromeBrowserContext::ProfileCreated(CreateStatus status,
       }
       init_callbacks_.clear();
     }
-
-#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
-    OnContextInitialized();
-#endif
   }
 }
 

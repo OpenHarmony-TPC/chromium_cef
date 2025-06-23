@@ -31,10 +31,6 @@
 #include "cef/libcef/common/net/url_util.h"
 #include "cef/libcef/common/request_impl.h"
 #include "cef/libcef/common/values_impl.h"
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-#include "cef/ohos_cef_ext/libcef/browser/osr/arkweb_render_widget_host_view_osr_ext.h"
-#endif
-
 #include "chrome/browser/file_select_helper.h"
 #include "chrome/browser/picture_in_picture/picture_in_picture_window_manager.h"
 #include "chrome/common/webui_url_constants.h"
@@ -57,21 +53,7 @@
 #include "net/base/net_errors.h"
 #include "ui/events/base_event_utils.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-#include "base/ohos/ltpo/include/sliding_observer.h"
-#endif
-#if BUILDFLAG(ARKWEB_BFCACHE)
-#include "content/public/common/content_switches.h"
-#endif
-
 using content::KeyboardEventProcessingResult;
-
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_ext.h"
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_utils.h"
 
 namespace {
 
@@ -81,14 +63,6 @@ static constexpr base::TimeDelta kRecentlyAudibleTimeout = base::Seconds(2);
 // Do not add new hosts to this list without also manually testing all related
 // functionality in CEF.
 const char* kAllowedWebUIHosts[] = {
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-    chrome::kChromeUIExtensionsHost,
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    chrome::kChromeUINetExportHost,
-#endif
-    chrome::kChromeUIWebUITestHost,
-    chrome::kChromeUIVersionHost,
-#else
     chrome::kChromeUIAccessibilityHost,
     content::kChromeUIBlobInternalsHost,
     chrome::kChromeUIChromeURLsHost,
@@ -115,7 +89,6 @@ const char* kAllowedWebUIHosts[] = {
     content::kChromeUITracingHost,
     chrome::kChromeUIVersionHost,
     content::kChromeUIWebRTCInternalsHost,
-#endif
 };
 
 bool IsAllowedWebUIHost(const std::string_view& host) {
@@ -195,7 +168,6 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::CreateInternal(
   DCHECK(browser_info);
   DCHECK(request_context);
   DCHECK(platform_delegate);
-  LOG(INFO) << "AlloyBrowserHostImpl::CreateInternal, begin";
 
   // If |opener| is non-NULL it must be a popup window.
   DCHECK(!opener.get() || browser_info->is_popup());
@@ -219,7 +191,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::CreateInternal(
   // Take ownership of |web_contents| if |own_web_contents| is true.
   platform_delegate->WebContentsCreated(web_contents, own_web_contents);
 
-  CefRefPtr<AlloyBrowserHostImpl> browser = new AlloyBrowserHostImplExt(
+  CefRefPtr<AlloyBrowserHostImpl> browser = new AlloyBrowserHostImpl(
       settings, client, web_contents, browser_info, opener, request_context,
       std::move(platform_delegate));
   browser->InitializeBrowser();
@@ -261,7 +233,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::FromBaseChecked(
     return nullptr;
   }
   CHECK(host_base->IsAlloyStyle());
-  return host_base.get()->AsAlloyBrowserHostImpl();
+  return static_cast<AlloyBrowserHostImpl*>(host_base.get());
 }
 
 // static
@@ -291,9 +263,7 @@ CefRefPtr<AlloyBrowserHostImpl> AlloyBrowserHostImpl::GetBrowserForGlobalId(
 // AlloyBrowserHostImpl methods.
 // -----------------------------------------------------------------------------
 
-AlloyBrowserHostImpl::~AlloyBrowserHostImpl() {
-  delete implUtils;
-}
+AlloyBrowserHostImpl::~AlloyBrowserHostImpl() = default;
 
 void AlloyBrowserHostImpl::CloseBrowser(bool force_close) {
   if (CEF_CURRENTLY_ON_UIT()) {
@@ -318,13 +288,6 @@ void AlloyBrowserHostImpl::CloseBrowser(bool force_close) {
       // Will result in a call to BeforeUnloadFired() and, if the close isn't
       // canceled, CloseContents().
       contents->DispatchBeforeUnload(false /* auto_cancel */);
-#if BUILDFLAG(ARKWEB_CLOSE_STEPS)
-      // In cef_life_span_handler.h file show DoClose step.
-      // Step 1 to Step 3 is over.
-      // This will replace Step 4 : User approves the close. Beause both in
-      // Android and OH close will not be blocked by beforeunload event.
-      CloseContents(contents);
-#endif
     } else {
       CloseContents(contents);
     }
@@ -440,9 +403,6 @@ void AlloyBrowserHostImpl::WasResized() {
 }
 
 void AlloyBrowserHostImpl::WasHidden(bool hidden) {
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  LOG(DEBUG) << "web was hidden:" << hidden;
-#endif
   if (!IsWindowless()) {
     DCHECK(false) << "Window rendering is not disabled";
     return;
@@ -453,16 +413,11 @@ void AlloyBrowserHostImpl::WasHidden(bool hidden) {
                   base::BindOnce(&CefBrowserHost::WasHidden, this, hidden));
     return;
   }
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  AsAlloyBrowserHostImplExt()->is_hidden_ = hidden;
-  AsAlloyBrowserHostImplExt()->ReportWindowStatus(false);
-#endif
+
   if (platform_delegate_) {
     platform_delegate_->WasHidden(hidden);
   }
 }
-
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_host_impl_for_include.cc"
 
 void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
   if (!IsWindowless()) {
@@ -480,11 +435,7 @@ void AlloyBrowserHostImpl::NotifyScreenInfoChanged() {
   if (platform_delegate_) {
     platform_delegate_->NotifyScreenInfoChanged();
   }
-#if BUILDFLAG(ARKWEB_SLIDE_LTPO)
-  base::ohos::SlidingObserver::GetInstance().OnDisplayInfoChange();
-#endif
 }
-
 
 void AlloyBrowserHostImpl::Invalidate(PaintElementType type) {
   if (!IsWindowless()) {
@@ -536,10 +487,6 @@ void AlloyBrowserHostImpl::SendTouchEvent(const CefTouchEvent& event) {
   if (platform_delegate_) {
     platform_delegate_->SendTouchEvent(event);
   }
-
-#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
-  implUtils->manageVSyncFrequencyOnTouchEvent(event);
-#endif
 }
 
 void AlloyBrowserHostImpl::SendCaptureLostEvent() {
@@ -597,11 +544,7 @@ bool AlloyBrowserHostImpl::IsVisible() const {
 
 bool AlloyBrowserHostImpl::IsPictureInPictureSupported() const {
   // Not currently supported with OSR.
-#if BUILDFLAG(ARKWEB_PIP)
-  return true;
-#else
   return !IsWindowless();
-#endif
 }
 
 void AlloyBrowserHostImpl::WindowDestroyed() {
@@ -632,12 +575,6 @@ void AlloyBrowserHostImpl::DestroyBrowser() {
   if (menu_manager_.get()) {
     menu_manager_->Destroy();
   }
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-  // If the WebContents still exists at this point, signal destruction before
-  // browser destruction.
-  implUtils->commitPendingZoomLevelPreferences();
-#endif
 
   // Disassociate the platform delegate from this browser. This will trigger
   // WebContents destruction in most cases.
@@ -673,12 +610,7 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
       IsBrowserPluginGuest(content::WebContents::FromRenderFrameHost(opener));
   if (is_guest_view && !params.is_pdf &&
       !params.url.SchemeIs(extensions::kExtensionScheme) &&
-      !params.url.SchemeIs(content::kChromeUIScheme)
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-      && !params.url.SchemeIs(content::kArkWebUIScheme)
-      && !params.url.SchemeIs(extensions::kArkwebExtensionScheme)
-#endif
-  ) {
+      !params.url.SchemeIs(content::kChromeUIScheme)) {
     // The PDF viewer will load the PDF extension in the guest view, and print
     // preview will load chrome://print in the guest view. The PDF renderer
     // used with PdfUnseasoned will set |params.is_pdf| when loading the PDF
@@ -692,12 +624,7 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     return false;
   }
 
-  if (!is_guest_view &&
-      (params.url.SchemeIs(content::kChromeUIScheme)
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-       || params.url.SchemeIs(content::kArkWebUIScheme)
-#endif
-           ) &&
+  if (!is_guest_view && params.url.SchemeIs(content::kChromeUIScheme) &&
       !IsAllowedWebUIHost(params.url.host_piece())) {
     // Block navigation to non-allowlisted WebUI pages.
     LOG(WARNING) << "Navigation to " << params.url.spec()
@@ -744,12 +671,6 @@ bool AlloyBrowserHostImpl::IsFullscreenForTabOrPending(
 
 blink::mojom::DisplayMode AlloyBrowserHostImpl::GetDisplayMode(
     const content::WebContents* web_contents) {
-#if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-        "enable-nweb-ex-video-assistant")) {
-    return blink::mojom::DisplayMode::kBrowser;
-  }
-#endif // ARKWEB_VIDEO_ASSISTANT
   return is_fullscreen_ ? blink::mojom::DisplayMode::kFullscreen
                         : blink::mojom::DisplayMode::kBrowser;
 }
@@ -1003,7 +924,6 @@ bool AlloyBrowserHostImpl::IsAudioMuted() {
   return web_contents()->IsAudioMuted();
 }
 
-
 // content::WebContentsDelegate methods.
 // -----------------------------------------------------------------------------
 
@@ -1072,14 +992,6 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
     if (handler.get()) {
       close_browser = !handler->DoClose(this);
     }
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-    // |DoClose| will notify the UI to close, |DESTRUCTION_STATE_NONE| means
-    // |CloseBrowser| has not been triggered by UI. We should close browser
-    // when received |CloseBrowser| request from UI.
-    if (destruction_state_ == DESTRUCTION_STATE_NONE) {
-      close_browser = false;
-    }
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
   }
 
   if (close_browser) {
@@ -1098,13 +1010,9 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
       CefRefPtr<AlloyBrowserHostImpl> browser(this);
 
       if (source) {
-#if BUILDFLAG(ARKWEB_IMMEDIATE_DESTORY)
-        implUtils->handleSingleRenderDelayShutdown(source);
-#else
         // Try to fast shutdown the associated process.
         source->GetPrimaryMainFrame()->GetProcess()->FastShutdownIfPossible(
             1, false);
-#endif
       }
 
       // No window exists. Destroy the browser immediately. Don't call other
@@ -1118,7 +1026,6 @@ void AlloyBrowserHostImpl::CloseContents(content::WebContents* source) {
 
 void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
                                            const GURL& url) {
-  AsAlloyBrowserHostImplExt()->ReportWindowStatus(false);
   contents_delegate_.UpdateTargetURL(source, url);
 }
 
@@ -1133,14 +1040,8 @@ bool AlloyBrowserHostImpl::DidAddMessageToConsole(
 }
 
 void AlloyBrowserHostImpl::ContentsZoomChange(bool zoom_in) {
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  if (implUtils->handleZoomEventWithInput(zoom_in) == -1) {
-    return;
-  }
-#else
   zoom::PageZoom::Zoom(
       web_contents(), zoom_in ? content::PAGE_ZOOM_IN : content::PAGE_ZOOM_OUT);
-#endif
 }
 
 void AlloyBrowserHostImpl::BeforeUnloadFired(content::WebContents* source,
@@ -1179,14 +1080,9 @@ KeyboardEventProcessingResult AlloyBrowserHostImpl::PreHandleKeyboardEvent(
   return contents_delegate_.PreHandleKeyboardEvent(source, event);
 }
 
-
-
 bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  return implUtils->handleAndReDispatchKeyboardEvent(source, event);
-#else
   // Check to see if event should be ignored.
   if (event.skip_if_unhandled) {
     return false;
@@ -1200,7 +1096,6 @@ bool AlloyBrowserHostImpl::HandleKeyboardEvent(
     return platform_delegate_->HandleKeyboardEvent(event);
   }
   return false;
-#endif
 }
 
 bool AlloyBrowserHostImpl::CanDragEnter(content::WebContents* source,
@@ -1279,36 +1174,19 @@ void AlloyBrowserHostImpl::WebContentsCreated(
       std::move(platform_delegate));
 }
 
-
 void AlloyBrowserHostImpl::RendererUnresponsive(
     content::WebContents* source,
     content::RenderWidgetHost* render_widget_host,
-#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
-    base::RepeatingClosure hang_monitor_restarter,
-    content::RendererIsUnresponsiveReason reason) {
-  if (implUtils->handleRendererUnresponsive(source, reason) == -1) {
-    return;
-  }
-#else
     base::RepeatingClosure hang_monitor_restarter) {
   hang_monitor::RendererUnresponsive(this, render_widget_host,
-                                  hang_monitor_restarter);
-#endif
+                                     hang_monitor_restarter);
 }
 
 void AlloyBrowserHostImpl::RendererResponsive(
     content::WebContents* source,
     content::RenderWidgetHost* render_widget_host) {
-#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
-  if (auto handler = client_->GetRequestHandler()) {
-    handler->AsCefRequestHandlerExt()->OnRenderProcessResponding(this);
-  }
-#else
   hang_monitor::RendererResponsive(this, render_widget_host);
-#endif
 }
-
-
 
 content::JavaScriptDialogManager*
 AlloyBrowserHostImpl::GetJavaScriptDialogManager(content::WebContents* source) {
@@ -1349,7 +1227,7 @@ void AlloyBrowserHostImpl::ResizeDueToAutoResize(content::WebContents* source,
   CEF_REQUIRE_UIT();
 
   if (client_) {
-    CefRefPtr<ArkWebDisplayHandlerExt> handler = client_->GetDisplayHandler();
+    CefRefPtr<CefDisplayHandler> handler = client_->GetDisplayHandler();
     if (handler && handler->OnAutoResize(
                        this, CefSize(new_size.width(), new_size.height()))) {
       return;
@@ -1363,16 +1241,10 @@ void AlloyBrowserHostImpl::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
     content::MediaResponseCallback callback) {
-#if BUILDFLAG(ARKWEB_WEBRTC) && BUILDFLAG(ARKWEB_PERMISSION)
-  if (implUtils->conditionalHandleMediaStreamPermissionRequest(std::move(callback), request) == -1) {
-    return;
-  }
-#else
   auto returned_callback = media_access_query::RequestMediaAccessPermission(
       this, request, std::move(callback), /*default_disallow=*/true);
   // Callback should not be returned.
   DCHECK(returned_callback.is_null());
-#endif  // BUILDFLAG(ARKWEB_WEBRTC) && BUILDFLAG(ARKWEB_PERMISSION)
 }
 
 bool AlloyBrowserHostImpl::CheckMediaAccessPermission(
@@ -1388,40 +1260,25 @@ content::PictureInPictureResult AlloyBrowserHostImpl::EnterPictureInPicture(
   if (!IsPictureInPictureSupported()) {
     return content::PictureInPictureResult::kNotSupported;
   }
-#if BUILDFLAG(ARKWEB_PIP)
-  SetPipActive(true);
-#endif
+
   return PictureInPictureWindowManager::GetInstance()
       ->EnterVideoPictureInPicture(web_contents);
 }
 
 void AlloyBrowserHostImpl::ExitPictureInPicture() {
   DCHECK(IsPictureInPictureSupported());
-#if BUILDFLAG(ARKWEB_PIP)
-  SetPipActive(false);
-#endif
   PictureInPictureWindowManager::GetInstance()->ExitPictureInPicture();
 }
 
 bool AlloyBrowserHostImpl::IsBackForwardCacheSupported(
     content::WebContents& web_contents) {
-#if BUILDFLAG(ARKWEB_BFCACHE)
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableBFCache)) {
-    return true;
-  }
-#endif
-  // Disabled due to issue #3237.
-  return false;
+  return true;
 }
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
-#else
-  return content::PreloadingEligibility::kEligible;
-#endif
+  // Prerender is not supported in CEF. See issue #3664.
+  return content::PreloadingEligibility::kPreloadingDisabled;
 }
 
 void AlloyBrowserHostImpl::DraggableRegionsChanged(
@@ -1436,12 +1293,6 @@ void AlloyBrowserHostImpl::DraggableRegionsChanged(
 void AlloyBrowserHostImpl::DidFinishNavigation(
     content::NavigationHandle* navigation_handle) {
   if (web_contents()) {
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    if (web_contents()->GetBrowserContext() &&
-        web_contents()->GetBrowserContext()->IsOffTheRecord()) {
-      return;
-    }
-#endif
     auto cef_browser_context = CefBrowserContext::FromBrowserContext(
         web_contents()->GetBrowserContext());
     if (cef_browser_context) {
@@ -1453,15 +1304,6 @@ void AlloyBrowserHostImpl::DidFinishNavigation(
 }
 
 void AlloyBrowserHostImpl::OnAudioStateChanged(bool audible) {
-#if BUILDFLAG(ARKWEB_MEDIA_MUTE_AUDIO)
-  LOG(INFO) << "OnAudioStateChanged: " << audible;
-
-  if (client_.get() && client_->AsArkWebClient()->GetMediaHandler().get()) {
-    client_->AsArkWebClient()->GetMediaHandler()->OnAudioStateChanged(this,
-                                                                      audible);
-  }
-#endif  // BUILDFLAG(ARKWEB_MEDIA_MUTE_AUDIO)
-
   if (audible) {
     if (recently_audible_timer_) {
       recently_audible_timer_->Stop();
@@ -1591,16 +1433,6 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
 
   // Make sure RenderFrameCreated is called at least one time.
   RenderFrameCreated(web_contents->GetPrimaryMainFrame());
-
-  implUtils = new AlloyBrowserHostImplUtils(this);
-
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-  implUtils->initializeSafeBrowsingTabHelper(web_contents, request_context);
-#endif
-
-#if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
-  implUtils->enableZoomLevelController(web_contents);
-#endif
 }
 
 bool AlloyBrowserHostImpl::CreateHostWindow() {
