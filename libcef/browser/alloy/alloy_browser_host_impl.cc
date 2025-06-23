@@ -154,17 +154,18 @@ static constexpr base::TimeDelta kRecentlyAudibleTimeout = base::Seconds(2);
 class CefDateTimeChooserCallbackImpl : public CefDateTimeChooserCallback {
  public:
   explicit CefDateTimeChooserCallbackImpl(
-      content::DateTimeChooserOHOS* date_time_chooser)
+      base::WeakPtr<content::DateTimeChooserOHOS> date_time_chooser)
       : date_time_chooser_(date_time_chooser) {}
 
   void Continue(bool success, double value) override {
-    if (date_time_chooser_) {
-      date_time_chooser_->NotifyResult(success, value);
-    }
+    base::SingleThreadTaskRunner::GetCurrentDefault()->PostTask(
+      FROM_HERE, base::BindOnce(
+        &content::DateTimeChooserOHOS::NotifyResult,
+        date_time_chooser_, success, value));
   }
 
  private:
-  content::DateTimeChooserOHOS* date_time_chooser_ = nullptr;
+  base::WeakPtr<content::DateTimeChooserOHOS> date_time_chooser_;
   IMPLEMENT_REFCOUNTING(CefDateTimeChooserCallbackImpl);
 };
 #endif
@@ -2614,7 +2615,7 @@ void AlloyBrowserHostImpl::OpenDateTimeChooser() {
           date_time_dialog_ptr->dialog_value, date_time_dialog_ptr->minimum,
           date_time_dialog_ptr->maximum, date_time_dialog_ptr->step);
       CefRefPtr<CefDateTimeChooserCallback> callback =
-          new CefDateTimeChooserCallbackImpl(date_time_chooser);
+          new CefDateTimeChooserCallbackImpl(date_time_chooser->GetWeakPtr());
       std::vector<CefDateTimeSuggestion> suggestions;
       for (size_t index = 0; index < date_time_dialog_ptr->suggestions.size();
            index++) {
