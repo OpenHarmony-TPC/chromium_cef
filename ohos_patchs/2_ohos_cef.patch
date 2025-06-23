@@ -1,0 +1,4248 @@
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+index e63f8d487b..90734fc638 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
++++ b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+@@ -896,7 +896,7 @@ if (is_clang_or_gcc) {
+     }
+ 
+     if (!use_partition_alloc_as_malloc) {
+-      if (is_android) {
++      if (is_android || is_ohos) {
+         shim_sources += [
+           "shim/allocator_shim_default_dispatch_to_linker_wrapped_symbols.cc",
+         ]
+diff --git a/cef/BUILD.gn b/cef/BUILD.gn
+index d4a3962c46..438d87051f 100644
+--- a/cef/BUILD.gn
++++ b/cef/BUILD.gn
+@@ -305,6 +305,7 @@ gypi_paths2 = exec_script("//cef/tools/gypi_to_gn.py",
+ includes_common = gypi_paths2.includes_common + gypi_paths2.includes_common_capi
+ includes_mac = gypi_paths2.includes_mac + gypi_paths2.includes_mac_capi
+ includes_linux = gypi_paths2.includes_linux + gypi_paths2.includes_linux_capi
++includes_ohos = gypi_paths2.includes_ohos + gypi_paths2.includes_ohos_capi
+ includes_win = gypi_paths2.includes_win + gypi_paths2.includes_win_capi
+ 
+ #
+@@ -1030,6 +1031,25 @@ source_set("libcef_static") {
+     }
+   }
+ 
++  if (is_ohos) {
++    sources += includes_ohos + [
++      "libcef/browser/native/browser_platform_delegate_native_ohos.cc",
++      "libcef/browser/native/browser_platform_delegate_native_ohos.h",
++      "libcef/browser/osr/browser_platform_delegate_osr_ohos.cc",
++      "libcef/browser/osr/browser_platform_delegate_osr_ohos.h",
++      "libcef/browser/printing/print_dialog_linux.cc",
++      "libcef/browser/printing/print_dialog_linux.h",
++      "libcef/common/util_ohos.h",
++      "libcef/common/util_ohos.cc",
++    ]
++
++    deps += [
++      "//build/config/freetype",
++      "//ohos/adapter:adapter",
++      "//third_party/aki:aki_jsbind",
++    ]
++  }
++
+   if (is_mac) {
+     sources += includes_mac + [
+       "libcef/browser/chrome/chrome_content_browser_client_cef_mac.mm",
+@@ -1183,6 +1203,14 @@ static_library("libcef_dll_wrapper") {
+   public_configs = [ ":libcef_dll_wrapper_config" ]
+ 
+   deps = [ ":cef_make_headers" ]
++
++  if (is_ohos) {
++    deps += [ "//base" ]
++    sources -= [
++      "libcef_dll/base/cef_atomic_flag.cc",
++      "libcef_dll/base/cef_callback_helpers.cc",
++    ]
++  }
+ }
+ 
+ 
+@@ -1385,6 +1413,7 @@ action("make_api_hash_header") {
+   # List of all C API files that will be checked for changes by cef_api_hash.py.
+   inputs = gypi_paths2.includes_common_capi +
+            gypi_paths2.includes_linux_capi +
++           gypi_paths2.includes_ohos_capi +
+            gypi_paths2.includes_mac_capi +
+            gypi_paths2.includes_win_capi +
+            gypi_paths2.includes_capi +
+@@ -2053,6 +2082,137 @@ if (is_mac) {
+       "CEF_TESTS_IN_SRC_DIRECTORY",
+     ]
+   }
++} else if (is_ohos) {
++  #
++  # libcefclient.so targets.
++  #
++  copy("copy_cefclient_files") {
++    sources = gypi_paths2.shared_sources_resources +
++              gypi_paths2.cefclient_sources_resources
++    outputs = [ "${root_out_dir}/cefclient_files/{{source_file_part}}" ]
++  }
++
++  shared_library("cefclient") {
++    # Necessary because the libcef target is testonly.
++    testonly = true
++
++    sources = includes_common +
++              gypi_paths2.includes_wrapper +
++              gypi_paths2.shared_sources_browser +
++              gypi_paths2.shared_sources_common +
++              gypi_paths2.shared_sources_renderer +
++              gypi_paths2.cefclient_sources_browser +
++              gypi_paths2.cefclient_sources_common +
++              gypi_paths2.cefclient_sources_renderer
++
++    sources += includes_ohos +
++              gypi_paths2.shared_sources_ohos +
++              gypi_paths2.cefclient_sources_ohos
++
++    sources -= [
++      "tests/cefclient/browser/osr_renderer.h",
++      "tests/cefclient/browser/osr_renderer.cc",
++      "tests/cefclient/browser/osr_renderer_settings.h",
++    ]
++
++    deps = [
++      ":copy_cefclient_files",
++      ":libcef",
++      ":libcef_dll_wrapper",
++      "//ohos/adapter:adapter",
++    ]
++
++    defines = [
++      "CEF_USE_SANDBOX",
++    ]
++
++    libs = [
++      "native_window",
++      "native_drawing"
++    ]
++
++    if (!is_component_build) {
++      # Set rpath to find our own libfreetype even in a non-component build.
++      configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
++    }
++  }
++
++  #
++  # libcefsimple.so targets.
++  #
++  shared_library("cefsimple") {
++    # Necessary because the libcef target is testonly.
++    testonly = true
++
++    sources = includes_common +
++              gypi_paths2.includes_wrapper +
++              gypi_paths2.shared_sources_common +
++              gypi_paths2.cefsimple_sources_common
++
++    sources += includes_ohos +
++            gypi_paths2.shared_sources_ohos +
++            gypi_paths2.cefsimple_sources_ohos
++
++    deps = [
++      ":libcef",
++      ":libcef_dll_wrapper",
++      "//ohos/adapter:adapter",
++    ]
++
++    defines = [
++      "CEF_USE_SANDBOX",
++    ]
++
++    libs = [
++      "native_window"
++    ]
++
++    if (!is_component_build) {
++      # Set rpath to find our own libfreetype even in a non-component build.
++      configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
++    }
++  }
++
++  #
++  # libcefsimple.so targets.
++  #
++  copy("copy_ceftests_files") {
++    sources = gypi_paths2.shared_sources_resources
++    outputs = [ "${root_out_dir}/ceftests_files/{{source_file_part}}" ]
++  }
++
++  shared_library("ceftests") {
++    testonly = true
++
++    sources = includes_common +
++              gypi_paths2.includes_wrapper +
++              gypi_paths2.shared_sources_browser +
++              gypi_paths2.shared_sources_common +
++              gypi_paths2.shared_sources_renderer +
++              gypi_paths2.ceftests_sources_common
++
++    sources += gypi_paths2.shared_sources_ohos +
++              gypi_paths2.ceftests_sources_ohos
++
++    deps = [
++      ":copy_ceftests_files",
++      ":libcef",
++      ":libcef_dll_wrapper",
++      ":gtest_teamcity",
++      "//ohos/adapter:adapter",
++      "//testing/gtest",
++    ]
++
++    defines = [
++      "CEF_USE_SANDBOX",
++      "CEF_TESTS_IN_SRC_DIRECTORY",
++    ]
++
++    libs = [
++      "native_window",
++      "native_drawing"
++    ]
++  }
+ } else {
+   #
+   # cefclient targets.
+diff --git a/cef/Doxyfile b/cef/Doxyfile
+index affddfb2dd..7a5123e38a 100644
+--- a/cef/Doxyfile
++++ b/cef/Doxyfile
+@@ -2376,7 +2376,8 @@ PREDEFINED             = USING_CEF_SHARED \
+                          OS_LINUX \
+                          CEF_X11 \
+                          OS_MAC \
+-                         ARCH_CPU_32_BITS
++                         ARCH_CPU_32_BITS \
++                         OS_OHOS
+ 
+ # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
+ # tag can be used to specify a list of macro names that should be expanded. The
+diff --git a/cef/cef_paths2.gypi b/cef/cef_paths2.gypi
+index 88fc7b230b..a331e47958 100644
+--- a/cef/cef_paths2.gypi
++++ b/cef/cef_paths2.gypi
+@@ -102,6 +102,12 @@
+     'includes_linux_capi': [
+       'include/internal/cef_types_linux.h',
+     ],
++    'includes_ohos': [
++      'include/internal/cef_linux.h',
++    ],
++    'includes_ohos_capi': [
++      'include/internal/cef_types_linux.h',
++    ],
+     'libcef_sources_common': [
+       'libcef_dll/cpptoc/cpptoc_ref_counted.h',
+       'libcef_dll/cpptoc/cpptoc_scoped.h',
+@@ -209,6 +215,10 @@
+       'tests/shared/browser/main_message_loop_external_pump_linux.cc',
+       'tests/shared/browser/resource_util_posix.cc',
+     ],
++    'shared_sources_ohos': [
++      'tests/shared/browser/main_message_loop_external_pump_ohos.cc',
++      'tests/shared/browser/resource_util_posix.cc',
++    ],
+     'shared_sources_mac': [
+       'tests/shared/browser/main_message_loop_external_pump_mac.mm',
+       'tests/shared/browser/resource_util_mac.mm',
+@@ -440,6 +450,21 @@
+       'tests/cefclient/browser/window_test_runner_gtk.h',
+       'tests/cefclient/cefclient_gtk.cc',
+     ],
++    'cefclient_sources_ohos': [
++      'tests/cefclient/browser/browser_window_osr_ohos.cc',
++      'tests/cefclient/browser/browser_window_osr_ohos.h',  
++      'tests/cefclient/browser/browser_window_std_ohos.cc',
++      'tests/cefclient/browser/browser_window_std_ohos.h',        
++      'tests/cefclient/browser/root_window_ohos.cc',
++      'tests/cefclient/browser/root_window_ohos.h',
++      'tests/cefclient/browser/temp_window_ohos.cc',
++      'tests/cefclient/browser/temp_window_ohos.h',
++      'tests/cefclient/browser/main_context_impl_posix.cc',
++      'tests/cefclient/browser/resource_util_ohos.cc',
++      'tests/cefclient/browser/window_test_runner_ohos.h',
++      'tests/cefclient/browser/window_test_runner_ohos.cc',
++      'tests/cefclient/cefclient_ohos.cc',
++    ],    
+     'cefsimple_sources_common': [
+       'tests/cefsimple/simple_app.cc',
+       'tests/cefsimple/simple_app.h',
+@@ -476,6 +501,10 @@
+       'tests/cefsimple/cefsimple_linux.cc',
+       'tests/cefsimple/simple_handler_linux.cc',
+     ],
++    'cefsimple_sources_ohos': [
++      'tests/cefsimple/cefsimple_ohos.cc',
++      'tests/cefsimple/simple_handler_ohos.cc',
++    ],
+     'ceftests_data_resources': [
+       'tests/ceftests/resources/net/data/ssl/certificates/expired_cert.pem',
+       'tests/ceftests/resources/net/data/ssl/certificates/localhost_cert.pem',
+@@ -677,5 +706,8 @@
+     'ceftests_sources_linux': [
+       'tests/ceftests/resource_util_linux.cc',
+     ],
++    'ceftests_sources_ohos': [
++      'tests/ceftests/resource_util_ohos.cc',
++    ],
+   },
+ }
+diff --git a/cef/include/base/cef_build.h b/cef/include/base/cef_build.h
+index b476c78c1c..d24ee26056 100644
+--- a/cef/include/base/cef_build.h
++++ b/cef/include/base/cef_build.h
+@@ -106,6 +106,8 @@
+ // For backwards compatibility.
+ #define OS_MACOSX 1
+ #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
++#elif defined(OSOHOS)
++#define OS_OHOS 1
+ #elif defined(__linux__)
+ #if !defined(OS_CHROMEOS)
+ // Do not define OS_LINUX on Chrome OS build.
+@@ -158,7 +160,7 @@
+     defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||  \
+     defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||  \
+     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) || \
+-    defined(OS_SOLARIS)
++    defined(OS_SOLARIS) || defined(OS_OHOS)
+ #define OS_POSIX 1
+ #endif
+ 
+diff --git a/cef/include/cef_api_hash.h b/cef/include/cef_api_hash.h
+index 24be64552c..289b801bad 100644
+--- a/cef/include/cef_api_hash.h
++++ b/cef/include/cef_api_hash.h
+@@ -49,6 +49,8 @@
+ #define CEF_API_HASH_PLATFORM "9cd794a0ab4506060ca2d7b3c335778d026337a4"
+ #elif defined(OS_LINUX)
+ #define CEF_API_HASH_PLATFORM "fab73fe3fddb82c0f75a404fb464935592880803"
++#elif defined(OS_OHOS)
++#define CEF_API_HASH_PLATFORM "09d3e280ed38f7a082b794c56ff71c52f86f0ea8"
+ #endif
+ 
+ #ifdef __cplusplus
+diff --git a/cef/include/cef_base.h b/cef/include/cef_base.h
+index 03221d1112..6eec295137 100644
+--- a/cef/include/cef_base.h
++++ b/cef/include/cef_base.h
+@@ -45,6 +45,8 @@
+ #include "include/internal/cef_mac.h"
+ #elif defined(OS_LINUX)
+ #include "include/internal/cef_linux.h"
++#elif defined(OS_OHOS)
++#include "include/internal/cef_linux.h"
+ #endif
+ 
+ ///
+diff --git a/cef/include/internal/cef_types.h b/cef/include/internal/cef_types.h
+index 7e0410129d..80f678deaf 100644
+--- a/cef/include/internal/cef_types.h
++++ b/cef/include/internal/cef_types.h
+@@ -48,6 +48,8 @@
+ #include "include/internal/cef_types_mac.h"
+ #elif defined(OS_LINUX)
+ #include "include/internal/cef_types_linux.h"
++#elif defined(OS_OHOS)
++#include "include/internal/cef_types_linux.h"
+ #endif
+ 
+ // 32-bit ARGB color value, not premultiplied. The color components are always
+diff --git a/cef/include/internal/cef_types_linux.h b/cef/include/internal/cef_types_linux.h
+index b9bd64b305..2fe1a8f490 100644
+--- a/cef/include/internal/cef_types_linux.h
++++ b/cef/include/internal/cef_types_linux.h
+@@ -33,7 +33,7 @@
+ 
+ #include "include/base/cef_build.h"
+ 
+-#if defined(OS_LINUX)
++#if defined(OS_LINUX) || defined(OS_OHOS)
+ 
+ #if defined(CEF_X11)
+ typedef union _XEvent XEvent;
+diff --git a/cef/libcef/browser/alloy/alloy_browser_host_impl.cc b/cef/libcef/browser/alloy/alloy_browser_host_impl.cc
+index 920a295734..bf37dea4b3 100644
+--- a/cef/libcef/browser/alloy/alloy_browser_host_impl.cc
++++ b/cef/libcef/browser/alloy/alloy_browser_host_impl.cc
+@@ -79,7 +79,7 @@ const char* kAllowedWebUIHosts[] = {
+     chrome::kChromeUIPrintHost,
+     content::kChromeUIProcessInternalsHost,
+     content::kChromeUIResourcesHost,
+-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
+     chrome::kChromeUISandboxHost,
+ #endif
+     content::kChromeUIServiceWorkerInternalsHost,
+diff --git a/cef/libcef/browser/browser_platform_delegate_create.cc b/cef/libcef/browser/browser_platform_delegate_create.cc
+index b2f30ae0a0..650235b231 100644
+--- a/cef/libcef/browser/browser_platform_delegate_create.cc
++++ b/cef/libcef/browser/browser_platform_delegate_create.cc
+@@ -24,6 +24,9 @@
+ #elif BUILDFLAG(IS_LINUX)
+ #include "cef/libcef/browser/native/browser_platform_delegate_native_linux.h"
+ #include "cef/libcef/browser/osr/browser_platform_delegate_osr_linux.h"
++#elif BUILDFLAG(IS_OHOS)
++#include "cef/libcef/browser/native/browser_platform_delegate_native_ohos.h"
++#include "cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h"
+ #else
+ #error A delegate implementation is not available for your platform.
+ #endif
+@@ -42,6 +45,9 @@ std::unique_ptr<CefBrowserPlatformDelegateNative> CreateNativeDelegate(
+ #elif BUILDFLAG(IS_LINUX)
+   return std::make_unique<CefBrowserPlatformDelegateNativeLinux>(
+       window_info, background_color);
++#elif BUILDFLAG(IS_OHOS)
++  return std::make_unique<CefBrowserPlatformDelegateNativeOHOS>(
++      window_info, background_color);
+ #endif
+ }
+ 
+@@ -58,6 +64,9 @@ std::unique_ptr<CefBrowserPlatformDelegateOsr> CreateOSRDelegate(
+ #elif BUILDFLAG(IS_LINUX)
+   return std::make_unique<CefBrowserPlatformDelegateOsrLinux>(
+       std::move(native_delegate), use_shared_texture, use_external_begin_frame);
++#elif BUILDFLAG(IS_OHOS)
++  return std::make_unique<CefBrowserPlatformDelegateOsrOHOS>(
++      std::move(native_delegate), use_shared_texture, use_external_begin_frame);
+ #endif
+ }
+ 
+diff --git a/cef/libcef/browser/download_manager_delegate_impl.cc b/cef/libcef/browser/download_manager_delegate_impl.cc
+index cea133cb20..7a3e723925 100644
+--- a/cef/libcef/browser/download_manager_delegate_impl.cc
++++ b/cef/libcef/browser/download_manager_delegate_impl.cc
+@@ -23,6 +23,11 @@
+ #include "net/base/filename_util.h"
+ #include "third_party/blink/public/mojom/choosers/file_chooser.mojom.h"
+ 
++#if BUILDFLAG(IS_OHOS)
++#include <accesstoken/ability_access_control.h>
++#include "ohos/adapter/permission_manager/permission_manager_adapter.h"
++#endif
++
+ using content::DownloadManager;
+ using content::WebContents;
+ using download::DownloadItem;
+@@ -420,6 +425,7 @@ bool CefDownloadManagerDelegateImpl::DetermineDownloadTarget(
+   return handled ? true : alloy_bootstrap_;
+ }
+ 
++
+ void CefDownloadManagerDelegateImpl::OnBrowserDestroyed(
+     CefBrowserHostBase* browser) {
+   ItemBrowserMap::iterator it = item_browser_map_.begin();
+diff --git a/cef/libcef/browser/media_access_query.cc b/cef/libcef/browser/media_access_query.cc
+index 89d20fc55c..eddf833a08 100644
+--- a/cef/libcef/browser/media_access_query.cc
++++ b/cef/libcef/browser/media_access_query.cc
+@@ -14,6 +14,10 @@
+ #include "chrome/browser/media/webrtc/media_capture_devices_dispatcher.h"
+ #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+ 
++#if BUILDFLAG(IS_OHOS)
++#include "ohos/adapter/permission_manager/permission_manager_adapter.h"
++#endif
++
+ namespace media_access_query {
+ 
+ namespace {
+@@ -150,7 +154,9 @@ class CefMediaAccessQuery {
+                              std::move(media_stream_ui));
+   }
+ 
++#if !BUILDFLAG(IS_OHOS)
+  private:
++#endif
+   bool device_audio_requested() const {
+     return request_.audio_type ==
+            blink::mojom::MediaStreamType::DEVICE_AUDIO_CAPTURE;
+@@ -367,6 +373,25 @@ content::MediaResponseCallback RequestMediaAccessPermission(
+   CefMediaAccessQuery query(browser, request, std::move(callback));
+ 
+   if (CheckCommandLinePermission()) {
++#if BUILDFLAG(IS_OHOS)
++    namespace ohos_permission = ohos::adapter::permission;
++    if (query.device_audio_requested() || query.desktop_audio_requested()) {
++      if (!ohos_permission::PermissionManagerAdapter::RequestPermission(
++              ohos_permission::OHOSPermissionType::MICROPHONE)) {
++        // Access permission disallowed by user.
++        query.ExecuteCallback(CEF_MEDIA_PERMISSION_NONE);
++        return base::NullCallback();
++      }
++    }
++    if (query.device_video_requested() || query.desktop_video_requested()) {
++      if (!ohos_permission::PermissionManagerAdapter::RequestPermission(
++              ohos_permission::OHOSPermissionType::CAMERA)) {
++        // Access permission disallowed by user.
++        query.ExecuteCallback(CEF_MEDIA_PERMISSION_NONE);
++        return base::NullCallback();
++      }
++    }
++#endif
+     // Allow all requested permissions.
+     query.ExecuteCallback(query.requested_permissions());
+     return base::NullCallback();
+diff --git a/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc
+new file mode 100755
+index 0000000000..a99c145c58
+--- /dev/null
++++ b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc
+@@ -0,0 +1,211 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "cef/libcef/browser/native/browser_platform_delegate_native_ohos.h"
++
++#include "base/no_destructor.h"
++#include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
++#include "cef/libcef/browser/browser_host_base.h"
++#include "cef/libcef/browser/context.h"
++#include "cef/libcef/browser/native/window_delegate_view.h"
++#include "cef/libcef/browser/thread_util.h"
++#include "components/input/native_web_keyboard_event.h"
++#include "content/browser/renderer_host/render_widget_host_impl.h"
++#include "content/public/browser/render_view_host.h"
++#include "ohos/adapter/screen/screen_adapter.h"
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#include "third_party/blink/public/mojom/renderer_preferences.mojom.h"
++#include "ui/events/keycodes/dom/dom_key.h"
++#include "ui/events/keycodes/dom/keycode_converter.h"
++#include "ui/events/keycodes/keysym_to_unicode.h"
++#include "ui/gfx/font_render_params.h"
++#include "ui/views/widget/widget.h"
++
++using namespace ohos::adapter;
++using namespace ohos::adapter::xcomponent;
++
++CefBrowserPlatformDelegateNativeOHOS::CefBrowserPlatformDelegateNativeOHOS(
++    const CefWindowInfo& window_info,
++    SkColor background_color)
++    : CefBrowserPlatformDelegateNativeAura(window_info, background_color) {}
++
++void CefBrowserPlatformDelegateNativeOHOS::BrowserDestroyed(
++    CefBrowserHostBase* browser) {
++  CefBrowserPlatformDelegateNativeAura::BrowserDestroyed(browser);
++
++  if (host_window_created_) {
++    // Release the reference added in CreateHostWindow().
++    browser->Release();
++  }
++}
++
++bool CefBrowserPlatformDelegateNativeOHOS::CreateHostWindow() {
++  DCHECK(!window_widget_);
++
++  int left = window_info_.bounds.x;
++  int top = window_info_.bounds.y;
++  int width = window_info_.bounds.width;
++  int height = window_info_.bounds.height;
++  if (width == 0 || height == 0) {
++    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++    OhosDisplay ohos_display;
++    ScreenAdapter::GetInstance().GetDefaultDisplay(ohos_display);
++    float scale_fator =
++        ohos_display.scaled_density == 0.0 ? 1.0f : ohos_display.scaled_density;
++    left = window_rect.left / scale_fator;
++    top = window_rect.top / scale_fator;
++    width = window_rect.width / scale_fator;
++    height = window_rect.height / scale_fator;
++  }
++  if (width == 0) {
++    width = 1700;
++  }
++  if (height == 0) {
++    height = 1007;
++  }
++  window_info_.bounds.x = left;
++  window_info_.bounds.y = top;
++  window_info_.bounds.width = width;
++  window_info_.bounds.height = height;
++
++  gfx::Rect rect(window_info_.bounds.x, window_info_.bounds.y,
++                 window_info_.bounds.width, window_info_.bounds.height);
++  CefWindowDelegateView* delegate_view = new CefWindowDelegateView(
++      GetBackgroundColor(), true,
++      GetBoundsChangedCallback(), GetWidgetDeleteCallback());
++  delegate_view->Init(
++      static_cast<gfx::AcceleratedWidget>(window_info_.parent_window),
++      web_contents_, rect);
++
++  window_widget_ = delegate_view->GetWidget();
++  window_widget_->CenterWindow(rect.size());
++  window_widget_->Show();
++
++  // As an additional requirement on OHOS, we must set the colors for the
++  // render widgets in webkit.
++  auto prefs = web_contents_->GetMutableRendererPrefs();
++  prefs->focus_ring_color = SkColorSetARGB(255, 229, 151, 0);
++
++  prefs->active_selection_bg_color = SkColorSetRGB(30, 144, 255);
++  prefs->active_selection_fg_color = SK_ColorWHITE;
++  prefs->inactive_selection_bg_color = SkColorSetRGB(200, 200, 200);
++  prefs->inactive_selection_fg_color = SkColorSetRGB(50, 50, 50);
++
++  // Set font-related attributes.
++  static const gfx::FontRenderParams params(
++      gfx::GetFontRenderParams(gfx::FontRenderParamsQuery(), nullptr));
++  prefs->should_antialias_text = params.antialiasing;
++  prefs->use_subpixel_positioning = params.subpixel_positioning;
++  prefs->hinting = params.hinting;
++  prefs->use_autohinter = params.autohinter;
++  prefs->use_bitmaps = params.use_bitmaps;
++  prefs->subpixel_rendering = params.subpixel_rendering;
++
++  web_contents_->SyncRendererPrefs();
++
++  return true;
++}
++
++void CefBrowserPlatformDelegateNativeOHOS::CloseHostWindow() {
++  if (browser_) {
++    CEF_POST_TASK(CEF_UIT,
++                  base::BindOnce(&AlloyBrowserHostImpl::WindowDestroyed,
++                                 static_cast<AlloyBrowserHostImpl*>(browser_)));
++  }
++}
++
++CefWindowHandle CefBrowserPlatformDelegateNativeOHOS::GetHostWindowHandle()
++    const {
++  if (windowless_handler_) {
++    return windowless_handler_->GetParentWindowHandle();
++  }
++  return window_info_.window;
++}
++
++views::Widget* CefBrowserPlatformDelegateNativeOHOS::GetWindowWidget() const {
++  return window_widget_;
++}
++
++void CefBrowserPlatformDelegateNativeOHOS::SetFocus(bool setFocus) {
++  if (!setFocus) {
++    return;
++  }
++
++  if (web_contents_) {
++    // Give logical focus to the RenderWidgetHostViewAura in the views
++    // hierarchy. This does not change the native keyboard focus.
++    web_contents_->Focus();
++  }
++}
++
++void CefBrowserPlatformDelegateNativeOHOS::NotifyMoveOrResizeStarted() {
++  // Call the parent method to dismiss any existing popups.
++  CefBrowserPlatformDelegateNativeAura::NotifyMoveOrResizeStarted();
++
++  if (!web_contents_) {
++    return;
++  }
++}
++
++void CefBrowserPlatformDelegateNativeOHOS::SizeTo(int width, int height) {}
++
++void CefBrowserPlatformDelegateNativeOHOS::ViewText(const std::string& text) {}
++
++bool CefBrowserPlatformDelegateNativeOHOS::HandleKeyboardEvent(
++    const input::NativeWebKeyboardEvent& event) {
++  // TODO(cef): Is something required here to handle shortcut keys?
++  return false;
++}
++
++CefEventHandle CefBrowserPlatformDelegateNativeOHOS::GetEventHandle(
++    const input::NativeWebKeyboardEvent& event) const {
++  // TODO(cef): We need to return an XEvent* from this method, but
++  // |event.os_event->native_event()| now returns a ui::Event* instead.
++  // See https://crbug.com/965991.
++  return nullptr;
++}
++
++ui::KeyEvent CefBrowserPlatformDelegateNativeOHOS::TranslateUiKeyEvent(
++    const CefKeyEvent& key_event) const {
++  int flags = TranslateUiEventModifiers(key_event.modifiers);
++  ui::KeyboardCode key_code =
++      static_cast<ui::KeyboardCode>(key_event.windows_key_code);
++  ui::DomCode dom_code =
++      ui::KeycodeConverter::NativeKeycodeToDomCode(key_event.native_key_code);
++
++  char16_t character = key_event.character;
++
++  base::TimeTicks time_stamp = GetEventTimeStamp();
++
++  if (key_event.type == KEYEVENT_CHAR) {
++    return ui::KeyEvent::FromCharacter(character, key_code, dom_code, flags,
++                                       time_stamp);
++  }
++
++  ui::EventType type = ui::EventType::kUnknown;
++  switch (key_event.type) {
++    case KEYEVENT_RAWKEYDOWN:
++    case KEYEVENT_KEYDOWN:
++      type = ui::EventType::kKeyPressed;
++      break;
++    case KEYEVENT_KEYUP:
++      type = ui::EventType::kKeyReleased;
++      break;
++    default:
++      DCHECK(false);
++  }
++
++  ui::DomKey dom_key = ui::DomKey::NONE;
++  return ui::KeyEvent(type, key_code, dom_code, flags, dom_key, time_stamp);
++}
++
++input::NativeWebKeyboardEvent
++CefBrowserPlatformDelegateNativeOHOS::TranslateWebKeyEvent(
++    const CefKeyEvent& key_event) const {
++  ui::KeyEvent ui_event = TranslateUiKeyEvent(key_event);
++  if (key_event.type == KEYEVENT_CHAR) {
++    return input::NativeWebKeyboardEvent(ui_event, key_event.character);
++  }
++  return input::NativeWebKeyboardEvent(ui_event);
++}
+diff --git a/cef/libcef/browser/native/browser_platform_delegate_native_ohos.h b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.h
+new file mode 100755
+index 0000000000..fd07583638
+--- /dev/null
++++ b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.h
+@@ -0,0 +1,41 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_OHOS_H_
++#define CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_OHOS_H_
++
++#include "cef/libcef/browser/native/browser_platform_delegate_native_aura.h"
++
++// Windowed browser implementation for OHOS.
++class CefBrowserPlatformDelegateNativeOHOS
++    : public CefBrowserPlatformDelegateNativeAura {
++ public:
++  CefBrowserPlatformDelegateNativeOHOS(const CefWindowInfo& window_info,
++                                       SkColor background_color);
++
++  // CefBrowserPlatformDelegate methods:
++  void BrowserDestroyed(CefBrowserHostBase* browser) override;
++  bool CreateHostWindow() override;
++  void CloseHostWindow() override;
++  CefWindowHandle GetHostWindowHandle() const override;
++  views::Widget* GetWindowWidget() const override;
++  void SetFocus(bool setFocus) override;
++  void NotifyMoveOrResizeStarted() override;
++  void SizeTo(int width, int height) override;
++  void ViewText(const std::string& text) override;
++  bool HandleKeyboardEvent(const input::NativeWebKeyboardEvent& event) override;
++  CefEventHandle GetEventHandle(
++      const input::NativeWebKeyboardEvent& event) const override;
++
++  // CefBrowserPlatformDelegateNativeAura methods:
++  ui::KeyEvent TranslateUiKeyEvent(const CefKeyEvent& key_event) const override;
++  input::NativeWebKeyboardEvent TranslateWebKeyEvent(
++      const CefKeyEvent& key_event) const override;
++
++ private:
++  // True if the host window has been created.
++  bool host_window_created_ = false;
++};
++
++#endif  // CEF_LIBCEF_BROWSER_NATIVE_BROWSER_PLATFORM_DELEGATE_NATIVE_OHOS_H_
+diff --git a/cef/libcef/browser/native/cursor_util_aura.cc b/cef/libcef/browser/native/cursor_util_aura.cc
+index 14bffcb625..74cb8a3006 100644
+--- a/cef/libcef/browser/native/cursor_util_aura.cc
++++ b/cef/libcef/browser/native/cursor_util_aura.cc
+@@ -26,6 +26,10 @@
+ #include "ui/base/win/win_cursor.h"
+ #endif
+ 
++#if BUILDFLAG(IS_OHOS)
++#include "ui/ozone/common/bitmap_cursor.h"
++#endif
++
+ namespace cursor_util {
+ 
+ namespace {
+diff --git a/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.cc b/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.cc
+new file mode 100755
+index 0000000000..f51e1f46d1
+--- /dev/null
++++ b/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.cc
+@@ -0,0 +1,20 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h"
++
++#include <utility>
++
++CefBrowserPlatformDelegateOsrOHOS::CefBrowserPlatformDelegateOsrOHOS(
++    std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
++    bool use_shared_texture,
++    bool use_external_begin_frame)
++    : CefBrowserPlatformDelegateOsr(std::move(native_delegate),
++                                    use_shared_texture,
++                                    use_external_begin_frame) {}
++
++CefWindowHandle CefBrowserPlatformDelegateOsrOHOS::GetHostWindowHandle()
++    const {
++  return native_delegate_->window_info().parent_window;
++}
+diff --git a/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h b/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h
+new file mode 100755
+index 0000000000..04fbe983bc
+--- /dev/null
++++ b/cef/libcef/browser/osr/browser_platform_delegate_osr_ohos.h
+@@ -0,0 +1,23 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_OHOS_H_
++#define CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_OHOS_H_
++
++#include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
++
++// Windowless browser implementation for OHOS.
++class CefBrowserPlatformDelegateOsrOHOS
++    : public CefBrowserPlatformDelegateOsr {
++ public:
++  CefBrowserPlatformDelegateOsrOHOS(
++      std::unique_ptr<CefBrowserPlatformDelegateNative> native_delegate,
++      bool use_shared_texture,
++      bool use_external_begin_frame);
++
++  // CefBrowserPlatformDelegate methods:
++  CefWindowHandle GetHostWindowHandle() const override;
++};
++
++#endif  // CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_OHOS_H_
+diff --git a/cef/libcef/browser/views/window_view.cc b/cef/libcef/browser/views/window_view.cc
+index 849660434c..395f084dec 100644
+--- a/cef/libcef/browser/views/window_view.cc
++++ b/cef/libcef/browser/views/window_view.cc
+@@ -47,6 +47,14 @@
+ #include "ui/aura/window.h"
+ #endif
+ 
++#if BUILDFLAG(IS_OHOS)
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#endif
++
++#if BUILDFLAG(IS_OHOS)
++using namespace ohos::adapter::xcomponent;
++#endif
++
+ namespace {
+ 
+ // Specialize ClientView to handle Widget-related events.
+@@ -523,7 +531,14 @@ void CefWindowView::CreateWidget(gfx::AcceleratedWidget parent_widget) {
+     params.bounds = gfx::Rect(CalculatePreferredSize({}));
+     if (params.bounds.IsEmpty()) {
+       // Choose a reasonable default size.
++#if BUILDFLAG(IS_OHOS)
++      auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++      int initial_width = window_rect.width;
++      int initial_height = window_rect.height;
++      params.bounds.set_size({initial_width, initial_height});
++#else
+       params.bounds.set_size({800, 600});
++#endif
+     }
+   }
+ 
+diff --git a/cef/libcef/common/chrome/chrome_main_delegate_cef.cc b/cef/libcef/common/chrome/chrome_main_delegate_cef.cc
+index a606f81e48..a878930a1b 100644
+--- a/cef/libcef/common/chrome/chrome_main_delegate_cef.cc
++++ b/cef/libcef/common/chrome/chrome_main_delegate_cef.cc
+@@ -37,8 +37,12 @@
+ #if BUILDFLAG(IS_MAC)
+ #include "cef/libcef/common/util_mac.h"
+ #elif BUILDFLAG(IS_POSIX)
++#if BUILDFLAG(IS_OHOS)
++#include "cef/libcef/common/util_ohos.h"
++#else
+ #include "cef/libcef/common/util_linux.h"
+ #endif
++#endif
+ 
+ namespace {
+ 
+@@ -389,7 +393,11 @@ void ChromeMainDelegateCef::PreSandboxStartup() {
+ #if BUILDFLAG(IS_MAC)
+     util_mac::PreSandboxStartup();
+ #elif BUILDFLAG(IS_POSIX)
++#if BUILDFLAG(IS_OHOS)
++    util_ohos::PreSandboxStartup();
++#else
+     util_linux::PreSandboxStartup();
++#endif
+ #endif
+   }
+ 
+diff --git a/cef/libcef/common/resource_util.cc b/cef/libcef/common/resource_util.cc
+index 22e667262a..6adc8fb24a 100644
+--- a/cef/libcef/common/resource_util.cc
++++ b/cef/libcef/common/resource_util.cc
+@@ -43,6 +43,17 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
+   return true;
+ }
+ 
++#elif BUILDFLAG(IS_OHOS)
++
++bool GetDefaultUserDataDirectory(base::FilePath* result) {
++  if (!base::PathService::Get(base::DIR_OHOS_APP_DATA, result)) {
++    return false;
++  }
++  *result = result->Append(FILE_PATH_LITERAL("CEF"));
++  *result = result->Append(FILE_PATH_LITERAL("User Data"));
++  return true;
++}
++
+ #elif BUILDFLAG(IS_MAC)
+ 
+ // Based on chrome/common/chrome_paths_mac.mm.
+diff --git a/cef/libcef/common/util_ohos.cc b/cef/libcef/common/util_ohos.cc
+new file mode 100755
+index 0000000000..7539f6a74c
+--- /dev/null
++++ b/cef/libcef/common/util_ohos.cc
+@@ -0,0 +1,35 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "libcef/common/util_ohos.h"
++
++#include "base/command_line.h"
++#include "base/files/file_path.h"
++#include "base/path_service.h"
++#include "content/public/common/content_paths.h"
++#include "content/public/common/content_switches.h"
++
++namespace util_ohos {
++
++namespace {
++
++void OverrideChildProcessPath() {
++  base::FilePath child_process_path =
++      base::CommandLine::ForCurrentProcess()->GetSwitchValuePath(
++          switches::kBrowserSubprocessPath);
++  if (child_process_path.empty()) {
++    return;
++  }
++
++  // Used by ChildProcessHost::GetChildPath and PlatformCrashpadInitialization.
++  base::PathService::Override(content::CHILD_PROCESS_EXE, child_process_path);
++}
++
++}  // namespace
++
++void PreSandboxStartup() {
++  OverrideChildProcessPath();
++}
++
++}  // namespace util_ohos
+diff --git a/cef/libcef/common/util_ohos.h b/cef/libcef/common/util_ohos.h
+new file mode 100755
+index 0000000000..d04980ed16
+--- /dev/null
++++ b/cef/libcef/common/util_ohos.h
+@@ -0,0 +1,16 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_LIBCEF_COMMON_UTIL_OHOS_H_
++#define CEF_LIBCEF_COMMON_UTIL_OHOS_H_
++#pragma once
++
++namespace util_ohos {
++
++// Called from MainDelegate::PreSandboxStartup for the main process.
++void PreSandboxStartup();
++
++}  // namespace util_ohos
++
++#endif  // CEF_LIBCEF_COMMON_UTIL_OHOS_H_
+diff --git a/cef/libcef_dll/CMakeLists.txt.in b/cef/libcef_dll/CMakeLists.txt.in
+index 72a2d99dff..f5385fb3bb 100644
+--- a/cef/libcef_dll/CMakeLists.txt.in
++++ b/cef/libcef_dll/CMakeLists.txt.in
+@@ -34,7 +34,9 @@ set(CEF_TARGET libcef_dll_wrapper)
+     'includes_mac:MAC',
+     'includes_mac_capi:MAC',
+     'includes_linux:LINUX',
++    'includes_ohos:OHOS',
+     'includes_linux_capi:LINUX',
++    'includes_ohos_capi:OHOS',
+     'libcef_dll_wrapper_sources_base',
+     'libcef_dll_wrapper_sources_common',
+     'libcef_dll_wrapper_sources_mac:MAC',
+diff --git a/cef/tests/cefclient/browser/browser_window_osr_ohos.cc b/cef/tests/cefclient/browser/browser_window_osr_ohos.cc
+new file mode 100644
+index 0000000000..2dec285a88
+--- /dev/null
++++ b/cef/tests/cefclient/browser/browser_window_osr_ohos.cc
+@@ -0,0 +1,486 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefclient/browser/browser_window_osr_ohos.h"
++
++#include <algorithm>
++
++#include "include/base/cef_logging.h"
++#include "include/base/cef_macros.h"
++#include "include/wrapper/cef_closure_task.h"
++#include "tests/shared/browser/geometry_util.h"
++#include "tests/shared/browser/main_message_loop.h"
++
++#include <native_window/external_window.h>
++#include <stdint.h>
++#include <sys/mman.h>
++#include <algorithm>
++#include <cmath>
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++
++using namespace ohos::adapter::xcomponent;
++
++namespace client {
++
++namespace {
++
++// Static BrowserWindowOsrOhos::EventFilter needs to forward touch events
++// to correct browser, so we maintain a vector of all windows.
++std::vector<BrowserWindowOsrOhos*> g_browser_windows;
++}  // namespace
++
++BrowserWindowOsrOhos::BrowserWindowOsrOhos(BrowserWindow::Delegate* delegate,
++                                           bool with_controls,
++                                           const std::string& startup_url,
++                                           const OsrRendererSettings& settings)
++    : BrowserWindow(delegate),
++      gl_enabled_(false),
++      painting_popup_(false),
++      hidden_(false),
++      drag_leave_(false),
++      drag_drop_(false),
++      device_scale_factor_(1.0f) {
++  client_handler_ =
++      new ClientHandlerOsr(this, this, with_controls, startup_url);
++  g_browser_windows.push_back(this);
++}
++
++BrowserWindowOsrOhos::~BrowserWindowOsrOhos() {
++  g_browser_windows.erase(
++      std::find(g_browser_windows.begin(), g_browser_windows.end(), this));
++}
++
++void BrowserWindowOsrOhos::CreateBrowser(
++    ClientWindowHandle parent_handle,
++    const CefRect& rect,
++    const CefBrowserSettings& settings,
++    CefRefPtr<CefDictionaryValue> extra_info,
++    CefRefPtr<CefRequestContext> request_context) {
++  REQUIRE_MAIN_THREAD();
++
++  // Windowless rendering requires Alloy style.
++  DCHECK(delegate_->UseAlloyStyle());
++
++  // Create the native window.
++  Create(parent_handle);
++  // Retrieve the OHOS Window ID for the parent window.
++  CefWindowInfo window_info;
++  window_info.SetAsWindowless(parent_handle);
++  window_info.SetAsChild(parent_handle, rect);
++
++  // Windowless rendering requires Alloy style.
++  DCHECK_EQ(CEF_RUNTIME_STYLE_ALLOY, window_info.runtime_style);
++
++  // Create the browser asynchronously.
++  CefBrowserHost::CreateBrowser(window_info, client_handler_,
++                                client_handler_->startup_url(), settings,
++                                extra_info, request_context);
++}
++
++void BrowserWindowOsrOhos::GetPopupConfig(CefWindowHandle temp_handle,
++                                          CefWindowInfo& windowInfo,
++                                          CefRefPtr<CefClient>& client,
++                                          CefBrowserSettings& settings) {
++  CEF_REQUIRE_UI_THREAD();
++
++  windowInfo.SetAsWindowless(temp_handle);
++
++  // Windowless rendering requires Alloy style.
++  DCHECK_EQ(CEF_RUNTIME_STYLE_ALLOY, windowInfo.runtime_style);
++
++  client = client_handler_;
++}
++
++void BrowserWindowOsrOhos::ShowPopup(ClientWindowHandle parent_handle,
++                                     int x,
++                                     int y,
++                                     size_t width,
++                                     size_t height) {
++  REQUIRE_MAIN_THREAD();
++  DCHECK(browser_.get());
++
++  // Create the native window.
++  Create(parent_handle);
++
++  // Send resize notification so the compositor is assigned the correct
++  // viewport size and begins rendering.
++  browser_->GetHost()->WasResized();
++
++  Show();
++}
++
++void BrowserWindowOsrOhos::Show() {
++  REQUIRE_MAIN_THREAD();
++
++  if (hidden_) {
++    // Set the browser as visible.
++    browser_->GetHost()->WasHidden(false);
++    hidden_ = false;
++  }
++
++  // Give focus to the browser.
++  browser_->GetHost()->SetFocus(true);
++}
++
++void BrowserWindowOsrOhos::Hide() {
++  REQUIRE_MAIN_THREAD();
++
++  if (!browser_) {
++    return;
++  }
++
++  // Remove focus from the browser.
++  browser_->GetHost()->SetFocus(false);
++
++  if (!hidden_) {
++    // Set the browser as hidden.
++    browser_->GetHost()->WasHidden(true);
++    hidden_ = true;
++  }
++}
++
++void BrowserWindowOsrOhos::SetBounds(int x,
++                                     int y,
++                                     size_t width,
++                                     size_t height) {
++  REQUIRE_MAIN_THREAD();
++  // Nothing to do here.
++}
++
++void BrowserWindowOsrOhos::SetFocus(bool focus) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void BrowserWindowOsrOhos::SetDeviceScaleFactor(float device_scale_factor) {
++  REQUIRE_MAIN_THREAD();
++  {
++    base::AutoLock lock_scope(lock_);
++    if (device_scale_factor == device_scale_factor_) {
++      return;
++    }
++
++    // Apply some sanity checks.
++    if (device_scale_factor < 1.0f || device_scale_factor > 4.0f) {
++      return;
++    }
++
++    device_scale_factor_ = device_scale_factor;
++  }
++
++  if (browser_) {
++    browser_->GetHost()->NotifyScreenInfoChanged();
++    browser_->GetHost()->WasResized();
++  }
++}
++
++float BrowserWindowOsrOhos::GetDeviceScaleFactor() const {
++  REQUIRE_MAIN_THREAD();
++  base::AutoLock lock_scope(lock_);
++  return device_scale_factor_;
++}
++
++ClientWindowHandle BrowserWindowOsrOhos::GetWindowHandle() const {
++  REQUIRE_MAIN_THREAD();
++  return glarea_;
++}
++
++void BrowserWindowOsrOhos::OnAfterCreated(CefRefPtr<CefBrowser> browser) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::OnBeforeClose(CefRefPtr<CefBrowser> browser) {
++  CEF_REQUIRE_UI_THREAD();
++
++  // Detach |this| from the ClientHandlerOsr.
++  static_cast<ClientHandlerOsr*>(client_handler_.get())->DetachOsrDelegate();
++
++  UnregisterDragDrop();
++
++  DisableGL();
++}
++
++bool BrowserWindowOsrOhos::GetRootScreenRect(CefRefPtr<CefBrowser> browser,
++                                             CefRect& rect) {
++  CEF_REQUIRE_UI_THREAD();
++  return false;
++}
++
++void BrowserWindowOsrOhos::GetViewRect(CefRefPtr<CefBrowser> browser,
++                                       CefRect& rect) {
++  CEF_REQUIRE_UI_THREAD();
++
++  rect.x = 0;
++  rect.y = 0;
++
++  float device_scale_factor;
++  {
++    base::AutoLock lock_scope(lock_);
++    device_scale_factor = device_scale_factor_;
++  }
++
++  // The simulated screen and view rectangle are the same. This is necessary
++  // for popup menus to be located and sized inside the view.
++  auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++  int width = window_rect.width;
++  int height = window_rect.height;
++  rect = CefRect(0, 0, width, height);
++}
++
++bool BrowserWindowOsrOhos::GetScreenPoint(CefRefPtr<CefBrowser> browser,
++                                          int viewX,
++                                          int viewY,
++                                          int& screenX,
++                                          int& screenY) {
++  CEF_REQUIRE_UI_THREAD();
++
++  float device_scale_factor;
++  {
++    base::AutoLock lock_scope(lock_);
++    device_scale_factor = device_scale_factor_;
++  }
++
++  // Get the widget position in the window.
++  return true;
++}
++
++bool BrowserWindowOsrOhos::GetScreenInfo(CefRefPtr<CefBrowser> browser,
++                                         CefScreenInfo& screen_info) {
++  CEF_REQUIRE_UI_THREAD();
++
++  CefRect view_rect;
++  GetViewRect(browser, view_rect);
++
++  float device_scale_factor;
++  {
++    base::AutoLock lock_scope(lock_);
++    device_scale_factor = device_scale_factor_;
++  }
++
++  screen_info.device_scale_factor = device_scale_factor;
++
++  // The screen info rectangles are used by the renderer to create and position
++  // popups. Keep popups inside the view rectangle.
++  screen_info.rect = view_rect;
++  screen_info.available_rect = view_rect;
++  return true;
++}
++
++void BrowserWindowOsrOhos::OnPopupShow(CefRefPtr<CefBrowser> browser,
++                                       bool show) {
++  CEF_REQUIRE_UI_THREAD();
++
++  if (!show) {
++    browser->GetHost()->Invalidate(PET_VIEW);
++  }
++}
++
++void BrowserWindowOsrOhos::OnPopupSize(CefRefPtr<CefBrowser> browser,
++                                       const CefRect& rect) {
++  CEF_REQUIRE_UI_THREAD();
++
++  float device_scale_factor;
++  {
++    base::AutoLock lock_scope(lock_);
++    device_scale_factor = device_scale_factor_;
++  }
++}
++
++bool BrowserWindowOsrOhos::RenderOnScreen(void* window,
++                                          const void* osr_buffer,
++                                          int w,
++                                          int h) {
++  uint8_t* sourceData = (uint8_t*)osr_buffer;
++  uint8_t* targetData = NULL;
++  Region region{nullptr, 0};
++  int32_t ret = 0;
++  int32_t stride = 0x8;
++  BufferHandle* bufferHandle = NULL;
++  uint8_t* mappedAddr = NULL;
++  int32_t code;
++
++  OHNativeWindowBuffer* buffer = nullptr;
++  int fenceFd;
++
++  OHNativeWindow* nativeWindow = static_cast<OHNativeWindow*>(window);
++  if (nativeWindow == NULL) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  code = SET_BUFFER_GEOMETRY;
++  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, w, h);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  code = SET_STRIDE;
++  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, stride);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  ret = OH_NativeWindow_NativeWindowRequestBuffer(nativeWindow, &buffer,
++                                                  &fenceFd);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  bufferHandle = OH_NativeWindow_GetBufferHandleFromNative(buffer);
++  mappedAddr = static_cast<uint8_t*>(
++      mmap(bufferHandle->virAddr, bufferHandle->size, PROT_READ | PROT_WRITE,
++           MAP_SHARED, bufferHandle->fd, 0));
++  if (mappedAddr == MAP_FAILED) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  if (bufferHandle->format == 12) {
++    int bpp = 4;  // src and dest: RGBA8888
++    targetData = mappedAddr;
++    for (int row = 0; row < h; row++) {
++      memcpy(targetData, sourceData, w * bpp);
++      sourceData += w * bpp;
++      targetData += bufferHandle->stride;
++    }
++
++    OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, buffer, fenceFd,
++                                            region);
++
++    int result = munmap(mappedAddr, bufferHandle->size);
++    // munmap failed
++    if (result == -1) {
++      LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++      goto err;
++    }
++  }
++  return true;
++err:
++  return false;
++}
++
++void BrowserWindowOsrOhos::OnPaint(CefRefPtr<CefBrowser> browser,
++                                   CefRenderHandler::PaintElementType type,
++                                   const CefRenderHandler::RectList& dirtyRects,
++                                   const void* buffer,
++                                   int width,
++                                   int height) {
++  CEF_REQUIRE_UI_THREAD();
++  // render to screen
++  WindowWidgetType nextWindowid =
++      WindowAdapter::GetInstance().GetWindowWidgetId() + 1;
++  WindowIdType windowId = WindowAdapter::GetInstance().GetWindowId(nextWindowid);
++  WindowType window = WindowAdapter::GetInstance().GetWindow(windowId);
++
++  bool result = RenderOnScreen((void*)window, buffer, width, height);
++  if (!result) {
++    LOG(ERROR) << "RenderOnScreen failed";
++  }
++}
++
++void BrowserWindowOsrOhos::OnCursorChange(
++    CefRefPtr<CefBrowser> browser,
++    CefCursorHandle cursor,
++    cef_cursor_type_t type,
++    const CefCursorInfo& custom_cursor_info) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++bool BrowserWindowOsrOhos::StartDragging(
++    CefRefPtr<CefBrowser> browser,
++    CefRefPtr<CefDragData> drag_data,
++    CefRenderHandler::DragOperationsMask allowed_ops,
++    int x,
++    int y) {
++  CEF_REQUIRE_UI_THREAD();
++
++  DragReset();
++
++  // Send drag enter event.
++  CefMouseEvent ev;
++  ev.x = x;
++  ev.y = y;
++  ev.modifiers = EVENTFLAG_LEFT_MOUSE_BUTTON;
++  browser->GetHost()->DragTargetDragEnter(drag_data, ev, allowed_ops);
++
++  return true;
++}
++
++void BrowserWindowOsrOhos::UpdateDragCursor(
++    CefRefPtr<CefBrowser> browser,
++    CefRenderHandler::DragOperation operation) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::OnImeCompositionRangeChanged(
++    CefRefPtr<CefBrowser> browser,
++    const CefRange& selection_range,
++    const CefRenderHandler::RectList& character_bounds) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::UpdateAccessibilityTree(CefRefPtr<CefValue> value) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::UpdateAccessibilityLocation(
++    CefRefPtr<CefValue> value) {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::Create(ClientWindowHandle parent_handle) {
++  REQUIRE_MAIN_THREAD();
++}
++
++bool BrowserWindowOsrOhos::IsOverPopupWidget(int x, int y) const {
++  return false;
++}
++
++int BrowserWindowOsrOhos::GetPopupXOffset() const {
++  return 0;
++}
++
++int BrowserWindowOsrOhos::GetPopupYOffset() const {
++  return 0;
++}
++
++void BrowserWindowOsrOhos::ApplyPopupOffset(int& x, int& y) const {
++  if (IsOverPopupWidget(x, y)) {
++    x += GetPopupXOffset();
++    y += GetPopupYOffset();
++  }
++}
++
++void BrowserWindowOsrOhos::EnableGL() {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::DisableGL() {
++  CEF_REQUIRE_UI_THREAD();
++}
++
++void BrowserWindowOsrOhos::RegisterDragDrop() {
++  REQUIRE_MAIN_THREAD();
++
++  // Succession of CEF d&d calls:
++  // 1. DragTargetDragEnter
++  // 2. DragTargetDragOver
++  // 3. DragTargetDragLeave - optional
++  // 4. DragSourceSystemDragEnded - optional, to cancel dragging
++  // 5. DragTargetDrop
++  // 6. DragSourceEndedAt
++  // 7. DragSourceSystemDragEnded
++  // Source widget events.
++}
++
++void BrowserWindowOsrOhos::UnregisterDragDrop() {
++  // Drag events are unregistered in OnBeforeClose by calling
++  // g_signal_handlers_disconnect_matched.
++}
++
++void BrowserWindowOsrOhos::DragReset() {}
++
++}  // namespace client
+diff --git a/cef/tests/cefclient/browser/browser_window_osr_ohos.h b/cef/tests/cefclient/browser/browser_window_osr_ohos.h
+new file mode 100644
+index 0000000000..c7f92d1ea6
+--- /dev/null
++++ b/cef/tests/cefclient/browser/browser_window_osr_ohos.h
+@@ -0,0 +1,143 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_OSR_OHOS_H_
++#define CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_OSR_OHOS_H_
++#pragma once
++
++#include "include/base/cef_lock.h"
++
++#include "tests/cefclient/browser/browser_window.h"
++#include "tests/cefclient/browser/client_handler_osr.h"
++#include "tests/cefclient/browser/osr_renderer.h"
++
++namespace client {
++
++// Represents a native child window hosting a single off-screen browser
++// instance. The methods of this class must be called on the main thread unless
++// otherwise indicated.
++class BrowserWindowOsrOhos : public BrowserWindow,
++                             public ClientHandlerOsr::OsrDelegate {
++ public:
++  typedef void* CefXIDeviceEvent;
++
++  // Constructor may be called on any thread.
++  // |delegate| must outlive this object.
++  BrowserWindowOsrOhos(BrowserWindow::Delegate* delegate,
++                       bool with_controls,
++                       const std::string& startup_url,
++                       const OsrRendererSettings& settings);
++
++  bool RenderOnScreen(void* window, const void* osr_buffer, int w, int h);
++
++  // BrowserWindow methods.
++  void CreateBrowser(ClientWindowHandle parent_handle,
++                     const CefRect& rect,
++                     const CefBrowserSettings& settings,
++                     CefRefPtr<CefDictionaryValue> extra_info,
++                     CefRefPtr<CefRequestContext> request_context) override;
++  void GetPopupConfig(CefWindowHandle temp_handle,
++                      CefWindowInfo& windowInfo,
++                      CefRefPtr<CefClient>& client,
++                      CefBrowserSettings& settings) override;
++  void ShowPopup(ClientWindowHandle parent_handle,
++                 int x,
++                 int y,
++                 size_t width,
++                 size_t height) override;
++  void Show() override;
++  void Hide() override;
++  void SetBounds(int x, int y, size_t width, size_t height) override;
++  void SetFocus(bool focus) override;
++  void SetDeviceScaleFactor(float device_scale_factor) override;
++  float GetDeviceScaleFactor() const override;
++  ClientWindowHandle GetWindowHandle() const override;
++
++  // ClientHandlerOsr::OsrDelegate methods.
++  void OnAfterCreated(CefRefPtr<CefBrowser> browser) override;
++  void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
++  bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
++  void GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) override;
++  bool GetScreenPoint(CefRefPtr<CefBrowser> browser,
++                      int viewX,
++                      int viewY,
++                      int& screenX,
++                      int& screenY) override;
++  bool GetScreenInfo(CefRefPtr<CefBrowser> browser,
++                     CefScreenInfo& screen_info) override;
++  void OnPopupShow(CefRefPtr<CefBrowser> browser, bool show) override;
++  void OnPopupSize(CefRefPtr<CefBrowser> browser, const CefRect& rect) override;
++  void OnPaint(CefRefPtr<CefBrowser> browser,
++               CefRenderHandler::PaintElementType type,
++               const CefRenderHandler::RectList& dirtyRects,
++               const void* buffer,
++               int width,
++               int height) override;
++  void OnCursorChange(CefRefPtr<CefBrowser> browser,
++                      CefCursorHandle cursor,
++                      cef_cursor_type_t type,
++                      const CefCursorInfo& custom_cursor_info) override;
++  bool StartDragging(CefRefPtr<CefBrowser> browser,
++                     CefRefPtr<CefDragData> drag_data,
++                     CefRenderHandler::DragOperationsMask allowed_ops,
++                     int x,
++                     int y) override;
++  void UpdateDragCursor(CefRefPtr<CefBrowser> browser,
++                        CefRenderHandler::DragOperation operation) override;
++  void OnImeCompositionRangeChanged(
++      CefRefPtr<CefBrowser> browser,
++      const CefRange& selection_range,
++      const CefRenderHandler::RectList& character_bounds) override;
++  void UpdateAccessibilityTree(CefRefPtr<CefValue> value) override;
++  void UpdateAccessibilityLocation(CefRefPtr<CefValue> value) override;
++
++ private:
++  ~BrowserWindowOsrOhos();
++
++  void Create(ClientWindowHandle parent_handle);
++
++  void RegisterTouch();
++
++  bool IsOverPopupWidget(int x, int y) const;
++  int GetPopupXOffset() const;
++  int GetPopupYOffset() const;
++  void ApplyPopupOffset(int& x, int& y) const;
++
++  void EnableGL();
++  void DisableGL();
++
++  // Drag & drop
++  void RegisterDragDrop();
++  void UnregisterDragDrop();
++  void DragReset();
++
++  // Members only accessed on the UI thread.
++  bool gl_enabled_;
++  bool painting_popup_;
++
++  // Members only accessed on the main thread.
++  bool hidden_;
++
++  // Members protected by the GDK global lock.
++  ClientWindowHandle glarea_;
++
++  // Drag & drop
++
++  CefRefPtr<CefDragData> drag_data_;
++  CefRenderHandler::DragOperation drag_operation_;
++
++  bool drag_leave_;
++  bool drag_drop_;
++
++  mutable base::Lock lock_;
++
++  // Access to these members must be protected by |lock_|.
++  float device_scale_factor_;
++
++  DISALLOW_COPY_AND_ASSIGN(BrowserWindowOsrOhos);
++};
++
++}  // namespace client
++
++#endif  // CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_OSR_OHOS_H_
+diff --git a/cef/tests/cefclient/browser/browser_window_std_ohos.cc b/cef/tests/cefclient/browser/browser_window_std_ohos.cc
+new file mode 100644
+index 0000000000..7842be43d3
+--- /dev/null
++++ b/cef/tests/cefclient/browser/browser_window_std_ohos.cc
+@@ -0,0 +1,88 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefclient/browser/browser_window_std_ohos.h"
++
++#undef Success     // Definition conflicts with cef_message_router.h
++#undef RootWindow  // Definition conflicts with root_window.h
++
++#include "include/base/cef_logging.h"
++#include "tests/cefclient/browser/client_handler_std.h"
++#include "tests/shared/browser/main_message_loop.h"
++
++namespace client {
++
++BrowserWindowStdOhos::BrowserWindowStdOhos(Delegate* delegate,
++                                           bool with_controls,
++                                           const std::string& startup_url)
++    : BrowserWindow(delegate) {
++  client_handler_ = new ClientHandlerStd(this, with_controls, startup_url);
++}
++
++void BrowserWindowStdOhos::CreateBrowser(
++    ClientWindowHandle parent_handle,
++    const CefRect& rect,
++    const CefBrowserSettings& settings,
++    CefRefPtr<CefDictionaryValue> extra_info,
++    CefRefPtr<CefRequestContext> request_context) {
++  LOG(INFO) << "call BrowserWindowStdOhos::CreateBrowser parent_handle:"
++            << parent_handle;
++  REQUIRE_MAIN_THREAD();
++
++  CefWindowInfo window_info;
++  window_info.SetAsChild(parent_handle, rect);
++
++  CefBrowserHost::CreateBrowser(window_info, client_handler_,
++                                client_handler_->startup_url(), settings,
++                                extra_info, request_context);
++}
++
++void BrowserWindowStdOhos::GetPopupConfig(CefWindowHandle temp_handle,
++                                          CefWindowInfo& windowInfo,
++                                          CefRefPtr<CefClient>& client,
++                                          CefBrowserSettings& settings) {
++  CEF_REQUIRE_UI_THREAD();
++  // The window will be properly sized after the browser is created.
++  windowInfo.SetAsChild(temp_handle, CefRect());
++  client = client_handler_;
++}
++
++void BrowserWindowStdOhos::ShowPopup(ClientWindowHandle parent_handle,
++                                     int x,
++                                     int y,
++                                     size_t width,
++                                     size_t height) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void BrowserWindowStdOhos::Show() {
++  REQUIRE_MAIN_THREAD();
++}
++
++void BrowserWindowStdOhos::Hide() {
++  REQUIRE_MAIN_THREAD();
++}
++
++void BrowserWindowStdOhos::SetBounds(int x,
++                                     int y,
++                                     size_t width,
++                                     size_t height) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void BrowserWindowStdOhos::SetFocus(bool focus) {
++  REQUIRE_MAIN_THREAD();
++  if (browser_) {
++    browser_->GetHost()->SetFocus(focus);
++  }
++}
++
++ClientWindowHandle BrowserWindowStdOhos::GetWindowHandle() const {
++  REQUIRE_MAIN_THREAD();
++  // There is no Widget* representation of this object.
++  NOTREACHED();
++  return (ClientWindowHandle)NULL;
++}
++
++}  // namespace client
+diff --git a/cef/tests/cefclient/browser/browser_window_std_ohos.h b/cef/tests/cefclient/browser/browser_window_std_ohos.h
+new file mode 100644
+index 0000000000..cfa296adca
+--- /dev/null
++++ b/cef/tests/cefclient/browser/browser_window_std_ohos.h
+@@ -0,0 +1,53 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_STD_OHOS_H_
++#define CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_STD_OHOS_H_
++#pragma once
++
++#include "tests/cefclient/browser/browser_window.h"
++
++namespace client {
++
++// Represents a native child window hosting a single windowed browser instance.
++// The methods of this class must be called on the main thread unless otherwise
++// indicated.
++class BrowserWindowStdOhos : public BrowserWindow {
++ public:
++  // Constructor may be called on any thread.
++  // |delegate| must outlive this object.
++  BrowserWindowStdOhos(Delegate* delegate,
++                       bool with_controls,
++                       const std::string& startup_url);
++
++  // Called from RootWindowOhos::CreateRootWindow before CreateBrowser.
++
++  // BrowserWindow methods.
++  void CreateBrowser(ClientWindowHandle parent_handle,
++                     const CefRect& rect,
++                     const CefBrowserSettings& settings,
++                     CefRefPtr<CefDictionaryValue> extra_info,
++                     CefRefPtr<CefRequestContext> request_context) override;
++  void GetPopupConfig(CefWindowHandle temp_handle,
++                      CefWindowInfo& windowInfo,
++                      CefRefPtr<CefClient>& client,
++                      CefBrowserSettings& settings) override;
++  void ShowPopup(ClientWindowHandle parent_handle,
++                 int x,
++                 int y,
++                 size_t width,
++                 size_t height) override;
++  void Show() override;
++  void Hide() override;
++  void SetBounds(int x, int y, size_t width, size_t height) override;
++  void SetFocus(bool focus) override;
++  ClientWindowHandle GetWindowHandle() const override;
++
++ private:
++  DISALLOW_COPY_AND_ASSIGN(BrowserWindowStdOhos);
++};
++
++}  // namespace client
++
++#endif  // CEF_TESTS_CEFCLIENT_BROWSER_BROWSER_WINDOW_STD_OHOS_H_
+diff --git a/cef/tests/cefclient/browser/osr_renderer.cc b/cef/tests/cefclient/browser/osr_renderer.cc
+index 22af816233..ed45e3982b 100644
+--- a/cef/tests/cefclient/browser/osr_renderer.cc
++++ b/cef/tests/cefclient/browser/osr_renderer.cc
+@@ -27,6 +27,8 @@
+ #endif
+ #elif defined(OS_LINUX)
+ #include <GL/gl.h>
++#elif defined(OS_OHOS)
++#include <GLES3/gl3.h>
+ #else
+ #error Platform is not supported.
+ #endif
+diff --git a/cef/tests/cefclient/browser/resource_util_ohos.cc b/cef/tests/cefclient/browser/resource_util_ohos.cc
+new file mode 100644
+index 0000000000..822f0065c4
+--- /dev/null
++++ b/cef/tests/cefclient/browser/resource_util_ohos.cc
+@@ -0,0 +1,27 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/shared/browser/resource_util.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++#include "include/base/cef_logging.h"
++#include "include/cef_path_util.h"
++#include "include/internal/cef_types.h"
++
++namespace client {
++
++bool GetResourceDir(std::string& dir) {
++  CefString cefclient_files;
++  if (CefGetPath(PK_DIR_RESOURCES, cefclient_files) &&
++      !cefclient_files.empty()) {
++    dir = std::string(cefclient_files.ToString()) + "/cefclient_files";
++    return true;
++  } else {
++    return false;
++  }
++}
++
++}  // namespace client
+diff --git a/cef/tests/cefclient/browser/root_window_create.cc b/cef/tests/cefclient/browser/root_window_create.cc
+index deb9cccbb0..fea76a0a82 100644
+--- a/cef/tests/cefclient/browser/root_window_create.cc
++++ b/cef/tests/cefclient/browser/root_window_create.cc
+@@ -9,6 +9,8 @@
+ #include "tests/cefclient/browser/root_window_win.h"
+ #elif defined(OS_LINUX)
+ #include "tests/cefclient/browser/root_window_gtk.h"
++#elif defined(OS_OHOS)
++#include "tests/cefclient/browser/root_window_ohos.h"
+ #elif defined(OS_MAC)
+ #include "tests/cefclient/browser/root_window_mac.h"
+ #endif
+@@ -28,6 +30,8 @@ scoped_refptr<RootWindow> RootWindow::Create(bool use_views,
+   return new RootWindowGtk(use_alloy_style);
+ #elif defined(OS_MAC)
+   return new RootWindowMac(use_alloy_style);
++#elif defined(OS_OHOS)
++  return new RootWindowOhos(use_alloy_style);
+ #else
+ #error Unsupported platform
+ #endif
+diff --git a/cef/tests/cefclient/browser/root_window_ohos.cc b/cef/tests/cefclient/browser/root_window_ohos.cc
+new file mode 100644
+index 0000000000..96660d7959
+--- /dev/null
++++ b/cef/tests/cefclient/browser/root_window_ohos.cc
+@@ -0,0 +1,458 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefclient/browser/root_window_ohos.h"
++
++#undef Success     // Definition conflicts with cef_message_router.h
++#undef RootWindow  // Definition conflicts with root_window.h
++
++#include "include/base/cef_callback.h"
++#include "include/cef_app.h"
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#include "tests/cefclient/browser/browser_window_osr_ohos.h"
++#include "tests/cefclient/browser/browser_window_std_ohos.h"
++#include "tests/cefclient/browser/main_context.h"
++#include "tests/cefclient/browser/resource.h"
++#include "tests/cefclient/browser/temp_window.h"
++#include "tests/shared/browser/main_message_loop.h"
++#include "tests/shared/common/client_switches.h"
++
++using namespace ohos::adapter::xcomponent;
++
++namespace client {
++
++RootWindowOhos::RootWindowOhos(bool use_alloy_style)
++    : RootWindow(use_alloy_style),
++      with_controls_(false),
++      always_on_top_(false),
++      with_osr_(false),
++      is_popup_(false),
++      window_destroyed_(false),
++      browser_destroyed_(false),
++      force_close_(false),
++      is_closing_(false) {}
++
++RootWindowOhos::~RootWindowOhos() {
++  REQUIRE_MAIN_THREAD();
++
++  // The window and browser should already have been destroyed.
++  DCHECK(window_destroyed_);
++  DCHECK(browser_destroyed_);
++}
++
++void RootWindowOhos::Init(RootWindow::Delegate* delegate,
++                          std::unique_ptr<RootWindowConfig> config,
++                          const CefBrowserSettings& settings) {
++  DCHECK(delegate);
++  DCHECK(!initialized_);
++
++  delegate_ = delegate;
++  with_controls_ = config->with_controls;
++  always_on_top_ = config->always_on_top;
++  with_osr_ = config->with_osr;
++  start_rect_ = config->bounds;
++
++  CreateBrowserWindow(config->url);
++
++  initialized_ = true;
++
++  // Always post asynchronously to avoid reentrancy of the GDK lock.
++  MAIN_POST_CLOSURE(base::BindOnce(&RootWindowOhos::CreateRootWindow, this,
++                                   settings, config->initially_hidden));
++}
++
++void RootWindowOhos::InitAsPopup(RootWindow::Delegate* delegate,
++                                 bool with_controls,
++                                 bool with_osr,
++                                 const CefPopupFeatures& popupFeatures,
++                                 CefWindowInfo& windowInfo,
++                                 CefRefPtr<CefClient>& client,
++                                 CefBrowserSettings& settings) {
++  DCHECK(delegate);
++  DCHECK(!initialized_);
++
++  delegate_ = delegate;
++  with_controls_ = with_controls;
++  with_osr_ = with_osr;
++  is_popup_ = true;
++
++  if (popupFeatures.xSet) {
++    start_rect_.x = popupFeatures.x;
++  }
++  if (popupFeatures.ySet) {
++    start_rect_.y = popupFeatures.y;
++  }
++  if (popupFeatures.widthSet) {
++    start_rect_.width = popupFeatures.width;
++  }
++  if (popupFeatures.heightSet) {
++    start_rect_.height = popupFeatures.height;
++  }
++
++  CreateBrowserWindow(std::string());
++
++  initialized_ = true;
++
++  // The new popup is initially parented to a temporary window. The native root
++  // window will be created after the browser is created and the popup window
++  // will be re-parented to it at that time.
++  browser_window_->GetPopupConfig(TempWindow::GetWindowHandle(), windowInfo,
++                                  client, settings);
++}
++
++void RootWindowOhos::Show(ShowMode mode) {
++  REQUIRE_MAIN_THREAD();
++
++  if (!window_) {
++    return;
++  }
++}
++
++void RootWindowOhos::Hide() {
++  REQUIRE_MAIN_THREAD();
++}
++
++void RootWindowOhos::SetBounds(int x, int y, size_t width, size_t height) {
++  REQUIRE_MAIN_THREAD();
++  if (!window_) {
++    return;
++  }
++}
++
++void RootWindowOhos::Close(bool force) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void RootWindowOhos::SetDeviceScaleFactor(float device_scale_factor) {
++  REQUIRE_MAIN_THREAD();
++
++  if (browser_window_ && with_osr_) {
++    browser_window_->SetDeviceScaleFactor(device_scale_factor);
++  }
++}
++
++float RootWindowOhos::GetDeviceScaleFactor() const {
++  REQUIRE_MAIN_THREAD();
++
++  if (browser_window_ && with_osr_) {
++    return browser_window_->GetDeviceScaleFactor();
++  }
++
++  NOTREACHED();
++  return 0.0f;
++}
++
++CefRefPtr<CefBrowser> RootWindowOhos::GetBrowser() const {
++  REQUIRE_MAIN_THREAD();
++
++  if (browser_window_) {
++    return browser_window_->GetBrowser();
++  }
++  return nullptr;
++}
++
++ClientWindowHandle RootWindowOhos::GetWindowHandle() const {
++  REQUIRE_MAIN_THREAD();
++  return window_;
++}
++
++bool RootWindowOhos::WithWindowlessRendering() const {
++  REQUIRE_MAIN_THREAD();
++  return with_osr_;
++}
++
++void RootWindowOhos::CreateBrowserWindow(const std::string& startup_url) {
++  if (with_osr_) {
++    OsrRendererSettings settings = {};
++    MainContext::Get()->PopulateOsrSettings(&settings);
++    browser_window_.reset(
++        new BrowserWindowOsrOhos(this, with_controls_, startup_url, settings));
++  } else {
++    browser_window_.reset(
++        new BrowserWindowStdOhos(this, with_controls_, startup_url));
++  }
++}
++
++void RootWindowOhos::CreateRootWindow(const CefBrowserSettings& settings,
++                                      bool initially_hidden) {
++  REQUIRE_MAIN_THREAD();
++  DCHECK(!window_);
++
++  // TODO(port): If no x,y position is specified the window will always appear
++  // in the upper-left corner. Maybe there's a better default place to put it?
++  int x = start_rect_.x;
++  int y = start_rect_.y;
++  int width;
++  int height;
++  if (start_rect_.IsEmpty()) {
++    // TODO(port): Also, maybe there's a better way to choose the default size.
++    // Default OSR widget size.
++    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++    width = window_rect.width;
++    height = window_rect.height;
++  } else {
++    width = start_rect_.width;
++    height = start_rect_.height;
++  }
++
++  Show(ShowNormal);
++
++  // Most window managers ignore requests for initial window positions (instead
++  // using a user-defined placement algorithm) and honor requests after the
++  // window has already been shown.
++
++  if (!is_popup_) {
++    // Create the browser window.
++    browser_window_->CreateBrowser(window_, browser_bounds_, settings, nullptr,
++                                   delegate_->GetRequestContext());
++  } else {
++    // With popups we already have a browser window. Parent the browser window
++    // to the root window and show it in the correct location.
++    browser_window_->ShowPopup(window_, browser_bounds_.x, browser_bounds_.y,
++                               browser_bounds_.width, browser_bounds_.height);
++  }
++}
++
++void RootWindowOhos::OnBrowserCreated(CefRefPtr<CefBrowser> browser) {
++  REQUIRE_MAIN_THREAD();
++
++  // For popup browsers create the root window once the browser has been
++  // created.
++  if (is_popup_) {
++    CreateRootWindow(CefBrowserSettings(), false);
++  }
++}
++
++void RootWindowOhos::OnBrowserWindowClosing() {
++  if (!CefCurrentlyOn(TID_UI)) {
++    CefPostTask(TID_UI,
++                base::BindOnce(&RootWindowOhos::OnBrowserWindowClosing, this));
++    return;
++  }
++
++  is_closing_ = true;
++}
++
++void RootWindowOhos::OnBrowserWindowDestroyed() {
++  REQUIRE_MAIN_THREAD();
++
++  browser_window_.reset();
++
++  if (!window_destroyed_) {
++    // The browser was destroyed first. This could be due to the use of
++    // off-screen rendering or execution of JavaScript window.close().
++    // Close the RootWindow.
++    Close(true);
++  }
++
++  NotifyDestroyedIfDone(false, true);
++}
++
++void RootWindowOhos::OnSetAddress(const std::string& url) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void RootWindowOhos::OnSetTitle(const std::string& title) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void RootWindowOhos::OnSetFullscreen(bool fullscreen) {
++  REQUIRE_MAIN_THREAD();
++
++  CefRefPtr<CefBrowser> browser = GetBrowser();
++  if (browser) {
++  }
++}
++
++void RootWindowOhos::OnAutoResize(const CefSize& new_size) {
++  REQUIRE_MAIN_THREAD();
++
++  if (!window_) {
++    return;
++  }
++}
++
++void RootWindowOhos::OnSetLoadingState(bool isLoading,
++                                       bool canGoBack,
++                                       bool canGoForward) {
++  REQUIRE_MAIN_THREAD();
++}
++
++void RootWindowOhos::OnSetDraggableRegions(
++    const std::vector<CefDraggableRegion>& regions) {
++  REQUIRE_MAIN_THREAD();
++  // TODO(cef): Implement support for draggable regions on this platform.
++}
++
++void RootWindowOhos::NotifyMoveOrResizeStarted() {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyMoveOrResizeStarted, this));
++    return;
++  }
++
++  // Called when size, position or stack order changes.
++  CefRefPtr<CefBrowser> browser = GetBrowser();
++  if (browser.get()) {
++    // Notify the browser of move/resize events so that:
++    // - Popup windows are displayed in the correct location and dismissed
++    //   when the window moves.
++    // - Drag&drop areas are updated accordingly.
++    browser->GetHost()->NotifyMoveOrResizeStarted();
++  }
++}
++
++void RootWindowOhos::NotifySetFocus() {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(base::BindOnce(&RootWindowOhos::NotifySetFocus, this));
++    return;
++  }
++
++  if (!browser_window_.get()) {
++    return;
++  }
++
++  browser_window_->SetFocus(true);
++  delegate_->OnRootWindowActivated(this);
++}
++
++void RootWindowOhos::NotifyVisibilityChange(bool show) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyVisibilityChange, this, show));
++    return;
++  }
++
++  if (!browser_window_.get()) {
++    return;
++  }
++
++  if (show) {
++    browser_window_->Show();
++  } else {
++    browser_window_->Hide();
++  }
++}
++
++void RootWindowOhos::NotifyMenuBarHeight(int height) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyMenuBarHeight, this, height));
++    return;
++  }
++}
++
++void RootWindowOhos::NotifyContentBounds(int x, int y, int width, int height) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(base::BindOnce(&RootWindowOhos::NotifyContentBounds, this,
++                                     x, y, width, height));
++    return;
++  }
++}
++
++void RootWindowOhos::NotifyLoadURL(const std::string& url) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyLoadURL, this, url));
++    return;
++  }
++
++  CefRefPtr<CefBrowser> browser = GetBrowser();
++  if (browser.get()) {
++    browser->GetMainFrame()->LoadURL(url);
++  }
++}
++
++void RootWindowOhos::NotifyButtonClicked(int id) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyButtonClicked, this, id));
++    return;
++  }
++
++  CefRefPtr<CefBrowser> browser = GetBrowser();
++  if (!browser.get()) {
++    return;
++  }
++
++  switch (id) {
++    case IDC_NAV_BACK:
++      browser->GoBack();
++      break;
++    case IDC_NAV_FORWARD:
++      browser->GoForward();
++      break;
++    case IDC_NAV_RELOAD:
++      browser->Reload();
++      break;
++    case IDC_NAV_STOP:
++      browser->StopLoad();
++      break;
++    default:
++      NOTREACHED() << "id=" << id;
++  }
++}
++
++void RootWindowOhos::NotifyMenuItem(int id) {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyMenuItem, this, id));
++    return;
++  }
++
++  // Run the test.
++  if (delegate_) {
++    delegate_->OnTest(this, id);
++  }
++}
++
++void RootWindowOhos::NotifyForceClose() {
++  if (!CefCurrentlyOn(TID_UI)) {
++    CefPostTask(TID_UI,
++                base::BindOnce(&RootWindowOhos::NotifyForceClose, this));
++    return;
++  }
++
++  force_close_ = true;
++}
++
++void RootWindowOhos::NotifyCloseBrowser() {
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(
++        base::BindOnce(&RootWindowOhos::NotifyCloseBrowser, this));
++    return;
++  }
++
++  CefRefPtr<CefBrowser> browser = GetBrowser();
++  if (browser) {
++    browser->GetHost()->CloseBrowser(false);
++  }
++}
++
++void RootWindowOhos::NotifyDestroyedIfDone(bool window_destroyed,
++                                           bool browser_destroyed) {
++  // Each call will to this method will set only one state flag.
++  DCHECK_EQ(1, window_destroyed + browser_destroyed);
++
++  if (!CURRENTLY_ON_MAIN_THREAD()) {
++    MAIN_POST_CLOSURE(base::BindOnce(&RootWindowOhos::NotifyDestroyedIfDone,
++                                     this, window_destroyed,
++                                     browser_destroyed));
++    return;
++  }
++
++  if (window_destroyed) {
++    window_destroyed_ = true;
++  }
++  if (browser_destroyed) {
++    browser_destroyed_ = true;
++  }
++
++  // Notify once both the window and the browser have been destroyed.
++  if (window_destroyed_ && browser_destroyed_) {
++    delegate_->OnRootWindowDestroyed(this);
++  }
++}
++
++}  // namespace client
+diff --git a/cef/tests/cefclient/browser/root_window_ohos.h b/cef/tests/cefclient/browser/root_window_ohos.h
+new file mode 100644
+index 0000000000..d511edb08e
+--- /dev/null
++++ b/cef/tests/cefclient/browser/root_window_ohos.h
+@@ -0,0 +1,106 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_TESTS_CEFCLIENT_BROWSER_ROOT_WINDOW_OHOS_H_
++#define CEF_TESTS_CEFCLIENT_BROWSER_ROOT_WINDOW_OHOS_H_
++#pragma once
++
++#include <memory>
++#include <string>
++
++#include "tests/cefclient/browser/browser_window.h"
++#include "tests/cefclient/browser/root_window.h"
++
++namespace client {
++
++// RootWindowOhos implementation of a top-level native window in the browser
++// process. The methods of this class must be called on the main thread unless
++// otherwise indicated.
++class RootWindowOhos : public RootWindow, public BrowserWindow::Delegate {
++ public:
++  // Constructor may be called on any thread.
++  explicit RootWindowOhos(bool use_alloy_style);
++  ~RootWindowOhos();
++
++  // RootWindow methods.
++  void Init(RootWindow::Delegate* delegate,
++            std::unique_ptr<RootWindowConfig> config,
++            const CefBrowserSettings& settings) override;
++  void InitAsPopup(RootWindow::Delegate* delegate,
++                   bool with_controls,
++                   bool with_osr,
++                   const CefPopupFeatures& popupFeatures,
++                   CefWindowInfo& windowInfo,
++                   CefRefPtr<CefClient>& client,
++                   CefBrowserSettings& settings) override;
++  void Show(ShowMode mode) override;
++  void Hide() override;
++  void SetBounds(int x, int y, size_t width, size_t height) override;
++  void Close(bool force) override;
++  void SetDeviceScaleFactor(float device_scale_factor) override;
++  float GetDeviceScaleFactor() const override;
++  CefRefPtr<CefBrowser> GetBrowser() const override;
++  ClientWindowHandle GetWindowHandle() const override;
++  bool WithWindowlessRendering() const override;
++
++ private:
++  void CreateBrowserWindow(const std::string& startup_url);
++  void CreateRootWindow(const CefBrowserSettings& settings,
++                        bool initially_hidden);
++
++  // BrowserWindow::Delegate methods.
++  bool UseAlloyStyle() const override { return IsAlloyStyle(); }
++  void OnBrowserCreated(CefRefPtr<CefBrowser> browser) override;
++  void OnBrowserWindowClosing() override;
++  void OnBrowserWindowDestroyed() override;
++  void OnSetAddress(const std::string& url) override;
++  void OnSetTitle(const std::string& title) override;
++  void OnSetFullscreen(bool fullscreen) override;
++  void OnAutoResize(const CefSize& new_size) override;
++  void OnSetLoadingState(bool isLoading,
++                         bool canGoBack,
++                         bool canGoForward) override;
++  void OnSetDraggableRegions(
++      const std::vector<CefDraggableRegion>& regions) override;
++
++  void NotifyMoveOrResizeStarted();
++  void NotifySetFocus();
++  void NotifyVisibilityChange(bool show);
++  void NotifyMenuBarHeight(int height);
++  void NotifyContentBounds(int x, int y, int width, int height);
++  void NotifyLoadURL(const std::string& url);
++  void NotifyButtonClicked(int id);
++  void NotifyMenuItem(int id);
++  void NotifyForceClose();
++  void NotifyCloseBrowser();
++  void NotifyDestroyedIfDone(bool window_destroyed, bool browser_destroyed);
++
++  // After initialization all members are only accessed on the main thread.
++  // Members set during initialization.
++  bool with_controls_;
++  bool always_on_top_;
++  bool with_osr_;
++  bool is_popup_;
++  CefRect start_rect_;
++  std::unique_ptr<BrowserWindow> browser_window_;
++
++  // Main window.
++  ClientWindowHandle window_;
++
++  CefRect browser_bounds_;
++
++  bool window_destroyed_;
++  bool browser_destroyed_;
++
++  // Members only accessed on the UI thread because they're needed for
++  // WindowDelete.
++  bool force_close_;
++  bool is_closing_;
++
++  DISALLOW_COPY_AND_ASSIGN(RootWindowOhos);
++};
++
++}  // namespace client
++
++#endif  // CEF_TESTS_CEFCLIENT_BROWSER_ROOT_WINDOW_OHOS_H_
+diff --git a/cef/tests/cefclient/browser/temp_window.h b/cef/tests/cefclient/browser/temp_window.h
+index 391bba4756..e08a9e6b3b 100644
+--- a/cef/tests/cefclient/browser/temp_window.h
++++ b/cef/tests/cefclient/browser/temp_window.h
+@@ -14,6 +14,8 @@
+ #include "tests/cefclient/browser/temp_window_x11.h"
+ #elif defined(OS_MAC)
+ #include "tests/cefclient/browser/temp_window_mac.h"
++#elif defined(OS_OHOS)
++#include "tests/cefclient/browser/temp_window_ohos.h"
+ #endif
+ 
+ namespace client {
+@@ -24,6 +26,8 @@ typedef TempWindowWin TempWindow;
+ typedef TempWindowX11 TempWindow;
+ #elif defined(OS_MAC)
+ typedef TempWindowMac TempWindow;
++#elif defined(OS_OHOS)
++typedef TempWindowOhos TempWindow;
+ #endif
+ 
+ }  // namespace client
+diff --git a/cef/tests/cefclient/browser/temp_window_ohos.cc b/cef/tests/cefclient/browser/temp_window_ohos.cc
+new file mode 100755
+index 0000000000..b131e622e6
+--- /dev/null
++++ b/cef/tests/cefclient/browser/temp_window_ohos.cc
+@@ -0,0 +1,29 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefclient/browser/temp_window_ohos.h"
++
++
++namespace client {
++
++TempWindowOhos* g_temp_window = nullptr;
++
++TempWindowOhos::TempWindowOhos() {
++  DCHECK(!g_temp_window);
++  g_temp_window = this;
++}
++
++TempWindowOhos::~TempWindowOhos() {
++  g_temp_window = nullptr;
++}
++
++// static
++CefWindowHandle TempWindowOhos::GetWindowHandle() {
++  DCHECK(g_temp_window);
++  return g_temp_window->ohos_window_;
++}
++
++}  // namespace client
++
++
+diff --git a/cef/tests/cefclient/browser/temp_window_ohos.h b/cef/tests/cefclient/browser/temp_window_ohos.h
+new file mode 100755
+index 0000000000..93fb37a86a
+--- /dev/null
++++ b/cef/tests/cefclient/browser/temp_window_ohos.h
+@@ -0,0 +1,37 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_TESTS_CEFCLIENT_BROWSER_TEMP_WINDOW_OHOS_H_
++#define CEF_TESTS_CEFCLIENT_BROWSER_TEMP_WINDOW_OHOS_H_
++#pragma once
++
++#include "include/cef_base.h"
++
++namespace client {
++
++// Represents a singleton hidden window that acts as a temporary parent for
++// popup browsers. Only accessed on the UI thread.
++class TempWindowOhos {
++ public:
++  // Returns the singleton window handle.
++  static CefWindowHandle GetWindowHandle();
++
++ private:
++  // A single instance will be created/owned by RootWindowManager.
++  friend class RootWindowManager;
++  // Allow deletion via std::unique_ptr only.
++  friend std::default_delete<TempWindowOhos>;
++
++  TempWindowOhos();
++  ~TempWindowOhos();
++
++  CefWindowHandle ohos_window_;
++
++  DISALLOW_COPY_AND_ASSIGN(TempWindowOhos);
++};
++
++}  // namespace client
++
++#endif  // CEF_TESTS_CEFCLIENT_BROWSER_TEMP_WINDOW_OHOS_H_
++
+diff --git a/cef/tests/cefclient/browser/views_window.cc b/cef/tests/cefclient/browser/views_window.cc
+index 511701abf1..5e14e11699 100644
+--- a/cef/tests/cefclient/browser/views_window.cc
++++ b/cef/tests/cefclient/browser/views_window.cc
+@@ -18,6 +18,9 @@
+ #include "tests/cefclient/browser/resource.h"
+ #include "tests/cefclient/browser/views_style.h"
+ #include "tests/shared/common/client_switches.h"
++#if defined(OS_OHOS)
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#endif
+ 
+ #if !defined(OS_WIN)
+ #define VK_ESCAPE 0x1B
+@@ -25,13 +28,22 @@
+ #define VK_MENU 0x12  // ALT key.
+ #endif
+ 
++#if defined(OS_OHOS)
++using namespace ohos::adapter::xcomponent;
++#endif
++
+ namespace client {
+ 
+ namespace {
+ 
+ // Default window size.
++#ifdef OS_OHOS
++constexpr int kDefaultWidth = 1700;
++constexpr int kDefaultHeight = 1007;
++#else
+ constexpr int kDefaultWidth = 800;
+ constexpr int kDefaultHeight = 600;
++#endif
+ 
+ #if defined(OS_MAC)
+ constexpr int kTitleBarHeight = 35;
+@@ -869,7 +881,12 @@ CefRect ViewsWindow::GetInitialBounds(CefRefPtr<CefWindow> window) {
+   const CefRect bounds = delegate_->GetInitialBounds();
+   if (frameless_ && bounds.IsEmpty()) {
+     // Need to provide a size for frameless windows that will be centered.
++#if defined(OS_OHOS)
++    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++    return CefRect(0, 0, window_rect.width, window_rect.height);
++#else
+     return CefRect(0, 0, kDefaultWidth, kDefaultHeight);
++#endif
+   }
+   return bounds;
+ }
+diff --git a/cef/tests/cefclient/browser/window_test.cc b/cef/tests/cefclient/browser/window_test.cc
+index ed75da706b..a3077bc414 100644
+--- a/cef/tests/cefclient/browser/window_test.cc
++++ b/cef/tests/cefclient/browser/window_test.cc
+@@ -23,6 +23,8 @@
+ #include "tests/cefclient/browser/window_test_runner_gtk.h"
+ #elif defined(OS_MAC)
+ #include "tests/cefclient/browser/window_test_runner_mac.h"
++#elif defined(OS_OHOS)
++#include "tests/cefclient/browser/window_test_runner_ohos.h"
+ #endif
+ 
+ namespace client::window_test {
+@@ -51,6 +53,8 @@ std::unique_ptr<WindowTestRunner> CreateWindowTestRunner(
+   return std::make_unique<WindowTestRunnerGtk>();
+ #elif defined(OS_MAC)
+   return std::make_unique<WindowTestRunnerMac>();
++#elif defined(OS_OHOS)
++  return std::make_unique<WindowTestRunnerOhos>();
+ #else
+ #error "No implementation available for your platform."
+ #endif
+diff --git a/cef/tests/cefclient/browser/window_test_runner_ohos.cc b/cef/tests/cefclient/browser/window_test_runner_ohos.cc
+new file mode 100644
+index 0000000000..95cadffbb8
+--- /dev/null
++++ b/cef/tests/cefclient/browser/window_test_runner_ohos.cc
+@@ -0,0 +1,81 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefclient/browser/window_test_runner_ohos.h"
++
++#include "include/views/cef_browser_view.h"
++#include "include/views/cef_display.h"
++#include "include/views/cef_window.h"
++#include "include/wrapper/cef_helpers.h"
++#include "tests/cefclient/browser/root_window_views.h"
++#include "tests/cefclient/browser/views_window.h"
++
++namespace client::window_test {
++
++namespace {
++
++CefRefPtr<CefWindow> GetWindow(const CefRefPtr<CefBrowser>& browser) {
++  CEF_REQUIRE_UI_THREAD();
++  DCHECK(browser->GetHost()->HasView());
++
++  CefRefPtr<CefBrowserView> browser_view =
++      CefBrowserView::GetForBrowser(browser);
++  DCHECK(browser_view.get());
++
++  CefRefPtr<CefWindow> window = browser_view->GetWindow();
++  DCHECK(window.get());
++  return window;
++}
++
++void SetTitlebarHeight(const CefRefPtr<CefBrowser>& browser,
++                       const std::optional<float>& height) {
++  CEF_REQUIRE_UI_THREAD();
++  auto root_window = RootWindow::GetForBrowser(browser->GetIdentifier());
++  DCHECK(root_window.get());
++
++  auto root_window_views = static_cast<RootWindowViews*>(root_window.get());
++  root_window_views->SetTitlebarHeight(height);
++}
++
++}  // namespace
++
++WindowTestRunnerOhos::WindowTestRunnerOhos() = default;
++
++void WindowTestRunnerOhos::SetPos(CefRefPtr<CefBrowser> browser,
++                                   int x,
++                                   int y,
++                                   int width,
++                                   int height) {
++  CefRefPtr<CefWindow> window = GetWindow(browser);
++
++  CefRect window_bounds(x, y, width, height);
++  ModifyBounds(window->GetDisplay()->GetWorkArea(), window_bounds);
++
++  window->SetBounds(window_bounds);
++}
++
++void WindowTestRunnerOhos::Minimize(CefRefPtr<CefBrowser> browser) {
++  GetWindow(browser)->Minimize();
++}
++
++void WindowTestRunnerOhos::Maximize(CefRefPtr<CefBrowser> browser) {
++  GetWindow(browser)->Maximize();
++}
++
++void WindowTestRunnerOhos::Restore(CefRefPtr<CefBrowser> browser) {
++  GetWindow(browser)->Restore();
++}
++
++void WindowTestRunnerOhos::Fullscreen(CefRefPtr<CefBrowser> browser) {
++  auto window = GetWindow(browser);
++
++  // Results in a call to ViewsWindow::OnWindowFullscreenTransition().
++  if (window->IsFullscreen()) {
++    window->SetFullscreen(false);
++  } else {
++    window->SetFullscreen(true);
++  }
++}
++
++}  // namespace client::window_test
+diff --git a/cef/tests/cefclient/browser/window_test_runner_ohos.h b/cef/tests/cefclient/browser/window_test_runner_ohos.h
+new file mode 100644
+index 0000000000..95ae98928a
+--- /dev/null
++++ b/cef/tests/cefclient/browser/window_test_runner_ohos.h
+@@ -0,0 +1,31 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CEF_TESTS_CEFCLIENT_BROWSER_WINDOW_TEST_RUNNER_OHOS_H_
++#define CEF_TESTS_CEFCLIENT_BROWSER_WINDOW_TEST_RUNNER_OHOS_H_
++#pragma once
++
++#include "tests/cefclient/browser/window_test_runner.h"
++
++namespace client::window_test {
++
++// Ohos platform implementation.
++class WindowTestRunnerOhos : public WindowTestRunner {
++ public:
++  WindowTestRunnerOhos();
++
++  void SetPos(CefRefPtr<CefBrowser> browser,
++              int x,
++              int y,
++              int width,
++              int height) override;
++  void Minimize(CefRefPtr<CefBrowser> browser) override;
++  void Maximize(CefRefPtr<CefBrowser> browser) override;
++  void Restore(CefRefPtr<CefBrowser> browser) override;
++  void Fullscreen(CefRefPtr<CefBrowser> browser) override;
++};
++
++}  // namespace client::window_test
++
++#endif  // CEF_TESTS_CEFCLIENT_BROWSER_WINDOW_TEST_RUNNER_OHOS_H_
+diff --git a/cef/tests/cefclient/cefclient_ohos.cc b/cef/tests/cefclient/cefclient_ohos.cc
+new file mode 100755
+index 0000000000..2b06f3e1ae
+--- /dev/null
++++ b/cef/tests/cefclient/cefclient_ohos.cc
+@@ -0,0 +1,130 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++#undef Success     // Definition conflicts with cef_message_router.h
++#undef RootWindow  // Definition conflicts with root_window.h
++
++#include <csignal>
++#include <unistd.h>
++#include <cstdlib>
++#include <memory>
++#include <string>
++
++#include "include/base/cef_logging.h"
++#include "include/cef_app.h"
++#include "include/cef_command_line.h"
++#include "include/wrapper/cef_helpers.h"
++#include "tests/cefclient/browser/main_context_impl.h"
++#include "tests/cefclient/browser/test_runner.h"
++#include "tests/shared/browser/client_app_browser.h"
++#include "tests/shared/browser/main_message_loop_external_pump.h"
++#include "tests/shared/browser/main_message_loop_std.h"
++#include "tests/shared/common/client_app_other.h"
++#include "tests/shared/common/client_switches.h"
++#include "tests/shared/renderer/client_app_renderer.h"
++
++namespace client {
++namespace {
++
++void TerminationSignalHandler(int signatl) {
++  LOG(ERROR) << "Received termination signal: " << signatl;
++  MainContext::Get()->GetRootWindowManager()->CloseAllWindows(true);
++}
++
++int RunMain(int argc, char* argv[]) {
++  CefMainArgs main_args(argc, argv);
++
++  // Parse command-line arguments.
++  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
++  command_line->InitFromArgv(argc, argv);
++
++  // Create a ClientApp of the correct type.
++  CefRefPtr<CefApp> app;
++  ClientApp::ProcessType process_type = ClientApp::GetProcessType(command_line);
++  if (process_type == ClientApp::BrowserProcess) {
++    app = new ClientAppBrowser();
++  } else if (process_type == ClientApp::RendererProcess ||
++             process_type == ClientApp::ZygoteProcess) {
++    // On Ohos the zygote process is used to spawn other process types. Since
++    // we don't know what type of process it will be give it the renderer
++    // client.
++    app = new ClientAppRenderer();
++  } else if (process_type == ClientApp::OtherProcess) {
++    app = new ClientAppOther();
++  }
++
++  // Execute the secondary process, if any.
++  int exit_code = CefExecuteProcess(main_args, app, nullptr);
++  if (exit_code >= 0) {
++    return exit_code;
++  }
++
++  // Create the main context object.
++  auto context = std::make_unique<MainContextImpl>(command_line, true);
++
++  CefSettings settings;
++
++// When generating projects with CMake the CEF_USE_SANDBOX value will be defined
++// automatically. Pass -DUSE_SANDBOX=OFF to the CMake command-line to disable
++// use of the sandbox.
++#if !defined(CEF_USE_SANDBOX)
++  settings.no_sandbox = true;
++#endif
++
++  // Populate the settings based on command line arguments.
++  context->PopulateSettings(&settings);
++
++  // Create the main message loop object.
++  std::unique_ptr<MainMessageLoop> message_loop;
++  if (settings.external_message_pump) {
++    message_loop = MainMessageLoopExternalPump::Create();
++  } else {
++    message_loop.reset(new MainMessageLoopStd);
++  }
++
++  // Initialize the CEF browser process. May return false if initialization
++  // fails or if early exit is desired (for example, due to process singleton
++  // relaunch behavior).
++  if (!context->Initialize(main_args, settings, app, nullptr)) {
++    return CefGetExitCode();
++  }
++
++  // Install a signal handler so we clean up after ourselves.
++  signal(SIGINT, TerminationSignalHandler);
++  signal(SIGTERM, TerminationSignalHandler);
++
++  // Register scheme handlers.
++  test_runner::RegisterSchemeHandlers();
++
++  auto window_config = std::make_unique<RootWindowConfig>();
++  window_config->always_on_top =
++      command_line->HasSwitch(switches::kAlwaysOnTop);
++  window_config->with_osr =
++      settings.windowless_rendering_enabled ? true : false;
++
++  // Create the first window.
++  context->GetRootWindowManager()->CreateRootWindow(std::move(window_config));
++
++  // Run the message loop. This will block until Quit() is called.
++  int result = message_loop->Run();
++
++  // Shut down CEF.
++  context->Shutdown();
++
++  // Release objects in reverse order of creation.
++  message_loop.reset();
++  context.reset();
++
++  return result;
++}
++
++}  // namespace
++}  // namespace client
++
++// Program entry point function.
++// Entry point function for all processes.
++extern "C" {
++int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
++  return client::RunMain(argc, argv);
++}
++}
+diff --git a/cef/tests/cefsimple/cefsimple_ohos.cc b/cef/tests/cefsimple/cefsimple_ohos.cc
+new file mode 100755
+index 0000000000..32b676ed5a
+--- /dev/null
++++ b/cef/tests/cefsimple/cefsimple_ohos.cc
+@@ -0,0 +1,65 @@
++// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
++// reserved. Use of this source code is governed by a BSD-style license that
++// can be found in the LICENSE file.
++
++#include "tests/cefsimple/simple_app.h"
++
++#include "include/base/cef_logging.h"
++#include "include/cef_command_line.h"
++
++// Entry point function for all processes.
++extern "C" {
++int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
++  // Provide CEF with command-line arguments.
++  CefMainArgs main_args(argc, argv);
++
++  // CEF applications have multiple sub-processes (render, GPU, etc) that share
++  // the same executable. This function checks the command-line and, if this is
++  // a sub-process, executes the appropriate logic.
++  int exit_code = CefExecuteProcess(main_args, nullptr, nullptr);
++  if (exit_code >= 0) {
++    // The sub-process has completed so return here.
++    return exit_code;
++  }
++
++  // Parse command-line arguments for use in this method.
++  CefRefPtr<CefCommandLine> command_line = CefCommandLine::CreateCommandLine();
++  command_line->InitFromArgv(argc, argv);
++
++  // Specify CEF global settings here.
++  CefSettings settings;
++
++// When generating projects with CMake the CEF_USE_SANDBOX value will be defined
++// automatically. Pass -DUSE_SANDBOX=OFF to the CMake command-line to disable
++// use of the sandbox.
++#if !defined(CEF_USE_SANDBOX)
++  settings.no_sandbox = true;
++#endif
++
++  // settings.multi_threaded_message_loop=false;
++  // settings.external_message_pump=true;
++  // enable osr
++  // settings.windowless_rendering_enabled = true;
++
++  // SimpleApp implements application-level callbacks for the browser process.
++  // It will create the first browser instance in OnContextInitialized() after
++  // CEF has initialized.
++  CefRefPtr<SimpleApp> app(new SimpleApp);
++
++  // Initialize the CEF browser process. May return false if initialization
++  // fails or if early exit is desired (for example, due to process singleton
++  // relaunch behavior).
++  if (!CefInitialize(main_args, settings, app.get(), nullptr)) {
++    return CefGetExitCode();
++  }
++
++  // Run the CEF message loop. This will block until CefQuitMessageLoop() is
++  // called.
++  CefRunMessageLoop();
++
++  // Shut down CEF.
++  CefShutdown();
++
++  return 0;
++}
++}
+\ No newline at end of file
+diff --git a/cef/tests/cefsimple/simple_app.cc b/cef/tests/cefsimple/simple_app.cc
+index 6cec793cc9..9b2f2204ce 100644
+--- a/cef/tests/cefsimple/simple_app.cc
++++ b/cef/tests/cefsimple/simple_app.cc
+@@ -13,6 +13,14 @@
+ #include "include/wrapper/cef_helpers.h"
+ #include "tests/cefsimple/simple_handler.h"
+ 
++#if defined(OS_OHOS)
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#endif
++
++#if defined(OS_OHOS)
++using namespace ohos::adapter::xcomponent;
++#endif
++
+ namespace {
+ 
+ // When using the Views framework this object provides the delegate
+@@ -49,7 +57,12 @@ class SimpleWindowDelegate : public CefWindowDelegate {
+   }
+ 
+   CefSize GetPreferredSize(CefRefPtr<CefView> view) override {
++#if defined(OS_OHOS)
++    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++    return CefSize(window_rect.width, window_rect.height);
++#else
+     return CefSize(800, 600);
++#endif
+   }
+ 
+   cef_show_state_t GetInitialShowState(CefRefPtr<CefWindow> window) override {
+@@ -172,6 +185,8 @@ void SimpleApp::OnContextInitialized() {
+     // Alloy style will create a basic native window. Chrome style will create a
+     // fully styled Chrome UI window.
+     window_info.runtime_style = runtime_style;
++    // enable osr
++    // window_info.windowless_rendering_enabled = true;
+ 
+     // Create the first browser window.
+     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,
+diff --git a/cef/tests/cefsimple/simple_handler.cc b/cef/tests/cefsimple/simple_handler.cc
+index 41d0841a4c..a2ae16997d 100644
+--- a/cef/tests/cefsimple/simple_handler.cc
++++ b/cef/tests/cefsimple/simple_handler.cc
+@@ -10,6 +10,7 @@
+ #include "include/base/cef_callback.h"
+ #include "include/cef_app.h"
+ #include "include/cef_parser.h"
++#include "include/cef_path_util.h"
+ #include "include/views/cef_browser_view.h"
+ #include "include/views/cef_window.h"
+ #include "include/wrapper/cef_closure_task.h"
+@@ -131,6 +132,33 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
+   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+ }
+ 
++bool SimpleHandler::CanDownload(CefRefPtr<CefBrowser> browser,
++                                const CefString& url,
++                                const CefString& request_method) {
++  return true;
++}
++
++bool SimpleHandler::OnBeforeDownload(
++    CefRefPtr<CefBrowser> browser,
++    CefRefPtr<CefDownloadItem> download_item,
++    const CefString& suggested_name,
++    CefRefPtr<CefBeforeDownloadCallback> callback) {
++  CefString download_dir;
++  if (CefGetPath(PK_DIR_TEMP, download_dir) && !download_dir.empty()) {
++    std::string download_path =
++        download_dir.ToString() + "/" + suggested_name.ToString();
++    CefString file_path = CefString(download_path);
++    callback->Continue(file_path, true);
++    return true;
++  }
++  return false;
++}
++
++void SimpleHandler::OnDownloadUpdated(
++    CefRefPtr<CefBrowser> browser,
++    CefRefPtr<CefDownloadItem> download_item,
++    CefRefPtr<CefDownloadItemCallback> callback) {}
++
+ void SimpleHandler::ShowMainWindow() {
+   if (!CefCurrentlyOn(TID_UI)) {
+     // Execute on the UI thread.
+diff --git a/cef/tests/cefsimple/simple_handler.h b/cef/tests/cefsimple/simple_handler.h
+index ea9e344d58..45f1721aa1 100644
+--- a/cef/tests/cefsimple/simple_handler.h
++++ b/cef/tests/cefsimple/simple_handler.h
+@@ -12,7 +12,9 @@
+ class SimpleHandler : public CefClient,
+                       public CefDisplayHandler,
+                       public CefLifeSpanHandler,
+-                      public CefLoadHandler {
++                      public CefLoadHandler,
++                      public CefDownloadHandler,
++                      public CefPermissionHandler {
+  public:
+   explicit SimpleHandler(bool is_alloy_style);
+   ~SimpleHandler() override;
+@@ -24,6 +26,10 @@ class SimpleHandler : public CefClient,
+   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
+   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }
+   CefRefPtr<CefLoadHandler> GetLoadHandler() override { return this; }
++  CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
++  CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
++    return this;
++  }
+ 
+   // CefDisplayHandler methods:
+   void OnTitleChange(CefRefPtr<CefBrowser> browser,
+@@ -41,6 +47,43 @@ class SimpleHandler : public CefClient,
+                    const CefString& errorText,
+                    const CefString& failedUrl) override;
+ 
++  // CefDownloadHandler methods
++  bool CanDownload(CefRefPtr<CefBrowser> browser,
++                   const CefString& url,
++                   const CefString& request_method) override;
++  bool OnBeforeDownload(CefRefPtr<CefBrowser> browser,
++                        CefRefPtr<CefDownloadItem> download_item,
++                        const CefString& suggested_name,
++                        CefRefPtr<CefBeforeDownloadCallback> callback) override;
++  void OnDownloadUpdated(CefRefPtr<CefBrowser> browser,
++                         CefRefPtr<CefDownloadItem> download_item,
++                         CefRefPtr<CefDownloadItemCallback> callback) override;
++
++  // CefPermissionHandler methods
++  bool OnRequestMediaAccessPermission(
++      CefRefPtr<CefBrowser> browser,
++      CefRefPtr<CefFrame> frame,
++      const CefString& requesting_origin,
++      uint32_t requested_permissions,
++      CefRefPtr<CefMediaAccessCallback> callback) override {
++    return true;
++  }
++
++  bool OnShowPermissionPrompt(
++      CefRefPtr<CefBrowser> browser,
++      uint64_t prompt_id,
++      const CefString& requesting_origin,
++      uint32_t requested_permissions,
++      CefRefPtr<CefPermissionPromptCallback> callback) override {
++    callback->Continue(CEF_PERMISSION_RESULT_ACCEPT);
++    return true;
++  }
++
++  void OnDismissPermissionPrompt(
++      CefRefPtr<CefBrowser> browser,
++      uint64_t prompt_id,
++      cef_permission_request_result_t result) override {}
++
+   void ShowMainWindow();
+ 
+   // Request that all existing browser windows close.
+diff --git a/cef/tests/cefsimple/simple_handler_ohos.cc b/cef/tests/cefsimple/simple_handler_ohos.cc
+new file mode 100755
+index 0000000000..0a08ec6d4a
+--- /dev/null
++++ b/cef/tests/cefsimple/simple_handler_ohos.cc
+@@ -0,0 +1,14 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/cefsimple/simple_handler.h"
++
++#include <string>
++
++#include "include/cef_browser.h"
++
++void SimpleHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser,
++                                        const CefString& title) {
++  NOTIMPLEMENTED();
++}
+diff --git a/cef/tests/ceftests/CMakeLists.txt.in b/cef/tests/ceftests/CMakeLists.txt.in
+index 24d8920b14..3990ab65da 100644
+--- a/cef/tests/ceftests/CMakeLists.txt.in
++++ b/cef/tests/ceftests/CMakeLists.txt.in
+@@ -14,12 +14,14 @@
+     'shared_sources_browser',
+     'shared_sources_common',
+     'shared_sources_linux:LINUX',
++    'shared_sources_ohos:OHOS',
+     'shared_sources_mac:MAC',
+     'shared_sources_renderer:WINDOWS',
+     'shared_sources_renderer:LINUX',
+     'shared_sources_win:WINDOWS',
+     'ceftests_sources_common',
+     'ceftests_sources_linux:LINUX',
++    'ceftests_sources_ohos:OHOS',
+     'ceftests_sources_mac:MAC',
+     'ceftests_sources_win:WINDOWS',
+     'ceftests_sources_resources_win_rc:WINDOWS',
+diff --git a/cef/tests/ceftests/os_rendering_unittest.cc b/cef/tests/ceftests/os_rendering_unittest.cc
+index 81277080ab..e519ba2615 100644
+--- a/cef/tests/ceftests/os_rendering_unittest.cc
++++ b/cef/tests/ceftests/os_rendering_unittest.cc
+@@ -20,6 +20,8 @@
+ #include "tests/ceftests/os_rendering_unittest_mac.h"
+ #elif defined(OS_LINUX)
+ #include <X11/keysym.h>
++#elif defined(OS_OHOS)
++#include <ace/xcomponent/native_xcomponent_key_event.h>
+ #elif defined(OS_WIN)
+ // Required for resource_util_win, which uses this as an extern
+ HINSTANCE hInst = ::GetModuleHandle(nullptr);
+@@ -35,7 +37,11 @@ const char kTestUrl[] = "https://tests/osrtest";
+ // Must be both large enough for the drag/drop region to be visible and small
+ // enough for a little vertical offset with scrollbar.
+ const int kOsrWidth = 600;
++#if defined(OS_OHOS)
++const int kOsrHeight = 550;
++#else
+ const int kOsrHeight = 450;
++#endif
+ 
+ // bounding client rects for edit box and navigate button
+ #if defined(OS_WIN)
+@@ -44,6 +50,8 @@ const CefRect kExpandedSelectRect(462, 42, 81, 334);
+ const CefRect kExpandedSelectRect(462, 42, 75, 334);
+ #elif defined(OS_LINUX)
+ const CefRect kExpandedSelectRect(462, 42, 79, 334);
++#elif defined(OS_OHOS)
++const CefRect kExpandedSelectRect(502, 48, 80, 2);
+ #else
+ #error "Unsupported platform"
+ #endif  // defined(OS_WIN)
+@@ -86,6 +94,24 @@ const unsigned int kNativeKeyTestCodes[] = {kVK_ANSI_D, kVK_ANSI_O, kVK_ANSI_N,
+ const unsigned int kNativeKeyEscape = kVK_Escape;
+ const unsigned int kNativeKeyTab = kVK_Tab;
+ 
++#elif defined(OS_OHOS)
++
++#define VKEY_D 0x64
++#define VKEY_O 0x6F
++#define VKEY_N 0x6E
++#define VKEY_E 0x65
++#define VKEY_ESCAPE 0x1B
++#define VKEY_TAB 0x09
++
++const unsigned int kNativeKeyTestCodes[] = {
++    OH_NativeXComponent_KeyCode::KEY_D, OH_NativeXComponent_KeyCode::KEY_O,
++    OH_NativeXComponent_KeyCode::KEY_N, OH_NativeXComponent_KeyCode::KEY_E};
++
++const unsigned int kKeyTestCodes[] = {VKEY_D, VKEY_O, VKEY_N, VKEY_E};
++
++const unsigned int kNativeKeyEscape = OH_NativeXComponent_KeyCode::KEY_ESCAPE;
++const unsigned int kNativeKeyTab = OH_NativeXComponent_KeyCode::KEY_TAB;
++
+ #endif
+ 
+ #if defined(OS_MAC) || defined(OS_LINUX)
+@@ -303,7 +329,7 @@ class OSRTestHandler : public RoutingTestHandler,
+                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
+                                             browser, VK_TAB),
+                              50);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+           CefPostDelayedTask(TID_UI,
+                              base::BindOnce(&OSRTestHandler::SendKeyEvent, this,
+                                             browser, kNativeKeyTab, VKEY_TAB),
+@@ -963,7 +989,7 @@ class OSRTestHandler : public RoutingTestHandler,
+         if (type == PET_POPUP) {
+ #if defined(OS_WIN)
+           SendKeyEvent(browser, VK_ESCAPE);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+           SendKeyEvent(browser, kNativeKeyEscape, VKEY_ESCAPE);
+ #else
+ #error "Unsupported platform"
+@@ -1483,7 +1509,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     } else {
+       windowInfo.SetAsWindowless(kNullWindowHandle);
+     }
+-#elif defined(OS_LINUX)
++#elif defined(OS_LINUX) || defined(OS_OHOS)
+     windowInfo.SetAsWindowless(kNullWindowHandle);
+ #else
+ #error "Unsupported platform"
+@@ -1566,7 +1592,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1584,7 +1610,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1607,7 +1633,7 @@ class OSRTestHandler : public RoutingTestHandler,
+     for (size_t i = 0; i < word_length; ++i) {
+ #if defined(OS_WIN)
+       SendKeyEvent(browser, kKeyTestWord[i]);
+-#elif defined(OS_MAC) || defined(OS_LINUX)
++#elif defined(OS_MAC) || defined(OS_LINUX) || defined(OS_OHOS)
+       SendKeyEvent(browser, kNativeKeyTestCodes[i], kKeyTestCodes[i]);
+ #else
+ #error "Unsupported platform"
+@@ -1734,7 +1760,7 @@ class OSRTestHandler : public RoutingTestHandler,
+   }
+ 
+   void SendKeyEvent(CefRefPtr<CefBrowser> browser,
+-#if defined(OS_LINUX) || defined(OS_MAC)
++#if defined(OS_LINUX) || defined(OS_MAC) || defined(OS_OHOS)
+                     unsigned int native_key_code,
+ #endif
+                     int key_code) {
+@@ -1759,6 +1785,10 @@ class OSRTestHandler : public RoutingTestHandler,
+     event.native_key_code = native_key_code;
+     event.windows_key_code = key_code;
+     event.character = event.unmodified_character = native_key_code;
++#elif defined(OS_OHOS)
++    event.native_key_code = native_key_code;
++    event.windows_key_code = key_code;
++    event.character = event.unmodified_character = key_code;
+ #else
+     NOTREACHED();
+ #endif
+diff --git a/cef/tests/ceftests/osr_accessibility_unittest.cc b/cef/tests/ceftests/osr_accessibility_unittest.cc
+index 1810242201..3fdc159978 100644
+--- a/cef/tests/ceftests/osr_accessibility_unittest.cc
++++ b/cef/tests/ceftests/osr_accessibility_unittest.cc
+@@ -221,6 +221,8 @@ class AccessibilityTestHandler : public TestHandler,
+     windowInfo.SetAsWindowless(kNullWindowHandle);
+ #elif defined(OS_LINUX)
+     windowInfo.SetAsWindowless(kNullWindowHandle);
++#elif defined(OS_OHOS)
++    windowInfo.SetAsWindowless(kNullWindowHandle);
+ #else
+ #error "Unsupported platform"
+ #endif
+diff --git a/cef/tests/ceftests/resource_util_ohos.cc b/cef/tests/ceftests/resource_util_ohos.cc
+new file mode 100755
+index 0000000000..6264dbac86
+--- /dev/null
++++ b/cef/tests/ceftests/resource_util_ohos.cc
+@@ -0,0 +1,26 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/shared/browser/resource_util.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++#include "include/base/cef_logging.h"
++#include "include/cef_path_util.h"
++#include "include/internal/cef_types.h"
++
++namespace client {
++
++bool GetResourceDir(std::string& dir) {
++  CefString ceftests_files;
++  if (CefGetPath(PK_DIR_RESOURCES, ceftests_files) && !ceftests_files.empty()) {
++    dir = std::string(ceftests_files.ToString()) + "/ceftests_files";
++    return true;
++  } else {
++    return false;
++  }
++}
++
++}  // namespace client
+diff --git a/cef/tests/ceftests/run_all_unittests.cc b/cef/tests/ceftests/run_all_unittests.cc
+index c20c1bfd80..0941303b10 100644
+--- a/cef/tests/ceftests/run_all_unittests.cc
++++ b/cef/tests/ceftests/run_all_unittests.cc
+@@ -133,7 +133,12 @@ class ScopedPlatformSetup final {
+ 
+ }  // namespace
+ 
++#if defined(OSOHOS)
++extern "C" {
++int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
++#else
+ int main(int argc, char* argv[]) {
++#endif
+   int exit_code;
+ 
+ #if defined(OS_WIN) && defined(ARCH_CPU_32_BITS)
+@@ -298,3 +303,6 @@ int main(int argc, char* argv[]) {
+ 
+   return retval;
+ }
++#if defined(OSOHOS)
++}
++#endif
+\ No newline at end of file
+diff --git a/cef/tests/ceftests/stream_unittest.cc b/cef/tests/ceftests/stream_unittest.cc
+index 891034b3da..2b0ab3232e 100644
+--- a/cef/tests/ceftests/stream_unittest.cc
++++ b/cef/tests/ceftests/stream_unittest.cc
+@@ -4,9 +4,24 @@
+ 
+ #include <algorithm>
+ 
++#include "include/base/cef_logging.h"
++#include "include/cef_path_util.h"
+ #include "include/cef_stream.h"
++#include "include/internal/cef_types.h"
+ #include "tests/gtest/include/gtest/gtest.h"
+ 
++#ifdef OS_OHOS
++bool GetResourceDir(std::string& dir) {
++  CefString files;
++  if (CefGetPath(PK_DIR_RESOURCES, files) && !files.empty()) {
++    dir = std::string(files.ToString());
++    return true;
++  } else {
++    return false;
++  }
++}
++#endif
++
+ static void VerifyStreamReadBehavior(CefRefPtr<CefStreamReader> stream,
+                                      const std::string& contents) {
+   int contentSize = static_cast<int>(contents.size());
+@@ -69,8 +84,22 @@ static void VerifyStreamWriteBehavior(CefRefPtr<CefStreamWriter> stream,
+ }
+ 
+ TEST(StreamTest, ReadFile) {
++#ifdef OS_OHOS
++  std::string resource_dir;
++  if (GetResourceDir(resource_dir)) {
++    resource_dir.append("/");
++  }
++  const char* file_Name = "StreamTest.VerifyReadFile.txt";
++  std::string resource = resource_dir;
++  resource.append(file_Name);
++  const char* fileName = resource.c_str();
++  resource = resource_dir;
++  resource.append("StreamTest.VerifyReadFile.txt");
++  CefString fileNameStr = resource.c_str();
++#else
+   const char* fileName = "StreamTest.VerifyReadFile.txt";
+   CefString fileNameStr = "StreamTest.VerifyReadFile.txt";
++#endif
+   std::string contents = "This is my test\ncontents for the file";
+ 
+   // Create the file
+@@ -115,8 +144,22 @@ TEST(StreamTest, ReadData) {
+ }
+ 
+ TEST(StreamTest, WriteFile) {
++#ifdef OS_OHOS
++  std::string resource_dir;
++  if (GetResourceDir(resource_dir)) {
++    resource_dir.append("/");
++  }
++  const char* file_Name = "StreamTest.VerifyWriteFile.txt";
++  std::string resource = resource_dir;
++  resource.append(file_Name);
++  const char* fileName = resource.c_str();
++  resource = resource_dir;
++  resource.append("StreamTest.VerifyWriteFile.txt");
++  CefString fileNameStr = resource.c_str();
++#else
+   const char* fileName = "StreamTest.VerifyWriteFile.txt";
+   CefString fileNameStr = "StreamTest.VerifyWriteFile.txt";
++#endif
+   std::string contents = "This is my test\ncontents for the file";
+ 
+   // Test the stream
+diff --git a/cef/tests/shared/browser/main_message_loop_external_pump_ohos.cc b/cef/tests/shared/browser/main_message_loop_external_pump_ohos.cc
+new file mode 100755
+index 0000000000..0af3c702b3
+--- /dev/null
++++ b/cef/tests/shared/browser/main_message_loop_external_pump_ohos.cc
+@@ -0,0 +1,146 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++
++#include "tests/shared/browser/main_message_loop_external_pump.h"
++
++#include <errno.h>
++#include <fcntl.h>
++#include <math.h>
++
++#include <memory>
++
++#include "include/base/cef_logging.h"
++#include "include/cef_app.h"
++
++// From base/posix/eintr_wrapper.h.
++// This provides a wrapper around system calls which may be interrupted by a
++// signal and return EINTR. See man 7 signal.
++// To prevent long-lasting loops (which would likely be a bug, such as a signal
++// that should be masked) to go unnoticed, there is a limit after which the
++// caller will nonetheless see an EINTR in Debug builds.
++#if !defined(HANDLE_EINTR)
++#if !DCHECK_IS_ON()
++
++#define HANDLE_EINTR(x)                                     \
++  ({                                                        \
++    decltype(x) eintr_wrapper_result;                       \
++    do {                                                    \
++      eintr_wrapper_result = (x);                           \
++    } while (eintr_wrapper_result == -1 && errno == EINTR); \
++    eintr_wrapper_result;                                   \
++  })
++
++#else
++
++#define HANDLE_EINTR(x)                                      \
++  ({                                                         \
++    int eintr_wrapper_counter = 0;                           \
++    decltype(x) eintr_wrapper_result;                        \
++    do {                                                     \
++      eintr_wrapper_result = (x);                            \
++    } while (eintr_wrapper_result == -1 && errno == EINTR && \
++             eintr_wrapper_counter++ < 100);                 \
++    eintr_wrapper_result;                                    \
++  })
++
++#endif  // !DCHECK_IS_ON()
++#endif  // !defined(HANDLE_EINTR)
++
++namespace client {
++
++namespace {
++
++class MainMessageLoopExternalPumpOHOS : public MainMessageLoopExternalPump {
++ public:
++  MainMessageLoopExternalPumpOHOS();
++  ~MainMessageLoopExternalPumpOHOS();
++
++  // MainMessageLoopStd methods:
++  void Quit() override;
++  int Run() override;
++
++  // MainMessageLoopExternalPump methods:
++  void OnScheduleMessagePumpWork(int64_t delay_ms) override;
++
++ protected:
++  // MainMessageLoopExternalPump methods:
++  void SetTimer(int64_t delay_ms) override;
++  void KillTimer() override;
++  bool IsTimerPending() override;
++
++ private:
++  // Used to flag that the Run() invocation should return ASAP.
++  bool should_quit_;
++};
++
++// Return a timeout suitable for the glib loop, -1 to block forever,
++// 0 to return right away, or a timeout in milliseconds from now.
++int GetTimeIntervalMilliseconds(const CefTime& from) {
++  if (from.GetDoubleT() == 0.0) {
++    return -1;
++  }
++
++  CefTime now;
++  now.Now();
++
++  // Be careful here. CefTime has a precision of microseconds, but we want a
++  // value in milliseconds. If there are 5.5ms left, should the delay be 5 or
++  // 6?  It should be 6 to avoid executing delayed work too early.
++  int delay =
++      static_cast<int>(ceil((from.GetDoubleT() - now.GetDoubleT()) * 1000.0));
++
++  // If this value is negative, then we need to run delayed work soon.
++  return delay < 0 ? 0 : delay;
++}
++
++MainMessageLoopExternalPumpOHOS::MainMessageLoopExternalPumpOHOS()
++    : should_quit_(false) {}
++
++MainMessageLoopExternalPumpOHOS::~MainMessageLoopExternalPumpOHOS() {
++}
++
++void MainMessageLoopExternalPumpOHOS::Quit() {
++  should_quit_ = true;
++}
++
++int MainMessageLoopExternalPumpOHOS::Run() {
++  // We need to run the message pump until it is idle. However we don't have
++  // that information here so we run the message loop "for a while".
++  for (int i = 0; i < 10; ++i) {
++    // Do some work.
++    CefDoMessageLoopWork();
++
++    // Sleep to allow the CEF proc to do work.
++    usleep(50000);
++  }
++
++  return 0;
++}
++
++void MainMessageLoopExternalPumpOHOS::OnScheduleMessagePumpWork(
++    int64_t delay_ms) {
++}
++
++void MainMessageLoopExternalPumpOHOS::SetTimer(int64_t delay_ms) {
++  DCHECK_GT(delay_ms, 0);
++
++}
++
++void MainMessageLoopExternalPumpOHOS::KillTimer() {
++}
++
++bool MainMessageLoopExternalPumpOHOS::IsTimerPending() {
++  return false;
++}
++
++}  // namespace
++
++// static
++std::unique_ptr<MainMessageLoopExternalPump>
++MainMessageLoopExternalPump::Create() {
++  return std::make_unique<MainMessageLoopExternalPumpOHOS>();
++}
++
++}  // namespace client
+diff --git a/cef/tests/shared/browser/resource_util_ohos.cc b/cef/tests/shared/browser/resource_util_ohos.cc
+new file mode 100644
+index 0000000000..c3e15368d4
+--- /dev/null
++++ b/cef/tests/shared/browser/resource_util_ohos.cc
+@@ -0,0 +1,26 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "tests/shared/browser/resource_util.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++#include "include/base/cef_logging.h"
++#include "include/cef_path_util.h"
++#include "include/internal/cef_types.h"
++
++namespace client {
++
++bool GetResourceDir(std::string& dir) {
++  CefString files;
++  if (CefGetPath(PK_DIR_RESOURCES, files) && !files.empty()) {
++    dir = std::string(files.ToString()) + "/files";
++    return true;
++  } else {
++    return false;
++  }
++}
++
++}  // namespace client
+diff --git a/cef/tests/shared/common/client_app.cc b/cef/tests/shared/common/client_app.cc
+index 7d88a9d504..843895751d 100644
+--- a/cef/tests/shared/common/client_app.cc
++++ b/cef/tests/shared/common/client_app.cc
+@@ -13,7 +13,7 @@ namespace {
+ // These flags must match the Chromium values.
+ const char kProcessType[] = "type";
+ const char kRendererProcess[] = "renderer";
+-#if defined(OS_LINUX)
++#if defined(OS_LINUX) || defined(OS_OHOS)
+ const char kZygoteProcess[] = "zygote";
+ #endif
+ 
+@@ -33,7 +33,7 @@ ClientApp::ProcessType ClientApp::GetProcessType(
+   if (process_type == kRendererProcess) {
+     return RendererProcess;
+   }
+-#if defined(OS_LINUX)
++#if defined(OS_LINUX) || defined(OS_OHOS)
+   else if (process_type == kZygoteProcess) {
+     return ZygoteProcess;
+   }
+diff --git a/cef/tools/cef_api_hash.py b/cef/tools/cef_api_hash.py
+index b036fb961e..41ff7e5f52 100644
+--- a/cef/tools/cef_api_hash.py
++++ b/cef/tools/cef_api_hash.py
+@@ -35,7 +35,7 @@ class cef_api_hash:
+     self.__debug_enabled = not (self.__debugdir is
+                                 None) and len(self.__debugdir) > 0
+ 
+-    self.platforms = ["windows", "mac", "linux"]
++    self.platforms = ["windows", "mac", "linux", "ohos"]
+ 
+     self.platform_files = {
+         # List of includes_win_capi from cef_paths2.gypi.
+@@ -50,6 +50,10 @@ class cef_api_hash:
+         # List of includes_linux_capi from cef_paths2.gypi.
+         "linux": [
+             "internal/cef_types_linux.h",
++        ],
++        # List of includes_ohos_capi from cef_paths2.gypi.
++        "ohos": [
++            "internal/cef_types_linux.h",
+         ]
+     }
+ 
+diff --git a/cef/tools/make_api_hash_header.py b/cef/tools/make_api_hash_header.py
+index 6c79efcdba..8901749c7d 100644
+--- a/cef/tools/make_api_hash_header.py
++++ b/cef/tools/make_api_hash_header.py
+@@ -39,6 +39,8 @@ def make_api_hash_header(cpp_header_dir):
+ #define CEF_API_HASH_PLATFORM "$MAC$"
+ #elif defined(OS_LINUX)
+ #define CEF_API_HASH_PLATFORM "$LINUX$"
++#elif defined(OS_OHOS)
++#define CEF_API_HASH_PLATFORM "$OHOS$"
+ #endif
+ 
+ #ifdef __cplusplus
+diff --git a/cef/tools/make_distrib.py b/cef/tools/make_distrib.py
+index 883966fb0f..5de1f57391 100644
+--- a/cef/tools/make_distrib.py
++++ b/cef/tools/make_distrib.py
+@@ -1455,6 +1455,28 @@ elif platform == 'linux':
+ 
+   # transfer Release files
+   build_dir = build_dir_release
++  # add test of cefsimple/ceftests
++  cefsimple_path = os.path.join(build_dir, 'cefsimple')
++  ceftests_path = os.path.join(build_dir, 'ceftests')
++  if mode == 'minimal':
++    if path_exists(cefsimple_path):
++      binaries.append({'path': 'cefsimple'})
++    if path_exists(ceftests_path):
++      binaries.append({'path': 'ceftests'})
++  # add test of so if cefsimple/ceftests needed for minimal
++  libcefsimple_path = os.path.join(build_dir, 'libcefsimple.so')
++  libceftests_path = os.path.join(build_dir, 'libceftests.so')
++  libcefclient_path = os.path.join(build_dir, 'libcefclient.so')
++  libadapter_path = os.path.join(build_dir, 'libadapter.so')
++  if mode == 'minimal':
++    if path_exists(libcefsimple_path):
++      binaries.append({'path': 'libcefsimple.so'})
++    if path_exists(libceftests_path):
++      binaries.append({'path': 'libceftests.so'})
++    if path_exists(libcefclient_path):
++      binaries.append({'path': 'libcefclient.so'})
++    if path_exists(libadapter_path):
++      binaries.append({'path': 'libadapter.so'})
+   libcef_path = os.path.join(build_dir, libcef_so)
+   if not options.allowpartial or path_exists(libcef_path):
+     valid_build_dir = build_dir
+@@ -1476,8 +1498,12 @@ elif platform == 'linux':
+     # transfer include files
+     transfer_gypi_files(cef_dir, cef_paths2['includes_linux'], \
+                         'include/', include_dir, options.quiet)
++    transfer_gypi_files(cef_dir, cef_paths2['includes_ohos'], \
++                        'include/', include_dir, options.quiet)
+     transfer_gypi_files(cef_dir, cef_paths2['includes_linux_capi'], \
+                         'include/', include_dir, options.quiet)
++    transfer_gypi_files(cef_dir, cef_paths2['includes_ohos_capi'], \
++                        'include/', include_dir, options.quiet)
+ 
+     # transfer additional files, if any
+     transfer_files(cef_dir, script_dir, os.path.join(script_dir, 'distrib', 'linux'), \
+@@ -1487,6 +1513,8 @@ elif platform == 'linux':
+     # transfer shared files
+     transfer_gypi_files(cef_dir, cef_paths2['shared_sources_linux'], \
+                         'tests/shared/', shared_dir, options.quiet)
++    transfer_gypi_files(cef_dir, cef_paths2['shared_sources_ohos'], \
++                        'tests/shared/', shared_dir, options.quiet)
+ 
+     if not options.ozone:
+       # transfer cefclient files
+@@ -1496,10 +1524,15 @@ elif platform == 'linux':
+     # transfer cefsimple files
+     transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_linux'], \
+                         'tests/cefsimple/', cefsimple_dir, options.quiet)
++    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_ohos'], \
++                        'tests/cefsimple/', cefsimple_dir, options.quiet)
+ 
+     # transfer ceftests files
+     transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_linux'], \
+                         'tests/ceftests/', ceftests_dir, options.quiet)
++    # transfer ceftests files
++    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_ohos'], \
++                        'tests/ceftests/', ceftests_dir, options.quiet)
+ 
+ if mode == 'standard' or mode == 'minimal':
+   variables = {
+diff --git a/components/constrained_window/constrained_window_views.cc b/components/constrained_window/constrained_window_views.cc
+index e224eef611..7751e690fa 100644
+--- a/components/constrained_window/constrained_window_views.cc
++++ b/components/constrained_window/constrained_window_views.cc
+@@ -295,12 +295,14 @@ views::Widget* CreateBrowserModalDialogViews(views::DialogDelegate* dialog,
+   gfx::NativeView parent_view =
+       parent ? CurrentBrowserModalClient()->GetDialogHostView(parent) : nullptr;
+   // Use with CEF windowless rendering.
++  ModalDialogHost* host =
++      CurrentBrowserModalClient()->GetModalDialogHost(parent);
+   gfx::AcceleratedWidget parent_widget =
+-      parent ? CurrentBrowserModalClient()->GetModalDialogHost(parent)->
+-          GetAcceleratedWidget() : gfx::kNullAcceleratedWidget;
+-  views::Widget* widget =
+-      views::DialogDelegate::CreateDialogWidget(dialog, nullptr, parent_view,
+-                                                parent_widget);
++      parent
++          ? (host ? host->GetAcceleratedWidget() : gfx::kNullAcceleratedWidget)
++          : gfx::kNullAcceleratedWidget;
++  views::Widget* widget = views::DialogDelegate::CreateDialogWidget(
++      dialog, nullptr, parent_view, parent_widget);
+   widget->SetNativeWindowProperty(
+       views::kWidgetIdentifierKey,
+       const_cast<void*>(kConstrainedWindowWidgetIdentifier));
+@@ -316,8 +318,6 @@ views::Widget* CreateBrowserModalDialogViews(views::DialogDelegate* dialog,
+   if (!requires_positioning)
+     return widget;
+ 
+-  ModalDialogHost* host =
+-      CurrentBrowserModalClient()->GetModalDialogHost(parent);
+   if (host) {
+     DCHECK_EQ(parent_view, host->GetHostView());
+     std::unique_ptr<ModalDialogHostObserver> observer =
+diff --git a/components/download/internal/common/download_file_impl.cc b/components/download/internal/common/download_file_impl.cc
+index 6d48cd769c..2b2793715a 100644
+--- a/components/download/internal/common/download_file_impl.cc
++++ b/components/download/internal/common/download_file_impl.cc
+@@ -23,6 +23,7 @@
+ #include "base/trace_event/trace_event.h"
+ #include "base/values.h"
+ #include "build/build_config.h"
++#include "cef/libcef/features/features.h"
+ #include "components/download/internal/common/parallel_download_utils.h"
+ #include "components/download/public/common/download_create_info.h"
+ #include "components/download/public/common/download_destination_observer.h"
+@@ -415,8 +416,16 @@ void DownloadFileImpl::RenameAndUniquify(const base::FilePath& full_path,
+     return;
+   }
+ #endif  // BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(ENABLE_CEF) && BUILDFLAG(IS_OHOS)
++  // If there's already a file on disk that conflicts with |new_path|, try to
++  // create a unique file by appending a uniquifier will be failed, due to
++  // file-manager set permissions only for full_path on CEF
++  std::unique_ptr<RenameParameters> parameters(new RenameParameters(
++      ANNOTATE_WITH_SOURCE_INFORMATION, full_path, std::move(callback)));
++#else
+   std::unique_ptr<RenameParameters> parameters(
+       new RenameParameters(UNIQUIFY, full_path, std::move(callback)));
++#endif  // BUILDFLAG(ENABLE_CEF) && BUILDFLAG(IS_OHOS)
+   RenameWithRetryInternal(std::move(parameters));
+ }
+ 
+diff --git a/ohos/adapter/web_entry/BUILD.gn b/ohos/adapter/web_entry/BUILD.gn
+index af03e08abf..6ff10a23df 100644
+--- a/ohos/adapter/web_entry/BUILD.gn
++++ b/ohos/adapter/web_entry/BUILD.gn
+@@ -30,6 +30,8 @@ import("//build/config/chrome_build.gni")
+ 
+ component("web_entry") {
+     sources = [
++      "cef/cef_loader.cc",
++      "cef/cef_loader.h",
+       "chrome/chrome_loader.cc",
+       "chrome/chrome_loader.h",
+       "shell/content_shell_loader.cc",
+@@ -47,6 +49,8 @@ component("web_entry") {
+       defines = [ "USE_LOADER_TARGET=0" ]
+     } else if (ohos_build_target == "chromium") {
+       defines = [ "USE_LOADER_TARGET=1" ]
++    } else if (ohos_build_target == "cef") {
++      defines = [ "USE_LOADER_TARGET=2" ]
+     } else {
+       assert(true, "$ohos_build_target target builds are not supported on ohos")
+     }
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.cc b/ohos/adapter/web_entry/cef/cef_loader.cc
+new file mode 100644
+index 0000000000..3228bac310
+--- /dev/null
++++ b/ohos/adapter/web_entry/cef/cef_loader.cc
+@@ -0,0 +1,84 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "ohos/adapter/web_entry/cef/cef_loader.h"
++
++#include "ohos/adapter/common/logging.h"
++#include "ohos/adapter/common/shared_library.h"
++#include "ohos/adapter/dev_config/dev_config.h"
++#include "ohos/adapter/device_info/device_info.h"
++
++namespace ohos::adapter::web_entry {
++namespace {
++__attribute__((no_sanitize("cfi", "cfi-icall")))
++bool CheckAdvSecMode() {
++  uint32_t mode = -1;
++  common::SharedLibrary shared_library_("/system/lib64/platformsdk/",
++                                        "dsmm_innersdk.z");
++  auto fn = shared_library_.GetFunction<int(const char*, uint32_t, const char*,
++                                            uint32_t, uint32_t*)>(
++      "AdvancedSecurityModeGetStateByFeature");
++  if (fn != nullptr) {
++    // returns 0 if success or errcode
++    int32_t ret = fn("default", 7, "default", 7, &mode); // len:7
++    if (ret == 0 && mode == 1) {
++      return true;
++    }
++  }
++  return false;
++}
++}  // namespace
++
++std::string CefLoader::GetEntryPoint(int process_type) {
++  std::string entry_point;
++  switch (process_type) {
++    case ProcessType::kMainProcess:
++    case ProcessType::kRenderProcess:
++    case ProcessType::kGpuProcess:
++      entry_point = "CefMain";
++      break;
++    case ProcessType::kCrashpadHandler:
++      entry_point = "CrashpadHandlerMain";
++      break;
++    default:
++      LOGE("GetEntryPoint nothing to do, unknown process type: %{public}d",
++           process_type);
++      break;
++  }
++  return entry_point;
++}
++
++const std::vector<std::string> CefLoader::GetEntryArgs() {
++  std::vector<std::string> args = {
++      "cef",
++      "--use-gl=egl",
++      "--enable-features=UseOzonePlatform",
++      "--ozone-platform=ohos",
++      "--enable-logging",
++      "--ozone-dump-file=/data/storage/el2/base/cache/",
++      "--no-zygote",
++      "--user-data-dir=/data/storage/el2/base/files/",
++      "--log-net-log",
++      "--enable-media-stream=true",
++      "--enable-speech-input=true",
++      "--enable-print-preview",
++      "--lang=zh-CN",
++  };
++  ohos::adapter::device_info::DeviceType device_type =
++    ohos::adapter::device_info::DeviceInfo::GetInstance().GetDeviceType();
++  // pad not support gpu process
++  if (device_type == ohos::adapter::device_info::DeviceType::_TABLET) {
++    args.push_back("--in-process-gpu");
++    args.push_back("--js-flags=--jitless");
++  }
++  if (CheckAdvSecMode()) {
++    args.emplace_back("--js-flags=--jitless");
++  }
++  for (const auto& command : GetDevCommandLines()) {
++    args.emplace_back(command);
++  }
++  return args;
++}
++
++}  // namespace ohos::adapter::web_entry
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.h b/ohos/adapter/web_entry/cef/cef_loader.h
+new file mode 100644
+index 0000000000..6a7cfa2044
+--- /dev/null
++++ b/ohos/adapter/web_entry/cef/cef_loader.h
+@@ -0,0 +1,19 @@
++// Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "ohos/adapter/web_entry/web_loader.h"
++
++namespace ohos::adapter::web_entry {
++
++class CefLoader : public BasicLoader {
++ public:
++  CefLoader(const std::string& dir, const std::string& name)
++      : BasicLoader(dir, name) {}
++  CefLoader(const std::string& lib_path) : BasicLoader(lib_path) {}
++
++  std::string GetEntryPoint(int process_type) override;
++  const std::vector<std::string> GetEntryArgs() override;
++};
++
++}  // namespace ohos::adapter::web_entry
+diff --git a/ohos/adapter/web_entry/web_entry.cc b/ohos/adapter/web_entry/web_entry.cc
+index 1ec2e71950..3ddb97a198 100644
+--- a/ohos/adapter/web_entry/web_entry.cc
++++ b/ohos/adapter/web_entry/web_entry.cc
+@@ -32,6 +32,7 @@
+ 
+ #include <atomic>
+ #include <chrono>
++#include <filesystem>
+ #include <thread>
+ 
+ #include "ohos/adapter/aki_hook/aki_hook.h"
+@@ -88,7 +89,20 @@ int RunOtherProcessType(int process_type) {
+   std::vector<std::string> commands;
+   multiprocess::AppSpawnCommunication::RequestCommandline(commands);
+   std::vector<const char*> cstrs;
+-  auto loader = BasicLoader::Create(USE_LOADER_TARGET);
++  std::string subprocess_path_name = "";
++  if (int(USE_LOADER_TARGET) == int(WebLoaderType::kCef)) {
++    const std::string sso_flag = ".so";
++    if (!commands.empty() && !commands[0].empty()) {
++      std::filesystem::path file_path(commands[0].data());
++      if (file_path.extension().string() == sso_flag) {
++        subprocess_path_name = commands[0].data();
++        LOGI("cef --browser-subprocess-path= %{public}s",
++             subprocess_path_name.c_str());
++      }
++    }
++  }
++  auto loader =
++      BasicLoader::Create(USE_LOADER_TARGET, subprocess_path_name.c_str());
+   for (size_t i = 0; i < commands.size(); ++i) {
+     if (commands[i].find("--type") != std::string::npos) {
+       auto pos = commands[i].find_last_of("=");
+diff --git a/ohos/adapter/web_entry/web_loader.cc b/ohos/adapter/web_entry/web_loader.cc
+index d394e0de68..d6d52e0f2e 100644
+--- a/ohos/adapter/web_entry/web_loader.cc
++++ b/ohos/adapter/web_entry/web_loader.cc
+@@ -35,6 +35,9 @@ namespace ohos::adapter::web_entry {
+ BasicLoader::BasicLoader(const std::string& dir, const std::string& name)
+     : shared_library_(dir, name) {}
+ 
++BasicLoader::BasicLoader(const std::string& lib_path)
++    : shared_library_(lib_path) {}
++
+ bool BasicLoader::Initialize() { return true; }
+ 
+ __attribute__((no_sanitize("cfi", "cfi-icall")))
+diff --git a/ohos/adapter/web_entry/web_loader.h b/ohos/adapter/web_entry/web_loader.h
+index 09b75d1faa..d08856ea1c 100644
+--- a/ohos/adapter/web_entry/web_loader.h
++++ b/ohos/adapter/web_entry/web_loader.h
+@@ -45,6 +45,7 @@ using OnLoaderCallback = std::function<void(int error_code)>;
+ enum WebLoaderType {
+   kContent_shell = 0,
+   kChrome,
++  kCef,
+ };
+ 
+ class BasicLoader {
+@@ -52,12 +53,14 @@ class BasicLoader {
+   BasicLoader(const BasicLoader&) = delete;
+   BasicLoader& operator=(const BasicLoader&) = delete;
+   BasicLoader(const std::string& dir, const std::string& name);
++  BasicLoader(const std::string& lib_path);
+ 
+   virtual ~BasicLoader() {}
+ 
+   // A factory method that can create any of the derived types of BasicLoader
+-  // (ContentShellLoader and ChromeMainLoader ).
+-  static BasicLoader* Create(int loaderType);
++  // (ContentShellLoader and ChromeMainLoader and CefLoader).
++  // Maybe CefLoader will add --browser-subprocess-path, input path here
++  static BasicLoader* Create(int loaderType, std::string subprocess_path = "");
+ 
+   bool Initialize();
+ 
+diff --git a/ohos/adapter/web_entry/web_loader_factory.cc b/ohos/adapter/web_entry/web_loader_factory.cc
+index aaf4beda84..e1e387c435 100644
+--- a/ohos/adapter/web_entry/web_loader_factory.cc
++++ b/ohos/adapter/web_entry/web_loader_factory.cc
+@@ -30,6 +30,7 @@
+ #include <memory>
+ 
+ #include "ohos/adapter/common/logging.h"
++#include "ohos/adapter/web_entry/cef/cef_loader.h"
+ #include "ohos/adapter/web_entry/chrome/chrome_loader.h"
+ #include "ohos/adapter/web_entry/shell/content_shell_loader.h"
+ #include "ohos/adapter/web_entry/web_loader.h"
+@@ -41,8 +42,10 @@ namespace {
+ static std::unique_ptr<BasicLoader> current_default_loader = nullptr;
+ const std::string kShellEntry = "content_shell_web";
+ const std::string kChromeEntry = "chrome_main_web";
++const std::string kCefEntry = "cefsimple";
+ 
+-std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
++std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType,
++                                                     std::string subprocess_path) {
+   std::unique_ptr<BasicLoader> loader;
+   switch (loaderType) {
+     case WebLoaderType::kContent_shell:
+@@ -51,6 +54,13 @@ std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
+     case WebLoaderType::kChrome:
+       loader = std::make_unique<ChromeMainLoader>("", kChromeEntry);
+       break;
++    case WebLoaderType::kCef:
++      if (subprocess_path.empty()) {
++        loader = std::make_unique<CefLoader>("", kCefEntry);
++      } else {
++        loader = std::make_unique<CefLoader>(subprocess_path);
++      }
++      break;
+     default:
+       LOGE("create web loader error unknown loaderType: %{public}d", loaderType);
+       break;
+@@ -61,9 +71,10 @@ std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
+ }  // namespace
+ 
+ // static
+-BasicLoader* BasicLoader::Create(int loaderType) {
++BasicLoader* BasicLoader::Create(int loaderType, std::string subprocess_path) {
+   if (!current_default_loader) {
+-    current_default_loader = GetCurrentDefaultLoader(loaderType);
++    current_default_loader =
++        GetCurrentDefaultLoader(loaderType, subprocess_path);
+   }
+   return current_default_loader.get();
+ }
+diff --git a/ohos/app/ohos_hap/AppScope/app.json5 b/ohos/app/ohos_hap/AppScope/app.json5
+index 704c810bbc..93426339f0 100644
+--- a/ohos/app/ohos_hap/AppScope/app.json5
++++ b/ohos/app/ohos_hap/AppScope/app.json5
+@@ -1,6 +1,6 @@
+ {
+   "app": {
+-    "bundleName": "com.huawei.ohos_chromium",
++    "bundleName": "com.huawei.ohos_cef",
+     "vendor": "example",
+     "versionCode": 1000000,
+     "versionName": "1.0.0",
+diff --git a/ohos/app/ohos_hap/AppScope/resources/base/element/string.json b/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
+index ed6d17651a..1d48845df4 100644
+--- a/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
++++ b/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
+@@ -2,7 +2,7 @@
+   "string": [
+     {
+       "name": "app_name",
+-      "value": "ohos_chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
+index fa6b8348ef..406d31d63f 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     },
+     {
+       "name": "BrowserAbility_desc",
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
+index 561f6eb09a..fec1adc93c 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
+index bde772db07..c2895b1472 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/ohos/app/ohos_hap/oh-package.json5 b/ohos/app/ohos_hap/oh-package.json5
+index f131d9efab..f75e44ac53 100644
+--- a/ohos/app/ohos_hap/oh-package.json5
++++ b/ohos/app/ohos_hap/oh-package.json5
+@@ -5,7 +5,7 @@
+     "@ohos/hypium": "1.0.6"
+   },
+   "author": "",
+-  "name": "ohos_chromium",
++  "name": "ohos_cef",
+   "description": "Please describe the basic information.",
+   "main": "",
+   "version": "1.0.0",
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebAbility.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebAbility.ets
+index 9d937f93b3..500b7fd03e 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebAbility.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebAbility.ets
+@@ -99,9 +99,9 @@ export class WebAbility extends WebBaseAbility {
+           const prop = data.getWindowProperties();
+           let windowBound: WindowBound = {
+             left: prop.windowRect.left + prop.drawableRect.left,
+-            top: prop.windowRect.top + prop.drawableRect.top,
++            top: this.hideTitleBar ? prop.windowRect.top + prop.drawableRect.top : prop.windowRect.top,
+             width: size.width - prop.drawableRect.left - prop.drawableRect.left,
+-            height: size.height - prop.drawableRect.left - prop.drawableRect.top,
++            height: this.hideTitleBar ? size.height - prop.drawableRect.left - prop.drawableRect.top : size.height - prop.drawableRect.top,
+           };
+           this.nativeContext.OnWindowSizeChange(this.xcomponentId, windowBound);
+         });
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
+index ecf6824b50..cab75b037d 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
+@@ -48,7 +48,8 @@ export class WebBaseAbility extends UIAbility implements WebProxy {
+   protected windowStage: window.WindowStage | undefined = undefined;
+   protected nativeContext: NativeContext =
+     JsBindingUtils.getNativeContext(ContextType.kMainProcess);
+-  protected hideTitleBar: boolean = true;
++  // cef: Need to display title bar
++  protected hideTitleBar: boolean = false;
+   protected originWindowId: number = -1;
+   protected useDarkMode: boolean = false;
+   protected isStateless: boolean = false;
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+index a56962538f..507379d4f3 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+@@ -47,7 +47,7 @@ const TAG: string = 'AppWindow';
+ @injectable()
+ export class AppWindowAdapter extends BaseAdapter {
+   private abilityManager: AbilityManager;
+-  private bundleName: string = 'com.huawei.ohos_chromium';
++  private bundleName: string = 'com.huawei.ohos_cef';
+   private bundleFlags = bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION |
+                         bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_METADATA;
+   private queryWindowNum: number = 10;                      
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+index f5c87b3760..e99d01a5e4 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+@@ -169,8 +169,8 @@ export struct WebWindow {
+ 
+   private buildArgs(): string[] {
+     const override_ua = '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) ' +
+-      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36';
+-    let default_uri = '';
++      'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36';
++    let default_uri = '--url=https://ams.haitaibrowser.com:8000/ohcef/ohindex.html';
+     if (this.startUri.length !== 0) {
+       default_uri = this.startUri;
+     }
+diff --git a/ohos/build/build.sh b/ohos/build/build.sh
+index 0fa300a12c..053e684af4 100755
+--- a/ohos/build/build.sh
++++ b/ohos/build/build.sh
+@@ -34,6 +34,7 @@ ROOT_DIR="${CUR_DIR%/src*}""/src"
+ # Global variables.
+ BUILD_TARGET_CONTENT_SHELL="content_shell_web"
+ BUILD_TARGET_CHROME="chrome_main_web"
++BUILD_TARGET_CEF="libcef cefsimple cefclient ceftests"
+ TEXT_BOLD="\033[1m"
+ TEXT_NORMAL="\033[0m"
+ 
+@@ -71,6 +72,10 @@ buildargs="
+   llvm_ohos_mainline=true
+   rustc_version=\"bca5fdebe0e539d123f33df5f2149d5976392e76-1-llvmorg-20-init-9764-gb81d8e90\"
+   rust_sysroot_absolute=\"//ohos_sdk/rust-toolchain\"
++  
++# cef args
++  use_partition_alloc_as_malloc=false
++  enable_backup_ref_ptr_support=false
+   "
+ #Add build args end
+ 
+@@ -88,7 +93,7 @@ buildarg_cpu="target_cpu=\"arm64\""
+ buildarg_musl="use_musl=true"
+ build_dir="out/musl_64/"
+ build_product_name="product_name=\"all\""
+-build_target="${BUILD_TARGET_CHROME}"
++build_target="${BUILD_TARGET_CEF}"
+ build_output=""
+ build_asan=0
+ 
+@@ -165,6 +170,12 @@ case "${build_target}" in
+     ohos_build_target=\"chromium\"
+     "
+     ;;
++  "c"|"${BUILD_TARGET_CEF}")
++    build_target="${BUILD_TARGET_CEF}"
++    buildargs="${buildargs}safe_browsing_mode=1
++    ohos_build_target=\"cef\"
++    "
++    ;;
+   *)
+     echo "build_target: ${build_target}"
+     ;;
+diff --git a/ui/ozone/platform/ohos/host/ohos_window.cc b/ui/ozone/platform/ohos/host/ohos_window.cc
+index ad943c63af..fa5414abd0 100755
+--- a/ui/ozone/platform/ohos/host/ohos_window.cc
++++ b/ui/ozone/platform/ohos/host/ohos_window.cc
+@@ -37,6 +37,7 @@
+ #include "content/public/browser/browser_thread.h"
+ #include "ohos/adapter/accessibility/accessibility_delegate_ohos_registry.h"
+ #include "ohos/adapter/cursor/cursor.h"
++#include "ohos/adapter/window/app_window_adapter.h"
+ #include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+ #include "ui/base/cursor/platform_cursor.h"
+ #include "ui/base/hit_test.h"
+@@ -213,7 +214,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
+ }
+ 
+ void OhosWindow::SetTitle(const std::u16string& title) {
+-  NOTIMPLEMENTED_LOG_ONCE();
++  AppWindowAdapter::GetInstance().SetTitle(base::UTF16ToUTF8(title), widget_);
+ }
+ 
+ void OhosWindow::SetCapture() {
