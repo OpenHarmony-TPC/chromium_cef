@@ -140,7 +140,7 @@ class CefResourceHandler : public virtual CefBaseRefCounted {
                                   CefString& redirectUrl) = 0;
 
 #if BUILDFLAG(IS_OHOS)
-  virtual const std::string& GetResponseData() {static const std::string data; return data;}
+  virtual const std::string GetResponseData() {static const std::string data; return data;}
   virtual size_t GetResponseDataBuffer(char* data) {return 0;}
   virtual size_t GetResponseDataBufferSize() {return 0;}
 #endif
