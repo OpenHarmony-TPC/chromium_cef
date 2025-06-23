@@ -93,8 +93,11 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
       weak_ptr_factory_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
   int commandId_ = -1;
   bool isCopy_ = false;
+  bool isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_AI)
   bool isSelectionNotEmptyForAI_;
 #endif
