@@ -1912,6 +1912,46 @@ void ArkWebRenderWidgetHostViewOSRExt::SendTouchpadFlingEvent(
     IgnorePendingWheelEndEvent();
   }
 
+  if (!IsPopupWidget()) {
+    if (popup_host_view_ &&
+        popup_host_view_->popup_position_.Contains(event.PositionInWidget().x(),
+                                                   event.PositionInWidget().y())) {
+      blink::WebGestureEvent popup_touchpad_fling_event(event);
+      popup_touchpad_fling_event.SetPositionInWidget(gfx::PointF(
+          event.PositionInWidget().x() - popup_host_view_->popup_position_.x(),
+          event.PositionInWidget().y() - popup_host_view_->popup_position_.y()));
+      popup_touchpad_fling_event.SetPositionInScreen(
+          gfx::PointF(popup_touchpad_fling_event.PositionInWidget().x(),
+                      popup_touchpad_fling_event.PositionInWidget().y()));
+      popup_host_view_->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
+          popup_touchpad_fling_event);
+      { TRACE_EVENT0("cef", "SendTouchpadFlingEvent to popup_host_view_"); }
+      return;
+    } else if (!guest_host_views_.empty()) {
+      for (auto guest_host_view : guest_host_views_) {
+        if (!guest_host_view->render_widget_host_ ||
+            !guest_host_view->render_widget_host_->GetView()) {
+          continue;
+        }
+        const gfx::Rect &guest_bounds =
+            guest_host_view->render_widget_host_->GetView()->GetViewBounds();
+        if (guest_bounds.Contains(event.PositionInWidget().x(),
+                                  event.PositionInWidget().y())) {
+          blink::WebGestureEvent guest_touchpad_fling_event(event);
+          guest_touchpad_fling_event.SetPositionInWidget(
+              gfx::PointF(event.PositionInWidget().x() - guest_bounds.x(),
+                          event.PositionInWidget().y() - guest_bounds.y()));
+          guest_touchpad_fling_event.SetPositionInScreen(
+              gfx::PointF(guest_touchpad_fling_event.PositionInWidget().x(),
+                          guest_touchpad_fling_event.PositionInWidget().y()));
+          guest_host_view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
+              guest_touchpad_fling_event);
+          { TRACE_EVENT0("cef", "SendTouchpadFlingEvent to guest_host_view"); }
+          return;
+        }
+      }
+    }
+  }
   if (render_widget_host_ && render_widget_host_->GetView()) {
     if (ShouldRouteEvents()) {
       render_widget_host_->delegate()->GetInputEventRouter()->RouteGestureEvent(
