@@ -132,11 +132,9 @@ CefRefPtr<CefBrowserHostBase> CefBrowserHostBase::GetBrowserForContents(
   // Try the owner WebContents if |contents| originates from an excluded view
   // such as the PDF viewer or Print Preview. This is safe to call even if Alloy
   // extensions are disabled.
-#if !BUILDFLAG(ARKWEB_PDF)
   if (auto* owner_contents = GetOwnerForGuestContents(contents)) {
     return WebContentsUserDataAdapter::Get(owner_contents);
   }
-#endif
 
   return nullptr;
 }
