@@ -112,7 +112,7 @@
 #endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
 
 #if BUILDFLAG(ARKWEB_SAFEBROWSING)
-#include "cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
+#include "content/browser/site_instance_impl.h"
 #endif
 using content::KeyboardEventProcessingResult;
 
@@ -249,17 +249,6 @@ int AlloyBrowserHostImplUtils::handleZoomEventWithInput(bool zoom_in) {
   alloyBrowserHostImpl->SetZoomLevel(tempZoomFactor);
 
   return 0;
-}
-#endif
-
-
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-void AlloyBrowserHostImplUtils::initializeSafeBrowsingTabHelper(
-      content::WebContents* web_contents,
-      CefRefPtr<CefRequestContextImpl> request_context) {
-  LOG(INFO) << "SafeBrowsing enabled, creating safe browsing tab helper";
-  ohos_safe_browsing::SafeBrowsingTabHelper::CreateForWebContents(
-          web_contents, request_context->IsOffTheRecord(), alloyBrowserHostImpl);
 }
 #endif
 

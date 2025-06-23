@@ -36,12 +36,6 @@ public:
   int handleZoomEventWithInput(bool zoom_in);
 #endif
 
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-  void initializeSafeBrowsingTabHelper(
-        content::WebContents* web_contents,
-        CefRefPtr<CefRequestContextImpl> request_context);
-#endif
-
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   void enableZoomLevelController(content::WebContents* web_contents);
 #endif
