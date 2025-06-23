@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "arkweb/build/features/features.h"
 #include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/memory/weak_ptr.h"
@@ -35,10 +34,6 @@
 #include "services/network/public/cpp/simple_url_loader.h"
 #include "services/network/public/cpp/simple_url_loader_stream_consumer.h"
 #include "third_party/blink/public/mojom/loader/resource_load_info.mojom.h"
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "libcef/common/arkweb_request_impl_ext.h"
-#endif
 
 namespace {
 
@@ -134,22 +129,14 @@ class CefBrowserURLRequest::Context
           CefRefPtr<CefRequestContext> request_context)
       : url_request_(url_request),
         frame_(frame),
-#if BUILDFLAG(IS_ARKWEB)
-        request_(request),
-#else
         request_(static_cast<CefRequestImpl*>(request.get())),
-#endif
         client_(client),
         request_context_(request_context),
         task_runner_(CefTaskRunnerImpl::GetCurrentTaskRunner()),
         response_(new CefResponseImpl()),
         weak_ptr_factory_(this) {
     // Mark the request/response objects as read-only.
-#if BUILDFLAG(IS_ARKWEB)
-    request_->AsArkWebRequestExt()->SetReadOnly(true);
-#else
     request_->SetReadOnly(true);
-#endif
     response_->SetReadOnly(true);
   }
   ~Context() override = default;
@@ -230,7 +217,7 @@ class CefBrowserURLRequest::Context
       // The request will be associated with this frame/browser if it's valid,
       // otherwise the request will be canceled.
       content::RenderFrameHost* rfh =
-          frame.get()->AsCefFrameHostImpl()->GetRenderFrameHost();
+          static_cast<CefFrameHostImpl*>(frame.get())->GetRenderFrameHost();
       if (rfh) {
         loader_factory_getter =
             net_service::URLLoaderFactoryGetter::Create(rfh, browser_context);
@@ -284,12 +271,8 @@ class CefBrowserURLRequest::Context
     auto loader_factory = loader_factory_getter_->GetURLLoaderFactory();
 
     auto resource_request = std::make_unique<network::ResourceRequest>();
-#if BUILDFLAG(IS_ARKWEB)
-    request_->AsArkWebRequestExt()->Get(resource_request.get(), false);
-#else
     static_cast<CefRequestImpl*>(request_.get())
         ->Get(resource_request.get(), false);
-#endif
 
     // Behave the same as a subresource load.
     resource_request->resource_type =
@@ -325,17 +308,9 @@ class CefBrowserURLRequest::Context
         method = "POST";
         resource_request->method = method;
 
-#if BUILDFLAG(IS_ARKWEB)
-        request_->AsArkWebRequestExt()->SetReadOnly(false);
-#else
         request_->SetReadOnly(false);
-#endif
         request_->SetMethod(method);
-#if BUILDFLAG(IS_ARKWEB)
-        request_->AsArkWebRequestExt()->SetReadOnly(true);
-#else
         request_->SetReadOnly(true);
-#endif
       }
       content_type = resource_request->headers.GetHeader(
           net::HttpRequestHeaders::kContentType);
@@ -612,11 +587,7 @@ class CefBrowserURLRequest::Context
   // Members only accessed on the initialization thread.
   CefRefPtr<CefBrowserURLRequest> url_request_;
   CefRefPtr<CefFrame> frame_;
-#if BUILDFLAG(IS_ARKWEB)
-  CefRefPtr<CefRequest> request_;
-#else
   CefRefPtr<CefRequestImpl> request_;
-#endif
   CefRefPtr<CefURLRequestClient> client_;
   CefRefPtr<CefRequestContext> request_context_;
   scoped_refptr<base::SequencedTaskRunner> task_runner_;

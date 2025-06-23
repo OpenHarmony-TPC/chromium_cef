@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include "cef/libcef/common/app_manager.h"
-#include "cef/ohos_cef_ext/libcef/common/arkweb_app_manager_ext.h"
 
 #include "base/command_line.h"
 #include "base/logging.h"
@@ -54,10 +53,6 @@ void CefAppManager::AddCustomScheme(const CefSchemeInfo* scheme_info) {
       policy->RegisterWebSafeScheme(scheme_info->scheme_name);
     }
   }
-
-#if BUILDFLAG(ARKWEB_CUSTOM_SCHEME_CODECACHE)
-  AsArkWebAppManagerExt()->AddSchemeCodeCache(scheme_info);
-#endif
 }
 
 bool CefAppManager::HasCustomScheme(const std::string& scheme_name) {
@@ -92,14 +87,6 @@ void CefAppManager::AddAdditionalSchemes(
     schemeRegistrar.GetSchemes(schemes);
   }
 
-#if BUILDFLAG(ARKWEB_SCHEME_HANDLER)
-  AsArkWebAppManagerExt()->SchemeHandlerAddCustomScheme(schemes);
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  AsArkWebAppManagerExt()->RenderAddCustomSchemes();
-#endif
-
   scheme_info_list_locked_ = true;
 }
 
@@ -120,4 +107,3 @@ const wchar_t* CefAppManager::GetResourceDllName() {
   return file_path;
 }
 #endif  // BUILDFLAG(IS_WIN)
-

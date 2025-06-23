@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include "third_party/bounds_checking_function/include/securec.h"
 
 #include "base/files/file_util.h"
 #include "base/logging.h"
@@ -159,7 +158,7 @@ size_t CefBytesReader::Read(void* ptr, size_t size, size_t n) {
   base::AutoLock lock_scope(lock_);
   size_t s = (data_.size() - offset_) / size;
   size_t ret = std::min(n, s);
-  (void)memcpy_s(ptr, ret * size, data_.data() + offset_, ret * size);
+  memcpy(ptr, data_.data() + offset_, ret * size);
   offset_ += ret * size;
   return ret;
 }

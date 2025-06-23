@@ -13,7 +13,6 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/chrome/browser_delegate.h"
 #include "chrome/browser/ui/browser.h"
-#include "ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 
 class ChromeBrowserDelegate;
 class ChromeBrowserView;
@@ -22,7 +21,7 @@ class ChromeBrowserView;
 // to the chrome Browser object or the WebContents as appropriate. See the
 // ChromeBrowserDelegate documentation for additional details. All methods are
 // thread-safe unless otherwise indicated.
-class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
+class ChromeBrowserHostImpl : public CefBrowserHostBase {
  public:
   // CEF-specific parameters passed via Browser::CreateParams::cef_params and
   // possibly shared by multiple Browser instances.
@@ -33,10 +32,6 @@ class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
 
     CefBrowserCreateParams create_params_;
   };
-
-  CefRefPtr<ChromeBrowserHostImpl> AsChromeBrowserHostImpl() override {
-    return this;
-  }
 
   // Create a new Browser with a single tab (WebContents) and associated
   // ChromeBrowserHostImpl instance.
@@ -132,17 +127,6 @@ class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
     return weak_ptr_factory_.GetWeakPtr();
   }
 
-#if BUILDFLAG(ARKWEB_PIP)
-  void SetPipNativeWindow(int delegate_id,
-                          int child_id,
-                          int frame_routing_id,
-                          cef_native_window_t window) override {}
-  void SendPipEvent(int delegate_id,
-                    int child_id,
-                    int frame_routing_id,
-                    int event) override {}
-#endif
-
  protected:
   bool Navigate(const content::OpenURLParams& params) override;
 
@@ -190,11 +174,6 @@ class ChromeBrowserHostImpl : public ArkWebBrowserHostExtImpl {
   // Returns the current tab index for the associated WebContents, or
   // TabStripModel::kNoTab if not found.
   int GetCurrentTabIndex() const;
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-  void SetShouldFrameSubmissionBeforeDraw(bool should) override {}
-  std::string GetCurrentLanguage() override { return ""; }
-#endif  // BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
 
   raw_ptr<Browser> browser_ = nullptr;
   CefWindowHandle host_window_handle_ = kNullWindowHandle;

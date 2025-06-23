@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=91397194ddde83c116c0585beb9c9b1e37d1ef45$
+// $hash=affc462b0818e87083dfc28428dcc8d53bd878a8$
 //
 
 #include "libcef_dll/ctocpp/context_menu_handler_ctocpp.h"
@@ -195,7 +195,6 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
     CefRefPtr<CefFrame> frame,
     const CefPoint& location,
     const CefSize& size,
-    const CefRect& select_bounds,
     QuickMenuEditStateFlags edit_state_flags,
     CefRefPtr<CefRunQuickMenuCallback> callback) {
   shutdown_checker::AssertNotShutdown();
@@ -226,7 +225,7 @@ bool CefContextMenuHandlerCToCpp::RunQuickMenu(
   // Execute
   int _retval = _struct->run_quick_menu(
       _struct, CefBrowserCppToC::Wrap(browser), CefFrameCppToC::Wrap(frame),
-      &location, &size, &select_bounds, edit_state_flags,
+      &location, &size, edit_state_flags,
       CefRunQuickMenuCallbackCppToC::Wrap(callback));
 
   // Return type: bool

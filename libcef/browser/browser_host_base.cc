@@ -42,10 +42,6 @@
 #include "components/spellcheck/browser/spellcheck_platform.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "ohos_cef_ext/libcef/browser/browser_host_base_for_include.cc"
-#endif
-
 namespace {
 
 // Associates a CefBrowserHostBase instance with a WebContents. This object will
@@ -90,7 +86,7 @@ class WebContentsUserDataAdapter : public base::SupportsUserData::Data {
 // static
 CefRefPtr<CefBrowserHostBase> CefBrowserHostBase::FromBrowser(
     CefRefPtr<CefBrowser> browser) {
-  return browser.get()->AsCefBrowserHostBase();
+  return static_cast<CefBrowserHostBase*>(browser.get());
 }
 
 // static
@@ -132,11 +128,9 @@ CefRefPtr<CefBrowserHostBase> CefBrowserHostBase::GetBrowserForContents(
   // Try the owner WebContents if |contents| originates from an excluded view
   // such as the PDF viewer or Print Preview. This is safe to call even if Alloy
   // extensions are disabled.
-#if !BUILDFLAG(ARKWEB_PDF)
   if (auto* owner_contents = GetOwnerForGuestContents(contents)) {
     return WebContentsUserDataAdapter::Get(owner_contents);
   }
-#endif
 
   return nullptr;
 }
@@ -274,12 +268,6 @@ CefBrowserHostBase::CefBrowserHostBase(
   browser_info_->SetBrowser(this);
 
   contents_delegate_.AddObserver(this);
-#if BUILDFLAG(ARKWEB_SENSOR) || BUILDFLAG(ARKWEB_PERMISSION)
-  if (client) {
-    permission_request_handler_.reset(new AlloyPermissionRequestHandler(
-        client->AsArkWebClient()->GetPermissionRequest(), GetWebContents()));
-  }
-#endif
 }
 
 void CefBrowserHostBase::InitializeBrowser() {
@@ -288,15 +276,6 @@ void CefBrowserHostBase::InitializeBrowser() {
   // Associate the WebContents with this browser object.
   DCHECK(GetWebContents());
   WebContentsUserDataAdapter::Register(this);
-
-#if BUILDFLAG(ARKWEB_FAVICON)
-  contents_delegate_.InitIconHelper();
-  contents_delegate_.ObserveWebContents(GetWebContents());
-#endif
-
-#if BUILDFLAG(ARKWEB_JAVASCRIPT_BRIDGE)
-  new NWEB::OhJavascriptInjector(GetWebContents(), client_->AsArkWebClient());
-#endif
 }
 
 void CefBrowserHostBase::DestroyWebContents(
@@ -561,9 +540,6 @@ void CefBrowserHostBase::StartDownload(const CefString& url) {
   std::unique_ptr<download::DownloadUrlParameters> params(
       content::DownloadRequestUtils::CreateDownloadForWebContentsMainFrame(
           web_contents, gurl, MISSING_TRAFFIC_ANNOTATION));
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  StartDownloadExt(gurl, web_contents, params, this);
-#endif
   manager->DownloadUrl(std::move(params));
 }
 
@@ -775,9 +751,7 @@ void CefBrowserHostBase::GetNavigationEntries(
     CefRefPtr<CefNavigationEntryImpl> entry =
         new CefNavigationEntryImpl(controller.GetEntryAtIndex(current));
     visitor->Visit(entry.get(), true, current, total);
-#if !BUILDFLAG(ARKWEB_NAVIGATION)
     std::ignore = entry->Detach(nullptr);
-#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
   } else {
     // Visit all entries.
     bool cont = true;
@@ -785,9 +759,7 @@ void CefBrowserHostBase::GetNavigationEntries(
       CefRefPtr<CefNavigationEntryImpl> entry =
           new CefNavigationEntryImpl(controller.GetEntryAtIndex(i));
       cont = visitor->Visit(entry.get(), (i == current), i, total);
-#if !BUILDFLAG(ARKWEB_NAVIGATION)
       std::ignore = entry->Detach(nullptr);
-#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
     }
   }
 }
@@ -979,17 +951,13 @@ bool CefBrowserHostBase::IsValid() {
   return browser_info_->IsValid();
 }
 
+CefRefPtr<CefBrowserHost> CefBrowserHostBase::GetHost() {
+  return this;
+}
+
 bool CefBrowserHostBase::CanGoBack() {
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  auto wc = GetWebContents();
-  if (wc == nullptr) {
-    LOG(ERROR) << "getWebContents falied, wc is null";
-    return false;
-  }
-  return wc->GetController().CanGoBack();
-#else
+  base::AutoLock lock_scope(state_lock_);
   return can_go_back_;
-#endif
 }
 
 void CefBrowserHostBase::GoBack() {
@@ -1005,25 +973,13 @@ void CefBrowserHostBase::GoBack() {
 
   auto wc = GetWebContents();
   if (wc && wc->GetController().CanGoBack()) {
-#if BUILDFLAG(ARKWEB_CLIPBOARD)
-    wc->CollapseAllFramesSelection();
-#endif  // defined(ARKWEB_CLIPBOARD)
     wc->GetController().GoBack();
   }
 }
 
 bool CefBrowserHostBase::CanGoForward() {
   base::AutoLock lock_scope(state_lock_);
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  auto wc = GetWebContents();
-  if (wc == nullptr) {
-    LOG(ERROR) << "getWebContents falied, wc is null";
-    return false;
-  }
-  return wc->GetController().CanGoForward();
-#else
   return can_go_forward_;
-#endif
 }
 
 void CefBrowserHostBase::GoForward() {
@@ -1210,10 +1166,8 @@ void CefBrowserHostBase::OnStateChanged(CefBrowserContentsState state_changed) {
   if ((state_changed & CefBrowserContentsState::kNavigation) ==
       CefBrowserContentsState::kNavigation) {
     is_loading_ = contents_delegate_.is_loading();
-#if !BUILDFLAG(ARKWEB_NETWORK_BASE)
     can_go_back_ = contents_delegate_.can_go_back();
     can_go_forward_ = contents_delegate_.can_go_forward();
-#endif
   }
   if ((state_changed & CefBrowserContentsState::kDocument) ==
       CefBrowserContentsState::kDocument) {
@@ -1294,18 +1248,8 @@ bool CefBrowserHostBase::Navigate(const content::OpenURLParams& params) {
       return false;
     }
 
-#if BUILDFLAG(ARKWEB_POST_URL)
-    if (params.post_data) {
-      content::NavigationController::LoadURLParams LoadURLParams(params);
-      web_contents->GetController().LoadURLWithParams(LoadURLParams);
-    } else {
-      web_contents->GetController().LoadURL(
-          gurl, params.referrer, params.transition, params.extra_headers);
-    }
-#else
     web_contents->GetController().LoadURL(
         gurl, params.referrer, params.transition, params.extra_headers);
-#endif
     return true;
   }
   return false;
@@ -1349,13 +1293,7 @@ void CefBrowserHostBase::RunSelectFile(
     const ui::SelectFileDialog::FileTypeInfo* file_types,
     int file_type_index,
     const base::FilePath::StringType& default_extension,
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-    gfx::NativeWindow owning_window,
-    std::vector<std::u16string> accept_types,
-    bool use_media_capture) {
-#else
     gfx::NativeWindow owning_window) {
-#endif
   if (!EnsureFileDialogManager()) {
     LOG(ERROR) << "File dialog canceled due to invalid state.";
     listener->FileSelectionCanceled();
@@ -1363,12 +1301,7 @@ void CefBrowserHostBase::RunSelectFile(
   }
   file_dialog_manager_->RunSelectFile(listener, std::move(policy), type, title,
                                       default_path, file_types, file_type_index,
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-                                      default_extension, owning_window,
-                                      accept_types, use_media_capture);
-#else
                                       default_extension, owning_window);
-#endif
 }
 
 void CefBrowserHostBase::SelectFileListenerDestroyed(
@@ -1395,7 +1328,6 @@ bool CefBrowserHostBase::MaybeAllowNavigation(
 
 void CefBrowserHostBase::OnAfterCreated() {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "CefBrowserHostBase::OnAfterCreated, client_:" << client_;
   if (client_) {
     if (auto handler = client_->GetLifeSpanHandler()) {
       handler->OnAfterCreated(this);

@@ -33,7 +33,6 @@
 
 #include <limits>
 
-#include "arkweb/build/features/features.h"
 #include "include/internal/cef_string.h"
 #include "include/internal/cef_string_list.h"
 #include "include/internal/cef_types.h"
@@ -299,50 +298,22 @@ class CefScreenInfo : public cef_screen_info_t {
                 int depth_per_component,
                 bool is_monochrome,
                 const cef_rect_t& rect,
-                const cef_rect_t& available_rect
-#if BUILDFLAG(IS_OHOS)
-                ,
-                uint16_t angle_val,
-                cef_screen_orientation_type_t orientation_val
-#endif
-                )
-      : cef_screen_info_t{device_scale_factor,
-                          depth,
-                          depth_per_component,
-                          is_monochrome,
-                          rect,
-                          available_rect
-#if BUILDFLAG(IS_OHOS)
-                          ,
-                          angle_val,
-                          orientation_val
-#endif
-        } {
-  }
+                const cef_rect_t& available_rect)
+      : cef_screen_info_t{device_scale_factor, depth, depth_per_component,
+                          is_monochrome,       rect,  available_rect} {}
 
   void Set(float device_scale_factor_val,
            int depth_val,
            int depth_per_component_val,
            bool is_monochrome_val,
            const CefRect& rect_val,
-           const CefRect& available_rect_val
-#if BUILDFLAG(IS_OHOS)
-           ,
-           uint16_t angle_val,
-           cef_screen_orientation_type_t orientation_val
-#endif
-  ) {
+           const CefRect& available_rect_val) {
     device_scale_factor = device_scale_factor_val;
     depth = depth_val;
     depth_per_component = depth_per_component_val;
     is_monochrome = is_monochrome_val;
     rect = rect_val;
     available_rect = available_rect_val;
-
-#if BUILDFLAG(IS_OHOS)
-    angle = angle_val;
-    orientation = orientation_val;
-#endif
   }
 };
 
@@ -465,10 +436,6 @@ struct CefSettingsTraits {
 #if defined(OS_POSIX) && !defined(OS_ANDROID)
     target->disable_signal_handlers = src->disable_signal_handlers;
 #endif
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    target->incognito_mode = src->incognito_mode;
-#endif
   }
 };
 
@@ -503,14 +470,6 @@ struct CefRequestContextSettingsTraits {
                    &target->cookieable_schemes_list, copy);
     target->cookieable_schemes_exclude_defaults =
         src->cookieable_schemes_exclude_defaults;
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    target->incognito_mode = src->incognito_mode;
-#endif
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-    target->global_request_context = src->global_request_context;
-#endif
   }
 };
 
@@ -534,10 +493,6 @@ struct CefBrowserSettingsTraits {
     cef_string_clear(&s->fantasy_font_family);
     cef_string_clear(&s->default_encoding);
   }
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/include/internal/cef_types_wrappers_head_for_include.cc"
-#endif  // BUILDFLAG(IS_ARKWEB)
 
   static inline void set(const struct_type* src,
                          struct_type* target,
@@ -587,14 +542,6 @@ struct CefBrowserSettingsTraits {
 
     target->chrome_status_bubble = src->chrome_status_bubble;
     target->chrome_zoom_bubble = src->chrome_zoom_bubble;
-
-    setForInclude(src, target, copy);
-#if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
-    target->border_radius_top_left = src->border_radius_top_left;
-    target->border_radius_top_right = src->border_radius_top_right;
-    target->border_radius_bottom_left = src->border_radius_bottom_left;
-    target->border_radius_bottom_right = src->border_radius_bottom_right;
-#endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
   }
 };
 
@@ -812,10 +759,6 @@ class CefAcceleratedPaintInfo : public cef_accelerated_paint_info_t {
   CefAcceleratedPaintInfo(const cef_accelerated_paint_info_t& r)
       : cef_accelerated_paint_info_t(r) {}
 };
-
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/include/internal/cef_types_wrappers_for_include.cc"
-#endif  // BUILDFLAG(IS_ARKWEB)
 
 struct CefTaskInfoTraits {
   using struct_type = cef_task_info_t;

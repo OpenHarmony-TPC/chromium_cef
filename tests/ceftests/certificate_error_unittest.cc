@@ -363,9 +363,10 @@ class RedirectMismatchedFromHandlerTest : public CertificateErrorTest {
             /*expect_load_success=*/continue_invalid_certificate,
             /*expect_certificate_error=*/true) {}
 
-  CefRefPtr<CefResourceHandler>(CefRefPtr<CefBrowser> browser,
-                                CefRefPtr<CefFrame> frame,
-                                CefRefPtr<CefRequest> request) override {
+  CefRefPtr<CefResourceHandler> GetResourceHandler(
+      CefRefPtr<CefBrowser> browser,
+      CefRefPtr<CefFrame> frame,
+      CefRefPtr<CefRequest> request) override {
     EXPECT_IO_THREAD();
 
     const std::string& url = request->GetURL();
@@ -376,7 +377,7 @@ class RedirectMismatchedFromHandlerTest : public CertificateErrorTest {
           /*stream=*/nullptr);
     }
 
-    return TestHandler::(browser, frame, request);
+    return TestHandler::GetResourceHandler(browser, frame, request);
   }
 
  protected:

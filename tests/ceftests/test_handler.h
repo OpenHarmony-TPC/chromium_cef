@@ -13,7 +13,6 @@
 #include <string>
 #include <utility>
 
-#include "cef/ohos_cef_ext/include/arkweb_display_handler_ext.h"
 #include "include/base/cef_callback.h"
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
@@ -47,7 +46,7 @@ class ResourceContent {
 // by test cases.
 class TestHandler : public CefClient,
                     public CefDialogHandler,
-                    public ArkWebDisplayHandlerExt,
+                    public CefDisplayHandler,
                     public CefDownloadHandler,
                     public CefJSDialogHandler,
                     public CefLifeSpanHandler,
@@ -144,9 +143,7 @@ class TestHandler : public CefClient,
 
   // CefClient methods. Add new methods as needed by test cases.
   CefRefPtr<CefDialogHandler> GetDialogHandler() override { return this; }
-  CefRefPtr<ArkWebDisplayHandlerExt> GetDisplayHandler() override {
-    return this;
-  }
+  CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
   CefRefPtr<CefDownloadHandler> GetDownloadHandler() override { return this; }
   CefRefPtr<CefJSDialogHandler> GetJSDialogHandler() override { return this; }
   CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() override { return this; }

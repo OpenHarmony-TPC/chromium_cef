@@ -20,10 +20,6 @@
 #include "third_party/blink/public/common/tokens/tokens.h"
 #include "third_party/blink/public/web/web_view_observer.h"
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
-#endif
-
 namespace blink {
 class WebFrame;
 class WebNode;
@@ -35,8 +31,7 @@ class WebView;
 // side.
 //
 // RenderViewObserver: Interface for observing RenderView notifications.
-class CefBrowserImpl : public virtual CefBrowser,
-                       public blink::WebViewObserver {
+class CefBrowserImpl : public CefBrowser, public blink::WebViewObserver {
  public:
   // Returns the browser associated with the specified RenderView.
   static CefRefPtr<CefBrowserImpl> GetBrowserForView(blink::WebView* view);
@@ -46,7 +41,7 @@ class CefBrowserImpl : public virtual CefBrowser,
 
   // CefBrowser methods.
   bool IsValid() override;
-  // CefRefPtr<CefBrowserHost> GetHost() override;
+  CefRefPtr<CefBrowserHost> GetHost() override;
   bool CanGoBack() override;
   void GoBack() override;
   bool CanGoForward() override;
@@ -94,11 +89,6 @@ class CefBrowserImpl : public virtual CefBrowser,
 
   void OnLoadingStateChange(bool isLoading);
   void OnEnterBFCache();
-
-#if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
-  bool NeedToFireBeforeUnloadOrUnloadEvents() override { return false; }
-  void DispatchBeforeUnload() override {}
-#endif  // ARKWEB_DISATCH_BEFORE_UNLOAD
 
  private:
   // ID of the browser that this RenderView is associated with. During loading

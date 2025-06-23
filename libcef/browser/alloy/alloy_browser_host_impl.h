@@ -11,7 +11,6 @@
 #include <string>
 #include <vector>
 
-#include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
@@ -24,16 +23,10 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_delegate.h"
 #include "content/public/browser/web_contents_observer.h"
-#include "ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 
 class CefAudioCapturer;
 class CefBrowserInfo;
-class AlloyBrowserHostImplExt;
-class AlloyBrowserHostImplUtils;
-
-#if !BUILDFLAG(ARKWEB_ZOOM)
 class SiteInstance;
-#endif
 
 // CefBrowser implementation for Alloy style. Method calls are delegated to the
 // CefPlatformDelegate or the WebContents as appropriate. All methods are
@@ -50,10 +43,9 @@ class SiteInstance;
 // messages sent using AlloyBrowserHostImpl::Send() will be forwarded to the
 // RenderViewHost (after posting to the UI thread if necessary). Use
 // WebContentsObserver::routing_id() when sending IPC messages.
-class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
+class AlloyBrowserHostImpl : public CefBrowserHostBase,
                              public content::WebContentsDelegate,
-                             public content::WebContentsObserver
-{
+                             public content::WebContentsObserver {
  public:
   // Used for handling the response to command messages.
   class CommandResponseHandler : public virtual CefBaseRefCounted {
@@ -61,17 +53,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
     virtual void OnResponse(const std::string& response) = 0;
   };
 
-  AlloyBrowserHostImplUtils* implUtils;
-
   ~AlloyBrowserHostImpl() override;
-
-  CefRefPtr<AlloyBrowserHostImpl> AsAlloyBrowserHostImpl() override {
-    return this;
-  }
-
-  virtual CefRefPtr<AlloyBrowserHostImplExt> AsAlloyBrowserHostImplExt() {
-    return nullptr;
-  }
 
   // Create a new AlloyBrowserHostImpl instance with owned WebContents.
   static CefRefPtr<AlloyBrowserHostImpl> Create(
@@ -108,13 +90,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   bool IsWindowRenderingDisabled() override;
   void WasResized() override;
   void WasHidden(bool hidden) override;
-
-#if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-  void SetEnableHalfFrameRate(bool enabled) override;
-#endif
-
   void NotifyScreenInfoChanged() override;
-
   void Invalidate(PaintElementType type) override;
   void SendExternalBeginFrame() override;
   void SendTouchEvent(const CefTouchEvent& event) override;
@@ -141,8 +117,6 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
   void DragSourceEndedAt(int x, int y, DragOperationsMask op) override;
   void SetAudioMuted(bool mute) override;
   bool IsAudioMuted() override;
-
-
   void SetAutoResizeEnabled(bool enabled,
                             const CefSize& min_size,
                             const CefSize& max_size) override;
@@ -256,14 +230,10 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
                           const std::string& frame_name,
                           const GURL& target_url,
                           content::WebContents* new_contents) override;
-  void RendererUnresponsive(content::WebContents* source,
-                            content::RenderWidgetHost* render_widget_host,
-                            base::RepeatingClosure hang_monitor_restarter
-#if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
-                            ,
-                            content::RendererIsUnresponsiveReason reason
-#endif
-                            ) override;
+  void RendererUnresponsive(
+      content::WebContents* source,
+      content::RenderWidgetHost* render_widget_host,
+      base::RepeatingClosure hang_monitor_restarter) override;
   void RendererResponsive(
       content::WebContents* source,
       content::RenderWidgetHost* render_widget_host) override;
@@ -319,28 +289,8 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
       ui::AXLocationAndScrollUpdates& details) override;
   void WebContentsDestroyed() override;
 
-#if BUILDFLAG(ARKWEB_PIP)
-  void SetPipNativeWindow(int delegate_id,
-                          int child_id,
-                          int frame_routing_id,
-                          cef_native_window_t window) override;
-  void OnPip(int status,
-             int delegate_id,
-             int child_id,
-             int frame_routing_id,
-             int width,
-             int height) override;
-  void SendPipEvent(int delegate_id,
-                    int child_id,
-                    int frame_routing_id,
-                    int event) override;
-  void OnPipEvent(int event) override;
-  void SetPipActive(bool active);
-#endif
  private:
   friend class CefBrowserPlatformDelegateAlloy;
-  friend class AlloyBrowserHostImplExt;
-  friend class AlloyBrowserHostImplUtils;
 
   static CefRefPtr<AlloyBrowserHostImpl> CreateInternal(
       const CefBrowserSettings& settings,

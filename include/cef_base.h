@@ -31,6 +31,7 @@
 #define CEF_INCLUDE_CEF_BASE_H_
 #pragma once
 
+#include "include/base/cef_atomic_ref_count.h"
 #include "include/base/cef_build.h"
 #include "include/base/cef_macros.h"
 
@@ -42,7 +43,7 @@
 #include "include/internal/cef_win.h"
 #elif defined(OS_MAC)
 #include "include/internal/cef_mac.h"
-#elif defined(OS_LINUX) || defined(OS_OHOS)
+#elif defined(OS_LINUX)
 #include "include/internal/cef_linux.h"
 #endif
 

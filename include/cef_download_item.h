@@ -40,8 +40,6 @@
 
 #include "include/cef_base.h"
 
-class CefDownloadItemExt;
-
 ///
 /// Class used to represent a download item.
 ///
@@ -163,8 +161,6 @@ class CefDownloadItem : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual CefString GetMimeType() = 0;
-
-  virtual CefRefPtr<CefDownloadItemExt> AsArkDownloadItem() { return nullptr; }
 };
 
 #endif  // CEF_INCLUDE_CEF_DOWNLOAD_ITEM_H_

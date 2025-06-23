@@ -121,11 +121,14 @@ def write_indented_output(output):
 def git_apply_patch_file(patch_path, patch_dir):
   """ Apply |patch_path| to files in |patch_dir|. """
   patch_name = os.path.basename(patch_path)
-  sys.stdout.write('\nApply %s in %s\n' % (patch_name, patch_dir))
+  sys.stdout.write('\nApply11 %s in %s\n' % (patch_name, patch_dir))
 
   if not os.path.isfile(patch_path):
     sys.stdout.write('... patch file does not exist.\n')
     return 'fail'
+
+  os.system("cd ../; patch -p0 < " + patch_path + "; cd ./cef;")
+  return 'apply'
 
   patch_string = open(patch_path, 'rb').read()
   if sys.platform == 'win32':
@@ -135,10 +138,10 @@ def git_apply_patch_file(patch_path, patch_dir):
 
   # Git apply fails silently if not run relative to a respository root.
   #if not is_checkout(patch_dir):
-    #sys.stdout.write('... patch directory is not a repository root.\n')
-    #return 'fail'
+  #  sys.stdout.write('... patch directory is not a repository root.\n')
+  #  return 'fail'
 
-  config = '-p1 --ignore-whitespace'
+  config = '-p0 --ignore-whitespace'
 
   # Output patch contents.
   cmd = '%s apply %s --numstat' % (git_exe, config)

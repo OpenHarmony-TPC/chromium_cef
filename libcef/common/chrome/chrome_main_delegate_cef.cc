@@ -40,17 +40,9 @@
 #include "cef/libcef/common/util_linux.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-#include "cef/ohos_cef_ext/libcef/common/chrome/chrome_main_delegate_cef_for_include.cc"
-#endif
-
 namespace {
 
-#if BUILDFLAG(IS_ARKWEB)
-base::LazyInstance<ArkWebContentRendererClientCefExt>::DestructorAtExit
-#else
 base::LazyInstance<ChromeContentRendererClientCef>::DestructorAtExit
-#endif
     g_chrome_content_renderer_client = LAZY_INSTANCE_INITIALIZER;
 
 void InitLogging(const base::CommandLine* command_line) {
@@ -333,11 +325,6 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       disable_features.push_back(base::kEnableHangWatcher.name);
     }
 
-    if (base::ohos::ApplicationApiVersion() < 20) {
-      disable_features.push_back(
-          network::features::kOpaqueResponseBlockingV02.name);
-    }
-
 #if BUILDFLAG(IS_WIN)
     {
       const bool feature_enabled =
@@ -357,17 +344,6 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       }
     }
 #endif  // BUILDFLAG(IS_WIN)
-
-#if BUILDFLAG(ARKWEB_BFCACHE)
-    if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
-            switches::kEnableBFCache)) {
-      disable_features.push_back(features::kBackForwardCache.name);
-    }
-#endif
-
-#if !BUILDFLAG(ARKWEB_BFCACHE)
-    ManageBackForwardCacheExt(disable_features);
-#endif
 
     if (!disable_features.empty()) {
       DCHECK(!base::FeatureList::GetInstance());

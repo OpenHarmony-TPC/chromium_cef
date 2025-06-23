@@ -31,8 +31,6 @@
 #define CEF_INCLUDE_INTERNAL_CEF_TYPES_COLOR_H_
 #pragma once
 
-#include "arkweb/build/features/features.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -50,13 +48,6 @@ typedef enum {
   /// BGRA with 8 bits per pixel (32bits total).
   ///
   CEF_COLOR_TYPE_BGRA_8888,
-
-#if BUILDFLAG(ARKWEB_NAVIGATION)
-  ///
-  /// Unknown color type.
-  ///
-  CEF_COLOR_TYPE_UNKNOWN,
-#endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 } cef_color_type_t;
 
 #ifdef __cplusplus

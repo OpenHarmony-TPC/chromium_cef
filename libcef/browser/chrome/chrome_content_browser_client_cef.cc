@@ -7,7 +7,6 @@
 
 #include <tuple>
 
-#include "arkweb/build/features/features.h"
 #include "base/command_line.h"
 #include "base/path_service.h"
 #include "cef/libcef/browser/browser_frame.h"
@@ -51,30 +50,10 @@
 #include "cef/libcef/browser/chrome/chrome_web_contents_view_delegate_cef.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "base/files/file_util.h"
-#include "base/ohos/sys_info_utils_ext.h"
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_client_cert_identity.h"
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_client_cert_lookup_table.h"
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key.h"
-#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key_ohos.h"
-#include "content/public/browser/shared_cors_origin_access_list.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_CA)
-#include "base/base_switches.h"
-#include "third_party/bounds_checking_function/include/securec.h"
-constexpr int32_t APPLICATION_API_10 = 10;
-#endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-#include "cef/ohos_cef_ext/libcef/browser/ark_web_certificate_query.h"
-#endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
-
 namespace {
 
 class CefSelectClientCertificateCallbackImpl
-    : public CefSelectClientCertificateCallbackExt {
+    : public CefSelectClientCertificateCallback {
  public:
   explicit CefSelectClientCertificateCallbackImpl(
       std::unique_ptr<content::ClientCertificateDelegate> delegate)
@@ -144,10 +123,6 @@ class CefSelectClientCertificateCallbackImpl
     }
   }
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_content_browser_client_cef_for_include_before.cc"
-#endif  // BUILDFLAG(IS_ARKWEB)
-
   std::unique_ptr<content::ClientCertificateDelegate> delegate_;
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(CefSelectClientCertificateCallbackImpl);
@@ -186,13 +161,6 @@ void HandleExternalProtocolHelper(
 }
 
 }  // namespace
-
-#if BUILDFLAG(IS_ARKWEB)
-// KEEP THIS HEADER FILE INCLUDED AFTER THE ANONYMOUS NAMESPACE.
-// ChromeContentBrowserClientCef's implementation depends on functions in this
-// file.
-#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_content_browser_client_cef_for_include_after.cc"
-#endif  // BUILDFLAG(IS_ARKWEB)
 
 ChromeContentBrowserClientCef::ChromeContentBrowserClientCef() = default;
 ChromeContentBrowserClientCef::~ChromeContentBrowserClientCef() = default;
@@ -301,21 +269,10 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
     const GURL& request_url,
     bool is_main_frame_request,
     bool strict_enforcement,
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    const GURL& origin_url,
-    const std::string& referrer,
-#endif
     base::OnceCallback<void(content::CertificateRequestResultType)> callback) {
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  auto returned_callback = certificate_query::AllowAllCertificateError(
-      web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement, origin_url, referrer, std::move(callback),
-      /*default_disallow=*/true);
-#else
   auto returned_callback = certificate_query::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
       strict_enforcement, std::move(callback), /*default_disallow=*/false);
-#endif
   if (returned_callback.is_null()) {
     // The error was handled.
     return;
@@ -324,11 +281,7 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
   // Proceed with default handling.
   ChromeContentBrowserClient::AllowCertificateError(
       web_contents, cert_error, ssl_info, request_url, is_main_frame_request,
-      strict_enforcement,
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-      origin_url, referrer,
-#endif
-      std::move(returned_callback));
+      strict_enforcement, std::move(returned_callback));
 }
 
 base::OnceClosure ChromeContentBrowserClientCef::SelectClientCertificate(
@@ -363,11 +316,10 @@ base::OnceClosure ChromeContentBrowserClientCef::SelectClientCertificate(
   CefRefPtr<CefSelectClientCertificateCallbackImpl> callbackImpl(
       new CefSelectClientCertificateCallbackImpl(std::move(delegate)));
 
-  bool handled = handler->AsCefRequestHandlerExt()->OnSelectClientCertificate(
+  bool handled = handler->OnSelectClientCertificate(
       browser.get(), cert_request_info->is_proxy,
       cert_request_info->host_and_port.host(),
-      cert_request_info->host_and_port.port(), {}, {}, certs,
-      callbackImpl.get());
+      cert_request_info->host_and_port.port(), certs, callbackImpl.get());
 
   if (!handled) {
     delegate = callbackImpl->DisconnectDelegate();
@@ -404,11 +356,6 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
     bool user_gesture,
     bool opener_suppressed,
     bool* no_javascript_access) {
-#if BUILDFLAG(ARKWEB_MULTI_WINDOW)
-  if (auto can_create = ArkWebInnerCanCreateWindow(opener, user_gesture)) {
-    return *can_create;
-  }
-#else
   // The chrome layer has popup blocker, extensions, etc.
   if (!ChromeContentBrowserClient::CanCreateWindow(
           opener, opener_url, opener_top_level_frame_url, source_origin,
@@ -416,7 +363,6 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
           features, user_gesture, opener_suppressed, no_javascript_access)) {
     return false;
   }
-#endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
   return CefBrowserInfoManager::GetInstance()->CanCreateWindow(
       opener, target_url, referrer, frame_name, disposition, features,
@@ -440,18 +386,6 @@ void ChromeContentBrowserClientCef::OverrideWebkitPrefs(
   auto browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
   if (browser) {
     renderer_prefs::SetCefPrefs(browser->settings(), *prefs);
-    auto frame = browser->GetMainFrame();
-
-#if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-    if (frame && frame->IsValid() &&
-        (browser->settings().text_size_percent > 0)) {
-      (*prefs).force_enable_zoom = false;
-      (*prefs).text_zoom_factor =
-          browser->settings().text_size_percent / 100.0f;
-      static_cast<CefFrameHostImpl*>(frame.get())
-          ->PutZoomingForTextFactorEx((*prefs).text_zoom_factor);
-    }
-#endif
 
     // Set the background color for the WebView.
     base_background_color = browser->GetBackgroundColor();
@@ -461,10 +395,6 @@ void ChromeContentBrowserClientCef::OverrideWebkitPrefs(
     base_background_color =
         CefContext::Get()->GetBackgroundColor(nullptr, STATE_DEFAULT);
   }
-
-#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
-  (*prefs).force_enable_zoom = web_contents->GetForceEnableZoom();
-#endif
 
   web_contents->SetPageBaseBackgroundColor(base_background_color);
 }
@@ -551,15 +481,10 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
       browser_context, frame, render_process_id,
       type == URLLoaderFactoryType::kNavigation,
       type == URLLoaderFactoryType::kDownload, request_initiator);
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  net_service::ProxyURLLoaderFactory::CreateProxy(
-      browser_context, factory_builder, header_client,
-      std::move(request_handler), factory_override);
-#else
+
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
       std::move(request_handler));
-#endif
 }
 
 bool ChromeContentBrowserClientCef::HandleExternalProtocol(
@@ -633,11 +558,6 @@ ChromeContentBrowserClientCef::CreateThrottlesForNavigation(
   auto throttles = ChromeContentBrowserClient::CreateThrottlesForNavigation(
       navigation_handle);
   throttle::CreateThrottlesForNavigation(navigation_handle, throttles);
-
-#if BUILDFLAG(ARKWEB_URL_TRUST_LIST)
-  ArkWebInnerCreateThrottlesForNavigation(navigation_handle, throttles);
-#endif
-
   return throttles;
 }
 
@@ -656,20 +576,11 @@ bool ChromeContentBrowserClientCef::ConfigureNetworkContextParams(
     return false;
   }
 
-#if BUILDFLAG(IS_ARKWEB)
-  ArkWebInnerConfigureNetworkContextParamsBefore(context, network_context_params);
-#endif  // BUILDFLAG(IS_ARKWEB)
-
   ChromeContentBrowserClient::ConfigureNetworkContextParams(
       context, in_memory, relative_partition_path, network_context_params,
       cert_verifier_creation_params);
 
   auto cef_context = CefBrowserContext::FromBrowserContext(context);
-
-#if BUILDFLAG(IS_ARKWEB)
-  ArkWebInnerConfigureNetworkContextParamsAfter(context, network_context_params);
-#endif  // BUILDFLAG(IS_ARKWEB)
-
   network_context_params->cookieable_schemes =
       cef_context ? cef_context->GetCookieableSchemes()
                   : CefBrowserContext::GetGlobalCookieableSchemes();
@@ -693,16 +604,9 @@ ChromeContentBrowserClientCef::CreateLoginDelegate(
   if (!web_contents || base::CommandLine::ForCurrentProcess()->HasSwitch(
                            switches::kDisableChromeLoginPrompt)) {
     // Delegate auth callbacks to GetAuthCredentials.
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-    return std::make_unique<net_service::LoginDelegate>(
-        auth_info, web_contents, request_id,
-        is_request_for_primary_main_frame_navigation, url, response_headers,
-        std::move(auth_required_callback));
-#else
     return std::make_unique<net_service::LoginDelegate>(
         auth_info, web_contents, request_id, url,
         std::move(auth_required_callback));
-#endif
   }
 
   return ChromeContentBrowserClient::CreateLoginDelegate(
@@ -721,9 +625,6 @@ void ChromeContentBrowserClientCef::ExposeInterfacesToRenderer(
 
   CefBrowserManager::ExposeInterfacesToRenderer(registry, associated_registry,
                                                 host);
-#if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
-  ArkWebInnerExposeInterfacesToRenderer(registry, associated_registry, host);
-#endif
 }
 
 void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForFrame(
@@ -734,9 +635,6 @@ void ChromeContentBrowserClientCef::RegisterBrowserInterfaceBindersForFrame(
 
   CefBrowserFrame::RegisterBrowserInterfaceBindersForFrame(render_frame_host,
                                                            map);
-#if BUILDFLAG(ARKWEB_ACTIVITY_STATE)
-  ArkWebInnerRegisterBrowserInterfaceBindersForFrame(map);
-#endif
 }
 
 std::unique_ptr<content::WebContentsViewDelegate>

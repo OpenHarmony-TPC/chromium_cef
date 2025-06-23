@@ -48,18 +48,9 @@
 #include "include/cef_navigation_entry.h"
 #include "include/cef_registration.h"
 #include "include/cef_request_context.h"
-#include "ohos_cef_ext/include/arkweb_browser_base_ext.h"
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-class CefDevToolsMessageHandlerDelegate;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 class CefBrowserHost;
 class CefClient;
-
-class ArkWebBrowserExt;
-class CefBrowserHostBase;
-class ArkWebBrowserHostExt;
 
 ///
 /// Class used to represent a browser. When used in the browser process the
@@ -77,17 +68,12 @@ class CefBrowser : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual bool IsValid() = 0;
 
-  virtual CefRefPtr<ArkWebBrowserExt> AsArkWebBrowser() { return nullptr; }
-
-  virtual CefRefPtr<CefBrowserHostBase> AsCefBrowserHostBase() {
-    return nullptr;
-  }
-
   ///
   /// Returns the browser host object. This method can only be called in the
   /// browser process.
   ///
-  virtual CefRefPtr<ArkWebBrowserHostExt> GetHost() { return nullptr; }
+  /*--cef()--*/
+  virtual CefRefPtr<CefBrowserHost> GetHost() = 0;
 
   ///
   /// Returns true if the browser can navigate backwards.
@@ -211,18 +197,6 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void GetFrameNames(std::vector<CefString>& names) = 0;
-
-  ///
-  /// Determine if BeforeUnload or Unload events need to be triggered.
-  ///
-  /*--cef()--*/
-  virtual bool NeedToFireBeforeUnloadOrUnloadEvents() = 0;
-
-  ///
-  /// Trigger the BeforeUnload event with an option to auto-cancel.
-  ///
-  /*--cef()--*/
-  virtual void DispatchBeforeUnload() = 0;
 };
 
 ///
@@ -305,8 +279,7 @@ class CefDownloadImageCallback : public virtual CefBaseRefCounted {
 /// comments.
 ///
 /*--cef(source=library)--*/
-class CefBrowserHost : public virtual CefBaseRefCounted,
-                       public virtual ArkwebBrowserHostBase {
+class CefBrowserHost : public virtual CefBaseRefCounted {
  public:
   typedef cef_drag_operations_mask_t DragOperationsMask;
   typedef cef_file_dialog_mode_t FileDialogMode;
@@ -610,16 +583,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
                             CefRefPtr<CefClient> client,
                             const CefBrowserSettings& settings,
                             const CefPoint& inspect_element_at) = 0;
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  ///
-  /// Opend DevTools with frontend_browser.
-  ///
-  virtual void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) = 0;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   ///
   /// Explicitly close the associated DevTools browser, if any.
@@ -1093,26 +1056,6 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   ///
   /*--cef(default_retval=CEF_RUNTIME_STYLE_DEFAULT)--*/
   virtual cef_runtime_style_t GetRuntimeStyle() = 0;
-
-  ///
-  /// Set pip native window.
-  ///
-  /*--cef()--*/
-  virtual void SetPipNativeWindow(int delegate_id,
-                                  int child_id,
-                                  int frame_routing_id,
-                                  cef_native_window_t window) = 0;
-
-  ///
-  /// Send pip evnet.
-  ///
-  /*--cef()--*/
-  virtual void SendPipEvent(int delegate_id,
-                            int child_id,
-                            int frame_routing_id,
-                            int event) = 0;
 };
-
-#include "ohos_cef_ext/include/arkweb_browser_ext.h"
 
 #endif  // CEF_INCLUDE_CEF_BROWSER_H_

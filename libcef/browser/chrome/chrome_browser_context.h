@@ -41,15 +41,8 @@ class ChromeBrowserContext : public CefBrowserContext, public ProfileObserver {
   // ProfileObserver overrides.
   void OnProfileWillBeDestroyed(Profile* profile) override;
 
-#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
-  void OnWebViewShow();
-  void OnContextInitialized();
-#endif
  private:
   ~ChromeBrowserContext() override;
-#if BUILDFLAG(ARKWEB_CLOUD_CONTROL)
-  void ScheduleUpdateCloudControl(content::BrowserContext* context);
-#endif
 
   enum class CreateStatus {
     // Default to creating a new/unique OffTheRecord profile.

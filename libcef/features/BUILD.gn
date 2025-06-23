@@ -91,7 +91,6 @@ config("config") {
   include_dirs = [
     # cef/include/ directory uses #includes relative to the cef/ directory.
     "//cef",
-    "//cef/ohos_cef_ext",
 
     # CEF generated header files that also need to be discoverable.
     # These #includes from library-side code will always be prefixed with cef/.

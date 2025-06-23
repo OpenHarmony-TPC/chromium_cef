@@ -65,6 +65,7 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
   CefBrowserContext* CreateNewBrowserContext(
       const CefRequestContextSettings& settings,
       base::OnceClosure initialized_cb) override;
+
   // CefTaskRunnerManager overrides.
   scoped_refptr<base::SingleThreadTaskRunner> GetBackgroundTaskRunner()
       override;
@@ -74,9 +75,7 @@ class ChromeMainDelegateCef : public ChromeMainDelegate,
       override;
   scoped_refptr<base::SingleThreadTaskRunner> GetRenderTaskRunner() override;
   scoped_refptr<base::SingleThreadTaskRunner> GetWebWorkerTaskRunner() override;
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  CefRefPtr<CefRequestContext> GetGlobalOTRRequestContext() override;
-#endif
+
  private:
   ChromeContentBrowserClientCef* content_browser_client() const;
   ChromeContentRendererClientCef* content_renderer_client() const;

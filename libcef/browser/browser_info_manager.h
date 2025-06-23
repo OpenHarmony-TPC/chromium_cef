@@ -11,7 +11,6 @@
 #include <memory>
 #include <vector>
 
-#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "base/synchronization/lock.h"
 #include "base/task/sequenced_task_runner.h"
@@ -39,9 +38,6 @@ class WebContentsView;
 
 class CefBrowserHostBase;
 class CefBrowserPlatformDelegate;
-#if BUILDFLAG(IS_ARKWEB)
-class ArkwebBrowserInfoManagerUtils;
-#endif
 
 // Singleton object for managing BrowserInfo instances.
 class CefBrowserInfoManager : public content::RenderProcessHostObserver {
@@ -55,11 +51,6 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
 
   // Returns this singleton instance of this class.
   static CefBrowserInfoManager* GetInstance();
-
-#if BUILDFLAG(IS_ARKWEB)
-  friend class ArkwebBrowserInfoManagerUtils;
-  ArkwebBrowserInfoManagerUtils* GetUtils();
-#endif
 
   // Called immediately before a new CefBrowserHost implementation is created
   // directly. In this case |is_popup| will be true only for DevTools browsers.
@@ -171,10 +162,6 @@ class CefBrowserInfoManager : public content::RenderProcessHostObserver {
   static bool IsExcludedFrameHost(content::RenderFrameHost* rfh);
 
  private:
-#if BUILDFLAG(IS_ARKWEB)
-  std::unique_ptr<ArkwebBrowserInfoManagerUtils> arkweb_browser_info_manager_utils_;
-#endif
-
   // RenderProcessHostObserver methods:
   void RenderProcessHostDestroyed(content::RenderProcessHost* host) override;
 

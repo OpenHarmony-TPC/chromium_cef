@@ -6,7 +6,6 @@
 
 #include <memory>
 
-#include "arkweb/build/features/features.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/run_loop.h"
@@ -26,10 +25,6 @@
 #include "cef/include/internal/cef_win.h"
 #include "chrome/chrome_elf/chrome_elf_main.h"
 #include "chrome/install_static/initialize_from_primary_module.h"
-#endif
-
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-#include "cef/ohos_cef_ext/libcef/browser/context_for_include.cc"
 #endif
 
 namespace {
@@ -85,14 +80,9 @@ bool GetColor(const cef_color_t cef_in, bool is_windowless, SkColor* sk_out) {
     return true;
   }
 
-#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
-  *sk_out = SkColorSetARGB(CefColorGetA(cef_in), CefColorGetR(cef_in),
-                           CefColorGetG(cef_in), CefColorGetB(cef_in));
-#else
   // Ignore the alpha component.
   *sk_out = SkColorSetRGB(CefColorGetR(cef_in), CefColorGetG(cef_in),
                           CefColorGetB(cef_in));
-#endif  // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
   return true;
 }
 
@@ -510,7 +500,6 @@ bool CefContext::Initialize(const CefMainArgs& args,
 
   main_runner_ = std::make_unique<CefMainRunner>(
       settings_.multi_threaded_message_loop, settings_.external_message_pump);
-  LOG(INFO) << "CefContext::Initialize";
 
   const bool initialized = main_runner_->Initialize(
       &settings_, application, args, windows_sandbox_info, &initialized_,
@@ -603,13 +592,6 @@ void CefContext::PopulateGlobalRequestContextSettings(
       CefString(&settings_.cookieable_schemes_list);
   settings->cookieable_schemes_exclude_defaults =
       settings_.cookieable_schemes_exclude_defaults;
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  settings->incognito_mode = false;
-#endif
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  settings->global_request_context = nullptr;
-#endif
 }
 
 void CefContext::NormalizeRequestContextSettings(
@@ -636,16 +618,11 @@ bool CefContext::HasObserver(Observer* observer) const {
 
 void CefContext::OnContextInitialized() {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "CefContext::OnContextInitialized, application_" << application_;
+
   if (application_) {
     // Notify the handler after the global browser context has initialized.
     CefRefPtr<CefRequestContext> request_context =
         CefRequestContext::GetGlobalContext();
-#if BUILDFLAG(IS_ARKWEB)
-    if (!request_context) {
-      return;
-    }
-#endif
     auto impl = static_cast<CefRequestContextImpl*>(request_context.get());
     impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
         [](CefRefPtr<CefApp> app) {
@@ -656,22 +633,6 @@ void CefContext::OnContextInitialized() {
           }
         },
         application_));
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-    if (CefRefPtr<CefRequestContext> otr_request_context =
-            CefRequestContext::GetGlobalOTRContext()) {
-      auto incognito_impl =
-          static_cast<CefRequestContextImpl*>(otr_request_context.get());
-      incognito_impl->ExecuteWhenBrowserContextInitialized(base::BindOnce(
-          [](CefRefPtr<CefApp> app) {
-            CefRefPtr<CefBrowserProcessHandler> handler =
-                app->GetBrowserProcessHandler();
-            if (handler) {
-              handler->OnContextInitializedForIncognitoMode();
-            }
-          },
-          application_));
-    }
-#endif
   }
 }
 

@@ -88,10 +88,6 @@ class CefContext {
   void AddObserver(Observer* observer);
   void RemoveObserver(Observer* observer);
   bool HasObserver(Observer* observer) const;
-#if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
-  void PopulateGlobalOTRRequestContextSettings(
-      CefRequestContextSettings* settings);
-#endif
 
  private:
   void OnContextInitialized();

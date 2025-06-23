@@ -33,8 +33,8 @@
 #else  // !defined(COMPILER_MSVC)
 #define E_CPONLY(...) E(__VA_ARGS__)
 #define E(...) GET_E(__VA_ARGS__, E3, E2, E1)(__VA_ARGS__),
-#endif  // !defined(COMPILER_MSVC)
-#else   // !defined(COLOR_ID_MACROS_DEFINED)
+#endif // !defined(COMPILER_MSVC)
+#else  // !defined(COLOR_ID_MACROS_DEFINED)
 #undef D1
 #undef D2
 #undef E1

@@ -13,7 +13,6 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/thread_util.h"
-#include "cef/ohos_cef_ext/libcef/browser/arkweb_file_dialog_manager_utils.h"
 #include "chrome/browser/file_select_helper.h"
 #include "content/public/browser/file_select_listener.h"
 #include "content/public/browser/render_frame_host.h"
@@ -133,12 +132,6 @@ FileChooserParams SelectFileToFileChooserParams(
     case ui::SelectFileDialog::Type::SELECT_OPEN_MULTI_FILE:
       mode = FileChooserParams::Mode::kOpenMultiple;
       break;
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-    case ui::SelectFileDialog::Type::SELECT_EXISTING_FOLDER:
-    case ui::SelectFileDialog::Type::SELECT_FOLDER:
-      mode = FileChooserParams::Mode::kUploadFolder;
-      break;
-#endif
     default:
       NOTIMPLEMENTED();
       return params;
@@ -267,11 +260,7 @@ class CefSelectFileDialogListener : public ui::SelectFileDialog::Listener {
 };
 
 CefFileDialogManager::CefFileDialogManager(CefBrowserHostBase* browser)
-    : browser_(browser) {
-#if BUILDFLAG(IS_ARKWEB)
-    arkweb_browser_info_manager_utils_ = std::make_unique<ArkwebFileDialogManagerUtils>(this);
-#endif
-  }
+    : browser_(browser) {}
 
 CefFileDialogManager::~CefFileDialogManager() = default;
 
@@ -382,23 +371,13 @@ void CefFileDialogManager::RunSelectFile(
     const ui::SelectFileDialog::FileTypeInfo* file_types,
     int file_type_index,
     const base::FilePath::StringType& default_extension,
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-    gfx::NativeWindow owning_window,
-    std::vector<std::u16string> accept_types,
-    bool use_media_capture) {
-#else
     gfx::NativeWindow owning_window) {
-#endif
   CEF_REQUIRE_UIT();
 
   active_listeners_.insert(listener);
 
   auto chooser_params =
       SelectFileToFileChooserParams(type, title, default_path, file_types);
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-  chooser_params.mime_types = accept_types;
-  chooser_params.use_media_capture = use_media_capture;
-#endif
   auto callback = base::BindOnce(
       &CefFileDialogManager::SelectFileDoneByDelegateCallback,
       weak_ptr_factory_.GetWeakPtr(), base::UnsafeDangling(listener));
@@ -446,10 +425,6 @@ void CefFileDialogManager::RunSelectFile(
   // See related comments on CefSelectFileDialogFactory.
   dialog_ = ui::SelectFileDialog::Create(dialog_listener_, std::move(policy),
                                          /*run_from_cef=*/true);
-
-#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
-  if (!arkweb_browser_info_manager_utils_->CheckDialogValidity()) return;
-#endif
 
   // With windowless rendering use the parent handle specified by the client.
   if (browser_->IsWindowless()) {
@@ -530,12 +505,6 @@ CefFileDialogManager::MaybeRunDelegate(
       } else {
         // There may be 1 additional entry in |extensions| and |descriptions|
         // that we want to ignore (for the "Custom Files" filter).
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-        const auto& extension_list = extensions[extensions.size() - 1];
-        for (auto& ext : extension_list) {
-            accept_extensions.push_back(FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
-        }
-#else
         for (size_t i = 0; i < params.accept_types.size(); ++i) {
           const auto& extension_list = extensions[i];
           std::u16string ext_str;
@@ -550,7 +519,6 @@ CefFileDialogManager::MaybeRunDelegate(
             accept_descriptions.push_back(descriptions[i]);
           }
         }
-#endif
       }
 
       CefRefPtr<CefFileDialogCallbackImpl> callbackImpl(
@@ -558,12 +526,7 @@ CefFileDialogManager::MaybeRunDelegate(
       const bool handled = handler->OnFileDialog(
           browser_.get(), static_cast<cef_file_dialog_mode_t>(mode),
           params.title, params.default_file_name.value(), accept_filters,
-          accept_extensions, accept_descriptions,
-#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-          params.use_media_capture, 
-          arkweb_browser_info_manager_utils_->ConvertMimeTypesToFilters(params),
-#endif
-          callbackImpl.get());
+          accept_extensions, accept_descriptions, callbackImpl.get());
       if (!handled) {
         // May return nullptr if the client has already executed the callback.
         callback = callbackImpl->Disconnect();
@@ -631,11 +594,7 @@ void CefFileDialogManager::SelectFileDoneByListenerCallback(
   dialog_listener_ = nullptr;
   dialog_listener->Cancel(listener_destroyed);
 
-#if BUILDFLAG(ARKWEB_BUGFIX_CRASH)
-  arkweb_browser_info_manager_utils_->HandleDialogDestruction();
-#else
   // There should be no further listener callbacks after this call.
   dialog_->ListenerDestroyed();
   dialog_ = nullptr;
-#endif  // BUILDFLAG(ARKWEB_BUGFIX_CRASH)
 }

@@ -314,6 +314,4 @@ void StartNavigation(blink::WebLocalFrame* frame,
       .StartNavigation(frame_load_request, blink::WebFrameLoadType::kStandard);
 }
 
-#include "cef/ohos_cef_ext/libcef/renderer/blink_glue_for_include.cc"
-
 }  // namespace blink_glue

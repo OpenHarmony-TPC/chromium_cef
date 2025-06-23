@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=d97da9d7a01effae39fe9b92dd40c680b6b9e1f4$
+// $hash=f94de13c95bbd53a5c3528bd91c9a4c58b3e3863$
 //
 
 #include "libcef_dll/cpptoc/context_menu_handler_cpptoc.h"
@@ -193,7 +193,6 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
     struct _cef_frame_t* frame,
     const cef_point_t* location,
     const cef_size_t* size,
-    const cef_rect_t* select_bounds,
     cef_quick_menu_edit_state_flags_t edit_state_flags,
     cef_run_quick_menu_callback_t* callback) {
   shutdown_checker::AssertNotShutdown();
@@ -224,11 +223,6 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
   if (!size) {
     return 0;
   }
-  // Verify param: select_bounds; type: simple_byref_const
-  DCHECK(select_bounds);
-  if (!select_bounds) {
-    return 0;
-  }
   // Verify param: callback; type: refptr_diff
   DCHECK(callback);
   if (!callback) {
@@ -239,14 +233,11 @@ int CEF_CALLBACK context_menu_handler_run_quick_menu(
   CefPoint locationVal = location ? *location : CefPoint();
   // Translate param: size; type: simple_byref_const
   CefSize sizeVal = size ? *size : CefSize();
-  // Translate param: select_bounds; type: simple_byref_const
-  CefRect select_boundsVal = select_bounds ? *select_bounds : CefRect();
 
   // Execute
   bool _retval = CefContextMenuHandlerCppToC::Get(self)->RunQuickMenu(
       CefBrowserCToCpp::Wrap(browser), CefFrameCToCpp::Wrap(frame), locationVal,
-      sizeVal, select_boundsVal, edit_state_flags,
-      CefRunQuickMenuCallbackCToCpp::Wrap(callback));
+      sizeVal, edit_state_flags, CefRunQuickMenuCallbackCToCpp::Wrap(callback));
 
   // Return type: bool
   return _retval;

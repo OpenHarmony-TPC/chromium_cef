@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2025 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,20 +9,17 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=02fc65eec44894d136e5c5ed139927c675a84c6e$
+// $hash=129048d3b43676e91129baa8f12cf4d0a5f9889d$
 //
 
 #include "libcef_dll/ctocpp/browser_host_ctocpp.h"
 
 #include "libcef_dll/cpptoc/client_cpptoc.h"
-#include "libcef_dll/cpptoc/dev_tools_message_handler_delegate_cpptoc.h"
 #include "libcef_dll/cpptoc/dev_tools_message_observer_cpptoc.h"
 #include "libcef_dll/cpptoc/download_image_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/navigation_entry_visitor_cpptoc.h"
 #include "libcef_dll/cpptoc/pdf_print_callback_cpptoc.h"
-#include "libcef_dll/cpptoc/pdf_value_callback_cpptoc.h"
 #include "libcef_dll/cpptoc/run_file_dialog_callback_cpptoc.h"
-#include "libcef_dll/cpptoc/screen_capture_callback_cpptoc.h"
 #include "libcef_dll/ctocpp/browser_ctocpp.h"
 #include "libcef_dll/ctocpp/dictionary_value_ctocpp.h"
 #include "libcef_dll/ctocpp/drag_data_ctocpp.h"
@@ -559,38 +556,6 @@ void CefBrowserHostCToCpp::ShowDevTools(const CefWindowInfo& windowInfo,
   // Execute
   _struct->show_dev_tools(_struct, &windowInfo, CefClientCppToC::Wrap(client),
                           &settings, &inspect_element_at);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::ShowDevToolsWith(
-    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    const CefPoint& inspect_element_at) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, show_dev_tools_with)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: frontend_browser; type: refptr_same
-  DCHECK(frontend_browser.get());
-  if (!frontend_browser.get()) {
-    return;
-  }
-  // Verify param: delegate; type: refptr_diff
-  DCHECK(delegate.get());
-  if (!delegate.get()) {
-    return;
-  }
-
-  // Execute
-  /*_struct->show_dev_tools_with(
-      _struct, CefBrowserHostCToCpp::Unwrap(frontend_browser),
-      CefDevToolsMessageHandlerDelegateCppToC::Wrap(delegate),
-      &inspect_element_at);*/
 }
 
 NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CloseDevTools() {
@@ -1378,213 +1343,6 @@ cef_runtime_style_t CefBrowserHostCToCpp::GetRuntimeStyle() {
 
   // Return type: simple
   return _retval;
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::CreateToPDF(
-    const CefPdfPrintSettings& settings,
-    CefRefPtr<CefPdfValueCallback> callback) {
-  shutdown_checker::AssertNotShutdown();
- 
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, create_to_pdf)) {
-    return;
-  }
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  // Verify param: callback; type: refptr_diff
-  DCHECK(callback.get());
-  if (!callback.get()) {
-    return;
-  }
- 
-  // Execute
-  _struct->create_to_pdf(_struct, &settings,
-                         CefPdfValueCallbackCppToC::Wrap(callback));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetPopupWindow(cef_native_window_t window) {
-  shutdown_checker::AssertNotShutdown();
- 
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_popup_window)) {
-        return;
-  }
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  // Execute
-  _struct->set_popup_window(_struct, window);
-}
-
-void CefBrowserHostCToCpp::EnableVideoAssistant(bool enable) {
-  shutdown_checker::AssertNotShutdown();
- 
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
-    return;
-  }
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  // Execute
-  _struct->enable_video_assistant(_struct, enable);
-}
- 
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::ExecuteVideoAssistantFunction(
-    const CefString& cmdId) {
-  shutdown_checker::AssertNotShutdown();
- 
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, execute_video_assistant_function)) {
-    return;
-  }
- 
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
- 
-  // Verify param: cmdId; type: string_byref_const
-  DCHECK(!cmdId.empty());
-  if (cmdId.empty()) {
-    return;
-  }
- 
-  // Execute
-  _struct->execute_video_assistant_function(_struct, cmdId.GetStruct());
-}
-
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-NO_SANITIZE("cfi-icall") bool CefBrowserHostCToCpp::IsIframe() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, is_iframe)) {
-    return false;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  int _retval = _struct->is_iframe(_struct);
-
-  // Return type: bool
-  return _retval ? true : false;
-}
-
-NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::ReloadFocusedFrame() {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, reload_focused_frame)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->reload_focused_frame(_struct);
-}
-#endif
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::StopScreenCapture(int32_t nweb_id, const CefString& session_id) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, stop_screen_capture)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: session_id; type: string_byref_const
-  DCHECK(!session_id.empty());
-  if (session_id.empty()) {
-    return;
-  }
-
-  // Execute
-  _struct->stop_screen_capture(_struct, nweb_id, session_id.GetStruct());
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::RegisterScreenCaptureDelegateListener(
-    CefRefPtr<CefScreenCaptureCallback> listener) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, register_screen_capture_delegate_listener)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Verify param: listener; type: refptr_diff
-  DCHECK(listener.get());
-  if (!listener.get()) {
-    return;
-  }
-
-  // Execute
-  _struct->register_screen_capture_delegate_listener(
-      _struct, CefScreenCaptureCallbackCppToC::Wrap(listener));
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-
-  if (CEF_MEMBER_MISSING(_struct, enable_video_assistant)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->custom_web_media_player(_struct, enable);
-}
-
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SetPipNativeWindow(int delegate_id,
-                                              int child_id,
-                                              int frame_routing_id,
-                                              cef_native_window_t window) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, set_pip_native_window)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->set_pip_native_window(_struct, delegate_id,
-                                 child_id, frame_routing_id, window);
-}
-
-NO_SANITIZE("cfi-icall")
-void CefBrowserHostCToCpp::SendPipEvent(int delegate_id,
-                                        int child_id,
-                                        int frame_routing_id,
-                                        int event) {
-  shutdown_checker::AssertNotShutdown();
-
-  cef_browser_host_t* _struct = GetStruct();
-  if (CEF_MEMBER_MISSING(_struct, send_pip_event)) {
-    return;
-  }
-
-  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
-
-  // Execute
-  _struct->send_pip_event(_struct, delegate_id,
-                          child_id, frame_routing_id, event);
 }
 
 // CONSTRUCTOR - Do not edit by hand.

@@ -38,9 +38,6 @@
 #include "sandbox/win/src/sandbox_types.h"
 #endif
 
-#if BUILDFLAG(IS_ARKWEB)
-#include "arkweb/chromium_ext/base/ohos/sys_info_utils_ext.h"
-#endif
 namespace {
 
 // Based on components/crash/core/app/run_as_crashpad_handler_win.cc
@@ -209,23 +206,6 @@ void CefMainRunner::QuitMessageLoop() {
   }
 }
 
-#if BUILDFLAG(IS_ARKWEB)
-// static
-void CefMainRunner::ParsePixelRatio(const base::CommandLine& command_line) {
-  const std::string& pixel_ratio =
-      command_line.GetSwitchValueASCII(switches::kPixelRatio);
-  if (pixel_ratio.empty()) {
-    return;
-  }
-  std::stringstream ss(pixel_ratio);
-  float ratio = -1;
-  ss >> ratio;
-  if (ratio > 0) {
-    base::ohos::SetPixelRatio(ratio);
-  }
-}
-#endif
-
 // static
 int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
                                       CefRefPtr<CefApp> application,
@@ -249,10 +229,6 @@ int CefMainRunner::RunAsHelperProcess(const CefMainArgs& args,
   if (process_type.empty()) {
     return -1;
   }
-
-#if BUILDFLAG(IS_ARKWEB)
-  ParsePixelRatio(command_line);
-#endif
 
   auto main_delegate = std::make_unique<ChromeMainDelegateCef>(
       /*runner=*/nullptr, /*settings=*/nullptr, application);
@@ -484,7 +460,7 @@ void CefMainRunner::FinishShutdownOnUIThread() {
     ChromeProcessSingleton::DeleteInstance();
   }
 
-  static_cast<content::ContentMainRunnerImpl*>(main_runner_.get())
+   static_cast<content::ContentMainRunnerImpl*>(main_runner_.get())
       ->ShutdownOnUIThread();
 }
 

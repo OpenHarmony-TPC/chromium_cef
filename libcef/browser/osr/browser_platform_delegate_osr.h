@@ -5,15 +5,12 @@
 #ifndef CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_
 #define CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_
 
-#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/alloy/browser_platform_delegate_alloy.h"
 #include "cef/libcef/browser/native/browser_platform_delegate_native.h"
 
 class CefRenderWidgetHostViewOSR;
 class CefWebContentsViewOSR;
-class CefBrowserPlatformDelegateOsrExt;
-class CefBrowserPlatformDelegateOsrUtils;
 
 namespace content {
 class RenderWidgetHostImpl;
@@ -24,14 +21,6 @@ class CefBrowserPlatformDelegateOsr
     : public CefBrowserPlatformDelegateAlloy,
       public CefBrowserPlatformDelegateNative::WindowlessHandler {
  public:
-  friend class CefBrowserPlatformDelegateOsrExt;
-  friend class CefBrowserPlatformDelegateOsrUtils;
-  std::unique_ptr<CefBrowserPlatformDelegateOsrUtils> cef_browser_platform_delegate_osr_utils_;
-  virtual CefBrowserPlatformDelegateOsrExt* AsCefBrowserPlatformDelegateOsrExt() {
-    NOTREACHED() << "AsCefBrowserPlatformDelegateOsrExt() in browser_platform_delegate_osr.h shouldn't be run.";
-    return nullptr;
-  }
-  ~CefBrowserPlatformDelegateOsr() override;
   // CefBrowserPlatformDelegate methods:
   void CreateViewForWebContents(
       raw_ptr<content::WebContentsView>* view,

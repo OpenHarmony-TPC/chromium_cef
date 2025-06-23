@@ -1,4 +1,4 @@
-// Copyright (c) 2024 The Chromium Embedded Framework Authors. All rights
+// Copyright (c) 2025 The Chromium Embedded Framework Authors. All rights
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 //
@@ -9,7 +9,7 @@
 // implementations. See the translator.README.txt file in the tools directory
 // for more information.
 //
-// $hash=f3902d95b54a26c99f532f6d04ce7e8027c86830$
+// $hash=53b5d884f963a6fa4fb6a6376c30187ebf21891f$
 //
 
 #ifndef CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
@@ -24,10 +24,8 @@
 
 #include "include/capi/cef_browser_capi.h"
 #include "include/capi/cef_client_capi.h"
-#include "include/capi/cef_devtools_message_handler_delegate_capi.h"
 #include "include/cef_browser.h"
 #include "include/cef_client.h"
-#include "include/cef_devtools_message_handler_delegate.h"
 #include "libcef_dll/ctocpp/ctocpp_ref_counted.h"
 
 // Wrap a C structure with a C++ class.
@@ -80,9 +78,6 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                     CefRefPtr<CefClient> client,
                     const CefBrowserSettings& settings,
                     const CefPoint& inspect_element_at) override;
-  void ShowDevToolsWith(CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-                        CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-                        const CefPoint& inspect_element_at) override;
   void CloseDevTools() override;
   bool HasDevTools() override;
   bool SendDevToolsMessage(const void* message, size_t message_size) override;
@@ -147,27 +142,6 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
                             cef_window_open_disposition_t disposition) override;
   bool IsRenderProcessUnresponsive() override;
   cef_runtime_style_t GetRuntimeStyle() override;
-  void SetPopupWindow(cef_native_window_t window) override;
-  void CreateToPDF(const CefPdfPrintSettings& settings,
-                   CefRefPtr<CefPdfValueCallback> callback) override;
-  void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
-  void RegisterScreenCaptureDelegateListener(
-      CefRefPtr<CefScreenCaptureCallback> listener) override;
-  void EnableVideoAssistant(bool enable) override;
-  void SetPipNativeWindow(int delegate_id,
-                          int child_id,
-                          int frame_routing_id,
-                          cef_native_window_t window) override;
-  void SendPipEvent(int delegate_id,
-                    int child_id,
-                    int frame_routing_id,
-                    int event) override;
-  void ExecuteVideoAssistantFunction(const CefString& cmdId) override;
-#if BUILDFLAG(ARKWEB_EX_REFRESH_IFRAME)
-  bool IsIframe() override;
-  void ReloadFocusedFrame() override;
-#endif
-  void CustomWebMediaPlayer(bool enable) override;
 };
 
 #endif  // CEF_LIBCEF_DLL_CTOCPP_BROWSER_HOST_CTOCPP_H_
