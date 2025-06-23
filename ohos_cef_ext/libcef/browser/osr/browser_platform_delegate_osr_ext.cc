@@ -155,6 +155,14 @@ void CefBrowserPlatformDelegateOsrExt::OnShowAutofillPopup(
       ConvertAutofillPopupItem(item, menu_item);
       item_list.push_back(menu_item);
     }
+
+    float shrink_viewport_height = 0;
+#if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)
+    if (GetOSRHostView()) {
+      shrink_viewport_height = GetOSRHostView()->GetShrinkViewportHeight();
+    }
+#endif
+
     LOG(INFO) << "element is screen bounds x:" << element_bounds.x()
               << ", y: " << element_bounds.y()
               << ", element_bounds width: " << element_bounds.width()
@@ -162,8 +170,8 @@ void CefBrowserPlatformDelegateOsrExt::OnShowAutofillPopup(
 
     handler->AsArkDialogHandler()->OnShowAutofillPopup(
         browser_->GetBrowser(),
-        CefRect(element_bounds.x(), element_bounds.y(), element_bounds.width(),
-                element_bounds.height()),
+        CefRect(element_bounds.x(), element_bounds.y() + shrink_viewport_height,
+                element_bounds.width(), element_bounds.height()),
         is_rtl, item_list, is_password_popup_type);
   }
 }
