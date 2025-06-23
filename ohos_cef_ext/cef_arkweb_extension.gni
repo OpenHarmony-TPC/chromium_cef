@@ -208,8 +208,6 @@ arkweb_anti_tracking_placeholder_source = [
   "//cef/ohos_cef_ext/libcef/browser/anti_tracking/anti_tracking_delegate_ohos.cc",
 ]
 arkweb_safebrowsing_sources = [
-  "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.cc",
-  "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_client.cc",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_client.h",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_malicious_allowlist.cc",

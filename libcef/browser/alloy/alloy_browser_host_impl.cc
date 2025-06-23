@@ -1594,10 +1594,6 @@ AlloyBrowserHostImpl::AlloyBrowserHostImpl(
 
   implUtils = new AlloyBrowserHostImplUtils(this);
 
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-  implUtils->initializeSafeBrowsingTabHelper(web_contents, request_context);
-#endif
-
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
   implUtils->enableZoomLevelController(web_contents);
 #endif
