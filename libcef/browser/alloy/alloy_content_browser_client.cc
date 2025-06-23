@@ -1162,35 +1162,7 @@ void AlloyContentBrowserClient::SiteInstanceGotProcess(
   }
 
   extensions::ProcessMap::Get(context)->Insert(
-      extension->id(), site_instance->GetProcess()->GetID(),
-      site_instance->GetId());
-}
-
-void AlloyContentBrowserClient::SiteInstanceDeleting(
-    content::SiteInstance* site_instance) {
-  if (!extensions::ExtensionsEnabled()) {
-    return;
-  }
-
-  if (!site_instance->HasProcess()) {
-    return;
-  }
-
-  auto context = site_instance->GetBrowserContext();
-  auto registry = extensions::ExtensionRegistry::Get(context);
-  if (!registry) {
-    return;
-  }
-
-  auto extension = registry->enabled_extensions().GetExtensionOrAppByURL(
-      site_instance->GetSiteURL());
-  if (!extension) {
-    return;
-  }
-
-  extensions::ProcessMap::Get(context)->Remove(
-      extension->id(), site_instance->GetProcess()->GetID(),
-      site_instance->GetId());
+      extension->id(), site_instance->GetProcess()->GetID());
 }
 
 void AlloyContentBrowserClient::BindHostReceiverForRenderer(
