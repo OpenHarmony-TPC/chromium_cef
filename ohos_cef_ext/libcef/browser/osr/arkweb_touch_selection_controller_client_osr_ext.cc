@@ -336,11 +336,19 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLES_CLEARED:
     case ui::INSERTION_HANDLE_CLEARED:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isCopy_ = false;
+#endif // ARKWEB_MENU_HANDLE
       quick_menu_requested_ = false;
       NotifyTouchSelectionChanged(true);
       UpdateQuickMenu();
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      if (isCopy_) {
+        NotifyTouchSelectionChanged(true);
+      }
+#endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
       if (controller && controller->AsTouchSelectionControllerExt()
@@ -350,10 +358,16 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       }
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
       if (isCopy_) {
+        LOG(INFO) << "Current Need Show QuickMenu After Drag Handle.";
         handle_drag_in_progress_ = false;
+        quick_menu_running_ = true;
         UpdateQuickMenu();
+        isCopy_ = false;
+        browser->web_contents()->SetShowingContextMenu(true);
       }
+#endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
       if (browser) {
@@ -384,13 +398,23 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       }
 #endif
       if (!handle_drag_in_progress_) {
-        if (!IsVaildSelectionHandleMove()) {
+        if (!IsVaildSelectionHandleMove()
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+            || (rwhv_->render_widget_host()->IsOrientationChange())
+#endif // ARKWEB_MENU_HANDLE           
+           ) {
           LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
           NotifyTouchSelectionChanged(true);
           return;
         }
         UpdateQuickMenu();
       }
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      if (isSelectAll_) {
+        isSelectAll_ = false;
+        return;
+      }
+#endif // ARKWEB_MENU_HANDLE
       NotifyTouchSelectionChanged(true);
       break;
     case ui::INSERTION_HANDLE_TAPPED:
@@ -592,10 +616,12 @@ void ArkWebTouchSelectionControllerClientOSRExt::ChangeVisibilityOfQuickMenu() {
   if (!rwhv_) {
     return;
   }
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
   if (isCopy_) {
     isCopy_ = false;
     return;
   }
+#endif // ARKWEB_MENU_HANDLEs
   auto browser = rwhv_->browser_impl();
   if (!browser || !browser->client()) {
     return;
@@ -689,6 +715,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::TemporarilyCloseQuickMenu() {
   }
 
   quick_menu_running_ = false;
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+  rwhv_->render_widget_host()->SetOrientationChange(false);
+#endif // ARKWEB_MENU_HANDLE
 
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
@@ -718,10 +747,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::CloseQuickMenu() {
 #endif
 }
 void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
-  if (base::ohos::IsPcDevice() && commandId_ == QM_EDITFLAG_CAN_SELECT_ALL) {
-    commandId_ = -1;
-    return;
-  }
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
     gfx::RectF rect =
@@ -740,6 +765,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     gfx::Vector2dF diagonal = bottom_right - origin;
     gfx::SizeF size(diagonal.x(), diagonal.y());
 
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+    rwhv_->render_widget_host()->SetOrientationChange(false);
+#endif // ARKWEB_MENU_HANDLE
     int quickmenuflags = 0;
     for (const auto& command : kMenuCommands) {
       if (active_menu_client_->IsCommandIdEnabled(command)) {
@@ -880,7 +908,9 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
 void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
     int command_id,
     int event_flags) {
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
     commandId_ = command_id;
+#endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   AsArkWebTouchSelectionControllerClientOSRExt()->SetSelectAllClicked(
       command_id);
@@ -895,8 +925,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 
 #if BUILDFLAG(ARKWEB_MENU)
   if (command_id != QM_EDITFLAG_CAN_ELLIPSIS &&
-      command_id != QM_EDITFLAG_CAN_SELECT_ALL &&
-      command_id != QM_EDITFLAG_CAN_COPY) {
+      command_id != QM_EDITFLAG_CAN_SELECT_ALL
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      && command_id != QM_EDITFLAG_CAN_COPY
+#endif // ARKWEB_MENU_HANDLE
+      ) {
 #else
   if (command_id != QM_EDITFLAG_CAN_ELLIPSIS) {
 #endif  // BUILDFLAG(ARKWEB_MENU)
@@ -927,9 +960,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
       break;
     case QM_EDITFLAG_CAN_COPY:
       host_delegate->Copy();
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
       browser->web_contents()->SetShowingContextMenu(false);
-      quick_menu_running_ = false;
       isCopy_ = true;
+#endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_NAVIGATION)
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
       break;
@@ -939,11 +973,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_SELECT_ALL:
       host_delegate->SelectAll();
-      if (base::ohos::IsPcDevice()) {
-        CloseQuickMenu();
-      } else {
-        ShowQuickMenu();
-      }
+      ShowQuickMenu();
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = true;
+#endif // ARKWEB_MENU_HANDLE
       break;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_ELLIPSIS:
