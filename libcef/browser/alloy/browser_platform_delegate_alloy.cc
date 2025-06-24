@@ -619,6 +619,7 @@ void CefBrowserPlatformDelegateAlloy::SendTouchEventToRender(
       return;
     }
 
+    ohos_print_manager->SetRfhId(rfh_to_use->GetGlobalId());
     ohos_print_manager->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
   }
 
