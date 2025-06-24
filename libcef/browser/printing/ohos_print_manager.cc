@@ -376,6 +376,11 @@ void OhosPrintManager::ScriptedPrint(
     return;
   }
 
+  if (!settings_) {
+    LOG(ERROR) << "settings_ is invalid.";
+    return;
+  }
+
   printing::RenderParamsFromPrintSettings(*settings_, params->params.get());
   params->params->document_cookie = scripted_params->cookie;
   params->pages = settings_->ranges();
