@@ -400,7 +400,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       if (!handle_drag_in_progress_) {
         if (!IsVaildSelectionHandleMove()
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-            || (rwhv_->render_view_host()->IsOrientationChange())
+            || (rwhv_->render_widget_host()->IsOrientationChange())
 #endif // ARKWEB_MENU_HANDLE           
            ) {
           LOG(DEBUG) << "Current Selection Handle Move Event Is Invalid";
@@ -716,7 +716,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::TemporarilyCloseQuickMenu() {
 
   quick_menu_running_ = false;
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-  rwhv_->render_view_host()->SetOrientationChange(false);
+  rwhv_->render_widget_host()->SetOrientationChange(false);
 #endif // ARKWEB_MENU_HANDLE
 
   auto browser = rwhv_->browser_impl();
@@ -766,7 +766,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     gfx::SizeF size(diagonal.x(), diagonal.y());
 
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-    rwhv_->render_view_host()->SetOrientationChange(false);
+    rwhv_->render_widget_host()->SetOrientationChange(false);
 #endif // ARKWEB_MENU_HANDLE
     int quickmenuflags = 0;
     for (const auto& command : kMenuCommands) {
