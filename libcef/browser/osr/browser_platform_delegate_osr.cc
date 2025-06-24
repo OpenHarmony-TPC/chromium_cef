@@ -582,7 +582,9 @@ void CefBrowserPlatformDelegateOsr::DragTargetDrop(const CefMouseEvent& event) {
                                gfx::PointF(screen_pt), modifiers,
                                base::DoNothing());
   }
-
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  last_drag_data_ = drag_data_;
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   drag_data_ = nullptr;
 }
 

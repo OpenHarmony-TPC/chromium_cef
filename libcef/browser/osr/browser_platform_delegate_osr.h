@@ -148,6 +148,10 @@ class CefBrowserPlatformDelegateOsr
   // document has registered an interest in the dropped data and the renderer
   // process should pass the data to the document on drop.
   bool document_is_handling_drag_ = false;
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  CefRefPtr<CefDragData> last_drag_data_;
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_

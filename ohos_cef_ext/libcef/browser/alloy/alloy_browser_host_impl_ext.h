@@ -133,6 +133,8 @@ public:
   void WebExtensionActionClicked(
       std::string extensionId,
       const NWebExtensionTab* tab) override;
+
+  content::DropData* GetDropData() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)

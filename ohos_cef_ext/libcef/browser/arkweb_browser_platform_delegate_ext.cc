@@ -247,3 +247,9 @@ void ArkWebCefBrowserPlatformDelegateExt::OnHideAutofillPopup() {
   NOTIMPLEMENTED();
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+CefRefPtr<CefDragData> ArkWebCefBrowserPlatformDelegateExt::GetDropData() {
+  return nullptr;
+}
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)

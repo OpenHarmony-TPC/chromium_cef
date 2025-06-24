@@ -158,6 +158,10 @@ public:
                     int frame_routing_id,
                     int event) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  CefRefPtr<CefDragData> GetDropData() override;
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(

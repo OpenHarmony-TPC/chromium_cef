@@ -881,6 +881,23 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
                                                      tab);
 }
 
+content::DropData* AlloyBrowserHostImplExt::GetDropData() {
+  if (!platform_delegate()) {
+    return nullptr;
+  }
+  auto* platform_delegate_ext =
+      platform_delegate()->AsArkWebCefBrowserPlatformDelegateExt();
+  if (!platform_delegate_ext) {
+    return nullptr;
+  }
+  CefRefPtr<CefDragData> cef_drag_data = platform_delegate_ext->GetDropData();
+  CefDragDataImpl* data_impl = static_cast<CefDragDataImpl*>(cef_drag_data.get());
+  if (!data_impl) {
+    return nullptr;
+  }
+  return data_impl->drop_data();
+}
+
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 
