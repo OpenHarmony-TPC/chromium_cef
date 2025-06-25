@@ -113,6 +113,9 @@ ArkWebTouchSelectionControllerClientOSRExt::
       weak_ptr_factory_(this) {}
 
 void ArkWebTouchSelectionControllerClientOSRExt::OnScrollStarted() {
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+  isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
   scroll_in_progress_ = true;
   rwhv_->selection_controller()->SetTemporarilyHidden(true);
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
@@ -335,6 +338,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isCopy_ = false;
@@ -345,6 +351,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
       if (isCopy_) {
         NotifyTouchSelectionChanged(true);
       }
@@ -417,12 +424,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
         }
         UpdateQuickMenu();
       }
-#if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      if (isSelectAll_) {
-        isSelectAll_ = false;
-        return;
-      }
-#endif // ARKWEB_MENU_HANDLE
       NotifyTouchSelectionChanged(true);
       break;
     case ui::INSERTION_HANDLE_TAPPED:
@@ -919,6 +920,11 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
     }
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_SELECT_ALL:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      if (isSelectAll_) {
+        return false;
+      }
+#endif // ARKWEB_MENU_HANDLE
       if (!editable && readable) {
         return true;
       }
@@ -934,9 +940,6 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
 void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
     int command_id,
     int event_flags) {
-#if BUILDFLAG(ARKWEB_MENU_HANDLE)
-    commandId_ = command_id;
-#endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   AsArkWebTouchSelectionControllerClientOSRExt()->SetSelectAllClicked(
       command_id);
