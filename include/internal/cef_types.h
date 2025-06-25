@@ -742,6 +742,10 @@ typedef struct _cef_browser_settings_t {
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  bool error_page_enabled;
+#endif
+
 #if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
   double border_radius_top_left;
   double border_radius_top_right;

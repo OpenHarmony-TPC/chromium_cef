@@ -104,6 +104,16 @@ class CefFrameImpl
                                         bool is_outermost_main_frame) {}
 #endif
 
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  virtual std::string OverrideErrorPage(const CefString& url,
+                                        const CefString& request_method,
+                                        bool user_gesture,
+                                        bool is_redirect,
+                                        bool is_outermost_main_frame,
+                                        int error_code,
+                                        const CefString& error_text) {}
+#endif
+
  private:
   // Called for draggable region changes due to navigation. This is in addition
   // to the standard notifications delivered via

@@ -665,6 +665,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
   settings_.record_whole_document = browser_settings.record_whole_document;
 #endif
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  settings_.error_page_enabled = browser_settings.error_page_enabled;
+#endif
 }
 
 void ArkWebBrowserHostExtImpl::SetDrawRect(int x,

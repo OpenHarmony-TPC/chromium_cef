@@ -40,6 +40,7 @@ mojom("mojom") {
     enabled_features += [ "arkweb_optimize_parser_budget" ]
     enabled_features += [ "arkweb_scrollbar" ]
     enabled_features += [ "arkweb_performance_scheduling" ]
+    enabled_features += [ "arkweb_error_page" ]
 
   }
 }
