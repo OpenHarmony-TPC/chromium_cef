@@ -244,12 +244,12 @@ bool MakeCefCookie(const net::CanonicalCookie& cc, CefCookie& cookie) {
 bool MakeCefCookie(const GURL& url,
                    const std::string& cookie_line,
                    CefCookie& cookie) {
-  // Parse the cookie.
   net::ParsedCookie pc(cookie_line);
+
   if (!pc.IsValid()) {
     return false;
   }
-
+ 
   std::string cookie_domain;
   if (!GetCookieDomain(url, pc, &cookie_domain)) {
     return false;

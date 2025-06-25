@@ -1116,6 +1116,15 @@ source_set("libcef_static") {
     ]
   }  #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
+  #if BUILDFLAG(ARKWEB_COOKIE)
+  if (defined(arkweb_cookie)) {
+    sources += [
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.cc",
+      "ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h",
+    ]
+  }
+  #endif // BUILDFLAG(ARKWEB_COOKIE)
+
   #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   if (defined(arkweb_ext_exception_list) && arkweb_ext_exception_list) {
     sources += [

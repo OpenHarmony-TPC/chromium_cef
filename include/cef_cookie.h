@@ -158,6 +158,7 @@ class CefCookieManager : public virtual CefBaseRefCounted {
   /*--cef()--*/
   static bool CreateCefCookie(const CefString& url,
                               const CefString& value,
+                              bool block_truncated,
                               CefCookie& cef_cookie);
 
   virtual CefRefPtr<CefCookieManagerExt> AsCefCookieManagerExt() {
