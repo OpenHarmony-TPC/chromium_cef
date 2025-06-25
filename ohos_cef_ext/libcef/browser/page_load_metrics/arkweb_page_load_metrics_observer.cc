@@ -31,6 +31,7 @@
 
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
 int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
+int64_t OhPageLoadMetricsObserver::render_init_block_ = -1;
 #endif
 
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
@@ -381,8 +382,10 @@ void OhPageLoadMetricsObserver::OnFirstPaintInPage(
 }
 
 void OhPageLoadMetricsObserver::ReportPerformanceTiming() {
+  web_performance_timing_.render_init_block = render_init_block_;
   ReportPageLoadTimeStats(web_performance_timing_);
   web_performance_timing_.Reset();
+  render_init_block_ = -1;
 }
 
 void OhPageLoadMetricsObserver::ReportBufferedMetrics(
@@ -416,6 +419,12 @@ static int64_t GetCurrentTimestampMS() {
 
 void OhPageLoadMetricsObserver::OnNavigationStart() {
   navigation_start_timestamp_ = GetCurrentTimestampMS();
+}
+
+void OhPageLoadMetricsObserver::RenderInitBlock(int64_t block_time) {
+
+  render_init_block_ = block_time;
+
 }
 #endif
 
