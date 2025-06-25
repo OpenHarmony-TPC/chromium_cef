@@ -748,6 +748,12 @@ typedef struct _cef_browser_settings_t {
   double border_radius_bottom_left;
   double border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+
+#if BUILDFLAG(ARKWEB_MENU)
+  bool touch_handle_exist;
+  bool viewport_scale;
+#endif  // BUILDFLAG(ARKWEB_MENU)
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   cef_state_t native_embed_mode_enabled;
   cef_state_t intrinsic_size_enabled;
