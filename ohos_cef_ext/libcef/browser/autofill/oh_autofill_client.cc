@@ -54,7 +54,8 @@ OhAutofillClient::OhAutofillClient(content::WebContents* web_contents)
     : autofill::ContentAutofillClient(web_contents) {}
 
 OhAutofillClient::~OhAutofillClient() {
-  HideAutofillSuggestions(autofill::SuggestionHidingReason::kTabGone);
+  // The call to HideAutofillSuggestions() has been removed here. If you need to
+  // call it, please avoid using the SuggestionHidingReason::kTabGone flag.
 }
 
 base::WeakPtr<autofill::AutofillClient> OhAutofillClient::GetWeakPtr() {
