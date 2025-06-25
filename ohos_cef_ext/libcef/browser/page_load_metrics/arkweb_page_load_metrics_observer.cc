@@ -422,9 +422,7 @@ void OhPageLoadMetricsObserver::OnNavigationStart() {
 }
 
 void OhPageLoadMetricsObserver::RenderInitBlock(int64_t block_time) {
-
   render_init_block_ = block_time;
-
 }
 #endif
 
