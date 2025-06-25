@@ -41,6 +41,10 @@
 #include "content/public/common/content_switches.h"
 #endif  // BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+#include "cef/ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
+#endif // BUILDFLAG(ARKWEB_COOKIE)
+
 using network::mojom::CookieManager;
 
 namespace {
@@ -674,7 +678,11 @@ bool CefCookieManagerImplExt::SetCookieInternal(
               net::CookiePartitionKey::AncestorChainBit::
                   kSameSite /* 132 new element */,
               std::nullopt),
+#if BUILDFLAG(ARKWEB_COOKIE)
+          net::CookieSourceType::kOther, /*status=*/nullptr, false));
+#else // BUILDFLAG(ARKWEB_COOKIE)
           net::CookieSourceType::kOther, /*status=*/nullptr));
+#endif // BUILDFLAG(ARKWEB_COOKIE)
   if (!canonical_cookie) {
     LOG(WARNING)
         << "SetCookie failed with reason: create canonical cookie failed";
@@ -838,9 +846,17 @@ CefRefPtr<CefCookieManagerExt> CefCookieManagerExt::GetGlobalIncognitoManager(
 
 bool CefCookieManager::CreateCefCookie(const CefString& url,
                                        const CefString& value,
+#if BUILDFLAG(ARKWEB_COOKIE)
+                                       bool block_truncated,
+#endif // BUILDFLAG(ARKWEB_COOKIE)
                                        CefCookie& cef_cookie) {
+#if BUILDFLAG(ARKWEB_COOKIE)
+  return net_service::MakeCefCookieEXT(GURL(url.ToString()), value.ToString(), block_truncated,
+                                    cef_cookie);
+#else // BUILDFLAG(ARKWEB_COOKIE)
   return net_service::MakeCefCookie(GURL(url.ToString()), value.ToString(),
                                     cef_cookie);
+#endif // BUILDFLAG(ARKWEB_COOKIE)
 }
 
 // Always execute the set callback on cookie_store_task_runner_.

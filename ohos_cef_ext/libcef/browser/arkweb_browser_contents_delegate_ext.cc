@@ -161,10 +161,12 @@ void MaybeSetUserAgentOverrideForMainFrame(
         GetHostOfReferrerUrlIfNeed(navigation, is_reload);
     if (!referer_host.empty()) {
       host = referer_host;
-      MatchUserAgent(navigation, host, final_ua);
+      match_type = MatchUserAgent(navigation, host, final_ua);
     }
   }
-
+  if (match_type == UserAgentOverridePolicy::ARKWEB_DEFAULT) {
+    return;
+  }
   LOG(DEBUG) << __func__ << " host " << host << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
              << ", main_frame " << navigation->IsInMainFrame() << ", reload "
