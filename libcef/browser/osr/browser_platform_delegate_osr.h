@@ -152,6 +152,10 @@ class CefBrowserPlatformDelegateOsr
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   CefRefPtr<CefDragData> last_drag_data_;
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  int32_t condition_ = 0;
+#endif
 };
 
 #endif  // CEF_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_H_

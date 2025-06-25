@@ -85,6 +85,12 @@ void CefBrowserPlatformDelegateOsr::RenderViewCreated(
 #if BUILDFLAG(IS_OHOS)
   cef_browser_platform_delegate_osr_utils_->InitializeAndUpdateRenderView();
 #endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view && condition_) {
+    cef_browser_platform_delegate_osr_utils_->UpdateBypassVsyncCondition(view);
+  }
+#endif
 }
 
 void CefBrowserPlatformDelegateOsr::BrowserCreated(

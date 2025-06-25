@@ -178,6 +178,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   blink::mojom::InputEventResultState FilterInputEvent(
       const blink::WebInputEvent& input_event) override;
   void ScrollBy(float delta_x, float delta_y);
+
   bool GetScrollable() override { return scroll_enabled_; }
   void SendTouchGestureEvent(blink::WebTouchEvent& touch_event);
   void SendGestureEvent(const ui::GestureEventData& gesture);
@@ -192,6 +193,10 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 
   void KeyboardReDispatch(const input::NativeWebKeyboardEvent& event, bool isUsed) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  void SetBypassVsyncCondition(int32_t condition);
+#endif
 
 #if BUILDFLAG(ARKWEB_ZOOM)
   bool RequiresDoubleTapGestureEvents() const override;
@@ -325,6 +330,9 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
  private:
   bool is_popup = false;
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  int32_t condition_ = 0;
+#endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   std::u16string mLastSelectedTextFromMenu;
 #endif //BUILDFLAG(ARKWEB_EXT_FREE_COPY)

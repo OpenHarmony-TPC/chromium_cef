@@ -165,6 +165,15 @@ void CefBrowserPlatformDelegateOsrUtils::UpdateNativeEmbedMode(CefRenderWidgetHo
     }
 }
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+void CefBrowserPlatformDelegateOsrUtils::UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view) {
+    if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
+        view->AsArkWebRenderWidgetHostViewOSRExt()->SetBypassVsyncCondition(
+            cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->condition_);
+    }
+}
+#endif
+
 void CefBrowserPlatformDelegateOsrUtils::SetFocusAndUpdateStatus(
     bool setFocus, CefRenderWidgetHostViewOSR* view){
   cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->focus_status_ = setFocus;

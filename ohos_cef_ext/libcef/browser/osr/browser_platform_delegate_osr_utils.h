@@ -26,6 +26,9 @@ public:
     CefImageImpl* CreateDragImage(const gfx::ImageSkia& image);
     void RestoreTextHandlesAfterDrag();
     void UpdateNativeEmbedMode(CefRenderWidgetHostViewOSR* view);
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+    void UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view);
+#endif
 };
  
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_UTILS_H_

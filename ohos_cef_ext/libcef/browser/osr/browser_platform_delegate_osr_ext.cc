@@ -294,6 +294,13 @@ void CefBrowserPlatformDelegateOsrExt::UpdateSecurityLayer(bool isNeedSecurityLa
 }
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+void CefBrowserPlatformDelegateOsrExt::SetBypassVsyncCondition(int32_t condition)
+{
+  condition_ = condition;
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 void CefBrowserPlatformDelegateOsrExt::ScrollFocusedEditableNodeIntoView()
 {

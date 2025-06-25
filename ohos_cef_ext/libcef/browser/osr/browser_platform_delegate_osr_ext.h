@@ -59,6 +59,9 @@ public:
   void ScrollBy(float delta_x, float delta_y) override;
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  void SetBypassVsyncCondition(int32_t condition) override;
+#endif
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded(bool occluded) override;
 #endif
