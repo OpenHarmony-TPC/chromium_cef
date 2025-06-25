@@ -167,6 +167,8 @@ void BrowserPolicyHandler::AddObserver(Observer* observer) {
 
   LOG(INFO) << "BrowserPolicyHandler add new observer";
   observers_.AddObserver(observer);
+
+  observer->OnPolicyChanged();
 }
 
 void BrowserPolicyHandler::RemoveObserver(Observer* observer) {
