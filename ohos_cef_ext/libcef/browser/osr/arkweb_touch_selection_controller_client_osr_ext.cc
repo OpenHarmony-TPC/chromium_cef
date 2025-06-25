@@ -370,6 +370,14 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
 #endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
+#if BUILDFLAG(ARKWEB_MENU)
+      if (browser && browser->client()) {
+        auto handler = browser->client()->GetContextMenuHandler();
+        if (handler) {
+          handler->HideMagnifier();
+        }
+      }
+#endif
       if (browser) {
         if (auto client = browser->client()) {
           if (auto render = client->GetRenderHandler()) {
@@ -418,15 +426,28 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       NotifyTouchSelectionChanged(true);
       break;
     case ui::INSERTION_HANDLE_TAPPED:
+#if !BUILDFLAG(ARKWEB_MENU)
       quick_menu_requested_ = !quick_menu_requested_;
       if (quick_menu_requested_) {
+#else
+      if (!quick_menu_requested_) {
+#endif
         bool handle_drag_in_progress = handle_drag_in_progress_;
         handle_drag_in_progress_ = false;
+#if !BUILDFLAG(ARKWEB_MENU)
         UpdateQuickMenu();
+#else
+        ShowQuickMenu();
+        quick_menu_requested_ = !quick_menu_requested_;
+#endif
         handle_drag_in_progress_ = handle_drag_in_progress;
       } else {
+#if BUILDFLAG(ARKWEB_MENU)
+        ChangeVisibilityOfQuickMenu();
+#else
         CloseQuickMenu();
         NotifyTouchSelectionChanged(true);
+#endif
       }
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
@@ -794,6 +815,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
                 << isLongPressSelectionActive << ", clipped_selection_bounds:"
                 << clipped_selection_bounds_.ToString();
     }
+#if BUILDFLAG(ARKWEB_MENU)
+    handler->SetHandleVisibleCallback([this](bool isVisible = true) {
+      this->quick_menu_requested_ = isVisible;
+    });
+#endif
     if (!handler->AsCefContextMenuHandlerExt()->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
             {static_cast<int>(std::round(origin.x())),
@@ -995,3 +1021,18 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
       break;
   }
 }
+
+#if BUILDFLAG(ARKWEB_MENU)
+void ArkWebTouchSelectionControllerClientOSRExt::NotifyShowMagnifier() {
+  if (!rwhv_) {
+    return;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (browser && browser->client()) {
+    auto handler = browser->client()->GetContextMenuHandler();
+    if (handler) {
+      handler->ShowMagnifier();
+    }
+  }
+}
+#endif

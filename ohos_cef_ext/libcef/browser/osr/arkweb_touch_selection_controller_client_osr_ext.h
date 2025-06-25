@@ -80,6 +80,9 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void TemporarilyCloseQuickMenu() override;
   bool IsCommandIdEnabled(int command_id) const override;
   void ExecuteCommand(int command_id, int event_flags) override;
+#if BUILDFLAG(ARKWEB_MENU)
+  void NotifyShowMagnifier() override;
+#endif  // BUILDFLAG(ARKWEB_MENU)
  private:
   // // Not owned, non-null for the lifetime of this object.
   // raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
