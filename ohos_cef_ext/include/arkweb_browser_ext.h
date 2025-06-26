@@ -19,6 +19,7 @@
 
 #include <vector>
 
+#include "ohos_nweb/src/capi/nweb_extension_javascript_item.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_devtools_message_observer.h"
@@ -1250,6 +1251,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void OnDataDetectorSelectText() = 0;
 #endif
+
+  ///
+  /// Execute a string of JavaScript code in frames.
+  ///
+  virtual void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
+                                     bool recursive, IsolatedWorld world,
+                                     CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
