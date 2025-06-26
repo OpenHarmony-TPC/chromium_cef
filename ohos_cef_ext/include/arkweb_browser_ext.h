@@ -1249,6 +1249,18 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// On data detector select text.
   ///
   virtual void OnDataDetectorSelectText() = 0;
+
+  ///
+  /// Notify browser is foreground.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserForeground() = 0;
+
+  ///
+  /// Notify browser is background.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserBackground() = 0;
 #endif
 };
 
