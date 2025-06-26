@@ -113,9 +113,6 @@ ArkWebTouchSelectionControllerClientOSRExt::
       weak_ptr_factory_(this) {}
 
 void ArkWebTouchSelectionControllerClientOSRExt::OnScrollStarted() {
-#if BUILDFLAG(ARKWEB_MENU_HANDLE)
-  isSelectAll_ = false;
-#endif // ARKWEB_MENU_HANDLE
   scroll_in_progress_ = true;
   rwhv_->selection_controller()->SetTemporarilyHidden(true);
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
@@ -317,6 +314,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       rwhv_->ResetGestureDetection(false);
       break;
     case ui::INSERTION_HANDLE_SHOWN:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
       if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
             rwhv_->browser_impl()->AsAlloyBrowserHostImplExt()->GetTouchInsertHandleMenuShow();
