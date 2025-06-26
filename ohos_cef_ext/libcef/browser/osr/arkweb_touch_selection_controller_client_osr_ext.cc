@@ -453,6 +453,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
       if (controller) {
         controller->AsTouchSelectionControllerExt()->ResetLongPressEvent();
       }
