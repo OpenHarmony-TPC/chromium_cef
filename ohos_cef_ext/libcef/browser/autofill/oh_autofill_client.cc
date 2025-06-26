@@ -68,7 +68,7 @@ void OhAutofillClient::FillData(CefRefPtr<CefValue> data) {
     return;
   }
   std::string json_str = data->GetString();
-  content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
+  content::RenderFrameHost* rfh = GetWebContents().GetPrimaryMainFrame();
   if (!rfh) {
     LOG(ERROR) << "rfh is nullptr";
     return;
