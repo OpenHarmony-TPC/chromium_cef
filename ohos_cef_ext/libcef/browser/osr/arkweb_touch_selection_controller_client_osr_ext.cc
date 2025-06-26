@@ -342,6 +342,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       quick_menu_requested_ = false;
       NotifyTouchSelectionChanged(true);
       UpdateQuickMenu();
+      AsArkWebTouchSelectionControllerClientOSRExt()->TemporarilyClearSpecialTag();
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
@@ -756,8 +757,12 @@ void ArkWebTouchSelectionControllerClientOSRExt::TemporarilyCloseQuickMenu() {
   }
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 }
-void ArkWebTouchSelectionControllerClientOSRExt::CloseQuickMenu() {
-  TemporarilyCloseQuickMenu();
+
+void ArkWebTouchSelectionControllerClientOSRExt::TemporarilyClearSpecialTag() {
+#if BUILDFLAG(ARKWEB_AI)
+  isSelectionNotEmptyForAI_ = false;
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->SetDataDetectorSelectText(std::u16string());
+#endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   if (base::CommandLine::ForCurrentProcess() &&
       base::CommandLine::ForCurrentProcess()->HasSwitch(
@@ -767,6 +772,12 @@ void ArkWebTouchSelectionControllerClientOSRExt::CloseQuickMenu() {
   }
 #endif
 }
+
+void ArkWebTouchSelectionControllerClientOSRExt::CloseQuickMenu() {
+  TemporarilyCloseQuickMenu();
+  AsArkWebTouchSelectionControllerClientOSRExt()->TemporarilyClearSpecialTag();
+}
+
 void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
   auto browser = rwhv_->browser_impl();
   if (auto handler = browser->client()->GetContextMenuHandler()) {
