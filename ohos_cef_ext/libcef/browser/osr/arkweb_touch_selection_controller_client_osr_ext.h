@@ -74,6 +74,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void UpdateQuickMenuByHandlesHidden();
   void SetSelectAllClicked(int command_id);
 #endif
+  void ClearSpecialSelectedTagTemporarily();
   void CloseQuickMenu() override;
   void ShowQuickMenu() override;
   void UpdateQuickMenu() override;
