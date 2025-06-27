@@ -696,6 +696,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_BGTASK)
+  void OnBrowserForeground() override;
+  void OnBrowserBackground() override;
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
