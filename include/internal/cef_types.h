@@ -768,6 +768,10 @@ typedef struct _cef_browser_settings_t {
   int32_t copy_option;
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
 
+#if BUILDFLAG(ARKWEB_FOCUS)
+  int32_t gesture_focus_mode;
+#endif
+
   ///
   /// Controls whether the Chrome status bubble will be used. Only supported
   /// with Chrome style. For details about the status bubble see
@@ -2479,6 +2483,12 @@ typedef enum {
   /// The source is a system-generated focus event.
   ///
   FOCUS_SOURCE_SYSTEM,
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// The source is a user gesture focus event.
+  ///
+  FOCUS_SOURCE_GESTURE,
+#endif
 } cef_focus_source_t;
 
 ///
