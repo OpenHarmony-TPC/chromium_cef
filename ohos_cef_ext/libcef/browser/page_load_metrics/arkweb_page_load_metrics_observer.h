@@ -64,6 +64,7 @@ class OhPageLoadMetricsObserver
   void OnFirstPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   static void OnNavigationStart();
+  static void RenderInitBlock(int64_t block_time);
 #endif
 #if BUILDFLAG(ARKWEB_BFCACHE)
   page_load_metrics::PageLoadMetricsObserver::ObservePolicy
@@ -106,6 +107,7 @@ class OhPageLoadMetricsObserver
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;
   static int64_t navigation_start_timestamp_;
+  static int64_t render_init_block_;
 #endif
 
 #if BUILDFLAG(ARKWEB_BFCACHE)
