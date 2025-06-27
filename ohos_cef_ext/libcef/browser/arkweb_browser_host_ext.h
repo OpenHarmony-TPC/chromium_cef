@@ -696,6 +696,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   }
 #endif
 
+  void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
+                             bool recursive, IsolatedWorld world,
+                             CefRefPtr<CefJavaScriptResultCallback> callback) override;
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;

@@ -189,6 +189,8 @@ static float DEFAULT_MAX_ZOOM_FACTOR = 100.0f;
 enum class WebScrollType : int { UNKNOWN = -1, EVENT = 0 };
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
+const int32_t kFrameIdMinLength = 3;
+
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -220,6 +222,24 @@ CefString GenerateArchiveAutoNamePath(const GURL& url,
   return "";
 }
 #endif
+
+bool ParaseRenderFrameHostId(const std::string& frameId, int* childId, int* routingId) {
+  if (frameId.size() < kFrameIdMinLength) {
+    return false;
+  }
+ 
+  const size_t pos = frameId.find('_');
+  if (pos == std::string::npos || pos == 0 || pos == frameId.size() - 1) {
+    return false;
+  }
+ 
+  if (!base::StringToInt(frameId.substr(0, pos), childId) ||
+      !base::StringToInt(frameId.substr(pos + 1), routingId)) {
+    return false;
+  }
+ 
+  return true;
+}
 
 ArkWebBrowserHostExtImpl::ArkWebBrowserHostExtImpl()
     : weak_ptr_factory_(this) {}
@@ -3540,3 +3560,35 @@ bool ArkWebBrowserHostExtImpl::GetWebDebuggingAccess() {
   }
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
+void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
+                                                     bool recursive, IsolatedWorld world,
+                                                     CefRefPtr<CefJavaScriptResultCallback> callback) {
+  LOG(DEBUG) << "RunJavaScriptInFrames enter";
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+ 
+  int childId = 0;
+  int routingId = 0;
+  content::RenderFrameHost* targetFrame = nullptr;
+  if(!ParaseRenderFrameHostId(rootFrame.id, &childId, &routingId)) {
+    LOG(INFO) << "rootFrame is null or invalid.";
+    targetFrame = web_contents->GetPrimaryMainFrame();
+  } else {
+    targetFrame = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt()
+                  ->GetTargetFramesIncludingPending(routingId);
+    if (!targetFrame) {
+      targetFrame = web_contents->GetPrimaryMainFrame();
+    }
+  }
+ 
+  if (targetFrame) {
+    LOG(DEBUG) << "RunJavaScriptInFrames";
+    targetFrame->AllowInjectingJavaScript();
+    targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
+                    base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
+                                  this, callback));
+  }
+}
