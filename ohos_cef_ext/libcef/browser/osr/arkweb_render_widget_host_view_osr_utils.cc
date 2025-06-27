@@ -596,7 +596,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HideEx() {
     view_->GetTextInputManager()->RemoveObserver(view_);
   }
   if (view_->overscroll_controller_) {
-    view_->overscroll_controller_->Enable();
+    view_->overscroll_controller_->Disable();
   }
 }
 
