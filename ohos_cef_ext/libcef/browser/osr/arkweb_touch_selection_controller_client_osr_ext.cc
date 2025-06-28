@@ -1005,10 +1005,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_SELECT_ALL:
       host_delegate->SelectAll();
-      ShowQuickMenu();
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = true;
 #endif // ARKWEB_MENU_HANDLE
+      ShowQuickMenu();
       break;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_ELLIPSIS:
