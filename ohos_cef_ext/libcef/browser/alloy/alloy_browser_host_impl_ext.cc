@@ -291,6 +291,7 @@ std::string BuildMediaInfo(
   root.Set("isPlaying", media_info->isPlaying);
   root.Set("downloadBtn", media_info->show_download_button);
   root.Set("playbackrateBtn", media_info->isShowPlaybackSpeed);
+  root.Set("volume", media_info->volume);
   // cloud control config
   base::Value::Dict policy;
   policy.Set("downloadButton", static_cast<int>(config->download_button));

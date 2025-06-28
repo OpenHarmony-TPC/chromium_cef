@@ -77,3 +77,10 @@ void MediaPlayerListenerProxy::OnFullscreenOverlayChanged(bool fullscreen_overla
     cef_listener_->OnFullscreenOverlayChanged(fullscreen_overlay);
   }
 }
+
+void MediaPlayerListenerProxy::OnVolumeChanged(double volume)
+{
+  if (cef_listener_) {
+    cef_listener_->OnVolumeChanged(volume);
+  }
+}

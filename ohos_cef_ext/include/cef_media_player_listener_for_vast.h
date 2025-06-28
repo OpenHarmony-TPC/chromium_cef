@@ -98,6 +98,10 @@ class CefMediaPlayerListenerForVAST {
   ///
   /*--cef()--*/
   virtual void OnFullscreenOverlayChanged(bool fullscreen_overlay) = 0;
+
+  // triggered on volume changed.
+  /*--cef()--*/
+  virtual void OnVolumeChanged(double volume) {}
 };
 
 #endif // BUILDFLAG(IS_OHOS)
