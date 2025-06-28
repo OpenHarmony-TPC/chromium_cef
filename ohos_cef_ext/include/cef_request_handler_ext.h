@@ -159,6 +159,19 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
   virtual void OnUpdateTargetURL(CefRefPtr<CefBrowser> browser,
                                  const CefString& url) {}
 
+  /*--cef()--*/
+  virtual std::string OverrideErrorPage(CefRefPtr<CefBrowser> browser,
+                                        const CefString& url,
+                                        const CefString& method,
+                                        bool user_gesture,
+                                        bool is_redirect,
+                                        bool is_outermost_main_frame,
+                                        const CefString& extra_request_headers,
+                                        int error_code,
+                                        const CefString& error_text) {
+    return "";
+  }
+
   CefRefPtr<CefRequestHandlerExt> AsCefRequestHandlerExt() override {
     return this;
   }

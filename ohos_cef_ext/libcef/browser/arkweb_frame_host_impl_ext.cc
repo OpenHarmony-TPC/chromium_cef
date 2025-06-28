@@ -625,3 +625,31 @@ void ArkwebFrameHostExtImpl::SetIsFling(bool is_fling) {
                     }, is_fling));
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+void ArkwebFrameHostExtImpl::OverrideErrorPage(
+    const std::string& url,
+    const std::string& request_method,
+    bool user_gesture,
+    bool is_redirect,
+    bool is_outermost_main_frame,
+    int error_code,
+    const std::string& error_text,
+    cef::mojom::BrowserFrame::OverrideErrorPageCallback callback) {
+  std::string html = "";
+  CefRefPtr<CefBrowserHostBase> browser_host = GetBrowserHostBase();
+  if (browser_host == nullptr) {
+    std::move(callback).Run(html);
+    return;
+  }
+
+  if (auto client = browser_host->GetClient()) {
+    if (auto handler = client->GetRequestHandler()) {
+      html = handler->AsCefRequestHandlerExt()->OverrideErrorPage(
+        browser_host.get(), url, request_method, user_gesture, is_redirect,
+        is_outermost_main_frame, "", error_code, error_text);
+    }
+  }
+  std::move(callback).Run(html);
+}
+#endif

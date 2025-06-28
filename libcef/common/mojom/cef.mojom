@@ -225,6 +225,15 @@ interface BrowserFrame {
 
   [EnableIf=is_ohos]
   UpdateHitTestData(int32 type, string extra_data);
+
+  [EnableIf=arkweb_error_page, Sync]
+  OverrideErrorPage(string url,
+                    string request_method,
+                    bool user_gesture,
+                    bool is_redirect,
+                    bool is_outermost_main_frame,
+                    int32 error_code,
+                    string error_text) => (string result);
 };
 
 struct CrossOriginWhiteListEntry {

@@ -146,6 +146,20 @@ void SetIsFling(bool is_fling);
       cef::mojom::BrowserFrame::ShouldOverrideUrlLoadingCallback callback)
       override;
 #endif
+
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  void OverrideErrorPage(
+    const std::string& url,
+    const std::string& request_method,
+    bool user_gesture,
+    bool is_redirect,
+    bool is_outermost_main_frame,
+    int error_code,
+    const std::string& error_text,
+    cef::mojom::BrowserFrame::OverrideErrorPageCallback callback)
+    override;
+#endif
+
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RemoveCache(bool include_disk_files);
 #endif
