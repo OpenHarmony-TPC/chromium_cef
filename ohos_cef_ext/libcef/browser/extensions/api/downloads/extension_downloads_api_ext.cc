@@ -137,11 +137,6 @@ enum DownloadsFunctionName {
   DOWNLOADS_FUNCTION_LAST
 };
 
-void RecordApiFunctions(DownloadsFunctionName function) {
-  UMA_HISTOGRAM_ENUMERATION("Download.ApiFunctions", function,
-                            DOWNLOADS_FUNCTION_LAST);
-}
-
 /* queryinfo */
 bool GetDownloadQueryInfoParams(std::optional<downloads::Erase::Params>& params,
                                 NWebDownloadsQueryInfo* queryInfo) {
