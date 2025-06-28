@@ -14,9 +14,8 @@
  */
 
 #include "chrome/browser/extensions/api/cookies/cookies_api.h"
-
-#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/extensions/api/cookies/cookies_helpers.h"
+#include "chrome/browser/profiles/profile.h"
 #include "cef/ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.h"
 
 namespace extensions {
@@ -25,17 +24,39 @@ ExtensionFunction::ResponseAction CookiesGetAllCookieStoresFunction::Run() {
   Profile* original_profile = Profile::FromBrowserContext(browser_context());
   DCHECK(original_profile);
   base::Value::List original_tab_ids;
- 
+  Profile* incognito_profile = nullptr;
+  base::Value::List incognito_tab_ids;
+  const bool include_incognito = include_incognito_information();
+  if (include_incognito && original_profile->HasPrimaryOTRProfile()) {
+    incognito_profile =
+        original_profile->GetPrimaryOTRProfile(/*create_if_needed=*/true);
+  }
+  DCHECK(original_profile != incognito_profile);
+
   NWebExtensionTabQueryInfo queryInfo;
-  std::vector<NWebExtensionTab> tabs = CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
-  for (NWebExtensionTab tab : tabs) {
-    original_tab_ids.Append(*tab.id);
+  std::vector<NWebExtensionTab> tabs =
+      CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
+  for (const NWebExtensionTab& tab : tabs) {
+    if (!tab.id.has_value()) {
+      continue;
+    }
+    if (tab.incognito) {
+      if (include_incognito) {
+        incognito_tab_ids.Append(tab.id.value());
+      }
+      continue;
+    }
+    original_tab_ids.Append(tab.id.value());
   }
   // Return a list of all cookie stores with at least one open tab.
   std::vector<api::cookies::CookieStore> cookie_stores;
   if (!original_tab_ids.empty()) {
     cookie_stores.push_back(cookies_helpers::CreateCookieStore(
         original_profile, std::move(original_tab_ids)));
+  }
+  if (include_incognito && incognito_profile && !incognito_tab_ids.empty()) {
+    cookie_stores.push_back(cookies_helpers::CreateCookieStore(
+        incognito_profile, std::move(incognito_tab_ids)));
   }
   return RespondNow(ArgumentList(
       api::cookies::GetAllCookieStores::Results::Create(cookie_stores)));
