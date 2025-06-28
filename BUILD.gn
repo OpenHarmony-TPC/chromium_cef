@@ -1169,6 +1169,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_windows_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/windows/windows_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/cookies/cookies_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/extension_downloads_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.h",
