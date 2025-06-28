@@ -43,6 +43,12 @@ int64_t OhPageLoadMetricsObserver::render_init_block_ = -1;
 // int64_t OhPageLoadMetricsObserver::navigation_start_timestamp_ = -1;
 #endif
 
+static int64_t GetCurrentTimestampMS() {
+  auto currentTime = std::chrono::system_clock::now().time_since_epoch();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
+      .count();
+}
+
 OhPageLoadMetricsObserver::OhPageLoadMetricsObserver() {
   network_quality_tracker_ = g_browser_process->network_quality_tracker();
   DCHECK(network_quality_tracker_);
@@ -55,6 +61,10 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
   navigation_id_ = navigation_handle->GetNavigationId();
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
   web_performance_timing_.navigation_id = navigation_id_;
+  int64_t input_time = GetCurrentTimestampMS();
+  web_performance_timing_.input_time = input_time;
+  web_performance_timing_.is_paint_down = false;
+  ReportFirstMeaningfulPaintDone(web_performance_timing_);
 #endif
 
 #if BUILDFLAG(ARKWEB_REPORT_SYS_EVENT)
@@ -172,6 +182,9 @@ void OhPageLoadMetricsObserver::OnFirstMeaningfulPaintInMainFrameDocument(
   int64_t navigation_start_time = GetNavigationStartTime();
   ReportFirstMeaningfulPaint(navigation_start_time,
                              first_meaningful_paint_time);
+  web_performance_timing_.first_meaningful_paint = GetCurrentTimestampMS();
+  web_performance_timing_.is_paint_down = true;
+  ReportFirstMeaningfulPaintDone(web_performance_timing_);
 }
 
 void OhPageLoadMetricsObserver::ReportFirstMeaningfulPaint(
@@ -409,12 +422,6 @@ void OhPageLoadMetricsObserver::ReportBufferedMetrics(
     ReportPerformanceTiming();
     return;
   }
-}
-
-static int64_t GetCurrentTimestampMS() {
-  auto currentTime = std::chrono::system_clock::now().time_since_epoch();
-  return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime)
-      .count();
 }
 
 void OhPageLoadMetricsObserver::OnNavigationStart() {
