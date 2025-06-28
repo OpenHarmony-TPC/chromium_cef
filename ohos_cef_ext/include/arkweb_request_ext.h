@@ -108,6 +108,18 @@ class ArkWebCefPostDataStreamReadCallback : public virtual CefBaseRefCounted {
 };
 
 ///
+/// Callback for async read from stream.
+///
+class ArkWebCefPostDataStreamAsyncReadCallback
+    : public virtual CefBaseRefCountedNopac {
+ public:
+  ///
+  /// Callback for async read from stream.
+  ///
+  virtual void OnAsyncReadComplete(char* buffer, int bytes_read) = 0;
+};
+
+///
 /// Class used to represent post data for a web request. The methods of this
 /// class may be called on any thread.
 ///
@@ -137,6 +149,14 @@ class ArkWebCefPostDataStream : public virtual CefBaseRefCounted {
       void* buffer,
       int buf_len,
       CefRefPtr<ArkWebCefPostDataStreamReadCallback> read_callback) = 0;
+
+  ///
+  /// AsyncRead the stream.
+  ///
+  virtual void AsyncRead(
+      void* buffer,
+      int buf_len,
+      CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback) = 0;
 
   ///
   /// Get the size of stream.
