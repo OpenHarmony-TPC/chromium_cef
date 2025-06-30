@@ -27,7 +27,6 @@ namespace {
   do {                                \
     if (ptr) {                        \
       free(ptr);                      \
-      ptr = nullptr;                  \
     }                                 \
   } while (0)
 

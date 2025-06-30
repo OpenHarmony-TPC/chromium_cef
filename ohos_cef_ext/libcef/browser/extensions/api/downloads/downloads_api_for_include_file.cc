@@ -28,11 +28,11 @@ class DownloadsEraseFunction : public ExtensionFunction {
       const char* error,
       const uint32_t count,
       const int* eraseIds);
-  base::WeakPtrFactory<DownloadsEraseFunction> weak_ptr_factory_{this};
   bool call_downloads_erase_ = false;
  
  protected:
   ~DownloadsEraseFunction() override;
+  base::WeakPtrFactory<DownloadsEraseFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsOpenFunction : public ExtensionFunction {
@@ -49,11 +49,11 @@ class DownloadsOpenFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsOpenFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsOpenFunction> weak_ptr_factory_{this};
   bool call_downloads_open_ = false;
  
  protected:
   ~DownloadsOpenFunction() override;
+  base::WeakPtrFactory<DownloadsOpenFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsRemoveFileFunction : public ExtensionFunction {
@@ -71,12 +71,11 @@ class DownloadsRemoveFileFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsRemoveFileFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsRemoveFileFunction> weak_ptr_factory_{this};
   bool call_downloads_remove_file_ = false;
  
  protected:
   ~DownloadsRemoveFileFunction() override;
- 
+  base::WeakPtrFactory<DownloadsRemoveFileFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsPauseFunction : public ExtensionFunction {
@@ -93,11 +92,11 @@ class DownloadsPauseFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsPauseFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsPauseFunction> weak_ptr_factory_{this};
   bool call_downloads_pause_ = false;
  
  protected:
   ~DownloadsPauseFunction() override;
+  base::WeakPtrFactory<DownloadsPauseFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsResumeFunction : public ExtensionFunction {
@@ -114,11 +113,11 @@ class DownloadsResumeFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsResumeFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsResumeFunction> weak_ptr_factory_{this};
   bool call_downloads_resume_ = false;
  
  protected:
   ~DownloadsResumeFunction() override;
+  base::WeakPtrFactory<DownloadsResumeFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsCancelFunction : public ExtensionFunction {
@@ -135,11 +134,11 @@ class DownloadsCancelFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsCancelFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsCancelFunction> weak_ptr_factory_{this};
   bool call_downloads_cancel_ = false;
  
  protected:
   ~DownloadsCancelFunction() override;
+  base::WeakPtrFactory<DownloadsCancelFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsAcceptDangerFunction : public ExtensionFunction {
@@ -157,11 +156,11 @@ class DownloadsAcceptDangerFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsAcceptDangerFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsAcceptDangerFunction> weak_ptr_factory_{this};
   bool call_downloads_accept_danger_ = false;
  
  protected:
   ~DownloadsAcceptDangerFunction() override;
+  base::WeakPtrFactory<DownloadsAcceptDangerFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsSetUiOptionsFunction : public ExtensionFunction {
@@ -179,11 +178,11 @@ class DownloadsSetUiOptionsFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsSetUiOptionsFunction>& function,
       const char* error);
  
-  base::WeakPtrFactory<DownloadsSetUiOptionsFunction> weak_ptr_factory_{this};
   bool call_downloads_set_ui_options_ = false;
  
  protected:
   ~DownloadsSetUiOptionsFunction() override;
+  base::WeakPtrFactory<DownloadsSetUiOptionsFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsShowFunction : public ExtensionFunction {
@@ -196,11 +195,11 @@ class DownloadsShowFunction : public ExtensionFunction {
  
   ResponseAction Run() override;
  
-  base::WeakPtrFactory<DownloadsShowFunction> weak_ptr_factory_{this};
   bool call_downloads_show_ = false;
  
  protected:
   ~DownloadsShowFunction() override;
+  base::WeakPtrFactory<DownloadsShowFunction> weak_ptr_factory_{this};
 };
  
 class DownloadsShowDefaultFolderFunction : public ExtensionFunction {
@@ -216,9 +215,9 @@ class DownloadsShowDefaultFolderFunction : public ExtensionFunction {
  
   ResponseAction Run() override;
  
-  base::WeakPtrFactory<DownloadsShowDefaultFolderFunction> weak_ptr_factory_{this};
   bool call_downloads_show_default_folder_ = false;
  
  protected:
   ~DownloadsShowDefaultFolderFunction() override;
+  base::WeakPtrFactory<DownloadsShowDefaultFolderFunction> weak_ptr_factory_{this};
 };
