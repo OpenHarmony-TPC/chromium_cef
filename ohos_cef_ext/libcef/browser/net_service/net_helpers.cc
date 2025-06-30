@@ -63,6 +63,10 @@ bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
 int NetHelpers::connection_timeout = 30;
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+bool NetHelpers::pna_check_enabled = true;
+#endif
+
 #if BUILDFLAG(ARKWEB_CUSTOM_DNS)
 std::map<std::string, struct CustomDnsEntry> NetHelpers::custom_dns = {};
 #endif
@@ -378,6 +382,25 @@ void NetHelpers::ClearHostIP(const std::string host_name) {
 
 void NetHelpers::ClearHostIP() {
   NetHelpers::custom_dns.clear();
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+bool NetHelpers::SkipPreflightCheck() {
+  LOG(DEBUG) << "PrivateNetworkAccess is " << (pna_check_enabled ? "enable" : "false");
+  return !pna_check_enabled;
+}
+
+void NetHelpers::SetPrivateNetworkAccess(bool enable) {
+  static bool is_set = false;
+  if (!is_set) {
+    pna_check_enabled = enable;
+    is_set = true;
+  }
+}
+
+bool NetHelpers::GetPrivateNetworkAccess() {
+  return pna_check_enabled;
 }
 #endif
 
