@@ -1174,6 +1174,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/downloads/extension_downloads_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
     ]
     configs += [
