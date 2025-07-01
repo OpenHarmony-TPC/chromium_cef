@@ -3317,16 +3317,6 @@ void CefBrowserHostBase::SetGrantFileAccessDirs(
     const std::vector<CefString>& dir_list) {
   base::AutoLock lock_scope(state_lock_);
   file_access_dirs_list_ = dir_list;
-#if defined(OHOS_MEDIA_POLICY)
-  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
-  if (!mediaSession || !GetWebContents()) {
-    LOG(ERROR) << "CefBrowserHostBase::SetGrantFileAccessDirs get mediaSession or webContents failed.";
-    return;
-  }
-  for (auto& dir: file_access_dirs_list_) {
-    mediaSession->grantMediaFileAccessDirs_.emplace_back(dir.ToString());
-  }
-#endif // defined(OHOS_MEDIA_POLICY)
 }
 
 bool CefBrowserHostBase::GetFileAccess() {
