@@ -81,6 +81,10 @@ class ArkWebCefPostDataStreamImpl : public ArkWebCefPostDataStream {
       void* buffer,
       int buf_len,
       CefRefPtr<ArkWebCefPostDataStreamReadCallback> read_callback) override;
+  void AsyncRead(void* buffer,
+                 int buf_len,
+                 CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback>
+                     read_callback) override;
   uint64_t GetSize() override;
   uint64_t GetPosition() override;
   bool IsChunked() override;
@@ -99,11 +103,20 @@ class ArkWebCefPostDataStreamImpl : public ArkWebCefPostDataStream {
   void ReadAsync(void* buffer,
                  int buf_len,
                  CefRefPtr<ArkWebCefPostDataStreamReadCallback> read_callback);
+  void ReadAsyncOnTaskRunner(void* buffer,
+                 int buf_len,
+                 CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback); 
   void OnStreamReadAsync(
       scoped_refptr<net::WrappedIOBuffer> buffer,
       CefRefPtr<ArkWebCefPostDataStreamReadCallback> read_callback,
       int rv);
+  void OnStreamReadCompleteOnTaskRunner(
+      scoped_refptr<net::WrappedIOBuffer> buffer,
+      CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback,
+      int rv);
   void ReadOnTaskRunner(void* buffer, int buf_len, base::WaitableEvent* event);
+
+  scoped_refptr<base::SequencedTaskRunner> GetSharedSequencedAsyncRunner();
 
   CefRefPtr<ArkWebCefPostDataStreamReadCallback> read_callback_;
   CefRefPtr<ArkWebCefPostDataStreamInitCallback> init_callback_;
