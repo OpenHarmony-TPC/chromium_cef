@@ -63,7 +63,7 @@ OhPageLoadMetricsObserver::ObservePolicy OhPageLoadMetricsObserver::OnStart(
   web_performance_timing_.navigation_id = navigation_id_;
   int64_t input_time = GetCurrentTimestampMS();
   web_performance_timing_.input_time = input_time;
-  web_performance_timing_.is_paint_down = false;
+  web_performance_timing_.is_paint_done = false;
   ReportFirstMeaningfulPaintDone(web_performance_timing_);
 #endif
 
@@ -183,7 +183,7 @@ void OhPageLoadMetricsObserver::OnFirstMeaningfulPaintInMainFrameDocument(
   ReportFirstMeaningfulPaint(navigation_start_time,
                              first_meaningful_paint_time);
   web_performance_timing_.first_meaningful_paint = GetCurrentTimestampMS();
-  web_performance_timing_.is_paint_down = true;
+  web_performance_timing_.is_paint_done = true;
   ReportFirstMeaningfulPaintDone(web_performance_timing_);
 }
 
