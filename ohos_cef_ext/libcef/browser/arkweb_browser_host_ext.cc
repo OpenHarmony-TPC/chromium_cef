@@ -652,6 +652,11 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
   settings_.copy_option = browser_settings.copy_option;
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
+
+#if BUILDFLAG(ARKWEB_FOCUS)
+  settings_.gesture_focus_mode = browser_settings.gesture_focus_mode;
+#endif
+
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
   settings_.custom_video_player_enable =
       browser_settings.custom_video_player_enable;

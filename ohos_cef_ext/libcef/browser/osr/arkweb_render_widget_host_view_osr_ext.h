@@ -364,6 +364,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                        blink::mojom::InputEventResultState ack_result) override;
   void SendInternalBeginFrame() override;
   void OnScrollState(bool scroll_state);
+  void SetFocusOnGestureEvent(const ui::GestureEventData& gesture);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)

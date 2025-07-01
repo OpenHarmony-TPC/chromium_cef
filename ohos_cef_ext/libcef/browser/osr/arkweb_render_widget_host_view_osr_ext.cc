@@ -1672,6 +1672,7 @@ void ArkWebRenderWidgetHostViewOSRExt::OnGestureEvent(
   }
   FilterScrollEventImpl(gesture);
   SendGestureEvent(gesture);
+  SetFocusOnGestureEvent(gesture);
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::ScaleGestureChangeV2(int type,
@@ -2028,6 +2029,34 @@ void ArkWebRenderWidgetHostViewOSRExt::FilterScrollEventImpl(
       browser_impl_->SetIsFling(true);
     }
 #endif
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::SetFocusOnGestureEvent(
+    const ui::GestureEventData& gesture) {
+  blink::WebGestureEvent web_event =
+      ui::CreateWebGestureEventFromGestureEventData(gesture);
+  if (!browser_impl_ || !browser_impl_->client()) {
+    LOG(ERROR) << "get browser_impl client failed.";
+    return;
+  }
+  if (!browser_impl_->settings().gesture_focus_mode) {
+    return;
+  }
+
+  CefRefPtr<CefFocusHandler> handler =
+      browser_impl_->client()->GetFocusHandler();
+  if (!handler) {
+    LOG(ERROR) << "get handler failed.";
+    return;
+  }
+  if (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap ||
+      web_event.GetType() == blink::WebInputEvent::Type::kGestureLongPress) {
+    LOG(INFO) << "set focus on the gesture event of "
+              << (web_event.GetType() == blink::WebInputEvent::Type::kGestureTap
+                      ? "gestureTap"
+                      : "gestureLongPress");
+    handler->OnSetFocus(browser_impl_.get(), FOCUS_SOURCE_GESTURE);
   }
 }
 
