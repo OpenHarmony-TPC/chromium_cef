@@ -111,7 +111,7 @@ class ArkWebCefPostDataStreamReadCallback : public virtual CefBaseRefCounted {
 /// Callback for async read from stream.
 ///
 class ArkWebCefPostDataStreamAsyncReadCallback
-    : public virtual CefBaseRefCountedNopac {
+    : public virtual CefBaseRefCounted {
  public:
   ///
   /// Callback for async read from stream.
