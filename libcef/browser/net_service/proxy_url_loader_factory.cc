@@ -496,10 +496,17 @@ InterceptedRequest::InterceptedRequest(
                           &removed_headers);
 
   // If there is a client error, clean up the request.
+#if BUILDFLAG(IS_ARKWEB)
+  target_client_.set_disconnect_handler(base::BindOnce(
+      &InterceptedRequest::OnURLLoaderClientError, weak_factory_.GetWeakPtr()));
+  proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
+      &InterceptedRequest::OnURLLoaderError, weak_factory_.GetWeakPtr()));
+#else
   target_client_.set_disconnect_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderClientError, base::Unretained(this)));
   proxied_loader_receiver_.set_disconnect_with_reason_handler(base::BindOnce(
       &InterceptedRequest::OnURLLoaderError, base::Unretained(this)));
+#endif
 }
 
 InterceptedRequest::~InterceptedRequest() {
