@@ -109,6 +109,59 @@ bool ArkWebExtensionIsNotTabId(content::WebContents* web_contents, int tab_id) {
   }
   return false;
 }
-#endif
+
+bool GetAlloyTabById(int tab_id,
+                     Profile* profile,
+                     bool include_incognito,
+                     content::WebContents** contents) {
+  for (auto rph_iterator = content::RenderProcessHost::AllHostsIterator();
+       !rph_iterator.IsAtEnd(); rph_iterator.Advance()) {
+    content::RenderProcessHost* rph = rph_iterator.GetCurrentValue();
+ 
+    // Ignore renderers that aren't ready.
+    if (!rph->IsInitializedAndNotDead()) {
+      continue;
+    }
+    // Ignore renderers that aren't from a valid profile. This is either the
+    // same profile or the incognito profile if `include_incognito` is true.
+    Profile* process_profile =
+        Profile::FromBrowserContext(rph->GetBrowserContext());
+    if (process_profile != profile &&
+        !(include_incognito && profile->IsSameOrParent(process_profile))) {
+      continue;
+    }
+ 
+    bool found_contents = false;
+    rph->ForEachRenderFrameHost([&contents, tab_id,
+                                 &found_contents](content::RenderFrameHost* rfh) {
+      CHECK(rfh);
+      auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
+      CHECK(web_contents);
+      if (ArkWebExtensionIsNotTabId(web_contents, tab_id)) {
+        return;
+      }
+ 
+      // We only consider Alloy style CefBrowserHosts in this loop. Otherwise,
+      // we could end up returning a WebContents that shouldn't be exposed to
+      // extensions.
+      auto browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
+      if (!browser || !browser->IsAlloyStyle()) {
+        return;
+      }
+ 
+      if (contents) {
+        *contents = web_contents;
+      }
+      found_contents = true;
+    });
+ 
+    if (found_contents) {
+      return true;
+    }
+  }
+ 
+  return false;
+}
+#endif // ARKWEB_ARKWEB_EXTENSIONS
 
 }  // namespace cef
