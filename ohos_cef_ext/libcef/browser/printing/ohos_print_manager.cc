@@ -594,6 +594,12 @@ void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
   print_job_id_ = printAttrs.jobId;
 }
 
+void OhosPrintManager::ClearPrintAttrs(const std::string& jobId) {
+  printAttrsMap_.erase(jobId);
+  fd_ = -1;
+  print_job_id_ = "";
+}
+
 void OhosPrintManager::PrintRequested(PrintRequestedCallback callback) {
   is_pdf_print_ = false;
   if (!PrintNow()) {
