@@ -62,7 +62,8 @@ class CefDisplayHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef(optional_param=title)--*/
   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser,
-                             const CefString& title) {}
+                             const CefString& title,
+                             bool isRealTitle) {}
 
   ///
   /// Called when the page icon changes.

@@ -551,7 +551,7 @@ void CefBrowserContentsDelegate::DidStopLoading() {
 #endif
   }
 
-  OnTitleChange(web_contents()->GetTitle());
+  OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
 }
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
@@ -731,9 +731,9 @@ void CefBrowserContentsDelegate::TitleWasSet(content::NavigationEntry* entry) {
   // |entry| may be NULL if a popup is created via window.open and never
   // navigated.
   if (entry) {
-    OnTitleChange(entry->GetTitle());
+    OnTitleChange(entry->GetTitle(), entry->GetIsRealTitle());
   } else if (web_contents()) {
-    OnTitleChange(web_contents()->GetTitle());
+    OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
   }
 }
 
@@ -872,10 +872,10 @@ void CefBrowserContentsDelegate::OnLoadError(CefRefPtr<CefFrame> frame,
   }
 }
 
-void CefBrowserContentsDelegate::OnTitleChange(const std::u16string& title) {
+void CefBrowserContentsDelegate::OnTitleChange(const std::u16string& title, bool isRealTitle) {
   if (auto c = client()) {
     if (auto handler = c->GetDisplayHandler()) {
-      handler->OnTitleChange(browser(), title);
+      handler->OnTitleChange(browser(), title, isRealTitle);
     }
   }
 }
