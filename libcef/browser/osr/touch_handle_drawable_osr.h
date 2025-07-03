@@ -50,7 +50,7 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
   void TouchHandleStateChanged(const CefTouchHandleState& state);
 
 #if BUILDFLAG(ARKWEB_MENU)
-  CefRenderWidgetHostViewOSR* rwhv_;
+  raw<CefRenderWidgetHostViewOSR> rwhv_;
 #else
   raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
