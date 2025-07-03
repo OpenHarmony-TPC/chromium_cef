@@ -397,7 +397,6 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   float pull_to_refresh_offset_x_ = 0;
   float pull_to_refresh_offset_y_ = 0;
   gfx::Transform root_layer_transform_{};
-  std::unique_ptr<content::OverscrollControllerOHOS> overscroll_controller_;
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
