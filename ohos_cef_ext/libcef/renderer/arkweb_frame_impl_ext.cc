@@ -98,6 +98,11 @@ static double POSITION_RATIO = 138.9;
 #if BUILDFLAG(ARKWEB_OPTIMIZE_PARSER_BUDGET)
 #include "third_party/blink/renderer/core/html/parser/html_document_parser.h"
 #endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+#include "content/renderer/render_frame_impl.h"
+#endif
+
 #if BUILDFLAG(IS_ARKWEB)
 const std::string kAddressPrefix = "geo:0,0?q=";
 const std::string kEmailPrefix = "mailto:";
@@ -805,5 +810,20 @@ void ArkwebFrameExtImpl::ScrollPageUpDown(bool is_up,
 void ArkwebFrameExtImpl::SetIsFling(bool is_fling) {
   LOG(DEBUG) << "SetIsFling in render side:" << is_fling;
   soc_perf::SocPerUtil::is_slide = is_fling;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+void ArkwebFrameExtImpl::SendBlanklessKeyToRenderFrame(
+    uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id, int64_t pref_hash) {
+  ExecuteOnLocalFrame(
+    __FUNCTION__,
+    base::BindOnce(
+      [](uint32 nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+         int64_t pref_hash, blink::WebLocalFrame* rframe) {
+        if (auto render_frame = content::RenderFrameImpl::FromWebFrame(frame)) {
+          render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
+        }
+      }, nweb_id, blankless_key, frame_sink_id, pref_hash));
 }
 #endif

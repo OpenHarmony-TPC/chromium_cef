@@ -43,6 +43,13 @@
 #endif
 #include "content/public/browser/browsing_data_remover.h"
 
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+#include "components/viz/common/surfaces/frame_sink_id.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
+#include "content/browser/renderer_host/render_view_host_impl.h"
+#include "ui/compositor/compositor.h"
+#endif
+
 namespace {
 
 #ifdef OHOS_CLIPBOARD
@@ -651,5 +658,40 @@ void ArkwebFrameHostExtImpl::OverrideErrorPage(
     }
   }
   std::move(callback).Run(html);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+void ArkwebFrameHostExtImpl::SendBlanklessKeyToRenderFrame(
+    uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id, int64_t pref_hash) {
+  content::RenderFrameHost* rfh = GetRenderFrameHost();
+  if (rfh == nullptr) {
+    return;
+  }
+  content::RenderViewHostImpl* rvh = static_cast<content::RenderFrameHostImpl*>(rfh)->render_view_host();
+  if (rvh == nullptr) {
+    return;
+  }
+  content::RenderWidgetHostImpl* rwh = rvh->GetWidget();
+  if (rwh == nullptr) {
+    return;
+  }
+  content::RenderWidgetHostViewBase* rwhvb = rwh->GetView();
+  if (rwhvb == nullptr) {
+    return;
+  }
+  ui::Compositor* compositor = rwhvb->GetCompositor();
+  if (compositor == nullptr) {
+    return;
+  }
+
+  uint64_t id = compositor->frame_sinke_id().hash();
+  SendToRenderFrame(
+    __FUNCTION__,
+    base::BindOnce(
+      [](uint32 nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+         int64_t pref_hash, const RenderFrameType& render_frame) {
+        render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
+      }, nweb_id, blankless_key, id, pref_hash));
 }
 #endif
