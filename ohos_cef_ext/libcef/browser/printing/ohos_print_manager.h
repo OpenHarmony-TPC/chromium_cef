@@ -68,6 +68,7 @@ class OhosPrintManager : public printing::PrintManager,
   void PrintPageImpl(bool isApplication);
   void DidDispatchPrintEventImpl(bool isBefore);
   void SetPrintAttrs(const PrintAttrs printAttrs);
+  void ClearPrintAttrs(const std::string& jobId);
   void RunPrintRequestedCallbackImpl(const std::string& jobId);
   void SetToken(void* token);
   void SetPrintStatus(bool is_print_now, uint32_t state);
@@ -121,7 +122,7 @@ class OhosPrintManager : public printing::PrintManager,
   scoped_refptr<base::TaskRunner> task_runner_;
   std::unique_ptr<printing::PrintSettings> settings_;
 
-  uint32_t fd_ = 0;
+  int fd_ = -1;
   uint32_t width_ = 8270;
   uint32_t height_ = 11690;
   int dpi_ = 300;  // DPI (Dots Per Inch)
