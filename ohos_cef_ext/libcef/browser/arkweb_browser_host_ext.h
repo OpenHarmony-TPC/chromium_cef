@@ -690,10 +690,28 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
+  virtual  WebExtensionTabUpdated(
+      int tab_id,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+      std::unique_ptr<NWebExtensionTab> tab) override {}
   virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
-  virtual void WebExtensionActionClicked(std::string extensionId,
-                                         const NWebExtensionTab* tab) override {
-  }
+  virtual void WebExtensionTabRemoved(int tab_id,
+    bool isWindowClosing, int windowId) override {}
+
+  virtual void WebExtensionTabAttached(int new_position, int new_window_id) override {}
+
+  virtual void WebExtensionTabCreated(int tab_id, std::unique_ptr<NWebExtensionTab> tab) override {}
+
+  virtual void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override {}
+
+  virtual void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override {}
+
+  virtual void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override {}
+
+  virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override {}
+
+  virtual void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
+      const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override {}
 #endif
 
   void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,

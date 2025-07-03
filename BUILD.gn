@@ -1156,8 +1156,6 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.h",
-      "ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.cc",
-      "ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.h",
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.cc",
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.h",
       "ohos_cef_ext/libcef/browser/extensions/windows_manager.h",

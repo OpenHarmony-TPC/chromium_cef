@@ -150,10 +150,6 @@ using content::KeyboardEventProcessingResult;
 #include "content/browser/media/session/media_session_impl.h"
 #endif // defined(OHOS_MEDIA_POLICY)
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "include/cef_web_extension_api_handler.h"
-#endif
-
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 #include "include/cef_media_player_controller.h"
 #include "include/cef_media_player_listener_for_vast.h"
@@ -775,19 +771,40 @@ bool AlloyBrowserHostImplExt::TrigAdBlockEnabledForSiteFromUi(
 
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url)  {
-  content::WebContents* web_contents = GetWebContents();
+void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
+  tab_id_ = tab_id;
+}
+
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId(int32_t tab_id) {
+  return tab_id_;
+}
+
+bool AlloyBrowserHostImplExt::WebExtensionCheck(
+    const std::string functionName,
+    content::BrowserContext*& browser_context,
+    content::WebContents*& web_contents) {
+  web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "TabUpdated get contents failed.";
-    return;
+    LOG(ERROR) << functionName << " get contents failed.";
+    return false;
   }
 
-  auto browser_context = web_contents->GetBrowserContext();
+  browser_context = web_contents->GetBrowserContext();
   if (!browser_context) {
-    LOG(ERROR) << "TabUpdated get browser context failed.";
+    LOG(ERROR) << functionName << " get contents failed.";
+    return false;
+  }
+
+  return true;
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
+        int tab_id,
+      const std::vector<CefString>& changed_property_names,
+      const CefString& url) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
     return;
   }
 
@@ -805,15 +822,9 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
     int tab_id,
     const std::vector<CefString>& changed_property_names,
     std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "TabUpdated get contents failed.";
-    return;
-  }
- 
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context) {
-    LOG(ERROR) << "TabUpdated get browser context failed.";
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
     return;
   }
  
@@ -827,77 +838,174 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
       tab_id, web_contents, changed_properties, std::move(changeInfo));
 }
 
+void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
+    int tab_id,
+    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+    std::unique_ptr<NWebExtensionTab> tab) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
+    return;
+  }
 
-void AlloyBrowserHostImplExt::WebExtensionUpdateTabUrl(
-    int32_t tab_id,
-    const GURL& url) {
-  contents_delegate_.WebExtensionUpdateTabUrl(tab_id, url);
+  extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
+      tab_id, web_contents, std::move(changeInfo), std::move(tab));
 }
-
-void AlloyBrowserHostImplExt::WebExtensionUpdateTab(
-    int32_t tab_id,
-    const NWebExtensionTabUpdateProperties* update_properties) {
-  contents_delegate_.WebExtensionUpdateTab(tab_id, update_properties);
-}
-
-void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
-}
-
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() const {
-  return tab_id_;
-}
-
-
  
 void AlloyBrowserHostImplExt::WebExtensionTabActivated(int tab_id, int window_id) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents) {
-    LOG(ERROR) << "TabActivated get contents failed.";
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabActivated", browser_context, web_contents)) {
     return;
   }
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context) {
-    LOG(ERROR) << "TabActivated get browser context failed.";
-    return;
-  }
+
   extensions::TabsWindowsAPI::Get(browser_context)
       ->TabActived(tab_id, window_id, web_contents);
 }
- 
+
+void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
+    int tab_id,
+    bool isWindowClosing,
+    int windowId) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabRemoved", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabRemoved(tab_id, isWindowClosing, windowId, web_contents);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabAttached(int new_position, int new_window_id) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabAttached", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabAttached(ExtensionGetTabId(), web_contents, new_position, new_window_id);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabCreated(
+    int tab_id,
+    std::unique_ptr<NWebExtensionTab> tab) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabCreated", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabCreated(tab_id, web_contents, std::move(tab));
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabDetached", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabDetached(web_contents, ExtensionGetTabId(), detachInfo->oldPosition,
+      detachInfo->oldWindowId);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabHighlighted", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabHighlighted(web_contents, highlightInfo);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabMoved(
+    int tab_id,
+    const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabMoved", browser_context, web_contents)) {
+    return;
+  }
+
+  std::unique_ptr<NWebExtensionTabMoveInfo> params = std::make_unique<NWebExtensionTabMoveInfo>(*moveInfo);
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabMoved(web_contents, tab_id, std::move(params));
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabReplaced", browser_context, web_contents)) {
+    return;
+  }
+
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabReplaced(web_contents, addedTabId, removedTabId);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
+    const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {
+  content::BrowserContext* browser_context = nullptr;
+  content::WebContents* web_contents = nullptr;
+  if (!WebExtensionCheck("TabZoomChange", browser_context, web_contents)) {
+    return;
+  }
+
+  std::unique_ptr<NWebExtensionTabZoomChangeInfo> params
+      = std::make_unique<NWebExtensionTabZoomChangeInfo>(*tabZoomChangeInfo);
+  extensions::TabsWindowsAPI::Get(browser_context)
+      ->TabZoomChange(web_contents, std::move(params));
+}
+
+content::BrowserContext* GetGlobalBrowserContext() {
+  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalBrowserContext();
+  if (!request_context) {
+    LOG(ERROR) << "request context is null";
+    return nullptr;
+  }
+
+  CefRequestContextImpl* request_context_impl =
+    static_cast<CefRequestContextImpl*>(request_context.get());
+  CefBrowserContext* cef_browser_context = request_context_impl->GetBrowserContext();
+  if (!cef_browser_context) {
+    LOG(ERROR) << "cef browser context is null";
+    return nullptr;
+  }
+  content::BrowserContext* browser_context = cef_browser_context->AsBrowserContext();
+  return browser_context;
+}
+
 void AlloyBrowserHostImplExt::WebExtensionActionClicked(
     std::string extensionId,
     const NWebExtensionTab* tab) {
-  content::WebContents* web_contents = GetWebContents();
-  if (!web_contents)
-    LOG(ERROR) << "WebExtensionActionClicked get web_contents failed.";
- 
-  auto browser_context = web_contents->GetBrowserContext();
-  if (!browser_context)
-    LOG(ERROR) << "WebExtensionActionClicked get browser_context failed.";
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionClicked context is null";
+    return;
+  }
     
-  extensions::ExtensionActionDispatcher::Get(browser_context)
-      ->DispatchExtensionActionClickedWithCustomArgs(web_contents, extensionId,
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->DispatchExtensionActionClickedWithCustomArgs(context, extensionId,
                                                      tab);
 }
 
-content::DropData* AlloyBrowserHostImplExt::GetDropData() {
-  if (!platform_delegate()) {
-    return nullptr;
+void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
+    std::string extensionId, bool isPinned) {
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionPinnedStateChanged context is null";
+    return;
   }
-  auto* platform_delegate_ext =
-      platform_delegate()->AsArkWebCefBrowserPlatformDelegateExt();
-  if (!platform_delegate_ext) {
-    return nullptr;
-  }
-  CefRefPtr<CefDragData> cef_drag_data = platform_delegate_ext->GetDropData();
-  CefDragDataImpl* data_impl = static_cast<CefDragDataImpl*>(cef_drag_data.get());
-  if (!data_impl) {
-    return nullptr;
-  }
-  return data_impl->drop_data();
+    
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->OnActionPinnedStateChanged(extensionId, isPinned);
 }
-
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 

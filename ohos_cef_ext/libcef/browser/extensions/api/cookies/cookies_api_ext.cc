@@ -17,7 +17,7 @@
 
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/extensions/api/cookies/cookies_helpers.h"
-#include "cef/ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
 
 namespace extensions {
 
@@ -27,7 +27,7 @@ ExtensionFunction::ResponseAction CookiesGetAllCookieStoresFunction::Run() {
   base::Value::List original_tab_ids;
  
   NWebExtensionTabQueryInfo queryInfo;
-  std::vector<NWebExtensionTab> tabs = CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
+  std::vector<NWebExtensionTab> tabs = OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
   for (NWebExtensionTab tab : tabs) {
     original_tab_ids.Append(*tab.id);
   }

@@ -80,6 +80,50 @@ base::Value::Dict GetTabValue(const NWebExtensionTab& tab) {
   return dict;
 }
 
+std::string GetZoomSettingsModeStr(NWebExtensionTabZoomSettingsMode mode) {
+  switch (mode) {
+    case NWebExtensionTabZoomSettingsMode::AUTOMATIC:
+      return "automatic";
+    case NWebExtensionTabZoomSettingsMode::MANUAL:
+      return "manual";
+    case NWebExtensionTabZoomSettingsMode::DISABLE:
+      return "disable";
+  }
+}
+
+std::string GetZoomSettingsScopeStr(NWebExtensionTabZoomSettingsScope scope) {
+  switch (scope) {
+    case NWebExtensionTabZoomSettingsScope::PER_ORIGIN:
+      return "per-origin";
+    case NWebExtensionTabZoomSettingsScope::PER_TAB:
+      return "per-tab";
+  }
+  return {};
+}
+
+base::Value::Dict GetTabZoomSettingsValue(const NWebExtensionTabZoomSettings& zoomSettings) {
+  base::Value::Dict dict;
+  if (zoomSettings.defaultZoomFactor) {
+    dict.Set("defaultZoomFactor", *zoomSettings.defaultZoomFactor);
+  }
+  if (zoomSettings.mode) {
+    dict.Set("mode", GetZoomSettingsModeStr(*zoomSettings.mode));
+  }
+  if (zoomSettings.scope) {
+    dict.Set("scope", GetZoomSettingsScopeStr(*zoomSettings.scope));
+  }
+  return dict;
+}
+
+base::Value::Dict GetTabZoomChangeValue(const NWebExtensionTabZoomChangeInfo& tabZoomChangeInfo) {
+  base::Value::Dict dict;
+  dict.Set("newZoomFactor", tabZoomChangeInfo.newZoomFactor);
+  dict.Set("oldZoomFactor", tabZoomChangeInfo.oldZoomFactor);
+  dict.Set("tabId", tabZoomChangeInfo.tabId);
+  dict.Set("zoomSettings", GetTabZoomSettingsValue(tabZoomChangeInfo.zoomSettings));
+  return dict;
+}
+
 base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs) {
   base::Value::List tab_list;
   for (NWebExtensionTab tab : tabs) {

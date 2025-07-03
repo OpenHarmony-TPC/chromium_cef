@@ -23,7 +23,6 @@
 #include "include/cef_media_handler.h"
 #include "include/cef_permission_request.h"
 #include "include/cef_web_client_extension_handler.h"
-#include "include/cef_web_extension_api_handler.h"
 
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
@@ -150,16 +149,6 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
     return nullptr;
   }
 #endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  ///
-  /// Return the handler for web extension api. If no handler is provided the
-  /// default implementation will be used.
-  ///
-  virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
-    return nullptr;
-  }
-#endif
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   ///

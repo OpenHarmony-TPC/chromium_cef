@@ -19,11 +19,92 @@
 #include "chrome/common/extensions/api/tabs.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/favicon_status.h"
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#include "libcef/browser/extensions/tab_extensions_util.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
+
+using base::Value;
+using content::WebContents;
 
 namespace extensions {
 
 namespace {
+constexpr char kGroupIdKey[] = "groupId";
+constexpr char kNewPositionKey[] = "newPosition";
+constexpr char kNewWindowIdKey[] = "newWindowId";
+
+constexpr char kPinnedKey[] = "pinned";
+constexpr char kAudibleKey[] = "audible";
+constexpr char kFrozenKey[] = "frozen";
+constexpr char kDiscardedKey[] = "discarded";
+constexpr char kAutoDiscardableKey[] = "autoDiscardable";
+constexpr char kMutedInfoKey[] = "mutedInfo";
+constexpr char kSelectedKey[] = "selected";
 constexpr char kStatusKey[] = "status";
+constexpr char kTabIdKey[] = "tabId";
+
+constexpr char kWindowClosing[] = "isWindowClosing";
+
+constexpr char kOldPositionKey[] = "oldPosition";
+constexpr char kOldWindowIdKey[] = "oldWindowId";
+constexpr char kWindowIdKey[] = "windowId";
+constexpr char kTabIdsKey[] = "tabIds";
+constexpr char kFromIndexKey[] = "fromIndex";
+constexpr char kToIndexKey[] = "toIndex";
+
+constexpr char kChangePropertyNameAudible[] = "audible";
+constexpr char kChangePropertyNameAutoDiscardable[] = "autoDiscardable";
+constexpr char kChangePropertyNameDiscarded[] = "discarded";
+constexpr char kChangePropertyNameFavIconUrl[] = "favIconUrl";
+constexpr char kChangePropertyNameGroupId[] = "groupId";
+constexpr char kChangePropertyNameMutedInfo[] = "mutedInfo";
+constexpr char kChangePropertyNamePinned[] = "pinned";
+constexpr char kChangePropertyNameStatus[] = "status";
+constexpr char kChangePropertyNameTitle[] = "title";
+constexpr char kChangePropertyNameUrl[] = "url";
+
+void FillChangeInfo(const NWebExtensionTabChangeInfo& changeInfo,
+                    base::Value::Dict& out) {
+  if (changeInfo.audible) {
+    out.Set(kChangePropertyNameAudible, changeInfo.audible.value());
+  }
+
+  if (changeInfo.autoDiscardable) {
+    out.Set(kChangePropertyNameAutoDiscardable, changeInfo.autoDiscardable.value());
+  }
+
+  if (changeInfo.discarded) {
+    out.Set(kChangePropertyNameDiscarded, changeInfo.discarded.value());
+  }
+
+  if (changeInfo.favIconUrl) {
+    out.Set(kChangePropertyNameFavIconUrl, changeInfo.favIconUrl.value());
+  }
+
+  if (changeInfo.groupId) {
+    out.Set(kChangePropertyNameGroupId, changeInfo.groupId.value());
+  }
+
+  if (changeInfo.mutedInfo) {
+    out.Set(kChangePropertyNameMutedInfo, GetMutedInfoValue(changeInfo.mutedInfo.value()));
+  }
+
+  if (changeInfo.pinned) {
+    out.Set(kChangePropertyNamePinned, changeInfo.pinned.value());
+  }
+
+  if (changeInfo.status) {
+    out.Set(kChangePropertyNameStatus, NWebExtensionTabStatusToString(changeInfo.status.value()));
+  }
+
+  if (changeInfo.title) {
+    out.Set(kChangePropertyNameTitle, changeInfo.title.value());
+  }
+
+  if (changeInfo.url) {
+    out.Set(kChangePropertyNameUrl, changeInfo.url.value());
+  }
+}
 
 bool HasValidMainFrameProcess(content::WebContents* contents) {
   content::RenderFrameHost* main_frame_host = contents->GetPrimaryMainFrame();
@@ -115,47 +196,6 @@ api::tabs::Tab CreateTabObject(
   return tab_object;
 }
 
-api::tabs::Tab CreateTabObject(
-    int tab_id,
-    content::WebContents* contents,
-    const NWebExtensionTabChangeInfo& info) {
-  api::tabs::Tab tab_object;
-  tab_object.id = tab_id;
-  tab_object.index = -1;
-  tab_object.window_id = -1;
-  tab_object.status = info.status ? api::tabs::TabStatus(*info.status): GetLoadingStatus(contents);
-  tab_object.active = false;
-  tab_object.selected = false;
-  tab_object.highlighted = false;
-  tab_object.pinned = info.pinned ? *info.pinned : false;
-  tab_object.group_id = info.groupId ? *info.groupId : -1;
-  tab_object.audible = info.audible ? *info.audible : false;
-  tab_object.discarded = info.discarded ? *info.discarded : false;
-  tab_object.auto_discardable = info.autoDiscardable ? *info.autoDiscardable : false;
-  tab_object.muted_info = CreateMutedInfo(info.mutedInfo, contents);
-  tab_object.incognito = contents->GetBrowserContext()->IsOffTheRecord();
-  gfx::Size contents_size = contents->GetContainerBounds().size();
-  tab_object.width = contents_size.width();
-  tab_object.height = contents_size.height();
-  if (info.url) {
-    tab_object.url = info.url.value().length() > 0 ? info.url.value() :
-                                      contents->GetLastCommittedURL().spec();
-  }
-
-  content::NavigationEntry* pending_entry =
-      contents->GetController().GetPendingEntry();
-  if (pending_entry) {
-    tab_object.pending_url = pending_entry->GetVirtualURL().spec();
-  }
-  tab_object.title = base::UTF16ToUTF8(contents->GetTitle());
-  content::NavigationEntry* visible_entry =
-      contents->GetController().GetVisibleEntry();
-  if (visible_entry && visible_entry->GetFavicon().valid) {
-    tab_object.fav_icon_url = visible_entry->GetFavicon().url.spec();
-  }
-  return tab_object;
-}
-
 bool WillDispatchTabUpdatedEvent(
     int tab_id,
     content::WebContents* contents,
@@ -167,9 +207,19 @@ bool WillDispatchTabUpdatedEvent(
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
     mojom::EventFilteringInfoPtr& event_filtering_info_out) {
-  api::tabs::Tab tab_object = CreateTabObject(tab_id, contents, url);
+  std::unique_ptr<NWebExtensionTab> web_extension_tab =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
+  if (!web_extension_tab) {
+    LOG(INFO) << "web extension tab is nullptr";
+    return false;
+  }
 
-  base::Value::Dict tab_value = tab_object.ToValue();
+  if (web_extension_tab->nwebId <= 0) {
+    LOG(INFO) << "web extension tab nweb id is invalid";
+    return false;
+  }
+
+  base::Value::Dict tab_value = GetTabValue(*web_extension_tab);
 
   base::Value::Dict changed_properties;
   for (const auto& property : changed_property_names) {
@@ -196,9 +246,19 @@ bool WillDispatchTabUpdatedEventChangeInfo(
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
     mojom::EventFilteringInfoPtr& event_filtering_info_out) {
-  api::tabs::Tab tab_object = CreateTabObject(tab_id, contents, info);
+  std::unique_ptr<NWebExtensionTab> web_extension_tab =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
+  if (!web_extension_tab) {
+    LOG(INFO) << "web extension tab is nullptr";
+    return false;
+  }
 
-  base::Value::Dict tab_value = tab_object.ToValue();
+  if (web_extension_tab->nwebId <= 0) {
+    LOG(INFO) << "web extension tab nweb id is invalid";
+    return false;
+  }
+
+  base::Value::Dict tab_value = GetTabValue(*web_extension_tab);
 
   base::Value::Dict changed_properties;
   for (const auto& property : changed_property_names) {
@@ -206,6 +266,35 @@ bool WillDispatchTabUpdatedEventChangeInfo(
       changed_properties.Set(property, value->Clone());
     }
   }
+
+  event_args_out.emplace();
+  event_args_out->Append(tab_id);
+  event_args_out->Append(std::move(changed_properties));
+  event_args_out->Append(std::move(tab_value));
+  return true;
+}
+
+bool WillDispatchTabUpdatedEventWithTab(
+    int tab_id,
+    content::WebContents* contents,
+    NWebExtensionTabChangeInfo changeInfo,
+    NWebExtensionTab tab,
+    content::BrowserContext* browser_context,
+    mojom::ContextType target_context,
+    const Extension* extension,
+    const base::Value::Dict* listener_filter,
+    std::optional<base::Value::List>& event_args_out,
+    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+  std::unique_ptr<NWebExtensionTab> web_extension_tab =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
+  if (tab.nwebId <= 0) {
+    LOG(INFO) << "WillDispatchTabUpdatedEventWithTab tab nweb id id invalid";
+    return false;
+  }
+
+  base::Value::Dict tab_value = GetTabValue(tab);
+  base::Value::Dict changed_properties;
+  FillChangeInfo(changeInfo, changed_properties);
 
   event_args_out.emplace();
   event_args_out->Append(tab_id);
@@ -226,7 +315,7 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
 
   std::vector<std::string> changes = changed_property_names;
   if (url.length() > 0) {
-    changes.push_back(kStatusKey);
+    changes.push_back(kChangePropertyNameStatus);
   }
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
@@ -254,7 +343,7 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   NWebExtensionTabChangeInfo in_info(*info);
   std::vector<std::string> changes = changed_property_names;
   if (info->url && info->url.value().length() > 0) {
-    changes.push_back(kStatusKey);
+    changes.push_back(kChangePropertyNameStatus);
   }
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
@@ -271,6 +360,35 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   EventRouter::Get(profile)->BroadcastEvent(std::move(event));
 }
 
+void TabsEventRouter::DispatchTabActiveEvent(
+    int tab_id,
+    content::WebContents* contents,
+    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+    std::unique_ptr<NWebExtensionTab> tab) {
+  DCHECK(contents);
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+
+  if (!changeInfo || !tab) {
+    LOG(ERROR) << "DispatchTabUpdatedEvent tab or changeInfo is null";
+    return;
+  }
+
+  NWebExtensionTabChangeInfo change_info(*changeInfo);
+  NWebExtensionTab extension_tab(*tab);
+
+  auto event = std::make_unique<Event>(
+      events::TABS_ON_UPDATED, api::tabs::OnUpdated::kEventName,
+      // The event arguments depend on the extension's permission. They are set
+      // in WillDispatchTabUpdatedEvent().
+      base::Value::List(), profile);
+  event->user_gesture = EventRouter::USER_GESTURE_NOT_ENABLED;
+  event->will_dispatch_callback =
+      base::BindRepeating(&WillDispatchTabUpdatedEventWithTab, tab_id,
+                          contents, std::move(change_info), std::move(extension_tab));
+  EventRouter::Get(profile)->BroadcastEvent(std::move(event));
+}
+
 void TabsEventRouter::DispatchTabActiveEvent(int tab_id,
                                              int window_id,
                                              content::WebContents* contents) {
@@ -283,6 +401,147 @@ void TabsEventRouter::DispatchTabActiveEvent(int tab_id,
   DispatchEvent(profile, events::TABS_ON_ACTIVATED,
                 api::tabs::OnActivated::kEventName,
                 api::tabs::OnActivated::Create(info),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabRemovedEvent(int tab_id,
+                                              bool isWindowClosing,
+                                              int windowId,
+                                              content::WebContents* contents) {
+  DCHECK(contents);
+  api::tabs::OnRemoved::RemoveInfo info;
+  info.window_id = windowId;
+  info.is_window_closing = isWindowClosing;
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_REMOVED,
+                api::tabs::OnRemoved::kEventName,
+                api::tabs::OnRemoved::Create(tab_id, info),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabAttachedEvent(int tab_id,
+                                             content::WebContents* contents,
+                                             int32_t newPosition,
+                                             int32_t newWindowId) {
+  DCHECK(contents);
+  api::tabs::OnAttached::AttachInfo info;
+  info.new_position = newPosition;
+  info.new_window_id = newWindowId;
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_ATTACHED,
+                api::tabs::OnAttached::kEventName,
+                api::tabs::OnAttached::Create(tab_id, info),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
+                                              content::WebContents* contents,
+                                              std::unique_ptr<NWebExtensionTab> tab) {
+  DCHECK(contents);
+  base::Value::List args;
+  args.Append(extensions::GetTabValue(*tab));
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_CREATED,
+                api::tabs::OnCreated::kEventName,
+                std::move(args),
+                EventRouter::USER_GESTURE_NOT_ENABLED);
+}
+
+void TabsEventRouter::DispatchTabDetachedEvent(content::WebContents* contents,
+                                               int tab_id,
+                                               int oldPosition,
+                                               int oldWindowId) {
+  DCHECK(contents);
+  base::Value::List args;
+  args.Append(tab_id);
+
+  base::Value::Dict object_args;
+  object_args.Set(kOldWindowIdKey, oldWindowId);
+  object_args.Set(kOldPositionKey, oldPosition);
+  args.Append(std::move(object_args));
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_DETACHED,
+                api::tabs::OnDetached::kEventName,
+                std::move(args),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabHighlightedEvent(
+    content::WebContents* contents,
+    NWebExtensionTabHighlightInfo& highlightInfo) {
+  DCHECK(contents);
+  base::Value::List all_tabs;
+  for (int tab_id : highlightInfo.tabIds) {
+    all_tabs.Append(tab_id);
+  }
+
+  base::Value::List args;
+  base::Value::Dict select_info;
+
+  select_info.Set(kWindowIdKey, highlightInfo.windowId.value());
+  select_info.Set(kWindowIdKey, std::move(all_tabs));
+  args.Append(std::move(select_info));
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_HIGHLIGHTED,
+                api::tabs::OnHighlighted::kEventName,
+                std::move(args),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabMovedEvent(
+    content::WebContents* contents,
+    int tab_id,
+    std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
+  DCHECK(contents);
+  base::Value::List args;
+  args.Append(tab_id);
+
+  base::Value::Dict object_args;
+  object_args.Set(kWindowIdKey, moveInfo->windowId);
+  object_args.Set(kFromIndexKey, moveInfo->fromIndex);
+  object_args.Set(kToIndexKey, moveInfo->toIndex);
+  args.Append(std::move(object_args));
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_MOVED,
+                api::tabs::OnMoved::kEventName,
+                std::move(args),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabReplacedEvent(
+    content::WebContents* contents,
+    int32_t addedTabId,
+    int32_t removedTabId) {
+  DCHECK(contents);
+  base::Value::List args;
+  args.Append(addedTabId);
+  args.Append(removedTabId);
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_REPLACED,
+                api::tabs::OnMoved::kEventName,
+                std::move(args),
+                EventRouter::USER_GESTURE_UNKNOWN);
+}
+
+void TabsEventRouter::DispatchTabZoomChangeEvent(
+    content::WebContents* contents,
+    std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {
+  DCHECK(contents);
+  base::Value::List args;
+
+  args.Append(extensions::GetTabZoomChangeValue(*tabZoomChangeInfo));
+
+  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  DispatchEvent(profile, events::TABS_ON_ZOOM_CHANGE,
+                api::tabs::OnZoomChanged::kEventName,
+                std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
 

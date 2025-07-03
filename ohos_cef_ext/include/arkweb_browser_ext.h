@@ -1120,21 +1120,70 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// Receiving the tab updated notification.
   ///
+  /*--cef()--*/
   virtual void WebExtensionTabUpdated(
       int tab_id,
       const std::vector<CefString>& changed_property_names,
-      const CefString& url) = 0;
+      const CefString& url) {}
 
   virtual void WebExtensionTabUpdated(
       int tab_id,
       const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) = 0;
- 
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) = 0;
- 
-  virtual void WebExtensionActionClicked(
-      std::string extensionId,
-      const NWebExtensionTab* tab) = 0;
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {}
+
+  virtual void WebExtensionTabUpdated(
+      int tab_id,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+      std::unique_ptr<NWebExtensionTab> tab) {}
+
+  ///
+  /// Receiving the tab activated notification.
+  /// 
+  /*--cef()--*/ 
+  virtual void WebExtensionTabActivated(int tab_id, int window_id) {}
+
+  ///
+  /// Receiving the tab removed notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabRemoved(int tab_id,
+    bool isWindowClosing, int windowId) {}
+
+  ///
+  /// Receiving the tab attached notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabAttached(int new_position, int new_window_id) {}
+
+  ///
+  /// Receiving the tab created notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {}
+
+  ///
+  /// Receiving the tab highlighted notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) {}
+
+  ///
+  /// Receiving the tab moved notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {}
+
+  ///
+  /// Receiving the tab replaced notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) {}
+
+  ///
+  /// Receiving the tab zoom change notification.
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionTabZoomChange(const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {}
 #endif
 
   ///

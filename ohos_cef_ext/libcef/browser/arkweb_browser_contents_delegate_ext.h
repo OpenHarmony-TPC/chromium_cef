@@ -76,13 +76,6 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
 #endif  // ARKWEB_NETWORK_BASE
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void WebExtensionUpdateTab(
-      int32_t tab_id,
-      const NWebExtensionTabUpdateProperties* update_properties) override;
-
-#endif
-
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void RequestPointerLock(content::WebContents* web_contents,
                           bool user_gesture,

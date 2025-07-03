@@ -113,28 +113,54 @@ public:
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void ExtensionSetTabId(int tab_id) override;
+  int ExtensionGetTabId() const override;
+  bool WebExtensionCheck(
+      const std::string functionName,
+      content::BrowserContext*& browser_context,
+      content::WebContents*& web_contents);
+
   void WebExtensionTabUpdated(
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       const CefString& url) override;
+
   void WebExtensionTabUpdated(
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
 
-  void WebExtensionUpdateTabUrl(int32_t tab_id, const GURL& url) override;
-  void WebExtensionUpdateTab(
-      int32_t tab_id,
-      const NWebExtensionTabUpdateProperties* update_properties) override;
-  void ExtensionSetTabId(int tab_id) override;
-  int ExtensionGetTabId() const override;
+  void WebExtensionTabUpdated(
+      int tab_id,
+      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
+      std::unique_ptr<NWebExtensionTab> tab) override;
+
   void WebExtensionTabActivated(int tab_id, int window_id) override;
- 
+
+  void WebExtensionTabRemoved(int tab_id,
+    bool isWindowClosing, int windowId) override;
+
+  void WebExtensionTabAttached(int new_position, int new_window_id) override;
+
+  void WebExtensionTabCreated(int tab_id, std::unique_ptr<NWebExtensionTab> tab) override;
+
+  void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
+
+  void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override;
+
+  void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override;
+
+  void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override;
+
+  void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
+      const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override;
+
   void WebExtensionActionClicked(
       std::string extensionId,
-      const NWebExtensionTab* tab) override;
+      const NWebExtensionTab* tab);
 
-  content::DropData* GetDropData() override;
+  void WebExtensionActionPinnedStateChanged(
+      std::string extensionId, bool isPinned);
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
