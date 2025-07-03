@@ -769,6 +769,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void ScrollBy(float delta_x, float delta_y) = 0;
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  ///
+  /// Set the bypass vsync condition.
+  ///
+  virtual void SetBypassVsyncCondition(int32_t condition) = 0;
+#endif
+
   ///
   /// Slide Scroll by the speed.
   ///

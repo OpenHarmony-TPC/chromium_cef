@@ -129,6 +129,11 @@ const size_t kMaxDataDetectorTextLength = 1000;
 const int SCALE_FACTOR_CONVERT_RATIO = 100;
 #endif
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+static float DEFAULT_PAGE_SCROLL_OFFSET = 50.0f;
+static float DEFAULT_SCROLL_OFFSET_Y = -1.0f;
+#endif
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
 class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  public:
@@ -1574,12 +1579,48 @@ void ArkWebRenderWidgetHostViewOSRExt::ScrollBy(float delta_x, float delta_y) {
   if (!render_widget_host_) {
     return;
   }
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  if (condition_) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportScene(
+        OHOS::NWeb::ResSchedStatusAdapter::WEB_SCENE_ENTER, OHOS::NWeb::ResSchedSceneAdapter::SLIDE);
+    float scroll_offset_y = DEFAULT_SCROLL_OFFSET_Y;
+
+    auto browser = browser_impl_->GetBrowser();
+    if (browser != nullptr && browser->GetHost() != nullptr) {
+      float ratio = browser->GetHost()->GetVirtualPixelRatio();
+      if (ratio > 0) {
+        scroll_offset_y = std::round(last_scroll_offset_.y() / ratio);
+      }
+    }
+
+    if (scroll_offset_y >= 0.0 && scroll_offset_y < DEFAULT_PAGE_SCROLL_OFFSET) {
+      TRACE_EVENT1("cef", "ArkWebRenderWidgetHostViewOSRExt::Scrollby",
+    "scroll_offset_y", scroll_offset_y);
+      OHOS::NWeb::OhosAdapterHelper::GetInstance()
+      .CreateSocPerfClientAdapter()
+      ->ApplySocPerfConfigByIdEx(OHOS::NWeb::SocPerfClientAdapter::SOC_PERF_SLIDE_NORMAL_ID, true);
+    }
+  }
+#endif
   render_widget_host_->input_router()->ScrollBy(delta_x, delta_y);
 }
 
-
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
-
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+void ArkWebRenderWidgetHostViewOSRExt::SetBypassVsyncCondition(int32_t condition) {
+  LOG(INFO) << "ArkWebRenderWidgetHostViewOSRExt::SetBypassVsyncCondition condition:"
+            << condition;
+  condition_ = condition;
+  if (!render_widget_host_) {
+    return;
+  }
+  render_widget_host_->input_router()->SetBypassVsyncCondition(condition);
+  if (auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
+            browser_impl_->GetAcceleratedWidget(is_popup_))) {
+    compositor->Utils()->SetBypassVsyncCondition(condition);
+  }
+}
+#endif
 #if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
 void ArkWebRenderWidgetHostViewOSRExt::DynamicFrameLossEvent(
     const std::string& sceneId,

@@ -413,6 +413,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
 #endif
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  void SetBypassVsyncCondition(int32_t condition) override;
+#endif
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   void SetFileAccess(bool flag) override;
   void SetBlockNetwork(bool flag) override;

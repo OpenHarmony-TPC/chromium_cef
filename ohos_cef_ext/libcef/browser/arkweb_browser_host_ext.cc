@@ -1250,11 +1250,20 @@ void ArkWebBrowserHostExtImpl::ScrollBy(float delta_x, float delta_y) {
   if (!scrollable_ && scrollType_ != static_cast<int>(WebScrollType::EVENT)) {
     return;
   }
-
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->ScrollBy(delta_x, delta_y);
   }
 }
+
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+void ArkWebBrowserHostExtImpl::SetBypassVsyncCondition(int32_t condition) {
+  LOG(INFO) << "ArkWebBrowserHostExtImpl::SetBypassVsyncCondition condition:"
+            << condition;
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetBypassVsyncCondition(condition);
+  }
+}
+#endif
 
 void ArkWebBrowserHostExtImpl::SlideScroll(float vx, float vy) {
   auto frame = GetMainFrame();

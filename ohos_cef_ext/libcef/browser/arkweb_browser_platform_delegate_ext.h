@@ -114,6 +114,10 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void ScrollBy(float delta_x, float delta_y) {}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  virtual void SetBypassVsyncCondition(int32_t condition) {}
+#endif
+
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   virtual void SetScrollable(bool enable) {}
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
