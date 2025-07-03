@@ -150,6 +150,9 @@ class PrintDocumentAdapterImpl
       if (!isCalled) {
         ohosPrintManager->RunPrintRequestedCallbackImpl(jobId);
       }
+      if (state == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED) {
+        ohosPrintManager->ClearPrintAttrs(jobId);
+      }
     } else {
       LOG(ERROR) << "failed to get OhosPrintManager";
     }
@@ -240,6 +243,9 @@ class ApplicationPrintDocumentAdapterImpl
       ohosPrintManager->SetPrintStatus(false, state);
       if (!isCalled) {
         ohosPrintManager->DidDispatchPrintEventImpl(false);
+      }
+      if (state == PRINT_JOB_SPOOLER_CLOSED_FOR_CANCELED) {
+        ohosPrintManager->ClearPrintAttrs(jobId);
       }
     } else {
       LOG(ERROR) << "failed to get OhosPrintManager";
@@ -580,7 +586,11 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
 
 void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
   printAttrsMap_[printAttrs.jobId] = printAttrs;
-  fd_ = printAttrs.fd;
+  if (base::IsValueInRangeForNumericType<int>(printAttrs.fd)) {
+    fd_ = static_cast<int>(printAttrs.fd);
+  } else {
+    fd_ = -1;
+  }
   print_job_id_ = printAttrs.jobId;
 }
 
