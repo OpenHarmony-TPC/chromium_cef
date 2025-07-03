@@ -21,7 +21,6 @@
 #endif
 
 namespace {
-
 #if BUILDFLAG(ARKWEB_SCHEME_HANDLER)
 // A subclass of net::UploadBytesElementReader which owns
 // ResourceRequestBody.
@@ -342,6 +341,29 @@ void ArkWebCefPostDataStreamImpl::ReadAsync(
   }
 }
 
+void ArkWebCefPostDataStreamImpl::ReadAsyncOnTaskRunner(
+    void* buffer,
+    int buf_len,
+    CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback) {
+  scoped_refptr<net::WrappedIOBuffer> upload_buffer =
+      base::MakeRefCounted<net::WrappedIOBuffer>(base::span(
+          static_cast<const char*>(buffer), static_cast<size_t>(buf_len)));
+
+  if (upload_stream_) {
+    int rv = upload_stream_->Read(
+        upload_buffer.get(), buf_len,
+        base::BindOnce(&ArkWebCefPostDataStreamImpl::OnStreamReadCompleteOnTaskRunner,
+                       base::Unretained(this), upload_buffer, read_callback));
+    if (rv == net::ERR_IO_PENDING) {
+      return;
+    }
+    OnStreamReadCompleteOnTaskRunner(upload_buffer, read_callback, rv);
+  } else {
+    LOG(ERROR) << "scheme_handler upload stream is nullptr.";
+    OnStreamReadCompleteOnTaskRunner(upload_buffer, read_callback, -2);
+  }
+}
+
 void ArkWebCefPostDataStreamImpl::Read(
     void* buffer,
     int buf_len,
@@ -362,6 +384,40 @@ void ArkWebCefPostDataStreamImpl::Read(
     } else {
       read_callback->OnReadComplete((char*)buffer, -2);
     }
+  }
+}
+
+scoped_refptr<base::SequencedTaskRunner>
+ArkWebCefPostDataStreamImpl::GetSharedSequencedAsyncRunner() {
+  static base::NoDestructor<scoped_refptr<base::SequencedTaskRunner>>
+      sequenced_async_task_runner(
+          scoped_refptr(base::ThreadPool::CreateSequencedTaskRunner({})));
+  return *sequenced_async_task_runner;
+}
+
+void ArkWebCefPostDataStreamImpl::AsyncRead(
+    void* buffer,
+    int buf_len,
+    CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback) {
+  scoped_refptr<base::SequencedTaskRunner> sequenced_async_task_runner =
+      GetSharedSequencedAsyncRunner();
+  if (sequenced_async_task_runner) {
+    sequenced_async_task_runner->PostTask(
+        FROM_HERE,
+        base::BindOnce(&ArkWebCefPostDataStreamImpl::ReadAsyncOnTaskRunner,
+                       this, buffer, buf_len, read_callback));
+  } else {
+    LOG(ERROR) << "sequenced_async_task_runner is nullptr";
+    read_callback->OnAsyncReadComplete((char*)buffer, -2);
+  }
+}
+
+void ArkWebCefPostDataStreamImpl::OnStreamReadCompleteOnTaskRunner(
+    scoped_refptr<net::WrappedIOBuffer> buffer,
+    CefRefPtr<ArkWebCefPostDataStreamAsyncReadCallback> read_callback,
+    int rv) {
+  if (read_callback) {
+    read_callback->OnAsyncReadComplete(buffer->data(), rv);
   }
 }
 

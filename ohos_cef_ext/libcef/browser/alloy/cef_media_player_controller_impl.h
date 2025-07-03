@@ -26,6 +26,8 @@ class CefMediaPlayerControllerImpl : public CefMediaPlayerController {
   void ExitFullscreen() override;
   bool SetVideoSurface(void* native_window) override;
   void Download() override;
+  void SetVolume(double volume) override;
+  double GetVolume() override;
  private:
   std::unique_ptr<content::MediaPlayerController> media_player_controller_;
 };

@@ -98,7 +98,6 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
       weak_ptr_factory_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-  int commandId_ = -1;
   bool isCopy_ = false;
   bool isSelectAll_ = false;
 #endif // ARKWEB_MENU_HANDLE

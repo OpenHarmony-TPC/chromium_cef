@@ -52,16 +52,16 @@ constexpr char kTabIdsKey[] = "tabIds";
 constexpr char kFromIndexKey[] = "fromIndex";
 constexpr char kToIndexKey[] = "toIndex";
 
-constexpr char kChangePropertyNameAudible[] = "audible";
-constexpr char kChangePropertyNameAutoDiscardable[] = "autoDiscardable";
-constexpr char kChangePropertyNameDiscarded[] = "discarded";
-constexpr char kChangePropertyNameFavIconUrl[] = "favIconUrl";
-constexpr char kChangePropertyNameGroupId[] = "groupId";
-constexpr char kChangePropertyNameMutedInfo[] = "mutedInfo";
-constexpr char kChangePropertyNamePinned[] = "pinned";
-constexpr char kChangePropertyNameStatus[] = "status";
-constexpr char kChangePropertyNameTitle[] = "title";
-constexpr char kChangePropertyNameUrl[] = "url";
+const char kChangePropertyNameAudible[] = "audible";
+const char kChangePropertyNameAutoDiscardable[] = "autoDiscardable";
+const char kChangePropertyNameDiscarded[] = "discarded";
+const char kChangePropertyNameFavIconUrl[] = "favIconUrl";
+const char kChangePropertyNameGroupId[] = "groupId";
+const char kChangePropertyNameMutedInfo[] = "mutedInfo";
+const char kChangePropertyNamePinned[] = "pinned";
+const char kChangePropertyNameStatus[] = "status";
+const char kChangePropertyNameTitle[] = "title";
+const char kChangePropertyNameUrl[] = "url";
 
 void FillChangeInfo(const NWebExtensionTabChangeInfo& changeInfo,
                     base::Value::Dict& out) {
@@ -129,31 +129,6 @@ api::tabs::MutedInfo CreateMutedInfo(
   DCHECK(contents);
   api::tabs::MutedInfo info;
   info.muted = contents->IsAudioMuted();
-  return info;
-}
-
-api::tabs::MutedInfo CreateMutedInfo(
-    std::optional<NWebExtensionTabMutedInfo> mutedInfo,
-    content::WebContents* contents) {
-  DCHECK(contents);
-  api::tabs::MutedInfo info;
-  if (mutedInfo) {
-    info.muted = mutedInfo->muted;
-    if (mutedInfo->extensionId) {
-      info.extension_id = mutedInfo->extensionId.value();
-    }
-    if (mutedInfo->reason) {
-      if (*mutedInfo->reason == "user") {
-        info.reason = api::tabs::MutedInfoReason::kUser;
-      } else if (*mutedInfo->reason == "capture") {
-        info.reason = api::tabs::MutedInfoReason::kCapture;
-      } else if (*mutedInfo->reason == "extension") {
-        info.reason = api::tabs::MutedInfoReason::kExtension;
-      }
-    }
-  } else {
-    info.muted = contents->IsAudioMuted();
-  }
   return info;
 }
 
@@ -276,7 +251,7 @@ bool WillDispatchTabUpdatedEventChangeInfo(
 
 bool WillDispatchTabUpdatedEventWithTab(
     int tab_id,
-    content::WebContents* contents,
+    WebContents* contents,
     NWebExtensionTabChangeInfo changeInfo,
     NWebExtensionTab tab,
     content::BrowserContext* browser_context,
@@ -285,10 +260,8 @@ bool WillDispatchTabUpdatedEventWithTab(
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
     mojom::EventFilteringInfoPtr& event_filtering_info_out) {
-  std::unique_ptr<NWebExtensionTab> web_extension_tab =
-      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
   if (tab.nwebId <= 0) {
-    LOG(INFO) << "WillDispatchTabUpdatedEventWithTab tab nweb id id invalid";
+    LOG(INFO) << "WillDispatchTabUpdatedEventWithTab tab nweb id is invalid";
     return false;
   }
 
@@ -360,7 +333,7 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   EventRouter::Get(profile)->BroadcastEvent(std::move(event));
 }
 
-void TabsEventRouter::DispatchTabActiveEvent(
+void TabsEventRouter::DispatchTabUpdatedEvent(
     int tab_id,
     content::WebContents* contents,
     std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
@@ -483,7 +456,7 @@ void TabsEventRouter::DispatchTabHighlightedEvent(
   base::Value::Dict select_info;
 
   select_info.Set(kWindowIdKey, highlightInfo.windowId.value());
-  select_info.Set(kWindowIdKey, std::move(all_tabs));
+  select_info.Set(kTabIdsKey, std::move(all_tabs));
   args.Append(std::move(select_info));
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
@@ -525,7 +498,7 @@ void TabsEventRouter::DispatchTabReplacedEvent(
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
   DispatchEvent(profile, events::TABS_ON_REPLACED,
-                api::tabs::OnMoved::kEventName,
+                api::tabs::OnReplaced::kEventName,
                 std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
@@ -540,7 +513,7 @@ void TabsEventRouter::DispatchTabZoomChangeEvent(
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
   DispatchEvent(profile, events::TABS_ON_ZOOM_CHANGE,
-                api::tabs::OnZoomChanged::kEventName,
+                api::tabs::OnZoomChange::kEventName,
                 std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
 }

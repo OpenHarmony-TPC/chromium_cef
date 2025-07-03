@@ -36,7 +36,7 @@ void DispatchTabActiveEvent(
     int window_id,
     content::WebContents* contents);
 
-void DispatchTabRemoveEvent(
+void DispatchTabRemovedEvent(
     int tab_id,
     bool is_window_closing,
     int window_id,
@@ -50,7 +50,7 @@ void DispatchTabAttachedEvent(
 
 void DispatchTabCreatedEvent(
     int tab_id,
-    content::WebContents* contents,
+    content::WebContents* web_contents,
     std::unique_ptr<NWebExtensionTab> tab);
 
 void DispatchTabDetachedEvent(

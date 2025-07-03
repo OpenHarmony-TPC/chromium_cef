@@ -152,15 +152,17 @@ public:
 
   void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override;
 
-  void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
+  void WebExtensionTabZoomChange(
       const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override;
 
-  void WebExtensionActionClicked(
+  static void WebExtensionActionClicked(
       std::string extensionId,
       const NWebExtensionTab* tab);
 
-  void WebExtensionActionPinnedStateChanged(
+  static void WebExtensionActionPinnedStateChanged(
       std::string extensionId, bool isPinned);
+
+  content::BrowserContext* GetOriginalContext(content::BrowserContext* browser_context);
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)

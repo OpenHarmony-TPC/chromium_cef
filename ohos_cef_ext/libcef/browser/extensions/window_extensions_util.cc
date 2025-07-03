@@ -36,7 +36,7 @@ base::Value::Dict GetWindowValue(const WebExtensionWindow& window) {
   base::Value::Dict dict;
   if (window.id)
     dict.Set(kIdKey, *window.id);
-  if (window_type)
+  if (window.type)
     dict.Set(kWindowTypeKey, *window.type);
   dict.Set(kFocusedKey, window.focused);
   dict.Set(kIncognitoKey, window.incognito);

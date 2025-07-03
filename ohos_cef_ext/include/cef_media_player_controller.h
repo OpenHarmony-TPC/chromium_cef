@@ -18,6 +18,8 @@ class CefMediaPlayerController {
   virtual void ExitFullscreen() {}
   virtual bool SetVideoSurface(void* native_window) { return false; }
   virtual void Download() {}
+  virtual void SetVolume(double volume) {}
+  virtual double GetVolume() { return 1.0; }
 };
 
 #endif // CEF_INCLUDE_CEF_MEDIA_PLAYER_CONTROLLER_H_

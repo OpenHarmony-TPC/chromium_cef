@@ -265,11 +265,12 @@ void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
   }
 
   std::string final_ua;
-  if (MatchUserAgent(navigation, current_url.host(), final_ua) >=
+  auto match_type = MatchUserAgent(navigation, current_url.host(), final_ua);
+  if (match_type >=
       UserAgentOverridePolicy::APP_DEFAULT) {
     if (GetDomainAndRegistry(current_url) ==
         GetDomainAndRegistry(prev_redirect_url)) {
-      MatchUserAgent(navigation, prev_redirect_url.host(), final_ua);
+      match_type = MatchUserAgent(navigation, prev_redirect_url.host(), final_ua);
     }
   }
 
@@ -278,7 +279,9 @@ void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
              << ", main_frame " << navigation->IsInMainFrame()
              << ", serverd_from_bfcache "
              << navigation->IsServedFromBackForwardCache();
-
+  if (match_type == UserAgentOverridePolicy::ARKWEB_DEFAULT) {
+    return;
+  }
   UpdateUserAgentForNavigation(navigation, final_ua);
 }
 #endif  // BUILDFLAG(ARKWEB_EXT_UA)

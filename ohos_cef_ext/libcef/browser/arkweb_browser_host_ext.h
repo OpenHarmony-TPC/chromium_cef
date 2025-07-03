@@ -413,6 +413,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void GetOverScrollOffset(float* offset_x, float* offset_y) override;
 #endif
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+  void SetBypassVsyncCondition(int32_t condition) override;
+#endif
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   void SetFileAccess(bool flag) override;
   void SetBlockNetwork(bool flag) override;
@@ -690,7 +693,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       int tab_id,
       const std::vector<CefString>& changed_property_names,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
-  virtual  WebExtensionTabUpdated(
+  virtual  void WebExtensionTabUpdated(
       int tab_id,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
       std::unique_ptr<NWebExtensionTab> tab) override {}
@@ -710,7 +713,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
   virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override {}
 
-  virtual void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
+  virtual void WebExtensionTabZoomChange(
       const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override {}
 #endif
 

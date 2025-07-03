@@ -612,6 +612,10 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
   settings_.border_radius_bottom_right =
       browser_settings.border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+#if BUILDFLAG(ARKWEB_MENU)
+  settings_.touch_handle_exist = browser_settings.touch_handle_exist;
+  settings_.viewport_scale = browser_settings.viewport_scale;
+#endif  // BUILDFLAG(ARKWEB_MENU)
 #if BUILDFLAG(IS_OHOS)
   settings_.draw_mode = browser_settings.draw_mode;
   settings_.text_autosizing_enabled = browser_settings.text_autosizing_enabled;
@@ -648,6 +652,11 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
   settings_.copy_option = browser_settings.copy_option;
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
+
+#if BUILDFLAG(ARKWEB_FOCUS)
+  settings_.gesture_focus_mode = browser_settings.gesture_focus_mode;
+#endif
+
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
   settings_.custom_video_player_enable =
       browser_settings.custom_video_player_enable;
@@ -684,6 +693,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 
 #if BUILDFLAG(ARKWEB_SOFTWARE_COMPOSITOR)
   settings_.record_whole_document = browser_settings.record_whole_document;
+#endif
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  settings_.error_page_enabled = browser_settings.error_page_enabled;
 #endif
 }
 
@@ -1238,11 +1250,20 @@ void ArkWebBrowserHostExtImpl::ScrollBy(float delta_x, float delta_y) {
   if (!scrollable_ && scrollType_ != static_cast<int>(WebScrollType::EVENT)) {
     return;
   }
-
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->ScrollBy(delta_x, delta_y);
   }
 }
+
+#if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
+void ArkWebBrowserHostExtImpl::SetBypassVsyncCondition(int32_t condition) {
+  LOG(INFO) << "ArkWebBrowserHostExtImpl::SetBypassVsyncCondition condition:"
+            << condition;
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetBypassVsyncCondition(condition);
+  }
+}
+#endif
 
 void ArkWebBrowserHostExtImpl::SlideScroll(float vx, float vy) {
   auto frame = GetMainFrame();

@@ -87,8 +87,9 @@ std::string GetZoomSettingsModeStr(NWebExtensionTabZoomSettingsMode mode) {
     case NWebExtensionTabZoomSettingsMode::MANUAL:
       return "manual";
     case NWebExtensionTabZoomSettingsMode::DISABLE:
-      return "disable";
+      return "disabled";
   }
+  return {};
 }
 
 std::string GetZoomSettingsScopeStr(NWebExtensionTabZoomSettingsScope scope) {

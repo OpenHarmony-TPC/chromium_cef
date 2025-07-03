@@ -52,3 +52,22 @@ void CefBrowserFrame::UpdateHitTestData(int32_t type, const std::string& extra_d
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+void CefBrowserFrame::OverrideErrorPage(
+    const std::string& url,
+    const std::string& request_method,
+    bool user_gesture,
+    bool is_redirect,
+    bool is_outermost_main_frame,
+    int error_code,
+    const std::string& error_text,
+    cef::mojom::BrowserFrame::OverrideErrorPageCallback callback) {
+  if (auto host = GetFrameHost(/*prefer_speculative=*/false)) {
+    host->OverrideErrorPage(url, request_method, user_gesture,
+                            is_redirect, is_outermost_main_frame,
+                            error_code, error_text,
+                            std::move(callback));
+  }
+}
+#endif

@@ -128,6 +128,11 @@ void SetCefPrefs(const CefBrowserSettings& cef,
   web.border_radius_bottom_left = cef.border_radius_bottom_left;
   web.border_radius_bottom_right = cef.border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+
+#if BUILDFLAG(ARKWEB_MENU)
+  web.touch_handle_exist = cef.touch_handle_exist;
+  web.viewport_scale = cef.viewport_scale;
+#endif  // BUILDFLAG(ARKWEB_MENU)
 #endif
 }
 

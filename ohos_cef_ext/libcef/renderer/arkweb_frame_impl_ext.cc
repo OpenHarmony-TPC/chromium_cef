@@ -496,6 +496,27 @@ bool ArkwebFrameExtImpl::ShouldOverrideUrlLoading(
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+std::string ArkwebFrameExtImpl::OverrideErrorPage(
+    const CefString& url,
+    const CefString& request_method,
+    bool user_gesture,
+    bool is_redirect,
+    bool is_outermost_main_frame,
+    int error_code,
+    const CefString& error_text) {
+  std::string html = "";
+  if (auto& browser_frame = CefFrameImpl::GetBrowserFrame()) {
+    browser_frame->OverrideErrorPage(
+      url.ToString(), request_method.ToString(),
+      user_gesture, is_redirect, is_outermost_main_frame,
+      error_code, error_text.ToString(), &html);
+  }
+
+  return html;
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_SCROLLBAR)
 void ArkwebFrameExtImpl::UpdatePixelRatio(float ratio) {
   LOG(INFO) << "UpdatePixelRatio in render side SetPixelRatio:" << ratio;

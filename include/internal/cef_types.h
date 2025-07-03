@@ -742,12 +742,22 @@ typedef struct _cef_browser_settings_t {
   /* ohos webview end */
 #endif  // BUILDFLAG(IS_OHOS)
 
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  bool error_page_enabled;
+#endif
+
 #if BUILDFLAG(ARKWEB_SCROLLBAR_AVOID_CORNER)
   double border_radius_top_left;
   double border_radius_top_right;
   double border_radius_bottom_left;
   double border_radius_bottom_right;
 #endif  // ARKWEB_SCROLLBAR_AVOID_CORNER
+
+#if BUILDFLAG(ARKWEB_MENU)
+  bool touch_handle_exist;
+  bool viewport_scale;
+#endif  // BUILDFLAG(ARKWEB_MENU)
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   cef_state_t native_embed_mode_enabled;
   cef_state_t intrinsic_size_enabled;
@@ -763,6 +773,10 @@ typedef struct _cef_browser_settings_t {
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
   int32_t copy_option;
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
+
+#if BUILDFLAG(ARKWEB_FOCUS)
+  int32_t gesture_focus_mode;
+#endif
 
   ///
   /// Controls whether the Chrome status bubble will be used. Only supported
@@ -2475,6 +2489,12 @@ typedef enum {
   /// The source is a system-generated focus event.
   ///
   FOCUS_SOURCE_SYSTEM,
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// The source is a user gesture focus event.
+  ///
+  FOCUS_SOURCE_GESTURE,
+#endif
 } cef_focus_source_t;
 
 ///

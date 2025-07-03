@@ -34,3 +34,16 @@ void ShouldOverrideUrlLoading(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 void UpdateHitTestData(int32_t type, const std::string& extra_data) override;
 #endif
+
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+void OverrideErrorPage(
+    const std::string& url,
+    const std::string& request_method,
+    bool user_gesture,
+    bool is_redirect,
+    bool is_outermost_main_frame,
+    int error_code,
+    const std::string& error_text,
+    cef::mojom::BrowserFrame::OverrideErrorPageCallback callback)
+    override;
+#endif

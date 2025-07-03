@@ -95,6 +95,16 @@ class ArkwebFrameExtImpl : public ArkwebFrameExt, public CefFrameImpl {
                                 bool is_outermost_main_frame) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+std::string OverrideErrorPage(const CefString& url,
+                              const CefString& request_method,
+                              bool user_gesture,
+                              bool is_redirect,
+                              bool is_outermost_main_frame,
+                              int error_code,
+                              const CefString& error_text) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_SCROLLBAR)
   void UpdatePixelRatio(float ratio) override;
 #endif  // BUILDFLAG(IS_OHOS)

@@ -314,6 +314,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       rwhv_->ResetGestureDetection(false);
       break;
     case ui::INSERTION_HANDLE_SHOWN:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
       if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
             rwhv_->browser_impl()->AsAlloyBrowserHostImplExt()->GetTouchInsertHandleMenuShow();
@@ -335,6 +338,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isCopy_ = false;
@@ -346,6 +352,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
       if (isCopy_) {
         NotifyTouchSelectionChanged(true);
       }
@@ -418,12 +425,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
         }
         UpdateQuickMenu();
       }
-#if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      if (isSelectAll_) {
-        isSelectAll_ = false;
-        return;
-      }
-#endif // ARKWEB_MENU_HANDLE
       NotifyTouchSelectionChanged(true);
       break;
     case ui::INSERTION_HANDLE_TAPPED:
@@ -453,6 +454,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLES_UPDATEMENU:
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      isSelectAll_ = false;
+#endif // ARKWEB_MENU_HANDLE
       if (controller) {
         controller->AsTouchSelectionControllerExt()->ResetLongPressEvent();
       }
@@ -933,6 +937,11 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
     }
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_SELECT_ALL:
+#if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      if (isSelectAll_) {
+        return false;
+      }
+#endif // ARKWEB_MENU_HANDLE
       if (!editable && readable) {
         return true;
       }
@@ -948,9 +957,6 @@ bool ArkWebTouchSelectionControllerClientOSRExt::IsCommandIdEnabled(
 void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
     int command_id,
     int event_flags) {
-#if BUILDFLAG(ARKWEB_MENU_HANDLE)
-    commandId_ = command_id;
-#endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   AsArkWebTouchSelectionControllerClientOSRExt()->SetSelectAllClicked(
       command_id);
@@ -1013,10 +1019,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_SELECT_ALL:
       host_delegate->SelectAll();
-      ShowQuickMenu();
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = true;
 #endif // ARKWEB_MENU_HANDLE
+      ShowQuickMenu();
       break;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
     case QM_EDITFLAG_CAN_ELLIPSIS:

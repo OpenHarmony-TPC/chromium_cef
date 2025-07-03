@@ -95,4 +95,7 @@ static inline void setForInclude(const struct_type* src,
 #if BUILDFLAG(ARKWEB_RENDER_PROCESS_SHARE)
   target->shared_render_process_token = src->shared_render_process_token;
 #endif
+#if BUILDFLAG(ARKWEB_ERROR_PAGE)
+  target->error_page_enabled = src->error_page_enabled;
+#endif
 }

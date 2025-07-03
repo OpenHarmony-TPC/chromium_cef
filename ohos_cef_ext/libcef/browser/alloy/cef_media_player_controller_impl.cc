@@ -54,3 +54,18 @@ void CefMediaPlayerControllerImpl::Download() {
     media_player_controller_->Download();
   }
 }
+
+void CefMediaPlayerControllerImpl::SetVolume(double volume)
+{
+  if (media_player_controller_) {
+    media_player_controller_->SetVolume(volume);
+  }
+}
+
+double CefMediaPlayerControllerImpl::GetVolume()
+{
+  if (media_player_controller_) {
+    return media_player_controller_->GetVolume();
+  }
+  return -1.0;
+}

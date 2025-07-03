@@ -18,7 +18,7 @@
 #pragma once
 
 #include "chrome/browser/extensions/menu_manager.h"
-#include "ohos_nweb/src/capi/nweb_context_menus_items.h"
+#include "ohos_nweb/src/capi/nweb_context_menus_item.h"
 #include "ohos_nweb/src/capi/nweb_context_menus_on_clicked_data.h"
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 

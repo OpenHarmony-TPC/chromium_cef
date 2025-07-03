@@ -287,6 +287,7 @@ std::string BuildMediaInfo(
   root.Set("isPlaying", media_info->isPlaying);
   root.Set("downloadBtn", media_info->show_download_button);
   root.Set("playbackrateBtn", media_info->isShowPlaybackSpeed);
+  root.Set("volume", media_info->volume);
   // cloud control config
   base::Value::Dict policy;
   policy.Set("downloadButton", static_cast<int>(config->download_button));
@@ -775,7 +776,7 @@ void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
   tab_id_ = tab_id;
 }
 
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId(int32_t tab_id) {
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() const {
   return tab_id_;
 }
 
@@ -794,6 +795,9 @@ bool AlloyBrowserHostImplExt::WebExtensionCheck(
     LOG(ERROR) << functionName << " get contents failed.";
     return false;
   }
+
+  // we need to get the original context to make sure we take the right context.
+  browser_context = GetOriginalContext(browser_context);
 
   return true;
 }
@@ -833,7 +837,7 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
       [&changed_properties] (const CefString& name) {
     changed_properties.emplace_back(name.ToString());
   });
- 
+
   extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
       tab_id, web_contents, changed_properties, std::move(changeInfo));
 }
@@ -964,7 +968,7 @@ void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
 }
 
 content::BrowserContext* GetGlobalBrowserContext() {
-  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalBrowserContext();
+  CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
   if (!request_context) {
     LOG(ERROR) << "request context is null";
     return nullptr;
@@ -1005,6 +1009,29 @@ void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
     
   extensions::ExtensionActionDispatcher::Get(context)
       ->OnActionPinnedStateChanged(extensionId, isPinned);
+}
+
+content::BrowserContext* AlloyBrowserHostImplExt::GetOriginalContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context->IsOffTheRecord()) {
+    return browser_context;
+  }
+
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  content::BrowserContext* original_browser_context =
+      browser_client->GetOriginalContext(browser_context);
+  if (!original_browser_context) {
+    LOG(ERROR) << "get original_browser_context failed.";
+    return browser_context;
+  }
+
+  if (!extensions::TabsWindowsAPI::Get(original_browser_context)) {
+    LOG(ERROR) << "get TabsWindowsAPI form original_browser_context failed.";
+    return browser_context;
+  }
+
+  return original_browser_context;
 }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 

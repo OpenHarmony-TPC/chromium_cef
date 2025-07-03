@@ -13,26 +13,35 @@
  * limitations under the License.
  */
 
+#include "base/types/optional_util.h"
+#include "base/task/bind_post_task.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/extensions/api/tabs/tabs_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
 #include "components/zoom/zoom_controller.h"
-#include "third_party/blink/public/common/page/page_zoom.h"
-#include "libcef/browser/extensions/tab_extensions_util.h"
+#include "extensions/browser/extension_zoom_request_client.h"
+#include "extensions/common/manifest_constants.h"
+#include "extensions/common/mojom/api_permission_id.mojom-shared.h"
+#include "extensions/common/permissions/permissions_data.h"
+
 #include "libcef/browser/browser_info_manager.h"
 #include "libcef/browser/extensions/extension_function_details.h"
-#include "libcef/browser/extensions/window_extensions_utils.h"
+#include "libcef/browser/extensions/tab_extensions_util.h"
+#include "libcef/browser/extensions/window_extensions_util.h"
+#include "third_party/blink/public/common/page/page_zoom.h"
 #include "ohos_nweb/src/capi/web_extension_window_items.h"
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
-#include "extensions/common/permissions/permissions_data.h"
+#include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
 #include "extensions/browser/extension_zoom_request_client.h"
 #include "base/types/optional_util.h"
 #include "base/task/bind_post_task.h"
+#include "third_party/blink/public/common/page/page_zoom.h"
 
 using content::NavigationController;
 using content::WebContents;
+using extensions::mojom::APIPermissionID;
 using zoom::ZoomController;
 
 namespace extensions {
@@ -119,7 +128,7 @@ std::optional<WebExtensionWindowType> GetQueryWindowType(api::tabs::WindowType w
   return queryWindowType;
 }
 
-bool GetQueryParams(
+void GetQueryParams(
     std::optional<tabs::Query::Params>& params,
     NWebExtensionTabQueryInfo& queryInfo) {
   queryInfo.active = params->query_info.active;
@@ -197,8 +206,7 @@ int GetAnyWebContents(int windowId) {
 }
 
 int GetCurrentWebContents(ExtensionFunction* function) {
-  WebContents* web_contents = nullptr;
-  web_contents = function->GetSenderWebContents();
+  WebContents* web_contents = web_contents = function->GetSenderWebContents();
   // 1. normal extension page
   if (web_contents && web_contents->ExtensionGetTabId() > 0) {
     return web_contents->ExtensionGetTabId();
@@ -209,7 +217,7 @@ int GetCurrentWebContents(ExtensionFunction* function) {
     return GetAnyWebContents(extension_misc::kCurrentWindowId);
   }
 
-  // 3. v2 backgound, window_id < 0
+  // 3. v2 background, window_id < 0
   // 4. popup or sidepanel, window_id > 0
   int nweb_id = web_contents->GetNWebId();
   int window_id = 
@@ -260,13 +268,13 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
 
   std::optional<ImageDetails> image_details;
   if (args().size() > 1) {
-    image_details = ImageDetails::FormValue(args()[1]);
+    image_details = ImageDetails::FromValue(args()[1]);
   }
 
   int current = GetAnyWebContents(window_id);
   if (current < 0) {
     LOG(INFO) << "TabsCaptureVisibleTabFunction cannot find WebContents by window_id:" << window_id;
-    return ResponseNow(Error("No active web contents to capture"));
+    return RespondNow(Error("No active web contents to capture"));
   }
 
   WebContents* contents = nullptr;
@@ -282,7 +290,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
       contents->GetLastCommittedURL(),
       contents->ExtensionGetTabId(), &error,
       extensions::CaptureRequirement::kActiveTabOrAllUrls)) {
-    return ResponseNow(Error(std::move(error)));
+    return RespondNow(Error(std::move(error)));
   }
 
   // NOTE: CaptureAsync() may invoke its callback from a background thread,
@@ -300,16 +308,16 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
 }
 
 void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& function,
-                                      const NWebExtensionTab& tab
+                                      const NWebExtensionTab& tab,
                                       std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnTabCreated is empty!!!!";
     return;
   }
-  if (tab->nwebId <= 0 || error) {
+  if (tab.nwebId <= 0 || error) {
     std::string errorMessage = error? error.value() : "create error";
-    function->Respond(function->Error("errorMessage"));
+    function->Respond(function->Error(errorMessage));
   } else {
   function->Respond(function->has_callback()
           ? function->WithArguments(base::Value(GetTabValue(tab)))
@@ -320,6 +328,18 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
     LOG(INFO) << "TabsCreateFunction Release";
     function->Release();
   }
+}
+
+void OnCreateTabForExtension(const NWebExtensionTab& tab,
+                             std::optional<std::string>& error) {
+  if (error) {
+    LOG(ERROR) << "OnCreateTabForExtension create error, " << error.value();
+  }
+}
+
+void TabsCreateFunction::CreateTabForExtension(std::string& url) {
+  NWebTabCreateInfo create_info;
+  create_info.url = url;
 }
 
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
@@ -339,7 +359,7 @@ ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
   }
 
   call_create_tab_ =true;
-  bool success = OHOS::NWeb::NWebExtensionTabDelegate::CreateTab(
+  bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::CreateTab(
       create_info, base::BindRepeating(&TabsCreateFunction::OnTabCreated,
                                        weak_ptr_factory_.GetWeakPtr()));
   call_create_tab_ =false;
@@ -491,17 +511,19 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
       tabs::Get::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
   int tab_id = params->tab_id;
-  call_duplicate_tab_ = true;
   std::unique_ptr<NWebExtensionTab> web_extension_tab =
       OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
   if (!web_extension_tab) {
+    return RespondNow(Error(kNotImplementedError));
+  }
+  if (web_extension_tab->nwebId <= 0) {
     std::string error = ErrorUtils::FormatErrorMessage(
         ExtensionTabUtil::kTabNotFoundError, base::NumberToString(tab_id));
     return RespondNow(Error(std::move(error)));
   }
 
   base::Value::List get_results;
-  get_results.reverse(1);
+  get_results.reserve(1);
   get_results.Append(GetTabValue(*web_extension_tab));
 
   return RespondNow(ArgumentList(std::move(get_results)));
@@ -632,8 +654,8 @@ ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
     options.tabIds = *params->options.tab_ids.as_integers;
     EXTENSION_FUNCTION_VALIDATE(!options.tabIds.empty());
   } else {
-    EXTENSION_FUNCTION_VALIDATE(params->options.tab_ids.as_integers);
-    options.tabIds.push_back(*params->options.tab_ids.as_integers);
+    EXTENSION_FUNCTION_VALIDATE(params->options.tab_ids.as_integer);
+    options.tabIds.push_back(*params->options.tab_ids.as_integer);
   }
 
   call_group_tab_ = true;
@@ -690,8 +712,8 @@ ExtensionFunction::ResponseAction TabsHighlightFunction::Run() {
     info.tabIds = *params->highlight_info.tabs.as_integers;
     EXTENSION_FUNCTION_VALIDATE(!info.tabIds.empty());
   } else {
-    EXTENSION_FUNCTION_VALIDATE(params->highlight_info.tabs.as_integers);
-    info.tabsIds.push_back(*params->highlight_info.tabs.as_integers);
+    EXTENSION_FUNCTION_VALIDATE(params->highlight_info.tabs.as_integer);
+    info.tabIds.push_back(*params->highlight_info.tabs.as_integer);
   }
 
   if (params->highlight_info.window_id) {
@@ -749,12 +771,12 @@ ExtensionFunction::ResponseAction TabsMoveFunction::Run() {
   std::vector<int> tab_ids;
 
   if (params->tab_ids.as_integers) {
-    for (int tabd_id : *params->tab_ids.as_integers) {
+    for (int tab_id : *params->tab_ids.as_integers) {
       tab_ids.emplace_back(tab_id);
     }
   } else {
-    EXTENSION_FUNCTION_VALIDATE(params->tab_ids.as_integers);
-    tab_ids.emplace_back(*params->tab_ids.as_integers);
+    EXTENSION_FUNCTION_VALIDATE(params->tab_ids.as_integer);
+    tab_ids.emplace_back(*params->tab_ids.as_integer);
   }
 
   struct NWebExtensionTabMoveProperties moveProperties;
@@ -862,12 +884,12 @@ ExtensionFunction::ResponseAction TabsRemoveFunction::Run() {
   std::vector<int> tab_ids;
 
   if (params->tab_ids.as_integers) {
-    for (int tabd_id : *params->tab_ids.as_integers) {
+    for (int tab_id : *params->tab_ids.as_integers) {
       tab_ids.emplace_back(tab_id);
     }
   } else {
-    EXTENSION_FUNCTION_VALIDATE(params->tab_ids.as_integers);
-    tab_ids.emplace_back(*params->tab_ids.as_integers);
+    EXTENSION_FUNCTION_VALIDATE(params->tab_ids.as_integer);
+    tab_ids.emplace_back(*params->tab_ids.as_integer);
   }
 
   call_remove_tab_ = true;
@@ -925,14 +947,14 @@ ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
   }
 
   GURL url(web_contents->GetVisibleURL());
-  if (extension()->permissions_data->IsRestrictedUrl(url, &error)) {
+  if (extension()->permissions_data()->IsRestrictedUrl(url, &error)) {
     return RespondNow(Error(std::move(error)));
   }
 
   ZoomController* zoom_controller =
       ZoomController::FromWebContents(web_contents);
   double zoom_level = params->zoom_factor > 0
-                          ? blink::zoomFactorToZoomLevel(params->zoom_factor)
+                          ? blink::ZoomFactorToZoomLevel(params->zoom_factor)
                           : zoom_controller->GetDefaultZoomLevel();
 
   auto client = base::MakeRefCounted<ExtensionZoomRequestClient>(extension());
@@ -944,7 +966,7 @@ ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
   return RespondNow(NoArguments());
 }
 
-ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
+ExtensionFunction::ResponseAction TabsSetZoomSettingsFunction::Run() {
   using api::tabs::ZoomSettings;
 
   std::optional<tabs::SetZoomSettings::Params> params =
@@ -960,11 +982,11 @@ ExtensionFunction::ResponseAction TabsSetZoomFunction::Run() {
   }
 
   GURL url(web_contents->GetVisibleURL());
-  if (extension()->permissions_data->IsRestrictedUrl(url, &error)) {
+  if (extension()->permissions_data()->IsRestrictedUrl(url, &error)) {
     return RespondNow(Error(std::move(error)));
   }
 
-  // "pre-origin" scope is only available in "automatic" mode.
+  // "per-origin" scope is only available in "automatic" mode.
   if (params->zoom_settings.scope == tabs::ZoomSettingsScope::kPerOrigin &&
       params->zoom_settings.mode != tabs::ZoomSettingsMode::kAutomatic &&
       params->zoom_settings.mode != tabs::ZoomSettingsMode::kNone) {
@@ -1009,7 +1031,7 @@ ExtensionFunction::ResponseAction TabsUngroupFunction::Run() {
     EXTENSION_FUNCTION_VALIDATE(!tab_ids.empty());
   } else {
     EXTENSION_FUNCTION_VALIDATE(params->tab_ids.as_integer);
-    tab_ids.emplace_back(*params->tab_ids.as_integer);
+    tab_ids.push_back(*params->tab_ids.as_integer);
   }
 
   call_ungroup_tab_ = true;
@@ -1078,14 +1100,14 @@ void TabsUpdateFunction::OnTabUpdated(
   }
 }
 
-bool TabsUpdatedFunction::GetUpdateParams(
+bool TabsUpdateFunction::GetUpdateParams(
     int tab_id,
-    std::optional<aoi::tabs::Update::Params>& params,
+    std::optional<api::tabs::Update::Params>& params,
     NWebExtensionTabUpdateProperties& update_properties) {
   if (params->update_properties.url.has_value()) {
     GURL url;
     auto url_expected = ExtensionTabUtil::PrepareURLForNavigation(
-        *params->update_properties.url, extensions(), browser_context());
+        *params->update_properties.url, extension(), browser_context());
     if (!url_expected.has_value()) {
       error_ = std::move(url_expected.error());
       return false;
@@ -1128,7 +1150,7 @@ bool TabsUpdatedFunction::GetUpdateParams(
   }
 
   if (params->update_properties.auto_discardable.has_value()) {
-    update_properties.auto_discardable = *params->update_properties.auto_discardable;
+    update_properties.autoDiscardable = *params->update_properties.auto_discardable;
   }
 
   return true;
@@ -1150,7 +1172,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
     }
     if (params->update_properties.url.has_value()) {
       std::string updated_url = *params->update_properties.url;
-      if (!UpdateURL(update_url, tab_id, &error_)) {
+      if (!UpdateURL(updated_url, tab_id, &error_)) {
         return RespondNow(Error(error));
       }
     }
@@ -1187,7 +1209,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
 
   if (success) {
     AddRef();
-    LOG(INFO) << "TabsUngroupFunction AddRef";
+    LOG(INFO) << "TabsUpdateFunction AddRef";
     return RespondLater();
   } else {
     return RespondNow(Error("not support tabs.update"));

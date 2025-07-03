@@ -20,15 +20,15 @@
 
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
-#include "libcef/browser/extensions/tab_extensions_util.h"
+#include "libcef/browser/extensions/window_extensions_util.h"
 #include "ohos_nweb/src/nweb_common.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_cef_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_delegate_handler.h"
 
 namespace extensions {
 
-typedef OHOS::NWeb::NweExtensionWindowCefDelagate NweExtensionWindowCefDelagate;
-typedef OHOS::NWeb::NweExtensionWindowDelagateHandler NweExtensionWindowDelagateHandler;
+typedef OHOS::NWeb::NweExtensionWindowCefDelegate NweExtensionWindowCefDelegate;
+typedef OHOS::NWeb::NweExtensionWindowDelegateHandler NweExtensionWindowDelegateHandler;
 
 namespace windows = api::windows;
 
@@ -69,7 +69,7 @@ WebExtensionWindowQueryOptions GetWindowQueryOptions(std::optional<api::windows:
   return options;
 }
 
-std::optionsl<std::string> GetCreateTypeStr(api::windows::CreateType type) {
+std::optional<std::string> GetCreateTypeStr(api::windows::CreateType type) {
   switch (type) {
   case windows::CreateType::kNormal:
     return "normal";
@@ -82,20 +82,20 @@ std::optionsl<std::string> GetCreateTypeStr(api::windows::CreateType type) {
   }
 }
 
-std::optional<std::string> GetWindowStateStr(api::windows::WidnowState state) {
+std::optional<std::string> GetWindowStateStr(api::windows::WindowState state) {
   switch (state) {
-  case windows::WindowState::kNormal:
-    return "normal";
-  case windows::WindowState::kMinimized:
-    return "minimized";
-  case windows::WindowState::kMaximized:
-    return "maximized";
-  case windows::WindowState::kFullscreen:
-    return "fullscreen";
-  case windows::WindowState::kLockedFullscreen:
-    return "locked-fullscreen";
-  default:
-    return std::nullopt;
+    case windows::WindowState::kNormal:
+      return "normal";
+    case windows::WindowState::kMinimized:
+      return "minimized";
+    case windows::WindowState::kMaximized:
+      return "maximized";
+    case windows::WindowState::kFullscreen:
+      return "fullscreen";
+    case windows::WindowState::kLockedFullscreen:
+      return "locked-fullscreen";
+    default:
+      return std::nullopt;
   }
 }
 
@@ -185,9 +185,9 @@ std::optional<WebExtensionWindow> getWindow(int id, std::optional<api::windows::
   WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(query_options);
 
   if (IsNativeApiEnable()) {
-    return NweExtensionWindowCefDelagate::GetInstance()->OnGetWindow(window_id, windowQueryOptions);
+    return NweExtensionWindowCefDelegate::GetInstance()->OnGetWindow(window_id, windowQueryOptions);
   }
-  return NweExtensionWindowDelagateHandler::GetInstance()->OnGetWindow(window_id, windowQueryOptions);
+  return NweExtensionWindowDelegateHandler::GetInstance()->OnGetWindow(window_id, windowQueryOptions);
 }
 
 ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
@@ -230,9 +230,9 @@ ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
   std::optional<WebExtensionWindow> window;
 
   if (IsNativeApiEnable()) {
-    window = NweExtensionWindowCefDelagate::GetInstance()->OnGetLastFocusedWindow(windowQueryOptions);
+    window = NweExtensionWindowCefDelegate::GetInstance()->OnGetLastFocusedWindow(windowQueryOptions);
   } else {
-    window = NweExtensionWindowDelagateHandler::GetInstance()->OnGetLastFocusedWindow(windowQueryOptions);
+    window = NweExtensionWindowDelegateHandler::GetInstance()->OnGetLastFocusedWindow(windowQueryOptions);
   }
   if (!window) {
     return RespondNow(Error(extensions::tabs_constants::kNoLastFocusedWindowError));
@@ -248,18 +248,18 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
   WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(params->query_options);
   std::vector<WebExtensionWindow> windows;
   if (IsNativeApiEnable()) {
-    windows = NweExtensionWindowCefDelagate::GetInstance()->OnGetAllWindows(windowQueryOptions);
+    windows = NweExtensionWindowCefDelegate::GetInstance()->OnGetAllWindows(windowQueryOptions);
   } else {
-    windows = NweExtensionWindowDelagateHandler::GetInstance()->OnGetAllWindows(windowQueryOptions);
+    windows = NweExtensionWindowDelegateHandler::GetInstance()->OnGetAllWindows(windowQueryOptions);
   }
-  base::Value::List window_list = GetWindowValueList(windows);
+  base::Value::List window_list = GettWindowValueList(windows);
   return RespondNow(WithArguments(std::move(window_list)));
 }
 
 // static
 void WindowsCreateFunction::OnCreateWindow(
     const base::WeakPtr<WindowsCreateFunction>& function,
-    const std::optional<WebExtensionWidnow>& window,
+    const std::optional<WebExtensionWindow>& window,
     const std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
@@ -312,11 +312,11 @@ ExtensionFunction::ResponseAction WindowsCreateFunction::Run() {
   call_create_window_ = true;
   bool success;
   if (IsNativeApiEnable()) {
-    success = NweExtensionWindowCefDelegate::OnCreateWindow(
+    success = NweExtensionWindowCefDelegate::GetInstance()->OnCreateWindow(
         data, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
                                   weak_ptr_factory_.GetWeakPtr()));
   } else {
-    success = NweExtensionWindowDelegateHandler::OnCreateWindow(
+    success = NweExtensionWindowDelegateHandler::GetInstance()->OnCreateWindow(
         data, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
                                   weak_ptr_factory_.GetWeakPtr()));
   }
@@ -324,23 +324,23 @@ ExtensionFunction::ResponseAction WindowsCreateFunction::Run() {
   call_create_window_ = false;
 
   if (did_respond()) {
-    LOG(INFO) << "WidnowsCreateFunction did_respond";
+    LOG(INFO) << "WindowsCreateFunction did_respond";
     return AlreadyResponded();
   }
 
   if (success) {
     AddRef();
-    LOG(INFO) << "WidnowsCreateFunction AddRef";
+    LOG(INFO) << "WindowsCreateFunction AddRef";
     return RespondLater();
   } else {
-    return RespondNow(Error("not support widnows.create"));
+    return RespondNow(Error("not support windows.create"));
   }
 }
 
 // static
 void WindowsUpdateFunction::OnUpdateWindow(
     const base::WeakPtr<WindowsUpdateFunction>& function,
-    const std::optional<WebExtensionWidnow>& window,
+    const std::optional<WebExtensionWindow>& window,
     const std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
@@ -367,32 +367,32 @@ ExtensionFunction::ResponseAction WindowsUpdateFunction::Run() {
   std::optional<windows::Update::Params> params =
       windows::Update::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
-  WebExtensionWindowUpdateInfo info = GetWindowUpdateInfo(param->update_info);
+  WebExtensionWindowUpdateInfo info = GetWindowUpdateInfo(params->update_info);
 
   call_update_window_ = true;
   bool success;
   if (IsNativeApiEnable()) {
-    success = NweExtensionWindowCefDelegate::OnUpdateWindow(
+    success = NweExtensionWindowCefDelegate::GetInstance()->OnUpdateWindow(
         params->window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
                                                      weak_ptr_factory_.GetWeakPtr()));
   } else {
-    success = NweExtensionWindowDelegateHandler::OnUpdateWindow(
+    success = NweExtensionWindowDelegateHandler::GetInstance()->OnUpdateWindow(
         params->window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
                                                      weak_ptr_factory_.GetWeakPtr()));
   }
   call_update_window_ = false;
 
   if (did_respond()) {
-    LOG(INFO) << "WidnowsUpdateFunction did_respond";
+    LOG(INFO) << "WindowsUpdateFunction did_respond";
     return AlreadyResponded();
   }
 
   if (success) {
     AddRef();
-    LOG(INFO) << "WidnowsUpdateFunction AddRef";
+    LOG(INFO) << "WindowsUpdateFunction AddRef";
     return RespondLater();
   } else {
-    return RespondNow(Error("not support widnows.update"));
+    return RespondNow(Error("not support windows.update"));
   }
 }
 
@@ -428,27 +428,27 @@ ExtensionFunction::ResponseAction WindowsRemoveFunction::Run() {
   call_remove_window_ = true;
   bool success;
   if (IsNativeApiEnable()) {
-    success = NweExtensionWindowCefDelegate::OnRemoveWindow(
+    success = NweExtensionWindowCefDelegate::GetInstance()->OnRemoveWindow(
         window_id, base::BindRepeating(&WindowsRemoveFunction::OnRemoveWindow,
                                        weak_ptr_factory_.GetWeakPtr()));
   } else {
-    success = NweExtensionWindowDelegateHandler::OnRemoveWindow(
+    success = NweExtensionWindowDelegateHandler::GetInstance()->OnRemoveWindow(
         window_id, base::BindRepeating(&WindowsRemoveFunction::OnRemoveWindow,
                                        weak_ptr_factory_.GetWeakPtr()));
   }
   call_remove_window_ = false;
 
   if (did_respond()) {
-    LOG(INFO) << "WidnowsRemoveFunction did_respond";
+    LOG(INFO) << "WindowsRemoveFunction did_respond";
     return AlreadyResponded();
   }
 
   if (success) {
     AddRef();
-    LOG(INFO) << "WidnowsRemoveFunction AddRef";
+    LOG(INFO) << "WindowsRemoveFunction AddRef";
     return RespondLater();
   } else {
-    return RespondNow(Error("not support widnows.remove"));
+    return RespondNow(Error("not support windows.remove"));
   }
 }
 
