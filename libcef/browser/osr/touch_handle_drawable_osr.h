@@ -49,11 +49,7 @@ class CefTouchHandleDrawableOSR : public ui::TouchHandleDrawable {
   // Pass the current touch handle state to the CefRenderHandler.
   void TouchHandleStateChanged(const CefTouchHandleState& state);
 
-#if BUILDFLAG(ARKWEB_MENU)
-  raw<CefRenderWidgetHostViewOSR> rwhv_;
-#else
   raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;
-#endif  // BUILDFLAG(ARKWEB_MENU)
 
   float alpha_ = 0.f;
   static int counter_;
