@@ -122,6 +122,34 @@ content::WebContentsImpl* OhGinJavascriptBridgeDispatcherHost::web_contents()
       content::WebContentsObserver::web_contents());
 }
 
+void OhGinJavascriptBridgeDispatcherHost::DidFinishNavigation(content::NavigationHandle* navigation_handle) {
+  if (!navigation_handle->HasCommitted() || navigation_handle->IsErrorPage()) {
+    LOG(ERROR) << "DidFinishNavigation invalid navigation_handle";
+    return;
+  }
+
+  content::RenderFrameHost* render_frame_host = navigation_handle->GetRenderFrameHost();
+  if (render_frame_host == nullptr) {
+    LOG(ERROR) << "DidFinishNavigation get render frame host failed";
+    return;
+  }
+
+  content::SiteInstance* site_instance = render_frame_host->GetSiteInstance();
+  if (site_instance == nullptr) {
+    LOG(ERROR) << "DidFinishNavigation get site instance failed";
+    return;
+  }
+  GURL site_instance_gurl = site_instance->GetSiteURL();
+  content::AgentSchedulingGroupHost& agent_scheduling_group =
+      static_cast<content::RenderFrameHostImpl*>(navigation_handle->GetRenderFrameHost())
+          ->GetAgentSchedulingGroup();
+
+  scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter =
+          OhGinJavascriptBridgeMessageFilter::FromHost(
+              agent_scheduling_group, /*create_if_not_exists=*/false);
+  filter->SetSiteInstanceGurl(site_instance_gurl);
+}
+
 void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
     content::RenderFrameHost* render_frame_host) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
