@@ -213,7 +213,7 @@ class CefRequestContext : public CefPreferenceManager {
   virtual void ClearHttpAuthCredentials(
       CefRefPtr<CefCompletionCallback> callback) = 0;
 #if BUILDFLAG(ARKWEB_WEBSTORAGE)
-#include "cef/include/cef_request_context_for_include.h"
+#include "cef/ohos_cef_ext/include/cef_request_context_for_include.h"
 #endif  // #if BUILDFLAG(ARKWEB_WEBSTORAGE)
   ///
   /// Clears all active and idle connections that Chromium currently has.
