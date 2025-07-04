@@ -280,6 +280,8 @@ bool ChromeContentBrowserClientCef::ShouldDisableSiteIsolation(
   if (g_siteIsolationMode) {
     return site_isolation::SiteIsolationPolicy::
         ShouldDisableSiteIsolationDueToMemoryThreshold(site_isolation_mode);
+  } else if (site_isolation_mode == content::SiteIsolationMode::kPartialSiteIsolation) {
+    return false;
   }
   return true;
 }
