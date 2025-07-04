@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 
+#include "base/memory/raw_ptr.h"
 #include "components/printing/browser/print_manager.h"
 #include "components/printing/common/print.mojom-forward.h"
 #include "content/public/browser/web_contents_user_data.h"
@@ -128,7 +129,7 @@ class OhosPrintManager : public printing::PrintManager,
   int dpi_ = 300;  // DPI (Dots Per Inch)
   std::queue<std::chrono::high_resolution_clock::time_point>
       cancelPrintTimeQueue_;
-  void* token_ = nullptr;
+  raw_ptr<void> token_ = nullptr;
   bool cancel_ = false;
   bool is_pdf_print_ = false;
   bool should_print_background_ = true;
