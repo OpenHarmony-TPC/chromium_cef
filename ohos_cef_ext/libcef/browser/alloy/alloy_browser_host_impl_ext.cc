@@ -1518,6 +1518,15 @@ void AlloyBrowserHostImplExt::SetAudioExclusive(bool audioExclusive) {
   }
   mediaSession->audioExclusive_ = audioExclusive;
 }
+
+void AlloyBrowserHostImplExt::SetAudioSessionType(int audioSessionType) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
+  if (!mediaSession) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioSessionType get mediaSession failed.";
+    return;
+  }
+  mediaSession->audioSessionType_ = audioSessionType;
+}
 #endif // BUILDFLAG(ARKWEB_MEDIA_POLICY)
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)

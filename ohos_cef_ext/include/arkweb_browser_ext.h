@@ -718,6 +718,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void SetAudioExclusive(bool audioExclusive) = 0;
 
   ///
+  ///  Set the audio session type of the browser.
+  ///
+  virtual void SetAudioSessionType(int audioSessionType) = 0;
+
+  ///
   /// Close fullScreen video.
   ///
   virtual void CloseMedia() = 0;
