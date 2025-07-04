@@ -12,6 +12,7 @@
 #include "content/public/browser/render_process_host_observer.h"
 #include "content/public/renderer/render_frame_observer.h"
 #include "libcef/common/javascript/oh_gin_javascript_bridge_errors.h"
+#include "url/gurl.h"
 
 namespace IPC {
 class Message;
@@ -52,6 +53,8 @@ class OhGinJavascriptBridgeMessageFilter
   static scoped_refptr<OhGinJavascriptBridgeMessageFilter> FromHost(
       content::AgentSchedulingGroupHost& agent_scheduling_group,
       bool create_if_not_exists);
+
+  void SetSiteInstanceGurl(const GURL& site_instance_url);
 
  private:
   friend class BrowserThread;
@@ -99,6 +102,8 @@ class OhGinJavascriptBridgeMessageFilter
                                   const base::Value::List& arguments);
   void OnObjectWrapperDeleted(int object_id);
 
+  bool IsSameSite(const GURL& document_gurl);
+
   // Accessed both from UI and background threads.
   HostMap hosts_ GUARDED_BY(hosts_lock_);
   base::Lock hosts_lock_;
@@ -112,6 +117,8 @@ class OhGinJavascriptBridgeMessageFilter
   int32_t current_routing_id_;
 
   scoped_refptr<base::SingleThreadTaskRunner> async_task_runner_;
+
+  GURL site_instance_gurl_;
 };
 }  // namespace NWEB
 #endif

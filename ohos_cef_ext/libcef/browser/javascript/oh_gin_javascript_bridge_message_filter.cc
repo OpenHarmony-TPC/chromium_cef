@@ -18,6 +18,7 @@
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/render_process_host.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/browser/site_isolation_policy.h"
 #include "ipc/ipc_platform_file_attachment_posix.h"
 #include "oh_gin_javascript_bridge_dispatcher_host.h"
 
@@ -276,6 +277,36 @@ void OhGinJavascriptBridgeMessageFilter::OnHasMethod(
   }
 }
 
+void OhGinJavascriptBridgeMessageFilter::SetSiteInstanceGurl(const GURL& site_instance_url) {
+  site_instance_gurl_ = site_instance_url;
+}
+
+bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
+  if (document_gurl.scheme().empty() ||
+      document_gurl.scheme() != site_instance_gurl_.scheme()) {
+    return false;
+  }
+
+  if (document_gurl.host().empty() ||
+      document_gurl.host() != site_instance_gurl_.host()) {
+    const size_t suffix_length = site_instance_gurl_.host().length() + 1;
+    const std::string url_host = document_gurl.host();
+
+    if (url_host.length() <= suffix_length) {
+      return false;
+    } else {
+      const size_t dot_pos = url_host.length() - suffix_length;
+      const std::string host_suffix = url_host.substr(dot_pos + 1);
+      if (url_host[dot_pos] != '.' ||
+          host_suffix != site_instance_gurl_.host()) {
+        return false;
+      }
+    }
+  }
+  LOG(INFO) << "OhGinJavascriptBridgeMessageFilter is same site";
+  return true;
+}
+
 void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
     int32_t object_id,
     const std::string& document_url,
@@ -283,8 +314,12 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethod(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
+  if (host && is_same_site) {
     host->OnInvokeMethod(current_routing_id_, object_id, document_url,
                          method_name, arguments, wrapped_result, error_code);
   } else {
@@ -298,8 +333,12 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
+  if (host && is_same_site) {
     host->OnInvokeMethodAsync(current_routing_id_, object_id, document_url,
                               method_name, arguments);
   }
@@ -313,8 +352,12 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbuf(
     const base::Value::List& arguments,
     base::Value::List* wrapped_result,
     OhGinJavascriptBridgeError* error_code) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
+  if (host && is_same_site) {
     host->OnInvokeMethodFlowbuf(current_routing_id_, object_id, document_url,
                                 method_name, arguments, *fd, wrapped_result,
                                 error_code);
@@ -330,8 +373,12 @@ void OhGinJavascriptBridgeMessageFilter::OnInvokeMethodFlowbufAsync(
     const std::string& document_url,
     const std::string& method_name,
     const base::Value::List& arguments) {
+  bool is_same_site = true;
+  if (content::SiteIsolationPolicy::UseDedicatedProcessesForAllSites()) {
+    is_same_site = IsSameSite(GURL(document_url));
+  }
   scoped_refptr<OhGinJavascriptBridgeDispatcherHost> host = FindHost();
-  if (host) {
+  if (host && is_same_site) {
     host->OnInvokeMethodFlowbufAsync(current_routing_id_, object_id,
                                      document_url, method_name, arguments, *fd);
   }

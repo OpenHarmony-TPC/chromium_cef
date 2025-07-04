@@ -84,6 +84,7 @@ class OhGinJavascriptBridgeDispatcherHost
 #endif
 
   // WebContentsObserver
+  void DidFinishNavigation(content::NavigationHandle* navigation_handle) override;
   void RenderFrameCreated(content::RenderFrameHost* render_frame_host) override;
   void WebContentsDestroyed() override;
   void RenderViewHostChanged(content::RenderViewHost* old_host,
