@@ -166,6 +166,12 @@ void SetIsFling(bool is_fling);
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool SetFocusByPosition(float x, float y);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+  virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,
+                                             uint64_t blankless_key,
+                                             uint64_t frame_sink_id,
+                                             int64_t pref_hash) override;
+#endif
 #if BUILDFLAG(IS_ARKWEB)
  private:
   using RenderFrameType = mojo::Remote<cef::mojom::RenderFrame>;
