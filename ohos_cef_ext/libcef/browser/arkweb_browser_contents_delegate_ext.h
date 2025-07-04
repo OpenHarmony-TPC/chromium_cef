@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_BROWSER_CONTENTS_DELEGATE_EXT_H_
 #pragma once
 
+#include "base/memory/raw_ptr.h"
 #include "build/build_config.h"
 #include "cef/include/cef_base.h"
 #include "cef/libcef/browser/browser_contents_delegate.h"
@@ -113,7 +114,7 @@ private:
   // Timestamp when the user last successfully escaped from a lock request.
   base::TimeTicks last_user_escape_time_;
 
-  content::WebContents* tab_with_exclusive_access_ = nullptr;
+  raw_ptr<content::WebContents> tab_with_exclusive_access_ = nullptr;
 #endif
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   bool did_synthesize_page_load_ = false;

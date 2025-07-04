@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include "base/memory/raw_ptr.h"
 #include "base/functional/callback.h"
 #include "base/threading/thread_checker.h"
 #include "mojo/public/cpp/bindings/remote.h"
@@ -199,7 +200,7 @@ class StreamReaderURLLoader : public network::mojom::URLLoader {
   bool need_client_callback_ = false;
   bool got_client_callback_ = false;
 
-  StreamReaderURLLoaderUtils* loader_utils_;
+  raw_ptr<StreamReaderURLLoaderUtils> loader_utils_;
   base::WeakPtrFactory<StreamReaderURLLoader> weak_factory_;
 };
 

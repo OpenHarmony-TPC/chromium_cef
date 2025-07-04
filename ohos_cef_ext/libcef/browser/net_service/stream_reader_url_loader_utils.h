@@ -18,6 +18,7 @@
 
 #include <regex>
 
+#include "base/memory/raw_ptr.h"
 #include "arkweb/build/features/features.h"
 #include "libcef/browser/net_service/stream_reader_url_loader.h"
 #include "net/base/features.h"
@@ -62,7 +63,7 @@ class StreamReaderURLLoaderUtils {
 #endif
 
  private:
-  StreamReaderURLLoader* url_loader_;
+  raw_ptr<StreamReaderURLLoader> url_loader_;
 };
 }  // namespace net_service
 #endif
