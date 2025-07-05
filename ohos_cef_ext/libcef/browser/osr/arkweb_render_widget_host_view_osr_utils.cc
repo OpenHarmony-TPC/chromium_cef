@@ -507,7 +507,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::StopBoosting() {
 #endif
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
 #if BUILDFLAG(IS_OHOS)
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
   }
 #endif
@@ -536,7 +536,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
   if (view_->isBoosting_) {
     int socPerfId = SOC_PERF_WEB_GESTURE_ID;
   #if BUILDFLAG(IS_OHOS)
-    if (base::ohos::IsPcDevice()) {
+    if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
       socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
     }
   #endif
