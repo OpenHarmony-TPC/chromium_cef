@@ -346,12 +346,19 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
 
   // Retrieve browser information synchronously.
   auto params = cef::mojom::NewBrowserInfo::New();
-  GetBrowserManager()->GetNewBrowserInfo(
-      render_frame->GetWebFrame()->GetLocalFrameToken(), &params);
-  if (params->browser_id == 0) {
-    // The popup may have been canceled during creation.
-    return nullptr;
+#if BUILDFLAG(ARKWEB_PDF)
+  const bool is_pdf = base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kPdfRenderer);
+  if (!is_pdf) {
+#endif
+    GetBrowserManager()->GetNewBrowserInfo(
+        render_frame->GetWebFrame()->GetLocalFrameToken(), &params);
+    if (params->browser_id == 0) {
+      // The popup may have been canceled during creation.
+      return nullptr;
+    }
+#if BUILDFLAG(ARKWEB_PDF)
   }
+#endif
 
   if (is_windowless) {
     *is_windowless = params->is_windowless;
@@ -359,7 +366,9 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
   if (print_preview_enabled) {
     *print_preview_enabled = params->print_preview_enabled;
   }
-
+#if BUILDFLAG(ARKWEB_PDF)
+  if (is_pdf || params->is_excluded || params->browser_id < 0) {
+#endif
   if (params->is_excluded || params->browser_id < 0) {
     // Don't create a CefBrowser for excluded content (PDF renderer, PDF
     // extension or print preview dialog), or if the new browser info response
