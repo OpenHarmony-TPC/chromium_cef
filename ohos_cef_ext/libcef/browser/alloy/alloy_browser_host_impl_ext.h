@@ -217,6 +217,7 @@ public:
 #if BUILDFLAG(ARKWEB_MEDIA_POLICY)
   void SetAudioResumeInterval(int resumeInterval) override;
   void SetAudioExclusive(bool audioExclusive) override;
+  void SetAudioSessionType(int audioSessionType) override;
 #endif // defined(OHOS_MEDIA_POLICY)
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)

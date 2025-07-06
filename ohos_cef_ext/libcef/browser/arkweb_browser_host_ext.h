@@ -373,10 +373,14 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif  // BUILDFLAG(ARKWEB_PRINT)
   void SetEnableLowerFrameRate(bool enabled) override;
   void SetEnableHalfFrameRate(bool enabled) override;
+#if BUILDFLAG(ARKWEB_MEDIA_POLICY)
   void SetAudioResumeInterval(int resumeInterval) override { /*TODO: IS_OHOS*/
   }
   void SetAudioExclusive(bool audioExclusive) override { /*TODO: IS_OHOS*/
   }
+  void SetAudioSessionType(int audioSessionType) override {
+  }
+#endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void SendTouchEventList(
       const std::vector<CefTouchEvent>& event_list) override;
