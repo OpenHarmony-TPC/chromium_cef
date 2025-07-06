@@ -11,13 +11,14 @@
 #include "cef/libcef/browser/thread_util.h"
 #include "content/public/browser/web_contents.h"
 #include "net/ssl/ssl_info.h"
+#include "ohos_cef_ext/include/arkweb_cef_ssl_callback.h"
 #include "url/gurl.h"
 
 namespace certificate_query {
 
 namespace {
 
-class CefAllowCertificateErrorCallbackImpl : public CefCallback {
+class CefAllowCertificateErrorCallbackImpl : public ArkWebCefSslCallback {
  public:
   using CallbackType = CertificateErrorCallback;
 
@@ -47,6 +48,8 @@ class CefAllowCertificateErrorCallbackImpl : public CefCallback {
 
   void Cancel() override { ContinueNow(false); }
 
+  void Cancel(bool abortLoading) override { CancelNow(abortLoading); }
+
   [[nodiscard]] CallbackType Disconnect() { return std::move(callback_); }
 
  private:
@@ -63,10 +66,30 @@ class CefAllowCertificateErrorCallbackImpl : public CefCallback {
     }
   }
 
+  void CancelNow(bool abortLoading) {
+    if (CEF_CURRENTLY_ON_UIT()) {
+      if (!callback_.is_null()) {
+        RunCancel(std::move(callback_), abortLoading);
+      }
+    } else {
+      CEF_POST_TASK(
+          CEF_UIT,
+          base::BindOnce(&CefAllowCertificateErrorCallbackImpl::CancelNow,
+                         this, abortLoading));
+    }
+  }
+
   static void RunNow(CallbackType callback, bool allow) {
     CEF_REQUIRE_UIT();
     std::move(callback).Run(
         allow ? content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE
+              : content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY);
+  }
+
+  static void RunCancel(CallbackType callback, bool allow) {
+    CEF_REQUIRE_UIT();
+    std::move(callback).Run(
+        allow ? content::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL
               : content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY);
   }
 
