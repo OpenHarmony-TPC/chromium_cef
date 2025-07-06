@@ -13,6 +13,7 @@
 #include "include/cef_ssl_info.h"
 #include "include/cef_unresponsive_process_callback.h"
 #include "include/cef_x509_certificate.h"
+#include "ohos_cef_ext/include/arkweb_cef_ssl_callback.h"
 
 class CefSelectClientCertificateCallbackExt
     : public virtual CefSelectClientCertificateCallback {
@@ -124,7 +125,7 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                      bool is_main_frame_request,
                                      bool is_fatal_error,
                                      CefRefPtr<CefSSLInfo> ssl_info,
-                                     CefRefPtr<CefCallback> callback) {
+                                     CefRefPtr<ArkWebCefSslCallback> callback) {
     return false;
   }
 
