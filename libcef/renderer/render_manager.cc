@@ -368,8 +368,9 @@ CefRefPtr<CefBrowserImpl> CefRenderManager::MaybeCreateBrowser(
   }
 #if BUILDFLAG(ARKWEB_PDF)
   if (is_pdf || params->is_excluded || params->browser_id < 0) {
-#endif
+#else
   if (params->is_excluded || params->browser_id < 0) {
+#endif
     // Don't create a CefBrowser for excluded content (PDF renderer, PDF
     // extension or print preview dialog), or if the new browser info response
     // has timed out.
