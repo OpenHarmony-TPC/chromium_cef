@@ -1236,6 +1236,10 @@ source_set("libcef_static") {
 
   deps += [ "//arkweb/build/features" ]
 
+  if (is_ohos && !is_component_build) {
+    deps += [ "//ui/events/keycodes:x11" ]
+  }
+
   if (enable_arkweb) {
     public_deps += [ "//arkweb/build/features" ]
   }
