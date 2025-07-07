@@ -246,6 +246,17 @@ void TabsCreateFunction::OnTabCreated(
   }
 }
 
+void OnCreateTabForExtension(const NWebExtensionTab* tab) {
+}
+
+void TabsCreateFunction::CreateTabForExtension(std::string& url) {
+  NWebTabCreateInfo create_info;
+  create_info.url = url;
+
+  OHOS::NWeb::NWebHandlerDelegate::OnCreateTab(
+    create_info, base::BindRepeating(&OnCreateTabForExtension));
+}
+
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
   std::optional<tabs::Create::Params> params =
       tabs::Create::Params::Create(args());
