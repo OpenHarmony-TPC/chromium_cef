@@ -321,8 +321,9 @@ bool ArkWebRenderWidgetHostViewOSRUtils::SetVisibleViewportSize() {
   }
   const gfx::Size& visible_view_bounds =
       ::GetVisibleViewportSize(view_->browser_impl_.get());
+  const bool size_in_pixel_changed = SetCurrentSizeInPixel();
   if (visible_view_bounds == view_->current_visible_view_bounds_) {
-    return false;
+    return size_in_pixel_changed;
   }
 
   view_->current_visible_view_bounds_ = visible_view_bounds;
@@ -345,13 +346,6 @@ bool ArkWebRenderWidgetHostViewOSRUtils::SetRootLayerSizeEx(
       !visible_view_bounds_changed) {
     return false;
   }
-
-#if BUILDFLAG(ARKWEB_DSS)
-  const bool size_in_pixel_changed = SetCurrentSizeInPixel();
-  if (!size_in_pixel_changed) {
-    return false;
-  }
-#endif
 
   view_->GetRootLayer()->SetBounds(
       gfx::Rect(view_->GetPhysicalViewBounds().size()));
@@ -513,7 +507,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::StopBoosting() {
 #endif
   int socPerfId = SOC_PERF_WEB_GESTURE_ID;
 #if BUILDFLAG(IS_OHOS)
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
     socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
   }
 #endif
@@ -542,7 +536,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
   if (view_->isBoosting_) {
     int socPerfId = SOC_PERF_WEB_GESTURE_ID;
   #if BUILDFLAG(IS_OHOS)
-    if (base::ohos::IsPcDevice()) {
+    if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
       socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
     }
   #endif

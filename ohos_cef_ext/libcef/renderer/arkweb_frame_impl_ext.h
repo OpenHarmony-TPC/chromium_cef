@@ -117,6 +117,13 @@ std::string OverrideErrorPage(const CefString& url,
   void RemoveCache() override;
 #endif
 
+#if BUILDFLAG(ARKWEB_BLANK_OPTIMIZE)
+  virtual void SendBlanklessKeyToRenderFrame(uint32_t nweb_id,
+                                             uint64_t blankless_key,
+                                             uint64_t frame_sink_id,
+                                             int64_t pref_hash) override;
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   void SetJsOnlineProperty(bool network_up) override;

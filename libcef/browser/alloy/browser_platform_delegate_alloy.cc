@@ -24,6 +24,10 @@
 #include "cef/ohos_cef_ext/libcef/browser/alloy/browser_platform_delegate_alloy_for_include.cc"
 #endif
 
+#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
+#include "chrome/browser/login_detection/login_detection_tab_helper.h"
+#endif
+
 namespace {
 
 const char kAttachedHelpersUserDataKey[] = "CefAttachedHelpers";
@@ -68,6 +72,9 @@ content::WebContents* CefBrowserPlatformDelegateAlloy::CreateWebContents(
   auto web_contents = content::WebContents::Create(wc_create_params);
   CHECK(web_contents);
 
+#if BUILDFLAG(ARKWEB_SITE_ISOLATION)
+  login_detection::LoginDetectionTabHelper::MaybeCreateForWebContents(web_contents.get());
+#endif
   own_web_contents = true;
   return web_contents.release();
 }

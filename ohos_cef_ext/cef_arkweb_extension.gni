@@ -108,6 +108,8 @@ libcef_arkweb_sources = [
 
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_applink_throttle.h",
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_applink_throttle.cc",
+  "//cef/ohos_cef_ext/libcef/browser/net/ohos_enable_applinking_util.h",
+  "//cef/ohos_cef_ext/libcef/browser/net/ohos_enable_applinking_util.cc",
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_net_export_ui.cc",
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_net_export_ui.h",
 

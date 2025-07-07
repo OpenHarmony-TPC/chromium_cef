@@ -59,6 +59,7 @@
 #include "extensions/common/constants.h"
 #include "libcef/browser/alloy/render_process_state_handler.h"
 #include "net/base/net_errors.h"
+#include "third_party/blink/public/common/frame/frame_owner_element_type.h"
 #include "ui/events/base_event_utils.h"
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
 #include "libcef/browser/osr/touch_selection_controller_client_osr.h"
@@ -421,7 +422,7 @@ void AlloyBrowserHostImplExt::SetWakeLockHandler(int32_t windowId, CefRefPtr<Cef
 bool AlloyBrowserHostImplExt::IsIframe()
 {
   if (web_contents() && web_contents()->GetFocusedFrame()) {
-    return !!web_contents()->GetFocusedFrame()->GetParentOrOuterDocument();
+    return web_contents()->GetFocusedFrame()->GetFrameOwnerElementType() == blink::FrameOwnerElementType::kIframe;
   }
   return false;
 }
@@ -1650,6 +1651,15 @@ void AlloyBrowserHostImplExt::SetAudioExclusive(bool audioExclusive) {
     return;
   }
   mediaSession->audioExclusive_ = audioExclusive;
+}
+
+void AlloyBrowserHostImplExt::SetAudioSessionType(int audioSessionType) {
+  content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(web_contents());
+  if (!mediaSession) {
+    LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioSessionType get mediaSession failed.";
+    return;
+  }
+  mediaSession->audioSessionType_ = audioSessionType;
 }
 #endif // BUILDFLAG(ARKWEB_MEDIA_POLICY)
 

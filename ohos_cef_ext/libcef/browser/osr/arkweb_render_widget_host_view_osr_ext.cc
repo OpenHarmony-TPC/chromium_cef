@@ -127,6 +127,7 @@ const size_t kMaxDataDetectorTextLength = 1000;
 
 #if BUILDFLAG(IS_ARKWEB)
 const int SCALE_FACTOR_CONVERT_RATIO = 100;
+const int SOC_PERF_WEB_SLIDE_SCROLL = 10097;
 #endif
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
@@ -401,9 +402,13 @@ void ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly() {
   if(pointer_state_.GetPointerCount() == 0) {
     return;
   }
+  int socPerfId = SOC_PERF_WEB_GESTURE_ID;
+  if (base::ohos::IsPcDevice() || base::ohos::IsTabletDevice()) {
+    socPerfId = SOC_PERF_WEB_SLIDE_SCROLL;
+  }
   OHOS::NWeb::OhosAdapterHelper::GetInstance()
     .CreateSocPerfClientAdapter()
-    ->ApplySocPerfConfigByIdEx(SOC_PERF_WEB_GESTURE_ID, true);
+    ->ApplySocPerfConfigByIdEx(socPerfId, true);
   LOG(DEBUG) << "hwtlog:ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly";
   CEF_POST_DELAYED_TASK(CEF_UIT,
     base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::BoostingPreiodly,

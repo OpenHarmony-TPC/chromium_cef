@@ -105,6 +105,13 @@ class NETHELPERS_EXPORT NetHelpers {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   static CefRefPtr<CefDownloadHandler> global_download_handler;
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  static bool pna_check_enabled;
+  static bool SkipPreflightCheck();
+  static void SetPrivateNetworkAccess(bool enable);
+  static bool GetPrivateNetworkAccess();
+#endif
 };
 
 bool IsSpecialFileUrl(const GURL& url);

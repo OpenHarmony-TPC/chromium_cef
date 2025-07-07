@@ -293,7 +293,9 @@ void CefBrowserHostBase::InitializeBrowser() {
 #endif
 
 #if BUILDFLAG(ARKWEB_JAVASCRIPT_BRIDGE)
-  new NWEB::OhJavascriptInjector(GetWebContents(), client_->AsArkWebClient());
+  if (client_) {
+    new NWEB::OhJavascriptInjector(GetWebContents(), client_->AsArkWebClient());
+  }
 #endif
 }
 

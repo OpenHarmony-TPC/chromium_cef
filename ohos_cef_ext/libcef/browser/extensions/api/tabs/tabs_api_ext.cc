@@ -330,13 +330,6 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
   }
 }
 
-void OnCreateTabForExtension(const NWebExtensionTab& tab,
-                             std::optional<std::string>& error) {
-  if (error) {
-    LOG(ERROR) << "OnCreateTabForExtension create error, " << error.value();
-  }
-}
-
 void TabsCreateFunction::CreateTabForExtension(std::string& url) {
   NWebTabCreateInfo create_info;
   create_info.url = url;

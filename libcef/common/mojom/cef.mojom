@@ -192,6 +192,8 @@ interface RenderFrame {
   [EnableIf=arkweb_network_base]
   RemoveCache();
 
+  [EnableIf=arkweb_blank_optimize]
+  SendBlanklessKeyToRenderFrame(uint32 nweb_id, uint64 blankless_key, uint64 frame_sink_id, int64 pref_hash);
 };
 
 // Interface for communicating with a frame in the browser process.

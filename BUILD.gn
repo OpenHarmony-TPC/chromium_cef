@@ -1327,6 +1327,7 @@ source_set("libcef_static") {
   }
 
   if (defined(arkweb_pull_to_refresh) && arkweb_pull_to_refresh) {
+    sources += arkweb_content_overscroll_controller_ohos_sources
     deps += ["//arkweb/chromium_ext/ui/ohos"]
   }
 
