@@ -86,11 +86,11 @@ class CefAllowCertificateErrorCallbackImpl : public ArkWebCefSslCallback {
               : content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY);
   }
 
-  static void RunCancel(CallbackType callback, bool allow) {
+  static void RunCancel(CallbackType callback, bool abortLoading) {
     CEF_REQUIRE_UIT();
     std::move(callback).Run(
-        allow ? content::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL
-              : content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY);
+        abortLoading ? content::CERTIFICATE_REQUEST_RESULT_TYPE_CANCEL
+                     : content::CERTIFICATE_REQUEST_RESULT_TYPE_DENY);
   }
 
   CallbackType callback_;
