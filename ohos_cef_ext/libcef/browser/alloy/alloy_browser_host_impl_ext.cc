@@ -872,7 +872,7 @@ int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
     LOG(ERROR) << "ExtensionGetTabId error nweb_id_=" << nweb_id_;
     return -1;
   }
- 
+ #if BUILDFLAG(ARKWEB_NWEB_EX)
   int32_t tabId = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id_);
   if (tabId < 0) {
     LOG(ERROR) << "ExtensionGetTabId error call GetTabIdByNwebId=" << tabId;
@@ -882,6 +882,8 @@ int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
   LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
             << "; tabId=" << tabId;
   tab_id_ = tabId;
+#endif
+  return tab_id_;
 }
 
 
