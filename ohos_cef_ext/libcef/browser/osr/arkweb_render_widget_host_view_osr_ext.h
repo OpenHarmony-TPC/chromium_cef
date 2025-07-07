@@ -327,6 +327,9 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #if BUILDFLAG(ARKWEB_PIP)
   void SetPipActive(bool active);
 #endif
+#if BUILDFLAG(ARKWEB_AI)
+  ui::FilteredGestureProvider& GetGestureProvider();
+#endif
  private:
   bool is_popup = false;
 

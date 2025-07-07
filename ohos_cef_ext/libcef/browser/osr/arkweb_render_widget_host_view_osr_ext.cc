@@ -2551,3 +2551,9 @@ void ArkWebRenderWidgetHostViewOSRExt::SetPipActive(bool active) {
   }
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_AI)
+ui::FilteredGestureProvider& ArkWebRenderWidgetHostViewOSRExt::GetGestureProvider() {
+  return gesture_provider_;
+}
+#endif
