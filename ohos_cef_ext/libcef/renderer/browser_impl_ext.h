@@ -63,7 +63,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   void ExtensionSetTabId(int32_t tab_id) override;
-  int32_t ExtensionGetTabId() const override;
+  int32_t ExtensionGetTabId() override;
 #endif
 
 #if BUILDFLAG(IS_OHOS)
@@ -158,10 +158,6 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   int viewport_width_ = 0;
   int viewport_height_ = 0;
 #endif
-
-//#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  int tab_id_;
-//#endif
 };
 
 #endif  // ARKWEB_RENDERER_BROWSER_IMPL_H_

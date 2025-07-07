@@ -144,6 +144,7 @@ using content::KeyboardEventProcessingResult;
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
+#include "ohos_nweb_ex/core/extension/nweb_extension_tabs_dispatcher.h"
 #endif  // ARKWEB_NWEB_EX
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
@@ -843,10 +844,45 @@ void AlloyBrowserHostImplExt::WebExtensionUpdateTab(
 }
 
 void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionSetTabId failed, called on invalid thread";
+    return;
+  }
+ 
+  if (tab_id != tab_id_) {
+    LOG(INFO) << "ExtensionSetTabId nweb_id_=" << nweb_id_
+              << "; tab_id_=" << tab_id_ << "; tab_id=" << tab_id;
+    tab_id_ = tab_id;
+  }
 }
 
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() const {
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
+    return -1;
+  }
+ 
+  if (tab_id_ > 0) {
+    return tab_id_;
+  }
+ 
+  if (nweb_id_ <= 0) {
+    LOG(ERROR) << "ExtensionGetTabId error nweb_id_=" << nweb_id_;
+    return -1;
+  }
+ #if BUILDFLAG(ARKWEB_NWEB_EX)
+  int32_t tabId = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id_);
+  if (tabId < 0) {
+    LOG(ERROR) << "ExtensionGetTabId error call GetTabIdByNwebId=" << tabId;
+    return -1;
+  }
+ 
+  LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
+            << "; tabId=" << tabId;
+  tab_id_ = tabId;
+#endif
   return tab_id_;
 }
 
