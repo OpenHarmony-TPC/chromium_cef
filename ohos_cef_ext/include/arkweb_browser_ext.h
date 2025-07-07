@@ -345,7 +345,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   ///
   /// Get tabId.
   ///
-  virtual int ExtensionGetTabId() const = 0;
+  virtual int ExtensionGetTabId() = 0;
 
   ///
   /// Set back forward cache options.

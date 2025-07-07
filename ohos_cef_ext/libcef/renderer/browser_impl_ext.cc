@@ -109,11 +109,9 @@ void ArkWebBrowserExtImpl::ClearForwardList() {}
 #endif  // BUILDFLAG(ARKWEB_EXT_NAVIGATION)
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-void ArkWebBrowserExtImpl::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
-}
-int32_t ArkWebBrowserExtImpl::ExtensionGetTabId() const {
-  return tab_id_;
+void ArkWebBrowserExtImpl::ExtensionSetTabId(int32_t tab_id) {}
+int32_t ArkWebBrowserExtImpl::ExtensionGetTabId() {
+  return -1;
 }
 #endif
 

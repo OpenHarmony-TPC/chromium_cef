@@ -144,6 +144,7 @@ using content::KeyboardEventProcessingResult;
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_cloud_config.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
+#include "ohos_nweb_ex/core/extension/nweb_extension_tabs_dispatcher.h"
 #endif  // ARKWEB_NWEB_EX
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
@@ -773,14 +774,6 @@ bool AlloyBrowserHostImplExt::TrigAdBlockEnabledForSiteFromUi(
 
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
-  tab_id_ = tab_id;
-}
-
-int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() const {
-  return tab_id_;
-}
-
 bool AlloyBrowserHostImplExt::WebExtensionCheck(
     const std::string functionName,
     content::BrowserContext*& browser_context,
@@ -868,6 +861,49 @@ void AlloyBrowserHostImplExt::WebExtensionTabActivated(int tab_id, int window_id
       ->TabActived(tab_id, window_id, web_contents);
 }
 
+void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionSetTabId failed, called on invalid thread";
+    return;
+  }
+ 
+  if (tab_id != tab_id_) {
+    LOG(INFO) << "ExtensionSetTabId nweb_id_=" << nweb_id_
+              << "; tab_id_=" << tab_id_ << "; tab_id=" << tab_id;
+    tab_id_ = tab_id;
+  }
+}
+
+int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    LOG(ERROR)
+        << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
+    return -1;
+  }
+ 
+  if (tab_id_ > 0) {
+    return tab_id_;
+  }
+ 
+  if (nweb_id_ <= 0) {
+    LOG(ERROR) << "ExtensionGetTabId error nweb_id_=" << nweb_id_;
+    return -1;
+  }
+ #if BUILDFLAG(ARKWEB_NWEB_EX)
+  int32_t tabId = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id_);
+  if (tabId < 0) {
+    LOG(ERROR) << "ExtensionGetTabId error call GetTabIdByNwebId=" << tabId;
+    return -1;
+  }
+ 
+  LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
+            << "; tabId=" << tabId;
+  tab_id_ = tabId;
+#endif
+  return tab_id_;
+}
+
 void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
     int tab_id,
     bool isWindowClosing,
@@ -882,7 +918,9 @@ void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
       ->TabRemoved(tab_id, isWindowClosing, windowId, web_contents);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabAttached(int new_position, int new_window_id) {
+void AlloyBrowserHostImplExt::WebExtensionTabAttached(
+    int new_position,
+    int new_window_id) {
   content::BrowserContext* browser_context = nullptr;
   content::WebContents* web_contents = nullptr;
   if (!WebExtensionCheck("TabAttached", browser_context, web_contents)) {
