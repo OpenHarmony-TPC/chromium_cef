@@ -311,7 +311,13 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       quick_menu_requested_ = true;
       NotifyTouchSelectionChanged(false);
       UpdateQuickMenu();
-      rwhv_->ResetGestureDetection(false);
+      {
+        auto rwhvOSRExt = rwhv_->AsArkWebRenderWidgetHostViewOSRExt();
+        if (rwhvOSRExt &&
+            rwhvOSRExt->GetGestureProvider().GetCurrentDownEvent()) {
+          rwhv_->ResetGestureDetection(false);
+        }
+      }
       break;
     case ui::INSERTION_HANDLE_SHOWN:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
