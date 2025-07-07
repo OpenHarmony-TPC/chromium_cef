@@ -55,7 +55,7 @@ void CefBrowserManager::GetNewBrowserInfo(
     const blink::LocalFrameToken& render_frame_token,
     cef::mojom::BrowserManager::GetNewBrowserInfoCallback callback) {
 #if BUILDFLAG(ARKWEB_PDF)
-  if (content::WebContentImplUtils::is_pdf_static) {
+  if (content::WebContentsImplUtils::is_pdf_static) {
     LOG(INFO) << "pdf load not use OnGetNewBrowserInfo due to long time consumption";
     return;
   }
