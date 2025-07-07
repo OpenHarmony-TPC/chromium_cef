@@ -335,7 +335,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
         }
         ShowQuickMenu();
       }
-      rwhv_->ResetGestureDetection(false);
       break;
     case ui::SELECTION_HANDLES_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
