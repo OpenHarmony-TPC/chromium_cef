@@ -127,7 +127,7 @@ public:
       int32_t tab_id,
       const NWebExtensionTabUpdateProperties* update_properties) override;
   void ExtensionSetTabId(int tab_id) override;
-  int ExtensionGetTabId() const override;
+  int ExtensionGetTabId() override;
   void WebExtensionTabActivated(int tab_id, int window_id) override;
  
   void WebExtensionActionClicked(
