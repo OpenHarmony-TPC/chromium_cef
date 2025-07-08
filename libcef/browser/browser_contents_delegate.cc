@@ -863,7 +863,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     }
 
 #if BUILDFLAG(IS_OHOS)
-    if (!navigation_handle->IsSameDocument()) {
+    if (navigation_handle->IsInPrimaryMainFrame() && !navigation_handle->IsSameDocument()) {
       content::RenderFrameHost* render_frame_host =
           navigation_handle->GetRenderFrameHost();
       if (render_frame_host) {
