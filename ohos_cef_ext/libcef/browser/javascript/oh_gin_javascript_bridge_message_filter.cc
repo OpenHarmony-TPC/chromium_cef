@@ -290,7 +290,7 @@ bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
     return false;
   }
 
-  if (site_instance_gurl_.scheme() != "http" && site_instance_gurl_.scheme() != "https") {
+  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS()) {
     return true;
   }
 
