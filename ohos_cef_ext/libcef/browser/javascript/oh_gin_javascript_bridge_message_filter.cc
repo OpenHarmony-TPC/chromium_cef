@@ -278,13 +278,20 @@ void OhGinJavascriptBridgeMessageFilter::OnHasMethod(
 }
 
 void OhGinJavascriptBridgeMessageFilter::SetSiteInstanceGurl(const GURL& site_instance_url) {
-  site_instance_gurl_ = site_instance_url;
+  if (site_instance_gurl_.is_empty()) {
+    site_instance_gurl_ = site_instance_url;
+  }
 }
 
 bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
   if (document_gurl.scheme().empty() ||
       document_gurl.scheme() != site_instance_gurl_.scheme()) {
+    LOG(INFO) << "IsSameSite scheme not same";
     return false;
+  }
+
+  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS()) {
+    return true;
   }
 
   if (document_gurl.host().empty() ||
@@ -293,17 +300,18 @@ bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
     const std::string url_host = document_gurl.host();
 
     if (url_host.length() <= suffix_length) {
+      LOG(INFO) << "IsSameSite host not same";
       return false;
     } else {
       const size_t dot_pos = url_host.length() - suffix_length;
       const std::string host_suffix = url_host.substr(dot_pos + 1);
       if (url_host[dot_pos] != '.' ||
           host_suffix != site_instance_gurl_.host()) {
+        LOG(INFO) << "IsSameSite host not subdomain";
         return false;
       }
     }
   }
-  LOG(INFO) << "OhGinJavascriptBridgeMessageFilter is same site";
   return true;
 }
 
