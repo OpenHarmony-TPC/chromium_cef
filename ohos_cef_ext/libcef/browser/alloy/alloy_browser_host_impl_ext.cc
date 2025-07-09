@@ -439,6 +439,22 @@ void AlloyBrowserHostImplExt::ReloadFocusedFrame()
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_PDF)
+void AlloyBrowserHostImplExt::OnPdfScrollAtBottom(const std::string& url)
+{
+  if (platform_delegate_) {
+    platform_delegate_->OnPdfScrollAtBottom(url);
+  }
+}
+
+void AlloyBrowserHostImplExt::OnPdfLoadEvent(int32_t result, const std::string& url)
+{
+  if (platform_delegate_) {
+    platform_delegate_->OnPdfLoadEvent(result, url);
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
 void AlloyBrowserHostImplExt::OnNativeEmbedStatusUpdate(
