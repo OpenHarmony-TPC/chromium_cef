@@ -809,7 +809,9 @@ void CefRenderWidgetHostViewOSR::Destroy() {
       Hide();
     }
   }
-
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  NotifyObserversAboutShutdown();
+#endif
   delete this;
 }
 
