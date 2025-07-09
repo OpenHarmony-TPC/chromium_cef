@@ -133,6 +133,20 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   virtual void OnLoadFinished(CefRefPtr<CefFrame> frame,
                               const CefString& url) {}
 #endif
+
+#if BUILDFLAG(ARKWEB_PDF)
+  ///
+  /// Handles the pdf scroll at bottom event.
+  ///
+  /*--cef()--*/
+  virtual void OnPdfScrollAtBottom(const std::string& url) {}
+
+  ///
+  /// Handles the pdf load state event.
+  ///
+  /*--cef()--*/
+  virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
+#endif  // BUILDFLAG(ARKWEB_PDF)
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

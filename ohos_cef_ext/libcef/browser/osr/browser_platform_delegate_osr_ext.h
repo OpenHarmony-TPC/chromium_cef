@@ -165,6 +165,10 @@ public:
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   CefRefPtr<CefDragData> GetDropData() override;
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_PDF)
+  void OnPdfScrollAtBottom(const std::string& url) override;
+  void OnPdfLoadEvent(int32_t result, const std::string& url) override;
+#endif  // BUILDFLAG(ARKWEB_PDF)
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(

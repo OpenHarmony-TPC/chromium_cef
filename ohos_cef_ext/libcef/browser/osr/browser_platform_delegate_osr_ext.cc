@@ -814,3 +814,25 @@ CefRefPtr<CefDragData> CefBrowserPlatformDelegateOsrExt::GetDropData() {
   return last_drag_data_;
 }
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PDF)
+void CefBrowserPlatformDelegateOsrExt::OnPdfScrollAtBottom(const std::string& url) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnPdfScrollAtBottom(url);
+  }
+}
+
+void CefBrowserPlatformDelegateOsrExt::OnPdfLoadEvent(int32_t result, const std::string& url) {
+  CHECK(browser_);
+  CHECK(browser_->GetClient());
+  CefRefPtr<ArkWebLoadHandlerExt> handler =
+      browser_->GetClient()->GetLoadHandler();
+  if (handler.get()) {
+    handler->OnPdfLoadEvent(result, url);
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)

@@ -44,6 +44,11 @@ public:
   void ReloadFocusedFrame() override;
 #endif
 
+#if BUILDFLAG(ARKWEB_PDF)
+  void OnPdfScrollAtBottom(const std::string& url) override;
+  void OnPdfLoadEvent(int32_t result, const std::string& url) override;
+#endif  // BUILDFLAG(ARKWEB_PDF)
+
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   void OnNativeEmbedStatusUpdate(
       const content::NativeEmbedInfo& native_embed_info,
