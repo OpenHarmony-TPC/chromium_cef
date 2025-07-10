@@ -3614,3 +3614,4 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
                     base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
                                    this, callback));
   }
+}
