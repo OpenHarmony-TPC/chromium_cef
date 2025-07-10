@@ -3593,14 +3593,17 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
   int childId = 0;
   int routingId = 0;
   content::RenderFrameHost* targetFrame = nullptr;
-  if(!ParaseRenderFrameHostId(rootFrame.id, &childId, &routingId)) {
-    LOG(INFO) << "rootFrame is null or invalid.";
+  if (rootFrame.id.empty()) {
     targetFrame = web_contents->GetPrimaryMainFrame();
+  } else if(!ParaseRenderFrameHostId(rootFrame.id, &childId, &routingId)) {
+    LOG(ERROR) << "rootFrame id is invalid.";
+    return;
   } else {
     targetFrame = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt()
                   ->GetTargetFramesIncludingPending(routingId);
     if (!targetFrame) {
-      targetFrame = web_contents->GetPrimaryMainFrame();
+      LOG(ERROR) << "rootFrame id can not find frame.";
+      return;
     }
   }
  
@@ -3609,6 +3612,5 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
     targetFrame->AllowInjectingJavaScript();
     targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
                     base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
-                                  this, callback));
+                                   this, callback));
   }
-}
