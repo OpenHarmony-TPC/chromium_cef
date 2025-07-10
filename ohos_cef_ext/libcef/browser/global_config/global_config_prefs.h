@@ -8,12 +8,12 @@
 #include "components/prefs/pref_registry_simple.h"
  
 namespace global_config {
- 
+#if BUILDFLAG(IS_ARKWEB_EXT)
   extern const char kGlobalConfigFeaturesSwitches[];
  
   void RegisterGlobalConfigPrefs(PrefRegistrySimple* registry);
  
   void OnGlobalConfigResult(const std::string& path);
- 
+#endif
 }
 #endif

@@ -50,7 +50,9 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 #if BUILDFLAG(ENABLE_CEF)
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
+#if BUILDFLAG(IS_ARKWEB_EXT)
   global_config::RegisterGlobalConfigPrefs(registry);
+#endif
 }
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
