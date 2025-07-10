@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "arkweb/build/features/features.h"
 #include "web_extension_menu_manager.h"
 #include "base/values.h"
 #include "chrome/browser/extensions/menu_manager.h"
@@ -21,37 +21,61 @@
 #include "extensions/browser/extension_system.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
+#include "ohos_nweb/src/nweb_common.h"
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+#include "ohos_nweb_ex/core/extension/nweb_extension_context_menus_dispatcher.h"
+#endif
 
 std::string GetTypeStr(extensions::MenuItem::Type type) {
   switch (type) {
-    case extensions::MenuItem::Type::NORMAL : return "normal";
-    case extensions::MenuItem::Type::CHECKBOX : return "checkbox";
-    case extensions::MenuItem::Type::RADIO : return "radio";
-    case extensions::MenuItem::Type::SEPARATOR : return "separator";
-    default : return nullptr;
+    case extensions::MenuItem::Type::NORMAL:
+      return "normal";
+    case extensions::MenuItem::Type::CHECKBOX:
+      return "checkbox";
+    case extensions::MenuItem::Type::RADIO:
+      return "radio";
+    case extensions::MenuItem::Type::SEPARATOR:
+      return "separator";
+    default:
+      return nullptr;
   };
 }
  
 std::string GetContextStr(extensions::MenuItem::Context context) {
   switch (context) {
-    case extensions::MenuItem::Context::ALL : return "all";
-    case extensions::MenuItem::Context::PAGE : return "page";
-    case extensions::MenuItem::Context::SELECTION : return "selection";
-    case extensions::MenuItem::Context::LINK : return "link";
-    case extensions::MenuItem::Context::EDITABLE : return "editable";
-    case extensions::MenuItem::Context::IMAGE : return "image";
-    case extensions::MenuItem::Context::VIDEO : return "video";
-    case extensions::MenuItem::Context::AUDIO : return "audio";
-    case extensions::MenuItem::Context::FRAME : return "frame";
-    case extensions::MenuItem::Context::LAUNCHER : return "launcher";
-    case extensions::MenuItem::Context::BROWSER_ACTION : return "browser_action";
-    case extensions::MenuItem::Context::PAGE_ACTION : return "page_action";
-    case extensions::MenuItem::Context::ACTION : return "action";
-    default : return nullptr;
+    case extensions::MenuItem::Context::ALL:
+      return "all";
+    case extensions::MenuItem::Context::PAGE:
+      return "page";
+    case extensions::MenuItem::Context::SELECTION:
+      return "selection";
+    case extensions::MenuItem::Context::LINK:
+      return "link";
+    case extensions::MenuItem::Context::EDITABLE:
+      return "editable";
+    case extensions::MenuItem::Context::IMAGE:
+      return "image";
+    case extensions::MenuItem::Context::VIDEO:
+      return "video";
+    case extensions::MenuItem::Context::AUDIO:
+      return "audio";
+    case extensions::MenuItem::Context::FRAME:
+      return "frame";
+    case extensions::MenuItem::Context::LAUNCHER:
+      return "launcher";
+    case extensions::MenuItem::Context::BROWSER_ACTION:
+      return "browser_action";
+    case extensions::MenuItem::Context::PAGE_ACTION:
+      return "page_action";
+    case extensions::MenuItem::Context::ACTION:
+      return "action";
+    default:
+      return nullptr;
   };
 }
  
-std::vector<std::string> ContextListToStrVector(const extensions::MenuItem::ContextList& contextList) {
+std::vector<std::string> ContextListToStrVector(
+    const extensions::MenuItem::ContextList& contextList) {
   std::vector<std::string> result;
   for (int contextInt = extensions::MenuItem::Context::ALL;
         contextInt <= extensions::MenuItem::Context::ACTION;
@@ -100,7 +124,8 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   return item;
 }
  
-void SetContextMenusEventProperties(base::Value::Dict& properties, ContextMenusOnClickedData& data) {
+void SetContextMenusEventProperties(base::Value::Dict& properties,
+                                    ContextMenusOnClickedData& data) {
   properties.Set("menuItemId", data.menuItemId);
   properties.Set("parentMenuItemId", data.parentMenuItemId);
   properties.Set("mediaType", data.mediaType);
@@ -116,8 +141,6 @@ void SetContextMenusEventProperties(base::Value::Dict& properties, ContextMenusO
   properties.Set("checked", data.checked);
   properties.Set("frameId", data.frameId);
 }
-
-CefExtensionContextMenusHandler* CefWebExtensionMenuManager::context_menus_handler = nullptr;
 
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
@@ -138,7 +161,8 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
     LOG(ERROR) << "event_router is null";
     return;
   }
-  extensions::MenuItem::Id id(browser_context->IsOffTheRecord(), extensions::MenuItem::ExtensionKey(extension_id));
+  extensions::MenuItem::Id id(browser_context->IsOffTheRecord(),
+                              extensions::MenuItem::ExtensionKey(extension_id));
   id.string_uid = data.menuItemId;
   extensions::MenuItem* item = menu_manager->GetItemById(id);
   if (!item) {
@@ -209,43 +233,51 @@ void CefWebExtensionMenuManager::GetFlattenedMenuItemSubtree(std::vector<NWebCon
   }
 }
  
-void CefWebExtensionMenuManager::SetContextMenusHandler(CefExtensionContextMenusHandler* handler) {
-  context_menus_handler = handler;
-}
- 
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extension_id,
     extensions::MenuItem* menu_item) {
-  if (!context_menus_handler) {
-    LOG(ERROR) << "context menus handler is null";
-  }
+#if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
-  context_menus_handler->OnContextMenusCreate(extension_id, item);
+  if (IsNativeApiEnable()) {
+    NWebExtensionContextMenusDispatcher::OnCreateNative(extension_id, item);
+  } else {
+    NWebExtensionContextMenusDispatcher::OnCreate(extension_id, item);
+  }
+#endif
 }
  
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extension_id,
     extensions::MenuItem* menu_item) {
-  if (!context_menus_handler) {
-    LOG(ERROR) << "context menus handler is null";
-  }
+#if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
-  context_menus_handler->OnContextMenusUpdate(extension_id, item);
+  if (IsNativeApiEnable()) {
+    NWebExtensionContextMenusDispatcher::OnUpdateNative(extension_id, item);
+  } else {
+    NWebExtensionContextMenusDispatcher::OnUpdate(extension_id, item);
+  }
+#endif
 }
  
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
     const std::string& menu_item_id) {
-  if (!context_menus_handler) {
-    LOG(ERROR) << "context menus handler is null";
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (IsNativeApiEnable()) {
+    NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, menu_item_id);
+  } else {
+    NWebExtensionContextMenusDispatcher::OnRemove(extension_id, menu_item_id);
   }
-  context_menus_handler->OnContextMenusRemove(extension_id, menu_item_id);
+#endif
 }
  
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusRemoveAll(const std::string& extension_id) {
-  if (!context_menus_handler) {
-    LOG(ERROR) << "context menus handler is null";
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (IsNativeApiEnable()) {
+    NWebExtensionContextMenusDispatcher::OnRemoveAllNative(extension_id);
+  } else {
+    NWebExtensionContextMenusDispatcher::OnRemoveAll(extension_id);
   }
-  context_menus_handler->OnContextMenusRemoveAll(extension_id);
+#endif
 }

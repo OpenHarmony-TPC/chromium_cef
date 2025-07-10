@@ -52,10 +52,6 @@
 #include "ohos_cef_ext/libcef/browser/load_committed_details_impl.h"
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-#include "include/cef_web_extension_api_handler.h"
-#endif
-
 namespace {
   
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -400,18 +396,6 @@ void ArkWebBrowserContentsDelegateExt::ShowRepostFormWarningDialog(
   }
 }
 #endif  // ARKWEB_NETWORK_BASE
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-void ArkWebBrowserContentsDelegateExt::WebExtensionUpdateTab(
-    int32_t tab_id,
-    const NWebExtensionTabUpdateProperties* update_properties) {
-  if (auto c = client()) {
-    if (auto handler = c->GetWebExtensionApiHandler()) {
-      handler->OnUpdateTab(tab_id, update_properties);
-    }
-  }
-}
-#endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 bool ArkWebBrowserContentsDelegateExt::IsPointerLocked() const {

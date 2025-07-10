@@ -28,6 +28,10 @@ base::Value::Dict GetMutedInfoValue(const NWebExtensionTabMutedInfo& mutedInfo);
 
 base::Value::Dict GetTabValue(const NWebExtensionTab& tab);
 
+base::Value::Dict GetTabZoomSettingsValue(const NWebExtensionTabZoomSettings& zoomSettings);
+
+base::Value::Dict GetTabZoomChangeValue(const NWebExtensionTabZoomChangeInfo& tabZoomChangeInfo);
+
 base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs);
 
 class CefExtensionWindowIdManager {

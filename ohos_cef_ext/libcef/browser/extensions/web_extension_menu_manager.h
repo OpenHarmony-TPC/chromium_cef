@@ -18,9 +18,9 @@
 #pragma once
 
 #include "chrome/browser/extensions/menu_manager.h"
+#include "ohos_nweb/src/capi/nweb_context_menus_item.h"
 #include "ohos_nweb/src/capi/nweb_context_menus_on_clicked_data.h"
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
-#include "include/cef_extension_context_menus_handler.h"
 
 class CefWebExtensionMenuManager {
  public:
@@ -28,7 +28,6 @@ class CefWebExtensionMenuManager {
                                              ContextMenusOnClickedData& data,
                                              std::optional<NWebExtensionTab>& tab);
   static std::vector<NWebContextMenusItem> GetAllExtensionContextMenus(const std::vector<std::string>& extension_ids);
-  static void SetContextMenusHandler(CefExtensionContextMenusHandler* handler);
   static void OnContextMenusCreate(const std::string& extension_id, extensions::MenuItem* menu_item);
   static void OnContextMenusUpdate(const std::string& extension_id, extensions::MenuItem* menu_item);
   static void OnContextMenusRemove(const std::string& extension_id, const std::string& menu_item_id);
@@ -38,7 +37,6 @@ class CefWebExtensionMenuManager {
   static void GetFlattenedMenuItemSubtree(
       std::vector<NWebContextMenusItem>& items,
       const std::unique_ptr<extensions::MenuItem>& item);
-  static CefExtensionContextMenusHandler* context_menus_handler;
 };
 
 #endif  // CEF_LIBCEF_BROWSER_WEBEXTENSION_MENU_MANAGER_H_

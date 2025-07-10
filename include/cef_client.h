@@ -206,16 +206,6 @@ class CefClient : public virtual CefBaseRefCounted {
     return false;
   }
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  ///
-  /// Return the handler for web extension api. If no handler is provided the
-  /// default implementation will be used.
-  ///
-  virtual CefRefPtr<CefWebExtensionApiHandler> GetWebExtensionApiHandler() {
-    return nullptr;
-  }
-#endif
-
   ///
   /// notify application to show toast.
   ///

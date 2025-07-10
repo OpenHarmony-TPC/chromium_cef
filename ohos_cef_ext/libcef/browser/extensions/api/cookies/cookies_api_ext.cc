@@ -15,8 +15,8 @@
 
 #include "chrome/browser/extensions/api/cookies/cookies_api.h"
 #include "chrome/browser/extensions/api/cookies/cookies_helpers.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
 #include "chrome/browser/profiles/profile.h"
-#include "cef/ohos_cef_ext/libcef/browser/extensions/web_extension_tab_manager.h"
 
 namespace extensions {
 
@@ -34,8 +34,7 @@ ExtensionFunction::ResponseAction CookiesGetAllCookieStoresFunction::Run() {
   DCHECK(original_profile != incognito_profile);
 
   NWebExtensionTabQueryInfo queryInfo;
-  std::vector<NWebExtensionTab> tabs =
-      CefWebExtensionTabManager::GetInstance()->QueryTab(queryInfo);
+  std::vector<NWebExtensionTab> tabs = OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
   for (const NWebExtensionTab& tab : tabs) {
     if (!tab.id.has_value()) {
       continue;
