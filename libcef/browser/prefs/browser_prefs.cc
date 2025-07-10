@@ -47,10 +47,12 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 
 }  // namespace
 
+#if BUILDFLAG(ENABLE_CEF)
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
   global_config::RegisterGlobalConfigPrefs(registry);
 }
+#endif
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_REQUEST_CONTEXT,
