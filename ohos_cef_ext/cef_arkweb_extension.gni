@@ -28,6 +28,8 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/net_service/stream_reader_url_loader_utils.h",
   "//cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.cc",
   "//cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h",
+  "//cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.cpp",
+  "//cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.h",
   "//cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.cc",
   "//cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h",
   "//cef/ohos_cef_ext/libcef/common/arkweb_app_manager_ext.cc",

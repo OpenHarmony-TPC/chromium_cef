@@ -7,6 +7,7 @@
 #include "cef/libcef/browser/browser_context.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/prefs/pref_registrar.h"
+#include "cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -48,6 +49,7 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
+  global_config::RegisterGlobalConfigPrefs(registry);
 }
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
