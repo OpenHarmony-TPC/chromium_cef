@@ -20,7 +20,7 @@
 namespace browser_prefs {
 
 namespace {
-
+#if BUILDFLAG(ENABLE_CEF)
 // Match the logic in chrome/browser/net/profile_network_context_service.cc.
 std::string ComputeAcceptLanguageFromPref(const std::string& language_pref) {
   std::string accept_languages_str =
@@ -44,7 +44,7 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 
   return std::string();
 }
-
+#endif  // BUILDFLAG(ENABLE_CEF)
 }  // namespace
 
 #if BUILDFLAG(ENABLE_CEF)
@@ -59,7 +59,6 @@ void RegisterProfilePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_REQUEST_CONTEXT,
                                       registry);
 }
-#endif
 
 std::string GetAcceptLanguageList(Profile* profile) {
   // Always prefer to the CEF settings configuration, if specified.
@@ -104,5 +103,6 @@ void SetInitialProfilePrefs(Profile* profile) {
   RegisterProfilePrefsForInclude(profile);
 #endif  // ARKWEB_PREFS
 }
+#endif  // BUILDFLAG(ENABLE_CEF)
 
 }  // namespace browser_prefs
