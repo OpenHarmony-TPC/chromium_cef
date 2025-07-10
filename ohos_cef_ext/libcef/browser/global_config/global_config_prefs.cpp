@@ -18,6 +18,7 @@
 
 namespace global_config {
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
 const uint32_t kMaxProbability = 10001;
 const char kGlobalConfigFeaturesSwitches[] = "global_config.FeaturesSwitches";
 std::string kGlobalConfigDataPath = "";
@@ -104,7 +105,6 @@ void ParseFeaturesSwitchesToPrefs() {
   g_browser_process->local_state()->CommitPendingWrite();
 }
 
-#if BUILDFLAG(IS_ARKWEB_EXT)
 void OnGlobalConfigResult(const std::string& path) {
   if (!path.empty()) {
     kGlobalConfigDataPath = path;
