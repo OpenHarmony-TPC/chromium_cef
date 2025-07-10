@@ -52,12 +52,12 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
   global_config::RegisterGlobalConfigPrefs(registry);
 }
-#endif
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_REQUEST_CONTEXT,
                                       registry);
 }
+#endif
 
 std::string GetAcceptLanguageList(Profile* profile) {
   // Always prefer to the CEF settings configuration, if specified.
