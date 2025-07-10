@@ -64,7 +64,7 @@ int NetHelpers::cache_mode = 0;
 int NetHelpers::connection_timeout = 30;
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-bool NetHelpers::pna_check_enabled = true;
+std::atomic<bool> NetHelpers::pna_check_enabled = true;
 #endif
 
 #if BUILDFLAG(ARKWEB_CUSTOM_DNS)
@@ -392,15 +392,11 @@ bool NetHelpers::SkipPreflightCheck() {
 }
 
 void NetHelpers::SetPrivateNetworkAccess(bool enable) {
-  static bool is_set = false;
-  if (!is_set) {
-    pna_check_enabled = enable;
-    is_set = true;
-  }
+  pna_check_enabled.store(enable, std::memory_order_release);
 }
 
 bool NetHelpers::GetPrivateNetworkAccess() {
-  return pna_check_enabled;
+  return pna_check_enabled.load(std::memory_order_acquire);
 }
 #endif
 

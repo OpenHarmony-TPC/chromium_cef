@@ -107,7 +107,7 @@ class NETHELPERS_EXPORT NetHelpers {
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  static bool pna_check_enabled;
+  static std::atomic<bool> pna_check_enabled;
   static bool SkipPreflightCheck();
   static void SetPrivateNetworkAccess(bool enable);
   static bool GetPrivateNetworkAccess();
