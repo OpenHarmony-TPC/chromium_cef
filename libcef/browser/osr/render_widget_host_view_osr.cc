@@ -717,9 +717,6 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
     content::RenderWidgetHostView* parent_host_view,
     const gfx::Rect& bounds,
     const gfx::Rect& anchor_rect) {
-#if BUILDFLAG(IS_ARKWEB)
-  if (base::ohos::IsPcDevice()) {
-#endif
   DCHECK_EQ(parent_host_view_, parent_host_view);
   DCHECK(browser_impl_);
 
@@ -758,9 +755,6 @@ void CefRenderWidgetHostViewOSR::InitAsPopup(
   SetRootLayerSize(true /* force */);
 #endif
   Show();
-#if BUILDFLAG(IS_ARKWEB)
-  }
-#endif
 }
 
 void CefRenderWidgetHostViewOSR::UpdateCursor(const ui::Cursor& cursor) {}
