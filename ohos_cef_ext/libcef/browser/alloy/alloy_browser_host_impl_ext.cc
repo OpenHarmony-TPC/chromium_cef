@@ -129,6 +129,7 @@ using content::KeyboardEventProcessingResult;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/extension_action_dispatcher.h"
+#include "extensions/browser/view_type_utils.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
@@ -1064,6 +1065,11 @@ void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
     
   extensions::ExtensionActionDispatcher::Get(context)
       ->OnActionPinnedStateChanged(extensionId, isPinned);
+}
+
+void AlloyBrowserHostImplExt::WebExtensionSetViewType(int32_t type) {
+  content::WebContents* web_contents = GetWebContents();
+  extensions::SetViewType(web_contents, static_cast<extensions::mojom::ViewType>(type));
 }
 
 content::BrowserContext* AlloyBrowserHostImplExt::GetOriginalContext(
