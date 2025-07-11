@@ -206,7 +206,7 @@ int GetAnyWebContents(int windowId) {
 }
 
 int GetCurrentWebContents(ExtensionFunction* function) {
-  WebContents* web_contents = web_contents = function->GetSenderWebContents();
+  WebContents* web_contents = function->GetSenderWebContents();
   // 1. normal extension page
   if (web_contents && web_contents->ExtensionGetTabId() > 0) {
     return web_contents->ExtensionGetTabId();

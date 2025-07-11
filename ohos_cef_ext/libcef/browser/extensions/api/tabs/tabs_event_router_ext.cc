@@ -410,13 +410,13 @@ void TabsEventRouter::DispatchTabAttachedEvent(int tab_id,
 }
 
 void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
-                                              content::WebContents* contents,
+                                              content::BrowserContext* browserContext,
                                               std::unique_ptr<NWebExtensionTab> tab) {
-  DCHECK(contents);
+  DCHECK(browserContext);
   base::Value::List args;
   args.Append(extensions::GetTabValue(*tab));
 
-  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  Profile* profile = Profile::FromBrowserContext(browserContext);
   DispatchEvent(profile, events::TABS_ON_CREATED,
                 api::tabs::OnCreated::kEventName,
                 std::move(args),

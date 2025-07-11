@@ -147,8 +147,6 @@ public:
 
   void WebExtensionTabAttached(int new_position, int new_window_id) override;
 
-  void WebExtensionTabCreated(int tab_id, std::unique_ptr<NWebExtensionTab> tab) override;
-
   void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
 
   void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override;
