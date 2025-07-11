@@ -61,6 +61,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
           &error);
 
   if (!unpack_result) {
+    LOG(INFO) << "failed to unpack permission";
     return RespondNow(Error(std::move(error)));
   }
 
@@ -68,10 +69,12 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   // in the manifest.
   if (!unpack_result->unlisted_apis.empty() ||
       !unpack_result->unlisted_hosts.is_empty()) {
+    LOG(INFO) << "permission is not in the manifest";
     return RespondNow(Error(kNotInManifestPermissionsError));
   }
 
   if (!unpack_result->restricted_file_scheme_patterns.is_empty()) {
+    LOG(INFO) << "file scheme patterns is not support";
     return RespondNow(Error(
         "Extension must have file access enabled to request '*'.",
         unpack_result->restricted_file_scheme_patterns.begin()->GetAsString()));
@@ -117,6 +120,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
 
   // If all permissions are already active, nothing left to do.
   if (total_new_permissions->IsEmpty()) {
+    LOG(INFO) << "no new permission needs to be applied";
     constexpr bool granted = true;
     return RespondNow(WithArguments(granted));
   }
@@ -125,6 +129,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   // enterprise policy.
   if (!ExtensionManagementFactory::GetForBrowserContext(browser_context())
            ->IsPermissionSetAllowed(extension(), *total_new_permissions)) {
+    LOG(INFO) << "permissions are blocked by enterprise policy";
     return RespondNow(Error(kBlockedByEnterprisePolicy));
   }
 
@@ -163,6 +168,7 @@ ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
       extension_->location() == mojom::ManifestLocation::kComponent) {
     OnInstallPromptDone(ExtensionInstallPrompt::DoneCallbackPayload(
         ExtensionInstallPrompt::Result::ACCEPTED));
+    LOG(INFO) << "has no warnings and granted permissions";
     return did_respond() ? AlreadyResponded() : RespondLater();
   }
 
