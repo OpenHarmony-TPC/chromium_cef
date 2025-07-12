@@ -177,10 +177,9 @@ WebExtensionWindowUpdateInfo GetWindowUpdateInfo(windows::Update::Params::Update
 
 std::optional<WebExtensionWindow> getWindow(int id, std::optional<api::windows::QueryOptions>& query_options,
                                             content::WebContents* webcontents) {
-  int defaultCurrentWindowId = -2;
   int window_id = id;
-  if (window_id == defaultCurrentWindowId) {
-    window_id = GetCurrentWindowId(webcontents, defaultCurrentWindowId);
+  if (window_id == extension_misc::kCurrentWindowId) {
+    window_id = GetCurrentWindowId(webcontents, extension_misc::kCurrentWindowId);
   }
   WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(query_options);
 
@@ -212,8 +211,7 @@ ExtensionFunction::ResponseAction WindowsGetCurrentFunction::Run() {
       windows::GetCurrent::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);  
 
-  int defaultCurrentWindowId = -2;
-  std::optional<WebExtensionWindow> window = getWindow(defaultCurrentWindowId, params->query_options,
+  std::optional<WebExtensionWindow> window = getWindow(extension_misc::kCurrentWindowId, params->query_options,
                                                        GetSenderWebContents());
   if (!window) {
     return RespondNow(Error(extensions::ExtensionTabUtil::kNoCurrentWindowError));
@@ -369,16 +367,21 @@ ExtensionFunction::ResponseAction WindowsUpdateFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
   WebExtensionWindowUpdateInfo info = GetWindowUpdateInfo(params->update_info);
 
+  int window_id = params->window_id;
+  if (window_id == extension_misc::kCurrentWindowId) {
+    window_id = GetCurrentWindowId(GetSenderWebContents(), extension_misc::kCurrentWindowId);
+  }
+
   call_update_window_ = true;
   bool success;
   if (IsNativeApiEnable()) {
     success = NweExtensionWindowCefDelegate::GetInstance()->OnUpdateWindow(
-        params->window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
-                                                     weak_ptr_factory_.GetWeakPtr()));
+        window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
+                                             weak_ptr_factory_.GetWeakPtr()));
   } else {
     success = NweExtensionWindowDelegateHandler::GetInstance()->OnUpdateWindow(
-        params->window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
-                                                     weak_ptr_factory_.GetWeakPtr()));
+        window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
+                                             weak_ptr_factory_.GetWeakPtr()));
   }
   call_update_window_ = false;
 
@@ -424,6 +427,9 @@ ExtensionFunction::ResponseAction WindowsRemoveFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int window_id = params->window_id;
+  if (window_id == extension_misc::kCurrentWindowId) {
+    window_id = GetCurrentWindowId(GetSenderWebContents(), extension_misc::kCurrentWindowId);
+  }
 
   call_remove_window_ = true;
   bool success;
