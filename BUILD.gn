@@ -1185,6 +1185,8 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/bookmarks/bookmarks_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/api/downloads/extension_downloads_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
+      "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",
