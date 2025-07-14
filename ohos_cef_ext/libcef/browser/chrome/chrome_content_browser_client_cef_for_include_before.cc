@@ -14,11 +14,90 @@
  */
 
 public:
+#if BUILDFLAG(IS_ARKWEB)
+explicit CefSelectClientCertificateCallbackImpl(
+      std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      const std::string& host,
+      int port)
+      : delegate_(std::move(delegate)),
+        host_(host),
+        port_(port) {}
+ 
+~CefSelectClientCertificateCallbackImpl() override {
+    // If Select has not been called, call it with NULL to continue without any
+    // client certificate.
+  if (!finsh_ && delegate_) {
+    DoCancel();
+  }
+}
+void Select(const CefString& private_key_file,
+              const CefString& cert_chain_file) override {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::Select";
+  if (!finsh_ && delegate_) {
+    finsh_ = true;
+    DoSelect(private_key_file, cert_chain_file);
+  }
+}
+ 
+void Cancel() override {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::Cancel";
+  if (!finsh_ && delegate_) {
+    finsh_ = true;
+    DoCancel();
+  }
+}
+ 
+void Ignore() override {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::Ignore";
+  if (!finsh_ && delegate_) {
+    finsh_ = true;
+    DoIgnore();
+  }
+}
+#else
 void Cancel() override {}
-
+ 
 void Ignore() override {}
+#endif
 
 private:
+void DoCancel() {
+  if (CEF_CURRENTLY_ON_UIT()) {
+    RunCancelNow(std::move(delegate_), host_, port_);
+  } else {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunCancelNow,
+                       std::move(delegate_), host_, port_));
+  }
+}
+ 
+void DoIgnore() {
+  if (CEF_CURRENTLY_ON_UIT()) {
+    RunIgnoreNow(std::move(delegate_), host_, port_);
+  } else {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunIgnoreNow,
+                       std::move(delegate_), host_, port_));
+  }
+}
+ 
+void DoSelect(const std::string& private_key_file,
+              const std::string& cert_chain_file) {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::DoSelect";
+  if (CEF_CURRENTLY_ON_UIT()) {
+    RunSelectNow(std::move(delegate_), private_key_file, cert_chain_file,
+                 host_, port_);
+  } else {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunSelectNow,
+                       std::move(delegate_), private_key_file,
+                       cert_chain_file, host_, port_));
+  }
+}
+
 #if BUILDFLAG(IS_ARKWEB)
 static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKey(
     bssl::UniquePtr<EVP_PKEY> key) {
@@ -123,7 +202,7 @@ static void RunSelectNow(
   } else {
     // Get client certificate from ohos cert manager
     auto RootCertDataAdapter =
-        OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
+        OHOS::NWeb::OhosAdapterHelper::GetInstance().GetCertManagerAdapter();
     if (RootCertDataAdapter == nullptr) {
       LOG(ERROR) << "RunSelectNow: root cert data adapter is null";
       return;
@@ -274,4 +353,27 @@ static scoped_refptr<net::SSLPrivateKey> WrapOpenSSLPrivateKeyOHOS(
       net::GetSSLPlatformKeyTaskRunner());
 }
 #endif  // BUILDFLAG(ARKWEB_CA)
+
+static void RunCancelNow(
+    std::unique_ptr<content::ClientCertificateDelegate> delegate,
+    const std::string& host,
+    int port) {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::RunCancelNow";
+  CEF_REQUIRE_UIT();
+  AlloyClientCertLookupTable::Deny(host, port);
+  delegate->ContinueWithCertificate(nullptr, nullptr);
+}
+ 
+static void RunIgnoreNow(
+    std::unique_ptr<content::ClientCertificateDelegate> delegate,
+    const std::string& host,
+    int port) {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::RunIgnoreNow";
+  CEF_REQUIRE_UIT();
+  delegate->ContinueWithCertificate(nullptr, nullptr);
+}
+
+std::string host_;
+int port_;
+bool finsh_ = false;
 #endif  // BUILDFLAG(IS_ARKWEB)
