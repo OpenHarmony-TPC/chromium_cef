@@ -65,6 +65,7 @@ int NetHelpers::connection_timeout = 30;
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 std::optional<bool> NetHelpers::enable_private_network_check = std::nullopt;
+std::mutex NetHelpers::enable_private_network_check_mutex;
 #endif
 
 #if BUILDFLAG(ARKWEB_CUSTOM_DNS)
@@ -388,6 +389,7 @@ void NetHelpers::ClearHostIP() {
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 bool NetHelpers::ShouldAllowInsecurePrivateNetworkRequests() {
   bool allow = false;
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
   if (enable_private_network_check.has_value()) {
     allow = !enable_private_network_check.value();
   }
@@ -395,10 +397,12 @@ bool NetHelpers::ShouldAllowInsecurePrivateNetworkRequests() {
 }
 
 void NetHelpers::SetPrivateNetworkAccess(bool enable) {
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
   enable_private_network_check = enable;
 }
 
 bool NetHelpers::GetPrivateNetworkAccess() {
+  std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
   return enable_private_network_check.value_or(true);
 }
 #endif
