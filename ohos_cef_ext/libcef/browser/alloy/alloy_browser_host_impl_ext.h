@@ -168,6 +168,8 @@ public:
       std::string extensionId, bool isPinned);
 
   content::BrowserContext* GetOriginalContext(content::BrowserContext* browser_context);
+
+  void WebExtensionSetViewType(int32_t type) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)

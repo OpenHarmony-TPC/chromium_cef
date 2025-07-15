@@ -719,6 +719,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
   virtual void WebExtensionTabZoomChange(
       const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override {}
+
+  virtual void WebExtensionSetViewType(int32_t type) override {}
 #endif
 
   void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
