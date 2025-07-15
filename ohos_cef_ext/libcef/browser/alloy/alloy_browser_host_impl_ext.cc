@@ -948,19 +948,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabAttached(
       ->TabAttached(ExtensionGetTabId(), web_contents, new_position, new_window_id);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabCreated(
-    int tab_id,
-    std::unique_ptr<NWebExtensionTab> tab) {
-  content::BrowserContext* browser_context = nullptr;
-  content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabCreated", browser_context, web_contents)) {
-    return;
-  }
-
-  extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabCreated(tab_id, web_contents, std::move(tab));
-}
-
 void AlloyBrowserHostImplExt::WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {
   content::BrowserContext* browser_context = nullptr;
   content::WebContents* web_contents = nullptr;

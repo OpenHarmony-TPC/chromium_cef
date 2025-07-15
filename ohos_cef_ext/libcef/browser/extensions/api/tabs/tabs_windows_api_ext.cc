@@ -65,9 +65,9 @@ void TabsWindowsAPI::TabAttached(int tab_id,
 }
 
 void TabsWindowsAPI::TabCreated(int tab_id,
-                                content::WebContents* contents,
+                                content::BrowserContext* browserContext,
                                 std::unique_ptr<NWebExtensionTab> tab) {
-  tabs_event_router()->DispatchTabCreatedEvent(tab_id, contents, std::move(tab));
+  tabs_event_router()->DispatchTabCreatedEvent(tab_id, browserContext, std::move(tab));
 }
 
 void TabsWindowsAPI::TabDetached(content::WebContents* contents,

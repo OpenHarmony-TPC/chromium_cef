@@ -50,7 +50,7 @@ void DispatchTabAttachedEvent(
 
 void DispatchTabCreatedEvent(
     int tab_id,
-    content::WebContents* web_contents,
+    content::BrowserContext* browserContext,
     std::unique_ptr<NWebExtensionTab> tab);
 
 void DispatchTabDetachedEvent(

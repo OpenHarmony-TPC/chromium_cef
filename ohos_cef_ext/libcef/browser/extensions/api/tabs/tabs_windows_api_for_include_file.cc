@@ -41,7 +41,7 @@ void TabAttached(int tab_id,
                 int32_t new_window_id);
 
 void TabCreated(int tab_id,
-                content::WebContents* web_contents,
+                content::BrowserContext* browserContext,
                 std::unique_ptr<NWebExtensionTab> tab);
 
 void TabDetached(content::WebContents* web_contents,
