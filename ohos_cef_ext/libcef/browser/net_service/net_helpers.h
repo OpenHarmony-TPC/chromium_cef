@@ -22,6 +22,11 @@
 #include "cef/include/cef_download_handler.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include <mutex>
+#include <optional>
+#endif
+
 class GURL;
 
 namespace net_service {
@@ -108,6 +113,7 @@ class NETHELPERS_EXPORT NetHelpers {
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   static std::optional<bool> enable_private_network_check;
+  static std::mutex enable_private_network_check_mutex;
   static bool ShouldAllowInsecurePrivateNetworkRequests();
   static void SetPrivateNetworkAccess(bool enable);
   static bool GetPrivateNetworkAccess();
