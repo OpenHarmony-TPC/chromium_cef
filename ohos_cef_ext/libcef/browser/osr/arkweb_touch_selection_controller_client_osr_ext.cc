@@ -322,6 +322,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
     case ui::INSERTION_HANDLE_SHOWN:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
+      isCopy_ = false;
 #endif // ARKWEB_MENU_HANDLE
       if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
@@ -358,9 +359,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
-      if (isCopy_) {
-        NotifyTouchSelectionChanged(true);
-      }
 #endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
@@ -372,14 +370,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      if (isCopy_) {
-        LOG(INFO) << "Current Need Show QuickMenu After Drag Handle.";
-        handle_drag_in_progress_ = false;
-        quick_menu_running_ = true;
-        UpdateQuickMenu();
-        isCopy_ = false;
-        browser->web_contents()->SetShowingContextMenu(true);
-      }
+      isCopy_ = false;
+      ShowQuickMenu();
 #endif // ARKWEB_MENU_HANDLE
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
@@ -650,6 +642,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ChangeVisibilityOfQuickMenu() {
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
   if (isCopy_) {
     isCopy_ = false;
+    ShowQuickMenu();
     return;
   }
 #endif // ARKWEB_MENU_HANDLEs
@@ -1012,7 +1005,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::ExecuteCommand(
     case QM_EDITFLAG_CAN_COPY:
       host_delegate->Copy();
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      browser->web_contents()->SetShowingContextMenu(false);
       isCopy_ = true;
 #endif // ARKWEB_MENU_HANDLE
 #if BUILDFLAG(ARKWEB_NAVIGATION)
