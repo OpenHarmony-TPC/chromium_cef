@@ -108,7 +108,8 @@ std::string GetRefererValue(std::string headers) {
   }
   size_t endPos = headers.find("\r\n", startPos);
   refererValue =
-      headers.substr(startPos + targetKeyword.length(), endPos - startPos);
+      headers.substr(startPos + targetKeyword.length(), endPos - startPos
+                      - targetKeyword.length());
   return refererValue;
 }
 #endif
