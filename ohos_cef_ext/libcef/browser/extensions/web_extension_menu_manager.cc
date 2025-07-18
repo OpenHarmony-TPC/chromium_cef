@@ -121,6 +121,7 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   item.type = GetTypeStr(menu_item->type());
   item.visible = menu_item->visible();
   item.extensionId = menu_item->extension_id();
+  item.isOffTheRecord = menu_item->incognito();
   return item;
 }
  
@@ -239,7 +240,11 @@ void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extensi
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
-    NWebExtensionContextMenusDispatcher::OnCreateNative(extension_id, item);
+    if (NWebExtensionContextMenusDispatcher::HasOnCreateNativeByPbCallback()) {
+      NWebExtensionContextMenusDispatcher::OnCreateNativeByPb(extension_id, item);
+    } else {
+      NWebExtensionContextMenusDispatcher::OnCreateNative(extension_id, item);
+    }
   } else {
     NWebExtensionContextMenusDispatcher::OnCreate(extension_id, item);
   }
@@ -252,7 +257,11 @@ void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extensi
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
-    NWebExtensionContextMenusDispatcher::OnUpdateNative(extension_id, item);
+    if (NWebExtensionContextMenusDispatcher::HasOnUpdateNativeByPbCallback()) {
+      NWebExtensionContextMenusDispatcher::OnUpdateNativeByPb(extension_id, item);
+    } else {
+      NWebExtensionContextMenusDispatcher::OnUpdateNative(extension_id, item);
+    }
   } else {
     NWebExtensionContextMenusDispatcher::OnUpdate(extension_id, item);
   }
