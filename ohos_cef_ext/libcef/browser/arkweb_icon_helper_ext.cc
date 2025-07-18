@@ -21,6 +21,7 @@
 
 #if BUILDFLAG(ARKWEB_FAVICON)
 #include "content/public/browser/navigation_handle.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
 
 namespace {
@@ -263,14 +264,14 @@ bool IconHelper::ShouldAbort() {
   GURL page_url = web_contents_->GetURL();
   if (!document_on_load_completed_) {
     LOG(INFO) << "should abort fetching favicon, document load not completed,"
-              << " page_url: " << page_url;
+              << " page_url: " << url::LogUtils::ConvertUrlWithMask(page_url.spec());
     return true;
   }
 
   if (last_page_url_ != web_contents_->GetURL()) {
     LOG(INFO) << "should abort fetching favicon, page urls not equal,"
-              << " last_page_url_:" << last_page_url_
-              << ", page_url:" << page_url;
+              << " last_page_url_:" << url::LogUtils::ConvertUrlWithMask(last_page_url_.spec())
+              << ", page_url:" << url::LogUtils::ConvertUrlWithMask(page_url.spec());
     return true;
   }
 
