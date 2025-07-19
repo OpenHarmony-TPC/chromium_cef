@@ -278,7 +278,7 @@ void ArkWebBrowserHostExtImpl::SetBrowserUserAgentString(
     CEF_POST_TASK(CEF_UIT, std::move(callback));
     return;
   }
-  PutUserAgent(user_agent);
+  PutUserAgent(user_agent, true);
 }
 
 void ArkWebBrowserHostExtImpl::DeleteHistory() {
@@ -3306,13 +3306,13 @@ gfx::Rect ArkWebBrowserHostExtImpl::GetVisibleRectToWeb() {
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
-void ArkWebBrowserHostExtImpl::PutUserAgent(const CefString& ua) {
+void ArkWebBrowserHostExtImpl::PutUserAgent(const CefString& ua, bool from_app) {
   if (!GetWebContents()) {
     return;
   }
   custom_user_agent_ = ua;
-  if (custom_user_agent_ != DefaultUserAgent().ToString()) {
-    GetWebContents() -> SetCustomUA(custom_user_agent_);
+  if (from_app) {
+    GetWebContents()->SetCustomUA(custom_user_agent_);
   }
 
 #if BUILDFLAG(ARKWEB_EXT_UA)
