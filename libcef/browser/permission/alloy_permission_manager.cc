@@ -17,6 +17,10 @@
 #include "content/public/browser/web_contents.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
 
+#if defined(OHOS_WEBRTC)
+#include "libcef/browser/permission/alloy_access_request.h"
+#endif // defined(OHOS_WEBRTC)
+
 using blink::PermissionType;
 using blink::mojom::PermissionStatus;
 
@@ -339,6 +343,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
     PermissionType permission,
     const GURL& requesting_origin,
     const GURL& embedding_origin) {
+LOG(INFO) << "AlloyPermissionManager::GetPermissionStatus permission:" << (int)permission;
   if (permission == PermissionType::CLIPBOARD_READ_WRITE ||
       permission == PermissionType::CLIPBOARD_SANITIZED_WRITE) {
     return PermissionStatus::GRANTED;
@@ -346,6 +351,20 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
   } else if (permission == PermissionType::SENSORS) {
     return PermissionStatus::ASK;
 #endif // defined(OHOS_SENSOR)
+#if defined(OHOS_WEBRTC)
+  } else if (permission == PermissionType::AUDIO_CAPTURE) {
+    if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
+      return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
+    } else {
+      return PermissionStatus::ASK;
+    }
+  } else if (permission == PermissionType::VIDEO_CAPTURE) {
+    if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
+      return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
+    } else {
+      return PermissionStatus::ASK;
+    }
+#endif // defined(OHOS_WEBRTC)
   }
   return PermissionStatus::DENIED;
 }
