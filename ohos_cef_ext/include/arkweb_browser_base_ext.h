@@ -135,5 +135,11 @@ public:
   ///
   /*--cef()--*/
   virtual void CustomWebMediaPlayer(bool enable) = 0;
+
+  ///
+  /// set media resumes playback when the page is restored from BFCache.
+  ///
+  /*--cef()--*/
+  virtual void SetMediaResumeFromBFCachePage(bool resume) = 0;
 };
 #endif //ARKWEB_INCLUDE_BROWSER_BASE_EXT_H_
