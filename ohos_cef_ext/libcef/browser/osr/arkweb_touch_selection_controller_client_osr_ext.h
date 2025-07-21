@@ -94,8 +94,6 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_MENU)
   base::TimeTicks select_handle_move_timer_;
   bool mouse_quick_menu_running_ = false;
-  base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
-      weak_ptr_factory_;
 #endif  // BUILDFLAG(ARKWEB_MENU)
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
   bool isCopy_ = false;
@@ -104,5 +102,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_AI)
   bool isSelectionNotEmptyForAI_;
 #endif
+  base::WeakPtrFactory<ArkWebTouchSelectionControllerClientOSRExt>
+      weak_ptr_factory_;
 };
 #endif
