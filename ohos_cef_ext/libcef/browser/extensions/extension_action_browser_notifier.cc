@@ -16,6 +16,7 @@
 #include "extension_action_browser_notifier.h"
 
 #include "chrome/browser/extensions/extension_action_dispatcher.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "content/public/browser/web_contents.h"
 #include "extensions/browser/extension_action.h"
 #include "extensions/common/constants.h"
@@ -53,7 +54,7 @@ void ExtensionActionBrowserNotifier::OnExtensionActionUpdated(
   std::string extension_id = extension_action->extension_id();
   int tab_id = -1;
   if (web_contents) {
-    tab_id = web_contents->ExtensionGetTabId();
+    tab_id = ExtensionTabUtil::GetTabId(web_contents);
   }
 
   NWebExtensionActionSetBadgeTextDetails details;
