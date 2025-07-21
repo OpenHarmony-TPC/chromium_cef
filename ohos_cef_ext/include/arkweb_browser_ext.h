@@ -536,7 +536,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// PutUserAgent
   ///
-  virtual void PutUserAgent(const CefString& ua) = 0;
+  virtual void PutUserAgent(const CefString& ua, bool from_app) = 0;
 
   ///
   /// DefaultUserAgent
