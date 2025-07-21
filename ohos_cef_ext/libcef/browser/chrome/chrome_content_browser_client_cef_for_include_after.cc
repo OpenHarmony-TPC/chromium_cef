@@ -105,8 +105,16 @@ std::optional<bool> ArkWebInnerCanCreateWindow(content::RenderFrameHost* opener,
                                                bool user_gesture) {
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
+  if (!web_contents) {
+    LOG(ERROR) << "web_contents is null!";
+    return false;
+  }
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
+  if (!browser_host) {
+    LOG(ERROR) << "browser_host is null!";
+    return false;
+  }
   if (!browser_host->settings().supports_multiple_windows) {
     if (browser_host->settings().javascript_can_open_windows_automatically ||
         user_gesture) {
