@@ -119,8 +119,8 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
   std::map<GURL, int32_t> geolocation_permission_;
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
-  base::WeakPtrFactory<AlloyPermissionManager> weak_ptr_factory_{this};
   UnhandledRequestsMap unhandled_requests_;
+  base::WeakPtrFactory<AlloyPermissionManager> weak_ptr_factory_{this};
 };
 
 #endif  // CEF_LIBCEF_BROWSER_ALLOY_PERMISSION_MANAGER_H_
