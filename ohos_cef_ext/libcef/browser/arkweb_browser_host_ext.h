@@ -664,7 +664,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   //  #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
-  void PutUserAgent(const CefString& ua) override;
+  void PutUserAgent(const CefString& ua, bool from_app) override;
   CefString GetCustomUserAgent() override;
   CefString DefaultUserAgent() override;
 #endif
