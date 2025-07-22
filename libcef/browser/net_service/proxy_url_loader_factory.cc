@@ -1630,14 +1630,16 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
       std::move(receiver), std::move(client), std::move(target_factory_clone));
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  bool is_redirect = false;
+  if (requests_.find(request_id) != requests_.end()) {
+    LOG(INFO) << "Use same request id for redirect.";
+    is_redirect = true;
+  }
   requests_[request_id] = base::WrapUnique(req);
+  req->Restart(is_redirect);
 #else
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
-#endif
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  req->Restart(false);
-#else
   req->Restart();
 #endif
 }
