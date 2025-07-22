@@ -33,10 +33,10 @@ class ContentSettingsContentSettingSetFunction : public ExtensionFunction {
   ResponseAction Run() override;
 
  private:
-  static void SetCallback(const base::WeakPtr<ContentSettingsContentSettingGetFunction>& function,
+  static void SetCallback(const base::WeakPtr<ContentSettingsContentSettingSetFunction>& function,
                           const char* error);
   bool call_set_content_settings_ = false;
-  base::WeakPtrFactory<ContentSettingsContentSettingGetFunction> weak_ptr_factory_{this};
+  base::WeakPtrFactory<ContentSettingsContentSettingSetFunction> weak_ptr_factory_{this};
 };
 
 class ContentSettingsContentSettingClearFunction : public ExtensionFunction {
