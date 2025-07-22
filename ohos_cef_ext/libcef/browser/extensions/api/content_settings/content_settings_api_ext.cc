@@ -351,7 +351,7 @@ bool ContentSettingsBuildGetParams(
   }
 
   if(!params->details.secondary_url){
-    getParam->secondaryUrl = strdup(params->details.secondary_url.c_str());
+    getParam->secondaryUrl = strdup(params->details.secondary_url->c_str());
     if(!getParam->secondaryUrl){
       return false;
     }
@@ -378,8 +378,8 @@ bool ContentSettingsBuildSetParams(
   }  
 
   if(!params->details.primary_pattern.empty()){
-    getParam->primaryPattern = strdup(params->details.primary_pattern.c_str());
-    if(!getParam->primaryPattern){
+    setParam->primaryPattern = strdup(params->details.primary_pattern.c_str());
+    if(!setParam->primaryPattern){
       return false;
     }
   }
@@ -387,14 +387,14 @@ bool ContentSettingsBuildSetParams(
   if(!params->details.setting.GetString().empty()){
     const std::string &settingStr = params->details.setting.GetString();
     setParam->contentSetting = strdup(settingStr.c_str());
-    if(!getParam->contentSetting){
+    if(!setParam->contentSetting){
       return false;
     }
   }
 
-  if(!params->details.secondaryPattern){
-    getParam->secondaryPattern = strdup(params->details.secondary_pattern.c_str());
-    if(!getParam->secondaryPattern){
+  if(!params->details.secondary_pattern){
+    setParam->secondaryPattern = strdup(params->details.secondary_pattern->c_str());
+    if(!setParam->secondaryPattern){
       return false;
     }
   }
@@ -440,7 +440,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
   Profile* profile = Profile::FromBrowserContext(browser_context());
   if(!profile){
     LOG(ERROR)<<"Failed to get profile from browser context";
-    return Respond(Error("Failed to get profile"))
+    return RespondNow(Error("Failed to get profile"));
   }
   if (incognito) {
     if (!profile->HasPrimaryOTRProfile()) {
@@ -517,16 +517,16 @@ void ContentSettingsContentSettingGetFunction::GetCallback(
   } else {
     LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param "<<detailParam->contentSetting;
     base::Value::Dict result;
-    std::string contentSettingStr(detailParam.contentSetting);
+    std::string contentSettingStr(detailParam->contentSetting);
     ContentSetting setting = StringToContentSetting(contentSettingStr);
     std::string setting_string = content_settings::ContentSettingToString(setting);
     DCHECK(!setting_string.empty());
-    result.Set(ContentSettingsStore::kContentSettingKey, setting_string)
+    result.Set(ContentSettingsStore::kContentSettingKey, setting_string);
     function->Respond(function->WithArguments(std::move(result)));
   }
 
-  if (!function->call_get_bookmarks_) {
-    LOG(INFO) << "BookmarksGetFunction Release";
+  if (!function->call_get_content_settings_) {
+    LOG(INFO) << "ContentSettingsGetFunction Release";
     function->Release();
   }
 }
@@ -649,7 +649,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
   NWebExtensionContentSettingsSetParam setParam = {0};
   std::string extension_id = this->extension_id();
 
-  if(!SetTypeToSetParam(&setParam,content_type)||!SetScopeToSetParam(&setParam,content_type)||
+  if(!SetTypeToSetParam(&setParam,content_type)||!SetScopeToSetParam(&setParam,scope)||
    !SetExtensionIdToSetParam(&setParam,extension_id)|| !ContentSettingsBuildSetParams(params,&setParam)){
       NWebExtensionContentSettingsSetParamRelease(&setParam);
       LOG(INFO)<<"ContentSettingsContentSettingSetFunction failed to build get parameters";
@@ -670,7 +670,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
   scoped_refptr<ContentSettingsStore> store =
       ContentSettingsService::Get(browser_context())->content_settings_store();
   store->SetExtensionContentSetting(
-    extension_id(), primary_pattern, secondary_pattern, content_type, setting, scope);
+    extension_id, primary_pattern, secondary_pattern, content_type, setting, scope);
 
   return RespondNow(NoArguments());
   }
@@ -737,9 +737,9 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
   NWebExtensionContentSettingsClearParam clearParam = {0};
   std::string extension_id = this->extension_id();
 
-  if(!SetTypeToClearParam(&clearParam,content_type)||!SetScopeToClearParam(&clearParam,content_type)||
+  if(!SetTypeToClearParam(&clearParam,content_type)||!SetScopeToClearParam(&clearParam,scope)||
    !SetExtensionIdToClearParam(&clearParam,extension_id)){
-      NWebExtensionContentSettingsClearParamRelease(&setParam);
+      NWebExtensionContentSettingsClearParamRelease(&clearParam);
       LOG(INFO)<<"ContentSettingsContentSettingClearFunction failed to build clear parameters";
       return RespondNow(BadMessage());
     }
@@ -758,7 +758,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
   } else {
   scoped_refptr<ContentSettingsStore> store =
       ContentSettingsService::Get(browser_context())->content_settings_store();
-  store->ClearExtensionContentSetting(extension_id, scope, content_type);
+  store->ClearContentSettingsForExtensionAndContentType(extension_id, scope, content_type);
 
   return RespondNow(NoArguments());
   }
