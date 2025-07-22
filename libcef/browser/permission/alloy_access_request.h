@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_PERMISSION_ALLOY_ACCESS_REQUEST_H_
 
 #include <memory>
+#include <map>
 
 #include "include/cef_permission_request.h"
 
@@ -13,6 +14,7 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "content/public/browser/media_stream_request.h"
 #include "third_party/blink/public/common/mediastream/media_stream_request.h"
+#include "libcef/browser/permission/alloy_permission_manager.h"
 #endif // defined(OHOS_WEBRTC)
 
 // This class is used to handle the permission request which just needs
@@ -79,8 +81,15 @@ private:
 #endif // defined(OHOS_SENSOR)
 
 #if defined(OHOS_WEBRTC)
+namespace content {
+  using PermissionStatus = blink::mojom::PermissionStatus;
+}
+
 class AlloyMediaAccessRequest : public CefAccessRequest {
 public:
+  static std::map<GURL, int32_t> camera_permission_;
+  static std::map<GURL, int32_t> microphone_permission_;
+
   AlloyMediaAccessRequest(CefBrowserHostBase* const browser,
                           const content::MediaStreamRequest& request,
                           content::MediaResponseCallback callback);
@@ -94,11 +103,13 @@ public:
   CefString Origin() override;
   int ResourceAcessId() override;
   void ReportRequestResult(bool allowed) override;
+  GURL GetMediaAccessRequestOriginAsURL();
 
 private:
   CefRefPtr<CefBrowserHostBase> browser_;
   const content::MediaStreamRequest request_;
   content::MediaResponseCallback callback_;
+  GURL requesting_origin_;
 
   IMPLEMENT_REFCOUNTING(AlloyMediaAccessRequest);
 };

@@ -9,6 +9,8 @@
 #include "content/public/browser/media_capture_devices.h"
 #include "libcef/browser/media_capture_devices_dispatcher.h"
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
+#include "third_party/blink/public/common/permissions/permission_utils.h"
+#include "components/permissions/permission_util.h"
 #endif // defined(OHOS_WEBRTC)
 
 AlloyAccessRequest::AlloyAccessRequest(const CefString& origin,
@@ -82,17 +84,30 @@ void AlloySensorAccessRequest::ReportRequestResult(bool allowed) {
 #endif // defined(OHOS_SENSOR)
 
 #if defined(OHOS_WEBRTC)
+std::map<GURL, int32_t> AlloyMediaAccessRequest::camera_permission_ = {};
+std::map<GURL, int32_t> AlloyMediaAccessRequest::microphone_permission_ = {};
+
 AlloyMediaAccessRequest::AlloyMediaAccessRequest(CefBrowserHostBase* const browser,
                                                  const content::MediaStreamRequest& request,
                                                  content::MediaResponseCallback callback)
-    : browser_(browser), request_(request), callback_(std::move(callback)) {}
+    : browser_(browser), request_(request), callback_(std::move(callback)) {
+  requesting_origin_ = GetMediaAccessRequestOriginAsURL();
+}
 
 AlloyMediaAccessRequest::~AlloyMediaAccessRequest() {
+  LOG(INFO) << "AlloyMediaAccessRequest::~AlloyMediaAccessRequest()";
   if (!callback_.is_null()) {
     std::move(callback_).Run(
         blink::mojom::StreamDevicesSet(),
         blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
         std::unique_ptr<content::MediaStreamUI>());
+  }
+
+  if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin_)) {
+    AlloyMediaAccessRequest::microphone_permission_.erase(requesting_origin_);
+  }
+  if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin_)) {
+    AlloyMediaAccessRequest::camera_permission_.erase(requesting_origin_);
   }
 }
 
@@ -111,9 +126,26 @@ int AlloyMediaAccessRequest::ResourceAcessId() {
               : 0);
 }
 
+GURL AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL() {
+  content::RenderFrameHost* renderFrameHost = content::RenderFrameHost::FromID(
+    request_.render_process_id, request_.render_frame_id);
+  
+  if (!renderFrameHost) {
+    LOG(ERROR) << "AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL, renderFrameHost is null";
+    return GURL();
+  }
+
+  return permissions::PermissionUtil::GetLastCommittedOriginAsURL(renderFrameHost);
+}
+
 void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
+  content::PermissionStatus status =
+    allowed ? content::PermissionStatus::GRANTED : content::PermissionStatus::DENIED;
+
   if (!allowed) {
     if (!callback_.is_null()) {
+      AlloyMediaAccessRequest::microphone_permission_[requesting_origin_] = (int32_t)content::PermissionStatus::DENIED;
+      AlloyMediaAccessRequest::camera_permission_[requesting_origin_] = (int32_t)content::PermissionStatus::DENIED;
       std::move(callback_).Run(
           blink::mojom::StreamDevicesSet(),
           blink::mojom::MediaStreamRequestResult::PERMISSION_DENIED,
@@ -141,6 +173,7 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
     if (!devices.empty()) {
       stream_devices.audio_device = devices[0];
       result = blink::mojom::MediaStreamRequestResult::OK;
+      AlloyMediaAccessRequest::microphone_permission_[requesting_origin_] = (int32_t)status;
     }
   }
 
@@ -154,6 +187,7 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
     if (!devices.empty()) {
       stream_devices.video_device = devices[0];
       result = blink::mojom::MediaStreamRequestResult::OK;
+      AlloyMediaAccessRequest::camera_permission_[requesting_origin_] = (int32_t)status;
     }
   }
   bool has_video = stream_devices.video_device.has_value();

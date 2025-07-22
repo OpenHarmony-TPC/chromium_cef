@@ -16,6 +16,9 @@
 namespace content {
 class WebContents;
 }
+#if defined(OHOS_WEBRTC)
+class AlloyMediaAccessRequest;
+#endif
 
 class AlloyPermissionManager : public content::PermissionControllerDelegate {
  public:
@@ -84,6 +87,9 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
   void AbortPermissionRequests();
 
  private:
+#if defined(OHOS_WEBRTC)
+  friend class AlloyMediaAccessRequest;
+#endif
   class UnhandledRequest;
   using UnhandledRequestsMap = base::IDMap<std::unique_ptr<UnhandledRequest>>;
 
