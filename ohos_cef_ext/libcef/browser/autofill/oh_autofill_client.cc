@@ -276,32 +276,6 @@ void OhAutofillClient::PinAutofillSuggestions() {
 
 void OhAutofillClient::HideAutofillSuggestions(autofill::SuggestionHidingReason reason) {
   delegate_.reset();
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  if (need_hide_password_popup_ && reason == SuggestionHidingReason::kTabGone) {
-    content::RenderFrameHost* rfh = GetWebContents().GetFocusedFrame();
-    if (!rfh) {
-      LOG(ERROR) << "rfh is nullptr";
-      return;
-    }
-    autofill::ContentAutofillDriver* driver =
-        autofill::ContentAutofillDriver::GetForRenderFrameHost(rfh);
-    if (!driver) {
-      LOG(ERROR) << "driver is nullptr";
-      return;
-    }
-    auto mgr = static_cast<OhAutofillManager*>(&driver->GetAutofillManager());
-    if (!mgr) {
-      LOG(ERROR) << "autofill_manager is nullptr";
-      return;
-    }
-    auto hidePopupStr = mgr->QueryPopupShowAndGetHideStr();
-    if (hidePopupStr.has_value() && OnAutofillEvent(hidePopupStr.value())) {
-      LOG(INFO) << "visibility changed, the password autofill popup is hidden";
-      mgr->SetPasswordPopupShow(false);
-    }
-    need_hide_password_popup_ = false;
-  }
-#endif
 }
 
 bool OhAutofillClient::IsAutocompleteEnabled() const {
