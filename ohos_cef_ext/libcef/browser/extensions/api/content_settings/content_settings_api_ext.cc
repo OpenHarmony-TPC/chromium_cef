@@ -107,16 +107,16 @@ void NWebExtensionContentSettingsGetParamRelease(NWebExtensionContentSettingsGet
     delete (param->incognito);
   }
   if(param->primaryUrl){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
   }
   if(param->secondaryUrl){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
   }
   if(param->type){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
   }
   if(param->extensionId){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
   }
 }
 
@@ -126,22 +126,22 @@ void NWebExtensionContentSettingsSetParamRelease(NWebExtensionContentSettingsSet
     return;
   }
   if(param->primaryPattern){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
   }
   if(param->scope){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
   }
   if(param->secondaryPattern){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
   }
   if(param->contentSetting){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
   }
   if(param->type){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
   }
   if(param->extensionId){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
   }
 }
 
@@ -151,13 +151,13 @@ void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsC
     return;
   }
   if(param->scope){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
   }
   if(param->type){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
   }
   if(param->extensionId){
-    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId)
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
   }
 }
 
@@ -196,7 +196,7 @@ bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const st
   }
 
   size_t ext_len = extension_id.length();
-  param->extension_id = new char[ext_len+1];
+  param->extensionId = new char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
@@ -210,7 +210,7 @@ bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const st
 
 bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettingsType content_type)
 {
-  std::string typeStr = content_settings_helpers::ChromeSettingTypeToString(content_type);
+  std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
   param->type = new char[len+1];
@@ -227,7 +227,7 @@ bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettings
 
 bool SetTypeToSetParam(NWebExtensionContentSettingsSetParam* param, ContentSettingsType content_type)
 {
-  std::string typeStr = content_settings_helpers::ChromeSettingTypeToString(content_type);
+  std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
   param->type = new char[len+1];
@@ -266,7 +266,7 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
   }
 
   size_t ext_len = extension_id.length();
-  param->extension_id = new char[ext_len+1];
+  param->extensionId = new char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
@@ -280,7 +280,7 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
 
 bool SetTypeToClearParam(NWebExtensionContentSettingsClearParam* param, ContentSettingsType content_type)
 {
-  std::string typeStr = content_settings_helpers::ChromeSettingTypeToString(content_type);
+  std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
   param->type = new char[len+1];
@@ -319,7 +319,7 @@ bool SetExtensionIdToClearParam(NWebExtensionContentSettingsClearParam* param, c
   }
 
   size_t ext_len = extension_id.length();
-  param->extension_id = new char[ext_len+1];
+  param->extensionId = new char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
