@@ -613,8 +613,8 @@ void InterceptedRequest::Restart() {
   struct NetHelperSetting setting;
   factory_->request_handler_->GetSettingOfNetHelper(setting);
   if (IsURLBlocked(request_.url, setting)) {
+    LOG(WARNING) << "File url access denied! url=" << request_.url.spec();
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
-    LOG(INFO) << "File url access denied! url=" << request_.url.spec();
     return;
   }
 
