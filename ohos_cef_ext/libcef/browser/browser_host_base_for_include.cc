@@ -148,6 +148,16 @@ void CefBrowserHostBase::CustomWebMediaPlayer(bool enable) {
 #endif  // ARKWEB_VIDEO_ASSISTANT
 }
 
+void CefBrowserHostBase::SetMediaResumeFromBFCachePage(bool resume) {
+  LOG(INFO) << "CefBrowserHostBase SetMediaResumeFromBFCachePage resume:" << resume;
+#if BUILDFLAG(ARKWEB_BFCACHE)
+  if (!GetWebContents()) {
+    LOG(ERROR) << "failed to get content when set media resume playback";
+    return;
+  }
+  GetWebContents()->SetMediaResumeFromBFCachePage(resume);
+#endif  // BUILDFLAG(ARKWEB_BFCACHE)
+}
 
 #if BUILDFLAG(ARKWEB_PERMISSION)
 
