@@ -24,6 +24,15 @@
 #include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+#include "base/command_line.h"
+#include "base/ohos/sys_info_utils_ext.h"
+#include "components/favicon_base/favicon_util.h"
+#include "components/favicon_base/select_favicon_frames.h"
+#include "content/public/common/content_switches.h"
+#include "ui/gfx/favicon_size.h"
+#endif
+
 namespace {
 
 constexpr int LARGEST_ICON_SIZE = 192;
@@ -52,6 +61,23 @@ cef_alpha_type_t TransformSkAlphaType(SkAlphaType alpha_type) {
   }
 }
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+std::vector<int> GetDesiredPixelSizes() {
+  std::vector<int> pixel_sizes;
+  for (float scale_factor : favicon_base::GetFaviconScales()) {
+    pixel_sizes.push_back(
+        static_cast<int>(ceil(scale_factor * gfx::kFaviconSize)));
+  }
+  return pixel_sizes;
+}
+
+void sortCallbackData(std::vector<IconHelper::CallbackData>& data_list) {
+  std::sort(data_list.begin(), data_list.end(),
+    [](const IconHelper::CallbackData& a, const IconHelper::CallbackData& b) {
+      return a.score < b.score;
+    });
+}
+#endif
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_NAVIGATION)
@@ -80,6 +106,8 @@ void IconHelper::OnUpdateFaviconURL(
     LOG(ERROR) << "Initialized value is invalid";
     return;
   }
+  static int request_id = 0;
+  request_id++;
   for (const auto& candidate : candidates) {
 #if BUILDFLAG(ARKWEB_WPT)
     if (!candidate->icon_url.is_valid() ||
@@ -98,7 +126,7 @@ void IconHelper::OnUpdateFaviconURL(
     }
     switch (candidate->icon_type) {
       case blink::mojom::FaviconIconType::kFavicon:
-        DownloadFavicon(candidate);
+        DownloadFavicon(candidate, request_id);
         break;
       case blink::mojom::FaviconIconType::kTouchIcon:
         handler_->OnReceivedTouchIconUrl(
@@ -121,21 +149,27 @@ void IconHelper::OnUpdateFaviconURL(
   }
 }
 
-void IconHelper::DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate) {
+void IconHelper::DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id) {
   if (!web_contents_) {
     LOG(ERROR) << "WebContents is invalid";
     return;
   }
+ 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  std::lock_guard<std::mutex> lock(mutex_);
+  pending_downloads_map_[request_id].insert(candidate->icon_url.spec());
+#endif
   web_contents_->DownloadImage(
       candidate->icon_url,
       true,               // Is a favicon
       gfx::Size(),        // No preferred size
       LARGEST_ICON_SIZE,  // Max bitmap size 192
       false,              // Normal cache policy
-      base::BindOnce(&IconHelper::DownloadFaviconCallback, this));
+      base::BindOnce(&IconHelper::DownloadFaviconCallback, this, request_id));
 }
 
 void IconHelper::DownloadFaviconCallback(
+    int request_id,
     int id,
     int http_status_code,
     const GURL& image_url,
@@ -159,14 +193,58 @@ void IconHelper::DownloadFaviconCallback(
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
 
   std::vector<size_t> best_indices;
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
+      base::ohos::IsPcDevice()) {
+    float current_score;
+    SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);
+    const auto& bitmap =
+        bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+    SkBitmap new_bitmap;
+    new_bitmap.allocPixels(bitmap.info());
+    bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
+    best_results_map_[request_id].push_back({current_score, image_url, new_bitmap});
+    std::unordered_set<std::string>& pending_urls = pending_downloads_map_[request_id];
+    std::lock_guard<std::mutex> lock(mutex_);
+    pending_urls.erase(image_url.spec());
+    if (!pending_urls.empty()) {
+      return;
+    }
+    sortCallbackData(best_results_map_[request_id]);
+    for (CallbackData& data : best_results_map_[request_id]) {
+      DownloadFaviconHandler(data.image_url, data.bitmap);
+    }
+    pending_downloads_map_.erase(request_id);
+    best_results_map_.erase(request_id);
+    return;
+  } else {
+    SelectFaviconFrameIndices(original_bitmap_sizes,
+                              std::vector<int>(1U, LARGEST_ICON_SIZE),
+                              &best_indices, nullptr);
+  }
+#else
   SelectFaviconFrameIndices(original_bitmap_sizes,
                             std::vector<int>(1U, LARGEST_ICON_SIZE),
                             &best_indices, nullptr);
+#endif
   const auto& bitmap =
       bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+  DownloadFaviconHandler(image_url, bitmap);
+}
+
+void IconHelper::DownloadFaviconHandler(
+    const GURL& image_url,
+    const SkBitmap& bitmap) {
   if (bitmap.drawsNothing()) {
     return;
   }
+  std::unique_ptr<SkBitmap> bitmap_ptr = std::make_unique<SkBitmap>(bitmap_);
+
+  base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
+      FROM_HERE,
+      base::BindOnce([](std::unique_ptr<SkBitmap> ptr){}, std::move(bitmap_ptr)),
+      base::Seconds(5)
+  );
   bitmap_ = bitmap;
   auto ret = bitmap_.writePixels(bitmap.pixmap());
   if (!ret) {
@@ -191,13 +269,7 @@ void IconHelper::DownloadFaviconCallback(
     if (entry) {
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
-      auto& current_image = entry->GetFavicon().image;
-      base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
-        FROM_HERE,
-        base::BindOnce([](gfx::Image&&){}, std::move(current_image)),
-        base::Seconds(5)
-      );
-      current_image = gfx::Image::CreateFrom1xBitmap(bitmap);
+      entry->GetFavicon().image = gfx::Image::CreateFrom1xBitmap(bitmap_);
     }
   }
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
