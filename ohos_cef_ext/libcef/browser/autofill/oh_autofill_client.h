@@ -36,7 +36,6 @@
 namespace autofill {
 class AutocompleteHistoryManager;
 class AutofillSuggestionDelegate;
-class OhAutofillManager;
 class PersonalDataManager;
 class StrikeDatabase;
 }  // namespace autofill
@@ -143,12 +142,6 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   std::unique_ptr<autofill::AutofillManager> CreateManager(
       base::PassKey<autofill::ContentAutofillDriver> pass_key,
       autofill::ContentAutofillDriver& driver) override;
-
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  void SetPasswordPopupStatus(bool status) {
-    need_hide_password_popup_ = status;
-  }
-#endif
 
 #if BUILDFLAG(ARKWEB_DATALIST)
   using SelectedCallback = base::OnceCallback<void(std::u16string text)>;

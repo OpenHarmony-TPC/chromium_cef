@@ -304,6 +304,7 @@ void OhAutofillManager::ForwardDataToPasswordManager(
   }
   password_manager->AsChromePasswordManagerClientExt()->FillData(page_url, username, password, is_other_account);
   is_password_popup_show_ = false;
+  popup_hide_helper_.reset();
 }
 
 bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
@@ -331,14 +332,44 @@ bool OhAutofillManager::IsUsernamePasswordFormField(FormRendererId form_id,
   }
 }
 
-absl::optional<std::string> OhAutofillManager::QueryPopupShowAndGetHideStr() {
-  if (!is_password_popup_show_) {
-    return absl::nullopt;
+void OhAutofillManager::SetPasswordPopupShow(bool is_show) {
+  is_password_popup_show_ = is_show;
+  if (is_show) {
+    PopupShow();
+  }
+}
+
+void OhAutofillManager::PopupShow() {
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
+    return;
   }
 
-  base::Value::List view_data_list;
-  view_data_list.Append(base::Value::Dict().Set(EVENT, EVENT_CLOSE));
-  return base::WriteJson(view_data_list);
+  auto* contents = content::WebContents::FromRenderFrameHost(rfh);
+  if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
+    return;
+  }
+
+  AutofillPopupHideHelper::HidingParams hiding_params = {
+      .hide_on_web_contents_lost_focus = false};
+  AutofillPopupHideHelper::HidingCallback hiding_callback =
+      base::BindRepeating(&OhAutofillManager::Hide, base::Unretained(this));
+  AutofillPopupHideHelper::PictureInPictureDetectionCallback
+      pip_detection_callback = base::BindRepeating([]() { return false; });
+
+  popup_hide_helper_.emplace(
+      contents, rfh->GetGlobalId(), std::move(hiding_params),
+      std::move(hiding_callback), std::move(pip_detection_callback));
+}
+
+void OhAutofillManager::Hide(SuggestionHidingReason reason) {
+  if (reason == SuggestionHidingReason::kTabGone ||
+      reason == SuggestionHidingReason::kContentAreaMoved) {
+    LOG(INFO) << "PopupHide, reason = " << static_cast<int>(reason);
+    HidePopup();
+  }
 }
 #endif
 
@@ -351,16 +382,19 @@ void OhAutofillManager::OnFormSubmittedImpl(const FormData& form,
   LOG(INFO) << "OnFormSubmittedImpl";
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
 
   auto* contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
     return;
   }
 
   auto* autofill_client = OhAutofillClient::FromWebContents(contents);
   if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
     return;
   }
 
@@ -376,16 +410,19 @@ void OhAutofillManager::OnTextFieldDidChangeImpl(const FormData& form,
   LOG(INFO) << "OnTextFieldDidChangeImpl";
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
 
   auto* contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
     return;
   }
 
   auto* autofill_client = OhAutofillClient::FromWebContents(contents);
   if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
     return;
   }
 
@@ -422,16 +459,19 @@ void OhAutofillManager::OnAskForValuesToFillImpl(
 
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
 
   auto* contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
     return;
   }
 
   auto* autofill_client = OhAutofillClient::FromWebContents(contents);
   if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
     return;
   }
 
@@ -480,17 +520,27 @@ void OhAutofillManager::OnHidePopupImpl() {
   LOG(INFO) << "OnHidePopupImpl, is_show=" << is_show_
             << ", is_password_popup_show=" << is_password_popup_show_
             << ", is_focused=" << is_focused;
-  if (!is_show_ && !(is_password_popup_show_ && is_focused)) {
+  if (is_show_ || (is_password_popup_show_ && is_focused)) {
+    HidePopup();
+  }
+}
+
+void OhAutofillManager::HidePopup() {
+  auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
+  if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
 
   auto* contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
     return;
   }
 
   auto* autofill_client = OhAutofillClient::FromWebContents(contents);
   if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
     return;
   }
 
@@ -503,6 +553,7 @@ void OhAutofillManager::OnHidePopupImpl() {
   }
   is_show_ = false;
   is_password_popup_show_ = false;
+  popup_hide_helper_.reset();
 }
 
 void OhAutofillManager::OnFormProcessed(const FormData& form,
@@ -518,6 +569,7 @@ void OhAutofillManager::Reset() {
   if (form_) {
     form_.reset(nullptr);
   }
+  popup_hide_helper_.reset();
   has_server_prediction_ = false;
 }
 
@@ -560,14 +612,17 @@ void OhAutofillManager::OnAskForValuesToFillImplForDatalist(
     const gfx::Rect& bounding_box) {
   auto* rfh = static_cast<ContentAutofillDriver&>(driver()).render_frame_host();
   if (!rfh || !rfh->IsActive()) {
+    LOG(ERROR) << "rfh is nullptr or not active";
     return;
   }
   auto* contents = content::WebContents::FromRenderFrameHost(rfh);
   if (!contents) {
+    LOG(ERROR) << "webcontents is nullptr";
     return;
   }
   auto* autofill_client = OhAutofillClient::FromWebContents(contents);
   if (!autofill_client) {
+    LOG(ERROR) << "autofill client is nullptr";
     return;
   }
 
