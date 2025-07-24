@@ -276,7 +276,7 @@ ExtensionFunction::ResponseAction BookmarksGetFunction::Run() {
   NWebExtensionBookmarksGetParam getParam = {0};
   if (!BookmarksBuildGetParams(params, &getParam)) {
     NWebExtensionBookmarksGetParamRelease(&getParam);
-    LOG(INFO) << "BookmarksGetFunction failed to build get parameters";
+    LOG(ERROR) << "BookmarksGetFunction failed to build get parameters";
     return RespondNow(BadMessage());
   }
 
@@ -561,8 +561,22 @@ ExtensionFunction::ResponseAction BookmarksSearchFunction::Run() {
   NWebExtensionBookmarksSearchParam searchParam = {0};
   if (!BookmarksBuildSearchParams(params, &searchParam)) {
     NWebExtensionBookmarksSearchParamRelease(&searchParam);
-    LOG(INFO) << "BookmarksSearchFunction failed to build search parameters";
+    LOG(ERROR) << "BookmarksSearchFunction failed to build search parameters";
     return RespondNow(BadMessage());
+  }
+
+  if (searchParam.url && searchParam.url[0] != '\0') {
+    GURL url(searchParam.url);
+    if (url.is_valid()) {
+      char* newUrl = strdup(url.spec().c_str());
+      if (!newUrl) {
+        NWebExtensionBookmarksSearchParamRelease(&searchParam);
+        LOG(ERROR) << "BookmarksSearchFunction failed to allocate url";
+        return RespondNow(Error("Internal memory error"));
+      }
+      NWEB_BOOKMARKS_SAFE_FREE(searchParam.url);
+      searchParam.url = newUrl;
+    }
   }
 
   call_search_bookmarks_ = true;
@@ -736,7 +750,7 @@ ExtensionFunction::ResponseAction BookmarksCreateFunction::Run() {
   NWebExtensionBookmarksCreateDetails details = {0};
   if (!BookmarksBuildCreateParams(params, &details)) {
     NWebExtensionBookmarksCreateDetailsRelease(&details);
-    LOG(INFO) << "BookmarksCreateFunction failed to build create parameters";
+    LOG(ERROR) << "BookmarksCreateFunction failed to build create parameters";
     return RespondNow(BadMessage());
   }
 
@@ -752,8 +766,8 @@ ExtensionFunction::ResponseAction BookmarksCreateFunction::Run() {
       details.url = strdup(url.spec().c_str());
       if (!details.url) {
         NWebExtensionBookmarksCreateDetailsRelease(&details);
-        LOG(INFO) << "BookmarksCreateFunction failed to allocate url";
-        return RespondNow(BadMessage());
+        LOG(ERROR) << "BookmarksCreateFunction failed to allocate url";
+        return RespondNow(Error("Internal memory error"));
       }
     }
   }
@@ -814,7 +828,7 @@ ExtensionFunction::ResponseAction BookmarksMoveFunction::Run() {
   NWebExtensionBookmarksMoveParam moveParam = {0};
   if (!BookmarksBuildMoveParams(params, &moveParam)) {
     NWebExtensionBookmarksMoveParamRelease(&moveParam);
-    LOG(INFO) << "BookmarksMoveFunction failed to build move parameters";
+    LOG(ERROR) << "BookmarksMoveFunction failed to build move parameters";
     return RespondNow(BadMessage());
   }
 
@@ -873,7 +887,7 @@ ExtensionFunction::ResponseAction BookmarksUpdateFunction::Run() {
   NWebExtensionBookmarksUpdateParam updateParam = {0};
   if (!BookmarksBuildUpdateParams(params, &updateParam)) {
     NWebExtensionBookmarksUpdateParamRelease(&updateParam);
-    LOG(INFO) << "BookmarksMoveFunction failed to build update parameters";
+    LOG(ERROR) << "BookmarksUpdateFunction failed to build update parameters";
     return RespondNow(BadMessage());
   }
 
@@ -889,8 +903,8 @@ ExtensionFunction::ResponseAction BookmarksUpdateFunction::Run() {
       updateParam.url = strdup(url.spec().c_str());
       if (!updateParam.url) {
         NWebExtensionBookmarksUpdateParamRelease(&updateParam);
-        LOG(INFO) << "BookmarksUpdateFunction failed to allocate url";
-        return RespondNow(BadMessage());
+        LOG(ERROR) << "BookmarksUpdateFunction failed to allocate url";
+        return RespondNow(Error("Internal memory error"));
       }
     }
   }
