@@ -165,6 +165,8 @@ public:
   static void WebExtensionActionPinnedStateChanged(
       std::string extensionId, bool isPinned);
 
+  static void WebExtensionActionShowPopup(int tabId, std::string extensionId);      
+
   content::BrowserContext* GetOriginalContext(content::BrowserContext* browser_context);
 
   void WebExtensionSetViewType(int32_t type) override;

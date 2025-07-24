@@ -18,6 +18,7 @@
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/extensions/api/tabs/tabs_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
+#include "components/sessions/content/session_tab_helper.h"
 #include "components/zoom/zoom_controller.h"
 #include "extensions/browser/extension_zoom_request_client.h"
 #include "extensions/common/manifest_constants.h"
@@ -41,7 +42,6 @@
 
 using content::NavigationController;
 using content::WebContents;
-using extensions::mojom::APIPermissionID;
 using zoom::ZoomController;
 
 namespace extensions {
@@ -288,7 +288,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
   std::string error;
   if (!extension()->permissions_data()->CanCaptureVisiblePage(
       contents->GetLastCommittedURL(),
-      contents->ExtensionGetTabId(), &error,
+      sessions::SessionTabHelper::IdForTab(contents).id(), &error,
       extensions::CaptureRequirement::kActiveTabOrAllUrls)) {
     return RespondNow(Error(std::move(error)));
   }

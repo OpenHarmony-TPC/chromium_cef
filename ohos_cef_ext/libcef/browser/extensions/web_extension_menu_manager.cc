@@ -12,16 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "arkweb/build/features/features.h"
+
 #include "web_extension_menu_manager.h"
+
+#include "arkweb/build/features/features.h"
 #include "base/values.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "chrome/browser/extensions/menu_manager.h"
+#include "chrome/browser/extensions/permissions/active_tab_permission_granter.h"
+#include "chrome/browser/extensions/tab_helper.h"
 #include "chrome/common/extensions/api/context_menus.h"
 #include "extensions/browser/event_router.h"
+#include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
 #include "ohos_nweb/src/nweb_common.h"
+
 #if BUILDFLAG(ARKWEB_NWEB_EX)
 #include "ohos_nweb_ex/core/extension/nweb_extension_context_menus_dispatcher.h"
 #endif
@@ -143,6 +150,31 @@ void SetContextMenusEventProperties(base::Value::Dict& properties,
   properties.Set("frameId", data.frameId);
 }
 
+void ExtensionContextMenusInvokeActiveTab(
+    content::BrowserContext* context,
+    int tab_id,
+    std::string extension_id) {
+  extensions::ExtensionRegistry* registry = extensions::ExtensionRegistry::Get(context);
+  if (!registry) {
+    LOG(ERROR) << "ExtensionActionInvokeActiveTab registry is null";
+    return;
+  }
+ 
+  const extensions::Extension* extension =
+      registry->enabled_extensions().GetByID(extension_id);
+  if (!extension) {
+    LOG(ERROR) << "ExtensionActionInvokeActiveTab extension is null";
+    return;
+  }
+ 
+  content::WebContents* out_contents = nullptr;
+  if (extensions::ExtensionTabUtil::GetTabById(tab_id, context, true, &out_contents)) {
+    extensions::TabHelper::FromWebContents(out_contents)
+        ->active_tab_permission_granter()
+        ->GrantIfRequested(extension);
+  }
+}
+
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
                                                     ContextMenusOnClickedData& data,
@@ -175,11 +207,12 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
   SetContextMenusEventProperties(properties, data);
   base::Value::List args;
   args.Append(std::move(properties));
- 
   if (tab) {
     args.Append(extensions::GetTabValue(*tab));
+    if (tab->id.has_value()) {
+      ExtensionContextMenusInvokeActiveTab(browser_context, tab->id.value(), extension_id);
+    }
   }
- 
   {
     auto event = std::make_unique<extensions::Event>(
         extensions::events::CONTEXT_MENUS,
