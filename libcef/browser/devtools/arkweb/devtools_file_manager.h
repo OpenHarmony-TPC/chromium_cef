@@ -174,8 +174,8 @@ class CefDevToolsFileManager {
   scoped_refptr<base::SequencedTaskRunner> file_task_runner_;
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  CefDevToolsMessageHandler* devtools_message_handler_ = nullptr;
-  content::WebContents* web_contents_;
+  raw_ptr<CefDevToolsMessageHandler> devtools_message_handler_ = nullptr;
+  raw_ptr<content::WebContents> web_contents_;
   PrefChangeRegistrar pref_change_registrar_;
   using PathToType = std::map<std::string, std::string>;
   PathToType file_system_paths_;
