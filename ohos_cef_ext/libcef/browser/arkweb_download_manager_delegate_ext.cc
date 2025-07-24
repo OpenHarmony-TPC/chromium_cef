@@ -83,7 +83,8 @@ class ArkWebDownloadItemCallbackImpl : public CefDownloadItemCallback {
 
     if (manager_) {
       DownloadItem* item = manager_->GetDownload(download_id_);
-      if (item && item->GetState() == DownloadItem::IN_PROGRESS) {
+      if (item && (item->GetState() == DownloadItem::IN_PROGRESS ||
+                   item->GetState() == DownloadItem::INTERRUPTED)) {
         item->Cancel(true);
       }
     }
