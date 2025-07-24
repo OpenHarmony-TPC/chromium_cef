@@ -155,7 +155,6 @@ void CefBrowserHostBase::SetMediaResumeFromBFCachePage(bool resume) {
     LOG(ERROR) << "failed to get content when set media resume playback";
     return;
   }
-  LOG(INFO) << "CefBrowserHostBase SetMediaResumeFromBFCachePage WebContentImpl resume:" << resume;
   GetWebContents()->SetMediaResumeFromBFCachePage(resume);
 #endif  // BUILDFLAG(ARKWEB_BFCACHE)
 }
