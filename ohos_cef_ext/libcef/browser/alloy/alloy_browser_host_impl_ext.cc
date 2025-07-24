@@ -1054,6 +1054,18 @@ void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
       ->OnActionPinnedStateChanged(extensionId, isPinned);
 }
 
+void AlloyBrowserHostImplExt::WebExtensionActionShowPopup(
+    int tabId, std::string extensionId) {
+  content::BrowserContext* context = GetGlobalBrowserContext();
+  if (!context) {
+    LOG(ERROR) << "WebExtensionActionShowPopup context is null";
+    return;
+  }
+ 
+  extensions::ExtensionActionDispatcher::Get(context)
+      ->WebExtensionActionShowPopup(context, tabId, extensionId);
+}
+
 void AlloyBrowserHostImplExt::WebExtensionSetViewType(int32_t type) {
   content::WebContents* web_contents = GetWebContents();
   extensions::SetViewType(web_contents, static_cast<extensions::mojom::ViewType>(type));
