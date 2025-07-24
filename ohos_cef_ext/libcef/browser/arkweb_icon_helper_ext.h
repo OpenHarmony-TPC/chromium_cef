@@ -10,7 +10,7 @@
 #include <vector>
 #include <queue>
  
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
