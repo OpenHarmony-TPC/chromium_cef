@@ -116,7 +116,6 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   content::WebContents* web_contents_ = nullptr;
   CefRefPtr<CefDisplayHandler> handler_ = nullptr;
-  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if defined(OHOS_WPT)
