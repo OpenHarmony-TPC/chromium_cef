@@ -196,15 +196,12 @@ bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const st
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new char[ext_len+1];
+  param->extensionId = new (std::nothrow) char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
 
-  for(size_t i=0;i<ext_len;++i){
-    param->extensionId[i] = extension_id[i];
-  }
-  param->extensionId[ext_len] = '\0';
+  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
   return true;
 }
 
@@ -213,15 +210,12 @@ bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettings
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new char[len+1];
+  param->type = new (std::nothrow) char[len+1];
   if(!param->type){
     return false;
   }
 
-  for(size_t i=0;i<len;++i){
-    param->type[i] = typeStr[i];
-  }
-  param->type[len] = '\0';
+  strcpy_s(param->type,len+1,typeStr.c_str())
   return true;
 }
 
@@ -230,15 +224,12 @@ bool SetTypeToSetParam(NWebExtensionContentSettingsSetParam* param, ContentSetti
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new char[len+1];
+  param->type = new (std::nothrow) char[len+1];
   if(!param->type){
     return false;
   }
 
-  for(size_t i=0;i<len;++i){
-    param->type[i] = typeStr[i];
-  }
-  param->type[len] = '\0';
+  strcpy_s(param->type,len+1,typeStr.c_str())
   return true;
 }
 
@@ -247,15 +238,12 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
   std::string scopeStr = ChromeSettingScopeToString(scope);
   size_t len = scopeStr.length();
 
-  param->scope = new char[len+1];
+  param->scope = new (std::nothrow) char[len+1];
   if(!param->scope){
     return false;
   }
 
-  for(size_t i=0;i<len;++i){
-    param->scope[i] = scopeStr[i];
-  }
-  param->scope[len] = '\0';
+  strcpy_s(param->scope,len+1,scopeStr.c_str())
   return true;
 }
 
@@ -266,15 +254,12 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new char[ext_len+1];
+  param->extensionId = new (std::nothrow) char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
   
-  for(size_t i=0;i<ext_len;++i){
-    param->extensionId[i] = extension_id[i];
-  }
-  param->extensionId[ext_len] = '\0';
+  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
   return true;
 }
 
@@ -283,15 +268,12 @@ bool SetTypeToClearParam(NWebExtensionContentSettingsClearParam* param, ContentS
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new char[len+1];
+  param->type = new (std::nothrow) char[len+1];
   if(!param->type){
     return false;
   }
 
-  for(size_t i=0;i<len;++i){
-    param->type[i] = typeStr[i];
-  }
-  param->type[len] = '\0';
+  strcpy_s(param->type,len+1,typeStr.c_str())
   return true;
 }
 
@@ -300,15 +282,12 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
   std::string scopeStr = ChromeSettingScopeToString(scope);
   size_t len = scopeStr.length();
 
-  param->scope = new char[len+1];
+  param->scope = new (std::nothrow) char[len+1];
   if(!param->scope){
     return false;
   }
 
-  for(size_t i=0;i<len;++i){
-    param->scope[i] = scopeStr[i];
-  }
-  param->scope[len] = '\0';
+  strcpy_s(param->scope,len+1,scopeStr.c_str())
   return true;
 }
 
@@ -319,15 +298,12 @@ bool SetExtensionIdToClearParam(NWebExtensionContentSettingsClearParam* param, c
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new char[ext_len+1];
+  param->extensionId = new (std::nothrow) char[ext_len+1];
   if(!param->extensionId){
     return false;
   }
   
-  for(size_t i=0;i<ext_len;++i){
-    param->extensionId[i] = extension_id[i];
-  }
-  param->extensionId[ext_len] = '\0';
+  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
   return true;
 }
 
