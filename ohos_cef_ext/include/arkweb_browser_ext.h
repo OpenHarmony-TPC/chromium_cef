@@ -491,6 +491,16 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) = 0;
 
   ///
+  /// Set HasComposition
+  ///
+  virtual void SetHasComposition(bool has_composition) = 0;
+
+  ///
+  /// Set HasComposition
+  ///
+  virtual bool GetHasComposition() = 0;
+
+  ///
   /// UpdateLocale
   ///
   virtual void UpdateLocale(const CefString& locale) = 0;

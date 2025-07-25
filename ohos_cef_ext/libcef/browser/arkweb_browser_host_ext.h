@@ -619,6 +619,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool IsNeedZoomChange(const input::NativeWebKeyboardEvent& event,
                         bool& zoom_in);
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
+  void SetHasComposition(bool has_composition) override;
+  bool GetHasComposition() override;
 #endif  // ARKWEB_INPUT_EVENTS
 
 #if BUILDFLAG(ARKWEB_BFCACHE)
@@ -797,6 +799,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   base::WeakPtrFactory<ArkWebBrowserHostExtImpl> weak_ptr_factory_;
 #endif
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  bool has_composition_ = false;
+#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 };
 
 #endif  // ARKWEB_BROWSER_BROWSER_HOST_EXT_H_
