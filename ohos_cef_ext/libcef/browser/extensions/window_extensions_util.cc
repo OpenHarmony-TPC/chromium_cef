@@ -15,6 +15,7 @@
 #include "base/logging.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
 
@@ -69,7 +70,7 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
   if (!webcontents) {
     return default_window_id;
   }
-  int32_t tab_id = webcontents->ExtensionGetTabId();
+  int32_t tab_id = ExtensionTabUtil::GetTabId(webcontents);
   if (tab_id > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
