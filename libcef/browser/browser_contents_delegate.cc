@@ -1033,7 +1033,7 @@ void CefBrowserContentsDelegate::DidUpdateFaviconURL(
     }
   }
 #if BUILDFLAG(IS_OHOS)
-  icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates);
+  icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates, CefBrowserContentsDelegate::browser());
 #endif
 }
 
@@ -1245,7 +1245,6 @@ void CefBrowserContentsDelegate::OnOldPageNoLongerRendered(const GURL& url,
 
 void CefBrowserContentsDelegate::InitIconHelper() {
   icon_helper_ = new IconHelper();
-  icon_helper_->SetBrowser(CefBrowserContentsDelegate::browser());
   CefRefPtr<CefClient> client = CefBrowserContentsDelegate::client();
   if (client) {
     CefRefPtr<CefDisplayHandler> handler = client->GetDisplayHandler();
