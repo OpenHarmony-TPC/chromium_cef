@@ -28,35 +28,22 @@ namespace {
 
 constexpr char kWindowTypesKey[] = "windowTypes";
 
-std::vector<std::string> GetWindowTypeFilter(const base::Value::Dict* listener_filter) {
-  std::vector<std::string> default_window_type_filter{"normal", "popup"};
-  if (!listener_filter ||
-      !listener_filter->contains(kWindowTypesKey)) {
-    return default_window_type_filter;
-  }
-  const base::Value::List* window_types = listener_filter->FindList(kWindowTypesKey);
-  std::vector<std::string> window_type_filter;
-  for (const base::Value& type : *window_types) {
-    if (type.is_string()) {
-        window_type_filter.push_back(type.GetString());
-    }
-  }
-  if (window_type_filter.size() == 0) {
-    return default_window_type_filter;
-  }
-  return window_type_filter;
-}
-
 bool WillDispatchWindowEvent(
-    std::string window_type,
+    const std::string& window_type,
     content::BrowserContext* browser_context,
     mojom::ContextType target_context,
     const Extension* extension,
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
     mojom::EventFilteringInfoPtr& event_filtering_info_out) {
-  std::vector<std::string> window_type_filter = GetWindowTypeFilter(listener_filter);
-  return base::Contains(window_type_filter, window_type);
+  event_filtering_info_out = mojom::EventFilteringInfo::New();
+  if (listener_filter && listener_filter->contains(kWindowTypesKey)) {
+    event_filtering_info_out->window_type = window_type;
+  } else {
+    event_filtering_info_out->window_exposed_by_default = true;
+    event_filtering_info_out->has_window_exposed_by_default = true;
+  }
+  return true;
 }
 }
 
