@@ -1130,6 +1130,14 @@ void ArkWebBrowserHostExtImpl::UpdateSecurityLayer(bool isNeedSecurityLayer) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateSecurityLayer(isNeedSecurityLayer);
   }
 }
+
+void ArkWebBrowserHostExtImpl::SetHasComposition(bool has_composition) {
+  has_composition_ = has_composition;
+}
+
+bool ArkWebBrowserHostExtImpl::GetHasComposition() {
+  return has_composition_;
+}
 #endif  // ARKWEB_INPUT_EVENTS
 
 bool ArkWebBrowserHostExtImpl::CanGoBackOrForward(int num_steps) {
