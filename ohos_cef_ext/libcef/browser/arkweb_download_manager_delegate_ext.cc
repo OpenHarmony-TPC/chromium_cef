@@ -1,5 +1,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_download_manager_delegate_ext.h"
 
+#include "base/command_line.h"
 #include "base/files/file_util.h"
 #include "base/functional/bind.h"
 #include "base/logging.h"
@@ -10,6 +11,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_host_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 #include "chrome/common/chrome_constants.h"
+#include "content/public/common/content_switches.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/download_item_utils.h"
 #include "content/public/browser/web_contents.h"
@@ -83,8 +85,12 @@ class ArkWebDownloadItemCallbackImpl : public CefDownloadItemCallback {
 
     if (manager_) {
       DownloadItem* item = manager_->GetDownload(download_id_);
+      bool nweb_ex_download_enabled =
+          base::CommandLine::ForCurrentProcess()->HasSwitch(
+              switches::kEnableNwebExDownload);
       if (item && (item->GetState() == DownloadItem::IN_PROGRESS ||
-                   item->GetState() == DownloadItem::INTERRUPTED)) {
+                   (item->GetState() == DownloadItem::INTERRUPTED &&
+                    nweb_ex_download_enabled))) {
         item->Cancel(true);
       }
     }
