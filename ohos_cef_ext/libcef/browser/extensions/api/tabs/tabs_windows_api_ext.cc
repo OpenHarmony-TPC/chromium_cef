@@ -17,6 +17,9 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/browser_context.h"
 #include "chrome/browser/extensions/api/tabs/tabs_event_router.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
+#include "extensions/browser/extension_web_contents_observer.h"
+#include "libcef/browser/extensions/window_extensions_util.h"
 
 namespace extensions {
 
@@ -40,6 +43,21 @@ void TabsWindowsAPI::TabUpdated(int tab_id,
     content::WebContents* contents,
     std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
     std::unique_ptr<NWebExtensionTab> tab) {
+  if (!tab) {
+    LOG(ERROR) << "TabUpdated tab is null";
+    return;
+  }
+ 
+  int windowId = tab->windowId;
+  if (auto* ewco = extensions::ExtensionWebContentsObserver::GetForWebContents(contents)) {
+      contents->ForEachRenderFrameHost([ewco, tab_id, windowId](content::RenderFrameHost* frame_host) {
+      if (auto local_frame = ewco->GetLocalFrame(frame_host)) {
+          local_frame->UpdateBrowserWindowId(windowId);
+          local_frame->SetTabId(tab_id);
+      }
+    });
+  }
+
   tabs_event_router()->DispatchTabUpdatedEvent(
       tab_id, contents, std::move(changeInfo), std::move(tab));
 }
