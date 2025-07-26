@@ -9,8 +9,8 @@
 
 #include <vector>
 #include <queue>
-
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+ 
+#include "arkweb/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
@@ -95,9 +95,9 @@ class IconHelper : public virtual CefBaseRefCounted {
     float score;
     GURL image_url;
     SkBitmap bitmap;
-
+ 
     CallbackData() {}
-
+ 
     CallbackData(float score_num, const GURL& url,
                  const SkBitmap& bmp)
         : score(score_num), image_url(url),
@@ -119,6 +119,7 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;
   CefRefPtr<ArkWebDisplayHandlerExt> handler_ = nullptr;
+  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if BUILDFLAG(ARKWEB_WPT)
