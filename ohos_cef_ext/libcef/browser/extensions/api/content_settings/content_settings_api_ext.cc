@@ -196,12 +196,14 @@ bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const st
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new (std::nothrow) char[ext_len+1];
+  param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
   if(!param->extensionId){
     return false;
   }
 
-  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -210,12 +212,14 @@ bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettings
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new (std::nothrow) char[len+1];
+  param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
   if(!param->type){
     return false;
   }
 
-  strcpy_s(param->type,len+1,typeStr.c_str())
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -224,12 +228,14 @@ bool SetTypeToSetParam(NWebExtensionContentSettingsSetParam* param, ContentSetti
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new (std::nothrow) char[len+1];
+  param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
   if(!param->type){
     return false;
   }
 
-  strcpy_s(param->type,len+1,typeStr.c_str())
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -238,12 +244,14 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
   std::string scopeStr = ChromeSettingScopeToString(scope);
   size_t len = scopeStr.length();
 
-  param->scope = new (std::nothrow) char[len+1];
+  param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
   if(!param->scope){
     return false;
   }
 
-  strcpy_s(param->scope,len+1,scopeStr.c_str())
+  if (strcpy_s(param->scope,len+1,scopeStr.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -254,12 +262,14 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new (std::nothrow) char[ext_len+1];
+  param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
   if(!param->extensionId){
     return false;
   }
   
-  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -268,12 +278,14 @@ bool SetTypeToClearParam(NWebExtensionContentSettingsClearParam* param, ContentS
   std::string typeStr = content_settings_helpers::ContentSettingsTypeToString(content_type);
   size_t len = typeStr.length();
 
-  param->type = new (std::nothrow) char[len+1];
+  param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
   if(!param->type){
     return false;
   }
 
-  strcpy_s(param->type,len+1,typeStr.c_str())
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+    return false;
+  }
   return true;
 }
 
@@ -282,12 +294,14 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
   std::string scopeStr = ChromeSettingScopeToString(scope);
   size_t len = scopeStr.length();
 
-  param->scope = new (std::nothrow) char[len+1];
+  param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
   if(!param->scope){
     return false;
   }
 
-  strcpy_s(param->scope,len+1,scopeStr.c_str())
+  if(strcpy_s(param->scope,len+1,scopeStr.c_str()) !=0) {
+    return false;
+  }
   return true;
 }
 
@@ -298,12 +312,14 @@ bool SetExtensionIdToClearParam(NWebExtensionContentSettingsClearParam* param, c
   }
 
   size_t ext_len = extension_id.length();
-  param->extensionId = new (std::nothrow) char[ext_len+1];
+  param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
   if(!param->extensionId){
     return false;
   }
   
-  strcpy_s(param->extensionId,ext_len+1,extension_id.c_str())
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) !=0){
+    return false;
+  }
   return true;
 }
 
@@ -389,7 +405,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
   EXTENSION_FUNCTION_VALIDATE(params);
 
   if (content_type == ContentSettingsType::DEPRECATED_PPAPI_BROKER) {
-    NOTREACHED();
+    return RespondNow(Error("failed to get contentSettings type::DEPRECATED_PPAPI_BROKER for get"));
   }
 
   GURL primary_url(params->details.primary_url);
@@ -515,7 +531,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
   std::optional<Set::Params> params = Set::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
   if (content_type == ContentSettingsType::DEPRECATED_PPAPI_BROKER) {
-    NOTREACHED();
+    return RespondNow(Error("failed to get contentSettings type::DEPRECATED_PPAPI_BROKER for set"));
   }
 
   std::string primary_error;
@@ -687,7 +703,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
   EXTENSION_FUNCTION_VALIDATE(params);
 
   if (content_type == ContentSettingsType::DEPRECATED_PPAPI_BROKER) {
-    NOTREACHED();
+    return RespondNow(Error("failed to get contentSettings type::DEPRECATED_PPAPI_BROKER for clear"));
   }
 
   ChromeSettingScope scope = ChromeSettingScope::kRegular;
