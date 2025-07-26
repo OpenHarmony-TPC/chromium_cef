@@ -369,7 +369,6 @@ void ArkWebBrowserContentsDelegateExt::InitIconHelper() {
     return;
   }
   icon_helper_ = new IconHelper();
-  icon_helper_->SetBrowser(browser());
   if (client()) {
     if (CefRefPtr<ArkWebDisplayHandlerExt> handler =
             client()->GetDisplayHandler()) {

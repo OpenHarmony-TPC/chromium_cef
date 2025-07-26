@@ -9,8 +9,8 @@
 
 #include <vector>
 #include <queue>
- 
-#include "arkweb/build/features/features.h"
+
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
 #include "base/memory/raw_ptr.h"
 #include "include/cef_base.h"
 #include "libcef/browser/thread_util.h"
@@ -47,14 +47,16 @@ class IconHelper : public virtual CefBaseRefCounted {
   IconHelper& operator=(const IconHelper&) = delete;
 
   void SetDisplayHandler(const CefRefPtr<ArkWebDisplayHandlerExt>& handler);
-  void SetBrowser(const CefRefPtr<CefBrowser>& browser);
   void SetWebContents(content::WebContents* new_contents);
   void OnUpdateFaviconURL(
       content::RenderFrameHost* render_frame_host,
-      const std::vector<blink::mojom::FaviconURLPtr>& candidates);
-  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id);
+      const std::vector<blink::mojom::FaviconURLPtr>& candidates,
+      CefRefPtr<CefBrowser> browser);
+  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id,
+                      CefRefPtr<CefBrowser> browser);
   void DownloadFaviconCallback(
       int request_id,
+      CefRefPtr<CefBrowser> browser,
       int id,
       int http_status_code,
       const GURL& image_url,
@@ -62,19 +64,22 @@ class IconHelper : public virtual CefBaseRefCounted {
       const std::vector<gfx::Size>& original_bitmap_sizes);
   void DownloadFaviconHandler(
       const GURL& image_url,
-      const SkBitmap& bitmap);
+      const SkBitmap& bitmap,
+      CefRefPtr<CefBrowser> browser);
   void OnReceivedIcon(const void* data,
                       size_t width,
                       size_t height,
                       cef_color_type_t color_type,
-                      cef_alpha_type_t alpha_type);
+                      cef_alpha_type_t alpha_type,
+                      CefRefPtr<CefBrowser> browser);
 
   void OnReceivedIconUrl(const CefString& image_url,
                          const void* data,
                          size_t width,
                          size_t height,
                          cef_color_type_t color_type,
-                         cef_alpha_type_t alpha_type);
+                         cef_alpha_type_t alpha_type,
+                         CefRefPtr<CefBrowser> browser);
 
 #if BUILDFLAG(ARKWEB_WPT)
   void ClearFailedFaviconUrlSets(content::NavigationHandle* navigation_handle);
@@ -90,9 +95,9 @@ class IconHelper : public virtual CefBaseRefCounted {
     float score;
     GURL image_url;
     SkBitmap bitmap;
- 
+
     CallbackData() {}
- 
+
     CallbackData(float score_num, const GURL& url,
                  const SkBitmap& bmp)
         : score(score_num), image_url(url),
@@ -114,7 +119,6 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;
   CefRefPtr<ArkWebDisplayHandlerExt> handler_ = nullptr;
-  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if BUILDFLAG(ARKWEB_WPT)
