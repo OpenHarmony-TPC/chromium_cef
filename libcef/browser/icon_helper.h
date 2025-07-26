@@ -44,14 +44,15 @@ class IconHelper : public virtual CefBaseRefCounted {
   IconHelper& operator=(const IconHelper&) = delete;
 
   void SetDisplayHandler(const CefRefPtr<CefDisplayHandler>& handler);
-  void SetBrowser(const CefRefPtr<CefBrowser>& browser);
   void SetWebContents(content::WebContents* new_contents);
   void OnUpdateFaviconURL(
       content::RenderFrameHost* render_frame_host,
-      const std::vector<blink::mojom::FaviconURLPtr>& candidates);
-  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id);
+      const std::vector<blink::mojom::FaviconURLPtr>& candidates,
+      const CefRefPtr<CefBrowser>& browser);
+  void DownloadFavicon(const blink::mojom::FaviconURLPtr& candidate, int request_id, const CefRefPtr<CefBrowser>& browser);
   void DownloadFaviconCallback(
       int request_id,
+      const CefRefPtr<CefBrowser>& browser,
       int id,
       int http_status_code,
       const GURL& image_url,
@@ -59,19 +60,22 @@ class IconHelper : public virtual CefBaseRefCounted {
       const std::vector<gfx::Size>& original_bitmap_sizes);
   void DownloadFaviconHandler(
       const GURL& image_url,
-      const SkBitmap& bitmaps);
+      const SkBitmap& bitmaps,
+      const CefRefPtr<CefBrowser>& browser);
   void OnReceivedIcon(const void* data,
                       size_t width,
                       size_t height,
                       cef_color_type_t color_type,
-                      cef_alpha_type_t alpha_type);
+                      cef_alpha_type_t alpha_type,
+                      const CefRefPtr<CefBrowser>& browser);
 
   void OnReceivedIconUrl(const CefString& image_url,
                          const void* data,
                          size_t width,
                          size_t height,
                          cef_color_type_t color_type,
-                         cef_alpha_type_t alpha_type);
+                         cef_alpha_type_t alpha_type,
+                         const CefRefPtr<CefBrowser>& browser);
 
 #if defined(OHOS_WPT)
   void ClearFailedFaviconUrlSets(content::NavigationHandle* navigation_handle);
@@ -112,7 +116,6 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   content::WebContents* web_contents_ = nullptr;
   CefRefPtr<CefDisplayHandler> handler_ = nullptr;
-  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if defined(OHOS_WPT)
