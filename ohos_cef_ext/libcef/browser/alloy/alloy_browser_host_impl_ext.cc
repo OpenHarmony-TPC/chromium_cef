@@ -129,7 +129,10 @@ using content::KeyboardEventProcessingResult;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/extension_action_dispatcher.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "extensions/browser/view_type_utils.h"
+#include "extensions/browser/extension_web_contents_observer.h"
+#include "libcef/browser/extensions/window_extensions_util.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
@@ -1069,6 +1072,15 @@ void AlloyBrowserHostImplExt::WebExtensionActionShowPopup(
 void AlloyBrowserHostImplExt::WebExtensionSetViewType(int32_t type) {
   content::WebContents* web_contents = GetWebContents();
   extensions::SetViewType(web_contents, static_cast<extensions::mojom::ViewType>(type));
+
+  int windowsId = extensions::GetCurrentWindowId(web_contents, extension_misc::kCurrentWindowId);
+  if (auto* ewco = extensions::ExtensionWebContentsObserver::GetForWebContents(web_contents)) {
+      web_contents->ForEachRenderFrameHost([ewco, windowsId](content::RenderFrameHost* frame_host) {
+      if (auto local_frame = ewco->GetLocalFrame(frame_host)) {
+          local_frame->UpdateBrowserWindowId(windowsId);
+      }
+    });
+  }
 }
 
 content::BrowserContext* AlloyBrowserHostImplExt::GetOriginalContext(
