@@ -238,13 +238,6 @@ void IconHelper::DownloadFaviconHandler(
   if (bitmap.drawsNothing()) {
     return;
   }
-  std::unique_ptr<SkBitmap> bitmap_ptr = std::make_unique<SkBitmap>(bitmap_);
-
-  base::SequencedTaskRunner::GetCurrentDefault()->PostDelayedTask(
-      FROM_HERE,
-      base::BindOnce([](std::unique_ptr<SkBitmap> ptr){}, std::move(bitmap_ptr)),
-      base::Seconds(5)
-  );
   bitmap_ = bitmap;
   auto ret = bitmap_.writePixels(bitmap.pixmap());
   if (!ret) {
@@ -269,7 +262,7 @@ void IconHelper::DownloadFaviconHandler(
     if (entry) {
       entry->GetFavicon().valid = true;
       entry->GetFavicon().url = image_url;
-      entry->GetFavicon().image = gfx::Image::CreateFrom1xBitmap(bitmap_);
+      entry->GetFavicon().image = gfx::Image::CreateFrom1xBitmap(bitmap);
     }
   }
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
