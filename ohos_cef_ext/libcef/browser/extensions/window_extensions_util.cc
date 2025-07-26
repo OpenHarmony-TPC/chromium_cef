@@ -70,7 +70,7 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
   if (!webcontents) {
     return default_window_id;
   }
-  int32_t tab_id = ExtensionTabUtil::GetTabId(webcontents);
+  int32_t tab_id = webcontents->ExtensionGetTabId();
   if (tab_id > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
