@@ -119,7 +119,6 @@ class IconHelper : public virtual CefBaseRefCounted {
 
   raw_ptr<content::WebContents> web_contents_ = nullptr;
   CefRefPtr<ArkWebDisplayHandlerExt> handler_ = nullptr;
-  CefRefPtr<CefBrowser> browser_ = nullptr;
   SkBitmap bitmap_;
 
 #if BUILDFLAG(ARKWEB_WPT)
