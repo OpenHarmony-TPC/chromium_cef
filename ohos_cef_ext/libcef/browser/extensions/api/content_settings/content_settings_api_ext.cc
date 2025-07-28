@@ -66,7 +66,7 @@ using extensions::api::types::ChromeSettingScope;
 
 bool RemoveContentType(base::Value::List& args, ContentSettingsType* content_type) 
 {
-  if (args.empty() || !args[0].is_string()){
+  if (args.empty() || !args[0].is_string()) {
     return false;
   }
 
@@ -84,7 +84,7 @@ bool RemoveContentType(base::Value::List& args, ContentSettingsType* content_typ
 // Errors.
 constexpr char kIncognitoContextError[] = "Can't modify regular settings from an incognito context.";
 constexpr char kIncognitoSessionOnlyError[] = "You cannot read incognito content settings when no incognito window "
-    "is open.";
+                                              "is open.";
 constexpr char kInvalidUrlError[] = "The URL \"*\" is invalid.";
 }  // namespace
 
@@ -163,11 +163,11 @@ void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsC
 
 ContentSetting StringToContentSetting(const std::string &str)
 {
-  if(str == "allow") {
+  if (str == "allow") {
     return ContentSetting::CONTENT_SETTING_ALLOW;
-  } else if(str == "block") {
+  } else if (str == "block") {
     return ContentSetting::CONTENT_SETTING_BLOCK;
-  } else if(str == "ask") {
+  } else if (str == "ask") {
     return ContentSetting::CONTENT_SETTING_ASK;
   } else {
     return ContentSetting::CONTENT_SETTING_DEFAULT;
@@ -183,25 +183,25 @@ std::string ChromeSettingScopeToString(ChromeSettingScope scope)
       {ChromeSettingScope::kIncognitoSessionOnly, "IncognitoSessionOnly"}};
 
   auto it = scopeMap.find(scope);
-  if(it!=scopeMap.end()){
+  if (it != scopeMap.end()) {
     return it->second;
   }
-  return "unknown";
+  return "Unknown";
 }
 
 bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const std::string &extension_id)
 {
-  if(extension_id.empty()){
+  if (extension_id.empty()) {
     return true;
   }
 
   size_t ext_len = extension_id.length();
   param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
-  if(!param->extensionId){
+  if (!param->extensionId) {
     return false;
   }
 
-  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0){
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
     return false;
   }
   return true;
@@ -213,11 +213,11 @@ bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettings
   size_t len = typeStr.length();
 
   param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
-  if(!param->type){
+  if (!param->type) {
     return false;
   }
 
-  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
     return false;
   }
   return true;
@@ -229,11 +229,11 @@ bool SetTypeToSetParam(NWebExtensionContentSettingsSetParam* param, ContentSetti
   size_t len = typeStr.length();
 
   param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
-  if(!param->type){
+  if (!param->type) {
     return false;
   }
 
-  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
     return false;
   }
   return true;
@@ -245,11 +245,11 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
   size_t len = scopeStr.length();
 
   param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
-  if(!param->scope){
+  if (!param->scope) {
     return false;
   }
 
-  if (strcpy_s(param->scope,len+1,scopeStr.c_str()) != 0){
+  if (strcpy_s(param->scope,len+1,scopeStr.c_str()) != 0) {
     return false;
   }
   return true;
@@ -257,17 +257,17 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
 
 bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const std::string &extension_id)
 {
-  if(extension_id.empty()){
+  if (extension_id.empty()) {
     return true;
   }
 
   size_t ext_len = extension_id.length();
   param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
-  if(!param->extensionId){
+  if (!param->extensionId) {
     return false;
   }
   
-  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0){
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
     return false;
   }
   return true;
@@ -279,11 +279,11 @@ bool SetTypeToClearParam(NWebExtensionContentSettingsClearParam* param, ContentS
   size_t len = typeStr.length();
 
   param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
-  if(!param->type){
+  if (!param->type) {
     return false;
   }
 
-  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0){
+  if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
     return false;
   }
   return true;
@@ -295,11 +295,11 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
   size_t len = scopeStr.length();
 
   param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
-  if(!param->scope){
+  if (!param->scope) {
     return false;
   }
 
-  if(strcpy_s(param->scope,len+1,scopeStr.c_str()) !=0) {
+  if (strcpy_s(param->scope,len+1,scopeStr.c_str()) !=0) {
     return false;
   }
   return true;
@@ -307,17 +307,17 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
 
 bool SetExtensionIdToClearParam(NWebExtensionContentSettingsClearParam* param, const std::string &extension_id)
 {
-  if(extension_id.empty()){
+  if (extension_id.empty()) {
     return true;
   }
 
   size_t ext_len = extension_id.length();
   param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
-  if(!param->extensionId){
+  if (!param->extensionId) {
     return false;
   }
   
-  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) !=0){
+  if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) !=0) {
     return false;
   }
   return true;
@@ -333,28 +333,28 @@ bool ContentSettingsBuildGetParams(
   if (!params) {
     return false;
   }
-  LOG(INFO)<<"ContentSettingsBuildGetParams get parameters";
+  LOG(INFO) << "ContentSettingsBuildGetParams get parameters";
 
-  if(!params->details.primary_url.empty()){
+  if (!params->details.primary_url.empty()) {
     getParam->primaryUrl = strdup(params->details.primary_url.c_str());
-    if(!getParam->primaryUrl){
+    if (!getParam->primaryUrl) {
       return false;
     }
   }
 
-  if(!params->details.secondary_url){
+  if (params->details.secondary_url) {
     getParam->secondaryUrl = strdup(params->details.secondary_url->c_str());
-    if(!getParam->secondaryUrl){
+    if (!getParam->secondaryUrl) {
       return false;
     }
   }
 
-  if(!params->details.incognito.has_value()){
-    getParam->incognito = new bool(params->details.incognito);
-    if(!getParam->incognito){
+  if (params->details.incognito.has_value()) {
+    getParam->incognito = new bool(*params->details.incognito);
+    if (getParam->incognito == nullptr) {
       return false;
     }
-  }else{
+  } else {
     getParam->incognito = nullptr;
   }  
   return true;
@@ -364,29 +364,29 @@ bool ContentSettingsBuildSetParams(
     const std::optional<extensions::api::content_settings::ContentSetting::Set::Params>& params,
     NWebExtensionContentSettingsSetParam* setParam)
 {
-  LOG(INFO)<<"ContentSettingsBuildSetParams set parameters";
+  LOG(INFO) << "ContentSettingsBuildSetParams set parameters";
   if (!params) {
     return false;
   }  
 
-  if(!params->details.primary_pattern.empty()){
+  if (!params->details.primary_pattern.empty()) {
     setParam->primaryPattern = strdup(params->details.primary_pattern.c_str());
-    if(!setParam->primaryPattern){
+    if (!setParam->primaryPattern) {
       return false;
     }
   }
 
-  if(!params->details.setting.GetString().empty()){
+  if (!params->details.setting.GetString().empty()) {
     const std::string &settingStr = params->details.setting.GetString();
     setParam->contentSetting = strdup(settingStr.c_str());
-    if(!setParam->contentSetting){
+    if (!setParam->contentSetting) {
       return false;
     }
   }
 
-  if(!params->details.secondary_pattern){
+  if (!params->details.secondary_pattern) {
     setParam->secondaryPattern = strdup(params->details.secondary_pattern->c_str());
-    if(!setParam->secondaryPattern){
+    if (!setParam->secondaryPattern) {
       return false;
     }
   }
@@ -395,7 +395,7 @@ bool ContentSettingsBuildSetParams(
 
 ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run() 
 {
-  LOG(INFO)<<"ContentSettingsContentSettingGetFunction run";
+  LOG(INFO) << "ContentSettingsContentSettingGetFunction run";
 
   ContentSettingsType content_type;
   EXTENSION_FUNCTION_VALIDATE(RemoveContentType(mutable_args(), &content_type));
@@ -441,8 +441,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
       return RespondNow(Error(kIncognitoSessionOnlyError));
     }
     map = HostContentSettingsMapFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
-    cookie_settings = CookieSettingsFactory::GetForProfile(
-        profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+    cookie_settings = 
+        CookieSettingsFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
   } else {
     map = HostContentSettingsMapFactory::GetForProfile(profile);
     cookie_settings = CookieSettingsFactory::GetForProfile(profile);
@@ -453,7 +453,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
   if(!SetTypeToParam(&getParam,content_type)|| !SetExtensionIdToParam(&getParam,extension_id)||
     !ContentSettingsBuildGetParams(params,&getParam)){
       NWebExtensionContentSettingsGetParamRelease(&getParam);
-      LOG(INFO)<<"ContentSettingsContentSettingGetFunction failed to build get parameters";
+      LOG(INFO)<<"ContentSettingsGetFunction failed to build get parameters";
       return RespondNow(BadMessage());
     }
 
@@ -498,16 +498,16 @@ void ContentSettingsContentSettingGetFunction::GetCallback(
   LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback";
   DCHECK(function);
   if (!function) {
-    LOG(ERROR) << "BookmarksGetFunction is empty!!!!";
+    LOG(ERROR) << "ContentSettingsGetFunction is empty!!!!";
     return;
   }
 
-  if (!detailParam||error||!detailParam->contentSetting) {
-    std::string errorMessage = error ? error:"get error";
-    LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param "<<errorMessage;
-    function->Respond(function->Error(std::string(errorMessage)));
+  if (!detailParam || error || !detailParam->contentSetting) {
+    std::string errorMessage = error ? error : "get error";
+    LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param " << errorMessage;
+    function->Respond(function->Error(errorMessage));
   } else {
-    LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param "<<detailParam->contentSetting;
+    LOG(INFO) << "ContentSettingsContentSettingGetFunction::GetCallback param " << detailParam->contentSetting;
     base::Value::Dict result;
     std::string contentSettingStr(detailParam->contentSetting);
     ContentSetting setting = StringToContentSetting(contentSettingStr);
@@ -525,7 +525,7 @@ void ContentSettingsContentSettingGetFunction::GetCallback(
 
 ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run() 
 {
-  LOG(INFO)<<"ContentSettingsContentSettingSetFunction run";
+  LOG(INFO) << "ContentSettingsContentSettingSetFunction run";
   ContentSettingsType content_type;
   EXTENSION_FUNCTION_VALIDATE(RemoveContentType(mutable_args(), &content_type));
   std::optional<Set::Params> params = Set::Params::Create(args());
@@ -543,8 +543,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
   ContentSettingsPattern secondary_pattern = ContentSettingsPattern::Wildcard();
   if (params->details.secondary_pattern) {
     std::string secondary_error;
-    secondary_pattern = content_settings_helpers::ParseExtensionPattern(
-        *params->details.secondary_pattern, &secondary_error);
+    secondary_pattern = 
+        content_settings_helpers::ParseExtensionPattern(*params->details.secondary_pattern, &secondary_error);
     if (!secondary_pattern.IsValid())
       return RespondNow(Error(secondary_error));
   }
@@ -559,10 +559,10 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
   EXTENSION_FUNCTION_VALIDATE(
       content_settings::ContentSettingsRegistry::GetInstance()->Get(content_type)->IsSettingValid(setting));
 
-  const content_settings::ContentSettingsInfo* info =
+  const content_settings::ContentSettingsInfo *info =
       content_settings::ContentSettingsRegistry::GetInstance()->Get(content_type);
-  if(!info){
-    LOG(ERROR)<<"Failed to get ContentSettingsInfo for content type: "<< content_type;
+  if (!info) {
+    LOG(ERROR) << "Failed to get ContentSettingsInfo for content type: " << content_type;
     return RespondNow(Error("Invalid content type"));
   }
 
@@ -674,16 +674,16 @@ void ContentSettingsContentSettingSetFunction::SetCallback(
   LOG(INFO) << "ContentSettingsContentSetting SetCallback";
   DCHECK(function);
   if (!function) {
-    LOG(ERROR) << "ContentSettingsContentSetting is empty!!!!";
+    LOG(ERROR) << "ContentSettingsContentSettingSetFunction is empty!!!!";
     return;
   }
 
   if (error) {
-    LOG(INFO) << "ContentSettingsContentSetting SetCallback error "<<error;
-    std::string errorMessage = error ? error:"get error";
-    function->Respond(function->Error(std::string(errorMessage)));
+    LOG(INFO) << "ContentSettingsContentSetting SetCallback error " << error;
+    std::string errorMessage = error ? error : "get error";
+    function->Respond(function->Error(errorMessage));
   } else {
-    LOG(INFO) << "ContentSettingsContentSetting no error ";
+    LOG(INFO) << "ContentSettingsContentSetting no error";
     function->Respond(function->NoArguments());
   }
 
@@ -695,7 +695,7 @@ void ContentSettingsContentSettingSetFunction::SetCallback(
 
 ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Run() 
 {
-  LOG(INFO)<<"ContentSettingsContentSettingClearFunction run";
+  LOG(INFO) << "ContentSettingsContentSettingClearFunction run";
   ContentSettingsType content_type;
   EXTENSION_FUNCTION_VALIDATE(RemoveContentType(mutable_args(), &content_type));
 
@@ -745,7 +745,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
 
   if (success) {
     AddRef();
-    LOG(INFO) << "ContentSettingsContentSettingSetFunction AddRef";
+    LOG(INFO) << "ContentSettingsContentSettingClearFunction AddRef";
     return RespondLater();
   } else {
   scoped_refptr<ContentSettingsStore> store =
@@ -759,7 +759,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
 void ContentSettingsContentSettingClearFunction::ClearCallback(
     const base::WeakPtr<ContentSettingsContentSettingClearFunction>& function,const char* error)
 {
-  LOG(INFO) << "ContentSettingsContentSettingClearFunction ClearCallback";
+  LOG(INFO) << "ContentSettingsContentSettingClearFunction ClearCallback run";
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "ContentSettingsContentSettingClearFunction is empty!!!!";
@@ -767,11 +767,11 @@ void ContentSettingsContentSettingClearFunction::ClearCallback(
   }
 
   if (error) {
-    LOG(INFO) << "ContentSettingsContentSettingClearFunction ClearCallback error "<<error;
-    std::string errorMessage = error ? error:"get error";
-    function->Respond(function->Error(std::string(errorMessage)));
+    LOG(INFO) << "ContentSettingsContentSetting ClearCallback error";
+    std::string errorMessage = error ? error : "get error";
+    function->Respond(function->Error(errorMessage));
   } else {
-    LOG(INFO) << "ContentSettingsContentSettingClearFunction no error ";
+    LOG(INFO) << "ContentSettingsContentSettingClearFunction no error";
     function->Respond(function->NoArguments());
   }
 
