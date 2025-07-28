@@ -755,7 +755,7 @@ void CefBrowserContentsDelegate::DidUpdateFaviconURL(
   }
 #if BUILDFLAG(ARKWEB_FAVICON)
   if (icon_helper_) {
-    icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates);
+    icon_helper_->OnUpdateFaviconURL(render_frame_host, candidates, browser());
   }
 #endif
 }
