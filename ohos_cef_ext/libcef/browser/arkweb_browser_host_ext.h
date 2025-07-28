@@ -504,18 +504,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   int GetTopControlsOffset() override;
   int GetShrinkViewportHeight() override;
 
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-  bool IsSafeBrowsingEnabled() override;
-  void EnableSafeBrowsing(bool enable) override;
-  void EnableSafeBrowsingDetection(bool enable, bool strictMode) override;
-  bool IsSafeBrowsingDetectionDisabled() const;
-  void HandleSafeBrowsingDetection(const std::string& url);
-  int GetSafeBrowsingDetectionMode() const;
-  int GetSafeBrowsingDetectionSwitch() const;
-  void SetSafeBrowsingDetectionCallback(
-      CefRefPtr<CefSafeBrowsingDetectionCallback> callback);
-#endif  // BUILDFLAG(ARKWEB_SAFEBROWSING)
-
 #if BUILDFLAG(IS_OHOS)
 
   // Geolocation API support
