@@ -104,7 +104,8 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                         const CefString& method,
                                         bool user_gesture,
                                         bool is_redirect,
-                                        bool is_outermost_main_frame) {
+                                        bool is_outermost_main_frame,
+                                        const CefString& extra_request_headers) {
     return false;
   }
 

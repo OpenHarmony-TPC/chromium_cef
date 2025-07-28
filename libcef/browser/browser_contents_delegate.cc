@@ -607,7 +607,12 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
 
     // Don't call OnLoadStart for same page navigations (fragments,
     // history state).
-    if (!navigation_handle->IsSameDocument()) {
+    if (!navigation_handle->IsSameDocument()
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+&&
+        !ArkWebBrowserContentsDelegateExt::IsPrerendering(frame)
+#endif
+      ) {
       OnLoadStart(frame.get(), navigation_handle->GetPageTransition());
       if (navigation_handle->IsServedFromBackForwardCache()) {
 #if BUILDFLAG(ARKWEB_BFCACHE)

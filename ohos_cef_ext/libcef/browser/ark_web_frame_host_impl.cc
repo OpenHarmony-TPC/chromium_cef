@@ -20,6 +20,7 @@
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "base/strings/escape.h"
 #include "cef/ohos_cef_ext/libcef/common/net/url_util_ex.h"
+#include "cef/libcef/browser/thread_util.h"
 #endif
  
 namespace {
@@ -121,5 +122,16 @@ void CefFrameHostImpl::SetOptimizeParserBudgetEnabled(bool enable) {
                           render_frame->SetOptimizeParserBudgetEnabled(enable);
                         },
                         enable));
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+content::RenderFrameHost* CefFrameHostImpl::GetRenderFrameHostFromGlobalId()
+    const {
+  CEF_REQUIRE_UIT();
+  if (rfh_global_id_) {
+    return content::RenderFrameHost::FromID(rfh_global_id_);
+  }
+  return nullptr;
 }
 #endif

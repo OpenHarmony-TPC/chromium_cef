@@ -69,6 +69,10 @@ constexpr int32_t APPLICATION_API_10 = 10;
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "cef/ohos_cef_ext/libcef/browser/ark_web_certificate_query.h"
+#include "components/page_load_metrics/browser/metrics_web_contents_observer.h"
+#include "extensions/browser/event_router.h"
+#include "extensions/browser/extension_frame_host.h"
+#include "extensions/browser/renderer_startup_helper.h"
 #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -876,5 +880,38 @@ std::unique_ptr<content::WebContentsViewDelegate>
 ChromeContentBrowserClientCef::CreateWebContentsViewDelegate(
     content::WebContents* web_contents) {
   return std::make_unique<ChromeWebContentsViewDelegateCef>(web_contents);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+void ChromeContentBrowserClientCef::RegisterMojoBinderPoliciesForSameOriginPrerendering(
+  content::MojoBinderPolicyMap& policy_map) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx)) {
+    return;
+  }
+
+  policy_map.SetAssociatedPolicy<page_load_metrics::mojom::PageLoadMetrics>(
+      content::MojoBinderAssociatedPolicy::kGrant);
+ 
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  // LocalFrameHost supports content scripts related APIs, which are
+  // RequestScriptInjectionPermission, GetInstallState, SendRequestIPC, and
+  // notifying CSS selector updates. These APIs are used by Browser Extensions
+  // under proper permission managements beyond the page boundaries.
+  policy_map.SetAssociatedPolicy<extensions::mojom::LocalFrameHost>(
+      content::MojoBinderAssociatedPolicy::kGrant);
+ 
+  // Grants Prerendering to use EventRouter, and sensitive behaviors are
+  // prohibited by permission request boundary.
+  policy_map.SetAssociatedPolicy<extensions::mojom::EventRouter>(
+      content::MojoBinderAssociatedPolicy::kGrant);
+ 
+  // Grants Prerendering to use RendererHost. This API is used for activity log,
+  // and it is safe to grant this API instead of default API behavior (deferring
+  // until prerender activation).
+  policy_map.SetAssociatedPolicy<extensions::mojom::RendererHost>(
+      content::MojoBinderAssociatedPolicy::kGrant);
+#endif
 }
 #endif

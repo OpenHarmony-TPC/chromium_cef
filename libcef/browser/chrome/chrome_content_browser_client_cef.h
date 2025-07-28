@@ -172,6 +172,12 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
 #if BUILDFLAG(ARKWEB_INCOGNITO_MODE)
   CefRefPtr<CefRequestContextImpl> off_the_record_request_context() const;
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void RegisterMojoBinderPoliciesForSameOriginPrerendering(
+      content::MojoBinderPolicyMap& policy_map) override;
+#endif
+
  private:
   static std::unique_ptr<content::WebContentsViewDelegate>
   CreateWebContentsViewDelegate(content::WebContents* web_contents);

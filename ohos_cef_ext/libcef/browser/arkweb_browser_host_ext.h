@@ -222,6 +222,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   CefString GetOriginalUrl() override;
   void PutNetworkAvailable(bool available) override;
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  int PrerenderPage(const CefString& url,
+                    const CefString& additional_headers) override;
+  void CancelAllPrerendering() override;
+#endif
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RemoveCache(bool include_disk_files) override;
 #endif
@@ -795,13 +800,15 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   bool SetFocusByPosition(float x, float y) override;
+  bool has_composition_ = false;
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  base::circular_deque<std::unique_ptr<content::PrerenderHandle>>
+      prerender_handles_;
+#endif
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   base::WeakPtrFactory<ArkWebBrowserHostExtImpl> weak_ptr_factory_;
 #endif
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  bool has_composition_ = false;
-#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 };
 
 #endif  // ARKWEB_BROWSER_BROWSER_HOST_EXT_H_

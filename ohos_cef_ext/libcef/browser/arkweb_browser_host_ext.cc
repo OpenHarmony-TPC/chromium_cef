@@ -168,6 +168,11 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "ohos_nweb/include/nweb_errors.h"
+#include "ohos_nweb/src/capi/arkweb_error_code.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
 #include "cef/ohos_cef_ext/libcef/browser/cef_download_item_impl_ext.h"
 #include "ohos_cef_ext/libcef/browser/permission/alloy_access_request.h"
@@ -1450,6 +1455,83 @@ std::vector<std::string> ArkWebBrowserHostExtImpl::GetGrantFileAccessDirs() {
   return dir_list;
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+int ArkWebBrowserHostExtImpl::PrerenderPage(const CefString& url,
+                                            const CefString& additional_headers) {
+  content::WebContents* web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "WebContents has not initialized.";
+    return ARKWEB_INIT_ERROR;
+  }
+
+  for (auto it = prerender_handles_.begin(); it != prerender_handles_.end();
+       ++it) {
+    const std::unique_ptr<content::PrerenderHandle>& handle = *it;
+
+    // If the handle is not equivalent but has the same prerendering URL, cancel
+    // it to start a new one.
+    if (handle->GetInitialPrerenderingUrl() == url.ToString()) {
+      prerender_handles_.erase(it);
+      break;
+    }
+  }
+
+  // Cancel existing prerendering before starting a new one to avoid hitting the
+  // limit.
+  // Erase the oldest prerendering to free up the capacity for the new
+  // attempt. If the handles are already empty, other embedder triggers should
+  // be running. In that case, there is no way to trigger. Let this request
+  // fail eventually.
+  if (!prerender_handles_.empty()) {
+    prerender_handles_.pop_front();
+  }
+
+  // This is the same as the page transition of WebView.loadUrl().
+  auto page_transition = ui::PageTransitionFromInt(
+      ui::PAGE_TRANSITION_TYPED | ui::PAGE_TRANSITION_FROM_API);
+
+  std::string new_additional_headers =
+      additional_headers.ToString() + "Sec-Purpose: prefetch;prerender\r\n";
+
+  GURL gurl = GURL(url.ToString());
+  if (gurl.is_empty() || !gurl.is_valid()) {
+    LOG(DEBUG) << "PrerenderPage url is invalid, skip.";
+    return OHOS::NWeb::NWEB_INVALID_URL;
+  }
+  if (!gurl.SchemeIsHTTPOrHTTPS()) {
+    LOG(DEBUG) << "Prerenderring does not support the scheme of the URL, skip.";
+    return OHOS::NWeb::NWEB_INVALID_URL;
+  }
+
+  // TODO(https://crbug.com/41490450): Do the following:
+  // - Pass a valid PreloadingAttempt.
+  // - Pass a valid navigation handle callback.
+  // - Run multiple prerendering in a sequential manner, not in parallel.
+  std::unique_ptr<content::PrerenderHandle> prerender_handle =
+      web_contents->StartPrerendering(
+          gurl, content::PreloadingTriggerType::kEmbedder,
+          "ArkWeb", page_transition,
+          /*should_warm_up_compositor*/true, /*should_prepare_paint_tree*/true,
+          content::PreloadingHoldbackStatus::kAllowed,
+          /*preloading_attempt=*/nullptr, /*url_match_predicate=*/{},
+          /*prerender_navigation_handle_callback*/{},
+          /*extra_headers=*/new_additional_headers.c_str());
+
+  if (prerender_handle) {
+    prerender_handles_.push_back(std::move(prerender_handle));
+    LOG(DEBUG) << "PrerenderPage successfully.";
+    return OHOS::NWeb::NWEB_OK;
+  } else {
+    LOG(DEBUG) << "PrerenderPage failed.";
+    return ARKWEB_INIT_ERROR;
+  }
+}
+ 
+void ArkWebBrowserHostExtImpl::CancelAllPrerendering() {
+  prerender_handles_.clear();
+}
+#endif // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 
 #if BUILDFLAG(ARKWEB_I18N)
 void ArkWebBrowserHostExtImpl::UpdateLocale(const CefString& locale) {

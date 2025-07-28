@@ -73,16 +73,26 @@ bool NavigationOnUIThread(content::NavigationHandle* navigation_handle) {
     if (auto client = browser->GetClient()) {
       if (auto handler = client->GetRequestHandler()) {
         CefRefPtr<CefFrame> frame;
-        if (is_main_frame) {
-          frame = browser->GetMainFrame();
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            ::switches::kEnableNwebEx)) {
+          frame = GetFrameFromGlobalIdFirst(browser,
+            global_id, parent_global_id, is_main_frame);
         } else {
-          frame = browser->GetFrameForGlobalId(global_id);
+#endif
+          if (is_main_frame) {
+            frame = browser->GetMainFrame();
+          } else {
+            frame = browser->GetFrameForGlobalId(global_id);
+          }
+          if (!frame) {
+            // Create a temporary frame object for navigation of sub-frames that
+            // don't yet exist.
+            frame = browser->browser_info()->CreateTempSubFrame(parent_global_id);
+          }
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         }
-        if (!frame) {
-          // Create a temporary frame object for navigation of sub-frames that
-          // don't yet exist.
-          frame = browser->browser_info()->CreateTempSubFrame(parent_global_id);
-        }
+#endif
 
 #if BUILDFLAG(IS_ARKWEB)
         CefRefPtr<CefRequestImpl> request = new ArkWebRequestImplExt();

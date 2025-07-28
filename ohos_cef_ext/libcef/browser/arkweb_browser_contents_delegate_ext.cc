@@ -52,6 +52,14 @@
 #include "ohos_cef_ext/libcef/browser/load_committed_details_impl.h"
 #endif  // BUILDFLAG(ARKWEB_NAVIGATION)
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "base/command_line.h"
+#include "content/browser/renderer_host/frame_tree.h"
+#include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/public/common/content_switches.h"
+#include "ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
+#endif
+
 namespace {
   
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -512,6 +520,35 @@ void ArkWebBrowserContentsDelegateExt::OnLoadFinished(CefRefPtr<CefFrame> frame,
       handler->OnLoadFinished(frame, url);
     }
   }
+}
+
+bool ArkWebBrowserContentsDelegateExt::IsPrerendering(
+  const CefRefPtr<CefFrameHostImpl> frame) {
+  // Prerendering is only supported when NwebEx is enabled.
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+      ::switches::kEnableNwebEx)) {
+    return false;
+  }
+
+  if (!frame) {
+    return false;
+  }
+
+  if (!frame->IsValid()) {
+    return false;
+  }
+
+  content::RenderFrameHostImpl* rfh = static_cast<content::RenderFrameHostImpl*>(
+    frame.get()->GetRenderFrameHostFromGlobalId());
+  if (!rfh) {
+    return false;
+  }
+
+  if (!rfh->frame_tree()) {
+    return false;
+  }
+
+  return rfh->frame_tree()->is_prerendering();
 }
 
 void ArkWebBrowserContentsDelegateExt::NavigationStateChanged(
