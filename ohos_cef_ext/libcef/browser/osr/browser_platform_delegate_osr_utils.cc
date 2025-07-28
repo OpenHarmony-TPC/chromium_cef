@@ -146,6 +146,8 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
         view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeEmbedMode(
             cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->native_embed_mode_);
+        view->AsArkWebRenderWidgetHostViewOSRExt()->SetEnableCustomVideoPlayer(
+            cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->custom_video_player_enable_);
     }
     #endif
 
@@ -158,12 +160,21 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
     #endif
 }
 
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
 void CefBrowserPlatformDelegateOsrUtils::UpdateNativeEmbedMode(CefRenderWidgetHostViewOSR* view) {
     if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
         view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeEmbedMode(
             cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->native_embed_mode_);
     }
 }
+
+void CefBrowserPlatformDelegateOsrUtils::SetEnableCustomVideoPlayer(CefRenderWidgetHostViewOSR* view) {
+    if (view->AsArkWebRenderWidgetHostViewOSRExt()) {
+        view->AsArkWebRenderWidgetHostViewOSRExt()->SetEnableCustomVideoPlayer(
+            cefBrowserPlatformDelegateOsr->AsCefBrowserPlatformDelegateOsrExt()->custom_video_player_enable_);
+    }
+}
+#endif
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
 void CefBrowserPlatformDelegateOsrUtils::UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view) {

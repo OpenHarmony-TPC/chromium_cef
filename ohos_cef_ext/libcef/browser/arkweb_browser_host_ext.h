@@ -631,6 +631,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetNativeEmbedMode(bool flag) override { /*TODO: ARKWEB_SAME_LAYER*/
   }
   void SetNativeInnerWeb(bool isInnerWeb) override {}
+  void SetEnableCustomVideoPlayer(bool flag) override {}
 #endif
 
   void OnWebPreferencesChanged();

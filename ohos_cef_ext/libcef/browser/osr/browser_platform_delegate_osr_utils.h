@@ -25,7 +25,10 @@ public:
     void SetFocusAndUpdateStatus(bool setFocus, CefRenderWidgetHostViewOSR* view);
     CefImageImpl* CreateDragImage(const gfx::ImageSkia& image);
     void RestoreTextHandlesAfterDrag();
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
     void UpdateNativeEmbedMode(CefRenderWidgetHostViewOSR* view);
+    void SetEnableCustomVideoPlayer(CefRenderWidgetHostViewOSR* view);
+#endif
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
     void UpdateBypassVsyncCondition(CefRenderWidgetHostViewOSR* view);
 #endif

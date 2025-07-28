@@ -455,6 +455,10 @@ void CefBrowserPlatformDelegateOsrExt::SetNativeInnerWeb(bool isInnerWeb) {
     view->AsArkWebRenderWidgetHostViewOSRExt()->SetNativeInnerWeb(isInnerWeb);
   }
 }
+
+void CefBrowserPlatformDelegateOsrExt::SetEnableCustomVideoPlayer(bool flag){
+  custom_video_player_enable_ = flag;
+}
 #endif
 #if BUILDFLAG(ARKWEB_AI)
 void CefBrowserPlatformDelegateOsrExt::OnTextSelected(bool flag)

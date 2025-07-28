@@ -100,7 +100,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
       const blink::mojom::NativeEmbedTouchEventPtr& touchEvent) override;
   void OnNativeEmbedLifecycleChange(
       const ArkWebRenderHandlerExt::CefNativeEmbedData& info);
-  void SetGestureEventResult(bool result, bool stopPropagation);
+  void SetGestureEventResult(bool result, bool stopPropagation, int32_t fingerId);
   void SetNativeEmbedMode(bool flag);
   void OnNativeEmbedVisibilityChange(const std::string& embed_id,
                                      bool visibility);
@@ -109,6 +109,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void DidNativeEmbedMouseEvent(const blink::mojom::NativeEmbedMouseEventPtr& mouseEvent) override;
   void SetMouseEventResult(bool result, bool stopPropagation);
   void SetNativeInnerWeb(bool isInnerWeb);
+  void SetEnableCustomVideoPlayer(bool flag);
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
