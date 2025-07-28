@@ -80,11 +80,6 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
                                       int64_t firstContentfulPaintMs) {}
 
   ///
-  /// Called when received website security risk check result.
-  ///
-  virtual void OnSafeBrowsingCheckResult(int threat_type) {}
-
-  ///
   /// Called when the first meaningful paint rendering of web page.
   ///
   virtual void OnFirstMeaningfulPaint(

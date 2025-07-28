@@ -234,19 +234,6 @@ class CefClient : public virtual CefBaseRefCounted {
 
 #endif // ARKWEB_VIDEO_ASSISTANT
 
-  ///
-  /// Detect whether the website has security risks.
-  ///
-  /*--cef()--*/
-  virtual void HandleSafeBrowsingDetection(int detectMode,
-                                           int detectSwitch,
-                                           const CefString& url) {}
- 
-  ///
-  /// Set the callback for detecting whether the website has security risks.
-  ///
-  virtual void SetSafeBrowsingDetectionCallback(
-      CefRefPtr<CefSafeBrowsingDetectionCallback> callback) {}
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_
