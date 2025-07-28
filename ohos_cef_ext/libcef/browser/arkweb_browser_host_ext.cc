@@ -3162,6 +3162,82 @@ int ArkWebBrowserHostExtImpl::GetShrinkViewportHeight() {
 #endif
 }
 
+#if BUILDFLAG(ARKWEB_SAFEBROWSING)
+bool ArkWebBrowserHostExtImpl::IsSafeBrowsingEnabled() {
+  return settings_.is_safe_browsing_enable;
+}
+
+void ArkWebBrowserHostExtImpl::EnableSafeBrowsing(bool enable) {
+  if (settings_.is_safe_browsing_enable != enable) {
+    LOG(INFO) << "enable safe browsing" << enable;
+#ifdef OHOS_LOGGER_REPORT
+    LOG_FEEDBACK(INFO) << "enable safe browsing" << enable;
+#endif
+    settings_.is_safe_browsing_enable = enable;
+  }
+}
+
+void ArkWebBrowserHostExtImpl::EnableSafeBrowsingDetection(bool enable,
+                                                           bool strictMode) {
+  if (!GetWebContents()) {
+    return;
+  }
+  GetWebContents()->EnableSafeBrowsingDetection(enable, strictMode);
+}
+
+bool ArkWebBrowserHostExtImpl::IsSafeBrowsingDetectionDisabled() const {
+  if (!GetWebContents()) {
+    return true;
+  }
+
+  return GetWebContents()->IsSafeBrowsingDetectionDisabled();
+}
+
+void ArkWebBrowserHostExtImpl::HandleSafeBrowsingDetection(
+    const std::string& url) {
+  if (client_) {
+      client_->HandleSafeBrowsingDetection(GetSafeBrowsingDetectionMode(),
+                                           GetSafeBrowsingDetectionSwitch(),
+                                           CefString(url));
+  }
+}
+
+int ArkWebBrowserHostExtImpl::GetSafeBrowsingDetectionMode() const {
+  if (!GetWebContents()) {
+    return 0;
+  }
+
+  return GetWebContents()->IsSafeBrowsingDetectionStrict() ? 1 : 0;
+}
+
+enum DetectSwitch {
+  DETECT_SWITCH_DEFAULT = 0,
+  DETECT_SWITCH_ENABLE = 1,
+  DETECT_SWITCH_DISABLE = 2
+};
+
+int ArkWebBrowserHostExtImpl::GetSafeBrowsingDetectionSwitch() const {
+  if (!GetWebContents()) {
+    return DETECT_SWITCH_DEFAULT;
+  }
+
+  if (!GetWebContents()->IsSafeBrowsingDetectionConfig()) {
+    return DETECT_SWITCH_DEFAULT;
+  }
+
+  return GetWebContents()->IsSafeBrowsingDetectionDisabled()
+             ? DETECT_SWITCH_DISABLE
+             : DETECT_SWITCH_ENABLE;
+}
+
+void ArkWebBrowserHostExtImpl::SetSafeBrowsingDetectionCallback(
+    CefRefPtr<CefSafeBrowsingDetectionCallback> callback) {
+  if (client_) {
+      client_->SetSafeBrowsingDetectionCallback(callback);
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_SAFEBROWSING)
+
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 bool ArkWebBrowserHostExtImpl::CanStoreWebArchive() {
   if (!CEF_CURRENTLY_ON_UIT()) {
