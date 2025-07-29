@@ -767,8 +767,8 @@ void ContentSettingsContentSettingClearFunction::ClearCallback(
   }
 
   if (error) {
-    LOG(INFO) << "ContentSettingsContentSetting ClearCallback error";
     std::string errorMessage = error ? error : "get error";
+    LOG(INFO) << "ContentSettingsContentSetting ClearCallback error" << errorMessage;
     function->Respond(function->Error(errorMessage));
   } else {
     LOG(INFO) << "ContentSettingsContentSettingClearFunction no error";
