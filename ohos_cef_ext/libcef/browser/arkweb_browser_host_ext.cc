@@ -3705,3 +3705,25 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
                                    this, callback));
   }
 }
+
+#if BUILDFLAG(ARKWEB_BGTASK)
+void ArkWebBrowserHostExtImpl::OnBrowserForeground() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  LOG(INFO) << "ArkWebBrowserHostExtImpl::OnBrowserForeground";
+  web_contents->OnBrowserForeground();
+}
+
+void ArkWebBrowserHostExtImpl::OnBrowserBackground() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  LOG(INFO) << "ArkWebBrowserHostExtImpl::OnBrowserBackground";
+  web_contents->OnBrowserBackground();
+}
+#endif

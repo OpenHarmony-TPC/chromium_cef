@@ -1348,6 +1348,20 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void RunJavaScriptInFrames(const std::string& jsString, FrameInfos rootFrame,
                                      bool recursive, IsolatedWorld world,
                                      CefRefPtr<CefJavaScriptResultCallback> callback) = 0;
+
+#if BUILDFLAG(ARKWEB_BGTASK)
+  ///
+  /// Notify browser is foreground.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserForeground() = 0;
+
+  ///
+  /// Notify browser is background.
+  ///
+  /*--cef()--*/
+  virtual void OnBrowserBackground() = 0;
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
