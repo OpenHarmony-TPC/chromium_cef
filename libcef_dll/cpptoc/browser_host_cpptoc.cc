@@ -33,6 +33,10 @@
 #include "libcef_dll/transfer_util.h"
 #include "libcef_dll/ctocpp/screen_capture_callback_ctocpp.h"
 
+namespace {
+int ARKWEB_INIT_ERROR = 17100001;
+}
+
 // GLOBAL FUNCTIONS - Body may be edited by hand.
 
 CEF_EXPORT int cef_browser_host_create_browser(
@@ -1825,6 +1829,40 @@ browser_host_send_pip_event(struct _cef_browser_host_t* self,
     delegate_id, child_id, frame_routing_id, event);
 }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+int CEF_CALLBACK
+browser_host_prerender_page(struct _cef_browser_host_t* self,
+                            const std::string& url,
+                            const std::string& additionalHeaders) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return ARKWEB_INIT_ERROR;
+  }
+
+  // Execute
+  return CefBrowserHostCppToC::Get(self)->PrerenderPage(url, additionalHeaders);
+}
+ 
+void CEF_CALLBACK
+browser_host_cancel_all_prerendering(struct _cef_browser_host_t* self) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->CancelAllPrerendering();
+}
+#endif
+
 }  // namespace
 
 // CONSTRUCTOR - Do not edit by hand.
@@ -1920,6 +1958,8 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->register_screen_capture_delegate_listener =
       browser_host_register_screen_capture_delegate_listener;
   GetStruct()->custom_web_media_player = browser_host_custom_web_media_player;
+  GetStruct()->prerender_page = browser_host_prerender_page;
+  GetStruct()->cancel_all_prerendering = browser_host_cancel_all_prerendering;
 }
 
 // DESTRUCTOR - Do not edit by hand.

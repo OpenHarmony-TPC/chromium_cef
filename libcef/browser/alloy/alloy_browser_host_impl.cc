@@ -1417,11 +1417,13 @@ bool AlloyBrowserHostImpl::IsBackForwardCacheSupported(
 
 content::PreloadingEligibility AlloyBrowserHostImpl::IsPrerender2Supported(
     content::WebContents& web_contents) {
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
-#else
-  return content::PreloadingEligibility::kEligible;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNwebEx)) {
+    return content::PreloadingEligibility::kEligible;
+  }
 #endif
+  return content::PreloadingEligibility::kPreloadingUnsupportedByWebContents;
 }
 
 void AlloyBrowserHostImpl::DraggableRegionsChanged(

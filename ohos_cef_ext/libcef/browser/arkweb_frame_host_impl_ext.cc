@@ -570,7 +570,7 @@ void ArkwebFrameHostExtImpl::ShouldOverrideUrlLoading(
     if (auto handler = client->GetRequestHandler()) {
       override = handler->AsCefRequestHandlerExt()->ShouldOverrideUrlLoading(
           browser_host.get(), url, request_method, user_gesture, is_redirect,
-          is_outermost_main_frame);
+          is_outermost_main_frame, "");
     }
   }
   std::move(callback).Run(override);

@@ -223,6 +223,21 @@ class CefBrowser : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void DispatchBeforeUnload() = 0;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender Page.
+  ///
+  /*--cef()--*/
+  virtual int PrerenderPage(const CefString& url,
+                            const CefString& additional_headers) = 0;
+ 
+  ///
+  /// Cancel All Prerendering.
+  ///
+  /*--cef()--*/
+  virtual void CancelAllPrerendering() = 0;
+#endif
 };
 
 ///
@@ -1111,6 +1126,20 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
                             int child_id,
                             int frame_routing_id,
                             int event) = 0;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender Page.
+  ///
+  /*--cef()--*/
+  virtual int PrerenderPage(const CefString& url,
+                            const CefString& additional_headers) = 0;
+  ///
+  /// Cancel All Prerendering.
+  ///
+  /*--cef()--*/
+  virtual void CancelAllPrerendering() = 0;
+#endif
 };
 
 #include "ohos_cef_ext/include/arkweb_browser_ext.h"

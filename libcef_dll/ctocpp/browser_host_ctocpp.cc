@@ -32,6 +32,11 @@
 #include "libcef_dll/shutdown_checker.h"
 #include "libcef_dll/transfer_util.h"
 
+namespace {
+int ARKWEB_INIT_ERROR = 17100001;
+}
+
+
 // STATIC METHODS - Body may be edited by hand.
 
 NO_SANITIZE("cfi-icall")
@@ -1548,6 +1553,37 @@ void CefBrowserHostCToCpp::CustomWebMediaPlayer(bool enable) {
   _struct->custom_web_media_player(_struct, enable);
 }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+NO_SANITIZE("cfi-icall")
+int CefBrowserHostCToCpp::PrerenderPage(const CefString& url,
+                                        const CefString& additional_headers) {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, prerender_page)) {
+    return ARKWEB_INIT_ERROR;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  return _struct->prerender_page(_struct, url, additional_headers);
+}
+ 
+NO_SANITIZE("cfi-icall") void CefBrowserHostCToCpp::CancelAllPrerendering() {
+  shutdown_checker::AssertNotShutdown();
+
+  cef_browser_host_t* _struct = GetStruct();
+  if (CEF_MEMBER_MISSING(_struct, cancel_all_prerendering)) {
+    return;
+  }
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  // Execute
+  _struct->cancel_all_prerendering(_struct);
+}
+#endif
 
 NO_SANITIZE("cfi-icall")
 void CefBrowserHostCToCpp::SetPipNativeWindow(int delegate_id,

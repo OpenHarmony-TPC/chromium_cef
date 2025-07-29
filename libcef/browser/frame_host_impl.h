@@ -141,6 +141,9 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // this frame is currenly detached. Do not directly compare RFH pointers; use
   // IsSameFrame() instead. Must be called on the UI thread.
   content::RenderFrameHost* GetRenderFrameHost() const;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  content::RenderFrameHost* GetRenderFrameHostFromGlobalId() const;
+#endif
 
   // Returns true if this frame and |frame_host| represent the same frame.
   // Frames are considered the same if they share the same frame token value,
@@ -240,6 +243,9 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
 
   // The following members are only accessed on the UI thread.
   raw_ptr<content::RenderFrameHost> render_frame_host_ = nullptr;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  content::GlobalRenderFrameHostId rfh_global_id_;
+#endif
 
   std::queue<std::pair<std::string, RenderFrameAction>>
       queued_renderer_actions_;

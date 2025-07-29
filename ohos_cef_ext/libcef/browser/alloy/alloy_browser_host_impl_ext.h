@@ -176,6 +176,11 @@ public:
   void OnShareFile(const std::string& filePath, const std::string& utdTypeId) override;
   void NavigationStateChanged(content::WebContents* source,
                               content::InvalidateTypes changed_flags) override;
+
+  bool ShouldAllowPartialParamMismatchOfPrerender2(
+      content::NavigationHandle& navigation_handle) override;
+  content::NavigationController::UserAgentOverrideOption
+      ShouldOverrideUserAgentForPrerender2() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)

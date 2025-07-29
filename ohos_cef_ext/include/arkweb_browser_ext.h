@@ -515,6 +515,19 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void PutNetworkAvailable(bool available) = 0;
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Prerender the page includes loading subresources and excute javascript.
+  ///
+  virtual int PrerenderPage(const CefString& url,
+                    const CefString& additional_headers) = 0;
+
+  ///
+  /// Cancel All Prerendered Pages.
+  ///
+  virtual void CancelAllPrerendering() = 0;
+#endif
+
   ///
   /// Remove web cache
   ///

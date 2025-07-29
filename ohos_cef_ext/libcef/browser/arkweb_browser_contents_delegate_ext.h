@@ -45,6 +45,8 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
                               content::InvalidateTypes changed_flags) override;
   void OnLoadStarted(CefRefPtr<CefFrame> frame, const CefString& url);
   void OnLoadFinished(CefRefPtr<CefFrame> frame, const CefString& url);
+
+  static bool IsPrerendering(const CefRefPtr<CefFrameHostImpl> frame);
 #endif
 
 #if BUILDFLAG(ARKWEB_WPT)

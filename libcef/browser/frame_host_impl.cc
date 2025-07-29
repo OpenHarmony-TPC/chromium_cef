@@ -28,6 +28,11 @@
 #include "libcef/common/arkweb_request_impl_ext.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace {
 
 void StringVisitCallback(CefRefPtr<CefStringVisitor> visitor,
@@ -105,7 +110,12 @@ CefFrameHostImpl::CefFrameHostImpl(scoped_refptr<CefBrowserInfo> browser_info,
           is_main_frame_
               ? std::optional<content::GlobalRenderFrameHostToken>()
               : render_frame_host->GetParent()->GetGlobalFrameToken()),
-      render_frame_host_(render_frame_host) {
+      render_frame_host_(render_frame_host)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+,
+      rfh_global_id_(render_frame_host->GetGlobalId())
+#endif
+      {
   DCHECK(browser_info_);
 }
 
@@ -627,6 +637,9 @@ void CefFrameHostImpl::MaybeReAttach(
   }
 
   render_frame_host_ = render_frame_host;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  rfh_global_id_ = render_frame_host->GetGlobalId();
+#endif
   RefreshAttributes();
 
   // We expect a reconnect to be triggered via FrameAttached().

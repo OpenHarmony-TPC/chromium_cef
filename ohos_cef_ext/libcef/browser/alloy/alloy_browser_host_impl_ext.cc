@@ -1129,6 +1129,30 @@ void AlloyBrowserHostImplExt::NavigationStateChanged(
     content::InvalidateTypes changed_flags) {
   contents_delegate_.NavigationStateChanged(source, changed_flags);
 }
+
+content::NavigationController::UserAgentOverrideOption
+AlloyBrowserHostImplExt::ShouldOverrideUserAgentForPrerender2() {
+  // For WebView, always use the user agent override, which is set every time
+  // the user agent in AwSettings is modified.
+  return content::NavigationController::UA_OVERRIDE_TRUE;
+}
+
+bool AlloyBrowserHostImplExt::ShouldAllowPartialParamMismatchOfPrerender2(
+    content::NavigationHandle& navigation_handle) {
+  // We relax initiator checks on WebView first, but continue to discuss.
+  //
+  // TODO(https://crbug.com/340416082): Relax initiator check for all platforms.
+
+  // `ui::PAGE_TRANSITION_FROM_API` bit distinguishes that the activation
+  // navigation is triggered by `WebView.loadUrl()`.
+  bool ret =
+      navigation_handle.GetPageTransition() & ui::PAGE_TRANSITION_FROM_API;
+  if (ret) {
+    CHECK(!navigation_handle.GetInitiatorFrameToken().has_value());
+    CHECK(!navigation_handle.GetInitiatorOrigin().has_value());
+  }
+  return ret;
+}
 #endif
 
 
