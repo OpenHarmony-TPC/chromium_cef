@@ -15,6 +15,11 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "content/public/browser/shared_cors_origin_access_list.h"
+#include "services/network/public/cpp/cors/origin_access_list.h"
+#endif
+
 namespace net_service::cookie_helper {
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
@@ -52,6 +57,54 @@ bool CanSaveOrLoadCookies(
   const ContentSettingPatternSource* match =
       (entry == cookie_settings.end() ? nullptr : &*entry);
   return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+// Logic here is the same as in
+// network::URLLoader::ShouldForceIgnoreSiteForCookies.
+bool ShouldForceIgnoreSiteForCookies(
+    const CefBrowserContext::Getter& browser_context_getter,
+    const network::ResourceRequest& request) {
+  auto cef_browser_context = GetBrowserContext(browser_context_getter);
+  auto browser_context =
+      cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
+  if (!browser_context) {
+    LOG(ERROR) << "Get browser_context failed.";
+    return false;
+  }
+
+  const auto& origin_access_list =
+      browser_context->GetSharedCorsOriginAccessList()->GetOriginAccessList();
+
+  if (request.request_initiator.has_value() &&
+      network::cors::OriginAccessList::AccessState::kAllowed ==
+          origin_access_list.CheckAccessState(request.request_initiator.value(),
+                                              request.url)) {
+    return true;
+  }
+
+  url::Origin site_origin =
+      url::Origin::Create(request.site_for_cookies.RepresentativeUrl());
+  if (!site_origin.opaque() && request.request_initiator.has_value()) {
+    bool site_can_access_target =
+        network::cors::OriginAccessList::AccessState::kAllowed ==
+        origin_access_list.CheckAccessState(site_origin, request.url);
+    bool site_can_access_initiator =
+        network::cors::OriginAccessList::AccessState::kAllowed ==
+        origin_access_list.CheckAccessState(
+            site_origin, request.request_initiator->GetURL());
+    net::SiteForCookies site_of_initiator =
+        net::SiteForCookies::FromOrigin(request.request_initiator.value());
+    bool are_initiator_and_target_same_site =
+        site_of_initiator.IsFirstParty(request.url);
+    if (site_can_access_initiator && site_can_access_target &&
+        are_initiator_and_target_same_site) {
+      return true;
+    }
+  }
+
+  return false;
 }
 #endif
 

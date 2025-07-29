@@ -20,7 +20,7 @@
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST) || BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "cef/ohos_cef_ext/libcef/browser/net_service/arkweb_cookie_helper_ext.h"
 #endif
 #if BUILDFLAG(ARKWEB_COOKIE)
@@ -48,6 +48,10 @@ network::mojom::CookieManager* GetCookieManager(
 
 net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+                                    const CefBrowserContext::Getter&
+                                        browser_context_getter,
+#endif
                                     bool for_loading_cookies,
                                     const std::optional<GURL> new_url) {
 #else
@@ -62,6 +66,13 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
        || request.site_for_cookies.scheme() == content::kArkWebUIScheme
 #endif
       );
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  bool should_ignore_site_for_cookies =
+      ShouldForceIgnoreSiteForCookies(browser_context_getter, request);
+  should_treat_as_first_party |= should_ignore_site_for_cookies;
+#endif
+
   bool is_main_frame_navigation =
       request.trusted_params &&
       request.trusted_params->isolation_info.request_type() ==
@@ -309,7 +320,12 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
   if (cookie_manager && cookie_manager->SupportAsyncThreadCookieLoad()) {
     cookie_manager->LoadCookiesOnAsyncThread(
         new_url.value_or(request.url),
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+        GetCookieOptions(request, browser_context_getter,
+                         /*for_loading_cookies=*/true, new_url),
+#else
         GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+#endif
         std::move(partition_key_collection),
         base::BindOnce(GetCookieListCallback, allow_cookie_callback,
                        std::move(done_callback)));
@@ -322,7 +338,12 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
           LoadCookiesOnUIThread, browser_context_getter,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
           new_url.value_or(request.url),
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+          GetCookieOptions(request, browser_context_getter,
+                           /*for_loading_cookies=*/true, new_url),
+#else
           GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
+#endif
 #else
           request.url, GetCookieOptions(request, /*for_loading_cookies=*/true),
 #endif
@@ -395,7 +416,12 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
         base::BindOnce(
             SaveCookiesOnUIThread, browser_context_getter, request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+            GetCookieOptions(request, browser_context_getter,
+                             /*for_loading_cookies=*/false, {}),
+#else
             GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+#endif
 #else
             GetCookieOptions(request, /*for_loading_cookies=*/false),
 #endif
