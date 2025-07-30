@@ -732,6 +732,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                              bool recursive, IsolatedWorld world,
                              CefRefPtr<CefJavaScriptResultCallback> callback) override;
 
+#if BUILDFLAG(ARKWEB_BGTASK)
+  void OnBrowserForeground() override;
+  void OnBrowserBackground() override;
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
