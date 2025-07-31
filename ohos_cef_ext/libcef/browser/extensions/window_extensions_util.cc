@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "base/logging.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
+
+#include "base/logging.h"
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
+#include "libcef/browser/alloy/alloy_browser_host_impl_ext.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
 
@@ -70,7 +72,8 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
   if (!webcontents) {
     return default_window_id;
   }
-  int32_t tab_id = webcontents->ExtensionGetTabId();
+
+  int32_t tab_id = ExtensionTabUtil::GetTabId(webcontents);
   if (tab_id > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
@@ -79,7 +82,18 @@ int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_wi
     }
     return tab->windowId;
   } else {
-    int nweb_id = webcontents->GetNWebId();
+    int nweb_id = -1;
+
+    auto browser = AlloyBrowserHostImpl::GetBrowserForContents(webcontents);
+    if (!browser) {
+      return default_window_id;
+    }
+
+    nweb_id = browser->AsAlloyBrowserHostImplExt()->GetNWebId();
+    if (nweb_id < 0) {
+      return default_window_id;
+    }
+
     int window_id =
         extensions::CefExtensionWindowIdManager::GetWindowId(nweb_id);
     if (window_id < 0) {
