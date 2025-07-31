@@ -86,6 +86,7 @@ public:
   void OnNativeEmbedVisibilityChange(const std::string& embed_id,
                                      bool visibility) override;
   void SetNativeInnerWeb(bool isInnerWeb) override;
+  void SetEnableCustomVideoPlayer(bool flag) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -194,6 +195,7 @@ protected:
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   bool native_embed_mode_ = false;
   bool isInnerWeb_ = false;
+  bool custom_video_player_enable_ = false;
 #endif
 };
  

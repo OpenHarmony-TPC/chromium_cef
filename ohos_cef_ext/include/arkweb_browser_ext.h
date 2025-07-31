@@ -1260,6 +1260,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /*--cef()--*/
   virtual void SetNativeInnerWeb(bool isInnerWeb) = 0;
+
+  ///
+  /// Set Enable Custom Video Player
+  ///
+  /*--cef()--*/
+  virtual void SetEnableCustomVideoPlayer(bool flag) = 0;
 #endif
   ///
   /// request autofill from IMF event.

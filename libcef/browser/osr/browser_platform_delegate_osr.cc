@@ -156,6 +156,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
   }
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
   cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+  cef_browser_platform_delegate_osr_utils_->SetEnableCustomVideoPlayer(view);
 #endif
   CefMouseEvent mouseEvent = event;
   cef_browser_platform_delegate_osr_utils_->AdjustMouseClickCoordinates(view, mouseEvent);

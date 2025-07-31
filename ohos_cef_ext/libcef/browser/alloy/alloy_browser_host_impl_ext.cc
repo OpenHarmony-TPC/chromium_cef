@@ -530,6 +530,12 @@ void AlloyBrowserHostImplExt::SetNativeInnerWeb(bool isInnerWeb) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetNativeInnerWeb(isInnerWeb);
   }
 }
+
+void AlloyBrowserHostImplExt::SetEnableCustomVideoPlayer(bool flag) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetEnableCustomVideoPlayer(flag);
+  }
+}
 #endif
 
 

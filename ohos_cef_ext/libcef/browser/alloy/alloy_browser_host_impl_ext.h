@@ -59,6 +59,7 @@ public:
   void OnLayerRectVisibilityChange(
     const std::string& embed_id,
     bool visibility) override;
+  void SetEnableCustomVideoPlayer(bool flag) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_FOCUS)

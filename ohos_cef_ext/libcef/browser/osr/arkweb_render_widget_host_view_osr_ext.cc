@@ -140,17 +140,17 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  public:
   using CallbackType = blink::InputHandlerProxyUtils::GestureEventCallback;
 
-  CefGestureEventCallbackImpl(CallbackType callback)
-      : callback_(std::move(callback)) {}
+  CefGestureEventCallbackImpl(CallbackType callback, int32_t fingerId)
+      : callback_(std::move(callback)), fingerId_(fingerId) {}
   ~CefGestureEventCallbackImpl() override {
     if (!callback_.is_null()) {
       // The callback is still pending. Cancel it now.
       if (CEF_CURRENTLY_ON_UIT()) {
-        CancelNow(std::move(callback_));
+        CancelNow(std::move(callback_), fingerId_);
       } else {
         CEF_POST_TASK(CEF_UIT,
                       base::BindOnce(&CefGestureEventCallbackImpl::CancelNow,
-                                     std::move(callback_)));
+                                     std::move(callback_), fingerId_));
       }
     }
   }
@@ -158,7 +158,7 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
   void ContinueTask(bool user_input, bool stopPropagation) override {
     if (CEF_CURRENTLY_ON_UIT()) {
       if (!callback_.is_null()) {
-        std::move(callback_).Run(user_input, stopPropagation);
+        std::move(callback_).Run(user_input, stopPropagation, fingerId_);
       }
     } else {
       CEF_POST_TASK(CEF_UIT,
@@ -170,12 +170,13 @@ class CefGestureEventCallbackImpl : public CefGestureEventCallback {
   [[nodiscard]] CallbackType Disconnect() { return std::move(callback_); }
 
  private:
-  static void CancelNow(CallbackType callback) {
+  static void CancelNow(CallbackType callback, int32_t fingerId) {
     CEF_REQUIRE_UIT();
-    std::move(callback).Run(false, true);
+    std::move(callback).Run(false, true, fingerId);
   }
 
   CallbackType callback_;
+  int32_t fingerId_ = 0;
 
   IMPLEMENT_REFCOUNTING(CefGestureEventCallbackImpl);
 };
@@ -1839,11 +1840,16 @@ void ArkWebRenderWidgetHostViewOSRExt::DidNativeEmbedEvent(
             touchEvent->type),
         touchEvent->offsetX,
         touchEvent->offsetY};
+    auto type = static_cast<ArkWebRenderHandlerExt::CefEmbedTouchType>(
+        touchEvent->type);
     auto new_callback =
         base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult,
                        weak_ptr_factory_.GetWeakPtr());
+    if (type != ArkWebRenderHandlerExt::CefEmbedTouchType::DOWN) {
+      new_callback.Reset();
+    }
     CefRefPtr<CefGestureEventCallbackImpl> callbackPtr(
-        new CefGestureEventCallbackImpl(std::move(new_callback)));
+        new CefGestureEventCallbackImpl(std::move(new_callback), touchEvent->id));
     handler->OnNativeEmbedGestureEvent(browser_impl_.get(), event,
                                        callbackPtr.get());
   }
@@ -1890,17 +1896,29 @@ void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedLifecycleChange(
 
 void ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult(
     bool result,
-    bool stopPropagation) {
-  if (!render_widget_host_) {
+    bool stopPropagation,
+    int32_t fingerId) {
+  if (!render_widget_host_ || !render_widget_host_->input_router()) {
     return;
   }
   render_widget_host_->input_router()->SetGestureEventResult(result,
-                                                             stopPropagation);
+                                                             stopPropagation,
+                                                             fingerId);
+  if (!browser_impl_ || browser_impl_->client()) {
+    return;
+  }
   CefRefPtr<ArkWebRenderHandlerExt> handler =
       browser_impl_->client()->GetRenderHandler();
   if (handler) {
     handler->SetGestureEventResult(result);
   }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::SetEnableCustomVideoPlayer(bool flag) {
+  if (!render_widget_host_ || !render_widget_host_->input_router()) {
+    return;
+  }
+  render_widget_host_->input_router()->SetEnableCustomVideoPlayer(flag);
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::SetMouseEventResult(bool result, bool stopPropagation) {
