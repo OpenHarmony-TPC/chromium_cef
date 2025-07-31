@@ -1152,11 +1152,11 @@ source_set("libcef_static") {
   }
 
   if (defined(arkweb_notification) && arkweb_notification) {
-    sources += [ 
+    sources += [
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.cc",
       "ohos_cef_ext/libcef/browser/permission/alloy_access_query.h",
     ]
-  } 
+  }
 
   if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
     sources += [
@@ -1187,6 +1187,9 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/downloads/extension_downloads_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/topSites/top_sites_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/history_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",
