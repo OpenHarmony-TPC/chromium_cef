@@ -796,11 +796,16 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
       case content::PIP_STATE_EXIT:
         observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
         observer->GetMediaPlayerRemote(it)->RequestPause(false);
+        if (web_contents_impl && web_contents_impl->AsWebContentsImplExt()) {
+          web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+        }
         break;
       case content::PIP_STATE_RESTORE:
         observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
         observer->GetMediaPlayerRemote(it)->RequestPlay();
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+        if (web_contents_impl && web_contents_impl->AsWebContentsImplExt()) {
+          web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+        }
         break;
       case content::PIP_STATE_RESIZE:
         observer->GetMediaPlayerRemote(it)->NotifyPipResize();
