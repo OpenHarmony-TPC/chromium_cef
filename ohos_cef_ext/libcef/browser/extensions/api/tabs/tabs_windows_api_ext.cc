@@ -112,9 +112,4 @@ void TabsWindowsAPI::TabReplaced(content::WebContents* contents,
   tabs_event_router()->DispatchTabReplacedEvent(contents, addedTabId, removedTabId);
 }
 
-void TabsWindowsAPI::TabZoomChange(content::WebContents* contents,
-                                   std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {
-  tabs_event_router()->DispatchTabZoomChangeEvent(contents, std::move(tabZoomChangeInfo));
-}
-
 }  // namespace extensions

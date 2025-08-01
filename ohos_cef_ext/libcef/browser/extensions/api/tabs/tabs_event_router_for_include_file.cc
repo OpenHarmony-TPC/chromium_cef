@@ -72,7 +72,3 @@ void DispatchTabReplacedEvent(
     content::WebContents* contents,
     int32_t addedTabId,
     int32_t removedTabId);
-
-void DispatchTabZoomChangeEvent(
-    content::WebContents* contents,
-    std::unique_ptr<NWebExtensionTabZoomChangeInfo> tab_zoom_change_info);

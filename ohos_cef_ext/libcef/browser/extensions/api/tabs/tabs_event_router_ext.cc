@@ -25,6 +25,7 @@
 
 using base::Value;
 using content::WebContents;
+using zoom::ZoomController;
 
 namespace extensions {
 
@@ -276,6 +277,22 @@ bool WillDispatchTabUpdatedEventWithTab(
   return true;
 }
 
+bool IsTabChangeInfoHasValue(NWebExtensionTabChangeInfo changeInfo) {
+  if (changeInfo.audible.has_value() ||
+      changeInfo.autoDiscardable.has_value() ||
+      changeInfo.discarded.has_value() ||
+      changeInfo.favIconUrl.has_value() ||
+      changeInfo.groupId.has_value() ||
+      changeInfo.mutedInfo.has_value() ||
+      changeInfo.pinned.has_value() ||
+      changeInfo.status.has_value() ||
+      changeInfo.title.has_value() ||
+      changeInfo.url.has_value()) {
+    return true;
+  }
+  return false;
+}
+
 }  // namespace
 
 void TabsEventRouter::DispatchTabUpdatedEvent(
@@ -349,6 +366,12 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
 
   NWebExtensionTabChangeInfo change_info(*changeInfo);
   NWebExtensionTab extension_tab(*tab);
+
+  if (!IsTabChangeInfoHasValue(change_info)) {
+    zoom_scoped_observations_.AddObservation(
+        ZoomController::FromWebContents(contents));
+        return;
+  }
 
   auto event = std::make_unique<Event>(
       events::TABS_ON_UPDATED, api::tabs::OnUpdated::kEventName,
@@ -499,21 +522,6 @@ void TabsEventRouter::DispatchTabReplacedEvent(
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
   DispatchEvent(profile, events::TABS_ON_REPLACED,
                 api::tabs::OnReplaced::kEventName,
-                std::move(args),
-                EventRouter::USER_GESTURE_UNKNOWN);
-}
-
-void TabsEventRouter::DispatchTabZoomChangeEvent(
-    content::WebContents* contents,
-    std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {
-  DCHECK(contents);
-  base::Value::List args;
-
-  args.Append(extensions::GetTabZoomChangeValue(*tabZoomChangeInfo));
-
-  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
-  DispatchEvent(profile, events::TABS_ON_ZOOM_CHANGE,
-                api::tabs::OnZoomChange::kEventName,
                 std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
 }

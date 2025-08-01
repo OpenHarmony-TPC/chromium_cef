@@ -723,9 +723,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
   virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override {}
 
-  virtual void WebExtensionTabZoomChange(
-      const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override {}
-
   virtual void WebExtensionSetViewType(int32_t type) override {}
 #endif
 

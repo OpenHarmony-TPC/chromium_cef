@@ -1215,12 +1215,6 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) {}
 
   ///
-  /// Receiving the tab zoom change notification.
-  ///
-  /*--cef()--*/
-  virtual void WebExtensionTabZoomChange(const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {}
-
-  ///
   /// Receiving the view updated type.
   ///
   /*--cef()--*/

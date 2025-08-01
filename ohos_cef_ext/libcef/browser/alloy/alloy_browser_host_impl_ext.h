@@ -156,9 +156,6 @@ public:
 
   void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override;
 
-  void WebExtensionTabZoomChange(
-      const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo)  override;
-
   static void WebExtensionActionClicked(
       std::string extensionId,
       const NWebExtensionTab* tab);
