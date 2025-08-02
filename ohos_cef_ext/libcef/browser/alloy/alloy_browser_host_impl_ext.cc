@@ -1005,20 +1005,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabReplaced(int32_t addedTabId, int32_
       ->TabReplaced(web_contents, addedTabId, removedTabId);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabZoomChange(
-    const std::unique_ptr<NWebExtensionTabZoomChangeInfo> tabZoomChangeInfo) {
-  content::BrowserContext* browser_context = nullptr;
-  content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabZoomChange", browser_context, web_contents)) {
-    return;
-  }
-
-  std::unique_ptr<NWebExtensionTabZoomChangeInfo> params
-      = std::make_unique<NWebExtensionTabZoomChangeInfo>(*tabZoomChangeInfo);
-  extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabZoomChange(web_contents, std::move(params));
-}
-
 content::BrowserContext* GetGlobalBrowserContext() {
   CefRefPtr<CefRequestContext> request_context = CefRequestContext::GetGlobalContext();
   if (!request_context) {

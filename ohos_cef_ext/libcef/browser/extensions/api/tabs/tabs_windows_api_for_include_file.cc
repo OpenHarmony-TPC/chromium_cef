@@ -59,6 +59,3 @@ void TabMoved(content::WebContents* web_contents,
 void TabReplaced(content::WebContents* web_contents,
                  int32_t added_tab_id,
                  int32_t removed_tab_id);
-
-void TabZoomChange(content::WebContents* web_contents,
-                   std::unique_ptr<NWebExtensionTabZoomChangeInfo> tab_zoom_change_info);
