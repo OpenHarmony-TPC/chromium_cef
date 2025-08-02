@@ -172,8 +172,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::SetupCompositor(
   if (render_widget_host_impl) {
     render_widget_host_impl->SetCompositorForFlingScheduler(compositor);
   }
-  LOG(INFO) << "CefRenderWidgetHostViewOSR::ShowWithVisibility compositor"
-            << compositor;
+  LOG(INFO) << "CefRenderWidgetHostViewOSR::ShowWithVisibility compositor";
 }
 
 void ArkWebRenderWidgetHostViewOSRUtils::HandleInvalidLocalSurfaceId() {
