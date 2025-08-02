@@ -370,7 +370,7 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   if (!IsTabChangeInfoHasValue(change_info)) {
     zoom_scoped_observations_.AddObservation(
         ZoomController::FromWebContents(contents));
-        return;
+    return;
   }
 
   auto event = std::make_unique<Event>(
