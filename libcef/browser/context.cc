@@ -636,7 +636,7 @@ bool CefContext::HasObserver(Observer* observer) const {
 
 void CefContext::OnContextInitialized() {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "CefContext::OnContextInitialized, application_" << application_;
+  LOG(INFO) << "CefContext::OnContextInitialized";
   if (application_) {
     // Notify the handler after the global browser context has initialized.
     CefRefPtr<CefRequestContext> request_context =
