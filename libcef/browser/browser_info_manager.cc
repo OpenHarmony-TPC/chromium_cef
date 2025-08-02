@@ -374,9 +374,6 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   DCHECK(frame_util::IsValidGlobalToken(global_token));
   DCHECK(callback);
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  LOG(INFO) << "on get new browser info " << frame_util::GetFrameDebugString(global_token);
-#endif
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
   base::AutoLock lock_scope(browser_info_lock_);
