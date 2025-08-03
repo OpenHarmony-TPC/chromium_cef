@@ -1147,7 +1147,8 @@ void ArkWebRenderWidgetHostViewOSRExt::
 #endif
 
   if (metadata.selection.start != selection_start_ ||
-      metadata.selection.end != selection_end_) {
+      metadata.selection.end != selection_end_ ||
+      metadata.selection.start.type() == gfx::SelectionBound::CENTER) {
     selection_start_ = metadata.selection.start;
     selection_end_ = metadata.selection.end;
     selection_controller_client_->UpdateClientSelectionBounds(selection_start_,
