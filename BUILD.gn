@@ -1188,6 +1188,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/permissions/permissions_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/topSites/top_sites_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/history/history_api_ext.cc",
+      "ohos_cef_ext/libcef/browser/extensions/api/browsing_data/browsing_data_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
