@@ -57,6 +57,7 @@
 #include "content/public/browser/web_contents.h"
 #include "content/public/common/url_constants.h"
 #include "extensions/common/constants.h"
+#include "extensions/browser/extension_prefs.h"
 #include "libcef/browser/alloy/render_process_state_handler.h"
 #include "net/base/net_errors.h"
 #include "third_party/blink/public/common/frame/frame_owner_element_type.h"
@@ -149,6 +150,7 @@ using content::KeyboardEventProcessingResult;
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/media_player_controller_impl.h"
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/video_assistant/video_assistant.h"
 #include "ohos_nweb_ex/core/extension/nweb_extension_tabs_dispatcher.h"
+#include "ohos_nweb_ex/core/extension/nweb_extension_manager_dispatcher.h"
 #endif  // ARKWEB_NWEB_EX
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
@@ -1037,6 +1039,27 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
                                                      tab);
 }
 
+void AlloyBrowserHostImplExt::UpdatePinnedExtensionIds(
+    content::BrowserContext* browser_context,
+    std::string extensionId,
+    bool isPinned) {
+  auto storedPinnedIds =
+      extensions::ExtensionPrefs::Get(browser_context)->GetPinnedExtensions();
+ 
+  if (isPinned) {
+    if (!base::Contains(storedPinnedIds, extensionId)) {
+      storedPinnedIds.push_back(extensionId);
+    }
+  } else {
+    auto iter = base::ranges::find(storedPinnedIds, extensionId);
+    if (iter != storedPinnedIds.end()) {
+      storedPinnedIds.erase(iter);
+    }
+  }
+ 
+  extensions::ExtensionPrefs::Get(browser_context)->SetPinnedExtensions(storedPinnedIds);
+}
+
 void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
     std::string extensionId, bool isPinned) {
   content::BrowserContext* context = GetGlobalBrowserContext();
@@ -1044,6 +1067,10 @@ void AlloyBrowserHostImplExt::WebExtensionActionPinnedStateChanged(
     LOG(ERROR) << "WebExtensionActionPinnedStateChanged context is null";
     return;
   }
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  UpdatePinnedExtensionIds(context, extensionId, isPinned);
+#endif
     
   extensions::ExtensionActionDispatcher::Get(context)
       ->OnActionPinnedStateChanged(extensionId, isPinned);

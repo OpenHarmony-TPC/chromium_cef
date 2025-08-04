@@ -160,6 +160,11 @@ public:
       std::string extensionId,
       const NWebExtensionTab* tab);
 
+  static void UpdatePinnedExtensionIds(
+    content::BrowserContext* browser_context,
+    std::string extensionId,
+    bool isPinned);
+
   static void WebExtensionActionPinnedStateChanged(
       std::string extensionId, bool isPinned);
 
