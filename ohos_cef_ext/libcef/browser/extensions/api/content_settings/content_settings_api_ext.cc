@@ -258,7 +258,7 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
 bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const std::string &extension_id)
 {
     if (extension_id.empty()) {
-      return true;
+        return true;
     }
 
     size_t ext_len = extension_id.length();
