@@ -106,16 +106,16 @@ void NWebExtensionContentSettingsGetParamRelease(NWebExtensionContentSettingsGet
     if (param->incognito) {
         delete (param->incognito);
     }
-    if(param->primaryUrl){
+    if (param->primaryUrl) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
     }
-    if(param->secondaryUrl){
+    if (param->secondaryUrl) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
     }
-    if(param->type){
+    if (param->type) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
-    if(param->extensionId){
+    if (param->extensionId) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
@@ -125,22 +125,22 @@ void NWebExtensionContentSettingsSetParamRelease(NWebExtensionContentSettingsSet
     if (!param) {
         return;
     }
-    if(param->primaryPattern){
+    if (param->primaryPattern) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
     }
-    if(param->scope){
+    if (param->scope) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
     }
-    if(param->secondaryPattern){
+    if (param->secondaryPattern) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
     }
-    if(param->contentSetting){
+    if (param->contentSetting) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
     }
-    if(param->type){
+    if (param->type) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
-    if(param->extensionId){
+    if (param->extensionId) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
@@ -150,13 +150,13 @@ void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsC
     if (!param) {
         return;
     }
-    if(param->scope){
+    if (param->scope) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
     }
-    if(param->type){
+    if (param->type) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
-    if(param->extensionId){
+    if (param->extensionId) {
        NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
@@ -201,7 +201,7 @@ bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const st
         return false;
     }
 
-    if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
+    if (strcpy_s(param->extensionId, ext_len + 1, extension_id.c_str()) != 0) {
         return false;
     }
     return true;
@@ -264,11 +264,11 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
     size_t ext_len = extension_id.length();
     param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
     if (!param->extensionId) {
-      return false;
+        return false;
     }
     
     if (strcpy_s(param->extensionId, ext_len + 1, extension_id.c_str()) != 0) {
-      return false;
+        return false;
     }
     return true;
 }
@@ -384,7 +384,7 @@ bool ContentSettingsBuildSetParams(
         }
     }
 
-    if (!params->details.secondary_pattern) {
+    if (params->details.secondary_pattern) {
         setParam->secondaryPattern = strdup(params->details.secondary_pattern->c_str());
         if (!setParam->secondaryPattern) {
             return false;
@@ -430,9 +430,9 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
     HostContentSettingsMap *map;
     scoped_refptr<content_settings::CookieSettings> cookie_settings;
     Profile *profile = Profile::FromBrowserContext(browser_context());
-    if(!profile){
-       LOG(ERROR)<<"Failed to get profile from browser context";
-       return RespondNow(Error("Failed to get profile"));
+    if (!profile) {
+        LOG(ERROR)<<"Failed to get profile from browser context";
+        return RespondNow(Error("Failed to get profile"));
     }
     if (incognito) {
         if (!profile->HasPrimaryOTRProfile()) {
@@ -459,7 +459,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
 
     call_get_content_settings_ = true;
     bool success = OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance().OnGet(&getParam,
-      base::BindRepeating(&ContentSettingsContentSettingGetFunction::GetCallback, weak_ptr_factory_.GetWeakPtr()));
+        base::BindRepeating(&ContentSettingsContentSettingGetFunction::GetCallback, weak_ptr_factory_.GetWeakPtr()));
     call_get_content_settings_ = false;
     NWebExtensionContentSettingsGetParamRelease(&getParam);
     if (did_respond()) {
@@ -642,11 +642,11 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
     std::string extension_id = this->extension_id();
 
     if (!SetTypeToSetParam(&setParam, content_type) || !SetScopeToSetParam(&setParam, scope) ||
-        !SetExtensionIdToSetParam(&setParam, extension_id) || !ContentSettingsBuildSetParams(params, &setParam)){
+        !SetExtensionIdToSetParam(&setParam, extension_id) || !ContentSettingsBuildSetParams(params, &setParam)) {
         NWebExtensionContentSettingsSetParamRelease(&setParam);
         LOG(INFO)<<"ContentSettingsContentSettingSetFunction failed to build get parameters";
         return RespondNow(BadMessage());
-      }
+    }
 
     call_set_content_settings_ = true;
     bool success = OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance().OnSet(&setParam,
@@ -722,15 +722,15 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
         return RespondNow(Error(kIncognitoContextError));
     }
 
-    if(!params){
+    if (!params) {
        return RespondNow(BadMessage());
     }
 
     NWebExtensionContentSettingsClearParam clearParam = {0};
     std::string extension_id = this->extension_id();
 
-    if(!SetTypeToClearParam(&clearParam, content_type) || !SetScopeToClearParam(&clearParam, scope) ||
-       !SetExtensionIdToClearParam(&clearParam, extension_id)) {
+    if (!SetTypeToClearParam(&clearParam, content_type) || !SetScopeToClearParam(&clearParam, scope) ||
+        !SetExtensionIdToClearParam(&clearParam, extension_id)) {
         NWebExtensionContentSettingsClearParamRelease(&clearParam);
         LOG(INFO) << "ContentSettingsContentSettingClearFunction failed to build clear parameters";
         return RespondNow(BadMessage());
