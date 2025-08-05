@@ -421,7 +421,12 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
       cookie_manager->SaveCookiesOnAsyncThread(
         request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+        GetCookieOptions(request, browser_context_getter,
+                         /*for_loading_cookies=*/false, {}),
+#else
         GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+#endif
 #else
         GetCookieOptions(request, /*for_loading_cookies=*/false),
 #endif
