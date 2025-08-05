@@ -67,7 +67,7 @@ using extensions::api::types::ChromeSettingScope;
 bool RemoveContentType(base::Value::List& args, ContentSettingsType* content_type) 
 {
     if (args.empty() || !args[0].is_string()) {
-      return false;
+        return false;
     }
 
     // Not a ref since we remove the underlying value after.
@@ -92,85 +92,85 @@ namespace extensions {
 
 #define NWEB_CONTENTSETTINGS_SAFE_FREE(ptr) \
     do {                                \
-      if (ptr) {                        \
-        free(ptr);                      \
-        ptr = nullptr;                  \
-      }                                 \
+        if (ptr) {                        \
+            free(ptr);                      \
+            ptr = nullptr;                  \
+        }                                 \
     } while (0)
 
 void NWebExtensionContentSettingsGetParamRelease(NWebExtensionContentSettingsGetParam* param) 
 {
     if (!param) {
-      return;
+        return;
     }
     if (param->incognito) {
-      delete (param->incognito);
+        delete (param->incognito);
     }
     if(param->primaryUrl){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
     }
     if(param->secondaryUrl){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
     }
     if(param->type){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
     if(param->extensionId){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
 
 void NWebExtensionContentSettingsSetParamRelease(NWebExtensionContentSettingsSetParam* param) 
 {
     if (!param) {
-      return;
+        return;
     }
     if(param->primaryPattern){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
     }
     if(param->scope){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
     }
     if(param->secondaryPattern){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
     }
     if(param->contentSetting){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
     }
     if(param->type){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
     if(param->extensionId){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
 
 void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsClearParam* param) 
 {
     if (!param) {
-      return;
+        return;
     }
     if(param->scope){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
     }
     if(param->type){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
     }
     if(param->extensionId){
-      NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
+       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
     }
 }
 
 ContentSetting StringToContentSetting(const std::string &str)
 {
     if (str == "allow") {
-      return ContentSetting::CONTENT_SETTING_ALLOW;
+        return ContentSetting::CONTENT_SETTING_ALLOW;
     } else if (str == "block") {
-      return ContentSetting::CONTENT_SETTING_BLOCK;
+        return ContentSetting::CONTENT_SETTING_BLOCK;
     } else if (str == "ask") {
-      return ContentSetting::CONTENT_SETTING_ASK;
+        return ContentSetting::CONTENT_SETTING_ASK;
     } else {
-      return ContentSetting::CONTENT_SETTING_DEFAULT;
+        return ContentSetting::CONTENT_SETTING_DEFAULT;
     }
 }
 
@@ -184,7 +184,7 @@ std::string ChromeSettingScopeToString(ChromeSettingScope scope)
 
     auto it = scopeMap.find(scope);
     if (it != scopeMap.end()) {
-      return it->second;
+        return it->second;
     }
     return "Unknown";
 }
@@ -192,17 +192,17 @@ std::string ChromeSettingScopeToString(ChromeSettingScope scope)
 bool SetExtensionIdToParam(NWebExtensionContentSettingsGetParam* param, const std::string &extension_id)
 {
     if (extension_id.empty()) {
-      return true;
+        return true;
     }
 
     size_t ext_len = extension_id.length();
     param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
     if (!param->extensionId) {
-      return false;
+        return false;
     }
 
     if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
-      return false;
+        return false;
     }
     return true;
 }
@@ -214,11 +214,11 @@ bool SetTypeToParam(NWebExtensionContentSettingsGetParam* param, ContentSettings
 
     param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
     if (!param->type) {
-      return false;
+        return false;
     }
 
-    if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->type, len + 1, typeStr.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -230,11 +230,11 @@ bool SetTypeToSetParam(NWebExtensionContentSettingsSetParam* param, ContentSetti
 
     param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
     if (!param->type) {
-      return false;
+        return false;
     }
 
-    if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->type, len + 1, typeStr.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -246,11 +246,11 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
 
     param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
     if (!param->scope) {
-      return false;
+        return false;
     }
 
-    if (strcpy_s(param->scope,len+1,scopeStr.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->scope, len + 1, scopeStr.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -258,7 +258,7 @@ bool SetScopeToSetParam(NWebExtensionContentSettingsSetParam* param, ChromeSetti
 bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const std::string &extension_id)
 {
     if (extension_id.empty()) {
-      return true;
+        return true;
     }
 
     size_t ext_len = extension_id.length();
@@ -267,7 +267,7 @@ bool SetExtensionIdToSetParam(NWebExtensionContentSettingsSetParam* param, const
       return false;
     }
     
-    if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
+    if (strcpy_s(param->extensionId, ext_len + 1, extension_id.c_str()) != 0) {
       return false;
     }
     return true;
@@ -280,11 +280,11 @@ bool SetTypeToClearParam(NWebExtensionContentSettingsClearParam* param, ContentS
 
     param->type = static_cast<char*>(calloc(len + 1, sizeof(char)));
     if (!param->type) {
-      return false;
+        return false;
     }
 
-    if (strcpy_s(param->type,len+1,typeStr.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->type, len + 1, typeStr.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -296,11 +296,11 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
 
     param->scope = static_cast<char*>(calloc(len + 1, sizeof(char)));
     if (!param->scope) {
-      return false;
+        return false;
     }
 
-    if (strcpy_s(param->scope,len+1,scopeStr.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->scope, len + 1, scopeStr.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -308,17 +308,17 @@ bool SetScopeToClearParam(NWebExtensionContentSettingsClearParam* param, ChromeS
 bool SetExtensionIdToClearParam(NWebExtensionContentSettingsClearParam* param, const std::string &extension_id)
 {
     if (extension_id.empty()) {
-      return true;
+        return true;
     }
 
     size_t ext_len = extension_id.length();
     param->extensionId = static_cast<char*>(calloc(ext_len + 1, sizeof(char)));
     if (!param->extensionId) {
-      return false;
+        return false;
     }
     
-    if (strcpy_s(param->extensionId,ext_len+1,extension_id.c_str()) != 0) {
-      return false;
+    if (strcpy_s(param->extensionId, ext_len + 1, extension_id.c_str()) != 0) {
+        return false;
     }
     return true;
 }
@@ -331,31 +331,31 @@ bool ContentSettingsBuildGetParams(
     NWebExtensionContentSettingsGetParam* getParam)
 {
     if (!params) {
-      return false;
+        return false;
     }
     LOG(INFO) << "ContentSettingsBuildGetParams get parameters";
 
     if (!params->details.primary_url.empty()) {
-      getParam->primaryUrl = strdup(params->details.primary_url.c_str());
-      if (!getParam->primaryUrl) {
-        return false;
-      }
+        getParam->primaryUrl = strdup(params->details.primary_url.c_str());
+        if (!getParam->primaryUrl) {
+            return false;
+        }
     }
 
     if (params->details.secondary_url) {
-      getParam->secondaryUrl = strdup(params->details.secondary_url->c_str());
-      if (!getParam->secondaryUrl) {
-        return false;
-      }
+        getParam->secondaryUrl = strdup(params->details.secondary_url->c_str());
+        if (!getParam->secondaryUrl) {
+            return false;
+        }
     }
 
     if (params->details.incognito.has_value()) {
-      getParam->incognito = new bool(*params->details.incognito);
-      if (getParam->incognito == nullptr) {
-        return false;
-      }
+        getParam->incognito = new bool(*params->details.incognito);
+        if (getParam->incognito == nullptr) {
+            return false;
+        }
     } else {
-      getParam->incognito = nullptr;
+        getParam->incognito = nullptr;
     }  
     return true;
 }
@@ -366,29 +366,29 @@ bool ContentSettingsBuildSetParams(
 {
     LOG(INFO) << "ContentSettingsBuildSetParams set parameters";
     if (!params) {
-      return false;
+        return false;
     }  
 
     if (!params->details.primary_pattern.empty()) {
-      setParam->primaryPattern = strdup(params->details.primary_pattern.c_str());
-      if (!setParam->primaryPattern) {
-        return false;
-      }
+        setParam->primaryPattern = strdup(params->details.primary_pattern.c_str());
+        if (!setParam->primaryPattern) {
+            return false;
+        }
     }
 
     if (!params->details.setting.GetString().empty()) {
-      const std::string &settingStr = params->details.setting.GetString();
-      setParam->contentSetting = strdup(settingStr.c_str());
-      if (!setParam->contentSetting) {
-        return false;
-      }
+        const std::string &settingStr = params->details.setting.GetString();
+        setParam->contentSetting = strdup(settingStr.c_str());
+        if (!setParam->contentSetting) {
+            return false;
+        }
     }
 
     if (!params->details.secondary_pattern) {
-      setParam->secondaryPattern = strdup(params->details.secondary_pattern->c_str());
-      if (!setParam->secondaryPattern) {
-        return false;
-      }
+        setParam->secondaryPattern = strdup(params->details.secondary_pattern->c_str());
+        if (!setParam->secondaryPattern) {
+            return false;
+        }
     }
     return true;
 }
@@ -405,55 +405,55 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingGetFunction::Run(
     EXTENSION_FUNCTION_VALIDATE(params);
 
     if (content_type == ContentSettingsType::DEPRECATED_PPAPI_BROKER) {
-      return RespondNow(Error("failed to get contentSettings type::DEPRECATED_PPAPI_BROKER for get"));
+        return RespondNow(Error("failed to get contentSettings type::DEPRECATED_PPAPI_BROKER for get"));
     }
 
     GURL primary_url(params->details.primary_url);
     if (!primary_url.is_valid()) {
-      return RespondNow(Error(kInvalidUrlError, params->details.primary_url));
+        return RespondNow(Error(kInvalidUrlError, params->details.primary_url));
     }
 
     GURL secondary_url(primary_url);
     if (params->details.secondary_url) {
-      secondary_url = GURL(*params->details.secondary_url);
-      if (!secondary_url.is_valid()) {
-        return RespondNow(Error(kInvalidUrlError, *params->details.secondary_url));
-      }
+        secondary_url = GURL(*params->details.secondary_url);
+        if (!secondary_url.is_valid()) {
+            return RespondNow(Error(kInvalidUrlError, *params->details.secondary_url));
+        }
     }
 
     bool incognito = false;
     if (params->details.incognito)
-      incognito = *params->details.incognito;
+        incognito = *params->details.incognito;
     if (incognito && !include_incognito_information())
-      return RespondNow(Error(extension_misc::kIncognitoErrorMessage));
+        return RespondNow(Error(extension_misc::kIncognitoErrorMessage));
 
     HostContentSettingsMap *map;
     scoped_refptr<content_settings::CookieSettings> cookie_settings;
     Profile *profile = Profile::FromBrowserContext(browser_context());
     if(!profile){
-      LOG(ERROR)<<"Failed to get profile from browser context";
-      return RespondNow(Error("Failed to get profile"));
+       LOG(ERROR)<<"Failed to get profile from browser context";
+       return RespondNow(Error("Failed to get profile"));
     }
     if (incognito) {
-      if (!profile->HasPrimaryOTRProfile()) {
-        // TODO(bauerb): Allow reading incognito content settings
-        // outside of an incognito session.
-        return RespondNow(Error(kIncognitoSessionOnlyError));
-      }
-      map = HostContentSettingsMapFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
-      cookie_settings = 
-          CookieSettingsFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+        if (!profile->HasPrimaryOTRProfile()) {
+            // TODO(bauerb): Allow reading incognito content settings
+            // outside of an incognito session.
+            return RespondNow(Error(kIncognitoSessionOnlyError));
+        }
+        map = HostContentSettingsMapFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
+        cookie_settings = 
+            CookieSettingsFactory::GetForProfile(profile->GetPrimaryOTRProfile(/*create_if_needed=*/true));
     } else {
-      map = HostContentSettingsMapFactory::GetForProfile(profile);
-      cookie_settings = CookieSettingsFactory::GetForProfile(profile);
+        map = HostContentSettingsMapFactory::GetForProfile(profile);
+        cookie_settings = CookieSettingsFactory::GetForProfile(profile);
     }
 
     NWebExtensionContentSettingsGetParam getParam = {0};
 
-    if (!SetTypeToParam(&getParam,content_type) || !SetExtensionIdToParam(&getParam,extension_id) ||
-        !ContentSettingsBuildGetParams(params,&getParam)) {
+    if (!SetTypeToParam(&getParam, content_type) || !SetExtensionIdToParam(&getParam, extension_id) ||
+        !ContentSettingsBuildGetParams(params, &getParam)) {
         NWebExtensionContentSettingsGetParamRelease(&getParam);
-        LOG(INFO)<<"ContentSettingsGetFunction failed to build get parameters";
+        LOG(INFO) << "ContentSettingsGetFunction failed to build get parameters";
         return RespondNow(BadMessage());
       }
 
@@ -500,7 +500,7 @@ void ContentSettingsContentSettingGetFunction::GetCallback(
     if (!function) {
         LOG(ERROR) << "ContentSettingsGetFunction is empty!!!!";
         return;
-      }
+    }
 
     if (!detailParam || error || !detailParam->contentSetting) {
         std::string errorMessage = error ? error : "get error";
@@ -571,7 +571,7 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         (primary_pattern != ContentSettingsPattern::Wildcard() ||
             secondary_pattern != ContentSettingsPattern::Wildcard())) {
         return RespondNow(Error("Site-specific settings are not allowed for this type. The URL "
-                  "pattern must be '<all_urls>'."));
+                                "pattern must be '<all_urls>'."));
     }
 
     // Some content setting types support the full set of values listed in
@@ -587,15 +587,15 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         // externally in the API, i.e. chrome.contentSettings.<name>.set().
         std::string readable_type_name;
         if (content_type == ContentSettingsType::MEDIASTREAM_MIC) {
-          readable_type_name = "microphone";
+            readable_type_name = "microphone";
         } else if (content_type == ContentSettingsType::MEDIASTREAM_CAMERA) {
-          readable_type_name = "camera";
+            readable_type_name = "camera";
         } else {
-          NOTREACHED() << "No human-readable type name defined for this type.";
+            NOTREACHED() << "No human-readable type name defined for this type.";
         }
 
         return RespondNow(Error(
-          base::StringPrintf(kUnsupportedDefaultSettingError, setting_str.c_str(), readable_type_name.c_str())));
+            base::StringPrintf(kUnsupportedDefaultSettingError, setting_str.c_str(), readable_type_name.c_str())));
     }
 
     if (primary_pattern != secondary_pattern && secondary_pattern != ContentSettingsPattern::Wildcard()) {
@@ -624,13 +624,13 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
         // to run in incognito contexts.
         if (!browser_context()->IsOffTheRecord() &&
             !extensions::util::IsIncognitoEnabled(extension_id(), browser_context())) {
-          return RespondNow(Error(extension_misc::kIncognitoErrorMessage));
+            return RespondNow(Error(extension_misc::kIncognitoErrorMessage));
         }
     } else {
         // Incognito profiles can't access regular mode ever, they only exist in
         // split mode.
         if (browser_context()->IsOffTheRecord())
-          return RespondNow(Error(kIncognitoContextError));
+            return RespondNow(Error(kIncognitoContextError));
     }
 
     if (scope == ChromeSettingScope::kIncognitoSessionOnly &&
@@ -641,8 +641,8 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingSetFunction::Run(
     NWebExtensionContentSettingsSetParam setParam = {0};
     std::string extension_id = this->extension_id();
 
-    if (!SetTypeToSetParam(&setParam,content_type) || !SetScopeToSetParam(&setParam,scope) ||
-        !SetExtensionIdToSetParam(&setParam,extension_id) || !ContentSettingsBuildSetParams(params,&setParam)){
+    if (!SetTypeToSetParam(&setParam, content_type) || !SetScopeToSetParam(&setParam, scope) ||
+        !SetExtensionIdToSetParam(&setParam, extension_id) || !ContentSettingsBuildSetParams(params, &setParam)){
         NWebExtensionContentSettingsSetParamRelease(&setParam);
         LOG(INFO)<<"ContentSettingsContentSettingSetFunction failed to build get parameters";
         return RespondNow(BadMessage());
@@ -723,23 +723,23 @@ ExtensionFunction::ResponseAction ContentSettingsContentSettingClearFunction::Ru
     }
 
     if(!params){
-        return RespondNow(BadMessage());
+       return RespondNow(BadMessage());
     }
 
     NWebExtensionContentSettingsClearParam clearParam = {0};
     std::string extension_id = this->extension_id();
 
-    if(!SetTypeToClearParam(&clearParam,content_type) || !SetScopeToClearParam(&clearParam,scope) ||
-       !SetExtensionIdToClearParam(&clearParam,extension_id)) {
+    if(!SetTypeToClearParam(&clearParam, content_type) || !SetScopeToClearParam(&clearParam, scope) ||
+       !SetExtensionIdToClearParam(&clearParam, extension_id)) {
         NWebExtensionContentSettingsClearParamRelease(&clearParam);
-        LOG(INFO)<<"ContentSettingsContentSettingClearFunction failed to build clear parameters";
+        LOG(INFO) << "ContentSettingsContentSettingClearFunction failed to build clear parameters";
         return RespondNow(BadMessage());
       }
 
     call_clear_content_settings_ = true;
     bool success = OHOS::NWeb::NWebExtensionContentSettingsCefDelegate::GetInstance().OnClear(&clearParam,
         base::BindRepeating(
-          &ContentSettingsContentSettingClearFunction::ClearCallback, weak_ptr_factory_.GetWeakPtr()));
+            &ContentSettingsContentSettingClearFunction::ClearCallback, weak_ptr_factory_.GetWeakPtr()));
     call_clear_content_settings_ = false;
     NWebExtensionContentSettingsClearParamRelease(&clearParam);
 
@@ -771,7 +771,7 @@ void ContentSettingsContentSettingClearFunction::ClearCallback(
         LOG(INFO) << "ContentSettingsContentSetting ClearCallback error" << errorMessage;
         function->Respond(function->Error(errorMessage));
     } else {
-        LOG(INFO) << "ContentSettingsContentSettingClearFunction no error";
+        LOG(INFO) << "ContentSettingsContentSetting ClearCallback no error";
         function->Respond(function->NoArguments());
     }
 
