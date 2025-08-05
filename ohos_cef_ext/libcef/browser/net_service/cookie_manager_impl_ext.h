@@ -87,6 +87,13 @@ class CefCookieManagerImplExt : public CefCookieManagerImpl,
       net::CookiePartitionKeyCollection cookie_partition_key_collection,
       net::CookieStore::GetCookieListCallback callback);
 
+void SaveCookiesOnAsyncThread(
+    const GURL& url,
+    const net::CookieOptions& options,
+    int total_count,
+    net::CookieList cookies,
+    base::OnceCallback<void(int, net::CookieList)> done_callback);
+
   bool SupportAsyncThreadCookieLoad();
 
  private:

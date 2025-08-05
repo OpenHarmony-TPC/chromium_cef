@@ -353,6 +353,9 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
 void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                 bool is_off_the_record,
+#endif
                  net::HttpResponseHeaders* headers,
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
@@ -411,6 +414,21 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
   }
 
   if (!allowed_cookies.empty()) {
+#if BUILDFLAG(ARKWEB_COOKIE)
+    CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(is_off_the_record);
+    if (cookie_manager && cookie_manager->SupportAsyncThreadCookieLoad()) {
+      cookie_manager->SaveCookiesOnAsyncThread(
+        request.url,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
+#else
+        GetCookieOptions(request, /*for_loading_cookies=*/false),
+#endif
+        total_count, std::move(allowed_cookies), std::move(done_callback));
+      return;
+    }
+#endif
     CEF_POST_TASK(
         CEF_UIT,
         base::BindOnce(

@@ -50,6 +50,13 @@ using network::mojom::CookieManager;
 namespace {
 base::Lock g_lock;
 
+struct SaveCookiesProgress {
+  base::OnceCallback<void(int, net::CookieList)> done_callback_;
+  int total_count_;
+  net::CookieList allowed_cookies_;
+  int num_cookie_lines_left_;
+};
+
 // Do not keep a reference to the object returned by this method.
 CefBrowserContext* GetBrowserContext(const CefBrowserContext::Getter& getter) {
   CEF_REQUIRE_UIT();
@@ -168,6 +175,25 @@ bool GetCookieAccessResultInclude(
   }
   return is_include;
 }
+
+void SetCanonicalCookieCallback(SaveCookiesProgress* progress,
+                                const net::CanonicalCookie& cookie,
+                                net::CookieAccessResult access_result) {
+  progress->num_cookie_lines_left_--;
+  if (access_result.status.IsInclude()) {
+    progress->allowed_cookies_.push_back(cookie);
+  }
+
+  // If all the cookie lines have been handled the request can be continued.
+  if (progress->num_cookie_lines_left_ == 0) {
+    CEF_POST_TASK(CEF_IOT,
+                  base::BindOnce(std::move(progress->done_callback_),
+                                 progress->total_count_,
+                                 std::move(progress->allowed_cookies_)));
+    delete progress;
+  }
+}
+
 }  // namespace
 
 // Do not keep a reference to the object returned by this method.
@@ -953,4 +979,52 @@ void CefCookieManagerImplExt::LoadCookiesOnAsyncThread(
 bool CefCookieManagerImplExt::SupportAsyncThreadCookieLoad() {
   return remote_network_cookie_manager_inited_ &&
          base::FeatureList::IsEnabled(kArkwebLoadCookiesOnAsyncThread);
+}
+
+void CefCookieManagerImplExt::SaveCookiesOnAsyncThread(
+    const GURL& url,
+    const net::CookieOptions& options,
+    int total_count,
+    net::CookieList cookies,
+    base::OnceCallback<void(int, net::CookieList)> done_callback) {
+  if (!cookie_store_task_runner_->RunsTasksInCurrentSequence()) {
+    cookie_store_task_runner_->PostTask(
+      FROM_HERE,
+      base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::SaveCookiesOnAsyncThread),
+                     base::Unretained(this), url, options, total_count, std::move(cookies), std::move(done_callback)));
+    return;
+  }
+
+  // |done_callback| needs to be executed once and only once after the list has
+  // been fully processed. |num_cookie_lines_left_| keeps track of how many
+  // async callbacks are currently pending.
+  auto progress = new SaveCookiesProgress;
+  progress->done_callback_ = std::move(done_callback);
+  progress->total_count_ = total_count;
+
+  // Make sure to wait for the loop to complete.
+  progress->num_cookie_lines_left_ = 1;
+
+  CookieManager* cookie_manager = GetNetworkCookieManager();
+  if (!cookie_manager) {
+    for (const auto& cookie : cookies) {
+      progress->num_cookie_lines_left_++;
+      auto cookie_ptr = std::make_unique<net::CanonicalCookie>(cookie);
+      GetCookieStore()->SetCanonicalCookieAsync(
+          std::move(cookie_ptr), url, options,
+          base::BindOnce(&SetCanonicalCookieCallback, base::Unretained(progress), cookie));
+    }
+  } else {
+    for (const auto& cookie : cookies) {
+      progress->num_cookie_lines_left_++;
+      cookie_manager->SetCanonicalCookie(
+          cookie, url, options,
+          base::BindOnce(&SetCanonicalCookieCallback, base::Unretained(progress), cookie));
+    }
+  }
+
+  SetCanonicalCookieCallback(
+      progress, net::CanonicalCookie(),
+      net::CookieAccessResult(net::CookieInclusionStatus(
+          net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
 }

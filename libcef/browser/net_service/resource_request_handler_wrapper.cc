@@ -1099,7 +1099,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         &InterceptedRequestHandlerWrapper::ContinueWithSavedCookies,
         weak_ptr_factory_.GetWeakPtr(), request_id, std::move(callback));
     cookie_helper::SaveCookies(
-        init_state_->browser_context_getter_, *(state->request_), headers,
+        init_state_->browser_context_getter_, *(state->request_),
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        init_state_->is_off_the_record_,
+#endif
+        headers,
         allow_cookie_callback, std::move(done_cookie_callback));
   }
 
