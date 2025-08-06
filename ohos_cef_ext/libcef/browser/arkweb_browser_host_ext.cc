@@ -859,6 +859,16 @@ void ArkWebBrowserHostExtImpl::SetNWebId(int NWebID) {
 #endif  // BUILDFLAG(ARKWEB_WEBRTC)
 }
 
+#if BUILDFLAG(IS_ARKWEB)
+void ArkWebBrowserHostExtImpl::EnableAppLinking(bool enable) {
+  is_arkweb_applinking_enabled_ = enable;
+}
+ 
+bool ArkWebBrowserHostExtImpl::IsAppLinkingEnabled() const {
+  return is_arkweb_applinking_enabled_;
+}
+#endif // BUILDFLAG(IS_ARKWEB)
+
 int ArkWebBrowserHostExtImpl::GetNWebId() {
 #if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
   if (browser_info() && browser_info()->extra_info()) {
