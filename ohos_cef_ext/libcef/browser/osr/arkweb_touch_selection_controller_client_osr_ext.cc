@@ -327,7 +327,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
             controller->AsTouchSelectionControllerExt()->IsLongPressEvent()) {
           if (auto client = browser->client()) {
             if (auto render = client->GetRenderHandler()) {
-              render->StartVibraFeedback("longPress.light");
               controller->AsTouchSelectionControllerExt()
                   ->ResetLongPressEvent();
             }
