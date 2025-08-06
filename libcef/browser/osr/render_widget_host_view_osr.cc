@@ -2024,6 +2024,14 @@ void CefRenderWidgetHostViewOSR::ReleaseResizeHold() {
 }
 
 void CefRenderWidgetHostViewOSR::CancelWidget() {
+#if BUILDFLAG(IS_ARKWEB)
+  if (popup_host_view_) {
+    popup_host_view_->CancelWidget();
+  }
+  if (child_host_view_) {
+    child_host_view_->CancelWidget();
+  }
+#endif
   if (render_widget_host_) {
     render_widget_host_->LostCapture();
   }
