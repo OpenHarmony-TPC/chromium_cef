@@ -1395,7 +1395,6 @@ bool CefBrowserHostBase::MaybeAllowNavigation(
 
 void CefBrowserHostBase::OnAfterCreated() {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "CefBrowserHostBase::OnAfterCreated, client_:" << client_;
   if (client_) {
     if (auto handler = client_->GetLifeSpanHandler()) {
       handler->OnAfterCreated(this);
