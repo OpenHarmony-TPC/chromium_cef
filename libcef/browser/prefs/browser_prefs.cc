@@ -97,7 +97,11 @@ void SetInitialProfilePrefs(Profile* profile) {
   }
 #if BUILDFLAG(ARKWEB_EXT_UA)
   UpdateCloudUAConfigAfterBrowserContextInitForInclude(profile);
-#endif      
+#endif
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
+  UpdateBrowserEngineGlobalConfigAfterBrowserContextInitForInclude(profile);
+#endif
 
 #if BUILDFLAG(ARKWEB_PREFS)
   RegisterProfilePrefsForInclude(profile);

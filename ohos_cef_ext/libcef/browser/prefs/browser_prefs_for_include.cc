@@ -25,6 +25,10 @@
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
+#include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_global_config.h"
+#endif
+
 namespace browser_prefs {
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
@@ -56,6 +60,19 @@ void UpdateCloudUAConfigAfterBrowserContextInitForInclude(Profile* profile) {
   }
 #endif
 }
+
+#if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
+void UpdateBrowserEngineGlobalConfigAfterBrowserContextInitForInclude(Profile* profile) {
+  auto* prefs = profile->GetPrefs();
+  nweb_ex::AlloyBrowserEngineGlobalConfig::GetInstance()->Init(prefs);
+  std::string path;
+  uint64_t version = 0;
+  (void)nweb_ex::AlloyBrowserEngineGlobalConfig::GetInstance()
+      ->ReadCloudConfigInfoFromPrefs(path, version);
+  nweb_ex::AlloyBrowserEngineGlobalConfig::GetInstance()
+      ->UpdateBrowserEngineGlobalConfigAfterBrowserContextInit(path, version);
+}
+#endif
 
 void RegisterProfilePrefsForInclude(Profile* profile) {
 #if BUILDFLAG(ARKWEB_PREFS)
