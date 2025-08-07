@@ -53,7 +53,7 @@ class ArkWebTouchSelectionControllerClientOSRExt
 // ui::TouchSelectionControllerClient:
 void OnSelectionEvent(ui::SelectionEventType event) override;
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
-  void HideHandleAndQuickMenuIfNecessary(bool hide_handles);
+  void HideHandleAndQuickMenuIfNecessary(bool hide_handles) override;
 #endif
 #if BUILDFLAG(ARKWEB_MENU)
   // CefTouchSelectionControllerClientOSR:
