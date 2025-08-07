@@ -114,7 +114,7 @@ void UpdateAdblockEasyListRules(base::FilePath path) {
       FROM_HERE, base::BindOnce(&UpdateEasyListRulesInIOThread));
 }
 
-void JNI_AdBlockList_TryRemoveAdblockSentinelFile(long adBlockEasyListVersion) {
+void TryRemoveAdblockSentinelFile(long adBlockEasyListVersion) {
   base::FilePath app_data_dir;
   base::PathService::Get(base::DIR_CACHE, &app_data_dir);
   base::FilePath sentinel_file_path =

@@ -107,19 +107,35 @@ bool GetEasylistsWithCommaSplit(const std::vector<base::FilePath>& easylists,
   return true;
 }
 
-bool UnindexedRulesetToIndexedRuleset(const base::FilePath& unindexed_file,
-                                      long long version) {
+void UnindexedRulesetToIndexedRulesetInternal(const base::FilePath unindexed_file,
+                                              long long version) {
   UnindexedRulesetInfo ruleset_info;
   ruleset_info.content_version = std::to_string(version);
-  ruleset_info.ruleset_path = GetUnindexedRulesetFile();
+  ruleset_info.ruleset_path = GetUnindexedRulesetFile();                                              
+
   if (!g_browser_process) {
-    return false;
+    return;
   }
+
   RulesetService* ruleset_service =
       g_browser_process->subresource_filter_ruleset_service();
   if (ruleset_service) {
     ruleset_service->IndexAndStoreAndPublishRulesetIfNeeded(ruleset_info);
+  } else {
+    LOG(WARNING) << kLogTag << "ruleset_service is null";
+    return;
   }
+}
+
+bool UnindexedRulesetToIndexedRuleset(const base::FilePath& unindexed_file,
+                                      long long version) {
+  if (!g_browser_process) {
+    return false;
+  }
+
+  content::GetUIThreadTaskRunner({base::TaskPriority::HIGHEST})
+      ->PostTask(FROM_HERE, base::BindOnce(&UnindexedRulesetToIndexedRulesetInternal,
+                 unindexed_file, version));
 
   LOG(INFO) << kLogTag << "Unindexed ruleset will be indexed";
   return true;
