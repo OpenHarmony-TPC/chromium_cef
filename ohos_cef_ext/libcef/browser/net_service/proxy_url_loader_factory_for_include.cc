@@ -49,6 +49,9 @@ class InterceptedRequestUtils {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   static void RestartExt(const GURL original_url,
                          raw_ptr<InterceptedRequest> obj) {
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    obj->factory_->request_handler_->SetIsolationInfo(obj->factory_->isolation_info_);
+#endif
     obj->factory_->request_handler_->OnBeforeRequest(
         obj->id_, &obj->request_, obj->request_was_redirected_,
         base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
@@ -197,7 +200,8 @@ void ProxyURLLoaderFactory::CreateProxy(
     mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
         header_client,
     std::unique_ptr<InterceptedRequestHandler> request_handler,
-    network::mojom::URLLoaderFactoryOverridePtr* factory_override) {
+    network::mojom::URLLoaderFactoryOverridePtr* factory_override,
+    const net::IsolationInfo& isolation_info) {
   CEF_REQUIRE_UIT();
   DCHECK(request_handler);
   mojo::PendingReceiver<network::mojom::URLLoaderFactory> proxied_receiver;
@@ -230,6 +234,10 @@ void ProxyURLLoaderFactory::CreateProxy(
   content::ResourceContext* resource_context =
       browser_context->GetResourceContext();
   DCHECK(resource_context);
+
+  if (!isolation_info.IsEmpty()) {
+    isolation_info_ = isolation_info;
+  }
 
   CEF_POST_TASK(
       CEF_IOT,

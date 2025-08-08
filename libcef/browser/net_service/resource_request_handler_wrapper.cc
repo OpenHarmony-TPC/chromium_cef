@@ -691,6 +691,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         new_url, init_state_->is_off_the_record_,
+        isolation_info_,
 #endif
         allow_cookie_callback, std::move(done_cookie_callback));
   }
@@ -1102,6 +1103,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         init_state_->is_off_the_record_,
+        isolation_info_,
 #endif
         headers,
         allow_cookie_callback, std::move(done_cookie_callback));
@@ -1234,6 +1236,12 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     RemoveState(request_id);
   }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  void SetIsolationInfo(net::IsolationInfo isolation_info) override {
+    isolation_info_ = isolation_info;
+  }
+#endif
 
  private:
   void CallHandlerOnComplete(RequestState* state,
@@ -1430,6 +1438,10 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 #endif  // BUILDFLAG(IS_ARKWEB)
 
   base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  net::IsolationInfo isolation_info_;
+#endif
 };
 
 }  // namespace

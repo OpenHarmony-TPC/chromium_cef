@@ -650,7 +650,7 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
-      std::move(request_handler), factory_override);
+      std::move(request_handler), factory_override, isolation_info);
 #else
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
