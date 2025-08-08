@@ -216,7 +216,7 @@ WebExtensionWindowCreateDataV2 GetWindowCreateDataV2(
     WebExtensionWindowCreateData data,
     content::BrowserContext* browser_context,
     bool includeIncognitoInfo,
-    std::string extensionId) {
+    const std::string& extensionId) {
   WebExtensionWindowCreateDataV2 data_v2;
   data_v2.focused = data.focused;
   data_v2.height = data.height;
@@ -245,7 +245,7 @@ WebExtensionWindowUpdateInfoV2 GetWindowUpdateInfoV2(
     WebExtensionWindowUpdateInfo info,
     content::BrowserContext* browser_context,
     bool includeIncognitoInfo,
-    std::string extensionId) {
+    const std::string& extensionId) {
   WebExtensionWindowUpdateInfoV2 info_v2;
   info_v2.drawAttention = info.drawAttention;
   info_v2.focused = info.focused;
@@ -268,7 +268,7 @@ WebExtensionWindowUpdateInfoV2 GetWindowUpdateInfoV2(
 WebExtensionWindowRemoveInfoV2 GetWindowRemoveInfoV2(
     content::BrowserContext* browser_context,
     bool includeIncognitoInfo,
-    std::string extensionId) {
+    const std::string& extensionId) {
   WebExtensionWindowRemoveInfoV2 info_v2;
   info_v2.extensionId = extensionId;
   std::string context_type = GetExtensionContextType(browser_context);
