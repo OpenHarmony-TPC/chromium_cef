@@ -18,16 +18,26 @@
 #include "base/functional/bind.h"
 #include "base/values.h"
 #include "chrome/browser/history/top_sites_factory.h"
+#include "chrome/browser/profiles/profile.h"
 #include "components/history/core/browser/top_sites.h"
+#include "components/profile_metrics/browser_profile_type.h"
 #include "ohos_nweb/src/capi/web_extension_top_sites_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_top_sites_cef_delegate.h"
 
 namespace extensions {
 
 ExtensionFunction::ResponseAction TopSitesGetFunction::Run() {
+  NWebExtensionTopSitesQueryOptions options;
+  options.contextType = "REGULAR";
+  if (browser_context()->IsOffTheRecord()) { // 无痕模式
+    options.contextType = "INCOGNITO";
+  }
+  options.includeIncognitoInfo = include_incognito_information();
+  LOG(INFO) << "TopSitesGetFunction contextType=" << options.contextType.value()
+            << ", includeIncognitoInfo=" << options.includeIncognitoInfo.value();
   call_get_ = true;
   OHOS::NWeb::NWebExtensionTopSitesCefDelegate::Get(
-      base::BindRepeating(&TopSitesGetFunction::OnGet, weak_ptr_factory_.GetWeakPtr()));
+      base::BindRepeating(&TopSitesGetFunction::OnGet, weak_ptr_factory_.GetWeakPtr()), options);
   call_get_ = false;
   if (did_respond()) {
     LOG(INFO) << "TopSitesGetFunction did_respond";
