@@ -18,6 +18,11 @@
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/browser_info_manager.h"
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "content/public/common/url_constants.h"
+#include "extensions/common/constants.h"
+#endif
+
 ArkwebBrowserInfoManagerUtils::ArkwebBrowserInfoManagerUtils(
     CefBrowserInfoManager* cef_browser_info_manager)
     : cef_browser_info_manager_(cef_browser_info_manager) {
@@ -68,6 +73,29 @@ bool ArkwebBrowserInfoManagerUtils::CanCreateWindow(
   return allow;
 }
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+bool ArkwebBrowserInfoManagerUtils::IsExtensionsOptionsUiFrame(
+    const content::GlobalRenderFrameHostToken& global_token) {
+  constexpr char kExtensionsHost[] = "extensions";
+  constexpr char kExtensionsOptionsQueryKey[] = "options";
+
+  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
+  auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
+
+  bool is_extensions_options_ui_frame =
+      web_contents &&
+      web_contents->GetURL().SchemeIs(extensions::kArkwebExtensionScheme) &&
+      web_contents->GetResponsibleWebContents() &&
+      web_contents->GetResponsibleWebContents()->GetURL().SchemeIs(
+          content::kArkWebUIScheme) &&
+      web_contents->GetResponsibleWebContents()->GetURL().host() ==
+          kExtensionsHost &&
+      web_contents->GetResponsibleWebContents()->GetURL().query().find(
+          kExtensionsOptionsQueryKey) != std::string::npos;
+  return is_extensions_options_ui_frame;
+}
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
 bool ArkwebBrowserInfoManagerUtils::IsPrerendering(
