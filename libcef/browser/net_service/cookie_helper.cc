@@ -273,23 +273,12 @@ bool IsCookieableScheme(
   return url.SchemeIsHTTPOrHTTPS() || url.SchemeIsWSOrWSS();
 }
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-const net::IsolationInfo& GetIsolationInfo(const network::ResourceRequest& request,
-                                           const net::IsolationInfo& isolation_info) {
-  if (request.trusted_params.has_value() &&
-      !request.trusted_params->isolation_info.IsEmpty()) {
-    return request.trusted_params->isolation_info;
-  }
-  return isolation_info;
-}
-#endif
-
 void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info,
+                 const net::IsolationInfo& isolation_info_for_partition,
 #endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
@@ -317,15 +306,23 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   net::CookiePartitionKeyCollection partition_key_collection;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if ((request.trusted_params.has_value() &&
-      !request.trusted_params->isolation_info.IsEmpty()) ||
-      !isolation_info.IsEmpty()) {
-    const auto& isolation_info_for_partition = GetIsolationInfo(request, isolation_info);
+  const auto& isolation_info = GetIsolationInfo(request, isolation_info_for_partition);
+  if (!isolation_info.IsEmpty()) {
     partition_key_collection = net::CookiePartitionKeyCollection::FromOptional(
         net::CookiePartitionKey::FromNetworkIsolationKey(
-            isolation_info_for_partition.network_isolation_key(), request.site_for_cookies,
+            isolation_info.network_isolation_key(), request.site_for_cookies,
             net::SchemefulSite(request.url),
-            isolation_info_for_partition.IsMainFrameRequest()));
+            isolation_info.IsMainFrameRequest()));
+  }
+#else
+  if (request.trusted_params.has_value() &&
+      !request.trusted_params->isolation_info.IsEmpty()) {
+    const auto& isolation_info = request.trusted_params->isolation_info;
+    partition_key_collection = net::CookiePartitionKeyCollection::FromOptional(
+        net::CookiePartitionKey::FromNetworkIsolationKey(
+            isolation_info.network_isolation_key(), request.site_for_cookies,
+            net::SchemefulSite(request.url),
+            isolation_info.IsMainFrameRequest()));
   }
 #endif
 
@@ -370,7 +367,7 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info,
+                 const net::IsolationInfo& isolation_info_for_partition,
 #endif
                  net::HttpResponseHeaders* headers,
                  const AllowCookieCallback& allow_cookie_callback,
@@ -402,23 +399,25 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
   while (headers->EnumerateHeader(&iter, name, &cookie_string)) {
     total_count++;
 
-    std::optional<net::CookiePartitionKey> optional_partition_key = std::nullopt;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    if ((request.trusted_params.has_value() &&
-        !request.trusted_params->isolation_info.IsEmpty()) ||
-        !isolation_info.IsEmpty()) {
-      const auto& isolation_info_for_partition = GetIsolationInfo(request, isolation_info);
+    std::optional<net::CookiePartitionKey> optional_partition_key = std::nullopt;
+    const auto& isolation_info = GetIsolationInfo(request, isolation_info_for_partition);
+    if (!isolation_info.IsEmpty()) {
       optional_partition_key = net::CookiePartitionKey::FromNetworkIsolationKey(
-        isolation_info_for_partition.network_isolation_key(), request.site_for_cookies,
+        isolation_info.network_isolation_key(), request.site_for_cookies,
         net::SchemefulSite(request.url),
-        isolation_info_for_partition.IsMainFrameRequest());
+        isolation_info.IsMainFrameRequest());
     }
 #endif
 
     net::CookieInclusionStatus returned_status;
     std::unique_ptr<net::CanonicalCookie> cookie = net::CanonicalCookie::Create(
         request.url, cookie_string, base::Time::Now(), response_date,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         /*cookie_partition_key=*/optional_partition_key, net::CookieSourceType::kHTTP,
+#else
+        /*cookie_partition_key=*/std::nullopt, net::CookieSourceType::kHTTP,
+#endif
         &returned_status);
     if (!returned_status.IsInclude()) {
       continue;

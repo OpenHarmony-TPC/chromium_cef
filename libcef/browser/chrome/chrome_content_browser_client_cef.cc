@@ -646,11 +646,15 @@ void ChromeContentBrowserClientCef::WillCreateURLLoaderFactory(
   auto request_handler = net_service::CreateInterceptedRequestHandler(
       browser_context, frame, render_process_id,
       type == URLLoaderFactoryType::kNavigation,
-      type == URLLoaderFactoryType::kDownload, request_initiator);
+      type == URLLoaderFactoryType::kDownload,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      isolation_info,
+#endif
+      request_initiator);
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
-      std::move(request_handler), factory_override, isolation_info);
+      std::move(request_handler), factory_override);
 #else
   net_service::ProxyURLLoaderFactory::CreateProxy(
       browser_context, factory_builder, header_client,
@@ -711,6 +715,9 @@ bool ChromeContentBrowserClientCef::HandleExternalProtocol(
   // HandleExternalProtocolHelper may be called if nothing handles the request.
   auto request_handler = net_service::CreateInterceptedRequestHandler(
       web_contents_getter, frame_tree_node_id, request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      isolation_info,
+#endif
       base::BindRepeating(HandleExternalProtocolHelper, base::Unretained(this),
                           web_contents_getter, frame_tree_node_id,
                           navigation_data, is_primary_main_frame,

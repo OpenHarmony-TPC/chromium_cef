@@ -412,13 +412,21 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     raw_ptr<InterceptedRequestHandlerWrapper> wrapper_;
   };
 
-  InterceptedRequestHandlerWrapper()
+  InterceptedRequestHandlerWrapper(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info
+#endif
+    )
       : init_helper_(base::MakeRefCounted<InitHelper>(this)),
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
         wrapper_helper_(
             std::make_unique<ArkWebInterceptedRequestHandlerWrapperHelper>()),
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
-        weak_ptr_factory_(this) {
+        weak_ptr_factory_(this)
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+        , isolation_info_(isolation_info)
+#endif
+  {
   }
 
   InterceptedRequestHandlerWrapper(const InterceptedRequestHandlerWrapper&) =
@@ -1237,12 +1245,6 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     RemoveState(request_id);
   }
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  void SetIsolationInfo(net::IsolationInfo isolation_info) override {
-    isolation_info_ = isolation_info;
-  }
-#endif
-
  private:
   void CallHandlerOnComplete(RequestState* state,
                              const network::URLLoaderCompletionStatus& status) {
@@ -1440,7 +1442,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  net::IsolationInfo isolation_info_;
+  const net::IsolationInfo isolation_info_;
 #endif
 };
 
@@ -1452,6 +1454,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     int render_process_id,
     bool is_navigation,
     bool is_download,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info,
+#endif
     const url::Origin& request_initiator) {
   CEF_REQUIRE_UIT();
   CHECK(browser_context);
@@ -1497,7 +1502,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 #endif
       is_navigation, is_download, request_initiator, base::RepeatingClosure());
 
-  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    isolation_info
+#endif
+    );
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;
@@ -1507,6 +1516,9 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
     content::WebContents::Getter web_contents_getter,
     content::FrameTreeNodeId frame_tree_node_id,
     const network::ResourceRequest& request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    const net::IsolationInfo& isolation_info,
+#endif
     const base::RepeatingClosure& unhandled_request_callback) {
   CEF_REQUIRE_UIT();
 
@@ -1590,7 +1602,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
                          is_navigation, is_download, request_initiator,
                          unhandled_request_callback);
 
-  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    isolation_info
+#endif
+    );
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;

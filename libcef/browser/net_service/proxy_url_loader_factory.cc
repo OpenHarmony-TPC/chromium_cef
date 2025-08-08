@@ -631,9 +631,6 @@ void InterceptedRequest::Restart() {
 #if BUILDFLAG(ARKWEB_EX_DOWNLOAD)
   InterceptedRequestUtils::RestartExt(original_url, this);
 #else
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  factory_->request_handler_->SetIsolationInfo(factory_->isolation_info_);
-#endif
   factory_->request_handler_->OnBeforeRequest(
       id_, &request_, request_was_redirected_,
       base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
@@ -1066,9 +1063,6 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
     proxied_client_receiver_.Pause();
   }
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  factory_->request_handler_->SetIsolationInfo(factory_->isolation_info_);
-#endif
   factory_->request_handler_->OnRequestResponse(
       id_, &request_, headers.get(), redirect_info,
       base::BindOnce(&InterceptedRequest::ContinueResponseOrRedirect,
@@ -1479,10 +1473,6 @@ InterceptedRequestHandler::OnFilterResponseBody(
 //==============================
 // ProxyURLLoaderFactory
 //==============================
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-net::IsolationInfo ProxyURLLoaderFactory::isolation_info_;
-#endif
 
 ProxyURLLoaderFactory::ProxyURLLoaderFactory(
     mojo::PendingReceiver<network::mojom::URLLoaderFactory> factory_receiver,

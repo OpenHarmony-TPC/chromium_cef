@@ -153,10 +153,6 @@ class InterceptedRequestHandler {
 #if BUILDFLAG(ARKWEB_USERAGENT)
   virtual std::string GetCustomUserAgent() { return ""; }
 #endif
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  virtual void SetIsolationInfo(net::IsolationInfo isolation_info) {}
-#endif
 };
 
 // URL Loader Factory that supports request/response interception, processing
@@ -180,8 +176,7 @@ class ProxyURLLoaderFactory
       mojo::PendingRemote<network::mojom::TrustedURLLoaderHeaderClient>*
           header_client,
       std::unique_ptr<InterceptedRequestHandler> request_handler,
-      network::mojom::URLLoaderFactoryOverridePtr* factory_override,
-      const net::IsolationInfo& isolation_info);
+      network::mojom::URLLoaderFactoryOverridePtr* factory_override);
 #else
   // Create a proxy object on the UI thread.
   static void CreateProxy(
@@ -273,10 +268,6 @@ class ProxyURLLoaderFactory
   std::map<int32_t, std::unique_ptr<InterceptedRequest>> requests_;
 
   base::WeakPtrFactory<ProxyURLLoaderFactory> weak_factory_;
-
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  static net::IsolationInfo isolation_info_;
-#endif
 };
 
 }  // namespace net_service
