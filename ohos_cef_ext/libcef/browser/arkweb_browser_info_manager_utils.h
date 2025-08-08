@@ -46,6 +46,11 @@ class ArkwebBrowserInfoManagerUtils {
                        CefRefPtr<CefCallback> callback);
 #endif  // BUILDFLAG(ARKWEB_MULTI_WINDOW)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  bool IsExtensionsOptionsUiFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
  private:
   const raw_ptr<CefBrowserInfoManager> cef_browser_info_manager_;
 
