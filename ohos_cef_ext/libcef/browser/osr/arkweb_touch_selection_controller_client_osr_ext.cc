@@ -826,9 +826,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
     if (controller) {
       isLongPressSelectionActive = controller->AsTouchSelectionControllerExt()
                                        ->IsLongPressDragSelectionActive();
-      LOG(INFO) << "The selection long press active is "
-                << isLongPressSelectionActive << ", clipped_selection_bounds:"
-                << clipped_selection_bounds_.ToString();
+      LOG(INFO) << "The selection long press active is " << isLongPressSelectionActive;
     }
 #if BUILDFLAG(ARKWEB_MENU)
     handler->SetHandleVisibleCallback([this](bool isVisible = true) {
