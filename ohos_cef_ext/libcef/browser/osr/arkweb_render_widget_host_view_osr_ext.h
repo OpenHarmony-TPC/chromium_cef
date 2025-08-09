@@ -48,6 +48,10 @@
 
 class ArkWebRenderWidgetHostViewOSRUtils;
 
+namespace {
+  const std::string TYPE_NAME = "ArkWebOSRExt";
+}
+
 class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
  public:
   ArkWebRenderWidgetHostViewOSRExt* AsArkWebRenderWidgetHostViewOSRExt()
@@ -296,6 +300,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void UpdateCursor(const ui::Cursor& cursor) override;
+  std::string GetViewType() override { return TYPE_NAME; }
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   viz::FrameSinkId GetRootFrameSinkId() override;
