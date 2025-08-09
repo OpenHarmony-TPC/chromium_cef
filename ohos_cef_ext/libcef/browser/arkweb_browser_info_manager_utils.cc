@@ -78,7 +78,6 @@ bool ArkwebBrowserInfoManagerUtils::CanCreateWindow(
 bool ArkwebBrowserInfoManagerUtils::IsExtensionsOptionsUiFrame(
     const content::GlobalRenderFrameHostToken& global_token) {
   constexpr char kExtensionsHost[] = "extensions";
-  constexpr char kExtensionsOptionsQueryKey[] = "options";
 
   auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
   auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
@@ -90,9 +89,7 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOptionsUiFrame(
       web_contents->GetResponsibleWebContents()->GetURL().SchemeIs(
           content::kArkWebUIScheme) &&
       web_contents->GetResponsibleWebContents()->GetURL().host() ==
-          kExtensionsHost &&
-      web_contents->GetResponsibleWebContents()->GetURL().query().find(
-          kExtensionsOptionsQueryKey) != std::string::npos;
+          kExtensionsHost;
   return is_extensions_options_ui_frame;
 }
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
