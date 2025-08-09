@@ -154,7 +154,7 @@ void ThirdPartyCookieAccessPolicy::SetTBWFilePath(
   LOG(INFO) << "Set TBWFile path: " << tbw_path.value();
 
   base::ThreadPool::PostTaskAndReplyWithResult(
-      FROM_HERE, {base::MayBlock(), base::TaskPriority::BEST_EFFORT},
+      FROM_HERE, {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
       base::BindOnce(&ParsingTBWOnFileThread, tbw_path_),
       base::BindOnce(&ThirdPartyCookieAccessPolicy::OnTBWDataReadDone,
                      base::Unretained(this)));
