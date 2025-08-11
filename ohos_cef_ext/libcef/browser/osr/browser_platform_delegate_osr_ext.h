@@ -9,6 +9,9 @@
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
 #include "content/browser/web_contents/web_contents_impl.h"
 #endif  // BUILDFLAG(ARKWEB_DRAG_DROP)
+#if BUILDFLAG(ARKWEB_PIP)
+#include "base/timer/timer.h"
+#endif  // BUILDFLAG(ARKWEB_PIP)
 
 class CefBrowserPlatformDelegateOsrExt : public CefBrowserPlatformDelegateOsr
 {
@@ -161,6 +164,12 @@ public:
                     int child_id,
                     int frame_routing_id,
                     int event) override;
+  void Pause();
+  void PipExit(int delegate_id,
+               int child_id,int frame_routing_id,
+               content::MediaWebContentsObserver* observer,
+               content::WebContentsImpl* web_contents_impl,
+               content::MediaPlayerId& id);
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
@@ -197,6 +206,13 @@ protected:
   bool isInnerWeb_ = false;
   bool custom_video_player_enable_ = false;
 #endif
+#if BUILDFLAG(ARKWEB_PIP)
+  int delegate_id_ = 0;
+  int child_id_ = 0;
+  int frame_routing_id_ = 0;
+  std::unique_ptr<base::OneShotTimer> pause_timer_;
+  SEQUENCE_CHECKER(sequence_checker_);
+#endif  // BUILDFLAG(ARKWEB_PIP)
 };
  
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_EXT_H_

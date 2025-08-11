@@ -38,6 +38,7 @@
 
 namespace {
 const base::TimeDelta kPictureInPictureDelta = base::Seconds(15);
+const base::TimeDelta kPictureInPicturePauseDelta = base::Milliseconds(10);
 }
 #endif
 
@@ -761,8 +762,9 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
     int event) {
   content::WebContentsImpl* web_contents_impl =
       static_cast<content::WebContentsImpl*>(web_contents_);
-
-  if (!web_contents_impl) {
+  LOG(INFO) << "Pip " << __func__ << " " << delegate_id << " " << child_id
+            << " " << frame_routing_id << " event:" << event;
+  if (!web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
     return;
   }
   bool status = false;
@@ -770,50 +772,106 @@ void CefBrowserPlatformDelegateOsrExt::SendPipEvent(
                                                 child_id,
                                                 frame_routing_id,
                                                 status);
-  if (status) {
-    LOG(INFO) << "Pip event:" << status; 
-    auto observer = web_contents_impl->media_web_contents_observer();
-    if (observer) {
-      switch(event) {
-      case content::PIP_STATE_PAUSE:
-        observer->GetMediaPlayerRemote(it)->PipDown(false);
-        observer->GetMediaPlayerRemote(it)->RequestPause(false);
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        break;
-      case content::PIP_STATE_PLAY:
-        observer->GetMediaPlayerRemote(it)->PipDown(false);
-        observer->GetMediaPlayerRemote(it)->RequestPlay();
-        web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        break;
-      case content::PIP_STATE_FAST_FORWARD:
-        observer->GetMediaPlayerRemote(it)->SetPlaybackRate(1.5);
-        observer->GetMediaPlayerRemote(it)->RequestSeekForward(kPictureInPictureDelta);
-        break;
-      case content::PIP_STATE_FAST_BACKWARD:
-        observer->GetMediaPlayerRemote(it)->SetPlaybackRate(1.5);
-        observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
-        break;
-      case content::PIP_STATE_EXIT:
-        observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
-        observer->GetMediaPlayerRemote(it)->RequestPause(false);
-        if (web_contents_impl && web_contents_impl->AsWebContentsImplExt()) {
-          web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        }
-        break;
-      case content::PIP_STATE_RESTORE:
-        observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
-        observer->GetMediaPlayerRemote(it)->RequestPlay();
-        if (web_contents_impl && web_contents_impl->AsWebContentsImplExt()) {
-          web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
-        }
-        break;
-      case content::PIP_STATE_RESIZE:
-        observer->GetMediaPlayerRemote(it)->NotifyPipResize();
-        break;
-      default:
-        LOG(INFO) << "Pip other event:" << event;
-      }
+  auto observer = web_contents_impl->media_web_contents_observer();
+  if (!status || !observer || !observer->GetMediaPlayerRemote(it)) {
+    LOG(ERROR) << "Pip cann't find mediaplayer status or observer is null.";
+    return;
+  }
+  switch(event) {
+    case content::PIP_STATE_PAUSE:
+      observer->GetMediaPlayerRemote(it)->PipDown(false);
+      observer->GetMediaPlayerRemote(it)->RequestPause(false);
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
+    case content::PIP_STATE_PLAY:
+      observer->GetMediaPlayerRemote(it)->PipDown(false);
+      observer->GetMediaPlayerRemote(it)->RequestPlay();
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
+    case content::PIP_STATE_FAST_FORWARD:
+      observer->GetMediaPlayerRemote(it)->RequestSeekForward(kPictureInPictureDelta);
+      break;
+    case content::PIP_STATE_FAST_BACKWARD:
+      observer->GetMediaPlayerRemote(it)->RequestSeekBackward(kPictureInPictureDelta);
+      break;
+    case content::PIP_STATE_EXIT: {
+      PipExit(delegate_id, child_id, frame_routing_id, observer, web_contents_impl, it);
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      break;
     }
+    case content::PIP_STATE_RESTORE:
+      observer->GetMediaPlayerRemote(it)->RequestExitPictureInPicture();
+      observer->GetMediaPlayerRemote(it)->PipRequestPlay();
+      web_contents_impl->AsWebContentsImplExt()->OnPipEvent(event);
+      web_contents_impl->AsWebContentsImplExt()->SetUpdateSurface(false);
+      break;
+    case content::PIP_STATE_RESIZE:
+      observer->GetMediaPlayerRemote(it)->NotifyPipResize();
+      break;
+    default:
+      LOG(INFO) << "Pip other event:" << event;
+  }
+}
+
+void CefBrowserPlatformDelegateOsrExt::PipExit(
+    int delegate_id,
+    int child_id,
+    int frame_routing_id,
+    content::MediaWebContentsObserver* observer,
+    content::WebContentsImpl* web_contents_impl,
+    content::MediaPlayerId& id) {
+  delegate_id_ = delegate_id;
+  child_id_ = child_id;
+  frame_routing_id_ = frame_routing_id;
+  if (!observer || !observer->GetMediaPlayerRemote(id) ||
+      !web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
+    LOG(ERROR) << "observer is null";
+    return;
+  }
+  observer->GetMediaPlayerRemote(id)->RequestExitPictureInPicture();
+  if (!web_contents_impl->IsFullscreen() &&
+      !web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface()) {
+    observer->GetMediaPlayerRemote(id)->RequestPause(false);
+  }
+  else if ((web_contents_impl->IsFullscreen() ||
+       web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface())) {
+    observer->GetMediaPlayerRemote(id)->PipRequestPlay();
+  }
+  else if (!web_contents_impl->IsFullscreen() &&
+       web_contents_impl->AsWebContentsImplExt()->IsUpdateSurface()) {
+    base::TimeDelta duration = kPictureInPicturePauseDelta;
+    if (!pause_timer_) {
+       pause_timer_ = std::make_unique<base::OneShotTimer>();
+    }
+    pause_timer_->Start(FROM_HERE, duration, this,
+                        &CefBrowserPlatformDelegateOsrExt::Pause);
+  } else {
+    LOG(ERROR) << "PipExit error";
+  }
+  web_contents_impl->AsWebContentsImplExt()->SetUpdateSurface(false);
+}
+
+void CefBrowserPlatformDelegateOsrExt::Pause() {
+  content::WebContentsImpl* web_contents_impl =
+      static_cast<content::WebContentsImpl*>(web_contents_);
+  if (!web_contents_impl) {
+    LOG(ERROR) << "Pip " << __func__ << " " << delegate_id_
+               << " " << child_id_ << " " << frame_routing_id_;
+    return;
+  }
+  bool status = false;
+  auto it = web_contents_impl->AsWebContentsImplExt()->GetMediaPlayerId(
+      delegate_id_, child_id_, frame_routing_id_, status);
+  if (status && !web_contents_impl->IsFullscreen()) {
+    auto observer = web_contents_impl->media_web_contents_observer();
+    if (!observer || !observer->GetMediaPlayerRemote(it)) {
+      LOG(ERROR) << "Pip get media_web_contents_observer is null";
+      return;
+    }
+    observer->GetMediaPlayerRemote(it)->RequestPause(false);
+  } else {
+    LOG(ERROR) << "Pip cann't find mediaplayer: " << delegate_id_
+               << " " << child_id_ << " " << frame_routing_id_;
   }
 }
 #endif
