@@ -119,9 +119,42 @@ void GetRemovalOptions(const base::Value::Dict& options, NWebExtensionBrowsingDa
 
 } // namespace
 
+void BrowsingDataRemoverFunction::StartRemovingDownload(const NWebExtensionBrowsingDataRemovalOptions& removeOptions,
+    const NWebExtensionBrowsingDataQueryOptions& queryOptions) {
+  pending_tasks_ += 1;
+  removal_mask_ &= ~content::BrowsingDataRemover::DATA_TYPE_DOWNLOADS;
+
+  call_remove_download_ = true;
+  OHOS::NWeb::NWebExtensionBrowsingDataCefDelegate::RemoveDownloads(removeOptions,
+      base::BindRepeating(&BrowsingDataRemoverFunction::OnRemovedDownload, weak_ptr_factory_.GetWeakPtr()),
+      queryOptions);
+  call_remove_download_ = false;
+}
+
+void BrowsingDataRemoverFunction::StartRemovingHistory(const NWebExtensionBrowsingDataRemovalOptions& removeOptions,
+    const NWebExtensionBrowsingDataQueryOptions& queryOptions) {
+  pending_tasks_ += 1;
+  removal_mask_ &= ~chrome_browsing_data_remover::DATA_TYPE_HISTORY;
+
+  call_remove_history_ = true;
+  OHOS::NWeb::NWebExtensionBrowsingDataCefDelegate::RemoveHistory(removeOptions,
+      base::BindRepeating(&BrowsingDataRemoverFunction::OnRemovedHistory, weak_ptr_factory_.GetWeakPtr()),
+      queryOptions);
+  call_remove_history_ = false;
+}
+
 void BrowsingDataRemoverFunction::StartRemoving() {
   Profile* profile = Profile::FromBrowserContext(browser_context());
   content::BrowsingDataRemover* remover = profile->GetBrowsingDataRemover();
+
+  NWebExtensionBrowsingDataQueryOptions queryOptions;
+  queryOptions.contextType = "REGULAR";
+  if (browser_context()->IsOffTheRecord()) {
+    queryOptions.contextType = "INCOGNITO";
+  }
+  queryOptions.includeIncognitoInfo = include_incognito_information();
+  LOG(INFO) << "BrowsingDataRemoverFunction contextType=" << queryOptions.contextType.value()
+            << ", includeIncognitoInfo=" << queryOptions.includeIncognitoInfo.value();
 
   // Add a ref (Balanced in OnTaskFinished)
   AddRef();
@@ -141,7 +174,7 @@ void BrowsingDataRemoverFunction::StartRemoving() {
 
   DCHECK_EQ(pending_tasks_, 0);
   pending_tasks_ = 1;
-  if (removal_mask_ & content::BrowsingDataRemover::DATA_TYPE_COOKIES &&
+  if ((removal_mask_ & content::BrowsingDataRemover::DATA_TYPE_COOKIES) &&
       !origins_.empty()) {
     pending_tasks_ += 1;
     removal_mask_ &= ~content::BrowsingDataRemover::DATA_TYPE_COOKIES;
@@ -166,25 +199,11 @@ void BrowsingDataRemoverFunction::StartRemoving() {
   NWebExtensionBrowsingDataRemovalOptions removeOptions;
   GetRemovalOptions(options_, removeOptions);
   if (removal_mask_ & content::BrowsingDataRemover::DATA_TYPE_DOWNLOADS) {
-    pending_tasks_ += 1;
-    removal_mask_ &= ~content::BrowsingDataRemover::DATA_TYPE_DOWNLOADS;
-
-    call_remove_download_ = true;
-    OHOS::NWeb::NWebExtensionBrowsingDataCefDelegate::RemoveDownloads(
-      removeOptions, base::BindRepeating(&BrowsingDataRemoverFunction::OnRemovedDownload,
-                                         weak_ptr_factory_.GetWeakPtr()));
-    call_remove_download_ = false;
+    StartRemovingDownload(removeOptions, queryOptions);
   }
 
   if (removal_mask_ & chrome_browsing_data_remover::DATA_TYPE_HISTORY) {
-    pending_tasks_ += 1;
-    removal_mask_ &= ~chrome_browsing_data_remover::DATA_TYPE_HISTORY;
-
-    call_remove_history_ = true;
-    OHOS::NWeb::NWebExtensionBrowsingDataCefDelegate::RemoveHistory(
-      removeOptions, base::BindRepeating(&BrowsingDataRemoverFunction::OnRemovedHistory,
-                                         weak_ptr_factory_.GetWeakPtr()));
-    call_remove_history_ = false;
+    StartRemovingHistory(removeOptions, queryOptions);
   }
 
   if (removal_mask_) {
