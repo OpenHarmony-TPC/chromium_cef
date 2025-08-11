@@ -149,7 +149,7 @@ void BrowsingDataRemoverFunction::StartRemoving() {
 
   NWebExtensionBrowsingDataQueryOptions queryOptions;
   queryOptions.contextType = "REGULAR";
-  if (browser_context()->IsOffTheRecord()) { // 无痕模式
+  if (browser_context()->IsOffTheRecord()) {
     queryOptions.contextType = "INCOGNITO";
   }
   queryOptions.includeIncognitoInfo = include_incognito_information();
