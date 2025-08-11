@@ -7,6 +7,7 @@
 
 #include "arkweb/build/features/features.h"
 #include "base/task/current_thread.h"
+#include "base/hash/hash.h"
 #include "cef/libcef/browser/image_impl.h"
 #include "cef/libcef/browser/osr/osr_accessibility_util.h"
 #include "cef/libcef/browser/osr/render_widget_host_view_osr.h"
@@ -720,9 +721,10 @@ void CefBrowserPlatformDelegateOsrExt::SetPipNativeWindow(
     int child_id,
     int frame_routing_id,
     cef_native_window_t window) {
-  LOG(INFO) << __func__ << " " << window << " delegate_id:"
-            << delegate_id << " child:" << child_id << " frame_routing_id:"
-			<< frame_routing_id;
+  LOG(INFO) << __func__
+            << " [hash: "<< std::hex << base::FastHash(base::byte_span_from_ref(window)) << "]"
+            << " delegate_id:" << delegate_id << " child:" << child_id
+            << " frame_routing_id:" << frame_routing_id;
   if (window == nullptr) {
     LOG(ERROR) << "Pip window is nullptr";
     return;
