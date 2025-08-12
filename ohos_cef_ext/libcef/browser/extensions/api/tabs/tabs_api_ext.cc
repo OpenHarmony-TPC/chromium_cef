@@ -844,6 +844,33 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
   return RespondNow(WithArguments(std::move(tab_list)));
 }
 
+ExtensionFunction::ResponseAction TabsGetSelectedFunction::Run() {
+  std::optional<tabs::GetSelected::Params> params =
+      tabs::GetSelected::Params::Create(args());
+  EXTENSION_FUNCTION_VALIDATE(params);
+
+  LOG(DEBUG) << "TabsGetSelectedFunction Run";
+
+  NWebExtensionTabQueryInfo query_info;
+  WebContents* web_contents = GetSenderWebContents();
+
+  query_info.active = true;
+  query_info.windowId = params->window_id;
+  if (!query_info.windowId) {
+    SetQueryInfoCurrentWindowId(web_contents, query_info);
+    query_info.currentWindow = true;
+  }
+
+  std::vector<NWebExtensionTab> tabs =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(query_info);
+  if (tabs.size() != 1) {
+    LOG(ERROR) << "invalid number of getSelected result tabs: " << tabs.size();
+    return RespondNow(
+        Error("getSelected tab failed: invalid number of result tabs"));
+  }
+  return RespondNow(WithArguments(GetTabValue(tabs[0])));
+}
+
 ExtensionFunction::ResponseAction TabsReloadFunction::Run() {
   std::optional<tabs::Reload::Params> params =
       tabs::Reload::Params::Create(args());
