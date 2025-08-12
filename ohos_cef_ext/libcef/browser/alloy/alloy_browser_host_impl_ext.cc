@@ -981,6 +981,7 @@ void AlloyBrowserHostImplExt::WebExtensionTabRemoved(
 }
 
 void AlloyBrowserHostImplExt::WebExtensionTabAttached(
+    int tab_id,
     int new_position,
     int new_window_id) {
   content::BrowserContext* browser_context = nullptr;
@@ -990,10 +991,12 @@ void AlloyBrowserHostImplExt::WebExtensionTabAttached(
   }
 
   extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabAttached(ExtensionGetTabId(), web_contents, new_position, new_window_id);
+      ->TabAttached(tab_id, web_contents, new_position, new_window_id);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {
+void AlloyBrowserHostImplExt::WebExtensionTabDetached(
+    int tab_id,
+    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {
   content::BrowserContext* browser_context = nullptr;
   content::WebContents* web_contents = nullptr;
   if (!WebExtensionCheck("TabDetached", browser_context, web_contents)) {
@@ -1001,7 +1004,7 @@ void AlloyBrowserHostImplExt::WebExtensionTabDetached(const std::unique_ptr<NWeb
   }
 
   extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabDetached(web_contents, ExtensionGetTabId(), detachInfo->oldPosition,
+      ->TabDetached(web_contents, tab_id, detachInfo->oldPosition,
       detachInfo->oldWindowId);
 }
 

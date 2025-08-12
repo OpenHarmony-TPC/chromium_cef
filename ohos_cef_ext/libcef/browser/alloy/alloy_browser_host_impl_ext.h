@@ -159,9 +159,11 @@ public:
   void WebExtensionTabRemoved(int tab_id,
     bool isWindowClosing, int windowId) override;
 
-  void WebExtensionTabAttached(int new_position, int new_window_id) override;
+  void WebExtensionTabAttached(int tab_id,
+    int new_position, int new_window_id) override;
 
-  void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
+  void WebExtensionTabDetached(int tab_id,
+    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
 
   void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override;
 

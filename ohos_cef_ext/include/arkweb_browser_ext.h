@@ -1188,13 +1188,15 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Receiving the tab attached notification.
   ///
   /*--cef()--*/
-  virtual void WebExtensionTabAttached(int new_position, int new_window_id) {}
+  virtual void WebExtensionTabAttached(int tab_id,
+    int new_position, int new_window_id) {}
 
   ///
   /// Receiving the tab created notification.
   ///
   /*--cef()--*/
-  virtual void WebExtensionTabDetached(const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {}
+  virtual void WebExtensionTabDetached(int tab_id,
+    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) {}
 
   ///
   /// Receiving the tab highlighted notification.
