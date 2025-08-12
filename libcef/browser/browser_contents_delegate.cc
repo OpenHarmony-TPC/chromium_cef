@@ -550,6 +550,12 @@ void CefBrowserContentsDelegate::DidStopLoading() {
     }
 #endif
   }
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (need_report_title_when_stop_loading_) {
+    OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
+    need_report_title_when_stop_loading_ = false;
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
@@ -738,6 +744,12 @@ void CefBrowserContentsDelegate::TitleWasSet(content::NavigationEntry* entry) {
   } else if (web_contents()) {
     OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
   }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (entry || web_contents()) {
+    need_report_title_when_stop_loading_ = false;
+  }
+#endif
 }
 
 void CefBrowserContentsDelegate::DidUpdateFaviconURL(
