@@ -550,8 +550,6 @@ void CefBrowserContentsDelegate::DidStopLoading() {
     }
 #endif
   }
-
-  OnTitleChange(web_contents()->GetTitle(), web_contents()->GetIsRealTitle());
 }
 
 void CefBrowserContentsDelegate::DidFinishNavigation(
