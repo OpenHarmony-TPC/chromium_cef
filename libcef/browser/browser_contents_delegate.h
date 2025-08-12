@@ -64,7 +64,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
                                           bool isReload) {}
 
   void DidStartLoading() override {
-    need_report_title_when_stop_loading = true;
+    need_report_title_when_stop_loading_ = true;
   }
 #endif
   using State = CefBrowserContentsState;
@@ -234,7 +234,7 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
   bool focus_on_editable_field_ = false;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   std::string last_did_finish_load_url_;
-  bool need_report_title_when_stop_loading = false;
+  bool need_report_title_when_stop_loading_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_FAVICON)
   // Store web site icon.
