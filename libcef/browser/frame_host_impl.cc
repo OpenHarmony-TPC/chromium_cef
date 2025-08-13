@@ -1003,8 +1003,11 @@ void CefFrameHostImpl::OnGetImageFromCache(
       return refererValue;
     }
     size_t endPos = headers.find("\r\n", startPos);
+    if (endPos == std::string::npos) {
+      endPos = headers.size();
+    }
     refererValue = headers.substr(startPos + targetKeyword.length(), endPos
-                                  -startPos - targetKeyword.length());
+                                  - startPos - targetKeyword.length());
     return refererValue;
   }
 #endif
