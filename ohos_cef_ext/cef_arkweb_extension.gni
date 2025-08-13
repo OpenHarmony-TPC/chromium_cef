@@ -200,6 +200,11 @@ arkweb_url_trust_list_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h",
 ]
+if (defined(arkweb_logger_report) && arkweb_logger_report) {
+  libcef_arkweb_sources += [
+    "//cef/ohos_cef_ext/include/cef_logger_callback_api_handler.h",
+  ]
+}
 
 arkweb_anti_tracking_source = [
   "//cef/ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy.cc",
