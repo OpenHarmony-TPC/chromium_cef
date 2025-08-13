@@ -510,7 +510,11 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     agent_host_->DispatchProtocolMessage(
         this, base::as_bytes(base::make_span(*protocol_message)));
   } else if (*method == "loadCompleted") {
-    web_contents()->GetPrimaryMainFrame()->ExecuteJavaScriptForTests(
+    auto* rfh = web_contents()->GetPrimaryMainFrame();
+    if (rfh == nullptr) {
+      return;
+    }
+    rfh->ExecuteJavaScriptForTests(
         u"DevToolsAPI.setUseSoftMenu(true);", base::NullCallback(), 0);
   } else if (*method == "loadNetworkResource") {
     if (params.size() < 3) {
@@ -585,8 +589,11 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
       SendMessageAck(request_id, std::move(response));
       return;
     } else {
-      auto* partition =
-          inspected_contents_->GetPrimaryMainFrame()->GetStoragePartition();
+      auto* rfh = inspected_contents_->GetPrimaryMainFrame();
+      if (rfh == nullptr) {
+        return;
+      }
+      auto* partition = rfh->GetStoragePartition();
       url_loader_factory = partition->GetURLLoaderFactoryForBrowserProcess();
     }
 
@@ -782,8 +789,12 @@ void CefDevToolsFrontend::CallClientFunction(
     base::Value arg3,
     base::OnceCallback<void(base::Value)> cb) {
   std::string javascript;
+  auto* rfh = web_contents()->GetPrimaryMainFrame();
+  if (rfh == nullptr) {
+    return;
+  }
 
-  web_contents()->GetPrimaryMainFrame()->AllowInjectingJavaScript();
+  rfh->AllowInjectingJavaScript();
 
   base::Value::List arguments;
   if (!arg1.is_none()) {
@@ -795,7 +806,7 @@ void CefDevToolsFrontend::CallClientFunction(
       }
     }
   }
-  web_contents()->GetPrimaryMainFrame()->ExecuteJavaScriptMethod(
+  rfh->ExecuteJavaScriptMethod(
       base::ASCIIToUTF16(object_name), base::ASCIIToUTF16(method_name),
       std::move(arguments), std::move(cb));
 }
@@ -831,10 +842,15 @@ void CefDevToolsFrontend::AgentHostClosed(
 }
 
 PrefService* CefDevToolsFrontend::GetPrefs() const {
-  return CefBrowserContext::FromBrowserContext(
-             frontend_browser_->web_contents()->GetBrowserContext())
-      ->AsProfile()
-      ->GetPrefs();
+  auto* web_contents = frontend_browser_->web_contents();
+  if (web_contents == nullptr) {
+    return nullptr;
+  }
+  auto* browser_contents = CefBrowserContext::FromBrowserContext(web_contents->GetBrowserContext());
+  if (browser_contents == nullptr) {
+    return nullptr;
+  }
+  return browser_contents->AsProfile()->GetPrefs();
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)

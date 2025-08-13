@@ -107,6 +107,10 @@ std::string RegisterFileSystem(content::WebContents* web_contents,
   CEF_REQUIRE_UIT();
   CHECK(web_contents->GetLastCommittedURL().SchemeIs(
       content::kChromeDevToolsScheme));
+  auto* rfh = web_contents->GetPrimaryMainFrame();
+  if (rfh == nullptr) {
+    return "";
+  }
   std::string root_name(kRootName);
   storage::IsolatedContext::ScopedFSHandle file_system =
       isolated_context()->RegisterFileSystemForPath(
@@ -115,7 +119,7 @@ std::string RegisterFileSystem(content::WebContents* web_contents,
   content::ChildProcessSecurityPolicy* policy =
       content::ChildProcessSecurityPolicy::GetInstance();
   content::RenderViewHost* render_view_host =
-      web_contents->GetPrimaryMainFrame()->GetRenderViewHost();
+      rfh->GetRenderViewHost();
   int renderer_id = render_view_host->GetProcess()->GetID();
   policy->GrantReadFileSystem(renderer_id, file_system.id());
   policy->GrantWriteFileSystem(renderer_id, file_system.id());
@@ -336,8 +340,11 @@ void CefDevToolsFileManager::CallClientFunction(
     }
   }
   javascript.append(");");
-  browser_impl_->web_contents()->GetPrimaryMainFrame()->ExecuteJavaScript(
-      base::UTF8ToUTF16(javascript), base::NullCallback());
+  auto* rfh = browser_impl_->web_contents()->GetPrimaryMainFrame();
+  if (rfh != nullptr) {
+    rfh->ExecuteJavaScript(
+        base::UTF8ToUTF16(javascript), base::NullCallback());
+  }
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -350,7 +357,11 @@ void CefDevToolsFileManager::CallClientMethod(
     base::OnceCallback<void(base::Value)> completion_callback) {
   // If the client renderer is gone (e.g., the window was closed with both the
   // inspector and client being destroyed), the message can not be sent.
-  if (!web_contents_->GetPrimaryMainFrame()->IsRenderFrameLive())
+  auto* rfh = web_contents_->GetPrimaryMainFrame();
+  if (rfh == nullptr) {
+    return;
+  }
+  if (!rfh->IsRenderFrameLive())
     return;
   base::Value::List arguments;
   if (!arg1.is_none()) {
@@ -362,7 +373,7 @@ void CefDevToolsFileManager::CallClientMethod(
       }
     }
   }
-  web_contents_->GetPrimaryMainFrame()->ExecuteJavaScriptMethod(
+  rfh->ExecuteJavaScriptMethod(
       base::ASCIIToUTF16(object_name), base::ASCIIToUTF16(method_name),
       std::move(arguments), std::move(completion_callback));
 }
