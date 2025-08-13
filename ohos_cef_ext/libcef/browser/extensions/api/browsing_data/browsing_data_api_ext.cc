@@ -65,45 +65,43 @@ std::optional<std::vector<std::string>> GetOptionStringVector(const base::Value:
   return result;
 }
 
-double GetOptionNumber(const base::Value::Dict& options, const char* key) {
-  return options.FindDouble(key).value_or(0);
+std::optional<double> GetOptionNumber(const base::Value::Dict& options, const char* key) {
+  const base::Value* value = options.Find(key);
+  if (!value) {
+    return std::nullopt;
+  }
+  if (!value->is_double()) {
+    return std::nullopt;
+  }
+  return value->GetDouble();
 }
 
-void GetOriginTypes(const base::Value::Dict& options, NWebExtensionBrowsingDataOriginTypes& originTypes) {
+std::optional<NWebExtensionBrowsingDataOriginTypes> GetOriginTypes(const base::Value::Dict& options) {
   const base::Value* origin_type_dict =
       options.Find(extension_browsing_data_api_constants::kOriginTypesKey);
-  if (!origin_type_dict) {
-    return ;
+  if (!origin_type_dict || !origin_type_dict->is_dict()) {
+    return std::nullopt;
   }
 
-  if (!origin_type_dict->is_dict()) {
-    return;
-  }
-
+  NWebExtensionBrowsingDataOriginTypes originTypes;
   const base::Value::Dict& origin_type = origin_type_dict->GetDict();
+
   const base::Value* option = origin_type.Find(extension_browsing_data_api_constants::kExtensionsKey);
-  if (option) {
-    if (!option->is_bool()) {
-      return;
-    }
+  if (option && option->is_bool()) {
     originTypes.extension = option->GetBool() ? chrome_browsing_data_remover::ORIGIN_TYPE_EXTENSION : 0;
   }
 
   option = origin_type.Find(extension_browsing_data_api_constants::kProtectedWebKey);
-  if (option) {
-    if (!option->is_bool()) {
-      return;
-    }
+  if (option && option->is_bool()) {
     originTypes.protectedWeb = option->GetBool() ? content::BrowsingDataRemover::ORIGIN_TYPE_PROTECTED_WEB : 0;
   }
 
   option = origin_type.Find(extension_browsing_data_api_constants::kUnprotectedWebKey);
-  if (option) {
-    if (!option->is_bool()) {
-      return;
-    }
+  if (option && option->is_bool()) {
     originTypes.unprotectedWeb = option->GetBool() ? content::BrowsingDataRemover::ORIGIN_TYPE_UNPROTECTED_WEB : 0;
   }
+
+  return originTypes;
 }
 
 void GetRemovalOptions(const base::Value::Dict& options, NWebExtensionBrowsingDataRemovalOptions& removeOptions) {
@@ -111,9 +109,7 @@ void GetRemovalOptions(const base::Value::Dict& options, NWebExtensionBrowsingDa
                                                        extension_browsing_data_api_constants::kExcludeOriginsKey);
   removeOptions.origins = GetOptionStringVector(options, extension_browsing_data_api_constants::kOriginsKey);
   removeOptions.startTime = GetOptionNumber(options, extension_browsing_data_api_constants::kSinceKey);
-  NWebExtensionBrowsingDataOriginTypes originTypes;
-  GetOriginTypes(options, originTypes);
-  removeOptions.originTypes = originTypes;
+  removeOptions.originTypes = GetOriginTypes(options);
   return removeOptions;
 }
 
