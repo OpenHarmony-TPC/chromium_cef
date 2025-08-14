@@ -161,20 +161,6 @@ void GetQueryParams(
   queryInfo.windowType = GetQueryWindowType(params->query_info.window_type);
 }
 
-WebContents* GetClientAvailableContent() {
-  WebContents* contents = nullptr;
-  for (const auto& browser_info :
-       CefBrowserInfoManager::GetInstance()->GetBrowserInfoList()) {
-    CefRefPtr<AlloyBrowserHostImpl> current_browser = browser_info->browser()->AsAlloyBrowserHostImpl();
-    if (current_browser && current_browser->web_contents() &&
-        current_browser->client()) {
-       contents = current_browser->web_contents();
-       break;
-    }
-  }
-  return contents;
-}
-
 void GetCreateParams(
     std::optional<tabs::Create::Params>& params,
     NWebTabCreateInfo& create_info) {
@@ -288,7 +274,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
   std::string error;
   if (!extension()->permissions_data()->CanCaptureVisiblePage(
       contents->GetLastCommittedURL(),
-      sessions::SessionTabHelper::IdForTab(contents).id(), &error,
+      current, &error,
       extensions::CaptureRequirement::kActiveTabOrAllUrls)) {
     return RespondNow(Error(std::move(error)));
   }
@@ -1184,12 +1170,12 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   int tab_id = params->tab_id ? *params->tab_id : -1;
   std::string error;
   web_contents_ = GetTabsAPIDefaultWebContents(this, tab_id, &error);
+  if (!web_contents_) {
+    return RespondNow(Error(error));
+  }
 
   // compatible with phone
   if (!OHOS::NWeb::NWebExtensionTabCefDelegate::HasExtensionListener()) {
-    if (!web_contents_) {
-      return RespondNow(Error(error));
-    }
     if (params->update_properties.url.has_value()) {
       std::string updated_url = *params->update_properties.url;
       if (!UpdateURL(updated_url, tab_id, &error_)) {
@@ -1204,21 +1190,9 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
     return RespondNow(Error(error_));
   }
 
-  if (!OHOS::NWeb::NWebExtensionTabCefDelegate::HasUpdateTabCallback()) {
-    if (!web_contents_) {
-      web_contents_ = GetClientAvailableContent();
-    }
-
-    if (!web_contents_) {
-      return RespondNow(Error(std::move(error_)));
-    }
-    OHOS::NWeb::NWebExtensionTabCefDelegate::UpdateTab(tab_id, update_properties);
-    return RespondNow(GetResult());
-  }
-
   call_update_tab_ = true;
-  bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::UpdateTab(
-      tab_id, update_properties, base::BindRepeating(&TabsUpdateFunction::OnTabUpdated,
+  bool success = OHOS::NWeb::NWebExtensionTabCefDeleetate::UpdateTab(
+      web_contents_->ExtensionGetTabId(), update_properties, base::BindRepeating(&TabsUpdateFunction::OnTabUpdated,
           weak_ptr_factory_.GetWeakPtr()));
   call_update_tab_ = false;
 
