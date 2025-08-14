@@ -274,7 +274,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
   std::string error;
   if (!extension()->permissions_data()->CanCaptureVisiblePage(
       contents->GetLastCommittedURL(),
-      current, &error,
+      sessions::SessionTabHelper::IdForTab(contents).id(), &error,
       extensions::CaptureRequirement::kActiveTabOrAllUrls)) {
     return RespondNow(Error(std::move(error)));
   }
