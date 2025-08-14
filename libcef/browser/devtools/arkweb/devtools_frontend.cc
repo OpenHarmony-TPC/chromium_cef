@@ -846,11 +846,11 @@ PrefService* CefDevToolsFrontend::GetPrefs() const {
   if (web_contents == nullptr) {
     return nullptr;
   }
-  auto* browser_contents = CefBrowserContext::FromBrowserContext(web_contents->GetBrowserContext());
-  if (browser_contents == nullptr) {
+  auto* browser_context = CefBrowserContext::FromBrowserContext(web_contents->GetBrowserContext());
+  if (browser_context == nullptr) {
     return nullptr;
   }
-  return browser_contents->AsProfile()->GetPrefs();
+  return browser_context->AsProfile()->GetPrefs();
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
