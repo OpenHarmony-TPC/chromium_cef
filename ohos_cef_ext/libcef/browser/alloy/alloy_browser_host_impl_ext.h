@@ -103,20 +103,7 @@ public:
   void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
   void OnReportStatisticLog(const std::string& content) override;
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  void OnShowConfirmInfoBar(const std::string&,
-                            const std::string& infoId,
-                            const std::string& message,
-                            int buttons,
-                            const std::string& buttonLabelOK,
-                            const std::string& buttonLabelCancel) override;
-  void OnHideConfirmInfoBar(const std::string&,
-                            const std::string& infoId,
-                            const std::string& message,
-                            int buttons,
-                            const std::string& buttonLabelOK,
-                            const std::string& buttonLabelCancel) override;
-#endif // ARKWEB_ARKWEB_EXTENSIONS
+
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   // Shows the repost form confirmation dialog box.
   void ShowRepostFormWarningDialog(content::WebContents* source) override;

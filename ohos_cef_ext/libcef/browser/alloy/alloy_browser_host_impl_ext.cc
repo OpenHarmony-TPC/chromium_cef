@@ -769,40 +769,6 @@ void AlloyBrowserHostImplExt::OnReportStatisticLog(const std::string& content) {
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-void AlloyBrowserHostImplExt::OnShowConfirmInfoBar(const std::string& title,
-                                                   const std::string& infoId,
-                                                   const std::string& message,
-                                                   int buttons,
-                                                   const std::string& buttonLabelOK,
-                                                   const std::string& buttonLabelCancel) {
-  if (!client_) {
-    LOG(WARNING) << "client is nullptr when notify to show confirm info bar";
-    return;
-  }
-  LOG(INFO) << " func:" << __FUNCTION__;
-  client_->OnShowConfirmInfoBar(title, infoId, message, buttons, buttonLabelOK, buttonLabelCancel);
-}
-
-///
-/// notify application to hide confirm infobar.
-///
-/*--cef()--*/
-void AlloyBrowserHostImplExt::OnHideConfirmInfoBar(const std::string& title,
-                                                   const std::string& infoId,
-                                                   const std::string& message,
-                                                   int buttons,
-                                                   const std::string& buttonLabelOK,
-                                                   const std::string& buttonLabelCancel) {
-  LOG(INFO) << " func:" << __FUNCTION__;
-  if (!client_) {
-    LOG(WARNING) << "client is nullptr when notify to hide confirm info bar";
-    return;
-  }
-
-  client_->OnHideConfirmInfoBar(title, infoId, message, buttons, buttonLabelOK, buttonLabelCancel);
-}
-#endif // ARKWEB_ARKWEB_EXTENSIONS
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 void AlloyBrowserHostImplExt::ShowRepostFormWarningDialog(
