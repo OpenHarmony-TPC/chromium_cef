@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
-#include "content/public/browser/web_contents.h"
-#include "content/public/browser/browser_context.h"
 #include "chrome/browser/extensions/api/tabs/tabs_event_router.h"
+#include "chrome/browser/extensions/api/tabs/tabs_windows_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
+#include "chrome/browser/extensions/tab_helper.h"
+#include "content/public/browser/browser_context.h"
+#include "content/public/browser/web_contents.h"
 #include "extensions/browser/extension_web_contents_observer.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
 
@@ -48,6 +49,11 @@ void TabsWindowsAPI::TabUpdated(int tab_id,
     return;
   }
  
+  auto tab_helper = TabHelper::FromWebContents(contents);
+  if (tab_helper) {
+    tab_helper->active_tab_permission_granter()->SetTabId(tab_id);
+  }
+
   int windowId = tab->windowId;
   if (auto* ewco = extensions::ExtensionWebContentsObserver::GetForWebContents(contents)) {
       contents->ForEachRenderFrameHost([ewco, tab_id, windowId](content::RenderFrameHost* frame_host) {

@@ -31,10 +31,11 @@ int GetTabIdForWebContents(const content::WebContents* web_contents) {
     if (!browser) {
       return -1;
     }
-    if (browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId() >= 0) {
-      return browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
+    int tab_id = browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
+    if (tab_id >= 0) {
+      return tab_id;
     } else {
-      LOG(INFO) << "GetTabIdForWebContents error tabId=" << browser->AsAlloyBrowserHostImplExt()->ExtensionGetTabId();
+      LOG(INFO) << "GetTabIdForWebContents error tabId=" << tab_id;
       return -1;
     }
   }
