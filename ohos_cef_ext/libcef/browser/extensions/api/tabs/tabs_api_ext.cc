@@ -1191,7 +1191,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   }
 
   call_update_tab_ = true;
-  bool success = OHOS::NWeb::NWebExtensionTabCefDeleetate::UpdateTab(
+  bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::UpdateTab(
       web_contents_->ExtensionGetTabId(), update_properties, base::BindRepeating(&TabsUpdateFunction::OnTabUpdated,
           weak_ptr_factory_.GetWeakPtr()));
   call_update_tab_ = false;
