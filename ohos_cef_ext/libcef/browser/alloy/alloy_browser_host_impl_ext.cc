@@ -943,25 +943,21 @@ int32_t AlloyBrowserHostImplExt::ExtensionGetTabId() {
         << "AlloyBrowserHostImplExt::ExtensionGetTabId failed, called on invalid thread";
     return -1;
   }
- 
-  if (tab_id_ > 0) {
+
+  if (tab_id_ != -1) {
     return tab_id_;
   }
- 
-  if (nweb_id_ <= 0) {
-    LOG(ERROR) << "ExtensionGetTabId error nweb_id_=" << nweb_id_;
+
+  int nweb_id = GetNWebId();
+  if (nweb_id <= 0) {
+    LOG(ERROR) << "ExtensionGetTabId error nweb_id=" << nweb_id;
     return -1;
   }
- #if BUILDFLAG(ARKWEB_NWEB_EX)
-  int32_t tabId = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id_);
-  if (tabId < 0) {
-    LOG(ERROR) << "ExtensionGetTabId error call GetTabIdByNwebId=" << tabId;
-    return -1;
-  }
- 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  int32_t tab_id = NWebExtensionTabDispatcher::GetTabIdByNwebId(nweb_id);
   LOG(INFO) << "ExtensionGetTabId tab_id_=" << tab_id_
-            << "; tabId=" << tabId;
-  tab_id_ = tabId;
+            << "; tab_id=" << tab_id;
+  tab_id_ = tab_id;
 #endif
   return tab_id_;
 }
