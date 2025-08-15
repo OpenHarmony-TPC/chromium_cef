@@ -1305,6 +1305,13 @@ void InterceptedRequest::OnDestroy() {
 #if BUILDFLAG(ARKWEB_RESOURCE_INTERCEPTION)
   ResReporter::GetInstance().FetchEnd();
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  if (status_.error_code != net::OK) {
+    LOG(INFO) << "InterceptedRequest id " << id_ << ", OnDestroy for error_code: "
+              << status_.error_code;
+  }
+#endif
   // We don't want any callbacks after this point.
   weak_factory_.InvalidateWeakPtrs();
 
@@ -1439,6 +1446,9 @@ void InterceptedRequestHandler::OnBeforeRequest(
     int32_t request_id,
     network::ResourceRequest* request,
     bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    base::WeakPtr<InterceptedRequest> intercepted_request,
+#endif
     OnBeforeRequestResultCallback callback,
     CancelRequestCallback cancel_callback) {
   std::move(callback).Run(false, false);

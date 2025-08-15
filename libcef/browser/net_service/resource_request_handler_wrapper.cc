@@ -151,11 +151,17 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     PendingRequest(int32_t request_id,
                    network::ResourceRequest* request,
                    bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                   base::WeakPtr<InterceptedRequest> intercepted_request,
+#endif
                    OnBeforeRequestResultCallback callback,
                    CancelRequestCallback cancel_callback)
         : id_(request_id),
           request_(request),
           request_was_redirected_(request_was_redirected),
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+          intercepted_request_(intercepted_request),
+#endif
           callback_(std::move(callback)),
           cancel_callback_(std::move(cancel_callback)) {}
 
@@ -167,6 +173,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 
     void Run(InterceptedRequestHandlerWrapper* self) {
       self->OnBeforeRequest(id_, request_, request_was_redirected_,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                            intercepted_request_,
+#endif
                             std::move(callback_), std::move(cancel_callback_));
       request_ = nullptr;
     }
@@ -174,6 +183,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     const int32_t id_;
     raw_ptr<network::ResourceRequest, DisableDanglingPtrDetection> request_;
     const bool request_was_redirected_;
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    base::WeakPtr<InterceptedRequest> intercepted_request_;
+#endif
     OnBeforeRequestResultCallback callback_;
     CancelRequestCallback cancel_callback_;
   };
@@ -549,6 +561,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   void OnBeforeRequest(int32_t request_id,
                        network::ResourceRequest* request,
                        bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                       base::WeakPtr<InterceptedRequest> intercepted_request,
+#endif
                        OnBeforeRequestResultCallback callback,
                        CancelRequestCallback cancel_callback) override {
     CEF_REQUIRE_IOT();
@@ -559,10 +574,24 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
       return;
     }
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    // OnBeforeRequest will be called asynchronously for TryCreateURLLoaderNetworkObserver below,
+    // its dependent InterceptedRequest object might have been destoryed.
+    if (!intercepted_request) {
+      LOG(ERROR) << "InterceptedRequest has destructed already.";
+      std::move(cancel_callback).Run(net::ERR_ABORTED);
+      return;
+    }
+#endif
+
     if (!init_state_) {
       // Queue requests until we're initialized.
       pending_requests_.push_back(std::make_unique<PendingRequest>(
-          request_id, request, request_was_redirected, std::move(callback),
+          request_id, request, request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+          intercepted_request,
+#endif
+          std::move(callback),
           std::move(cancel_callback)));
       return;
     }
@@ -578,6 +607,9 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
                              TryCreateURLLoaderNetworkObserver,
                          std::make_unique<PendingRequest>(
                              request_id, request, request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                             intercepted_request,
+#endif
                              std::move(callback), std::move(cancel_callback)),
                          init_state_->frame_,
                          init_state_->browser_context_getter_,

@@ -63,6 +63,9 @@ class InterceptedRequestHandler {
   virtual void OnBeforeRequest(int32_t request_id,
                                network::ResourceRequest* request,
                                bool request_was_redirected,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               base::WeakPtr<InterceptedRequest> intercepted_request,
+#endif
                                OnBeforeRequestResultCallback callback,
                                CancelRequestCallback cancel_callback);
 
