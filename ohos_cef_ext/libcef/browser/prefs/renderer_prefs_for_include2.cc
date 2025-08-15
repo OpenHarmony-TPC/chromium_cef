@@ -129,6 +129,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
   SetCopyOptionToWeb(cef, web);
 #endif  // BUILDFLAG(ARKWEB_COPY_OPTION)
+#if BUILDFLAG(ARKWEB_FOCUS)
+  web.gesture_focus_mode = cef.gesture_focus_mode;
+#endif
 #if BUILDFLAG(ARKWEB_CUSTOM_VIDEO_PLAYER)
   web.custom_video_player_enable = cef.custom_video_player_enable;
   web.custom_video_player_overlay = cef.custom_video_player_overlay;
