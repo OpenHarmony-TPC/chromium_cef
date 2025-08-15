@@ -170,10 +170,6 @@ class OhAutofillClient : public autofill::ContentAutofillClient {
   SelectedCallback selected_callback_;
 #endif
 
-#if BUILDFLAG(ARKWEB_PASSWORD_AUTOFILL)
-  bool need_hide_password_popup_ = false;
-#endif
-
 #if DCHECK_IS_ON()
   bool use_autofill_manager_;
 #endif
