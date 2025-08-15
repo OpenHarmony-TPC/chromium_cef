@@ -216,7 +216,8 @@ ArkWebBrowserContentsDelegateExt::ArkWebBrowserContentsDelegateExt(
 void ArkWebBrowserContentsDelegateExt::OnRefreshAccessedHistory(
     CefRefPtr<CefFrame> frame,
     const GURL& url,
-    bool isReload) {
+    bool isReload,
+    bool isMainFrame) {
   CefRefPtr<CefClient> cefClient = client();
   if (!cefClient.get()) {
     LOG(ERROR) << "cef client is null";
@@ -229,7 +230,7 @@ void ArkWebBrowserContentsDelegateExt::OnRefreshAccessedHistory(
     return;
   }
 
-  handler->OnRefreshAccessedHistory(browser(), frame, url.spec(), isReload);
+  handler->OnRefreshAccessedHistory(browser(), frame, url.spec(), isReload, isMainFrame);
 }
 #endif  // BUILDFLAG(ARKWEB_RENDER_PROCESS_MODE)
 

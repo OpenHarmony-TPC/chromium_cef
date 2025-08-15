@@ -61,7 +61,8 @@ class CefBrowserContentsDelegate : public content::WebContentsDelegate,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   virtual void OnRefreshAccessedHistoryEx(CefRefPtr<CefFrame> frame,
                                           const GURL& url,
-                                          bool isReload) {}
+                                          bool isReload,
+                                          bool isMainFrame) {}
 
   void DidStartLoading() override {
     need_report_title_when_stop_loading_ = true;

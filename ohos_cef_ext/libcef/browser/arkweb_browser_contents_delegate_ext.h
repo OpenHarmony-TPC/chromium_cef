@@ -34,12 +34,14 @@ class ArkWebBrowserContentsDelegateExt : public CefBrowserContentsDelegate {
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   void OnRefreshAccessedHistoryEx(CefRefPtr<CefFrame> frame,
                                   const GURL& url,
-                                  bool isReload) override {
-    OnRefreshAccessedHistory(frame, url, isReload);
+                                  bool isReload,
+                                  bool isMainFrame) override {
+    OnRefreshAccessedHistory(frame, url, isReload, isMainFrame);
   }
   void OnRefreshAccessedHistory(CefRefPtr<CefFrame> frame,
                                 const GURL& url,
-                                bool isReload);
+                                bool isReload,
+                                bool isMainFrame);
 
   void NavigationStateChanged(content::WebContents* source,
                               content::InvalidateTypes changed_flags) override;
