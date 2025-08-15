@@ -247,29 +247,6 @@ class CefClient : public virtual CefBaseRefCounted {
   ///
   virtual void SetSafeBrowsingDetectionCallback(
       CefRefPtr<CefSafeBrowsingDetectionCallback> callback) {}
-
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  ///
-  /// notify application to show confirm info bar.
-  ///
-  /*--cef()--*/
-  virtual void OnShowConfirmInfoBar(const CefString& title,
-                                    const CefString& infoId,
-                                    const CefString& message,
-                                    int buttons,
-                                    const CefString& buttonLabelOK,
-                                    const CefString& buttonLabelCancel) {}
-  ///
-  /// notify application to hide confirm info bar.
-  ///
-  /*--cef()--*/
-  virtual void OnHideConfirmInfoBar(const CefString& title,
-                                    const CefString& infoId,
-                                    const CefString& message,
-                                    int buttons,
-                                    const CefString& buttonLabelOK,
-                                    const CefString& buttonLabelCancel) {}
-#endif // ARKWEB_ARKWEB_EXTENSIONS
 };
 
 #endif  // CEF_INCLUDE_CEF_CLIENT_H_
