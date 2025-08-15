@@ -367,7 +367,8 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   NWebExtensionTabChangeInfo change_info(*changeInfo);
   NWebExtensionTab extension_tab(*tab);
 
-  if (!IsTabChangeInfoHasValue(change_info)) {
+  if (change_info.status.has_value() &&
+      change_info.status.value() == NWebExtensionTabStatus::NWEB_NOTIFY) {
     zoom_scoped_observations_.AddObservation(
         ZoomController::FromWebContents(contents));
     return;
