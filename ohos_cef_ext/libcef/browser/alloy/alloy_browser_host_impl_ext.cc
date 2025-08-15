@@ -309,6 +309,24 @@ std::string BuildMediaInfo(
 }
 #endif // ARKWEB_NWEB_EX
 #endif // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+content::BrowserContext* GetIncognitoContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    return nullptr;
+  }
+ 
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  if (!browser_client->HasOffTheRecordContext(browser_context)) {
+    return nullptr;
+  }
+ 
+  return browser_client->GetOffTheRecordContext(browser_context);
+}
+#endif // ARKWEB_NWEB_EX
+
 }
 
 
@@ -1066,7 +1084,17 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
     LOG(ERROR) << "WebExtensionActionClicked context is null";
     return;
   }
-    
+
+  if (tab && tab->incognito) {
+    content::BrowserContext* incognito_context = GetIncognitoContext(context);
+    if (incognito_context) {
+      context = incognito_context;
+    } else {
+      LOG(ERROR) << "get incognito context failed";
+      return;
+    }
+  }
+
   extensions::ExtensionActionDispatcher::Get(context)
       ->DispatchExtensionActionClickedWithCustomArgs(context, extensionId,
                                                      tab);
