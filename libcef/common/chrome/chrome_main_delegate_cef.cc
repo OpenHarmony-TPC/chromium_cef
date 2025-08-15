@@ -333,11 +333,6 @@ std::optional<int> ChromeMainDelegateCef::BasicStartupComplete() {
       disable_features.push_back(base::kEnableHangWatcher.name);
     }
 
-    if (base::ohos::ApplicationApiVersion() < 20) {
-      disable_features.push_back(
-          network::features::kOpaqueResponseBlockingV02.name);
-    }
-
 #if BUILDFLAG(IS_WIN)
     {
       const bool feature_enabled =
