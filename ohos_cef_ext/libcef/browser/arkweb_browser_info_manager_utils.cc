@@ -84,7 +84,8 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOptionsUiFrame(
 
   bool is_extensions_options_ui_frame =
       web_contents &&
-      web_contents->GetURL().SchemeIs(extensions::kArkwebExtensionScheme) &&
+      (web_contents->GetURL().SchemeIs(extensions::kExtensionScheme) ||
+       web_contents->GetURL().SchemeIs(extensions::kArkwebExtensionScheme)) &&
       web_contents->GetResponsibleWebContents() &&
       web_contents->GetResponsibleWebContents()->GetURL().SchemeIs(
           content::kArkWebUIScheme) &&
