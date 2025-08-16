@@ -277,22 +277,6 @@ bool WillDispatchTabUpdatedEventWithTab(
   return true;
 }
 
-bool IsTabChangeInfoHasValue(NWebExtensionTabChangeInfo changeInfo) {
-  if (changeInfo.audible.has_value() ||
-      changeInfo.autoDiscardable.has_value() ||
-      changeInfo.discarded.has_value() ||
-      changeInfo.favIconUrl.has_value() ||
-      changeInfo.groupId.has_value() ||
-      changeInfo.mutedInfo.has_value() ||
-      changeInfo.pinned.has_value() ||
-      changeInfo.status.has_value() ||
-      changeInfo.title.has_value() ||
-      changeInfo.url.has_value()) {
-    return true;
-  }
-  return false;
-}
-
 }  // namespace
 
 void TabsEventRouter::DispatchTabUpdatedEvent(
