@@ -919,6 +919,12 @@ source_set("libcef_static") {
     ]
   }
 
+  #if defined(ARKWEB_LOGGER_REPORT)
+  sources += [
+    "include/cef_logger_callback_api_handler.h",
+  ]
+  #endif
+
   configs += [
     "libcef/features:config",
     "//build/config:precompiled_headers",
@@ -1115,6 +1121,12 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h",
     ]
   }  #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
+
+  if (defined(is_arkweb) && is_arkweb) {
+    deps += [
+      "//base:base_static",
+    ]
+  }
 
 #if BUILDFLAG(ARKWEB_COOKIE)
   if (defined(arkweb_cookie)) {

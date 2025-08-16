@@ -44,6 +44,11 @@
 #include "cef/ohos_cef_ext/libcef/common/chrome/chrome_main_delegate_cef_for_include.cc"
 #endif
 
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+#include "arkweb/chromium_ext/base/ohos/logger.h"
+#include "base/logging.h"
+#endif
+
 namespace {
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -508,6 +513,9 @@ ChromeMainDelegateCef::RunProcess(
     const std::string& process_type,
     content::MainFunctionParams main_function_params) {
   if (process_type.empty()) {
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    ohos::logger::SetMainProcessMode(true);
+#endif
     return runner_->RunMainProcess(std::move(main_function_params));
   }
 

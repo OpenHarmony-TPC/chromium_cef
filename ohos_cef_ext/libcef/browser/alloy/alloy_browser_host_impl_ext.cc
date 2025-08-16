@@ -809,12 +809,18 @@ bool AlloyBrowserHostImplExt::WebExtensionCheck(
   web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << functionName << " get contents failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << functionName << " get contents failed.";
+#endif
     return false;
   }
 
   browser_context = web_contents->GetBrowserContext();
   if (!browser_context) {
-    LOG(ERROR) << functionName << " get contents failed.";
+    LOG(ERROR) << functionName << " get context failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << functionName << " get context failed.";
+#endif
     return false;
   }
 
@@ -1743,7 +1749,7 @@ void AlloyBrowserHostImplExt::SetAudioResumeInterval(int resumeInterval) {
   if (!mediaSession) {
     LOG(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
 
-#ifdef OHOS_LOGGER_REPORT
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(ERROR) << "AlloyBrowserHostImpl::SetAudioResumeInterval get mediaSession failed.";
 #endif
 

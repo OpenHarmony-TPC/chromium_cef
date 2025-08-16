@@ -14,6 +14,13 @@
 #include "ohos_cef_ext/include/arkweb_cef_ssl_callback.h"
 #include "url/gurl.h"
 
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+#include "base/base_switches.h"
+#include "base/command_line.h"
+#include "third_party/blink/renderer/core/frame/settings.h"
+#include "url/ohos/log_utils.h"
+#endif
+
 namespace certificate_query {
 
 namespace {
@@ -145,6 +152,35 @@ bool OnCertificateError(
   return false;
 }
 
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+int IsSslCertErrorFatal(int cert_error) {
+  switch (cert_error) {
+    case net::ERR_CERT_COMMON_NAME_INVALID:
+    case net::ERR_CERT_DATE_INVALID:
+    case net::ERR_CERT_AUTHORITY_INVALID:
+    case net::ERR_CERT_NO_REVOCATION_MECHANISM:
+    case net::ERR_CERT_UNABLE_TO_CHECK_REVOCATION:
+    case net::ERR_CERT_WEAK_SIGNATURE_ALGORITHM:
+    case net::ERR_CERT_WEAK_KEY:
+    case net::ERR_CERT_NAME_CONSTRAINT_VIOLATION:
+    case net::ERR_CERT_VALIDITY_TOO_LONG:
+    case net::ERR_CERTIFICATE_TRANSPARENCY_REQUIRED:
+    case net::ERR_CERT_SYMANTEC_LEGACY:
+    case net::ERR_CERT_KNOWN_INTERCEPTION_BLOCKED:
+    case net::ERR_SSL_OBSOLETE_VERSION_OR_CIPHER:
+      return false;
+    case net::ERR_CERT_CONTAINS_ERRORS:
+    case net::ERR_CERT_REVOKED:
+    case net::ERR_CERT_INVALID:
+    case net::ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN:
+      return true;
+    default:
+      NOTREACHED();
+      return true;
+  }
+}
+#endif
+
 CertificateErrorCallback AllowAllCertificateError(
     content::WebContents* web_contents,
     int cert_error,
@@ -157,6 +193,25 @@ CertificateErrorCallback AllowAllCertificateError(
     CertificateErrorCallback callback,
     bool default_disallow) {
   CEF_REQUIRE_UIT();
+
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  bool is_fatal_error = false;
+  bool is_incognito = false;
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableLoggerReport)) {
+    is_fatal_error = IsSslCertErrorFatal(cert_error) || is_fatal_error;
+    std::string err_msg =
+        "a ssl error occurred, err_code: " + std::to_string(cert_error) +
+        ", is_fatal_error: " + std::to_string(is_fatal_error) +
+        ", origin: " + origin_url.spec() + ", refer: " + referrer;
+    if (!is_incognito) {
+      int32_t usage_scenario =
+          web_contents->GetOrCreateWebPreferences().usage_scenario;
+      LOG(URL) << "event_message: " << err_msg << ", url: "
+               << url::LogUtils::ConvertUrl(origin_url.spec(), usage_scenario);
+    }
+  }
+#endif
 
   bool result;
   CefRefPtr<CefSSLInfo> sslInfo(new CefSSLInfoImpl(ssl_info));

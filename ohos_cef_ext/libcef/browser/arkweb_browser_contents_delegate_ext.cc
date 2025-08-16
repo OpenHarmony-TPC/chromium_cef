@@ -220,12 +220,18 @@ void ArkWebBrowserContentsDelegateExt::OnRefreshAccessedHistory(
   CefRefPtr<CefClient> cefClient = client();
   if (!cefClient.get()) {
     LOG(ERROR) << "cef client is null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "cef client is null";
+#endif
     return;
   }
 
   auto handler = cefClient->GetLoadHandler();
   if (!handler.get()) {
     LOG(ERROR) << "cef client handler is null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "cef client handler is null";
+#endif
     return;
   }
 

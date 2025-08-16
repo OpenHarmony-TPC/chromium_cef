@@ -535,7 +535,11 @@ void ArkWebBrowserHostExtImpl::PostTaskToUIThread(CefRefPtr<CefTask> task) {
 void ArkWebBrowserHostExtImpl::SetWebPreferences(
     const CefBrowserSettings& browser_settings) {
   UpdateBrowserSettings(browser_settings);
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  GetWebContents()->OnWebPreferencesChanged(settings_.usage_scenario);
+#else
   GetWebContents()->OnWebPreferencesChanged();
+#endif
 }
 
 void ArkWebBrowserHostExtImpl::OnWebPreferencesChanged() {
@@ -853,6 +857,9 @@ void ArkWebBrowserHostExtImpl::SetNWebId(int NWebID) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
   web_contents->SetNWebId(NWebID);
@@ -1015,6 +1022,9 @@ void ArkWebBrowserHostExtImpl::SetAutofillCallback(
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
 
@@ -1029,6 +1039,9 @@ void ArkWebBrowserHostExtImpl::FillAutofillData(CefRefPtr<CefValue> message) {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
   autofill::OhAutofillClient* autofill_client =
@@ -2448,6 +2461,10 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
   std::string detailErrMsgUpdated;
   if (!webContents) {
     LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, web contents is error.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR)
+        << "SetUrlTrustListWithErrMsg failed, web contents is error.";
+#endif
     return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
   }
   ohos_safe_browsing::UrlTrustListManager* manager =
@@ -2459,6 +2476,10 @@ int ArkWebBrowserHostExtImpl::SetUrlTrustListWithErrMsg(
     if (!manager) {
       LOG(ERROR) << "SetUrlTrustListWithErrMsg failed, new UrlTrustListManager "
                     "failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+      LOG_FEEDBACK(ERROR) << "SetUrlTrustListWithErrMsg failed, new "
+                             "UrlTrustListManager failed.";
+#endif
       return static_cast<int>(ohos_safe_browsing::UrlListSetResult::INIT_ERROR);
     }
     webContents->SetUserData(
@@ -2810,7 +2831,7 @@ void ArkWebBrowserHostExtImpl::EnableAdsBlock(bool enable) {
 
   LOG(INFO) << "web adblock enabled : " << enable;
 
-#ifdef OHOS_LOGGER_REPORT
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
   LOG_FEEDBACK(INFO) << "web adblock enabled :" << enable;
 #endif
 
@@ -2820,7 +2841,7 @@ void ArkWebBrowserHostExtImpl::EnableAdsBlock(bool enable) {
       enable) {
     LOG(INFO) << "[Adblock] enable cloud control for easylist";
 
-#ifdef OHOS_LOGGER_REPORT
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(INFO) << "[Adblock] enable cloud control for easylist";
 #endif
 
@@ -2981,11 +3002,10 @@ void ArkWebBrowserHostExtImpl::EnableIntelligentTrackingPrevention(
     intelligent_tracking_prevention_cookies_enabled_ = enable;
   }
   LOG(INFO) << "Intelligent tracking prevention cookies enabled " << enable;
-  // TODO(ARKWEB)
-  // #ifdef OHOS_LOGGER_REPORT
-  //   LOG_FEEDBACK(INFO) << "Intelligent tracking prevention cookies enabled "
-  //   << enable;
-  // #endif
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  LOG_FEEDBACK(INFO) << "Intelligent tracking prevention cookies enabled "
+                     << enable;
+#endif
   ohos_anti_tracking::ThirdPartyCookieAccessPolicy::GetInstance()
       ->EnableIntelligentTrackingPrevention(GetBrowserContext(), enable);
 }
@@ -3098,6 +3118,9 @@ void ArkWebBrowserHostExtImpl::StartCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
   web_contents->StartCamera(web_contents->GetNWebId());
@@ -3109,6 +3132,9 @@ void ArkWebBrowserHostExtImpl::StopCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
   web_contents->StopCamera(web_contents->GetNWebId());
@@ -3120,6 +3146,9 @@ void ArkWebBrowserHostExtImpl::CloseCamera() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
     LOG(ERROR) << "GetWebContents null";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "GetWebContents null";
+#endif
     return;
   }
   web_contents->CloseCamera(web_contents->GetNWebId());
@@ -3262,7 +3291,7 @@ bool ArkWebBrowserHostExtImpl::IsSafeBrowsingEnabled() {
 void ArkWebBrowserHostExtImpl::EnableSafeBrowsing(bool enable) {
   if (settings_.is_safe_browsing_enable != enable) {
     LOG(INFO) << "enable safe browsing" << enable;
-#ifdef OHOS_LOGGER_REPORT
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
     LOG_FEEDBACK(INFO) << "enable safe browsing" << enable;
 #endif
     settings_.is_safe_browsing_enable = enable;
@@ -3378,11 +3407,19 @@ void ArkWebBrowserHostExtImpl::SetBackForwardCacheOptions(int32_t size,
   if (!web_contents) {
     LOG(ERROR) << "SetBackForwardCacheOptions failed to get web contents in "
                   "CefBrowserHostBase.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "SetBackForwardCacheOptions failed to get web "
+                           "contents in CefBrowserHostBase.";
+#endif
     return;
   }
 
   LOG(INFO) << "SetBackForwardCacheOptions size: " << size
             << " timeToLive: " << timeToLive;
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+  LOG_FEEDBACK(INFO) << "SetBackForwardCacheOptions size: " << size
+                     << " timeToLive: " << timeToLive;
+#endif
   content::NavigationController& controller = web_contents->GetController();
   controller.GetBackForwardCache().SetCacheSize(size);
   controller.GetBackForwardCache().SetTimeToLive(timeToLive);
@@ -3505,6 +3542,10 @@ void ArkWebBrowserHostExtImpl::ResumeMedia() {
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "ArkWebBrowserHostExtImpl::ResumeMedia get mediaSession or "
                   "webContents failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::ResumeMedia get mediaSession "
+                           "or webContents failed.";
+#endif
     return;
   }
   mediaSession->Resume(content::MediaSession::SuspendType::kSystem);
@@ -3517,6 +3558,10 @@ void ArkWebBrowserHostExtImpl::PauseMedia() {
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "ArkWebBrowserHostExtImpl::PauseMedia get mediaSession or "
                   "webContents failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::PauseMedia get mediaSession or "
+                           "webContents failed.";
+#endif
     return;
   }
   mediaSession->Suspend(content::MediaSession::SuspendType::kSystem);
@@ -3529,6 +3574,10 @@ void ArkWebBrowserHostExtImpl::StopMedia() {
   if (!mediaSession) {
     LOG(ERROR)
         << "ArkWebBrowserHostExtImpl::StopMedia get mediaSession failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR)
+        << "CefBrowserHostBase::StopMedia get mediaSession failed.";
+#endif
     return;
   }
   mediaSession->Stop(content::MediaSession::SuspendType::kSystem);
@@ -3540,6 +3589,10 @@ int ArkWebBrowserHostExtImpl::GetMediaPlaybackState() {
   if (!mediaSession || !GetWebContents()) {
     LOG(ERROR) << "ArkWebBrowserHostExtImpl::GetMediaPlaybackState get "
                   "mediaSession or webContents failed.";
+#if BUILDFLAG(ARKWEB_LOGGER_REPORT)
+    LOG_FEEDBACK(ERROR) << "CefBrowserHostBase::GetMediaPlaybackState get "
+                           "mediaSession or webContents failed.";
+#endif
     return static_cast<int>(content::MediaSessionImpl::NWebPlaybackState::NONE);
   }
   if (!GetWebContents()->IsHtmlPlayEnabled()) {
