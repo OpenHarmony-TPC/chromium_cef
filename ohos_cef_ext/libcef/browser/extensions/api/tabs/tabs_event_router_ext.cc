@@ -277,22 +277,6 @@ bool WillDispatchTabUpdatedEventWithTab(
   return true;
 }
 
-bool IsTabChangeInfoHasValue(NWebExtensionTabChangeInfo changeInfo) {
-  if (changeInfo.audible.has_value() ||
-      changeInfo.autoDiscardable.has_value() ||
-      changeInfo.discarded.has_value() ||
-      changeInfo.favIconUrl.has_value() ||
-      changeInfo.groupId.has_value() ||
-      changeInfo.mutedInfo.has_value() ||
-      changeInfo.pinned.has_value() ||
-      changeInfo.status.has_value() ||
-      changeInfo.title.has_value() ||
-      changeInfo.url.has_value()) {
-    return true;
-  }
-  return false;
-}
-
 }  // namespace
 
 void TabsEventRouter::DispatchTabUpdatedEvent(
@@ -367,7 +351,8 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   NWebExtensionTabChangeInfo change_info(*changeInfo);
   NWebExtensionTab extension_tab(*tab);
 
-  if (!IsTabChangeInfoHasValue(change_info)) {
+  if (change_info.status.has_value() &&
+      change_info.status.value() == NWebExtensionTabStatus::NWEB_NOTIFY) {
     zoom_scoped_observations_.AddObservation(
         ZoomController::FromWebContents(contents));
     return;
