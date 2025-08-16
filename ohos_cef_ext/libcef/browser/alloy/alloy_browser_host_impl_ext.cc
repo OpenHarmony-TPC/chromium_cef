@@ -1085,6 +1085,7 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
     return;
   }
 
+#if BUILDFLAG(ARKWEB_NWEB_EX)
   if (tab && tab->incognito) {
     content::BrowserContext* incognito_context = GetIncognitoContext(context);
     if (incognito_context) {
@@ -1094,6 +1095,7 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
       return;
     }
   }
+#endif // ARKWEB_NWEB_EX
 
   extensions::ExtensionActionDispatcher::Get(context)
       ->DispatchExtensionActionClickedWithCustomArgs(context, extensionId,
