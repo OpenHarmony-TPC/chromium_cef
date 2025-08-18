@@ -424,21 +424,20 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
     raw_ptr<InterceptedRequestHandlerWrapper> wrapper_;
   };
 
-  InterceptedRequestHandlerWrapper(
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    const net::IsolationInfo& isolation_info
+  InterceptedRequestHandlerWrapper(const net::IsolationInfo& isolation_info)
+#else
+  InterceptedRequestHandlerWrapper()
 #endif
-    )
       : init_helper_(base::MakeRefCounted<InitHelper>(this)),
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
         wrapper_helper_(
             std::make_unique<ArkWebInterceptedRequestHandlerWrapperHelper>()),
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
-        weak_ptr_factory_(this)
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-        , isolation_info_(isolation_info)
+        isolation_info_(isolation_info),
 #endif
-  {
+        weak_ptr_factory_(this) {
   }
 
   InterceptedRequestHandlerWrapper(const InterceptedRequestHandlerWrapper&) =
@@ -1471,11 +1470,11 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
 #include "cef/ohos_cef_ext/libcef/browser/net_service/intercepted_request_handler_wrapper_for_include.cc"
 #endif  // BUILDFLAG(IS_ARKWEB)
 
-  base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
-
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   const net::IsolationInfo isolation_info_;
 #endif
+
+  base::WeakPtrFactory<InterceptedRequestHandlerWrapper> weak_ptr_factory_;
 };
 
 }  // namespace
@@ -1534,11 +1533,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
 #endif
       is_navigation, is_download, request_initiator, base::RepeatingClosure());
 
-  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    isolation_info
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(isolation_info);
+#else
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
 #endif
-    );
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;
@@ -1634,11 +1633,11 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
                          is_navigation, is_download, request_initiator,
                          unhandled_request_callback);
 
-  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-    isolation_info
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>(isolation_info);
+#else
+  auto wrapper = std::make_unique<InterceptedRequestHandlerWrapper>();
 #endif
-    );
   wrapper->init_helper()->MaybeSetInitialized(std::move(init_state));
 
   return wrapper;
