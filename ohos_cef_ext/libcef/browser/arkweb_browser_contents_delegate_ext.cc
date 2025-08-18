@@ -261,32 +261,44 @@ void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
   }
 
   const auto& redirect_chain = navigation->GetRedirectChain();
+  int chain_size = redirect_chain.size();
   constexpr int kLeastLengthForRedirectChain = 2;
-  if (redirect_chain.size() < kLeastLengthForRedirectChain) {
+  if (chain_size < kLeastLengthForRedirectChain) {
     return;
   }
 
   const auto& current_url = navigation->GetURL();
-  const auto& prev_redirect_url = redirect_chain[redirect_chain.size() - 2];
-  if (IsIllegalUrl(current_url) || IsIllegalUrl(prev_redirect_url)) {
+  if (IsIllegalUrl(current_url)) {
     return;
   }
 
   std::string final_ua;
   auto match_type = MatchUserAgent(navigation, current_url.host(), final_ua);
-  if (match_type >=
-      UserAgentOverridePolicy::APP_DEFAULT) {
-    if (GetDomainAndRegistry(current_url) ==
-        GetDomainAndRegistry(prev_redirect_url)) {
-      match_type = MatchUserAgent(navigation, prev_redirect_url.host(), final_ua);
+  if (match_type >= UserAgentOverridePolicy::APP_DEFAULT) {
+    for (int i = chain_size - 1; i > 0; i--) {
+      if (IsIllegalUrl(redirect_chain[i]) ||
+          IsIllegalUrl(redirect_chain[i - 1])) {
+        continue;
+      }
+      if (GetDomainAndRegistry(redirect_chain[i]) !=
+          GetDomainAndRegistry(redirect_chain[i - 1])) {
+        continue;
+      }
+      match_type =
+          MatchUserAgent(navigation, redirect_chain[i - 1].host(), final_ua);
+      if (match_type < UserAgentOverridePolicy::APP_DEFAULT) {
+        break;
+      }
     }
   }
 
-  LOG(DEBUG) << __func__ << " host " << current_url.host() << ", final_ua "
-             << final_ua << ", user_gesture " << navigation->HasUserGesture()
+  LOG(DEBUG) << __func__ << " host " << current_url.host()
+             << " match_type:" << match_type << ", final_ua " << final_ua
+             << ", user_gesture " << navigation->HasUserGesture()
              << ", main_frame " << navigation->IsInMainFrame()
              << ", serverd_from_bfcache "
              << navigation->IsServedFromBackForwardCache();
+
   if (match_type == UserAgentOverridePolicy::ARKWEB_DEFAULT) {
     return;
   }
