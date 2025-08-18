@@ -20,11 +20,6 @@ bool ShouldForceIgnoreSiteForCookies(
     const network::ResourceRequest& request);
 #endif
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-const net::IsolationInfo& GetIsolationInfo(const network::ResourceRequest& request,
-                                           const net::IsolationInfo& isolation_info);
-#endif
-
 }  // namespace net_service::cookie_helper
 
 #endif  // ARKWEB_LIBCEF_BROWSER_NET_SERVICE_COOKIE_HELPER_EXT_H_

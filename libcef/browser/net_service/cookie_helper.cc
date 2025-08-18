@@ -278,7 +278,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info_for_partition,
+                 const net::IsolationInfo& isolation_info,
 #endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback) {
@@ -306,7 +306,6 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 
   net::CookiePartitionKeyCollection partition_key_collection;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  const auto& isolation_info = GetIsolationInfo(request, isolation_info_for_partition);
   if (!isolation_info.IsEmpty()) {
 #else
   if (request.trusted_params.has_value() &&
@@ -361,7 +360,7 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info_for_partition,
+                 const net::IsolationInfo& isolation_info,
 #endif
                  net::HttpResponseHeaders* headers,
                  const AllowCookieCallback& allow_cookie_callback,
@@ -395,7 +394,6 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     std::optional<net::CookiePartitionKey> optional_partition_key = std::nullopt;
-    const auto& isolation_info = GetIsolationInfo(request, isolation_info_for_partition);
     if (!isolation_info.IsEmpty()) {
       optional_partition_key = net::CookiePartitionKey::FromNetworkIsolationKey(
         isolation_info.network_isolation_key(), request.site_for_cookies,
