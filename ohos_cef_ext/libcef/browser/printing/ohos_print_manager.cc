@@ -439,6 +439,11 @@ void OhosPrintManager::GetDefaultPrintSettings(
                   << page_count;
       });
   UpdateParam(CreatePdfSettings(page_ranges), fd_, pdf_writing_done_callback);
+
+  if (!settings_) {
+    LOG(ERROR) << "settings_ is invalid.";
+    return;
+  }
   printing::RenderParamsFromPrintSettings(*settings_, params.get());
   params->document_cookie = cookie();
   std::move(callback).Run(std::move(params));
@@ -472,6 +477,10 @@ void OhosPrintManager::ScriptedPrint(
     return;
   }
 
+  if (!settings_) {
+    LOG(ERROR) << "settings_ is invalid.";
+    return;
+  }
   printing::RenderParamsFromPrintSettings(*settings_, params->params.get());
   params->params->document_cookie = scripted_params->cookie;
   params->pages = settings_->ranges();
