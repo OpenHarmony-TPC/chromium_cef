@@ -63,29 +63,28 @@ struct DetermineFilenameInfo {
 class ExDownloadsItemData : public base::SupportsUserData {
  public:
   // 构造函数
-  explicit ExDownloadsItemData(const ExDownloadsItem& item) {
-    byExtensionId_ = item.byExtensionId.value_or("");
-    byExtensionName_ = item.byExtensionName.value_or("");
-    bytesReceived_ = item.bytesReceived;
-    canResume_ = item.canResume;
-    danger_ = item.danger;
-    endTime_ = item.endTime.value_or("");
-    error_ = item.error;
-    estimatedEndTime_ = item.estimatedEndTime.value_or("");
-    exists_ = item.exists;
-    fileSize_ = item.fileSize;
-    filename_ = item.filename;
-    finalUrl_ = item.finalUrl;
-    download_id_ = item.id;
-    incognito_ = item.incognito;
-    mime_ = item.mime;
-    paused_ = item.paused;
-    referrer_ = item.referrer;
-    startTime_ = item.startTime;
-    state_ = item.state;
-    totalBytes_ = item.totalBytes;
-    downloadUrl_ = item.url;
-
+  explicit ExDownloadsItemData(const ExDownloadsItem& item)
+      : byExtensionId_(item.byExtensionId.value_or("")),
+        byExtensionName_(item.byExtensionName.value_or("")),
+        bytesReceived_(item.bytesReceived),
+        canResume_(item.canResume),
+        danger_(item.danger),
+        endTime_(item.endTime.value_or("")),
+        error_(item.error),
+        estimatedEndTime_(item.estimatedEndTime.value_or("")),
+        exists_(item.exists),
+        fileSize_(item.fileSize),
+        filename_(item.filename),
+        finalUrl_(item.finalUrl),
+        download_id_(item.id),
+        incognito_(item.incognito),
+        mime_(item.mime),
+        paused_(item.paused),
+        referrer_(item.referrer),
+        startTime_(item.startTime),
+        state_(item.state),
+        totalBytes_(item.totalBytes),
+        downloadUrl_(item.url) {
     download_items_[download_id_] = std::shared_ptr<ExDownloadsItemData>(this);
   }
   ~ExDownloadsItemData() {
