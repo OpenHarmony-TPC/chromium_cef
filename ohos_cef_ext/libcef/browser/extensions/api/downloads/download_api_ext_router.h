@@ -87,6 +87,7 @@ class ExDownloadsItemData : public base::SupportsUserData {
         downloadUrl_(item.url) {
     download_items_[download_id_] = std::shared_ptr<ExDownloadsItemData>(this);
   }
+
   ~ExDownloadsItemData() {
     Remove(download_id_);
   }

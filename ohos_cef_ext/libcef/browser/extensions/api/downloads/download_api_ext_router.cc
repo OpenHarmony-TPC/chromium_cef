@@ -109,8 +109,8 @@ base::Value::Dict DownloadItemsToJSON(const ExDownloadsItem* download_item) {
 
   item.bytes_received = download_item->bytesReceived;
   item.can_resume = download_item->canResume;
-  item.danger =
-      static_cast<extensions::api::downloads::DangerType>(download_item->danger);
+  item.danger = static_cast<extensions::api::downloads::DangerType>(
+      download_item->danger);
   item.exists = download_item->exists;
   item.file_size = download_item->fileSize;
   item.filename = download_item->filename;
@@ -171,6 +171,46 @@ void RecordApiFunctions(DownloadsFunctionName function) {
                             DOWNLOADS_FUNCTION_LAST);
 }
 
+base::Value::Dict GenerateDeltaForIncompleteDownload(
+    ExtensionDownloadsEventRouterDataEx* data,
+    ExDownloadsItemData* item_class,
+    base::Value::Dict* new_json,
+    bool* changed,
+    ExDownloadsItem* download_item) {
+  base::Value::Dict delta;
+  *new_json = DownloadItemsToJSON(download_item);
+  std::set<std::string> new_fields;
+  for (auto kv : *new_json) {
+    new_fields.insert(kv.first);
+    if (!IsDownloadDeltaField(kv.first)) {
+      continue;
+    }
+    const base::Value* old_value = data->json().Find(kv.first);
+    if (!old_value || kv.second != *old_value) {
+      delta.SetByDottedPath(kv.first + ".current", kv.second.Clone());
+      if (old_value) {
+        delta.SetByDottedPath(kv.first + ".previous", old_value->Clone());
+      }
+      LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
+                   "GetOnDownloadUpdateDelta changed 2";
+      *changed = true;
+    }
+  }
+
+  for (auto kv : data->json()) {
+    if ((new_fields.find(kv.first) == new_fields.end()) &&
+        IsDownloadDeltaField(kv.first)) {
+      // estimatedEndTime disappears after completion, but bytesReceived
+      // stays.
+      delta.SetByDottedPath(kv.first + ".previous", kv.second.Clone());
+      LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
+                   "GetOnDownloadUpdateDelta changed 3";
+      *changed = true;
+    }
+  }
+  return delta;
+}
+
 base::Value::Dict GetOnDownloadUpdateDelta(
     ExtensionDownloadsEventRouterDataEx* data,
     ExDownloadsItemData* item_class,
@@ -190,36 +230,8 @@ base::Value::Dict GetOnDownloadUpdateDelta(
       *changed = true;
     }
   } else {
-    *new_json = DownloadItemsToJSON(download_item);
-    std::set<std::string> new_fields;
-    for (auto kv : *new_json) {
-      new_fields.insert(kv.first);
-      if (!IsDownloadDeltaField(kv.first)) {
-        continue;
-      }
-      const base::Value* old_value = data->json().Find(kv.first);
-      if (!old_value || kv.second != *old_value) {
-        delta.SetByDottedPath(kv.first + ".current", kv.second.Clone());
-        if (old_value) {
-          delta.SetByDottedPath(kv.first + ".previous", old_value->Clone());
-        }
-        LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
-                     "GetOnDownloadUpdateDelta changed 2";
-        *changed = true;
-      }
-    }
-
-    for (auto kv : data->json()) {
-      if ((new_fields.find(kv.first) == new_fields.end()) &&
-          IsDownloadDeltaField(kv.first)) {
-        // estimatedEndTime disappears after completion, but bytesReceived
-        // stays.
-        delta.SetByDottedPath(kv.first + ".previous", kv.second.Clone());
-        LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
-                     "GetOnDownloadUpdateDelta changed 3";
-        *changed = true;
-      }
-    }
+    delta = GenerateDeltaForIncompleteDownload(data, item_class, new_json,
+                                               changed, download_item);
   }
   return delta;
 }
@@ -746,13 +758,13 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
   ExtensionDownloadsEventRouterDataEx* data =
       ExtensionDownloadsEventRouterDataEx::Get(item_class);
   if (!data) {
-    data =
-        new ExtensionDownloadsEventRouterDataEx(item_class, base::Value::Dict());
+    data = new ExtensionDownloadsEventRouterDataEx(item_class,
+                                                   base::Value::Dict());
   }
   base::Value::Dict new_json;
   bool changed = false;
-  base::Value::Dict delta = GetOnDownloadUpdateDelta(data, item_class, &new_json,
-                                                     &changed, download_item);
+  base::Value::Dict delta = GetOnDownloadUpdateDelta(
+      data, item_class, &new_json, &changed, download_item);
 
   delta.Set("id", item_class->GetId());
 
@@ -813,8 +825,8 @@ void ExtensionDownloadsEventRouterEx::OnDeterminingFilename(
       ExtensionDownloadsEventRouterDataEx::Get(item_class);
   if (!data) {
     LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDeterminingFilename !data";
-    data =
-        new ExtensionDownloadsEventRouterDataEx(item_class, base::Value::Dict());
+    data = new ExtensionDownloadsEventRouterDataEx(item_class,
+                                                   base::Value::Dict());
   }
   data->BeginFilenameDetermination(std::move(filename_changed_callback));
   bool any_determiners = false;
@@ -882,7 +894,8 @@ bool ExtensionDownloadsEventRouterEx::DetermineFilename(
 
   ExDownloadsItemData* item_class = ExDownloadsItemData::Get(info.download_id);
   ExtensionDownloadsEventRouterDataEx* data =
-      item_class ? ExtensionDownloadsEventRouterDataEx::Get(item_class) : nullptr;
+      item_class ? ExtensionDownloadsEventRouterDataEx::Get(item_class)
+                 : nullptr;
   // maxListeners=1 in downloads.idl and suggestCallback in
   // downloads_custom_bindings.js should prevent duplicate DeterminerCallback
   // calls from the same renderer, but an extension may have more than one
