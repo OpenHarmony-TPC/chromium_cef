@@ -108,15 +108,4 @@ bool ShouldForceIgnoreSiteForCookies(
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-const net::IsolationInfo& GetIsolationInfo(const network::ResourceRequest& request,
-                                           const net::IsolationInfo& isolation_info) {
-  if (request.trusted_params.has_value() &&
-      !request.trusted_params->isolation_info.IsEmpty()) {
-    return request.trusted_params->isolation_info;
-  }
-  return isolation_info;
-}
-#endif
-
 }  // namespace net_service::cookie_helper

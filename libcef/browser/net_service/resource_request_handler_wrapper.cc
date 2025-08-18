@@ -730,7 +730,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         new_url, init_state_->is_off_the_record_,
-        isolation_info_,
+        GetIsolationInfo(*(state->request_)),
 #endif
         allow_cookie_callback, std::move(done_cookie_callback));
   }
@@ -1142,7 +1142,7 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
         init_state_->browser_context_getter_, *(state->request_),
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
         init_state_->is_off_the_record_,
-        isolation_info_,
+        GetIsolationInfo(*(state->request_)),
 #endif
         headers,
         allow_cookie_callback, std::move(done_cookie_callback));
@@ -1454,6 +1454,16 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
   static bool IsExternalRequest(const network::ResourceRequest* request) {
     return !scheme::IsInternalHandledScheme(request->url.scheme());
   }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  const net::IsolationInfo& GetIsolationInfo(const network::ResourceRequest& request) {
+    if (request.trusted_params.has_value() &&
+        !request.trusted_params->isolation_info.IsEmpty()) {
+      return request.trusted_params->isolation_info;
+    }
+    return isolation_info_;
+  }
+#endif
 
   scoped_refptr<InitHelper> init_helper_;
   std::unique_ptr<InitState> init_state_;
