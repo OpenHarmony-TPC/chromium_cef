@@ -25,9 +25,8 @@ class DownloadsEraseFunction : public ExtensionFunction {
 
   static void EraseCallback(
       const base::WeakPtr<DownloadsEraseFunction>& function,
-      const char* error,
-      const uint32_t count,
-      const int* eraseIds);
+      std::optional<std::string> error,
+      std::vector<int32_t>& erase_id);
   bool call_downloads_erase_ = false;
 
  protected:
@@ -46,7 +45,7 @@ class DownloadsOpenFunction : public ExtensionFunction {
   ResponseAction Run() override;
 
   static void OpenCallback(const base::WeakPtr<DownloadsOpenFunction>& function,
-                           const char* error);
+                           std::optional<std::string> error);
 
   bool call_downloads_open_ = false;
 
@@ -68,7 +67,7 @@ class DownloadsRemoveFileFunction : public ExtensionFunction {
 
   static void RemoveFileCallback(
       const base::WeakPtr<DownloadsRemoveFileFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_remove_file_ = false;
 
@@ -89,7 +88,7 @@ class DownloadsPauseFunction : public ExtensionFunction {
 
   static void PauseCallback(
       const base::WeakPtr<DownloadsPauseFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_pause_ = false;
 
@@ -110,7 +109,7 @@ class DownloadsResumeFunction : public ExtensionFunction {
 
   static void ResumeCallback(
       const base::WeakPtr<DownloadsResumeFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_resume_ = false;
 
@@ -131,7 +130,7 @@ class DownloadsCancelFunction : public ExtensionFunction {
 
   static void CancelCallback(
       const base::WeakPtr<DownloadsCancelFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_cancel_ = false;
 
@@ -153,7 +152,7 @@ class DownloadsAcceptDangerFunction : public ExtensionFunction {
 
   static void AcceptDangerCallback(
       const base::WeakPtr<DownloadsAcceptDangerFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_accept_danger_ = false;
 
@@ -175,7 +174,7 @@ class DownloadsSetUiOptionsFunction : public ExtensionFunction {
 
   static void SetUiOptionsCallback(
       const base::WeakPtr<DownloadsSetUiOptionsFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_set_ui_options_ = false;
 
@@ -199,7 +198,7 @@ class DownloadsSetShelfEnabledFunction : public ExtensionFunction {
 
   static void SetShelfEnabledCallback(
       const base::WeakPtr<DownloadsSetShelfEnabledFunction>& function,
-      const char* error);
+      std::optional<std::string> error);
 
   bool call_downloads_set_shelf_enabled_ = false;
 
@@ -219,7 +218,7 @@ class DownloadsShowFunction : public ExtensionFunction {
 
   ResponseAction Run() override;
   static void ShowCallback(const base::WeakPtr<DownloadsShowFunction>& function,
-                           const char* error);
+                           std::optional<std::string> error);
 
   bool call_downloads_show_ = false;
 
@@ -261,9 +260,9 @@ class DownloadsSearchFunction : public ExtensionFunction {
 
   static void SearchCallback(
       const base::WeakPtr<DownloadsSearchFunction>& function,
-      const char* error,
+      std::optional<std::string> error,
       const uint32_t count,
-      const ExDownloadsItem* downloadItems);
+      std::vector<ExDownloadsItem>& download_items);
   bool call_downloads_search_ = false;
 
  protected:
@@ -283,9 +282,9 @@ class DownloadsGetFileIconFunction : public ExtensionFunction {
   ResponseAction Run() override;
   static void GetFileIconCallback(
       const base::WeakPtr<DownloadsGetFileIconFunction>& function,
-      const char* error,
-      const ExDownloadsIconBitmap& bitmap);
-  bool call_downloads_getFileIcon_ = false;
+      std::optional<std::string> error,
+      std::string iconUrl);
+  bool call_downloads_getfileicon_ = false;
 
  protected:
   ~DownloadsGetFileIconFunction() override;
