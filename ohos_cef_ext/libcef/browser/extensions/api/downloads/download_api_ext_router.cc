@@ -191,8 +191,6 @@ base::Value::Dict GenerateDeltaForIncompleteDownload(
       if (old_value) {
         delta.SetByDottedPath(kv.first + ".previous", old_value->Clone());
       }
-      LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
-                   "GetOnDownloadUpdateDelta changed 2";
       *changed = true;
     }
   }
@@ -203,8 +201,6 @@ base::Value::Dict GenerateDeltaForIncompleteDownload(
       // estimatedEndTime disappears after completion, but bytesReceived
       // stays.
       delta.SetByDottedPath(kv.first + ".previous", kv.second.Clone());
-      LOG(INFO) << "ExtensionDownloadsEventRouterEx::"
-                   "GetOnDownloadUpdateDelta changed 3";
       *changed = true;
     }
   }
@@ -225,8 +221,6 @@ base::Value::Dict GetOnDownloadUpdateDelta(
       DCHECK(item_class->GetFileExternallyRemoved());
       delta.SetByDottedPath("exists.current", false);
       delta.SetByDottedPath("exists.previous", true);
-      LOG(INFO) << "ExtensionDownloadsEventRouterEx::GetOnDownloadUpdateDelta "
-                   "changed 1";
       *changed = true;
     }
   } else {
@@ -496,41 +490,6 @@ ExtensionDownloadsEventRouterEx::GetInstance() {
   return instance;
 }
 
-void printfDownloadItem(ExDownloadsItem* items) {
-  if (items->byExtensionId) {
-    LOG(INFO) << "printfDownloadItem byExtensionId: " << *items->byExtensionId;
-  }
-  if (items->byExtensionName) {
-    LOG(INFO) << "printfDownloadItem byExtensionName: "
-              << *items->byExtensionName;
-  }
-  LOG(INFO) << "printfDownloadItem bytesReceived: " << items->bytesReceived;
-  LOG(INFO) << "printfDownloadItem canResume: " << items->canResume;
-  LOG(INFO) << "printfDownloadItem danger: " << items->danger;
-  if (items->endTime) {
-    LOG(INFO) << "printfDownloadItem endTime: " << items->endTime.value();
-  }
-  LOG(INFO) << "printfDownloadItem error: " << items->error;
-  if (items->estimatedEndTime) {
-    LOG(INFO) << "printfDownloadItem estimatedEndTime: "
-              << *items->estimatedEndTime;
-  }
-  LOG(INFO) << "printfDownloadItem exists: " << items->exists;
-  LOG(INFO) << "printfDownloadItem fileSize: " << items->fileSize;
-  LOG(INFO) << "printfDownloadItem filename: " << items->filename;
-  LOG(INFO) << "printfDownloadItem finalUrl: " << items->finalUrl;
-  LOG(INFO) << "printfDownloadItem id: " << items->id;
-  LOG(INFO) << "printfDownloadItem incognito: " << items->incognito;
-  LOG(INFO) << "printfDownloadItem mime: " << items->mime;
-  LOG(INFO) << "printfDownloadItem paused: " << items->paused;
-  LOG(INFO) << "printfDownloadItem referrer: " << items->referrer;
-  LOG(INFO) << "printfDownloadItem startTime: " << items->startTime;
-  LOG(INFO) << "printfDownloadItem state: " << items->state;
-  LOG(INFO) << "printfDownloadItem totalBytes: " << items->totalBytes;
-  LOG(INFO) << "printfDownloadItem url: " << items->url;
-  LOG(INFO) << "printfDownloadItem end";
-}
-
 void ExtensionDownloadsEventRouterEx::OnListenerRemoved(
     const EventListenerInfo& details) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
@@ -564,7 +523,6 @@ void ExtensionDownloadsEventRouterEx::OnListenerRemoved(
     if (!item_class) {
       item_class = new ExDownloadsItemData(itemsVector[i]);
     }
-    printfDownloadItem(&itemsVector[i]);
     ExtensionDownloadsEventRouterDataEx* data =
         ExtensionDownloadsEventRouterDataEx::Get(item_class);
     if (!data) {
