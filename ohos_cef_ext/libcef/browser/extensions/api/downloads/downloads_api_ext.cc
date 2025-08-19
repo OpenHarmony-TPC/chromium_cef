@@ -380,7 +380,7 @@ ExtensionFunction::ResponseAction DownloadsEraseFunction::Run() {
 void DownloadsEraseFunction::EraseCallback(
     const base::WeakPtr<DownloadsEraseFunction>& function,
     std::optional<std::string> error,
-    std::vector<int32_t> erase_id) {
+    std::vector<int32_t>& erase_id) {
   DCHECK(function);
   if (error.has_value()) {
     LOG(INFO) << "DownloadsEraseFunction EraseCallback error: "
@@ -951,7 +951,7 @@ void DownloadsSearchFunction::SearchCallback(
     const base::WeakPtr<DownloadsSearchFunction>& function,
     std::optional<std::string> error,
     const uint32_t count,
-    std::vector<ExDownloadsItem> download_items) {
+    std::vector<ExDownloadsItem>& download_items) {
   LOG(INFO) << "DownloadsSearchFunction SearchCallback";
   DCHECK(function);
   if (error.has_value()) {

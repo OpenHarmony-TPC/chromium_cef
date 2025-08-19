@@ -62,7 +62,6 @@ struct DetermineFilenameInfo {
 /* downloadItemData */
 class ExDownloadsItemData : public base::SupportsUserData {
  public:
-  // 构造函数
   explicit ExDownloadsItemData(const ExDownloadsItem& item)
       : byExtensionId_(item.byExtensionId.value_or("")),
         byExtensionName_(item.byExtensionName.value_or("")),
@@ -95,7 +94,6 @@ class ExDownloadsItemData : public base::SupportsUserData {
   static ExDownloadsItemData* Get(int download_id);
   static void Remove(int download_id);
 
-  // Getter 方法
   std::string GetByExtensionId() const { return byExtensionId_; }
   std::string GetByExtensionName() const { return byExtensionName_; }
   double GetBytesReceived() const { return bytesReceived_; }
@@ -119,7 +117,6 @@ class ExDownloadsItemData : public base::SupportsUserData {
   std::string GetUrl() const { return downloadUrl_; }
   bool GetFileExternallyRemoved() const { return !exists_; }
 
-  // Setter 方法
   void SetByExtensionId(const std::string& value) { byExtensionId_ = value; }
   void SetByExtensionName(const std::string& value) {
     byExtensionName_ = value;
@@ -291,17 +288,14 @@ class ExtensionDownloadsEventRouterDataEx
       const base::FilePath& filename,
       downloads::FilenameConflictAction conflict_action);
 
-  /* ExtensionDownloadsEventRouterEx::OnListenerRemoved 调用 */
   base::FilePath creator_suggested_filename() const {
     return creator_suggested_filename_;
   }
 
-  // 暂时无人调用
   downloads::FilenameConflictAction creator_conflict_action() const {
     return creator_conflict_action_;
   }
 
-  /* ExtensionDownloadsEventRouterEx::OnDeterminingFilename 调用 */
   void ResetCreatorSuggestion() {
     DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
     creator_suggested_filename_.clear();
@@ -311,7 +305,6 @@ class ExtensionDownloadsEventRouterDataEx
   // Returns false if this |extension_id| was not expected or if this
   // |extension_id| has already reported. The caller is responsible for
   // validating |filename|.
-  /* ExtensionDownloadsEventRouterEx::DetermineFilename 调用 */
   bool DeterminerCallback(content::BrowserContext* browser_context,
                           const ExtensionId& extension_id,
                           const base::FilePath& filename,

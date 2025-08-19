@@ -26,7 +26,7 @@ class DownloadsEraseFunction : public ExtensionFunction {
   static void EraseCallback(
       const base::WeakPtr<DownloadsEraseFunction>& function,
       std::optional<std::string> error,
-      std::vector<int32_t> erase_id);
+      std::vector<int32_t>& erase_id);
   bool call_downloads_erase_ = false;
 
  protected:
@@ -262,7 +262,7 @@ class DownloadsSearchFunction : public ExtensionFunction {
       const base::WeakPtr<DownloadsSearchFunction>& function,
       std::optional<std::string> error,
       const uint32_t count,
-      std::vector<ExDownloadsItem> download_items);
+      std::vector<ExDownloadsItem>& download_items);
   bool call_downloads_search_ = false;
 
  protected:

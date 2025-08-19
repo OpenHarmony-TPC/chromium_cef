@@ -550,7 +550,6 @@ void ExtensionDownloadsEventRouterEx::OnListenerRemoved(
   if (!determiner_removed && any_listeners) {
     return;
   }
-  // 这里需要从端侧获取所有item
 
   ExDownloadsItemVector itemsVector =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance()
@@ -664,67 +663,28 @@ void ExtensionDownloadsEventRouterEx::UpdateDownloadsItemData(
     ExDownloadsItemData* item_class,
     const ExDownloadsItem* download_item) {
   if (item_class == nullptr || download_item == nullptr) {
-    // 处理空指针情况，例如记录错误日志或抛出异常
     return;
   }
-
-  // 更新 bytesReceived
   item_class->SetBytesReceived(download_item->bytesReceived);
-
-  // 更新 canResume
   item_class->SetCanResume(download_item->canResume);
-
-  // 更新 danger
   item_class->SetDanger(download_item->danger);
-
-  // 更新 endTime
   item_class->SetEndTime(
       download_item->endTime.value_or(item_class->GetEndTime()));
-
-  // 更新 error
   item_class->SetError(download_item->error);
-
-  // 更新 estimatedEndTime
   item_class->SetEstimatedEndTime(download_item->estimatedEndTime.value_or(
       item_class->GetEstimatedEndTime()));
-
-  // 更新 exists
   item_class->SetExists(download_item->exists);
-
-  // 更新 fileSize
   item_class->SetFileSize(download_item->fileSize);
-
-  // 更新 filename
   item_class->SetFilename(download_item->filename);
-
-  // 更新 finalUrl
   item_class->SetFinalUrl(download_item->finalUrl);
-
-  // 更新 id
   item_class->SetId(download_item->id);
-
-  // 更新 incognito
   item_class->SetIncognito(download_item->incognito);
-
-  // 更新 mime
   item_class->SetMime(download_item->mime);
-
-  // 更新 paused
   item_class->SetPaused(download_item->paused);
-
-  // 更新 referrer
   item_class->SetReferrer(download_item->referrer);
-
-  // 更新 startTime
   item_class->SetStartTime(download_item->startTime);
-
-  // 更新 state
   item_class->SetState(download_item->state);
-
-  // 更新 totalBytes
   item_class->SetTotalBytes(download_item->totalBytes);
-
-  // 更新 url
   item_class->SetUrl(download_item->url);
 }
 
@@ -859,8 +819,6 @@ void ExtensionDownloadsEventRouterEx::DetermineFilenameInternal(
     *info.winner_extension_id = info.suggesting_extension_id;
     *info.determined_filename = info.filename;
     *info.determined_conflict_action = info.conflict_action;
-    LOG(INFO) << "ExtensionDownloadsEventRouterEx::DetermineFilenameInternal 1"
-              << ", info.determined_filename: " << info.filename.value();
     return;
   }
 
@@ -869,9 +827,6 @@ void ExtensionDownloadsEventRouterEx::DetermineFilenameInternal(
     info.warnings->insert(Warning::CreateDownloadFilenameConflictWarning(
         info.suggesting_extension_id, info.incumbent_extension_id,
         info.filename, *info.determined_filename));
-    LOG(INFO) << "ExtensionDownloadsEventRouterEx::DetermineFilenameInternal 2"
-              << ", info.determined_filename: "
-              << (*info.determined_filename).value();
     return;
   }
 
