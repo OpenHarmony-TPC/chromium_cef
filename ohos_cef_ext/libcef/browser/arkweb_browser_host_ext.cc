@@ -1920,12 +1920,14 @@ void ArkWebBrowserHostExtImpl::ClosePortInternal(const CefString& portHandle) {
 
   postedPorts_.erase(portHandle.ToString());
   LOG(DEBUG) << "ClosePort end";
+  Release();
 }
 
 void ArkWebBrowserHostExtImpl::ClosePort(const CefString& portHandle) {
-    sequenced_task_runner_->PostTask(
-        FROM_HERE, base::BindOnce(&ArkWebBrowserHostExtImpl::ClosePortInternal,
-                                  this, portHandle));
+  AddRef();
+  sequenced_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&ArkWebBrowserHostExtImpl::ClosePortInternal,
+                                this, portHandle));
 }
 
 bool ArkWebBrowserHostExtImpl::ConvertCefValueToBlinkMsg(
@@ -2136,7 +2138,12 @@ void ArkWebBrowserHostExtImpl::SetPortMessageCallback(
 
 void ArkWebBrowserHostExtImpl::DestroyAllWebMessagePorts() {
   base::AutoLock msg_lock(web_message_lock_);
-  LOG(DEBUG) << "clear all message ports";
+  LOG(INFO) << "clear all message ports";
+  for (auto& port : portMap_) {
+    CefString handleCef;
+    handleCef.FromString(std::to_string(port.first.first));
+    ClosePort(handleCef);
+  }
   portMap_.clear();
   receiverMap_.clear();
   postedPorts_.clear();
