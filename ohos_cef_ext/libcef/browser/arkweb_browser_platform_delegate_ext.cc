@@ -253,3 +253,11 @@ CefRefPtr<CefDragData> ArkWebCefBrowserPlatformDelegateExt::GetDropData() {
   return nullptr;
 }
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool ArkWebCefBrowserPlatformDelegateExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  return true;
+}
+#endif // ARKWEB_PERFORMANCE_PERSISTENT_TASK
