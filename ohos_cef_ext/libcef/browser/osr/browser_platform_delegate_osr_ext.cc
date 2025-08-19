@@ -911,3 +911,17 @@ void CefBrowserPlatformDelegateOsrExt::OnPdfLoadEvent(int32_t result, const std:
   }
 }
 #endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool CefBrowserPlatformDelegateOsrExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  if (!browser_ || !browser_->GetClient().get() ||
+      !browser_->GetClient()->AsArkWebClient().get()) {
+    LOG(ERROR) << "has nullptr, default return true";
+    return true;
+  }
+  return browser_->GetClient()->AsArkWebClient()->OnStartBackgroundTask(
+      type, message);
+}
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
