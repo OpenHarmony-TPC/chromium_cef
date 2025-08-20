@@ -179,6 +179,11 @@ public:
   void OnPdfScrollAtBottom(const std::string& url) override;
   void OnPdfLoadEvent(int32_t result, const std::string& url) override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(

@@ -1812,6 +1812,19 @@ void AlloyBrowserHostImplExt::SetAudioSessionType(int audioSessionType) {
 }
 #endif // BUILDFLAG(ARKWEB_MEDIA_POLICY)
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool AlloyBrowserHostImplExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  if (platform_delegate_ &&
+      platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()) {
+    return platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnStartBackgroundTask(type, message);
+  }
+  return true;
+}
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 std::unique_ptr<content::MediaPlayerListener>
 AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
