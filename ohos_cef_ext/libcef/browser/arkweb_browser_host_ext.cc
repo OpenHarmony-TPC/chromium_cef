@@ -1895,17 +1895,11 @@ void ArkWebBrowserHostExtImpl::ClosePortInternal(const CefString& portHandle) {
   LOG(DEBUG) << "ClosePort Start";
 
   // find port and close, then erase the item in map
-  blink::WebMessagePort port;
   for (auto iter = portMap_.begin(); iter != portMap_.end(); ++iter) {
-    if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0) {
-      port = std::move(iter->second.first);
-      port.Close();
-      portMap_.erase(iter);
-      break;
-    } else if (portHandle.ToString().compare(
-                   std::to_string(iter->first.second)) == 0) {
-      port = std::move(iter->second.second);
-      port.Close();
+    if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0 ||
+        portHandle.ToString().compare(std::to_string(iter->first.second)) == 0) {
+      iter->second.first.Close();
+      iter->second.second.Close();
       portMap_.erase(iter);
       break;
     }
@@ -2144,9 +2138,6 @@ void ArkWebBrowserHostExtImpl::DestroyAllWebMessagePorts() {
     handleCef.FromString(std::to_string(port.first.first));
     ClosePort(handleCef);
   }
-  portMap_.clear();
-  receiverMap_.clear();
-  postedPorts_.clear();
 }
 #endif  // BUILDFLAG(ARKWEB_MSGPORT)
 
