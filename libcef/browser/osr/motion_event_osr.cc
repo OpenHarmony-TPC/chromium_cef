@@ -247,6 +247,11 @@ ui::PointerProperties CefMotionEventOSR::GetPointerPropertiesFromTouchEvent(
   pointer_properties.id = id;
   pointer_properties.pressure = touch.pressure;
   pointer_properties.source_device_id = 0;
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  pointer_properties.tilt_x = touch.tiltX;
+  pointer_properties.tilt_y = touch.tiltY;
+  pointer_properties.twist = touch.rotation_angle;
+#endif //BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   pointer_properties.SetAxesAndOrientation(touch.radius_x, touch.radius_y,
                                            touch.rotation_angle);
