@@ -215,7 +215,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void WasOccluded() override;
   void SetEnableLowerFrameRate(bool enabled);
   void SetEnableHalfFrameRate(bool enabled);
-  void EvictFrameBackBuffers(bool invisible) override;
+  void EvictFrameBackBuffers() override;
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
