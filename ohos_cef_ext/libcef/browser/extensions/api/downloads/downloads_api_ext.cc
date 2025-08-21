@@ -25,10 +25,12 @@
 #include "chrome/browser/extensions/api/downloads/downloads_api.h"
 #include "chrome/common/extensions/api/downloads.h"
 #include "components/download/public/common/download_item.h"
+#include "content/public/browser/web_contents.h"
 #include "download_api_ext_router.h"
 #include "extensions/browser/extension_function_dispatcher.h"
 #include "extensions/common/extension.h"
 #include "extensions/common/mojom/event_dispatcher.mojom-forward.h"
+#include "extensions/common/permissions/permissions_data.h"
 #include "net/base/filename_util.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_downloads_cef_delegate.h"
 #include "third_party/bounds_checking_function/include/securec.h"
@@ -36,111 +38,27 @@
 
 using content::BrowserContext;
 using download::DownloadItem;
+using extensions::mojom::APIPermissionID;
 
 namespace extensions {
 namespace {
 namespace downloads = api::downloads;
+const char kOpenPermission[] = "The \"downloads.open\" permission is required";
+const char kShelfPermission[] =
+    "downloads.setShelfEnabled requires the "
+    "\"downloads.shelf\" permission";
+const char kUiPermission[] =
+    "downloads.setUiOptions requires the "
+    "\"downloads.ui\" permission";
+const char kUserGesture[] = "User gesture required";
 
-#define NWEB_DOWNLOADS_SAFE_FREE(ptr) \
-  do {                                \
-    if (ptr) {                        \
-      free(ptr);                      \
-      ptr = nullptr;                  \
-    }                                 \
-  } while (0)
-
-#define OP_PARAMS_GET_DOUBLE(c, v, result)              \
-  if (c) {                                              \
-    (v) = static_cast<double*>(malloc(sizeof(double))); \
-    if (!(v)) {                                         \
-      LOG(INFO) << "malloc double file: " << (#v);      \
-      (result) = false;                                 \
-    } else {                                            \
-      *(v) = (c).value();                               \
-    }                                                   \
+bool Fault(bool error, const char* message_in, std::string* message_out) {
+  if (!error) {
+    return false;
   }
-
-#define OP_PARAMS_GET_STRING(c, v, result)         \
-  if (c) {                                         \
-    (v) = strdup((c).value().c_str());             \
-    if (!(v)) {                                    \
-      LOG(INFO) << "malloc string file: " << (#v); \
-      (result) = false;                            \
-    }                                              \
-  }
-
-#define OP_PARAMS_GET_BOOL(c, v, result)            \
-  if (c) {                                          \
-    (v) = static_cast<bool*>(malloc(sizeof(bool))); \
-    if (!(v)) {                                     \
-      LOG(INFO) << "malloc bool file: " << (#v);    \
-      (result) = false;                             \
-    } else {                                        \
-      *(v) = (c).value();                           \
-    }                                               \
-  }
-
-#define OP_PARAMS_GET_INT(c, v, result)           \
-  if (c) {                                        \
-    (v) = static_cast<int*>(malloc(sizeof(int))); \
-    if (!(v)) {                                   \
-      LOG(INFO) << "malloc int file: " << (#v);   \
-      (result) = false;                           \
-    } else {                                      \
-      *(v) = (c).value();                         \
-    }                                             \
-  }
-
-#define OP_PARAMS_COPY_VECTOR_STRINGS(v, result)     \
-  if (v) {                                           \
-    for (uint32_t i = 0; i < (v)->count; ++i) {      \
-      (v)->strs[i] = strdup(strList[i].c_str());     \
-      if (!(v)->strs[i]) {                           \
-        LOG(INFO) << "vector strdup file: " << (#v); \
-        (result) = false;                            \
-      }                                              \
-    }                                                \
-  }
-
-#define PARAMS_GET_ENUMINT(c, v, result)           \
-  (v) = static_cast<int*>(malloc(sizeof(int)));    \
-  if (!(v)) {                                      \
-    LOG(INFO) << "malloc enum int file: " << (#v); \
-    (result) = false;                              \
-  } else {                                         \
-    *(v) = static_cast<int>(c);                    \
-  }
-
-#define EXTENSION_PARAMS_GET_BOOL(c, v, result)     \
-  do {                                              \
-    (v) = static_cast<bool*>(malloc(sizeof(bool))); \
-    if (!(v)) {                                     \
-      LOG(INFO) << "malloc bool file: " << (#v);    \
-      (result) = false;                             \
-    } else {                                        \
-      *(v) = (c);                                   \
-    }                                               \
-  } while (0)
-
-#define EXTENSION_PARAMS_GET_STRING(c, v, result)  \
-  do {                                             \
-    (v) = strdup((c).c_str());                     \
-    if (!(v)) {                                    \
-      LOG(INFO) << "malloc string file: " << (#v); \
-      (result) = false;                            \
-    }                                              \
-  } while (0)
-
-#define EXTENSION_PARAMS_GET_INT(c, v, result)    \
-  do {                                            \
-    (v) = static_cast<int*>(malloc(sizeof(int))); \
-    if (!(v)) {                                   \
-      LOG(INFO) << "malloc int file: " << (#v);   \
-      (result) = false;                           \
-    } else {                                      \
-      *(v) = (c);                                 \
-    }                                             \
-  } while (0)
+  *message_out = message_in;
+  return true;
+}
 
 extensions::api::downloads::DangerType ConvertDangerType(
     download::DownloadDangerType danger) {
@@ -415,6 +333,26 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
     return RespondNow(BadMessage());
   }
 
+  // Extensions with debugger permission could fake user gestures and should
+  // not be trusted.
+  std::string error;
+  if (Fault(!user_gesture(), download_extension_errors::kUserGesture, &error) ||
+      Fault(!extension()->permissions_data()->HasAPIPermission(
+                APIPermissionID::kDownloadsOpen),
+            download_extension_errors::kOpenPermission, &error)) {
+    return RespondNow(Error(std::move(error)));
+  }
+
+  // Prompt user for ack to open the download.
+  // TODO(qinmin): check if user prefers to open all download using the same
+  // extension, or check the recent user gesture on the originating webcontents
+  // to avoid showing the prompt.
+  if (!GetSenderWebContents() ||
+      !GetSenderWebContents()->HasRecentInteraction() ||
+      extension()->permissions_data()->HasAPIPermission(
+          APIPermissionID::kDebugger)) {
+      return RespondNow(NoArguments());
+  }
   int downloadId = params->download_id;
   LOG(INFO) << "DownloadsOpenFunction::Run downloadId: " << downloadId;
 
@@ -750,6 +688,11 @@ ExtensionFunction::ResponseAction DownloadsSetUiOptionsFunction::Run() {
     return RespondNow(BadMessage());
   }
 
+  if (!extension()->permissions_data()->HasAPIPermission(
+          APIPermissionID::kDownloadsUi)) {
+    return RespondNow(Error(download_extension_errors::kUiPermission));
+  }
+
   ExDownloadsUiOptions options;
   options.enabled = params->options.enabled;
   options.extensionId = extension_id();
@@ -804,6 +747,11 @@ ExtensionFunction::ResponseAction DownloadsSetShelfEnabledFunction::Run() {
       downloads::SetShelfEnabled::Params::Create(args());
   if (!params) {
     return RespondNow(BadMessage());
+  }
+  // TODO(devlin): Solve this with the feature system.
+  if (!extension()->permissions_data()->HasAPIPermission(
+          APIPermissionID::kDownloadsShelf)) {
+    return RespondNow(Error(download_extension_errors::kShelfPermission));
   }
 
   ExDownloadsUiOptions options;
