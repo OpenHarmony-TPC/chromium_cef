@@ -1172,12 +1172,6 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
       std::unique_ptr<NWebExtensionTab> tab) {}
 
   ///
-  /// Receiving the tab activated notification.
-  /// 
-  /*--cef()--*/ 
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) {}
-
-  ///
   /// Receiving the tab removed notification.
   ///
   /*--cef()--*/
@@ -1192,7 +1186,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
     int new_position, int new_window_id) {}
 
   ///
-  /// Receiving the tab created notification.
+  /// Receiving the tab detached notification.
   ///
   /*--cef()--*/
   virtual void WebExtensionTabDetached(int tab_id,
