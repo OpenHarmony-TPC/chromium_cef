@@ -50,6 +50,7 @@ const char kShelfPermission[] =
 const char kUiPermission[] =
     "downloads.setUiOptions requires the "
     "\"downloads.ui\" permission";
+const char kUserGesture[] = "User gesture required";
 
 bool Fault(bool error, const char* message_in, std::string* message_out) {
   if (!error) {
@@ -335,7 +336,8 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
   // Extensions with debugger permission could fake user gestures and should
   // not be trusted.
   std::string error;
-  if (Fault(!extension()->permissions_data()->HasAPIPermission(
+  if (Fault(!user_gesture(), download_extension_errors::kUserGesture, &error) ||
+      Fault(!extension()->permissions_data()->HasAPIPermission(
                 APIPermissionID::kDownloadsOpen),
             download_extension_errors::kOpenPermission, &error)) {
     return RespondNow(Error(std::move(error)));
