@@ -392,6 +392,9 @@ bool ExtensionDownloadsEventRouterDataEx::DeterminerAlreadyReported(
 void ExtensionDownloadsEventRouterDataEx::CreatorSuggestedFilename(
     const base::FilePath& filename,
     downloads::FilenameConflictAction conflict_action) {
+  LOG(INFO)
+      << "ExtensionDownloadsEventRouterEx::CreatorSuggestedFilename start filename: "
+      << filename.value();
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   creator_suggested_filename_ = filename;
   creator_conflict_action_ = conflict_action;
