@@ -141,7 +141,6 @@ public:
 
   void ExtensionSetTabId(int tab_id) override;
   int ExtensionGetTabId() override;
-  void WebExtensionTabActivated(int tab_id, int window_id) override;
 
   void WebExtensionTabRemoved(int tab_id,
     bool isWindowClosing, int windowId) override;

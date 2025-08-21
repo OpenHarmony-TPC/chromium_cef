@@ -901,17 +901,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
   extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
       tab_id, web_contents, std::move(changeInfo), std::move(tab));
 }
- 
-void AlloyBrowserHostImplExt::WebExtensionTabActivated(int tab_id, int window_id) {
-  content::BrowserContext* browser_context = nullptr;
-  content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabActivated", browser_context, web_contents)) {
-    return;
-  }
-
-  extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabActived(tab_id, window_id, web_contents);
-}
 
 void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
   if (!CEF_CURRENTLY_ON_UIT()) {
