@@ -1139,6 +1139,15 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   ///
   /*--cef()--*/
   virtual void CancelAllPrerendering() = 0;
+
+  
+#if defined(OHOS_INPUT_EVENTS)
+  ///
+  /// Set focus by position.
+  ///
+  /*--cef()--*/
+  virtual bool SetFocusByPosition(float x, float y) = 0;
+#endif // defined(OHOS_INPUT_EVENTS)
 #endif
 };
 
