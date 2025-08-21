@@ -799,3 +799,20 @@ void CefExecuteJavaScriptWithUserGestureForTests(CefRefPtr<CefFrame> frame,
     impl->ExecuteJavaScriptWithUserGestureForTests(javascript);
   }
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+bool CefFrameHostImpl::SetFocusByPosition(float x, float y) {
+  if (is_temporary() || !render_frame_host_) {
+    LOG(ERROR) << "is temporary or not render frame host.";
+    return false;
+  }
+
+  if (!render_frame_.is_bound()) {
+    LOG(ERROR) << "render frame is not bound.";
+    return false;
+  }
+  bool out_isEditable = false;
+  render_frame_->SetFocusByPosition(x, y, &out_isEditable);
+  return out_isEditable;
+}
+#endif // defined(OHOS_INPUT_EVENTS)

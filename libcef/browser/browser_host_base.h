@@ -643,6 +643,9 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   std::string custom_user_agent_;
 #endif
   IMPLEMENT_REFCOUNTING(CefBrowserHostBase);
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y) override;
+#endif // defined(OHOS_INPUT_EVENTS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_HOST_BASE_H_

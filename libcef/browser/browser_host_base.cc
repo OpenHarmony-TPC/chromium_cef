@@ -1562,3 +1562,14 @@ bool CefBrowserHostBase::EnsureFileDialogManager() {
   }
   return true;
 }
+
+#if defined(OHOS_INPUT_EVENTS)
+bool CefBrowserHostBase::SetFocusByPosition(float x, float y) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    y -= GetShrinkViewportHeight() * GetVirtualPixelRatio();
+    return static_cast<CefFrameHostImpl*>(frame.get())->SetFocusByPosition(x, y);
+  }
+  return false;
+}
+#endif // defined(OHOS_INPUT_EVENTS)
