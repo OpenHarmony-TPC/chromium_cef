@@ -372,14 +372,14 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
 }
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
-void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers(bool invisible) {
-  TRACE_EVENT1("base", "ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers",
-               "invisible", invisible);
+void ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers() {
+  TRACE_EVENT0("base", "ArkWebRenderWidgetHostViewOSRExt::EvictFrameBackBuffers");
+
   if (browser_impl_.get() && browser_impl_->GetAcceleratedWidget(is_popup_)) {
     ui::Compositor* compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
       browser_impl_->GetAcceleratedWidget(is_popup_));
-    if(compositor) {
-        compositor->Utils()->EvictFrameBackBuffers(invisible);
+    if (compositor) {
+      compositor->Utils()->EvictFrameBackBuffers();
     }
   }
 }
