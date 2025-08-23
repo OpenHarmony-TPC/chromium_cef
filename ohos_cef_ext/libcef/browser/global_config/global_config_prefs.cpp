@@ -39,11 +39,20 @@ bool CheckFeaturesSwitches(const base::Value& item) {
 
   std::string hash_str = base::Uuid::GenerateRandomV4().AsLowercaseString() + *name;
   size_t hash_value = base::FastHash(hash_str);
-  if ((hash_value % kMaxProbability) > probability.value()) {
+  if ((int)(hash_value % kMaxProbability) > probability.value()) {
     LOG(INFO) << "probability is Not Satisfied.";
     return false;
   }
   return true;
+}
+
+void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList) {
+  if (!g_browser_process || !(g_browser_process->local_state())) {
+    return;
+  }
+  g_browser_process->local_state()->ClearPref(kGlobalConfigFeaturesSwitches);
+  g_browser_process->local_state()->SetList(kGlobalConfigFeaturesSwitches, std::move(prefsList));
+  g_browser_process->local_state()->CommitPendingWrite();
 }
 
 void ParseFeaturesSwitchesToPrefs() {
@@ -101,8 +110,7 @@ void ParseFeaturesSwitchesToPrefs() {
     }
   }
 
-  g_browser_process->local_state()->SetList(kGlobalConfigFeaturesSwitches, std::move(prefs_list));
-  g_browser_process->local_state()->CommitPendingWrite();
+  SetFeaturesSwitchesToPrefsFile(std::move(prefs_list));
 }
 
 void OnGlobalConfigResult(const std::string& path) {
