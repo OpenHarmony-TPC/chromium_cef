@@ -192,18 +192,22 @@ void IconHelper::DownloadFaviconCallback(
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
 
   std::vector<size_t> best_indices;
-#if BUILDFLAG(ARKWEB_NWEB_EX)
+  SelectFaviconFrameIndices(original_bitmap_sizes,
+                            std::vector<int>(1U, LARGEST_ICON_SIZE),
+                            &best_indices, nullptr);
+  const auto& bitmap =
+      bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+#if defined(OHOS_NWEB_EX)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
       base::ohos::IsPcDevice()) {
     float current_score;
     SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);
-    const auto& bitmap =
-        bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
-    SkBitmap new_bitmap;
-    new_bitmap.allocPixels(bitmap.info());
-    bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
-    best_results_map_[request_id].push_back({current_score, image_url, new_bitmap});
     std::lock_guard<std::mutex> lock(mutex_);
+    best_results_map_[request_id].push_back({current_score, image_url, CopySkBitmap(bitmap)});
+    if (best_indices.size() > 1) {
+      const auto& current_bitmap = bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
+      best_results_map_[request_id].push_back({current_score, image_url, CopySkBitmap(current_bitmap)});
+    }
     std::unordered_set<std::string>& pending_urls = pending_downloads_map_[request_id];
     pending_urls.erase(image_url.spec());
     if (!pending_urls.empty()) {
@@ -216,18 +220,8 @@ void IconHelper::DownloadFaviconCallback(
     pending_downloads_map_.erase(request_id);
     best_results_map_.erase(request_id);
     return;
-  } else {
-    SelectFaviconFrameIndices(original_bitmap_sizes,
-                              std::vector<int>(1U, LARGEST_ICON_SIZE),
-                              &best_indices, nullptr);
   }
-#else
-  SelectFaviconFrameIndices(original_bitmap_sizes,
-                            std::vector<int>(1U, LARGEST_ICON_SIZE),
-                            &best_indices, nullptr);
 #endif
-  const auto& bitmap =
-      bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
   DownloadFaviconHandler(image_url, bitmap, browser);
 }
 
