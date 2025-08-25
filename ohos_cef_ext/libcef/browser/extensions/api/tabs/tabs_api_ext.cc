@@ -18,6 +18,7 @@
 #include "chrome/browser/extensions/api/tabs/tabs_constants.h"
 #include "chrome/browser/extensions/api/tabs/tabs_api.h"
 #include "chrome/browser/extensions/extension_tab_util.h"
+#include "chrome/browser/profiles/profile.h"
 #include "components/sessions/content/session_tab_helper.h"
 #include "components/zoom/zoom_controller.h"
 #include "extensions/browser/extension_zoom_request_client.h"
@@ -57,6 +58,27 @@ const char kJavaScriptUrlsNotAllowedInTabsUpdate[] =
 const char kSetOpenerError[] = "Cannot set a tab's opener to itself.";
 constexpr char kCannotDetermineLanguageOfUnloadedTab[] =
     "Cannot determine language: tab not loaded";
+
+std::optional<std::string> GetExtensionContextType(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    return std::nullopt;
+  }
+
+  if (browser_context->IsOffTheRecord()) {
+    return "INCOGNITO";
+  }
+
+  Profile* profile = Profile::FromBrowserContext(browser_context);
+  if (!profile) {
+    return std::nullopt;
+  }
+
+  if (profile->IsRegularProfile()) {
+    return "REGULAR";
+  }
+  return std::nullopt;
+}
 
 void SetQueryInfoCurrentWindowId(WebContents* webcontents,
                                  NWebExtensionTabQueryInfo& queryInfo) {
@@ -185,9 +207,17 @@ void GetCreateParams(
   }
 }
 
-int GetAnyWebContents(int windowId) {
-  int current_tab_id = OHOS::NWeb::NWebExtensionTabCefDelegate::GetAnyTab(windowId);
-  LOG(INFO) << "GetAnyWebContents return " << current_tab_id << "; by windowId=" << windowId;
+int GetAnyWebContents(int windowId, ExtensionFunction* function) {
+  NWebExtensionTabGetAnyTabParams params = {
+    .windowId = windowId,
+    .contextType = GetExtensionContextType(function->browser_context()),
+    .includeIncognitoInfo = function->include_incognito_information(),
+  };
+
+  int current_tab_id =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::GetAnyTab(params);
+  LOG(INFO) << "GetAnyWebContents return " << current_tab_id
+            << "; by windowId=" << windowId;
   return current_tab_id;
 }
 
@@ -200,7 +230,7 @@ int GetCurrentWebContents(ExtensionFunction* function) {
 
   // 2. service worker
   if (!web_contents) {
-    return GetAnyWebContents(extension_misc::kCurrentWindowId);
+    return GetAnyWebContents(extension_misc::kCurrentWindowId, function);
   }
 
   // 3. v2 background, window_id < 0
@@ -208,7 +238,7 @@ int GetCurrentWebContents(ExtensionFunction* function) {
   int nweb_id = web_contents->GetNWebId();
   int window_id = 
       extensions::CefExtensionWindowIdManager::GetWindowId(nweb_id);
-  return GetAnyWebContents(window_id);
+  return GetAnyWebContents(window_id, function);
 }
 
 WebContents* GetTabsAPIDefaultWebContents(ExtensionFunction* function,
@@ -257,7 +287,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
     image_details = ImageDetails::FromValue(args()[1]);
   }
 
-  int current = GetAnyWebContents(window_id);
+  int current = GetAnyWebContents(window_id, this);
   if (current < 0) {
     LOG(INFO) << "TabsCaptureVisibleTabFunction cannot find WebContents by window_id:" << window_id;
     return RespondNow(Error("No active web contents to capture"));
@@ -491,7 +521,9 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
   int tab_id = params->tab_id;
   std::unique_ptr<NWebExtensionTab> web_extension_tab =
-      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(tab_id);
+      OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(
+          tab_id, GetExtensionContextType(browser_context()),
+          include_incognito_information());
   if (!web_extension_tab) {
     return RespondNow(Error(kNotImplementedError));
   }
@@ -758,13 +790,15 @@ ExtensionFunction::ResponseAction TabsMoveFunction::Run() {
     tab_ids.emplace_back(*params->tab_ids.as_integer);
   }
 
-  struct NWebExtensionTabMoveProperties moveProperties;
-  moveProperties.index = params->move_properties.index;
-  moveProperties.windowId = params->move_properties.window_id;
+  NWebExtensionTabMovePropertiesV2 movePropertiesV2;
+  movePropertiesV2.properties.index = params->move_properties.index;
+  movePropertiesV2.properties.windowId = params->move_properties.window_id;
+  movePropertiesV2.contextType = GetExtensionContextType(browser_context());
+  movePropertiesV2.includeIncognitoInfo = include_incognito_information();
 
   call_move_tab_ = true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::MoveTab(
-      tab_ids, moveProperties,
+      tab_ids, movePropertiesV2,
       base::BindRepeating(&TabsMoveFunction::OnTabMoved,
                           weak_ptr_factory_.GetWeakPtr()));
   call_move_tab_ = false;
@@ -820,12 +854,25 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
   LOG(DEBUG) << "TabsQueryFunction Run";
 
-  NWebExtensionTabQueryInfo queryInfo;
+  NWebExtensionTabQueryInfoV2 queryInfo;
   WebContents* webcontents = GetSenderWebContents();
-  SetQueryInfoCurrentWindowId(webcontents, queryInfo);
-  GetQueryParams(params, queryInfo);
-  std::vector<NWebExtensionTab> tabs = OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
+  SetQueryInfoCurrentWindowId(webcontents, queryInfo.query);
+  GetQueryParams(params, queryInfo.query);
 
+  URLPatternSet url_patterns;
+  if (queryInfo.query.url) {
+    std::string error;
+    if (!url_patterns.Populate(*queryInfo.query.url, URLPattern::SCHEME_ALL,
+                               true, &error)) {
+      return RespondNow(Error(std::move(error)));
+    }
+  }
+
+  queryInfo.contextType = GetExtensionContextType(browser_context());
+  queryInfo.includeIncognitoInfo = include_incognito_information();
+
+  std::vector<NWebExtensionTab> tabs =
+      OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
   base::Value::List tab_list = GetTabValueList(tabs);
   return RespondNow(WithArguments(std::move(tab_list)));
 }
@@ -837,14 +884,16 @@ ExtensionFunction::ResponseAction TabsGetSelectedFunction::Run() {
 
   LOG(DEBUG) << "TabsGetSelectedFunction Run";
 
-  NWebExtensionTabQueryInfo query_info;
-  WebContents* web_contents = GetSenderWebContents();
+  NWebExtensionTabQueryInfoV2 query_info;
+  query_info.contextType = GetExtensionContextType(browser_context());
+  query_info.includeIncognitoInfo = include_incognito_information();
 
-  query_info.active = true;
-  query_info.windowId = params->window_id;
-  if (!query_info.windowId) {
-    SetQueryInfoCurrentWindowId(web_contents, query_info);
-    query_info.currentWindow = true;
+  WebContents* web_contents = GetSenderWebContents();
+  query_info.query.active = true;
+  query_info.query.windowId = params->window_id;
+  if (!query_info.query.windowId) {
+    SetQueryInfoCurrentWindowId(web_contents, query_info.query);
+    query_info.query.currentWindow = true;
   }
 
   std::vector<NWebExtensionTab> tabs =
@@ -898,10 +947,15 @@ ExtensionFunction::ResponseAction TabsRemoveFunction::Run() {
     tab_ids.emplace_back(*params->tab_ids.as_integer);
   }
 
+  NWebExtensionTabRemoveParams nwebParams;
+  nwebParams.tabIds = tab_ids;
+  nwebParams.contextType = GetExtensionContextType(browser_context());
+  nwebParams.includeIncognitoInfo = include_incognito_information();
+
   call_remove_tab_ = true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::RemoveTab(
-      tab_ids, base::BindRepeating(&TabsRemoveFunction::OnTabRemoved,
-                                   weak_ptr_factory_.GetWeakPtr()));
+      nwebParams, base::BindRepeating(&TabsRemoveFunction::OnTabRemoved,
+                                      weak_ptr_factory_.GetWeakPtr()));
   call_remove_tab_ = false;
 
   if (did_respond()) {
@@ -1040,10 +1094,15 @@ ExtensionFunction::ResponseAction TabsUngroupFunction::Run() {
     tab_ids.push_back(*params->tab_ids.as_integer);
   }
 
+  NWebExtensionTabUngroupParams nwebParams;
+  nwebParams.tabIds = tab_ids;
+  nwebParams.contextType = GetExtensionContextType(browser_context());
+  nwebParams.includeIncognitoInfo = include_incognito_information();
+
   call_ungroup_tab_ = true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::UngroupTab(
-      tab_ids, base::BindRepeating(&TabsUngroupFunction::OnTabUngrouped,
-                                   weak_ptr_factory_.GetWeakPtr()));
+      nwebParams, base::BindRepeating(&TabsUngroupFunction::OnTabUngrouped,
+                                      weak_ptr_factory_.GetWeakPtr()));
   call_ungroup_tab_ = false;
 
   if (did_respond()) {
