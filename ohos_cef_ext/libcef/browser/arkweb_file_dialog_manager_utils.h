@@ -46,6 +46,8 @@ class ArkwebFileDialogManagerUtils {
 
   void HandleDialogDestruction();
 
+  void HandleSetFileChooserInActive();
+
  private:
   const raw_ptr<CefFileDialogManager> cef_file_dialog_manager_;
 };

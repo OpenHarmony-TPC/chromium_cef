@@ -15,6 +15,7 @@
 
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_file_dialog_manager_utils.h"
 
+#include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/file_dialog_manager.h"
 
 using blink::mojom::FileChooserParams;
@@ -51,5 +52,11 @@ void ArkwebFileDialogManagerUtils::HandleDialogDestruction() {
     // There should be no further listener callbacks after this call.
     cef_file_dialog_manager_->dialog_->ListenerDestroyed();
     cef_file_dialog_manager_->dialog_ = nullptr;
+  }
+}
+
+void ArkwebFileDialogManagerUtils::HandleSetFileChooserInActive() {
+  if (cef_file_dialog_manager_->browser_->GetWebContents()) {
+    cef_file_dialog_manager_->browser_->GetWebContents()->SetFileChooserInActive();
   }
 }
