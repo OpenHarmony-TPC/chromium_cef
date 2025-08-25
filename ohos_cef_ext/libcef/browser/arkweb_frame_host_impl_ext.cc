@@ -689,11 +689,11 @@ void ArkwebFrameHostExtImpl::SendBlanklessKeyToRenderFrame(
     return;
   }
 
-  uint64_t id = compositor->frame_sinke_id().hash();
+  uint64_t id = compositor->frame_sink_id().hash();
   SendToRenderFrame(
     __FUNCTION__,
     base::BindOnce(
-      [](uint32 nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+      [](uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
          int64_t pref_hash, const RenderFrameType& render_frame) {
         render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
       }, nweb_id, blankless_key, id, pref_hash));
