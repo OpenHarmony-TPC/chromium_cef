@@ -77,6 +77,13 @@ void sortCallbackData(std::vector<IconHelper::CallbackData>& data_list) {
       return a.score < b.score;
     });
 }
+
+SkBitmap CopySkBitmap(const SkBitmap& bitmap) {
+  SkBitmap new_bitmap;
+  new_bitmap.allocPixels(bitmap.info());
+  bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
+  return new_bitmap;
+}
 #endif
 }  // namespace
 
