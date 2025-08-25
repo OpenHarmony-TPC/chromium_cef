@@ -346,6 +346,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_CLEARED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isCopy_ = false;
@@ -359,6 +360,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
       isSelectAll_ = false;
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STARTED:
       handle_drag_in_progress_ = true;
       if (controller && controller->AsTouchSelectionControllerExt()
@@ -372,6 +374,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       isCopy_ = false;
       ShowQuickMenu();
 #endif // ARKWEB_MENU_HANDLE
+      [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
       handle_drag_in_progress_ = false;
 #if BUILDFLAG(ARKWEB_MENU)
@@ -401,6 +404,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       if (quick_menu_requested_) {
         quick_menu_requested_ = false;
       }
+      [[fallthrough]];
     case ui::SELECTION_HANDLES_MOVED:
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
       if (handles_hidden_by_selection_ui_) {
