@@ -197,7 +197,7 @@ void IconHelper::DownloadFaviconCallback(
                             &best_indices, nullptr);
   const auto& bitmap =
       bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
-#if defined(OHOS_NWEB_EX)
+#if BUILDFLAG(ARKWEB_NWEB_EX)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
       base::ohos::IsPcDevice()) {
     float current_score;
