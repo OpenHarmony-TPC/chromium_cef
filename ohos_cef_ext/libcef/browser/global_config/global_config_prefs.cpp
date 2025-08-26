@@ -53,7 +53,7 @@ void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList, PrefService* lo
         base::BindOnce(&SetFeaturesSwitchesToPrefsFile, std::move(prefsList), localState));
     return;
   }
- 
+
   if (g_browser_process && g_browser_process->local_state()) {
     g_browser_process->local_state()->ClearPref(kGlobalConfigFeaturesSwitches);
     g_browser_process->local_state()->SetList(kGlobalConfigFeaturesSwitches, std::move(prefsList));
