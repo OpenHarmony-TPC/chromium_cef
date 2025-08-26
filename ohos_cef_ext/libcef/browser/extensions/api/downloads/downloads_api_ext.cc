@@ -939,11 +939,6 @@ void DownloadsDownloadFunction::OnStarted(
   }
 
   DCHECK_EQ(download::DOWNLOAD_INTERRUPT_REASON_NONE, interrupt_reason);
-
-  LOG(INFO)
-      << "DownloadsDownloadFunction OnStarted creator_suggested_filename: "
-      << creator_suggested_filename.value()
-      << ", creator_conflict_action: " << (int)creator_conflict_action;
   call_downloads_download_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().GetDownloadId(
@@ -991,13 +986,10 @@ void DownloadsDownloadFunction::GetDownloadIdCallback(
 
     ExDownloadsItemData* itemClass = ExDownloadsItemData::Get(itemStruct.id);
     if (!itemClass) {
+      LOG(INFO) << "DownloadsDownloadFunction::GetDownloadIdCallback !item_class";
       itemClass = new ExDownloadsItemData(itemStruct);
     }
 
-    LOG(INFO) << "DownloadsDownloadFunction GetDownloadIdCallback "
-                 "creator_suggested_filename: "
-              << creator_suggested_filename.value()
-              << ", creator_conflict_action: " << (int)creator_conflict_action;
     if (!creator_suggested_filename.empty() ||
         (creator_conflict_action !=
          downloads::FilenameConflictAction::kUniquify)) {
@@ -1013,7 +1005,6 @@ void DownloadsDownloadFunction::GetDownloadIdCallback(
     }
     new DownloadedByExtensionEx(itemClass, function->extension()->id(),
                                 function->extension()->name());
-    item->UpdateObservers();
   }
 
   if (!function->call_downloads_download_) {
