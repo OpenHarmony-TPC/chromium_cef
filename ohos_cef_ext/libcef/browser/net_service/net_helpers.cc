@@ -230,38 +230,6 @@ bool IsAppStorageSandboxUrl(const GURL& url) {
 }
 #endif
 
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-bool IsInFileAccessList(const GURL& url,
-                        const std::vector<std::string>& pass_dir) {
-  if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
-    return false;
-  }
-
-  auto url_path = base::MakeAbsoluteFilePathNoResolveSymbolicLinks(
-      base::FilePath(url.path())).value_or(base::FilePath());
-  if (url_path.empty()) {
-    return false;
-  }
-  for (auto& path : pass_dir) {
-    auto pass_path =
-        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
-            .value_or(base::FilePath());
-    if (pass_path.empty()) {
-      return false;
-    }
-    if (!pass_path.IsParent(url_path)) {
-      if (pass_path == url_path) {
-        LOG(INFO) << "IsInFileAccessList equal";
-        return true;
-      }
-    } else {
-      return true;
-    }
-  }
-  return false;
-}
-#endif
-
 bool IsURLBlocked(const GURL& url
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 ,
@@ -275,12 +243,12 @@ bool IsURLBlocked(const GURL& url
   }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if (url.SchemeIsFile() && !setting.file_access_dirs_list.empty()) {
-    bool result = IsInFileAccessList(url, setting.file_access_dirs_list);
-    if (!result) {
+  if (url.SchemeIsFile() && (setting.file_access_dirs_list != FileAccessType::kFileAccessEmpty)) {
+    if (setting.file_access_dirs_list == FileAccessType::kFileAccessBlock) {
       LOG(WARNING) << "Blocked by file access list";
+      return true;
     }
-    return !result;
+    return false;
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_LOAD)
 

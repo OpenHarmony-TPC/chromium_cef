@@ -1149,7 +1149,8 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Set grant file access dirs.
   ///
   virtual void SetGrantFileAccessDirs(
-      const std::vector<CefString>& dir_list) = 0;
+      const std::vector<CefString>& dir_list,
+      const std::vector<CefString>& excluded_dir_list) = 0;
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   ///
