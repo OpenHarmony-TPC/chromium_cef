@@ -113,6 +113,9 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_net_export_ui.cc",
   "//cef/ohos_cef_ext/libcef/browser/net/ohos_net_export_ui.h",
 
+  "//cef/ohos_cef_ext/libcef/browser/net/extra_headers_throttle.h",
+  "//cef/ohos_cef_ext/libcef/browser/net/extra_headers_throttle.cc",
+
   "//cef/ohos_cef_ext/libcef/browser/prefs/arkweb_browser_prefs_ext.cc",
   "//cef/ohos_cef_ext/libcef/browser/prefs/arkweb_browser_prefs_ext.h",
 
