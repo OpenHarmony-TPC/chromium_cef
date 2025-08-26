@@ -49,6 +49,8 @@ class ArkwebBrowserInfoManagerUtils {
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   bool IsExtensionsOptionsUiFrame(
       const content::GlobalRenderFrameHostToken& global_token);
+  bool IsExtensionsOffscreenFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
  private:
