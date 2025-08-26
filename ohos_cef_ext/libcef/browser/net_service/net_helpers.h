@@ -47,7 +47,7 @@ struct NetHelperSetting {
 #if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
   bool disallow_sandbox_file_access_from_file_url = false;
 #endif
-  FileAccessType file_access_dirs_list = FileAccessType::kFileAccessEmpty;
+  FileAccessType file_access_status = FileAccessType::kFileAccessEmpty;
 };
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 

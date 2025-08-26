@@ -196,6 +196,19 @@ enum class WebScrollType : int { UNKNOWN = -1, EVENT = 0 };
 
 const int32_t kFrameIdMinLength = 3;
 
+bool CheckUrlPath(base::FilePath url_path, CefString& path) {
+    auto file_path =
+        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
+            .value_or(base::FilePath());
+    if (file_path.empty()) {
+      return false;
+    }
+    if (file_path == url_path || file_path.IsParent(url_path)) {
+      return true;
+    }
+    return false;
+}
+
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -1496,31 +1509,14 @@ net_service::FileAccessType ArkWebBrowserHostExtImpl::IsInFileAccessList(const G
   }
 
   for (auto& path : file_excluded_dirs_list_) {
-    auto excluded_path =
-        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
-            .value_or(base::FilePath());
-    if (excluded_path.empty()) {
-      continue;
-    }
-    if (excluded_path == url_path || excluded_path.IsParent(url_path)) {
-      LOG(INFO) << "IsInFileAccessList excluded";
+    if (CheckUrlPath(url_path, path)) {
+      LOG(WARNING) << "IsInFileAccessList excluded";
       return net_service::FileAccessType::kFileAccessBlock;
     }
   }
 
   for (auto& path : file_access_dirs_list_) {
-    auto pass_path =
-        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
-            .value_or(base::FilePath());
-    if (pass_path.empty()) {
-      continue;
-    }
-    if (!pass_path.IsParent(url_path)) {
-      if (pass_path == url_path) {
-        LOG(INFO) << "IsInFileAccessList equal";
-        return net_service::FileAccessType::kFileAccessPass;
-      }
-    } else {
+    if (CheckUrlPath(url_path, path)) {
       return net_service::FileAccessType::kFileAccessPass;
     }
   }
@@ -1534,7 +1530,7 @@ void ArkWebBrowserHostExtImpl::GetSettingOfNetHelper(const GURL& url, struct net
 #if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
   setting.disallow_sandbox_file_access_from_file_url = GetDisallowSandboxFileAccessFromFileUrl();
 #endif
-  setting.file_access_dirs_list = IsInFileAccessList(url);
+  setting.file_access_status = IsInFileAccessList(url);
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 

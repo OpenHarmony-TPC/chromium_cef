@@ -243,8 +243,8 @@ bool IsURLBlocked(const GURL& url
   }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  if (url.SchemeIsFile() && (setting.file_access_dirs_list != FileAccessType::kFileAccessEmpty)) {
-    if (setting.file_access_dirs_list == FileAccessType::kFileAccessBlock) {
+  if (url.SchemeIsFile() && (setting.file_access_status != FileAccessType::kFileAccessEmpty)) {
+    if (setting.file_access_status == FileAccessType::kFileAccessBlock) {
       LOG(WARNING) << "Blocked by file access list";
       return true;
     }
