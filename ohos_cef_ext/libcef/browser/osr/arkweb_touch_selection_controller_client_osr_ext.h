@@ -83,6 +83,8 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void ExecuteCommand(int command_id, int event_flags) override;
 #if BUILDFLAG(ARKWEB_MENU)
   void NotifyShowMagnifier() override;
+  void ConvertClientClippedSelectionBounds(
+    gfx::Rect& clipped_selection_bounds) override;
 #endif  // BUILDFLAG(ARKWEB_MENU)
  private:
   // // Not owned, non-null for the lifetime of this object.

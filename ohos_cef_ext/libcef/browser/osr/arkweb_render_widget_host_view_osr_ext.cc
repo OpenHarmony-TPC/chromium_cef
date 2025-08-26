@@ -990,6 +990,19 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTextSelectionChanged(
     LOG(INFO) << "OnTextSelectionChanged selected_text is null";
   }
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::OnSelectAreaChanged(
+    CefRect& select_area,
+    bool need_report) {
+  if (!browser_impl_ || !browser_impl_->GetClient()) {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+    browser_impl_->GetClient()->GetRenderHandler();
+  if (handler) {
+    handler->OnSelectAreaChanged(select_area);
+  }
+}
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)

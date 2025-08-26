@@ -1053,4 +1053,17 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyShowMagnifier() {
     }
   }
 }
+
+void ArkWebTouchSelectionControllerClientOSRExt::
+    ConvertClientClippedSelectionBounds(gfx::Rect& clipped_selection_bounds) {
+  if(rwhv_ && rwhv_->AsArkWebRenderWidgetHostViewOSRExt()) {
+    CefRect converted_rect(
+        clipped_selection_bounds.x(), clipped_selection_bounds.y(),
+        clipped_selection_bounds.width(), clipped_selection_bounds.height());
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnSelectAreaChanged(
+        converted_rect, true);
+    clipped_selection_bounds = {converted_rect.x, converted_rect.y,
+                                converted_rect.width, converted_rect.height};
+  }
+}
 #endif

@@ -89,6 +89,15 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
       const CefTouchHandleState& end_selection_handle,
       bool need_report) override {}
 
+#if BUILDFLAG(ARKWEB_MENU) || BUILDFLAG(ARKWEB_PDF)
+  ///
+  /// Called when touch selection is updated, but select_area data id not
+  /// controlled by kernel.The select_area is the shadow area between
+  /// touch handles.Initially added for PDF.
+  ///
+  virtual void OnSelectAreaChanged(CefRect& select_area) {}
+#endif
+
   ///
   /// Called when the RootLayer has changed.
   ///
