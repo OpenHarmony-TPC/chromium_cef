@@ -174,22 +174,21 @@ void RecordApiFunctions(DownloadsFunctionName function) {
 base::Value::Dict GenerateDeltaForIncompleteDownload(
     ExtensionDownloadsEventRouterDataEx* data,
     ExDownloadsItemData* item_class,
-    base::Value::Dict* new_json,
+    base::Value::Dict* delta,
     bool* changed,
     ExDownloadsItem* download_item) {
-  base::Value::Dict delta;
-  *new_json = DownloadItemsToJSON(download_item);
+  base::Value::Dict new_json = DownloadItemsToJSON(download_item);
   std::set<std::string> new_fields;
-  for (auto kv : *new_json) {
+  for (auto kv : new_json) {
     new_fields.insert(kv.first);
     if (!IsDownloadDeltaField(kv.first)) {
       continue;
     }
     const base::Value* old_value = data->json().Find(kv.first);
     if (!old_value || kv.second != *old_value) {
-      delta.SetByDottedPath(kv.first + ".current", kv.second.Clone());
+      delta->SetByDottedPath(kv.first + ".current", kv.second.Clone());
       if (old_value) {
-        delta.SetByDottedPath(kv.first + ".previous", old_value->Clone());
+        delta->SetByDottedPath(kv.first + ".previous", old_value->Clone());
       }
       *changed = true;
     }
@@ -200,11 +199,11 @@ base::Value::Dict GenerateDeltaForIncompleteDownload(
         IsDownloadDeltaField(kv.first)) {
       // estimatedEndTime disappears after completion, but bytesReceived
       // stays.
-      delta.SetByDottedPath(kv.first + ".previous", kv.second.Clone());
+      delta->SetByDottedPath(kv.first + ".previous", kv.second.Clone());
       *changed = true;
     }
   }
-  return delta;
+  return new_json;
 }
 
 base::Value::Dict GetOnDownloadUpdateDelta(
@@ -224,9 +223,12 @@ base::Value::Dict GetOnDownloadUpdateDelta(
       *changed = true;
     }
   } else {
-    delta = GenerateDeltaForIncompleteDownload(data, item_class, new_json,
-                                               changed, download_item);
+    *new_json = GenerateDeltaForIncompleteDownload(data, item_class, &delta,
+                                                   changed, download_item);
   }
+  LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDownloadUpdated changed: "
+            << *changed;
+  delta.Set("id", item_class->GetId());
   return delta;
 }
 
@@ -392,9 +394,7 @@ bool ExtensionDownloadsEventRouterDataEx::DeterminerAlreadyReported(
 void ExtensionDownloadsEventRouterDataEx::CreatorSuggestedFilename(
     const base::FilePath& filename,
     downloads::FilenameConflictAction conflict_action) {
-  LOG(INFO)
-      << "ExtensionDownloadsEventRouterEx::CreatorSuggestedFilename start filename: "
-      << filename.value();
+  LOG(INFO) << "ExtensionDownloadsEventRouterEx::CreatorSuggestedFilename";
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   creator_suggested_filename_ = filename;
   creator_conflict_action_ = conflict_action;
@@ -580,9 +580,7 @@ void ExtensionDownloadsEventRouterEx::DispatchEvent(dispatchEventInfo info) {
 void ExtensionDownloadsEventRouterEx::OnDownloadCreated(
     ExDownloadsItem* download_item,
     content::BrowserContext* browser_context) {
-  LOG(INFO)
-      << "ExtensionDownloadsEventRouterEx::OnDownloadCreated start state: "
-      << download_item->state;
+  LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDownloadCreated";
   EventRouter* router =
       EventRouter::Get(Profile::FromBrowserContext(browser_context));
   if (!router || (!router->HasEventListener(downloads::OnCreated::kEventName) &&
@@ -601,10 +599,9 @@ void ExtensionDownloadsEventRouterEx::OnDownloadCreated(
 
   ExDownloadsItemData* item_class = ExDownloadsItemData::Get(download_item->id);
   if (!item_class) {
+    LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDownloadCreated "
+                 "!item_class";
     item_class = new ExDownloadsItemData(*download_item);
-  } else {
-    UpdateDownloadsItemData(item_class,
-                            const_cast<ExDownloadsItem*>(download_item));
   }
 
   if (!ExtensionDownloadsEventRouterDataEx::Get(item_class) &&
@@ -617,6 +614,8 @@ void ExtensionDownloadsEventRouterEx::OnDownloadCreated(
             ? base::Value::Dict()
             : std::move(jsonItem));
   }
+  UpdateDownloadsItemData(item_class,
+                          const_cast<ExDownloadsItem*>(download_item));
 }
 
 /* onChanged */
@@ -663,6 +662,8 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
 
   ExDownloadsItemData* item_class = ExDownloadsItemData::Get(download_item->id);
   if (!item_class) {
+    LOG(INFO)
+        << "ExtensionDownloadsEventRouterEx::OnDownloadUpdated !item_class";
     item_class = new ExDownloadsItemData(*download_item);
   } else {
     const Extension* extension =
@@ -672,13 +673,12 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
     if (extension) {
       item_class->SetByExtensionName(extension->name());
     }
-    UpdateDownloadsItemData(item_class,
-                            const_cast<ExDownloadsItem*>(download_item));
   }
 
   ExtensionDownloadsEventRouterDataEx* data =
       ExtensionDownloadsEventRouterDataEx::Get(item_class);
   if (!data) {
+    LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDownloadUpdated !data";
     data = new ExtensionDownloadsEventRouterDataEx(item_class,
                                                    base::Value::Dict());
   }
@@ -686,8 +686,8 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
   bool changed = false;
   base::Value::Dict delta = GetOnDownloadUpdateDelta(
       data, item_class, &new_json, &changed, download_item);
-
-  delta.Set("id", item_class->GetId());
+  UpdateDownloadsItemData(item_class,
+                          const_cast<ExDownloadsItem*>(download_item));
 
   data->set_is_download_completed(GetDownloadState(item_class->GetState()) ==
                                   ExDownloadsState::kComplete);
@@ -696,8 +696,6 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
       item_class->GetFileExternallyRemoved());
   data->set_json(std::move(new_json));
   data->OnItemUpdated();
-  LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDownloadUpdated changed: "
-            << changed;
   if (changed) {
     DispatchEvent({events::DOWNLOADS_ON_CHANGED,
                    downloads::OnChanged::kEventName, true,
@@ -728,7 +726,8 @@ void ExtensionDownloadsEventRouterEx::OnDeterminingFilename(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   LOG(INFO) << "ExtensionDownloadsEventRouterEx::OnDeterminingFilename start"
             << ", download_id: " << download_item->id
-            << ", state: " << download_item->state;
+            << ", state: " << download_item->state
+            << ", start-time: " << download_item->startTime;
 
   ExDownloadsItemData* item_class = ExDownloadsItemData::Get(download_item->id);
   if (!item_class) {
