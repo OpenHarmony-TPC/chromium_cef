@@ -2800,10 +2800,7 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
 }
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
-                                            CefString& additionalHttpHeaders,
-                                            int minTimeBetweenPrefetchesMs,
-                                            bool ignoreCacheControl) {
+void ArkWebBrowserHostExtImpl::PrefetchPage(PrefetchOptions prefetchOptions) {
   if (!GetWebContents()) {
     return;
   }
@@ -2818,10 +2815,12 @@ void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
       GetWebContents()->GetController().GetDefaultSessionStorageNamespace();
   gfx::Size size = GetWebContents()->GetContainerBounds().size();
 
-  std::string prefetch_url = url;
-  std::string additional_http_headers = additionalHttpHeaders;
-  no_state_prefetch_manager->SetMinTimeBetweenPrefetchesMs(minTimeBetweenPrefetchesMs);
-  no_state_prefetch_manager->SetIgnoreCacheControlNoStore(ignoreCacheControl);
+  std::string prefetch_url = prefetchOptions.urlCef;
+  std::string additional_http_headers = prefetchOptions.additionalHttpHeadersCef;
+  no_state_prefetch_manager->SetMinTimeBetweenPrefetchesMs(
+    prefetchOptions.minTimeBetweenPrefetchesMs);
+  no_state_prefetch_manager->SetIgnoreCacheControlNoStore(
+    prefetchOptions.ignoreCacheControlNoStore);
   no_state_prefetch_manager->StartOhPrefetchingFromOmnibox(
       GURL(prefetch_url), session_storage_namespace, size, nullptr,
       additional_http_headers);
