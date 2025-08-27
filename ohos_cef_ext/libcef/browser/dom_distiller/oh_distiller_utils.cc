@@ -61,14 +61,14 @@ constexpr char kSelected[] = "selected";
 constexpr char kPageSelectList[] = "pageSelectList";
 constexpr char kCatalogPagination[] = "catalogPagination";
 constexpr char kTitle[] = "title";
-constexpr char kTotalTime[] = "totalTime";
-constexpr char kDistillTime[] = "distillTime";
+constexpr char kTotalTime[] = "total_time";
+constexpr char kDistillTime[] = "distill_time";
 constexpr char kTimingInfo[] = "timingInfo";
 constexpr char kCurrentPageUrl[] = "currentPageUrl";
 constexpr char kResultList[] = "resultList";
 
 bool FillResultFields(
-    const dom_distiller::DomDistilledPageProto_HwReadExtendFields& flat,
+    const dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
     base::Value::Dict& dict) {
   dict.Set(kResultCode, 0);
   if (flat.has_distilled_result()) {
@@ -125,7 +125,7 @@ void FillBasicInfoFields(
 void FillContentInfoFields(
     const dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
     bool has_result,
-    base:Value::Dict& dict) {
+    base::Value::Dict& dict) {
   if (flat.has_content_info()) {
     dict.Set(kType, kContent);
     const auto& info = flat.content_info();
@@ -187,7 +187,7 @@ bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFiel
 }
 
 void FillCatalogInfoFields(
-    const oh_dom_distiller::DistlledPageProto_HwReadExtendFields& flat,
+    const dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
     bool has_result,
     base::Value::Dict& dict) {
   if (!flat.has_catalog_info()) {
@@ -195,11 +195,11 @@ void FillCatalogInfoFields(
     return;
   }
   dict.Set(kType, kCatalog);
-  const auto& cata = flat.catalog_info();
+  const auto& cat = flat.catalog_info();
 
   base::Value::List latest;
   base::Value::List all;
-  for (const auto& ch : cata.latest_chapters()) {
+  for (const auto& ch : cat.latest_chapters()) {
     base::Value::Dict ci;
     ci.Set(kChapterName, ch.chapter_name());
     ci.Set(kChapterUrl, ch.chapter_url());
@@ -227,7 +227,7 @@ void FillCatalogInfoFields(
 }
 
 void FillTimingInfoFields(
-    const oh_dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
+    const dom_distiller::DistilledPageProto_HwReadExtendFields& flat,
     base::Value::Dict& dict) {
   if (flat.has_timing_info()) {
     const auto& t = flat.timing_info();
@@ -265,8 +265,8 @@ base::Value::Dict BuildPageContent(
   auto* prev_page_url = dict.FindString(kPrevPageUrl);
   auto* catalog_page_url = dict.FindString(kCatalogPageUrl);
   auto* content = dict.FindString(kPageContent);
-  auto* latest_chapters = dict.FindString(kLatestChapters);
-  auto* all_chapters = dict.FindString(kAllChapters);
+  auto* latest_chapters = dict.FindList(kLatestChapters);
+  auto* all_chapters = dict.FindList(kAllChapters);
   auto* type = dict.FindString(kType);
 
   std::string json;
@@ -279,8 +279,8 @@ base::Value::Dict BuildPageContent(
     auto* next_page = pagination->FindString(kNextPageUrl);
     auto* prev_page = pagination->FindString(kPrevPageUrl);
     auto* more_page = pagination->FindString(kMorePageUrl);
-    auto* page_select = pagination->FindString(kPageSelectList);
-    pagination_str = base::StringPrint(
+    auto* page_select = pagination->FindList(kPageSelectList);
+    pagination_str = base::StringPrintf(
         "%d %d %d %zu", (next_page && !next_page->empty()),
         (prev_page && !prev_page->empty()), (more_page && !more_page->empty()),
         (page_select ? page_select->size() : 0));
@@ -312,7 +312,7 @@ base::Value::List BuildDistilledPageList(
 } // namespace
 
 std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
-    const dom_distiller:DistilledArticleProto* article_proto,
+    const dom_distiller::DistilledArticleProto* article_proto,
     const GURL& url) {
 
   auto result = std::make_unique<std::string>();
@@ -323,7 +323,7 @@ std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     json.Set(kResultCode, kNoPageErrorCode);
     json.Set(kResultMessage, kErrorMsgNoPage);
     base::JSONWriter::Write(std::move(json), result.get());
-    LOG(ERROR) << "[Distiller] DistillResult no pages";
+    LOG(INFO) << "[Distiller] DistillResult no pages";
     return result;
   }
 

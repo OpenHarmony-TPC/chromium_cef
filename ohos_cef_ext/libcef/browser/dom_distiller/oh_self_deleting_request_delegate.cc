@@ -42,13 +42,13 @@ void OhSelfDeletingRequestDelegate::OnArticleReady(
     LOG(ERROR) << __func__ << " [Distiller] DistillResult, callback is null";
     return;
   }
-  LOG(INFO) << __func__ " [Distiller]";
+  LOG(INFO) << __func__ << " [Distiller]";
   auto json_data =
     FormatDistilledArticleProtoToJsonData(article_proto, GetRequestURL());
 
   std::move(distill_result_callback_).Run(*json_data);
 
-  // No need to hold on to the ViewerHandle no that distillation is complete.
+  // No need to hold on to the ViewerHandle now that distillation is complete.
   viewer_handle_.reset();
 }
 

@@ -45,7 +45,7 @@ inline constexpr char kResultMessage[] = "resultMessage";
  * 
  * @param article_proto Constant pointer to the protocol buffer object to
  * convert. Ownership remains with caller. Requirements: Must be non-null and
- * contain at least on valid field
+ * contain at least one valid field
  * 
  * @return std::string Standardized JSON data string. Example format:
  */

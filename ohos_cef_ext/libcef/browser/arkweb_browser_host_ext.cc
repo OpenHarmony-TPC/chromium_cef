@@ -185,7 +185,7 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "libcef/browser/dom_distiller/oh_dom_distiller_manager.h"
-#include "libcef/browser/dom_distiller/oh_dom_distiller_service_factory.h"
+#include "libcef/browser/dom_distiller/oh_self_deleting_request_delegate.h"
 #endif // ARKWEB_READER_MODE
 
 const char kNWebId[] = "nweb_id";
@@ -3828,7 +3828,7 @@ void ArkWebBrowserHostExtImpl::Distill(const std::string& guid, const DistillOpt
 void ArkWebBrowserHostExtImpl::AbortDistill() {
   auto web_contents = GetWebContents();
   if (!web_contents) {
-    LOG(ERROR) << "ArkWebBrowserHostExtImpl::Distill, web_contents is null";
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::AbortDistill, web_contents is null";
     return;
   }
   oh_dom_distiller::OhDomDistillerManager::GetInstance()->AbortDistill(web_contents);

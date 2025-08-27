@@ -33,7 +33,6 @@ namespace oh_dom_distiller {
 // KeyedService.
 class OhDomDistillerContextKeyedService : public KeyedService,
                                           public dom_distiller::DomDistillerService {
-
  public:
   OhDomDistillerContextKeyedService(
     std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory,
@@ -60,7 +59,7 @@ class OhDomDistillerServiceFactory : public BrowserContextKeyedServiceFactory {
   OhDomDistillerServiceFactory();
   ~OhDomDistillerServiceFactory() override;
 
-  std::unique_ptr<KeyedService> BuildServiceInstanceForBrowserContent(
+  std::unique_ptr<KeyedService> BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const override;
 };
 

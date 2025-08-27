@@ -37,6 +37,7 @@ class OhDomDistillerManager {
   static OhDomDistillerManager* GetInstance();
 
   OhDomDistillerManager(const OhDomDistillerManager&) = delete;
+  OhDomDistillerManager& operator=(const OhDomDistillerManager&) = delete;
 
   // Creates a new WebContents and navigates it to view the URL of the current
   // page, while in the background starts distilling the current page. This
@@ -52,13 +53,13 @@ class OhDomDistillerManager {
     base::OnceCallback<void(const std::string& content)> callback);
 
   // Starts distillation in the |source_web_contents| while navigating the
-  // |destination_web_contents| to view the distillled content. This does not
+  // |destination_web_contents| to view the distilled content. This does not
   // take ownership of any WebContents.
   void DistillAndView(content::WebContents* source_web_contents,
-                      const DistillOptions& distill_option,
+                      const DistillOptions& distill_options,
                       content::WebContents* destination_web_contents);
 
-  void AborDistill(content::WebContents* source_web_contents);
+  void AbortDistill(content::WebContents* source_web_contents);
 
   dom_distiller::DomDistillerService* GetDomDistillerService(
     content::WebContents*);

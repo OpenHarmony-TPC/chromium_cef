@@ -191,7 +191,7 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   /// Notify the page is distillable.
   ///
   /*--cef()--*/
-  virtual OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
+  virtual void OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
 #endif // ARKWEB_READER_MODE
 
 };

@@ -29,7 +29,7 @@
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "content/public/browser/browser_context.h"
 #include "content/public/browser/storage_partition.h"
-#include "service/network/public/cpp/shared_url_loader_factory.h"
+#include "services/network/public/cpp/shared_url_loader_factory.h"
 
 namespace oh_dom_distiller {
 
@@ -72,7 +72,7 @@ OhDomDistillerServiceFactory::BuildServiceInstanceForBrowserContext(
       {base::MayBlock(), base::TaskPriority::BEST_EFFORT});
 
   std::unique_ptr<dom_distiller::DistillerPageFactory> distiller_page_factory(
-    new dom_distiller::DistillerPageWebContentsFactory(content));
+    new dom_distiller::DistillerPageWebContentsFactory(context));
   std::unique_ptr<dom_distiller::DistillerURLFetcherFactory> distiller_url_fetcher_factory(
     new dom_distiller::DistillerURLFetcherFactory(
       context->GetDefaultStoragePartition()
@@ -82,7 +82,7 @@ OhDomDistillerServiceFactory::BuildServiceInstanceForBrowserContext(
   // Options for pagination algorithm:
   // - "next": detect anchors with "next" text
   // -"pagenum": detect anchors with numeric page numbers
-  // Default is "next"
+  // Default is "next".
   options.set_pagination_algo("next");
   options.set_extract_text_only(true);
   std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory(
