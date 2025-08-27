@@ -357,7 +357,7 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
 }
 
 void TabsCreateFunction::CreateTabForExtension(
-    std::string& url
+    std::string& url,
     content::BrowserContext* context) {
   NWebTabCreateInfo create_info;
   create_info.url = url;
