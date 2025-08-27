@@ -1153,6 +1153,16 @@ void ArkWebBrowserHostExtImpl::SetFocusOnWeb() {
   }
 }
 
+void ArkWebBrowserHostExtImpl::SetImeShow(bool visible) {
+  if (client_) {
+    CefRefPtr<CefKeyboardHandler> handler = client_->GetKeyboardHandler();
+    if (handler) {
+      LOG(INFO) << "ArkWebBrowserHostExtImpl::SetImeShow visible=" << visible;
+      handler->SetImeShow(visible);
+    }
+  }
+}
+
 void ArkWebBrowserHostExtImpl::UpdateSecurityLayer(bool isNeedSecurityLayer) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateSecurityLayer(isNeedSecurityLayer);

@@ -84,6 +84,12 @@ class CefKeyboardHandler : public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void KeyboardReDispatch(const CefKeyEvent& event, bool isUsed) {}
+
+  ///
+  /// Set whether the soft keyboard is displayed.
+  ///
+  /*--cef()--*/
+  virtual void SetImeShow(bool visible) {}
 #endif
 };
 

@@ -627,6 +627,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void GoBackOrForward(int num_steps) override;
   void SetInitialScale(float scale) override;
   void SetFocusOnWeb() override;
+  void SetImeShow(bool visible) override;
   bool IsNeedZoomChange(const input::NativeWebKeyboardEvent& event,
                         bool& zoom_in);
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
