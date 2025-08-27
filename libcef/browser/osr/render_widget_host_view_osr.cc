@@ -1080,6 +1080,11 @@ void CefRenderWidgetHostViewOSR::AllocateLocalSurfaceId() {
 
 const viz::LocalSurfaceId&
 CefRenderWidgetHostViewOSR::GetCurrentLocalSurfaceId() const {
+#if BUILDFLAG(IS_OHOS)
+  if (!parent_local_surface_id_allocator_) {
+    return viz::ParentLocalSurfaceIdAllocator::InvalidLocalSurfaceId();
+  }
+#endif
   return parent_local_surface_id_allocator_->GetCurrentLocalSurfaceId();
 }
 
