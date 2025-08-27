@@ -14,8 +14,8 @@
  */
 
 #include "chrome/browser/extensions/api/extension_action/extension_action_api.h"
-#include "ohos_nweb/src/cef_delegate/nweb_extension_action_cef_delegate.h"
 #include "ohos_nweb/src/capi/nweb_extension_action_icon.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_action_cef_delegate.h"
 
 namespace extensions {
 
@@ -27,21 +27,24 @@ ExtensionFunction::ResponseAction ActionOpenPopupFunction::Run() {
   const base::Value& options = args()[0];
 
   // Support specifying the tab ID? This is
-  // kind of racy (because really what the extension propably cares about is
+  // kind of racy (because really what the extension probably cares about is
   // the document ID; tab ID persists across pages, whereas document ID would
   // detect things like navigations).
   std::optional<int32_t> window_id;
   if (options.is_dict()) {
     const base::Value* window_value = options.GetDict().Find("windowId");
     if (window_value) {
-        EXTENSION_FUNCTION_VALIDATE(window_value->is_int());
-        window_id = window_value->GetInt();
+      EXTENSION_FUNCTION_VALIDATE(window_value->is_int());
+      window_id = window_value->GetInt();
     }
   }
 
   NWebExtensionActionOpenPopupOptions open_popup_option;
   open_popup_option.windowId = window_id;
-  OHOS::NWeb::NWebExtensionActionCefDelegate::GetInstance()->OnOpenPopup(extension()->id(), open_popup_option);
+  OHOS::NWeb::NWebExtensionActionCefDelegate::GetInstance()->OnOpenPopup(
+      extension()->id(), open_popup_option,
+      OHOS::NWeb::GetExtensionContextType(browser_context()),
+      include_incognito_information());
   return RespondNow(NoArguments());
 }
 
