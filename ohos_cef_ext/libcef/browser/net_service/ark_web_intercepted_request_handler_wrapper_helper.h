@@ -60,7 +60,8 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
                    bool is_main_frame,
                    bool has_user_gesture,
                    CefRefPtr<CefResponse> error_response);
-  void GetSettingOfNetHelper(CefRefPtr<CefBrowserHostBase> browser,
+  void GetSettingOfNetHelper(const GURL& url,
+                             CefRefPtr<CefBrowserHostBase> browser,
                              struct NetHelperSetting& setting);
 
  private:

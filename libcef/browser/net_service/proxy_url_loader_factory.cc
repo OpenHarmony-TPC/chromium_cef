@@ -611,7 +611,7 @@ void InterceptedRequest::Restart() {
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   struct NetHelperSetting setting;
-  factory_->request_handler_->GetSettingOfNetHelper(setting);
+  factory_->request_handler_->GetSettingOfNetHelper(request_.url, setting);
   if (IsURLBlocked(request_.url, setting)) {
     LOG(WARNING) << "File url access denied! url=" << request_.url.spec();
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
