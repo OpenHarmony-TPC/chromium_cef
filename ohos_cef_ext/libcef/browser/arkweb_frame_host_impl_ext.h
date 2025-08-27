@@ -184,6 +184,7 @@ void SetIsFling(bool is_fling);
   };
   CefHitData hit_data_;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  base::WeakPtrFactory<ArkwebFrameHostExtImpl> weak_ptr_factory_{this};
 #endif
 };
 #endif  // CEF_LIBCEF_BROWSER_FRAME_HOST_IMPL_EXT_H_
