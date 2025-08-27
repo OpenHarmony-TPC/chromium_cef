@@ -38,6 +38,10 @@
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_distill_item.h"
+#endif // ARKWEB_READER_MODE
+
 class CefClient;
 
 ///
@@ -52,6 +56,13 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   ///
   virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
 };
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+class CefDistillCallback : public virtual CefBaseRefCounted {
+  public:
+  virtual void OnDistillCallback(const std::string& guid, const std::string& distill_info) = 0;
+};
+#endif // ARKWEB_READER_MODE
 
 /* ---------- ohos webview add begin --------- */
 ///
@@ -1370,6 +1381,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /*--cef()--*/
   virtual void OnBrowserBackground() = 0;
 #endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  virtual void Distill(const std::string& guid, const DistillOptions& distill_options,
+    CefRefPtr<CefDistillCallback> callback) = 0;
+  virtual void AbortDistill() = 0;
+#endif // ARKWEB_READER_MODE
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

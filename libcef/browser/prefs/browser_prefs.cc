@@ -17,6 +17,10 @@
 #include "cef/ohos_cef_ext/libcef/browser/prefs/browser_prefs_for_include.cc"
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/global_reader_mode_data_manager.h"
+#endif // ARKWEB_READER_MODE
+
 namespace browser_prefs {
 
 namespace {
@@ -53,6 +57,9 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 #if BUILDFLAG(IS_ARKWEB_EXT)
   global_config::RegisterGlobalConfigPrefs(registry);
 #endif
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  nweb_ex::GlobalReaderModeDataManager::RegisterProfilePrefs(registry);
+#endif // ARKWEB_READER_MODE
 }
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {

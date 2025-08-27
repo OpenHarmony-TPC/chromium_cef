@@ -28,6 +28,10 @@
 #include "chrome/browser/login_detection/login_detection_tab_helper.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "components/dom_distiller/content/browser/distillability_driver.h"
+#endif // ARKWEB_READER_MODE
+
 namespace {
 
 const char kAttachedHelpersUserDataKey[] = "CefAttachedHelpers";
@@ -150,6 +154,10 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
 
   autofill::OhAutofillClient::CreateForWebContents(web_contents_);
 #endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  dom_distiller::DistillabilityDriver::CreateForWebContents(web_contents_);
+#endif // ARKWEB_READER_MODE
 }
 
 void CefBrowserPlatformDelegateAlloy::BrowserDestroyed(

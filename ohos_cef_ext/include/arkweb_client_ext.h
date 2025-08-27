@@ -34,6 +34,10 @@
 #include "include/cef_media_player_listener.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "components/dom_distiller/content/common/mojom/distillability_service.mojom.h"
+#endif // ARKWEB_READER_MODE
+
 ///
 /// Extended from CefClient
 ///
@@ -181,6 +185,15 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
     return true;
   }
 #endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  ///
+  /// Notify the page is distillable.
+  ///
+  /*--cef()--*/
+  virtual OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
+#endif // ARKWEB_READER_MODE
+
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_CLIENT_EXT_H_

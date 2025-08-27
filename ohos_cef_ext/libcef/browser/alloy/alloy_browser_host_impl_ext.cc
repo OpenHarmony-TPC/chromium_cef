@@ -1852,3 +1852,20 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
   return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+void AlloyBrowserHostImplExt::OnIsPageDistillable(
+    int page_type,
+    const std::string& distillable_page_url,
+    const std::string& title) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnIsPageDistillable failed";
+    return nullptr;
+  }
+  client_->AsArkWebClient()->OnIsPageDistillable(page_type, distillable_page_url, title);
+}
+
+bool AlloyBrowserHostImplExt::IsForDistillerPage() {
+  return false;
+}
+#endif // ARKWEB_READER_MODE
