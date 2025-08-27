@@ -468,7 +468,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   int GetMediaPlaybackState() override;
 #endif  // BUILDFLAG(ARKWEB_MEDIA_POLICY)
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
+  void PrefetchPage(CefString& url,
+                    CefString& additionalHttpHeaders,
+                    int minTimeBetweenPrefetchesMs,
+                    bool ignoreCacheControl) override;
 #endif  // ARKWEB_NO_STATE_PREFETCH
 #if BUILDFLAG(ARKWEB_MSGPORT)
   void CreateWebMessagePorts(std::vector<CefString>& ports) override;

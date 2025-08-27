@@ -204,8 +204,9 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// render the page.
   ///
   virtual void PrefetchPage(CefString& url,
-                            CefString& additionalHttpHeaders) = 0;
-
+                            CefString& additionalHttpHeaders,
+                            int minTimeBetweenPrefetchesMs,
+                            bool ignoreCacheControl) = 0;
   /* ---------- ohos_nweb_ex add begin --------- */
   ///
   /// Reload the current page with original url.
