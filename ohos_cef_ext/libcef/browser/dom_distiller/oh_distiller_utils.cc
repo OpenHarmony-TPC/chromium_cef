@@ -191,7 +191,6 @@ void FillCatalogInfoFields(
     bool has_result,
     base::Value::Dict& dict) {
   if (!flat.has_catalog_info()) {
-    LOG(WARNING) << __func__ << "[Distiller] no catalog_info";
     return;
   }
   dict.Set(kType, kCatalog);
