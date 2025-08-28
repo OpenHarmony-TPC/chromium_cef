@@ -99,7 +99,7 @@ class ArkWebBrowserExtImpl : virtual public ArkWebBrowserExt,
   // #endif
   int GetNWebId() override { return -1; }
   //#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  void PrefetchPage(PrefetchOptions prefetch_options) override {
+  void PrefetchPage(const PrefetchOptions prefetch_options) override {
   }
   //#endif  // ARKWEB_NO_STATE_PREFETCH
   // #if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
