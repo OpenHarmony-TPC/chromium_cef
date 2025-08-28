@@ -601,9 +601,9 @@ void InterceptedRequest::Restart() {
        request_.method != net::HttpRequestHeaders::kHeadMethod);
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  const bool is_extenion_scheme =
+  const bool is_extension_scheme =
       request_.request_initiator && (request_.request_initiator->scheme() == extensions::kExtensionScheme);
-  if (should_add_origin_header && !is_extenion_scheme) {
+  if (should_add_origin_header && !is_extension_scheme) {
 #else
   if (should_add_origin_header) {
 #endif
