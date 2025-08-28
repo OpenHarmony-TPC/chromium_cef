@@ -21,10 +21,6 @@
 #include "cef/libcef/browser/printing/print_dialog_linux.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_COOKIE)
-#include "chrome/browser/profiles/profile_manager.h"
-#endif
-
 #if BUILDFLAG(IS_WIN)
 #include "chrome/browser/win/app_icon.h"
 #endif
@@ -47,17 +43,13 @@
 
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_request_context_impl_ext.h"
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_main_extra_parts_cef_for_include.cc"
+#endif
+
 ChromeBrowserMainExtraPartsCef::ChromeBrowserMainExtraPartsCef() = default;
 
 ChromeBrowserMainExtraPartsCef::~ChromeBrowserMainExtraPartsCef() = default;
-
-#if BUILDFLAG(ARKWEB_COOKIE)
-void ChromeBrowserMainExtraPartsCef::PreProfileInit() {
-  CefRequestContextSettings settings;
-  CefContext::Get()->PopulateGlobalRequestContextSettings(&settings);
-  g_browser_process->profile_manager()->SetPersistSessionCookies(settings.persist_session_cookies);
-}
-#endif
 
 void ChromeBrowserMainExtraPartsCef::PostProfileInit(Profile* profile,
                                                      bool is_initial_profile) {
