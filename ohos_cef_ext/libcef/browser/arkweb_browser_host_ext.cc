@@ -2800,7 +2800,7 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
 }
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-void ArkWebBrowserHostExtImpl::PrefetchPage(const PrefetchOptions prefetch_options) {
+void ArkWebBrowserHostExtImpl::PrefetchPage(const OHOS::NWeb::PrefetchOptions prefetch_options) {
   if (!GetWebContents()) {
     return;
   }
