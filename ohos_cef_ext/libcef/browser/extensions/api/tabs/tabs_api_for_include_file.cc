@@ -58,7 +58,7 @@ class TabsCreateFunction : public ExtensionFunction {
   static void OnTabCreated(const base::WeakPtr<TabsCreateFunction>& function,
                            const NWebExtensionTab& tab,
                            std::optional<std::string>& error);
-  static void CreateTabForExtension(std::string& url);
+  static void CreateTabForExtension(std::string& url, content::BrowserContext* context);
   bool call_create_tab_ = false;
   base::WeakPtrFactory<TabsCreateFunction> weak_ptr_factory_{this};
 };

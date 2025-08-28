@@ -270,6 +270,16 @@ WebContents* GetTabsAPIDefaultWebContents(ExtensionFunction* function,
   return contents;
 }
 
+NWebExtensionTabContextInfo GetNWebExtensionTabContextInfo(
+    content::BrowserContext* browser_context,
+    bool includeIncognitoInfo) {
+  NWebExtensionTabContextInfo context_info;
+  context_info.contextType = GetExtensionContextType(browser_context);
+  context_info.includeIncognitoInfo = includeIncognitoInfo;
+ 
+  return context_info;
+}
+
 }  // namespace
 
 ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
@@ -346,9 +356,12 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
   }
 }
 
-void TabsCreateFunction::CreateTabForExtension(std::string& url) {
+void TabsCreateFunction::CreateTabForExtension(
+    std::string& url,
+    content::BrowserContext* context) {
   NWebTabCreateInfo create_info;
   create_info.url = url;
+  create_info.contextType = GetExtensionContextType(context);
 }
 
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
@@ -364,8 +377,10 @@ ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
     if (!result.has_value()) {
       return RespondNow(Error(result.error()));
     }
-  create_info.url = (*result).spec();
+    create_info.url = (*result).spec();
   }
+  create_info.contextType = GetExtensionContextType(browser_context());
+  create_info.includeIncognitoInfo = include_incognito_information();
 
   call_create_tab_ =true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::CreateTab(
@@ -423,8 +438,10 @@ ExtensionFunction::ResponseAction TabsDiscardFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
   int tab_id = params->tab_id ? *params->tab_id : -1;
   call_discard_tab_ = true;
+  NWebExtensionTabDiscardInfo discard_info = GetNWebExtensionTabContextInfo(
+      browser_context(), include_incognito_information());
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::DiscardTab(
-      tab_id, base::BindRepeating(&TabsDiscardFunction::OnTabDiscarded,
+      tab_id, discard_info, base::BindRepeating(&TabsDiscardFunction::OnTabDiscarded,
                                   weak_ptr_factory_.GetWeakPtr()));
   call_discard_tab_ = false;
 
@@ -471,8 +488,10 @@ ExtensionFunction::ResponseAction TabsDuplicateFunction::Run() {
       tabs::Duplicate::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
   call_duplicate_tab_ = true;
+  NWebExtensionTabDuplicateInfo duplicate_info = GetNWebExtensionTabContextInfo(
+      browser_context(), include_incognito_information());
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::DuplicateTab(
-      params->tab_id, base::BindRepeating(&TabsDuplicateFunction::OnTabDuplicated,
+      params->tab_id, duplicate_info, base::BindRepeating(&TabsDuplicateFunction::OnTabDuplicated,
                                   weak_ptr_factory_.GetWeakPtr()));
   call_duplicate_tab_ = false;
 
@@ -654,11 +673,13 @@ ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
     }
   }
 
+  NWebExtensionTabCreateProperties properties;
   if (params->options.create_properties && params->options.create_properties.value().window_id) {
-    NWebExtensionTabCreateProperties properties;
     properties.windowId = params->options.create_properties.value().window_id.value();
-    options.createProperties = properties;
   }
+  properties.contextType = GetExtensionContextType(browser_context());
+  properties.includeIncognitoInfo = include_incognito_information();
+  options.createProperties = properties;
 
   // Get all tab IDs from parameters.
   if (params->options.tab_ids.as_integers) {
@@ -730,6 +751,9 @@ ExtensionFunction::ResponseAction TabsHighlightFunction::Run() {
   if (params->highlight_info.window_id) {
     info.windowId = params->highlight_info.window_id.value();
   }
+
+  info.contextType = GetExtensionContextType(browser_context());
+  info.includeIncognitoInfo = include_incognito_information();
 
   call_highlight_tab_ = true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::HighlightTab(
@@ -1248,6 +1272,8 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   if (!GetUpdateParams(tab_id, params, update_properties)) {
     return RespondNow(Error(error_));
   }
+  update_properties.contextType = GetExtensionContextType(browser_context());
+  update_properties.includeIncognitoInfo = include_incognito_information();
 
   call_update_tab_ = true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::UpdateTab(
