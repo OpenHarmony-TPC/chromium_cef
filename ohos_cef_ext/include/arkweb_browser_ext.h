@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ohos_nweb/src/capi/nweb_extension_javascript_item.h"
+#include "arkweb/ohos_nweb/src/capi/nweb_prefetch_options.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
 #include "include/cef_devtools_message_observer.h"
@@ -203,9 +204,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
   ///
-  virtual void PrefetchPage(CefString& url,
-                            CefString& additionalHttpHeaders) = 0;
-
+  virtual void PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) = 0;
   /* ---------- ohos_nweb_ex add begin --------- */
   ///
   /// Reload the current page with original url.

@@ -2865,8 +2865,7 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
 }
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
-                                            CefString& additionalHttpHeaders) {
+void ArkWebBrowserHostExtImpl::PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) {
   if (!GetWebContents()) {
     return;
   }
@@ -2881,8 +2880,12 @@ void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
       GetWebContents()->GetController().GetDefaultSessionStorageNamespace();
   gfx::Size size = GetWebContents()->GetContainerBounds().size();
 
-  std::string prefetch_url = url;
-  std::string additional_http_headers = additionalHttpHeaders;
+  std::string prefetch_url = prefetch_options.url_cef;
+  std::string additional_http_headers = prefetch_options.additional_http_headers_cef;
+  no_state_prefetch_manager->SetMinTimeBetweenPrefetchesMs(
+    prefetch_options.min_time_between_prefetches);
+  no_state_prefetch_manager->SetIgnoreCacheControlNoStore(
+    prefetch_options.ignore_cache_control_no_store);
   no_state_prefetch_manager->StartOhPrefetchingFromOmnibox(
       GURL(prefetch_url), session_storage_namespace, size, nullptr,
       additional_http_headers);
