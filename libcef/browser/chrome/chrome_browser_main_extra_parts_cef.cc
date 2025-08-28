@@ -21,10 +21,6 @@
 #include "cef/libcef/browser/printing/print_dialog_linux.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_COOKIE)
-#include "chrome/browser/profiles/profile_manager.h"
-#endif
-
 #if BUILDFLAG(IS_WIN)
 #include "chrome/browser/win/app_icon.h"
 #endif
