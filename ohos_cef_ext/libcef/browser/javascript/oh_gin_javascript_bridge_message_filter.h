@@ -8,6 +8,7 @@
 
 #include "base/types/pass_key.h"
 #include "base/values.h"
+#include "base/memory/raw_ref.h"
 #include "content/public/browser/browser_message_filter.h"
 #include "content/public/browser/render_process_host_observer.h"
 #include "content/public/renderer/render_frame_observer.h"
@@ -110,7 +111,7 @@ class OhGinJavascriptBridgeMessageFilter
 
   // The `AgentSchedulingGroupHost` that this object is associated with. This
   // filter is installed on the host's channel.
-  content::AgentSchedulingGroupHost& agent_scheduling_group_;
+  raw_ref<content::AgentSchedulingGroupHost> agent_scheduling_group_;
 
   // The routing id of the RenderFrameHost whose request we are processing.
   // Used on the background thread.

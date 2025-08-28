@@ -73,7 +73,7 @@ class InterceptedRequestUtils {
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
     const uint32_t response_code_400 = 400;
     if (obj->current_response_->headers &&
-        obj->current_response_->headers->response_code() >= response_code_400) {
+        static_cast<uint32_t>(obj->current_response_->headers->response_code()) >= response_code_400) {
       // The WebViewClient onReceivedHttpError callback will be invoked for any
       // resource (such as main page, iframe, image, etc.) with status code >= 4
       auto error_reponse =
