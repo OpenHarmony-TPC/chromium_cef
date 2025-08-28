@@ -315,8 +315,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::INSERTION_HANDLE_SHOWN:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      isSelectAll_ = false;
       AsArkWebTouchSelectionControllerClientOSRExt()->ClearSpecialSelectedTagTemporarily();
+      isSelectAll_ = false;
 #endif // ARKWEB_MENU_HANDLE
       if (rwhv_->browser_impl()) {
         quick_menu_requested_ =
