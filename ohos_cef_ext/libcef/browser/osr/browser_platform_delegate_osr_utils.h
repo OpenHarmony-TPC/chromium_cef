@@ -5,13 +5,14 @@
 #define CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_UTILS_H_
 #pragma once
  
+#include "base/memory/raw_ptr.h"
 #include "cef/libcef/browser/osr/browser_platform_delegate_osr.h"
 #include "cef/ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_ext.h"
 
 class CefBrowserPlatformDelegateOsrUtils
 {
 public:
-    CefBrowserPlatformDelegateOsr* cefBrowserPlatformDelegateOsr;
+    raw_ptr<CefBrowserPlatformDelegateOsr> cefBrowserPlatformDelegateOsr;
     CefBrowserPlatformDelegateOsrUtils(CefBrowserPlatformDelegateOsr* osr) { cefBrowserPlatformDelegateOsr = osr; }
     ~CefBrowserPlatformDelegateOsrUtils() = default;
 

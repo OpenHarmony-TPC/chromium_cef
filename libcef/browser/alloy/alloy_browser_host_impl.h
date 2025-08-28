@@ -13,6 +13,7 @@
 
 #include "arkweb/build/features/features.h"
 #include "base/synchronization/lock.h"
+#include "base/memory/raw_ptr.h"
 #include "cef/include/cef_browser.h"
 #include "cef/include/cef_client.h"
 #include "cef/include/cef_frame.h"
@@ -61,7 +62,7 @@ class AlloyBrowserHostImpl : public ArkWebBrowserHostExtImpl,
     virtual void OnResponse(const std::string& response) = 0;
   };
 
-  AlloyBrowserHostImplUtils* implUtils;
+  raw_ptr<AlloyBrowserHostImplUtils> implUtils;
 
   ~AlloyBrowserHostImpl() override;
 
