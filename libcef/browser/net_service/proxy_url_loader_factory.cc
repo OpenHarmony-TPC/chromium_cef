@@ -51,6 +51,10 @@
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
+
 namespace net_service {
 
 namespace {
@@ -595,6 +599,13 @@ void InterceptedRequest::Restart() {
       (!is_cross_origin &&
        request_.method != net::HttpRequestHeaders::kGetMethod &&
        request_.method != net::HttpRequestHeaders::kHeadMethod);
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (request_.request_initiator &&
+      request_.request_initiator->scheme() == extensions::kExtensionScheme) {
+    should_add_origin_header = false;
+  }
+#endif
 
   if (should_add_origin_header) {
     // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
