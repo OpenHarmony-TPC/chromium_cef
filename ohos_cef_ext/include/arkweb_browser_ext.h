@@ -204,7 +204,7 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Prefetch the resources required by the page, but will not execute js or
   /// render the page.
   ///
-  virtual void PrefetchPage(const OHOS::NWeb::PrefetchOptions prefetch_options) = 0;
+  virtual void PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) = 0;
   /* ---------- ohos_nweb_ex add begin --------- */
   ///
   /// Reload the current page with original url.
