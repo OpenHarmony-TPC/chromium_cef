@@ -18,6 +18,7 @@
 #include "base/values.h"
 #include "content/public/browser/web_contents.h"
 #include "third_party/abseil-cpp/absl/types/optional.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 
 namespace ohos_safe_browsing {
 static constexpr int MAX_PATH_SIZE = 0x10000;
@@ -34,11 +35,12 @@ static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err) {
   std::string combine = scheme + "://" + urlRule.host + port + "/" + path;
   GURL gurlRule(combine);
   if (!gurlRule.is_valid()) {
-    LOG(ERROR) << "parse: url format is invalid, combine url is " << combine;
+    LOG(ERROR) << "parse: url format is invalid, combine url is "
+               << url::LogUtils::ConvertUrlWithMask(combine);
     err = "url format is invalid, combine url is " + combine;
     return false;
   }
-  LOG(DEBUG) << "parse: combine url is " << combine;
+  LOG(DEBUG) << "parse: combine url is " << url::LogUtils::ConvertUrlWithMask(combine);
   if (gurlRule.host().empty()) {
     LOG(ERROR) << "parse: format url host is invalid.";
     err = "format url host is invalid";
@@ -59,7 +61,8 @@ static bool FormatUrlRule(UrlTrustRule& urlRule, std::string& err) {
 static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
   if (!urlRule.scheme.empty()) {
     if (urlRule.scheme != "http" && urlRule.scheme != "https") {
-      LOG(ERROR) << "parse: host " << urlRule.host << " scheme is invalid.";
+      LOG(ERROR) << "parse: host "
+                 << url::LogUtils::ConvertUrlWithMask(urlRule.host)<< " scheme is invalid.";
       err = "host " + urlRule.host + " scheme is invalid";
       return false;
     }
@@ -71,19 +74,22 @@ static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
     return false;
   }
   if (urlRule.port <= -1) {
-    LOG(ERROR) << "parse: host " << urlRule.host << " port is invalid";
+    LOG(ERROR) << "parse: host "
+               << url::LogUtils::ConvertUrlWithMask(urlRule.host) << " port is invalid";
     err = "host " + urlRule.host + " port is invalid";
     return false;
   }
   if (urlRule.path.size() > MAX_PATH_SIZE) {
-    LOG(ERROR) << "parse: host " << urlRule.host << " path len too long.";
+    LOG(ERROR) << "parse: host "
+               << url::LogUtils::ConvertUrlWithMask(urlRule.host) << " path len too long.";
     err = "host " + urlRule.host + " path len too long";
     return false;
   }
   if (!FormatUrlRule(urlRule, err)) {
     return false;
   }
-  LOG(DEBUG) << "parse: url host " << urlRule.host << " path " << urlRule.path;
+  LOG(DEBUG) << "parse: url host "
+             << url::LogUtils::ConvertUrlWithMask(urlRule.host) << " path " << urlRule.path;
   return true;
 }
 

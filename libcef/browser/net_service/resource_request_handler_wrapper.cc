@@ -50,6 +50,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/net_service/ark_web_intercepted_request_handler_wrapper_helper.h"
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_PREFETCH_POST)

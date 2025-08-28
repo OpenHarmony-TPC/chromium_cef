@@ -63,7 +63,6 @@ base::LazyInstance<base::FilePath>::Leaky last_save_dir =
     LAZY_INSTANCE_INITIALIZER;
 
 void CreateAndAddNetExportHTMLSource(Profile* profile) {
-  LOG(INFO) << "wanghui-debug create add net export html source";
   content::WebUIDataSource* source = content::WebUIDataSource::CreateAndAdd(
       profile, chrome::kChromeUINetExportHost);
 
@@ -314,7 +313,6 @@ void NetExportMessageHandler::NotifyUIWithState(
 
 OhosNetExportUI::OhosNetExportUI(content::WebUI* web_ui)
     : WebUIController(web_ui) {
-  LOG(INFO) << "wanghui-debug new ohos net export ui";
   web_ui->AddMessageHandler(std::make_unique<NetExportMessageHandler>());
 
   // Set up the arkweb://net-export/ source.
