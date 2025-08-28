@@ -601,13 +601,12 @@ void InterceptedRequest::Restart() {
        request_.method != net::HttpRequestHeaders::kHeadMethod);
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  if (request_.request_initiator &&
-      request_.request_initiator->scheme() == extensions::kExtensionScheme) {
-    should_add_origin_header = false;
-  }
-#endif
-
+  const bool is_extenion_scheme =
+      request_.request_initiator && (request_.request_initiator->scheme() == extensions::kExtensionScheme);
+  if (should_add_origin_header && !is_extenion_scheme) {
+#else
   if (should_add_origin_header) {
+#endif
     // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
     url::Origin origin_header_value =
         request_.request_initiator.value_or(url::Origin());
