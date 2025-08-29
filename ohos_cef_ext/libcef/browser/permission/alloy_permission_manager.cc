@@ -447,6 +447,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
       if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
       } else {
+        LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in microphone permission map";
         return PermissionStatus::DENIED;
       }
     }
@@ -456,6 +457,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
       if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
       } else {
+        LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in camera permission map";
         return PermissionStatus::DENIED;
       }
     }
