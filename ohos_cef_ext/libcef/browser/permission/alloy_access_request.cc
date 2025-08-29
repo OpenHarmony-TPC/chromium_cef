@@ -147,6 +147,8 @@ GURL AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL() {
 }
 
 void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
+  LOG(WARNING) << "AlloyMediaAccessRequest::ReportRequestResult, video_type = " << request_.video_type
+               << ", audio_type = " << request_.audio_type << ", allowed = " << allowed;
   content::PermissionStatus status =
       allowed ? content::PermissionStatus::GRANTED : content::PermissionStatus::DENIED;
 
@@ -246,6 +248,7 @@ CefString AlloyScreenCaptureAccessRequest::Origin() {
 }
 
 void AlloyScreenCaptureAccessRequest::SetCaptureMode(int32_t mode) {
+  LOG(INFO) << "AlloyScreenCaptureAccessRequest::SetCaptureMode, mode = " << mode;
   mode_ = mode;
 }
 
@@ -254,6 +257,8 @@ void AlloyScreenCaptureAccessRequest::SetCaptureSourceId(int32_t sourceId) {
 }
 
 void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
+  LOG(WARNING) << "AlloyScreenCaptureAccessRequest::ReportRequestResult, video_type = " << request_.video_type
+               << ", audio_type = " << request_.audio_type << ", mode = " << mode_ << ", allowed = " << allowed;
   if (!allowed) {
     if (!callback_.is_null()) {
       std::move(callback_).Run(
@@ -312,7 +317,13 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
       media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_WINDOW,
                                          sourceId_);
     }
+  } else if (request_.requested_video_device_ids.front() == "undefined") {
+    LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, requested_video_device_id is undefined";
+    std::move(callback_).Run(devices_set,
+                           blink::mojom::MediaStreamRequestResult::INVALID_STATE,
+                           nullptr);
   } else {
+    LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, requested_video_device_id is not empty";
     media_id = content::DesktopMediaID::Parse(
         request_.requested_video_device_ids.front());
   }
