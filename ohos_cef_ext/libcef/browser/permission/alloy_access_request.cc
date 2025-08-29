@@ -324,6 +324,7 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     std::move(callback_).Run(devices_set,
                            blink::mojom::MediaStreamRequestResult::INVALID_STATE,
                            nullptr);
+    return;
   } else {
     LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, requested_video_device_id is not empty";
     media_id = content::DesktopMediaID::Parse(
@@ -334,6 +335,7 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     std::move(callback_).Run(devices_set,
                            blink::mojom::MediaStreamRequestResult::INVALID_STATE,
                            nullptr);
+    return;
   }
   if (media_id.type == content::DesktopMediaID::Type::TYPE_NONE) {
     media_id.type = content::DesktopMediaID::Type::TYPE_SCREEN;
