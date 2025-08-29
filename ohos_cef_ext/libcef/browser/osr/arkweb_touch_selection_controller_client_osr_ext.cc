@@ -321,6 +321,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::INSERTION_HANDLE_SHOWN:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
+      AsArkWebTouchSelectionControllerClientOSRExt()->ClearSpecialSelectedTagTemporarily();
       isSelectAll_ = false;
       isCopy_ = false;
 #endif // ARKWEB_MENU_HANDLE
@@ -354,7 +355,6 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       quick_menu_requested_ = false;
       NotifyTouchSelectionChanged(true);
       UpdateQuickMenu();
-      AsArkWebTouchSelectionControllerClientOSRExt()->ClearSpecialSelectedTagTemporarily();
       break;
     case ui::SELECTION_HANDLE_DRAG_STARTED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
