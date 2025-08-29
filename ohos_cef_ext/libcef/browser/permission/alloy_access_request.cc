@@ -319,12 +319,6 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
       media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_WINDOW,
                                          sourceId_);
     }
-  } else if (request_.requested_video_device_ids.front() == "undefined") {
-    LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, requested_video_device_id is undefined";
-    std::move(callback_).Run(devices_set,
-                           blink::mojom::MediaStreamRequestResult::INVALID_STATE,
-                           nullptr);
-    return;
   } else {
     LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, requested_video_device_id is not empty";
     media_id = content::DesktopMediaID::Parse(
