@@ -147,8 +147,9 @@ GURL AlloyMediaAccessRequest::GetMediaAccessRequestOriginAsURL() {
 }
 
 void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
-  LOG(WARNING) << "AlloyMediaAccessRequest::ReportRequestResult, video_type = " << request_.video_type
-               << ", audio_type = " << request_.audio_type << ", allowed = " << allowed;
+  LOG(WARNING) << "AlloyMediaAccessRequest::ReportRequestResult"
+               << ", video_type = " << request_.video_type << ", audio_type = " << request_.audio_type
+               << ", allowed = " << allowed;
   content::PermissionStatus status =
       allowed ? content::PermissionStatus::GRANTED : content::PermissionStatus::DENIED;
 
