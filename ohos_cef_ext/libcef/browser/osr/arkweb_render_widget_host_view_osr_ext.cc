@@ -551,12 +551,22 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
         static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
             static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
-    mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
+    if (state->mode >= 0 && state->mode <= static_cast<int>(ArkWebRenderHandlerExt::TextInputMode::CEF_TEXT_INPUT_MODE_MAX)) {
+      mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
+    }
     type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
-               : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
-    action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
-    flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
+               : (state->type >= 0 && state->type <= static_cast<int>(ArkWebRenderHandlerExt::TextInputType::CEF_TEXT_INPUT_TYPE_MAX)
+                ? static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type)
+                : CEF_TEXT_INPUT_TYPE_NONE);
+    if (state->action >= 0 && state->action <= static_cast<int>(ArkWebRenderHandlerExt::TextInputAction::CEF_TEXT_INPUT_ACTION_MAX)) {
+      action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
+    }
+    if (state->flags == 0 
+      || ((state->flags == (state->flags & -(state->flags))) 
+      && state->flags <= static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_INPUT_FLAGS_VERTICAL))) {
+      flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
+    }
     show_keyboard = state->show_ime_if_needed;
   }
   if (state && !state->show_ime_if_needed && did_update_state) {
@@ -1543,6 +1553,10 @@ void ArkWebRenderWidgetHostViewOSRExt::OnScrollState(bool scroll_state) {
 void ArkWebRenderWidgetHostViewOSRExt::AdvanceFocusForIME(int focusType) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::AdvanceFocusForIME focusType = "
              << focusType;
+  if (focusType < static_cast<int>(blink::mojom::FocusType::kMinValue)
+   || focusType > static_cast<int>(blink::mojom::FocusType::kMaxValue)) {
+    return;
+  }
   content::RenderFrameHostImpl* frame_host = nullptr;
   if (render_widget_host() && render_widget_host()->frame_tree() &&
       render_widget_host()->frame_tree()->GetFocusedFrame()) {
