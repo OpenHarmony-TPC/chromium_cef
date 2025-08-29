@@ -258,8 +258,9 @@ void AlloyScreenCaptureAccessRequest::SetCaptureSourceId(int32_t sourceId) {
 }
 
 void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
-  LOG(WARNING) << "AlloyScreenCaptureAccessRequest::ReportRequestResult, video_type = " << request_.video_type
-               << ", audio_type = " << request_.audio_type << ", mode = " << mode_ << ", allowed = " << allowed;
+  LOG(WARNING) << "AlloyScreenCaptureAccessRequest::ReportRequestResult"
+               << ", video_type = " << request_.video_type << ", audio_type = " << request_.audio_type
+               << ", mode = " << mode_ << ", allowed = " << allowed;
   if (!allowed) {
     if (!callback_.is_null()) {
       std::move(callback_).Run(
