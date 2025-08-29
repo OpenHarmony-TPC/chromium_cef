@@ -327,6 +327,12 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
     media_id = content::DesktopMediaID::Parse(
         request_.requested_video_device_ids.front());
   }
+  if (media_id.is_null()) {
+    LOG(INFO) << "[screen_webrtc_logging]ReportRequestResult, media_id is invalid(type == TYPE_NONE)";
+    std::move(callback_).Run(devices_set,
+                           blink::mojom::MediaStreamRequestResult::INVALID_STATE,
+                           nullptr);
+  }
   if (media_id.type == content::DesktopMediaID::Type::TYPE_NONE) {
     media_id.type = content::DesktopMediaID::Type::TYPE_SCREEN;
     auto web_contents = browser_->GetWebContents();
