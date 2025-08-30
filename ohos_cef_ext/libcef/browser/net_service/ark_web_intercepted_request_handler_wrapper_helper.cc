@@ -98,7 +98,7 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::OnHttpError(
     bool has_user_gesture,
     CefRefPtr<CefResponse> error_response) {
   CEF_REQUIRE_UIT();
-  if (!browser) {
+  if (!browser || !browser->GetHost()) {
     return;
   }
   CefRefPtr<CefClient> client = browser->GetHost()->GetClient();

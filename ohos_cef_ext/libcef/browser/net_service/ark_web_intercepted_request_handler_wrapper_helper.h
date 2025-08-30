@@ -16,7 +16,7 @@
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #include "ui/base/page_transition_types.h"
 
-#define POST_CACHE_KEY "ArkWebPostCacheKey"
+constexpr char POST_CACHE_KEY[] = "ArkWebPostCacheKey";
 
 namespace net_service {
 
