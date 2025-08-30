@@ -42,16 +42,16 @@ inline constexpr char kResultMessage[] = "resultMessage";
 /**
  * @brief Converts a DistilledArticleProto protocol buffer object to a
  * standardized JSON format string
- * 
+ *
  * @param article_proto Constant pointer to the protocol buffer object to
  * convert. Ownership remains with caller. Requirements: Must be non-null and
  * contain at least one valid field
- * 
+ *
  * @return std::string Standardized JSON data string. Example format:
  */
 std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     const dom_distiller::DistilledArticleProto* article_proto,
     const GURL& url);
-} // namespace oh_dom_distiller
+}  // namespace oh_dom_distiller
 
 #endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DISTILLER_UTILS_H_

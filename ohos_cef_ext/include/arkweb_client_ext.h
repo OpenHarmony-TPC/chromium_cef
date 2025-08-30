@@ -36,7 +36,7 @@
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "components/dom_distiller/content/common/mojom/distillability_service.mojom.h"
-#endif // ARKWEB_READER_MODE
+#endif  // ARKWEB_READER_MODE
 
 ///
 /// Extended from CefClient
@@ -192,7 +192,7 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual void OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
-#endif // ARKWEB_READER_MODE
+#endif
 
 };
 

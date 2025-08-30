@@ -77,7 +77,7 @@ bool FillResultFields(
       dict.Set(kResultCode, res.code());
     }
     if (res.has_message()) {
-        dict.Set(kResultMessage, res.message());
+      dict.Set(kResultMessage, res.message());
     }
     return res.has_code();
   }
@@ -130,13 +130,13 @@ void FillContentInfoFields(
     dict.Set(kType, kContent);
     const auto& info = flat.content_info();
     if (info.has_next_page()) {
-        dict.Set(kNextPageUrl, info.next_page());
+      dict.Set(kNextPageUrl, info.next_page());
     }
     if (info.has_prev_page()) {
-        dict.Set(kPrevPageUrl, info.prev_page());
+      dict.Set(kPrevPageUrl, info.prev_page());
     }
     if (info.has_catalog_page()) {
-        dict.Set(kCatalogPageUrl, info.catalog_page());
+      dict.Set(kCatalogPageUrl, info.catalog_page());
     }
   }
   if (!has_result && ((flat.has_content_info() && !flat.has_content()) ||
@@ -147,7 +147,7 @@ void FillContentInfoFields(
 }
 
 bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFields_CatalogPageInfo& cat,
-    base::Value::Dict& dict) {
+  base::Value::Dict& dict) {
   bool has_pagination = false;
   if (!cat.has_pagination_info()) {
     LOG(WARNING) << __func__ << "[Distiller] no pagination_info";
@@ -174,7 +174,7 @@ bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFiel
     pi.Set(kPageName, cp.page_name());
     pi.Set(kPageUrl, cp.page_url());
     if (cp.has_selected() && cp.selected()) {
-        pi.Set(kSelected, cp.selected());
+      pi.Set(kSelected, cp.selected());
     }
     pages.Append(std::move(pi));
     has_pagination = true;
@@ -191,6 +191,7 @@ void FillCatalogInfoFields(
     bool has_result,
     base::Value::Dict& dict) {
   if (!flat.has_catalog_info()) {
+    LOG(WARNING) << __func__ << "[Distiller] no catalog_info";
     return;
   }
   dict.Set(kType, kCatalog);
@@ -285,17 +286,17 @@ base::Value::Dict BuildPageContent(
         (page_select ? page_select->size() : 0));
   }
 
-  LOG(INFO) << "[Distiller] DistillResult type: " << (type ? *type : "")
-            << " resultCode: " << result_code << " "
+  LOG(INFO) << "[Distiller] DistillResult type:" << (type ? *type : "")
+            << " resultCode:" << result_code << " "
             << (result_message ? *result_message : "")
-            << " contents: " << (content ? (int)content->size() : -1) << " "
+            << " contents:" << (content ? (int)content->size() : -1) << " "
             << (next_page_url ? !next_page_url->empty() : false) << " "
             << (prev_page_url ? !prev_page_url->empty() : false) << " "
             << (catalog_page_url ? !catalog_page_url->empty() : false)
-            << " chapters: "
+            << " chapters:"
             << (latest_chapters ? (int)latest_chapters->size() : -1) << " "
             << (all_chapters ? (int)all_chapters->size() : -1) << " "
-            << pagination_str << " timing_info: " << json;
+            << pagination_str << " timing_info:" << json;
   return dict;
 }
 
@@ -308,7 +309,7 @@ base::Value::List BuildDistilledPageList(
   return list;
 }
 
-} // namespace
+}  // namespace
 
 std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     const dom_distiller::DistilledArticleProto* article_proto,

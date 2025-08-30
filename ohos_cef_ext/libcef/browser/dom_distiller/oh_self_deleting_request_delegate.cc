@@ -44,7 +44,7 @@ void OhSelfDeletingRequestDelegate::OnArticleReady(
   }
   LOG(INFO) << __func__ << " [Distiller]";
   auto json_data =
-    FormatDistilledArticleProtoToJsonData(article_proto, GetRequestURL());
+      FormatDistilledArticleProtoToJsonData(article_proto, GetRequestURL());
 
   std::move(distill_result_callback_).Run(*json_data);
 

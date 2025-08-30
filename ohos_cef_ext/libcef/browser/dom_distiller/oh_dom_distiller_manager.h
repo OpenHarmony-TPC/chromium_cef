@@ -24,11 +24,11 @@
 
 namespace content {
 class WebContents;
-} // namespace content
+}  // namespace content
 
 namespace dom_distiller {
 class DomDistillerService;
-} // namespace dom_distiller
+}  // namespace dom_distiller
 
 namespace oh_dom_distiller {
 
@@ -45,12 +45,12 @@ class OhDomDistillerManager {
   // one.
   void DistillCurrentPageAndView(content::WebContents* old_web_contents);
 
-  // Starts distillation in the |source_web_contents|. the viewer needs to be
+  // Starts distillation in the |source_web_contents|. The viewer needs to be
   // created separately.
   void DistillCurrentPage(
-    content::WebContents* source_web_contents,
-    const DistillOptions& distill_options,
-    base::OnceCallback<void(const std::string& content)> callback);
+      content::WebContents* source_web_contents,
+      const DistillOptions& distill_options,
+      base::OnceCallback<void(const std::string& content)> callback);
 
   // Starts distillation in the |source_web_contents| while navigating the
   // |destination_web_contents| to view the distilled content. This does not
@@ -62,7 +62,7 @@ class OhDomDistillerManager {
   void AbortDistill(content::WebContents* source_web_contents);
 
   dom_distiller::DomDistillerService* GetDomDistillerService(
-    content::WebContents*);
+      content::WebContents*);
 
  private:
   friend class base::NoDestructor<OhDomDistillerManager>;
@@ -75,4 +75,4 @@ class OhDomDistillerManager {
 
 } // namespace oh_dom_distiller
 
-#endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DOM_DISTILLER_MANAGER_H_
+#endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DOM_DISTILLER_MANAGER_H_

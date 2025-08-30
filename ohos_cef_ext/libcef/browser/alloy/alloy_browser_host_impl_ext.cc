@@ -1854,10 +1854,8 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
-void AlloyBrowserHostImplExt::OnIsPageDistillable(
-    int page_type,
-    const std::string& distillable_page_url,
-    const std::string& title) {
+void AlloyBrowserHostImplExt::OnIsPageDistillable(int page_type,
+                                            const std::string& distillable_page_url, const std::string& title) {
   if (!client_ || !client_->AsArkWebClient()) {
     LOG(ERROR) << "client is null, OnIsPageDistillable failed";
     return nullptr;
@@ -1868,4 +1866,4 @@ void AlloyBrowserHostImplExt::OnIsPageDistillable(
 bool AlloyBrowserHostImplExt::IsForDistillerPage() {
   return false;
 }
-#endif // ARKWEB_READER_MODE
+#endif

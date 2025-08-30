@@ -41,8 +41,7 @@ class OhSelfDeletingRequestDelegate : public ViewRequestDelegate {
  public:
   explicit OhSelfDeletingRequestDelegate(DistillResultCallback callback,
                                          GURL url,
-                                        std::string guid);
-
+                                         std::string guid);
   ~OhSelfDeletingRequestDelegate() override;
 
   // ViewRequestDelegate implementation.

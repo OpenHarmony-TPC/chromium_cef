@@ -19,7 +19,7 @@
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/global_reader_mode_data_manager.h"
-#endif // ARKWEB_READER_MODE
+#endif
 
 namespace browser_prefs {
 
@@ -59,7 +59,7 @@ void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
 #endif
 #if BUILDFLAG(ARKWEB_READER_MODE)
   nweb_ex::GlobalReaderModeDataManager::RegisterProfilePrefs(registry);
-#endif // ARKWEB_READER_MODE
+#endif
 }
 
 void RegisterProfilePrefs(PrefRegistrySimple* registry) {

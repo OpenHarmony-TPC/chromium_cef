@@ -54,13 +54,13 @@ OhDomDistillerContextKeyedService*
 OhDomDistillerServiceFactory::GetForBrowserContext(
     content::BrowserContext* context) {
   return static_cast<OhDomDistillerContextKeyedService*>(
-    GetInstance()->GetServiceForBrowserContext(context, true));
+      GetInstance()->GetServiceForBrowserContext(context, true));
 }
 
 OhDomDistillerServiceFactory::OhDomDistillerServiceFactory()
     : BrowserContextKeyedServiceFactory(
-        "DomDistillerService",
-        BrowserContextDependencyManager::GetInstance()) {}
+          "DomDistillerService",
+          BrowserContextDependencyManager::GetInstance()) {}
 
 OhDomDistillerServiceFactory::~OhDomDistillerServiceFactory() = default;
 
@@ -68,38 +68,38 @@ std::unique_ptr<KeyedService>
 OhDomDistillerServiceFactory::BuildServiceInstanceForBrowserContext(
     content::BrowserContext* context) const {
   scoped_refptr<base::SequencedTaskRunner> background_task_runner =
-    base::ThreadPool::CreateSequencedTaskRunner(
-      {base::MayBlock(), base::TaskPriority::BEST_EFFORT});
+      base::ThreadPool::CreateSequencedTaskRunner(
+          {base::MayBlock(), base::TaskPriority::BEST_EFFORT});
 
   std::unique_ptr<dom_distiller::DistillerPageFactory> distiller_page_factory(
-    new dom_distiller::DistillerPageWebContentsFactory(context));
+      new dom_distiller::DistillerPageWebContentsFactory(context));
   std::unique_ptr<dom_distiller::DistillerURLFetcherFactory> distiller_url_fetcher_factory(
-    new dom_distiller::DistillerURLFetcherFactory(
-      context->GetDefaultStoragePartition()
-        ->GetURLLoaderFactoryForBrowserProcess()));
+      new dom_distiller::DistillerURLFetcherFactory(
+          context->GetDefaultStoragePartition()
+              ->GetURLLoaderFactoryForBrowserProcess()));
 
   dom_distiller::proto::DomDistillerOptions options;
   // Options for pagination algorithm:
   // - "next": detect anchors with "next" text
-  // -"pagenum": detect anchors with numeric page numbers
+  // - "pagenum": detect anchors with numeric page numbers
   // Default is "next".
   options.set_pagination_algo("next");
   options.set_extract_text_only(true);
   std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory(
-    new dom_distiller::DistillerFactoryImpl(
-      std::move(distiller_url_fetcher_factory), options));
+      new dom_distiller::DistillerFactoryImpl(
+          std::move(distiller_url_fetcher_factory), options));
   auto cef_browser_context = CefBrowserContext::FromBrowserContext(context);
   if (cef_browser_context == nullptr || cef_browser_context->AsProfile() == nullptr) {
     LOG(ERROR) << __func__ << " [Distiller] cef_browser_context or AsProfile is null";
     return nullptr;
   }
   std::unique_ptr<dom_distiller::DistilledPagePrefs> distilled_page_prefs(
-    new dom_distiller::DistilledPagePrefs(cef_browser_context->AsProfile()->GetPrefs()));
+      new dom_distiller::DistilledPagePrefs(cef_browser_context->AsProfile()->GetPrefs()));
   std::unique_ptr<dom_distiller::DistillerUIHandle> distiller_ui_handle;
 
   return std::make_unique<OhDomDistillerContextKeyedService>(
-    std::move(distiller_factory), std::move(distiller_page_factory),
-    std::move(distilled_page_prefs), std::move(distiller_ui_handle));
+      std::move(distiller_factory), std::move(distiller_page_factory),
+      std::move(distilled_page_prefs), std::move(distiller_ui_handle));
 }
 
 } // namespace oh_dom_distiller

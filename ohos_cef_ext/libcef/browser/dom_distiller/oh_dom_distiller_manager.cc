@@ -41,15 +41,15 @@ namespace {
 void StartNavigationToDistillerViewer(content::WebContents* web_contents,
                                       const GURL& url) {
   GURL viewer_url = dom_distiller::url_utils::GetDistillerViewUrlFromUrl(
-    dom_distiller::kDomDistillerScheme, url,
-    base::UTF16ToUTF8(web_contents->GetTitle()),
-    (base::TimeTicks::Now() - base::TimeTicks()).InMilliseconds());
+      dom_distiller::kDomDistillerScheme, url,
+      base::UTF16ToUTF8(web_contents->GetTitle()),
+      (base::TimeTicks::Now() - base::TimeTicks()).InMilliseconds());
   content::NavigationController::LoadURLParams params(viewer_url);
   params.transition_type = ui::PAGE_TRANSITION_AUTO_BOOKMARK;
   web_contents->GetController().LoadURLWithParams(params);
 }
 
-} // namespace
+}  // namespace
 
 // static
 OhDomDistillerManager* OhDomDistillerManager::GetInstance() {
@@ -68,8 +68,8 @@ OhDomDistillerManager::GetDomDistillerService(
     // Start distillation using |source_page_handle|, and ensure ViewerHandle
     // stays around until the viewer requests distillation.
     dom_distiller_service_ =
-      OhDomDistillerServiceFactory::GetForBrowserContext(
-        web_contents->GetBrowserContext());
+        OhDomDistillerServiceFactory::GetForBrowserContext(
+            web_contents->GetBrowserContext());
   }
   return dom_distiller_service_;
 }
@@ -85,20 +85,20 @@ void OhDomDistillerManager::DistillCurrentPage(
     DistillResultCallback callback) {
   DCHECK(source_web_contents);
   std::unique_ptr<dom_distiller::SourcePageHandleWebContents>
-    source_page_handle(new dom_distiller::SourcePageHandleWebContents(
-      source_web_contents, false));
+      source_page_handle(new dom_distiller::SourcePageHandleWebContents(
+          source_web_contents, false));
 
   const GURL& distill_url = GURL(distill_options.distill_url);
   if (!dom_distiller::url_utils::IsUrlDistillable(distill_url)) {
     LOG(INFO) << __func__ << " [Distiller] DistillResult, url cannot distillable";
     std::move(callback).Run(
-      "{\"resultCode\": -50, \"resultMessage\": \"url is invalid or not "
-      "http[s].\"}");
+        "{\"resultCode\": -50, \"resultMessage\": \"url is invalid or not "
+        "http[s].\"}");
     return;
   }
 
   std::string guid = base::Uuid::GenerateRandomV4().AsLowercaseString();
-  LOG(INFO) << __func__ << " [Distiller] option: " << static_cast<int32_t>(distill_options.distill_type) << " "
+  LOG(INFO) << __func__ << " [Distiller] option:" << static_cast<int32_t>(distill_options.distill_type) << " "
             << static_cast<int32_t>(distill_options.fetch_action) << " "
             << distill_options.max_distill_pages;
 
@@ -106,10 +106,10 @@ void OhDomDistillerManager::DistillCurrentPage(
   // be cancelled and would not be restarted when the page is restored from the
   // cache.
   content::BackForwardCache::DisableForRenderFrameHost(
-    source_page_handle->web_contents()->getPrimaryMainFrame(),
-    back_forward_cache::DisabledReason(
-      back_forward_cache::DisabledReasonId::
-        kDomDistiller_SelfDeletingRequestDelegate));
+      source_page_handle->web_contents()->getPrimaryMainFrame(),
+      back_forward_cache::DisabledReason(
+          back_forward_cache::DisabledReasonId::
+              kDomDistiller_SelfDeletingRequestDelegate));
 
   // Start distillation using |source_page_handle|, and ensure ViewerHandle
   // stays around until the viewer requests distillation.
@@ -119,8 +119,8 @@ void OhDomDistillerManager::DistillCurrentPage(
     return;
   }
   std::unique_ptr<dom_distiller::DistillerPage> distiller_page =
-    dom_distiller_service->CreateDefaultDistillerPageWithHandle(
-      std::move(source_page_handle));
+      dom_distiller_service->CreateDefaultDistillerPageWithHandle(
+          std::move(source_page_handle));
   if (distiller_page == nullptr) {
     LOG(ERROR) << "[Distiller] distiller_page is nullptr";
     return;
@@ -128,11 +128,11 @@ void OhDomDistillerManager::DistillCurrentPage(
   distiller_page->SetDistillOptions(distill_options);
 
   auto* view_request_delegate =
-    new OhSelfDeletingRequestDelegate(std::move(callback), distill_url, guid);
+      new OhSelfDeletingRequestDelegate(std::move(callback), distill_url, guid);
 
   std::unique_ptr<dom_distiller::ViewerHandle> viewer_handle =
-    dom_distiller_service->ViewUrl(view_request_delegate,
-                                   std::move(distiller_page), distill_url);
+      dom_distiller_service->ViewUrl(view_request_delegate,
+                                     std::move(distiller_page), distill_url);
   view_request_delegate->TakeViewerHandle(std::move(viewer_handle));
 }
 
@@ -153,8 +153,8 @@ void OhDomDistillerManager::AbortDistill(
   DCHECK(source_web_contents);
   if (auto* dom_distiller_service = GetDomDistillerService(source_web_contents)) {
     if (!dom_distiller_service->utils()) {
-       LOG(ERROR) << "[Distiller] dom_distiller_service_utils is nullptr";
-       return;
+      LOG(ERROR) << "[Distiller] dom_distiller_service_utils is nullptr";
+      return;
     }
     dom_distiller_service->utils()->AbortDistill();
   }

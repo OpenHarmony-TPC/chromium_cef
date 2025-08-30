@@ -25,24 +25,26 @@
 
 namespace content {
 class BrowserContext;
-} // namespace content
+}  // namespace content
 
 namespace oh_dom_distiller {
 
 // A simple wrapper for DomDistillerService to expose it as a
 // KeyedService.
 class OhDomDistillerContextKeyedService : public KeyedService,
-                                          public dom_distiller::DomDistillerService {
+                                        public dom_distiller::DomDistillerService {
  public:
   OhDomDistillerContextKeyedService(
     std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory,
-    std::unique_ptr<dom_distiller::DistillerPageFactory> distiller_page_factory,
+    std::unique_ptr<dom_distiller::DistillerPageFactory>
+        distiller_page_factory,
     std::unique_ptr<dom_distiller::DistilledPagePrefs> distilled_page_prefs,
     std::unique_ptr<dom_distiller::DistillerUIHandle> distiller_ui_handle);
   
-  OhDomDistillerContextKeyedService(const OhDomDistillerContextKeyedService&) = delete;
+  OhDomDistillerContextKeyedService(const OhDomDistillerContextKeyedService&) =
+      delete;
   OhDomDistillerContextKeyedService& operator=(
-    const OhDomDistillerContextKeyedService&) = delete;
+      const OhDomDistillerContextKeyedService&) = delete;
 
   ~OhDomDistillerContextKeyedService() override = default;
 };
@@ -51,8 +53,8 @@ class OhDomDistillerServiceFactory : public BrowserContextKeyedServiceFactory {
  public:
   static OhDomDistillerServiceFactory* GetInstance();
   static OhDomDistillerContextKeyedService* GetForBrowserContext(
-    content::BrowserContext* context);
-  
+      content::BrowserContext* context);
+
  private:
   friend base::NoDestructor<OhDomDistillerServiceFactory>;
 
@@ -60,9 +62,9 @@ class OhDomDistillerServiceFactory : public BrowserContextKeyedServiceFactory {
   ~OhDomDistillerServiceFactory() override;
 
   std::unique_ptr<KeyedService> BuildServiceInstanceForBrowserContext(
-    content::BrowserContext* context) const override;
+      content::BrowserContext* context) const override;
 };
 
-} // oh_dom_distiller
+} // namespace oh_dom_distiller
 
 #endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DOM_DISTILLER_SERVICE_FACTORY_H_

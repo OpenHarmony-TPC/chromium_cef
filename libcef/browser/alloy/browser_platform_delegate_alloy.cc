@@ -30,7 +30,7 @@
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "components/dom_distiller/content/browser/distillability_driver.h"
-#endif // ARKWEB_READER_MODE
+#endif
 
 namespace {
 
@@ -157,7 +157,7 @@ void CefBrowserPlatformDelegateAlloy::BrowserCreated(
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
   dom_distiller::DistillabilityDriver::CreateForWebContents(web_contents_);
-#endif // ARKWEB_READER_MODE
+#endif
 }
 
 void CefBrowserPlatformDelegateAlloy::BrowserDestroyed(
