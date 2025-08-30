@@ -35,11 +35,11 @@ class OhDomDistillerContextKeyedService : public KeyedService,
                                         public dom_distiller::DomDistillerService {
  public:
   OhDomDistillerContextKeyedService(
-    std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory,
-    std::unique_ptr<dom_distiller::DistillerPageFactory>
-        distiller_page_factory,
-    std::unique_ptr<dom_distiller::DistilledPagePrefs> distilled_page_prefs,
-    std::unique_ptr<dom_distiller::DistillerUIHandle> distiller_ui_handle);
+      std::unique_ptr<dom_distiller::DistillerFactory> distiller_factory,
+      std::unique_ptr<dom_distiller::DistillerPageFactory>
+          distiller_page_factory,
+      std::unique_ptr<dom_distiller::DistilledPagePrefs> distilled_page_prefs,
+      std::unique_ptr<dom_distiller::DistillerUIHandle> distiller_ui_handle);
   
   OhDomDistillerContextKeyedService(const OhDomDistillerContextKeyedService&) =
       delete;
@@ -67,4 +67,4 @@ class OhDomDistillerServiceFactory : public BrowserContextKeyedServiceFactory {
 
 } // namespace oh_dom_distiller
 
-#endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DOM_DISTILLER_SERVICE_FACTORY_H_
+#endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DOM_DISTILLER_SERVICE_FACTORY_H_

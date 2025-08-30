@@ -337,4 +337,4 @@ std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
   return result;
 }
 
-} // namespace oh_dom_distiller
+}  // namespace oh_dom_distiller

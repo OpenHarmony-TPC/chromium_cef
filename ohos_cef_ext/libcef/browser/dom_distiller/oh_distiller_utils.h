@@ -54,4 +54,4 @@ std::unique_ptr<std::string> FormatDistilledArticleProtoToJsonData(
     const GURL& url);
 }  // namespace oh_dom_distiller
 
-#endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DISTILLER_UTILS_H_
+#endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_DISTILLER_UTILS_H_
