@@ -40,7 +40,7 @@ class OhDomDistillerContextKeyedService : public KeyedService,
           distiller_page_factory,
       std::unique_ptr<dom_distiller::DistilledPagePrefs> distilled_page_prefs,
       std::unique_ptr<dom_distiller::DistillerUIHandle> distiller_ui_handle);
-  
+
   OhDomDistillerContextKeyedService(const OhDomDistillerContextKeyedService&) =
       delete;
   OhDomDistillerContextKeyedService& operator=(

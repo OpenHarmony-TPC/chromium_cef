@@ -66,4 +66,4 @@ class OhSelfDeletingRequestDelegate : public ViewRequestDelegate {
 
 } // namespace oh_dom_distiller
 
-#endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_SELF_DELETING_REQUEST_DELEGATE_H_
+#endif // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_DOM_DISTILLER_OH_SELF_DELETING_REQUEST_DELEGATE_H_
