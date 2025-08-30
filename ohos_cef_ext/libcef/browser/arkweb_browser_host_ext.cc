@@ -196,6 +196,19 @@ enum class WebScrollType : int { UNKNOWN = -1, EVENT = 0 };
 
 const int32_t kFrameIdMinLength = 3;
 
+bool CheckUrlPath(base::FilePath url_path, CefString& path) {
+    auto file_path =
+        base::MakeAbsoluteFilePathNoResolveSymbolicLinks(base::FilePath(path))
+            .value_or(base::FilePath());
+    if (file_path.empty()) {
+      return false;
+    }
+    if (file_path == url_path || file_path.IsParent(url_path)) {
+      return true;
+    }
+    return false;
+}
+
 }  // namespace
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -1153,6 +1166,16 @@ void ArkWebBrowserHostExtImpl::SetFocusOnWeb() {
   }
 }
 
+void ArkWebBrowserHostExtImpl::SetImeShow(bool visible) {
+  if (client_) {
+    CefRefPtr<CefKeyboardHandler> handler = client_->GetKeyboardHandler();
+    if (handler) {
+      LOG(INFO) << "ArkWebBrowserHostExtImpl::SetImeShow visible=" << visible;
+      handler->SetImeShow(visible);
+    }
+  }
+}
+
 void ArkWebBrowserHostExtImpl::UpdateSecurityLayer(bool isNeedSecurityLayer) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateSecurityLayer(isNeedSecurityLayer);
@@ -1432,9 +1455,11 @@ void ArkWebBrowserHostExtImpl::SetCacheMode(int flag) {
 }
 
 void ArkWebBrowserHostExtImpl::SetGrantFileAccessDirs(
-    const std::vector<CefString>& dir_list) {
+    const std::vector<CefString>& dir_list,
+    const std::vector<CefString>& excluded_dir_list) {
   base::AutoLock lock_scope(state_lock_);
   file_access_dirs_list_ = dir_list;
+  file_excluded_dirs_list_ = excluded_dir_list;
 #if BUILDFLAG(ARKWEB_MEDIA_POLICY)
   content::MediaSessionImpl* mediaSession = content::MediaSessionImpl::Get(GetWebContents());
   if (!mediaSession || !GetWebContents()) {
@@ -1476,6 +1501,46 @@ std::vector<std::string> ArkWebBrowserHostExtImpl::GetGrantFileAccessDirs() {
     dir_list.emplace_back(dir.ToString());
   }
   return dir_list;
+}
+
+net_service::FileAccessType ArkWebBrowserHostExtImpl::IsInFileAccessList(const GURL& url) {
+  if (file_access_dirs_list_.empty()) {
+    return net_service::FileAccessType::kFileAccessEmpty;
+  }
+
+  if (!url.is_valid() || !url.SchemeIsFile() || !url.has_path()) {
+    return net_service::FileAccessType::kFileAccessBlock;
+  }
+
+  auto url_path = base::MakeAbsoluteFilePathNoResolveSymbolicLinks(
+      base::FilePath(url.path())).value_or(base::FilePath());
+  if (url_path.empty()) {
+    return net_service::FileAccessType::kFileAccessBlock;
+  }
+
+  for (auto& path : file_excluded_dirs_list_) {
+    if (CheckUrlPath(url_path, path)) {
+      LOG(WARNING) << "IsInFileAccessList excluded";
+      return net_service::FileAccessType::kFileAccessBlock;
+    }
+  }
+
+  for (auto& path : file_access_dirs_list_) {
+    if (CheckUrlPath(url_path, path)) {
+      return net_service::FileAccessType::kFileAccessPass;
+    }
+  }
+  return net_service::FileAccessType::kFileAccessBlock;
+}
+
+void ArkWebBrowserHostExtImpl::GetSettingOfNetHelper(const GURL& url, struct net_service::NetHelperSetting& setting) {
+  setting.file_access = GetFileAccess();
+  setting.block_network = GetBlockNetwork();
+  setting.cache_mode = GetCacheMode();
+#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
+  setting.disallow_sandbox_file_access_from_file_url = GetDisallowSandboxFileAccessFromFileUrl();
+#endif
+  setting.file_access_status = IsInFileAccessList(url);
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
@@ -2791,8 +2856,7 @@ void ArkWebBrowserHostExtImpl::SendTouchpadFlingEvent(
 }
 #endif
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
-                                            CefString& additionalHttpHeaders) {
+void ArkWebBrowserHostExtImpl::PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) {
   if (!GetWebContents()) {
     return;
   }
@@ -2807,8 +2871,12 @@ void ArkWebBrowserHostExtImpl::PrefetchPage(CefString& url,
       GetWebContents()->GetController().GetDefaultSessionStorageNamespace();
   gfx::Size size = GetWebContents()->GetContainerBounds().size();
 
-  std::string prefetch_url = url;
-  std::string additional_http_headers = additionalHttpHeaders;
+  std::string prefetch_url = prefetch_options.url_cef;
+  std::string additional_http_headers = prefetch_options.additional_http_headers_cef;
+  no_state_prefetch_manager->SetMinTimeBetweenPrefetchesMs(
+    prefetch_options.min_time_between_prefetches);
+  no_state_prefetch_manager->SetIgnoreCacheControlNoStore(
+    prefetch_options.ignore_cache_control_no_store);
   no_state_prefetch_manager->StartOhPrefetchingFromOmnibox(
       GURL(prefetch_url), session_storage_namespace, size, nullptr,
       additional_http_headers);

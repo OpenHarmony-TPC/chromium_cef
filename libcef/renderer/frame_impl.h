@@ -114,6 +114,11 @@ class CefFrameImpl
                                         const CefString& error_text) {}
 #endif
 
+#if defined(OHOS_INPUT_EVENTS)
+  void SetFocusByPosition(float x, float y,
+      cef::mojom::RenderFrame::SetFocusByPositionCallback callback) override;
+#endif // defined(OHOS_INPUT_EVENTS)
+
  private:
   // Called for draggable region changes due to navigation. This is in addition
   // to the standard notifications delivered via

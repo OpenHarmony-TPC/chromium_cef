@@ -309,6 +309,24 @@ std::string BuildMediaInfo(
 }
 #endif // ARKWEB_NWEB_EX
 #endif // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+content::BrowserContext* GetIncognitoContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    return nullptr;
+  }
+ 
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  if (!browser_client->HasOffTheRecordContext(browser_context)) {
+    return nullptr;
+  }
+ 
+  return browser_client->GetOffTheRecordContext(browser_context);
+}
+#endif // ARKWEB_NWEB_EX
+
 }
 
 
@@ -883,17 +901,6 @@ void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
   extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
       tab_id, web_contents, std::move(changeInfo), std::move(tab));
 }
- 
-void AlloyBrowserHostImplExt::WebExtensionTabActivated(int tab_id, int window_id) {
-  content::BrowserContext* browser_context = nullptr;
-  content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabActivated", browser_context, web_contents)) {
-    return;
-  }
-
-  extensions::TabsWindowsAPI::Get(browser_context)
-      ->TabActived(tab_id, window_id, web_contents);
-}
 
 void AlloyBrowserHostImplExt::ExtensionSetTabId(int32_t tab_id) {
   if (!CEF_CURRENTLY_ON_UIT()) {
@@ -1038,7 +1045,19 @@ void AlloyBrowserHostImplExt::WebExtensionActionClicked(
     LOG(ERROR) << "WebExtensionActionClicked context is null";
     return;
   }
-    
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (tab && tab->incognito) {
+    content::BrowserContext* incognito_context = GetIncognitoContext(context);
+    if (incognito_context) {
+      context = incognito_context;
+    } else {
+      LOG(ERROR) << "get incognito context failed";
+      return;
+    }
+  }
+#endif // ARKWEB_NWEB_EX
+
   extensions::ExtensionActionDispatcher::Get(context)
       ->DispatchExtensionActionClickedWithCustomArgs(context, extensionId,
                                                      tab);
@@ -1781,6 +1800,19 @@ void AlloyBrowserHostImplExt::SetAudioSessionType(int audioSessionType) {
   mediaSession->audioSessionType_ = audioSessionType;
 }
 #endif // BUILDFLAG(ARKWEB_MEDIA_POLICY)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+bool AlloyBrowserHostImplExt::OnStartBackgroundTask(
+    int32_t type,
+    const std::string& message) {
+  if (platform_delegate_ &&
+      platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()) {
+    return platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()
+        ->OnStartBackgroundTask(type, message);
+  }
+  return true;
+}
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
 #if BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
 std::unique_ptr<content::MediaPlayerListener>

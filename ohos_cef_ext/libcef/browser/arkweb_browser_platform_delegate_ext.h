@@ -81,7 +81,7 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void SetNativeEmbedMode(bool flag) {}
   virtual void OnNativeEmbedVisibilityChange(const std::string& embed_id,
                                              bool visibility) {}
-  virtual void SetNativeInnerWeb(bool isInnerWeb) {};
+  virtual void SetNativeInnerWeb(bool isInnerWeb) {}
   virtual void SetEnableCustomVideoPlayer(bool flag) {}
 #endif
 
@@ -193,5 +193,9 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   virtual CefRefPtr<CefDragData> GetDropData();
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  virtual bool OnStartBackgroundTask(int32_t type, const std::string& message);
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 };
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_EXT_H_

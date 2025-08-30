@@ -819,8 +819,8 @@ void ArkwebFrameExtImpl::SendBlanklessKeyToRenderFrame(
   ExecuteOnLocalFrame(
     __FUNCTION__,
     base::BindOnce(
-      [](uint32 nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
-         int64_t pref_hash, blink::WebLocalFrame* rframe) {
+      [](uint32_t nweb_id, uint64_t blankless_key, uint64_t frame_sink_id,
+         int64_t pref_hash, blink::WebLocalFrame* frame) {
         if (auto render_frame = content::RenderFrameImpl::FromWebFrame(frame)) {
           render_frame->SendBlanklessKeyToRenderFrame(nweb_id, blankless_key, frame_sink_id, pref_hash);
         }

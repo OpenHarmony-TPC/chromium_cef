@@ -2215,6 +2215,26 @@ typedef struct _cef_touch_event_t {
   ///
   uint32_t modifiers;
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  ///
+  /// Stylus X-axis tilt angle.
+  /// Angle of the stylus relative to the screen plane along the X-axis.
+  /// Range: [-90.0, 90.0] degrees.
+  /// 0 indicates the stylus is perpendicular to the screen, positive values indicate right tilt,
+  /// negative values indicate left tilt. Set to 0.0 if not supported.
+  ///
+  float tiltX;
+
+  ///
+  /// Stylus Y-axis tilt angle.
+  /// Angle of the stylus relative to the screen plane along the Y-axis.
+  /// Range: [-90.0, 90.0] degrees.
+  /// 0 indicates the stylus is perpendicular to the screen, positive values indicate forward tilt,
+  /// negative values indicate backward tilt. Set to 0.0 if not supported.
+  ///
+  float tiltY;
+#endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
+
   ///
   /// The device type that caused the event.
   ///

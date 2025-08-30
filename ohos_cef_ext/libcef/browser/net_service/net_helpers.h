@@ -34,14 +34,20 @@ namespace net_service {
 #define NETHELPERS_EXPORT __attribute__((visibility("default")))
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
+enum class FileAccessType {
+  kFileAccessEmpty,
+  kFileAccessPass,
+  kFileAccessBlock,
+};
+
 struct NetHelperSetting {
-  bool file_access;
-  bool block_network;
-  int cache_mode;
+  bool file_access = false;
+  bool block_network = false;
+  int cache_mode = 0;
 #if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-  bool disallow_sandbox_file_access_from_file_url;
+  bool disallow_sandbox_file_access_from_file_url = false;
 #endif
-  std::vector<std::string> file_access_dirs_list;
+  FileAccessType file_access_status = FileAccessType::kFileAccessEmpty;
 };
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 

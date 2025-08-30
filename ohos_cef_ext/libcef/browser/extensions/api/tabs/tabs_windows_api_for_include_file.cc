@@ -28,7 +28,7 @@ void TabUpdated(int tab_id,
                 std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
                 std::unique_ptr<NWebExtensionTab> tab);
 
-void TabActived(int tab_id, int window_id, content::WebContents* contents);
+void TabActivated(int tab_id, int window_id, content::BrowserContext* browser_context);
 
 void TabRemoved(int tab_id,
                 bool is_window_closing,

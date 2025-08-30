@@ -204,6 +204,9 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   // ContentBrowserClient::IsExplicitNavigation for debug URLs (HandleDebugURL)
   // to work as expected.
   static const ui::PageTransition kPageTransitionExplicit;
+#if defined(OHOS_INPUT_EVENTS)
+  bool SetFocusByPosition(float x, float y);
+#endif // defined(OHOS_INPUT_EVENTS)
 
 #if BUILDFLAG(IS_ARKWEB)
   friend class ArkwebFrameHostExtImpl;

@@ -45,6 +45,8 @@
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_frame_host_impl_ext.h"
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
+#include "cef/ohos_cef_ext/libcef/browser/net_service/net_helpers.h"
+
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
 #endif
@@ -438,7 +440,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetDisallowSandboxFileAccessFromFileUrl(bool flag) override;
 #endif
   void SetCacheMode(int flag) override;
-  void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list) override;
+ void SetGrantFileAccessDirs(const std::vector<CefString>& dir_list,
+                             const std::vector<CefString>& excluded_dir_list) override;
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   void SetShouldFrameSubmissionBeforeDraw(
       bool should) override { /*TODO: IS_OHOS*/
@@ -468,7 +471,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   int GetMediaPlaybackState() override;
 #endif  // BUILDFLAG(ARKWEB_MEDIA_POLICY)
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  void PrefetchPage(CefString& url, CefString& additionalHttpHeaders) override;
+  void PrefetchPage(const OHOS::NWeb::PrefetchOptions& prefetch_options) override;
 #endif  // ARKWEB_NO_STATE_PREFETCH
 #if BUILDFLAG(ARKWEB_MSGPORT)
   void CreateWebMessagePorts(std::vector<CefString>& ports) override;
@@ -563,6 +566,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif
   int GetCacheMode();
   std::vector<std::string> GetGrantFileAccessDirs();
+  net_service::FileAccessType IsInFileAccessList(const GURL& url);
+  void GetSettingOfNetHelper(const GURL& url, struct net_service::NetHelperSetting& setting);
   bool file_access_ = false;
   bool network_blocked_ = false;
 #if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
@@ -570,6 +575,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif
   int cache_mode_ = 0;
   std::vector<CefString> file_access_dirs_list_{};
+  std::vector<CefString> file_excluded_dirs_list_{};
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 
 #if BUILDFLAG(ARKWEB_SECURE_JAVASCRIPT_PROXY)
@@ -627,6 +633,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void GoBackOrForward(int num_steps) override;
   void SetInitialScale(float scale) override;
   void SetFocusOnWeb() override;
+  void SetImeShow(bool visible) override;
   bool IsNeedZoomChange(const input::NativeWebKeyboardEvent& event,
                         bool& zoom_in);
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
@@ -715,7 +722,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       int tab_id,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
       std::unique_ptr<NWebExtensionTab> tab) override {}
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
   virtual void WebExtensionTabRemoved(int tab_id,
     bool isWindowClosing, int windowId) override {}
 

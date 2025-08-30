@@ -171,6 +171,16 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnActivateContent() {}
 #endif
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  ///
+  /// Notify start background task.
+  ///
+  /*--cef()--*/
+  virtual bool OnStartBackgroundTask(int32_t type, const std::string& message) {
+    return true;
+  }
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_CLIENT_EXT_H_

@@ -15,6 +15,7 @@
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 #include "base/functional/callback_helpers.h"
 #include "base/values.h"
+#include "base/memory/raw_ptr.h"
 #include "chrome/browser/devtools/devtools_file_watcher.h"
 #include "components/prefs/pref_change_registrar.h"
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
@@ -165,7 +166,7 @@ class CefDevToolsFileManager {
   // Guaranteed to outlive this object.
   AlloyBrowserHostImpl* browser_impl_;
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-  Delegate* delegate_;
+  raw_ptr<Delegate> delegate_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   PrefService* prefs_;
 

@@ -72,7 +72,10 @@ void ExtensionActionBrowserNotifier::OnExtensionActionUpdated(
             << extension_id << ", tab_id: " << details.tabId.value_or(-1)
             << ", text: " << details.text.value_or("NA");
   OHOS::NWeb::NWebExtensionActionCefDelegate::GetInstance()->OnSetBadgeText(
-      extension_id, details);
+      extension_id, details,
+      OHOS::NWeb::GetExtensionContextType(browser_context),
+      OHOS::NWeb::GetIncludeIncognitoInformation(extension_id,
+                                                 browser_context));
 }
 
 }  // namespace extensions

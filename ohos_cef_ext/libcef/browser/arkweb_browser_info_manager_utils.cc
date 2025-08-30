@@ -20,6 +20,7 @@
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "content/public/common/url_constants.h"
+#include "extensions/browser/view_type_utils.h"
 #include "extensions/common/constants.h"
 #endif
 
@@ -92,6 +93,22 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOptionsUiFrame(
       web_contents->GetResponsibleWebContents()->GetURL().host() ==
           kExtensionsHost;
   return is_extensions_options_ui_frame;
+}
+
+bool ArkwebBrowserInfoManagerUtils::IsExtensionsOffscreenFrame(
+    const content::GlobalRenderFrameHostToken& global_token) {
+  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
+  auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
+
+  if (web_contents &&
+      (web_contents->GetURL().SchemeIs(extensions::kExtensionScheme) ||
+       web_contents->GetURL().SchemeIs(extensions::kArkwebExtensionScheme)) &&
+      (extensions::GetViewType(web_contents) ==
+       extensions::mojom::ViewType::kOffscreenDocument)) {
+    LOG(INFO) << "need to exclude GetNewBrowserInfo for offscreen document";
+    return true;
+  }
+  return false;
 }
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 

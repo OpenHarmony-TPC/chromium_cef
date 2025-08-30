@@ -45,7 +45,7 @@ void GetOhosResourceHandlerResult(
     TRACE_EVENT1("net", "Response Cache InterceptRequest", "url",
                  state->request_->url.spec().c_str());
     LOG(DEBUG) << "Use intercept request with response cache. url: "
-               << state->request_->url;
+               << url::LogUtils::ConvertUrlWithMask(state->request_->url.spec());
     auto resource_response = std::make_unique<oh_code_cache::ResourceResponse>(
         std::move(response_cache));
     std::move(callback).Run(std::move(resource_response));
@@ -287,10 +287,10 @@ void OnHttpError(int32_t request_id,
 #endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
-void GetSettingOfNetHelper(struct NetHelperSetting& setting) override {
+void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) override {
   if (wrapper_helper_) {
     wrapper_helper_->GetSettingOfNetHelper(
-        init_state_ ? init_state_->browser_ : nullptr, setting);
+        url, init_state_ ? init_state_->browser_ : nullptr, setting);
   }
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)

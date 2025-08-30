@@ -143,7 +143,7 @@ class InterceptedRequestHandler {
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   // To get setting of net helper.
-  virtual void GetSettingOfNetHelper(struct NetHelperSetting& setting) {}
+  virtual void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) {}
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   // Called on received http request error.

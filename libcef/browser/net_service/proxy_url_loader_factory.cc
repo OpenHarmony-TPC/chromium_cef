@@ -51,6 +51,10 @@
 #include "cef/ohos_cef_ext/libcef/common/arkweb_request_impl_ext.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "extensions/common/constants.h"
+#endif
+
 namespace net_service {
 
 namespace {
@@ -596,7 +600,13 @@ void InterceptedRequest::Restart() {
        request_.method != net::HttpRequestHeaders::kGetMethod &&
        request_.method != net::HttpRequestHeaders::kHeadMethod);
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  const bool is_extension_scheme =
+      request_.request_initiator && (request_.request_initiator->scheme() == extensions::kExtensionScheme);
+  if (should_add_origin_header && !is_extension_scheme) {
+#else
   if (should_add_origin_header) {
+#endif
     // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
     url::Origin origin_header_value =
         request_.request_initiator.value_or(url::Origin());
@@ -611,7 +621,7 @@ void InterceptedRequest::Restart() {
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
   struct NetHelperSetting setting;
-  factory_->request_handler_->GetSettingOfNetHelper(setting);
+  factory_->request_handler_->GetSettingOfNetHelper(request_.url, setting);
   if (IsURLBlocked(request_.url, setting)) {
     LOG(WARNING) << "File url access denied! url=" << request_.url.spec();
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);

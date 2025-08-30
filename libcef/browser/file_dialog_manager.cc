@@ -597,6 +597,9 @@ void CefFileDialogManager::SelectFileDoneByDelegateCallback(
   } else {
     listener->MultiFilesSelected(ui::FilePathListToSelectedFileInfoList(paths));
   }
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  arkweb_browser_info_manager_utils_->HandleSetFileChooserInActive();
+#endif //BUILDFLAG(ARKWEB_FILE_UPLOAD)
   // |listener| is likely deleted at this point.
 }
 

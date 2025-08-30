@@ -116,30 +116,14 @@ void ArkWebInterceptedRequestHandlerWrapperHelper::OnHttpError(
 
 #if BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 void ArkWebInterceptedRequestHandlerWrapperHelper::GetSettingOfNetHelper(
+    const GURL& url,
     CefRefPtr<CefBrowserHostBase> browser,
     struct NetHelperSetting& setting) {
   CEF_REQUIRE_UIT();
   if (!browser) {
-    // set the default value
-    setting.file_access = false;
-    setting.block_network = false;
-    setting.cache_mode = 0;
-#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-    setting.disallow_sandbox_file_access_from_file_url = false;
-#endif
-    setting.file_access_dirs_list = std::vector<std::string>();
     return;
   }
-  setting.file_access = browser->AsArkWebBrowserHostExtImpl()->GetFileAccess();
-  setting.block_network =
-      browser->AsArkWebBrowserHostExtImpl()->GetBlockNetwork();
-  setting.cache_mode = browser->AsArkWebBrowserHostExtImpl()->GetCacheMode();
-#if BUILDFLAG(ARKWEB_EXT_FILE_ACCESS)
-  setting.disallow_sandbox_file_access_from_file_url =
-      browser->AsArkWebBrowserHostExtImpl()->GetDisallowSandboxFileAccessFromFileUrl();
-#endif
-  setting.file_access_dirs_list =
-      browser->AsArkWebBrowserHostExtImpl()->GetGrantFileAccessDirs();
+  browser->AsArkWebBrowserHostExtImpl()->GetSettingOfNetHelper(url, setting);
 }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_CONNINFO)
 

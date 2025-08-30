@@ -376,17 +376,6 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
 
   auto callback_runner = base::SequencedTaskRunner::GetCurrentDefault();
 
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  // Skip GetNewBrowserInfo for extensions options ui, because without
-  // skipping it will take a long time
-  // (kNewBrowserInfoResponseTimeoutMs) and will finally fail as well.
-  if (GetUtils()->IsExtensionsOptionsUiFrame(global_token)) {
-    SendNewBrowserInfoResponse(/*browser_info=*/nullptr, /*is_excluded=*/false,
-                               std::move(callback), callback_runner);
-    return;
-  }
-#endif
-
   base::AutoLock lock_scope(browser_info_lock_);
 
   scoped_refptr<CefBrowserInfo> browser_info =
@@ -448,6 +437,22 @@ void CefBrowserInfoManager::CheckExcludedNewBrowserInfoOnUIThread(
   if (!g_info_manager) {
     return;
   }
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  // Exclude GetNewBrowserInfo for extensions options ui or offscreen document,
+  // because if continue waiting it will finally fail as well, and can cause a
+  // long block (kNewBrowserInfoResponseTimeoutMs) on renderer process in
+  // loading.
+  if (g_info_manager->GetUtils()->IsExtensionsOptionsUiFrame(global_token) ||
+      g_info_manager->GetUtils()->IsExtensionsOffscreenFrame(global_token)) {
+    LOG(INFO) << "exclude getting browser info for extensions options ui or "
+                 "offscreen document";
+    g_info_manager->ContinueNewBrowserInfo(global_token,
+                                           /*browser_info=*/nullptr,
+                                           /*is_excluded=*/true);
+    return;
+  }
+#endif
 
   // May return nullptr for PDF renderer process.
   auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
