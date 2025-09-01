@@ -162,6 +162,12 @@ void ArkWebCefBrowserPlatformDelegateExt::CreateWebPrintDocumentAdapter(
     void** webPrintDocumentAdapter) {
   NOTIMPLEMENTED();
 }
+
+void ArkWebCefBrowserPlatformDelegateExt::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName,
+    void** adapter) {
+  NOTIMPLEMENTED();
+}
 #endif  // BUILDFLAG(ARKWEB_PRINT)
 
 #if BUILDFLAG(ARKWEB_EXT_TOPCONTROLS)

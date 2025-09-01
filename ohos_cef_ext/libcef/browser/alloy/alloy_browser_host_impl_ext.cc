@@ -682,6 +682,14 @@ void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapter(const CefString& job
   }
 }
 
+void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName, void** adapter) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->
+      CreateWebPrintDocumentAdapterV2(jobName, adapter);
+  }
+}
+
 void AlloyBrowserHostImplExt::SetPrintBackground(bool enable) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->SetPrintBackground(enable);

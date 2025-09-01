@@ -127,6 +127,8 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void SetToken(void* token) {}
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                              void** webPrintDocumentAdapter);
+  virtual void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                               void** adapter);
   virtual void SetPrintBackground(bool enable) {}
   virtual bool GetPrintBackground() { return false; }
 #endif  // BUILDFLAG(ARKWEB_PRINT)
