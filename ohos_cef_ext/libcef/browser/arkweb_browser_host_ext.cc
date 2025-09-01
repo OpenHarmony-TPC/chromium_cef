@@ -477,6 +477,25 @@ void ArkWebBrowserHostExtImpl::CreateWebPrintDocumentAdapter(
                                                     webPrintDocumentAdapter);
 }
 
+void ArkWebBrowserHostExtImpl::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName,
+    void** adapter) {
+  content::RenderFrameHost* rfh_to_use =
+      printing::OhosPrintManager::GetRenderFrameHostToUse(GetWebContents());
+  if (!rfh_to_use) {
+    LOG(ERROR) << "rfh_to_use is nullptr";
+    return;
+  }
+  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
+      content::WebContents::FromRenderFrameHost(rfh_to_use));
+  if (!ohos_print_manager) {
+    LOG(ERROR) << "ohos_print_manager is nullptr";
+    return;
+  }
+
+  ohos_print_manager->CreateWebPrintDocumentAdapterV2(jobName, adapter);
+}
+
 void ArkWebBrowserHostExtImpl::SetPrintBackground(bool enabled) {
   content::RenderFrameHost* rfh_to_use =
       printing::GetFrameToPrint(GetWebContents());

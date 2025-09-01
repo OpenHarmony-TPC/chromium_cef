@@ -904,6 +904,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
       void** webPrintDocumentAdapter) = 0;
 
   ///
+  /// Create the Web print document adapter v2 of the UI framework
+  ///
+  virtual void CreateWebPrintDocumentAdapterV2(
+      const CefString& jobName,
+      void** adapter) = 0;
+
+  ///
   /// Set the over-scroll mode of web
   ///
   virtual void SetOverscrollMode(int mode) = 0;

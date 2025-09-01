@@ -88,6 +88,8 @@ public:
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
  #endif
