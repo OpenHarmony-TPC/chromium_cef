@@ -359,8 +359,8 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
 void TabsCreateFunction::CreateTabForExtension(
     std::string& url,
     content::BrowserContext* context) {
-  NWebTabCreateInfo create_info;
-  create_info.url = url;
+  NWebTabCreateInfoV2 create_info;
+  create_info.createInfo.url = url;
   create_info.contextType = GetExtensionContextType(context);
 }
 
@@ -368,8 +368,8 @@ ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
   std::optional<tabs::Create::Params> params =
       tabs::Create::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
-  NWebTabCreateInfo create_info;
-  GetCreateParams(params, create_info);
+  NWebTabCreateInfoV2 create_info;
+  GetCreateParams(params, create_info.createInfo);
 
   if (params->create_properties.url) {
     auto result = ExtensionTabUtil::PrepareURLForNavigation(
@@ -377,7 +377,7 @@ ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
     if (!result.has_value()) {
       return RespondNow(Error(result.error()));
     }
-    create_info.url = (*result).spec();
+    create_info.createInfo.url = (*result).spec();
   }
   create_info.contextType = GetExtensionContextType(browser_context());
   create_info.includeIncognitoInfo = include_incognito_information();
@@ -1268,8 +1268,8 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
     return RespondNow(GetResult());
   }
 
-  NWebExtensionTabUpdateProperties update_properties;
-  if (!GetUpdateParams(tab_id, params, update_properties)) {
+  NWebExtensionTabUpdatePropertiesV2 update_properties;
+  if (!GetUpdateParams(tab_id, params, update_properties.updateProperties)) {
     return RespondNow(Error(error_));
   }
   update_properties.contextType = GetExtensionContextType(browser_context());
