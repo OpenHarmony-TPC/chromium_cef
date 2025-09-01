@@ -3314,6 +3314,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserControlsState(int constraints,
 
   if (constraints <= 0 || constraints > static_cast<int>(cc::BrowserControlsState::kMaxValue) ||
       current <= 0 || current > static_cast<int>(cc::BrowserControlsState::kMaxValue)) {
+    LOG(ERROR) << "UpdateBrowserControlsState states out of bound" 
+                  "constraints : " << constraints
+                  "current : " << current;
     return;
   }
 
