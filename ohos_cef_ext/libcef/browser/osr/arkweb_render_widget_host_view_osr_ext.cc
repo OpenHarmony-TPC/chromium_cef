@@ -562,7 +562,7 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
     if (state->flags == 0 
       || ((state->flags == (state->flags & -(state->flags))) 
-      && state->flags <= static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_INPUT_FLAG_VERTICAL))) {
+      && state->flags <= static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_TEXT_INPUT_FLAG_MAX))) {
       flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
     }
     show_keyboard = state->show_ime_if_needed;

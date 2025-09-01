@@ -64,7 +64,7 @@ void SbBlockPage::CommandReceived(const std::string& command) {
   int cmd = 0;
   bool retval = base::StringToInt(command, &cmd);
   if (cmd < static_cast<int>(security_interstitials::SecurityInterstitialCommand::CMD_TEXT_FOUND) ||
-      cmt > static_cast<int>(security_interstitials::SecurityInterstitialCommand::CMD_REQUEST_SITE_ACCESS_PERMISSION)){
+      cmd > static_cast<int>(security_interstitials::SecurityInterstitialCommand::CMD_REQUEST_SITE_ACCESS_PERMISSION)){
     retval = false;
   }
   DCHECK(retval);
