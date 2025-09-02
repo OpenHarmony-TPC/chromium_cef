@@ -776,9 +776,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   js_injection::JsCommunicationHost* GetJsCommunicationHost();
 #endif
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   bool is_arkweb_applinking_enabled_ = true;
-#endif // BUILDFLAG(IS_ARKWEB)
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   float virtual_pixel_ratio_ = 2.0;
   uint64_t last_zoom_time_ = 0;
