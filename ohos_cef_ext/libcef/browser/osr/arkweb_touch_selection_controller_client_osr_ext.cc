@@ -371,8 +371,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      isCopy_ = false;
-      ShowQuickMenu();
+      if (isCopy_) {
+        isCopy_ = false;
+        ShowQuickMenu();
+      }
 #endif // ARKWEB_MENU_HANDLE
       [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
