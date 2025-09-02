@@ -549,20 +549,26 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
         static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
-            static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
+            static_cast<int>(ui::TextInputMode::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
-    if (state->mode >= 0 && state->mode <= static_cast<int>(ArkWebRenderHandlerExt::TextInputMode::CEF_TEXT_INPUT_MODE_MAX)) {
-      mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
-    }
+    static_assert(
+        static_cast<int>(CEF_TEXT_INPUT_TYPE_MAX) ==
+            static_cast<int>(ui::TextInputType::CEF_TEXT_INPUT_TYPE_MAX),
+        "Enum values in cef_text_input_type_t must match ui::TextInputType");
+    static_assert(
+        static_cast<int>(CEF_TEXT_INPUT_ACTION_MAX) ==
+            static_cast<int>(ui::TextInputAction::kMaxValue),
+        "Enum values in cef_text_input_action_t must match ui::TextInputAction");
+    static_assert(
+        static_cast<int>(TEXT_INPUT_FLAG_VERTICAL) ==
+            static_cast<int>(ui::TextInputFlags::TEXT_INPUT_FLAG_VERTICAL),
+        "Enum values in cef_text_input_flags_t must match ui::TextInputFlags");
+    mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
     type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
-               : (state->type >= 0 && state->type <= static_cast<int>(ArkWebRenderHandlerExt::TextInputType::CEF_TEXT_INPUT_TYPE_MAX)
-                ? static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type)
-                : CEF_TEXT_INPUT_TYPE_NONE);
+               : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
-    if (state->flags == 0 
-      || ((state->flags == (state->flags & -(state->flags))) 
-      && state->flags <= static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_TEXT_INPUT_FLAG_MAX))) {
+    if (state->flags == 0 || (state->flags == (state->flags & -(state->flags)))) {
       flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
     }
     show_keyboard = state->show_ime_if_needed;
@@ -1551,10 +1557,6 @@ void ArkWebRenderWidgetHostViewOSRExt::OnScrollState(bool scroll_state) {
 void ArkWebRenderWidgetHostViewOSRExt::AdvanceFocusForIME(int focusType) {
   LOG(DEBUG) << "CefRenderWidgetHostViewOSR::AdvanceFocusForIME focusType = "
              << focusType;
-  if (focusType < static_cast<int>(blink::mojom::FocusType::kMinValue)
-   || focusType > static_cast<int>(blink::mojom::FocusType::kMaxValue)) {
-    return;
-  }
   content::RenderFrameHostImpl* frame_host = nullptr;
   if (render_widget_host() && render_widget_host()->frame_tree() &&
       render_widget_host()->frame_tree()->GetFocusedFrame()) {
