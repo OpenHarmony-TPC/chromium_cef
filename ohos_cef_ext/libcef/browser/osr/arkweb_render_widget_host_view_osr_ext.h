@@ -153,6 +153,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void ResetGestureDetection(bool is_lost_focus) override;
   void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
                               RenderWidgetHostViewBase* updated_view) override;
+  void OnSelectAreaChanged(CefRect& select_area, bool need_report);
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
