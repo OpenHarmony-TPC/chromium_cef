@@ -83,6 +83,8 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
                                              bool visibility) {}
   virtual void SetNativeInnerWeb(bool isInnerWeb) {}
   virtual void SetEnableCustomVideoPlayer(bool flag) {}
+  virtual void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {}
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)

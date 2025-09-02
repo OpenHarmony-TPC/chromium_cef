@@ -74,6 +74,9 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   typedef cef_embed_mouse_event_t CefEmbedMouseEvent;
   typedef cef_embed_mouse_type_t CefEmbedMouseType;
   typedef cef_embed_mouse_button_t CefEmbedMouseButton;
+  typedef cef_native_param_status_t CefNativeParamStatus;
+  typedef cef_native_param_item_t CefNativeParamItem;
+  typedef cef_native_param_data_t CefNativeParamData;
 
   CefRefPtr<ArkWebRenderHandlerExt> AsArkWebRenderHandler() override {
     return this;
@@ -195,6 +198,13 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   ///
   virtual void OnNativeEmbedVisibilityChange(const CefString& embed_id,
                                              bool visibility) {}
+  
+  ///
+  /// Called when params change.
+  ///
+  virtual void OnNativeEmbedObjectParamChange(CefRefPtr<CefBrowser> browser,
+                                              const CefNativeParamData& paramData) {}
+  
 
   ///
   /// Called when select all is clicked.

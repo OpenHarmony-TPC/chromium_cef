@@ -1966,6 +1966,16 @@ void ArkWebRenderWidgetHostViewOSRExt::SetNativeInnerWeb(bool isInnerWeb) {
     compositor->Utils()->SetNativeInnerWeb(isInnerWeb);
   }
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnNativeEmbedObjectParamChange(browser_impl_.get(), native_param_data);
+  }
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)

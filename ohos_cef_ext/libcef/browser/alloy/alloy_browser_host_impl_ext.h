@@ -60,6 +60,8 @@ public:
     const std::string& embed_id,
     bool visibility) override;
   void SetEnableCustomVideoPlayer(bool flag) override;
+  void OnNativeEmbedObjectParamChange(
+      const content::NativeEmbedParamDataInfo& native_param_info) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_FOCUS)
