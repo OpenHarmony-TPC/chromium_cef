@@ -692,8 +692,21 @@ void ArkWebTouchSelectionControllerClientOSRExt::
     }
   }
 }
-#endif
 
+bool ArkWebTouchSelectionControllerClientOSRExt::IsShowHandle() {
+  if (!rwhv_) {
+    return false;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (browser && browser->client()) {
+    auto handler = browser->client()->GetContextMenuHandler();
+    if (handler) {
+      return handler->IsShowHandle();
+    }
+  }
+  return false;
+}
+#endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
 void ArkWebTouchSelectionControllerClientOSRExt::SelectionTextNotEmpty(
     bool has_selection) {
