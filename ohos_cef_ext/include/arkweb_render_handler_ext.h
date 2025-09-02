@@ -357,6 +357,16 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
                               bool& isAvailable) {
     return false;
   }
+
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  ///
+  /// Called when selection changed.
+  ///
+  /*--cef()--*/
+  virtual void SelectionBoundsChanged(const CefRect& anchor_rect,
+                                      const CefRect& focus_rect,
+                                      bool is_anchor_first) {}
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_RENDER_HANDLER_EXT_H_
