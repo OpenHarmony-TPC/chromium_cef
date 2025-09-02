@@ -282,10 +282,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
 
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   void EnableAppLinking(bool enable) override;
   bool IsAppLinkingEnabled() const override;
-#endif // BUILDFLAG(IS_ARKWEB)
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void AdvanceFocusForIME(int focusType) override;
