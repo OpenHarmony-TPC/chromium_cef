@@ -183,6 +183,11 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 
 #include "arkweb/chromium_ext/components/js_injection/js_communication_host_utils.h"
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "libcef/browser/dom_distiller/oh_dom_distiller_manager.h"
+#include "libcef/browser/dom_distiller/oh_self_deleting_request_delegate.h"
+#endif // ARKWEB_READER_MODE
+
 const char kNWebId[] = "nweb_id";
 #endif
 namespace {
@@ -3875,3 +3880,35 @@ void ArkWebBrowserHostExtImpl::OnBrowserBackground() {
   web_contents->OnBrowserBackground();
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+void ArkWebBrowserHostExtImpl::Distill(const std::string& guid, const DistillOptions& distill_options,
+  CefRefPtr<CefDistillCallback> callback) {
+  auto web_contents = GetWebContents();
+  if (!web_contents || !callback) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::Distill "
+                  "callback is nullptr or web_contents is null";
+    return;
+  }
+  oh_dom_distiller::DistillResultCallback distill_result_callback =
+    base::BindOnce(
+      [](CefRefPtr<CefDistillCallback> callback,
+        const std::string& guid, const std::string& content) {
+        if (callback) {
+          callback->OnDistillCallback(guid, content);
+        }
+      },
+      callback, guid);
+  oh_dom_distiller::OhDomDistillerManager::GetInstance()->DistillCurrentPage(
+    web_contents, distill_options, std::move(distill_result_callback));
+}
+
+void ArkWebBrowserHostExtImpl::AbortDistill() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::AbortDistill, web_contents is null";
+    return;
+  }
+  oh_dom_distiller::OhDomDistillerManager::GetInstance()->AbortDistill(web_contents);
+}
+#endif // ARKWEB_READER_MODE

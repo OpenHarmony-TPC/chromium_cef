@@ -1213,6 +1213,15 @@ source_set("libcef_static") {
     ]
   }
 
+  if (defined(arkweb_reader_mode) && arkweb_reader_mode) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_manager.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_dom_distiller_service_factory.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_self_deleting_request_delegate.cc",
+      "ohos_cef_ext/libcef/browser/dom_distiller/oh_distiller_utils.cc",
+    ]
+  }
+
   if (arkweb_itp) {
     if (!is_arkweb_ext) {
       sources += arkweb_anti_tracking_placeholder_source

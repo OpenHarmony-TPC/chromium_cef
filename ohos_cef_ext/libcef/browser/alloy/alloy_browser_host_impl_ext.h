@@ -272,6 +272,14 @@ public:
       const content::MediaPlayerId& media_player_id) override;
 #endif  // ARKWEB_VIDEO_ASSISTANT
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  void OnIsPageDistillable(
+      int page_type,
+      const std::string& distillable_page_url,
+      const std::string& title) override;
+  bool IsForDistillerPage() override;
+#endif
+
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK

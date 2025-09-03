@@ -750,6 +750,11 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void OnBrowserBackground() override;
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  void Distill(const std::string& guid, const DistillOptions& distill_options,
+    CefRefPtr<CefDistillCallback> callback) override;
+  void AbortDistill() override;
+#endif // ARKWEB_READER_MODE
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
