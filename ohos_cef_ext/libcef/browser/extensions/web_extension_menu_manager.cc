@@ -128,6 +128,12 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   item.type = GetTypeStr(menu_item->type());
   item.visible = menu_item->visible();
   item.extensionId = menu_item->extension_id();
+  return item;
+}
+ 
+NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item) {
+  NWebContextMenusItemV2 item;
+  item.item = GetNWebContextMenusItem(menu_item);
   item.isOffTheRecord = menu_item->incognito();
   return item;
 }
@@ -274,7 +280,8 @@ void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extensi
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
     if (NWebExtensionContextMenusDispatcher::HasOnCreateNativeByPbCallback()) {
-      NWebExtensionContextMenusDispatcher::OnCreateNativeByPb(extension_id, item);
+      NWebContextMenusItemV2 item_v2 = GetNWebContextMenusItemV2(menu_item);
+      NWebExtensionContextMenusDispatcher::OnCreateNativeByPb(extension_id, item_v2);
     } else {
       NWebExtensionContextMenusDispatcher::OnCreateNative(extension_id, item);
     }
@@ -291,7 +298,8 @@ void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extensi
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
     if (NWebExtensionContextMenusDispatcher::HasOnUpdateNativeByPbCallback()) {
-      NWebExtensionContextMenusDispatcher::OnUpdateNativeByPb(extension_id, item);
+      NWebContextMenusItemV2 item_v2 = GetNWebContextMenusItemV2(menu_item);
+      NWebExtensionContextMenusDispatcher::OnUpdateNativeByPb(extension_id, item_v2);
     } else {
       NWebExtensionContextMenusDispatcher::OnUpdateNative(extension_id, item);
     }
