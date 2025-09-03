@@ -1350,7 +1350,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void OnDataDetectorSelectText() = 0;
 #endif
 
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   /// 
   /// set applink enable
   ///
@@ -1360,7 +1360,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// get app link status
   ///
   virtual bool IsAppLinkingEnabled() const = 0;
-#endif
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 
   ///
   /// Execute a string of JavaScript code in frames.
