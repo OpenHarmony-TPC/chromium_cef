@@ -310,8 +310,6 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(params);
 
   int window_id = params->window_id;
-  WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(params->query_options);
-
   std::optional<WebExtensionWindow> window = getWindow(window_id, params->query_options,
                                                        GetSenderWebContents(),
                                                        browser_context(),
@@ -320,7 +318,12 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
     return RespondNow(Error(ErrorUtils::FormatErrorMessage(extensions::ExtensionTabUtil::kWindowNotFoundError,
                                                            base::NumberToString(window_id))));
   }
-  return RespondNow(WithArguments(GetWindowValue(*window)));
+
+  bool populate = false;
+  if (params->query_options && params->query_options->populate) {
+    populate = *(params->query_options->populate);
+  } 
+  return RespondNow(WithArguments(GetWindowValue(*window, populate)));
 }
 
 ExtensionFunction::ResponseAction WindowsGetCurrentFunction::Run() {
@@ -335,7 +338,12 @@ ExtensionFunction::ResponseAction WindowsGetCurrentFunction::Run() {
   if (!window) {
     return RespondNow(Error(extensions::ExtensionTabUtil::kNoCurrentWindowError));
   }
-  return RespondNow(WithArguments(GetWindowValue(*window)));
+
+  bool populate = false;
+  if (params->query_options && params->query_options->populate) {
+    populate = *(params->query_options->populate);
+  }
+  return RespondNow(WithArguments(GetWindowValue(*window, populate)));
 }
 
 ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
@@ -360,7 +368,12 @@ ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
   if (!window) {
     return RespondNow(Error(extensions::tabs_constants::kNoLastFocusedWindowError));
   }
-  return RespondNow(WithArguments(GetWindowValue(*window)));
+
+  bool populate = false;
+  if (params->query_options && params->query_options->populate) {
+    populate = *(params->query_options->populate);
+  }
+  return RespondNow(WithArguments(GetWindowValue(*window, populate)));
 }
 
 ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
@@ -381,7 +394,12 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
   } else {
     windows = NweExtensionWindowDelegateHandler::GetInstance()->OnGetAllWindows(windowQueryOptions);
   }
-  base::Value::List window_list = GettWindowValueList(windows);
+
+  bool populate = false;
+  if (params->query_options && params->query_options->populate) {
+    populate = *(params->query_options->populate);
+  }
+  base::Value::List window_list = GettWindowValueList(windows, populate);
   return RespondNow(WithArguments(std::move(window_list)));
 }
 

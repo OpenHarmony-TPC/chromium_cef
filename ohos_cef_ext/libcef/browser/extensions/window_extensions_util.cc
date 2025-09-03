@@ -35,7 +35,7 @@ const char kWidthKey[] = "width";
 const char kHeightKey[] = "height";
 const char kTabsKey[] = "tabs";
 
-base::Value::Dict GetWindowValue(const WebExtensionWindow& window) {
+base::Value::Dict GetWindowValue(const WebExtensionWindow& window, bool populate) {
   base::Value::Dict dict;
   if (window.id)
     dict.Set(kIdKey, *window.id);
@@ -56,14 +56,15 @@ base::Value::Dict GetWindowValue(const WebExtensionWindow& window) {
     dict.Set(kHeightKey, *window.height);
   if (window.sessionId)
     dict.Set("sessionId", *window.sessionId);
-  dict.Set(kTabsKey, GetTabValueList(window.tabs));
+  if (populate)
+    dict.Set(kTabsKey, GetTabValueList(window.tabs));
   return dict;
 }
 
-base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows) {
+base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows, bool populate) {
   base::Value::List window_list;
   for (WebExtensionWindow window : windows) {
-    window_list.Append(GetWindowValue(window));
+    window_list.Append(GetWindowValue(window, populate));
   }
   return window_list;
 }
