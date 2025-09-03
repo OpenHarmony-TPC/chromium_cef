@@ -77,13 +77,6 @@ void sortCallbackData(std::vector<IconHelper::CallbackData>& data_list) {
       return a.score < b.score;
     });
 }
-
-SkBitmap CopySkBitmap(const SkBitmap& bitmap) {
-  SkBitmap new_bitmap;
-  new_bitmap.allocPixels(bitmap.info());
-  bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
-  return new_bitmap;
-}
 #endif
 }  // namespace
 
@@ -207,25 +200,24 @@ void IconHelper::DownloadFaviconCallback(
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
       base::ohos::IsPcDevice()) {
-    float current_score;
-    SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);
-    std::lock_guard<std::mutex> lock(mutex_);
-    best_results_map_[request_id].push_back({current_score, image_url, CopySkBitmap(bitmap)});
-    if (best_indices.size() > 1) {
-      const auto& current_bitmap = bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
-      best_results_map_[request_id].push_back({current_score, image_url, CopySkBitmap(current_bitmap)});
-    }
-    std::unordered_set<std::string>& pending_urls = pending_downloads_map_[request_id];
-    pending_urls.erase(image_url.spec());
-    if (!pending_urls.empty()) {
-      return;
-    }
-    sortCallbackData(best_results_map_[request_id]);
-    for (CallbackData& data : best_results_map_[request_id]) {
-      DownloadFaviconHandler(data.image_url, data.bitmap, browser);
-    }
-    pending_downloads_map_.erase(request_id);
-    best_results_map_.erase(request_id);
+    float current_score;	
+    SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);	
+    SkBitmap new_bitmap;
+    new_bitmap.allocPixels(bitmap.info());
+    bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
+    best_results_map_[request_id].push_back({current_score, image_url, new_bitmap});
+    std::lock_guard<std::mutex> lock(mutex_);	
+    std::unordered_set<std::string>& pending_urls = pending_downloads_map_[request_id];	
+    pending_urls.erase(image_url.spec());	
+    if (!pending_urls.empty()) {	
+      return;	
+    }	
+    sortCallbackData(best_results_map_[request_id]);	
+    for (CallbackData& data : best_results_map_[request_id]) {	
+      DownloadFaviconHandler(data.image_url, data.bitmap, browser);	
+    }	
+    pending_downloads_map_.erase(request_id);	
+    best_results_map_.erase(request_id);	
     return;
   }
 #endif
