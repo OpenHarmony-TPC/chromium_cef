@@ -529,17 +529,17 @@ bool ShouldMigratePassword(password_manager::PasswordForm* form, CefRefPtr<CefWe
   }
   password_manager::PasswordStore* password_store = web_storage_impl->GetPasswordStore();
   if (form->username_value.empty() || form->password_value.empty() || form->url.is_empty()) {
-    LOG(WARNING) << "[Autofill] migration data value is empty.";
     form->display_name = MIGRATION_LABEL;
     password_store->UpdateLoginDisplayName(*form);
+    LOG(WARNING) << "[Autofill] migration data value is empty.";
     return false;
   }
  
   if (form->username_value.length() > kMaxUserNameLength || form->password_value.length() > kMaxPasswordLength ||
       form->url.spec().length() > kMaxUrlLength) {
-    LOG(WARNING) << "[Autofill] migration data length over max.";
     form->display_name = MIGRATION_LABEL;
     password_store->UpdateLoginDisplayName(*form);
+    LOG(WARNING) << "[Autofill] migration data length over max.";
     return false;
   }
  
