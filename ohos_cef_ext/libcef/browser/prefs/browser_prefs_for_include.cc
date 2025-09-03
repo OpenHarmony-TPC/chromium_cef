@@ -39,6 +39,9 @@ namespace browser_prefs {
 const char kMigratePasswordsReady[] = "migrate_passwords_ready";
 const char kMigratePasswordsToPasswordVault[] =
     "migrate_passwords_to_password_vault";
+const char kMigrationCount[] = "migration_count";
+const char kMigrationDataBackupCompletion[] = "migration_data_backup_completion";
+const char kMigrationQueryAssetfailure[] = "migration_query_asset_failure";
 #endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
@@ -46,6 +49,9 @@ void RegisterMigratePasswordsPrefs(PrefRegistrySimple* registry) {
   registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsReady, false);
   registry->RegisterBooleanPref(browser_prefs::kMigratePasswordsToPasswordVault,
                                 false);
+  registry->RegisterIntegerPref(browser_prefs::kMigrationCount, 0);
+  registry->RegisterBooleanPref(browser_prefs::kMigrationDataBackupCompletion, false);
+  registry->RegisterBooleanPref(browser_prefs::kMigrationQueryAssetfailure, false);
 }
 #endif
 

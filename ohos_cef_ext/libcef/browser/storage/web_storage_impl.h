@@ -175,7 +175,7 @@ class CefWebStorageImpl : public CefWebStorage {
 class MigrationCallback : public OHOS::NWeb::MigrationListenerAdapter {
 public:
   MigrationCallback() {}
-  void OnMigrationReply(int32_t errorCode, int32_t succussCount, const std::vector<int32_t>& errorIndex,
+  void OnMigrationReply(int32_t errorCode, int32_t successCount, const std::vector<int32_t>& errorIndex,
                         const std::vector<int32_t>& codeList) override;
   void SetMigrationFinish(bool isFinish) { migration_finished_ = isFinish; }
   bool GetMigrationFinish() { return migration_finished_; }
