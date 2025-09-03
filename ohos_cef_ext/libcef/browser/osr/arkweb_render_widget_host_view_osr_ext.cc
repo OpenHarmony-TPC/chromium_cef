@@ -548,15 +548,29 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
   }
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
-        static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
-            static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputMode::CEF_TEXT_INPUT_MODE_MAX) ==
+            static_cast<int>(ui::TextInputMode::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputType::CEF_TEXT_INPUT_TYPE_MAX) ==
+            static_cast<int>(ui::TextInputType::TEXT_INPUT_TYPE_MAX),
+        "Enum values in cef_text_input_type_t must match ui::TextInputType");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputAction::CEF_TEXT_INPUT_ACTION_MAX) ==
+            static_cast<int>(ui::TextInputAction::kMaxValue),
+        "Enum values in cef_text_input_action_t must match ui::TextInputAction");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_TEXT_INPUT_FLAG_VERTICAL) ==
+            static_cast<int>(ui::TextInputFlags::TEXT_INPUT_FLAG_VERTICAL),
+        "Enum values in cef_text_input_flags_t must match ui::TextInputFlags");
     mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
     type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
                : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
-    flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
+    if (state->flags == 0 || (state->flags == (state->flags & -(state->flags)))) {
+      flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
+    }
     show_keyboard = state->show_ime_if_needed;
   }
   if (state && !state->show_ime_if_needed && did_update_state) {
