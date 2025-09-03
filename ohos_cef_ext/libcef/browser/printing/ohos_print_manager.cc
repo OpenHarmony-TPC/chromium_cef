@@ -129,10 +129,16 @@ class PrintDocumentAdapterImpl
       std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback)
       override {
     LOG(INFO) << "OhosPrintManager onStartLayoutWrite.";
+    int32_t print_attrs_fd;
+    if (base::IsValueInRangeForNumericType<int32_t>(fd)) {
+      print_attrs_fd = static_cast<int32_t>(fd);
+    } else {
+      print_attrs_fd = -1;
+    }
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = print_attrs_fd;
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -216,10 +222,16 @@ class ApplicationPrintDocumentAdapterImpl
       std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback)
       override {
     LOG(INFO) << "Application OhosPrintManager onStartLayoutWrite.";
+    int32_t print_attrs_fd;
+    if (base::IsValueInRangeForNumericType<int32_t>(fd)) {
+      print_attrs_fd = static_cast<int32_t>(fd);
+    } else {
+      print_attrs_fd = -1;
+    }
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = print_attrs_fd;
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -326,10 +338,16 @@ class ApplicationPrintDocumentAdapterImplV2
       return;
     }
 
+    int32_t print_attrs_fd;
+    if (base::IsValueInRangeForNumericType<int32_t>(fd)) {
+      print_attrs_fd = static_cast<int32_t>(fd);
+    } else {
+      print_attrs_fd = -1;
+    }
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = TransformPrintAttrs(newAttrs);
-    printAttrs.fd = fd;
+    printAttrs.fd = print_attrs_fd;
     printAttrs.callback =
       std::make_shared<PrintWriteResultCallbackAdapterV2>(callback);
 
