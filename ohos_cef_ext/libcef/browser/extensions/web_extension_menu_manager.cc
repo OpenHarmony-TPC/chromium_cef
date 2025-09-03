@@ -130,14 +130,16 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   item.extensionId = menu_item->extension_id();
   return item;
 }
- 
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
 NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item) {
   NWebContextMenusItemV2 item;
   item.item = GetNWebContextMenusItem(menu_item);
   item.isOffTheRecord = menu_item->incognito();
   return item;
 }
- 
+#endif
+
 void SetContextMenusEventProperties(base::Value::Dict& properties,
                                     ContextMenusOnClickedData& data) {
   properties.Set("menuItemId", data.menuItemId);
