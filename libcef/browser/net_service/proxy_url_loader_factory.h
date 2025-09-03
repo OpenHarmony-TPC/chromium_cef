@@ -268,8 +268,14 @@ class ProxyURLLoaderFactory
   DisconnectCallback on_disconnect_;
 
   // Map of request ID to request object.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  std::map<int32_t,
+           std::pair<std::unique_ptr<InterceptedRequest>,
+                     base::WeakPtr<InterceptedRequest>>>
+      requests_;
+#else
   std::map<int32_t, std::unique_ptr<InterceptedRequest>> requests_;
-
+#endif
   base::WeakPtrFactory<ProxyURLLoaderFactory> weak_factory_;
 };
 
