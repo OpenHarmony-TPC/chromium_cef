@@ -118,9 +118,8 @@ int32_t ConvertUint32ToInt32(uint32_t value)
 {
   if (base::IsValueInRangeForNumericType<int32_t>(value)) {
     return static_cast<int32_t>(value);
-  } else {
-    return -1;
   }
+  return -1;
 }
 
 class PrintDocumentAdapterImpl
