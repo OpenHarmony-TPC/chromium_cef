@@ -110,10 +110,6 @@ OHOS::NWeb::PrintAttributesAdapter TransformPrintAttrs(
   return attrs;
 }
 
-}  // namespace
-
-class OhosPrintManager;
-
 int32_t ConvertUint32ToInt32(uint32_t value)
 {
   if (base::IsValueInRangeForNumericType<int32_t>(value)) {
@@ -121,6 +117,10 @@ int32_t ConvertUint32ToInt32(uint32_t value)
   }
   return -1;
 }
+
+}  // namespace
+
+class OhosPrintManager;
 
 class PrintDocumentAdapterImpl
     : public OHOS::NWeb::PrintDocumentAdapterAdapter {
