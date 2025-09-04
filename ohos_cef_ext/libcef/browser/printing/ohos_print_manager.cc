@@ -110,6 +110,14 @@ OHOS::NWeb::PrintAttributesAdapter TransformPrintAttrs(
   return attrs;
 }
 
+int32_t ConvertUint32ToInt32(uint32_t value)
+{
+  if (base::IsValueInRangeForNumericType<int32_t>(value)) {
+    return static_cast<int32_t>(value);
+  }
+  return -1;
+}
+
 }  // namespace
 
 class OhosPrintManager;
@@ -132,7 +140,7 @@ class PrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -219,7 +227,7 @@ class ApplicationPrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -329,7 +337,7 @@ class ApplicationPrintDocumentAdapterImplV2
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = TransformPrintAttrs(newAttrs);
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback =
       std::make_shared<PrintWriteResultCallbackAdapterV2>(callback);
 

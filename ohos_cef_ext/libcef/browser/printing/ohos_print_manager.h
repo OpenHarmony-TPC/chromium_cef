@@ -37,7 +37,7 @@ namespace printing {
 struct PrintAttrs {
   std::string jobId;
   OHOS::NWeb::PrintAttributesAdapter attrs;
-  uint32_t fd;
+  int32_t fd;
   std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback;
 };
 
