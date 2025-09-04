@@ -467,6 +467,16 @@ void CefBrowserPlatformDelegateOsrExt::SetNativeInnerWeb(bool isInnerWeb) {
 void CefBrowserPlatformDelegateOsrExt::SetEnableCustomVideoPlayer(bool flag){
   custom_video_player_enable_ = flag;
 }
+
+void CefBrowserPlatformDelegateOsrExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data)
+{
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedObjectParamChange(
+        native_param_data);
+  }
+}
 #endif
 #if BUILDFLAG(ARKWEB_AI)
 void CefBrowserPlatformDelegateOsrExt::OnTextSelected(bool flag)

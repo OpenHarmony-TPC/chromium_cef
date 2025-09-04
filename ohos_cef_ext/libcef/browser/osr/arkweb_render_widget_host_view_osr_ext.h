@@ -114,6 +114,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void SetMouseEventResult(bool result, bool stopPropagation);
   void SetNativeInnerWeb(bool isInnerWeb);
   void SetEnableCustomVideoPlayer(bool flag);
+  void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data);
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)

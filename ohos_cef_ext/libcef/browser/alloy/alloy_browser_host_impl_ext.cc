@@ -524,6 +524,37 @@ void AlloyBrowserHostImplExt::OnLayerRectVisibilityChange(const std::string& emb
 
   platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedVisibilityChange(embed_id, visibility);
 }
+
+void AlloyBrowserHostImplExt::OnNativeEmbedObjectParamChange(
+    const content::NativeEmbedParamDataInfo& native_param_info) {
+  if (!platform_delegate_) {
+    return;
+  }
+
+  ArkWebRenderHandlerExt::CefNativeParamData native_param_data;
+  native_param_data.embedId = std::to_string(native_param_info.embed_id);
+  native_param_data.objectAttributeId = native_param_info.object_attribute_id;
+  for (const auto& param_item : native_param_info.param_items) {
+    ArkWebRenderHandlerExt::CefNativeParamItem native_param_item;
+    switch (param_item.status) {
+      case content::NativeEmbedParamStatus::kAdd:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_ADD;
+        break;
+      case content::NativeEmbedParamStatus::kUpdate:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_UPDATE;
+        break;
+      case content::NativeEmbedParamStatus::kDelete:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_DELETE;
+        break;
+    }
+    native_param_item.id = param_item.id;
+    native_param_item.name = param_item.name;
+    native_param_item.value = param_item.value;
+    native_param_data.paramItems.push_back(native_param_item);
+  }
+
+  platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedObjectParamChange(native_param_data);
+}
 #endif
 
 
