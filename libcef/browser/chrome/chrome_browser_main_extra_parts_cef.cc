@@ -42,6 +42,10 @@
 
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_request_context_impl_ext.h"
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_browser_main_extra_parts_cef_for_include.cc"
+#endif
+
 ChromeBrowserMainExtraPartsCef::ChromeBrowserMainExtraPartsCef() = default;
 
 ChromeBrowserMainExtraPartsCef::~ChromeBrowserMainExtraPartsCef() = default;

@@ -43,6 +43,9 @@ class ChromeBrowserMainExtraPartsCef : public ChromeBrowserMainExtraParts {
   }
 #endif
  private:
+#if BUILDFLAG(ARKWEB_COOKIE)
+  void PreProfileInit() override;
+#endif
   // ChromeBrowserMainExtraParts overrides.
   void PostProfileInit(Profile* profile, bool is_initial_profile) override;
   void PostBrowserStart() override;
