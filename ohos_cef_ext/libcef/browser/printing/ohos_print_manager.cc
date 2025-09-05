@@ -656,7 +656,7 @@ void OhosPrintManager::DidPrintDocument(
 }
 
 // static
-void OhosPrintManager::RunCallback(const std::string& jobId, int32_t result)
+void OhosPrintManager::RunCallback(const std::string& jobId, int32_t result) {
   if (printAttrsMap_.find(jobId) == printAttrsMap_.end()) {
     return;
   }
@@ -736,7 +736,7 @@ void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
 
 void OhosPrintManager::ClearPrintAttrs(const std::string& jobId) {
   // clear callback before erase
-  RunCallback(printAttrs.jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
+  RunCallback(jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
   printAttrsMap_.erase(jobId);
   fd_ = -1;
   print_job_id_ = "";
