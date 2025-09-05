@@ -49,7 +49,7 @@ struct OSPositionScheme {
   base::Value::List front_str;
   base::Value::List back_str;
 };
-struct OSPostionPrefsInfo {
+struct OSPositionPrefsInfo {
   std::string front_str;
   std::string back_str;
 };
@@ -62,7 +62,7 @@ class UAPushConfig {
   void ReadConfigInfoFromPrefs();
   void UpdateLastOsPositionStr(const std::string& position,
                                const base::Value::Dict& storage_dict);
-  std::optional<OSPostionPrefsInfo> GetLastOsPositionStr(
+  std::optional<OSPositionPrefsInfo> GetLastOsPositionStr(
       const std::string& device_type);
 
  private:
@@ -77,11 +77,12 @@ class UAPushConfig {
   std::optional<OSPositionScheme> LoadConfigFromFile(
       const std::string& file_path);
   std::optional<OSPositionScheme> ParseOSCompatibleData(
-      base::Value* os_compatible);
+      base::Value* os_compatible,
+      const std::string& bundle_name);
   friend struct base::DefaultSingletonTraits<UAPushConfig>;
   base::raw_ptr<PrefService> pref_service_;
   scoped_refptr<base::SequencedTaskRunner> sequenced_task_runner_;
-  std::map<std::string, OSPostionPrefsInfo> last_os_position_str_map_;
+  std::map<std::string, OSPositionPrefsInfo> last_os_position_str_map_;
   mutable base::Lock lock_;
 };
 void UpdateUAPushConfigRule(const std::string& path);
