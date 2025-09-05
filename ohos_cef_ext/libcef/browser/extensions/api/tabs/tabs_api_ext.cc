@@ -345,9 +345,24 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
     std::string errorMessage = error? error.value() : "create error";
     function->Respond(function->Error(errorMessage));
   } else {
-  function->Respond(function->has_callback()
-          ? function->WithArguments(base::Value(GetTabValue(tab)))
-          : function->NoArguments());
+    if (function->has_callback()) {
+      NWebExtensionTab tab_t = tab;
+      WebContents* contents = nullptr;
+      if (!ExtensionTabUtil::GetTabById(
+          tab.id.value_or(-1), function->browser_context(),
+          function->include_incognito_information(), &contents) || !contents) {
+        LOG(INFO) << "OnTabCreated cannot find WebContents by tab_id:" << tab.id.value_or(-1);
+        function->Respond(function->Error("OnTabCreated cannot find WebContents"));
+      } else {
+        ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+            ExtensionTabUtil::GetScrubTabBehavior(
+                function->extension(), function->source_context_type(), contents);
+ 
+        function->Respond(function->WithArguments(base::Value(GetTabValue(tab_t, scrub_tab_behavior))));
+      }
+    } else {
+      function->Respond(function->NoArguments());
+    }
   }
 
   if (!function->call_create_tab_) {
@@ -472,9 +487,15 @@ void TabsDiscardFunction::OnTabDiscarded(
   if (error) {
     function->Respond(function->Error(error.value()));
   } else {
-    function->Respond(function->has_callback()
-        ? function->WithArguments(base::Value(GetTabValue(tab)))
-        : function->NoArguments());
+    if (function->has_callback()) {
+      GURL gurl(tab.url.value_or(""));
+      ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+          ExtensionTabUtil::GetScrubTabBehaviorExt(
+              function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
+      function->Respond(function->WithArguments(base::Value(GetTabValue(tab, scrub_tab_behavior))));
+    } else {
+      function->Respond(function->NoArguments());
+    }
   }
 
   if (!function->call_discard_tab_) {
@@ -522,9 +543,15 @@ void TabsDuplicateFunction::OnTabDuplicated(
   if (error) {
     function->Respond(function->Error(error.value()));
   } else {
-    function->Respond(function->has_callback()
-        ? function->WithArguments(base::Value(GetTabValue(tab)))
-        : function->NoArguments());
+    if (function->has_callback()) {
+      GURL gurl(tab.url.value_or(""));
+      ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+          ExtensionTabUtil::GetScrubTabBehaviorExt(
+              function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
+      function->Respond(function->WithArguments(base::Value(GetTabValue(tab, scrub_tab_behavior))));
+    } else {
+      function->Respond(function->NoArguments());
+    }
   }
 
   if (!function->call_duplicate_tab_) {
@@ -552,9 +579,18 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
     return RespondNow(Error(std::move(error)));
   }
 
+  WebContents* contents = nullptr;
+  if (!ExtensionTabUtil::GetTabById(
+      tab_id, browser_context(),
+      include_incognito_information(), &contents) || !contents) {
+    LOG(INFO) << "TabsGetFunction cannot find WebContents by tab_id:" << tab_id;
+    return RespondNow(Error("TabsGetFunction cannot find WebContents"));
+  }
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
   base::Value::List get_results;
   get_results.reserve(1);
-  get_results.Append(GetTabValue(*web_extension_tab));
+  get_results.Append(GetTabValue(*web_extension_tab, scrub_tab_behavior));
 
   return RespondNow(ArgumentList(std::move(get_results)));
 }
@@ -566,7 +602,10 @@ ExtensionFunction::ResponseAction TabsGetCurrentFunction::Run() {
   if (caller_contents && caller_contents->ExtensionGetTabId() > 0) {
     std::unique_ptr<NWebExtensionTab> tab =
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(caller_contents->ExtensionGetTabId());
-    return RespondNow(WithArguments(base::Value(GetTabValue(*tab))));
+    ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+        ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), caller_contents);
+ 
+    return RespondNow(WithArguments(base::Value(GetTabValue(*tab, scrub_tab_behavior))));
   }
   return RespondNow(NoArguments());
 }
@@ -788,9 +827,29 @@ void TabsHighlightFunction::OnTabHighlighted(
   if (error) {
     function->Respond(function->Error(error.value()));
   } else {
-    function->Respond(function->has_callback()
-        ? function->WithArguments(GetWindowValue(window))
-        : function->NoArguments());
+    std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
+    bool respond_error = false;
+    for (NWebExtensionTab tab : window.tabs) {
+      WebContents* contents = nullptr;
+      if (!ExtensionTabUtil::GetTabById(
+          tab.id.value_or(-1), function->browser_context(),
+          function->include_incognito_information(), &contents) || !contents) {
+        LOG(INFO) << "OnTabHighlighted cannot find WebContents by tab_id:" << tab.id.value_or(-1);
+        function->Respond(function->Error("OnTabHighlighted cannot find WebContents"));
+        respond_error = true;
+        break;
+      } else {
+        ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+            ExtensionTabUtil::GetScrubTabBehavior(
+                function->extension(), function->source_context_type(), contents);
+        scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
+      }
+    }
+    if (!respond_error) {
+      function->Respond(function->has_callback()
+          ? function->WithArguments(GetWindowValue(window, scrub_tab_behaviors))
+          : function->NoArguments());
+    }
   }
 
   if (!function->call_highlight_tab_) {
@@ -853,16 +912,45 @@ void TabsMoveFunction::OnTabMoved(
 
   if (error) {
     function->Respond(function->Error(error.value()));
-  } else {
-    if (!function->has_callback()) {
-      function->Respond(function->NoArguments());
+  } else if (!function->has_callback()) {
+    function->Respond(function->NoArguments());
+  } else if (tabs.size() == 1) {
+    std::vector<NWebExtensionTab> tabs_t = tabs;
+    WebContents* contents = nullptr;
+    if (!ExtensionTabUtil::GetTabById(
+        tabs[0].id.value_or(-1), function->browser_context(),
+        function->include_incognito_information(), &contents) || !contents) {
+      LOG(INFO) << "OnTabMoved cannot find WebContents by tab_id:" << tabs[0].id.value_or(-1);
+      function->Respond(function->Error("OnTabMoved cannot find WebContents"));
     } else {
-      if (tabs.size() == 1) {
-        function->Respond(function->WithArguments(base::Value(GetTabValue(tabs[0]))));
+      ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+          ExtensionTabUtil::GetScrubTabBehavior(
+              function->extension(), function->source_context_type(), contents);
+ 
+      function->Respond(function->WithArguments(base::Value(GetTabValue(tabs_t[0], scrub_tab_behavior))));
+    }
+  } else {
+    std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
+    bool respond_error = false;
+    for (NWebExtensionTab tab : tabs) {
+      WebContents* contents = nullptr;
+      if (!ExtensionTabUtil::GetTabById(
+          tab.id.value_or(-1), function->browser_context(),
+          function->include_incognito_information(), &contents) || !contents) {
+        LOG(INFO) << "OnTabMoved cannot find WebContents by tab_id:" << tab.id.value_or(-1);
+        function->Respond(function->Error("OnTabMoved cannot find WebContents"));
+        respond_error = true;
+        break;
       } else {
-        base::Value::List tab_list = GetTabValueList(tabs);
-        function->Respond(function->WithArguments(std::move(tab_list)));
+        ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+            ExtensionTabUtil::GetScrubTabBehavior(
+                function->extension(), function->source_context_type(), contents);
+        scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
       }
+    }
+    if (!respond_error) {
+      base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
+      function->Respond(function->WithArguments(std::move(tab_list)));
     }
   }
 
@@ -897,7 +985,22 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
 
   std::vector<NWebExtensionTab> tabs =
       OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
-  base::Value::List tab_list = GetTabValueList(tabs);
+
+  std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
+  for (NWebExtensionTab tab : tabs) {
+    WebContents* contents = nullptr;
+    if (!ExtensionTabUtil::GetTabById(
+        tab.id.value_or(-1), browser_context(),
+        include_incognito_information(), &contents) || !contents) {
+      LOG(INFO) << "TabsQueryFucntion cannot find WebContents by tab_id:" << tab.id.value_or(-1);
+      return RespondNow(Error("TabsQueryFucntion cannot find WebContents"));
+    }
+    ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+        ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
+    scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
+  }
+ 
+  base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
   return RespondNow(WithArguments(std::move(tab_list)));
 }
 
@@ -927,7 +1030,18 @@ ExtensionFunction::ResponseAction TabsGetSelectedFunction::Run() {
     return RespondNow(
         Error("getSelected tab failed: invalid number of result tabs"));
   }
-  return RespondNow(WithArguments(GetTabValue(tabs[0])));
+
+  WebContents* contents = nullptr;
+  if (!ExtensionTabUtil::GetTabById(
+      tabs[0].id.value_or(-1), browser_context(),
+      include_incognito_information(), &contents) || !contents) {
+    LOG(INFO) << "TabsGetSelectedFucntion cannot find WebContents by tab_id:" << tabs[0].id.value_or(-1);
+    return RespondNow(Error("TabsGetSelectedFucntion cannot find WebContents"));
+  }
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
+ 
+  return RespondNow(WithArguments(GetTabValue(tabs[0], scrub_tab_behavior)));
 }
 
 ExtensionFunction::ResponseAction TabsReloadFunction::Run() {
@@ -1178,9 +1292,22 @@ void TabsUpdateFunction::OnTabUpdated(
     std::string errorMessage = error ? error.value() : "update error";
     function->Respond(function->Error(errorMessage));
   } else {
-    function->Respond(function->has_callback()
-        ? function->WithArguments(base::Value(GetTabValue(tab)))
-        : function->NoArguments());
+    if (function->has_callback()) {
+      WebContents* contents = nullptr;
+      if (!ExtensionTabUtil::GetTabById(
+          tab.id.value_or(-1), function->browser_context(),
+          function->include_incognito_information(), &contents) || !contents) {
+        LOG(INFO) << "OnTabUpdated cannot find WebContents by tab_id:" << tab.id.value_or(-1);
+        function->Respond(function->Error("OnTabUpdated cannot find WebContents"));
+      } else {
+        ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+            ExtensionTabUtil::GetScrubTabBehavior(
+                function->extension(), function->source_context_type(), contents);
+        function->Respond(function->WithArguments(base::Value(GetTabValue(tab, scrub_tab_behavior))));
+      }
+    } else {
+      function->Respond(function->NoArguments());
+    }
   }
 
   if (!function->call_update_tab_) {

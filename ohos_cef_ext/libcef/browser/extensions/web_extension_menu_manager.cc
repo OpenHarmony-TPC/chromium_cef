@@ -25,6 +25,8 @@
 #include "extensions/browser/event_router.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/common/mojom/context_type.mojom.h"
+#include "extensions/common/mojom/context_type.mojom-forward.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
 #include "ohos_nweb/src/nweb_common.h"
@@ -216,26 +218,22 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
   base::Value::List args;
   args.Append(std::move(properties));
   if (tab) {
-    args.Append(extensions::GetTabValue(*tab));
+    extensions::ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = {
+        extensions::ExtensionTabUtil::kDontScrubTab, extensions::ExtensionTabUtil::kDontScrubTab};
+    args.Append(extensions::GetTabValue(*tab, scrub_tab_behavior));
     if (tab->id.has_value()) {
       ExtensionContextMenusInvokeActiveTab(browser_context, tab->id.value(), extension_id);
     }
   }
   {
-    auto event = std::make_unique<extensions::Event>(
-        extensions::events::CONTEXT_MENUS,
-        "contextMenus",
-        args.Clone(),
-        browser_context);
+    auto event = std::make_unique<extensions::Event>(extensions::events::CONTEXT_MENUS,
+        "contextMenus", args.Clone(), browser_context);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
   {
-    auto event = std::make_unique<extensions::Event>(
-        extensions::events::CONTEXT_MENUS_ON_CLICKED,
-        extensions::api::context_menus::OnClicked::kEventName,
-        std::move(args),
-        browser_context);
+    auto event = std::make_unique<extensions::Event>(extensions::events::CONTEXT_MENUS_ON_CLICKED,
+        extensions::api::context_menus::OnClicked::kEventName, std::move(args), browser_context);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }

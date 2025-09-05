@@ -16,12 +16,15 @@
 #include "chrome/browser/extensions/api/tabs/tabs_event_router.h"
 #include "chrome/browser/profiles/profile.h"
 #include "content/public/browser/render_process_host.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 #include "chrome/common/extensions/api/tabs.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/favicon_status.h"
-#include "ohos_nweb/src/capi/web_extension_tab_items.h"
+#include "cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
+#include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
+#include "url/gurl.h"
 
 using base::Value;
 using content::WebContents;
@@ -195,7 +198,10 @@ bool WillDispatchTabUpdatedEvent(
     return false;
   }
 
-  base::Value::Dict tab_value = GetTabValue(*web_extension_tab);
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension, target_context, contents);
+ 
+  base::Value::Dict tab_value = GetTabValue(*web_extension_tab, scrub_tab_behavior);
 
   base::Value::Dict changed_properties;
   for (const auto& property : changed_property_names) {
@@ -234,7 +240,10 @@ bool WillDispatchTabUpdatedEventChangeInfo(
     return false;
   }
 
-  base::Value::Dict tab_value = GetTabValue(*web_extension_tab);
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension, target_context, contents);
+ 
+  base::Value::Dict tab_value = GetTabValue(*web_extension_tab, scrub_tab_behavior);
 
   base::Value::Dict changed_properties;
   for (const auto& property : changed_property_names) {
@@ -266,13 +275,34 @@ bool WillDispatchTabUpdatedEventWithTab(
     return false;
   }
 
-  base::Value::Dict tab_value = GetTabValue(tab);
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehavior(extension, target_context, contents);
+ 
+  base::Value::Dict tab_value = GetTabValue(tab, scrub_tab_behavior);
   base::Value::Dict changed_properties;
   FillChangeInfo(changeInfo, changed_properties);
 
   event_args_out.emplace();
   event_args_out->Append(tab_id);
   event_args_out->Append(std::move(changed_properties));
+  event_args_out->Append(std::move(tab_value));
+  return true;
+}
+
+bool WillDispatchTabCreatedEvent(
+    NWebExtensionTab tab,
+    content::BrowserContext* browser_context,
+    mojom::ContextType target_context,
+    const Extension* extension,
+    const base::Value::Dict* listener_filter,
+    std::optional<base::Value::List>& event_args_out,
+    mojom::EventFilteringInfoPtr& event_filtering_info_out) {
+  GURL gurl(tab.url.value());
+  ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+      ExtensionTabUtil::GetScrubTabBehaviorExt(extension, target_context, gurl, tab.id.value_or(-1));
+ 
+  base::Value::Dict tab_value = extensions::GetTabValue(tab, scrub_tab_behavior);
+  event_args_out.emplace();
   event_args_out->Append(std::move(tab_value));
   return true;
 }
@@ -422,14 +452,18 @@ void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
                                               content::BrowserContext* browserContext,
                                               std::unique_ptr<NWebExtensionTab> tab) {
   DCHECK(browserContext);
+  NWebExtensionTab extension_tab(*tab);
   base::Value::List args;
   args.Append(extensions::GetTabValue(*tab));
 
   Profile* profile = Profile::FromBrowserContext(browserContext);
-  DispatchEvent(profile, events::TABS_ON_CREATED,
-                api::tabs::OnCreated::kEventName,
-                std::move(args),
-                EventRouter::USER_GESTURE_NOT_ENABLED);
+  auto event = std::make_unique<Event>(events::TABS_ON_CREATED,
+                                       api::tabs::OnCreated::kEventName,
+                                       base::Value::List(), profile);
+  event->user_gesture = EventRouter::USER_GESTURE_NOT_ENABLED;
+  event->will_dispatch_callback =
+      base::BindRepeating(&WillDispatchTabCreatedEvent, std::move(extension_tab));
+  EventRouter::Get(profile)->BroadcastEvent(std::move(event));
 }
 
 void TabsEventRouter::DispatchTabDetachedEvent(content::WebContents* contents,
