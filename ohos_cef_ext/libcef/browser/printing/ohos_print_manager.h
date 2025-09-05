@@ -123,6 +123,7 @@ class OhosPrintManager : public printing::PrintManager,
   void CheckCancel(CheckCancelCallback callback) override;
   void PrintPdfRequested() override;
 
+  static void RunCallback(const std::string& jobId, int32_t result);
   static void OnDidPrintDocumentWritingDone(
       const PdfWritingDoneCallback& callback,
       DidPrintDocumentCallback did_print_document_cb,
