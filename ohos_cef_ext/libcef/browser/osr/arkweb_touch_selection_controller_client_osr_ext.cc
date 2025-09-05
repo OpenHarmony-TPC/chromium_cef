@@ -324,7 +324,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       }
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
-        if (controller &&
+        if (controller && !controller->AsTouchSelectionControllerExt()->IsTapEvent() &&
             controller->AsTouchSelectionControllerExt()->IsLongPressEvent()) {
           if (auto client = browser->client()) {
             if (auto render = client->GetRenderHandler()) {
@@ -332,8 +332,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
                   ->ResetLongPressEvent();
             }
           }
+          ShowQuickMenu();
         }
-        ShowQuickMenu();
       }
       break;
     case ui::SELECTION_HANDLES_CLEARED:
