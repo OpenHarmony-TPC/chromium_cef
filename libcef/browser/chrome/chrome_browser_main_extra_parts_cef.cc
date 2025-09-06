@@ -87,7 +87,7 @@ void ChromeBrowserMainExtraPartsCef::PostProfileInit(Profile* profile,
         switches::kDisableAutoPreconnect)) {
     std::set<std::string> urls =
         predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
-    if (CefBrowserContext::GetAll().size()) {
+    if (CefBrowserContext::GetAll().size() > 0) {
       auto browser_context = CefBrowserContext::GetAll()[0];
       ohos_predictors::LoadingPredictor* predictor =
           ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(

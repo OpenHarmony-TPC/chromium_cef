@@ -124,7 +124,7 @@ int CefDownloadItemImplExt::GetNWebId() {
       return nweb_id_data_ptr->nweb_id_;
     }
   }
-  return 0;
+  return -1;
 #else
   return -1;
 #endif  //  ARKWEB_EX_DOWNLOAD
