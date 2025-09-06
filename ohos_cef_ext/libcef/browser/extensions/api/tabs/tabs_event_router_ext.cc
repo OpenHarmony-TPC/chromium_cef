@@ -453,8 +453,6 @@ void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
                                               std::unique_ptr<NWebExtensionTab> tab) {
   DCHECK(browserContext);
   NWebExtensionTab extension_tab(*tab);
-  base::Value::List args;
-  args.Append(extensions::GetTabValue(*tab));
 
   Profile* profile = Profile::FromBrowserContext(browserContext);
   auto event = std::make_unique<Event>(events::TABS_ON_CREATED,
