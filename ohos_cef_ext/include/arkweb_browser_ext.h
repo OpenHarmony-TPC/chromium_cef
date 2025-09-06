@@ -1399,6 +1399,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
     CefRefPtr<CefDistillCallback> callback) = 0;
   virtual void AbortDistill() = 0;
 #endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  ///
+  /// get the foucused frame info
+  ///
+  virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
