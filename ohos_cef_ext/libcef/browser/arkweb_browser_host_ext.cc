@@ -3545,8 +3545,10 @@ void ArkWebBrowserHostExtImpl::PutUserAgent(const CefString& ua, bool from_app) 
       (ua.empty() || ua.length() == 0)) {
     user_agent = DefaultUserAgent();
   }
-  GetWebContents()->SetUserAgentOverride(
-      blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+  blink::UserAgentOverride user_agent_override =
+      blink::UserAgentOverride::UserAgentOnly(user_agent);
+  user_agent_override.from_app = true;
+  GetWebContents()->SetUserAgentOverride(user_agent_override, true);
 #else
   GetWebContents()->SetUserAgentOverride(
       blink::UserAgentOverride::UserAgentOnly(ua), true);
