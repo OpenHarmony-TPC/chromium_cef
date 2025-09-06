@@ -436,6 +436,8 @@ test("libcef_static_unittests") {
     ":libcef_static_unittested",
     "//base/test:run_all_unittests",
     "//testing/gtest",
+    "//testing/gmock",
+    "//base",
   ]
 
   configs += [
@@ -443,7 +445,10 @@ test("libcef_static_unittests") {
     "//build/config:precompiled_headers",
   ]
   if (arkweb_unittests) {
-    sources += ["ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",]
+    sources += [
+      "ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
+      "ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager_unittest.cc",
+    ]
     deps += [
       ":libcef_static",
       "libcef/common/mojom",
