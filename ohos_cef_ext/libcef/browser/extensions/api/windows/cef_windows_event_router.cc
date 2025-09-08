@@ -20,7 +20,9 @@
 #include "chrome/common/extensions/api/windows.h"
 #include "extensions/browser/event_router.h"
 #include "extensions/common/features/feature.h"
+#include "extensions/common/mojom/context_type.mojom.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
+#include "cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h"
 
 namespace extensions {
 
@@ -61,7 +63,15 @@ void CefWindowsEventRouter::DispatchWindowCreatedEvent(content::BrowserContext* 
     return;
   }
   base::Value::List args;
-  args.Append(GetWindowValue(window));
+  std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
+  constexpr mojom::ContextType context_type = mojom::ContextType::kUnspecified;
+  for (NWebExtensionTab tab : window.tabs) {
+    GURL gurl(tab.url.value_or(""));
+    ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+        ExtensionTabUtil::GetScrubTabBehaviorExt(nullptr, context_type, gurl, tab.id.value_or(-1));
+    scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
+  }
+  args.Append(GetWindowValue(window, scrub_tab_behaviors));
   auto event = std::make_unique<Event>(events::WINDOWS_ON_CREATED,
                                        api::windows::OnCreated::kEventName,
                                        std::move(args),
@@ -95,7 +105,15 @@ void CefWindowsEventRouter::DispatchWindowBoundsChangedEvent(content::BrowserCon
     return;
   }
   base::Value::List args;
-  args.Append(GetWindowValue(window));
+  std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
+  constexpr mojom::ContextType context_type = mojom::ContextType::kUnspecified;
+  for (NWebExtensionTab tab : window.tabs) {
+    GURL gurl(tab.url.value_or(""));
+    ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
+        ExtensionTabUtil::GetScrubTabBehaviorExt(nullptr, context_type, gurl, tab.id.value_or(-1));
+    scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
+  }
+  args.Append(GetWindowValue(window, scrub_tab_behaviors));
   auto event = std::make_unique<Event>(events::WINDOWS_ON_BOUNDS_CHANGED,
                                        api::windows::OnBoundsChanged::kEventName,
                                        std::move(args),
