@@ -1710,14 +1710,16 @@ void AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback(
     int pid,
     content::RendererIsUnresponsiveReason reason,
     const std::string& stack) {
-  if (auto handler = client_->GetRequestHandler()) {
-    int anr_reason = static_cast<int>(
-        reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
-            ? content::RendererIsUnresponsiveReason::
-                  kNavigationRequestCommitTimeout
-            : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
-    handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
-        this, stack, pid, anr_reason);
+  if (client_) {
+    if (auto handler = client_->GetRequestHandler()) {
+      int anr_reason = static_cast<int>(
+          reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
+              ? content::RendererIsUnresponsiveReason::
+                    kNavigationRequestCommitTimeout
+              : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
+      handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
+          this, stack, pid, anr_reason);
+    }
   }
 }
 #endif
