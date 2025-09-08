@@ -80,15 +80,19 @@ std::string GetDomainAndRegistry(const GURL& url) {
 }
 
 void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
-                                  const std::string& user_agent) {
+                                  const std::string& user_agent,
+                                  const UserAgentOverridePolicy& match_policy) {
   navigation->SetRequestHeader(net::HttpRequestHeaders::kUserAgent, user_agent);
   if (!navigation->IsInMainFrame()) {
     return;
   }
 
   if (auto* web_contents = navigation->GetWebContents()) {
-    web_contents->SetUserAgentOverride(
-        blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+    blink::UserAgentOverride user_agent_override =
+        blink::UserAgentOverride::UserAgentOnly(user_agent);
+    user_agent_override.from_app =
+        (match_policy < UserAgentOverridePolicy::ARKWEB_DEFAULT);
+    web_contents->SetUserAgentOverride(user_agent_override, true);
   }
 }
 
@@ -176,7 +180,7 @@ void MaybeSetUserAgentOverrideForMainFrame(
              << navigation->IsServedFromBackForwardCache() << ", match_type "
              << match_type;
 
-  UpdateUserAgentForNavigation(navigation, final_ua);
+  UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 #endif  // BUILDFLAG(ARKWEB_USERAGENT)
 }  // namespace
@@ -304,11 +308,7 @@ void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
              << ", main_frame " << navigation->IsInMainFrame()
              << ", serverd_from_bfcache "
              << navigation->IsServedFromBackForwardCache();
-
-  if (match_type == UserAgentOverridePolicy::ARKWEB_DEFAULT) {
-    return;
-  }
-  UpdateUserAgentForNavigation(navigation, final_ua);
+  UpdateUserAgentForNavigation(navigation, final_ua, match_type);
 }
 #endif  // BUILDFLAG(ARKWEB_EXT_UA)
 
