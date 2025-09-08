@@ -3912,3 +3912,30 @@ void ArkWebBrowserHostExtImpl::AbortDistill() {
   oh_dom_distiller::OhDomDistillerManager::GetInstance()->AbortDistill(web_contents);
 }
 #endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
+                                                   CefString& frame_url) {
+  frame_id = -1;
+  frame_url.clear();
+
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+
+  auto frame = web_contents->GetFocusedFrame();
+  if (!frame) {
+    LOG(ERROR) << "web_contents GetFocusedFrame null";
+    return;
+  }
+
+  // Extension API frame ID of the top-level frame.
+  constexpr int32_t kTopFrameId = 0;
+  frame_id = frame->IsInPrimaryMainFrame()
+                 ? kTopFrameId
+                 : frame->GetFrameTreeNodeId().value();
+  frame_url = frame->GetLastCommittedURL().spec();
+}
+#endif

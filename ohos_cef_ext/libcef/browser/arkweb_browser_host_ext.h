@@ -755,6 +755,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
     CefRefPtr<CefDistillCallback> callback) override;
   void AbortDistill() override;
 #endif // ARKWEB_READER_MODE
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) override;
+#endif
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
