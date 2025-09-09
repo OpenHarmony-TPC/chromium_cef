@@ -1402,7 +1402,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   ///
-  /// get the foucused frame info
+  /// get the focused frame info
   ///
   virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
 #endif
