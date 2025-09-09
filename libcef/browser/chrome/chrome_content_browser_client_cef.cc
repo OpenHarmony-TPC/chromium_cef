@@ -81,7 +81,9 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
+#if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
@@ -925,14 +927,16 @@ void ChromeContentBrowserClientCef::RegisterMojoBinderPoliciesForSameOriginPrere
 std::string ChromeContentBrowserClientCef::GetUAStringForHost(
     std::string host) {
   std::string user_agent;
+  auto match_type =
+      AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(host, user_agent);
+#if BUILDFLAG(IS_ARKWEB_EXT)
   std::string user_agent_ex;
-  if (AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(host, user_agent) >=
+  if (match_type >=
       nweb_ex::AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
           host, user_agent_ex)) {
-    LOG(DEBUG) << __func__ << " [UA] host:" << host << " ua:" << user_agent_ex;
     return user_agent_ex;
   }
-  LOG(DEBUG) << __func__ << " [UA] host:" << host << " ua:" << user_agent;
+#endif
   return user_agent;
 }
 #endif
