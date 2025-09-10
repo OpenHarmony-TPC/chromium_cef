@@ -1429,4 +1429,48 @@ ExtensionFunction::ResponseValue TabsUpdateFunction::GetResult() {
           -1, true, web_contents_->ExtensionGetTabId())));
 }
 
+ExecuteCodeFunction::InitResult ExecuteCodeInTabFunction::Init() {
+  if (init_result_) {
+    return init_result_.value();
+  }
+
+  if (args().size() < 2) {
+    return set_init_result(VALIDATION_FAILURE);
+  }
+
+  const auto& tab_id_value = args()[0];
+  // |tab_id| is optional so it's ok if it's not there.
+  int tab_id = -1;
+  if (tab_id_value.is_int()) {
+    // But if it is present, it needs to be non-negative.
+    tab_id = tab_id_value.GetInt();
+    if (tab_id < 0) {
+      return set_init_result(VALIDATION_FAILURE);
+    }
+  }
+
+  // |details| are not optional.
+  const base::Value& details_value = args()[1];
+  if (!details_value.is_dict()) {
+    return set_init_result(VALIDATION_FAILURE);
+  }
+  auto details =
+      api::extension_types::InjectDetails::FromValue(details_value.GetDict());
+  if (!details) {
+    return set_init_result(VALIDATION_FAILURE);
+  }
+
+  // If the tab ID wasn't given then it needs to be converted to the
+  // currently active tab's ID.
+  if (tab_id == -1) {
+    tab_id = GetCurrentWebContents(this);
+  }
+
+  execute_tab_id_ = tab_id;
+  details_ = std::move(details);
+  set_host_id(
+      mojom::HostID(mojom::HostID::HostType::kExtensions, extension()->id()));
+  return set_init_result(SUCCESS);
+}
+
 }  // namespace extensions
