@@ -1711,12 +1711,15 @@ void ArkWebBrowserHostExtImpl::GetImageFromCacheEx(const CefString& url,
   auto frame = GetMainFrame();
   if (web_contents && frame && frame->IsValid()) {
     content::RenderFrameHost* rfh = web_contents->GetPrimaryMainFrame();
-    rfh->GetImageFromCache(
-        url.ToString(),
-        base::BindOnce(&ArkwebFrameHostExtImpl::OnGetImageFromCacheEx,
-                       static_cast<ArkwebFrameHostExtImpl*>(frame.get()),
-                       url.ToString(), command_id));
-    return;
+   if (rfh) {
+      LOG(INFO) << "ArkWebBrowserHostExtImpl::GetImageFromCacheEx";
+      rfh->GetImageFromCache(
+          url.ToString(),
+          base::BindOnce(&ArkwebFrameHostExtImpl::OnGetImageFromCacheEx,
+                         static_cast<ArkwebFrameHostExtImpl*>(frame.get()),
+                         url.ToString(), command_id));
+    }
+   return;
   }
 #endif
 }
