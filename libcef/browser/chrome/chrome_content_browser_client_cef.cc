@@ -925,7 +925,7 @@ void ChromeContentBrowserClientCef::RegisterMojoBinderPoliciesForSameOriginPrere
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
 std::string ChromeContentBrowserClientCef::GetUAStringForHost(
-    std::string host) {
+    const std::string& host) {
   std::string user_agent;
   auto match_type =
       AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(host, user_agent);
