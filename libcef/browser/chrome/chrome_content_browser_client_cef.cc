@@ -80,6 +80,13 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #include "base/ohos/nweb_engine_event_logger_code.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_ua_config.h"
+#endif
+
 namespace {
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -920,5 +927,23 @@ void ChromeContentBrowserClientCef::RegisterMojoBinderPoliciesForSameOriginPrere
   policy_map.SetAssociatedPolicy<extensions::mojom::RendererHost>(
       content::MojoBinderAssociatedPolicy::kGrant);
 #endif
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_USERAGENT)
+std::string ChromeContentBrowserClientCef::GetUAStringForHost(
+    const std::string& host) {
+  std::string user_agent;
+  auto match_type =
+      AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(host, user_agent);
+#if BUILDFLAG(IS_ARKWEB_EXT)
+  std::string user_agent_ex;
+  if (match_type >=
+      nweb_ex::AlloyBrowserUAConfig::GetInstance()->MatchUserAgent(
+          host, user_agent_ex)) {
+    return user_agent_ex;
+  }
+#endif
+  return user_agent;
 }
 #endif
