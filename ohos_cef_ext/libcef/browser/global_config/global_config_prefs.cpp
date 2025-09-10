@@ -4,6 +4,10 @@
 
 #include "libcef/browser/global_config/global_config_prefs.h"
 
+#include <AbilityKit/ability_runtime/application_context.h>
+ 
+#include "base/base_switches.h"
+#include "base/command_line.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/hash/hash.h"
@@ -15,6 +19,7 @@
 #include "base/values.h"
 #include "chrome/browser/browser_process.h"
 #include "content/public/browser/browser_thread.h"
+#include "components/version_info/version_info.h"
 
 namespace global_config {
 
@@ -67,16 +72,62 @@ void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList, PrefService* lo
   }
 }
 
+void ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) {
+  const base::Value::List* switches_list = value.GetDict().FindList("Switches");
+  if (!switches_list) {
+    LOG(WARNING) << "Missing 'Switches' list.";
+    return;
+  }
+ 
+  AbilityRuntime_ErrorCode code = ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID;
+  constexpr int32_t NATIVE_BUFFER_SIZE = 1024;
+  char bundle_name[NATIVE_BUFFER_SIZE] = {0};
+  int32_t bundle_name_length = 0;
+  code = OH_AbilityRuntime_ApplicationContextGetBundleName(bundle_name, NATIVE_BUFFER_SIZE, &bundle_name_length);
+  if (code != ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
+    LOG(ERROR) << "OH_AbilityRuntime_ApplicationContextGetBundleName failed:err=" << code;
+    return;
+  }
+  
+  std::string bundle_name_str(bundle_name);
+  if(bundle_name_str.empty()) {
+    LOG(ERROR) << "bundle_name is empty.";
+    return;
+  }
+ 
+  base::Value::List prefs_list;
+  for (const auto& item : *switches_list) {
+    if (!item.is_dict()) {
+      continue;
+    }
+    const base::Value::List* app_list = item.GetDict().FindList("applist");
+    for (const auto& val : *app_list) {
+      const std::string *app_name = val.GetIfString();
+      if (!app_name || (*app_name != bundle_name_str && *app_name != "*")) {
+        continue;
+      }
+      if (CheckFeaturesSwitches(item)) {
+        const std::string* name = item.GetDict().FindString("name");
+        const std::string* cmd_line = item.GetDict().FindString("commandline");
+        base::Value::Dict switch_info;
+        switch_info.Set("name", *name);
+        switch_info.Set("commandline", *cmd_line);
+        prefs_list.Append(std::move(switch_info));
+      }
+    }
+  }
+ 
+  SetFeaturesSwitchesToPrefsFile(std::move(prefs_list), localState);
+}
+
 void ParseFeaturesSwitchesToPrefs(PrefService* localState) {
   base::FilePath global_config_path(kGlobalConfigDataPath);
   if (!base::PathExists(global_config_path)) {
-    LOG(INFO) << "global config path is not exist:" << global_config_path.value();
+    LOG(ERROR) << "global config path is not exist:" << global_config_path.value();
     return;
   }
 
-  std::string global_config_json;
-  bool res = base::ReadFileToString(global_config_path, &global_config_json);
-  if (!res) {
+  if (!base::ReadFileToString(global_config_path, &global_config_json)) {
     LOG(WARNING) << "read global config file failed.";
     return;
   }
@@ -105,24 +156,35 @@ void ParseFeaturesSwitchesToPrefs(PrefService* localState) {
     return;
   }
 
-  const base::Value::List* switches_list = switches_dict->FindList("Switches");
-  if (!switches_list) {
-    LOG(WARNING) << "Missing 'Switches' list.";
+  const base::Value::List* versioned_config_list = switches_dict->FindList("VersionedConfig");
+  if (!versioned_config_list) {
+    LOG(WARNING) << "Missing 'VersionedConfig' field in JSON.";
     return;
   }
-
-  base::Value::List prefs_list;
-  for (const auto& item : *switches_list) {
+ 
+  const std::string version = version_info::GetMajorVersionNumber();
+  if (version.empty()) {
+    LOG(WARNING) << "Failed to get current version.";
+    return;
+  }
+  base::Value versioned_config;
+  for (const auto& item : *versioned_config_list) {
     if (!item.is_dict()) {
+      LOG(WARNING) << "Invalid item in VersionedConfig list.";
       continue;
     }
-
-    if (CheckFeaturesSwitches(item)) {
-      prefs_list.Append(item.Clone());
+    const std::string *arkweb_version = item.GetDict().FindString("ArkWebCoreVersion");
+    if (arkweb_version && *arkweb_version == version) {
+      versioned_config = item.Clone();
+      break;
     }
   }
-
-  SetFeaturesSwitchesToPrefsFile(std::move(prefs_list), localState);
+  if (!versioned_config.is_dict() || versioned_config.GetDict().empty()) {
+    LOG(WARNING) << "No data matching the version is found in 'VersionedConfig' .";
+    return;
+  }
+ 
+  ProcessFeaturesSwitches(versioned_config, localState);
 }
 
 void OnGlobalConfigResult(const std::string& path, PrefService* localState) {
