@@ -135,7 +135,8 @@ void SbClient::ShowBlockingPage() {
       }
 
       if (block_type == OHSBThreatType::THREAT_WARNING &&
-          policy == OHSBPolicyType::POLICY_HALF_POPUP) {
+          (policy == OHSBPolicyType::POLICY_DANGER_LABEL ||
+           policy == OHSBPolicyType::POLICY_HALF_POPUP)) {
         NotifySafeBrowsingCheckResult(block_type);
         return;
       }
@@ -216,7 +217,8 @@ void SbClient::BlockingPageInfo::SetBlockingPageInfo(
   if (policy == OHSBPolicyType::POLICY_POPUP_AND_DANGER ||
       policy == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS ||
       policy == OHSBPolicyType::POLICY_HALF_POPUP ||
-      policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
+      policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS ||
+      policy == OHSBPolicyType::POLICY_DANGER_LABEL) {
     SbBlockingPageInfo info(url, block_type, hw_code, policy, redirect_url);
     blocking_page_info_cache.Put(url, info);
   }
