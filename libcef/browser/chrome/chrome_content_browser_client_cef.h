@@ -179,7 +179,7 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
-  std::string GetUAStringForHost(std::string host) override;
+  std::string GetUAStringForHost(const std::string& host) override;
 #endif
 
  private:
