@@ -27,7 +27,7 @@ class CefExtensionKeybindingRegistryViews
     : public extensions::ExtensionKeybindingRegistry {
  public:
   CefExtensionKeybindingRegistryViews(content::BrowserContext* context,
-      Delegate* delegate);
+      raw_ptr<Delegate> delegate);
 
   CefExtensionKeybindingRegistryViews(
       const CefExtensionKeybindingRegistryViews&) = delete;
@@ -51,6 +51,8 @@ class CefExtensionKeybindingRegistryViews
   void OnShortcutHandlingSuspended(bool suspended) override {}
 
   raw_ptr<content::BrowserContext> browser_context_profile;
+
+  raw_ptr<Delegate> delegate_;
 };
 
 #endif  // CEF_EXTENSIONS_KEYBINDING_REGISTRY_VIEWS_H_
