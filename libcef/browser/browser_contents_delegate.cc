@@ -676,7 +676,7 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     LOG(INFO) << "load type = "
               << PageTransitionStripQualifier(
                      navigation_handle->GetPageTransition());
-    OnRefreshAccessedHistoryEx(frame.get(), url, isReload);
+    OnRefreshAccessedHistoryEx(frame.get(), url, isReload, is_main_frame);
 #endif
   } else {
     // The navigation failed with an error. This may happen before commit
