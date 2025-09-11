@@ -27,7 +27,7 @@ class CefExtensionKeybindingRegistryViews
     : public extensions::ExtensionKeybindingRegistry {
  public:
   CefExtensionKeybindingRegistryViews(content::BrowserContext* context,
-    Delegate* delegate);
+      Delegate* delegate);
 
   CefExtensionKeybindingRegistryViews(
       const CefExtensionKeybindingRegistryViews&) = delete;
