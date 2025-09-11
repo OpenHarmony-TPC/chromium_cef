@@ -13,7 +13,7 @@
 #endif
 class AlloyBrowserHostImplExt : public AlloyBrowserHostImpl
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-                                , public ExtensionKeybindingRegistry::Delegate
+                                , public extensions::ExtensionKeybindingRegistry::Delegate
 #endif
 {
 public:
