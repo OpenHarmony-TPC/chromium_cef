@@ -62,6 +62,9 @@ bool NetHelpers::accept_cookies = true;
 bool NetHelpers::third_party_cookies = false;
 int NetHelpers::cache_mode = 0;
 int NetHelpers::connection_timeout = 30;
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+int32_t NetHelpers::socket_idle_timeout = kDefaultSocketIdleTimeout;
+#endif
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 std::optional<bool> NetHelpers::enable_private_network_check = std::nullopt;
@@ -372,6 +375,35 @@ void NetHelpers::SetPrivateNetworkAccess(bool enable) {
 bool NetHelpers::GetPrivateNetworkAccess() {
   std::lock_guard<std::mutex> lock(enable_private_network_check_mutex);
   return enable_private_network_check.value_or(true);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+int32_t NetHelpers::GetDefaultSocketIdleTimeout()
+{
+    return kDefaultSocketIdleTimeout;
+}
+
+void NetHelpers::SetSocketIdleTimeout(int32_t timeout)
+{
+    socket_idle_timeout = timeout;
+}
+
+int32_t NetHelpers::GetSocketIdleTimeout()
+{
+    int32_t timeout = kDefaultSocketIdleTimeout;
+    if (socket_idle_timeout != kDefaultSocketIdleTimeout) {
+        timeout = socket_idle_timeout;
+    } else {
+        const base::CommandLine *command_line = base::CommandLine::ForCurrentProcess();
+        if (command_line && command_line->HasSwitch(::switches::kSocketIdleTimeout)) {
+            int time;
+            if (base::StringToInt(command_line->GetSwitchValueASCII(::switches::kSocketIdleTimeout), &time)) {
+                timeout = static_cast<int32_t>(time);
+            }
+        }
+    }
+    return timeout;
 }
 #endif
 
