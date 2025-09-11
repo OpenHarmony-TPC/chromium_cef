@@ -21,7 +21,7 @@
 
 CefExtensionKeybindingRegistryViews::CefExtensionKeybindingRegistryViews(
     content::BrowserContext* context,
-    Delegate* delegate)
+    raw_ptr<Delegate> delegate)
     : ExtensionKeybindingRegistry(
           context,
           extensions::ExtensionKeybindingRegistry::ALL_EXTENSIONS,
