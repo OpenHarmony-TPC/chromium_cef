@@ -331,12 +331,6 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
                            nullptr);
     return;
   }
-  if (media_id.type == content::DesktopMediaID::Type::TYPE_NONE) {
-    media_id.type = content::DesktopMediaID::Type::TYPE_SCREEN;
-    auto web_contents = browser_->GetWebContents();
-    media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
-                                       web_contents->GetNWebId());
-  }
   stream_devices.video_device = blink::MediaStreamDevice(
       request_.video_type, media_id.ToString(), "Screen");
   bool has_audio = stream_devices.audio_device.has_value();
