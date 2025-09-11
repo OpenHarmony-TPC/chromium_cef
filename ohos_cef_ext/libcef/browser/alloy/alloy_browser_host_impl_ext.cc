@@ -1776,8 +1776,9 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
             CEF_UIT,
             base::BindOnce(&AlloyBrowserHostImplExt::AcceleratorPressedUI, this,
                            accelerator, browser_context));
+      } else {
+        AcceleratorPressedUI(accelerator, browser_context);
       }
-      AcceleratorPressedUI(accelerator, browser_context);
     }
   }
   
