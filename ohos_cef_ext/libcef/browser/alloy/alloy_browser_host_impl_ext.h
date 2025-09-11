@@ -8,7 +8,13 @@
 
 #include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#include "chrome/browser/extensions/extension_keybinding_registry.h"
+#endif
 class AlloyBrowserHostImplExt : public AlloyBrowserHostImpl
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+                                , public ExtensionKeybindingRegistry::Delegate
+#endif
 {
 public:
   AlloyBrowserHostImplExt(
@@ -253,6 +259,9 @@ public:
 #endif  // ARKWEB_HTML_SELECT
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  content::WebContents* GetWebContentsForExtension() override;
+  void AcceleratorPressedUI(const ui::Accelerator& accelerator,
+                            content::BrowserContext* browser_context);
   bool WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event);

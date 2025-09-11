@@ -20,11 +20,12 @@
 #include "ui/content_accelerators/accelerator_util.h"
 
 CefExtensionKeybindingRegistryViews::CefExtensionKeybindingRegistryViews(
-    content::BrowserContext* context)
+    content::BrowserContext* context,
+    Delegate* delegate)
     : ExtensionKeybindingRegistry(
           context,
           extensions::ExtensionKeybindingRegistry::ALL_EXTENSIONS,
-          nullptr),
+          delegate),
       browser_context_profile(context) {
   Init();
 }
