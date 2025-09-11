@@ -1770,7 +1770,6 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     }
  
     if (run_accelerator_flag) {
-      CefExtensionKeybindingRegistryViews cef_key_view(browser_context, this);
       if (!CEF_CURRENTLY_ON_UIT()) {
         CEF_POST_TASK(
             CEF_UIT,
