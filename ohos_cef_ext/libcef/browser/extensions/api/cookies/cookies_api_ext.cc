@@ -19,28 +19,6 @@
 #include "chrome/browser/profiles/profile.h"
 
 namespace extensions {
-namespace {
-std::optional<std::string> GetExtensionContextType(
-    content::BrowserContext* browser_context) {
-  if (!browser_context) {
-    return std::nullopt;
-  }
-
-  if (browser_context->IsOffTheRecord()) {
-    return "INCOGNITO";
-  }
-
-  Profile* profile = Profile::FromBrowserContext(browser_context);
-  if (!profile) {
-    return std::nullopt;
-  }
-
-  if (profile->IsRegularProfile()) {
-    return "REGULAR";
-  }
-  return std::nullopt;
-}
-}
 
 ExtensionFunction::ResponseAction CookiesGetAllCookieStoresFunction::Run() {
   Profile* original_profile = Profile::FromBrowserContext(browser_context());
@@ -55,9 +33,7 @@ ExtensionFunction::ResponseAction CookiesGetAllCookieStoresFunction::Run() {
   }
   DCHECK(original_profile != incognito_profile);
 
-  NWebExtensionTabQueryInfoV2 queryInfo;
-  queryInfo.contextType = GetExtensionContextType(browser_context());
-  queryInfo.includeIncognitoInfo = include_incognito_information();
+  NWebExtensionTabQueryInfo queryInfo;
   std::vector<NWebExtensionTab> tabs = OHOS::NWeb::NWebExtensionTabCefDelegate::QueryTab(queryInfo);
   for (const NWebExtensionTab& tab : tabs) {
     if (!tab.id.has_value()) {
