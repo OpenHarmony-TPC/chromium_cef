@@ -47,11 +47,11 @@ network::mojom::CookieManager* GetCookieManager(
 }
 
 net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
-#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
                                     const CefBrowserContext::Getter&
                                         browser_context_getter,
 #endif
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                                     bool for_loading_cookies,
                                     const std::optional<GURL> new_url) {
 #else

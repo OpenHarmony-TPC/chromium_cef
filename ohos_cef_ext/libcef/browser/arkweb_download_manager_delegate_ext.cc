@@ -437,8 +437,7 @@ bool ArkWebCefDownloadManagerDelegateExt::DetermineDownloadTarget(
         browser.get(), download_item.get(), suggested_name.value(),
         callbackObj);
   } else {
-    LOG(ERROR) << "find download_handler_per_context failed, cancel download "
-               << this;
+    LOG(ERROR) << "find download_handler_per_context failed, cancel download.";
     item->Cancel(false /*user_cancel*/);
   }
   // Call original download handler.

@@ -70,6 +70,9 @@ bool ArkWebIsExtensionNavigation(content::NavigationHandle* navigation_handle) {
 CefRefPtr<CefFrame> GetFrameFromGlobalIdFirst(CefRefPtr<CefBrowserHostBase> browser,
   content::GlobalRenderFrameHostId global_id,
   content::GlobalRenderFrameHostId parent_global_id, bool is_main_frame) {
+  if (!browser || !browser->browser_info()) {
+    return nullptr;
+  }
   CefRefPtr<CefFrame> frame = browser->GetFrameForGlobalId(global_id);
   if (!frame) {
     if (is_main_frame) {

@@ -15,6 +15,7 @@
 #include "base/trace_event/trace_event.h"
 #endif
 #include "arkweb/build/features/features.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/origin_whitelist_impl.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -613,7 +614,8 @@ void InterceptedRequest::Restart() {
   struct NetHelperSetting setting;
   factory_->request_handler_->GetSettingOfNetHelper(setting);
   if (IsURLBlocked(request_.url, setting)) {
-    LOG(WARNING) << "File url access denied! url=" << request_.url.spec();
+    LOG(WARNING) << "File url access denied! url="
+                 << url::LogUtils::ConvertUrlWithMask(request_.url.spec());
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
     return;
   }
