@@ -164,11 +164,19 @@ class CefDevToolsFileManager {
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
   // Guaranteed to outlive this object.
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  raw_ptr<AlloyBrowserHostImpl> browser_impl_;
+#else
   AlloyBrowserHostImpl* browser_impl_;
+#endif
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   raw_ptr<Delegate> delegate_;
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  raw_ptr<PrefService> prefs_;
+#else
   PrefService* prefs_;
+#endif
 
   using PathsMap = std::map<std::string, base::FilePath>;
   PathsMap saved_files_;
