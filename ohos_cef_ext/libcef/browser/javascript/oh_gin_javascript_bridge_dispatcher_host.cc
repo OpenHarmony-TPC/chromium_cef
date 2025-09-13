@@ -8,6 +8,7 @@
 #if BUILDFLAG(ARKWEB_SECURE_JAVASCRIPT_PROXY)
 #include "base/threading/thread_local_storage.h"
 #endif
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "content/browser/renderer_host/agent_scheduling_group_host.h"
 #include "content/browser/renderer_host/render_frame_host_impl.h"
 #include "content/browser/web_contents/web_contents_impl.h"
@@ -141,13 +142,15 @@ void OhGinJavascriptBridgeDispatcherHost::DidFinishNavigation(content::Navigatio
   }
   GURL site_instance_gurl = site_instance->GetSiteURL();
   content::AgentSchedulingGroupHost& agent_scheduling_group =
-      static_cast<content::RenderFrameHostImpl*>(navigation_handle->GetRenderFrameHost())
+      static_cast<content::RenderFrameHostImpl*>(render_frame_host)
           ->GetAgentSchedulingGroup();
 
   scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter =
           OhGinJavascriptBridgeMessageFilter::FromHost(
               agent_scheduling_group, /*create_if_not_exists=*/false);
-  filter->SetSiteInstanceGurl(site_instance_gurl);
+  if(filter) {
+    filter->SetSiteInstanceGurl(site_instance_gurl);
+  }
 }
 
 void OhGinJavascriptBridgeDispatcherHost::RenderFrameCreated(
@@ -1152,8 +1155,7 @@ bool OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission(
   if (map_tmp[object_id][method_name].find(gurl.host()) ==
       map_tmp[object_id][method_name].end()) {
     LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::CheckIsInJsPermission: "
-                  "method level, permission map no host("
-               << gurl.host() << ") key";
+                  "method level, permission map no host key";
     return false;
   }
   JsProxyPermissionConfigData method_permission =
