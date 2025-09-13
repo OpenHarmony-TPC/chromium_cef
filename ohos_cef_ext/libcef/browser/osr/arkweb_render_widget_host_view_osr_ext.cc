@@ -1290,6 +1290,15 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionBoundsChanged(
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
 
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  handler->AsArkWebRenderHandler()->SelectionBoundsChanged(
+      CefRect(anchor_rect.x(), anchor_rect.y(), anchor_rect.width(),
+              anchor_rect.height()),
+      CefRect(focus_rect.x(), focus_rect.y(), focus_rect.width(),
+              focus_rect.height()),
+      is_anchor_first);
+#endif
+
   if (!is_select_text_) {
     handler->AsArkWebRenderHandler()->OnCursorUpdate(
         browser_impl_->GetBrowser(),
