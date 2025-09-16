@@ -24,9 +24,9 @@
 
 namespace extensions {
 
-base::Value::Dict GetWindowValue(const WebExtensionWindow& window);
+base::Value::Dict GetWindowValue(const WebExtensionWindow& window, bool populate = true);
 
-base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows);
+base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows, bool populate = true);
 
 int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_window_id);
 
