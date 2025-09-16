@@ -111,16 +111,27 @@ void CefBrowserPlatformDelegateOsrUtils::AdjustMouseMoveCoordinates(
 }
 
 void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingMouseWheel(
-    CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event){
-    if (view->render_widget_host() &&
-        !view->render_widget_host()->IsAutoscrollInProgress()) {
-        blink::WebGestureEvent fling_cancel =
-            cefBrowserPlatformDelegateOsr->native_delegate_->TranslateTouchpadFlingEvent(event);
-        fling_cancel.data.fling_start.target_viewport = false;
-        fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-        view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-            fling_cancel);
+    CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event) {
+    content::WebContentsImpl* web_contents =
+        static_cast<content::WebContentsImpl*>(cefBrowserPlatformDelegateOsr->web_contents_);
+    if (!web_contents) {
+        return;
     }
+    auto* frame = web_contents->GetFocusedFrame();
+    if (!frame || !frame->GetRenderWidgetHost()) {
+        LOG(ERROR) << "get focused rwh failed";
+        return;
+    }
+    if (frame->GetRenderWidgetHost()->IsAutoscrollInProgress()) {
+        LOG(DEBUG) << "When the current frame is auto scroll, kGestureFlingCancel event not send";
+        return;
+    }
+    blink::WebGestureEvent fling_cancel =
+        cefBrowserPlatformDelegateOsr->native_delegate_->TranslateTouchpadFlingEvent(event);
+    fling_cancel.data.fling_start.target_viewport = false;
+    fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
+    view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
+        fling_cancel);
 }
 
 void CefBrowserPlatformDelegateOsrUtils::AdjustAndSendTouchEvent(
