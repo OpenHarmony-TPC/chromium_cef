@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#ifndef CEF_LIBCEF_BROWSER_USERAGENT_UTILS_H_
-#define CEF_LIBCEF_BROWSER_USERAGENT_UTILS_H_
+#ifndef CEF_LIBCEF_BROWSER_ARKWEB_USERAGENT_UTILS_H_
+#define CEF_LIBCEF_BROWSER_ARKWEB_USERAGENT_UTILS_H_
 #pragma once
 
 #include "content/public/browser/navigation_handle.h"
@@ -13,4 +13,4 @@ namespace arkweb_useragent_utils {
   void MaybeOverrideUserAgentOnRedirectNavigation(content::NavigationHandle* navigation);
 } // namespace arkweb_useragent_utils
 
-#endif // CEF_LIBCEF_BROWSER_USERAGENT_UTILS_H_
+#endif // CEF_LIBCEF_BROWSER_ARKWEB_USERAGENT_UTILS_H_
