@@ -83,7 +83,7 @@ void ChromeBrowserMainExtraPartsCef::PostProfileInit(Profile* profile,
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
   std::set<std::string> urls =
       predictor::PredictorDatabase::GetInstance()->GetRecentVisitedUrl();
-  if (CefBrowserContext::GetAll().size()) {
+  if (CefBrowserContext::GetAll().size() > 0) {
     auto browser_context = CefBrowserContext::GetAll()[0];
     ohos_predictors::LoadingPredictor* predictor =
         ohos_predictors::LoadingPredictorFactory::GetForBrowserContext(

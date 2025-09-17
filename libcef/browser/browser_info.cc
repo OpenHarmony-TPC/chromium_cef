@@ -289,12 +289,6 @@ void CefBrowserInfo::RemoveFrame(content::RenderFrameHost* host) {
     return;
   }
 
-#if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  if (it == frame_id_map_.end()) {
-    return;
-  }
-#endif
-
   auto frame_info = it->second;
 
   browser_->request_context()->OnRenderFrameDeleted(global_id,

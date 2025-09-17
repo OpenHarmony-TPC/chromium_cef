@@ -168,6 +168,9 @@ void SbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
                                          OHSBThreatType block_type,
                                          int hw_code,
                                          const GURL& redirect_url) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+    return;
+  }
   BlockingPageInfo::SetBlockingPageInfo(web_contents(), url, policy, block_type,
                                         hw_code, redirect_url);
   content::NavigationEntry* pending_entry =
@@ -242,6 +245,9 @@ void SbClient::DisplayBlockingPage(const GURL& url,
                                    int policy,
                                    OHSBThreatType block_type,
                                    const std::string& app_locale) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+    return;
+  }
   LOG(INFO) << "SafeBrowsing " << __func__ << ", policy: " << policy
             << ", type: " << block_type;
   auto controller = std::make_unique<SbControllerClient>(

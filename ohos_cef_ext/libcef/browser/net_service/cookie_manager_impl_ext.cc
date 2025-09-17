@@ -963,7 +963,7 @@ void CefCookieManagerImplExt::LoadCookiesOnAsyncThread(
   CookieManager* cookie_manager = GetNetworkCookieManager();
   if (!cookie_manager) {
     GetCookieStore()->GetCookieListWithOptionsAsync(
-        url, options, std::move(cookie_partition_key_collection),
+        url, options, cookie_partition_key_collection,
         base::BindOnce(&CefCookieManagerImplExt::LoadCookiesCallback,
                        base::Unretained(this), std::move(callback)));
     return;
