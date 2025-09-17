@@ -71,6 +71,14 @@ int MilsToDots(int val, int dpi) {
   return static_cast<int>(printing::ConvertUnitFloat(val, 1000, dpi));
 }
 
+int32_t ConvertUint32ToInt32(uint32_t value)
+{
+  if (base::IsValueInRangeForNumericType<int32_t>(value)) {
+    return static_cast<int32_t>(value);
+  }
+  return -1;
+}
+
 }  // namespace
 
 class OhosPrintManager;
@@ -93,7 +101,7 @@ class PrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -180,7 +188,7 @@ class ApplicationPrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -439,6 +447,11 @@ void OhosPrintManager::GetDefaultPrintSettings(
                   << page_count;
       });
   UpdateParam(CreatePdfSettings(page_ranges), fd_, pdf_writing_done_callback);
+  
+  if (!settings_) {
+    LOG(ERROR) << "settings_ is invalid.";
+    return;
+  }
   printing::RenderParamsFromPrintSettings(*settings_, params.get());
   params->document_cookie = cookie();
   std::move(callback).Run(std::move(params));
@@ -472,6 +485,10 @@ void OhosPrintManager::ScriptedPrint(
     return;
   }
 
+  if (!settings_) {
+    LOG(ERROR) << "settings_ is invalid.";
+    return;
+  }
   printing::RenderParamsFromPrintSettings(*settings_, params->params.get());
   params->params->document_cookie = scripted_params->cookie;
   params->pages = settings_->ranges();
