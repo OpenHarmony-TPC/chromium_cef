@@ -568,9 +568,9 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
                : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
-    if (state->flags == 0 || (state->flags == (state->flags & -(state->flags)))) {
-      flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
-    }
+    // flags is used as bitfield 
+    // state->flags may contains multiple ArkWebRenderHandlerExt::TextInputFlag
+    flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
     show_keyboard = state->show_ime_if_needed;
   }
   if (state && !state->show_ime_if_needed && did_update_state) {
