@@ -679,7 +679,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SetShouldFrameSubmissionBeforeDraw(
 
 void ArkWebRenderWidgetHostViewOSRExt::SendCurrentLanguage(
     const std::string& ans) {
-  LOG(DEBUG) << "SendCurrentLanguage language is " << ans.c_str();
   language_ = ans;
 }
 #endif
