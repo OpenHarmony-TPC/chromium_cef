@@ -35,7 +35,7 @@ namespace renderer_prefs {
 void SetDefaultPrefsExt(blink::web_pref::WebPreferences& web) {
   // These OHOS default prefs defined in web_preferences.cc is only used for
   // none PC device, PC device has different prefs as below.
-  if (base::ohos::IsPcDevice()) {
+  if (base::ohos::IsPcDevice() || base::ohos::IsPcMode()) {
     web.viewport_meta_enabled = false;
     web.auto_zoom_focused_editable_to_legible_scale = false;
     web.shrinks_viewport_contents_to_fit = false;
