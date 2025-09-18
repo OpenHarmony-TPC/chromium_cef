@@ -439,11 +439,14 @@ void CefBrowserInfoManager::CheckExcludedNewBrowserInfoOnUIThread(
   }
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  // Exclude GetNewBrowserInfo for extensions options ui, because if continue
-  // waiting it will finally fail as well, and can cause a long block
-  // (kNewBrowserInfoResponseTimeoutMs) on renderer process in loading.
-  if (g_info_manager->GetUtils()->IsExtensionsOptionsUiFrame(global_token)) {
-    LOG(INFO) << "exclude getting browser info for extensions options ui";
+  // Exclude GetNewBrowserInfo for extensions options ui or offscreen document,
+  // because if continue waiting it will finally fail as well, and can cause a
+  // long block (kNewBrowserInfoResponseTimeoutMs) on renderer process in
+  // loading.
+  if (g_info_manager->GetUtils()->IsExtensionsOptionsUiFrame(global_token) ||
+      g_info_manager->GetUtils()->IsExtensionsOffscreenFrame(global_token)) {
+    LOG(INFO) << "exclude getting browser info for extensions options ui or "
+                 "offscreen document";
     g_info_manager->ContinueNewBrowserInfo(global_token,
                                            /*browser_info=*/nullptr,
                                            /*is_excluded=*/true);
