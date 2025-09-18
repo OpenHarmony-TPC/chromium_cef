@@ -38,8 +38,6 @@ const NetExportView = (function() {
   const kIdStartOverButton = 'startover';
   const kIdPrivacyReadMoreLink = 'privacy-read-more-link';
   const kIdPrivacyReadMoreDiv = 'privacy-read-more';
-  const kIdTooBigReadMoreLink = 'toobig-read-more-link';
-  const kIdTooBigReadMoreDiv = 'toobig-read-more';
   const kIdLogMaxFileSizeInput = 'log-max-filesize';
 
   /**
@@ -239,11 +237,6 @@ const NetExportView = (function() {
       $(kIdPrivacyReadMoreLink).onclick =
           this.showPrivacyReadMore_.bind(this, true);
       this.showPrivacyReadMore_(false);
-
-      // Hook up the "read more..." link for reducing log size information.
-      $(kIdTooBigReadMoreLink).onclick =
-          this.showTooBigReadMore_.bind(this, true);
-      this.showTooBigReadMore_(false);
     },
 
     /**
@@ -267,11 +260,6 @@ const NetExportView = (function() {
     showPrivacyReadMore_(show) {
       $(kIdPrivacyReadMoreDiv).hidden = !show;
       $(kIdPrivacyReadMoreLink).hidden = show;
-    },
-
-    showTooBigReadMore_(show) {
-      $(kIdTooBigReadMoreDiv).hidden = !show;
-      $(kIdTooBigReadMoreLink).hidden = show;
     },
 
     showStateDiv_(divId) {
