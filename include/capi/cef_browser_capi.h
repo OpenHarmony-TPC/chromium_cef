@@ -1632,6 +1632,13 @@ typedef struct _cef_browser_host_t {
                                    cef_string_t* extra_data);
 
   ///
+  /// Gets the latest hitdata
+  ///
+  void(CEF_CALLBACK* get_last_hit_data)(struct _cef_browser_host_t* self,
+                                   int* type,
+                                   cef_string_t* extra_data);
+
+  ///
   /// Set the inital page scale
   ///
   void(CEF_CALLBACK* set_initial_scale)(struct _cef_browser_host_t* self,

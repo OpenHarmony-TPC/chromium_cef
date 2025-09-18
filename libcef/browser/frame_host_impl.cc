@@ -1260,6 +1260,16 @@ void CefFrameHostImpl::GetHitData(int& type, CefString& extra_data) {
   extra_data = temp_extra_data;
 }
 
+void CefFrameHostImpl::UpdateHitTestData(int32_t type, const std::string& extra_data) {
+  hit_data_.type = type;
+  hit_data_.extra_data = extra_data;
+}
+
+void CefFrameHostImpl::GetLastHitData(int& type, CefString& extra_data) {
+  type = hit_data_.type;
+  extra_data = hit_data_.extra_data;
+}
+
 void CefFrameHostImpl::UpdateDrawRect() {
   SendToRenderFrame(__FUNCTION__, base::BindOnce(
                                       [](const RenderFrameType& render_frame) {

@@ -2368,6 +2368,42 @@ void CEF_CALLBACK browser_host_get_hit_data(struct _cef_browser_host_t* self,
   }
 }
 
+void CEF_CALLBACK browser_host_get_last_hit_data(struct _cef_browser_host_t* self,
+                                            int* type,
+                                            cef_string_t* extra_data) {
+  shutdown_checker::AssertNotShutdown();
+
+  // AUTO-GENERATED CONTENT - DELETE THIS COMMENT BEFORE MODIFYING
+
+  DCHECK(self);
+  if (!self) {
+    return;
+  }
+  // Verify param: type; type: simple_byref
+  DCHECK(type);
+  if (!type) {
+    return;
+  }
+  // Verify param: extra_data; type: string_byref
+  DCHECK(extra_data);
+  if (!extra_data) {
+    return;
+  }
+
+  // Translate param: type; type: simple_byref
+  int typeVal = type ? *type : 0;
+  // Translate param: extra_data; type: string_byref
+  CefString extra_dataStr(extra_data);
+
+  // Execute
+  CefBrowserHostCppToC::Get(self)->GetLastHitData(typeVal, extra_dataStr);
+
+  // Restore param: type; type: simple_byref
+  if (type) {
+    *type = typeVal;
+  }
+}
+
 void CEF_CALLBACK
 browser_host_set_initial_scale(struct _cef_browser_host_t* self, float scale) {
   shutdown_checker::AssertNotShutdown();
@@ -4389,6 +4425,7 @@ CefBrowserHostCppToC::CefBrowserHostCppToC() {
   GetStruct()->set_port_message_callback =
       browser_host_set_port_message_callback;
   GetStruct()->get_hit_data = browser_host_get_hit_data;
+  GetStruct()->get_last_hit_data = browser_host_get_last_hit_data;
   GetStruct()->set_initial_scale = browser_host_set_initial_scale;
   GetStruct()->page_load_progress = browser_host_page_load_progress;
   GetStruct()->scale = browser_host_scale;

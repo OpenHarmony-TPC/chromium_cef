@@ -3545,6 +3545,13 @@ void CefBrowserHostBase::GetHitData(int& type, CefString& extra_data) {
   }
 }
 
+void CefBrowserHostBase::GetLastHitData(int& type, CefString& extra_data) {
+  auto frame = GetMainFrame();
+  if (frame && frame->IsValid()) {
+    static_cast<CefFrameHostImpl*>(frame.get())->GetLastHitData(type, extra_data);
+  }
+}
+
 uint64_t CefBrowserHostBase::GetCurrentTimestamp() {
   auto now = std::chrono::system_clock::now();
   return std::chrono::duration_cast<std::chrono::milliseconds>(

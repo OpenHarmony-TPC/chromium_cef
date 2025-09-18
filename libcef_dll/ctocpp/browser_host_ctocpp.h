@@ -203,6 +203,7 @@ class CefBrowserHostCToCpp : public CefCToCppRefCounted<CefBrowserHostCToCpp,
       const CefString& port_handle,
       CefRefPtr<CefWebMessageReceiver> callback) override;
   void GetHitData(int& type, CefString& extra_data) override;
+  void GetLastHitData(int& type, CefString& extra_data) override;
   void SetInitialScale(float scale) override;
   int PageLoadProgress() override;
   float Scale() override;

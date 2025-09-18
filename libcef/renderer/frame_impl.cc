@@ -1014,6 +1014,14 @@ void CefFrameImpl::OnFocusedNodeChanged(const blink::WebElement& element) {
 #if defined(OHOS_INPUT_EVENTS)
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
+  SendToBrowserFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](const int32_t type, const std::string extra_data,
+              const BrowserFrameType& render_frame) {
+            render_frame->UpdateHitTestData(type, extra_data);
+          },
+          cef_hit_data_.type, cef_hit_data_.extra_data));
 #endif  // defined(OHOS_INPUT_EVENTS)
 }
 
@@ -1045,6 +1053,14 @@ void CefFrameImpl::SendHitEvent(cef::mojom::HitEventParamsPtr params) {
   cef_hit_data_.type = data->type;
   cef_hit_data_.extra_data = data->extra_data_for_type;
   is_update_ = true;
+  SendToBrowserFrame(
+      __FUNCTION__,
+      base::BindOnce(
+          [](const int32_t type, const std::string extra_data,
+              const BrowserFrameType& render_frame) {
+            render_frame->UpdateHitTestData(type, extra_data);
+          },
+          cef_hit_data_.type, cef_hit_data_.extra_data));
 #endif  // defined(OHOS_INPUT_EVENTS)
 }
 
