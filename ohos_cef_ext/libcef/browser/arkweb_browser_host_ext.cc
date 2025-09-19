@@ -1898,17 +1898,11 @@ void ArkWebBrowserHostExtImpl::ClosePortInternal(const CefString& portHandle) {
   LOG(DEBUG) << "ClosePort Start";
 
   // find port and close, then erase the item in map
-  blink::WebMessagePort port;
   for (auto iter = portMap_.begin(); iter != portMap_.end(); ++iter) {
-    if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0) {
-      port = std::move(iter->second.first);
-      port.Close();
-      portMap_.erase(iter);
-      break;
-    } else if (portHandle.ToString().compare(
-                   std::to_string(iter->first.second)) == 0) {
-      port = std::move(iter->second.second);
-      port.Close();
+    if (portHandle.ToString().compare(std::to_string(iter->first.first)) == 0 ||
+        portHandle.ToString().compare(std::to_string(iter->first.second)) == 0) {
+      iter->second.first.Close();
+      iter->second.second.Close();
       portMap_.erase(iter);
       break;
     }
@@ -1923,12 +1917,14 @@ void ArkWebBrowserHostExtImpl::ClosePortInternal(const CefString& portHandle) {
 
   postedPorts_.erase(portHandle.ToString());
   LOG(DEBUG) << "ClosePort end";
+  Release();
 }
 
 void ArkWebBrowserHostExtImpl::ClosePort(const CefString& portHandle) {
-    sequenced_task_runner_->PostTask(
-        FROM_HERE, base::BindOnce(&ArkWebBrowserHostExtImpl::ClosePortInternal,
-                                  this, portHandle));
+  AddRef();
+  sequenced_task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&ArkWebBrowserHostExtImpl::ClosePortInternal,
+                                this, portHandle));
 }
 
 bool ArkWebBrowserHostExtImpl::ConvertCefValueToBlinkMsg(
@@ -2139,10 +2135,12 @@ void ArkWebBrowserHostExtImpl::SetPortMessageCallback(
 
 void ArkWebBrowserHostExtImpl::DestroyAllWebMessagePorts() {
   base::AutoLock msg_lock(web_message_lock_);
-  LOG(DEBUG) << "clear all message ports";
-  portMap_.clear();
-  receiverMap_.clear();
-  postedPorts_.clear();
+  LOG(INFO) << "clear all message ports";
+  for (auto& port : portMap_) {
+    CefString handleCef;
+    handleCef.FromString(std::to_string(port.first.first));
+    ClosePort(handleCef);
+  }
 }
 #endif  // BUILDFLAG(ARKWEB_MSGPORT)
 
