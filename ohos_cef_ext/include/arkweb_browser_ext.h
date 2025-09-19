@@ -1376,6 +1376,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /*--cef()--*/
   virtual void OnBrowserBackground() = 0;
 #endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  ///
+  /// get the focused frame info
+  ///
+  virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
