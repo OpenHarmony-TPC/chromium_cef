@@ -13,6 +13,11 @@
 #include "net/cookies/cookie_store.h"
 #include "services/network/cookie_manager.h"
 #include "services/network/public/mojom/cookie_manager.mojom.h"
+#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+#include "components/content_settings/core/browser/host_content_settings_map.h"
+#endif
 
 BASE_FEATURE(kArkwebLoadCookiesOnAsyncThread,
              "ArkwebLoadCookiesOnAsyncThread",
@@ -96,6 +101,11 @@ void SaveCookiesOnAsyncThread(
 
   bool SupportAsyncThreadCookieLoad();
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool CanSaveOrLoadCookies(const network::ResourceRequest& request);
+void UpdateHostContentSettingsMap();
+#endif
+
  private:
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(
@@ -175,5 +185,8 @@ void SaveCookiesOnAsyncThread(
   base::Thread cookie_store_task_thread_;
   base::Thread cookie_store_backend_thread_;
   mutable bool remote_network_cookie_manager_inited_{false};
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+  HostContentSettingsMap* host_content_settings_map_ = nullptr;
+#endif
 };
 #endif  // COOKIE_MANAGER_IMPL_EXT_H_

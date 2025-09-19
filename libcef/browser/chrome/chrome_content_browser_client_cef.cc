@@ -543,6 +543,9 @@ void ChromeContentBrowserClientCef::OverrideWebkitPrefs(
   auto browser = CefBrowserHostBase::GetBrowserForContents(web_contents);
   if (browser) {
     renderer_prefs::SetCefPrefs(browser->settings(), *prefs);
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+    renderer_prefs::SetJsDefaultContent(web_contents, *prefs);
+#endif
     auto frame = browser->GetMainFrame();
 
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)

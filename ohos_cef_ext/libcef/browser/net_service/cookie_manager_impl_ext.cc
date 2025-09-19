@@ -26,6 +26,9 @@
 #include "net/cookies/cookie_util.h"
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "services/network/public/cpp/resource_request.h"
+#endif
 #include "services/network/public/mojom/cookie_manager.mojom.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "url/gurl.h"
@@ -1028,3 +1031,35 @@ void CefCookieManagerImplExt::SaveCookiesOnAsyncThread(
       net::CookieAccessResult(net::CookieInclusionStatus(
           net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
 }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool CefCookieManagerImplExt::CanSaveOrLoadCookies(const network::ResourceRequest& request) {
+  if (!host_content_settings_map_) {
+    LOG(ERROR) << "Can not get host_content_settings_map.";
+    return true;
+  }
+
+  ContentSettingsForOneType cookie_settings =
+      host_content_settings_map_->GetSettingsForOneType(
+          ContentSettingsType::COOKIES);
+
+  const auto& entry = base::ranges::find_if(
+      cookie_settings, [&](const ContentSettingPatternSource& entry) {
+        // The primary pattern is for the request URL; the secondary pattern
+        // is for the first-party URL (which is the top-frame origin [if
+        // available] or the site-for-cookies).
+        return !entry.IsExpired() &&
+               entry.primary_pattern.Matches(request.url) &&
+               entry.secondary_pattern.Matches(request.url);
+      });
+  const ContentSettingPatternSource* match =
+      (entry == cookie_settings.end() ? nullptr : &*entry);
+  return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
+}
+
+void CefCookieManagerImplExt::UpdateHostContentSettingsMap() {
+  auto cef_browser_context = browser_context_getter_.Run();
+  host_content_settings_map_ =
+      HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());
+}
+#endif
