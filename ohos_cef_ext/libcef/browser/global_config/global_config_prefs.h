@@ -6,6 +6,7 @@
 #define CEF_LIBCEF_BROWSER_GLOBAL_CONFIG_GLOBAL_CONFIG_PREFS_H_
  
 #include "components/prefs/pref_registry_simple.h"
+#include "components/prefs/pref_service.h"
  
 namespace global_config {
 #if BUILDFLAG(IS_ARKWEB_EXT)
@@ -13,7 +14,7 @@ namespace global_config {
  
   void RegisterGlobalConfigPrefs(PrefRegistrySimple* registry);
  
-  void OnGlobalConfigResult(const std::string& path);
+  void OnGlobalConfigResult(const std::string& path, PrefService* localState);
 #endif
 }
 #endif
