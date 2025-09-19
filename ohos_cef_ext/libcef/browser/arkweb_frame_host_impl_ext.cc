@@ -191,7 +191,7 @@ void ArkwebFrameHostExtImpl::GetImages(
     CefRefPtr<CefGetImagesCallback> callback) {
 #if BUILDFLAG(ARKWEB_MEDIA)
   GetImagesWithResponse(base::BindOnce(
-      &ArkwebFrameHostExtImpl::GetImagesCallback, base::Unretained(this),
+      &ArkwebFrameHostExtImpl::GetImagesCallback, weak_ptr_factory_.GetWeakPtr(),
       CefRefPtr<CefFrameHostImpl>(this), callback));
 #endif  // BUILDFLAG(ARKWEB_MEDIA)
 }
