@@ -139,7 +139,7 @@ void ArkWebBrowserContentsDelegateExt::DidStartNavigation(
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
   // |final_ua| may be added to the navigation of the mainframe and iframe.
-  arkweb_useragent_utils::MaybeOverrideUserAgentOnStartNavigation(navigation_handle);
+  arkweb_useragent_utils::MaybeOverrideUserAgentOnStartNavigation(navigation);
 #endif
 }
 #endif  // BUILDFLAG(ARKWEB_WPT)
@@ -147,7 +147,7 @@ void ArkWebBrowserContentsDelegateExt::DidStartNavigation(
 #if BUILDFLAG(ARKWEB_USERAGENT)
 void ArkWebBrowserContentsDelegateExt::DidRedirectNavigation(
     content::NavigationHandle* navigation) {
-  arkweb_useragent_utils::MaybeOverrideUserAgentOnRedirectNavigation(navigation_handle);
+  arkweb_useragent_utils::MaybeOverrideUserAgentOnRedirectNavigation(navigation);
 }
 #endif  // BUILDFLAG(ARKWEB_EXT_UA)
 

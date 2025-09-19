@@ -171,4 +171,6 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
              << ", serverd_from_bfcache "
              << navigation->IsServedFromBackForwardCache();
   UpdateUserAgentForNavigation(navigation, final_ua, match_type);
+}
+
 } // arkweb_useragent_utils
