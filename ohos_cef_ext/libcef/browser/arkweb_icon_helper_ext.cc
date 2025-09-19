@@ -192,13 +192,16 @@ void IconHelper::DownloadFaviconCallback(
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
 
   std::vector<size_t> best_indices;
+  SelectFaviconFrameIndices(original_bitmap_sizes,
+                            std::vector<int>(1U, LARGEST_ICON_SIZE),
+                            &best_indices, nullptr);
+  const auto& bitmap =
+      bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(::switches::kEnableNwebEx) &&
       base::ohos::IsPcDevice()) {
     float current_score;
     SelectFaviconFrameIndices(original_bitmap_sizes, GetDesiredPixelSizes(), &best_indices, &current_score);
-    const auto& bitmap =
-        bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
     SkBitmap new_bitmap;
     new_bitmap.allocPixels(bitmap.info());
     bitmap.readPixels(new_bitmap.pixmap(), 0, 0);
@@ -216,18 +219,8 @@ void IconHelper::DownloadFaviconCallback(
     pending_downloads_map_.erase(request_id);
     best_results_map_.erase(request_id);
     return;
-  } else {
-    SelectFaviconFrameIndices(original_bitmap_sizes,
-                              std::vector<int>(1U, LARGEST_ICON_SIZE),
-                              &best_indices, nullptr);
   }
-#else
-  SelectFaviconFrameIndices(original_bitmap_sizes,
-                            std::vector<int>(1U, LARGEST_ICON_SIZE),
-                            &best_indices, nullptr);
 #endif
-  const auto& bitmap =
-      bitmaps[best_indices.size() == 0 ? 0 : best_indices.front()];
   DownloadFaviconHandler(image_url, bitmap, browser);
 }
 
