@@ -1666,6 +1666,17 @@ void AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback(
 
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+content::WebContents* AlloyBrowserHostImplExt::GetWebContentsForExtension() {
+  return web_contents();
+}
+
+void AlloyBrowserHostImplExt::AcceleratorPressedUI(
+    const ui::Accelerator& accelerator,
+    content::BrowserContext* browser_context) {
+  CefExtensionKeybindingRegistryViews cef_key_view(browser_context, this);
+  cef_key_view.AcceleratorPressed(accelerator);
+}
+
 bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
@@ -1699,8 +1710,14 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     }
  
     if (run_accelerator_flag) {
-      CefExtensionKeybindingRegistryViews cef_key_view(browser_context);
-      cef_key_view.AcceleratorPressed(accelerator);
+      if (!CEF_CURRENTLY_ON_UIT()) {
+        CEF_POST_TASK(
+            CEF_UIT,
+            base::BindOnce(&AlloyBrowserHostImplExt::AcceleratorPressedUI, this,
+                           accelerator, browser_context));
+      } else {
+        AcceleratorPressedUI(accelerator, browser_context);
+      }
     }
   }
   
