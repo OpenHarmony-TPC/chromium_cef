@@ -565,7 +565,7 @@ void ChromeContentBrowserClientCef::OverrideWebkitPrefs(
         CefContext::Get()->GetBackgroundColor(nullptr, STATE_DEFAULT);
   }
 
-#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
+#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM) || BUILDFLAG(ARKWEB_ZOOM)
   (*prefs).force_enable_zoom = web_contents->GetForceEnableZoom();
 #endif
 

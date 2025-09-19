@@ -1854,7 +1854,7 @@ void ArkWebBrowserHostExtImpl::GetOverScrollOffset(float* offset_x,
 #endif
 
 void ArkWebBrowserHostExtImpl::SetForceEnableZoom(bool forceEnableZoom) {
-#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
+#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM) || BUILDFLAG(ARKWEB_ZOOM)
   if (!GetWebContents()) {
     return;
   }
