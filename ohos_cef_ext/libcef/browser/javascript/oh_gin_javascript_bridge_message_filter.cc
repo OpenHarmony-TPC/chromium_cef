@@ -206,14 +206,14 @@ void OhGinJavascriptBridgeMessageFilter::RenderProcessExited(
   {
     scoped_refptr<OhGinJavascriptBridgeMessageFilter> filter =
         base::UserDataAdapter<OhGinJavascriptBridgeMessageFilter>::Get(
-            &agent_scheduling_group_, kOhGinJavascriptBridgeMessageFilterKey);
+            &(*agent_scheduling_group_), kOhGinJavascriptBridgeMessageFilterKey);
     DCHECK_EQ(this, filter.get());
   }
 #endif
 
   rph->RemoveObserver(this);
 
-  agent_scheduling_group_.RemoveUserData(
+  (*agent_scheduling_group_).RemoveUserData(
       kOhGinJavascriptBridgeMessageFilterKey);
 }
 
