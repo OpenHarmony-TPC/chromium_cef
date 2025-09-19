@@ -396,13 +396,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
   auto* rfh = web_contents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
-    if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
-      LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_FAILED";
-      if (printAttrsMap_[print_job_id_].callback) {
-        printAttrsMap_[print_job_id_].callback->WriteResultCallback(
-            print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
-      }
-    }
+    RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     return;
   }
 
@@ -416,6 +410,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
       GetPrintRenderFrame(pdf_rfh)->ApplicationPrintRequestedPages();
     } else {
       LOG(ERROR) << "failed to get rfh from id for pdf print";
+      RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     }
     return;
   }
@@ -544,6 +539,21 @@ void OhosPrintManager::DidPrintDocument(
 }
 
 // static
+void OhosPrintManager::RunCallback(const std::string& jobId, int32_t result) {
+  if (printAttrsMap_.find(jobId) == printAttrsMap_.end()) {
+    return;
+  }
+
+  if (printAttrsMap_[jobId].callback) {
+    LOG(INFO) << "OhosPrintManager calls WriteResultCallback with " << result;
+    printAttrsMap_[jobId].callback->WriteResultCallback(jobId, result);
+    printAttrsMap_[jobId].callback = nullptr;
+  } else {
+    LOG(INFO) << "OhosPrintManager WriteResultCallback is empty";
+  }
+}
+
+// static
 void OhosPrintManager::OnDidPrintDocumentWritingDone(
     const PdfWritingDoneCallback& callback,
     DidPrintDocumentCallback did_print_document_cb,
@@ -554,13 +564,7 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
     callback.Run(base::checked_cast<int>(page_count));
   }
   std::move(did_print_document_cb).Run(true);
-  if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
-    LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS";
-    if (printAttrsMap_[print_job_id_].callback) {
-      printAttrsMap_[print_job_id_].callback->WriteResultCallback(
-          print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
-    }
-  }
+  RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
 }
 
 std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
@@ -602,6 +606,8 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
 }
 
 void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
+  // clear old callback if any
+  RunCallback(printAttrs.jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
   printAttrsMap_[printAttrs.jobId] = printAttrs;
   if (base::IsValueInRangeForNumericType<int>(printAttrs.fd)) {
     fd_ = static_cast<int>(printAttrs.fd);
@@ -612,6 +618,8 @@ void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
 }
 
 void OhosPrintManager::ClearPrintAttrs(const std::string& jobId) {
+  // clear callback before erase
+  RunCallback(jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
   printAttrsMap_.erase(jobId);
   fd_ = -1;
   print_job_id_ = "";
