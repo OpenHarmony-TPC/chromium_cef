@@ -1035,7 +1035,6 @@ void CefCookieManagerImplExt::SaveCookiesOnAsyncThread(
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 bool CefCookieManagerImplExt::CanSaveOrLoadCookies(const network::ResourceRequest& request) {
   if (!host_content_settings_map_) {
-    LOG(ERROR) << "Can not get host_content_settings_map.";
     return true;
   }
 
@@ -1062,7 +1061,9 @@ void CefCookieManagerImplExt::UpdateHostContentSettingsMap() {
     return;
   }
   auto cef_browser_context = browser_context_getter_.Run();
-  host_content_settings_map_ =
-      HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());
+  if (cef_browser_context) {
+    host_content_settings_map_ =
+        HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());
+  }
 }
 #endif

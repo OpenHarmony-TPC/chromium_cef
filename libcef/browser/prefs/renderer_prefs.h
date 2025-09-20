@@ -8,7 +8,7 @@
 
 #include <string>
 
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "arkweb/build/features/features.h"
 
 #include "cef/include/internal/cef_types_wrappers.h"
 

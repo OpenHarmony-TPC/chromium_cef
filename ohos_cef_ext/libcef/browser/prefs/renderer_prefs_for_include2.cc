@@ -158,14 +158,18 @@ void SetJsDefaultContent(content::WebContents* web_contents,
     content::BrowserContext* browser_context = web_contents->GetBrowserContext();
     HostContentSettingsMap* host_content_settings_map =
       HostContentSettingsMapFactory::GetForProfile(browser_context);
-    host_content_settings_map->SetDefaultContentSetting(ContentSettingsType::JAVASCRIPT, setting);
-    LOG(INFO) << "JAVASCRIPT SetDefaultContentSetting, setting = " << int(setting);
+    if (host_content_settings_map) {
+      host_content_settings_map->SetDefaultContentSetting(ContentSettingsType::JAVASCRIPT, setting);
+      LOG(INFO) << "JAVASCRIPT SetDefaultContentSetting, setting = " << int(setting);
+    }
 
     // Update cookie manager host content settings map
     bool is_off_the_record = browser_context ? browser_context->IsOffTheRecord() : false;
     CefRefPtr<CefCookieManagerImplExt> cookie_manager =
       CefCookieManagerImplExt::GetInstance(is_off_the_record);
-    cookie_manager->UpdateHostContentSettingsMap();
+    if (cookie_manager) {
+      cookie_manager->UpdateHostContentSettingsMap();
+    }
   }
 }
 #endif

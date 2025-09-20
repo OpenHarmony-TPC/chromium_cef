@@ -13,7 +13,7 @@
 #include "net/cookies/cookie_store.h"
 #include "services/network/cookie_manager.h"
 #include "services/network/public/mojom/cookie_manager.mojom.h"
-#include "arkweb/ohos_nweb_ex/build/features/features.h"
+#include "arkweb/build/features/features.h"
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "components/content_settings/core/browser/host_content_settings_map.h"
