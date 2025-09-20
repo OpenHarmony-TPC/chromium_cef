@@ -25,6 +25,10 @@
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+#include "cef/ohos_cef_ext/libcef/browser/useragent/ua_push_config.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
 #include "ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_engine_global_config.h"
 #endif

@@ -98,6 +98,11 @@ void SetInitialProfilePrefs(Profile* profile) {
 #if BUILDFLAG(ARKWEB_EXT_UA)
   UpdateCloudUAConfigAfterBrowserContextInitForInclude(profile);
 #endif
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  if (profile && !profile->IsOffTheRecord()) {
+    ohos_user_agent::UAPushConfig::GetInstance()->Init(profile->GetPrefs());
+  }
+#endif
 
 #if BUILDFLAG(ARKWEB_CLOUD_CONTROL) && BUILDFLAG(IS_ARKWEB_EXT)
   UpdateBrowserEngineGlobalConfigAfterBrowserContextInitForInclude(profile);
