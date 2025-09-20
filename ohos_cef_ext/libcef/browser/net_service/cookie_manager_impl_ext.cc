@@ -462,8 +462,8 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
   }
   if (cmd_value) {
     OHOS::NWeb::ResSchedClientAdapter::ReportKeyThread(
-      OHOS::NWeb::ResSchedClientAdapter::THREAD_CREATED, base::GetCurrentRealPid(),
-      cookie_store_task_thread_.GetThreadRealId(), OHOS::NWeb::ResSchedClientAdapter::USER_INTERACT);
+      OHOS::NWeb::ResSchedStatusAdapter::THREAD_CREATED, base::GetCurrentRealPid(),
+      cookie_store_task_thread_.GetThreadRealId(), OHOS::NWeb::ResSchedRoleAdapter::USER_INTERACT);
   }
 #endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 }
