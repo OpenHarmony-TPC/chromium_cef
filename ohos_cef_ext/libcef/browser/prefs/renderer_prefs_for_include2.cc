@@ -150,13 +150,11 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 void SetJsDefaultContent(content::WebContents* web_contents,
                          blink::web_pref::WebPreferences& web) {
   const base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line && command_line && command_line->HasSwitch(switches::kEnableNwebExExceptionList)) {
+  if (web_contents && command_line && command_line->HasSwitch(switches::kEnableNwebExExceptionList)) {
     bool javascript_enabled = web.javascript_enabled;
 
     // Update content setting default value
     ContentSetting setting = javascript_enabled ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK;
-    if (!web_contents)
-      return;
     content::BrowserContext* browser_context = web_contents->GetBrowserContext();
     HostContentSettingsMap* host_content_settings_map =
       HostContentSettingsMapFactory::GetForProfile(browser_context);

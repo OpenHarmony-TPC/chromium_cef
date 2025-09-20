@@ -1058,6 +1058,9 @@ bool CefCookieManagerImplExt::CanSaveOrLoadCookies(const network::ResourceReques
 }
 
 void CefCookieManagerImplExt::UpdateHostContentSettingsMap() {
+  if (host_content_settings_map_) {
+    return;
+  }
   auto cef_browser_context = browser_context_getter_.Run();
   host_content_settings_map_ =
       HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());

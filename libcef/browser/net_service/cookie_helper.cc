@@ -136,7 +136,7 @@ void ContinueWithLoadedCookies(const AllowCookieCallback& allow_cookie_callback,
     if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
         CefRefPtr<CefCookieManagerImplExt> cookie_manager =
           CefCookieManagerImplExt::GetInstance(is_off_the_record);
-        if (cookie_manager->CanSaveOrLoadCookies(request)) {
+        if (cookie_manager && cookie_manager->CanSaveOrLoadCookies(request)) {
           allowed_cookies.push_back(status.cookie);
         }
     } else {
@@ -329,8 +329,10 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
                  DoneCookieCallback done_callback) {
   CEF_REQUIRE_IOT();
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   CefRefPtr<CefCookieManagerImplExt> cookie_manager =
     CefCookieManagerImplExt::GetInstance(is_off_the_record);
+#endif
   if ((request.load_flags & net::LOAD_DO_NOT_SEND_COOKIES) ||
       request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
@@ -342,7 +344,7 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
       || !request.SendsCookies()
 #endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-      || !cookie_manager->CanSaveOrLoadCookies(request)
+      || (cookie_manager && !cookie_manager->CanSaveOrLoadCookies(request))
 #endif
 
   ) {
@@ -444,8 +446,10 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
   net::CookieList allowed_cookies;
   int total_count = 0;
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   CefRefPtr<CefCookieManagerImplExt> cookie_manager =
     CefCookieManagerImplExt::GetInstance(is_off_the_record);
+#endif
   while (headers->EnumerateHeader(&iter, name, &cookie_string)) {
     total_count++;
 
@@ -473,7 +477,7 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
     }
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-    if (cookie && !cookie_manager->CanSaveOrLoadCookies(request)) {
+    if (cookie && cookie_manager && !cookie_manager->CanSaveOrLoadCookies(request)) {
       returned_status.AddExclusionReason(
           net::CookieInclusionStatus::EXCLUDE_USER_PREFERENCES);
     }
