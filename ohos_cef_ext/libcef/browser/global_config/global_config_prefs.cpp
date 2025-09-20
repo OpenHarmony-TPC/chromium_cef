@@ -14,7 +14,7 @@
 #include "base/uuid.h"
 #include "base/values.h"
 #include "chrome/browser/browser_process.h"
-#include "components/prefs/pref_service.h"
+#include "content/public/browser/browser_thread.h"
 
 namespace global_config {
 
@@ -39,14 +39,35 @@ bool CheckFeaturesSwitches(const base::Value& item) {
 
   std::string hash_str = base::Uuid::GenerateRandomV4().AsLowercaseString() + *name;
   size_t hash_value = base::FastHash(hash_str);
-  if ((hash_value % kMaxProbability) > probability.value()) {
+  if ((int)(hash_value % kMaxProbability) > probability.value()) {
     LOG(INFO) << "probability is Not Satisfied.";
     return false;
   }
   return true;
 }
 
-void ParseFeaturesSwitchesToPrefs() {
+void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList, PrefService* localState) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE,
+        base::BindOnce(&SetFeaturesSwitchesToPrefsFile, std::move(prefsList), localState));
+    return;
+  }
+
+  if (g_browser_process && g_browser_process->local_state()) {
+    g_browser_process->local_state()->ClearPref(kGlobalConfigFeaturesSwitches);
+    g_browser_process->local_state()->SetList(kGlobalConfigFeaturesSwitches, std::move(prefsList));
+    g_browser_process->local_state()->CommitPendingWrite();
+  } else {
+    if (localState != nullptr) {
+      localState->ClearPref(kGlobalConfigFeaturesSwitches);
+      localState->SetList(kGlobalConfigFeaturesSwitches, std::move(prefsList));
+      localState->CommitPendingWrite();
+    }
+  }
+}
+
+void ParseFeaturesSwitchesToPrefs(PrefService* localState) {
   base::FilePath global_config_path(kGlobalConfigDataPath);
   if (!base::PathExists(global_config_path)) {
     LOG(INFO) << "global config path is not exist:" << global_config_path.value();
@@ -101,15 +122,14 @@ void ParseFeaturesSwitchesToPrefs() {
     }
   }
 
-  g_browser_process->local_state()->SetList(kGlobalConfigFeaturesSwitches, std::move(prefs_list));
-  g_browser_process->local_state()->CommitPendingWrite();
+  SetFeaturesSwitchesToPrefsFile(std::move(prefs_list), localState);
 }
 
-void OnGlobalConfigResult(const std::string& path) {
+void OnGlobalConfigResult(const std::string& path, PrefService* localState) {
   if (!path.empty()) {
     kGlobalConfigDataPath = path;
   }
-  ParseFeaturesSwitchesToPrefs();
+  ParseFeaturesSwitchesToPrefs(localState);
 }
 #endif
 
