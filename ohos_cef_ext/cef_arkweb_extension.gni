@@ -190,6 +190,13 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ark_web_frame_host_impl.h",
 ]
 
+if (defined(arkweb_useragent) && arkweb_useragent) {
+  libcef_arkweb_sources += [
+    "//cef/ohos_cef_ext/libcef/browser/useragent/arkweb_useragent_utils.cc",
+    "//cef/ohos_cef_ext/libcef/browser/useragent/arkweb_useragent_utils.h",
+  ]
+}
+
 arkweb_url_trust_list_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_controller_client.cc",

@@ -90,6 +90,8 @@ public:
                                      bool visibility) override;
   void SetNativeInnerWeb(bool isInnerWeb) override;
   void SetEnableCustomVideoPlayer(bool flag) override;
+  void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)

@@ -548,14 +548,28 @@ void ArkWebRenderWidgetHostViewOSRExt::OnUpdateTextInputStateCalled(
   }
   if (state && state->type != ui::TEXT_INPUT_TYPE_NONE) {
     static_assert(
-        static_cast<int>(CEF_TEXT_INPUT_MODE_MAX) ==
-            static_cast<int>(ui::TEXT_INPUT_MODE_MAX),
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputMode::CEF_TEXT_INPUT_MODE_MAX) ==
+            static_cast<int>(ui::TextInputMode::TEXT_INPUT_MODE_MAX),
         "Enum values in cef_text_input_mode_t must match ui::TextInputMode");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputType::CEF_TEXT_INPUT_TYPE_MAX) ==
+            static_cast<int>(ui::TextInputType::TEXT_INPUT_TYPE_MAX),
+        "Enum values in cef_text_input_type_t must match ui::TextInputType");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputAction::CEF_TEXT_INPUT_ACTION_MAX) ==
+            static_cast<int>(ui::TextInputAction::kMaxValue),
+        "Enum values in cef_text_input_action_t must match ui::TextInputAction");
+    static_assert(
+        static_cast<int>(ArkWebRenderHandlerExt::TextInputFlags::CEF_TEXT_INPUT_FLAG_VERTICAL) ==
+            static_cast<int>(ui::TextInputFlags::TEXT_INPUT_FLAG_VERTICAL),
+        "Enum values in cef_text_input_flags_t must match ui::TextInputFlags");
     mode = static_cast<ArkWebRenderHandlerExt::TextInputMode>(state->mode);
     type = state->flags & ui::TEXT_INPUT_FLAG_HAS_BEEN_PASSWORD
                ? CEF_TEXT_INPUT_TYPE_PASSWORD
                : static_cast<ArkWebRenderHandlerExt::TextInputType>(state->type);
     action = static_cast<ArkWebRenderHandlerExt::TextInputAction>(state->action);
+    // flags is used as bitfield 
+    // state->flags may contains multiple ArkWebRenderHandlerExt::TextInputFlag
     flags = static_cast<ArkWebRenderHandlerExt::TextInputFlags>(state->flags);
     show_keyboard = state->show_ime_if_needed;
   }
@@ -989,6 +1003,19 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTextSelectionChanged(
     LOG(INFO) << "OnTextSelectionChanged selected_text is null";
   }
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::OnSelectAreaChanged(
+    CefRect& select_area,
+    bool need_report) {
+  if (!browser_impl_ || !browser_impl_->GetClient()) {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+    browser_impl_->GetClient()->GetRenderHandler();
+  if (handler) {
+    handler->OnSelectAreaChanged(select_area);
+  }
+}
 #endif
 
 #if BUILDFLAG(IS_ARKWEB)
@@ -1288,6 +1315,15 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionBoundsChanged(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
+
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  handler->AsArkWebRenderHandler()->SelectionBoundsChanged(
+      CefRect(anchor_rect.x(), anchor_rect.y(), anchor_rect.width(),
+              anchor_rect.height()),
+      CefRect(focus_rect.x(), focus_rect.y(), focus_rect.width(),
+              focus_rect.height()),
+      is_anchor_first);
+#endif
 
   if (!is_select_text_) {
     handler->AsArkWebRenderHandler()->OnCursorUpdate(
@@ -1964,6 +2000,16 @@ void ArkWebRenderWidgetHostViewOSRExt::SetNativeInnerWeb(bool isInnerWeb) {
   if (auto compositor = ArkWebRenderWidgetHostViewOSRUtils::GetCompositor(
             browser_impl_->GetAcceleratedWidget(is_popup_))) {
     compositor->Utils()->SetNativeInnerWeb(isInnerWeb);
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OnNativeEmbedObjectParamChange(browser_impl_.get(), native_param_data);
   }
 }
 #endif

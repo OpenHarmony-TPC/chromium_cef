@@ -71,6 +71,53 @@ int MilsToDots(int val, int dpi) {
   return static_cast<int>(printing::ConvertUnitFloat(val, 1000, dpi));
 }
 
+OHOS::NWeb::PrintAttributesAdapter TransformPrintAttrs(
+    std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> newAttrs)
+{
+  OHOS::NWeb::PrintAttributesAdapter attrs;
+  attrs.copyNumber = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_COPY_NUMBER);
+  attrs.pageRange.startPage = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_RANGE_START);
+  attrs.pageRange.endPage = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_RANGE_END);
+  attrs.pageRange.pages = newAttrs->GetUint32Vector(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_RANGE_ARRAY);
+  attrs.isSequential = newAttrs->GetBool(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_IS_SEQUENTIAL);
+  attrs.pageSize.width = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_SIZE_WIDTH);
+  attrs.pageSize.height = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_PAGE_SIZE_HEIGHT);
+  attrs.isLandscape = newAttrs->GetBool(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_IS_LANDSCAPE);
+  attrs.colorMode = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_COLOR_MODE);
+  attrs.duplexMode = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_DUPLEX_MODE);
+  attrs.margin.top = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_MARGIN_TOP);
+  attrs.margin.bottom = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_MARGIN_BOTTOM);
+  attrs.margin.left = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_MARGIN_LEFT);
+  attrs.margin.right = newAttrs->GetUInt32(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_MARGIN_RIGHT);
+  attrs.hasOption = newAttrs->GetBool(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_HAS_OPTION);
+  attrs.option = newAttrs->GetString(
+      OHOS::NWeb::NWEB_PRINT_ATTR_ID_OPTION);
+  return attrs;
+}
+
+int32_t ConvertUint32ToInt32(uint32_t value)
+{
+  if (base::IsValueInRangeForNumericType<int32_t>(value)) {
+    return static_cast<int32_t>(value);
+  }
+  return -1;
+}
+
 }  // namespace
 
 class OhosPrintManager;
@@ -93,7 +140,7 @@ class PrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -180,7 +227,7 @@ class ApplicationPrintDocumentAdapterImpl
     PrintAttrs printAttrs;
     printAttrs.jobId = jobId;
     printAttrs.attrs = newAttrs;
-    printAttrs.fd = fd;
+    printAttrs.fd = ConvertUint32ToInt32(fd);
     printAttrs.callback = callback;
 
     auto main_task_runner = content::GetUIThreadTaskRunner({});
@@ -215,7 +262,6 @@ class ApplicationPrintDocumentAdapterImpl
     }
   }
 
- private:
   static void OnStartLayoutWriteOnUIThread(
       content::GlobalRenderFrameHostId rfhId, PrintAttrs printAttrs,
       bool isCalled) {
@@ -251,6 +297,85 @@ class ApplicationPrintDocumentAdapterImpl
       LOG(ERROR) << "failed to get OhosPrintManager";
     }
   }
+
+private:
+  uint32_t state_ = 0;
+  bool isCalledBeforeEvent = false;
+  bool isCalledOnJobStateChanged = false;
+  content::GlobalRenderFrameHostId rfhId_;
+};
+
+void PrintWriteResultCallbackAdapterV2::WriteResultCallback(std::string jobId,
+    uint32_t code)
+{
+  if (cb_) {
+    cb_->WriteResultCallback(jobId, code);
+  }
+}
+
+class ApplicationPrintDocumentAdapterImplV2
+    : public OHOS::NWeb::NWebPrintDocumentAdapterAdapter {
+ public:
+  explicit ApplicationPrintDocumentAdapterImplV2(
+      content::GlobalRenderFrameHostId rfhId) : rfhId_(rfhId) {}
+  ~ApplicationPrintDocumentAdapterImplV2() = default;
+
+  void OnStartLayoutWrite(
+      const std::string& jobId,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> oldAttrs,
+      std::shared_ptr<OHOS::NWeb::NWebPrintAttributesAdapter> newAttrs,
+      uint32_t fd,
+      std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> callback)
+      override {
+    LOG(INFO) << "Application OhosPrintManager OnStartLayoutWrite V2.";
+    if (!newAttrs ||
+        !newAttrs->GetBool(OHOS::NWeb::NWEB_PRINT_ATTR_ID_IS_VALID)) {
+      LOG(ERROR) << "invalid print attr";
+      return;
+    }
+
+    PrintAttrs printAttrs;
+    printAttrs.jobId = jobId;
+    printAttrs.attrs = TransformPrintAttrs(newAttrs);
+    printAttrs.fd = ConvertUint32ToInt32(fd);
+    printAttrs.callback =
+      std::make_shared<PrintWriteResultCallbackAdapterV2>(callback);
+
+    auto main_task_runner = content::GetUIThreadTaskRunner({});
+    if (!main_task_runner) {
+      LOG(ERROR) << "failed to get main_task_runner";
+      return;
+    }
+
+    main_task_runner->PostTask(
+      FROM_HERE, base::BindOnce(
+      &ApplicationPrintDocumentAdapterImpl::OnStartLayoutWriteOnUIThread,
+      rfhId_, printAttrs, isCalledBeforeEvent));
+    if (!isCalledBeforeEvent) {
+      isCalledBeforeEvent = true;
+    }
+  }
+
+  void OnJobStateChanged(const std::string& jobId, uint32_t state) override {
+    LOG(INFO) << "Application OhosPrintManager OnJobStateChanged V2.";
+    state_ = state;
+
+    auto main_task_runner = content::GetUIThreadTaskRunner({});
+    if (!main_task_runner) {
+      LOG(ERROR) << "failed to get main_task_runner";
+      return;
+    }
+
+    main_task_runner->PostTask(
+        FROM_HERE, base::BindOnce(
+        &ApplicationPrintDocumentAdapterImpl::OnJobStateChangedOnUIThread,
+        rfhId_, jobId, state, isCalledOnJobStateChanged));
+    if (!isCalledOnJobStateChanged) {
+      isCalledOnJobStateChanged = true;
+    }
+  }
+
+ private:
   uint32_t state_ = 0;
   bool isCalledBeforeEvent = false;
   bool isCalledOnJobStateChanged = false;
@@ -388,13 +513,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
   auto* rfh = web_contents->GetPrimaryMainFrame();
   if (!rfh || !rfh->IsRenderFrameLive()) {
     LOG(ERROR) << "rfh is nullptr.";
-    if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
-      LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_FAILED";
-      if (printAttrsMap_[print_job_id_].callback) {
-        printAttrsMap_[print_job_id_].callback->WriteResultCallback(
-            print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
-      }
-    }
+    RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     return;
   }
 
@@ -408,6 +527,7 @@ void OhosPrintManager::PrintPageImpl(bool isApplication) {
       GetPrintRenderFrame(pdf_rfh)->ApplicationPrintRequestedPages();
     } else {
       LOG(ERROR) << "failed to get rfh from id for pdf print";
+      RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
     }
     return;
   }
@@ -536,6 +656,21 @@ void OhosPrintManager::DidPrintDocument(
 }
 
 // static
+void OhosPrintManager::RunCallback(const std::string& jobId, int32_t result) {
+  if (printAttrsMap_.find(jobId) == printAttrsMap_.end()) {
+    return;
+  }
+
+  if (printAttrsMap_[jobId].callback) {
+    LOG(INFO) << "OhosPrintManager calls WriteResultCallback with " << result;
+    printAttrsMap_[jobId].callback->WriteResultCallback(jobId, result);
+    printAttrsMap_[jobId].callback = nullptr;
+  } else {
+    LOG(INFO) << "OhosPrintManager WriteResultCallback is empty";
+  }
+}
+
+// static
 void OhosPrintManager::OnDidPrintDocumentWritingDone(
     const PdfWritingDoneCallback& callback,
     DidPrintDocumentCallback did_print_document_cb,
@@ -546,13 +681,7 @@ void OhosPrintManager::OnDidPrintDocumentWritingDone(
     callback.Run(base::checked_cast<int>(page_count));
   }
   std::move(did_print_document_cb).Run(true);
-  if (printAttrsMap_.find(print_job_id_) != printAttrsMap_.end()) {
-    LOG(INFO) << "writeResultCallback PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS";
-    if (printAttrsMap_[print_job_id_].callback) {
-      printAttrsMap_[print_job_id_].callback->WriteResultCallback(
-          print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
-    }
-  }
+  RunCallback(print_job_id_, PRINT_JOB_CREATE_FILE_COMPLETED_SUCCESS);
 }
 
 std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
@@ -594,6 +723,8 @@ std::unique_ptr<printing::PrintSettings> OhosPrintManager::CreatePdfSettings(
 }
 
 void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
+  // clear old callback if any
+  RunCallback(printAttrs.jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
   printAttrsMap_[printAttrs.jobId] = printAttrs;
   if (base::IsValueInRangeForNumericType<int>(printAttrs.fd)) {
     fd_ = static_cast<int>(printAttrs.fd);
@@ -604,6 +735,8 @@ void OhosPrintManager::SetPrintAttrs(const PrintAttrs printAttrs) {
 }
 
 void OhosPrintManager::ClearPrintAttrs(const std::string& jobId) {
+  // clear callback before erase
+  RunCallback(jobId, PRINT_JOB_CREATE_FILE_COMPLETED_FAILED);
   printAttrsMap_.erase(jobId);
   fd_ = -1;
   print_job_id_ = "";
@@ -722,6 +855,19 @@ void OhosPrintManager::CreateWebPrintDocumentAdapter(
   is_print_now_ = true;
   *webPrintDocumentAdapter =
       static_cast<void*>(new ApplicationPrintDocumentAdapterImpl(GetRfhId()));
+}
+
+void OhosPrintManager::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName,
+    void** adapter) {
+  if (is_print_now_) {
+    LOG(ERROR) << "Application printing in progress.";
+    return;
+  }
+  cancel_ = false;
+  is_print_now_ = true;
+  *adapter =
+    static_cast<void*>(new ApplicationPrintDocumentAdapterImplV2(GetRfhId()));
 }
 
 void OhosPrintManager::SetPrintBackground(bool enable) {

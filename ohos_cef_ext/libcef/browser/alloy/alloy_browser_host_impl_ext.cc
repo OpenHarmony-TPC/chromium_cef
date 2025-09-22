@@ -524,6 +524,37 @@ void AlloyBrowserHostImplExt::OnLayerRectVisibilityChange(const std::string& emb
 
   platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedVisibilityChange(embed_id, visibility);
 }
+
+void AlloyBrowserHostImplExt::OnNativeEmbedObjectParamChange(
+    const content::NativeEmbedParamDataInfo& native_param_info) {
+  if (!platform_delegate_) {
+    return;
+  }
+
+  ArkWebRenderHandlerExt::CefNativeParamData native_param_data;
+  native_param_data.embedId = std::to_string(native_param_info.embed_id);
+  native_param_data.objectAttributeId = native_param_info.object_attribute_id;
+  for (const auto& param_item : native_param_info.param_items) {
+    ArkWebRenderHandlerExt::CefNativeParamItem native_param_item;
+    switch (param_item.status) {
+      case content::NativeEmbedParamStatus::kAdd:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_ADD;
+        break;
+      case content::NativeEmbedParamStatus::kUpdate:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_UPDATE;
+        break;
+      case content::NativeEmbedParamStatus::kDelete:
+        native_param_item.status = ArkWebRenderHandlerExt::CefNativeParamStatus::PARAM_DELETE;
+        break;
+    }
+    native_param_item.id = param_item.id;
+    native_param_item.name = param_item.name;
+    native_param_item.value = param_item.value;
+    native_param_data.paramItems.push_back(native_param_item);
+  }
+
+  platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->OnNativeEmbedObjectParamChange(native_param_data);
+}
 #endif
 
 
@@ -679,6 +710,14 @@ void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapter(const CefString& job
                                                          void** webPrintDocumentAdapter) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->CreateWebPrintDocumentAdapter(jobName, webPrintDocumentAdapter);
+  }
+}
+
+void AlloyBrowserHostImplExt::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName, void** adapter) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->
+      CreateWebPrintDocumentAdapterV2(jobName, adapter);
   }
 }
 
@@ -1671,20 +1710,33 @@ void AlloyBrowserHostImplExt::OnDumpJavaScriptStackCallback(
     int pid,
     content::RendererIsUnresponsiveReason reason,
     const std::string& stack) {
-  if (auto handler = client_->GetRequestHandler()) {
-    int anr_reason = static_cast<int>(
-        reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
-            ? content::RendererIsUnresponsiveReason::
-                  kNavigationRequestCommitTimeout
-            : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
-    handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
-        this, stack, pid, anr_reason);
+  if (client_) {
+    if (auto handler = client_->GetRequestHandler()) {
+      int anr_reason = static_cast<int>(
+          reason != content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout
+              ? content::RendererIsUnresponsiveReason::
+                    kNavigationRequestCommitTimeout
+              : content::RendererIsUnresponsiveReason::kOnInputEventAckTimeout);
+      handler->AsCefRequestHandlerExt()->OnRenderProcessNotResponding(
+          this, stack, pid, anr_reason);
+    }
   }
 }
 #endif
 
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+content::WebContents* AlloyBrowserHostImplExt::GetWebContentsForExtension() {
+  return web_contents();
+}
+
+void AlloyBrowserHostImplExt::AcceleratorPressedUI(
+    const ui::Accelerator& accelerator,
+    content::BrowserContext* browser_context) {
+  CefExtensionKeybindingRegistryViews cef_key_view(browser_context, this);
+  cef_key_view.AcceleratorPressed(accelerator);
+}
+
 bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event) {
@@ -1718,8 +1770,14 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     }
  
     if (run_accelerator_flag) {
-      CefExtensionKeybindingRegistryViews cef_key_view(browser_context);
-      cef_key_view.AcceleratorPressed(accelerator);
+      if (!CEF_CURRENTLY_ON_UIT()) {
+        CEF_POST_TASK(
+            CEF_UIT,
+            base::BindOnce(&AlloyBrowserHostImplExt::AcceleratorPressedUI, this,
+                           accelerator, browser_context));
+      } else {
+        AcceleratorPressedUI(accelerator, browser_context);
+      }
     }
   }
   
@@ -1852,3 +1910,18 @@ AlloyBrowserHostImplExt::OnFullScreenOverlayEnter(
   return std::make_unique<MediaPlayerListenerProxy>(std::move(listener));
 }
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+void AlloyBrowserHostImplExt::OnIsPageDistillable(int page_type,
+                                            const std::string& distillable_page_url, const std::string& title) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnIsPageDistillable failed";
+    return nullptr;
+  }
+  client_->AsArkWebClient()->OnIsPageDistillable(page_type, distillable_page_url, title);
+}
+
+bool AlloyBrowserHostImplExt::IsForDistillerPage() {
+  return false;
+}
+#endif

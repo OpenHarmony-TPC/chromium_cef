@@ -282,10 +282,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
 
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   void EnableAppLinking(bool enable) override;
   bool IsAppLinkingEnabled() const override;
-#endif // BUILDFLAG(IS_ARKWEB)
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void AdvanceFocusForIME(int focusType) override;
@@ -381,6 +381,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
 #endif  // BUILDFLAG(ARKWEB_PRINT)
@@ -748,6 +750,14 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void OnBrowserBackground() override;
 #endif
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  void Distill(const std::string& guid, const DistillOptions& distill_options,
+    CefRefPtr<CefDistillCallback> callback) override;
+  void AbortDistill() override;
+#endif // ARKWEB_READER_MODE
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) override;
+#endif
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
@@ -774,9 +784,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   js_injection::JsCommunicationHost* GetJsCommunicationHost();
 #endif
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   bool is_arkweb_applinking_enabled_ = true;
-#endif // BUILDFLAG(IS_ARKWEB)
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   float virtual_pixel_ratio_ = 2.0;
   uint64_t last_zoom_time_ = 0;

@@ -259,6 +259,19 @@ ExDownloadsItem GetExDownloadsItemByNwebItem(
 
   return download_item;
 }
+
+std::optional<std::string> GetExtensionContextType(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    return std::nullopt;
+  }
+
+  if (browser_context->IsOffTheRecord()) {
+    return "INCOGNITO";
+  } else {
+    return "REGULAR";
+  }
+}
 }  // namespace
 
 /* downloads.erase */
@@ -274,6 +287,8 @@ ExtensionFunction::ResponseAction DownloadsEraseFunction::Run() {
   }
   ExDownloadsQueryInfo queryInfo;
   GetEraseDownloadQueryInfoParams(params, queryInfo);
+  queryInfo.contextType = GetExtensionContextType(browser_context());
+  queryInfo.includeIncognitoInfo = include_incognito_information();
 
   call_downloads_erase_ = true;
   bool success =
@@ -351,7 +366,7 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
       !GetSenderWebContents()->HasRecentInteraction() ||
       extension()->permissions_data()->HasAPIPermission(
           APIPermissionID::kDebugger)) {
-      return RespondNow(NoArguments());
+    return RespondNow(NoArguments());
   }
   int downloadId = params->download_id;
   LOG(INFO) << "DownloadsOpenFunction::Run downloadId: " << downloadId;
@@ -359,8 +374,10 @@ ExtensionFunction::ResponseAction DownloadsOpenFunction::Run() {
   call_downloads_open_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().Open(
-          downloadId, base::BindRepeating(&DownloadsOpenFunction::OpenCallback,
-                                          weak_ptr_factory_.GetWeakPtr()));
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
+          base::BindRepeating(&DownloadsOpenFunction::OpenCallback,
+                              weak_ptr_factory_.GetWeakPtr()));
 
   call_downloads_open_ = false;
 
@@ -414,7 +431,8 @@ ExtensionFunction::ResponseAction DownloadsRemoveFileFunction::Run() {
   call_downloads_remove_file_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().RemoveFile(
-          downloadId,
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
           base::BindRepeating(&DownloadsRemoveFileFunction::RemoveFileCallback,
                               weak_ptr_factory_.GetWeakPtr()));
 
@@ -470,7 +488,8 @@ ExtensionFunction::ResponseAction DownloadsPauseFunction::Run() {
   call_downloads_pause_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().Pause(
-          downloadId,
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
           base::BindRepeating(&DownloadsPauseFunction::PauseCallback,
                               weak_ptr_factory_.GetWeakPtr()));
 
@@ -526,7 +545,8 @@ ExtensionFunction::ResponseAction DownloadsResumeFunction::Run() {
   call_downloads_resume_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().Resume(
-          downloadId,
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
           base::BindRepeating(&DownloadsResumeFunction::ResumeCallback,
                               weak_ptr_factory_.GetWeakPtr()));
 
@@ -582,7 +602,8 @@ ExtensionFunction::ResponseAction DownloadsCancelFunction::Run() {
   call_downloads_cancel_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().Cancel(
-          downloadId,
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
           base::BindRepeating(&DownloadsCancelFunction::CancelCallback,
                               weak_ptr_factory_.GetWeakPtr()));
 
@@ -638,9 +659,11 @@ ExtensionFunction::ResponseAction DownloadsAcceptDangerFunction::Run() {
   call_downloads_accept_danger_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().AcceptDanger(
-          downloadId, base::BindRepeating(
-                          &DownloadsAcceptDangerFunction::AcceptDangerCallback,
-                          weak_ptr_factory_.GetWeakPtr()));
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
+          base::BindRepeating(
+              &DownloadsAcceptDangerFunction::AcceptDangerCallback,
+              weak_ptr_factory_.GetWeakPtr()));
 
   call_downloads_accept_danger_ = false;
 
@@ -696,6 +719,8 @@ ExtensionFunction::ResponseAction DownloadsSetUiOptionsFunction::Run() {
   ExDownloadsUiOptions options;
   options.enabled = params->options.enabled;
   options.extensionId = extension_id();
+  options.contextType = GetExtensionContextType(browser_context());
+  options.includeIncognitoInfo = include_incognito_information();
 
   call_downloads_set_ui_options_ = true;
   bool success =
@@ -757,6 +782,8 @@ ExtensionFunction::ResponseAction DownloadsSetShelfEnabledFunction::Run() {
   ExDownloadsUiOptions options;
   options.enabled = params->enabled;
   options.extensionId = extension_id();
+  options.contextType = GetExtensionContextType(browser_context());
+  options.includeIncognitoInfo = include_incognito_information();
 
   call_downloads_set_shelf_enabled_ = true;
   bool success =
@@ -815,8 +842,10 @@ ExtensionFunction::ResponseAction DownloadsShowFunction::Run() {
   call_downloads_show_ = true;
   bool success =
       OHOS::NWeb::NWebExtensionDownloadCefDelegate::GetInstance().Show(
-          downloadId, base::BindRepeating(&DownloadsShowFunction::ShowCallback,
-                                          weak_ptr_factory_.GetWeakPtr()));
+          downloadId, GetExtensionContextType(browser_context()),
+          include_incognito_information(),
+          base::BindRepeating(&DownloadsShowFunction::ShowCallback,
+                              weak_ptr_factory_.GetWeakPtr()));
 
   call_downloads_show_ = false;
 
@@ -873,6 +902,8 @@ ExtensionFunction::ResponseAction DownloadsSearchFunction::Run() {
 
   ExDownloadsQueryInfo queryInfo;
   GetSearchDownloadQueryInfoParams(params, queryInfo);
+  queryInfo.contextType = GetExtensionContextType(browser_context());
+  queryInfo.includeIncognitoInfo = include_incognito_information();
 
   call_downloads_search_ = true;
   bool success =
@@ -1043,6 +1074,9 @@ ExtensionFunction::ResponseAction DownloadsGetFileIconFunction::Run() {
       (*(iconOption.size) != 16 && *(iconOption.size) != 32)) {
     return RespondNow(Error("Invalid `size`. Must be either `16` or `32`."));
   }
+
+  iconOption.contextType = GetExtensionContextType(browser_context());
+  iconOption.includeIncognitoInfo = include_incognito_information();
 
   call_downloads_getfileicon_ = true;
   bool success =

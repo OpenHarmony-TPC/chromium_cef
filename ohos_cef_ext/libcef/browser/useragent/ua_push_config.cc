@@ -62,12 +62,6 @@ std::optional<OSPositionScheme> UAPushConfig::LoadConfigFromFile(
   if (!os_compatible || !os_compatible->is_list()) {
     return std::nullopt;
   }
-  return ParseOSCompatibleData(os_compatible);
-}
-
-std::optional<OSPositionScheme> UAPushConfig::ParseOSCompatibleData(
-    base::Value* os_compatible) {
-  LOG(INFO) << kUAPushLogTag << "ParseOSCompatibleData begin ";
   std::string bundle_name = OHOS::NWeb::OhosAdapterHelper::GetInstance()
                                 .GetSystemPropertiesInstance()
                                 .GetBundleName();
@@ -75,6 +69,13 @@ std::optional<OSPositionScheme> UAPushConfig::ParseOSCompatibleData(
     LOG(WARNING) << kUAPushLogTag << "bundle_name is empty";
     return std::nullopt;
   }
+  return ParseOSCompatibleData(os_compatible, bundle_name);
+}
+
+std::optional<OSPositionScheme> UAPushConfig::ParseOSCompatibleData(
+    base::Value* os_compatible,
+    const std::string& bundle_name) {
+  LOG(INFO) << kUAPushLogTag << "ParseOSCompatibleData begin ";
   OSPositionScheme os_position_str;
   for (const auto& it : os_compatible->GetList()) {
     const base::Value::Dict* dict_val = it.GetIfDict();
@@ -97,16 +98,19 @@ std::optional<OSPositionScheme> UAPushConfig::ParseOSCompatibleData(
     if (!device_type_list || device_type_list->empty()) {
       return std::nullopt;
     }
+    std::set<std::string> url_and_device_flag;
     for (const auto& val : *trust_list) {
       const std::string* url = val.GetIfString();
-      if (!url || bundle_name != *url) {
+      if (!url || bundle_name != *url || url_and_device_flag.count(*url)) {
         continue;
       }
+      url_and_device_flag.insert(*url);
       for (const auto& device_type : *device_type_list) {
         const std::string* device_type_val = device_type.GetIfString();
-        if (!device_type_val) {
+        if (!device_type_val || url_and_device_flag.count(*device_type_val)) {
           continue;
         }
+        url_and_device_flag.insert(*device_type_val);
         auto supplement_dict_val =
             GetSupplement(*device_type_val, *os_supplement);
         UpdateOsPositionStr(os_position_str, std::move(supplement_dict_val),
@@ -158,10 +162,10 @@ void UAPushConfig::DidLoadConfigFromFile(
   LOG(INFO) << kUAPushLogTag << "success to save config info to prefs";
 }
 
-std::optional<OSPostionPrefsInfo> UAPushConfig::GetLastOsPositionStr(
+std::optional<OSPositionPrefsInfo> UAPushConfig::GetLastOsPositionStr(
     const std::string& device_type) {
   return last_os_position_str_map_[device_type];
-};
+}
 
 void UAPushConfig::ReadConfigInfoFromPrefs() {
   LOG(INFO) << kUAPushLogTag << "start ReadConfigInfoFromPrefs";
@@ -215,7 +219,7 @@ void UAPushConfig::UpdateLastOsPositionStr(
         it->second.front_str = it->second.front_str + *dict_supplement;
       } else {
         last_os_position_str_map_[*dict_device_type] =
-            OSPostionPrefsInfo(*dict_supplement, "");
+            OSPositionPrefsInfo(*dict_supplement, "");
       }
       continue;
     }
@@ -224,7 +228,7 @@ void UAPushConfig::UpdateLastOsPositionStr(
         it->second.back_str = it->second.back_str + *dict_supplement;
       } else {
         last_os_position_str_map_[*dict_device_type] =
-            OSPostionPrefsInfo("", *dict_supplement);
+            OSPositionPrefsInfo("", *dict_supplement);
       }
       continue;
     }

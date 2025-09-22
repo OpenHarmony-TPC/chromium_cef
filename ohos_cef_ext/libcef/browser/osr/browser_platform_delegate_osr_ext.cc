@@ -204,12 +204,7 @@ void CefBrowserPlatformDelegateOsrExt::SendTouchpadFlingEvent(
     return;
   }
 
-  blink::WebGestureEvent fling_cancel =
-      native_delegate_->TranslateTouchpadFlingEvent(event);
-  fling_cancel.data.fling_start.target_viewport = false;
-  fling_cancel.SetType(blink::WebInputEvent::Type::kGestureFlingCancel);
-  view->AsArkWebRenderWidgetHostViewOSRExt()->SendTouchpadFlingEvent(
-      fling_cancel);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 
   blink::WebGestureEvent fling_start =
       native_delegate_->TranslateTouchpadFlingEvent(event);
@@ -466,6 +461,16 @@ void CefBrowserPlatformDelegateOsrExt::SetNativeInnerWeb(bool isInnerWeb) {
 
 void CefBrowserPlatformDelegateOsrExt::SetEnableCustomVideoPlayer(bool flag){
   custom_video_player_enable_ = flag;
+}
+
+void CefBrowserPlatformDelegateOsrExt::OnNativeEmbedObjectParamChange(
+    const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data)
+{
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->OnNativeEmbedObjectParamChange(
+        native_param_data);
+  }
 }
 #endif
 #if BUILDFLAG(ARKWEB_AI)

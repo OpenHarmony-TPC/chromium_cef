@@ -24,11 +24,7 @@ class SidePanelSetOptionsFunction : public SidePanelApiFunction {
  private:
   ~SidePanelSetOptionsFunction() override = default;
   ResponseAction RunFunction() override;
-  static void OnSetOptions(const base::WeakPtr<SidePanelSetOptionsFunction>& function,
-                           const std::optional<std::string>& error);
-  bool call_on_set_options_ = false;
-  ResponseAction RunFunctionForInclude(std::optional<api::side_panel::SetOptions::Params>& params);
-  base::WeakPtrFactory<SidePanelSetOptionsFunction> weak_ptr_factory_{this};
+  void RunFunctionForInclude(std::optional<api::side_panel::SetOptions::Params>& params);
 };
  
 class SidePanelOpenFunction : public SidePanelApiFunction {

@@ -183,6 +183,11 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 
 #include "arkweb/chromium_ext/components/js_injection/js_communication_host_utils.h"
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "libcef/browser/dom_distiller/oh_dom_distiller_manager.h"
+#include "libcef/browser/dom_distiller/oh_self_deleting_request_delegate.h"
+#endif // ARKWEB_READER_MODE
+
 const char kNWebId[] = "nweb_id";
 #endif
 namespace {
@@ -475,6 +480,25 @@ void ArkWebBrowserHostExtImpl::CreateWebPrintDocumentAdapter(
 
   ohos_print_manager->CreateWebPrintDocumentAdapter(jobName,
                                                     webPrintDocumentAdapter);
+}
+
+void ArkWebBrowserHostExtImpl::CreateWebPrintDocumentAdapterV2(
+    const CefString& jobName,
+    void** adapter) {
+  content::RenderFrameHost* rfh_to_use =
+      printing::OhosPrintManager::GetRenderFrameHostToUse(GetWebContents());
+  if (!rfh_to_use) {
+    LOG(ERROR) << "rfh_to_use is nullptr";
+    return;
+  }
+  auto* ohos_print_manager = printing::OhosPrintManager::FromWebContents(
+      content::WebContents::FromRenderFrameHost(rfh_to_use));
+  if (!ohos_print_manager) {
+    LOG(ERROR) << "ohos_print_manager is nullptr";
+    return;
+  }
+
+  ohos_print_manager->CreateWebPrintDocumentAdapterV2(jobName, adapter);
 }
 
 void ArkWebBrowserHostExtImpl::SetPrintBackground(bool enabled) {
@@ -879,7 +903,7 @@ void ArkWebBrowserHostExtImpl::SetNWebId(int NWebID) {
 #endif  // BUILDFLAG(ARKWEB_WEBRTC)
 }
 
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 void ArkWebBrowserHostExtImpl::EnableAppLinking(bool enable) {
   is_arkweb_applinking_enabled_ = enable;
 }
@@ -887,7 +911,7 @@ void ArkWebBrowserHostExtImpl::EnableAppLinking(bool enable) {
 bool ArkWebBrowserHostExtImpl::IsAppLinkingEnabled() const {
   return is_arkweb_applinking_enabled_;
 }
-#endif // BUILDFLAG(IS_ARKWEB)
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 
 int ArkWebBrowserHostExtImpl::GetNWebId() {
 #if BUILDFLAG(ARKWEB_EXT_DOWNLOAD)
@@ -1776,12 +1800,15 @@ void ArkWebBrowserHostExtImpl::GetImageFromCacheEx(const CefString& url,
   auto frame = GetMainFrame();
   if (web_contents && frame && frame->IsValid()) {
     content::RenderFrameHost* rfh = web_contents->GetPrimaryMainFrame();
-    rfh->GetImageFromCache(
-        url.ToString(),
-        base::BindOnce(&ArkwebFrameHostExtImpl::OnGetImageFromCacheEx,
-                       static_cast<ArkwebFrameHostExtImpl*>(frame.get()),
-                       url.ToString(), command_id));
-    return;
+   if (rfh) {
+      LOG(INFO) << "ArkWebBrowserHostExtImpl::GetImageFromCacheEx";
+      rfh->GetImageFromCache(
+          url.ToString(),
+          base::BindOnce(&ArkwebFrameHostExtImpl::OnGetImageFromCacheEx,
+                         static_cast<ArkwebFrameHostExtImpl*>(frame.get()),
+                         url.ToString(), command_id));
+    }
+   return;
   }
 #endif
 }
@@ -1827,7 +1854,7 @@ void ArkWebBrowserHostExtImpl::GetOverScrollOffset(float* offset_x,
 #endif
 
 void ArkWebBrowserHostExtImpl::SetForceEnableZoom(bool forceEnableZoom) {
-#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM)
+#if BUILDFLAG(ARKWEB_EXT_FORCE_ZOOM) || BUILDFLAG(ARKWEB_ZOOM)
   if (!GetWebContents()) {
     return;
   }
@@ -3526,8 +3553,10 @@ void ArkWebBrowserHostExtImpl::PutUserAgent(const CefString& ua, bool from_app) 
       (ua.empty() || ua.length() == 0)) {
     user_agent = DefaultUserAgent();
   }
-  GetWebContents()->SetUserAgentOverride(
-      blink::UserAgentOverride::UserAgentOnly(user_agent), true);
+  blink::UserAgentOverride user_agent_override =
+      blink::UserAgentOverride::UserAgentOnly(user_agent);
+  user_agent_override.from_app = true;
+  GetWebContents()->SetUserAgentOverride(user_agent_override, true);
 #else
   GetWebContents()->SetUserAgentOverride(
       blink::UserAgentOverride::UserAgentOnly(ua), true);
@@ -3854,5 +3883,64 @@ void ArkWebBrowserHostExtImpl::OnBrowserBackground() {
   }
   LOG(INFO) << "ArkWebBrowserHostExtImpl::OnBrowserBackground";
   web_contents->OnBrowserBackground();
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+void ArkWebBrowserHostExtImpl::Distill(const std::string& guid, const DistillOptions& distill_options,
+  CefRefPtr<CefDistillCallback> callback) {
+  auto web_contents = GetWebContents();
+  if (!web_contents || !callback) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::Distill "
+                  "callback is nullptr or web_contents is null";
+    return;
+  }
+  oh_dom_distiller::DistillResultCallback distill_result_callback =
+    base::BindOnce(
+      [](CefRefPtr<CefDistillCallback> callback,
+        const std::string& guid, const std::string& content) {
+        if (callback) {
+          callback->OnDistillCallback(guid, content);
+        }
+      },
+      callback, guid);
+  oh_dom_distiller::OhDomDistillerManager::GetInstance()->DistillCurrentPage(
+    web_contents, distill_options, std::move(distill_result_callback));
+}
+
+void ArkWebBrowserHostExtImpl::AbortDistill() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::AbortDistill, web_contents is null";
+    return;
+  }
+  oh_dom_distiller::OhDomDistillerManager::GetInstance()->AbortDistill(web_contents);
+}
+#endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
+                                                   CefString& frame_url) {
+  frame_id = -1;
+  frame_url.clear();
+
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+
+  auto frame = web_contents->GetFocusedFrame();
+  if (!frame) {
+    LOG(ERROR) << "web_contents GetFocusedFrame null";
+    return;
+  }
+
+  // Extension API frame ID of the top-level frame.
+  constexpr int32_t kTopFrameId = 0;
+  frame_id = frame->IsInPrimaryMainFrame()
+                 ? kTopFrameId
+                 : frame->GetFrameTreeNodeId().value();
+  frame_url = frame->GetLastCommittedURL().spec();
 }
 #endif

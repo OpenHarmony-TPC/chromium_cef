@@ -83,6 +83,8 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
                                              bool visibility) {}
   virtual void SetNativeInnerWeb(bool isInnerWeb) {}
   virtual void SetEnableCustomVideoPlayer(bool flag) {}
+  virtual void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data) {}
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -127,6 +129,8 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void SetToken(void* token) {}
   virtual void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                              void** webPrintDocumentAdapter);
+  virtual void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                               void** adapter);
   virtual void SetPrintBackground(bool enable) {}
   virtual bool GetPrintBackground() { return false; }
 #endif  // BUILDFLAG(ARKWEB_PRINT)

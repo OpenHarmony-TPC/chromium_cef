@@ -25,6 +25,8 @@
 #include "extensions/browser/event_router.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/common/mojom/context_type.mojom.h"
+#include "extensions/common/mojom/context_type.mojom-forward.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
 #include "ohos_nweb/src/nweb_common.h"
@@ -128,10 +130,18 @@ NWebContextMenusItem GetNWebContextMenusItem(extensions::MenuItem* menu_item) {
   item.type = GetTypeStr(menu_item->type());
   item.visible = menu_item->visible();
   item.extensionId = menu_item->extension_id();
+  return item;
+}
+
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item) {
+  NWebContextMenusItemV2 item;
+  item.item = GetNWebContextMenusItem(menu_item);
   item.isOffTheRecord = menu_item->incognito();
   return item;
 }
- 
+#endif
+
 void SetContextMenusEventProperties(base::Value::Dict& properties,
                                     ContextMenusOnClickedData& data) {
   properties.Set("menuItemId", data.menuItemId);
@@ -208,26 +218,22 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
   base::Value::List args;
   args.Append(std::move(properties));
   if (tab) {
-    args.Append(extensions::GetTabValue(*tab));
+    extensions::ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = {
+        extensions::ExtensionTabUtil::kDontScrubTab, extensions::ExtensionTabUtil::kDontScrubTab};
+    args.Append(extensions::GetTabValue(*tab, scrub_tab_behavior));
     if (tab->id.has_value()) {
       ExtensionContextMenusInvokeActiveTab(browser_context, tab->id.value(), extension_id);
     }
   }
   {
-    auto event = std::make_unique<extensions::Event>(
-        extensions::events::CONTEXT_MENUS,
-        "contextMenus",
-        args.Clone(),
-        browser_context);
+    auto event = std::make_unique<extensions::Event>(extensions::events::CONTEXT_MENUS,
+        "contextMenus", args.Clone(), browser_context);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
   {
-    auto event = std::make_unique<extensions::Event>(
-        extensions::events::CONTEXT_MENUS_ON_CLICKED,
-        extensions::api::context_menus::OnClicked::kEventName,
-        std::move(args),
-        browser_context);
+    auto event = std::make_unique<extensions::Event>(extensions::events::CONTEXT_MENUS_ON_CLICKED,
+        extensions::api::context_menus::OnClicked::kEventName, std::move(args), browser_context);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
@@ -274,7 +280,8 @@ void CefWebExtensionMenuManager::OnContextMenusCreate(const std::string& extensi
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
     if (NWebExtensionContextMenusDispatcher::HasOnCreateNativeByPbCallback()) {
-      NWebExtensionContextMenusDispatcher::OnCreateNativeByPb(extension_id, item);
+      NWebContextMenusItemV2 item_v2 = GetNWebContextMenusItemV2(menu_item);
+      NWebExtensionContextMenusDispatcher::OnCreateNativeByPb(extension_id, item_v2);
     } else {
       NWebExtensionContextMenusDispatcher::OnCreateNative(extension_id, item);
     }
@@ -291,7 +298,8 @@ void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extensi
   NWebContextMenusItem item = GetNWebContextMenusItem(menu_item);
   if (IsNativeApiEnable()) {
     if (NWebExtensionContextMenusDispatcher::HasOnUpdateNativeByPbCallback()) {
-      NWebExtensionContextMenusDispatcher::OnUpdateNativeByPb(extension_id, item);
+      NWebContextMenusItemV2 item_v2 = GetNWebContextMenusItemV2(menu_item);
+      NWebExtensionContextMenusDispatcher::OnUpdateNativeByPb(extension_id, item_v2);
     } else {
       NWebExtensionContextMenusDispatcher::OnUpdateNative(extension_id, item);
     }
@@ -300,13 +308,22 @@ void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extensi
   }
 #endif
 }
- 
+
+NO_SANITIZE("cfi-icall")
+void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
+    int menu_item_id) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, menu_item_id, nullptr);
+#endif
+}
+
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
     const std::string& menu_item_id) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (IsNativeApiEnable()) {
-    NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, menu_item_id);
+    NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, 0,
+                                                        menu_item_id.c_str());
   } else {
     NWebExtensionContextMenusDispatcher::OnRemove(extension_id, menu_item_id);
   }

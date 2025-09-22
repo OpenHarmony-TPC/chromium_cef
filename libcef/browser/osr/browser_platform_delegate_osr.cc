@@ -198,7 +198,7 @@ void CefBrowserPlatformDelegateOsr::SendMouseWheelEvent(
   }
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view , event);
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingMouseWheel(view, event);
 #endif
 
   blink::WebMouseWheelEvent web_event =

@@ -331,7 +331,7 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       }
       NotifyTouchSelectionChanged(true);
       if (quick_menu_requested_) {
-        if (controller &&
+        if (controller && !controller->AsTouchSelectionControllerExt()->IsTapEvent() &&
             controller->AsTouchSelectionControllerExt()->IsLongPressEvent()) {
           if (auto client = browser->client()) {
             if (auto render = client->GetRenderHandler()) {
@@ -339,8 +339,8 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
                   ->ResetLongPressEvent();
             }
           }
+          ShowQuickMenu();
         }
-        ShowQuickMenu();
       }
       break;
     case ui::SELECTION_HANDLES_CLEARED:
@@ -371,8 +371,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::OnSelectionEvent(
       break;
     case ui::SELECTION_HANDLE_DRAG_STOPPED:
 #if BUILDFLAG(ARKWEB_MENU_HANDLE)
-      isCopy_ = false;
-      ShowQuickMenu();
+      if (isCopy_) {
+        isCopy_ = false;
+        ShowQuickMenu();
+      }
 #endif // ARKWEB_MENU_HANDLE
       [[fallthrough]];
     case ui::INSERTION_HANDLE_DRAG_STOPPED:
@@ -690,8 +692,21 @@ void ArkWebTouchSelectionControllerClientOSRExt::
     }
   }
 }
-#endif
 
+bool ArkWebTouchSelectionControllerClientOSRExt::IsShowHandle() {
+  if (!rwhv_) {
+    return false;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (browser && browser->client()) {
+    auto handler = browser->client()->GetContextMenuHandler();
+    if (handler) {
+      return handler->IsShowHandle();
+    }
+  }
+  return false;
+}
+#endif
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
 void ArkWebTouchSelectionControllerClientOSRExt::SelectionTextNotEmpty(
     bool has_selection) {
@@ -1051,6 +1066,19 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyShowMagnifier() {
     if (handler) {
       handler->ShowMagnifier();
     }
+  }
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::
+    ConvertClientClippedSelectionBounds(gfx::Rect& clipped_selection_bounds) {
+  if(rwhv_ && rwhv_->AsArkWebRenderWidgetHostViewOSRExt()) {
+    CefRect converted_rect(
+        clipped_selection_bounds.x(), clipped_selection_bounds.y(),
+        clipped_selection_bounds.width(), clipped_selection_bounds.height());
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnSelectAreaChanged(
+        converted_rect, true);
+    clipped_selection_bounds = {converted_rect.x, converted_rect.y,
+                                converted_rect.width, converted_rect.height};
   }
 }
 #endif

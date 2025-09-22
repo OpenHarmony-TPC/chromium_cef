@@ -57,7 +57,8 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   virtual void OnRefreshAccessedHistory(CefRefPtr<CefBrowser> browser,
                                         CefRefPtr<CefFrame> frame,
                                         const CefString& url,
-                                        bool isReload) {}
+                                        bool isReload,
+                                        bool isMainFrame) {}
 
   ///
   /// Notify the body that is loading the Http response to make it visible,

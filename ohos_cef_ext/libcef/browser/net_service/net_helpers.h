@@ -58,6 +58,10 @@ struct CustomDnsEntry {
 };
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+constexpr static int32_t kDefaultSocketIdleTimeout = 300;
+#endif
+
 class NETHELPERS_EXPORT NetHelpers {
  public:
   static bool ShouldBlockContentUrls();
@@ -123,6 +127,13 @@ class NETHELPERS_EXPORT NetHelpers {
   static bool ShouldAllowInsecurePrivateNetworkRequests();
   static void SetPrivateNetworkAccess(bool enable);
   static bool GetPrivateNetworkAccess();
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_SERVICE)
+  static int32_t socket_idle_timeout;
+  static int32_t GetDefaultSocketIdleTimeout();
+  static void SetSocketIdleTimeout(int32_t timeout);
+  static int32_t GetSocketIdleTimeout();
 #endif
 };
 

@@ -114,6 +114,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void SetMouseEventResult(bool result, bool stopPropagation);
   void SetNativeInnerWeb(bool isInnerWeb);
   void SetEnableCustomVideoPlayer(bool flag);
+  void OnNativeEmbedObjectParamChange(
+      const ArkWebRenderHandlerExt::CefNativeParamData& native_param_data);
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
@@ -153,6 +155,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void ResetGestureDetection(bool is_lost_focus) override;
   void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
                               RenderWidgetHostViewBase* updated_view) override;
+  void OnSelectAreaChanged(CefRect& select_area, bool need_report);
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)

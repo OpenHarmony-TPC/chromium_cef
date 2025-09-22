@@ -8,7 +8,13 @@
 
 #include "cef/libcef/browser/alloy/alloy_browser_host_impl.h"
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#include "chrome/browser/extensions/extension_keybinding_registry.h"
+#endif
 class AlloyBrowserHostImplExt : public AlloyBrowserHostImpl
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+                                , public extensions::ExtensionKeybindingRegistry::Delegate
+#endif
 {
 public:
   AlloyBrowserHostImplExt(
@@ -60,6 +66,8 @@ public:
     const std::string& embed_id,
     bool visibility) override;
   void SetEnableCustomVideoPlayer(bool flag) override;
+  void OnNativeEmbedObjectParamChange(
+      const content::NativeEmbedParamDataInfo& native_param_info) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_FOCUS)
@@ -88,6 +96,8 @@ public:
   void SetToken(void* token) override;
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter) override;
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter) override;
   void SetPrintBackground(bool enable) override;
   bool GetPrintBackground() override;
  #endif
@@ -249,6 +259,9 @@ public:
 #endif  // ARKWEB_HTML_SELECT
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  content::WebContents* GetWebContentsForExtension() override;
+  void AcceleratorPressedUI(const ui::Accelerator& accelerator,
+                            content::BrowserContext* browser_context);
   bool WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event);
@@ -269,6 +282,14 @@ public:
       media::mojom::MediaInfoForVASTPtr media_info_ptr,
       const content::MediaPlayerId& media_player_id) override;
 #endif  // ARKWEB_VIDEO_ASSISTANT
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  void OnIsPageDistillable(
+      int page_type,
+      const std::string& distillable_page_url,
+      const std::string& title) override;
+  bool IsForDistillerPage() override;
+#endif
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;

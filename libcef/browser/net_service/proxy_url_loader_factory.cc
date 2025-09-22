@@ -15,6 +15,7 @@
 #include "base/trace_event/trace_event.h"
 #endif
 #include "arkweb/build/features/features.h"
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/origin_whitelist_impl.h"
 #include "cef/libcef/browser/thread_util.h"
@@ -295,7 +296,11 @@ class InterceptedRequest : public network::mojom::URLLoader,
                    int32_t intra_priority_value) override;
   void PauseReadingBodyFromNet() override;
   void ResumeReadingBodyFromNet() override;
-
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+  base::WeakPtr<InterceptedRequest> GetWeakPtr() {
+    return weak_factory_.GetWeakPtr();
+  }
+#endif
   int32_t id() const { return id_; }
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
@@ -623,7 +628,8 @@ void InterceptedRequest::Restart() {
   struct NetHelperSetting setting;
   factory_->request_handler_->GetSettingOfNetHelper(request_.url, setting);
   if (IsURLBlocked(request_.url, setting)) {
-    LOG(WARNING) << "File url access denied! url=" << request_.url.spec();
+    LOG(WARNING) << "File url access denied! url="
+                 << url::LogUtils::ConvertUrlWithMask(request_.url.spec());
     SendErrorAndCompleteImmediately(net::ERR_ACCESS_DENIED);
     return;
   }
@@ -1652,11 +1658,17 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
       std::move(receiver), std::move(client), std::move(target_factory_clone));
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   bool is_redirect = false;
-  if (requests_.find(request_id) != requests_.end()) {
+  auto it = requests_.find(request_id);
+  if (it != requests_.end()) {
     LOG(INFO) << "Use same request id for redirect.";
     is_redirect = true;
+    if (!it->second.second) {
+      it->second.first.release();
+    }
+    requests_.erase(it);
   }
-  requests_[request_id] = base::WrapUnique(req);
+  requests_[request_id] =
+      std::make_pair(base::WrapUnique(req), req->GetWeakPtr());
   req->Restart(is_redirect);
 #else
   requests_.insert(std::make_pair(request_id, base::WrapUnique(req)));
@@ -1676,7 +1688,11 @@ void ProxyURLLoaderFactory::OnLoaderCreated(
   CEF_REQUIRE_IOT();
   auto request_it = requests_.find(request_id);
   if (request_it != requests_.end()) {
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+    request_it->second.first->OnLoaderCreated(std::move(receiver));
+#else
     request_it->second->OnLoaderCreated(std::move(receiver));
+#endif
   }
 }
 

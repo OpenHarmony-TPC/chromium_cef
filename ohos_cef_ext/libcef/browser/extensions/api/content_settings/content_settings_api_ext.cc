@@ -106,18 +106,10 @@ void NWebExtensionContentSettingsGetParamRelease(NWebExtensionContentSettingsGet
     if (param->incognito) {
         delete (param->incognito);
     }
-    if (param->primaryUrl) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
-    }
-    if (param->secondaryUrl) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
-    }
-    if (param->type) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
-    }
-    if (param->extensionId) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
-    }
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryUrl);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryUrl);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
 }
 
 void NWebExtensionContentSettingsSetParamRelease(NWebExtensionContentSettingsSetParam* param) 
@@ -125,24 +117,12 @@ void NWebExtensionContentSettingsSetParamRelease(NWebExtensionContentSettingsSet
     if (!param) {
         return;
     }
-    if (param->primaryPattern) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
-    }
-    if (param->scope) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
-    }
-    if (param->secondaryPattern) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
-    }
-    if (param->contentSetting) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
-    }
-    if (param->type) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
-    }
-    if (param->extensionId) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
-    }
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->primaryPattern);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->secondaryPattern);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->contentSetting);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
 }
 
 void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsClearParam* param) 
@@ -150,15 +130,9 @@ void NWebExtensionContentSettingsClearParamRelease(NWebExtensionContentSettingsC
     if (!param) {
         return;
     }
-    if (param->scope) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
-    }
-    if (param->type) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
-    }
-    if (param->extensionId) {
-       NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
-    }
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->scope);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->type);
+    NWEB_CONTENTSETTINGS_SAFE_FREE(param->extensionId);
 }
 
 ContentSetting StringToContentSetting(const std::string &str)

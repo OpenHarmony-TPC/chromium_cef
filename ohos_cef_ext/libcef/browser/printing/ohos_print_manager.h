@@ -26,6 +26,7 @@
 #include "include/cef_base.h"
 #include "printing/print_settings.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
+#include "ohos_nweb/include/nweb_print_manager_adapter.h"
 
 namespace base {
 class TaskRunner;
@@ -36,8 +37,20 @@ namespace printing {
 struct PrintAttrs {
   std::string jobId;
   OHOS::NWeb::PrintAttributesAdapter attrs;
-  uint32_t fd;
+  int32_t fd;
   std::shared_ptr<OHOS::NWeb::PrintWriteResultCallbackAdapter> callback;
+};
+
+class PrintWriteResultCallbackAdapterV2 :
+    public OHOS::NWeb::PrintWriteResultCallbackAdapter {
+public:
+    explicit PrintWriteResultCallbackAdapterV2(
+        std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> cb)
+        : cb_(cb) {}
+
+    void WriteResultCallback(std::string jobId, uint32_t code) override;
+private:
+    std::shared_ptr<OHOS::NWeb::NWebPrintWriteResultCallbackAdapter> cb_;
 };
 
 class OhosPrintManager : public printing::PrintManager,
@@ -75,6 +88,8 @@ class OhosPrintManager : public printing::PrintManager,
   void SetPrintStatus(bool is_print_now, uint32_t state);
   void CreateWebPrintDocumentAdapter(const CefString& jobName,
                                      void** webPrintDocumentAdapter);
+  void CreateWebPrintDocumentAdapterV2(const CefString& jobName,
+                                       void** adapter);
   void SetPrintBackground(bool enable);
   bool GetPrintBackground();
   void CheckForCancel(int32_t preview_ui_id,
@@ -108,6 +123,7 @@ class OhosPrintManager : public printing::PrintManager,
   void CheckCancel(CheckCancelCallback callback) override;
   void PrintPdfRequested() override;
 
+  static void RunCallback(const std::string& jobId, int32_t result);
   static void OnDidPrintDocumentWritingDone(
       const PdfWritingDoneCallback& callback,
       DidPrintDocumentCallback did_print_document_cb,

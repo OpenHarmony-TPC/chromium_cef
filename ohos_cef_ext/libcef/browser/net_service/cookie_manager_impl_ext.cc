@@ -26,6 +26,9 @@
 #include "net/cookies/cookie_util.h"
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "services/network/public/cpp/resource_request.h"
+#endif
 #include "services/network/public/mojom/cookie_manager.mojom.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
 #include "url/gurl.h"
@@ -44,6 +47,11 @@
 #if BUILDFLAG(ARKWEB_COOKIE)
 #include "cef/ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
 #endif // BUILDFLAG(ARKWEB_COOKIE)
+
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+#include "arkweb/chromium_ext/base/process/process_handle_posix_ex.h"
+#include "third_party/ohos_ndk/includes/ohos_adapter/res_sched_client_adapter.h"
+#endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 
 using network::mojom::CookieManager;
 
@@ -449,6 +457,18 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
 
   base::PathService::Get(base::DIR_CACHE, &cookie_store_path_);
   cookie_store_path_ = cookie_store_path_.Append("Cookies");
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  bool cmd_value = false;
+  if (command_line) {
+    cmd_value = command_line->HasSwitch(switches::kEnableReportCookieMonsterClient);
+  }
+  if (cmd_value) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportKeyThread(
+      OHOS::NWeb::ResSchedStatusAdapter::THREAD_CREATED, base::GetCurrentRealPid(),
+      cookie_store_task_thread_.GetThreadRealId(), OHOS::NWeb::ResSchedRoleAdapter::USER_INTERACT);
+  }
+#endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 }
 
 void CefCookieManagerImplExt::Initialize(
@@ -963,7 +983,7 @@ void CefCookieManagerImplExt::LoadCookiesOnAsyncThread(
   CookieManager* cookie_manager = GetNetworkCookieManager();
   if (!cookie_manager) {
     GetCookieStore()->GetCookieListWithOptionsAsync(
-        url, options, std::move(cookie_partition_key_collection),
+        url, options, cookie_partition_key_collection,
         base::BindOnce(&CefCookieManagerImplExt::LoadCookiesCallback,
                        base::Unretained(this), std::move(callback)));
     return;
@@ -1028,3 +1048,39 @@ void CefCookieManagerImplExt::SaveCookiesOnAsyncThread(
       net::CookieAccessResult(net::CookieInclusionStatus(
           net::CookieInclusionStatus::EXCLUDE_UNKNOWN_ERROR)));
 }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+bool CefCookieManagerImplExt::CanSaveOrLoadCookies(const network::ResourceRequest& request) {
+  if (!host_content_settings_map_) {
+    return true;
+  }
+
+  ContentSettingsForOneType cookie_settings =
+      host_content_settings_map_->GetSettingsForOneType(
+          ContentSettingsType::COOKIES);
+
+  const auto& entry = base::ranges::find_if(
+      cookie_settings, [&](const ContentSettingPatternSource& entry) {
+        // The primary pattern is for the request URL; the secondary pattern
+        // is for the first-party URL (which is the top-frame origin [if
+        // available] or the site-for-cookies).
+        return !entry.IsExpired() &&
+               entry.primary_pattern.Matches(request.url) &&
+               entry.secondary_pattern.Matches(request.url);
+      });
+  const ContentSettingPatternSource* match =
+      (entry == cookie_settings.end() ? nullptr : &*entry);
+  return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
+}
+
+void CefCookieManagerImplExt::UpdateHostContentSettingsMap() {
+  if (host_content_settings_map_) {
+    return;
+  }
+  auto cef_browser_context = browser_context_getter_.Run();
+  if (cef_browser_context) {
+    host_content_settings_map_ =
+        HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());
+  }
+}
+#endif

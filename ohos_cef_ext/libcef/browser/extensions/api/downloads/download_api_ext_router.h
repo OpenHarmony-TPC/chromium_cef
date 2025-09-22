@@ -15,6 +15,7 @@
 #ifndef CEF_LIBCEF_BROWSER_EXTENSIONS_DOWNLOADS_API_EXT_ROUTER_H_
 #define CEF_LIBCEF_BROWSER_EXTENSIONS_DOWNLOADS_API_EXT_ROUTER_H_
 
+#include "base/memory/raw_ptr.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/supports_user_data.h"
 #include "base/values.h"
@@ -33,7 +34,7 @@ struct dispatchEventInfo {
   bool include_incognito;
   Event::WillDispatchCallback will_dispatch_callback;
   base::Value arg;
-  content::BrowserContext* browser_context;
+  raw_ptr<content::BrowserContext> browser_context;
 };
 
 struct DetermineFilenameInternalInfo {
@@ -43,20 +44,20 @@ struct DetermineFilenameInternalInfo {
   const base::Time& suggesting_install_time;
   const ExtensionId& incumbent_extension_id;
   const base::Time& incumbent_install_time;
-  ExtensionId* winner_extension_id;
-  base::FilePath* determined_filename;
-  downloads::FilenameConflictAction* determined_conflict_action;
-  WarningSet* warnings;
+  raw_ptr<ExtensionId> winner_extension_id;
+  raw_ptr<base::FilePath> determined_filename;
+  raw_ptr<downloads::FilenameConflictAction> determined_conflict_action;
+  raw_ptr<WarningSet> warnings;
 };
 
 struct DetermineFilenameInfo {
-  content::BrowserContext* browser_context;
+  raw_ptr<content::BrowserContext> browser_context;
   bool include_incognito;
   const ExtensionId& ext_id;
   int download_id;
   const base::FilePath& const_filename;
   downloads::FilenameConflictAction conflict_action;
-  std::string* error;
+  raw_ptr<std::string> error;
 };
 
 /* downloadItemData */

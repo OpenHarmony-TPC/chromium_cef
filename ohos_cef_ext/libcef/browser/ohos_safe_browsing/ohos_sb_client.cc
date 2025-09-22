@@ -135,7 +135,8 @@ void SbClient::ShowBlockingPage() {
       }
 
       if (block_type == OHSBThreatType::THREAT_WARNING &&
-          policy == OHSBPolicyType::POLICY_HALF_POPUP) {
+          (policy == OHSBPolicyType::POLICY_DANGER_LABEL ||
+           policy == OHSBPolicyType::POLICY_HALF_POPUP)) {
         NotifySafeBrowsingCheckResult(block_type);
         return;
       }
@@ -167,6 +168,9 @@ void SbClient::SetEvilUrlPolicyAndHwCode(const GURL& url,
                                          OHSBThreatType block_type,
                                          int hw_code,
                                          const GURL& redirect_url) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+    return;
+  }
   BlockingPageInfo::SetBlockingPageInfo(web_contents(), url, policy, block_type,
                                         hw_code, redirect_url);
   content::NavigationEntry* pending_entry =
@@ -216,7 +220,8 @@ void SbClient::BlockingPageInfo::SetBlockingPageInfo(
   if (policy == OHSBPolicyType::POLICY_POPUP_AND_DANGER ||
       policy == OHSBPolicyType::POLICY_FORBIDDEN_PROHIBIT_ACCESS ||
       policy == OHSBPolicyType::POLICY_HALF_POPUP ||
-      policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS) {
+      policy == OHSBPolicyType::POLICY_CHILD_MODE_PROHIBIT_ACCESS ||
+      policy == OHSBPolicyType::POLICY_DANGER_LABEL) {
     SbBlockingPageInfo info(url, block_type, hw_code, policy, redirect_url);
     blocking_page_info_cache.Put(url, info);
   }
@@ -240,6 +245,9 @@ void SbClient::DisplayBlockingPage(const GURL& url,
                                    int policy,
                                    OHSBThreatType block_type,
                                    const std::string& app_locale) {
+  if (!web_contents() || web_contents()->IsBeingDestroyed()) {
+    return;
+  }
   LOG(INFO) << "SafeBrowsing " << __func__ << ", policy: " << policy
             << ", type: " << block_type;
   auto controller = std::make_unique<SbControllerClient>(

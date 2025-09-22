@@ -213,14 +213,18 @@ CertificateErrorCallback AllowAllCertificateError(
   }
 #endif
 
+  const GURL local_request_url(request_url);
+  const GURL local_origin_url(origin_url);
+  const std::string local_referrer(referrer);
+
   bool result;
   CefRefPtr<CefSSLInfo> sslInfo(new CefSSLInfoImpl(ssl_info));
   CefRefPtr<CefAllowCertificateErrorCallbackImpl> callbackImpl(
       new CefAllowCertificateErrorCallbackImpl(std::move(callback)));
 
-  result = OnCertificateError(web_contents, cert_error, sslInfo, request_url,
+  result = OnCertificateError(web_contents, cert_error, sslInfo, local_request_url,
                               is_main_frame_request, strict_enforcement,
-                              origin_url, referrer, callbackImpl, false);
+                              local_origin_url, local_referrer, callbackImpl, false);
   if (!result) {
     callback = callbackImpl->Disconnect();
     LOG_IF(ERROR, callback.is_null())
@@ -239,9 +243,9 @@ CertificateErrorCallback AllowAllCertificateError(
 
   CefRefPtr<CefAllowCertificateErrorCallbackImpl> mainCallbackImpl(
       new CefAllowCertificateErrorCallbackImpl(std::move(callback)));
-  result = OnCertificateError(web_contents, cert_error, sslInfo, request_url,
+  result = OnCertificateError(web_contents, cert_error, sslInfo, local_request_url,
                               is_main_frame_request, strict_enforcement,
-                              origin_url, referrer, mainCallbackImpl, true);
+                              local_origin_url, local_referrer, mainCallbackImpl, true);
   if (!result) {
     callback = mainCallbackImpl->Disconnect();
     LOG_IF(ERROR, callback.is_null())

@@ -39,6 +39,10 @@
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_distill_item.h"
+#endif // ARKWEB_READER_MODE
+
 class CefClient;
 
 ///
@@ -53,6 +57,13 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   ///
   virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
 };
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+class CefDistillCallback : public virtual CefBaseRefCounted {
+  public:
+  virtual void OnDistillCallback(const std::string& guid, const std::string& distill_info) = 0;
+};
+#endif // ARKWEB_READER_MODE
 
 /* ---------- ohos webview add begin --------- */
 ///
@@ -904,6 +915,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
       void** webPrintDocumentAdapter) = 0;
 
   ///
+  /// Create the Web print document adapter v2 of the UI framework
+  ///
+  virtual void CreateWebPrintDocumentAdapterV2(
+      const CefString& jobName,
+      void** adapter) = 0;
+
+  ///
   /// Set the over-scroll mode of web
   ///
   virtual void SetOverscrollMode(int mode) = 0;
@@ -1343,7 +1361,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void OnDataDetectorSelectText() = 0;
 #endif
 
-#if BUILDFLAG(IS_ARKWEB)
+#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
   /// 
   /// set applink enable
   ///
@@ -1353,7 +1371,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// get app link status
   ///
   virtual bool IsAppLinkingEnabled() const = 0;
-#endif
+#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
 
   ///
   /// Execute a string of JavaScript code in frames.
@@ -1374,6 +1392,19 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /*--cef()--*/
   virtual void OnBrowserBackground() = 0;
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  virtual void Distill(const std::string& guid, const DistillOptions& distill_options,
+    CefRefPtr<CefDistillCallback> callback) = 0;
+  virtual void AbortDistill() = 0;
+#endif // ARKWEB_READER_MODE
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  ///
+  /// get the focused frame info
+  ///
+  virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
 #endif
 };
 
