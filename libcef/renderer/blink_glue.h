@@ -130,6 +130,10 @@ BLINK_EXPORT extern const int64_t kInvalidFrameId;
 BLINK_EXPORT void PenTouchInputFocus(blink::WebNode webNode);
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
+#if defined(OHOS_INPUT_EVENTS)
+BLINK_EXPORT void PenTouchInputFocus(blink::WebNode webNode);   
+#endif // defined(OHOS_INPUT_EVENTS)                                                                                                                                                        
+
 }  // namespace blink_glue
 
 #endif  // CEF_LIBCEF_RENDERER_BLINK_GLUE_H_
