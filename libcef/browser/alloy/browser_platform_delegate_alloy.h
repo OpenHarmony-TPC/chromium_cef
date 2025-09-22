@@ -112,6 +112,13 @@ class CefBrowserPlatformDelegateAlloy : public CefBrowserPlatformDelegate {
   void WasOccluded(bool occluded) override {}
 #endif
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
+  bool OnStartBackgroundTask(int32_t type,
+                             const std::string& message) override {
+    return true;
+  }
+#endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
  protected:
   CefBrowserPlatformDelegateAlloy();
 
