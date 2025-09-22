@@ -10,10 +10,6 @@
 #include "net/cookies/canonical_cookie.h"
 
 namespace net_service::cookie_helper {
-bool CanSaveOrLoadCookies(
-    const CefBrowserContext::Getter& browser_context_getter,
-    const network::ResourceRequest& request);
-
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 bool ShouldForceIgnoreSiteForCookies(
     const CefBrowserContext::Getter& browser_context_getter,
