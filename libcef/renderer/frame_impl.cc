@@ -863,6 +863,43 @@ void CefFrameImpl::ContextLifecycleStateChanged(
     browser_->OnEnterBFCache();
   }
 }
+#if defined(OHOS_INPUT_EVENTS)
+void CefFrameImpl::SetFocusByPosition(float x, float y, cef::mojom::RenderFrame::SetFocusByPositionCallback callback) {
+  LOG(INFO) << "SetFocusByPosition in cef frame";
+  bool isEditable = false;
+  auto render_frame = content::RenderFrame::FromWebFrame(frame_);
+  if (!render_frame) {
+    LOG(ERROR) << "render_frame NULL";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  if (!render_frame->IsMainFrame()) {
+    LOG(ERROR) << "IsMainFrame false";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  blink::WebView* webview = render_frame->GetWebView();
+  if (!webview) {
+    LOG(ERROR) << "webview is NULL";
+    std::move(callback).Run(isEditable);
+    return;
+  }
+  const blink::WebHitTestResult result = webview->HitTestResultForTap(gfx::Point(x, y), gfx::Size(1, 1));
+  if (result.IsContentEditable() && result.GetNode().IsElementNode()) {
+    isEditable = true;
+    const blink::WebElement webElement = result.GetNode().To<blink::WebElement>();
+    if (!webElement.Focused() && webElement.IsFocusable()) {
+      std::move(callback).Run(isEditable);
+      LOG(INFO) << "can focus and do Focus";
+      // focus must be async so as not to block the thread
+      blink_glue::PenTouchInputFocus(result.GetNode());
+      return;
+    }
+  }
+  std::move(callback).Run(isEditable);
+  LOG(INFO) << "SetFocusByPosition cef frame done. isEditable:" << (isEditable ? "true" : "false");
+}
+#endif // defined(OHOS_INPUT_EVENTS)
 
 // Enable deprecation warnings on Windows. See http://crbug.com/585142.
 #if BUILDFLAG(IS_WIN)
