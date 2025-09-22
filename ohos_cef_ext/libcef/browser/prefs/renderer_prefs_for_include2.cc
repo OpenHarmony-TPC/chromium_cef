@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "cef/ohos_cef_ext/libcef/browser/net_service/cookie_manager_impl_ext.h"
+#include "content/public/browser/browser_context.h"
+#endif
+
 namespace renderer_prefs {
 
 #if BUILDFLAG(ARKWEB_COPY_OPTION)
@@ -140,5 +145,33 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   web.error_page_enabled = cef.error_page_enabled;
 #endif
 }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+void SetJsDefaultContent(content::WebContents* web_contents,
+                         blink::web_pref::WebPreferences& web) {
+  const base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  if (web_contents && command_line && command_line->HasSwitch(switches::kEnableNwebExExceptionList)) {
+    bool javascript_enabled = web.javascript_enabled;
+
+    // Update content setting default value
+    ContentSetting setting = javascript_enabled ? CONTENT_SETTING_ALLOW : CONTENT_SETTING_BLOCK;
+    content::BrowserContext* browser_context = web_contents->GetBrowserContext();
+    HostContentSettingsMap* host_content_settings_map =
+      HostContentSettingsMapFactory::GetForProfile(browser_context);
+    if (host_content_settings_map) {
+      host_content_settings_map->SetDefaultContentSetting(ContentSettingsType::JAVASCRIPT, setting);
+      LOG(INFO) << "JAVASCRIPT SetDefaultContentSetting, setting = " << int(setting);
+    }
+
+    // Update cookie manager host content settings map
+    bool is_off_the_record = browser_context ? browser_context->IsOffTheRecord() : false;
+    CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(is_off_the_record);
+    if (cookie_manager) {
+      cookie_manager->UpdateHostContentSettingsMap();
+    }
+  }
+}
+#endif
 
 }  // namespace renderer_prefs

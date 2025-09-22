@@ -22,44 +22,6 @@
 
 namespace net_service::cookie_helper {
 
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-bool CanSaveOrLoadCookies(
-    const CefBrowserContext::Getter& browser_context_getter,
-    const network::ResourceRequest& request) {
-  auto cef_browser_context = GetBrowserContext(browser_context_getter);
-  auto browser_context =
-      cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
-  if (!browser_context) {
-    LOG(ERROR) << "Can not get browser_context.";
-    return true;
-  }
-
-  HostContentSettingsMap* host_content_settings_map =
-      HostContentSettingsMapFactory::GetForProfile(browser_context);
-  if (!host_content_settings_map) {
-    LOG(ERROR) << "Can not get host_content_settings_map.";
-    return true;
-  }
-
-  ContentSettingsForOneType cookie_settings =
-      host_content_settings_map->GetSettingsForOneType(
-          ContentSettingsType::COOKIES);
-
-  const auto& entry = base::ranges::find_if(
-      cookie_settings, [&](const ContentSettingPatternSource& entry) {
-        // The primary pattern is for the request URL; the secondary pattern
-        // is for the first-party URL (which is the top-frame origin [if
-        // available] or the site-for-cookies).
-        return !entry.IsExpired() &&
-               entry.primary_pattern.Matches(request.url) &&
-               entry.secondary_pattern.Matches(request.url);
-      });
-  const ContentSettingPatternSource* match =
-      (entry == cookie_settings.end() ? nullptr : &*entry);
-  return !(match && match->GetContentSetting() == CONTENT_SETTING_BLOCK);
-}
-#endif
-
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 // Logic here is the same as in
 // network::URLLoader::ShouldForceIgnoreSiteForCookies.
