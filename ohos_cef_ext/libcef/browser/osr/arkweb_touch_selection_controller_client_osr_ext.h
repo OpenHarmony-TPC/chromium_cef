@@ -86,6 +86,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void ConvertClientClippedSelectionBounds(
     gfx::Rect& clipped_selection_bounds) override;
   bool IsShowHandle() override;
+  void SetQuickMenuRequested(bool is_visible);
 #endif  // BUILDFLAG(ARKWEB_MENU)
  private:
   // // Not owned, non-null for the lifetime of this object.
