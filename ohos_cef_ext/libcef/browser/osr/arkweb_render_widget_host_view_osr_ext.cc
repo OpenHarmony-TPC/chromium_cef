@@ -641,6 +641,16 @@ void ArkWebRenderWidgetHostViewOSRExt::UpdateSecurityLayer(bool isNeedSecurityLa
     }
   }
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    if (handler.get()) {
+      handler->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
+    }
+  }
+}
 #endif //BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_ZOOM)

@@ -124,6 +124,7 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   virtual void SetScrollable(bool enable) {}
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {}
 #endif
 #if BUILDFLAG(ARKWEB_PRINT)
   virtual void SetToken(void* token) {}

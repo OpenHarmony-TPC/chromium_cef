@@ -1206,6 +1206,12 @@ void ArkWebBrowserHostExtImpl::UpdateSecurityLayer(bool isNeedSecurityLayer) {
   }
 }
 
+void ArkWebBrowserHostExtImpl::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
+  }
+}
+
 void ArkWebBrowserHostExtImpl::SetHasComposition(bool has_composition) {
   has_composition_ = has_composition;
 }

@@ -295,6 +295,13 @@ void CefBrowserPlatformDelegateOsrExt::UpdateSecurityLayer(bool isNeedSecurityLa
     view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateSecurityLayer(isNeedSecurityLayer);
   }
 }
+
+void CefBrowserPlatformDelegateOsrExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
+  }
+}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
