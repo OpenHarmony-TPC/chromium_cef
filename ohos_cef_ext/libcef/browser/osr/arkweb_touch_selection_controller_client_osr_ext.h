@@ -83,6 +83,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void ExecuteCommand(int command_id, int event_flags) override;
 #if BUILDFLAG(ARKWEB_MENU)
   void NotifyShowMagnifier() override;
+  void SetQuickMenuRequested(bool is_visible);
 #endif  // BUILDFLAG(ARKWEB_MENU)
  private:
   // // Not owned, non-null for the lifetime of this object.

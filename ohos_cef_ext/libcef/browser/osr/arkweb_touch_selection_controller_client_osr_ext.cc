@@ -831,9 +831,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::ShowQuickMenu() {
       LOG(INFO) << "The selection long press active is " << isLongPressSelectionActive;
     }
 #if BUILDFLAG(ARKWEB_MENU)
-    handler->SetHandleVisibleCallback([this](bool isVisible = true) {
-      this->quick_menu_requested_ = isVisible;
-    });
+    auto handle_visible_callback = base::BindRepeating(
+        &ArkWebTouchSelectionControllerClientOSRExt::SetQuickMenuRequested,
+        weak_ptr_factory_.GetWeakPtr());
+    handler->SetHandleVisibleCallback(handle_visible_callback);
 #endif
     if (!handler->AsCefContextMenuHandlerExt()->RunQuickMenu(
             browser, browser->GetFocusedFrame(),
@@ -1050,5 +1051,10 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyShowMagnifier() {
       handler->ShowMagnifier();
     }
   }
+}
+
+void ArkWebTouchSelectionControllerClientOSRExt::SetQuickMenuRequested(bool is_visible)
+{
+  quick_menu_requested_ = is_visible;
 }
 #endif

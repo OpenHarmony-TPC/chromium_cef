@@ -97,14 +97,14 @@ class CefContextMenuHandlerExt : virtual public CefContextMenuHandler {
     return this;
   }
 
-  #if BUILDFLAG(ARKWEB_MENU)
-    virtual void SetHandleVisibleCallback(
-        std::function<void(bool)> onHandleVisible) {}
-  
-    virtual void ShowMagnifier() {}
-  
-    virtual void HideMagnifier() {}
-  #endif
+#if BUILDFLAG(ARKWEB_MENU)
+  virtual void SetHandleVisibleCallback(
+      const base::RepeatingCallback<void(bool)>& on_handle_visible) {}
+
+  virtual void ShowMagnifier() {}
+
+  virtual void HideMagnifier() {}
+#endif
 
 };
 
