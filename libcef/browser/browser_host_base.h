@@ -556,6 +556,13 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   void ReloadFocusedFrame() override {}
 #endif
 
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  void SetBlankScreenDetectionConfig(bool enable,
+                                     const std::vector<double> &detectionTiming,
+                                     const std::vector<int32_t> &detectionMethods,
+                                     int32_t contentfulNodesCountThreshold) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
   void StopScreenCapture(int32_t nweb_id, const CefString& session_id) override;
   void SetScreenCapturePickerShow() override;
