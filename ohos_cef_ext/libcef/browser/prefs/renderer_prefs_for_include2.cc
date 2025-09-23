@@ -123,7 +123,8 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   web.contextmenu_customization_enabled = cef.contextmenu_customization_enabled;
 #endif
 #if BUILDFLAG(ARKWEB_MEDIA)
-  if (!base::ohos::IsPcDevice() && cef.viewport_meta_enabled.has_value()) {
+  if (!(base::ohos::IsPcDevice() || base::ohos::IsPcMode()) &&
+      cef.viewport_meta_enabled.has_value()) {
     web.viewport_meta_enabled = cef.viewport_meta_enabled.value();
   }
   web.autoplay_policy =
