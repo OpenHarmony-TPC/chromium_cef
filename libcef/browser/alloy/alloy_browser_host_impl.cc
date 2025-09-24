@@ -705,6 +705,12 @@ bool AlloyBrowserHostImpl::MaybeAllowNavigation(
     return false;
   }
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (AsAlloyBrowserHostImplExt()->IsURLBlockedInIncognito(is_guest_view, params)) {
+    return false;
+  }
+#endif
+
   return true;
 }
 
