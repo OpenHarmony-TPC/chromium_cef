@@ -3,7 +3,7 @@
 // can be found in the LICENSE file.
 
 #include "cef/ohos_cef_ext/libcef/browser/ark_web_certificate_query.h"
-
+#include "chrome/browser/ssl/https_only_mode_tab_helper.h"
 #include "cef/include/cef_callback.h"
 #include "cef/include/cef_request_handler.h"
 #include "cef/libcef/browser/browser_host_base.h"
@@ -216,7 +216,16 @@ CertificateErrorCallback AllowAllCertificateError(
   const GURL local_request_url(request_url);
   const GURL local_origin_url(origin_url);
   const std::string local_referrer(referrer);
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+    auto* tab_helper = HttpsOnlyModeTabHelper::FromWebContents(web_contents);
+    if (tab_helper && tab_helper->is_navigation_upgraded() && is_main_frame_request) {
+      if (!callback.is_null()) {
 
+        std::move(callback).Run(content::CERTIFICATE_REQUEST_RESULT_TYPE_CONTINUE);
+      }
+      return base::NullCallback();
+    }
+#endif
   bool result;
   CefRefPtr<CefSSLInfo> sslInfo(new CefSSLInfoImpl(ssl_info));
   CefRefPtr<CefAllowCertificateErrorCallbackImpl> callbackImpl(
