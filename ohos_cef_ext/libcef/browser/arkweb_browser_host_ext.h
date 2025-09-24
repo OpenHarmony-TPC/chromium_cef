@@ -758,6 +758,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) override;
 #endif
+
+  void HandleInputMethodExtendAction(int32_t action) override;
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;

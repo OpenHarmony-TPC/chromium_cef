@@ -188,6 +188,8 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #include "libcef/browser/dom_distiller/oh_self_deleting_request_delegate.h"
 #endif // ARKWEB_READER_MODE
 
+#include "arkweb/ohos_adapter_ndk/inputmethodframework_adapter/imf_adapter_impl.h"
+
 const char kNWebId[] = "nweb_id";
 #endif
 namespace {
@@ -3944,3 +3946,26 @@ void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
   frame_url = frame->GetLastCommittedURL().spec();
 }
 #endif
+
+void ArkWebBrowserHostExtImpl::HandleInputMethodExtendAction(int32_t action) {
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(ERROR) << __FUNCTION__ << " web_contents is nullptr, " << action;
+    return;
+  }
+  if (action ==
+      static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::SELECT_ALL)) {
+    web_contents->SelectAll();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::CUT)) {
+    web_contents->Cut();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::COPY)) {
+    web_contents->Copy();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::PASTE)) {
+    web_contents->Paste();
+  } else {
+    LOG(ERROR) << __FUNCTION__ << " Unsupported action " << action;
+  }
+}

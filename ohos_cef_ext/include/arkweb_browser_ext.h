@@ -1406,6 +1406,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
 #endif
+
+  ///
+  /// Handle extend action from input method.
+  ///
+  virtual void HandleInputMethodExtendAction(int32_t action) {}
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
