@@ -462,6 +462,12 @@ void CefBrowserPlatformDelegateOsr::DragTargetDragOver(
       web_contents->GetInputEventRouter()->GetRenderWidgetHostViewInputAtPoint(
           web_contents->GetRenderViewHost()->GetWidget()->GetView(),
           gfx::PointF(client_pt), &transformed_pt);
+#if BUILDFLAG(ARKWEB_DRAG_DROP)
+  if (!view) {
+    LOG(WARNING) << "DragDrop dragover, get view failed!!";
+    return;
+  }
+#endif
   auto* target_rwh = content::RenderWidgetHostImpl::From(
       static_cast<content::RenderWidgetHostViewBase*>(view)
           ->GetRenderWidgetHost());
