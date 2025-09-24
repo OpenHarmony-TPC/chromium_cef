@@ -68,10 +68,9 @@ void TabsWindowsAPI::TabUpdated(int tab_id,
       tab_id, contents, std::move(changeInfo), std::move(tab));
 }
 
-void TabsWindowsAPI::TabActived(int tab_id,
-                                int window_id,
-                                content::WebContents* contents) {
-  tabs_event_router()->DispatchTabActiveEvent(tab_id, window_id, contents);
+void TabsWindowsAPI::TabActivated(int tab_id,
+    int window_id, content::BrowserContext* browser_context) {
+  tabs_event_router()->DispatchTabActivatedEvent(tab_id, window_id, browser_context);
 }
 
 void TabsWindowsAPI::TabRemoved(int tab_id,

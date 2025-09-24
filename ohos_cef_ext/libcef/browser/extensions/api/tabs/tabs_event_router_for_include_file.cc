@@ -31,10 +31,10 @@ void DispatchTabUpdatedEvent(
     std::unique_ptr<NWebExtensionTabChangeInfo> change_info,
     std::unique_ptr<NWebExtensionTab> tab);
 
-void DispatchTabActiveEvent(
+void DispatchTabActivatedEvent(
     int tab_id,
     int window_id,
-    content::WebContents* contents);
+    content::BrowserContext* browser_context);
 
 void DispatchTabRemovedEvent(
     int tab_id,

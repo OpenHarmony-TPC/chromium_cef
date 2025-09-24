@@ -715,7 +715,6 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
       int tab_id,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
       std::unique_ptr<NWebExtensionTab> tab) override {}
-  virtual void WebExtensionTabActivated(int tab_id, int window_id) override {}
   virtual void WebExtensionTabRemoved(int tab_id,
     bool isWindowClosing, int windowId) override {}
 
