@@ -310,13 +310,22 @@ void CefWebExtensionMenuManager::OnContextMenusUpdate(const std::string& extensi
   }
 #endif
 }
- 
+
+NO_SANITIZE("cfi-icall")
+void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
+    int menu_item_id) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, menu_item_id, nullptr);
+#endif
+}
+
 NO_SANITIZE("cfi-icall")
 void CefWebExtensionMenuManager::OnContextMenusRemove(const std::string& extension_id,
     const std::string& menu_item_id) {
 #if BUILDFLAG(ARKWEB_NWEB_EX)
   if (IsNativeApiEnable()) {
-    NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, menu_item_id);
+    NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, 0,
+                                                        menu_item_id.c_str());
   } else {
     NWebExtensionContextMenusDispatcher::OnRemove(extension_id, menu_item_id);
   }

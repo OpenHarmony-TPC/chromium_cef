@@ -30,6 +30,7 @@ class CefWebExtensionMenuManager {
   static std::vector<NWebContextMenusItem> GetAllExtensionContextMenus(const std::vector<std::string>& extension_ids);
   static void OnContextMenusCreate(const std::string& extension_id, extensions::MenuItem* menu_item);
   static void OnContextMenusUpdate(const std::string& extension_id, extensions::MenuItem* menu_item);
+  static void OnContextMenusRemove(const std::string& extension_id, int menu_item_id);
   static void OnContextMenusRemove(const std::string& extension_id, const std::string& menu_item_id);
   static void OnContextMenusRemoveAll(const std::string& extension_id);
 
