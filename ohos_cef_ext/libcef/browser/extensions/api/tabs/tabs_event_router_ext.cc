@@ -370,15 +370,16 @@ void TabsEventRouter::DispatchTabUpdatedEvent(
   EventRouter::Get(profile)->BroadcastEvent(std::move(event));
 }
 
-void TabsEventRouter::DispatchTabActiveEvent(int tab_id,
-                                             int window_id,
-                                             content::WebContents* contents) {
-  DCHECK(contents);
+void TabsEventRouter::DispatchTabActivatedEvent(
+    int tab_id,
+    int window_id,
+    content::BrowserContext* browser_context) {
+  DCHECK(browser_context);
   api::tabs::OnActivated::ActiveInfo info;
   info.tab_id = tab_id;
   info.window_id = window_id;
 
-  Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
+  Profile* profile = Profile::FromBrowserContext(browser_context);
   DispatchEvent(profile, events::TABS_ON_ACTIVATED,
                 api::tabs::OnActivated::kEventName,
                 api::tabs::OnActivated::Create(info),
