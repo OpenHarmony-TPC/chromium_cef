@@ -1147,6 +1147,10 @@ void ArkWebBrowserHostExtImpl::UpdateBackgroundColor(int color) {
   if (rvh->GetWidget()->GetView()) {
     rvh->GetWidget()->GetView()->SetBackgroundColor(color);
   }
+
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateBackgroundColor(color);
+  }
 }
 #endif  // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
 

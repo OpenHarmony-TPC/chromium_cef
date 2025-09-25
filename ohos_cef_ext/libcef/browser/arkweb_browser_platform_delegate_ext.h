@@ -197,5 +197,9 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
   virtual bool OnStartBackgroundTask(int32_t type, const std::string& message);
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  virtual void UpdateBackgroundColor(SkColor color) {}
+#endif  // ARKWEB_BACKGROUND_COLOR
 };
 #endif  // CEF_LIBCEF_BROWSER_BROWSER_PLATFORM_DELEGATE_EXT_H_
