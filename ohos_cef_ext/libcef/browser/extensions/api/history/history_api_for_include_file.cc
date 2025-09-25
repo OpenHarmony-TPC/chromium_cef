@@ -55,6 +55,14 @@ class HistoryAddUrlFunction : public HistoryFunction {
   ~HistoryAddUrlFunction() override {}
 
   ResponseAction Run() override;
+
+ private:
+  static void OnHistoryAddUrl(
+      const base::WeakPtr<HistoryAddUrlFunction>& function,
+      const char* error);
+
+  bool call_history_add_url_ = false;
+  base::WeakPtrFactory<HistoryAddUrlFunction> weak_ptr_factory_{this};
 };
 
 class HistoryDeleteAllFunction : public HistoryFunctionWithCallback {
@@ -68,6 +76,14 @@ class HistoryDeleteAllFunction : public HistoryFunctionWithCallback {
 
   // Callback for the history service to acknowledge deletion.
   void DeleteComplete();
+
+ private:
+  static void OnHistoryDeleteAll(
+      const base::WeakPtr<HistoryDeleteAllFunction>& function,
+      const char* error);
+
+  bool call_history_delete_all_ = false;
+  base::WeakPtrFactory<HistoryDeleteAllFunction> weak_ptr_factory_{this};
 };
 
 class HistoryDeleteUrlFunction : public HistoryFunction {
@@ -78,6 +94,14 @@ class HistoryDeleteUrlFunction : public HistoryFunction {
   ~HistoryDeleteUrlFunction() override {}
 
   ResponseAction Run() override;
+
+ private:
+  static void OnHistoryDeleteUrl(
+      const base::WeakPtr<HistoryDeleteUrlFunction>& function,
+      const char* error);
+
+  bool call_history_delete_url_ = false;
+  base::WeakPtrFactory<HistoryDeleteUrlFunction> weak_ptr_factory_{this};
 };
 
 class HistoryDeleteRangeFunction : public HistoryFunctionWithCallback {

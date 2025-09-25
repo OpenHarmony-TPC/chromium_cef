@@ -235,9 +235,46 @@ ExtensionFunction::ResponseAction HistoryAddUrlFunction::Run() {
     return RespondNow(Error(std::move(error)));
   }
 
-  NWebExtensionHistoryCefDelegate::GetInstance()->AddUrl(url.spec().c_str());
+  call_history_add_url_ = true;
+  bool success = NWebExtensionHistoryCefDelegate::GetInstance()->AddUrl(
+      url.spec().c_str(), base::BindRepeating(&HistoryAddUrlFunction::OnHistoryAddUrl,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  call_history_add_url_ = false;
 
-  return RespondNow(NoArguments());
+  if (did_respond()) {
+    LOG(INFO) << "HistoryAddUrlFunction did_respond";
+    return AlreadyResponded();
+  }
+
+  if (success) {
+    AddRef();
+    LOG(INFO) << "HistoryAddUrlFunction AddRef";
+    return RespondLater();
+  } else {
+    return RespondNow(Error("not support history.search"));
+  }
+}
+
+// static
+void HistoryAddUrlFunction::OnHistoryAddUrl(
+    const base::WeakPtr<HistoryAddUrlFunction>& function,
+    const char* error) {
+  DCHECK(function);
+  if (!function) {
+    LOG(ERROR) << "HistoryAddUrlFunction is empty!!!!";
+    return;
+  }
+
+  if (error) {
+    function->Respond(function->Error(std::string(error)));
+  } else {
+    function->Respond(function->NoArguments());
+  }
+
+  if (!function->call_history_add_url_) {
+    LOG(INFO) << "HistoryAddUrlFunction Release";
+    function->Release();
+  }
 }
 
 ExtensionFunction::ResponseAction HistoryDeleteUrlFunction::Run() {
@@ -250,15 +287,89 @@ ExtensionFunction::ResponseAction HistoryDeleteUrlFunction::Run() {
     return RespondNow(Error(std::move(error)));
   }
 
-  NWebExtensionHistoryCefDelegate::GetInstance()->DeleteUrl(url.spec().c_str());
+  call_history_delete_url_ = true;
+  bool success = NWebExtensionHistoryCefDelegate::GetInstance()->DeleteUrl(
+      url.spec().c_str(), base::BindRepeating(&HistoryDeleteUrlFunction::OnHistoryDeleteUrl,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  call_history_delete_url_ = false;
 
-  return RespondNow(NoArguments());
+  if (did_respond()) {
+    LOG(INFO) << "HistoryDeleteUrlFunction did_respond";
+    return AlreadyResponded();
+  }
+
+  if (success) {
+    AddRef();
+    LOG(INFO) << "HistoryDeleteUrlFunction AddRef";
+    return RespondLater();
+  } else {
+    return RespondNow(Error("not support history.search"));
+  }
+}
+
+// static
+void HistoryDeleteUrlFunction::OnHistoryDeleteUrl(
+    const base::WeakPtr<HistoryDeleteUrlFunction>& function,
+    const char* error) {
+  DCHECK(function);
+  if (!function) {
+    LOG(ERROR) << "HistoryDeleteUrlFunction is empty!!!!";
+    return;
+  }
+
+  if (error) {
+    function->Respond(function->Error(std::string(error)));
+  } else {
+    function->Respond(function->NoArguments());
+  }
+
+  if (!function->call_history_delete_url_) {
+    LOG(INFO) << "HistoryDeleteUrlFunction Release";
+    function->Release();
+  }
 }
 
 ExtensionFunction::ResponseAction HistoryDeleteAllFunction::Run() {
-  NWebExtensionHistoryCefDelegate::GetInstance()->DeleteAll();
+  call_history_delete_all_ = true;
+  bool success = NWebExtensionHistoryCefDelegate::GetInstance()->DeleteAll(
+      base::BindRepeating(&HistoryDeleteAllFunction::OnHistoryDeleteAll,
+                                      weak_ptr_factory_.GetWeakPtr()));
+  call_history_delete_all_ = false;
 
-  return RespondNow(NoArguments());
+  if (did_respond()) {
+    LOG(INFO) << "HistoryDeleteAllFunction did_respond";
+    return AlreadyResponded();
+  }
+
+  if (success) {
+    AddRef();
+    LOG(INFO) << "HistoryDeleteAllFunction AddRef";
+    return RespondLater();
+  } else {
+    return RespondNow(Error("not support history.search"));
+  }
+}
+
+// static
+void HistoryDeleteAllFunction::OnHistoryDeleteAll(
+    const base::WeakPtr<HistoryDeleteAllFunction>& function,
+    const char* error) {
+  DCHECK(function);
+  if (!function) {
+    LOG(ERROR) << "HistoryDeleteAllFunction is empty!!!!";
+    return;
+  }
+
+  if (error) {
+    function->Respond(function->Error(std::string(error)));
+  } else {
+    function->Respond(function->NoArguments());
+  }
+
+  if (!function->call_history_delete_all_) {
+    LOG(INFO) << "HistoryDeleteAllFunction Release";
+    function->Release();
+  }
 }
 
 void HistoryDeleteAllFunction::DeleteComplete() {}
