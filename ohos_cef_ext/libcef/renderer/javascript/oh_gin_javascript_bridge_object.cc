@@ -32,7 +32,7 @@ OhGinJavascriptBridgeObject* OhGinJavascriptBridgeObject::InjectNamed(
   v8::HandleScope handle_scope(isolate);
   v8::Local<v8::Context> context = frame->MainWorldScriptContext();
   if (context.IsEmpty()) {
-    return NULL;
+    return nullptr;
   }
 
   OhGinJavascriptBridgeObject* object =
@@ -45,7 +45,7 @@ OhGinJavascriptBridgeObject* OhGinJavascriptBridgeObject::InjectNamed(
   // WrappableBase instance deletes itself in case of a wrapper
   // creation failure, thus there is no need to delete |object|.
   if (controller.IsEmpty()) {
-    return NULL;
+    return nullptr;
   }
 
   global->Set(context, gin::StringToV8(isolate, object_name), controller.ToV8())
