@@ -903,10 +903,6 @@ source_set("libcef_static") {
   if (defined(arkweb_devtools) && arkweb_devtools) {
     sources += [
       "include/cef_devtools_message_handler_delegate.h",
-      "libcef/browser/devtools/arkweb/devtools_message_handler.cc",
-      "libcef/browser/devtools/arkweb/devtools_message_handler.h",
-      "libcef/browser/devtools/arkweb/devtools_frontend.cc",
-      "libcef/browser/devtools/arkweb/devtools_frontend.h",
       "libcef/browser/devtools/arkweb/devtools_file_manager.cc",
       "libcef/browser/devtools/arkweb/devtools_file_manager.h",
       "include/base/cef_basictypes.h",
