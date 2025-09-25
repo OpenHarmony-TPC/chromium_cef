@@ -643,6 +643,8 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
       browser_settings.supports_double_tap_zoom;
   settings_.supports_multi_touch_zoom =
       browser_settings.supports_multi_touch_zoom;
+  settings_.zoom_control_access =
+      browser_settings.zoom_control_access;
   settings_.initialize_at_minimum_page_scale =
       browser_settings.initialize_at_minimum_page_scale;
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
