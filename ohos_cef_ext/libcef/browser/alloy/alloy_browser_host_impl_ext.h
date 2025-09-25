@@ -362,6 +362,12 @@ private:
       const std::string& stack);
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  bool IsURLBlockedInIncognito(
+      bool is_guest_view,
+      const content::OpenURLParams& params);
+#endif
+
 };
 
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_EXT_H_
