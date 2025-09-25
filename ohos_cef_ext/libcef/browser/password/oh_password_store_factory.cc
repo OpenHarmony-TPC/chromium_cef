@@ -28,7 +28,7 @@
 using password_manager::PasswordStore;
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
-constexpr base::FilePath::CharType kNWebMigrateDir[] = FILE_PATH_LITERAL("migrate");
+constexpr base::FilePath::CharType kNWebMigrateDir[] = FILE_PATH_LITERAL("migrate_bak");
 #endif
 
 // static
