@@ -1061,6 +1061,9 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url, const L
   loadUrlParams.extra_headers = headers;
   ArkWebDealWithPostData(post_data, &loadUrlParams);
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
+
+  // if url_typed_with_http_scheme == true, it means user dont want to upgrade.
+  loadUrlParams.url_typed_with_http_scheme = !allow_https_upgrade;
                                                        
   if (auto web_contents = GetWebContents()) {
     LOG(DEBUG) << "load Url With Params";
