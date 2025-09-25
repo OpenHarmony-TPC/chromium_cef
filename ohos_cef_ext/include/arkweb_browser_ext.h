@@ -1421,6 +1421,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void EnableHttpsUpgrades(bool enable) = 0;
 #endif
+
+  ///
+  /// Handle extend action from input method.
+  ///
+  virtual void HandleInputMethodExtendAction(int32_t action) {}
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

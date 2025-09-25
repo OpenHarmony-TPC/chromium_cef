@@ -768,6 +768,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
   void EnableHttpsUpgrades(bool enable) override;
 #endif
+
+  void HandleInputMethodExtendAction(int32_t action) override;
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
