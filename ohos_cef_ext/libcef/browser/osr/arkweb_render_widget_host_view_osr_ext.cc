@@ -136,6 +136,10 @@ static float DEFAULT_SCROLL_OFFSET_Y = -1.0f;
 #endif
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
+const int32_t NOT_NATIVE_ID = 100;
+#endif
+
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
 class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  public:
   using CallbackType = blink::InputHandlerProxyUtils::GestureEventCallback;
@@ -1881,7 +1885,7 @@ void ArkWebRenderWidgetHostViewOSRExt::DidNativeEmbedEvent(
     auto new_callback =
         base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult,
                        weak_ptr_factory_.GetWeakPtr());
-    if (type != ArkWebRenderHandlerExt::CefEmbedTouchType::DOWN) {
+    if (touchEvent->id == NOT_NATIVE_ID) {
       new_callback.Reset();
     }
     CefRefPtr<CefGestureEventCallbackImpl> callbackPtr(
