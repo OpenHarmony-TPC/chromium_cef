@@ -1285,11 +1285,6 @@ std::unique_ptr<content::CustomMediaPlayer>
 AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
     std::unique_ptr<content::CustomMediaPlayerListener> listener,
     const content::MediaInfo& media_info) {
-  if (!client_) {
-    LOG(ERROR) << "CreateCustomMediaPlayer failed, client_ is null";
-    return nullptr;
-  }
-
   CefOwnPtr<CefCustomMediaPlayerDelegate> delegate;
   static_assert(sizeof(CefCustomMediaInfo) == sizeof(content::MediaInfo));
   CefCustomMediaInfo cef_media_info;
@@ -1320,6 +1315,10 @@ AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
   cef_media_info.https_headers = media_info.https_headers;
   cef_media_info.attributes = media_info.attributes;
 
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, CreateCustomMediaPlayer failed";
+    return nullptr;
+  }
   delegate = client_->AsArkWebClient()->OnCreateCustomMediaPlayer(
       CefOwnPtr<CefMediaPlayerListenerImpl>(
           new CefMediaPlayerListenerImpl(std::move(listener))),
