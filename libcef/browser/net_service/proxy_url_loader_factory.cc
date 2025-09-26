@@ -615,10 +615,12 @@ void InterceptedRequest::Restart() {
     // Match logic in navigation_request.cc AddAdditionalRequestHeaders.
     url::Origin origin_header_value =
         request_.request_initiator.value_or(url::Origin());
+#if !BUILDFLAG(ARKWEB_NETWORK_LOAD)
     origin_header_value = content::Referrer::SanitizeOriginForRequest(
         request_.url, origin_header_value,
         blink::ReferrerUtils::NetToMojoReferrerPolicy(
             request_.referrer_policy));
+#endif
 
     request_.headers.SetHeaderIfMissing(net::HttpRequestHeaders::kOrigin,
                                         origin_header_value.Serialize());
