@@ -138,6 +138,7 @@ NWebContextMenusItemV2 GetNWebContextMenusItemV2(extensions::MenuItem* menu_item
   NWebContextMenusItemV2 item;
   item.item = GetNWebContextMenusItem(menu_item);
   item.isOffTheRecord = menu_item->incognito();
+  item.intId = menu_item->id().uid;
   return item;
 }
 #endif
@@ -158,6 +159,48 @@ void SetContextMenusEventProperties(base::Value::Dict& properties,
   properties.Set("wasChecked", data.wasChecked);
   properties.Set("checked", data.checked);
   properties.Set("frameId", data.frameId);
+}
+
+void SetContextMenusEventProperties(base::Value::Dict& properties,
+                                    ContextMenusOnClickedDataV2& data) {
+  properties.Set("editable", data.editable);
+  if (data.menuItemIdStr.empty()) {
+    properties.Set("menuItemId", data.menuItemId);
+  } else {
+    properties.Set("menuItemId", data.menuItemIdStr);
+  }
+  if (data.frameId) {
+    properties.Set("frameId", *data.frameId);
+  }
+  if (data.checked) {
+    properties.Set("checked", *data.checked);
+  }
+  if (data.wasChecked) {
+    properties.Set("wasChecked", *data.wasChecked);
+  }
+  if (data.srcUrl) {
+    properties.Set("srcUrl", *data.srcUrl);
+  }
+  if (data.linkUrl) {
+    properties.Set("linkUrl", *data.linkUrl);
+  }
+  if (data.pageUrl) {
+    properties.Set("pageUrl", *data.pageUrl);
+  }
+  if (data.frameUrl) {
+    properties.Set("frameUrl", *data.frameUrl);
+  }
+  if (data.mediaType) {
+    properties.Set("mediaType", *data.mediaType);
+  }
+  if (data.selectionText) {
+    properties.Set("selectionText", *data.selectionText);
+  }
+  if (data.parentMenuItemId) {
+    properties.Set("parentMenuItemId", *data.parentMenuItemId);
+  } else if (data.parentMenuItemIdStr) {
+    properties.Set("parentMenuItemId", *data.parentMenuItemIdStr);
+  }
 }
 
 void ExtensionContextMenusInvokeActiveTab(
@@ -183,6 +226,30 @@ void ExtensionContextMenusInvokeActiveTab(
         ->active_tab_permission_granter()
         ->GrantIfRequested(extension);
   }
+}
+
+base::Value::List BuildContextMenuEventArgs(
+    ContextMenusOnClickedDataV2& data,
+    std::optional<NWebExtensionTab>& tab,
+    content::BrowserContext* browser_context,
+    const std::string& extension_id) {
+  base::Value::Dict properties;
+  SetContextMenusEventProperties(properties, data);
+
+  base::Value::List args;
+  args.Append(std::move(properties));
+
+  if (tab) {
+    extensions::ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = {
+        extensions::ExtensionTabUtil::kDontScrubTab,
+        extensions::ExtensionTabUtil::kDontScrubTab};
+    args.Append(extensions::GetTabValue(*tab, scrub_tab_behavior));
+    if (tab->id.has_value()) {
+      ExtensionContextMenusInvokeActiveTab(browser_context, tab->id.value(),
+                                           extension_id);
+    }
+  }
+  return args;
 }
 
 NO_SANITIZE("cfi-icall")
@@ -234,6 +301,61 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
   {
     auto event = std::make_unique<extensions::Event>(extensions::events::CONTEXT_MENUS_ON_CLICKED,
         extensions::api::context_menus::OnClicked::kEventName, std::move(args), browser_context);
+    event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
+    event_router->DispatchEventToExtension(extension_id, std::move(event));
+  }
+}
+
+NO_SANITIZE("cfi-icall")
+void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
+                                                    ContextMenusOnClickedDataV2& data,
+                                                    std::optional<NWebExtensionTab>& tab) {
+  content::BrowserContext* browser_context = GetBrowserContext();
+  if (!browser_context) {
+    LOG(ERROR) << "browser_context is null";
+    return;
+  }
+  extensions::MenuManager* menu_manager = extensions::MenuManager::Get(browser_context);
+  if (!menu_manager) {
+    LOG(ERROR) << "menu_manager is null";
+    return;
+  }
+  extensions::EventRouter* event_router = extensions::EventRouter::Get(browser_context);
+  if (!event_router) {
+    LOG(ERROR) << "event_router is null";
+    return;
+  }
+  extensions::MenuItem::Id id(browser_context->IsOffTheRecord(),
+                              extensions::MenuItem::ExtensionKey(extension_id));
+  id.uid = data.menuItemId;
+  id.string_uid = data.menuItemIdStr;
+  extensions::MenuItem* item = menu_manager->GetItemById(id);
+  if (!item) {
+    LOG(ERROR) << "item is null,id is " << id.uid << " - " << id.string_uid;
+    return;
+  }
+  if (data.checked) {
+    item->SetChecked(*data.checked);
+  }
+
+  base::Value::List args =
+      BuildContextMenuEventArgs(data, tab, browser_context, extension_id);
+
+  {
+    auto event = std::make_unique<extensions::Event>(
+        extensions::events::CONTEXT_MENUS,
+        "contextMenus",
+        args.Clone(),
+        browser_context);
+    event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
+    event_router->DispatchEventToExtension(extension_id, std::move(event));
+  }
+  {
+    auto event = std::make_unique<extensions::Event>(
+        extensions::events::CONTEXT_MENUS_ON_CLICKED,
+        extensions::api::context_menus::OnClicked::kEventName,
+        std::move(args),
+        browser_context);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
