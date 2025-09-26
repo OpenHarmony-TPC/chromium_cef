@@ -61,6 +61,7 @@ public:
                             float centerY) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
   void SetBypassVsyncCondition(int32_t condition) override;

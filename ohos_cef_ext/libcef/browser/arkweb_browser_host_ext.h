@@ -647,6 +647,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
   void SetHasComposition(bool has_composition) override;
   bool GetHasComposition() override;
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) override;
 #endif  // ARKWEB_INPUT_EVENTS
 
 #if BUILDFLAG(ARKWEB_BFCACHE)

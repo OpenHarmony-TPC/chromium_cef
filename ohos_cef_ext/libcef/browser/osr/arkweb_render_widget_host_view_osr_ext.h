@@ -262,6 +262,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
   void UpdateSecurityLayer(bool isNeedSecurityLayer);
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME);
 #endif
 
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)

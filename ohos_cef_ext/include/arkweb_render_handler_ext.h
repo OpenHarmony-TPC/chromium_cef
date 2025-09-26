@@ -311,6 +311,12 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /*--cef()--*/
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
 
+  ///
+  /// Update focus and keyboard status in textFieldManager
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {}
+
 #if BUILDFLAG(ARKWEB_DSS)
   ///
   /// Get Device pixel size.

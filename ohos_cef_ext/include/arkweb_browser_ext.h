@@ -502,6 +502,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) = 0;
 
   ///
+  /// UpdateTextFieldStatus
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) = 0;
+
+  ///
   /// Set HasComposition
   ///
   virtual void SetHasComposition(bool has_composition) = 0;
