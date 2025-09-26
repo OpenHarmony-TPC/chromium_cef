@@ -14,7 +14,7 @@
  */
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
-#include "cef/libcef/browser/devtools/arkweb/devtools_frontend.h"
+#include "cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_frontend.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
