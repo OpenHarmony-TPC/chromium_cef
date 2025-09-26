@@ -232,6 +232,9 @@ void AlloyBrowserHostImplUtils::commitPendingZoomLevelPreferences() {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 int AlloyBrowserHostImplUtils::handleZoomEventWithInput(bool zoom_in) {
+  if (alloyBrowserHostImpl && !alloyBrowserHostImpl->settings_.zoom_control_access) {
+    return -1;
+  }
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kEnableNwebEx)) {
     content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN

@@ -725,6 +725,7 @@ typedef struct _cef_browser_settings_t {
   bool geolocation_enabled;
   bool supports_double_tap_zoom;
   bool supports_multi_touch_zoom;
+  bool zoom_control_access;
   cef_state_t initialize_at_minimum_page_scale;
   std::optional<bool> viewport_meta_enabled;
   bool user_gesture_required;

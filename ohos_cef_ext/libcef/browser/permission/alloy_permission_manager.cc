@@ -243,18 +243,22 @@ void AlloyPermissionManager::RequestPermissionByType(
       }
       break;
     case PermissionType::PROTECTED_MEDIA_IDENTIFIER:
-      browser->AskProtectedMediaIdentifierPermission(
-          pending_request_raw->requesting_origin_.spec(),
-          base::BindRepeating(
-              &AlloyPermissionManager::OnRequestResponseCallBack,
-              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      if (browser) {
+        browser->AskProtectedMediaIdentifierPermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }        
       break;
     case PermissionType::MIDI_SYSEX:
-      browser->AskMIDISysexPermission(
-          pending_request_raw->requesting_origin_.spec(),
-          base::BindRepeating(
-              &AlloyPermissionManager::OnRequestResponseCallBack,
-              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      if (browser) {
+        browser->AskMIDISysexPermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }        
       break;
     case PermissionType::CLIPBOARD_READ_WRITE:
       if (GetApplicationApiVersion() <= APPLICATION_API_10) {
@@ -283,18 +287,22 @@ void AlloyPermissionManager::RequestPermissionByType(
       break;
 #endif  // BUILDFLAG(ARKWEB_SENSOR)
     case PermissionType::AUDIO_CAPTURE:
-      browser->AskAudioCapturePermission(
-          pending_request_raw->requesting_origin_.spec(),
-          base::BindRepeating(
-              &AlloyPermissionManager::OnRequestResponseCallBack,
-              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      if (browser) {
+        browser->AskAudioCapturePermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }        
       break;
     case PermissionType::VIDEO_CAPTURE:
-      browser->AskVideoCapturePermission(
-          pending_request_raw->requesting_origin_.spec(),
-          base::BindRepeating(
-              &AlloyPermissionManager::OnRequestResponseCallBack,
-              weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      if (browser) {
+        browser->AskVideoCapturePermission(
+            pending_request_raw->requesting_origin_.spec(),
+            base::BindRepeating(
+                &AlloyPermissionManager::OnRequestResponseCallBack,
+                weak_ptr_factory_.GetWeakPtr(), request_id, permission_type));
+      }        
       break;
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
     case PermissionType::NOTIFICATIONS:
