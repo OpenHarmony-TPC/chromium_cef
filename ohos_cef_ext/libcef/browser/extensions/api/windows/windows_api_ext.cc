@@ -461,7 +461,7 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
     }
     scrub_tab_behaviors_combined.emplace_back(scrub_tab_behaviors);
   }
-  base::Value::List window_list = GetWindowValueList(windows, scrub_tab_behaviors_combined);
+  base::Value::List window_list = GetWindowValueList(windows, scrub_tab_behaviors_combined, populate);
   return RespondNow(WithArguments(std::move(window_list)));
 }
 
