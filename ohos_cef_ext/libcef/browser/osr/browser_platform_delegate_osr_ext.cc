@@ -938,3 +938,16 @@ bool CefBrowserPlatformDelegateOsrExt::OnStartBackgroundTask(
       type, message);
 }
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+SkColor CefBrowserPlatformDelegateOsrExt::GetBackgroundColor() const {
+  if (background_color_) {
+    return background_color_.value();
+  }
+  return CefBrowserPlatformDelegateOsr::GetBackgroundColor();
+}
+
+void CefBrowserPlatformDelegateOsrExt::UpdateBackgroundColor(SkColor color) {
+  background_color_ = color;
+}
+#endif  // ARKWEB_BACKGROUND_COLOR
