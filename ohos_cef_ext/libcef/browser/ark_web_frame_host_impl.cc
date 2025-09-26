@@ -21,6 +21,8 @@
 #include "base/strings/escape.h"
 #include "cef/ohos_cef_ext/libcef/common/net/url_util_ex.h"
 #include "cef/libcef/browser/thread_util.h"
+#include "content/browser/renderer_host/frame_tree.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
 #endif
  
 namespace {
@@ -133,5 +135,18 @@ content::RenderFrameHost* CefFrameHostImpl::GetRenderFrameHostFromGlobalId()
     return content::RenderFrameHost::FromID(rfh_global_id_);
   }
   return nullptr;
+}
+
+bool CefFrameHostImpl::IsPrerendering() {
+  content::RenderFrameHostImpl* rfh = static_cast<content::RenderFrameHostImpl*>(
+    GetRenderFrameHostFromGlobalId());
+  if (!rfh) {
+    return initial_is_prerendering_;
+  }
+  if (!rfh->frame_tree()) {
+    return initial_is_prerendering_;
+  }
+
+  return rfh->frame_tree()->is_prerendering();
 }
 #endif

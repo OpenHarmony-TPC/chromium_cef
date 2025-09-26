@@ -30,6 +30,7 @@
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #include "base/command_line.h"
+#include "content/browser/renderer_host/frame_tree.h"
 #include "content/public/common/content_switches.h"
 #endif
 
@@ -113,7 +114,11 @@ CefFrameHostImpl::CefFrameHostImpl(scoped_refptr<CefBrowserInfo> browser_info,
       render_frame_host_(render_frame_host)
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 ,
-      rfh_global_id_(render_frame_host->GetGlobalId())
+      rfh_global_id_(render_frame_host->GetGlobalId()),
+      initial_is_prerendering_(
+          static_cast<content::RenderFrameHostImpl *>(render_frame_host)
+              ->frame_tree()
+              ->is_prerendering())
 #endif
       {
   DCHECK(browser_info_);
@@ -639,6 +644,10 @@ void CefFrameHostImpl::MaybeReAttach(
   render_frame_host_ = render_frame_host;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   rfh_global_id_ = render_frame_host->GetGlobalId();
+  initial_is_prerendering_ =
+      static_cast<content::RenderFrameHostImpl *>(render_frame_host)
+          ->frame_tree()
+          ->is_prerendering();
 #endif
   RefreshAttributes();
 
