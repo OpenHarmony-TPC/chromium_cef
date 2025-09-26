@@ -35,7 +35,10 @@ const char kWidthKey[] = "width";
 const char kHeightKey[] = "height";
 const char kTabsKey[] = "tabs";
 
-base::Value::Dict GetWindowValue(const WebExtensionWindow& window, bool populate) {
+base::Value::Dict GetWindowValue(
+    const WebExtensionWindow& window,
+    const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors,
+    bool populate) {
   base::Value::Dict dict;
   if (window.id)
     dict.Set(kIdKey, *window.id);
@@ -57,14 +60,19 @@ base::Value::Dict GetWindowValue(const WebExtensionWindow& window, bool populate
   if (window.sessionId)
     dict.Set("sessionId", *window.sessionId);
   if (populate)
-    dict.Set(kTabsKey, GetTabValueList(window.tabs));
+    dict.Set(kTabsKey, GetTabValueList(window.tabs, scrub_tab_behaviors));
   return dict;
 }
 
-base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows, bool populate) {
+base::Value::List GetWindowValueList(
+    const std::vector<WebExtensionWindow>& windows,
+    const std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>>& scrub_tab_behaviors_combined,
+    bool populate) {
   base::Value::List window_list;
-  for (WebExtensionWindow window : windows) {
-    window_list.Append(GetWindowValue(window, populate));
+  size_t i = 0;
+  for (const WebExtensionWindow& window : windows) {
+    if (i == scrub_tab_behaviors_combined.size()) break;
+    window_list.Append(GetWindowValue(window, scrub_tab_behaviors_combined[i++], populate));
   }
   return window_list;
 }
