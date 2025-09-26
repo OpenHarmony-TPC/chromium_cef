@@ -4044,3 +4044,10 @@ void ArkWebBrowserHostExtImpl::HandleInputMethodExtendAction(int32_t action) {
     LOG(ERROR) << __FUNCTION__ << " Unsupported action " << action;
   }
 }
+
+void ArkWebBrowserHostExtImpl::StopFling() {
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(rwhv->GetRenderWidgetHost())->StopFling();
+  }
+}
