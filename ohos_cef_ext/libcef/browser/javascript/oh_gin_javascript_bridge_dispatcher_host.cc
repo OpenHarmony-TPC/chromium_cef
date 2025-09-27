@@ -755,7 +755,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasAsyncThreadMethod(
     bool* result) {
   *result = false;
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  
+
   // find in sync methods
   if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
     MethodPair p = sync_method_map_[object_id];
@@ -849,20 +849,18 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       return std::make_unique<base::Value>(std::move(*value));
     }
     case CefValueType::VTYPE_BINARY: {
-      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
-                    "ParseCefValueTObaseValueHelper: VTYPE_BINARY";
       auto size = result->GetBinary()->GetSize();
-      auto buff = std::make_unique<char[]>(size);
+      auto buff = std::make_unique<char[]>(size + 1);
       result->GetBinary()->GetData(buff.get(), size, 0);
+      buff[size] = '\0';
       int32_t objId;
-      std::string str(buff.get());
+      std::string str(buff.get(), size);
       std::vector<std::string> strList =
           base::SplitString(str, ";", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                    "ParseCefValueTObaseValueHelper: strList.size() ="
+                 << strList.size() << ", size =" << size;
       if (strList.size() != JS_BRIDGE_BINARY_ARGS_COUNT) {
-        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
-                      "ParseCefValueTObaseValueHelper: strList.size() == "
-                   << strList.size() << " is error, str=" << str
-                   << ", size=" << size;
         baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(-1);
         break;
       }
