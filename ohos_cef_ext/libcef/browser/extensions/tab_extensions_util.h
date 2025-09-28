@@ -28,14 +28,14 @@ namespace extensions {
 base::Value::Dict GetMutedInfoValue(const NWebExtensionTabMutedInfo& mutedInfo);
 
 base::Value::Dict GetTabValue(NWebExtensionTab& tab,
-                              const ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior);
+                              const ExtensionTabUtil::ScrubTabBehavior& scrub_tab_behavior);
 
 base::Value::Dict GetTabZoomSettingsValue(const NWebExtensionTabZoomSettings& zoomSettings);
 
 base::Value::Dict GetTabZoomChangeValue(const NWebExtensionTabZoomChangeInfo& tabZoomChangeInfo);
 
 base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs,
-                                  const std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors);
+                                  const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors);
 
 class CefExtensionWindowIdManager {
  public:

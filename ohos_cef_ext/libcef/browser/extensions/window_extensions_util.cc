@@ -37,7 +37,7 @@ const char kTabsKey[] = "tabs";
 
 base::Value::Dict GetWindowValue(
     const WebExtensionWindow& window,
-    const std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors,
+    const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors,
     bool populate) {
   base::Value::Dict dict;
   if (window.id)
@@ -66,7 +66,7 @@ base::Value::Dict GetWindowValue(
 
 base::Value::List GetWindowValueList(
     const std::vector<WebExtensionWindow>& windows,
-    const std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>> scrub_tab_behaviors_combined,
+    const std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>>& scrub_tab_behaviors_combined,
     bool populate) {
   base::Value::List window_list;
   size_t i = 0;
