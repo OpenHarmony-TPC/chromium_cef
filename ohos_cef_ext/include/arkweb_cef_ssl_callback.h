@@ -25,7 +25,7 @@ class ArkWebCefSslCallback : public CefCallback {
   ///
   /// Handle the result if the user cancelled the url request.
   ///
-  /*--arkweb()--*/
+  /*--cef()--*/
   virtual void Cancel(bool abortLoading) = 0;
 };
 
