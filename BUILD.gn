@@ -1187,6 +1187,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.h",
       "ohos_cef_ext/libcef/browser/extensions/extension_function_details.cc",
       "ohos_cef_ext/libcef/browser/extensions/extension_function_details.h",
+      "ohos_cef_ext/libcef/browser/extensions/api/sessions/sessions_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_api_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_event_router_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/tabs/tabs_windows_api_ext.cc",
