@@ -21,12 +21,19 @@
 #include "base/values.h"
 #include "ohos_nweb/src/capi/web_extension_window_items.h"
 #include "content/public/browser/web_contents.h"
+#include "chrome/browser/extensions/extension_tab_util.h"
 
 namespace extensions {
 
-base::Value::Dict GetWindowValue(const WebExtensionWindow& window, bool populate = true);
+base::Value::Dict GetWindowValue(
+    const WebExtensionWindow& window,
+    const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors,
+    bool populate = true);
 
-base::Value::List GettWindowValueList(const std::vector<WebExtensionWindow>& windows, bool populate = true);
+base::Value::List GetWindowValueList(
+    const std::vector<WebExtensionWindow>& windows,
+    const std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>>& scrub_tab_behaviors_combined,
+    bool populate = true);
 
 int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_window_id);
 
