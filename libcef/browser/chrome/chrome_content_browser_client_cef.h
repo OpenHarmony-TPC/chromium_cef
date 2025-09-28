@@ -178,6 +178,10 @@ class ChromeContentBrowserClientCef : public ChromeContentBrowserClient {
       content::MojoBinderPolicyMap& policy_map) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+  std::string GetUAStringForHost(const std::string& host) override;
+#endif
+
  private:
   static std::unique_ptr<content::WebContentsViewDelegate>
   CreateWebContentsViewDelegate(content::WebContents* web_contents);
