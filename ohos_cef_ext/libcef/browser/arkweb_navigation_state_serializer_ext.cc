@@ -21,7 +21,7 @@
 #include "third_party/blink/public/common/page_state/page_state.h"
 
 namespace {
-  const int MAX_NAVIGATION_ENTRY_SIZE = 1024;
+  const int kMaxNavigationEntrySize = 1024;
 } // namespace
 
 CefRefPtr<CefBinaryValue> NavigationStateSerializer::WriteNavigationStatus(
@@ -85,7 +85,7 @@ bool NavigationStateSerializer::RestoreNavigationStatus(
   int entry_count = -1;
   int entry_index = -2;
   if (!iterator.ReadInt(&entry_count) || !iterator.ReadInt(&entry_index) ||
-      entry_index >= entry_count || entry_index > MAX_NAVIGATION_ENTRY_SIZE) {
+      entry_index >= entry_count || entry_index > kMaxNavigationEntrySize) {
     LOG(ERROR) << "web state size invalid.";
     return false;
   }
