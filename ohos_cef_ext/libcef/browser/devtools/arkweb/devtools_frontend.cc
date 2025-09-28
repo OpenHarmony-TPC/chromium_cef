@@ -1027,8 +1027,8 @@ void CefDevToolsFrontend::AddDevToolsExtensionsToClient() {
 
 
   CallClientFunction("DevToolsAPI", "setOriginsForbiddenForExtensions",
-                   base::Value(std::move(forbidden_origins)));
+                     base::Value(std::move(forbidden_origins)));
   CallClientFunction("DevToolsAPI", "addExtensions",
-                   base::Value(std::move(results)));
+                     base::Value(std::move(results)));
 }
 #endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
