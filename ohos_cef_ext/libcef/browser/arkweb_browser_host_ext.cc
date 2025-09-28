@@ -2405,8 +2405,14 @@ bool ValidateResultType(base::Value::Type type) {
 
 void ArkWebBrowserHostExtImpl::ExecuteJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
-    base::Value result) {
+    base::Value dict_result) {
   LOG(DEBUG) << "javascript result callback enter";
+  const auto& dict = dict_result.GetIfDict();
+  if (!dict || !dict->Find("result")) {
+    return;
+  }
+
+  base::Value result = std::move(*dict->Find("result"));
   std::string json;
   base::JSONWriter::Write(result, &json);
   if (callback != nullptr) {
@@ -2418,7 +2424,15 @@ void ArkWebBrowserHostExtImpl::ExecuteJSCallback(
 
 void ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
-    base::Value result) {
+    base::Value dict_result) {
+  const auto& dict = dict_result.GetIfDict();
+  if (!dict || !dict->Find("result")) {
+    return;
+  }
+
+  std::string* exception = dict->FindString("exception");
+  base::Value result = std::move(*dict->Find("result"));
+  std::optional<bool> isObject = dict->FindBool("isObject");
   LOG(DEBUG) << "javascript result callback enter, type:"
              << result.GetTypeName(result.type());
   std::string json;
@@ -2511,6 +2525,11 @@ void ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback(
     }
     default: {
       LOG(ERROR) << "base::Value not support type:" << result.type();
+      if (exception) {
+        callback->SetErrorDescription(*exception);
+      } else if (isObject.value_or(false)) {
+        callback->SetErrorDescription(json);
+      }
       data->SetString(
           "This type not support, only "
           "string/number/boolean/arraybuffer/array is supported");
