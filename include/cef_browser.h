@@ -1140,7 +1140,18 @@ class CefBrowserHost : public virtual CefBaseRefCounted,
   /*--cef()--*/
   virtual void CancelAllPrerendering() = 0;
 
-  
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  ///
+  /// Set blank screen detection config.
+  ///
+  /*--cef()--*/
+  virtual void SetBlankScreenDetectionConfig(
+      bool enable,
+      const std::vector<double> &detectionTiming,
+      const std::vector<int32_t> &detectionMethods,
+      int32_t contentfulNodesCountThreshold) = 0;
+#endif
+
 #if defined(OHOS_INPUT_EVENTS)
   ///
   /// Set focus by position.

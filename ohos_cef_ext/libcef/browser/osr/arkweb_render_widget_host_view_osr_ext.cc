@@ -2630,6 +2630,19 @@ void ArkWebRenderWidgetHostViewOSRExt::SetPipActive(bool active) {
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
+    const std::string& url,
+    int32_t blankScreenReason,
+    int32_t detectedContentfulNodesCount) {
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnDetectedBlankScreen(url, blankScreenReason,
+                                 detectedContentfulNodesCount);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_AI)
 ui::FilteredGestureProvider& ArkWebRenderWidgetHostViewOSRExt::GetGestureProvider() {
   return gesture_provider_;

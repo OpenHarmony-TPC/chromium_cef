@@ -385,6 +385,22 @@ void CefBrowserHostBase::AbortAskVideoCapturePermission(
 }
 #endif  // BUILDFLAG(ARKWEB_PERMISSION)
 
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+void CefBrowserHostBase::SetBlankScreenDetectionConfig(
+    bool enable,
+    const std::vector<double> &detectionTiming,
+    const std::vector<int32_t> &detectionMethods,
+    int32_t contentfulNodesCountThreshold) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "SetBlankScreenDetectionConfig GetWebContents null";
+    return;
+  }
+  web_contents->SetBlankScreenDetectionConfig(
+      enable, detectionTiming, detectionMethods, contentfulNodesCountThreshold);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_DISATCH_BEFORE_UNLOAD)
 bool CefBrowserHostBase::NeedToFireBeforeUnloadOrUnloadEvents() {
   if (!GetWebContents()) {

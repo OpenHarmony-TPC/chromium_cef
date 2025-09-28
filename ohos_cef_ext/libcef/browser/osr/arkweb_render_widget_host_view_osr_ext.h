@@ -318,6 +318,12 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                               const std::string& argument) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  void OnDetectedBlankScreen(const std::string& url,
+                             int32_t blankScreenReason,
+                             int32_t detectedContentfulNodesCount) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
 #endif
