@@ -7,11 +7,12 @@
 
 #include "cef/ohos_cef_ext/include/cef_data_base.h"
 #include "libcef/browser/browser_context.h"
+#include "base/files/file_path.h"
 
 class CefDataBaseImpl : public CefDataBase {
  public:
   enum CefPermissionType { GEOLOCATION_TYPE };
-  CefDataBaseImpl() = default;
+  CefDataBaseImpl();
 
   CefDataBaseImpl(const CefDataBaseImpl&) = delete;
   CefDataBaseImpl& operator=(const CefDataBaseImpl&) = delete;
@@ -55,5 +56,6 @@ class CefDataBaseImpl : public CefDataBase {
 
  private:
   IMPLEMENT_REFCOUNTING(CefDataBaseImpl);
+  base::FilePath user_cache_path_ = base::FilePath("");
 };
 #endif  // CEF_LIBCEF_BROWSER_NET_DATA_BASE_IMPL_H_
