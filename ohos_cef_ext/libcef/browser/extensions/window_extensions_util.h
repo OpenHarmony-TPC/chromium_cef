@@ -27,12 +27,12 @@ namespace extensions {
 
 base::Value::Dict GetWindowValue(
     const WebExtensionWindow& window,
-    std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors,
+    const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors,
     bool populate = true);
 
-base::Value::List GettWindowValueList(
+base::Value::List GetWindowValueList(
     const std::vector<WebExtensionWindow>& windows,
-    std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>> scrub_tab_behaviors_combined,
+    const std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>>& scrub_tab_behaviors_combined,
     bool populate = true);
 
 int32_t GetCurrentWindowId(content::WebContents* webcontents, int32_t default_window_id);

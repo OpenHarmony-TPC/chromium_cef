@@ -1,11 +1,21 @@
-// Copyright 2013 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
+/*
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "libcef/browser/devtools/arkweb/devtools_frontend.h"
 
-#include <stddef.h>
-
+#include <cstddef>
 #include <iomanip>
 #include <utility>
 
@@ -62,6 +72,20 @@
 #elif BUILDFLAG(IS_POSIX)
 #include <time.h>
 #endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/extensions/arkweb_chrome_extension_util_ext.h"
+#include "chrome/browser/extensions/extension_management.h"
+#include "chrome/browser/extensions/extension_service.h"
+#include "chrome/common/extensions/chrome_manifest_url_handlers.h"
+#include "extensions/browser/extension_registry.h"
+#include "extensions/browser/extension_util.h"
+#include "extensions/common/mojom/api_permission_id.mojom-shared.h"
+#include "extensions/common/permissions/permissions_data.h"
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "chrome/browser/profiles/profile.h"
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace {
 
@@ -226,9 +250,6 @@ class CefDevToolsFrontend::NetworkResourceLoader
 
     bool encoded = !base::IsStringUTF8(chunk);
     if (encoded) {
-      /*std::string encoded_string;
-      base::Base64Encode(chunk, &encoded_string);
-      chunkValue = base::Value(std::move(encoded_string));*/
       chunkValue = base::Value(base::Base64Encode(chunk));
     } else {
       chunkValue = base::Value(chunk);
@@ -317,7 +338,9 @@ CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
             << inspect_element_at.x << "*" << inspect_element_at.y << "})";
   AlloyBrowserHostImpl* alloy_frontend_browser = static_cast<AlloyBrowserHostImpl*>(frontend_browser.get());
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
-      std::move(devtools_message_handler));
+      std::move(devtools_message_handler),
+      Profile::FromBrowserContext(
+          alloy_frontend_browser->web_contents()->GetBrowserContext()));
   // CefDevToolsFrontend will delete itself when the frontend WebContents is
   // destroyed.
   CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
@@ -486,10 +509,11 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   if (devtools_message_handler_) {
-    if (devtools_message_handler_->HandleMessage(
-          request_id, *method, params)) {
+    auto ret = devtools_message_handler_->HandleMessage(
+        request_id, *method, params);
+    if (ret.handled) {
       if (request_id) {
-        SendMessageAck(request_id, base::Value::Dict());
+        SendMessageAck(request_id, std::move(ret.result));
       }
       return;
     }
@@ -510,6 +534,13 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     agent_host_->DispatchProtocolMessage(
         this, base::as_bytes(base::make_span(*protocol_message)));
   } else if (*method == "loadCompleted") {
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    int tab_id = cef::GetTabIdForWebContents(inspected_contents_);
+    CallClientFunction("DevToolsAPI", "setInspectedTabId", base::Value(tab_id));
+
+    AddDevToolsExtensionsToClient();
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
     auto* rfh = web_contents()->GetPrimaryMainFrame();
     if (rfh == nullptr) {
       return;
@@ -524,7 +555,6 @@ void CefDevToolsFrontend::HandleMessageFromDevToolsFrontend(
     // TODO(pfeldman): handle some of the embedder messages in content.
     const std::string* url = params[0].GetIfString();
     const std::string* headers = params[1].GetIfString();
-    //absl::optional<const int> stream_id = params[2].GetIfInt();
     std::optional<const int> stream_id = params[2].GetIfInt();
     if (!url || !headers || !stream_id.has_value()) {
       return;
@@ -906,6 +936,12 @@ void CefDevToolsFrontend::FilePathsChanged(
   }
 }
 
+void CefDevToolsFrontend::SendMessageAck(int request_id,
+                                         base::Value arg) {
+  CallClientFunction("DevToolsAPI", "embedderMessageAck",
+                     base::Value(request_id), std::move(arg));
+}
+
 void CefDevToolsFrontend::RequestFileSystems() {
   base::Value::List file_systems_value;
   for (auto const& file_system : file_manager_.GetFileSystems()) {
@@ -915,3 +951,84 @@ void CefDevToolsFrontend::RequestFileSystems() {
       base::Value(std::move(file_systems_value)));
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+base::Value::Dict CefDevToolsFrontend::BuildExtensionInfo(
+    const extensions::Extension* extension) {
+  GURL url =
+      extensions::chrome_manifest_urls::GetDevToolsPage(extension);
+  const bool is_extension_url =
+      (url.SchemeIs(extensions::kExtensionScheme)
+       || url.SchemeIs(extensions::kArkwebExtensionScheme)) &&
+      url.host_piece() == extension->id();
+  DCHECK(is_extension_url || url.SchemeIsHTTPOrHTTPS());
+
+  // Each devtools extension will need to be able to run in the devtools
+  // process. Grant the devtools process the ability to request URLs from the
+  // extension.
+  content::ChildProcessSecurityPolicy::GetInstance()->GrantRequestOrigin(
+      web_contents()->GetPrimaryMainFrame()->GetProcess()->GetID(),
+      url::Origin::Create(extension->url()));
+
+  extensions::ExtensionManagement* management =
+      extensions::ExtensionManagementFactory::GetForBrowserContext(
+          web_contents()->GetBrowserContext());
+  base::Value::List runtime_allowed_hosts;
+  std::vector<std::string> allowed_hosts =
+      management->GetPolicyAllowedHosts(extension).ToStringVector();
+  for (auto& host : allowed_hosts) {
+    runtime_allowed_hosts.Append(std::move(host));
+  }
+  base::Value::List runtime_blocked_hosts;
+  std::vector<std::string> blocked_hosts =
+      management->GetPolicyBlockedHosts(extension).ToStringVector();
+  for (auto& host : blocked_hosts) {
+    runtime_blocked_hosts.Append(std::move(host));
+  }
+
+  base::Value::Dict extension_info;
+  extension_info.Set("startPage", url.spec());
+  extension_info.Set("name", extension->name());
+  extension_info.Set("exposeExperimentalAPIs",
+                     extension->permissions_data()->HasAPIPermission(
+                         extensions::mojom::APIPermissionID::kExperimental));
+  extension_info.Set("allowFileAccess", extensions::util::AllowFileAccess(
+                                            extension->id(),
+                                            web_contents()->GetBrowserContext()));
+  extension_info.Set(
+      "hostsPolicy",
+      base::Value::Dict()
+          .Set("runtimeAllowedHosts", std::move(runtime_allowed_hosts))
+          .Set("runtimeBlockedHosts", std::move(runtime_blocked_hosts)));
+  return extension_info;
+}
+
+void CefDevToolsFrontend::AddDevToolsExtensionsToClient() {
+  // See DevToolsUIBindings::AddDevToolsExtensionsToClient.
+  const extensions::ExtensionRegistry* registry =
+      extensions::ExtensionRegistry::Get(web_contents()->GetBrowserContext());
+  if (!registry) {
+    return;
+  }
+
+  base::Value::List results;
+  base::Value::List forbidden_origins;
+  for (const scoped_refptr<const extensions::Extension>& extension :
+       registry->enabled_extensions()) {
+    if (extensions::Manifest::IsComponentLocation(extension->location())) {
+      forbidden_origins.Append(extension->origin().Serialize());
+    }
+    if (extensions::chrome_manifest_urls::GetDevToolsPage(extension.get())
+            .is_empty()) {
+      continue;
+    }
+    results.Append(BuildExtensionInfo(extension.get()));
+  }
+
+
+  CallClientFunction("DevToolsAPI", "setOriginsForbiddenForExtensions",
+                     base::Value(std::move(forbidden_origins)));
+  CallClientFunction("DevToolsAPI", "addExtensions",
+                     base::Value(std::move(results)));
+}
+#endif // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)

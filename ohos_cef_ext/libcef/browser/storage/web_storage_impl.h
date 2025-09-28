@@ -106,7 +106,7 @@ class CefWebStorageImpl : public CefWebStorage {
   void GetPasswordInternal(const CefString& url,
                            const CefString& username,
                            CefRefPtr<CefGetPasswordCallback> callback);
-  void MigratePasswordsInfoInternal();
+  void MigratePasswordsInfoInternal(bool migrateBackupFlag);
   void GetPasswordCallbackImpl(CefRefPtr<CefGetPasswordCallback> callback,
                                const std::u16string& password);
   void GetSavedPasswordsCallbackImpl(
@@ -150,6 +150,9 @@ class CefWebStorageImpl : public CefWebStorage {
     void RequestAutofillableLogins(
         CefRefPtr<CefGetSavedPasswordsCallback> callback);
     void RequestAndMigrateAutofillableLogins();
+
+    void GetPasswordStoreResultsFrom(
+        std::vector<std::unique_ptr<password_manager::PasswordForm>> results);
 
    protected:
     raw_ptr<CefWebStorageImpl> web_storage_impl_;

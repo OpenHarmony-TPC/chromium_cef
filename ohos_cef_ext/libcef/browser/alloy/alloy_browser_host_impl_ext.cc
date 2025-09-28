@@ -327,6 +327,21 @@ content::BrowserContext* GetIncognitoContext(
 }
 #endif // ARKWEB_NWEB_EX
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+const char* kBlockedWebUIHostsInIncognito[] = {
+  chrome::kChromeUIExtensionsHost,
+};
+ 
+bool IsBlockedWebUIHostInIncognito(const std::string_view& host) {
+  for (auto& blocked_host : kBlockedWebUIHostsInIncognito) {
+    if (base::EqualsCaseInsensitiveASCII(blocked_host, host)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif // ARKWEB_ARKWEB_EXTENSIONS
+
 }
 
 
@@ -1324,11 +1339,6 @@ std::unique_ptr<content::CustomMediaPlayer>
 AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
     std::unique_ptr<content::CustomMediaPlayerListener> listener,
     const content::MediaInfo& media_info) {
-  if (!client_) {
-    LOG(ERROR) << "CreateCustomMediaPlayer failed, client_ is null";
-    return nullptr;
-  }
-
   CefOwnPtr<CefCustomMediaPlayerDelegate> delegate;
   static_assert(sizeof(CefCustomMediaInfo) == sizeof(content::MediaInfo));
   CefCustomMediaInfo cef_media_info;
@@ -1359,6 +1369,10 @@ AlloyBrowserHostImplExt::CreateCustomMediaPlayer(
   cef_media_info.https_headers = media_info.https_headers;
   cef_media_info.attributes = media_info.attributes;
 
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, CreateCustomMediaPlayer failed";
+    return nullptr;
+  }
   delegate = client_->AsArkWebClient()->OnCreateCustomMediaPlayer(
       CefOwnPtr<CefMediaPlayerListenerImpl>(
           new CefMediaPlayerListenerImpl(std::move(listener))),
@@ -1922,6 +1936,29 @@ void AlloyBrowserHostImplExt::OnIsPageDistillable(int page_type,
 }
 
 bool AlloyBrowserHostImplExt::IsForDistillerPage() {
+  return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
+    bool is_guest_view,
+    const content::OpenURLParams& params) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
+    return false;
+  }
+ 
+  if (!is_guest_view &&
+      (params.url.SchemeIs(content::kChromeUIScheme)
+      || params.url.SchemeIs(content::kArkWebUIScheme)) &&
+      web_contents()->GetBrowserContext() &&
+      web_contents()->GetBrowserContext()->IsOffTheRecord() &&
+      IsBlockedWebUIHostInIncognito(params.url.host_piece())) {
+    // Block navigation to non-allowlisted WebUI pages.
+    LOG(WARNING) << "Navigation is blocked in Alloy-style browser.";
+    return true;
+  }
+  
   return false;
 }
 #endif

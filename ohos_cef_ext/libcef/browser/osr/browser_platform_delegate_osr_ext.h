@@ -61,6 +61,7 @@ public:
                             float centerY) override;
   void ScrollBy(float delta_x, float delta_y) override;
   void UpdateSecurityLayer(bool isNeedSecurityLayer) override;
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) override;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
   void SetBypassVsyncCondition(int32_t condition) override;
@@ -186,6 +187,11 @@ public:
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  SkColor GetBackgroundColor() const override;
+  void UpdateBackgroundColor(SkColor color) override;
+#endif  // ARKWEB_BACKGROUND_COLOR
+
 protected:
   // Platform-specific behaviors will be delegated to |native_delegate|.
   CefBrowserPlatformDelegateOsrExt(
@@ -220,6 +226,9 @@ protected:
   std::unique_ptr<base::OneShotTimer> pause_timer_;
   SEQUENCE_CHECKER(sequence_checker_);
 #endif  // BUILDFLAG(ARKWEB_PIP)
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+  std::optional<SkColor> background_color_;
+#endif  // ARKWEB_BACKGROUND_COLOR
 };
  
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_OSR_BROWSER_PLATFORM_DELEGATE_OSR_EXT_H_

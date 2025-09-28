@@ -394,17 +394,7 @@ bool ArkWebBrowserContentsDelegateExt::IsPrerendering(
     return false;
   }
 
-  content::RenderFrameHostImpl* rfh = static_cast<content::RenderFrameHostImpl*>(
-    frame.get()->GetRenderFrameHostFromGlobalId());
-  if (!rfh) {
-    return false;
-  }
-
-  if (!rfh->frame_tree()) {
-    return false;
-  }
-
-  return rfh->frame_tree()->is_prerendering();
+  return frame->IsPrerendering();
 }
 
 void ArkWebBrowserContentsDelegateExt::NavigationStateChanged(

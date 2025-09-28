@@ -47,6 +47,7 @@
 #include "base/task/thread_pool.h"
 #include "arkweb/chromium_ext/base/ohos/nweb_engine_event_logger_code.h"
 #include "components/os_crypt/sync/os_crypt_linux_for_include.h"
+#include "content/public/browser/browser_thread.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
@@ -464,8 +465,22 @@ void CefWebStorageImpl::GetSavedPasswordsInfoInternal(
   // oh_password_consumer_.RequestAutofillableLogins(callback);
 }
 
-bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter) {
-  if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigrationDataBackupCompletion)) {
+void SetMigrationPasswordPrefs(std::string_view path, bool value) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE,
+        base::BindOnce(&SetMigrationPasswordPrefs, path, value));
+    return;
+  }
+
+  if (g_browser_process && g_browser_process->local_state()) {
+    g_browser_process->local_state()->SetBoolean(path, value);
+    g_browser_process->local_state()->CommitPendingWrite();
+  }
+}
+
+bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter, bool migrateBackupFlag) {
+  if (migrateBackupFlag) {
     return true;
   }
   auto browser_context = GetBrowserContext(getter);
@@ -488,22 +503,20 @@ bool VerifyMigrationDataBackupCompletion(const CefBrowserContext::Getter& getter
                           std::to_string(DIRECTORY_OR_FILE_NOT_EXIST);
     base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
                                   base::ohos::kPasswordManagerError, err_msg);
-    g_browser_process->local_state()->SetBoolean(browser_prefs::kMigratePasswordsToPasswordVault, true);
-    g_browser_process->local_state()->CommitPendingWrite();
+    SetMigrationPasswordPrefs(browser_prefs::kMigratePasswordsToPasswordVault, true);
     return false;
   }
   if (!base::CopyDirectory(migrate_path, migrate_backup_path, false)) {
     LOG(ERROR) << "[Autofill] migrate directory backup failed.";
     return false;
   }
-  g_browser_process->local_state()->SetBoolean(browser_prefs::kMigrationDataBackupCompletion, true);
-  g_browser_process->local_state()->CommitPendingWrite();
+  SetMigrationPasswordPrefs(browser_prefs::kMigrationDataBackupCompletion, true);
   LOG(INFO) << "[Autofill] migrate directory backup successful.";
   return true;
 }
 
-void CefWebStorageImpl::MigratePasswordsInfoInternal() {
-  if (!VerifyMigrationDataBackupCompletion(browser_context_getter_)) {
+void CefWebStorageImpl::MigratePasswordsInfoInternal(bool migrateBackupFlag) {
+  if (!VerifyMigrationDataBackupCompletion(browser_context_getter_, migrateBackupFlag)) {
     return;
   }
   oh_password_consumer_.RequestAndMigrateAutofillableLogins();
@@ -552,11 +565,6 @@ bool ShouldMigratePassword(password_manager::PasswordForm* form, CefRefPtr<CefWe
  
   return true;
 }
- 
-void SetMigrationPasswordPrefs() {
-  g_browser_process->local_state()->SetBoolean(browser_prefs::kMigratePasswordsToPasswordVault, true);
-  g_browser_process->local_state()->CommitPendingWrite();
-}
 
 void UpdatePasswordDisplayName(const std::vector<CefString>& url,
                                const std::vector<CefString>& username,
@@ -602,7 +610,7 @@ bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<C
       base::ohos::ReportEngineEvent(base::ohos::kModuleContentBrowser, base::ohos::kDefaultUrl,
                                     base::ohos::kPasswordManagerError, err_msg);
       migration_listener->SetMigrationErrorCode(MIGRATION_SERVICE_ABILITY_DISABLE);
-      CEF_POST_TASK(CEF_IOT, base::BindOnce(&SetMigrationPasswordPrefs));
+      SetMigrationPasswordPrefs(browser_prefs::kMigratePasswordsToPasswordVault, true);
       return false;
     }
  
@@ -703,7 +711,7 @@ void OnMigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_i
  
   if (migration_listener->GetMigrationErrorCode() == MIGRATION_SUCCESS &&
       migration_listener->GetMigrationDisconnectCount() == 0) {
-    CEF_POST_TASK(CEF_IOT, base::BindOnce(&SetMigrationPasswordPrefs));
+    SetMigrationPasswordPrefs(browser_prefs::kMigratePasswordsToPasswordVault, true);
     LOG(INFO) << "[Autofill] Migrate password to passwordVault success, migration total count:"
       << results.size() << ", success count:" << migration_listener->GetMigrationSuccessCount();
     std::string err_msg = "Migrate password to passwordVault success, error_code:" +
@@ -714,16 +722,31 @@ void OnMigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_i
   }
 }
 
-void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
-    password_manager::PasswordStoreInterface* store,
-    std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
-  if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigratePasswordsToPasswordVault)) {
+void CefWebStorageImpl::OhPasswordStoreConsumer::GetPasswordStoreResultsFrom(
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE,
+        base::BindOnce(&CefWebStorageImpl::OhPasswordStoreConsumer::GetPasswordStoreResultsFrom,
+                       weak_ptr_factory_.GetWeakPtr(),
+                       std::move(results)));
     return;
   }
 
-  if (g_browser_process->local_state()->GetBoolean(browser_prefs::kMigrationQueryAssetfailure)) {
-    g_browser_process->local_state()->SetBoolean(browser_prefs::kMigrationQueryAssetfailure, false);
-    g_browser_process->local_state()->CommitPendingWrite();
+  LOG(DEBUG) << "[Autofill]OhPasswordStoreConsumer::GetPasswordStoreResultsFrom.";
+  if (!g_browser_process || !g_browser_process->local_state()) {
+    LOG(ERROR) << "[Autofill]GetPasswordStoreResultsFrom:prefService is invalid.";
+    return;
+  }
+
+  PrefService* local_state = g_browser_process->local_state();
+  if (local_state->GetBoolean(browser_prefs::kMigratePasswordsToPasswordVault)) {
+    return;
+  }
+
+  if (local_state->GetBoolean(browser_prefs::kMigrationQueryAssetfailure)) {
+    local_state->SetBoolean(browser_prefs::kMigrationQueryAssetfailure, false);
+    local_state->CommitPendingWrite();
     return;
   }
  
@@ -732,6 +755,12 @@ void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
           {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
           base::BindOnce(OnMigratePasswordToPasswordVault, (CefRefPtr<CefWebStorageImpl>)web_storage_impl_,
                          std::move(results)));
+}
+
+void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResultsFrom(
+    password_manager::PasswordStoreInterface* store,
+    std::vector<std::unique_ptr<password_manager::PasswordForm>> results) {
+  GetPasswordStoreResultsFrom(std::move(results));
 }
 
 void CefWebStorageImpl::OhPasswordStoreConsumer::RequestAutofillableLogins(
@@ -838,9 +867,19 @@ void CefWebStorageImpl::GetSavedPasswordsInfo(
 
 void CefWebStorageImpl::MigratePasswordsInfo() {
 #if BUILDFLAG(ARKWEB_EXT_PASSWORD)
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE,
+        base::BindOnce(&CefWebStorageImpl::MigratePasswordsInfo, weak_factory_.GetWeakPtr()));
+    return;
+  }
+
+  bool migrateBackupFlag =
+    g_browser_process->local_state()->GetBoolean(browser_prefs::kMigrationDataBackupCompletion);
+
   CEF_POST_TASK(
       CEF_IOT, base::BindOnce(&CefWebStorageImpl::MigratePasswordsInfoInternal,
-                              weak_factory_.GetWeakPtr()));
+                              weak_factory_.GetWeakPtr(), migrateBackupFlag));
 #endif  // ARKWEB_EXT_PASSWORD
 }
 

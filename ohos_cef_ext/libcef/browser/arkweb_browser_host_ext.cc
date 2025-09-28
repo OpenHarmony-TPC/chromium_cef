@@ -188,6 +188,12 @@ using OhPasswordManagerClient = ChromePasswordManagerClient;
 #include "libcef/browser/dom_distiller/oh_self_deleting_request_delegate.h"
 #endif // ARKWEB_READER_MODE
 
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+#include "arkweb/chromium_ext/chrome/browser/ssl/ohos_https_upgrades_helper.h"
+#endif
+
+#include "arkweb/ohos_adapter_ndk/inputmethodframework_adapter/imf_adapter_impl.h"
+
 const char kNWebId[] = "nweb_id";
 #endif
 namespace {
@@ -637,6 +643,8 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
       browser_settings.supports_double_tap_zoom;
   settings_.supports_multi_touch_zoom =
       browser_settings.supports_multi_touch_zoom;
+  settings_.zoom_control_access =
+      browser_settings.zoom_control_access;
   settings_.initialize_at_minimum_page_scale =
       browser_settings.initialize_at_minimum_page_scale;
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
@@ -1021,6 +1029,48 @@ void ArkWebBrowserHostExtImpl::LoadWithData(const CefString& data,
   }
 }
 
+void ArkWebDealWithPostData(const std::string& post_data, 
+                           content::NavigationController::LoadURLParams* params) {
+  if (post_data.empty()) {
+      params->post_data = new network::ResourceRequestBody();
+  } else {
+      params->post_data = network::ResourceRequestBody::CreateFromBytes(
+          post_data.data(), post_data.size());
+  }
+}
+
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
+                                                 const std::string& refer, const std::string& headers,
+                                                 const std::string& post_data, const bool allow_https_upgrade) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(CEF_UIT,
+                  base::BindOnce(&ArkWebBrowserHostExtImpl::LoadUrlWithParams, this, 
+                                 url, load_type,
+                                 refer, headers,
+                                 post_data, allow_https_upgrade));
+    return;
+  }
+  GURL new_url = GURL(url);
+  content::NavigationController::LoadURLParams loadUrlParams(new_url);
+ 
+  loadUrlParams.url = GURL(new_url);
+  loadUrlParams.load_type = static_cast<content::NavigationController::LoadURLType>(load_type);
+  
+  loadUrlParams.referrer = content::Referrer(GURL(static_cast<std::optional<std::string>>(refer).value_or("")), 
+                           network::mojom::ReferrerPolicy::kDefault);
+  
+  loadUrlParams.extra_headers = headers;
+  ArkWebDealWithPostData(post_data, &loadUrlParams);
+  loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
+                                                       
+  if (auto web_contents = GetWebContents()) {
+    LOG(DEBUG) << "load Url With Params";
+    web_contents->GetController().LoadURLWithParams(loadUrlParams);
+  }
+}
+#endif
+
 void ArkWebBrowserHostExtImpl::SetNativeWindow(cef_native_window_t window) {
   widget_ = NWebNativeWindowTracker::GetInstance()->AddNativeWindow(window);
 }
@@ -1124,6 +1174,10 @@ void ArkWebBrowserHostExtImpl::UpdateBackgroundColor(int color) {
   if (rvh->GetWidget()->GetView()) {
     rvh->GetWidget()->GetView()->SetBackgroundColor(color);
   }
+
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateBackgroundColor(color);
+  }
 }
 #endif  // BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
 
@@ -1203,6 +1257,12 @@ void ArkWebBrowserHostExtImpl::SetImeShow(bool visible) {
 void ArkWebBrowserHostExtImpl::UpdateSecurityLayer(bool isNeedSecurityLayer) {
   if (platform_delegate_) {
     platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateSecurityLayer(isNeedSecurityLayer);
+  }
+}
+
+void ArkWebBrowserHostExtImpl::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  if (platform_delegate_) {
+    platform_delegate_->AsArkWebCefBrowserPlatformDelegateExt()->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
   }
 }
 
@@ -3944,3 +4004,43 @@ void ArkWebBrowserHostExtImpl::GetFocusedFrameInfo(int32_t& frame_id,
   frame_url = frame->GetLastCommittedURL().spec();
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+void ArkWebBrowserHostExtImpl::EnableHttpsUpgrades(bool enable) {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::EnableHttpsUpgrades, web_contents is null";
+    return;
+  }
+  OhosHttpsUpgradesHelper::CreateForWebContents(web_contents);
+  auto* https_helper = OhosHttpsUpgradesHelper::FromWebContents(web_contents);
+  if (https_helper) {
+    https_helper->set_is_arkweb_https_upgrades_enable(enable);
+  } else {
+    LOG(ERROR) << "ArkWebBrowserHostExtImpl::EnableHttpsUpgrades, https_helper is null";
+  }
+}
+#endif
+
+void ArkWebBrowserHostExtImpl::HandleInputMethodExtendAction(int32_t action) {
+  auto* web_contents = static_cast<content::WebContentsImpl*>(GetWebContents());
+  if (web_contents == nullptr) {
+    LOG(ERROR) << __FUNCTION__ << " web_contents is nullptr, " << action;
+    return;
+  }
+  if (action ==
+      static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::SELECT_ALL)) {
+    web_contents->SelectAll();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::CUT)) {
+    web_contents->Cut();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::COPY)) {
+    web_contents->Copy();
+  } else if (action ==
+             static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::PASTE)) {
+    web_contents->Paste();
+  } else {
+    LOG(ERROR) << __FUNCTION__ << " Unsupported action " << action;
+  }
+}

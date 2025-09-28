@@ -295,6 +295,13 @@ void CefBrowserPlatformDelegateOsrExt::UpdateSecurityLayer(bool isNeedSecurityLa
     view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateSecurityLayer(isNeedSecurityLayer);
   }
 }
+
+void CefBrowserPlatformDelegateOsrExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (view) {
+    view->AsArkWebRenderWidgetHostViewOSRExt()->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
+  }
+}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_VSYNC_SCHEDULE)
@@ -938,3 +945,16 @@ bool CefBrowserPlatformDelegateOsrExt::OnStartBackgroundTask(
       type, message);
 }
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_BACKGROUND_COLOR)
+SkColor CefBrowserPlatformDelegateOsrExt::GetBackgroundColor() const {
+  if (background_color_) {
+    return background_color_.value();
+  }
+  return CefBrowserPlatformDelegateOsr::GetBackgroundColor();
+}
+
+void CefBrowserPlatformDelegateOsrExt::UpdateBackgroundColor(SkColor color) {
+  background_color_ = color;
+}
+#endif  // ARKWEB_BACKGROUND_COLOR

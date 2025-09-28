@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "ohos_nweb/src/capi/nweb_extension_javascript_item.h"
+#include "arkweb/ohos_nweb/src/capi/nweb_extension_load_url_params.h"
 #include "arkweb/ohos_nweb/src/capi/nweb_prefetch_options.h"
 #include "include/cef_base.h"
 #include "include/cef_browser.h"
@@ -501,6 +502,12 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) = 0;
 
   ///
+  /// UpdateTextFieldStatus
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) = 0;
+
+  ///
   /// Set HasComposition
   ///
   virtual void SetHasComposition(bool has_composition) = 0;
@@ -723,7 +730,14 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   virtual void LoadWithData(const CefString& data,
                             const CefString& mimeType,
                             const CefString& encoding) = 0;
-
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  ///
+  /// Load the url with loadURLParams into this WebView
+  ///
+  virtual void LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
+                                 const std::string& refer, const std::string& headers,
+                                 const std::string& post_data, const bool allow_https_upgrade) = 0;
+#endif
   ///
   /// add visited url.
   ///
@@ -1406,6 +1420,18 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) = 0;
 #endif
+
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  ///
+  /// enable or disable https upgrades function
+  ///
+  virtual void EnableHttpsUpgrades(bool enable) = 0;
+#endif
+
+  ///
+  /// Handle extend action from input method.
+  ///
+  virtual void HandleInputMethodExtendAction(int32_t action) {}
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_

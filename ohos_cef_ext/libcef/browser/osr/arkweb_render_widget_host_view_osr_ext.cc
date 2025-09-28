@@ -136,6 +136,10 @@ static float DEFAULT_SCROLL_OFFSET_Y = -1.0f;
 #endif
 
 #if BUILDFLAG(ARKWEB_SAME_LAYER)
+const int32_t NOT_NATIVE_ID = 100;
+#endif
+
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
 class CefGestureEventCallbackImpl : public CefGestureEventCallback {
  public:
   using CallbackType = blink::InputHandlerProxyUtils::GestureEventCallback;
@@ -638,6 +642,16 @@ void ArkWebRenderWidgetHostViewOSRExt::UpdateSecurityLayer(bool isNeedSecurityLa
         browser_impl_->GetClient()->GetRenderHandler();
     if (handler.get()) {
       handler->UpdateSecurityLayer(isNeedSecurityLayer);
+    }
+  }
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {
+  if (browser_impl_ && browser_impl_->GetClient()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->GetClient()->GetRenderHandler();
+    if (handler.get()) {
+      handler->UpdateTextFieldStatus(isShowKeyboard, isAttachIME);
     }
   }
 }
@@ -1881,7 +1895,7 @@ void ArkWebRenderWidgetHostViewOSRExt::DidNativeEmbedEvent(
     auto new_callback =
         base::BindOnce(&ArkWebRenderWidgetHostViewOSRExt::SetGestureEventResult,
                        weak_ptr_factory_.GetWeakPtr());
-    if (type != ArkWebRenderHandlerExt::CefEmbedTouchType::DOWN) {
+    if (touchEvent->id == NOT_NATIVE_ID) {
       new_callback.Reset();
     }
     CefRefPtr<CefGestureEventCallbackImpl> callbackPtr(
@@ -2613,6 +2627,19 @@ void ArkWebRenderWidgetHostViewOSRExt::SetPipActive(bool active) {
       compositor->Utils()->SetPipActive(active);
     }
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
+    const std::string& url,
+    int32_t blankScreenReason,
+    int32_t detectedContentfulNodesCount) {
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnDetectedBlankScreen(url, blankScreenReason,
+                                 detectedContentfulNodesCount);
 }
 #endif
 

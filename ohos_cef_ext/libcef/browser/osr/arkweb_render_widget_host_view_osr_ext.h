@@ -49,8 +49,8 @@
 class ArkWebRenderWidgetHostViewOSRUtils;
 
 namespace {
-  const std::string TYPE_NAME = "ArkWebOSRExt";
-}
+constexpr std::string_view TYPE_NAME = "ArkWebOSRExt";
+}  // namespace
 
 class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
  public:
@@ -262,6 +262,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool UpdateEditBounds();
   std::pair<int, int> HandleCursorOffset();
   void UpdateSecurityLayer(bool isNeedSecurityLayer);
+  void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME);
 #endif
 
 #if BUILDFLAG(ARKWEB_TOUCHPAD_FLING)
@@ -303,7 +304,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void UpdateCursor(const ui::Cursor& cursor) override;
-  std::string GetViewType() override { return TYPE_NAME; }
+  constexpr std::string_view GetViewType() override { return TYPE_NAME; }
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   viz::FrameSinkId GetRootFrameSinkId() override;
@@ -315,6 +316,12 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void SendAccessibilityEvent(int64_t accessibilityId,
                               int32_t eventType,
                               const std::string& argument) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  void OnDetectedBlankScreen(const std::string& url,
+                             int32_t blankScreenReason,
+                             int32_t detectedContentfulNodesCount) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DRAG_DROP)

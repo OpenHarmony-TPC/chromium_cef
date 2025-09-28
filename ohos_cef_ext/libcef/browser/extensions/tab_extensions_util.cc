@@ -29,7 +29,7 @@ base::Value::Dict GetMutedInfoValue(const NWebExtensionTabMutedInfo& mutedInfo) 
   return dict;
 }
 
-void ScrubTabValue(NWebExtensionTab& tab, ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior) {
+void ScrubTabValue(NWebExtensionTab& tab, const ExtensionTabUtil::ScrubTabBehavior& scrub_tab_behavior) {
   switch (scrub_tab_behavior.committed_info) {
     case ExtensionTabUtil::kScrubTabFully:
       tab.url = std::nullopt;
@@ -58,7 +58,7 @@ void ScrubTabValue(NWebExtensionTab& tab, ExtensionTabUtil::ScrubTabBehavior scr
   }
 }
  
-base::Value::Dict GetTabValue(NWebExtensionTab& tab, ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior) {
+base::Value::Dict GetTabValue(NWebExtensionTab& tab, const ExtensionTabUtil::ScrubTabBehavior& scrub_tab_behavior) {
   ScrubTabValue(tab, scrub_tab_behavior);
   base::Value::Dict dict;
   if (tab.id) {
@@ -156,13 +156,13 @@ base::Value::Dict GetTabZoomChangeValue(const NWebExtensionTabZoomChangeInfo& ta
 }
 
 base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs,
-                                  std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors) {
+                                  const std::vector<ExtensionTabUtil::ScrubTabBehavior>& scrub_tab_behaviors) {
   base::Value::List tab_list;
   size_t i = 0;
   for (NWebExtensionTab tab : tabs) {
+    if (i == scrub_tab_behaviors.size()) break;
     LOG(DEBUG) << "GetTabValueList tab id: " << *tab.id;
-    ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = scrub_tab_behaviors[i++];
-    tab_list.Append(GetTabValue(tab, scrub_tab_behavior));
+    tab_list.Append(GetTabValue(tab, scrub_tab_behaviors[i++]));
   }
   return tab_list;
 }

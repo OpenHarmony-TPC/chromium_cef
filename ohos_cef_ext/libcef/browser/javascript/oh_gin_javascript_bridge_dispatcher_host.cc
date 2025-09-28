@@ -52,16 +52,6 @@ class ValueConvertState {
  private:
   size_t maxRecursionDepth_;
 };
-
-void StringSplit(std::string str,
-                 const char split,
-                 std::vector<std::string>& result) {
-  std::istringstream iss(str);
-  std::string token;
-  while (getline(iss, token, split)) {
-    result.push_back(token);
-  }
-}
 }  // namespace
 
 namespace NWEB {
@@ -333,9 +323,9 @@ void OhGinJavascriptBridgeDispatcherHost::ParseJsProxyPermissionJson(
         if ((*method_name).empty()) {
           continue;
         }
-        const base::Value::List* List_val =
+        const base::Value::List* list_val =
             dict_val->FindList("urlPermissionList");
-        for (const auto& val : *List_val) {
+        for (const auto& val : *list_val) {
           JsProxyPermissionConfigData data;
           std::map<std::string, JsProxyPermissionConfigData*> config_map_tmp;
           data.method_name = *method_name;
@@ -426,7 +416,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     // add sync method
     MethodPair object_pair;
     std::unordered_set<std::string> method_set;
-    for (std::string s : method_list) {
+    for (const auto& s : method_list) {
       method_set.emplace(s);
     }
     object_pair.first = object_name;
@@ -438,7 +428,7 @@ void OhGinJavascriptBridgeDispatcherHost::AddNamedObjectForWebController(
     // add async method
     MethodPair async_object_pair;
     std::unordered_set<std::string> async_method_set;
-    for (std::string s : async_method_list) {
+    for (const auto& s : async_method_list) {
       async_method_set.emplace(s);
       async_method_for_render.Append(s);
     }
@@ -528,10 +518,6 @@ void OhGinJavascriptBridgeDispatcherHost::SendAddNameObjectToRender(
   // https://chromium-review.googlesource.com/c/chromium/src/+/4968451
   render_frame_host->AddNamedObject(object_name, object_id, async_method_list,
                                     need_update);
-  // render_frame_host->Send(new
-  //     OhGinJavascriptBridgeMsg_AddNamedObject(
-  //     render_frame_host->GetRoutingID(), object_name, object_id,
-  //     async_method_for_render, need_update));
 }
 
 void OhGinJavascriptBridgeDispatcherHost::AddNamedObject(
@@ -769,7 +755,7 @@ void OhGinJavascriptBridgeDispatcherHost::OnHasAsyncThreadMethod(
     bool* result) {
   *result = false;
   std::shared_lock<std::shared_mutex> lock(share_mutex_);
-  
+
   // find in sync methods
   if (sync_method_map_.find(object_id) != sync_method_map_.end()) {
     MethodPair p = sync_method_map_[object_id];
@@ -863,20 +849,18 @@ std::unique_ptr<base::Value> ParseCefValueTObaseValueHelper(
       return std::make_unique<base::Value>(std::move(*value));
     }
     case CefValueType::VTYPE_BINARY: {
-      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
-                    "ParseCefValueTObaseValueHelper: VTYPE_BINARY";
       auto size = result->GetBinary()->GetSize();
-      auto buff = std::make_unique<char[]>(size);
+      auto buff = std::make_unique<char[]>(size + 1);
       result->GetBinary()->GetData(buff.get(), size, 0);
+      buff[size] = '\0';
       int32_t objId;
-      std::string str(buff.get());
-      std::vector<std::string> strList;
-      StringSplit(str, ';', strList);
+      std::string str(buff.get(), size);
+      std::vector<std::string> strList =
+          base::SplitString(str, ";", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+      LOG(DEBUG) << "OhGinJavascriptBridgeDispatcherHost::"
+                    "ParseCefValueTObaseValueHelper: strList.size() ="
+                 << strList.size() << ", size =" << size;
       if (strList.size() != JS_BRIDGE_BINARY_ARGS_COUNT) {
-        LOG(ERROR) << "OhGinJavascriptBridgeDispatcherHost::"
-                      "ParseCefValueTObaseValueHelper: strList.size() == "
-                   << strList.size() << " is error, str=" << str
-                   << ", size=" << size;
         baseValue = OhGinJavascriptBridgeValue::CreateObjectIDValue(-1);
         break;
       }

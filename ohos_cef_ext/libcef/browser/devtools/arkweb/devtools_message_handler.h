@@ -19,6 +19,7 @@
 #include "base/values.h"
 #include "base/functional/bind.h"
 
+#include "chrome/browser/devtools/devtools_settings.h"
 #include "libcef/browser/file_dialog_manager.h"
 #include "include/cef_devtools_message_handler_delegate.h"
 
@@ -29,9 +30,9 @@ class FileChooserParams;
 class CefDevToolsMessageHandler final {
  public:
   explicit CefDevToolsMessageHandler(
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate);
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate, Profile* profile);
   CefDevToolsMessageHandler(const CefDevToolsMessageHandler&) = delete;
-  CefDevToolsMessageHandler(CefDevToolsMessageHandler&&);
+  CefDevToolsMessageHandler(CefDevToolsMessageHandler&&) = delete;
   ~CefDevToolsMessageHandler();
 
   CefFileDialogManager::RunFileChooserCallback ShowFileChooser(
@@ -44,20 +45,33 @@ class CefDevToolsMessageHandler final {
       const std::string& path,
       InfoBarCallback callback);
 
-  bool HandleMessage(int request_id, const std::string& method,
+  struct Result final {
+    bool handled = false;
+    base::Value result;
+  };
+  Result HandleMessage(int request_id, const std::string& method,
       const base::Value::List& params);
 
  private:
-  bool HandleProtocolMessage(const base::Value::List&);
-  bool BringToFront(const base::Value::List&);
-  bool CloseWindow(const base::Value::List&);
-  bool InspectedURLChanged(const base::Value::List&);
-  bool PageBringToFront(const base::Value::List&);
+  Result HandleProtocolMessage(const base::Value::List&);
+  Result BringToFront(const base::Value::List&);
+  Result CloseWindow(const base::Value::List&);
+  Result InspectedURLChanged(const base::Value::List&);
+  Result PageBringToFront(const base::Value::List&);
+
+  Result RegisterPreference(const base::Value::List& params);
+  Result GetPreferences(const base::Value::List& params);
+  Result GetPreference(const base::Value::List& params);
+  Result SetPreference(const base::Value::List& params);
+  Result RemovePreference(const base::Value::List& params);
+  Result ClearPreferences(const base::Value::List& params);
 
   CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate_;
 
-  using Handler = base::RepeatingCallback<bool(const base::Value::List&)>;
+  using Handler = base::RepeatingCallback<Result(const base::Value::List&)>;
   std::map<std::string, Handler> method_handlers_;
   std::map<std::string, Handler> protocol_message_handlers_;
+
+  DevToolsSettings settings_;
 };
 #endif // CEF_LIBCEF_BROWSER_DEVTOOLS_ARKWEB_DEVTOOLS_MESSAGE_HANDLER_H_

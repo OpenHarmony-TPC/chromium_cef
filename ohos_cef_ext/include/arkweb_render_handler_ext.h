@@ -311,6 +311,12 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /*--cef()--*/
   virtual void UpdateSecurityLayer(bool isNeedSecurityLayer) {}
 
+  ///
+  /// Update focus and keyboard status in textFieldManager
+  ///
+  /*--cef()--*/
+  virtual void UpdateTextFieldStatus(bool isShowKeyboard, bool isAttachIME) {}
+
 #if BUILDFLAG(ARKWEB_DSS)
   ///
   /// Get Device pixel size.
@@ -354,6 +360,16 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /*--cef()--*/
   virtual void GetScreenOffset(CefRefPtr<CefBrowser> browser, double& x, double& y) {}
 #endif  // BUILDFLAG(ARKWEB_SCREEN_OFFSET)
+
+#if BUILDFLAG(ARKWEB_BLANK_SCREEN_DETECTION)
+  ///
+  /// Called when a blank screen is detected.
+  ///
+  /*--cef()--*/
+  virtual void OnDetectedBlankScreen(const std::string &url,
+                                     int32_t blankScreenReason,
+                                     int32_t detectedContentfulNodesCount) {}
+#endif
 
   ///
   /// Called when scroll.

@@ -143,6 +143,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   content::RenderFrameHost* GetRenderFrameHost() const;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   content::RenderFrameHost* GetRenderFrameHostFromGlobalId() const;
+  bool IsPrerendering();
 #endif
 
   // Returns true if this frame and |frame_host| represent the same frame.
@@ -248,6 +249,7 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
   raw_ptr<content::RenderFrameHost> render_frame_host_ = nullptr;
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   content::GlobalRenderFrameHostId rfh_global_id_;
+  bool initial_is_prerendering_ = false;
 #endif
 
   std::queue<std::pair<std::string, RenderFrameAction>>
