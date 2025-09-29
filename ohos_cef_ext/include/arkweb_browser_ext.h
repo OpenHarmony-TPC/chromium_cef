@@ -375,6 +375,11 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /*--cef()--*/
   virtual void SetAdBlockEnabledForSite(bool is_adblock_enabled,
                                         int main_frame_tree_node_id) = 0;
+
+  ///
+  /// Stop web fling.
+  ///
+  virtual void StopFling() {};
 };
 
 ///

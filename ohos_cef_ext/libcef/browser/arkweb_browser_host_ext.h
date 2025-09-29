@@ -771,6 +771,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #endif
 
   void HandleInputMethodExtendAction(int32_t action) override;
+  void StopFling() override;
 
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
