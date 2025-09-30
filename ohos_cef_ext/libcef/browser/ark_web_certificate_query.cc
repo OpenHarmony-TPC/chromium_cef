@@ -136,7 +136,7 @@ bool OnCertificateError(
   }
   bool proceed;
   if (onlyMainError) {
-    proceed = handler->OnCertificateError(
+    proceed = handler->AsCefRequestHandlerExt()->OnCertificateErrorExt(
         browser.get(), static_cast<cef_errorcode_t>(certError),
         requestUrl.spec(), sslInfo, callbackImpl.get());
   } else {
