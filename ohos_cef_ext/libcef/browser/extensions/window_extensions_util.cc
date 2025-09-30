@@ -23,6 +23,7 @@
 
 namespace extensions {
 
+namespace {
 const char kIdKey[] = "id";
 const char kWindowTypeKey[] = "type";
 const char kFocusedKey[] = "focused";
@@ -34,6 +35,8 @@ const char kTopKey[] = "top";
 const char kWidthKey[] = "width";
 const char kHeightKey[] = "height";
 const char kTabsKey[] = "tabs";
+const char kSessionIdKey[] = "sessionId";
+}
 
 base::Value::Dict GetWindowValue(
     const WebExtensionWindow& window,
@@ -58,7 +61,7 @@ base::Value::Dict GetWindowValue(
   if (window.height)
     dict.Set(kHeightKey, *window.height);
   if (window.sessionId)
-    dict.Set("sessionId", *window.sessionId);
+    dict.Set(kSessionIdKey, *window.sessionId);
   if (populate)
     dict.Set(kTabsKey, GetTabValueList(window.tabs, scrub_tab_behaviors));
   return dict;
