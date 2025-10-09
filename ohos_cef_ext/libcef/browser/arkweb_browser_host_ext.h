@@ -325,6 +325,12 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                     const CefString& mimeType,
                     const CefString& encoding) override;
 
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  void LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
+                         const std::string& refer, const std::string& headers,
+                         const std::string& post_data, const bool allow_https_upgrade) override;
+#endif
+
   void ExecuteJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
                          base::Value result);
 
@@ -743,6 +749,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   void GetFocusedFrameInfo(int32_t& frame_id, CefString& frame_url) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
+  void EnableHttpsUpgrades(bool enable) override;
 #endif
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
