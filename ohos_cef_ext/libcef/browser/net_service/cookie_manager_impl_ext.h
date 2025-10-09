@@ -19,6 +19,11 @@
 #include "components/content_settings/core/browser/host_content_settings_map.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include <mutex>
+#include "services/network/public/cpp/cors/origin_access_list.h"
+#endif
+
 BASE_FEATURE(kArkwebLoadCookiesOnAsyncThread,
              "ArkwebLoadCookiesOnAsyncThread",
              base::FEATURE_ENABLED_BY_DEFAULT);
@@ -106,6 +111,14 @@ bool CanSaveOrLoadCookies(const network::ResourceRequest& request);
 void UpdateHostContentSettingsMap();
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void SetOriginAccessListForOrigin(
+      const url::Origin& source_origin,
+      std::vector<network::mojom::CorsOriginPatternPtr> allow_patterns,
+      std::vector<network::mojom::CorsOriginPatternPtr> block_patterns);
+  bool ShouldForceIgnoreSiteForCookies(const network::ResourceRequest& request);
+#endif
+
  private:
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(
@@ -187,6 +200,10 @@ void UpdateHostContentSettingsMap();
   mutable bool remote_network_cookie_manager_inited_{false};
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   HostContentSettingsMap* host_content_settings_map_ = nullptr;
+#endif
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  network::cors::OriginAccessList origin_access_list_;
+  std::mutex origin_access_list_mutex_;
 #endif
 };
 #endif  // COOKIE_MANAGER_IMPL_EXT_H_

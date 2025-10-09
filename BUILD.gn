@@ -1181,6 +1181,7 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/window_extensions_util.h",
+      "ohos_cef_ext/libcef/browser/extensions/network_permissions_updater_ext.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.cc",
       "ohos_cef_ext/libcef/browser/extensions/api/windows/cef_windows_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/web_extension_menu_manager.cc",

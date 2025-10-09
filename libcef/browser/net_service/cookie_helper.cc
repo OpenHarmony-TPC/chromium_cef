@@ -20,12 +20,11 @@
 #include "arkweb/ohos_nweb_ex/build/features/features.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST) || BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
 #include "base/command_line.h"
 #include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
-#include "cef/ohos_cef_ext/libcef/browser/net_service/arkweb_cookie_helper_ext.h"
 #endif
-#if BUILDFLAG(ARKWEB_COOKIE)
+#if BUILDFLAG(ARKWEB_COOKIE) || BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "libcef/browser/net_service/cookie_manager_impl_ext.h"
 #endif
 
@@ -49,16 +48,14 @@ network::mojom::CookieManager* GetCookieManager(
 }
 
 net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
-#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-                                    const CefBrowserContext::Getter&
-                                        browser_context_getter,
-#endif
+                                    bool for_loading_cookies
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-                                    bool for_loading_cookies,
-                                    const std::optional<GURL> new_url) {
-#else
-                                    bool for_loading_cookies) {
+                                    , const std::optional<GURL> new_url
 #endif
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+                                    , bool is_off_the_record
+#endif
+) {
   // Match the logic from InterceptionJob::FetchCookies and
   // ChromeContentBrowserClient::ShouldIgnoreSameSiteCookieRestrictionsWhenTopLevel.
   bool should_treat_as_first_party =
@@ -70,9 +67,13 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
       );
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-  bool should_ignore_site_for_cookies =
-      ShouldForceIgnoreSiteForCookies(browser_context_getter, request);
-  should_treat_as_first_party |= should_ignore_site_for_cookies;
+  CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+      CefCookieManagerImplExt::GetInstance(is_off_the_record);
+
+  if (cookie_manager &&
+      cookie_manager->ShouldForceIgnoreSiteForCookies(request)) {
+    should_treat_as_first_party = true;
+  }
 #endif
 
   bool is_main_frame_navigation =
@@ -377,8 +378,8 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
     cookie_manager->LoadCookiesOnAsyncThread(
         new_url.value_or(request.url),
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-        GetCookieOptions(request, browser_context_getter,
-                         /*for_loading_cookies=*/true, new_url),
+        GetCookieOptions(request, /*for_loading_cookies=*/true, new_url,
+                         is_off_the_record),
 #else
         GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
 #endif
@@ -401,8 +402,8 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
           new_url.value_or(request.url),
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-          GetCookieOptions(request, browser_context_getter,
-                           /*for_loading_cookies=*/true, new_url),
+          GetCookieOptions(request, /*for_loading_cookies=*/true, new_url,
+                           is_off_the_record),
 #else
           GetCookieOptions(request, /*for_loading_cookies=*/true, new_url),
 #endif
@@ -505,8 +506,8 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
         request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-        GetCookieOptions(request, browser_context_getter,
-                         /*for_loading_cookies=*/false, {}),
+        GetCookieOptions(request, /*for_loading_cookies=*/false, {},
+                         is_off_the_record),
 #else
         GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
 #endif
@@ -523,8 +524,8 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
             SaveCookiesOnUIThread, browser_context_getter, request.url,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
-            GetCookieOptions(request, browser_context_getter,
-                             /*for_loading_cookies=*/false, {}),
+            GetCookieOptions(request, /*for_loading_cookies=*/false, {},
+                             is_off_the_record),
 #else
             GetCookieOptions(request, /*for_loading_cookies=*/false, {}),
 #endif
