@@ -1040,15 +1040,20 @@ void ArkWebDealWithPostData(const std::string& post_data,
 }
 
 #if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
-void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
-                                                 const std::string& refer, const std::string& headers,
-                                                 const std::string& post_data, const bool allow_https_upgrade) {
+void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url,
+                                                 const LoadUrlType load_type,
+                                                 const std::string& refer,
+                                                 const std::string& headers,
+                                                 const std::string& post_data,
+                                                 const bool allow_https_upgrade,
+                                                 int32_t transition_type) {
   if (!CEF_CURRENTLY_ON_UIT()) {
     CEF_POST_TASK(CEF_UIT,
-                  base::BindOnce(&ArkWebBrowserHostExtImpl::LoadUrlWithParams, this, 
-                                 url, load_type,
-                                 refer, headers,
-                                 post_data, allow_https_upgrade));
+                  base::BindOnce(&ArkWebBrowserHostExtImpl::LoadUrlWithParams,
+                                 this, std::string(url), load_type,
+                                 std::string(refer), std::string(headers),
+                                 std::string(post_data), allow_https_upgrade,
+                                 transition_type));
     return;
   }
   GURL new_url = GURL(url);
@@ -1064,6 +1069,12 @@ void ArkWebBrowserHostExtImpl::LoadUrlWithParams(const std::string& url, const L
   ArkWebDealWithPostData(post_data, &loadUrlParams);
   loadUrlParams.force_no_https_upgrade = !allow_https_upgrade;
 
+  loadUrlParams.transition_type = static_cast<ui::PageTransition>(
+      ui::PAGE_TRANSITION_TYPED | ui::PAGE_TRANSITION_FROM_ADDRESS_BAR);
+  if (ui::IsValidPageTransitionType(transition_type)) {
+    loadUrlParams.transition_type =
+        static_cast<ui::PageTransition>(transition_type);
+  }
   // if url_typed_with_http_scheme == true, it means user dont want to upgrade.
   loadUrlParams.url_typed_with_http_scheme = !allow_https_upgrade;
                                                        
