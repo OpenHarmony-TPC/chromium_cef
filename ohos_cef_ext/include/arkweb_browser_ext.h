@@ -718,9 +718,13 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// Load the url with loadURLParams into this WebView
   ///
-  virtual void LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
-                                 const std::string& refer, const std::string& headers,
-                                 const std::string& post_data, const bool allow_https_upgrade) = 0;
+  virtual void LoadUrlWithParams(const std::string& url,
+                                 const LoadUrlType load_type,
+                                 const std::string& refer,
+                                 const std::string& headers,
+                                 const std::string& post_data,
+                                 const bool allow_https_upgrade,
+                                 int32_t transition_type) = 0;
 #endif
   ///
   /// add visited url.
