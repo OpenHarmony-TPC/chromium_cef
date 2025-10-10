@@ -316,6 +316,17 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string OnRewriteUrlForNavigation(
+    const std::string& original_url,
+    const std::string& referrer) override {
+  if (wrapper_helper_) {
+    return wrapper_helper_->OnRewriteUrlForNavigation(init_state_->browser_, original_url, referrer);
+  }
+  return "";
+}
+#endif
+
 private:
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
 std::unique_ptr<ArkWebInterceptedRequestHandlerWrapperHelper> wrapper_helper_;

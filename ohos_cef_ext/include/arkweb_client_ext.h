@@ -193,6 +193,15 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   virtual void OnIsPageDistillable(int page_type, const std::string& distillable_page_url, const std::string& title) {}
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  ///
+  /// Notify rewrite url for navigation.
+  ///
+  /*--cef()--*/
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url, const std::string& referrer) { return ""; }
+#endif
+
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_CLIENT_EXT_H_

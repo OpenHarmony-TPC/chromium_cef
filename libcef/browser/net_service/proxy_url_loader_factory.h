@@ -156,6 +156,12 @@ class InterceptedRequestHandler {
 #if BUILDFLAG(ARKWEB_USERAGENT)
   virtual std::string GetCustomUserAgent() { return ""; }
 #endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer) { return ""; }
+#endif
 };
 
 // URL Loader Factory that supports request/response interception, processing

@@ -295,6 +295,10 @@ public:
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string OnRewriteUrlForNavigation(const std::string& original_url, const std::string& referrer) override;
+#endif
+
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;

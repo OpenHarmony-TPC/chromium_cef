@@ -163,6 +163,28 @@ GURL ArkWebInterceptedRequestHandlerWrapperHelper::
 }
 #endif  // BUILDFLAG(ARKWEB_ITP)
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigation(
+    CefRefPtr<CefBrowserHostBase> browser,
+    const std::string& original_url,
+    const std::string& referrer) {
+  if (!browser || !browser->GetHost()) {
+    return "";
+  }
+
+  CefRefPtr<CefClient> client = browser->GetHost()->GetClient();
+  if (!client) {
+    return "";
+  }
+
+  CefRefPtr<ArkWebLoadHandlerExt> load_handler = client->GetLoadHandler();
+  if (!load_handler) {
+    return "";
+  }
+  return load_handler->OnRewriteUrlForNavigation(original_url, referrer);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_ITP)
 void ReportITPResultInUiTask(CefRefPtr<CefBrowserHostBase> browser,
                              CefString tracker_host,
