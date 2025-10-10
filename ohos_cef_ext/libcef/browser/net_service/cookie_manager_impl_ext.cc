@@ -26,7 +26,7 @@
 #include "net/cookies/cookie_util.h"
 #include "services/network/cookie_access_delegate_impl.h"
 #include "services/network/cookie_manager.h"
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST) || BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "services/network/public/cpp/resource_request.h"
 #endif
 #include "services/network/public/mojom/cookie_manager.mojom.h"
@@ -1082,5 +1082,56 @@ void CefCookieManagerImplExt::UpdateHostContentSettingsMap() {
     host_content_settings_map_ =
         HostContentSettingsMapFactory::GetForProfile(cef_browser_context->AsBrowserContext());
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+void CefCookieManagerImplExt::SetOriginAccessListForOrigin(
+    const url::Origin& source_origin,
+    std::vector<network::mojom::CorsOriginPatternPtr> allow_patterns,
+    std::vector<network::mojom::CorsOriginPatternPtr> block_patterns) {
+  std::unique_lock<std::mutex> lock(origin_access_list_mutex_);
+
+  origin_access_list_.SetAllowListForOrigin(source_origin, allow_patterns);
+  origin_access_list_.SetBlockListForOrigin(source_origin, block_patterns);
+}
+
+bool CefCookieManagerImplExt::ShouldForceIgnoreSiteForCookies(
+    const network::ResourceRequest& request) {
+  if (!base::CommandLine::ForCurrentProcess()->HasSwitch(
+          switches::kEnableNwebEx)) {
+    return false;
+  }
+
+  std::unique_lock<std::mutex> lock(origin_access_list_mutex_);
+
+  if (request.request_initiator.has_value() &&
+      network::cors::OriginAccessList::AccessState::kAllowed ==
+          origin_access_list_.CheckAccessState(
+              request.request_initiator.value(), request.url)) {
+    return true;
+  }
+
+  url::Origin site_origin =
+      url::Origin::Create(request.site_for_cookies.RepresentativeUrl());
+  if (!site_origin.opaque() && request.request_initiator.has_value()) {
+    bool site_can_access_target =
+        network::cors::OriginAccessList::AccessState::kAllowed ==
+        origin_access_list_.CheckAccessState(site_origin, request.url);
+    bool site_can_access_initiator =
+        network::cors::OriginAccessList::AccessState::kAllowed ==
+        origin_access_list_.CheckAccessState(
+            site_origin, request.request_initiator->GetURL());
+    net::SiteForCookies site_of_initiator =
+        net::SiteForCookies::FromOrigin(request.request_initiator.value());
+    bool are_initiator_and_target_same_site =
+        site_of_initiator.IsFirstParty(request.url);
+    if (site_can_access_initiator && site_can_access_target &&
+        are_initiator_and_target_same_site) {
+      return true;
+    }
+  }
+
+  return false;
 }
 #endif
