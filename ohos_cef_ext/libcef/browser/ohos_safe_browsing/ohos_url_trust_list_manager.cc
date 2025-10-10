@@ -73,7 +73,7 @@ static bool CheckUrlRuleValid(UrlTrustRule& urlRule, std::string& err) {
     err = "empty host";
     return false;
   }
-  if (urlRule.port <= -1) {
+  if (urlRule.port <= -1 || urlRule.port >= 65536) {
     LOG(ERROR) << "parse: host "
                << url::LogUtils::ConvertUrlWithMask(urlRule.host) << " port is invalid";
     err = "host " + urlRule.host + " port is invalid";
