@@ -161,7 +161,7 @@ void UAPushConfig::DidLoadConfigFromFile(
 std::optional<OSPostionPrefsInfo> UAPushConfig::GetLastOsPositionStr(
     const std::string& device_type) {
   return last_os_position_str_map_[device_type];
-};
+}
 
 void UAPushConfig::ReadConfigInfoFromPrefs() {
   LOG(INFO) << kUAPushLogTag << "start ReadConfigInfoFromPrefs";
