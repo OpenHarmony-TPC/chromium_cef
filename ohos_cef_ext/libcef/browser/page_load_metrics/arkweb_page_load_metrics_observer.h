@@ -60,7 +60,7 @@ class OhPageLoadMetricsObserver
   void OnLoadEventEnd(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   void OnLoadedResource(const page_load_metrics::ExtraRequestCompleteInfo&
-                            extra_request_complelte_info) override;
+                            extra_request_complete_info) override;
   void OnFirstPaintInPage(
       const page_load_metrics::mojom::PageLoadTiming& timing) override;
   static void OnNavigationStart();
@@ -102,7 +102,7 @@ class OhPageLoadMetricsObserver
   raw_ptr<network::NetworkQualityTracker> network_quality_tracker_ = nullptr;
 
 #if BUILDFLAG(ARKWEB_NETWORK_DFX)
-  bool did_dispatch_on_main_resourse_ = false;
+  bool did_dispatch_on_main_resource_ = false;
   bool reported_buffered_metrics_ = false;
   uint32_t main_frame_request_redirect_count_ = 0;
   OhWebPerformanceTiming web_performance_timing_;
