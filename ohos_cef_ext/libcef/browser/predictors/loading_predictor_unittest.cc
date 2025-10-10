@@ -223,13 +223,7 @@ class HwLoadingPredictorTest : public testing::Test {
               description: "Prefetches resources for faster page loading."
               trigger: "Heuristic prediction of user navigation."
               data: "None"
-              destination: WEBSITE
-            }
-            policy {
-              cookies_allowed: NO
-              setting: "This feature cannot be disabled in settings."
-              policy_exception_justification: "Not implemented."
-            })");
+              destination: WEBSITE })");
     predictor_->loader_map_.emplace(
         123, network::SimpleURLLoader::Create(
                  std::make_unique<network::ResourceRequest>(),
