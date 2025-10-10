@@ -72,11 +72,11 @@ void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList, PrefService* lo
   }
 }
 
-void ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) {
+bool ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) {
   const base::Value::List* switches_list = value.GetDict().FindList("Switches");
   if (!switches_list) {
     LOG(WARNING) << "Missing 'Switches' list.";
-    return;
+    return false;
   }
  
   AbilityRuntime_ErrorCode code = ABILITY_RUNTIME_ERROR_CODE_PARAM_INVALID;
@@ -86,13 +86,13 @@ void ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) 
   code = OH_AbilityRuntime_ApplicationContextGetBundleName(bundle_name, NATIVE_BUFFER_SIZE, &bundle_name_length);
   if (code != ABILITY_RUNTIME_ERROR_CODE_NO_ERROR) {
     LOG(ERROR) << "OH_AbilityRuntime_ApplicationContextGetBundleName failed:err=" << code;
-    return;
+    return false;
   }
   
   std::string bundle_name_str(bundle_name);
   if(bundle_name_str.empty()) {
     LOG(ERROR) << "bundle_name is empty.";
-    return;
+    return false;
   }
  
   base::Value::List prefs_list;
@@ -118,54 +118,55 @@ void ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) 
   }
  
   SetFeaturesSwitchesToPrefsFile(std::move(prefs_list), localState);
+  return true;
 }
 
-void ParseFeaturesSwitchesToPrefs(PrefService* localState) {
+bool ParseFeaturesSwitchesToPrefs(PrefService* localState) {
   base::FilePath global_config_path(kGlobalConfigDataPath);
   if (!base::PathExists(global_config_path)) {
     LOG(ERROR) << "global config path is not exist:" << global_config_path.value();
-    return;
+    return false;
   }
 
   if (!base::ReadFileToString(global_config_path, &global_config_json)) {
     LOG(WARNING) << "read global config file failed.";
-    return;
+    return false;
   }
 
   std::optional<base::Value> global_config_value = base::JSONReader::Read(global_config_json);
   if (!global_config_value || !global_config_value->is_dict()) {
     LOG(WARNING) << "Invalid JSON.";
-    return;
+    return false;
   }
 
   const base::Value::Dict* data_dict = global_config_value->GetDict().FindDict("data");
   if (!data_dict) {
     LOG(WARNING) << "Missing 'data' field in JSON.";
-    return;
+    return false;
   }
 
   const base::Value::Dict* body_dict = data_dict->FindDict("body");
   if (!body_dict) {
     LOG(WARNING) << "Missing 'body' field in JSON.";
-    return;
+    return false;
   }
 
   const base::Value::Dict* switches_dict = body_dict->FindDict("FeaturesSwitches");
   if (!switches_dict) {
     LOG(WARNING) << "Missing 'FeaturesSwitches' field in JSON.";
-    return;
+    return false;
   }
 
   const base::Value::List* versioned_config_list = switches_dict->FindList("VersionedConfig");
   if (!versioned_config_list) {
     LOG(WARNING) << "Missing 'VersionedConfig' field in JSON.";
-    return;
+    return false;
   }
  
   const std::string version = version_info::GetMajorVersionNumber();
   if (version.empty()) {
     LOG(WARNING) << "Failed to get current version.";
-    return;
+    return false;
   }
   base::Value versioned_config;
   for (const auto& item : *versioned_config_list) {
@@ -181,17 +182,17 @@ void ParseFeaturesSwitchesToPrefs(PrefService* localState) {
   }
   if (!versioned_config.is_dict() || versioned_config.GetDict().empty()) {
     LOG(WARNING) << "No data matching the version is found in 'VersionedConfig' .";
-    return;
+    return false;
   }
  
-  ProcessFeaturesSwitches(versioned_config, localState);
+  return ProcessFeaturesSwitches(versioned_config, localState);
 }
 
-void OnGlobalConfigResult(const std::string& path, PrefService* localState) {
+bool OnGlobalConfigResult(const std::string& path, PrefService* localState) {
   if (!path.empty()) {
     kGlobalConfigDataPath = path;
   }
-  ParseFeaturesSwitchesToPrefs(localState);
+  return ParseFeaturesSwitchesToPrefs(localState);
 }
 #endif
 

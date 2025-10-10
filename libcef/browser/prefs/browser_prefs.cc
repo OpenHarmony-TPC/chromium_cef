@@ -7,7 +7,6 @@
 #include "cef/libcef/browser/browser_context.h"
 #include "cef/libcef/browser/context.h"
 #include "cef/libcef/browser/prefs/pref_registrar.h"
-#include "cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -15,6 +14,11 @@
 
 #if BUILDFLAG(IS_ARKWEB)
 #include "cef/ohos_cef_ext/libcef/browser/prefs/browser_prefs_for_include.cc"
+#endif
+
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb_ex/overrides/ohos_nweb/src/cef_delegate/cloud_control_config/nweb_cloud_control_config_type.h"
+#include "cef/ohos_cef_ext/libcef/browser/global_config/global_config_prefs.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
@@ -55,6 +59,7 @@ std::string GetAcceptLanguageListSetting(Profile* profile) {
 void RegisterLocalStatePrefs(PrefRegistrySimple* registry) {
   pref_registrar::RegisterCustomPrefs(CEF_PREFERENCES_TYPE_GLOBAL, registry);
 #if BUILDFLAG(IS_ARKWEB_EXT)
+  OHOS::NWeb::RegisterCloudConfigVersionPrefs(registry);
   global_config::RegisterGlobalConfigPrefs(registry);
 #endif
 #if BUILDFLAG(ARKWEB_READER_MODE)

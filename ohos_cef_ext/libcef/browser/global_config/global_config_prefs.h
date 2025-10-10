@@ -14,7 +14,7 @@ namespace global_config {
  
   void RegisterGlobalConfigPrefs(PrefRegistrySimple* registry);
  
-  void OnGlobalConfigResult(const std::string& path, PrefService* localState);
+  bool OnGlobalConfigResult(const std::string& path, PrefService* localState);
 #endif
 }
 #endif
