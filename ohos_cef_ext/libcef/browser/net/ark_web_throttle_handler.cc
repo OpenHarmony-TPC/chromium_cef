@@ -63,7 +63,7 @@ bool ArkWebIsExtensionNavigation(content::NavigationHandle* navigation_handle) {
     return true;
   }
   return false;
-#endif  // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 }
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)

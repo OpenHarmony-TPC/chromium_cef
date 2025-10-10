@@ -27,11 +27,10 @@ using content::DownloadManager;
 using content::WebContents;
 using download::DownloadItem;
 
-namespace {}
-
+namespace {
 // Helper function to retrieve the CefDownloadHandler.
-CefRefPtr<CefDownloadHandler> GetDownloadHandler(
-    CefRefPtr<CefBrowserHostBase> browser) {
+CefRefPtr<CefDownloadHandler>
+GetDownloadHandler(CefRefPtr<CefBrowserHostBase> browser) {
   CefRefPtr<CefClient> client = browser->GetClient();
   if (client.get()) {
     return client->GetDownloadHandler();
@@ -40,12 +39,13 @@ CefRefPtr<CefDownloadHandler> GetDownloadHandler(
 }
 
 void RunDownloadTargetCallback(download::DownloadTargetCallback callback,
-                               const base::FilePath& path) {
+                               const base::FilePath &path) {
   download::DownloadTargetInfo target_info;
   target_info.target_path = path;
   target_info.intermediate_path = path;
   std::move(callback).Run(std::move(target_info));
 }
+} // namespace
 
 // CefDownloadItemCallback implementation.
 class ArkWebDownloadItemCallbackImpl : public CefDownloadItemCallback {
