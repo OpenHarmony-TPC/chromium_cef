@@ -328,9 +328,13 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                     const CefString& encoding) override;
 
 #if BUILDFLAG(ARKWEB_EXT_HTTPS_UPGRADES)
-  void LoadUrlWithParams(const std::string& url, const LoadUrlType load_type,
-                         const std::string& refer, const std::string& headers,
-                         const std::string& post_data, const bool allow_https_upgrade) override;
+  void LoadUrlWithParams(const std::string& url,
+                         const LoadUrlType load_type,
+                         const std::string& refer,
+                         const std::string& headers,
+                         const std::string& post_data,
+                         const bool allow_https_upgrade,
+                         int32_t transition_type) override;
 #endif
 
   void ExecuteJSCallback(CefRefPtr<CefJavaScriptResultCallback> callback,
