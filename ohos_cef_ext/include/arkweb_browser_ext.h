@@ -36,6 +36,10 @@
 #include "include/cef_task.h"
 #include "include/internal/cef_string_map.h"
 
+#if BUILDFLAG(IS_ARKWEB_EXT)
+#include "arkweb/ohos_nweb/build/features/features.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
