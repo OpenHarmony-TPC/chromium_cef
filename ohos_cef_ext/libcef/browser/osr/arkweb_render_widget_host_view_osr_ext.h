@@ -271,6 +271,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
 #if BUILDFLAG(ARKWEB_MENU)
   void MouseSelectMenuShow(bool show);
   void ChangeVisibilityOfQuickMenu();
+  bool IsQuickMenuShow();
 #endif
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)

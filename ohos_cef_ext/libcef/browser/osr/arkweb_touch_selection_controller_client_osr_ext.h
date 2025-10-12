@@ -40,6 +40,7 @@ class ArkWebTouchSelectionControllerClientOSRExt
 
   void MouseSelectMenuShow(bool show);
   void ChangeVisibilityOfQuickMenu();
+  bool IsQuickMenuShow();
   void UpdateClientClippedSelectionBounds(
       const gfx::Rect& clipped_selection_bounds) override;
   bool NeedPopupInsertTouchHandleQuickMenu();

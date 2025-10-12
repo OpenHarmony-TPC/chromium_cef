@@ -85,6 +85,11 @@ class CefContextMenuHandlerExt : virtual public CefContextMenuHandler {
   ///
   virtual void ChangeVisibilityOfQuickMenu() {}
 
+  ///
+  /// Return is quick menu show.
+  ///
+  virtual bool IsQuickMenuShow() { return false; }
+
 #if BUILDFLAG(ARKWEB_AI)
   ///
   /// Called to close selection on image overlay.

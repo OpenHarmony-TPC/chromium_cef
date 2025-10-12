@@ -136,6 +136,15 @@ void ArkWebCefWebContentsViewOSRExt::ChangeVisibilityOfQuickMenu()
     rwhv->ChangeVisibilityOfQuickMenu();
   }
 }
+
+bool ArkWebCefWebContentsViewOSRExt::IsQuickMenuShow()
+{
+  auto* rwhv = GetView();
+  if (rwhv) {
+    return rwhv->IsQuickMenuShow();
+  }
+  return false;
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)

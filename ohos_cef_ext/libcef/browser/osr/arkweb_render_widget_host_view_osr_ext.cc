@@ -2224,6 +2224,13 @@ void ArkWebRenderWidgetHostViewOSRExt::ChangeVisibilityOfQuickMenu() {
     selection_controller_client_->ChangeVisibilityOfQuickMenu();
   }
 }
+
+bool ArkWebRenderWidgetHostViewOSRExt::IsQuickMenuShow() {
+  if (selection_controller_client_) {
+    return selection_controller_client_->IsQuickMenuShow();
+  }
+  return false;
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)

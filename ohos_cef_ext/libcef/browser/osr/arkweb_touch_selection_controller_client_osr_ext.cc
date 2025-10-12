@@ -661,6 +661,21 @@ void ArkWebTouchSelectionControllerClientOSRExt::ChangeVisibilityOfQuickMenu() {
   }
   handler->ChangeVisibilityOfQuickMenu();
 }
+
+bool ArkWebTouchSelectionControllerClientOSRExt::IsQuickMenuShow() {
+  if (!rwhv_) {
+    return false;
+  }
+  auto browser = rwhv_->browser_impl();
+  if (!browser || !browser->client()) {
+    return false;
+  }
+  auto handler = browser->client()->GetContextMenuHandler();
+  if (!handler) {
+    return false;
+  }
+  return handler->IsQuickMenuShow();
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_VIBRATE)
