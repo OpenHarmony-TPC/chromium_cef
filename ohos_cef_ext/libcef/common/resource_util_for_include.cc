@@ -14,6 +14,7 @@
  */
 
 #include "arkweb/build/features/features.h"
+#include "chrome/common/chrome_switches.h"
 #if BUILDFLAG(ARKWEB_CRASHPAD)
 #include "base/base_switches.h"
 #include "base/logging.h"
@@ -34,8 +35,15 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
 
 void OverrideUserDataDirExt(const base::FilePath& user_data_path,
                             const base::CommandLine* command_line) {
-  base::PathService::Override(base::DIR_CACHE,
+  base::FilePath user_cache_path = 
+      command_line->GetSwitchValuePath(switches::kUserCacheDir);
+
+  if (!user_cache_path.empty()) {
+    base::PathService::Override(base::DIR_CACHE, user_cache_path);
+  } else {
+    base::PathService::Override(base::DIR_CACHE,
                               user_data_path.Append("cache/web"));
+  }
   base::PathService::Override(base::DIR_OHOS_APP_DATA, user_data_path);
 #if BUILDFLAG(ARKWEB_CRASHPAD)
   // log path need to get by interface

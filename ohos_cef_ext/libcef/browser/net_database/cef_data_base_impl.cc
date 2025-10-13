@@ -6,7 +6,8 @@
 
 #include "base/functional/bind.h"
 #include "base/logging.h"
-#include "third_party/ohos_ndk/includes/ohos_adapter/ohos_adapter_helper.h"
+#include "arkweb/ohos_adapter_ndk/interfaces/ohos_adapter_helper.h"
+#include "base/path_service.h"
 
 void TransferVector(const std::vector<std::string>& source,
                     std::vector<CefString>& target) {
@@ -27,17 +28,21 @@ CefRefPtr<CefDataBase> CefDataBase::GetGlobalDataBase() {
   return context ? context->GetDataBase() : nullptr;
 }
 
+CefDataBaseImpl::CefDataBaseImpl() {
+  base::PathService::Get(base::DIR_CACHE, &user_cache_path_);
+}
+
 bool CefDataBaseImpl::ExistHttpAuthCredentials() {
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetOhosWebDataBaseAdapterInstance();
+          .GetOhosWebDataBaseAdapterInstance(user_cache_path_.value());
   return databaseAdapter.ExistHttpAuthCredentials();
 }
 
 void CefDataBaseImpl::DeleteHttpAuthCredentials() {
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetOhosWebDataBaseAdapterInstance();
+          .GetOhosWebDataBaseAdapterInstance(user_cache_path_.value());
   return databaseAdapter.DeleteHttpAuthCredentials();
 }
 
@@ -50,7 +55,7 @@ void CefDataBaseImpl::SaveHttpAuthCredentials(const CefString& host,
   }
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetOhosWebDataBaseAdapterInstance();
+          .GetOhosWebDataBaseAdapterInstance(user_cache_path_.value());
   databaseAdapter.SaveHttpAuthCredentials(host, realm, username, password);
 }
 
@@ -72,7 +77,7 @@ void CefDataBaseImpl::GetHttpAuthCredentials(const CefString& host,
   std::string usernameStr;
   OHOS::NWeb::OhosWebDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetOhosWebDataBaseAdapterInstance();
+          .GetOhosWebDataBaseAdapterInstance(user_cache_path_.value());
 #if BUILDFLAG(IS_OHOS)
   databaseAdapter.GetHttpAuthCredentials(host, realm, usernameStr, password,
                                          passwordSize);
@@ -101,7 +106,7 @@ bool CefDataBaseImpl::ExistPermissionByOrigin(const CefString& origin,
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   return databaseAdapter.ExistPermissionByOrigin(origin, key);
 }
 
@@ -117,7 +122,7 @@ bool CefDataBaseImpl::GetPermissionResultByOrigin(const CefString& origin,
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   return databaseAdapter.GetPermissionResultByOrigin(origin, key, result);
 }
 
@@ -133,7 +138,7 @@ void CefDataBaseImpl::SetPermissionByOrigin(const CefString& origin,
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   databaseAdapter.SetPermissionByOrigin(origin, key, result);
 }
 
@@ -148,7 +153,7 @@ void CefDataBaseImpl::ClearPermissionByOrigin(const CefString& origin,
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   databaseAdapter.ClearPermissionByOrigin(origin, key);
 }
 
@@ -159,7 +164,7 @@ void CefDataBaseImpl::ClearAllPermission(int type) {
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   databaseAdapter.ClearAllPermission(key);
 }
 
@@ -171,7 +176,7 @@ void CefDataBaseImpl::GetOriginsByPermission(int type,
   }
   OHOS::NWeb::OhosWebPermissionDataBaseAdapter& databaseAdapter =
       OHOS::NWeb::OhosAdapterHelper::GetInstance()
-          .GetWebPermissionDataBaseInstance();
+          .GetWebPermissionDataBaseInstance(user_cache_path_.value());
   std::vector<std::string> result;
   databaseAdapter.GetOriginsByPermission(key, result);
   TransferVector(result, origins);

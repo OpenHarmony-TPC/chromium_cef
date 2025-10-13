@@ -656,20 +656,22 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
         OnLoadEnd(frame.get(), navigation_handle->GetURL(), 0);
       }
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
-      if (auto* render_frame_host = navigation_handle->GetRenderFrameHost()) {
-        auto invokeVisualStateCallback = base::BindOnce(
-            [](base::WeakPtr<CefBrowserContentsDelegate> self, const GURL url,
-               bool success) {
-              LOG(INFO) << "invokeVisualStateCallback success: " << success;
-              if (!self) {
-                return;
-              }
-              self->AsArkWebBrowserContentsDelegateExt()
-                  ->OnOldPageNoLongerRendered(url, success);
-            },
-            weak_factory_.GetWeakPtr(), url);
-        render_frame_host->InsertVisualStateCallback(
-            std::move(invokeVisualStateCallback));
+      if (navigation_handle->IsInPrimaryMainFrame() && !navigation_handle->IsSameDocument()) {
+        if (auto* render_frame_host = navigation_handle->GetRenderFrameHost()) {
+          auto invokeVisualStateCallback = base::BindOnce(
+              [](base::WeakPtr<CefBrowserContentsDelegate> self, const GURL url,
+                bool success) {
+                LOG(INFO) << "invokeVisualStateCallback success: " << success;
+                if (!self) {
+                  return;
+                }
+                self->AsArkWebBrowserContentsDelegateExt()
+                    ->OnOldPageNoLongerRendered(url, success);
+              },
+              weak_factory_.GetWeakPtr(), url);
+          render_frame_host->InsertVisualStateCallback(
+              std::move(invokeVisualStateCallback));
+        }
       }
 #endif
     }
@@ -700,7 +702,9 @@ void CefBrowserContentsDelegate::DidFinishNavigation(
     LOG(INFO) << "load type = "
               << PageTransitionStripQualifier(
                      navigation_handle->GetPageTransition());
-    OnRefreshAccessedHistoryEx(frame.get(), url, isReload);
+    if (navigation_handle->IsInPrimaryMainFrame()) {
+      OnRefreshAccessedHistoryEx(frame.get(), url, isReload);
+    }
 #endif
   } else {
     // The navigation failed with an error. This may happen before commit
