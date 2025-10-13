@@ -10,6 +10,13 @@
 #include "content/browser/renderer_host/navigation_request.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
 
+#if BUILDFLAG(ARKWEB_USERAGENT)
+#include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/browser/renderer_host/render_frame_host_impl.h"
+#include "content/browser/web_contents/web_contents_impl.h"
+#endif
+
+
 namespace arkweb_useragent_utils {
 std::string last_redirect_error_page_url_;
 std::vector<std::string> ConvertGURLVectorToStringVector(
@@ -93,6 +100,19 @@ void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
   }
 
   if (auto* web_contents = navigation->GetWebContents()) {
+#if BUILDFLAG(ARKWEB_USERAGENT)
+    content::WebContentsImpl* web_contents_impl =
+        static_cast<content::WebContentsImpl*>(web_contents);
+    content::FrameTreeNode* root_node =
+        web_contents_impl->GetPrimaryFrameTree().root();
+    content::RenderFrameHostImpl* rfh_impl = root_node->current_frame_host();
+    if (rfh_impl && rfh_impl->IsActive()) {
+      if (!web_contents_impl->AsWebContentsImplExt()->isSameUserAgent(
+              blink::UserAgentOverride::UserAgentOnly(user_agent))) {
+        rfh_impl->SetUserAgentDifferentFromNavigatingFrame(false);
+      }
+    }
+#endif
     blink::UserAgentOverride user_agent_override =
         blink::UserAgentOverride::UserAgentOnly(user_agent);
     user_agent_override.from_app =
