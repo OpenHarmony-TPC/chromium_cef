@@ -284,14 +284,14 @@ void OhGinJavascriptBridgeMessageFilter::SetSiteInstanceGurl(const GURL& site_in
 }
 
 bool OhGinJavascriptBridgeMessageFilter::IsSameSite(const GURL& document_gurl) {
+  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS()) {
+    return true;
+  }
+
   if (document_gurl.scheme().empty() ||
       document_gurl.scheme() != site_instance_gurl_.scheme()) {
     LOG(INFO) << "IsSameSite scheme not same";
     return false;
-  }
-
-  if (!site_instance_gurl_.SchemeIsHTTPOrHTTPS()) {
-    return true;
   }
 
   if (document_gurl.host().empty() ||
