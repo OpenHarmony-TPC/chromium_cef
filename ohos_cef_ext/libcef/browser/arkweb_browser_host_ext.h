@@ -282,10 +282,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
                             CefRefPtr<CefCacheOptions> cacheOptions,
                             CefRefPtr<CefPrecompileCallback> callback) override;
 
-#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
+#if BUILDFLAG(IS_ARKWEB)
   void EnableAppLinking(bool enable) override;
   bool IsAppLinkingEnabled() const override;
-#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
+#endif // BUILDFLAG(IS_ARKWEB)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void AdvanceFocusForIME(int focusType) override;
@@ -803,9 +803,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_JS_ON_DOCUMENT_END)
   js_injection::JsCommunicationHost* GetJsCommunicationHost();
 #endif
-#if BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
+#if BUILDFLAG(IS_ARKWEB)
   bool is_arkweb_applinking_enabled_ = true;
-#endif // BUILDFLAG(ARKWEB_EX_ENABLE_APPLINKING)
+#endif // BUILDFLAG(IS_ARKWEB)
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   float virtual_pixel_ratio_ = 2.0;
   uint64_t last_zoom_time_ = 0;
