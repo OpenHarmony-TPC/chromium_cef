@@ -109,7 +109,7 @@ void UpdateUserAgentForNavigation(content::NavigationHandle* navigation,
     if (rfh_impl && rfh_impl->IsActive()) {
       if (!web_contents_impl->AsWebContentsImplExt()->isSameUserAgent(
               blink::UserAgentOverride::UserAgentOnly(user_agent))) {
-        rfh_impl->SetUserAgentDifferentFromNavigatingFrame(false);
+        rfh_impl->SetUserAgentDifferentFromNavigatingFrame(true);
       }
     }
 #endif
