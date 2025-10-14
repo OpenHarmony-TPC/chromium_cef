@@ -1,0 +1,26 @@
+From 48a956d4e36c32831cf952bb1d66e29ea6d2fa70 Mon Sep 17 00:00:00 2001
+From: ht_laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Tue, 14 Oct 2025 09:45:03 +0800
+Subject: [PATCH] fix window_info_
+
+Change-Id: I80811217fa7d05f5ae9762032838ba69938fd161
+---
+ .../browser/native/browser_platform_delegate_native_ohos.cc     | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc
+index a99c145c58..094e0f9f6f 100755
+--- a/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc
++++ b/cef/libcef/browser/native/browser_platform_delegate_native_ohos.cc
+@@ -75,7 +75,7 @@ bool CefBrowserPlatformDelegateNativeOHOS::CreateHostWindow() {
+       GetBackgroundColor(), true,
+       GetBoundsChangedCallback(), GetWidgetDeleteCallback());
+   delegate_view->Init(
+-      static_cast<gfx::AcceleratedWidget>(window_info_.parent_window),
++      static_cast<gfx::AcceleratedWidget>(window_info_.window),
+       web_contents_, rect);
+ 
+   window_widget_ = delegate_view->GetWidget();
+-- 
+2.34.1
+
