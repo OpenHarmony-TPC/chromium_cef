@@ -30,7 +30,7 @@ cp -r "$CEF_PATH" "$CHROMIUM_SRC_PATH/cef" || {
 
 # 3. 拷贝图标文件到指定位置
 echo "Copying icon files..."
-TARGET_ICON_DIR="$CHROMIUM_SRC_PATH/src/ohos/app/ohos_hap/AppScope/resources/base/media"
+TARGET_ICON_DIR="$CHROMIUM_SRC_PATH/ohos/app/ohos_hap/AppScope/resources/base/media"
 mkdir -p "$TARGET_ICON_DIR" || {
     echo "Error: Failed to create target directory $TARGET_ICON_DIR"
     exit 1
