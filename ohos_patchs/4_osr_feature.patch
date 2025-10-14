@@ -1,0 +1,321 @@
+From bc092c51359d5f82de7ba8d5447b1529ceccc4f6 Mon Sep 17 00:00:00 2001
+From: ht_laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Tue, 14 Oct 2025 09:46:47 +0800
+Subject: [PATCH 1/3] =?UTF-8?q?simple=20demo=E6=B7=BB=E5=8A=A0OSR=E7=A6=BB?=
+ =?UTF-8?q?=E5=B1=8F=E5=8A=9F=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: Ia27127977268175899ed3adab2c90dfef1c3d8fe
+---
+ cef/tests/cefsimple/simple_handler.cc | 119 ++++++++++++++++++++++++++
+ cef/tests/cefsimple/simple_handler.h  |  17 +++-
+ 2 files changed, 135 insertions(+), 1 deletion(-)
+
+diff --git a/cef/tests/cefsimple/simple_handler.cc b/cef/tests/cefsimple/simple_handler.cc
+index a2ae16997d..8eb439c4bf 100644
+--- a/cef/tests/cefsimple/simple_handler.cc
++++ b/cef/tests/cefsimple/simple_handler.cc
+@@ -15,6 +15,20 @@
+ #include "include/views/cef_window.h"
+ #include "include/wrapper/cef_closure_task.h"
+ #include "include/wrapper/cef_helpers.h"
++#if defined(OS_OHOS)
++#include <native_window/external_window.h>
++#include <stdint.h>
++#include <sys/mman.h>
++#include <algorithm>
++#include <cmath>
++#include "ohos/adapter/screen/screen_adapter.h"
++#include "ohos/adapter/window/app_window_adapter.h"
++#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
++#endif
++
++#if defined(OS_OHOS)
++using namespace ohos::adapter::xcomponent;
++#endif
+ 
+ namespace {
+ 
+@@ -205,3 +219,108 @@ void SimpleHandler::PlatformShowWindow(CefRefPtr<CefBrowser> browser) {
+   NOTIMPLEMENTED();
+ }
+ #endif
++
++bool SimpleHandler::RenderOnScreen(void* window,
++                                   const void* osr_buffer,
++                                   int w,
++                                   int h) {
++  uint8_t* sourceData = (uint8_t*)osr_buffer;
++  uint8_t* targetData = NULL;
++  Region region{nullptr, 0};
++  int32_t ret = 0;
++  int32_t stride = 0x8;
++  BufferHandle* bufferHandle = NULL;
++  uint8_t* mappedAddr = NULL;
++  int32_t code;
++
++  OHNativeWindowBuffer* buffer = nullptr;
++  int fenceFd;
++
++  OHNativeWindow* nativeWindow = static_cast<OHNativeWindow*>(window);
++  if (nativeWindow == NULL) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  code = SET_BUFFER_GEOMETRY;
++  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, w, h);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  code = SET_STRIDE;
++  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, stride);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  ret = OH_NativeWindow_NativeWindowRequestBuffer(nativeWindow, &buffer,
++                                                  &fenceFd);
++  if (ret != 0) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  bufferHandle = OH_NativeWindow_GetBufferHandleFromNative(buffer);
++  mappedAddr = static_cast<uint8_t*>(
++      mmap(bufferHandle->virAddr, bufferHandle->size, PROT_READ | PROT_WRITE,
++           MAP_SHARED, bufferHandle->fd, 0));
++  if (mappedAddr == MAP_FAILED) {
++    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++    goto err;
++  }
++
++  if (bufferHandle->format == 12) {
++    int bpp = 4;  // src and dest: RGBA8888
++    targetData = mappedAddr;
++    for (int row = 0; row < h; row++) {
++      memcpy(targetData, sourceData, w * bpp);
++      sourceData += w * bpp;
++      targetData += bufferHandle->stride;
++    }
++
++    OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, buffer, fenceFd,
++                                            region);
++
++    int result = munmap(mappedAddr, bufferHandle->size);
++    // munmap failed
++    if (result == -1) {
++      LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
++      goto err;
++    }
++  }
++  return true;
++err:
++  return false;
++}
++
++void SimpleHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
++  LOG(INFO) << "call API: " << __FUNCTION__ << ": " << __FILE__ << " line: " << __LINE__;
++  // Default OSR widget size.
++  auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
++  int width = window_rect.width;
++  int height = window_rect.height;
++  LOG(INFO) << "call API: width" << width << "  height: " << height;
++  rect = CefRect(0, 0, width, height);
++}
++
++void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,
++                            PaintElementType type,
++                            const RectList& dirtyRects,
++                            const void* buffer,
++                            int width,
++                            int height) {
++  LOG(INFO) << "call API: " << __FUNCTION__ << ": " << width << ":" << height;
++  // render to screen
++  WindowWidgetType nextWindowid =
++      WindowAdapter::GetInstance().GetWindowWidgetId();
++  WindowIdType windowId = WindowAdapter::GetInstance().GetWindowId(nextWindowid);
++  WindowType window = WindowAdapter::GetInstance().GetWindow(windowId);
++  bool result = RenderOnScreen((void*)window, buffer, width, height);
++  if (!result) {
++    LOG(ERROR) << "RenderOnScreen failed";
++  }
++
++}
+\ No newline at end of file
+diff --git a/cef/tests/cefsimple/simple_handler.h b/cef/tests/cefsimple/simple_handler.h
+index 45f1721aa1..0396635b21 100644
+--- a/cef/tests/cefsimple/simple_handler.h
++++ b/cef/tests/cefsimple/simple_handler.h
+@@ -14,13 +14,15 @@ class SimpleHandler : public CefClient,
+                       public CefLifeSpanHandler,
+                       public CefLoadHandler,
+                       public CefDownloadHandler,
+-                      public CefPermissionHandler {
++                      public CefPermissionHandler,
++                      public CefRenderHandler {
+  public:
+   explicit SimpleHandler(bool is_alloy_style);
+   ~SimpleHandler() override;
+ 
+   // Provide access to the single global instance of this object.
+   static SimpleHandler* GetInstance();
++  bool RenderOnScreen(void* window, const void* osr_buffer, int w, int h);
+ 
+   // CefClient methods:
+   CefRefPtr<CefDisplayHandler> GetDisplayHandler() override { return this; }
+@@ -30,6 +32,9 @@ class SimpleHandler : public CefClient,
+   CefRefPtr<CefPermissionHandler> GetPermissionHandler() override {
+     return this;
+   }
++  virtual CefRefPtr<CefRenderHandler> GetRenderHandler() override {
++    return this;
++  }
+ 
+   // CefDisplayHandler methods:
+   void OnTitleChange(CefRefPtr<CefBrowser> browser,
+@@ -84,6 +89,16 @@ class SimpleHandler : public CefClient,
+       uint64_t prompt_id,
+       cef_permission_request_result_t result) override {}
+ 
++  // CefRenderHandler
++  virtual void GetViewRect(CefRefPtr<CefBrowser> browser,
++                           CefRect& rect) override;
++  virtual void OnPaint(CefRefPtr<CefBrowser> browser,
++                       PaintElementType type,
++                       const RectList& dirtyRects,
++                       const void* buffer,
++                       int width,
++                       int height) override;
++
+   void ShowMainWindow();
+ 
+   // Request that all existing browser windows close.
+-- 
+2.34.1
+
+
+From 81c0e94b6ce1270e1838cc19dfd55389041cbc41 Mon Sep 17 00:00:00 2001
+From: ht_laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Tue, 14 Oct 2025 09:47:12 +0800
+Subject: [PATCH 2/3] =?UTF-8?q?simple=20demo=E5=BC=80=E5=90=AFOSR=E7=A6=BB?=
+ =?UTF-8?q?=E5=B1=8F=E5=8A=9F=E8=83=BD=E5=BC=80=E5=85=B3?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Change-Id: I50d2b12f04d475f454d255b732fd9c36b3523d17
+---
+ cef/tests/cefsimple/cefsimple_ohos.cc    | 2 +-
+ cef/tests/cefsimple/simple_app.cc        | 2 +-
+ ohos/adapter/web_entry/cef/cef_loader.cc | 3 +++
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/cef/tests/cefsimple/cefsimple_ohos.cc b/cef/tests/cefsimple/cefsimple_ohos.cc
+index 32b676ed5a..16030988a1 100755
+--- a/cef/tests/cefsimple/cefsimple_ohos.cc
++++ b/cef/tests/cefsimple/cefsimple_ohos.cc
+@@ -39,7 +39,7 @@ int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
+   // settings.multi_threaded_message_loop=false;
+   // settings.external_message_pump=true;
+   // enable osr
+-  // settings.windowless_rendering_enabled = true;
++  settings.windowless_rendering_enabled = true;
+ 
+   // SimpleApp implements application-level callbacks for the browser process.
+   // It will create the first browser instance in OnContextInitialized() after
+diff --git a/cef/tests/cefsimple/simple_app.cc b/cef/tests/cefsimple/simple_app.cc
+index 9b2f2204ce..b508c0d348 100644
+--- a/cef/tests/cefsimple/simple_app.cc
++++ b/cef/tests/cefsimple/simple_app.cc
+@@ -186,7 +186,7 @@ void SimpleApp::OnContextInitialized() {
+     // fully styled Chrome UI window.
+     window_info.runtime_style = runtime_style;
+     // enable osr
+-    // window_info.windowless_rendering_enabled = true;
++    window_info.windowless_rendering_enabled = true;
+ 
+     // Create the first browser window.
+     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.cc b/ohos/adapter/web_entry/cef/cef_loader.cc
+index 3228bac310..434cf21705 100644
+--- a/ohos/adapter/web_entry/cef/cef_loader.cc
++++ b/ohos/adapter/web_entry/cef/cef_loader.cc
+@@ -64,6 +64,9 @@ const std::vector<std::string> CefLoader::GetEntryArgs() {
+       "--enable-speech-input=true",
+       "--enable-print-preview",
+       "--lang=zh-CN",
++      "--off-screen-rendering-enabled",
++      "--use-native",
++      "--use-alloy-style",
+   };
+   ohos::adapter::device_info::DeviceType device_type =
+     ohos::adapter::device_info::DeviceInfo::GetInstance().GetDeviceType();
+-- 
+2.34.1
+
+
+From beb4a65b6658954d048f938b62491d23bca15863 Mon Sep 17 00:00:00 2001
+From: ht_laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Tue, 14 Oct 2025 10:53:27 +0800
+Subject: [PATCH 3/3] =?UTF-8?q?Revert=20"simple=20demo=E5=BC=80=E5=90=AFOS?=
+ =?UTF-8?q?R=E7=A6=BB=E5=B1=8F=E5=8A=9F=E8=83=BD=E5=BC=80=E5=85=B3"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This reverts commit 81c0e94b6ce1270e1838cc19dfd55389041cbc41.
+---
+ cef/tests/cefsimple/cefsimple_ohos.cc    | 2 +-
+ cef/tests/cefsimple/simple_app.cc        | 2 +-
+ ohos/adapter/web_entry/cef/cef_loader.cc | 3 ---
+ 3 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/cef/tests/cefsimple/cefsimple_ohos.cc b/cef/tests/cefsimple/cefsimple_ohos.cc
+index 16030988a1..32b676ed5a 100755
+--- a/cef/tests/cefsimple/cefsimple_ohos.cc
++++ b/cef/tests/cefsimple/cefsimple_ohos.cc
+@@ -39,7 +39,7 @@ int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
+   // settings.multi_threaded_message_loop=false;
+   // settings.external_message_pump=true;
+   // enable osr
+-  settings.windowless_rendering_enabled = true;
++  // settings.windowless_rendering_enabled = true;
+ 
+   // SimpleApp implements application-level callbacks for the browser process.
+   // It will create the first browser instance in OnContextInitialized() after
+diff --git a/cef/tests/cefsimple/simple_app.cc b/cef/tests/cefsimple/simple_app.cc
+index b508c0d348..9b2f2204ce 100644
+--- a/cef/tests/cefsimple/simple_app.cc
++++ b/cef/tests/cefsimple/simple_app.cc
+@@ -186,7 +186,7 @@ void SimpleApp::OnContextInitialized() {
+     // fully styled Chrome UI window.
+     window_info.runtime_style = runtime_style;
+     // enable osr
+-    window_info.windowless_rendering_enabled = true;
++    // window_info.windowless_rendering_enabled = true;
+ 
+     // Create the first browser window.
+     CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings,
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.cc b/ohos/adapter/web_entry/cef/cef_loader.cc
+index 434cf21705..3228bac310 100644
+--- a/ohos/adapter/web_entry/cef/cef_loader.cc
++++ b/ohos/adapter/web_entry/cef/cef_loader.cc
+@@ -64,9 +64,6 @@ const std::vector<std::string> CefLoader::GetEntryArgs() {
+       "--enable-speech-input=true",
+       "--enable-print-preview",
+       "--lang=zh-CN",
+-      "--off-screen-rendering-enabled",
+-      "--use-native",
+-      "--use-alloy-style",
+   };
+   ohos::adapter::device_info::DeviceType device_type =
+     ohos::adapter::device_info::DeviceInfo::GetInstance().GetDeviceType();
+-- 
+2.34.1
+
