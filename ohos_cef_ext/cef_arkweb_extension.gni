@@ -189,6 +189,19 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ark_web_frame_host_impl.cc",
   "//cef/ohos_cef_ext/libcef/browser/ark_web_frame_host_impl.h",
 ]
+if (defined(arkweb_logger_report) && arkweb_logger_report) {
+  libcef_arkweb_sources += [
+    "//cef/ohos_cef_ext/include/cef_logger_callback_api_handler.h",
+  ]
+}
+if (defined(arkweb_devtools) && arkweb_devtools) {
+  libcef_arkweb_sources += [
+    "//cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_message_handler.cc",
+    "//cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_message_handler.h",
+    "//cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_frontend.cc",
+    "//cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_frontend.h",
+  ]
+}
 
 arkweb_url_trust_list_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_sb_block_page.cc",
@@ -205,11 +218,6 @@ arkweb_url_trust_list_sources = [
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager.h",
   "//cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_navigation_throttle.h",
 ]
-if (defined(arkweb_logger_report) && arkweb_logger_report) {
-  libcef_arkweb_sources += [
-    "//cef/ohos_cef_ext/include/cef_logger_callback_api_handler.h",
-  ]
-}
 
 arkweb_anti_tracking_source = [
   "//cef/ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy.cc",

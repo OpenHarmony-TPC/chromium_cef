@@ -124,9 +124,13 @@ class CefInfoBarCallbackImpl : public CefInfoBarCallback {
 
 } // namespace
 
+using Result = CefDevToolsMessageHandler::Result;
+
 CefDevToolsMessageHandler::CefDevToolsMessageHandler(
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate)
-  : delegate_(std::move(delegate)) {
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    Profile* profile)
+  : delegate_(std::move(delegate)),
+    settings_(profile) {
   method_handlers_["dispatchProtocolMessage"] = base::BindRepeating(
       &CefDevToolsMessageHandler::HandleProtocolMessage, base::Unretained(this));
   method_handlers_["bringToFront"] = base::BindRepeating(
@@ -135,16 +139,22 @@ CefDevToolsMessageHandler::CefDevToolsMessageHandler(
       &CefDevToolsMessageHandler::CloseWindow, base::Unretained(this));
   method_handlers_["inspectedURLChanged"] = base::BindRepeating(
       &CefDevToolsMessageHandler::InspectedURLChanged, base::Unretained(this));
+  method_handlers_["registerPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::RegisterPreference, base::Unretained(this));
+  method_handlers_["getPreferences"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::GetPreferences, base::Unretained(this));
+  method_handlers_["getPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::GetPreference, base::Unretained(this));
+  method_handlers_["setPreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::SetPreference, base::Unretained(this));
+  method_handlers_["removePreference"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::RemovePreference, base::Unretained(this));
+  method_handlers_["clearPreferences"] = base::BindRepeating(
+      &CefDevToolsMessageHandler::ClearPreferences, base::Unretained(this));
 
   protocol_message_handlers_["Page.bringToFront"] = base::BindRepeating(
       &CefDevToolsMessageHandler::PageBringToFront, base::Unretained(this));
 }
-
-CefDevToolsMessageHandler::CefDevToolsMessageHandler(
-    CefDevToolsMessageHandler&& other)
-  : delegate_(std::move(other.delegate_)),
-    method_handlers_(std::move(other.method_handlers_)),
-    protocol_message_handlers_(std::move(other.protocol_message_handlers_)) {}
 
 CefDevToolsMessageHandler::~CefDevToolsMessageHandler() {}
 
@@ -212,73 +222,144 @@ void CefDevToolsMessageHandler::ShowInfoBar(
   delegate_->ShowInfoBar(message, path, callback_impl);
 }
 
-bool CefDevToolsMessageHandler::HandleMessage(int request_id,
+Result CefDevToolsMessageHandler::HandleMessage(int request_id,
     const std::string& method,
     const base::Value::List& params) {
   auto iter = method_handlers_.find(method);
   if (iter == method_handlers_.end()) {
-    return false;
+    return {false, {}};
   }
   return iter->second.Run(params);
 }
 
-bool CefDevToolsMessageHandler::HandleProtocolMessage(
+Result CefDevToolsMessageHandler::HandleProtocolMessage(
     const base::Value::List& message_params) {
   auto message = ExtractProtocolMessage(message_params);
   if (!message) {
-    return false;
+    return {false, {}};
   }
   const std::string* method = message->FindString("method");
   if (!method) {
-    return false;
+    return {false, {}};
   }
 
   const base::Value::List* params_value = message->FindList("params");
 
   auto iter = protocol_message_handlers_.find(*method);
   if (iter == protocol_message_handlers_.end()) {
-    return false;
+    return {false, {}};
   }
 
   if (params_value) {
-    return iter->second.Run(*params_value);
+    iter->second.Run(*params_value);
   } else {
-    return iter->second.Run({});
+    iter->second.Run({});
   }
+
+  // Never prevent protocol message.
+  return {false, {}};
 }
 
-bool CefDevToolsMessageHandler::BringToFront(const base::Value::List&) {
+Result CefDevToolsMessageHandler::BringToFront(const base::Value::List&) {
   LOG(INFO) << "CefDevToolsMessageHandler::BringToFront";
   if (!delegate_) {
     LOG(INFO) << "BringToFront, no delegate_";
-    return false;
+    return {false, {}};
   }
-  return delegate_->ActiveDevToolsWindow();
+  return {delegate_->ActiveDevToolsWindow(), {}};
 }
 
-bool CefDevToolsMessageHandler::CloseWindow(const base::Value::List&) {
+Result CefDevToolsMessageHandler::CloseWindow(const base::Value::List&) {
   LOG(INFO) << "CefDevToolsMessageHandler::CloseWindow";
   if (!delegate_) {
     LOG(INFO) << "CloseWindow, no delegate_";
-    return false;
+    return {false, {}};
   }
-  return delegate_->CloseWindow();
+  return {delegate_->CloseWindow(), {}};
 }
 
-bool CefDevToolsMessageHandler::InspectedURLChanged(const base::Value::List& param) {
+Result CefDevToolsMessageHandler::InspectedURLChanged(const base::Value::List& param) {
   LOG(INFO) << "CefDevToolsMessageHandler::InspectedURLChanged";
   if (!delegate_) {
     LOG(INFO) << "InspectedURLChanged, no delegate_";
-    return false;
+    return {false, {}};
   }
-  return false;
+  return {false, {}};
 }
 
-bool CefDevToolsMessageHandler::PageBringToFront(const base::Value::List&) {
+Result CefDevToolsMessageHandler::RegisterPreference(const base::Value::List& params) {
+  if (params.size() < 2) {
+    return {false, {}};
+  }
+  const std::string* name = params[0].GetIfString();
+
+  if (!name || !params[1].is_dict()) {
+    return {false, {}};
+  }
+
+  const bool synced = params[1].GetDict().FindBool("synced").value_or(false);
+  RegisterOptions options{RegisterOptions::SyncMode::kDontSync};
+  if (synced) {
+    options.sync_mode = RegisterOptions::SyncMode::kSync;
+  }
+  settings_.Register(*name, options);
+  return {true, {}};
+}
+
+Result CefDevToolsMessageHandler::GetPreferences(const base::Value::List& params) {
+  return {true, base::Value(settings_.Get())};
+}
+
+Result CefDevToolsMessageHandler::GetPreference(const base::Value::List& params) {
+  if (params.empty()) {
+    return {false, {}};
+  }
+  const std::string* name = params[0].GetIfString();
+  if (!name) {
+    return {false, {}};
+  }
+  return {true, settings_.Get(*name).value_or(base::Value())};
+}
+
+Result CefDevToolsMessageHandler::SetPreference(const base::Value::List& params) {
+  if (params.size() < 2) {
+    return {false, {}};
+  }
+
+  const std::string* name = params[0].GetIfString();
+  const std::string* value = params[1].GetIfString();
+  if (!name || !value) {
+    return {false, {}};
+  }
+
+  settings_.Set(*name, *value);
+  return {true, {}};
+}
+
+Result CefDevToolsMessageHandler::RemovePreference(const base::Value::List& params) {
+  if (params.empty()) {
+    return {false, {}};
+  }
+
+  const std::string* name = params[0].GetIfString();
+  if (!name) {
+    return {false, {}};
+  }
+
+  settings_.Remove(*name);
+  return {true, {}};
+}
+
+Result CefDevToolsMessageHandler::ClearPreferences(const base::Value::List& params) {
+  settings_.Clear();
+  return {true, {}};
+}
+
+Result CefDevToolsMessageHandler::PageBringToFront(const base::Value::List&) {
   LOG(INFO) << "CefDevToolsMessageHandler::PageBringToFront";
   if (!delegate_) {
     LOG(INFO) << "PageBringToFront, no delegate_";
-    return false;
+    return {false, {}};
   }
-  return delegate_->BringToFront();
+  return {delegate_->BringToFront(), {}};
 }
