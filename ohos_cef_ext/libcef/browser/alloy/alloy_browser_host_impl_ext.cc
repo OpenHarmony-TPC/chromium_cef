@@ -94,6 +94,7 @@
 #include "ui/content_accelerators/accelerator_util.h"
 #include "ui/events/types/event_type.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#include "content/public/browser/eye_dropper_listener.h"
 #endif
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 #include "base/ohos/ltpo/include/sliding_observer.h"
@@ -1806,6 +1807,38 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
     return true;
   }
   return false;
+}
+
+std::unique_ptr<content::EyeDropper> AlloyBrowserHostImplExt::OpenEyeDropper(
+    content::RenderFrameHost *frame,
+    content::EyeDropperListener *listener) {
+  listener_ = listener;
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    ArkWebRenderWidgetHostViewOSRExt* view =
+        static_cast<ArkWebRenderWidgetHostViewOSRExt*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->OpenEyeDropper();
+    }
+  }
+  return std::make_unique<content::EyeDropper>();
+}
+
+void AlloyBrowserHostImplExt::OnEyeDropperResult(bool success, uint32_t color) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImplExt::OnEyeDropperResult, this, success, color));
+    return;
+  }
+  if (!listener_) {
+    return;
+  }
+  if (success) {
+    listener_->ColorSelected(color);
+  } else {
+    listener_->ColorSelectionCanceled();
+  }
 }
 #endif
 

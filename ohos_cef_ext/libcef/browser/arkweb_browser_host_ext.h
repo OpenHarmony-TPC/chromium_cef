@@ -847,6 +847,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool is_web_debugging_access_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void OnEyeDropperResult(bool success, uint32_t color) override {}
   bool SetFocusByPosition(float x, float y) override;
   bool has_composition_ = false;
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)

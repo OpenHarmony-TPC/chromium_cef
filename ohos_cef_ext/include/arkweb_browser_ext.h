@@ -989,6 +989,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual int GetShrinkViewportHeight() = 0;
 
+  ///
+  /// Called when picking color.
+  ///
+  virtual void OnEyeDropperResult(bool success, uint32_t color) = 0;
+
 #if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
   /// Get the shrink viewport height.

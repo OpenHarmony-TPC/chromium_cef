@@ -180,6 +180,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                           const gfx::Rect& node_bounds_in_screen) override;
   void DidOverscroll(const ui::DidOverscrollParams& params) override;
   void OnDidNavigateMainFrameToNewPage();
+  void OpenEyeDropper();
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 
   void DidStopFlinging() override;

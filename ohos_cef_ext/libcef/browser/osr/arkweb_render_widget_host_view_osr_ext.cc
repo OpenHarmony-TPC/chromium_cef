@@ -2187,6 +2187,15 @@ void ArkWebRenderWidgetHostViewOSRExt::SetFocusOnGestureEvent(
 void ArkWebRenderWidgetHostViewOSRExt::OnDidNavigateMainFrameToNewPage() {
   ResetGestureDetection(false);
 }
+
+void ArkWebRenderWidgetHostViewOSRExt::OpenEyeDropper() {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OpenEyeDropper(browser_impl_->GetBrowser());
+  }
+}
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(IS_ARKWEB)
