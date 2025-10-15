@@ -3938,23 +3938,38 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
     targetFrame = web_contents->GetPrimaryMainFrame();
   } else if(!ParaseRenderFrameHostId(rootFrame.id, &childId, &routingId)) {
     LOG(ERROR) << "rootFrame id is invalid.";
+    CefRefPtr<CefValue> data = CefValue::Create();
+    std::u16string err_name = base::UTF8ToUTF16(std::string("RunJavaScriptInFrames"));
+    std::u16string err_msg = base::UTF8ToUTF16(std::string("rootFrame id is invalid."));
+    CefRefPtr<CefDictionaryValue> dict = CefDictionaryValue::Create();
+    dict->SetString("Error.name", err_name);
+    dict->SetString("Error.message", err_msg);
+    data->SetDictionary(dict);
+    callback->OnJavaScriptExeResult(data);
     return;
   } else {
     targetFrame = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt()
                   ->GetTargetFramesIncludingPending(routingId);
-    if (!targetFrame) {
-      LOG(ERROR) << "rootFrame id can not find frame.";
-      return;
-    }
   }
- 
-  if (targetFrame) {
-    LOG(DEBUG) << "RunJavaScriptInFrames";
-    targetFrame->AllowInjectingJavaScript();
-    targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
+
+  if (!targetFrame) {
+    LOG(ERROR) << "rootFrame id can not find frame.";
+    CefRefPtr<CefValue> data = CefValue::Create();
+    std::u16string err_name = base::UTF8ToUTF16(std::string("RunJavaScriptInFrames"));
+    std::u16string err_msg = base::UTF8ToUTF16(std::string("rootFrame id can not find frame."));
+    CefRefPtr<CefDictionaryValue> dict = CefDictionaryValue::Create();
+    dict->SetString("Error.name", err_name);
+    dict->SetString("Error.message", err_msg);
+    data->SetDictionary(dict);
+    callback->OnJavaScriptExeResult(data);
+    return;
+  }
+
+  LOG(DEBUG) << "RunJavaScriptInFrames";
+  targetFrame->AllowInjectingJavaScript();
+  targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
                     base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
                                    this, callback));
-  }
 }
 
 #if BUILDFLAG(ARKWEB_BGTASK)
