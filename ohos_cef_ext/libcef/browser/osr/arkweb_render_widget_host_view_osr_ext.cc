@@ -101,6 +101,7 @@ constexpr int32_t PINCH_START_TYPE = 1;
 constexpr int32_t PINCH_UPDATE_TYPE = 3;
 constexpr int32_t PINCH_END_TYPE = 2;
 const int32_t DEFAULT_PINCH_FINGER = 2;
+const int32_t TAP_TWICE = 2;
 #endif
 
 #if BUILDFLAG(ARKWEB_AI)
@@ -340,7 +341,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
   // may be routed and not make it to FilterInputEvent().
   if (selection_controller_ &&
       web_event.SourceDevice() == blink::WebGestureDevice::kTouchscreen) {
-    is_tap_down_in_cursor_update_ = false;
     switch (web_event.GetType()) {
       case blink::WebInputEvent::Type::kGestureLongPress:
         selection_controller_->HandleLongPressEvent(
@@ -350,13 +350,13 @@ void ArkWebRenderWidgetHostViewOSRExt::SendGestureEvent(
         selection_controller_->OnScrollBeginEvent();
         break;
       case blink::WebInputEvent::Type::kGestureTapDown:
-        is_tap_down_in_cursor_update_ = true;
         break;
       case blink::WebInputEvent::Type::kGestureShowPress:
-        is_tap_down_in_cursor_update_ = true;
         break;
       case blink::WebInputEvent::Type::kGestureTap:
-        is_tap_down_in_cursor_update_ = true;
+        if (web_event.TapCount() == TAP_TWICE) {
+          is_tap_down_twice_ = true;
+        }
         break;
       default:
         break;
@@ -1224,12 +1224,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   handler->AsArkWebRenderHandler()->OnSelectionChanged(browser_impl_.get(),
                                                        text, cef_range);
-  if (selection_controller_client_ &&
-      selection_controller_client_->IsInsertHandleShow() &&
-      range.start() == range.end() && !is_tap_down_in_cursor_update_) {
-    handler->AsArkWebRenderHandler()->StartVibraFeedback("longPress.light");
-  }
-  is_tap_down_in_cursor_update_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
   CefString selected_text;
@@ -1241,9 +1235,10 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
     }
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
     is_select_text_ = n - pos > 0;
-    if (n > 0) {
+    if (n > 0 && is_event_from_touch_ && !is_tap_down_twice_) {
       handler->AsArkWebRenderHandler()->StartVibraFeedback("longPress.light");
     }
+    is_tap_down_twice_ = false;
   } else {
     is_select_text_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -1491,7 +1486,14 @@ void ArkWebRenderWidgetHostViewOSRExt::GestureEventAck(
 blink::mojom::InputEventResultState
 ArkWebRenderWidgetHostViewOSRExt::FilterInputEvent(
     const blink::WebInputEvent& input_event) {
-  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent";
+  blink::mojom::EventType inputType = input_event.GetType();    
+  LOG(DEBUG) << "CefRenderWidgetHostViewOSR::FilterInputEvent type: " << inputType;
+
+  if (input_event.IsTouchEventType(inputType)) {
+    is_event_from_touch_ = true;
+  } else if (inputType == blink::WebInputEvent::Type::kMouseDown) {
+    is_event_from_touch_ = false;
+  }
 
 #if BUILDFLAG(ARKWEB_PULL_TO_REFRESH)
   if (FilterInputEventForPullToRefresh(input_event)) {
