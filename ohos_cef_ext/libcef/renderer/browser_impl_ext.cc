@@ -125,6 +125,10 @@ void ArkWebBrowserExtImpl::DidCommitCompositorFrame() {
   }
   needs_contents_size_update_ = false;
 
+  if (!GetWebView() || !GetWebView()->MainFrame()) {
+    return;
+  }
+
   blink::WebFrame* main_frame = GetWebView()->MainFrame();
   blink::WebLocalFrame* web_local_frame = main_frame->ToWebLocalFrame();
 
