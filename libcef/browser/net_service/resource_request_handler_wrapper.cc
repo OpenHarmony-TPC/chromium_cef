@@ -1627,8 +1627,8 @@ std::unique_ptr<InterceptedRequestHandler> CreateInterceptedRequestHandler(
       std::make_unique<InterceptedRequestHandlerWrapper::InitState>();
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   init_state->Initialize(browser_context,
-                         browserPtr->AsArkWebBrowserHostExtImpl(), framePtr,
-                         realFramePtr, global_id,
+                         browserPtr != nullptr ? browserPtr->AsArkWebBrowserHostExtImpl() : nullptr,
+                         framePtr, realFramePtr, global_id,
 #else
   init_state->Initialize(browser_context, browserPtr, framePtr, global_id,
 #endif
