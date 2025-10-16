@@ -448,7 +448,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
         return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in microphone permission map";
-        return PermissionStatus::DENIED;
+        return PermissionStatus::ASK;
       }
     }
   } else if (permission == PermissionType::VIDEO_CAPTURE) {
@@ -458,7 +458,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
         return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in camera permission map";
-        return PermissionStatus::DENIED;
+        return PermissionStatus::ASK;
       }
     }
 #endif // BUILDFLAG(ARKWEB_WEBRTC)
