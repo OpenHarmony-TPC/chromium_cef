@@ -48,6 +48,11 @@
 #include "cef/ohos_cef_ext/libcef/common/net_service/net_service_util_ext.h"
 #endif // BUILDFLAG(ARKWEB_COOKIE)
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+#include "arkweb/chromium_ext/base/process/process_handle_posix_ex.h"
+#include "third_party/ohos_ndk/includes/ohos_adapter/res_sched_client_adapter.h"
+#endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+
 using network::mojom::CookieManager;
 
 namespace {
@@ -452,6 +457,18 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
 
   base::PathService::Get(base::DIR_CACHE, &cookie_store_path_);
   cookie_store_path_ = cookie_store_path_.Append("Cookies");
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+  bool cmd_value = false;
+  if (command_line) {
+    cmd_value = command_line->HasSwitch(switches::kEnableReportCookieMonsterClient);
+  }
+  if (cmd_value) {
+    OHOS::NWeb::ResSchedClientAdapter::ReportKeyThread(
+      OHOS::NWeb::ResSchedStatusAdapter::THREAD_CREATED, base::GetCurrentRealPid(),
+      cookie_store_task_thread_.GetThreadRealId(), OHOS::NWeb::ResSchedRoleAdapter::USER_INTERACT);
+  }
+#endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 }
 
 void CefCookieManagerImplExt::Initialize(
