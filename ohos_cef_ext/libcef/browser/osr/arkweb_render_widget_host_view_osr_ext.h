@@ -413,7 +413,8 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   bool is_scroll_consumed_ = false;
   bool is_mouse_wheel_scroll_ = false;
   std::queue<ui::GestureEventData> pending_touchpad_pinch_events_;
-  bool is_tap_down_in_cursor_update_ = false;
+  bool is_event_from_touch_ = false;
+  bool is_tap_down_twice_ = false;
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 
 #if BUILDFLAG(ARKWEB_AI)
