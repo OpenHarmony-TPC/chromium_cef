@@ -327,15 +327,9 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
   }
   std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
   for (NWebExtensionTab tab : window->tabs) {
-    WebContents* contents = nullptr;
-    if (!ExtensionTabUtil::GetTabById(
-        tab.id.value_or(-1), browser_context(),
-        include_incognito_information(), &contents) || !contents) {
-      LOG(INFO) << "WindowsGetFucntion cannot find WebContents by tab_id:" << tab.id.value_or(-1);
-      return RespondNow(Error("WindowsGetFucntion cannot find WebContents"));
-    }
+    GURL gurl(tab.url.value_or(""));
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
-        ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
+        ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
 
@@ -361,15 +355,9 @@ ExtensionFunction::ResponseAction WindowsGetCurrentFunction::Run() {
   }
   std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
   for (NWebExtensionTab tab : window->tabs) {
-    WebContents* contents = nullptr;
-    if (!ExtensionTabUtil::GetTabById(
-        tab.id.value_or(-1), browser_context(),
-        include_incognito_information(), &contents) || !contents) {
-      LOG(INFO) << "WindowsGetCurrentFucntion cannot find WebContents by tab_id:" << tab.id.value_or(-1);
-      return RespondNow(Error("WindowsGetCurrentFucntion cannot find WebContents"));
-    }
+    GURL gurl(tab.url.value_or(""));
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
-        ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
+        ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
  
@@ -405,16 +393,10 @@ ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
   }
   std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
   for (NWebExtensionTab tab : window->tabs) {
-    WebContents* contents = nullptr;
-    if (!ExtensionTabUtil::GetTabById(
-        tab.id.value_or(-1), browser_context(),
-        include_incognito_information(), &contents) || !contents) {
-      LOG(INFO) << "WindowsGetLastFocusedFucntion cannot find WebContents by tab_id:" << tab.id.value_or(-1);
-      return RespondNow(Error("WindowsGetLastFocusedFucntion cannot find WebContents"));
-    }
+    GURL gurl(tab.url.value_or(""));
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
-        ExtensionTabUtil::GetScrubTabBehavior(
-            extension(), source_context_type(), contents);
+        ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
+
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
  
@@ -448,15 +430,9 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
   for (int j = 0; j < windows.size(); j++) {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
     for (NWebExtensionTab tab : windows[j].tabs) {
-      WebContents* contents = nullptr;
-      if (!ExtensionTabUtil::GetTabById(
-          tab.id.value_or(-1), browser_context(),
-          include_incognito_information(), &contents) || !contents) {
-        LOG(INFO) << "WindowsGetAllFucntion cannot find WebContents by tab_id:" << tab.id.value_or(-1);
-        return RespondNow(Error("WindowsGetAllFucntion cannot find WebContents"));
-      }
+      GURL gurl(tab.url.value_or(""));
       ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
-          ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), contents);
+          ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
       scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
     scrub_tab_behaviors_combined.emplace_back(scrub_tab_behaviors);
@@ -581,20 +557,10 @@ void WindowsUpdateFunction::OnUpdateWindow(
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
     bool respond_error = false;
     for (NWebExtensionTab tab : window->tabs) {
-      WebContents* contents = nullptr;
-      if (!ExtensionTabUtil::GetTabById(
-          tab.id.value_or(-1), function->browser_context(),
-          function->include_incognito_information(), &contents) || !contents) {
-        LOG(INFO) << "OnUpdateWindow cannot find WebContents by tab_id:" << tab.id.value_or(-1);
-        function->Respond(function->Error("OnUpdateWindow cannot find WebContents"));
-        respond_error = true;
-        break;
-      } else {
-        ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
-            ExtensionTabUtil::GetScrubTabBehavior(
-                function->extension(), function->source_context_type(), contents);
-        scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
-      }
+      GURL gurl(tab.url.value_or(""));
+      ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = ExtensionTabUtil::GetScrubTabBehaviorExt(
+          function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
+      scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
     if (!respond_error) {
       function->Respond(function->has_callback()
