@@ -517,7 +517,6 @@ void ArkWebRenderWidgetHostViewOSRUtils::StopBoosting() {
 
 void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
   if (view_->pointer_state_.GetPointerCount() == 0) {
-    has_touch_point_ = false;
     if (view_->isBoosting_) {
       view_->isBoosting_ = false;
       CEF_POST_DELAYED_TASK(
@@ -525,11 +524,12 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
           base::BindOnce(&ArkWebRenderWidgetHostViewOSRUtils::StopBoosting,
                          weak_ptr_factory_.GetWeakPtr()),
           TOUCH_UP_DURATION_TIME);
-      auto* host = content::GpuProcessHost::Get();
-      if (host && host->gpu_host()) {
-        host->gpu_host()->SetHasTouchPoint(false);
-      }
     }
+    auto* host = content::GpuProcessHost::Get();
+    if (host && host->gpu_host()) {
+      host->gpu_host()->SetHasTouchPoint(false);
+    }
+    has_touch_point_ = false;
     return;
   }
   if (view_->isBoosting_) {
@@ -543,11 +543,6 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
         .CreateSocPerfClientAdapter()
         ->ApplySocPerfConfigByIdEx(socPerfId, true);
     LOG(DEBUG) << "hwtlog:CefRenderWidgetHostViewOSR::OnTouchDown";
-    CEF_POST_DELAYED_TASK(
-        CEF_UIT,
-        base::BindOnce(&ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown,
-                       weak_ptr_factory_.GetWeakPtr()),
-        TOUCH_DOWN_DELAY_TIME);
   }
 #if BUILDFLAG(ARKWEB_PERFORMANCE_JITTER)
   OHOS::NWeb::ResSchedClientAdapter::ReportScene(
@@ -562,6 +557,11 @@ void ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown() {
     }
   }
   has_touch_point_ = true;
+  CEF_POST_DELAYED_TASK(
+      CEF_UIT,
+      base::BindOnce(&ArkWebRenderWidgetHostViewOSRUtils::OnTouchDown,
+                      weak_ptr_factory_.GetWeakPtr()),
+      TOUCH_DOWN_DELAY_TIME);
 }
 #endif
 
