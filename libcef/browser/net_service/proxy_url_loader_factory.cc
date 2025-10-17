@@ -56,6 +56,12 @@
 #include "extensions/common/constants.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+#include "cef/ohos_cef_ext/libcef/browser/net/ohos_url_rewrite_controller.h"
+#include "base/command_line.h"
+#include "content/public/common/content_switches.h"
+#endif
+
 namespace net_service {
 
 namespace {
@@ -370,6 +376,19 @@ class InterceptedRequest : public network::mojom::URLLoader,
   void SendErrorCallback(int error_code, bool safebrowsing_hit);
 
   void OnUploadProgressACK();
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  GURL AddQueryForRedirectOnUI(
+    GURL original_url,
+    GURL referrer);
+
+  void AddQueryForRedirectOnUIDone(
+    const std::vector<std::string>& removed_headers,    
+    const net::HttpRequestHeaders& modified_headers,
+    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    const std::optional<GURL>& original_url,
+    GURL rewrited_url);
+#endif
 
   const raw_ptr<ProxyURLLoaderFactory> factory_;
   const int32_t id_;
@@ -864,25 +883,55 @@ void InterceptedRequest::FollowRedirect(
   net::HttpRequestHeaders modified_headers = modified_headers_ext;
   OnProcessRequestHeaders(new_url.value_or(GURL()), &modified_headers,
                           &removed_headers);
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  LOG(DEBUG) << "InterceptedRequest::FollowRedirect";
+  bool is_main_frame = request_.resource_type ==
+                       static_cast<int>(blink::mojom::ResourceType::kMainFrame);
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx) &&
+        OhosUrlRewriteController::IsRewriteUrlEnabled() && is_main_frame) {
+    GURL rewrited_url;
+    if (new_url.has_value()) {
+      rewrited_url = new_url.value();
+    } else {
+      rewrited_url = request_.url;
+    }
+
+    GURL referrer = request_.referrer.is_valid() ? request_.referrer : GURL();
+
+    content::GetUIThreadTaskRunner({})->PostTaskAndReplyWithResult(
+      FROM_HERE,
+      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUI,
+                    base::Unretained(this),
+                    std::move(rewrited_url),
+                    std::move(referrer)),
+      base::BindOnce(&InterceptedRequest::AddQueryForRedirectOnUIDone,
+                    weak_factory_.GetWeakPtr(),
+                    removed_headers,
+                    modified_headers,
+                    modified_cors_exempt_headers,
+                    new_url));
+  } else {
 #if BUILDFLAG(IS_ARKWEB)
-  InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
+    InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
                                              modified_cors_exempt_headers,
                                              new_url, this);
 #endif
-  // If |OnURLLoaderClientError| was called then we're just waiting for the
-  // connection error handler of |proxied_loader_receiver_|. Don't restart the
-  // job since that'll create another URLLoader.
-  if (!target_client_) {
-    return;
-  }
+    // If |OnURLLoaderClientError| was called then we're just waiting for the
+    // connection error handler of |proxied_loader_receiver_|. Don't restart the
+    // job since that'll create another URLLoader.
+    if (!target_client_) {
+      return;
+    }
 
-  // Normally we would call FollowRedirect on the target loader and it would
-  // begin loading the redirected request. However, the client might want to
-  // intercept that request so restart the job instead.
+    // Normally we would call FollowRedirect on the target loader and it would
+    // begin loading the redirected request. However, the client might want to
+    // intercept that request so restart the job instead.
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
-  Restart(true);
+    Restart(true);
 #else
-  Restart();
+    Restart();
+#endif
+  }
 #endif
 }
 
@@ -1452,6 +1501,54 @@ void InterceptedRequest::OnUploadProgressACK() {
   DCHECK(waiting_for_upload_progress_ack_);
   waiting_for_upload_progress_ack_ = false;
 }
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+GURL InterceptedRequest::AddQueryForRedirectOnUI(
+    GURL original_url, 
+    GURL referrer) {
+  if (!original_url.is_empty() && original_url.is_valid()) {
+    std::string new_url =
+      factory_->request_handler_->OnRewriteUrlForNavigation(original_url.spec(), referrer.spec());
+    return GURL(new_url);
+  }
+  return GURL();
+}
+
+void InterceptedRequest::AddQueryForRedirectOnUIDone(
+    const std::vector<std::string>& removed_headers,
+    const net::HttpRequestHeaders& modified_headers,
+    const net::HttpRequestHeaders& modified_cors_exempt_headers,
+    const std::optional<GURL>& original_url,
+    GURL rewrited_url) {
+  std::optional<GURL> optional_url;
+  if (rewrited_url.is_empty() || !rewrited_url.is_valid() || rewrited_url == request_.url) {
+    optional_url = std::nullopt;
+  } else {
+    optional_url = std::optional<GURL>(rewrited_url);
+  }
+
+#if BUILDFLAG(IS_ARKWEB)
+    InterceptedRequestUtils::FollowRedirectExt(removed_headers, modified_headers,
+                                             modified_cors_exempt_headers,
+                                             optional_url, this);
+#endif
+    // If |OnURLLoaderClientError| was called then we're just waiting for the
+    // connection error handler of |proxied_loader_receiver_|. Don't restart the
+    // job since that'll create another URLLoader.
+    if (!target_client_) {
+      return;
+    }
+
+    // Normally we would call FollowRedirect on the target loader and it would
+    // begin loading the redirected request. However, the client might want to
+    // intercept that request so restart the job instead.
+#if BUILDFLAG(ARKWEB_NETWORK_BASE)
+    Restart(true);
+#else
+    Restart();
+#endif  
+}
+#endif
 
 //==============================
 // InterceptedRequestHandler

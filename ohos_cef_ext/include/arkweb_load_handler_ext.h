@@ -148,6 +148,12 @@ class ArkWebLoadHandlerExt : public virtual CefLoadHandler,
   /*--cef()--*/
   virtual void OnPdfLoadEvent(int32_t result, const std::string& url) {}
 #endif  // BUILDFLAG(ARKWEB_PDF)
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  virtual std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer) { return ""; }
+#endif
 };
 
 #endif  // OHOS_CEF_EXT_INCLUDE_ARKWEB_LOAD_HANDLER_EXT_H_

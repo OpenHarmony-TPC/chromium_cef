@@ -64,6 +64,13 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
                              CefRefPtr<CefBrowserHostBase> browser,
                              struct NetHelperSetting& setting);
 
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string OnRewriteUrlForNavigation(
+    CefRefPtr<CefBrowserHostBase> browser,
+    const std::string& original_url,
+    const std::string& referrer);
+#endif
+
  private:
   bool IsIntelligentTrackingPreventionEnabled(
       CefRefPtr<CefBrowserHostBase> browser);
