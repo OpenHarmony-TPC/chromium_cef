@@ -555,18 +555,15 @@ void WindowsUpdateFunction::OnUpdateWindow(
     function->Respond(function->Error(errorMessage));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
-    bool respond_error = false;
     for (NWebExtensionTab tab : window->tabs) {
       GURL gurl(tab.url.value_or(""));
       ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = ExtensionTabUtil::GetScrubTabBehaviorExt(
           function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
       scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
-    if (!respond_error) {
-      function->Respond(function->has_callback()
-              ? function->WithArguments(GetWindowValue(*window, scrub_tab_behaviors))
-              : function->NoArguments());
-    }
+    function->Respond(function->has_callback()
+            ? function->WithArguments(GetWindowValue(*window, scrub_tab_behaviors))
+            : function->NoArguments());
   }
 
   if (!function->call_update_window_) {
