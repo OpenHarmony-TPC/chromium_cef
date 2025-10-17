@@ -809,18 +809,15 @@ void TabsHighlightFunction::OnTabHighlighted(
     function->Respond(function->Error(error.value()));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
-    bool respond_error = false;
     for (NWebExtensionTab tab : window.tabs) {
       GURL gurl(tab.url.value_or(""));
       ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior = ExtensionTabUtil::GetScrubTabBehaviorExt(
           function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
       scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
-    if (!respond_error) {
-      function->Respond(function->has_callback()
-          ? function->WithArguments(GetWindowValue(window, scrub_tab_behaviors))
-          : function->NoArguments());
-    }
+    function->Respond(function->has_callback()
+        ? function->WithArguments(GetWindowValue(window, scrub_tab_behaviors))
+        : function->NoArguments());
   }
 
   if (!function->call_highlight_tab_) {
@@ -894,7 +891,6 @@ void TabsMoveFunction::OnTabMoved(
     function->Respond(function->WithArguments(base::Value(GetTabValue(tabs_t[0], scrub_tab_behavior))));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
-    bool respond_error = false;
     for (NWebExtensionTab tab : tabs) {
       GURL gurl(tab.url.value_or(""));
       ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
@@ -902,10 +898,8 @@ void TabsMoveFunction::OnTabMoved(
               function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
       scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
-    if (!respond_error) {
-      base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
-      function->Respond(function->WithArguments(std::move(tab_list)));
-    }
+    base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
+    function->Respond(function->WithArguments(std::move(tab_list)));
   }
 
   if (!function->call_move_tab_) {
