@@ -26,22 +26,6 @@ namespace extensions {
 
 void TabsWindowsAPI::TabUpdated(int tab_id,
     content::WebContents* contents,
-    const std::vector<std::string>& changed_property_names,
-    const std::string& url) {
-  tabs_event_router()->DispatchTabUpdatedEvent(tab_id, contents,
-                                               changed_property_names, url);
-}
-
-void TabsWindowsAPI::TabUpdated(int tab_id,
-    content::WebContents* contents,
-    const std::vector<std::string>& changed_property_names,
-    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
-  tabs_event_router()->DispatchTabUpdatedEvent(
-      tab_id, contents, changed_property_names, std::move(changeInfo));
-}
-
-void TabsWindowsAPI::TabUpdated(int tab_id,
-    content::WebContents* contents,
     std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
     std::unique_ptr<NWebExtensionTab> tab) {
   if (!tab) {
@@ -115,6 +99,14 @@ void TabsWindowsAPI::TabReplaced(content::WebContents* contents,
                                  int32_t addedTabId,
                                  int32_t removedTabId) {
   tabs_event_router()->DispatchTabReplacedEvent(contents, addedTabId, removedTabId);
+}
+
+void TabsWindowsAPI::RegisterTabZoomObserver(content::WebContents* web_contents) {
+  tabs_event_router()->RegisterTabZoomObserver(web_contents);
+}
+ 
+void TabsWindowsAPI::UnregisterTabZoomObserver(content::WebContents* web_contents) {
+  tabs_event_router()->UnregisterTabZoomObserver(web_contents);
 }
 
 }  // namespace extensions

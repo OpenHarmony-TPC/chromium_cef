@@ -723,14 +723,8 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   virtual void ExtensionSetTabId(int32_t tab_id) override {}
   virtual int32_t ExtensionGetTabId() override { return -1; }
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) override {}
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override {}
+  virtual void WebExtensionRegisterZoomObserver() override {}
+  virtual void WebExtensionUnregisterZoomObserver() override {}
   virtual  void WebExtensionTabUpdated(
       int tab_id,
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,

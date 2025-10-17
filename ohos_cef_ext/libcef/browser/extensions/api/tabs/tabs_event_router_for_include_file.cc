@@ -16,18 +16,6 @@
 void DispatchTabUpdatedEvent(
     int tab_id,
     content::WebContents* contents,
-    const std::vector<std::string>& changed_property_names,
-    const std::string& url);
-
-void DispatchTabUpdatedEvent(
-    int tab_id,
-    content::WebContents* contents,
-    const std::vector<std::string>& changed_property_names,
-    std::unique_ptr<NWebExtensionTabChangeInfo> change_info);
-
-void DispatchTabUpdatedEvent(
-    int tab_id,
-    content::WebContents* contents,
     std::unique_ptr<NWebExtensionTabChangeInfo> change_info,
     std::unique_ptr<NWebExtensionTab> tab);
 
@@ -72,3 +60,7 @@ void DispatchTabReplacedEvent(
     content::WebContents* contents,
     int32_t addedTabId,
     int32_t removedTabId);
+
+void RegisterTabZoomObserver(content::WebContents* web_contents);
+ 
+void UnregisterTabZoomObserver(content::WebContents* web_contents);
