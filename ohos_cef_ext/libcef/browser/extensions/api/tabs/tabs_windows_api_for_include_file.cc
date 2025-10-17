@@ -15,16 +15,6 @@
 
 void TabUpdated(int tab_id,
                 content::WebContents* contents,
-                const std::vector<std::string>& changed_property_names,
-                const std::string& url);
-
-void TabUpdated(int tab_id,
-                content::WebContents* contents,
-                const std::vector<std::string>& changed_property_names,
-                std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo);
-
-void TabUpdated(int tab_id,
-                content::WebContents* contents,
                 std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
                 std::unique_ptr<NWebExtensionTab> tab);
 
@@ -59,3 +49,7 @@ void TabMoved(content::WebContents* web_contents,
 void TabReplaced(content::WebContents* web_contents,
                  int32_t added_tab_id,
                  int32_t removed_tab_id);
+
+void RegisterTabZoomObserver(content::WebContents* web_contents);
+ 
+void UnregisterTabZoomObserver(content::WebContents* web_contents);

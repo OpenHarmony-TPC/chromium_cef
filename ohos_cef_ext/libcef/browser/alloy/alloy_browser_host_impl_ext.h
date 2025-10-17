@@ -134,15 +134,9 @@ public:
       content::BrowserContext*& browser_context,
       content::WebContents*& web_contents);
 
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) override;
+  void WebExtensionRegisterZoomObserver() override;
 
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
+  void WebExtensionUnregisterZoomObserver() override;
 
   void WebExtensionTabUpdated(
       int tab_id,
