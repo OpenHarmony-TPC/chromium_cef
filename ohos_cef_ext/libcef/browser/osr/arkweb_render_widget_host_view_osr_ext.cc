@@ -2644,6 +2644,9 @@ void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
     const std::string& url,
     int32_t blankScreenReason,
     int32_t detectedContentfulNodesCount) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get()) {
+    return;
+  }
   CefRefPtr<ArkWebRenderHandlerExt> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
