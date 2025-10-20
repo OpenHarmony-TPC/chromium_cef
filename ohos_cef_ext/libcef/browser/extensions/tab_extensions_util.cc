@@ -161,7 +161,7 @@ base::Value::List GetTabValueList(const std::vector<NWebExtensionTab>& tabs,
   size_t i = 0;
   for (NWebExtensionTab tab : tabs) {
     if (i == scrub_tab_behaviors.size()) break;
-    LOG(DEBUG) << "GetTabValueList tab id: " << *tab.id;
+    LOG(DEBUG) << "GetTabValueList tab id: " << tab.id.value_or(-1);
     tab_list.Append(GetTabValue(tab, scrub_tab_behaviors[i++]));
   }
   return tab_list;
