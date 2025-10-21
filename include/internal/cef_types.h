@@ -48,6 +48,8 @@
 #include "include/internal/cef_types_mac.h"
 #elif defined(OS_LINUX)
 #include "include/internal/cef_types_linux.h"
+#elif defined(OS_OHOS)
+#include "include/internal/cef_types_linux.h"
 #endif
 
 // 32-bit ARGB color value, not premultiplied. The color components are always

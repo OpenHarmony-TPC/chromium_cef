@@ -111,6 +111,7 @@ import("//rlz/buildflags/buildflags.gni")
 import("//testing/test.gni")
 import("//third_party/icu/config.gni")
 import("//third_party/widevine/cdm/widevine.gni")
+import("//third_party/wiseplay/cdm/wiseplay.gni")
 import("//tools/grit/repack.gni")
 import("//tools/grit/grit_rule.gni")
 import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
@@ -305,6 +306,7 @@ gypi_paths2 = exec_script("//cef/tools/gypi_to_gn.py",
 includes_common = gypi_paths2.includes_common + gypi_paths2.includes_common_capi
 includes_mac = gypi_paths2.includes_mac + gypi_paths2.includes_mac_capi
 includes_linux = gypi_paths2.includes_linux + gypi_paths2.includes_linux_capi
+includes_ohos = gypi_paths2.includes_ohos + gypi_paths2.includes_ohos_capi
 includes_win = gypi_paths2.includes_win + gypi_paths2.includes_win_capi
 
 #
@@ -1030,6 +1032,43 @@ source_set("libcef_static") {
     }
   }
 
+  if (is_ohos) {
+    sources += includes_ohos + [
+      "libcef/browser/native/browser_platform_delegate_native_ohos.cc",
+      "libcef/browser/native/browser_platform_delegate_native_ohos.h",
+      "libcef/browser/osr/browser_platform_delegate_osr_ohos.cc",
+      "libcef/browser/osr/browser_platform_delegate_osr_ohos.h",
+      "libcef/browser/printing/print_dialog_linux.cc",
+      "libcef/browser/printing/print_dialog_linux.h",
+      "libcef/common/ohos_cef_media_drm_bridge_client.cc",
+      "libcef/common/ohos_cef_media_drm_bridge_client.h",
+      "libcef/common/util_ohos.h",
+      "libcef/common/util_ohos.cc",
+    ]
+
+    deps += [
+      "//build/config/freetype",
+      "//ohos/adapter:adapter",
+      "//third_party/aki:aki_jsbind",
+    ]
+
+    if (enable_wiseplay) {
+      deps += [ 
+        "//chrome/browser/media:mojo_bindings",
+        "//chrome/common:mojo_bindings",
+        "//components/cdm/renderer",
+        "//components/cdm/browser",
+        "//components/crash/ohos:crash_features",
+        "//components/visitedlink/common",
+        "//media/mojo:buildflags",
+        "//media/mojo/common",
+        "//media/mojo/services",
+        "//third_party/wiseplay/cdm:buildflags", 
+        "//third_party/wiseplay/cdm:headers",
+      ]
+    }
+  }
+
   if (is_mac) {
     sources += includes_mac + [
       "libcef/browser/chrome/chrome_content_browser_client_cef_mac.mm",
@@ -1183,6 +1222,14 @@ static_library("libcef_dll_wrapper") {
   public_configs = [ ":libcef_dll_wrapper_config" ]
 
   deps = [ ":cef_make_headers" ]
+
+  if (is_ohos) {
+    deps += [ "//base" ]
+    sources -= [
+      "libcef_dll/base/cef_atomic_flag.cc",
+      "libcef_dll/base/cef_callback_helpers.cc",
+    ]
+  }
 }
 
 
@@ -1385,6 +1432,7 @@ action("make_api_hash_header") {
   # List of all C API files that will be checked for changes by cef_api_hash.py.
   inputs = gypi_paths2.includes_common_capi +
            gypi_paths2.includes_linux_capi +
+           gypi_paths2.includes_ohos_capi +
            gypi_paths2.includes_mac_capi +
            gypi_paths2.includes_win_capi +
            gypi_paths2.includes_capi +
@@ -2051,6 +2099,137 @@ if (is_mac) {
     defines = [
       "CEF_USE_SANDBOX",
       "CEF_TESTS_IN_SRC_DIRECTORY",
+    ]
+  }
+} else if (is_ohos) {
+  #
+  # libcefclient.so targets.
+  #
+  copy("copy_cefclient_files") {
+    sources = gypi_paths2.shared_sources_resources +
+              gypi_paths2.cefclient_sources_resources
+    outputs = [ "${root_out_dir}/cefclient_files/{{source_file_part}}" ]
+  }
+
+  shared_library("cefclient") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_renderer +
+              gypi_paths2.cefclient_sources_browser +
+              gypi_paths2.cefclient_sources_common +
+              gypi_paths2.cefclient_sources_renderer
+
+    sources += includes_ohos +
+              gypi_paths2.shared_sources_ohos +
+              gypi_paths2.cefclient_sources_ohos
+
+    sources -= [
+      "tests/cefclient/browser/osr_renderer.h",
+      "tests/cefclient/browser/osr_renderer.cc",
+      "tests/cefclient/browser/osr_renderer_settings.h",
+    ]
+
+    deps = [
+      ":copy_cefclient_files",
+      ":libcef",
+      ":libcef_dll_wrapper",
+      "//ohos/adapter:adapter",
+    ]
+
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    libs = [
+      "native_window",
+      "native_drawing"
+    ]
+
+    if (!is_component_build) {
+      # Set rpath to find our own libfreetype even in a non-component build.
+      configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+    }
+  }
+
+  #
+  # libcefsimple.so targets.
+  #
+  shared_library("cefsimple") {
+    # Necessary because the libcef target is testonly.
+    testonly = true
+
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.cefsimple_sources_common
+
+    sources += includes_ohos +
+            gypi_paths2.shared_sources_ohos +
+            gypi_paths2.cefsimple_sources_ohos
+
+    deps = [
+      ":libcef",
+      ":libcef_dll_wrapper",
+      "//ohos/adapter:adapter",
+    ]
+
+    defines = [
+      "CEF_USE_SANDBOX",
+    ]
+
+    libs = [
+      "native_window"
+    ]
+
+    if (!is_component_build) {
+      # Set rpath to find our own libfreetype even in a non-component build.
+      configs += [ "//build/config/gcc:rpath_for_built_shared_libraries" ]
+    }
+  }
+
+  #
+  # libcefsimple.so targets.
+  #
+  copy("copy_ceftests_files") {
+    sources = gypi_paths2.shared_sources_resources
+    outputs = [ "${root_out_dir}/ceftests_files/{{source_file_part}}" ]
+  }
+
+  shared_library("ceftests") {
+    testonly = true
+
+    sources = includes_common +
+              gypi_paths2.includes_wrapper +
+              gypi_paths2.shared_sources_browser +
+              gypi_paths2.shared_sources_common +
+              gypi_paths2.shared_sources_renderer +
+              gypi_paths2.ceftests_sources_common
+
+    sources += gypi_paths2.shared_sources_ohos +
+              gypi_paths2.ceftests_sources_ohos
+
+    deps = [
+      ":copy_ceftests_files",
+      ":libcef",
+      ":libcef_dll_wrapper",
+      ":gtest_teamcity",
+      "//ohos/adapter:adapter",
+      "//testing/gtest",
+    ]
+
+    defines = [
+      "CEF_USE_SANDBOX",
+      "CEF_TESTS_IN_SRC_DIRECTORY",
+    ]
+
+    libs = [
+      "native_window",
+      "native_drawing"
     ]
   }
 } else {

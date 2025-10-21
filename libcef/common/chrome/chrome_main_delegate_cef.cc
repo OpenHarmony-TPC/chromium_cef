@@ -37,7 +37,11 @@
 #if BUILDFLAG(IS_MAC)
 #include "cef/libcef/common/util_mac.h"
 #elif BUILDFLAG(IS_POSIX)
+#if BUILDFLAG(IS_OHOS)
+#include "cef/libcef/common/util_ohos.h"
+#else
 #include "cef/libcef/common/util_linux.h"
+#endif
 #endif
 
 namespace {
@@ -389,7 +393,11 @@ void ChromeMainDelegateCef::PreSandboxStartup() {
 #if BUILDFLAG(IS_MAC)
     util_mac::PreSandboxStartup();
 #elif BUILDFLAG(IS_POSIX)
+#if BUILDFLAG(IS_OHOS)
+    util_ohos::PreSandboxStartup();
+#else
     util_linux::PreSandboxStartup();
+#endif
 #endif
   }
 

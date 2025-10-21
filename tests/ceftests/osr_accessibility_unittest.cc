@@ -221,6 +221,8 @@ class AccessibilityTestHandler : public TestHandler,
     windowInfo.SetAsWindowless(kNullWindowHandle);
 #elif defined(OS_LINUX)
     windowInfo.SetAsWindowless(kNullWindowHandle);
+#elif defined(OS_OHOS)
+    windowInfo.SetAsWindowless(kNullWindowHandle);
 #else
 #error "Unsupported platform"
 #endif

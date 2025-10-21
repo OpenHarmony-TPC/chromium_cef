@@ -133,7 +133,12 @@ class ScopedPlatformSetup final {
 
 }  // namespace
 
+#if defined(OSOHOS)
+extern "C" {
+int __attribute__((visibility("default"))) CefMain(int argc, char* argv[]) {
+#else
 int main(int argc, char* argv[]) {
+#endif
   int exit_code;
 
 #if defined(OS_WIN) && defined(ARCH_CPU_32_BITS)
@@ -298,3 +303,6 @@ int main(int argc, char* argv[]) {
 
   return retval;
 }
+#if defined(OSOHOS)
+}
+#endif
