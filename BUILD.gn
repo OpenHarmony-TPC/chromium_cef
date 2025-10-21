@@ -919,6 +919,13 @@ source_set("libcef_static") {
     ]
   }
 
+  if (defined(arkweb_css_input_time) && arkweb_css_input_time) {
+    sources += [
+      "ohos_cef_ext/libcef/browser/color_chooser/color_chooser_ohos.cc",
+      "ohos_cef_ext/libcef/browser/color_chooser/color_chooser_ohos.h",
+    ]
+  }
+
   #if defined(ARKWEB_LOGGER_REPORT)
   sources += [
     "include/cef_logger_callback_api_handler.h",
