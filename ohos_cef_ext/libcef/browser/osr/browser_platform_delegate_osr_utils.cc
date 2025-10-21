@@ -82,15 +82,6 @@ void CefBrowserPlatformDelegateOsrUtils::RedistributeKeyEventIfUrlEmpty(const Ce
     }
 }
 
-void CefBrowserPlatformDelegateOsrUtils::AdjustMouseClickCoordinates(
-    CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent){
-    if (view->AsArkWebRenderWidgetHostViewOSRExt()
-            ->IsRequestUnadjustedMovement()) {
-        mouseEvent.x = mouseEvent.raw_x;
-        mouseEvent.y = mouseEvent.raw_y;
-    }
-}
-
 void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingOnMouseClick(
     CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event){
     blink::WebGestureEvent fling_cancel =
@@ -101,12 +92,16 @@ void CefBrowserPlatformDelegateOsrUtils::CancelTouchpadFlingOnMouseClick(
         fling_cancel);
 }
 
-void CefBrowserPlatformDelegateOsrUtils::AdjustMouseMoveCoordinates(
-    CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent){
-    if (view->AsArkWebRenderWidgetHostViewOSRExt()
-            ->IsRequestUnadjustedMovement()) {
-        mouseEvent.x = mouseEvent.raw_x;
-        mouseEvent.y = mouseEvent.raw_y;
+void CefBrowserPlatformDelegateOsrUtils::AdjustMouseEventCoordinates(
+    CefRenderWidgetHostViewOSR* view,
+    const CefMouseEvent& mouseEvent,
+    blink::WebMouseEvent& event) {
+    if (view->IsPointerLocked()) {
+      event.SetPositionInScreen(
+          {mouseEvent.x + mouseEvent.raw_x, mouseEvent.y + mouseEvent.raw_y});
+      event.movement_x = mouseEvent.raw_x;
+      event.movement_y = mouseEvent.raw_y;
+      event.is_raw_movement_event = true;
     }
 }
 
