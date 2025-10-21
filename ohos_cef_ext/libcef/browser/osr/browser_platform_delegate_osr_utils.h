@@ -18,9 +18,10 @@ public:
 
     void InitializeAndUpdateRenderView();
     void RedistributeKeyEventIfUrlEmpty(const CefKeyEvent& event);
-    void AdjustMouseClickCoordinates(CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent);
     void CancelTouchpadFlingOnMouseClick(CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event);
-    void AdjustMouseMoveCoordinates(CefRenderWidgetHostViewOSR* view, CefMouseEvent& mouseEvent);
+    void AdjustMouseEventCoordinates(CefRenderWidgetHostViewOSR* view,
+                                     const CefMouseEvent& mouseEventevent,
+                                     blink::WebMouseEvent& event);
     void CancelTouchpadFlingMouseWheel(CefRenderWidgetHostViewOSR* view, const CefMouseEvent& event);
     void AdjustAndSendTouchEvent(CefRenderWidgetHostViewOSR* view, const CefTouchEvent& event);
     void SetFocusAndUpdateStatus(bool setFocus, CefRenderWidgetHostViewOSR* view);
