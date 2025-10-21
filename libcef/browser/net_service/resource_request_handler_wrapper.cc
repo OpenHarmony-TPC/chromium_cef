@@ -64,6 +64,11 @@
 #include "services/network/sec_header_helpers.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+#include "arkweb/chromium_ext/content/public/common/content_switches_ext.h"
+#include "base/command_line.h"
+#include "libcef/browser/net_service/cookie_manager_impl_ext.h"
+#endif
 namespace net_service {
 
 namespace {
@@ -761,6 +766,16 @@ class InterceptedRequestHandlerWrapper : public InterceptedRequestHandler {
           init_state_->browser_, init_state_->frame_,
           state->pending_request_.get(), cef_cookie);
     }
+
+#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
+      CefRefPtr<CefCookieManagerImplExt> cookie_manager =
+        CefCookieManagerImplExt::GetInstance(init_state_->is_off_the_record_);
+      if (cookie_manager) {
+        *allow = cookie_manager->CanSaveOrLoadCookies(*(state->request_));
+      }
+    }
+#endif // ARKWEB_EXT_EXCEPTION_LIST
 
 #if BUILDFLAG(ARKWEB_ITP)
     if (wrapper_helper_ && wrapper_helper_->ProceedAllowCookieLoad(

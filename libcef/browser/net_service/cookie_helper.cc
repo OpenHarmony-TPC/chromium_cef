@@ -123,47 +123,21 @@ net::CookieOptions GetCookieOptions(const network::ResourceRequest& request,
 //
 
 void ContinueWithLoadedCookies(const AllowCookieCallback& allow_cookie_callback,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-                               const CefBrowserContext::Getter& browser_context_getter,
-                               const network::ResourceRequest& request,
-                               bool is_off_the_record,
-#endif // ARKWEB_EXT_EXCEPTION_LIST
                                DoneCookieCallback done_callback,
                                const net::CookieAccessResultList& cookies) {
   CEF_REQUIRE_IOT();
   net::CookieList allowed_cookies;
   for (const auto& status : cookies) {
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-    if (base::CommandLine::ForCurrentProcess()->HasSwitch(switches::kEnableNwebEx)) {
-        CefRefPtr<CefCookieManagerImplExt> cookie_manager =
-          CefCookieManagerImplExt::GetInstance(is_off_the_record);
-        if (cookie_manager && cookie_manager->CanSaveOrLoadCookies(request)) {
-          allowed_cookies.push_back(status.cookie);
-        }
-    } else {
-      bool allow = false;
-      allow_cookie_callback.Run(status.cookie, &allow);
-      if (allow) {
-        allowed_cookies.push_back(status.cookie);
-      }
-    }
-#else // ARKWEB_EXT_EXCEPTION_LIST
     bool allow = false;
     allow_cookie_callback.Run(status.cookie, &allow);
     if (allow) {
       allowed_cookies.push_back(status.cookie);
     }
-#endif // ARKWEB_EXT_EXCEPTION_LIST
   }
   std::move(done_callback).Run(cookies.size(), std::move(allowed_cookies));
 }
 
 void GetCookieListCallback(const AllowCookieCallback& allow_cookie_callback,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-                           const CefBrowserContext::Getter& browser_context_getter,
-                           const network::ResourceRequest& request,
-                           bool is_off_the_record,
-#endif // ARKWEB_EXT_EXCEPTION_LIST
                            DoneCookieCallback done_callback,
                            const net::CookieAccessResultList& included_cookies,
                            const net::CookieAccessResultList&) {
@@ -172,18 +146,11 @@ void GetCookieListCallback(const AllowCookieCallback& allow_cookie_callback,
 #endif
   CEF_POST_TASK(CEF_IOT,
                 base::BindOnce(ContinueWithLoadedCookies, allow_cookie_callback,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-                               browser_context_getter, request, is_off_the_record,
-#endif // ARKWEB_EXT_EXCEPTION_LIST
                                std::move(done_callback), included_cookies));
 }
 
 void LoadCookiesOnUIThread(
     const CefBrowserContext::Getter& browser_context_getter,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-    const network::ResourceRequest& request,
-    bool is_off_the_record,
-#endif // ARKWEB_EXT_EXCEPTION_LIST
     const GURL& url,
     const net::CookieOptions& options,
     net::CookiePartitionKeyCollection cookie_partition_key_collection,
@@ -193,12 +160,7 @@ void LoadCookiesOnUIThread(
   auto browser_context =
       cef_browser_context ? cef_browser_context->AsBrowserContext() : nullptr;
   if (!browser_context) {
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-    GetCookieListCallback(allow_cookie_callback, browser_context_getter, request, 
-                          is_off_the_record, std::move(done_callback),
-#else // ARKWEB_EXT_EXCEPTION_LIST
     GetCookieListCallback(allow_cookie_callback, std::move(done_callback),
-#endif // ARKWEB_EXT_EXCEPTION_LIST
                           net::CookieAccessResultList(),
                           net::CookieAccessResultList());
     return;
@@ -207,12 +169,7 @@ void LoadCookiesOnUIThread(
   GetCookieManager(browser_context)
       ->GetCookieList(
           url, options, cookie_partition_key_collection,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-          base::BindOnce(GetCookieListCallback, allow_cookie_callback, browser_context_getter,
-                         request, is_off_the_record,
-#else // ARKWEB_EXT_EXCEPTION_LIST
           base::BindOnce(GetCookieListCallback, allow_cookie_callback,
-#endif // ARKWEB_EXT_EXCEPTION_LIST
                          std::move(done_callback)));
 }
 
@@ -385,9 +342,6 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 #endif
         std::move(partition_key_collection),
         base::BindOnce(GetCookieListCallback, allow_cookie_callback,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-                       browser_context_getter, request, is_off_the_record,
-#endif
                        std::move(done_callback)));
     return;
   }
@@ -396,9 +350,6 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
       CEF_UIT,
       base::BindOnce(
           LoadCookiesOnUIThread, browser_context_getter,
-#if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
-          request, is_off_the_record,
-#endif // (ARKWEB_EXT_EXCEPTION_LIST
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
           new_url.value_or(request.url),
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
