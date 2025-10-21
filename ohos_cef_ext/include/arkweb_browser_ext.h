@@ -967,6 +967,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual std::string GetSelectedTextFromContextParam() = 0;
 
+  ///
+  /// Get last stat after tabs switch.
+  ///
+  virtual bool JudgeTextInputState() = 0;
+
 #if BUILDFLAG(ARKWEB_DISCARD)
   ///
   /// Discard a webview window

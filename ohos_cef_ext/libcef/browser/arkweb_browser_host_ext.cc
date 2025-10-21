@@ -457,6 +457,25 @@ std::string ArkWebBrowserHostExtImpl::GetSelectedTextFromContextParam() {
 #endif
 }
 
+bool ArkWebBrowserHostExtImpl::JudgeTextInputState() {
+  if (!GetWebContents()) {
+    return true;
+  }
+
+  auto rvh = GetWebContents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget() && rvh->GetWidget()->GetView()) {
+    ArkWebRenderWidgetHostViewOSRExt* view =
+        static_cast<ArkWebRenderWidgetHostViewOSRExt*>(rvh->GetWidget()->GetView());
+    if (view && view->GetTextInputManager()) {
+      content::TextInputManager* mgr = view->GetTextInputManager();
+      ui::TextInputType type = mgr->GetTextInputState() ? mgr->GetTextInputState()->type : ui::TEXT_INPUT_TYPE_NONE;
+      LOG(INFO) << "JudgeTextInputState " << static_cast<int32_t>(type);
+      return type == ui::TEXT_INPUT_TYPE_NONE;
+    }
+  }
+  return true;
+}
+
 bool ArkWebBrowserHostExtImpl::ShouldShowFreeCopyMenu() {
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   if (!GetWebContents()) {

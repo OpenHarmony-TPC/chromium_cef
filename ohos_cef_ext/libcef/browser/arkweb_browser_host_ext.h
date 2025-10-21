@@ -468,6 +468,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void ShowFreeCopyMenu() override;
   bool ShouldShowFreeCopyMenu() override;
   std::string GetSelectedTextFromContextParam() override;
+  bool JudgeTextInputState() override;
   int GetNWebId() override;
 #if BUILDFLAG(ARKWEB_ITP)
   void EnableIntelligentTrackingPrevention(bool enable) override;
