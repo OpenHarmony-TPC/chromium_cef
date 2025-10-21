@@ -1,0 +1,637 @@
+From 97dc683707b55f984f74e3a02c6ed685c9c733df Mon Sep 17 00:00:00 2001
+From: laixiaohai <xiaohai.lai@haitaichina.com>
+Date: Tue, 21 Oct 2025 13:44:50 +0800
+Subject: [PATCH] adapter ohos chromium for cef
+
+Change-Id: I59655d652c2f922f2fb6651fae103195d1c20ce6
+---
+ .../src/partition_alloc/BUILD.gn              |   2 +-
+ .../constrained_window_views.cc               |  14 +--
+ .../internal/common/download_file_impl.cc     |   9 ++
+ media/BUILD.gn                                |   2 +-
+ ohos/adapter/web_entry/BUILD.gn               |   4 +
+ ohos/adapter/web_entry/cef/cef_loader.cc      | 109 ++++++++++++++++++
+ ohos/adapter/web_entry/cef/cef_loader.h       |  44 +++++++
+ ohos/adapter/web_entry/web_entry.cc           |  16 ++-
+ ohos/adapter/web_entry/web_loader.cc          |   3 +
+ ohos/adapter/web_entry/web_loader.h           |   7 +-
+ ohos/adapter/web_entry/web_loader_factory.cc  |  17 ++-
+ ohos/app/ohos_hap/AppScope/app.json5          |   2 +-
+ .../resources/base/element/string.json        |   2 +-
+ .../main/resources/base/element/string.json   |   2 +-
+ .../main/resources/en_US/element/string.json  |   2 +-
+ .../main/resources/zh_CN/element/string.json  |   2 +-
+ ohos/app/ohos_hap/oh-package.json5            |   2 +-
+ .../src/main/ets/ability/WebBaseAbility.ets   |   3 +-
+ .../src/main/ets/adapter/AppWindowAdapter.ets |   2 +-
+ .../src/main/ets/components/WebWindow.ets     |   2 +-
+ ohos/build/build.sh                           |  13 ++-
+ ui/ozone/platform/ohos/BUILD.gn               |   1 +
+ ui/ozone/platform/ohos/host/ohos_window.cc    |   3 +-
+ 23 files changed, 237 insertions(+), 26 deletions(-)
+ create mode 100644 ohos/adapter/web_entry/cef/cef_loader.cc
+ create mode 100644 ohos/adapter/web_entry/cef/cef_loader.h
+
+diff --git a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+index e63f8d487b..90734fc638 100644
+--- a/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
++++ b/base/allocator/partition_allocator/src/partition_alloc/BUILD.gn
+@@ -896,7 +896,7 @@ if (is_clang_or_gcc) {
+     }
+ 
+     if (!use_partition_alloc_as_malloc) {
+-      if (is_android) {
++      if (is_android || is_ohos) {
+         shim_sources += [
+           "shim/allocator_shim_default_dispatch_to_linker_wrapped_symbols.cc",
+         ]
+diff --git a/components/constrained_window/constrained_window_views.cc b/components/constrained_window/constrained_window_views.cc
+index e224eef611..7751e690fa 100644
+--- a/components/constrained_window/constrained_window_views.cc
++++ b/components/constrained_window/constrained_window_views.cc
+@@ -295,12 +295,14 @@ views::Widget* CreateBrowserModalDialogViews(views::DialogDelegate* dialog,
+   gfx::NativeView parent_view =
+       parent ? CurrentBrowserModalClient()->GetDialogHostView(parent) : nullptr;
+   // Use with CEF windowless rendering.
++  ModalDialogHost* host =
++      CurrentBrowserModalClient()->GetModalDialogHost(parent);
+   gfx::AcceleratedWidget parent_widget =
+-      parent ? CurrentBrowserModalClient()->GetModalDialogHost(parent)->
+-          GetAcceleratedWidget() : gfx::kNullAcceleratedWidget;
+-  views::Widget* widget =
+-      views::DialogDelegate::CreateDialogWidget(dialog, nullptr, parent_view,
+-                                                parent_widget);
++      parent
++          ? (host ? host->GetAcceleratedWidget() : gfx::kNullAcceleratedWidget)
++          : gfx::kNullAcceleratedWidget;
++  views::Widget* widget = views::DialogDelegate::CreateDialogWidget(
++      dialog, nullptr, parent_view, parent_widget);
+   widget->SetNativeWindowProperty(
+       views::kWidgetIdentifierKey,
+       const_cast<void*>(kConstrainedWindowWidgetIdentifier));
+@@ -316,8 +318,6 @@ views::Widget* CreateBrowserModalDialogViews(views::DialogDelegate* dialog,
+   if (!requires_positioning)
+     return widget;
+ 
+-  ModalDialogHost* host =
+-      CurrentBrowserModalClient()->GetModalDialogHost(parent);
+   if (host) {
+     DCHECK_EQ(parent_view, host->GetHostView());
+     std::unique_ptr<ModalDialogHostObserver> observer =
+diff --git a/components/download/internal/common/download_file_impl.cc b/components/download/internal/common/download_file_impl.cc
+index 6d48cd769c..2b2793715a 100644
+--- a/components/download/internal/common/download_file_impl.cc
++++ b/components/download/internal/common/download_file_impl.cc
+@@ -23,6 +23,7 @@
+ #include "base/trace_event/trace_event.h"
+ #include "base/values.h"
+ #include "build/build_config.h"
++#include "cef/libcef/features/features.h"
+ #include "components/download/internal/common/parallel_download_utils.h"
+ #include "components/download/public/common/download_create_info.h"
+ #include "components/download/public/common/download_destination_observer.h"
+@@ -415,8 +416,16 @@ void DownloadFileImpl::RenameAndUniquify(const base::FilePath& full_path,
+     return;
+   }
+ #endif  // BUILDFLAG(IS_ANDROID)
++#if BUILDFLAG(ENABLE_CEF) && BUILDFLAG(IS_OHOS)
++  // If there's already a file on disk that conflicts with |new_path|, try to
++  // create a unique file by appending a uniquifier will be failed, due to
++  // file-manager set permissions only for full_path on CEF
++  std::unique_ptr<RenameParameters> parameters(new RenameParameters(
++      ANNOTATE_WITH_SOURCE_INFORMATION, full_path, std::move(callback)));
++#else
+   std::unique_ptr<RenameParameters> parameters(
+       new RenameParameters(UNIQUIFY, full_path, std::move(callback)));
++#endif  // BUILDFLAG(ENABLE_CEF) && BUILDFLAG(IS_OHOS)
+   RenameWithRetryInternal(std::move(parameters));
+ }
+ 
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 788e315600..3575bb22dd 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -81,7 +81,7 @@ buildflag_header("media_buildflags") {
+   if (is_ohos) {
+     flags += [ 
+       "OHOS_ENABLE_MEDIA_ROUTER=$ohos_enable_media_router" ,
+-      "ENABLE_OHOS_MEDIA_DRM_STORAGE=true",
++      "ENABLE_OHOS_MEDIA_DRM_STORAGE=false",
+     ]
+   }
+ }
+diff --git a/ohos/adapter/web_entry/BUILD.gn b/ohos/adapter/web_entry/BUILD.gn
+index af03e08abf..6ff10a23df 100644
+--- a/ohos/adapter/web_entry/BUILD.gn
++++ b/ohos/adapter/web_entry/BUILD.gn
+@@ -30,6 +30,8 @@ import("//build/config/chrome_build.gni")
+ 
+ component("web_entry") {
+     sources = [
++      "cef/cef_loader.cc",
++      "cef/cef_loader.h",
+       "chrome/chrome_loader.cc",
+       "chrome/chrome_loader.h",
+       "shell/content_shell_loader.cc",
+@@ -47,6 +49,8 @@ component("web_entry") {
+       defines = [ "USE_LOADER_TARGET=0" ]
+     } else if (ohos_build_target == "chromium") {
+       defines = [ "USE_LOADER_TARGET=1" ]
++    } else if (ohos_build_target == "cef") {
++      defines = [ "USE_LOADER_TARGET=2" ]
+     } else {
+       assert(true, "$ohos_build_target target builds are not supported on ohos")
+     }
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.cc b/ohos/adapter/web_entry/cef/cef_loader.cc
+new file mode 100644
+index 0000000000..35597be5ac
+--- /dev/null
++++ b/ohos/adapter/web_entry/cef/cef_loader.cc
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (c) 2023-2025 Haitai FangYuan Co., Ltd.
++ * Redistribution and use in source and binary forms, with or without modification,
++ * are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice, this list of
++ *    conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice, this list
++ *    of conditions and the following disclaimer in the documentation and/or other materials
++ *    provided with the distribution.
++ *
++ * 3. Neither the name of the copyright holder nor the names of its contributors may be used
++ *    to endorse or promote products derived from this software without specific prior written
++ *    permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
++ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "ohos/adapter/web_entry/cef/cef_loader.h"
++
++#include "ohos/adapter/common/logging.h"
++#include "ohos/adapter/common/shared_library.h"
++#include "ohos/adapter/dev_config/dev_config.h"
++#include "ohos/adapter/device_info/device_info.h"
++
++namespace ohos::adapter::web_entry {
++namespace {
++__attribute__((no_sanitize("cfi", "cfi-icall")))
++bool CheckAdvSecMode() {
++  uint32_t mode = -1;
++  common::SharedLibrary shared_library_("/system/lib64/platformsdk/",
++                                        "dsmm_innersdk.z");
++  auto fn = shared_library_.GetFunction<int(const char*, uint32_t, const char*,
++                                            uint32_t, uint32_t*)>(
++      "AdvancedSecurityModeGetStateByFeature");
++  if (fn != nullptr) {
++    // returns 0 if success or errcode
++    int32_t ret = fn("default", 7, "default", 7, &mode); // len:7
++    if (ret == 0 && mode == 1) {
++      return true;
++    }
++  }
++  return false;
++}
++}  // namespace
++
++std::string CefLoader::GetEntryPoint(int process_type) {
++  std::string entry_point;
++  switch (process_type) {
++    case ProcessType::kMainProcess:
++    case ProcessType::kRenderProcess:
++    case ProcessType::kGpuProcess:
++      entry_point = "CefMain";
++      break;
++    case ProcessType::kCrashpadHandler:
++      entry_point = "CrashpadHandlerMain";
++      break;
++    default:
++      LOGE("GetEntryPoint nothing to do, unknown process type: %{public}d",
++           process_type);
++      break;
++  }
++  return entry_point;
++}
++
++const std::vector<std::string> CefLoader::GetEntryArgs() {
++  std::vector<std::string> args = {
++      "cef",
++      "--use-gl=egl",
++      "--enable-features=UseOzonePlatform",
++      "--ozone-platform=ohos",
++      "--enable-logging",
++      "--ozone-dump-file=/data/storage/el2/base/cache/",
++      "--no-zygote",
++      "--user-data-dir=/data/storage/el2/base/files/",
++      "--force-renderer-accessibility=basic",
++      "--enable-media-stream=true",
++      "--enable-speech-input=true",
++      "--enable-print-preview",
++      "--lang=zh-CN",
++  };
++  ohos::adapter::device_info::DeviceType device_type =
++    ohos::adapter::device_info::DeviceInfo::GetInstance().GetDeviceType();
++  // pad not support gpu process
++  if (device_type == ohos::adapter::device_info::DeviceType::_TABLET) {
++    args.push_back("--in-process-gpu");
++    args.push_back("--js-flags=--jitless");
++  }
++  if (CheckAdvSecMode()) {
++    args.emplace_back("--js-flags=--jitless");
++  }
++  for (const auto& command : GetDevCommandLines()) {
++    args.emplace_back(command);
++  }
++  return args;
++}
++
++}  // namespace ohos::adapter::web_entry
+diff --git a/ohos/adapter/web_entry/cef/cef_loader.h b/ohos/adapter/web_entry/cef/cef_loader.h
+new file mode 100644
+index 0000000000..90c0c8a635
+--- /dev/null
++++ b/ohos/adapter/web_entry/cef/cef_loader.h
+@@ -0,0 +1,44 @@
++/*
++ * Copyright (c) 2023-2025 Haitai FangYuan Co., Ltd.
++ * Redistribution and use in source and binary forms, with or without modification,
++ * are permitted provided that the following conditions are met:
++ *
++ * 1. Redistributions of source code must retain the above copyright notice, this list of
++ *    conditions and the following disclaimer.
++ *
++ * 2. Redistributions in binary form must reproduce the above copyright notice, this list
++ *    of conditions and the following disclaimer in the documentation and/or other materials
++ *    provided with the distribution.
++ *
++ * 3. Neither the name of the copyright holder nor the names of its contributors may be used
++ *    to endorse or promote products derived from this software without specific prior written
++ *    permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
++ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
++ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
++ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
++ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
++ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "ohos/adapter/web_entry/web_loader.h"
++
++namespace ohos::adapter::web_entry {
++
++class CefLoader : public BasicLoader {
++ public:
++  CefLoader(const std::string& dir, const std::string& name)
++      : BasicLoader(dir, name) {}
++  CefLoader(const std::string& lib_path) : BasicLoader(lib_path) {}
++
++  std::string GetEntryPoint(int process_type) override;
++  const std::vector<std::string> GetEntryArgs() override;
++};
++
++}  // namespace ohos::adapter::web_entry
+diff --git a/ohos/adapter/web_entry/web_entry.cc b/ohos/adapter/web_entry/web_entry.cc
+index 1ec2e71950..3ddb97a198 100644
+--- a/ohos/adapter/web_entry/web_entry.cc
++++ b/ohos/adapter/web_entry/web_entry.cc
+@@ -32,6 +32,7 @@
+ 
+ #include <atomic>
+ #include <chrono>
++#include <filesystem>
+ #include <thread>
+ 
+ #include "ohos/adapter/aki_hook/aki_hook.h"
+@@ -88,7 +89,20 @@ int RunOtherProcessType(int process_type) {
+   std::vector<std::string> commands;
+   multiprocess::AppSpawnCommunication::RequestCommandline(commands);
+   std::vector<const char*> cstrs;
+-  auto loader = BasicLoader::Create(USE_LOADER_TARGET);
++  std::string subprocess_path_name = "";
++  if (int(USE_LOADER_TARGET) == int(WebLoaderType::kCef)) {
++    const std::string sso_flag = ".so";
++    if (!commands.empty() && !commands[0].empty()) {
++      std::filesystem::path file_path(commands[0].data());
++      if (file_path.extension().string() == sso_flag) {
++        subprocess_path_name = commands[0].data();
++        LOGI("cef --browser-subprocess-path= %{public}s",
++             subprocess_path_name.c_str());
++      }
++    }
++  }
++  auto loader =
++      BasicLoader::Create(USE_LOADER_TARGET, subprocess_path_name.c_str());
+   for (size_t i = 0; i < commands.size(); ++i) {
+     if (commands[i].find("--type") != std::string::npos) {
+       auto pos = commands[i].find_last_of("=");
+diff --git a/ohos/adapter/web_entry/web_loader.cc b/ohos/adapter/web_entry/web_loader.cc
+index d394e0de68..d6d52e0f2e 100644
+--- a/ohos/adapter/web_entry/web_loader.cc
++++ b/ohos/adapter/web_entry/web_loader.cc
+@@ -35,6 +35,9 @@ namespace ohos::adapter::web_entry {
+ BasicLoader::BasicLoader(const std::string& dir, const std::string& name)
+     : shared_library_(dir, name) {}
+ 
++BasicLoader::BasicLoader(const std::string& lib_path)
++    : shared_library_(lib_path) {}
++
+ bool BasicLoader::Initialize() { return true; }
+ 
+ __attribute__((no_sanitize("cfi", "cfi-icall")))
+diff --git a/ohos/adapter/web_entry/web_loader.h b/ohos/adapter/web_entry/web_loader.h
+index 09b75d1faa..d08856ea1c 100644
+--- a/ohos/adapter/web_entry/web_loader.h
++++ b/ohos/adapter/web_entry/web_loader.h
+@@ -45,6 +45,7 @@ using OnLoaderCallback = std::function<void(int error_code)>;
+ enum WebLoaderType {
+   kContent_shell = 0,
+   kChrome,
++  kCef,
+ };
+ 
+ class BasicLoader {
+@@ -52,12 +53,14 @@ class BasicLoader {
+   BasicLoader(const BasicLoader&) = delete;
+   BasicLoader& operator=(const BasicLoader&) = delete;
+   BasicLoader(const std::string& dir, const std::string& name);
++  BasicLoader(const std::string& lib_path);
+ 
+   virtual ~BasicLoader() {}
+ 
+   // A factory method that can create any of the derived types of BasicLoader
+-  // (ContentShellLoader and ChromeMainLoader ).
+-  static BasicLoader* Create(int loaderType);
++  // (ContentShellLoader and ChromeMainLoader and CefLoader).
++  // Maybe CefLoader will add --browser-subprocess-path, input path here
++  static BasicLoader* Create(int loaderType, std::string subprocess_path = "");
+ 
+   bool Initialize();
+ 
+diff --git a/ohos/adapter/web_entry/web_loader_factory.cc b/ohos/adapter/web_entry/web_loader_factory.cc
+index aaf4beda84..e1e387c435 100644
+--- a/ohos/adapter/web_entry/web_loader_factory.cc
++++ b/ohos/adapter/web_entry/web_loader_factory.cc
+@@ -30,6 +30,7 @@
+ #include <memory>
+ 
+ #include "ohos/adapter/common/logging.h"
++#include "ohos/adapter/web_entry/cef/cef_loader.h"
+ #include "ohos/adapter/web_entry/chrome/chrome_loader.h"
+ #include "ohos/adapter/web_entry/shell/content_shell_loader.h"
+ #include "ohos/adapter/web_entry/web_loader.h"
+@@ -41,8 +42,10 @@ namespace {
+ static std::unique_ptr<BasicLoader> current_default_loader = nullptr;
+ const std::string kShellEntry = "content_shell_web";
+ const std::string kChromeEntry = "chrome_main_web";
++const std::string kCefEntry = "cefsimple";
+ 
+-std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
++std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType,
++                                                     std::string subprocess_path) {
+   std::unique_ptr<BasicLoader> loader;
+   switch (loaderType) {
+     case WebLoaderType::kContent_shell:
+@@ -51,6 +54,13 @@ std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
+     case WebLoaderType::kChrome:
+       loader = std::make_unique<ChromeMainLoader>("", kChromeEntry);
+       break;
++    case WebLoaderType::kCef:
++      if (subprocess_path.empty()) {
++        loader = std::make_unique<CefLoader>("", kCefEntry);
++      } else {
++        loader = std::make_unique<CefLoader>(subprocess_path);
++      }
++      break;
+     default:
+       LOGE("create web loader error unknown loaderType: %{public}d", loaderType);
+       break;
+@@ -61,9 +71,10 @@ std::unique_ptr<BasicLoader> GetCurrentDefaultLoader(int loaderType) {
+ }  // namespace
+ 
+ // static
+-BasicLoader* BasicLoader::Create(int loaderType) {
++BasicLoader* BasicLoader::Create(int loaderType, std::string subprocess_path) {
+   if (!current_default_loader) {
+-    current_default_loader = GetCurrentDefaultLoader(loaderType);
++    current_default_loader =
++        GetCurrentDefaultLoader(loaderType, subprocess_path);
+   }
+   return current_default_loader.get();
+ }
+diff --git a/ohos/app/ohos_hap/AppScope/app.json5 b/ohos/app/ohos_hap/AppScope/app.json5
+index 704c810bbc..93426339f0 100644
+--- a/ohos/app/ohos_hap/AppScope/app.json5
++++ b/ohos/app/ohos_hap/AppScope/app.json5
+@@ -1,6 +1,6 @@
+ {
+   "app": {
+-    "bundleName": "com.huawei.ohos_chromium",
++    "bundleName": "com.huawei.ohos_cef",
+     "vendor": "example",
+     "versionCode": 1000000,
+     "versionName": "1.0.0",
+diff --git a/ohos/app/ohos_hap/AppScope/resources/base/element/string.json b/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
+index ed6d17651a..1d48845df4 100644
+--- a/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
++++ b/ohos/app/ohos_hap/AppScope/resources/base/element/string.json
+@@ -2,7 +2,7 @@
+   "string": [
+     {
+       "name": "app_name",
+-      "value": "ohos_chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
+index de1f20ba98..5b50e43bae 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/base/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     },
+     {
+       "name": "BrowserAbility_desc",
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
+index 561f6eb09a..fec1adc93c 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/en_US/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json b/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
+index bde772db07..c2895b1472 100755
+--- a/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
++++ b/ohos/app/ohos_hap/chromium/src/main/resources/zh_CN/element/string.json
+@@ -10,7 +10,7 @@
+     },
+     {
+       "name": "EntryAbility_label",
+-      "value": "Chromium"
++      "value": "CEF"
+     }
+   ]
+ }
+\ No newline at end of file
+diff --git a/ohos/app/ohos_hap/oh-package.json5 b/ohos/app/ohos_hap/oh-package.json5
+index f131d9efab..f75e44ac53 100644
+--- a/ohos/app/ohos_hap/oh-package.json5
++++ b/ohos/app/ohos_hap/oh-package.json5
+@@ -5,7 +5,7 @@
+     "@ohos/hypium": "1.0.6"
+   },
+   "author": "",
+-  "name": "ohos_chromium",
++  "name": "ohos_cef",
+   "description": "Please describe the basic information.",
+   "main": "",
+   "version": "1.0.0",
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
+index 6aa47e75b2..71e0209ab2 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/ability/WebBaseAbility.ets
+@@ -48,7 +48,8 @@ export class WebBaseAbility extends UIAbility implements WebProxy {
+   protected windowStage: window.WindowStage | undefined = undefined;
+   protected nativeContext: NativeContext =
+     JsBindingUtils.getNativeContext(ContextType.kMainProcess);
+-  protected hideTitleBar: boolean = true;
++  // cef: Need to display title bar
++  protected hideTitleBar: boolean = false;
+   protected originWindowId: number = -1;
+   protected useDarkMode: boolean = false;
+   protected isStateless: boolean = false;
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+index d6ba9967af..1b77c4cfc1 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/adapter/AppWindowAdapter.ets
+@@ -49,7 +49,7 @@ const TAG: string = 'AppWindow';
+ @injectable()
+ export class AppWindowAdapter extends BaseAdapter {
+   private abilityManager: AbilityManager;
+-  private bundleName: string = 'com.huawei.ohos_chromium';
++  private bundleName: string = 'com.huawei.ohos_cef';
+   private bundleFlags = bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION |
+                         bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_METADATA;
+   private queryWindowNum: number = 10;                      
+diff --git a/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets b/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+index 870fbe3373..a2eb28b531 100644
+--- a/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
++++ b/ohos/app/ohos_hap/web_engine/src/main/ets/components/WebWindow.ets
+@@ -181,7 +181,7 @@ export struct WebWindow {
+   }
+ 
+   private buildArgs(): string[] {
+-    let default_uri = '';
++    let default_uri = '--url=https://ams.haitaibrowser.com:8000/ohcef/ohindex.html';
+     if (this.startUri.length !== 0) {
+       default_uri = this.startUri;
+     }
+diff --git a/ohos/build/build.sh b/ohos/build/build.sh
+index e221753729..34033d730a 100755
+--- a/ohos/build/build.sh
++++ b/ohos/build/build.sh
+@@ -20,6 +20,7 @@ ROOT_DIR="${CUR_DIR%/src*}""/src"
+ # Global variables.
+ BUILD_TARGET_CONTENT_SHELL="content_shell_web"
+ BUILD_TARGET_CHROME="chrome_main_web"
++BUILD_TARGET_CEF="libcef cefsimple cefclient ceftests"
+ TEXT_BOLD="\033[1m"
+ TEXT_NORMAL="\033[0m"
+ 
+@@ -58,6 +59,10 @@ buildargs="
+   llvm_ohos_mainline=true
+   rustc_version=\"bca5fdebe0e539d123f33df5f2149d5976392e76-1-llvmorg-20-init-9764-gb81d8e90\"
+   rust_sysroot_absolute=\"//ohos_sdk/rust-toolchain\"
++  
++# cef args
++  use_partition_alloc_as_malloc=false
++  enable_backup_ref_ptr_support=false
+   "
+ #Add build args end
+ 
+@@ -75,7 +80,7 @@ buildarg_cpu="target_cpu=\"arm64\""
+ buildarg_musl="use_musl=true"
+ build_dir="out/musl_64/"
+ build_product_name="product_name=\"all\""
+-build_target="${BUILD_TARGET_CHROME}"
++build_target="${BUILD_TARGET_CEF}"
+ build_output=""
+ build_asan=0
+ build_isolated_level=0
+@@ -161,6 +166,12 @@ case "${build_target}" in
+     ohos_build_target=\"chromium\"
+     "
+     ;;
++  "c"|"${BUILD_TARGET_CEF}")
++    build_target="${BUILD_TARGET_CEF}"
++    buildargs="${buildargs}safe_browsing_mode=1
++    ohos_build_target=\"cef\"
++    "
++    ;;
+   *)
+     echo "build_target: ${build_target}"
+     ;;
+diff --git a/ui/ozone/platform/ohos/BUILD.gn b/ui/ozone/platform/ohos/BUILD.gn
+index e515e7a312..d0e703be0f 100755
+--- a/ui/ozone/platform/ohos/BUILD.gn
++++ b/ui/ozone/platform/ohos/BUILD.gn
+@@ -104,6 +104,7 @@ source_set("test_support") {
+   ]
+ 
+   deps = [
++    "//ohos/adapter:adapter",
+     "//ui/aura:aura",
+   ]
+ }
+diff --git a/ui/ozone/platform/ohos/host/ohos_window.cc b/ui/ozone/platform/ohos/host/ohos_window.cc
+index 692dbbd80d..3de7091924 100755
+--- a/ui/ozone/platform/ohos/host/ohos_window.cc
++++ b/ui/ozone/platform/ohos/host/ohos_window.cc
+@@ -37,6 +37,7 @@
+ #include "content/public/browser/browser_thread.h"
+ #include "ohos/adapter/accessibility/accessibility_delegate_ohos_registry.h"
+ #include "ohos/adapter/cursor/cursor.h"
++#include "ohos/adapter/window/app_window_adapter.h"
+ #include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+ #include "ui/base/cursor/platform_cursor.h"
+ #include "ui/base/hit_test.h"
+@@ -214,7 +215,7 @@ gfx::Rect OhosWindow::GetBoundsInDIP() const {
+ }
+ 
+ void OhosWindow::SetTitle(const std::u16string& title) {
+-  NOTIMPLEMENTED_LOG_ONCE();
++  AppWindowAdapter::GetInstance().SetTitle(base::UTF16ToUTF8(title), widget_);
+ }
+ 
+ void OhosWindow::SetCapture() {
+-- 
+2.34.1
+
