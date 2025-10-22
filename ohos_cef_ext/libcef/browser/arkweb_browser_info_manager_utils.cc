@@ -177,11 +177,11 @@ bool ArkwebBrowserInfoManagerUtils::ShouldCancel(
   return should_cancel;
 }
 
-void ArkwebBrowserInfoManagerUtils::CancelForPrerendering(
+void ArkwebBrowserInfoManagerUtils::CancelForSomeCases(
     const content::GlobalRenderFrameHostToken& global_token,
     int timeout_id) {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "cancel for prerendering";
+  LOG(INFO) << "cancel for some cases";
   CefBrowserInfoManager* cef_browser_info_manager =
       CefBrowserInfoManager::GetInstance();
   if (!cef_browser_info_manager) {

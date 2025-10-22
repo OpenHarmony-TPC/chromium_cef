@@ -65,9 +65,9 @@ class ArkwebBrowserInfoManagerUtils {
 #endif
 
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
-  static bool IsPrerendering(
+  static bool ShouldCancel(
       const content::GlobalRenderFrameHostToken& global_token);
-  static void CancelForPrerendering(
+  static void CancelForSomeCases(
       const content::GlobalRenderFrameHostToken& global_token,
       int timeout_id);
 #endif
