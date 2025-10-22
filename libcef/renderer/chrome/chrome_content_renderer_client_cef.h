@@ -58,6 +58,10 @@ class ChromeContentRendererClientCef : public ChromeContentRendererClient {
   void DevToolsAgentAttached() override;
   void DevToolsAgentDetached() override;
   void ExposeInterfacesToBrowser(mojo::BinderMap* binders) override;
+#if BUILDFLAG(ARKWEB_NOTIFICATION)
+  void PostIOThreadCreated(
+      base::SingleThreadTaskRunner* io_thread_task_runner) override;
+#endif // ARKWEB_NOTIFICATION
 
  private:
   friend class ArkWebContentRendererClientCefExt;
