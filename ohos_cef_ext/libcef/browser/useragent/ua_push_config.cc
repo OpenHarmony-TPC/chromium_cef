@@ -40,6 +40,19 @@ void UAPushConfig::Init(PrefService* pref_service) {
   pref_service_ = pref_service;
   ReadConfigInfoFromPrefs();
 }
+
+std::set<std::string> ConvertListToSet(const base::Value::List* device_type_list) {
+  std::set<std::string> device_set;
+  for (const auto& val : *device_type_list) {
+    const std::string* value = val.GetIfString();
+    if (!value || value->empty()) {
+      continue;
+    }
+    device_set.insert(*value);
+  }
+  return device_set;
+}
+
 std::optional<OSPositionScheme> UAPushConfig::LoadConfigFromFile(
     const std::string& file_path) {
   LOG(INFO) << kUAPushLogTag << "LoadConfigFromFile begin";
@@ -98,24 +111,12 @@ std::optional<OSPositionScheme> UAPushConfig::ParseOSCompatibleData(
     if (!device_type_list || device_type_list->empty()) {
       return std::nullopt;
     }
-    std::set<std::string> url_and_device_flag;
-    for (const auto& val : *trust_list) {
-      const std::string* url = val.GetIfString();
-      if (!url || bundle_name != *url || url_and_device_flag.count(*url)) {
-        continue;
-      }
-      url_and_device_flag.insert(*url);
-      for (const auto& device_type : *device_type_list) {
-        const std::string* device_type_val = device_type.GetIfString();
-        if (!device_type_val || url_and_device_flag.count(*device_type_val)) {
-          continue;
+    auto trust_set = ConvertListToSet(trust_list);
+    if (trust_set.count(bundle_name)) {
+        for (const auto& device_type_val : ConvertListToSet(device_type_list)) {
+            auto supplement_dict_val = GetSupplement(device_type_val, *os_supplement);
+            UpdateOsPositionStr(os_position_str, std::move(supplement_dict_val), position);
         }
-        url_and_device_flag.insert(*device_type_val);
-        auto supplement_dict_val =
-            GetSupplement(*device_type_val, *os_supplement);
-        UpdateOsPositionStr(os_position_str, std::move(supplement_dict_val),
-                            position);
-      }
     }
   }
   return os_position_str;
