@@ -25,7 +25,7 @@
 #endif
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "content/browser/web_contents/web_contents_impl.h"
-#endif // ARKWEB_READER_MODE
+#endif
 
 ArkwebBrowserInfoManagerUtils::ArkwebBrowserInfoManagerUtils(
     CefBrowserInfoManager* cef_browser_info_manager)
@@ -170,7 +170,7 @@ bool ArkwebBrowserInfoManagerUtils::ShouldCancel(
   should_cancel = should_cancel || IsPrerendering(web_contents);
 #endif
 
-@if BUILDFLAG(ARKWEB_READER_MODE)
+#if BUILDFLAG(ARKWEB_READER_MODE)
   should_cancel = should_cancel || IsDistillerPageWebContents(web_contents);
 #endif
 
