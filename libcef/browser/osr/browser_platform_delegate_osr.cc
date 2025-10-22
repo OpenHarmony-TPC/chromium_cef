@@ -151,21 +151,12 @@ void CefBrowserPlatformDelegateOsr::SendMouseClickEvent(
     int clickCount) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
-    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
     return;
   }
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
-  cef_browser_platform_delegate_osr_utils_->SetEnableCustomVideoPlayer(view);
-#endif
-  CefMouseEvent mouseEvent = event;
-  cef_browser_platform_delegate_osr_utils_->AdjustMouseClickCoordinates(view, mouseEvent);
+
   blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
-      mouseEvent, type, mouseUp, clickCount);
+      event, type, mouseUp, clickCount);
   view->SendMouseEvent(web_event);
-#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
-  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingOnMouseClick(view, event);
-#endif
 }
 
 void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
@@ -173,17 +164,11 @@ void CefBrowserPlatformDelegateOsr::SendMouseMoveEvent(
     bool mouseLeave) {
   CefRenderWidgetHostViewOSR* view = GetOSRHostView();
   if (!view) {
-    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
     return;
   }
-#if BUILDFLAG(ARKWEB_SAME_LAYER)
-  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
-#endif
 
-  CefMouseEvent mouseEvent = event;
-  cef_browser_platform_delegate_osr_utils_->AdjustMouseMoveCoordinates(view, mouseEvent);
   blink::WebMouseEvent web_event =
-      native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
+      native_delegate_->TranslateWebMoveEvent(event, mouseLeave);
   view->SendMouseEvent(web_event);
 }
 

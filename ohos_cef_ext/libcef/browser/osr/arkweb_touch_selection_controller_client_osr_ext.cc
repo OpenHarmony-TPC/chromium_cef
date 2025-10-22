@@ -1103,3 +1103,13 @@ void ArkWebTouchSelectionControllerClientOSRExt::SetQuickMenuRequested(bool is_v
   quick_menu_requested_ = is_visible;
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_PDF)
+void ArkWebTouchSelectionControllerClientOSRExt::ResetResponsePendingInputEvent()
+{
+  ui::TouchSelectionController* controller = GetTouchSelectionController();
+  if (controller) {
+    controller->AsTouchSelectionControllerExt()->ResetResponsePendingInputEvent();
+  }
+}
+#endif  // BUILDFLAG(ARKWEB_PDF)

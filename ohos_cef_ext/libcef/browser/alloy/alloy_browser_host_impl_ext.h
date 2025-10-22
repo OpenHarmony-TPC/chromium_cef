@@ -134,15 +134,9 @@ public:
       content::BrowserContext*& browser_context,
       content::WebContents*& web_contents);
 
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) override;
+  void WebExtensionRegisterZoomObserver() override;
 
-  void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) override;
+  void WebExtensionUnregisterZoomObserver() override;
 
   void WebExtensionTabUpdated(
       int tab_id,
@@ -294,6 +288,10 @@ public:
 #if BUILDFLAG(ARKWEB_PERFORMANCE_PERSISTENT_TASK)
   bool OnStartBackgroundTask(int32_t type, const std::string& message) override;
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string OnRewriteUrlForNavigation(const std::string& original_url, const std::string& referrer) override;
+#endif
 
 private:
   friend class AlloyBrowserHostImpl;

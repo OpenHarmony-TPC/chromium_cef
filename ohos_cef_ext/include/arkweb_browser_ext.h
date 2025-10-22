@@ -1205,18 +1205,16 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   ///
-  /// Receiving the tab updated notification.
+  /// register the TabsEventRouter ZoomObserver.
   ///
   /*--cef()--*/
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) {}
-
-  virtual void WebExtensionTabUpdated(
-      int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {}
+  virtual void WebExtensionRegisterZoomObserver() {}
+ 
+  ///
+  /// unregister the TabsEventRouter ZoomObserver
+  ///
+  /*--cef()--*/
+  virtual void WebExtensionUnregisterZoomObserver() {}
 
   virtual void WebExtensionTabUpdated(
       int tab_id,

@@ -73,9 +73,9 @@ void SetFeaturesSwitchesToPrefsFile(base::Value::List prefsList, PrefService* lo
 }
 
 bool ProcessFeaturesSwitches(const base::Value& value, PrefService* localState) {
-  const base::Value::List* switches_list = value.GetDict().FindList("Switches");
+  const base::Value::List* switches_list = value.GetDict().FindList("FeaturesSwitches");
   if (!switches_list) {
-    LOG(WARNING) << "Missing 'Switches' list.";
+    LOG(WARNING) << "Missing 'FeaturesSwitches' list.";
     return false;
   }
  
@@ -139,25 +139,7 @@ bool ParseFeaturesSwitchesToPrefs(PrefService* localState) {
     return false;
   }
 
-  const base::Value::Dict* data_dict = global_config_value->GetDict().FindDict("data");
-  if (!data_dict) {
-    LOG(WARNING) << "Missing 'data' field in JSON.";
-    return false;
-  }
-
-  const base::Value::Dict* body_dict = data_dict->FindDict("body");
-  if (!body_dict) {
-    LOG(WARNING) << "Missing 'body' field in JSON.";
-    return false;
-  }
-
-  const base::Value::Dict* switches_dict = body_dict->FindDict("FeaturesSwitches");
-  if (!switches_dict) {
-    LOG(WARNING) << "Missing 'FeaturesSwitches' field in JSON.";
-    return false;
-  }
-
-  const base::Value::List* versioned_config_list = switches_dict->FindList("VersionedConfig");
+  const base::Value::List* versioned_config_list = global_config_value->GetDict().FindList("VersionedConfig");
   if (!versioned_config_list) {
     LOG(WARNING) << "Missing 'VersionedConfig' field in JSON.";
     return false;

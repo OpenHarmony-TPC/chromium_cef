@@ -109,10 +109,13 @@ const size_t kMaxDataDetectorTextLength = 1000;
 #endif
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+#include <window_manager/oh_window.h>
+
+#include "arkweb/ohos_adapter_ndk/window_manager_adapter/window_manager_adapter_impl.h"
+#include "cef/include/internal/cef_types.h"
 #include "ui/base/ime/text_input_flags.h"
 #include "ui/events/blink/did_overscroll_params.h"
 #include "ui/events/types/event_type.h"
-#include "cef/include/internal/cef_types.h"
 #endif //BUILDFLAG(ARKWEB_INPUT_EVENTS)
 #if BUILDFLAG(ARKWEB_AI)
 #include "cef/libcef/browser/image_impl.h"
@@ -1251,32 +1254,55 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionChanged(
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
 blink::mojom::PointerLockResult ArkWebRenderWidgetHostViewOSRExt::LockPointer(
     bool request_unadjusted_movement) {
-  if (is_pointer_locked_) {
+  if (IsPointerLocked()) {
     return blink::mojom::PointerLockResult::kAlreadyLocked;
   }
-  is_pointer_locked_ = true;
-  is_request_unadjusted_movement_ = request_unadjusted_movement;
-  CefRefPtr<CefDisplayHandler> handler =
-      browser_impl_->client()->GetDisplayHandler();
-  LOG(INFO) << "SetMouseLock unadjust mouse movement is "
-            << (request_unadjusted_movement ? "on" : "off");
-  if (handler) {
-    CefCursorInfo cursor_info;
-    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK,
-                            cursor_info);
+
+  if (!HasFocus()) {
+    LOG(ERROR) << "SetPointerLock failed because WrongDocument";
+    return blink::mojom::PointerLockResult::kWrongDocument;
   }
-  return blink::mojom::PointerLockResult::kSuccess;
+
+  CefRefPtr<ArkWebDisplayHandlerExt> handler =
+      browser_impl_->client()->GetDisplayHandler();
+
+  if (!handler) {
+    return blink::mojom::PointerLockResult::kPermissionDenied;
+  }
+
+  int32_t res = OHOS::NWeb::WindowManagerAdapterImpl::LockPointer(handler->GetWindowId());
+  switch (res) {
+    case WindowManager_ErrorCode::OK: {
+      LOG(INFO) << "SetPointerLock unadjust mouse movement is "
+                << (request_unadjusted_movement ? "on" : "off");
+      is_pointer_locked_ = true;
+      CefCursorInfo cursor_info;
+      handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_LOCK,
+                              cursor_info);
+      is_request_unadjusted_movement_ = request_unadjusted_movement;
+      return blink::mojom::PointerLockResult::kSuccess;
+    }
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_NO_PERMISSION:
+      return blink::mojom::PointerLockResult::kPermissionDenied;
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_DEVICE_NOT_SUPPORTED:
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_STATE_ABNORMAL:
+    case WindowManager_ErrorCode::WINDOW_MANAGER_ERRORCODE_SYSTEM_ABNORMAL:
+    default:
+      return blink::mojom::PointerLockResult::kUnknownError;
+  }
 }
 
 blink::mojom::PointerLockResult
 ArkWebRenderWidgetHostViewOSRExt::ChangePointerLock(
     bool request_unadjusted_movement) {
+  LOG(INFO) << "ChangePointerLock unadjust mouse movement to "
+            << (request_unadjusted_movement ? "on" : "off")
+            << ", Lock state is " << is_pointer_locked_;
   if (is_pointer_locked_) {
-    return LockPointer(request_unadjusted_movement);
+    is_request_unadjusted_movement_ = request_unadjusted_movement;
+    return blink::mojom::PointerLockResult::kSuccess;
   }
-
-  UnlockPointer();
-  return blink::mojom::PointerLockResult::kSuccess;
+  return blink::mojom::PointerLockResult::kWrongDocument;
 }
 
 void ArkWebRenderWidgetHostViewOSRExt::UnlockPointer() {
@@ -1285,16 +1311,20 @@ void ArkWebRenderWidgetHostViewOSRExt::UnlockPointer() {
   }
   is_pointer_locked_ = false;
   is_request_unadjusted_movement_ = false;
-  CefRefPtr<CefDisplayHandler> handler =
+  CefRefPtr<ArkWebDisplayHandlerExt> handler =
       browser_impl_->client()->GetDisplayHandler();
-  LOG(INFO) << "SetMouseLock off";
-  if (handler) {
-    CefCursorInfo cursor_info;
-    handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK,
-                            cursor_info);
+
+  if (!handler) {
+    LOG(ERROR)<<"UnLockPointer failed, no displayHandler";
+    return;
   }
+
+  OHOS::NWeb::WindowManagerAdapterImpl::UnlockPointer(handler->GetWindowId());
+  CefCursorInfo cursor_info;
+  handler->OnCursorChange(browser_impl_->GetBrowser(), nullptr, CT_UNLOCK,
+                          cursor_info);
+
   if (render_widget_host_) {
-    render_widget_host_->SendPointerLockLost();
     render_widget_host_->LostPointerLock();
   }
 }
@@ -2644,6 +2674,9 @@ void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
     const std::string& url,
     int32_t blankScreenReason,
     int32_t detectedContentfulNodesCount) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get()) {
+    return;
+  }
   CefRefPtr<ArkWebRenderHandlerExt> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);

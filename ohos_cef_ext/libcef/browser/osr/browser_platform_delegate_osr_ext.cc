@@ -958,3 +958,55 @@ void CefBrowserPlatformDelegateOsrExt::UpdateBackgroundColor(SkColor color) {
   background_color_ = color;
 }
 #endif  // ARKWEB_BACKGROUND_COLOR
+
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+void CefBrowserPlatformDelegateOsrExt::SendMouseClickEvent(
+    const CefMouseEvent& event,
+    CefBrowserHost::MouseButtonType type,
+    bool mouseUp,
+    int clickCount) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    LOG(ERROR) << "SendMouseClickEvent drop mouse event!!";
+    return;
+  }
+
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+  cef_browser_platform_delegate_osr_utils_->SetEnableCustomVideoPlayer(view);
+#endif
+
+  CefMouseEvent mouseEvent = event;
+  blink::WebMouseEvent web_event = native_delegate_->TranslateWebClickEvent(
+      mouseEvent, type, mouseUp, clickCount);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseEventCoordinates(view, mouseEvent, web_event);
+#endif
+
+  view->SendMouseEvent(web_event);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->CancelTouchpadFlingOnMouseClick(view, event);
+#endif
+}
+
+void CefBrowserPlatformDelegateOsrExt::SendMouseMoveEvent(
+    const CefMouseEvent& event,
+    bool mouseLeave) {
+  CefRenderWidgetHostViewOSR* view = GetOSRHostView();
+  if (!view) {
+    LOG(ERROR) << "SendMouseMoveEvent drop mouse event!!";
+    return;
+  }
+#if BUILDFLAG(ARKWEB_SAME_LAYER)
+  cef_browser_platform_delegate_osr_utils_->UpdateNativeEmbedMode(view);
+#endif
+
+  CefMouseEvent mouseEvent = event;
+  blink::WebMouseEvent web_event =
+      native_delegate_->TranslateWebMoveEvent(mouseEvent, mouseLeave);
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  cef_browser_platform_delegate_osr_utils_->AdjustMouseEventCoordinates(view, mouseEvent, web_event);
+#endif
+  view->SendMouseEvent(web_event);
+}
+#endif

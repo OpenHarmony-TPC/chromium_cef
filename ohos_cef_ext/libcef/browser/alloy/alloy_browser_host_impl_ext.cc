@@ -902,44 +902,24 @@ bool AlloyBrowserHostImplExt::WebExtensionCheck(
   return true;
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
-        int tab_id,
-      const std::vector<CefString>& changed_property_names,
-      const CefString& url) {
+void AlloyBrowserHostImplExt::WebExtensionRegisterZoomObserver() {
   content::BrowserContext* browser_context = nullptr;
   content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
+  if (!WebExtensionCheck("WebExtensionRegisterZoomObserver", browser_context, web_contents)) {
     return;
   }
 
-  std::vector<std::string> changed_properties;
-  std::for_each(changed_property_names.begin(), changed_property_names.end(),
-      [&changed_properties] (const CefString& name) {
-    changed_properties.emplace_back(name.ToString());
-  });
-
-  extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
-      tab_id, web_contents, changed_properties, url.ToString());
+  extensions::TabsWindowsAPI::Get(browser_context)->RegisterTabZoomObserver(web_contents);
 }
 
-void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
-    int tab_id,
-    const std::vector<CefString>& changed_property_names,
-    std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo) {
+void AlloyBrowserHostImplExt::WebExtensionUnregisterZoomObserver() {
   content::BrowserContext* browser_context = nullptr;
   content::WebContents* web_contents = nullptr;
-  if (!WebExtensionCheck("TabUpdated", browser_context, web_contents)) {
+  if (!WebExtensionCheck("WebExtensionUnregisterZoomObserver", browser_context, web_contents)) {
     return;
   }
- 
-  std::vector<std::string> changed_properties;
-  std::for_each(changed_property_names.begin(), changed_property_names.end(),
-      [&changed_properties] (const CefString& name) {
-    changed_properties.emplace_back(name.ToString());
-  });
 
-  extensions::TabsWindowsAPI::Get(browser_context)->TabUpdated(
-      tab_id, web_contents, changed_properties, std::move(changeInfo));
+  extensions::TabsWindowsAPI::Get(browser_context)->UnregisterTabZoomObserver(web_contents);
 }
 
 void AlloyBrowserHostImplExt::WebExtensionTabUpdated(
@@ -1960,5 +1940,16 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
   }
   
   return false;
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(const std::string& original_url,
+                                                                 const std::string& referrer) {
+  if (!client_ || !client_->AsArkWebClient()) {
+    LOG(ERROR) << "client is null, OnRewriteUrlForNavigation failed";
+    return "";
+  }
+  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer);
 }
 #endif

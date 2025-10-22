@@ -89,6 +89,10 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   bool IsShowHandle() override;
   void SetQuickMenuRequested(bool is_visible);
 #endif  // BUILDFLAG(ARKWEB_MENU)
+
+#if BUILDFLAG(ARKWEB_PDF)
+void ResetResponsePendingInputEvent() override;
+#endif  // BUILDFLAG(ARKWEB_PDF)
  private:
   // // Not owned, non-null for the lifetime of this object.
   // raw_ptr<CefRenderWidgetHostViewOSR> rwhv_;

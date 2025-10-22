@@ -72,6 +72,11 @@ class ArkWebDisplayHandlerExt : public virtual CefDisplayHandler,
                              float page_scale_factor) {}
 
   ///
+  /// GetWindowId from nweb.
+  ///
+  virtual uint32_t GetWindowId() { return 0; }
+
+  ///
   /// Called when the page browser zoom has changed.
   ///
   virtual void OnContentsBrowserZoomChange(double zoom_factor,

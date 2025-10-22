@@ -25,6 +25,9 @@ class ArkWebContentSettingsClient : public content::RenderFrameObserver,
   void OnDestruct() override;
 
   bool ShouldAutoupgradeMixedContent() override;
+#ifdef BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  bool AllowWriteToClipboard() override;
+#endif
 };
 
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_RENDERER_ARKWEB_CONTENT_SETTINGS_CLIENT_H_
