@@ -25,6 +25,7 @@
 #endif
 #if BUILDFLAG(ARKWEB_READER_MODE)
 #include "content/browser/web_contents/web_contents_impl.h"
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_reader_mode_config.h"
 #endif
 
 ArkwebBrowserInfoManagerUtils::ArkwebBrowserInfoManagerUtils(
@@ -117,6 +118,9 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOffscreenFrame(
 
 #if BUILDFLAG(ARKWEB_READER_MODE)
 bool ArkwebBrowserInfoManagerUtils::IsDistillerPageWebContents(content::WebContents* web_contents) {
+  if (!nweb_ex::AlloyBrowserReaderModeConfig::GetInstance()->IsReaderModeEnabled()) {
+    return false;
+  }
   if (!web_contents) {
     LOG(ERROR) << "web_contents is nullptr";
     return;
