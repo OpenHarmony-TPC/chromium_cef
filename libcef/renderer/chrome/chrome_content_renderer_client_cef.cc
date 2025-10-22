@@ -25,12 +25,6 @@
 #include "cef/ohos_cef_ext/libcef/renderer/chrome_safe_browsing_error_page_controller_delegate_impl.h"
 #endif
 
-#if BUILDFLAG(ARKWEB_NOTIFICATION)
-#include "base/command_line.h"
-#include "content/public/common/content_switches.h"
-#include "third_party/blink/public/platform/web_runtime_features.h"
-#endif // ARKWEB_NOTIFICATION
-
 ChromeContentRendererClientCef::ChromeContentRendererClientCef()
     : render_manager_(new CefRenderManager) {}
 
@@ -161,17 +155,3 @@ void ChromeContentRendererClientCef::OnBrowserCreated(
   web_view->SetUseExternalPopupMenusThisInstance(!windowless);
 #endif
 }
-
-#if BUILDFLAG(ARKWEB_NOTIFICATION)
-void ChromeContentRendererClientCef::PostIOThreadCreated(
-    base::SingleThreadTaskRunner* io_thread_task_runner) {
-  // same as 114 AlloyContentRendererClient::PostIOThreadCreated
-  if (!(*base::CommandLine::ForCurrentProcess()).HasSwitch(
-      switches::kEnableNwebEx)) {
-    blink::WebRuntimeFeatures::EnableNotifications(false);
-    blink::WebRuntimeFeatures::EnablePushMessaging(false);
-  }
- 
-  ChromeContentRendererClient::PostIOThreadCreated(io_thread_task_runner);
-}
-#endif // ARKWEB_NOTIFICATION
