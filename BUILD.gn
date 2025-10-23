@@ -450,7 +450,8 @@ test("libcef_static_unittests") {
       "ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
       "ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager_unittest.cc",
       "ohos_cef_ext/libcef/browser/predictors/loading_predictor_unittest.cc",
-      "ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy_unittest.cc",
+      "ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl_unittest.cc",
+      "ohos_cef_ext/libcef/browser/net_database/cef_data_base_impl_unittest.cc",
     ]
     deps += [
       ":libcef_static",
