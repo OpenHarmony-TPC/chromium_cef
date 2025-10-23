@@ -42,7 +42,6 @@ class SSLPlatformUKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
       LOG(ERROR) << "root cert data adapter is null";
       return;
     }
-    rootCertDataAdapter->CloseUKeyRemoteHandle(uri);
     rootCertDataAdapter->OpenUKeyRemoteHandle(uri);
   }
  
