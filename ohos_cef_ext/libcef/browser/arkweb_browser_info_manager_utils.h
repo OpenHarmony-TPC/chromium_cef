@@ -56,10 +56,18 @@ class ArkwebBrowserInfoManagerUtils {
  private:
   const raw_ptr<CefBrowserInfoManager> cef_browser_info_manager_;
 
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  static bool IsDistillerPageWebContents(content::WebContents* web_contents);
+#endif
+
 #if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-  static bool IsPrerendering(
+  static bool IsPrerendering(content::WebContents* web_contents);
+#endif
+
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
+  static bool ShouldCancel(
       const content::GlobalRenderFrameHostToken& global_token);
-  static void CancelForPrerendering(
+  static void CancelForSomeCases(
       const content::GlobalRenderFrameHostToken& global_token,
       int timeout_id);
 #endif

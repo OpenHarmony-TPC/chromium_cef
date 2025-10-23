@@ -402,10 +402,10 @@ void CefBrowserInfoManager::OnGetNewBrowserInfo(
   pending->callback_runner = callback_runner;
   pending_new_browser_info_map_.insert(
       std::make_pair(global_token, std::move(pending)));
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
   LOG(INFO) << "on get new browser info wait timeout";
   CEF_POST_TASK(CEF_UIT,
-                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForPrerendering,
+                base::BindOnce(&ArkwebBrowserInfoManagerUtils::CancelForSomeCases,
                                global_token, timeout_id));
 #endif
 
