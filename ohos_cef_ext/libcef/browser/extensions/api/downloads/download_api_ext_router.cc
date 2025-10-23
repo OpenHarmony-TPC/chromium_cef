@@ -645,7 +645,9 @@ void ExtensionDownloadsEventRouterEx::UpdateDownloadsItemData(
   item_class->SetStartTime(download_item->startTime);
   item_class->SetState(download_item->state);
   item_class->SetTotalBytes(download_item->totalBytes);
-  item_class->SetUrl(download_item->url);
+  // Intentionally skip updating URL field to preserve correct value.
+  // |download_item->url| is untrusted and should not overwrite |item_class|
+  // data.
 }
 
 void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
@@ -751,6 +753,9 @@ void ExtensionDownloadsEventRouterEx::OnDeterminingFilename(
   data->BeginFilenameDetermination(std::move(filename_changed_callback));
   bool any_determiners = false;
   base::Value::Dict json = DownloadItemsToJSON(download_item);
+  // Override 'url' field with trusted value from |item_class| since
+  // |download_item->url| is known to be unreliable.
+  json.Set(kUrlKey, item_class->GetUrl());
   if (suggested_path) {
     json.Set("filename", suggested_path);
   }
