@@ -17,9 +17,11 @@ public:
 #if BUILDFLAG(IS_ARKWEB)
 explicit CefSelectClientCertificateCallbackImpl(
       std::unique_ptr<content::ClientCertificateDelegate> delegate,
+      CefRefPtr<CefRequestHandler> handler,
       const std::string& host,
       int port)
       : delegate_(std::move(delegate)),
+        handler_(handler),
         host_(host),
         port_(port) {}
  
@@ -54,6 +56,22 @@ void Ignore() override {
     DoIgnore();
   }
 }
+
+void Select(const CefString& identity, int32_t type) override {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::Select type: " << type;
+  if (!finsh_ && delegate_) {
+    finsh_ = true;
+    switch (type) {
+      case CREDENTIAL_USER:
+      case CREDENTIAL_APP:
+        DoSelect(identity, "");
+        break;
+      default:
+        SelectInner(identity);
+        break;
+    }
+  }
+}
 #else
 void Cancel() override {}
  
@@ -61,6 +79,12 @@ void Ignore() override {}
 #endif
 
 private:
+enum CredentialType {
+    CREDENTIAL_USER = 2,
+    CREDENTIAL_APP = 3,
+    CREDENTIAL_UKEY = 4,
+};
+
 void DoCancel() {
   if (CEF_CURRENTLY_ON_UIT()) {
     RunCancelNow(std::move(delegate_), host_, port_);
@@ -95,6 +119,18 @@ void DoSelect(const std::string& private_key_file,
         base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunSelectNow,
                        std::move(delegate_), private_key_file,
                        cert_chain_file, host_, port_));
+  }
+}
+
+void SelectInner(const std::string& identity) {
+  LOG(DEBUG) << "CefSelectClientCertificateCallbackImpl::SelectInner";
+  if (CEF_CURRENTLY_ON_UIT()) {
+    RunSelectInner(std::move(delegate_), std::move(handler_), identity);
+  } else {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&CefSelectClientCertificateCallbackImpl::RunSelectInner,
+                       std::move(delegate_), std::move(handler_), identity));
   }
 }
 
@@ -373,6 +409,95 @@ static void RunIgnoreNow(
   delegate->ContinueWithCertificate(nullptr, nullptr);
 }
 
+static void RunSelectInner(
+    std::unique_ptr<content::ClientCertificateDelegate> delegate,
+    CefRefPtr<CefRequestHandler> handler,
+    const std::string& identity) {
+  LOG(INFO) << "CefSelectClientCertificateCallbackImpl::RunSelectInner";
+  CEF_REQUIRE_UIT();
+ 
+  auto rootCertDataAdapter =
+        OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
+  if (rootCertDataAdapter == nullptr) {
+    LOG(ERROR) << "RunSelectInner: root cert data adapter is null";
+    return;
+  }
+ 
+  auto certMaxSize = rootCertDataAdapter->GetAppCertMaxSize();
+  uint8_t* certData = new uint8_t[certMaxSize];
+  if (certData == nullptr) {
+    LOG(ERROR) << "RunSelectInner: new cert data memory failed";
+    return;
+  }
+ 
+  if (memset_s(certData, certMaxSize, 0, certMaxSize) != EOK) {
+    delete[] certData;
+    return;
+  }
+  uint32_t len = 0;
+  rootCertDataAdapter->GetUkeyCert(identity, certData, &len);
+ 
+  net::CertificateList certsList = net::X509Certificate::CreateCertificateListFromBytes(
+      base::as_bytes(
+          base::make_span(static_cast<const uint8_t*>(certData), len)),
+      net::X509Certificate::FORMAT_AUTO);
+  if (certsList.empty()) {
+    LOG(ERROR) << "RunSelectInner: certs list is empty";
+    delete[] certData;
+    return;
+  }
+ 
+  delete[] certData;
+ 
+  auto client_certs = ClientCertIdentityListFromCertificateList(certsList);
+  CefRequestHandler::X509CertificateList certs;
+  for (net::ClientCertIdentityList::iterator iter = client_certs.begin();
+       iter != client_certs.end(); iter++) {
+    certs.push_back(new CefX509CertificateImpl(std::move(*iter)));
+  }
+ 
+  std::vector<bssl::UniquePtr<CRYPTO_BUFFER>> intermediates;
+  for (size_t j = 1; j < certsList.size(); ++j) {
+    intermediates.push_back(bssl::UpRef(certsList[j]->cert_buffer()));
+  }
+ 
+  scoped_refptr<net::X509Certificate> cert_X509(
+      net::X509Certificate::CreateFromBuffer(
+          bssl::UpRef(certsList[0]->cert_buffer()), std::move(intermediates)));
+ 
+  // Save the converted X509 format certificate
+  CefX509CertificateImpl* certImpl =
+      static_cast<CefX509CertificateImpl*>(certs[0].get());
+  certImpl->setClientCert(cert_X509);
+ 
+  size_t keySize = 0;
+  net::X509Certificate::PublicKeyType type = net::X509Certificate::kPublicKeyTypeUnknown;
+  net::X509Certificate::GetPublicKeyInfo(certImpl->GetInternalCertObject()->cert_buffer(), &keySize, &type);
+  scoped_refptr<net::SSLPrivateKey> ssl_private_key = base::MakeRefCounted<net::ThreadedSSLPrivateKey>(
+                                                          std::make_unique<SSLPlatformUKeyOHOS>(identity, keySize),
+                                                          net::GetSSLPlatformKeyTaskRunner());
+  if (!ssl_private_key) {
+    LOG(ERROR) << "RunSelectInner: ssl private key parse failed";
+    return;
+  }
+ 
+  bool state = false;
+  rootCertDataAdapter->GetUkeyPinAuthState(identity, &state);
+  LOG(INFO) << "zyt GetUkeyPinAuthState state: " << state;
+ 
+  if (state) {
+    RunWithPrivateKey(std::move(delegate), certs[0], ssl_private_key);
+    return;
+  }
+ 
+  CefRefPtr<CefVerifyPinCallbackImpl> callbackImpl(
+    new CefVerifyPinCallbackImpl(std::move(delegate), certs[0], identity, ssl_private_key));
+  if (!handler->AsCefRequestHandlerExt()->OnVerifyPin(identity, callbackImpl)) {
+    callbackImpl->DisconnectDelegate()->ContinueWithCertificate(nullptr, nullptr);
+  }
+}
+ 
+CefRefPtr<CefRequestHandler> handler_;
 std::string host_;
 int port_;
 bool finsh_ = false;
