@@ -56,7 +56,7 @@ class ArkwebBrowserInfoManagerUtils {
  private:
   const raw_ptr<CefBrowserInfoManager> cef_browser_info_manager_;
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+#if BUILDFLAG(ARKWEB_READER_MODE)
   static bool IsDistillerPageWebContents(content::WebContents* web_contents);
 #endif
 
