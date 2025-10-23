@@ -1859,7 +1859,8 @@ void ArkWebBrowserHostExtImpl::OnSafeInsetsChange(int left,
 #endif
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-void ArkWebBrowserHostExtImpl::GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) {
+void ArkWebBrowserHostExtImpl::GetImageForContextNode(int command_id) {
+  auto frame = GetFocusedFrame();
   if (frame && frame->IsValid()) {
     static_cast<ArkwebFrameHostExtImpl*>(frame.get())
         ->GetImageForContextNode(command_id);
