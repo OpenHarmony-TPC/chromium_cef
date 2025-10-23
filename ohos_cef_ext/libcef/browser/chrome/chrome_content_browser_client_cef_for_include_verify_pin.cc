@@ -36,7 +36,7 @@ class CefVerifyPinCallbackImpl : public CefVerifyPinCallback {
       delegate_->ContinueWithCertificate(nullptr, nullptr);
       return;
     }
-    if (!identity_.empty()) {
+    if (identity_.empty()) {
       LOG(ERROR) << "CefVerifyPinCallbackImpl Confirm identity is empty";
       delegate_->ContinueWithCertificate(nullptr, nullptr);
       return;
