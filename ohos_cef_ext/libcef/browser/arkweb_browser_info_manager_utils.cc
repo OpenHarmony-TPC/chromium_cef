@@ -123,12 +123,12 @@ bool ArkwebBrowserInfoManagerUtils::IsDistillerPageWebContents(content::WebConte
   }
   if (!web_contents) {
     LOG(ERROR) << "web_contents is nullptr";
-    return;
+    return false;
   }
   content::WebContentsImpl* web_contents_impl = static_cast<content::WebContentsImpl*>(web_contents);
   if (!web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
     LOG(ERROR) << "get web_contents_impl_ext failed";
-    return;
+    return false;
   }
   return web_contents_impl->AsWebContentsImplExt()->IsDistillerPageWebContents();
 }
