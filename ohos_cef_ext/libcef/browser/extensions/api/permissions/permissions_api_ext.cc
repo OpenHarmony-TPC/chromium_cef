@@ -16,6 +16,7 @@
 #include <codecvt>
 #include <locale>
 
+#include "base/check_is_test.h"
 #include "base/logging.h"
 #include "chrome/browser/extensions/api/permissions/permissions_api.h"
 #include "chrome/browser/extensions/chrome_extension_function_details.h"
@@ -33,16 +34,35 @@
 
 namespace extensions {
 
+namespace {
 const char kBlockedByEnterprisePolicy[] =
     "Permissions are blocked by enterprise policy.";
 
 const char kNotInManifestPermissionsError[] =
     "Only permissions specified in the manifest may be requested.";
 
+const char kUserGestureRequiredError[] =
+    "This function must be called during a user gesture";
+
+bool ignore_user_gesture_for_tests = false;
+}  // namespace
+
 using permissions_api_helpers::UnpackPermissionSetResult;
+
+// static
+void PermissionsRequestFunction::SetIgnoreUserGestureForTests(
+    bool ignore) {
+  CHECK_IS_TEST();
+  ignore_user_gesture_for_tests = ignore;
+}
 
 ExtensionFunction::ResponseAction PermissionsRequestFunction::Run() {
   LOG(INFO) << "begin to request permissions";
+
+  if (!user_gesture() && !ignore_user_gesture_for_tests &&
+      extension_->location() != mojom::ManifestLocation::kComponent) {
+    return RespondNow(Error(kUserGestureRequiredError));
+  }
 
   gfx::NativeWindow native_window =
       ChromeExtensionFunctionDetails(this).GetNativeWindowForUI();
