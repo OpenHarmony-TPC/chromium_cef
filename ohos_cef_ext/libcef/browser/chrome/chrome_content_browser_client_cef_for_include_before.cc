@@ -483,7 +483,7 @@ static void RunSelectInner(
  
   bool state = false;
   rootCertDataAdapter->GetUkeyPinAuthState(identity, &state);
-  LOG(INFO) << "zyt GetUkeyPinAuthState state: " << state;
+  LOG(INFO) << "RunSelectInner: GetUkeyPinAuthState state: " << state;
  
   if (state) {
     RunWithPrivateKey(std::move(delegate), certs[0], ssl_private_key);

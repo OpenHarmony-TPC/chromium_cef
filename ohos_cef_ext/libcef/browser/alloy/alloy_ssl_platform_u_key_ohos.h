@@ -79,7 +79,6 @@ class SSLPlatformUKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
         SSL_SIGN_ECDSA_SECP256R1_SHA256,
         SSL_SIGN_ECDSA_SECP384R1_SHA384,
         SSL_SIGN_ECDSA_SECP521R1_SHA512,
-        SSL_SIGN_RSA_PKCS1_MD5_SHA1,
     };
   }
  
@@ -87,6 +86,11 @@ class SSLPlatformUKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
                   base::span<const uint8_t> input,
                   std::vector<uint8_t>* signature) override {
     LOG(DEBUG) << "SSLPlatformUKeyOHOS Sign algorithm: " << algorithm;
+
+    if (!signature) {
+        LOG(ERROR) << "SSLPlatformUKeyOHOS Sign signature is nullptr";
+        return net::ERR_SSL_CLIENT_AUTH_SIGNATURE_FAILED;
+    }
     
     std::unique_ptr<OHOS::NWeb::CertManagerAdapter> rootCertDataAdapter =
         OHOS::NWeb::OhosAdapterHelper::GetInstance().GetRootCertDataAdapter();
