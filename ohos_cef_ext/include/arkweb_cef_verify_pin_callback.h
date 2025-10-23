@@ -20,9 +20,6 @@
  
 class CefVerifyPinCallback : public virtual CefBaseRefCounted {
  public:
-  ///
-  /// Confirm verify pin.
-  ///
   /*--cef()--*/
   virtual void Confirm(int32_t verifyResult) = 0;
 };
