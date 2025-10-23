@@ -2316,8 +2316,14 @@ bool ValidateResultType(base::Value::Type type) {
 
 void ArkWebBrowserHostExtImpl::ExecuteJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
-    base::Value result) {
+    base::Value dict_result) {
   LOG(DEBUG) << "javascript result callback enter";
+    const auto& dict = dict_result.GetIfDict();
+  if (!dict || !dict->Find("result")) {
+    return;
+  }
+
+  base::Value result = std::move(*dict->Find("result"));
   std::string json;
   base::JSONWriter::Write(result, &json);
   if (callback != nullptr) {
@@ -2329,7 +2335,15 @@ void ArkWebBrowserHostExtImpl::ExecuteJSCallback(
 
 void ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback(
     CefRefPtr<CefJavaScriptResultCallback> callback,
-    base::Value result) {
+    base::Value dict_result) {
+  const auto& dict = dict_result.GetIfDict();
+  if (!dict || !dict->Find("result")) {
+    return;
+  }
+
+  std::string* exception = dict->FindString("exception");
+  base::Value result = std::move(*dict->Find("result"));
+  std::optional<bool> isObject = dict->FindBool("isObject");
   LOG(DEBUG) << "javascript result callback enter, type:"
              << result.GetTypeName(result.type());
   std::string json;
@@ -2422,6 +2436,11 @@ void ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback(
     }
     default: {
       LOG(ERROR) << "base::Value not support type:" << result.type();
+      if (exception) {
+        callback->SetErrorDescription(*exception);
+      } else if (isObject.value_or(false)) {
+        callback->SetErrorDescription(json);
+      }
       data->SetString(
           "This type not support, only "
           "string/number/boolean/arraybuffer/array is supported");
@@ -3811,23 +3830,39 @@ void ArkWebBrowserHostExtImpl::RunJavaScriptInFrames(const std::string& jsString
     targetFrame = web_contents->GetPrimaryMainFrame();
   } else if(!ParaseRenderFrameHostId(rootFrame.id, &childId, &routingId)) {
     LOG(ERROR) << "rootFrame id is invalid.";
+    CefRefPtr<CefValue> data = CefValue::Create();
+    std::u16string err_name = base::UTF8ToUTF16(std::string("RunJavaScriptInFrames"));
+    std::u16string err_msg = base::UTF8ToUTF16(std::string("rootFrame id is invalid."));
+    CefRefPtr<CefDictionaryValue> dict = CefDictionaryValue::Create();
+    dict->SetString("Error.name", err_name);
+    dict->SetString("Error.message", err_msg);
+    data->SetDictionary(dict);
+    callback->OnJavaScriptExeResult(data);
     return;
   } else {
     targetFrame = static_cast<content::WebContentsImpl*>(web_contents)->AsWebContentsImplExt()
                   ->GetTargetFramesIncludingPending(routingId);
-    if (!targetFrame) {
-      LOG(ERROR) << "rootFrame id can not find frame.";
-      return;
-    }
+  }
+
+  if (!targetFrame) {
+    LOG(ERROR) << "rootFrame id can not find frame.";
+    CefRefPtr<CefValue> data = CefValue::Create();
+    std::u16string err_name = base::UTF8ToUTF16(std::string("RunJavaScriptInFrames"));
+    std::u16string err_msg = base::UTF8ToUTF16(std::string("rootFrame id can not find frame."));
+    CefRefPtr<CefDictionaryValue> dict = CefDictionaryValue::Create();
+    dict->SetString("Error.name", err_name);
+    dict->SetString("Error.message", err_msg);
+    data->SetDictionary(dict);
+    callback->OnJavaScriptExeResult(data);
+    return;
   }
  
-  if (targetFrame) {
-    LOG(DEBUG) << "RunJavaScriptInFrames";
-    targetFrame->AllowInjectingJavaScript();
-    targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
+  LOG(DEBUG) << "RunJavaScriptInFrames";
+  targetFrame->AllowInjectingJavaScript();
+  targetFrame->ExecuteJavaScriptInFrames(base::UTF8ToUTF16(jsString), recursive, world.name,
                     base::BindOnce(&ArkWebBrowserHostExtImpl::ExecuteExtensionJSCallback,
                                    this, callback));
-  }
+
 }
 
 #if BUILDFLAG(ARKWEB_BGTASK)
