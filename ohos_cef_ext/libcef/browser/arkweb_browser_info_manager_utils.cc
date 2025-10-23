@@ -23,6 +23,10 @@
 #include "extensions/browser/view_type_utils.h"
 #include "extensions/common/constants.h"
 #endif
+#if BUILDFLAG(ARKWEB_READER_MODE)
+#include "content/browser/web_contents/web_contents_impl.h"
+#include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_reader_mode_config.h"
+#endif
 
 ArkwebBrowserInfoManagerUtils::ArkwebBrowserInfoManagerUtils(
     CefBrowserInfoManager* cef_browser_info_manager)
@@ -112,22 +116,26 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOffscreenFrame(
 }
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
-#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
-bool ArkwebBrowserInfoManagerUtils::IsPrerendering(
-    const content::GlobalRenderFrameHostToken& global_token) {
-  std::vector<CefBrowserContext*> browser_context_all =
-      CefBrowserContext::GetAll();
-  if (browser_context_all.size() == 0) {
+#if BUILDFLAG(ARKWEB_READER_MODE)
+bool ArkwebBrowserInfoManagerUtils::IsDistillerPageWebContents(content::WebContents* web_contents) {
+  if (!nweb_ex::AlloyBrowserReaderModeConfig::GetInstance()->IsReaderModeEnabled()) {
     return false;
   }
-
-  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
-  content::WebContents* web_contents =
-      content::WebContents::FromRenderFrameHost(rfh);
   if (!web_contents) {
+    LOG(ERROR) << "web_contents is nullptr";
     return false;
   }
+  content::WebContentsImpl* web_contents_impl = static_cast<content::WebContentsImpl*>(web_contents);
+  if (!web_contents_impl || !web_contents_impl->AsWebContentsImplExt()) {
+    LOG(ERROR) << "get web_contents_impl_ext failed";
+    return false;
+  }
+  return web_contents_impl->AsWebContentsImplExt()->IsDistillerPageWebContents();
+}
+#endif // ARKWEB_READER_MODE
 
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+bool ArkwebBrowserInfoManagerUtils::IsPrerendering(content::WebContents* web_contents) {
   for (auto& context : CefBrowserContext::GetAll()) {
     prerender::NoStatePrefetchManager* no_state_prefetch_manager =
         prerender::NoStatePrefetchManagerFactory::GetForBrowserContext(
@@ -143,19 +151,48 @@ bool ArkwebBrowserInfoManagerUtils::IsPrerendering(
 
   return false;
 }
+#endif // ARKWEB_NO_STATE_PREFETCH
 
-void ArkwebBrowserInfoManagerUtils::CancelForPrerendering(
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH) || BUILDFLAG(ARKWEB_READER_MODE)
+bool ArkwebBrowserInfoManagerUtils::ShouldCancel(
+    const content::GlobalRenderFrameHostToken& global_token) {
+  std::vector<CefBrowserContext*> browser_context_all =
+      CefBrowserContext::GetAll();
+  if (browser_context_all.size() == 0) {
+    return false;
+  }
+
+  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
+  content::WebContents* web_contents =
+      content::WebContents::FromRenderFrameHost(rfh);
+  if (!web_contents) {
+    return false;
+  }
+
+  bool should_cancel = false;
+#if BUILDFLAG(ARKWEB_NO_STATE_PREFETCH)
+  should_cancel = should_cancel || IsPrerendering(web_contents);
+#endif
+
+#if BUILDFLAG(ARKWEB_READER_MODE)
+  should_cancel = should_cancel || IsDistillerPageWebContents(web_contents);
+#endif
+
+  return should_cancel;
+}
+
+void ArkwebBrowserInfoManagerUtils::CancelForSomeCases(
     const content::GlobalRenderFrameHostToken& global_token,
     int timeout_id) {
   CEF_REQUIRE_UIT();
-  LOG(INFO) << "cancel for prerendering";
+  LOG(INFO) << "cancel for some cases";
   CefBrowserInfoManager* cef_browser_info_manager =
       CefBrowserInfoManager::GetInstance();
   if (!cef_browser_info_manager) {
     return;
   }
 
-  if (!IsPrerendering(global_token)) {
+  if (!ShouldCancel(global_token)) {
     return;
   }
 
