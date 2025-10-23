@@ -194,7 +194,12 @@ void ArkWebInnerConfigureNetworkContextParamsAfter(
   if (context->IsOffTheRecord() || context->GetPath().empty()) {
     network_context_params->http_cache_enabled = false;
   } else if (base::PathService::Get(base::DIR_CACHE, &cache_path)) {
-    network_context_params->file_paths->data_directory = cache_path;
+    base::FilePath data_path;
+    if (base::PathService::Get(chrome::DIR_USER_DATA, &data_path)) {
+      network_context_params->file_paths->data_directory = data_path;
+    } else {
+      network_context_params->file_paths->data_directory = cache_path;
+    }
     network_context_params->file_paths->cookie_database_name =
         base::FilePath(chrome::kCookieFilename);
 
