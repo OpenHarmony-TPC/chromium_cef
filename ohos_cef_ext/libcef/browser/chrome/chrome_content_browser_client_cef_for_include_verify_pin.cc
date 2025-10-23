@@ -3,7 +3,7 @@ class CefVerifyPinCallbackImpl : public CefVerifyPinCallback {
   explicit CefVerifyPinCallbackImpl(
       std::unique_ptr<content::ClientCertificateDelegate> delegate,
       CefRefPtr<CefX509Certificate> cert,
-      std::string identity,
+      const std::string& identity,
       scoped_refptr<net::SSLPrivateKey> ssl_private_key)
       : delegate_(std::move(delegate)),
         cert_(cert),
