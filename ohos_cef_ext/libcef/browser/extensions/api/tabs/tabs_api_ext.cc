@@ -341,9 +341,8 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
     LOG(ERROR) << "OnTabCreated is empty!!!!";
     return;
   }
-  if (tab.nwebId <= 0 || error) {
-    std::string errorMessage = error? error.value() : "create error";
-    function->Respond(function->Error(errorMessage));
+  if (error) {
+    function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {
       NWebExtensionTab tab_t = tab;
@@ -1224,9 +1223,8 @@ void TabsUpdateFunction::OnTabUpdated(
     return;
   }
 
-  if (tab.nwebId <= 0 || error) {
-    std::string errorMessage = error ? error.value() : "update error";
-    function->Respond(function->Error(errorMessage));
+  if (error) {
+    function->Respond(function->Error(error.value()));
   } else {
     if (function->has_callback()) {
       GURL gurl(tab.url.value_or(""));
