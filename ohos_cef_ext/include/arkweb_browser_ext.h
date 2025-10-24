@@ -52,6 +52,8 @@ class CefJavaScriptResultCallback : public virtual CefBaseRefCounted {
   /// number of cookies that were deleted.
   ///
   virtual void OnJavaScriptExeResult(CefRefPtr<CefValue> result) = 0;
+
+  virtual void SetErrorDescription(const std::string& description) {}
 };
 
 /* ---------- ohos webview add begin --------- */
