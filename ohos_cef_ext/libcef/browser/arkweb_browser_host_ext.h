@@ -819,7 +819,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   int base_background_color_ = 0xffffffff;
 #endif  // ARKWEB_BACKGROUND_COLOR
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-  void GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) override;
+  void GetImageForContextNode(int command_id) override;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void SendMouseClickEvent(const CefMouseEvent& event,

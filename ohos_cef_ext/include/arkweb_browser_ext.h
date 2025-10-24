@@ -484,7 +484,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// GetImageForContextNode
   ///
-  virtual void GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) = 0;
+  virtual void GetImageForContextNode(int command_id) = 0;
 
   ///
   /// GetImageFromCache
