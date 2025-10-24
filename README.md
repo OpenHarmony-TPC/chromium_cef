@@ -177,8 +177,6 @@ so库与resfile都放入指定位置后，点击 **Build -> Build Hap(s)/APP(s) 
 | ohos.permission.FILE_ACCESS_PERSIST                   | 允许应用支持持久化访问文件Uri。                              | **基础权限** |
 | ohos.permission.PRIVACY_WINDOW                        | 允许应用将窗口设置为隐私窗口，禁止截屏录屏。                 | 按需申请     |
 | ohos.permission.WINDOW_TOPMOST                        | 允许窗口置顶。                                               | 按需申请     |
-| ohos.permission.kernel.ALLOW_WRITABLE_CODE_MEMORY     | 用于开启JIT权限，提升小程序及网页访问性能。                  | **基础权限** |
-| ohos.permission.kernel.DISABLE_CODE_MEMORY_PROTECTION | 用于开启JIT权限，提升小程序及网页访问性能。                  | **基础权限** |
 | ohos.permission.READ_PASTEBOARD                       | 允许应用读取剪贴板。                                         | **基础权限** |
 | ohos.permission.READ_WRITE_DOWNLOAD_DIRECTORY         | 允许应用访问公共目录下Download目录及子目录，建议与ohos.permission.FILE_ACCESS_PERSIST同时申请。 | 按需申请     |
 | ohos.permission.READ_WRITE_DOCUMENTS_DIRECTORY        | 允许应用访问公共目录下Documents目录及子目录，建议与ohos.permission.FILE_ACCESS_PERSIST同时申请。 | 按需申请     |
@@ -289,6 +287,37 @@ NULL
 ![11](./res/11.png)
 
 
+## 坚盾守护模式
 
+坚盾守护模式是为高安全需求用户设计的系统级安全防护方案。该模式通过实施严格的功能限制，显著增强系统安全性，有效防范针对远程攻击面的各类威胁。在坚盾安全模式下，CEF增加了功能限制，需要开发者评估应用在坚盾模式下的可用性。
+
+### 启用坚盾守护模式
+
+要启用坚盾守护模式，请按以下路径操作：
+1. 进入系统设置
+2. 选择"隐私和安全"选项
+3. 点击"坚盾守护模式"并开启
+
+### 坚盾守护模式下的功能限制
+
+为降低CEF受攻击风险，坚盾守护模式将实施以下关键安全限制：
+- 全面禁用即时编译(JIT)功能，包括已获取 ACL 权限的应用程序
+- 暂停 WebAssembly 支持（当前版本中 WebAssembly 依赖 JIT 功能实现）
+
+### 应用兼容性评估指南
+
+在坚盾守护模式下运行应用程序时，建议进行以下兼容性检查：
+1. JavaScript 性能评估：
+    - 测试应用在限制环境中的运行效率
+    - 优化可能存在的性能瓶颈
+
+2. WebAssembly 兼容性检查：
+    - 静态代码分析：检查项目中的 WebAssembly 相关API调用，与第三方库的 Wasm 依赖情况。
+    - 运行时验证：在坚盾守护模式下执行全功能测试。
+
+参考文档：
+- [查询设备安全模式](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/devicesecurity-securitymode)
+- [JSVM坚盾守护模式](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/jsvm-secure-shield-mode)
+- [ArkWeb坚盾守护模式](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/web-secure-shield-mode)
 
 
