@@ -59,8 +59,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key_ohos.h"
 #include "content/public/browser/shared_cors_origin_access_list.h"
-#include "arkweb/ohos_nweb_ex/core/static/nweb_static_dispatcher.h"
-#include "arkweb/ohos_nweb/src/nweb_common.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_CA)
@@ -80,6 +78,8 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #if BUILDFLAG(IS_ARKWEB)
 #include "base/ohos/nweb_engine_event_logger.h"
 #include "base/ohos/nweb_engine_event_logger_code.h"
+#include "arkweb/ohos_nweb/src/cef_delegate/nweb_engine_event_logger_cef_delegate.h"
+#include "arkweb/ohos_nweb/src/nweb_common.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
@@ -358,7 +358,8 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
   // 打点
   std::string err_msg = "a ssl error occurred, err_code: " + std::to_string(cert_error);
   if (IsNativeApiEnable()) {
-    NWebStaticDispatcher::OnLoggerReportEvent(base::ohos::kModuleContentBrowser,
+    OHOS::NWeb::NWebEngineEventLoggerCefDelegate::ReportEngineEvent(
+      base::ohos::kModuleContentBrowser,
       base::ohos::kDefaultUrl,
       base::ohos::kNetworkSSLError,
       err_msg);
