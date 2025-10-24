@@ -445,7 +445,7 @@ uint64_t ArkWebCefPostDataStreamImpl::GetSize() {
     return upload_stream_->size();
   } else {
     LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return -1;
+    return 0;
   }
 }
 
@@ -454,7 +454,7 @@ uint64_t ArkWebCefPostDataStreamImpl::GetPosition() {
     return upload_stream_->position();
   } else {
     LOG(ERROR) << "scheme_handler upload stream is nullptr.";
-    return -1;
+    return 0;
   }
 }
 

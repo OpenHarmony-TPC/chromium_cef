@@ -330,19 +330,19 @@ void OhPageLoadMetricsObserver::OnLoadEventEnd(
 
 void OhPageLoadMetricsObserver::OnLoadedResource(
     const page_load_metrics::ExtraRequestCompleteInfo&
-        extra_request_complelte_info) {
+        extra_request_complete_info) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  if (extra_request_complelte_info.request_destination ==
+  if (extra_request_complete_info.request_destination ==
       network::mojom::RequestDestination::kDocument) {
-    if (did_dispatch_on_main_resourse_) {
+    if (did_dispatch_on_main_resource_) {
       return;
     }
-    did_dispatch_on_main_resourse_ = true;
+    did_dispatch_on_main_resource_ = true;
 
     base::TimeTicks navigation_start = GetDelegate().GetNavigationStart();
 
     const net::LoadTimingInfo& timing =
-        *extra_request_complelte_info.load_timing_info;
+        *extra_request_complete_info.load_timing_info;
     web_performance_timing_.worker_start =
         timing.service_worker_start_time.is_null()
             ? -1
