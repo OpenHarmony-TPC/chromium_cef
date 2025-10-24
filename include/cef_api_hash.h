@@ -49,6 +49,8 @@
 #define CEF_API_HASH_PLATFORM "9cd794a0ab4506060ca2d7b3c335778d026337a4"
 #elif defined(OS_LINUX)
 #define CEF_API_HASH_PLATFORM "fab73fe3fddb82c0f75a404fb464935592880803"
+#elif defined(OS_OHOS)
+#define CEF_API_HASH_PLATFORM "fa2247effb47a85c64707164c311dec1056698ff"
 #endif
 
 #ifdef __cplusplus

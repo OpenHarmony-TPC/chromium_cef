@@ -18,6 +18,9 @@
 #include "tests/cefclient/browser/resource.h"
 #include "tests/cefclient/browser/views_style.h"
 #include "tests/shared/common/client_switches.h"
+#if defined(OS_OHOS)
+#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+#endif
 
 #if !defined(OS_WIN)
 #define VK_ESCAPE 0x1B
@@ -25,13 +28,22 @@
 #define VK_MENU 0x12  // ALT key.
 #endif
 
+#if defined(OS_OHOS)
+using namespace ohos::adapter::xcomponent;
+#endif
+
 namespace client {
 
 namespace {
 
 // Default window size.
+#ifdef OS_OHOS
+constexpr int kDefaultWidth = 1700;
+constexpr int kDefaultHeight = 1007;
+#else
 constexpr int kDefaultWidth = 800;
 constexpr int kDefaultHeight = 600;
+#endif
 
 #if defined(OS_MAC)
 constexpr int kTitleBarHeight = 35;
@@ -869,7 +881,12 @@ CefRect ViewsWindow::GetInitialBounds(CefRefPtr<CefWindow> window) {
   const CefRect bounds = delegate_->GetInitialBounds();
   if (frameless_ && bounds.IsEmpty()) {
     // Need to provide a size for frameless windows that will be centered.
+#if defined(OS_OHOS)
+    auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
+    return CefRect(0, 0, window_rect.width, window_rect.height);
+#else
     return CefRect(0, 0, kDefaultWidth, kDefaultHeight);
+#endif
   }
   return bounds;
 }

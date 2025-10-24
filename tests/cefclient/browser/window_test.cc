@@ -23,6 +23,8 @@
 #include "tests/cefclient/browser/window_test_runner_gtk.h"
 #elif defined(OS_MAC)
 #include "tests/cefclient/browser/window_test_runner_mac.h"
+#elif defined(OS_OHOS)
+#include "tests/cefclient/browser/window_test_runner_ohos.h"
 #endif
 
 namespace client::window_test {
@@ -51,6 +53,8 @@ std::unique_ptr<WindowTestRunner> CreateWindowTestRunner(
   return std::make_unique<WindowTestRunnerGtk>();
 #elif defined(OS_MAC)
   return std::make_unique<WindowTestRunnerMac>();
+#elif defined(OS_OHOS)
+  return std::make_unique<WindowTestRunnerOhos>();
 #else
 #error "No implementation available for your platform."
 #endif

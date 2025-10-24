@@ -10,10 +10,25 @@
 #include "include/base/cef_callback.h"
 #include "include/cef_app.h"
 #include "include/cef_parser.h"
+#include "include/cef_path_util.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
+#if defined(OS_OHOS)
+#include <native_window/external_window.h>
+#include <stdint.h>
+#include <sys/mman.h>
+#include <algorithm>
+#include <cmath>
+#include "ohos/adapter/screen/screen_adapter.h"
+#include "ohos/adapter/window/app_window_adapter.h"
+#include "ohos/adapter/xcomponent/adapter/window_adapter.h"
+#endif
+
+#if defined(OS_OHOS)
+using namespace ohos::adapter::xcomponent;
+#endif
 
 namespace {
 
@@ -131,6 +146,33 @@ void SimpleHandler::OnLoadError(CefRefPtr<CefBrowser> browser,
   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
 }
 
+bool SimpleHandler::CanDownload(CefRefPtr<CefBrowser> browser,
+                                const CefString& url,
+                                const CefString& request_method) {
+  return true;
+}
+
+bool SimpleHandler::OnBeforeDownload(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefDownloadItem> download_item,
+    const CefString& suggested_name,
+    CefRefPtr<CefBeforeDownloadCallback> callback) {
+  CefString download_dir;
+  if (CefGetPath(PK_DIR_TEMP, download_dir) && !download_dir.empty()) {
+    std::string download_path =
+        download_dir.ToString() + "/" + suggested_name.ToString();
+    CefString file_path = CefString(download_path);
+    callback->Continue(file_path, true);
+    return true;
+  }
+  return false;
+}
+
+void SimpleHandler::OnDownloadUpdated(
+    CefRefPtr<CefBrowser> browser,
+    CefRefPtr<CefDownloadItem> download_item,
+    CefRefPtr<CefDownloadItemCallback> callback) {}
+
 void SimpleHandler::ShowMainWindow() {
   if (!CefCurrentlyOn(TID_UI)) {
     // Execute on the UI thread.
@@ -177,3 +219,108 @@ void SimpleHandler::PlatformShowWindow(CefRefPtr<CefBrowser> browser) {
   NOTIMPLEMENTED();
 }
 #endif
+
+bool SimpleHandler::RenderOnScreen(void* window,
+                                   const void* osr_buffer,
+                                   int w,
+                                   int h) {
+  uint8_t* sourceData = (uint8_t*)osr_buffer;
+  uint8_t* targetData = NULL;
+  Region region{nullptr, 0};
+  int32_t ret = 0;
+  int32_t stride = 0x8;
+  BufferHandle* bufferHandle = NULL;
+  uint8_t* mappedAddr = NULL;
+  int32_t code;
+
+  OHNativeWindowBuffer* buffer = nullptr;
+  int fenceFd;
+
+  OHNativeWindow* nativeWindow = static_cast<OHNativeWindow*>(window);
+  if (nativeWindow == NULL) {
+    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+    goto err;
+  }
+
+  code = SET_BUFFER_GEOMETRY;
+  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, w, h);
+  if (ret != 0) {
+    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+    goto err;
+  }
+
+  code = SET_STRIDE;
+  ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, stride);
+  if (ret != 0) {
+    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+    goto err;
+  }
+
+  ret = OH_NativeWindow_NativeWindowRequestBuffer(nativeWindow, &buffer,
+                                                  &fenceFd);
+  if (ret != 0) {
+    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+    goto err;
+  }
+
+  bufferHandle = OH_NativeWindow_GetBufferHandleFromNative(buffer);
+  mappedAddr = static_cast<uint8_t*>(
+      mmap(bufferHandle->virAddr, bufferHandle->size, PROT_READ | PROT_WRITE,
+           MAP_SHARED, bufferHandle->fd, 0));
+  if (mappedAddr == MAP_FAILED) {
+    LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+    goto err;
+  }
+
+  if (bufferHandle->format == 12) {
+    int bpp = 4;  // src and dest: RGBA8888
+    targetData = mappedAddr;
+    for (int row = 0; row < h; row++) {
+      memcpy(targetData, sourceData, w * bpp);
+      sourceData += w * bpp;
+      targetData += bufferHandle->stride;
+    }
+
+    OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, buffer, fenceFd,
+                                            region);
+
+    int result = munmap(mappedAddr, bufferHandle->size);
+    // munmap failed
+    if (result == -1) {
+      LOG(ERROR) << "RenderOnScreen failed:" << __LINE__;
+      goto err;
+    }
+  }
+  return true;
+err:
+  return false;
+}
+
+void SimpleHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+  LOG(INFO) << "call API: " << __FUNCTION__ << ": " << __FILE__ << " line: " << __LINE__;
+  // Default OSR widget size.
+  auto window_rect = WindowAdapter::GetInstance().GetInitialBounds();
+  int width = window_rect.width;
+  int height = window_rect.height;
+  LOG(INFO) << "call API: width" << width << "  height: " << height;
+  rect = CefRect(0, 0, width, height);
+}
+
+void SimpleHandler::OnPaint(CefRefPtr<CefBrowser> browser,
+                            PaintElementType type,
+                            const RectList& dirtyRects,
+                            const void* buffer,
+                            int width,
+                            int height) {
+  LOG(INFO) << "call API: " << __FUNCTION__ << ": " << width << ":" << height;
+  // render to screen
+  WindowWidgetType nextWindowid =
+      WindowAdapter::GetInstance().GetWindowWidgetId();
+  WindowIdType windowId = WindowAdapter::GetInstance().GetWindowId(nextWindowid);
+  WindowType window = WindowAdapter::GetInstance().GetWindow(windowId);
+  bool result = RenderOnScreen((void*)window, buffer, width, height);
+  if (!result) {
+    LOG(ERROR) << "RenderOnScreen failed";
+  }
+
+}

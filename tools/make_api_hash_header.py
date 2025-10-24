@@ -39,6 +39,8 @@ def make_api_hash_header(cpp_header_dir):
 #define CEF_API_HASH_PLATFORM "$MAC$"
 #elif defined(OS_LINUX)
 #define CEF_API_HASH_PLATFORM "$LINUX$"
+#elif defined(OS_OHOS)
+#define CEF_API_HASH_PLATFORM "$OHOS$"
 #endif
 
 #ifdef __cplusplus

@@ -749,6 +749,12 @@ parser.add_option(
     dest='quiet',
     default=False,
     help='do not output detailed status information')
+parser.add_option(
+    '--ohos',
+    action='store_true',
+    dest='ohos',
+    default=False,
+    help='target platform, e.g. arm64 for Ohos only')
 (options, args) = parser.parse_args()
 
 # Test the operating system.
@@ -901,6 +907,9 @@ else:
 out_dir = os.path.join(src_dir, 'out')
 build_dir_debug = os.path.join(out_dir, 'Debug' + build_dir_suffix)
 build_dir_release = os.path.join(out_dir, 'Release' + build_dir_suffix)
+if options.ohos:
+  build_dir_debug = os.path.join(out_dir, 'musl_64')
+  build_dir_release = os.path.join(out_dir, 'musl_64')
 
 if mode == 'standard' or mode == 'minimal':
   # create the include directory
@@ -1412,17 +1421,29 @@ elif platform == 'mac':
 elif platform == 'linux':
   libcef_so = 'libcef.so'
   # yapf: disable
-  binaries = [
-      {'path': 'chrome_sandbox', 'out_path': 'chrome-sandbox'},
-      {'path': libcef_so},
-      {'path': 'libEGL.so'},
-      {'path': 'libGLESv2.so'},
-      {'path': 'libvk_swiftshader.so'},
-      {'path': 'libvulkan.so.1'},
-      {'path': 'snapshot_blob.bin', 'conditional': True},
-      {'path': 'v8_context_snapshot.bin', 'conditional': True},
-      {'path': 'vk_swiftshader_icd.json'},
-  ]
+  if options.ohos:
+    binaries = [
+        {'path': libcef_so},
+        {'path': 'libEGL.so'},
+        {'path': 'libGLESv2.so'},
+        {'path': 'libvk_swiftshader.so'},
+        {'path': 'snapshot_blob.bin', 'conditional': True},
+        {'path': 'v8_context_snapshot.bin', 'conditional': True},
+        {'path': 'vk_swiftshader_icd.json'},
+    ]
+  else:
+    binaries = [
+        {'path': 'chrome_sandbox', 'out_path': 'chrome-sandbox'},
+        {'path': libcef_so},
+        {'path': 'libEGL.so'},
+        {'path': 'libGLESv2.so'},
+        {'path': 'libvk_swiftshader.so'},
+        {'path': 'libvulkan.so.1'},
+        {'path': 'snapshot_blob.bin', 'conditional': True},
+        {'path': 'v8_context_snapshot.bin', 'conditional': True},
+        {'path': 'vk_swiftshader_icd.json'},
+    ]
+
   # yapf: enable
   if options.ozone:
     binaries.append({'path': 'libminigbm.so', 'conditional': True})
@@ -1455,6 +1476,28 @@ elif platform == 'linux':
 
   # transfer Release files
   build_dir = build_dir_release
+  # add test of cefsimple/ceftests
+  cefsimple_path = os.path.join(build_dir, 'cefsimple')
+  ceftests_path = os.path.join(build_dir, 'ceftests')
+  if mode == 'minimal':
+    if path_exists(cefsimple_path):
+      binaries.append({'path': 'cefsimple'})
+    if path_exists(ceftests_path):
+      binaries.append({'path': 'ceftests'})
+  # add test of so if cefsimple/ceftests needed for minimal
+  libcefsimple_path = os.path.join(build_dir, 'libcefsimple.so')
+  libceftests_path = os.path.join(build_dir, 'libceftests.so')
+  libcefclient_path = os.path.join(build_dir, 'libcefclient.so')
+  libadapter_path = os.path.join(build_dir, 'libadapter.so')
+  if mode == 'minimal':
+    if path_exists(libcefsimple_path):
+      binaries.append({'path': 'libcefsimple.so'})
+    if path_exists(libceftests_path):
+      binaries.append({'path': 'libceftests.so'})
+    if path_exists(libcefclient_path):
+      binaries.append({'path': 'libcefclient.so'})
+    if path_exists(libadapter_path):
+      binaries.append({'path': 'libadapter.so'})
   libcef_path = os.path.join(build_dir, libcef_so)
   if not options.allowpartial or path_exists(libcef_path):
     valid_build_dir = build_dir
@@ -1476,7 +1519,11 @@ elif platform == 'linux':
     # transfer include files
     transfer_gypi_files(cef_dir, cef_paths2['includes_linux'], \
                         'include/', include_dir, options.quiet)
+    transfer_gypi_files(cef_dir, cef_paths2['includes_ohos'], \
+                        'include/', include_dir, options.quiet)
     transfer_gypi_files(cef_dir, cef_paths2['includes_linux_capi'], \
+                        'include/', include_dir, options.quiet)
+    transfer_gypi_files(cef_dir, cef_paths2['includes_ohos_capi'], \
                         'include/', include_dir, options.quiet)
 
     # transfer additional files, if any
@@ -1487,6 +1534,8 @@ elif platform == 'linux':
     # transfer shared files
     transfer_gypi_files(cef_dir, cef_paths2['shared_sources_linux'], \
                         'tests/shared/', shared_dir, options.quiet)
+    transfer_gypi_files(cef_dir, cef_paths2['shared_sources_ohos'], \
+                        'tests/shared/', shared_dir, options.quiet)
 
     if not options.ozone:
       # transfer cefclient files
@@ -1496,9 +1545,14 @@ elif platform == 'linux':
     # transfer cefsimple files
     transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_linux'], \
                         'tests/cefsimple/', cefsimple_dir, options.quiet)
+    transfer_gypi_files(cef_dir, cef_paths2['cefsimple_sources_ohos'], \
+                        'tests/cefsimple/', cefsimple_dir, options.quiet)
 
     # transfer ceftests files
     transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_linux'], \
+                        'tests/ceftests/', ceftests_dir, options.quiet)
+    # transfer ceftests files
+    transfer_gypi_files(cef_dir, cef_paths2['ceftests_sources_ohos'], \
                         'tests/ceftests/', ceftests_dir, options.quiet)
 
 if mode == 'standard' or mode == 'minimal':
