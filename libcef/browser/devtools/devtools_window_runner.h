@@ -14,6 +14,10 @@
 class CefBrowserHostBase;
 class ChromeBrowserHostImpl;
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+class CefDevToolsFrontend;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
 // Parameters passed to ShowDevTools.
 struct CefShowDevToolsParams {
   CefShowDevToolsParams(const CefWindowInfo& windowInfo,
@@ -41,6 +45,13 @@ class CefDevToolsWindowRunner final {
 
   void ShowDevTools(CefBrowserHostBase* opener,
                     std::unique_ptr<CefShowDevToolsParams> params);
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void ShowDevToolsWith(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefBrowserHostBase* inspected_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
+      const CefPoint& inspect_element_at);
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   void CloseDevTools();
   bool HasDevTools();
 
@@ -50,9 +61,18 @@ class CefDevToolsWindowRunner final {
       base::WeakPtr<ChromeBrowserHostImpl> browser_host);
 
  private:
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void OnFrontEndDestroyed();
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
   std::unique_ptr<CefShowDevToolsParams> pending_params_;
 
   base::WeakPtr<ChromeBrowserHostImpl> browser_host_;
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  raw_ptr<CefDevToolsFrontend> devtools_frontend_ = nullptr;
+  base::WeakPtrFactory<CefDevToolsWindowRunner> weak_ptr_factory_{this};
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 };
 
 #endif  // CEF_LIBCEF_BROWSER_DEVTOOLS_DEVTOOLS_WINDOW_RUNNER_H_

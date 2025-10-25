@@ -35,9 +35,6 @@
 #if BUILDFLAG(ARKWEB_PERMISSION)
 #include "ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h"
 #endif
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-#include "include/cef_devtools_message_handler_delegate.h"
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 namespace extensions {
 class Extension;
@@ -317,12 +314,6 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
                             bool current_only) override;
   CefRefPtr<CefNavigationEntry> GetVisibleNavigationEntry() override;
   void NotifyMoveOrResizeStarted() override;
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override {}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   bool IsFullscreen() override;
   void ExitFullscreen(bool will_cause_resize) override;
   bool IsRenderProcessUnresponsive() override;

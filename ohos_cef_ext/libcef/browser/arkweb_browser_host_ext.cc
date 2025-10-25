@@ -4119,3 +4119,14 @@ void ArkWebBrowserHostExtImpl::StopFling() {
     content::RenderWidgetHostImpl::From(rwhv->GetRenderWidgetHost())->StopFling();
   }
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
+    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    const CefPoint& inspect_element_at) {
+  CEF_REQUIRE_UIT();
+  GetDevToolsWindowRunner()->ShowDevToolsWith(
+      frontend_browser, this, delegate, inspect_element_at);
+}
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)

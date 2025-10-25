@@ -368,21 +368,6 @@ AlloyBrowserHostImplExt::AlloyBrowserHostImplExt(
   platform_delegate_->BrowserCreated(this);
 }
 
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-void AlloyBrowserHostImplExt::ShowDevToolsWith(
-    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    const CefPoint& inspect_element_at) {
-  LOG(INFO) << "ShowDevToolsWith";
-  CEF_REQUIRE_UIT();
-  if (!EnsureDevToolsProtocolManager()) {
-    return;
-  }
-  devtools_protocol_manager_->ShowDevToolsWith(
-      frontend_browser, delegate, inspect_element_at);
-}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
 void AlloyBrowserHostImplExt::WasOccluded(bool occluded) {
   LOG(DEBUG) << "web was occluded:" << occluded;

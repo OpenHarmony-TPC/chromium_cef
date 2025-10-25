@@ -920,6 +920,10 @@ source_set("libcef_static") {
       "libcef/browser/net/scheme_handler.cc",
       "libcef/browser/net/scheme_handler.h",
     ]
+
+    sources += [
+      "ohos_cef_ext/libcef/browser/devtools/devtools_window_runner_ext.cc",
+    ]
   }
 
   #if defined(ARKWEB_LOGGER_REPORT)
