@@ -58,6 +58,7 @@
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_client_cert_lookup_table.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_key_ohos.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_ssl_platform_u_key_ohos.h"
 #include "content/public/browser/shared_cors_origin_access_list.h"
 #endif
 
@@ -106,6 +107,10 @@ target.push_back(*it);
 }
 }
 #endif
+
+#if BUILDFLAG(IS_ARKWEB)
+#include "cef/ohos_cef_ext/libcef/browser/chrome/chrome_content_browser_client_cef_for_include_verify_pin.cc"
+#endif  // BUILDFLAG(IS_ARKWEB)
 
 class CefSelectClientCertificateCallbackImpl
     : public CefSelectClientCertificateCallbackExt {
@@ -466,7 +471,7 @@ base::OnceClosure ChromeContentBrowserClientCef::SelectClientCertificate(
 
 #if BUILDFLAG(IS_ARKWEB)
   CefRefPtr<CefSelectClientCertificateCallbackImpl> callbackImpl(
-      new CefSelectClientCertificateCallbackImpl(std::move(delegate), host, port));
+      new CefSelectClientCertificateCallbackImpl(std::move(delegate), handler, host, port));
 #else
   CefRefPtr<CefSelectClientCertificateCallbackImpl> callbackImpl(
       new CefSelectClientCertificateCallbackImpl(std::move(delegate)));
