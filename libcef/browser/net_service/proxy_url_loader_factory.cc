@@ -1504,11 +1504,12 @@ void InterceptedRequest::OnUploadProgressACK() {
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 GURL InterceptedRequest::AddQueryForRedirectOnUI(
-    GURL original_url, 
+    GURL original_url,
     GURL referrer) {
   if (!original_url.is_empty() && original_url.is_valid()) {
     std::string new_url =
-      factory_->request_handler_->OnRewriteUrlForNavigation(original_url.spec(), referrer.spec());
+      factory_->request_handler_->OnRewriteUrlForNavigation(
+          original_url.spec(), referrer.spec(), ui::PageTransition::PAGE_TRANSITION_SERVER_REDIRECT, true);
     return GURL(new_url);
   }
   return GURL();

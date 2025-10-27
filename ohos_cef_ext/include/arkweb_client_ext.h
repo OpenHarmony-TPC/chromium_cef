@@ -199,7 +199,7 @@ class ArkWebClientExt : public CefClient, public virtual CefBaseRefCounted {
   ///
   /*--cef()--*/
   virtual std::string OnRewriteUrlForNavigation(
-      const std::string& original_url, const std::string& referrer) { return ""; }
+      const std::string& original_url, const std::string& referrer, int transition_type, bool is_key_request) { return ""; }
 #endif
 
 };

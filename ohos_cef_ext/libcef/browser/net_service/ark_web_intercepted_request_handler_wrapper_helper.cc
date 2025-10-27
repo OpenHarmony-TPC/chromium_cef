@@ -167,7 +167,9 @@ GURL ArkWebInterceptedRequestHandlerWrapperHelper::
 std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigation(
     CefRefPtr<CefBrowserHostBase> browser,
     const std::string& original_url,
-    const std::string& referrer) {
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) {
   if (!browser || !browser->GetHost()) {
     return "";
   }
@@ -181,7 +183,7 @@ std::string ArkWebInterceptedRequestHandlerWrapperHelper::OnRewriteUrlForNavigat
   if (!load_handler) {
     return "";
   }
-  return load_handler->OnRewriteUrlForNavigation(original_url, referrer);
+  return load_handler->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
 }
 #endif
 
