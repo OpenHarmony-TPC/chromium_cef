@@ -73,5 +73,5 @@ class CefVerifyPinCallbackImpl : public CefVerifyPinCallback {
   std::string identity_;
   scoped_refptr<net::SSLPrivateKey> ssl_private_key_;
  
-  IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(CefSelectClientCertificateCallbackImpl);
+  IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(CefVerifyPinCallbackImpl);
 };
