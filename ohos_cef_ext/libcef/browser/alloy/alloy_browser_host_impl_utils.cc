@@ -235,8 +235,11 @@ int AlloyBrowserHostImplUtils::handleZoomEventWithInput(bool zoom_in) {
   if (alloyBrowserHostImpl && !alloyBrowserHostImpl->settings_.zoom_control_access) {
     return -1;
   }
-  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
-          switches::kEnableNwebEx)) {
+
+  bool usePreset = base::CommandLine::ForCurrentProcess()->HasSwitch(
+      switches::kEnableNwebEx);
+  LOG(INFO) << "HandleZoomEventWithInput zoom_in: " << zoom_in << ", shouldUsePresets:" << usePreset;
+  if (usePreset) {
     content::PageZoom zoomType = zoom_in ? content::PageZoom::PAGE_ZOOM_IN
                                          : content::PageZoom::PAGE_ZOOM_OUT;
     zoom::PageZoom::Zoom(alloyBrowserHostImpl->web_contents(), zoomType);
