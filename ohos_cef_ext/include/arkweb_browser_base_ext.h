@@ -131,6 +131,14 @@ public:
       CefRefPtr<CefScreenCaptureCallback> listener) = 0;
 #endif  // defined(ARKWEB_EX_SCREEN_CAPTURE)
 
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+  ///
+  /// Get over scroll offset value.
+  ///
+  /*--cef()--*/
+  virtual void GetOverScrollOffsetValue(float* offset_x, float* offset_y) = 0;
+#endif
+
   /// set custom web media player enable.
   ///
   /*--cef()--*/
