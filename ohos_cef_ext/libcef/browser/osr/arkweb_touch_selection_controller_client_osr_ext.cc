@@ -259,6 +259,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyTouchSelectionChanged(
     ConvertTouchHandleState(
         controller->AsTouchSelectionControllerExt()->GetEndSelectionHandle(),
         end_selection_handle);
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()
+        ->OnClippedSelectionBoundsChanged(clipped_selection_bounds_,
+                                          need_report);
     rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnTouchSelectionChanged(
         insert_handle, start_selection_handle, end_selection_handle,
         need_report);
