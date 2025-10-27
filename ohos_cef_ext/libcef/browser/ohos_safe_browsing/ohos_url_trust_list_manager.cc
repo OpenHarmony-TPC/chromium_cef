@@ -171,8 +171,9 @@ UrlTrustCheckResult UrlTrustListManager::CheckUrlTrustList(const GURL& url) {
     return UrlTrustCheckResult::RESULT_ALLOW;
   }
   LOG(ERROR) << "Deny url.";
-  LOG(DEBUG) << "Url detail: scheme:" << url.scheme() << ",host:" << url.host()
-             << ",port:" << url.EffectiveIntPort() << ",path:" << url.path();
+  LOG(DEBUG) << "Url detail: scheme:" << url.scheme()
+             << ",host:" << url::LogUtils::ConvertUrlWithMask(url.host())
+             << ",port:" << url.EffectiveIntPort() << ",path: ***";
   return UrlTrustCheckResult::RESULT_DENY;
 }
 }  // namespace ohos_safe_browsing
