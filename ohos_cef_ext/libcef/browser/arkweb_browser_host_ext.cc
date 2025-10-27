@@ -3838,6 +3838,8 @@ void ArkWebBrowserHostExtImpl::SetBrowserZoomLevel(double zoom_factor) {
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
 void ArkWebBrowserHostExtImpl::OnZoomChanged(
     const zoom::ZoomController::ZoomChangedEventData& data) {
+  LOG(INFO) << "ArkWeb OnZoomChanged new level = " << data.new_zoom_level
+            << ", showBubble = " << data.can_show_bubble;
   if (data.web_contents != GetWebContents()) {
     return;
   }
