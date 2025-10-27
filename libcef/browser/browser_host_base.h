@@ -503,6 +503,10 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   std::string GetCustomUserAgent();
 #endif
 
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+  void GetOverScrollOffsetValue(float* offset_x, float* offset_y) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_PERMISSION)
   CefRefPtr<CefBrowserPermissionRequestDelegate> GetPermissionRequestDelegate();
   CefRefPtr<CefGeolocationAcess> GetGeolocationPermissions();
