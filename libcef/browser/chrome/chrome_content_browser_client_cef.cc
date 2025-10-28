@@ -361,10 +361,10 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
   // 打点
   std::string err_msg = "a ssl error occurred, err_code: " + std::to_string(cert_error);
   base::ohos::ReportEngineEvent(
-      base::ohos::kModuleContentBrowser,
-      base::ohos::kDefaultUrl,
-      base::ohos::kNetworkSSLError,
-      err_msg);
+    base::ohos::kModuleContentBrowser,
+    base::ohos::kDefaultUrl,
+    base::ohos::kNetworkSSLError,
+    err_msg);
 #endif
 #else
   auto returned_callback = certificate_query::AllowCertificateError(
