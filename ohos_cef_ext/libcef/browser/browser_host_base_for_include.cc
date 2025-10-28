@@ -308,10 +308,10 @@ void CefBrowserHostBase::AbortAskNotificationPermission(
 
 void CefBrowserHostBase::GetPermissionStatusAsync(
     const CefString& origin,
+    int resources,
     cef_permission_status_query_callback_t callback) {
   CefPermissionQuery::GetPermissionStatusAsync(
-      new AlloyAccessQuery(origin, AlloyAccessRequest::Resources::NOTIFICATION,
-                           std::move(callback)));
+      new AlloyAccessQuery(origin, resources, std::move(callback)));
 }
 
 #endif // #if BUILDFLAG(ARKWEB_NOTIFICATION)

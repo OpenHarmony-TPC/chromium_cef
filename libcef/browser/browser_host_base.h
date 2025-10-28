@@ -201,6 +201,7 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   static CefRefPtr<CefBrowserHostBase> GetLikelyFocusedBrowser();
 #ifdef BUILDFLAG(ARKWEB_NOTIFICATION)
   static void GetPermissionStatusAsync(const CefString& origin,
+                                       int resources,
                                        cef_permission_status_query_callback_t callback);
   void AskNotificationPermission(const CefString& origin,
                                  cef_permission_callback_t callback) override;
