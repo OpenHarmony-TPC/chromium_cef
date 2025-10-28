@@ -65,6 +65,7 @@ class InterceptedRequestHandler {
                                bool request_was_redirected,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                                base::WeakPtr<InterceptedRequest> intercepted_request,
+                               bool current_request_uses_header_client,
 #endif
                                OnBeforeRequestResultCallback callback,
                                CancelRequestCallback cancel_callback);
@@ -121,6 +122,9 @@ class InterceptedRequestHandler {
                                  network::ResourceRequest* request,
                                  net::HttpResponseHeaders* headers,
                                  std::optional<net::RedirectInfo> redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                                 bool current_request_uses_header_client,
+#endif
                                  OnRequestResponseResultCallback callback);
 
   // Called to optionally filter the response body.
