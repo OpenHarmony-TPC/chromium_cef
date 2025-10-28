@@ -1,3 +1,13 @@
 /bazel/ @ringking0
 /cmake/ @ringking0
 /libcef/features/ @ringking0
+
+#arkweb dfx
+/libcef/browser/hang_monitor.cc @StringChen
+/libcef/browser/trace_impl.cc @StringChen
+/libcef/browser/trace_subscriber.cc @StringChen
+/libcef/common/base_impl.cc @StringChen
+/libcef/common/cef_crash_report_upload_thread.cc @StringChen
+/libcef/common/cef_crash_report_utils.cc @StringChen
+/libcef/common/crash_reporter_client.cc @StringChen
+/libcef/common/crash_reporting.cc @StringChen
