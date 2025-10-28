@@ -297,6 +297,9 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RedirectSavedCookieDone(int32_t request_id,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               bool current_request_uses_header_client,
+#endif
                                network::ResourceRequest* request,
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
@@ -312,7 +315,11 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
     // Clear the cookie  first. we will get cookie for this redirect.
     request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
 
-    MaybeLoadCookies(request_id, state, new_url, std::move(exec_callback));
+    MaybeLoadCookies(request_id, state, new_url,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                     current_request_uses_header_client,
+#endif
+                     std::move(exec_callback));
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
 
