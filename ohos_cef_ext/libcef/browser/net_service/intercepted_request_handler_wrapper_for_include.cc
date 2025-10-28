@@ -297,10 +297,10 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
 
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RedirectSavedCookieDone(int32_t request_id,
+                               network::ResourceRequest* request,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                                bool current_request_uses_header_client,
 #endif
-                               network::ResourceRequest* request,
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
     auto exec_callback = base::BindOnce(
