@@ -9,6 +9,10 @@
 #include "cef/libcef/browser/thread_util.h"
 #include "chrome/browser/devtools/devtools_window.h"
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "cef/ohos_cef_ext/libcef/browser/devtools/arkweb/devtools_frontend.h"
+#endif
+
 void CefDevToolsWindowRunner::ShowDevTools(
     CefBrowserHostBase* opener,
     std::unique_ptr<CefShowDevToolsParams> params) {
@@ -52,10 +56,21 @@ void CefDevToolsWindowRunner::CloseDevTools() {
     browser_host_->TryCloseBrowser();
     browser_host_ = nullptr;
   }
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (devtools_frontend_) {
+    devtools_frontend_->Close();
+    devtools_frontend_ = nullptr;
+  }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 }
 
 bool CefDevToolsWindowRunner::HasDevTools() {
   CEF_REQUIRE_UIT();
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  if (devtools_frontend_) {
+    return true;
+  }
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
   return !!browser_host_;
 }
 

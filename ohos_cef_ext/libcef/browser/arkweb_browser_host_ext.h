@@ -73,6 +73,10 @@
 #include "components/zoom/zoom_observer.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "include/cef_devtools_message_handler_delegate.h"
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
 #if BUILDFLAG(ARKWEB_MSGPORT)
 class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
  public:
@@ -771,6 +775,13 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
 
   void HandleInputMethodExtendAction(int32_t action) override;
   void StopFling() override;
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void ShowDevToolsWith(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) override;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)

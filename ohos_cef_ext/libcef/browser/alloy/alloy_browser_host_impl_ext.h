@@ -28,13 +28,6 @@ public:
 
   CefRefPtr<AlloyBrowserHostImplExt> AsAlloyBrowserHostImplExt() override { return this; }
 
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded(bool occluded) override;
   void SetEnableLowerFrameRate(bool enabled) override;
