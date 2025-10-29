@@ -10,6 +10,9 @@ CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
     int tab_id,
     content::BrowserContext* browser_context);
 
+content::BrowserContext* GetIncognitoContext(
+    content::BrowserContext* browser_context);
+
 }  // namespace extensions
 
 #endif // CEF_LIBCEF_BROWSER_EXTENSIONS_BROWSER_EXTENSIONS_UTIL_H_
