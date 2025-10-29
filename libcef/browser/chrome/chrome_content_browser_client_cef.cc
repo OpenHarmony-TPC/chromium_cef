@@ -79,8 +79,6 @@ constexpr int32_t APPLICATION_API_10 = 10;
 #if BUILDFLAG(IS_ARKWEB)
 #include "base/ohos/nweb_engine_event_logger.h"
 #include "base/ohos/nweb_engine_event_logger_code.h"
-#include "arkweb/ohos_nweb/src/cef_delegate/nweb_engine_event_logger_cef_delegate.h"
-#include "arkweb/ohos_nweb/src/nweb_common.h"
 #endif
 
 #if BUILDFLAG(ARKWEB_USERAGENT)
@@ -362,19 +360,11 @@ void ChromeContentBrowserClientCef::AllowCertificateError(
 #if BUILDFLAG(IS_ARKWEB)
   // 打点
   std::string err_msg = "a ssl error occurred, err_code: " + std::to_string(cert_error);
-  if (IsNativeApiEnable()) {
-    OHOS::NWeb::NWebEngineEventLoggerCefDelegate::ReportEngineEvent(
-      base::ohos::kModuleContentBrowser,
-      base::ohos::kDefaultUrl,
-      base::ohos::kNetworkSSLError,
-      err_msg);
-  } else {
-    base::ohos::ReportEngineEvent(
-      base::ohos::kModuleContentBrowser,
-      base::ohos::kDefaultUrl,
-      base::ohos::kNetworkSSLError,
-      err_msg);
-  }
+  base::ohos::ReportEngineEvent(
+    base::ohos::kModuleContentBrowser,
+    base::ohos::kDefaultUrl,
+    base::ohos::kNetworkSSLError,
+    err_msg);
 #endif
 #else
   auto returned_callback = certificate_query::AllowCertificateError(
