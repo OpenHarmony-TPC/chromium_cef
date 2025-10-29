@@ -283,7 +283,10 @@ public:
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::string OnRewriteUrlForNavigation(const std::string& original_url, const std::string& referrer) override;
+  std::string OnRewriteUrlForNavigation(const std::string& original_url,
+                                        const std::string& referrer,
+                                        int transition_type,
+                                        bool is_key_request) override;
 #endif
 
 private:

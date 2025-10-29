@@ -1930,11 +1930,13 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(const std::string& original_url,
-                                                                 const std::string& referrer) {
+                                                                 const std::string& referrer,
+                                                                 int transition_type,
+                                                                 bool is_key_request) {
   if (!client_ || !client_->AsArkWebClient()) {
     LOG(ERROR) << "client is null, OnRewriteUrlForNavigation failed";
     return "";
   }
-  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer);
+  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
 }
 #endif
