@@ -1179,6 +1179,8 @@ source_set("libcef_static") {
 
   if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
     sources += [
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
@@ -1217,6 +1219,8 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
       "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.h",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.cc",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",
