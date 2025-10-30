@@ -23,6 +23,7 @@
 #include "chrome/browser/profiles/profile.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
 #include "ohos_nweb/src/nweb_common.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_utils.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_cef_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_delegate_handler.h"
 
@@ -176,29 +177,12 @@ WebExtensionWindowUpdateInfo GetWindowUpdateInfo(windows::Update::Params::Update
   return info;
 }
 
-std::string GetExtensionContextType(content::BrowserContext* browser_context) {
-  if (!browser_context)
-    return std::string();
-
-  if (browser_context->IsOffTheRecord()) {
-    return "INCOGNITO";
-  }
-
-  Profile* profile = Profile::FromBrowserContext(browser_context);
-  if (!profile)
-    return std::string();
-  if (profile->IsRegularProfile()) {
-    return "REGULAR";
-  }
-  return std::string();
-}
-
 WebExtensionWindowQueryOptionsV2 GetWindowQueryOptionsV2(
     std::optional<api::windows::QueryOptions>& query_options,
     content::BrowserContext* browser_context,
     bool includeIncognitoInfo) {
   WebExtensionWindowQueryOptionsV2 options_v2;
-  std::string context_type = GetExtensionContextType(browser_context);
+  std::string context_type = OHOS::NWeb::GetExtensionContextType(browser_context).value_or("");
   if (!context_type.empty()) {
     options_v2.contextType = context_type;
   }
@@ -234,7 +218,7 @@ WebExtensionWindowCreateDataV2 GetWindowCreateDataV2(
   data_v2.urls = data.urls;
   data_v2.width = data.width;
   data_v2.extensionId = extensionId;
-  std::string context_type = GetExtensionContextType(browser_context);
+  std::string context_type = OHOS::NWeb::GetExtensionContextType(browser_context).value_or("");
   if (!context_type.empty()) {
     data_v2.contextType = context_type;
   }
@@ -258,7 +242,7 @@ WebExtensionWindowUpdateInfoV2 GetWindowUpdateInfoV2(
   info_v2.top = info.top;
   info_v2.width = info.width;
   info_v2.extensionId = extensionId;
-  std::string context_type = GetExtensionContextType(browser_context);
+  std::string context_type = OHOS::NWeb::GetExtensionContextType(browser_context).value_or("");
   if (!context_type.empty()) {
     info_v2.contextType = context_type;
   }
@@ -273,7 +257,7 @@ WebExtensionWindowRemoveInfoV2 GetWindowRemoveInfoV2(
     const std::string& extensionId) {
   WebExtensionWindowRemoveInfoV2 info_v2;
   info_v2.extensionId = extensionId;
-  std::string context_type = GetExtensionContextType(browser_context);
+  std::string context_type = OHOS::NWeb::GetExtensionContextType(browser_context).value_or("");
   if (!context_type.empty()) {
     info_v2.contextType = context_type;
   }

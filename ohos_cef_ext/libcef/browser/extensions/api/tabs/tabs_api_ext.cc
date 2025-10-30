@@ -35,6 +35,7 @@
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_utils.h"
 #include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
 #include "extensions/browser/extension_zoom_request_client.h"
 #include "base/types/optional_util.h"
@@ -58,27 +59,6 @@ const char kJavaScriptUrlsNotAllowedInTabsUpdate[] =
 const char kSetOpenerError[] = "Cannot set a tab's opener to itself.";
 constexpr char kCannotDetermineLanguageOfUnloadedTab[] =
     "Cannot determine language: tab not loaded";
-
-std::optional<std::string> GetExtensionContextType(
-    content::BrowserContext* browser_context) {
-  if (!browser_context) {
-    return std::nullopt;
-  }
-
-  if (browser_context->IsOffTheRecord()) {
-    return "INCOGNITO";
-  }
-
-  Profile* profile = Profile::FromBrowserContext(browser_context);
-  if (!profile) {
-    return std::nullopt;
-  }
-
-  if (profile->IsRegularProfile()) {
-    return "REGULAR";
-  }
-  return std::nullopt;
-}
 
 void SetQueryInfoCurrentWindowId(WebContents* webcontents,
                                  NWebExtensionTabQueryInfo& queryInfo) {
@@ -210,7 +190,7 @@ void GetCreateParams(
 int GetAnyWebContents(int windowId, ExtensionFunction* function) {
   NWebExtensionTabGetAnyTabParams params = {
     .windowId = windowId,
-    .contextType = GetExtensionContextType(function->browser_context()),
+    .contextType = OHOS::NWeb::GetExtensionContextType(function->browser_context()),
     .includeIncognitoInfo = function->include_incognito_information(),
   };
 
@@ -274,7 +254,7 @@ NWebExtensionTabContextInfo GetNWebExtensionTabContextInfo(
     content::BrowserContext* browser_context,
     bool includeIncognitoInfo) {
   NWebExtensionTabContextInfo context_info;
-  context_info.contextType = GetExtensionContextType(browser_context);
+  context_info.contextType = OHOS::NWeb::GetExtensionContextType(browser_context);
   context_info.includeIncognitoInfo = includeIncognitoInfo;
  
   return context_info;
@@ -366,7 +346,7 @@ void TabsCreateFunction::CreateTabForExtension(
     content::BrowserContext* context) {
   NWebTabCreateInfoV2 create_info;
   create_info.createInfo.url = url;
-  create_info.contextType = GetExtensionContextType(context);
+  create_info.contextType = OHOS::NWeb::GetExtensionContextType(context);
 }
 
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
@@ -384,7 +364,7 @@ ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
     }
     create_info.createInfo.url = (*result).spec();
   }
-  create_info.contextType = GetExtensionContextType(browser_context());
+  create_info.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   create_info.includeIncognitoInfo = include_incognito_information();
 
   call_create_tab_ =true;
@@ -558,7 +538,7 @@ ExtensionFunction::ResponseAction TabsGetFunction::Run() {
   int tab_id = params->tab_id;
   std::unique_ptr<NWebExtensionTab> web_extension_tab =
       OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(
-          tab_id, GetExtensionContextType(browser_context()),
+          tab_id, OHOS::NWeb::GetExtensionContextType(browser_context()),
           include_incognito_information());
   if (!web_extension_tab) {
     return RespondNow(Error(kNotImplementedError));
@@ -696,7 +676,7 @@ ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
   if (params->options.create_properties && params->options.create_properties.value().window_id) {
     properties.windowId = params->options.create_properties.value().window_id.value();
   }
-  properties.contextType = GetExtensionContextType(browser_context());
+  properties.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   properties.includeIncognitoInfo = include_incognito_information();
   options.createProperties = properties;
 
@@ -771,7 +751,7 @@ ExtensionFunction::ResponseAction TabsHighlightFunction::Run() {
     info.windowId = params->highlight_info.window_id.value();
   }
 
-  info.contextType = GetExtensionContextType(browser_context());
+  info.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   info.includeIncognitoInfo = include_incognito_information();
 
   call_highlight_tab_ = true;
@@ -843,7 +823,7 @@ ExtensionFunction::ResponseAction TabsMoveFunction::Run() {
   NWebExtensionTabMovePropertiesV2 movePropertiesV2;
   movePropertiesV2.properties.index = params->move_properties.index;
   movePropertiesV2.properties.windowId = params->move_properties.window_id;
-  movePropertiesV2.contextType = GetExtensionContextType(browser_context());
+  movePropertiesV2.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   movePropertiesV2.includeIncognitoInfo = include_incognito_information();
 
   call_move_tab_ = true;
@@ -927,7 +907,7 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
     }
   }
 
-  queryInfo.contextType = GetExtensionContextType(browser_context());
+  queryInfo.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   queryInfo.includeIncognitoInfo = include_incognito_information();
 
   std::vector<NWebExtensionTab> tabs =
@@ -953,7 +933,7 @@ ExtensionFunction::ResponseAction TabsGetSelectedFunction::Run() {
   LOG(DEBUG) << "TabsGetSelectedFunction Run";
 
   NWebExtensionTabQueryInfoV2 query_info;
-  query_info.contextType = GetExtensionContextType(browser_context());
+  query_info.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   query_info.includeIncognitoInfo = include_incognito_information();
 
   WebContents* web_contents = GetSenderWebContents();
@@ -1022,7 +1002,7 @@ ExtensionFunction::ResponseAction TabsRemoveFunction::Run() {
 
   NWebExtensionTabRemoveParams nwebParams;
   nwebParams.tabIds = tab_ids;
-  nwebParams.contextType = GetExtensionContextType(browser_context());
+  nwebParams.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   nwebParams.includeIncognitoInfo = include_incognito_information();
 
   call_remove_tab_ = true;
@@ -1169,7 +1149,7 @@ ExtensionFunction::ResponseAction TabsUngroupFunction::Run() {
 
   NWebExtensionTabUngroupParams nwebParams;
   nwebParams.tabIds = tab_ids;
-  nwebParams.contextType = GetExtensionContextType(browser_context());
+  nwebParams.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   nwebParams.includeIncognitoInfo = include_incognito_information();
 
   call_ungroup_tab_ = true;
@@ -1325,7 +1305,7 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   if (!GetUpdateParams(tab_id, params, update_properties.updateProperties)) {
     return RespondNow(Error(error_));
   }
-  update_properties.contextType = GetExtensionContextType(browser_context());
+  update_properties.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   update_properties.includeIncognitoInfo = include_incognito_information();
 
   call_update_tab_ = true;
