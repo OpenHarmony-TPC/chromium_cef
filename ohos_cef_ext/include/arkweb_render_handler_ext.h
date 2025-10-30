@@ -248,6 +248,12 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
                                      const CefRect& cef_image_rect) {}
 
   ///
+  /// Open Eye Dropper.
+  ///
+  /*--cef()--*/
+  virtual void OpenEyeDropper(CefRefPtr<CefBrowser> browser) {}
+
+  ///
   /// Get data detector enable.
   ///
   virtual bool GetDataDetectorEnable() {}

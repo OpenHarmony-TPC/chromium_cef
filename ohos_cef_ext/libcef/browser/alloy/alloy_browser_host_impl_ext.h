@@ -252,6 +252,11 @@ public:
   bool WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event);
+
+  std::unique_ptr<content::EyeDropper> OpenEyeDropper(
+      content::RenderFrameHost *frame,
+      content::EyeDropperListener *listener) override;
+  void OnEyeDropperResult(bool success, uint32_t color) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
@@ -362,6 +367,9 @@ private:
       const content::OpenURLParams& params);
 #endif
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  raw_ptr<content::EyeDropperListener> listener_;
+#endif
 };
 
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_EXT_H_
