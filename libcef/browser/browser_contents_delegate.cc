@@ -548,7 +548,7 @@ void CefBrowserContentsDelegate::DidStopLoading() {
     frame->MaybeSendDidStopLoading();
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     std::string url = web_contents()->GetLastCommittedURL().spec();
-    if (last_did_finish_load_url_ == url) {
+    if (frame->IsMain() && (last_did_finish_load_url_ == url)) {
       AsArkWebBrowserContentsDelegateExt()->OnLoadFinished(frame, url);
       last_did_finish_load_url_ = std::string();
     }
