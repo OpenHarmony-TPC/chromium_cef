@@ -63,37 +63,6 @@ base::Value::List CreateNWebExtensionHistoryVisitedList(
     return base::Value::List();
   }
 
-  if (item->id) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, id:" << item->id;
-  }
-
-  if (item->title) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, title:"
-               << item->title;
-  }
-
-  if (item->url) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, url:" << item->url;
-  }
-
-  if (item->lastVisitTime) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, "
-                  "lastVisitTime:"
-               << *(item->lastVisitTime);
-  }
-
-  if (item->typedCount) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, "
-                  "typedCount:"
-               << *(item->typedCount);
-  }
-
-  if (item->visitCount) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitedList, "
-                  "visitCount:"
-               << *(item->visitCount);
-  }
-
   auto args = api::history::OnVisited::Create(GetHistoryItem(item));
   return args;
 }
@@ -109,12 +78,6 @@ base::Value::List CreateNWebExtensionHistoryVisitRemovedList(
 
   removed.urls.emplace();
   for (uint32_t i = 0; i < item->count; i++) {
-    LOG(DEBUG) << "CreateNWebExtensionHistoryVisitRemovedList, "
-                  "item->urls["
-               << i << "]:" << item->urls[i]
-               << ", allHistory:" << *(item->allHistory)
-               << ", count:" << item->count;
-
     removed.urls->push_back(item->urls[i]);
   }
 

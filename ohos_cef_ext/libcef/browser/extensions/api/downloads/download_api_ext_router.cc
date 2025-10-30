@@ -658,7 +658,6 @@ void ExtensionDownloadsEventRouterEx::OnDownloadUpdated(
   EventRouter* router =
       EventRouter::Get(Profile::FromBrowserContext(browser_context));
   if (!router->HasEventListener(downloads::OnChanged::kEventName)) {
-    LOG(INFO) << "router->HasEventListener(downloads::OnChanged::kEventName)";
     return;
   }
 
