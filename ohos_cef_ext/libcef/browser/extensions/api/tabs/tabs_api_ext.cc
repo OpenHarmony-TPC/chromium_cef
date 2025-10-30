@@ -190,7 +190,7 @@ void GetCreateParams(
 int GetAnyWebContents(int windowId, ExtensionFunction* function) {
   NWebExtensionTabGetAnyTabParams params = {
     .windowId = windowId,
-    .contextType = OHOS::NWeb::(function->browser_context()),
+    .contextType = OHOS::NWeb::GetExtensionContextType(function->browser_context()),
     .includeIncognitoInfo = function->include_incognito_information(),
   };
 
