@@ -150,3 +150,11 @@ bool CefFrameHostImpl::IsPrerendering() {
   return rfh->frame_tree()->is_prerendering();
 }
 #endif
+
+content::GlobalRenderFrameHostId CefFrameHostImpl::GetGlobalRenderFrameHostId() {
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+  return rfh_global_id_;
+#else
+  return content::GlobalRenderFrameHostId();
+#endif
+}
