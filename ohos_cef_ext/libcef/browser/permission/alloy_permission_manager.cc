@@ -422,45 +422,61 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
 #endif  //BUILDFLAG(ARKWEB_SENSOR)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   } else if (permission == PermissionType::NOTIFICATIONS) {
-    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+#if BUILDFLAG(ARKWEB_NWEB_EX)     
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(       
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (notification_permission_.count(requesting_origin)) {
         return (PermissionStatus)notification_permission_[requesting_origin];
       } else {
         return PermissionStatus::DENIED;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
   } else if (permission == PermissionType::GEOLOCATION) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (geolocation_permission_.count(requesting_origin)) {
         return (PermissionStatus)geolocation_permission_[requesting_origin];
       } else {
         return PermissionStatus::DENIED;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #if BUILDFLAG(ARKWEB_WEBRTC)
   } else if (permission == PermissionType::AUDIO_CAPTURE) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in microphone permission map";
         return PermissionStatus::ASK;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
   } else if (permission == PermissionType::VIDEO_CAPTURE) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in camera permission map";
         return PermissionStatus::ASK;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
 #endif // BUILDFLAG(ARKWEB_WEBRTC)
   }
   return PermissionStatus::DENIED;
