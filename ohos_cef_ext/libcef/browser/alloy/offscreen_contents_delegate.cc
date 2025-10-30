@@ -14,11 +14,11 @@
  */
 
 #include "cef/ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h"
-#include "cef/ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h"
 
+#include "cef/ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h"
+#include "cef/ohos_cef_ext/libcef/browser/permission/offscreen_permission_request_handler.h"
 #include "extensions/browser/extension_host.h"
 #include "ohos_nweb/src/nweb_impl.h"
-#include "base/logging.h"
 
 namespace extensions {
 
@@ -69,10 +69,10 @@ void OffscreenContentsDelegate::RequestMediaAccessPermission(
     content::WebContents* web_contents,
     const content::MediaStreamRequest& request,
     content::MediaResponseCallback callback) {
-  if (extension_host_) {
-    extension_host_->RequestMediaAccessPermission(web_contents, request,
-                                                  std::move(callback));
-  }
+  auto extension_id = GetExtensionId();
+  OffscreenPermissionRequestHandler::GetInstance()
+      ->HandleMediaStreamPermissionRequest(extension_id, request,
+                                           std::move(callback));
 }
 
 bool OffscreenContentsDelegate::CheckMediaAccessPermission(
