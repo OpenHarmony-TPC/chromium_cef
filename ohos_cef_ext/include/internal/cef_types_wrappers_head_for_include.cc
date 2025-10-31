@@ -98,4 +98,8 @@ static inline void setForInclude(const struct_type* src,
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   target->error_page_enabled = src->error_page_enabled;
 #endif
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  target->clipboard_site_permission_enabled = src->clipboard_site_permission_enabled;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 }

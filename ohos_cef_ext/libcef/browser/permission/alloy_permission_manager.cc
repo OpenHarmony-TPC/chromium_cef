@@ -750,3 +750,9 @@ void AlloyPermissionManager::GetPermissionStatusAsync(
          query_id, permission));
 }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool AlloyPermissionManager::IsClipboardSitePermissionEnabled() {
+  return CefBrowserHostBase::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)

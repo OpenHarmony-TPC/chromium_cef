@@ -313,8 +313,13 @@ void CefBrowserHostBase::GetPermissionStatusAsync(
   CefPermissionQuery::GetPermissionStatusAsync(
       new AlloyAccessQuery(origin, resources, std::move(callback)));
 }
-
 #endif // #if BUILDFLAG(ARKWEB_NOTIFICATION)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool CefBrowserHostBase::IsClipboardSitePermissionEnabled() {
+  return CefPermissionQuery::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 void CefBrowserHostBase::AskMIDISysexPermission(
     const CefString& origin,

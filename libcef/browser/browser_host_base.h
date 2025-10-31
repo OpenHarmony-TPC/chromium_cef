@@ -214,6 +214,10 @@ class CefBrowserHostBase : virtual public CefBrowserHost,
   }
 #endif
 
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  static bool IsClipboardSitePermissionEnabled();
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
+
   CefBrowserHostBase(
       const CefBrowserSettings& settings,
       CefRefPtr<CefClient> client,

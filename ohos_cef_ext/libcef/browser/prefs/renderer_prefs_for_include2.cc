@@ -145,6 +145,11 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   web.error_page_enabled = cef.error_page_enabled;
 #endif
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  if (cef.clipboard_site_permission_enabled.has_value()) {
+    web.clipboard_site_permission_enabled = cef.clipboard_site_permission_enabled.value();
+  }
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 }
 
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)

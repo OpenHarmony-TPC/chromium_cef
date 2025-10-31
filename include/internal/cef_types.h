@@ -823,6 +823,9 @@ typedef struct _cef_browser_settings_t {
 #if BUILDFLAG(ARKWEB_MEDIA_NETWORK_TRAFFIC_PROMPT)
   bool enable_media_network_traffic_prompt;
 #endif  // ARKWEB_MEDIA_NETWORK_TRAFFIC_PROMPT
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  std::optional<bool> clipboard_site_permission_enabled;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 } cef_browser_settings_t;
 
 ///
