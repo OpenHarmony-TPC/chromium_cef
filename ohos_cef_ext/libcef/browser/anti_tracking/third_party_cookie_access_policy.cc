@@ -253,7 +253,6 @@ void ThirdPartyCookieAccessPolicy::RemoveITPBypassingListOnIOThread(
 void ThirdPartyCookieAccessPolicy::ClearITPBypassingList() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
-  bypassing_host_list_.clear();
   LOG(INFO) << "ClearITPBypassingList";
   content::GetIOThreadTaskRunner({})->PostTask(
       FROM_HERE,
