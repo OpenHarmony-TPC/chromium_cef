@@ -27,6 +27,7 @@
 #include "extensions/browser/extension_system.h"
 #include "extensions/common/mojom/context_type.mojom.h"
 #include "extensions/common/mojom/context_type.mojom-forward.h"
+#include "libcef/browser/extensions/browser_extensions_util.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/request_context_impl.h"
 #include "ohos_nweb/src/nweb_common.h"
@@ -228,6 +229,29 @@ void ExtensionContextMenusInvokeActiveTab(
   }
 }
 
+NO_SANITIZE("cfi-icall")
+content::BrowserContext* GetBrowserContextInUse(
+    content::BrowserContext* browser_context,
+    const std::optional<NWebExtensionTab>& tab) {
+  if (!browser_context) {
+    LOG(ERROR) << "browser_context is null";
+    return nullptr;
+  }
+
+  if (tab && tab->incognito) {
+    content::BrowserContext* incognito =
+        extensions::GetIncognitoContext(browser_context);
+    if (!incognito) {
+      LOG(ERROR)
+          << "OnClickedExtensionContextMenus get incognito context failed";
+      return nullptr;
+    }
+    return incognito;
+  }
+
+  return browser_context;
+}
+
 base::Value::List BuildContextMenuEventArgs(
     ContextMenusOnClickedDataV2& data,
     std::optional<NWebExtensionTab>& tab,
@@ -307,25 +331,30 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
 }
 
 NO_SANITIZE("cfi-icall")
-void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::string& extension_id,
-                                                    ContextMenusOnClickedDataV2& data,
-                                                    std::optional<NWebExtensionTab>& tab) {
+void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(
+    const std::string& extension_id,
+    ContextMenusOnClickedDataV2& data,
+    std::optional<NWebExtensionTab>& tab) {
   content::BrowserContext* browser_context = GetBrowserContext();
-  if (!browser_context) {
-    LOG(ERROR) << "browser_context is null";
+  content::BrowserContext* browser_context_active =
+      GetBrowserContextInUse(browser_context, tab);
+  if (!browser_context_active) {
     return;
   }
-  extensions::MenuManager* menu_manager = extensions::MenuManager::Get(browser_context);
+
+  extensions::MenuManager* menu_manager =
+      extensions::MenuManager::Get(browser_context_active);
   if (!menu_manager) {
     LOG(ERROR) << "menu_manager is null";
     return;
   }
-  extensions::EventRouter* event_router = extensions::EventRouter::Get(browser_context);
+  extensions::EventRouter* event_router =
+      extensions::EventRouter::Get(browser_context_active);
   if (!event_router) {
     LOG(ERROR) << "event_router is null";
     return;
   }
-  extensions::MenuItem::Id id(browser_context->IsOffTheRecord(),
+  extensions::MenuItem::Id id(browser_context_active->IsOffTheRecord(),
                               extensions::MenuItem::ExtensionKey(extension_id));
   id.uid = data.menuItemId;
   id.string_uid = data.menuItemIdStr;
@@ -338,24 +367,20 @@ void CefWebExtensionMenuManager::OnClickedExtensionContextMenus(const std::strin
     item->SetChecked(*data.checked);
   }
 
-  base::Value::List args =
-      BuildContextMenuEventArgs(data, tab, browser_context, extension_id);
-
+  base::Value::List args = BuildContextMenuEventArgs(
+      data, tab, browser_context_active, extension_id);
   {
     auto event = std::make_unique<extensions::Event>(
-        extensions::events::CONTEXT_MENUS,
-        "contextMenus",
-        args.Clone(),
-        browser_context);
+        extensions::events::CONTEXT_MENUS, "contextMenus", args.Clone(),
+        browser_context_active);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
   {
     auto event = std::make_unique<extensions::Event>(
         extensions::events::CONTEXT_MENUS_ON_CLICKED,
-        extensions::api::context_menus::OnClicked::kEventName,
-        std::move(args),
-        browser_context);
+        extensions::api::context_menus::OnClicked::kEventName, std::move(args),
+        browser_context_active);
     event->user_gesture = extensions::EventRouter::USER_GESTURE_ENABLED;
     event_router->DispatchEventToExtension(extension_id, std::move(event));
   }
