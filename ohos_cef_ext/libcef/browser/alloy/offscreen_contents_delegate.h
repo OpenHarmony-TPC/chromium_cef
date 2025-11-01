@@ -61,10 +61,6 @@ class OffscreenContentsDelegate : public content::WebContentsDelegate {
   std::string GetTitleForMediaControls(
       content::WebContents* web_contents) override;
 
-  void HandleMediaStreamPermissionRequest(
-      content::MediaResponseCallback callback,
-      const content::MediaStreamRequest& request);
-
  private:
   base::WeakPtr<ExtensionHost> extension_host_;
 };

@@ -173,6 +173,8 @@ libcef_arkweb_sources = [
   "//cef/ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.cc",
   "//cef/ohos_cef_ext/libcef/browser/permission/alloy_permission_request_handler.h",
   "//cef/ohos_cef_ext/libcef/browser/permission/alloy_access_request.cc",
+  "//cef/ohos_cef_ext/libcef/browser/permission/offscreen_permission_request_handler.cc",
+  "//cef/ohos_cef_ext/libcef/browser/permission/offscreen_permission_request_handler.h",
   "//cef/ohos_cef_ext/libcef/browser/ermission/alloy_access_request.h",
   "//cef/ohos_cef_ext/libcef/browser/policy/browser_policy_handler.cc",
   "//cef/ohos_cef_ext/libcef/browser/policy/browser_policy_handler.h",

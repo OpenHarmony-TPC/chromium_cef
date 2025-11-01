@@ -12,6 +12,7 @@
 #include "third_party/blink/public/mojom/mediastream/media_stream.mojom.h"
 #include "media/audio/audio_device_description.h"
 #include "third_party/blink/public/common/permissions/permission_utils.h"
+#include "third_party/webrtc/modules/desktop_capture/desktop_capture_types.h"
 #include "components/permissions/permission_util.h"
 #endif  // BUILDFLAG(ARKWEB_WEBRTC)
 
@@ -218,10 +219,14 @@ void AlloyMediaAccessRequest::ReportRequestResult(bool allowed) {
   }
   bool has_video = stream_devices.video_device.has_value();
   bool has_audio = stream_devices.audio_device.has_value();
-  auto media_stream_ui =
-      browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(has_video,
-                                                                    has_audio);
-  std::move(callback_).Run(devices_set, result, std::move(media_stream_ui));
+  if (browser_) {
+    auto media_stream_ui =
+        browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(
+            has_video, has_audio);
+    std::move(callback_).Run(devices_set, result, std::move(media_stream_ui));
+  } else {
+    std::move(callback_).Run(devices_set, result, /*ui=*/nullptr);
+  }
 }
 
 AlloyScreenCaptureAccessRequest::AlloyScreenCaptureAccessRequest(
@@ -302,14 +307,14 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
   if (request_.requested_video_device_ids.empty() ||
       request_.requested_video_device_ids.front().empty()) {
     if (mode_ == cef_screen_capture_mode_t::CAPTURE_HOME_SCREEN_MODE) {
+      content::DesktopMediaID::Id screen_id = webrtc::kFullDesktopScreenId;
 #if BUILDFLAG(ARKWEB_EX_SCREEN_CAPTURE)
-      auto web_contents = browser_->GetWebContents();
-      media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
-                                         web_contents->GetNWebId());
-#else
-      media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
-                                         -1 /* webrtc::kFullDesktopScreenId */);
+      if (browser_ && browser_->GetWebContents()) {
+        screen_id = browser_->GetWebContents()->GetNWebId();
+      }
 #endif
+      media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
+                                         screen_id);
     } else if (mode_ ==
                cef_screen_capture_mode_t::CAPTURE_SPECIFIED_SCREEN_MODE) {
       media_id = content::DesktopMediaID(content::DesktopMediaID::TYPE_SCREEN,
@@ -334,11 +339,17 @@ void AlloyScreenCaptureAccessRequest::ReportRequestResult(bool allowed) {
   stream_devices.video_device = blink::MediaStreamDevice(
       request_.video_type, media_id.ToString(), "Screen");
   bool has_audio = stream_devices.audio_device.has_value();
-  auto media_stream_ui =
-      browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(true,
-                                                                    has_audio);
-  std::move(callback_).Run(devices_set,
-                           blink::mojom::MediaStreamRequestResult::OK,
-                           std::move(media_stream_ui));
+  if (browser_) {
+    auto media_stream_ui =
+        browser_->GetMediaStreamRegistrar()->MaybeCreateMediaStreamUI(
+            true, has_audio);
+    std::move(callback_).Run(devices_set,
+                             blink::mojom::MediaStreamRequestResult::OK,
+                             std::move(media_stream_ui));
+  } else {
+    std::move(callback_).Run(devices_set,
+                             blink::mojom::MediaStreamRequestResult::OK,
+                             /*ui=*/nullptr);
+  }
 }
 #endif  // BUILDFLAG(ARKWEB_WEBRTC)
