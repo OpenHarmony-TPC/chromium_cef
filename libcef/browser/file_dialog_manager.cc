@@ -164,6 +164,10 @@ FileChooserParams SelectFileToFileChooserParams(
             FILE_PATH_LITERAL(".") + file_types->extensions[i][0]));
       }
     }
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+    params.is_exclude_accept_all_options = !file_types->include_all_files;
+    params.start_in = file_types->start_in;
+#endif
   }
 
   return params;
@@ -535,6 +539,9 @@ CefFileDialogManager::MaybeRunDelegate(
         for (auto& ext : extension_list) {
             accept_extensions.push_back(FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
         }
+        for (auto& description : descriptions) {
+            accept_extensions.push_back(description);
+        }
 #else
         for (size_t i = 0; i < params.accept_types.size(); ++i) {
           const auto& extension_list = extensions[i];
@@ -560,6 +567,8 @@ CefFileDialogManager::MaybeRunDelegate(
           params.title, params.default_file_name.value(), accept_filters,
           accept_extensions, accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+          params.start_in,
+          params.is_exclude_accept_all_options,
           params.use_media_capture, 
           arkweb_browser_info_manager_utils_->ConvertMimeTypesToFilters(params),
 #endif
