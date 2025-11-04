@@ -669,6 +669,10 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
   settings_.user_gesture_required = browser_settings.user_gesture_required;
   settings_.pinch_smooth_mode = browser_settings.pinch_smooth_mode;
+#if BUILDFLAG(ARKWEB_AI)
+  settings_.image_analyzer_enabled =
+      browser_settings.image_analyzer_enabled;
+#endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   settings_.hide_vertical_scrollbars =
       browser_settings.hide_vertical_scrollbars;

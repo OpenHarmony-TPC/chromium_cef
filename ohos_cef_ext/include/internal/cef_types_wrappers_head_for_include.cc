@@ -38,6 +38,7 @@ static inline void setForInclude(const struct_type* src,
   target->viewport_meta_enabled = src->viewport_meta_enabled;
   target->user_gesture_required = src->user_gesture_required;
   target->pinch_smooth_mode = src->pinch_smooth_mode;
+  target->image_analyzer_enabled = src->image_analyzer_enabled;
   target->hide_vertical_scrollbars = src->hide_vertical_scrollbars;
   target->hide_horizontal_scrollbars = src->hide_horizontal_scrollbars;
   target->contextmenu_customization_enabled =

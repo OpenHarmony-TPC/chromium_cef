@@ -730,6 +730,7 @@ typedef struct _cef_browser_settings_t {
   std::optional<bool> viewport_meta_enabled;
   bool user_gesture_required;
   bool pinch_smooth_mode;
+  cef_state_t image_analyzer_enabled;
   cef_state_t hide_vertical_scrollbars;
   cef_state_t hide_horizontal_scrollbars;
   bool contextmenu_customization_enabled;
