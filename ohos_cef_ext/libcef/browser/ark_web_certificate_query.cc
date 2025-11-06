@@ -207,8 +207,7 @@ CertificateErrorCallback AllowAllCertificateError(
     if (!is_incognito) {
       int32_t usage_scenario =
           web_contents->GetOrCreateWebPreferences().usage_scenario;
-      LOG(URL) << "event_message: " << err_msg << ", url: "
-               << url::LogUtils::ConvertUrl(origin_url.spec(), usage_scenario);
+      LOG(URL) << "event_message: " << err_msg << ", url: " << origin_url.spec();
     }
   }
 #endif
