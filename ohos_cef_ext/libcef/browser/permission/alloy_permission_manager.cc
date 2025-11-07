@@ -727,12 +727,27 @@ void AlloyPermissionManager::OnQueryResponseCallBack(
   std::move(pending_query->callback_).Run((blink::mojom::PermissionStatus)status);
   manager->unhandled_querys_.Remove(query_id);
 }
- 
+
+int PermissionTypeToResources(const blink::PermissionType& permission) {
+  switch (permission) {
+    case PermissionType::NOTIFICATIONS:
+      return AlloyAccessRequest::Resources::NOTIFICATION;
+    case PermissionType::CLIPBOARD_READ_WRITE:
+      return AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE;
+    case PermissionType::CLIPBOARD_SANITIZED_WRITE:
+      return AlloyAccessRequest::Resources::CLIPBOARD_SANITIZED_WRITE;
+    default:
+      return AlloyAccessRequest::Resources::NOTIFICATION;
+  }
+}
+
 void AlloyPermissionManager::GetPermissionStatusAsync(
     blink::PermissionType permission,
     const GURL& requesting_origin,
     base::OnceCallback<void(blink::mojom::PermissionStatus)> callback) {
-  if (permission != PermissionType::NOTIFICATIONS) {
+  if (permission != PermissionType::NOTIFICATIONS &&
+      permission != PermissionType::CLIPBOARD_READ_WRITE &&
+      permission != PermissionType::CLIPBOARD_SANITIZED_WRITE) {
     std::move(callback).Run(PermissionStatus::DENIED);
     return;
   }
@@ -745,8 +760,15 @@ void AlloyPermissionManager::GetPermissionStatusAsync(
  
  CefBrowserHostBase::GetPermissionStatusAsync(
      pending_query_raw->requesting_origin_.spec(),
+     PermissionTypeToResources(permission),
      base::BindRepeating(
          &OnQueryResponseCallBack, weak_ptr_factory_.GetWeakPtr(),
          query_id, permission));
 }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool AlloyPermissionManager::IsClipboardSitePermissionEnabled() {
+  return CefBrowserHostBase::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)

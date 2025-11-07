@@ -74,6 +74,9 @@ class AlloyPermissionManager : public content::PermissionControllerDelegate {
       const GURL& requesting_origin,
       base::OnceCallback<void(blink::mojom::PermissionStatus)> callback) override;
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  bool IsClipboardSitePermissionEnabled() override;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
  protected:
   void AbortPermissionRequest(int request_id);
   void AbortPermissionRequests();
