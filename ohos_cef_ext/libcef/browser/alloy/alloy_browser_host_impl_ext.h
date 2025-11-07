@@ -294,6 +294,10 @@ public:
                                         bool is_key_request) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  void OnCameraCaptureStateChanged(int original_state, int new_state) override;
+#endif
+
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;
