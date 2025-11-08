@@ -63,14 +63,14 @@ const std::string BUNDLE_NAME = "com.huawei.hmos.passwordvault";
 const std::string ABILITY_NAME = "ServiceAbility";
 const std::string TOKEN = "passwordVaultServiceKey";
 const std::u16string MIGRATION_LABEL = u"33ee52bb-c2d5-4e13-ba45-94c2e206a6fd";
- 
+
 struct UserData {
   std::string username;
   std::string password;
   std::string url;
   int dataType;
 };
- 
+
 base::Value UserDatatoJson(const UserData& userData) {
   base::Value obj(base::Value::Type::DICT);
   obj.GetDict().Set("username", base::Value(userData.username));
@@ -79,7 +79,7 @@ base::Value UserDatatoJson(const UserData& userData) {
   obj.GetDict().Set("dataType", base::Value(userData.dataType));
   return obj;
 }
- 
+
 void MigrationCallback::OnMigrationReply(int32_t errorCode, int32_t successCount,
     const std::vector<int32_t>& errorIndex, const std::vector<int32_t>& codeList) {
   if (errorCode == MIGRATION_DISCONNECT) {
@@ -90,7 +90,7 @@ void MigrationCallback::OnMigrationReply(int32_t errorCode, int32_t successCount
       migration_success_count_++;
     }
   }
- 
+
   migration_error_code_ = errorCode;
   if (migration_error_code_ == MIGRATION_DUPLICATE_DATA) {
     migration_error_code_ = MIGRATION_SUCCESS;
@@ -465,6 +465,24 @@ void CefWebStorageImpl::GetSavedPasswordsInfoInternal(
   // oh_password_consumer_.RequestAutofillableLogins(callback);
 }
 
+void UpdateLoginDisplayNameOnUI(std::unique_ptr<password_manager::PasswordForm> form,
+                                CefRefPtr<CefWebStorageImpl> web_storage_impl) {
+  if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
+    content::GetUIThreadTaskRunner({})->PostTask(
+        FROM_HERE,
+        base::BindOnce(&UpdateLoginDisplayNameOnUI, std::move(form), web_storage_impl));
+    return;
+  }
+
+  if (!form || !web_storage_impl) {
+    LOG(DEBUG) << "UpdateLoginDisplayNameOnUI fail, due to form or web_storage_impl null";
+    return;
+  }
+
+  password_manager::PasswordStore* password_store = web_storage_impl->GetPasswordStore();
+  password_store->UpdateLoginDisplayName(*form);
+}
+
 void SetMigrationPasswordPrefs(std::string_view path, bool value) {
   if (!content::BrowserThread::CurrentlyOn(content::BrowserThread::UI)) {
     content::GetUIThreadTaskRunner({})->PostTask(
@@ -536,72 +554,56 @@ void CefWebStorageImpl::OhPasswordStoreConsumer::OnGetPasswordStoreResults(
   NOTREACHED();
 }
 
-bool ShouldMigratePassword(password_manager::PasswordForm* form, CefRefPtr<CefWebStorageImpl> web_storage_impl) {
-  if (form->display_name == MIGRATION_LABEL) {
-    return false;
-  }
-  password_manager::PasswordStore* password_store = web_storage_impl->GetPasswordStore();
-  if (form->username_value.empty() || form->password_value.empty() || form->url.is_empty()) {
-    form->display_name = MIGRATION_LABEL;
-    password_store->UpdateLoginDisplayName(*form);
+
+bool ShouldMigratePassword(const std::u16string& username_value,
+                           const std::u16string& password_value,
+                           const GURL& url) {
+  if (username_value.empty() || password_value.empty() || url.is_empty()) {
     LOG(WARNING) << "[Autofill] migration data value is empty.";
     return false;
   }
- 
-  if (form->username_value.length() > kMaxUserNameLength || form->password_value.length() > kMaxPasswordLength ||
-      form->url.spec().length() > kMaxUrlLength) {
-    form->display_name = MIGRATION_LABEL;
-    password_store->UpdateLoginDisplayName(*form);
+
+  if (username_value.length() > kMaxUserNameLength || password_value.length() > kMaxPasswordLength ||
+      url.spec().length() > kMaxUrlLength) {
     LOG(WARNING) << "[Autofill] migration data length over max.";
     return false;
   }
- 
-  if (!form->url.SchemeIsHTTPOrHTTPS()) {
-    form->display_name = MIGRATION_LABEL;
-    password_store->UpdateLoginDisplayName(*form);
+
+  if (!url.SchemeIsHTTPOrHTTPS()) {
     LOG(WARNING) << "[Autofill] migration data url is invalid.";
     return false;
   }
- 
+
   return true;
 }
 
-void UpdatePasswordDisplayName(const std::vector<CefString>& url,
-                               const std::vector<CefString>& username,
-                               std::shared_ptr<MigrationCallback>& migration_listener,
+void UpdatePasswordDisplayName(std::shared_ptr<MigrationCallback>& migration_listener,
                                CefRefPtr<CefWebStorageImpl> web_storage_impl,
-                               std::vector<std::unique_ptr<password_manager::PasswordForm>>& results) {
-  password_manager::PasswordStore* password_store = web_storage_impl->GetPasswordStore();
+                               std::vector<std::unique_ptr<password_manager::PasswordForm>> valid_forms) {
   std::vector<int32_t> error_index = migration_listener->GetMigrationErrorIndex();
   std::vector<int32_t> code_list = migration_listener->GetMigrationCodeList();
 
-  for (size_t i = 0; i < url.size(); i++) {
+  for (size_t i = 0; i < valid_forms.size(); i++) {
     auto it = std::find(error_index.begin(), error_index.end(), i);
     if (it != error_index.end() &&
         code_list[std::distance(error_index.begin(), it)] != MIGRATION_DUPLICATE_DATA) {
       continue;
     }
 
-    for (auto& form : results) {
-      if (form->url.spec() == url[i].ToString() && form->username_value == username[i].ToString16()) {
-        form->display_name = MIGRATION_LABEL;
-        password_store->UpdateLoginDisplayName(*form);
-        break;
-      }
-    }
+    valid_forms[i]->display_name = MIGRATION_LABEL;
+    UpdateLoginDisplayNameOnUI(std::move(valid_forms[i]), web_storage_impl);
   }
 }
 
-bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<CefString>& url,
-                                    const std::vector<CefString>& username,
+bool ProcessAndSendMigrationRequest(base::Value& json_array,
                                     std::unique_ptr<OHOS::NWeb::MigrationManagerAdapter>& migration_manager_adapter,
                                     std::shared_ptr<MigrationCallback>& migration_listener,
                                     CefRefPtr<CefWebStorageImpl> web_storage_impl,
-                                    std::vector<std::unique_ptr<password_manager::PasswordForm>>& results) {
+                                    std::vector<std::unique_ptr<password_manager::PasswordForm>> valid_forms) {
   std::string json_string;
   base::JSONWriter::Write(json_array, &json_string);
   std::shared_ptr<std::string> shared_json = std::make_shared<std::string>(json_string);
- 
+
   for (size_t j = 0; j <= kMaxDiconnectCount; j++) {
     if (!migration_manager_adapter->SendMigrationRequest(shared_json)) {
       LOG(ERROR) << "[Autofill] Connect PasswordVault failed.";
@@ -613,7 +615,7 @@ bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<C
       SetMigrationPasswordPrefs(browser_prefs::kMigratePasswordsToPasswordVault, true);
       return false;
     }
- 
+
     while (!migration_listener->GetMigrationFinish()) {
       base::PlatformThread::Sleep(base::Milliseconds(kMigrateDelayTime));
     }
@@ -645,9 +647,9 @@ bool ProcessAndSendMigrationRequest(base::Value& json_array, const std::vector<C
     }
     break;
   }
- 
-  UpdatePasswordDisplayName(url, username, migration_listener, web_storage_impl, results);
- 
+
+  UpdatePasswordDisplayName(migration_listener, web_storage_impl, std::move(valid_forms));
+
   return true;
 }
 
@@ -655,38 +657,53 @@ void MigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_imp
                                     std::unique_ptr<OHOS::NWeb::MigrationManagerAdapter>& migration_manager_adapter,
                                     std::shared_ptr<MigrationCallback>& migration_listener,
                                     std::vector<std::unique_ptr<password_manager::PasswordForm>>& results) {
-  std::vector<CefString> url;
-  std::vector<CefString> username;
-  uint32_t count = 0;
-  uint32_t size = 0;
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> valid_forms;
   base::Value json_array(base::Value::Type::LIST);
   for (auto& form : results) {
-    size++;
-    bool ret = ShouldMigratePassword(form.get(), web_storage_impl);
-    if (ret == false && size != results.size()) {
+    auto url = form->url;
+    auto username = form->username_value;
+    auto password = form->password_value;
+    auto display_name = form->display_name;
+    // 如果是已经迁移过的表单，直接跳过。
+    if (display_name == MIGRATION_LABEL) {
       continue;
     }
-    if (ret == true) {
-      url.push_back(CefString(form->url.spec()));
-      username.push_back(CefString(base::UTF16ToUTF8(form->username_value)));
- 
-      json_array.GetList().Append(UserDatatoJson(UserData{base::UTF16ToUTF8(form->username_value),
-                                                          base::UTF16ToUTF8(form->password_value),
-                                                          form->url.spec(),
-                                                          kMigrateDataType}));
-      count++;
+
+    // 判断表单是否符合迁移规则。
+    bool should_migrate = ShouldMigratePassword(username, password, url);
+    if (!should_migrate) {
+      // 如果不符合迁移规则，更新数据库将display_name置为MIGRATION_LABEL，下次迁移直接跳过。
+      form->display_name = MIGRATION_LABEL;
+      UpdateLoginDisplayNameOnUI(std::move(form), web_storage_impl);
+      continue;
     }
-    if (count == kMaxDataCount || (size == results.size() && count != 0)) {
-      if (!ProcessAndSendMigrationRequest(json_array, url, username, migration_manager_adapter, migration_listener,
-                                          web_storage_impl, results)) {
+
+    // 将表单填充到json数组中。json数组会发送给密码保险箱。
+    json_array.GetList().Append(UserDatatoJson(UserData{base::UTF16ToUTF8(username),
+                                                        base::UTF16ToUTF8(password),
+                                                        url.spec(),
+                                                        kMigrateDataType}));
+
+    // 将有效的表单添加到valid_forms.
+    valid_forms.push_back(std::move(form));
+    // 避免一次性传输过大的数据，一次性最多传输50条。
+    if (valid_forms.size() == kMaxDataCount) {
+      if (!ProcessAndSendMigrationRequest(json_array, migration_manager_adapter, migration_listener,
+                                          web_storage_impl, std::move(valid_forms))) {
+        // 如果发送到密码保险箱失败，停止密码迁移。
         return;
       }
+
       migration_listener->SetMigrationFinish(false);
       json_array.GetList().clear();
-      url.clear();
-      username.clear();
-      count = 0;
+      valid_forms.clear();
     }
+  }
+
+  // 数据遍历完毕，如果还有未发送的表单，一次性发送。
+  if (valid_forms.size()) {
+    ProcessAndSendMigrationRequest(json_array, migration_manager_adapter, migration_listener,
+                                   web_storage_impl, std::move(valid_forms));
   }
 }
 
@@ -706,9 +723,9 @@ void OnMigratePasswordToPasswordVault(CefRefPtr<CefWebStorageImpl> web_storage_i
      return;
   }
   migration_manager_adapter->SetMigrationParam(BUNDLE_NAME, ABILITY_NAME, TOKEN);
- 
+
   MigratePasswordToPasswordVault(web_storage_impl, migration_manager_adapter, migration_listener, results);
- 
+
   if (migration_listener->GetMigrationErrorCode() == MIGRATION_SUCCESS &&
       migration_listener->GetMigrationDisconnectCount() == 0) {
     SetMigrationPasswordPrefs(browser_prefs::kMigratePasswordsToPasswordVault, true);
@@ -749,7 +766,7 @@ void CefWebStorageImpl::OhPasswordStoreConsumer::GetPasswordStoreResultsFrom(
     local_state->CommitPendingWrite();
     return;
   }
- 
+
   base::ThreadPool::PostTask(
           FROM_HERE,
           {base::MayBlock(), base::TaskPriority::USER_VISIBLE},
@@ -877,9 +894,7 @@ void CefWebStorageImpl::MigratePasswordsInfo() {
   bool migrateBackupFlag =
     g_browser_process->local_state()->GetBoolean(browser_prefs::kMigrationDataBackupCompletion);
 
-  CEF_POST_TASK(
-      CEF_IOT, base::BindOnce(&CefWebStorageImpl::MigratePasswordsInfoInternal,
-                              weak_factory_.GetWeakPtr(), migrateBackupFlag));
+  MigratePasswordsInfoInternal(migrateBackupFlag);
 #endif  // ARKWEB_EXT_PASSWORD
 }
 
