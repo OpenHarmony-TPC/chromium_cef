@@ -1981,10 +1981,23 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
 
 #if BUILDFLAG(ARKWEB_WEBRTC)
 void AlloyBrowserHostImplExt::OnCameraCaptureStateChanged(int original_state, 
-                                                            int new_state) {
-  if (client_ && client_->AsArkWebClient() && client_->AsArkWebClient()->GetMediaHandler()) {
-    client_->AsArkWebClient()->GetMediaHandler()
-      ->OnCameraCaptureStateChanged(original_state, new_state);
+                                                          int new_state) {
+  if (client_ && client_->AsArkWebClient() &&
+      client_->AsArkWebClient()->GetMediaHandler()) {
+    client_->AsArkWebClient()->GetMediaHandler()->OnCameraCaptureStateChanged(
+        original_state, new_state);
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+void AlloyBrowserHostImplExt::OnMicrophoneCaptureStateChanged(int original_state, 
+                                                              int new_state) {
+  if (client_ && client_->AsArkWebClient() &&
+      client_->AsArkWebClient()->GetMediaHandler()) {
+    client_->AsArkWebClient()
+        ->GetMediaHandler()
+        ->OnMicrophoneCaptureStateChanged(original_state, new_state);
   }
 }
 #endif

@@ -4140,3 +4140,32 @@ void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
       frontend_browser, this, delegate, inspect_element_at);
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+void ArkWebBrowserHostExtImpl::ResumeMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->ResumeMicrophone(web_contents->GetNWebId());
+}
+
+void ArkWebBrowserHostExtImpl::PauseMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->PauseMicrophone(web_contents->GetNWebId());
+}
+
+void ArkWebBrowserHostExtImpl::StopMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->StopMicrophone(web_contents->GetNWebId());
+}
+#endif

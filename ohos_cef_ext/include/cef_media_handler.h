@@ -72,6 +72,14 @@ class CefMediaHandler : public virtual CefBaseRefCounted {
   /*--cef()--*/
   virtual void OnCameraCaptureStateChanged(int original_state, int new_state) {}
 #endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  ///
+  /// Called when the microphone capture state changed.
+  ///
+  /*--cef()--*/
+  virtual void OnMicrophoneCaptureStateChanged(int original_state, int new_state) {}
+#endif
 };
 
 #endif  // CEF_INCLUDE_CEF_MEDIA_HANDLER_H_

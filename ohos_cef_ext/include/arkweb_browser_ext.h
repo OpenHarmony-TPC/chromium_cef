@@ -1455,6 +1455,23 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Handle extend action from input method.
   ///
   virtual void HandleInputMethodExtendAction(int32_t action) {}
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  ///
+  /// Resume current microphone.
+  ///
+  virtual void ResumeMicrophone() {}
+
+  ///
+  /// Pause current microphone.
+  ///
+  virtual void PauseMicrophone() {}
+
+  ///
+  /// Stop current microphone.
+  ///
+  virtual void StopMicrophone() {}
+#endif
 };
 
 #endif  // ARKWEB_INCLUDE_CEF_BROWSER_H_
