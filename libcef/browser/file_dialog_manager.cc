@@ -166,7 +166,7 @@ FileChooserParams SelectFileToFileChooserParams(
     }
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
     params.is_exclude_accept_all_options = !file_types->include_all_files;
-    params.start_in = file_types->start_in;
+    params.start_in.push_back(file_types->start_in);
 #endif
   }
 
@@ -522,6 +522,12 @@ CefFileDialogManager::MaybeRunDelegate(
 
       std::vector<CefString> accept_extensions;
       std::vector<CefString> accept_descriptions;
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+      CefString start_in = u"";
+      if (params.start_in.size() > 0) {
+        start_in = params.start_in[0];
+      }
+#endif
       if (extensions.empty()) {
         // We don't know the expansion of mime type values at this time,
         // so only include the single file extensions.
@@ -540,7 +546,7 @@ CefFileDialogManager::MaybeRunDelegate(
             accept_extensions.push_back(FilePathTypeToString16(FILE_PATH_LITERAL(".") + ext));
         }
         for (auto& description : descriptions) {
-            accept_extensions.push_back(description);
+            accept_descriptions.push_back(description);
         }
 #else
         for (size_t i = 0; i < params.accept_types.size(); ++i) {
@@ -567,7 +573,7 @@ CefFileDialogManager::MaybeRunDelegate(
           params.title, params.default_file_name.value(), accept_filters,
           accept_extensions, accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-          params.start_in,
+          start_in,
           params.is_exclude_accept_all_options,
           params.use_media_capture, 
           arkweb_browser_info_manager_utils_->ConvertMimeTypesToFilters(params),
