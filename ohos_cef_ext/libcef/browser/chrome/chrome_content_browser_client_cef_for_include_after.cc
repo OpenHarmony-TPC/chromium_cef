@@ -46,6 +46,12 @@
 #include "chrome/common/chrome_constants.h"
 #endif  // BUILDFLAG(ARKWEB_INCOGNITO_MODE)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "arkweb/ohos_nweb/src/nweb_impl.h"
+#include "cef/ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h"
+#include "extensions/browser/view_type_utils.h"
+#endif
+
 #if BUILDFLAG(ARKWEB_SITE_ISOLATION)
 bool g_siteIsolationMode = false;
 #endif
@@ -248,6 +254,26 @@ bool ChromeContentBrowserClientCef::CanCreateWindow(
   CEF_REQUIRE_UIT();
   content::WebContents* web_contents =
       content::WebContents::FromRenderFrameHost(opener);
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (extensions::GetViewType(web_contents) ==
+      extensions::mojom::ViewType::kOffscreenDocument) {
+      auto extensionId = static_cast<extensions::OffscreenContentsDelegate*>(
+          web_contents->GetDelegate())->GetExtensionId();
+      auto originUrl = web_contents->GetController().GetOriginalUrl();
+      auto origin = url::Origin::Create(GURL(originUrl));
+      bool isAlert = false;
+      if (disposition == static_cast<WindowOpenDisposition>(CEF_WOD_NEW_WINDOW) ||
+          disposition == static_cast<WindowOpenDisposition>(CEF_WOD_NEW_POPUP)) {
+        isAlert = true;
+      }
+      LOG(INFO) << "Offscreen CanCreateWindow extensionId:" << extensionId
+                << " isAlert:" << isAlert << " isUserTrigger:" << user_gesture;
+      OHOS::NWeb::NWebImpl::OnOffscreenDocumentWindowNewEvent(
+          extensionId, originUrl, isAlert, user_gesture, target_url.spec());
+      std::move(callback).Run(content::mojom::CreateNewWindowStatus::kBlocked);
+      return false;
+  }
+#endif
   CefRefPtr<CefBrowserHostBase> browser_host =
       CefBrowserHostBase::GetBrowserForContents(web_contents);
   if (!browser_host) {
