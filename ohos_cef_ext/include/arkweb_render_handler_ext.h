@@ -99,6 +99,15 @@ class ArkWebRenderHandlerExt : public virtual CefRenderHandler,
   /// touch handles.Initially added for PDF.
   ///
   virtual void OnSelectAreaChanged(CefRect& select_area) {}
+
+  ///
+  /// Called when touch selection is updated.The Position of arkUI-quickmenu
+  /// which was calculated by left and right handel previously, is calculated 
+  /// by clipped-selection-bounds. Add this interface because arkUI couldn't
+  /// get the data update. 
+  ///
+  virtual void OnClippedSelectionBoundsChanged(const CefRect &rect,
+                                               bool need_report) {}
 #endif
 
   ///

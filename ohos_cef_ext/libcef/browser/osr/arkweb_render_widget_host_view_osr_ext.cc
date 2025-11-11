@@ -944,6 +944,20 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTouchSelectionChanged(
   }
 }
 
+void ArkWebRenderWidgetHostViewOSRExt::OnClippedSelectionBoundsChanged(
+    const gfx::Rect& rect, bool need_report) {
+  if (!browser_impl_ && !browser_impl_->client()) {
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->client()->GetRenderHandler();
+  if (handler) {
+    CefRect cef_rect(rect.x(), rect.y(), rect.width(), rect.height());
+    handler->AsArkWebRenderHandler()->OnClippedSelectionBoundsChanged(
+        cef_rect, need_report);
+  }
+}
+
 bool ArkWebRenderWidgetHostViewOSRExt::NeedPopupInsertTouchHandleQuickMenu() {
   if (selection_controller_client_) {
     selection_controller_client_->AsArkWebTouchSelectionControllerClientOSRExt()
