@@ -701,7 +701,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::
     auto browser = rwhv_->browser_impl();
     if (browser && browser->client()) {
       auto handler = browser->client()->GetContextMenuHandler();
-      if (handler) {
+      if (isCopy_ && !hide_handles && handler) {
+        isCopy_ = false;
+        ShowQuickMenu();
+        LOG(INFO) << "HideHandleAndQuickMenuIfNecessary ShowQuickMenu.";
+      } else if (handler) {
         handler->HideHandleAndQuickMenuIfNecessary(hide_handles);
       }
     }
