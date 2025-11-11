@@ -33,6 +33,15 @@
 #include "ui/gfx/favicon_size.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "base/command_line.h"
+#include "base/ohos/sys_info_utils_ext.h"
+#include "components/favicon/content/content_favicon_driver.h"
+#include "content/public/common/content_switches.h"
+#include "extensions/common/constants.h"
+#include "ui/gfx/image/image_skia_rep_default.h"
+#endif
+
 namespace {
 
 constexpr int LARGEST_ICON_SIZE = 192;
@@ -92,6 +101,22 @@ void IconHelper::SetDisplayHandler(
 }
 
 void IconHelper::SetWebContents(content::WebContents* new_contents) {
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          ::switches::kEnableNwebEx) &&
+      base::ohos::IsPcDevice()) {
+    favicon_driver_observation_.Reset();
+
+    if (new_contents) {
+      auto driver =
+          favicon::ContentFaviconDriver::FromWebContents(new_contents);
+      if (driver) {
+        LOG(INFO) << "IconHelper start observing ContentFaviconDriver";
+        favicon_driver_observation_.Observe(driver);
+      }
+    }
+  }
+#endif
   web_contents_ = new_contents;
 }
 
@@ -347,3 +372,38 @@ void IconHelper::SetLastPageUrl(const GURL& url) {
   last_page_url_ = url;
 }
 #endif  // BUILDFLAG(ARKWEB_FAVICON)
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+void IconHelper::OnFaviconUpdated(favicon::FaviconDriver* favicon_driver,
+                                  NotificationIconType notification_icon_type,
+                                  const GURL& icon_url,
+                                  bool icon_url_changed,
+                                  const gfx::Image& image) {
+  if (!handler_ || !web_contents_) {
+    LOG(ERROR) << "OnFaviconUpdated handler_ or web_contents_ is null";
+    return;
+  }
+
+  // OnFaviconUpdated implementation below is only for updating favicons of
+  // extension pages, so ignore other types of URL.
+  if (!web_contents_->GetLastCommittedURL().SchemeIs(
+          extensions::kExtensionScheme) &&
+      !web_contents_->GetLastCommittedURL().SchemeIs(
+          extensions::kArkwebExtensionScheme)) {
+    return;
+  }
+
+  if (image.IsEmpty()) {
+    LOG(ERROR) << "IconHelper OnFaviconUpdated image is empty";
+    return;
+  }
+
+  constexpr float kArkWebFaviconScale = 2.0;
+  gfx::ImageSkiaRep rep =
+      image.ToImageSkia()->GetRepresentation(kArkWebFaviconScale);
+  SkBitmap bitmap = rep.GetBitmap();
+  handler_->OnReceivedIcon(bitmap.getPixels(), bitmap.width(), bitmap.height(),
+                           TransformSkColorType(bitmap.colorType()),
+                           TransformSkAlphaType(bitmap.alphaType()));
+}
+#endif
