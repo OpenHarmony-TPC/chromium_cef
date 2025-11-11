@@ -42,4 +42,21 @@ CefRefPtr<AlloyBrowserHostImpl> GetBrowserByTabIdForExtension(
   return nullptr;
 }
 
+content::BrowserContext* GetIncognitoContext(
+    content::BrowserContext* browser_context) {
+  if (!browser_context) {
+    LOG(ERROR) << "browser context is null";
+    return nullptr;
+  }
+
+  extensions::ExtensionsBrowserClient* browser_client =
+      extensions::ExtensionsBrowserClient::Get();
+  if (!browser_client->HasOffTheRecordContext(browser_context)) {
+    LOG(ERROR) << "Off-the-record context is not available";
+    return nullptr;
+  }
+
+  return browser_client->GetOffTheRecordContext(browser_context);
+}
+
 } // namespace extensions

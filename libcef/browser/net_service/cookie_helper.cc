@@ -298,9 +298,6 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 #else
       request.url.IsAboutBlank()
 #endif
-#if BUILDFLAG(IS_ARKWEB)
-      || !request.SendsCookies()
-#endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
       || (cookie_manager && !cookie_manager->CanSaveOrLoadCookies(request))
 #endif
@@ -379,9 +376,6 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
   if (request.credentials_mode == network::mojom::CredentialsMode::kOmit ||
       request.url.IsAboutBlank() || !headers ||
       !headers->HasHeader(net_service::kHTTPSetCookieHeaderName)
-#if BUILDFLAG(IS_ARKWEB)
-      || !request.SavesCookies()
-#endif
   ) {
     // Continue immediately without saving cookies.
     std::move(done_callback).Run(0, {});

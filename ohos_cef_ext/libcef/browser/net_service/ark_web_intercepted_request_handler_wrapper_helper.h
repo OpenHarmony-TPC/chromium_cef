@@ -68,7 +68,9 @@ class ArkWebInterceptedRequestHandlerWrapperHelper {
   std::string OnRewriteUrlForNavigation(
     CefRefPtr<CefBrowserHostBase> browser,
     const std::string& original_url,
-    const std::string& referrer);
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request);
 #endif
 
  private:

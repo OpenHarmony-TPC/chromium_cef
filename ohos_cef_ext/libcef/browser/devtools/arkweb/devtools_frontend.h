@@ -71,7 +71,7 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   static CefDevToolsFrontend* ShowWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
@@ -90,6 +90,10 @@ class CefDevToolsFrontend : public content::WebContentsObserver,
       const base::Value arg2 = {},
       const base::Value arg3 = {},
       base::OnceCallback<void(base::Value)> cb = base::NullCallback());
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  AlloyBrowserHostImpl* GetFrontendBrowser();
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
  private:
   CefDevToolsFrontend(AlloyBrowserHostImpl* frontend_browser,

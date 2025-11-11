@@ -944,6 +944,20 @@ void ArkWebRenderWidgetHostViewOSRExt::OnTouchSelectionChanged(
   }
 }
 
+void ArkWebRenderWidgetHostViewOSRExt::OnClippedSelectionBoundsChanged(
+    const gfx::Rect& rect, bool need_report) {
+  if (!browser_impl_ && !browser_impl_->client()) {
+    return;
+  }
+  CefRefPtr<CefRenderHandler> handler =
+      browser_impl_->client()->GetRenderHandler();
+  if (handler) {
+    CefRect cef_rect(rect.x(), rect.y(), rect.width(), rect.height());
+    handler->AsArkWebRenderHandler()->OnClippedSelectionBoundsChanged(
+        cef_rect, need_report);
+  }
+}
+
 bool ArkWebRenderWidgetHostViewOSRExt::NeedPopupInsertTouchHandleQuickMenu() {
   if (selection_controller_client_) {
     selection_controller_client_->AsArkWebTouchSelectionControllerClientOSRExt()
@@ -1354,15 +1368,6 @@ void ArkWebRenderWidgetHostViewOSRExt::SelectionBoundsChanged(
   CefRefPtr<CefRenderHandler> handler =
       browser_impl_->GetClient()->GetRenderHandler();
   CHECK(handler);
-
-#if BUILDFLAG(ARKWEB_DRAG_DROP)
-  handler->AsArkWebRenderHandler()->SelectionBoundsChanged(
-      CefRect(anchor_rect.x(), anchor_rect.y(), anchor_rect.width(),
-              anchor_rect.height()),
-      CefRect(focus_rect.x(), focus_rect.y(), focus_rect.width(),
-              focus_rect.height()),
-      is_anchor_first);
-#endif
 
   if (!is_select_text_) {
     handler->AsArkWebRenderHandler()->OnCursorUpdate(
@@ -2218,6 +2223,15 @@ void ArkWebRenderWidgetHostViewOSRExt::SetFocusOnGestureEvent(
 
 void ArkWebRenderWidgetHostViewOSRExt::OnDidNavigateMainFrameToNewPage() {
   ResetGestureDetection(false);
+}
+
+void ArkWebRenderWidgetHostViewOSRExt::OpenEyeDropper() {
+  if (browser_impl_.get()) {
+    CefRefPtr<ArkWebRenderHandlerExt> handler =
+        browser_impl_->client()->GetRenderHandler();
+    CHECK(handler);
+    handler->OpenEyeDropper(browser_impl_->GetBrowser());
+  }
 }
 #endif  // BUILDFLAG(ARKWEB_INPUT_EVENTS)
 

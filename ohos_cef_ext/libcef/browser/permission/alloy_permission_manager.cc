@@ -430,45 +430,61 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
 #endif  //BUILDFLAG(ARKWEB_SENSOR)
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   } else if (permission == PermissionType::NOTIFICATIONS) {
-    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
+#if BUILDFLAG(ARKWEB_NWEB_EX)     
+    if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(       
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (notification_permission_.count(requesting_origin)) {
         return (PermissionStatus)notification_permission_[requesting_origin];
       } else {
         return PermissionStatus::DENIED;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
   } else if (permission == PermissionType::GEOLOCATION) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (geolocation_permission_.count(requesting_origin)) {
         return (PermissionStatus)geolocation_permission_[requesting_origin];
       } else {
         return PermissionStatus::DENIED;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 #if BUILDFLAG(ARKWEB_WEBRTC)
   } else if (permission == PermissionType::AUDIO_CAPTURE) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::microphone_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::microphone_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in microphone permission map";
         return PermissionStatus::ASK;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
   } else if (permission == PermissionType::VIDEO_CAPTURE) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)    
     if ((*base::CommandLine::ForCurrentProcess()).HasSwitch(
         switches::kEnableNwebExPermission)) {
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)          
       if (AlloyMediaAccessRequest::camera_permission_.count(requesting_origin)) {
         return (PermissionStatus)AlloyMediaAccessRequest::camera_permission_[requesting_origin];
       } else {
         LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in camera permission map";
         return PermissionStatus::ASK;
       }
+#if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
+#endif  //BUILDFLAG(ARKWEB_NWEB_EX)    
 #endif // BUILDFLAG(ARKWEB_WEBRTC)
   }
   return PermissionStatus::DENIED;
@@ -711,12 +727,27 @@ void AlloyPermissionManager::OnQueryResponseCallBack(
   std::move(pending_query->callback_).Run((blink::mojom::PermissionStatus)status);
   manager->unhandled_querys_.Remove(query_id);
 }
- 
+
+int PermissionTypeToResources(const blink::PermissionType& permission) {
+  switch (permission) {
+    case PermissionType::NOTIFICATIONS:
+      return AlloyAccessRequest::Resources::NOTIFICATION;
+    case PermissionType::CLIPBOARD_READ_WRITE:
+      return AlloyAccessRequest::Resources::CLIPBOARD_READ_WRITE;
+    case PermissionType::CLIPBOARD_SANITIZED_WRITE:
+      return AlloyAccessRequest::Resources::CLIPBOARD_SANITIZED_WRITE;
+    default:
+      return AlloyAccessRequest::Resources::NOTIFICATION;
+  }
+}
+
 void AlloyPermissionManager::GetPermissionStatusAsync(
     blink::PermissionType permission,
     const GURL& requesting_origin,
     base::OnceCallback<void(blink::mojom::PermissionStatus)> callback) {
-  if (permission != PermissionType::NOTIFICATIONS) {
+  if (permission != PermissionType::NOTIFICATIONS &&
+      permission != PermissionType::CLIPBOARD_READ_WRITE &&
+      permission != PermissionType::CLIPBOARD_SANITIZED_WRITE) {
     std::move(callback).Run(PermissionStatus::DENIED);
     return;
   }
@@ -729,8 +760,15 @@ void AlloyPermissionManager::GetPermissionStatusAsync(
  
  CefBrowserHostBase::GetPermissionStatusAsync(
      pending_query_raw->requesting_origin_.spec(),
+     PermissionTypeToResources(permission),
      base::BindRepeating(
          &OnQueryResponseCallBack, weak_ptr_factory_.GetWeakPtr(),
          query_id, permission));
 }
 #endif // #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool AlloyPermissionManager::IsClipboardSitePermissionEnabled() {
+  return CefBrowserHostBase::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)

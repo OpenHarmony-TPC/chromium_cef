@@ -329,27 +329,26 @@ CefDevToolsFrontend* CefDevToolsFrontend::Show(
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
 // static
 CefDevToolsFrontend* CefDevToolsFrontend::ShowWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      AlloyBrowserHostImpl* frontend_browser,
       CefRefPtr<CefDevToolsMessageHandlerDelegate> devtools_message_handler,
       content::WebContents* inspected_contents,
       const CefPoint& inspect_element_at,
       base::OnceClosure frontend_destroyed_callback) {
   LOG(INFO) << "CefDevToolsFrontend::ShowWith({"
             << inspect_element_at.x << "*" << inspect_element_at.y << "})";
-  AlloyBrowserHostImpl* alloy_frontend_browser = static_cast<AlloyBrowserHostImpl*>(frontend_browser.get());
   auto handler = std::make_unique<CefDevToolsMessageHandler>(
       std::move(devtools_message_handler),
       Profile::FromBrowserContext(
-          alloy_frontend_browser->web_contents()->GetBrowserContext()));
+          frontend_browser->web_contents()->GetBrowserContext()));
   // CefDevToolsFrontend will delete itself when the frontend WebContents is
   // destroyed.
   CefDevToolsFrontend* devtools_frontend = new CefDevToolsFrontend(
-      alloy_frontend_browser, std::move(handler),
+      frontend_browser, std::move(handler),
       inspected_contents, inspect_element_at,
       std::move(frontend_destroyed_callback));
 
   // Need to load the URL after creating the DevTools objects.
-  alloy_frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL());
+  frontend_browser->GetMainFrame()->LoadURL(GetFrontendURL());
 
   return devtools_frontend;
 }
@@ -884,6 +883,10 @@ PrefService* CefDevToolsFrontend::GetPrefs() const {
 }
 
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
+AlloyBrowserHostImpl* CefDevToolsFrontend::GetFrontendBrowser() {
+  return frontend_browser_.get();
+}
+
 void CefDevToolsFrontend::FileSystemAdded(
     const std::string& error,
     const CefDevToolsFileManager::FileSystem* file_system) {

@@ -52,6 +52,7 @@ class InterceptedRequestUtils {
     obj->factory_->request_handler_->OnBeforeRequest(
         obj->id_, &obj->request_, obj->request_was_redirected_,
         obj->weak_factory_.GetWeakPtr(),
+        obj->current_request_uses_header_client_,
         base::BindOnce(&InterceptedRequest::BeforeRequestReceived,
                        obj->weak_factory_.GetWeakPtr(), original_url),
         base::BindOnce(&InterceptedRequest::CancelRequest,

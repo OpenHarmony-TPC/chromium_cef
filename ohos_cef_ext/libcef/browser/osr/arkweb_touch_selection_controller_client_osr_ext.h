@@ -91,7 +91,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
 #endif  // BUILDFLAG(ARKWEB_MENU)
 
 #if BUILDFLAG(ARKWEB_PDF)
-void ResetResponsePendingInputEvent() override;
+  void ResetResponsePendingInputEvent() override;
 #endif  // BUILDFLAG(ARKWEB_PDF)
  private:
   // // Not owned, non-null for the lifetime of this object.

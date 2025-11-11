@@ -259,6 +259,9 @@ void ArkWebTouchSelectionControllerClientOSRExt::NotifyTouchSelectionChanged(
     ConvertTouchHandleState(
         controller->AsTouchSelectionControllerExt()->GetEndSelectionHandle(),
         end_selection_handle);
+    rwhv_->AsArkWebRenderWidgetHostViewOSRExt()
+        ->OnClippedSelectionBoundsChanged(clipped_selection_bounds_,
+                                          need_report);
     rwhv_->AsArkWebRenderWidgetHostViewOSRExt()->OnTouchSelectionChanged(
         insert_handle, start_selection_handle, end_selection_handle,
         need_report);
@@ -701,7 +704,11 @@ void ArkWebTouchSelectionControllerClientOSRExt::
     auto browser = rwhv_->browser_impl();
     if (browser && browser->client()) {
       auto handler = browser->client()->GetContextMenuHandler();
-      if (handler) {
+      if (isCopy_ && !hide_handles && handler) {
+        isCopy_ = false;
+        ShowQuickMenu();
+        LOG(INFO) << "HideHandleAndQuickMenuIfNecessary ShowQuickMenu.";
+      } else if (handler) {
         handler->HideHandleAndQuickMenuIfNecessary(hide_handles);
       }
     }

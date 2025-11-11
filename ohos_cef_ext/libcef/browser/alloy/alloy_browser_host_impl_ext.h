@@ -28,13 +28,6 @@ public:
 
   CefRefPtr<AlloyBrowserHostImplExt> AsAlloyBrowserHostImplExt() override { return this; }
 
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-  void ShowDevToolsWith(
-      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-      const CefPoint& inspect_element_at) override;
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
-
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
   void WasOccluded(bool occluded) override;
   void SetEnableLowerFrameRate(bool enabled) override;
@@ -259,6 +252,11 @@ public:
   bool WebHandleKeyboardEvent(
     content::WebContents* source,
     const input::NativeWebKeyboardEvent& event);
+
+  std::unique_ptr<content::EyeDropper> OpenEyeDropper(
+      content::RenderFrameHost *frame,
+      content::EyeDropperListener *listener) override;
+  void OnEyeDropperResult(bool success, uint32_t color) override;
 #endif
 
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
@@ -290,7 +288,10 @@ public:
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::string OnRewriteUrlForNavigation(const std::string& original_url, const std::string& referrer) override;
+  std::string OnRewriteUrlForNavigation(const std::string& original_url,
+                                        const std::string& referrer,
+                                        int transition_type,
+                                        bool is_key_request) override;
 #endif
 
 private:
@@ -366,6 +367,9 @@ private:
       const content::OpenURLParams& params);
 #endif
 
+#if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  raw_ptr<content::EyeDropperListener> listener_;
+#endif
 };
 
 #endif  // CEF_OHOS_CEF_EXT_LIBCEF_BROWSER_ALLOY_ALLOY_BROWSER_HOST_IMPL_EXT_H_

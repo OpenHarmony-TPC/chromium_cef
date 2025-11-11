@@ -201,6 +201,8 @@ class CefFrameHostImpl : public CefFrame, public cef::mojom::BrowserFrame {
     return frame_token_;
   }
 
+  content::GlobalRenderFrameHostId GetGlobalRenderFrameHostId();
+
   // PageTransition type for explicit navigations. This must pass the check in
   // ContentBrowserClient::IsExplicitNavigation for debug URLs (HandleDebugURL)
   // to work as expected.

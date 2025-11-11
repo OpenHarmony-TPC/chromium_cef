@@ -156,6 +156,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void OnTextSelectionChanged(content::TextInputManager* text_input_manager,
                               RenderWidgetHostViewBase* updated_view) override;
   void OnSelectAreaChanged(CefRect& select_area, bool need_report);
+  void OnClippedSelectionBoundsChanged(const gfx::Rect& rect, bool need_report);
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
@@ -180,6 +181,7 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                           const gfx::Rect& node_bounds_in_screen) override;
   void DidOverscroll(const ui::DidOverscrollParams& params) override;
   void OnDidNavigateMainFrameToNewPage();
+  void OpenEyeDropper();
   void SendTouchEventList(const std::vector<CefTouchEvent>& event_list);
 
   void DidStopFlinging() override;

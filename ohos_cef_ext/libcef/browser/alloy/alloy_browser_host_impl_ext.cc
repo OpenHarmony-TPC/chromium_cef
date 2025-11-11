@@ -94,6 +94,7 @@
 #include "ui/content_accelerators/accelerator_util.h"
 #include "ui/events/types/event_type.h"
 #include "cef/ohos_cef_ext/libcef/browser/arkweb_browser_platform_delegate_ext.h"
+#include "content/public/browser/eye_dropper_listener.h"
 #endif
 #if BUILDFLAG(ARKWEB_SLIDE_LTPO)
 #include "base/ohos/ltpo/include/sliding_observer.h"
@@ -367,21 +368,6 @@ AlloyBrowserHostImplExt::AlloyBrowserHostImplExt(
                             std::move(platform_delegate)) {
   platform_delegate_->BrowserCreated(this);
 }
-
-#if BUILDFLAG(ARKWEB_DEVTOOLS)
-void AlloyBrowserHostImplExt::ShowDevToolsWith(
-    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
-    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
-    const CefPoint& inspect_element_at) {
-  LOG(INFO) << "ShowDevToolsWith";
-  CEF_REQUIRE_UIT();
-  if (!EnsureDevToolsProtocolManager()) {
-    return;
-  }
-  devtools_protocol_manager_->ShowDevToolsWith(
-      frontend_browser, delegate, inspect_element_at);
-}
-#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
 #if BUILDFLAG(ARKWEB_OCCLUDED_OPT)
 void AlloyBrowserHostImplExt::WasOccluded(bool occluded) {
@@ -1787,6 +1773,38 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
   }
   return false;
 }
+
+std::unique_ptr<content::EyeDropper> AlloyBrowserHostImplExt::OpenEyeDropper(
+    content::RenderFrameHost *frame,
+    content::EyeDropperListener *listener) {
+  listener_ = listener;
+  auto rvh = web_contents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget()) {
+    ArkWebRenderWidgetHostViewOSRExt* view =
+        static_cast<ArkWebRenderWidgetHostViewOSRExt*>(rvh->GetWidget()->GetView());
+    if (view) {
+      view->OpenEyeDropper();
+    }
+  }
+  return std::make_unique<content::EyeDropper>();
+}
+
+void AlloyBrowserHostImplExt::OnEyeDropperResult(bool success, uint32_t color) {
+  if (!CEF_CURRENTLY_ON_UIT()) {
+    CEF_POST_TASK(
+        CEF_UIT,
+        base::BindOnce(&AlloyBrowserHostImplExt::OnEyeDropperResult, this, success, color));
+    return;
+  }
+  if (!listener_) {
+    return;
+  }
+  if (success) {
+    listener_->ColorSelected(color);
+  } else {
+    listener_->ColorSelectionCanceled();
+  }
+}
 #endif
 
 #if BUILDFLAG(ARKWEB_SCREEN_OFFSET)
@@ -1945,11 +1963,13 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
   std::string AlloyBrowserHostImplExt::OnRewriteUrlForNavigation(const std::string& original_url,
-                                                                 const std::string& referrer) {
+                                                                 const std::string& referrer,
+                                                                 int transition_type,
+                                                                 bool is_key_request) {
   if (!client_ || !client_->AsArkWebClient()) {
     LOG(ERROR) << "client is null, OnRewriteUrlForNavigation failed";
     return "";
   }
-  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer);
+  return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
 }
 #endif

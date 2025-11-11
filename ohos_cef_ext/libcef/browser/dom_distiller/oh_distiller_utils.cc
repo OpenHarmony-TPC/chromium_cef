@@ -151,7 +151,7 @@ bool FillPaginationInfo(const dom_distiller::DistilledPageProto_HwReadExtendFiel
   bool has_pagination = false;
   if (!cat.has_pagination_info()) {
     LOG(WARNING) << __func__ << "[Distiller] no pagination_info";
-    return;
+    return has_pagination;
   }
   base::Value::Dict pag;
   const auto& p = cat.pagination_info();

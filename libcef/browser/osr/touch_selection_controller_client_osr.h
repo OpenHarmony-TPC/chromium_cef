@@ -147,7 +147,7 @@ class CefTouchSelectionControllerClientOSR
 #if BUILDFLAG(IS_ARKWEB)
   virtual void CloseQuickMenu();
   virtual void ShowQuickMenu();
-  virtual void UpdateQuickMenu();
+  void UpdateQuickMenu() override;
   virtual void TemporarilyCloseQuickMenu();
 #else
   void CloseQuickMenu();

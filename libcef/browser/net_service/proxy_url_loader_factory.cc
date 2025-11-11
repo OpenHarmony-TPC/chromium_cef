@@ -246,6 +246,9 @@ class InterceptedRequest : public network::mojom::URLLoader,
       const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
       mojo::PendingReceiver<network::mojom::URLLoader> loader_receiver,
       mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+#if BUILDFLAG(ARKWEB_COOKIE)
+      bool disable_web_security,
+#endif
       mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory);
 
   InterceptedRequest(const InterceptedRequest&) = delete;
@@ -444,6 +447,10 @@ class InterceptedRequest : public network::mojom::URLLoader,
   bool is_download_{false};
 #endif
 
+#if BUILDFLAG(ARKWEB_COOKIE)
+  bool disable_web_security_{false};
+#endif
+
   base::WeakPtrFactory<InterceptedRequest> weak_factory_;
 };
 
@@ -506,6 +513,9 @@ InterceptedRequest::InterceptedRequest(
     const net::MutableNetworkTrafficAnnotationTag& traffic_annotation,
     mojo::PendingReceiver<network::mojom::URLLoader> loader_receiver,
     mojo::PendingRemote<network::mojom::URLLoaderClient> client,
+#if BUILDFLAG(ARKWEB_COOKIE)
+      bool disable_web_security,
+#endif
     mojo::PendingRemote<network::mojom::URLLoaderFactory> target_factory)
     : factory_(factory),
       id_(id),
@@ -515,6 +525,9 @@ InterceptedRequest::InterceptedRequest(
       proxied_loader_receiver_(this, std::move(loader_receiver)),
       target_client_(std::move(client)),
       target_factory_(std::move(target_factory)),
+#if BUILDFLAG(ARKWEB_COOKIE)
+      disable_web_security_(disable_web_security),
+#endif
       weak_factory_(this) {
   status_ = network::URLLoaderCompletionStatus(net::OK);
 
@@ -594,7 +607,11 @@ void InterceptedRequest::Restart() {
   }
 
   // Maybe update |credentials_mode| for fetch requests.
+#if BUILDFLAG(ARKWEB_COOKIE)
+  if (!disable_web_security_ && request_.credentials_mode ==
+#else
   if (request_.credentials_mode ==
+#endif
       network::mojom::CredentialsMode::kSameOrigin) {
     // Match logic in devtools_url_loader_interceptor.cc
     // InterceptionJob::FollowRedirect.
@@ -1131,7 +1148,11 @@ void InterceptedRequest::HandleResponseOrRedirectHeaders(
   }
 
   factory_->request_handler_->OnRequestResponse(
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+      id_, &request_, headers.get(), redirect_info, current_request_uses_header_client_,
+#else
       id_, &request_, headers.get(), redirect_info,
+#endif
       base::BindOnce(&InterceptedRequest::ContinueResponseOrRedirect,
                      weak_factory_.GetWeakPtr(), std::move(continuation)));
 }
@@ -1504,11 +1525,12 @@ void InterceptedRequest::OnUploadProgressACK() {
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 GURL InterceptedRequest::AddQueryForRedirectOnUI(
-    GURL original_url, 
+    GURL original_url,
     GURL referrer) {
   if (!original_url.is_empty() && original_url.is_valid()) {
     std::string new_url =
-      factory_->request_handler_->OnRewriteUrlForNavigation(original_url.spec(), referrer.spec());
+      factory_->request_handler_->OnRewriteUrlForNavigation(
+          original_url.spec(), referrer.spec(), ui::PageTransition::PAGE_TRANSITION_SERVER_REDIRECT, true);
     return GURL(new_url);
   }
   return GURL();
@@ -1563,6 +1585,7 @@ void InterceptedRequestHandler::OnBeforeRequest(
     bool request_was_redirected,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
     base::WeakPtr<InterceptedRequest> intercepted_request,
+    bool current_request_uses_header_client,
 #endif
     OnBeforeRequestResultCallback callback,
     CancelRequestCallback cancel_callback) {
@@ -1581,6 +1604,9 @@ void InterceptedRequestHandler::OnRequestResponse(
     network::ResourceRequest* request,
     net::HttpResponseHeaders* headers,
     std::optional<net::RedirectInfo> redirect_info,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+    bool current_request_uses_header_client,
+#endif
     OnRequestResponseResultCallback callback) {
   std::move(callback).Run(
       ResponseMode::CONTINUE, nullptr,
@@ -1754,7 +1780,12 @@ void ProxyURLLoaderFactory::CreateLoaderAndStart(
 #endif
   InterceptedRequest* req = new InterceptedRequest(
       this, request_id, options, request, traffic_annotation,
+#if BUILDFLAG(ARKWEB_COOKIE)
+      std::move(receiver), std::move(client), request.disable_web_security,
+      std::move(target_factory_clone));
+#else
       std::move(receiver), std::move(client), std::move(target_factory_clone));
+#endif
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   bool is_redirect = false;
   auto it = requests_.find(request_id);

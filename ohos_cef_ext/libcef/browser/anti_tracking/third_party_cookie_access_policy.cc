@@ -33,7 +33,11 @@
 
 namespace ohos_anti_tracking {
 
+#if BUILDFLAG(ARKWEB_UNITTESTS)
+namespace third_party_cookie_access_policy {
+#else
 namespace {
+#endif
 
 const std::string TBW_DOMAIN_KEY = "trackingBehaviorWebsite";
 
@@ -110,6 +114,13 @@ std::unique_ptr<autofill::Trie<std::string>> ParsingTBWOnFileThread(
 }
 
 }  // namespace
+
+#if BUILDFLAG(ARKWEB_UNITTESTS)
+using third_party_cookie_access_policy::g_lazy_instance;
+using third_party_cookie_access_policy::ParsingTBWOnFileThread;
+using third_party_cookie_access_policy::ToByteArray;
+using third_party_cookie_access_policy::CheckIsInResult;
+#endif
 
 ThirdPartyCookieAccessPolicy::ThirdPartyCookieAccessPolicy() = default;
 
@@ -253,7 +264,6 @@ void ThirdPartyCookieAccessPolicy::RemoveITPBypassingListOnIOThread(
 void ThirdPartyCookieAccessPolicy::ClearITPBypassingList() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
-  bypassing_host_list_.clear();
   LOG(INFO) << "ClearITPBypassingList";
   content::GetIOThreadTaskRunner({})->PostTask(
       FROM_HERE,

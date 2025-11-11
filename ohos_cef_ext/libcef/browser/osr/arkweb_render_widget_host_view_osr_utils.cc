@@ -140,6 +140,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
     if (com != compositor_map_.end()) {
       if (com->second != nullptr) {
         delete com->second;
+        com->second = nullptr;
       }
       compositor_map_.erase(com);
     }

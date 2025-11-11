@@ -14,6 +14,7 @@
 #include "include/cef_unresponsive_process_callback.h"
 #include "include/cef_x509_certificate.h"
 #include "ohos_cef_ext/include/arkweb_cef_ssl_callback.h"
+#include "ohos_cef_ext/include/arkweb_cef_verify_pin_callback.h"
 
 class CefSelectClientCertificateCallbackExt
     : public virtual CefSelectClientCertificateCallback {
@@ -32,6 +33,8 @@ class CefSelectClientCertificateCallbackExt
   /// Ignore the select cert request.
   ///
   virtual void Ignore() = 0;
+
+  virtual void Select(const CefString& identity, int32_t type) {}
 
   CefRefPtr<CefSelectClientCertificateCallbackExt>
   AsCefSelectClientCertificateCallbackExt() override {
@@ -188,6 +191,13 @@ class CefRequestHandlerExt : public virtual CefRequestHandler {
                                      const CefString& request_url,
                                      CefRefPtr<CefSSLInfo> ssl_info,
                                      CefRefPtr<ArkWebCefSslCallback> callback) {
+    return false;
+  }
+  
+  /*--cef()--*/
+  virtual bool OnVerifyPin(
+      const std::string& identity,
+      CefRefPtr<CefVerifyPinCallback> callback) {
     return false;
   }
 

@@ -298,6 +298,9 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   void RedirectSavedCookieDone(int32_t request_id,
                                network::ResourceRequest* request,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                               bool current_request_uses_header_client,
+#endif
                                OnRequestResponseResultCallback callback,
                                const GURL& new_url) {
     auto exec_callback = base::BindOnce(
@@ -312,16 +315,23 @@ void GetSettingOfNetHelper(const GURL& url, struct NetHelperSetting& setting) ov
     // Clear the cookie  first. we will get cookie for this redirect.
     request->headers.RemoveHeader(net::HttpRequestHeaders::kCookie);
 
-    MaybeLoadCookies(request_id, state, new_url, std::move(exec_callback));
+    MaybeLoadCookies(request_id, state, new_url,
+#if BUILDFLAG(ARKWEB_NETWORK_LOAD)
+                     current_request_uses_header_client,
+#endif
+                     std::move(exec_callback));
   }
 #endif  // BUILDFLAG(ARKWEB_NETWORK_BASE)
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
 std::string OnRewriteUrlForNavigation(
     const std::string& original_url,
-    const std::string& referrer) override {
+    const std::string& referrer,
+    int transition_type,
+    bool is_key_request) override {
   if (wrapper_helper_) {
-    return wrapper_helper_->OnRewriteUrlForNavigation(init_state_->browser_, original_url, referrer);
+    return wrapper_helper_->OnRewriteUrlForNavigation(
+        init_state_->browser_, original_url, referrer, transition_type, is_key_request);
   }
   return "";
 }

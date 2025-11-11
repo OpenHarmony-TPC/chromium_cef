@@ -6,6 +6,7 @@
 #if BUILDFLAG(IS_ARKWEB_EXT)
 #include "arkweb/ohos_nweb_ex/overrides/cef/libcef/browser/alloy/alloy_browser_ua_config.h"
 #endif
+#include "arkweb/chromium_ext/url/ohos/log_utils.h"
 #include "cef/ohos_cef_ext/libcef/browser/alloy/alloy_browser_ua_config.h"
 #include "content/browser/renderer_host/navigation_request.h"
 #include "net/base/registry_controlled_domains/registry_controlled_domain.h"
@@ -198,7 +199,8 @@ void MaybeOverrideUserAgentOnStartNavigation(
     }
   }
 
-  LOG(DEBUG) << __func__ << " host " << host << ", final_ua " << final_ua
+  LOG(DEBUG) << __func__ << " host " << url::LogUtils::ConvertUrlWithMask(host)
+             << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
              << ", main_frame " << navigation->IsInMainFrame() << ", reload "
              << is_reload << ", serverd_from_bfcache "

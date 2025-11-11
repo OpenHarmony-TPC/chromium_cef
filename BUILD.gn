@@ -450,6 +450,7 @@ test("libcef_static_unittests") {
       "ohos_cef_ext/libcef/browser/osr/browser_platform_delegate_osr_unittest.cc",
       "ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_url_trust_list_manager_unittest.cc",
       "ohos_cef_ext/libcef/browser/predictors/loading_predictor_unittest.cc",
+      "ohos_cef_ext/libcef/browser/anti_tracking/third_party_cookie_access_policy_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_incognito_data_base_impl_unittest.cc",
       "ohos_cef_ext/libcef/browser/net_database/cef_data_base_impl_unittest.cc",
     ]
@@ -922,6 +923,10 @@ source_set("libcef_static") {
       "libcef/browser/net/scheme_handler.cc",
       "libcef/browser/net/scheme_handler.h",
     ]
+
+    sources += [
+      "ohos_cef_ext/libcef/browser/devtools/devtools_window_runner_ext.cc",
+    ]
   }
 
   #if defined(ARKWEB_LOGGER_REPORT)
@@ -1177,6 +1182,8 @@ source_set("libcef_static") {
 
   if (defined(arkweb_arkweb_extensions) && arkweb_arkweb_extensions) {
     sources += [
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.cc",
+      "ohos_cef_ext/libcef/browser/alloy/offscreen_contents_delegate.h",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.cc",
       "ohos_cef_ext/libcef/browser/extensions/browser_extensions_util.h",
       "ohos_cef_ext/libcef/browser/extensions/tab_extensions_util.cc",
@@ -1215,6 +1222,8 @@ source_set("libcef_static") {
       "ohos_cef_ext/libcef/browser/extensions/api/history/cef_history_event_router.h",
       "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.cc",
       "ohos_cef_ext/libcef/browser/extensions/extension_action_browser_notifier.h",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.cc",
+      "ohos_cef_ext/libcef/browser/offscreen_document_dialog_manager.h",
     ]
     configs += [
       "//ohos_nweb:nweb_config",

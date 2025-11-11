@@ -308,13 +308,18 @@ void CefBrowserHostBase::AbortAskNotificationPermission(
 
 void CefBrowserHostBase::GetPermissionStatusAsync(
     const CefString& origin,
+    int resources,
     cef_permission_status_query_callback_t callback) {
   CefPermissionQuery::GetPermissionStatusAsync(
-      new AlloyAccessQuery(origin, AlloyAccessRequest::Resources::NOTIFICATION,
-                           std::move(callback)));
+      new AlloyAccessQuery(origin, resources, std::move(callback)));
 }
-
 #endif // #if BUILDFLAG(ARKWEB_NOTIFICATION)
+
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+bool CefBrowserHostBase::IsClipboardSitePermissionEnabled() {
+  return CefPermissionQuery::IsClipboardSitePermissionEnabled();
+}
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 
 void CefBrowserHostBase::AskMIDISysexPermission(
     const CefString& origin,
@@ -398,6 +403,18 @@ void CefBrowserHostBase::SetBlankScreenDetectionConfig(
   }
   web_contents->SetBlankScreenDetectionConfig(
       enable, detectionTiming, detectionMethods, contentfulNodesCountThreshold);
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_GET_SCROLL_OFFSET)
+void CefBrowserHostBase::GetOverScrollOffsetValue(float* offset_x,
+                                                  float* offset_y) {
+  if (GetWebContents()) {
+    GetWebContents()->GetOverScrollOffset(offset_x, offset_y);
+  } else if (offset_x && offset_y) {
+    *offset_x = 0.0f;
+    *offset_y = 0.0f;
+  }
 }
 #endif
 

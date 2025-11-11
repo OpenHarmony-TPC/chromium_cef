@@ -457,6 +457,25 @@ std::string ArkWebBrowserHostExtImpl::GetSelectedTextFromContextParam() {
 #endif
 }
 
+bool ArkWebBrowserHostExtImpl::JudgeTextInputState() {
+  if (!GetWebContents()) {
+    return true;
+  }
+
+  auto rvh = GetWebContents()->GetRenderViewHost();
+  if (rvh && rvh->GetWidget() && rvh->GetWidget()->GetView()) {
+    ArkWebRenderWidgetHostViewOSRExt* view =
+        static_cast<ArkWebRenderWidgetHostViewOSRExt*>(rvh->GetWidget()->GetView());
+    if (view && view->GetTextInputManager()) {
+      content::TextInputManager* mgr = view->GetTextInputManager();
+      ui::TextInputType type = mgr->GetTextInputState() ? mgr->GetTextInputState()->type : ui::TEXT_INPUT_TYPE_NONE;
+      LOG(INFO) << "JudgeTextInputState " << static_cast<int32_t>(type);
+      return type == ui::TEXT_INPUT_TYPE_NONE;
+    }
+  }
+  return true;
+}
+
 bool ArkWebBrowserHostExtImpl::ShouldShowFreeCopyMenu() {
 #if BUILDFLAG(ARKWEB_EXT_FREE_COPY)
   if (!GetWebContents()) {
@@ -751,6 +770,9 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
 #if BUILDFLAG(ARKWEB_ERROR_PAGE)
   settings_.error_page_enabled = browser_settings.error_page_enabled;
 #endif
+#if BUILDFLAG(ARKWEB_CLIPBOARD)
+  settings_.clipboard_site_permission_enabled = browser_settings.clipboard_site_permission_enabled;
+#endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 }
 
 void ArkWebBrowserHostExtImpl::SetDrawRect(int x,
@@ -1840,7 +1862,8 @@ void ArkWebBrowserHostExtImpl::OnSafeInsetsChange(int left,
 #endif
 
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-void ArkWebBrowserHostExtImpl::GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) {
+void ArkWebBrowserHostExtImpl::GetImageForContextNode(int command_id) {
+  auto frame = GetFocusedFrame();
   if (frame && frame->IsValid()) {
     static_cast<ArkwebFrameHostExtImpl*>(frame.get())
         ->GetImageForContextNode(command_id);
@@ -3818,6 +3841,8 @@ void ArkWebBrowserHostExtImpl::SetBrowserZoomLevel(double zoom_factor) {
 #if BUILDFLAG(ARKWEB_EXT_GET_ZOOM_LEVEL)
 void ArkWebBrowserHostExtImpl::OnZoomChanged(
     const zoom::ZoomController::ZoomChangedEventData& data) {
+  LOG(INFO) << "ArkWeb OnZoomChanged new level = " << data.new_zoom_level
+            << ", showBubble = " << data.can_show_bubble;
   if (data.web_contents != GetWebContents()) {
     return;
   }
@@ -4099,3 +4124,14 @@ void ArkWebBrowserHostExtImpl::StopFling() {
     content::RenderWidgetHostImpl::From(rwhv->GetRenderWidgetHost())->StopFling();
   }
 }
+
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
+    CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+    CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+    const CefPoint& inspect_element_at) {
+  CEF_REQUIRE_UIT();
+  GetDevToolsWindowRunner()->ShowDevToolsWith(
+      frontend_browser, this, delegate, inspect_element_at);
+}
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)

@@ -73,6 +73,10 @@
 #include "components/zoom/zoom_observer.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+#include "include/cef_devtools_message_handler_delegate.h"
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
 #if BUILDFLAG(ARKWEB_MSGPORT)
 class WebMessageReceiverImpl : public blink::WebMessagePort::MessageReceiver {
  public:
@@ -468,6 +472,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void ShowFreeCopyMenu() override;
   bool ShouldShowFreeCopyMenu() override;
   std::string GetSelectedTextFromContextParam() override;
+  bool JudgeTextInputState() override;
   int GetNWebId() override;
 #if BUILDFLAG(ARKWEB_ITP)
   void EnableIntelligentTrackingPrevention(bool enable) override;
@@ -771,6 +776,13 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void HandleInputMethodExtendAction(int32_t action) override;
   void StopFling() override;
 
+#if BUILDFLAG(ARKWEB_DEVTOOLS)
+  void ShowDevToolsWith(
+      CefRefPtr<ArkWebBrowserHostExt> frontend_browser,
+      CefRefPtr<CefDevToolsMessageHandlerDelegate> delegate,
+      const CefPoint& inspect_element_at) override;
+#endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
  private:
 #if BUILDFLAG(ARKWEB_MSGPORT)
   using MessagePipe = std::pair<blink::WebMessagePort, blink::WebMessagePort>;
@@ -818,7 +830,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   int base_background_color_ = 0xffffffff;
 #endif  // ARKWEB_BACKGROUND_COLOR
 #if BUILDFLAG(ARKWEB_CLIPBOARD)
-  void GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) override;
+  void GetImageForContextNode(int command_id) override;
 #endif  // BUILDFLAG(ARKWEB_CLIPBOARD)
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   void SendMouseClickEvent(const CefMouseEvent& event,
@@ -841,6 +853,7 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   bool is_web_debugging_access_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
+  void OnEyeDropperResult(bool success, uint32_t color) override {}
   bool SetFocusByPosition(float x, float y) override;
   bool has_composition_ = false;
 #endif // BUILDFLAG(ARKWEB_INPUT_EVENTS)

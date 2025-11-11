@@ -484,7 +484,7 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   /// GetImageForContextNode
   ///
-  virtual void GetImageForContextNode(CefRefPtr<CefFrame> frame, int command_id) = 0;
+  virtual void GetImageForContextNode(int command_id) = 0;
 
   ///
   /// GetImageFromCache
@@ -967,6 +967,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   ///
   virtual std::string GetSelectedTextFromContextParam() = 0;
 
+  ///
+  /// Get last stat after tabs switch.
+  ///
+  virtual bool JudgeTextInputState() = 0;
+
 #if BUILDFLAG(ARKWEB_DISCARD)
   ///
   /// Discard a webview window
@@ -988,6 +993,11 @@ class ArkWebBrowserHostExt : public virtual CefBrowserHost,
   /// Get the shrink viewport height.
   ///
   virtual int GetShrinkViewportHeight() = 0;
+
+  ///
+  /// Called when picking color.
+  ///
+  virtual void OnEyeDropperResult(bool success, uint32_t color) = 0;
 
 #if BUILDFLAG(ARKWEB_EXT_NAVIGATION)
   ///
