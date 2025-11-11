@@ -24,6 +24,7 @@
 #include "base/path_service.h"
 #include "base/uuid.h"
 #include "chrome/browser/browser_process.h"
+#include "components/prefs/pref_service.h"
 #include "components/subresource_filter/core/browser/ruleset_version.h"
 #include "components/subresource_filter/core/browser/subresource_filter_constants.h"
 #include "components/subresource_filter/core/browser/subresource_filter_features.h"
@@ -113,7 +114,10 @@ void UnindexedRulesetToIndexedRulesetInternal(const base::FilePath unindexed_fil
   ruleset_info.content_version = std::to_string(version);
   ruleset_info.ruleset_path = GetUnindexedRulesetFile();                                              
 
-  if (!g_browser_process) {
+  if (!g_browser_process || !g_browser_process->local_state() ||
+      g_browser_process->local_state()->GetInitializationStatus() == PrefService::INITIALIZATION_STATUS_WAITING) {
+    LOG(WARNING) << kLogTag <<
+        "g_browser_process is null or local state has not been initialized";
     return;
   }
 
