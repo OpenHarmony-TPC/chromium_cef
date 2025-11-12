@@ -25,6 +25,12 @@
 #include "content/public/browser/navigation_handle.h"
 #endif  // BUILDFLAG(ARKWEB_WPT)
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+#include "base/scoped_observation.h"
+#include "components/favicon/core/favicon_driver.h"
+#include "components/favicon/core/favicon_driver_observer.h"
+#endif
+
 namespace gfx {
 class Size;
 }  // namespace gfx
@@ -38,7 +44,11 @@ class CefBrowser;
 class ArkWebDisplayHandlerExt;
 class GURL;
 
-class IconHelper : public virtual CefBaseRefCounted {
+class IconHelper :
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+    public favicon::FaviconDriverObserver,
+#endif
+    public virtual CefBaseRefCounted {
  public:
   IconHelper() = default;
   ~IconHelper() { web_contents_ = nullptr; }
@@ -105,6 +115,15 @@ class IconHelper : public virtual CefBaseRefCounted {
   };
 #endif
 
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  // favicon::FaviconDriverObserver implementation.
+  void OnFaviconUpdated(favicon::FaviconDriver* favicon_driver,
+                        NotificationIconType notification_icon_type,
+                        const GURL& icon_url,
+                        bool icon_url_changed,
+                        const gfx::Image& image) override;
+#endif
+
  private:
 #if BUILDFLAG(ARKWEB_WPT)
   void InsertFailedFaviconUrl(const GURL& icon_url);
@@ -129,6 +148,12 @@ class IconHelper : public virtual CefBaseRefCounted {
   std::map<int, std::unordered_set<std::string>> pending_downloads_map_;
   std::map<int, std::vector<CallbackData>> best_results_map_;
   std::mutex mutex_;
+#endif
+
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  base::ScopedObservation<favicon::FaviconDriver,
+                          favicon::FaviconDriverObserver>
+      favicon_driver_observation_{this};
 #endif
 
   IMPLEMENT_REFCOUNTING_DELETE_ON_UIT(IconHelper);
