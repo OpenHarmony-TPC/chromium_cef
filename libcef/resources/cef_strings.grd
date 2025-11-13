@@ -112,6 +112,7 @@ need to be translated for each locale.-->
     <!-- </if> -->
     <if expr="is_ohos">
       <output filename="cef_strings_ka.pak" type="data_package" lang="ka" />
+      <output filename="cef_strings_lo.pak" type="data_package" lang="lo" />
       <output filename="cef_strings_mk.pak" type="data_package" lang="mk" />
       <output filename="cef_strings_my.pak" type="data_package" lang="my" />
       <output filename="cef_strings_be.pak" type="data_package" lang="be" />
