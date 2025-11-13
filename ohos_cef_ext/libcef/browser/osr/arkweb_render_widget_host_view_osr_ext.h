@@ -327,6 +327,11 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
                              int32_t detectedContentfulNodesCount) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_FIRST_SCREEN_PAINT)
+  void OnFirstScreenPaint(const std::string &url,
+                          int64_t navigationStartTime, int64_t firstScreenPaintTime) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_DRAG_DROP)
   void SetTextHandlesTemporarilyHiddenByDrag(bool hide_handles, bool dragging);
 #endif

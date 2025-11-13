@@ -2699,6 +2699,21 @@ void ArkWebRenderWidgetHostViewOSRExt::OnDetectedBlankScreen(
 }
 #endif
 
+#if BUILDFLAG(ARKWEB_FIRST_SCREEN_PAINT)
+void ArkWebRenderWidgetHostViewOSRExt::OnFirstScreenPaint(const std::string &url,
+                                                          int64_t navigationStartTime, int64_t firstScreenPaintTime) {
+  if (!browser_impl_.get() || !browser_impl_->GetClient().get())
+  {
+    return;
+  }
+  CefRefPtr<ArkWebRenderHandlerExt> handler =
+      browser_impl_->GetClient()->GetRenderHandler();
+  CHECK(handler);
+  handler->OnFirstScreenPaint(url, navigationStartTime,
+                              firstScreenPaintTime);
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_AI)
 ui::FilteredGestureProvider& ArkWebRenderWidgetHostViewOSRExt::GetGestureProvider() {
   return gesture_provider_;
