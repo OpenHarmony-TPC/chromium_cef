@@ -137,7 +137,6 @@ class ArkWebRenderWidgetHostViewOSRExt : public CefRenderWidgetHostViewOSR {
   void NotifyOverlayStateChanged();
   bool SetDataDetectorSelectText(const std::u16string& text);
   std::string GetDataDetectorSelectText();
-  void OnDataDetectorSelectText();
 #endif
 #if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   void UpdateVSyncFrequency();

@@ -101,7 +101,6 @@ public:
   void OnFoldStatusChanged(uint32_t foldStatus) override;
   float GetPageScaleFactor() override;
   std::string GetDataDetectorSelectText() override;
-  void OnDataDetectorSelectText() override;
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)

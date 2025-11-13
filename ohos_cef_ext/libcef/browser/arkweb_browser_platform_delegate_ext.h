@@ -93,7 +93,6 @@ class ArkWebCefBrowserPlatformDelegateExt : public CefBrowserPlatformDelegate {
   virtual void OnFoldStatusChanged(uint32_t foldStatus);
   virtual float GetPageScaleFactor();
   virtual std::string GetDataDetectorSelectText();
-  virtual void OnDataDetectorSelectText();
 #endif
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
   virtual void OnSafeInsetsChange(int left, int top, int right, int bottom);
