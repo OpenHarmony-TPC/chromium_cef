@@ -437,7 +437,8 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
       if (notification_permission_.count(requesting_origin)) {
         return (PermissionStatus)notification_permission_[requesting_origin];
       } else {
-        return PermissionStatus::DENIED;
+        LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in notifications permission map";
+        return PermissionStatus::ASK;
       }
 #if BUILDFLAG(ARKWEB_NWEB_EX)      
     }
@@ -450,6 +451,7 @@ PermissionStatus AlloyPermissionManager::GetPermissionStatus(
       if (geolocation_permission_.count(requesting_origin)) {
         return (PermissionStatus)geolocation_permission_[requesting_origin];
       } else {
+        LOG(WARNING) << __FUNCTION__ << ", requesting_origin is not in geolocation permission map";
         return PermissionStatus::ASK;
       }
 #if BUILDFLAG(ARKWEB_NWEB_EX)      
