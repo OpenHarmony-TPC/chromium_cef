@@ -638,7 +638,10 @@ void CefCookieManagerImplExt::GetCookieListCookieTask(
   CookieManager* cookie_manager = GetNetworkCookieManager();
   if (!cookie_manager) {
     GetCookieStore()->GetCookieListWithOptionsAsync(
-        url, options, net::CookiePartitionKeyCollection(),
+        url, options,
+        net::CookiePartitionKeyCollection(net::CookiePartitionKey::FromWire(
+            net::SchemefulSite(url),
+            net::CookiePartitionKey::AncestorChainBit::kSameSite)),
         base::BindOnce(&CefCookieManagerImplExt::GetCookiesCallbackImpl,
                        base::Unretained(this), visitor, std::move(complete),
                        nullptr));
@@ -646,7 +649,10 @@ void CefCookieManagerImplExt::GetCookieListCookieTask(
   }
 
   cookie_manager->GetCookieList(
-      url, options, net::CookiePartitionKeyCollection(),
+      url, options,
+      net::CookiePartitionKeyCollection(net::CookiePartitionKey::FromWire(
+          net::SchemefulSite(url),
+          net::CookiePartitionKey::AncestorChainBit::kSameSite)),
       base::BindOnce(&CefCookieManagerImplExt::GetCookiesCallbackImpl,
                      base::Unretained(this), visitor, std::move(complete),
                      cookie_manager));
