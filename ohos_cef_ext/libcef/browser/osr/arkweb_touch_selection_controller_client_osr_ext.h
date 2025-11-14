@@ -87,7 +87,7 @@ void OnSelectionEvent(ui::SelectionEventType event) override;
   void ConvertClientClippedSelectionBounds(
     gfx::Rect& clipped_selection_bounds) override;
   bool IsShowHandle() override;
-  void SetQuickMenuRequested(bool is_visible);
+  void SetQuickMenuRequested(bool is_visible) override;
 #endif  // BUILDFLAG(ARKWEB_MENU)
 
 #if BUILDFLAG(ARKWEB_PDF)
