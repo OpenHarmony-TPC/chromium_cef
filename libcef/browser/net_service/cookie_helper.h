@@ -47,7 +47,6 @@ void LoadCookies(const CefBrowserContext::Getter& browser_context_getter,
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
                  const std::optional<GURL>& new_url,
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info,
 #endif
                  const AllowCookieCallback& allow_cookie_callback,
                  DoneCookieCallback done_callback);
@@ -62,7 +61,6 @@ void SaveCookies(const CefBrowserContext::Getter& browser_context_getter,
                  const network::ResourceRequest& request,
 #if BUILDFLAG(ARKWEB_COOKIE)
                  bool is_off_the_record,
-                 const net::IsolationInfo& isolation_info,
 #endif
                  net::HttpResponseHeaders* headers,
                  const AllowCookieCallback& allow_cookie_callback,
