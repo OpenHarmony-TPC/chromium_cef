@@ -896,13 +896,6 @@ bool ArkWebRenderWidgetHostViewOSRExt::SetDataDetectorSelectText(const std::u16s
 std::string ArkWebRenderWidgetHostViewOSRExt::GetDataDetectorSelectText() {
   return base::UTF16ToUTF8(data_detector_select_text_);
 }
-
-void ArkWebRenderWidgetHostViewOSRExt::OnDataDetectorSelectText() {
-  LOG(DEBUG) << "ArkWebRenderWidgetHostViewOSRExt::OnDataDetectorSelectText";
-  if (render_widget_host_) {
-    render_widget_host_->AsRenderWidgetHostImplExt()->OnDataDetectorSelectText();
-  }
-}
 #endif
 
 #if BUILDFLAG(ARKWEB_VIDEO_LTPO)

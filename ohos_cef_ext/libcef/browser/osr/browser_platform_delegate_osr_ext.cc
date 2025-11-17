@@ -518,13 +518,6 @@ std::string CefBrowserPlatformDelegateOsrExt::GetDataDetectorSelectText()
   }
   return std::string();
 }
-
-void CefBrowserPlatformDelegateOsrExt::OnDataDetectorSelectText()
-{
-  if (CefRenderWidgetHostViewOSR* view = GetOSRHostView()) {
-    view->AsArkWebRenderWidgetHostViewOSRExt()->OnDataDetectorSelectText();
-  }
-}
 #endif
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
 void CefBrowserPlatformDelegateOsrExt::OnSafeInsetsChange(int left,

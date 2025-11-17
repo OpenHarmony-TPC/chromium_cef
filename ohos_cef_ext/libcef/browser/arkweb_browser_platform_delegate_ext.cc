@@ -131,10 +131,6 @@ float ArkWebCefBrowserPlatformDelegateExt::GetPageScaleFactor() {
 std::string ArkWebCefBrowserPlatformDelegateExt::GetDataDetectorSelectText() {
   return std::string();
 }
-
-void ArkWebCefBrowserPlatformDelegateExt::OnDataDetectorSelectText() {
-  NOTIMPLEMENTED();
-}
 #endif
 
 #if BUILDFLAG(ARKWEB_DISPLAY_CUTOUT)
