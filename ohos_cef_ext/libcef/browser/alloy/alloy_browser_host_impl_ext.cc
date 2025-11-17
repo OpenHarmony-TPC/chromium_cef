@@ -1777,6 +1777,11 @@ bool AlloyBrowserHostImplExt::WebHandleKeyboardEvent(
 std::unique_ptr<content::EyeDropper> AlloyBrowserHostImplExt::OpenEyeDropper(
     content::RenderFrameHost *frame,
     content::EyeDropperListener *listener) {
+  if (listener_) {
+    LOG(ERROR) << "AlloyBrowserHostImplExt::OpenEyeDropper, dumplicate";
+    listener->ColorSelectionCanceled();
+    return;
+  }
   listener_ = listener;
   auto rvh = web_contents()->GetRenderViewHost();
   if (rvh && rvh->GetWidget()) {
@@ -1804,6 +1809,7 @@ void AlloyBrowserHostImplExt::OnEyeDropperResult(bool success, uint32_t color) {
   } else {
     listener_->ColorSelectionCanceled();
   }
+  listener_ = nullptr;
 }
 #endif
 
