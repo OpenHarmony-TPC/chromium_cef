@@ -20,3 +20,7 @@
 /libcef/common/cef_crash_report_utils.cc @StringChen
 /libcef/common/crash_reporter_client.cc @StringChen
 /libcef/common/crash_reporting.cc @StringChen
+
+# Compositor
+/libcef/browser/gpu/ @defeng20201 @LXinJie1
+/libcef/browser/osr/ @defeng20201 @LXinJie1
