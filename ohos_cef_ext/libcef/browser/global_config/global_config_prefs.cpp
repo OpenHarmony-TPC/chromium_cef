@@ -164,7 +164,8 @@ bool ParseFeaturesSwitchesToPrefs(PrefService* localState) {
   }
   if (!versioned_config.is_dict() || versioned_config.GetDict().empty()) {
     LOG(WARNING) << "No data matching the version is found in 'VersionedConfig' .";
-    return false;
+    SetFeaturesSwitchesToPrefsFile(std::move(base::Value::List()), localState);
+    return true;
   }
  
   return ProcessFeaturesSwitches(versioned_config, localState);
