@@ -4104,15 +4104,19 @@ void ArkWebBrowserHostExtImpl::HandleInputMethodExtendAction(int32_t action) {
   }
   if (action ==
       static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::SELECT_ALL)) {
+    LOG(INFO) << __FUNCTION__ << " SELECT_ALL";
     web_contents->SelectAll();
   } else if (action ==
              static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::CUT)) {
+    LOG(INFO) << __FUNCTION__ << " CUT";
     web_contents->Cut();
   } else if (action ==
              static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::COPY)) {
+    LOG(INFO) << __FUNCTION__ << " COPY";
     web_contents->Copy();
   } else if (action ==
              static_cast<int32_t>(OHOS::NWeb::IMFAdapterExtendAction::PASTE)) {
+    LOG(INFO) << __FUNCTION__ << " PASTE";
     web_contents->Paste();
   } else {
     LOG(ERROR) << __FUNCTION__ << " Unsupported action " << action;
