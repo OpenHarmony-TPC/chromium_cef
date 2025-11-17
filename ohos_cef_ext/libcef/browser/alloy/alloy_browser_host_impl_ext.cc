@@ -1779,8 +1779,7 @@ std::unique_ptr<content::EyeDropper> AlloyBrowserHostImplExt::OpenEyeDropper(
     content::EyeDropperListener *listener) {
   if (listener_) {
     LOG(ERROR) << "AlloyBrowserHostImplExt::OpenEyeDropper, dumplicate";
-    listener->ColorSelectionCanceled();
-    return;
+    return nullptr;
   }
   listener_ = listener;
   auto rvh = web_contents()->GetRenderViewHost();
