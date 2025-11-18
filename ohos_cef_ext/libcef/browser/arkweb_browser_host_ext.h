@@ -776,6 +776,10 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void HandleInputMethodExtendAction(int32_t action) override;
   void StopFling() override;
 
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+  void SetFocusWebId(int32_t nweb_id) override;
+#endif
+
 #if BUILDFLAG(ARKWEB_DEVTOOLS)
   void ShowDevToolsWith(
       CefRefPtr<ArkWebBrowserHostExt> frontend_browser,

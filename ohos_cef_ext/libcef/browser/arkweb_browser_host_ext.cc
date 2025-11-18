@@ -4140,3 +4140,13 @@ void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
       frontend_browser, this, delegate, inspect_element_at);
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
+
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+void ArkWebBrowserHostExtImpl::SetFocusWebId(int32_t nweb_id) {
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(
+      rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetFocusWebId(nweb_id);
+  }
+}
+#endif
