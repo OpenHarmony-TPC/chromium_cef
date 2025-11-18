@@ -3834,6 +3834,11 @@ typedef struct _cef_touch_handle_state_t {
   /// view port state. Only set if |flags| contains CEF_THS_FLAG_VIEW_PORT.
   ///
   cef_point_t view_port;
+
+  ///
+  /// Whether it is being dragged or not.
+  ///
+  bool is_dragging;
 #endif  // BUILDFLAG(IS_OHOS)
 } cef_touch_handle_state_t;
 
