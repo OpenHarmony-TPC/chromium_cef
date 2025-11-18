@@ -50,13 +50,19 @@
 
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 #include "arkweb/chromium_ext/base/process/process_handle_posix_ex.h"
+#include "base/trace_event/trace_event.h"
+#include "content/public/browser/network_service_instance.h"
 #include "third_party/ohos_ndk/includes/ohos_adapter/res_sched_client_adapter.h"
+#include <qos/qos.h>
 #endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
 
 using network::mojom::CookieManager;
 
 namespace {
 base::Lock g_lock;
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+const int32_t sync_close_delay_time = 100;
+#endif
 
 struct SaveCookiesProgress {
   base::OnceCallback<void(int, net::CookieList)> done_callback_;
@@ -275,15 +281,57 @@ bool CefCookieManagerImplExt::DeleteCookies(
                                is_sync);
 }
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+int CefCookieManagerImplExt::StartCookieTaskSync() {
+  TRACE_EVENT0("cef", "CefCookieManagerImplExt::StartCookieTaskSync");
+  return OH_QoS_SetThreadQoS(QoS_Level::QOS_USER_INTERACTIVE);
+}
+
+void CefCookieManagerImplExt::FinishCookieTaskSync() {
+  base::TimeDelta duration_time = base::Time::Now() - end_time_;
+  if (duration_time.InMilliseconds() >= sync_close_delay_time) {
+    TRACE_EVENT0("cef", "CefCookieManagerImplExt::FinishCookieTaskSync");
+    cookie_store_task_runner_->PostTask(FROM_HERE,
+        base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS)));
+    content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
+        base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS)));
+  }
+}
+
+void CefCookieManagerImplExt::StartSetQos() {
+  cookie_store_task_runner_->PostTask(FROM_HERE,
+      base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
+  content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
+      base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
+}
+
+void CefCookieManagerImplExt::FinishSetQos() {
+  end_time_ = base::Time::Now();
+  content::GetUIThreadTaskRunner({})->PostDelayedTask(FROM_HERE,
+    base::BindOnce(&CefCookieManagerImplExt::FinishCookieTaskSync, weak_ptr_factory_.GetWeakPtr()),
+    base::Milliseconds(sync_close_delay_time));
+}
+#endif // BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+
 void CefCookieManagerImplExt::RunCookieTaskSync(
     base::OnceCallback<void(base::OnceClosure)> task) {
   base::WaitableEvent completion(
       base::WaitableEvent::ResetPolicy::AUTOMATIC,
       base::WaitableEvent::InitialState::NOT_SIGNALED);
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    StartSetQos();
+  }
+#endif
   RunCookieTaskAsync(
       base::BindOnce(std::move(task), SignalEventClosure(&completion)));
   base::ScopedAllowBaseSyncPrimitivesOutsideBlockingScope wait;
   completion.Wait();
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    FinishSetQos();
+  }
+#endif
 }
 
 void CefCookieManagerImplExt::RunCookieTaskSync(
@@ -292,11 +340,21 @@ void CefCookieManagerImplExt::RunCookieTaskSync(
   base::WaitableEvent completion(
       base::WaitableEvent::ResetPolicy::AUTOMATIC,
       base::WaitableEvent::InitialState::NOT_SIGNALED);
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    StartSetQos();
+  }
+#endif
   RunCookieTaskAsync(base::BindOnce(
       std::move(task),
       OnceClosureToBoolCallback(SignalEventClosure(&completion), callback)));
   base::ScopedAllowBaseSyncPrimitivesOutsideBlockingScope wait;
   completion.Wait();
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    FinishSetQos();
+  }
+#endif
 }
 
 void CefCookieManagerImplExt::RunCookieTaskSync(
@@ -305,11 +363,21 @@ void CefCookieManagerImplExt::RunCookieTaskSync(
   base::WaitableEvent completion(
       base::WaitableEvent::ResetPolicy::AUTOMATIC,
       base::WaitableEvent::InitialState::NOT_SIGNALED);
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    StartSetQos();
+  }
+#endif
   RunCookieTaskAsync(base::BindOnce(
       std::move(task),
       OnceClosureToUint32Callback(SignalEventClosure(&completion), callback)));
   base::ScopedAllowBaseSyncPrimitivesOutsideBlockingScope wait;
   completion.Wait();
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  if (cmd_value_) {
+    FinishSetQos();
+  }
+#endif
 }
 
 void CefCookieManagerImplExt::RunCookieTaskAsync(base::OnceClosure task) {
@@ -459,11 +527,11 @@ CefCookieManagerImplExt::CefCookieManagerImplExt(bool support_incognito)
   cookie_store_path_ = cookie_store_path_.Append("Cookies");
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  bool cmd_value = false;
+  cmd_value_ = false;
   if (command_line) {
-    cmd_value = command_line->HasSwitch(switches::kEnableReportCookieMonsterClient);
+    cmd_value_ = command_line->HasSwitch(switches::kEnableReportCookieMonsterClient);
   }
-  if (cmd_value) {
+  if (cmd_value_) {
     OHOS::NWeb::ResSchedClientAdapter::ReportKeyThread(
       OHOS::NWeb::ResSchedStatusAdapter::THREAD_CREATED, base::GetCurrentRealPid(),
       cookie_store_task_thread_.GetThreadRealId(), OHOS::NWeb::ResSchedRoleAdapter::USER_INTERACT);
