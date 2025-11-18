@@ -248,7 +248,8 @@ void MaybeOverrideUserAgentOnRedirectNavigation(
     }
   }
   CheckRedirectChainForDuplicates(navigation);
-  LOG(DEBUG) << __func__ << " host " << current_url.host()
+  LOG(DEBUG) << __func__ << " host "
+             << url::LogUtils::ConvertUrlWithMask(current_url.host())
              << " match_type:" << match_type << ", final_ua " << final_ua
              << ", user_gesture " << navigation->HasUserGesture()
              << ", main_frame " << navigation->IsInMainFrame()
