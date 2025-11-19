@@ -584,11 +584,18 @@ void ChromeBrowserDelegate::UpdateTargetURL(content::WebContents* source,
 bool ChromeBrowserDelegate::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
     const std::u16string& message,
     int32_t line_no,
     const std::u16string& source_id) {
   if (auto delegate = GetDelegateForWebContents(source)) {
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    return delegate->DidAddMessageToConsole(source, log_level, log_source, message, line_no,
+#else
     return delegate->DidAddMessageToConsole(source, log_level, message, line_no,
+#endif
                                             source_id);
   }
   return false;

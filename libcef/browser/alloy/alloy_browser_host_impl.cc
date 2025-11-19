@@ -1131,10 +1131,17 @@ void AlloyBrowserHostImpl::UpdateTargetURL(content::WebContents* source,
 bool AlloyBrowserHostImpl::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
     const std::u16string& message,
     int32_t line_no,
     const std::u16string& source_id) {
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+  return contents_delegate_.DidAddMessageToConsole(source, level, log_source, message,
+#else
   return contents_delegate_.DidAddMessageToConsole(source, level, message,
+#endif
                                                    line_no, source_id);
 }
 
