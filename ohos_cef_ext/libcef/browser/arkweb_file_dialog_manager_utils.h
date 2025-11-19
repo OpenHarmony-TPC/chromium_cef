@@ -48,6 +48,12 @@ class ArkwebFileDialogManagerUtils {
 
   void HandleSetFileChooserInActive();
 
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+  static void HandleFileParams(
+      const ui::SelectFileDialog::FileTypeInfo& file_types,
+      FileChooserParams& params);
+#endif
+
  private:
   const raw_ptr<CefFileDialogManager> cef_file_dialog_manager_;
 };

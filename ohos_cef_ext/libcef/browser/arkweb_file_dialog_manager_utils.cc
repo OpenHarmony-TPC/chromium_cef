@@ -17,6 +17,10 @@
 
 #include "cef/libcef/browser/browser_host_base.h"
 #include "cef/libcef/browser/file_dialog_manager.h"
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+#include "base/json/json_reader.h"
+#include "base/json/json_writer.h"
+#endif
 
 using blink::mojom::FileChooserParams;
 
@@ -60,3 +64,28 @@ void ArkwebFileDialogManagerUtils::HandleSetFileChooserInActive() {
     cef_file_dialog_manager_->browser_->GetWebContents()->SetFileChooserInActive();
   }
 }
+
+#if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+void ArkwebFileDialogManagerUtils::HandleFileParams(
+    const ui::SelectFileDialog::FileTypeInfo &file_types,
+    FileChooserParams &params) {
+  params.is_exclude_accept_all_options = !file_types.include_all_files;
+  params.start_in.push_back(file_types.start_in);
+  base::Value::List accepts;
+  for (auto accept : file_types.accepts) {
+    base::Value::List types;
+    for (auto accept_file_type : accept) {
+      base::Value::Dict type;
+      base::Value::List accept_types;
+      for (auto accept_type : accept_file_type.accept_type) {
+        accept_types.Append(accept_type);
+      }
+      type.Set("mime_type", accept_file_type.mime_type);
+      type.Set("accept_type", base::WriteJson(accept_types).value());
+      types.Append(base::WriteJson(type).value());
+    }
+    accepts.Append(base::WriteJson(types).value());
+  };
+  params.accepts.push_back(base::UTF8ToUTF16(base::WriteJson(accepts).value()));
+}
+#endif
