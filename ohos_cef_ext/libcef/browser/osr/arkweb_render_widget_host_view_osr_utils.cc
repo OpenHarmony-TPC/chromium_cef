@@ -95,6 +95,16 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositorCreation(
 }
 
 #if BUILDFLAG(ARKWEB_COMPOSITE_RENDER)
+// fix compositor->delegete() UAF
+void ArkWebRenderWidgetHostViewOSRUtils::DetachView() {
+  LOG(WARNING) << "DetachView";
+  for (const auto& pair : ArkWebRenderWidgetHostViewOSRUtils::compositor_map_) {
+    if (pair.second && pair.second->delegate() == view_) {
+      pair.second->SetDelegate(nullptr);
+    }
+  }
+}
+
 void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   DCHECK(view_);
 #ifdef DISABLE_GPU
@@ -103,11 +113,13 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   }
 #else
   if (!view_->browser_impl_) {
+    DetachView();
     return;
   }
   auto it1 = accelerate_widget_map_.find(
       view_->browser_impl_->GetAcceleratedWidget(view_->is_popup_));
   if (it1 == accelerate_widget_map_.end()) {
+    DetachView();
     return;
   }
 #endif
@@ -131,6 +143,7 @@ void ArkWebRenderWidgetHostViewOSRUtils::HandleCompositeRenderRelease() {
   if (--accelerate_widget_map_[view_->browser_impl_->GetAcceleratedWidget(
           view_->is_popup_)] == 0) {
     if (!view_->browser_impl_) {
+      DetachView();
       return;
     }
     LOG(INFO) << "ReleaseCompositor, widget = "

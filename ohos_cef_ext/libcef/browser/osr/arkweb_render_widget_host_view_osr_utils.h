@@ -75,6 +75,7 @@ class ArkWebRenderWidgetHostViewOSRUtils {
   static auto GetContextFactory() { return content::GetContextFactory(); }
   void HandleCompositorCreation(base::SingleThreadTaskRunner* task_runner,
                                 bool use_external_begin_frame);
+  void DetachView();
   void HandleCompositeRenderRelease();
   void SetupCompositor(ui::Compositor* compositor);
   void HandleInvalidLocalSurfaceId();
