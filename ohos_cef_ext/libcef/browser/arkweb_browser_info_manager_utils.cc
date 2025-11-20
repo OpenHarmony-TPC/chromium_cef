@@ -114,6 +114,32 @@ bool ArkwebBrowserInfoManagerUtils::IsExtensionsOffscreenFrame(
   }
   return false;
 }
+
+bool ArkwebBrowserInfoManagerUtils::IsExtensionsBackgroundFrame(
+    const content::GlobalRenderFrameHostToken& global_token) {
+  auto* rfh = content::RenderFrameHost::FromFrameToken(global_token);
+  auto* web_contents = content::WebContents::FromRenderFrameHost(rfh);
+
+  if (!web_contents) {
+    LOG(INFO) << "IsExtensionsBackgroundFrame: web_contents is null";
+    return false;
+  }
+
+  const GURL& url = web_contents->GetURL();
+
+  if (!(url.SchemeIs(extensions::kExtensionScheme) ||
+        url.SchemeIs(extensions::kArkwebExtensionScheme))) {
+    return false;
+  }
+
+  auto view_type = extensions::GetViewType(web_contents);
+
+  if (view_type == extensions::mojom::ViewType::kExtensionBackgroundPage) {
+    return true;
+  }
+
+  return false;
+}
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
 #if BUILDFLAG(ARKWEB_READER_MODE)

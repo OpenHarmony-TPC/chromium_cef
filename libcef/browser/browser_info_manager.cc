@@ -444,7 +444,8 @@ void CefBrowserInfoManager::CheckExcludedNewBrowserInfoOnUIThread(
   // long block (kNewBrowserInfoResponseTimeoutMs) on renderer process in
   // loading.
   if (g_info_manager->GetUtils()->IsExtensionsOptionsUiFrame(global_token) ||
-      g_info_manager->GetUtils()->IsExtensionsOffscreenFrame(global_token)) {
+      g_info_manager->GetUtils()->IsExtensionsOffscreenFrame(global_token) ||
+      g_info_manager->GetUtils()->IsExtensionsBackgroundFrame(global_token)) {
     LOG(INFO) << "exclude getting browser info for extensions options ui or "
                  "offscreen document";
     g_info_manager->ContinueNewBrowserInfo(global_token,

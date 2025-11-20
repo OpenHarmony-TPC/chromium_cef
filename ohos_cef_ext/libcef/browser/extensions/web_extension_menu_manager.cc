@@ -487,3 +487,56 @@ void CefWebExtensionMenuManager::OnContextMenusRemoveAll(const std::string& exte
   }
 #endif
 }
+
+NO_SANITIZE("cfi-icall")
+void CefWebExtensionMenuManager::OnContextMenusRemove(
+    content::BrowserContext* browser_context,
+    const std::string& extension_id,
+    int menu_item_id) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (!browser_context) {
+    CefWebExtensionMenuManager::OnContextMenusRemove(extension_id,
+                                                     menu_item_id);
+    return;
+  }
+
+  if (NWebExtensionContextMenusDispatcher::HasOnRemoveByIntPbCallback()) {
+    NWebContextMenusItemV2 v2 = {};
+    v2.isOffTheRecord = browser_context->IsOffTheRecord();
+    NWebExtensionContextMenusDispatcher::OnRemoveByPb(
+        extension_id, menu_item_id, /*menu_item_id_string=*/nullptr, v2);
+  } else {
+    CefWebExtensionMenuManager::OnContextMenusRemove(extension_id,
+                                                     menu_item_id);
+  }
+#endif
+}
+
+NO_SANITIZE("cfi-icall")
+void CefWebExtensionMenuManager::OnContextMenusRemove(
+    content::BrowserContext* browser_context,
+    const std::string& extension_id,
+    const std::string& menu_item_id) {
+#if BUILDFLAG(ARKWEB_NWEB_EX)
+  if (!browser_context) {
+    CefWebExtensionMenuManager::OnContextMenusRemove(extension_id,
+                                                     menu_item_id);
+    return;
+  }
+
+  if (IsNativeApiEnable()) {
+    if (NWebExtensionContextMenusDispatcher::HasOnRemoveByPbCallback()) {
+      NWebContextMenusItemV2 v2 = {};
+      v2.isOffTheRecord = browser_context->IsOffTheRecord();
+      NWebExtensionContextMenusDispatcher::OnRemoveByPb(
+          extension_id,
+          /*menu_item_id_int=*/0, menu_item_id.c_str(), v2);
+    } else {
+      NWebExtensionContextMenusDispatcher::OnRemoveNative(extension_id, 0,
+                                                          menu_item_id.c_str());
+    }
+  } else {
+    NWebExtensionContextMenusDispatcher::OnRemove(extension_id, menu_item_id);
+  }
+#endif
+}

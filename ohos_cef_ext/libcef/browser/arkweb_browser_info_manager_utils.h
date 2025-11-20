@@ -51,6 +51,8 @@ class ArkwebBrowserInfoManagerUtils {
       const content::GlobalRenderFrameHostToken& global_token);
   bool IsExtensionsOffscreenFrame(
       const content::GlobalRenderFrameHostToken& global_token);
+  bool IsExtensionsBackgroundFrame(
+      const content::GlobalRenderFrameHostToken& global_token);
 #endif  // BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
 
  private:
