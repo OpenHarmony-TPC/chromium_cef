@@ -100,6 +100,7 @@ class CefDialogHandler : public virtual CefBaseRefCounted {
                             const std::vector<CefString>& accept_extensions,
                             const std::vector<CefString>& accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+                            const CefString& accepts,
                             const CefString& start_in,
                             bool is_exclude_accept_all_options,
                             bool capture,

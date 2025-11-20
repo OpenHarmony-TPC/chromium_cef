@@ -165,8 +165,7 @@ FileChooserParams SelectFileToFileChooserParams(
       }
     }
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
-    params.is_exclude_accept_all_options = !file_types->include_all_files;
-    params.start_in.push_back(file_types->start_in);
+    ArkwebFileDialogManagerUtils::HandleFileParams(*file_types, params);
 #endif
   }
 
@@ -524,8 +523,12 @@ CefFileDialogManager::MaybeRunDelegate(
       std::vector<CefString> accept_descriptions;
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
       CefString start_in = u"";
+      CefString accepts = u"";
       if (params.start_in.size() > 0) {
         start_in = params.start_in[0];
+      }
+      if (params.accepts.size() > 0) {
+        accepts = params.accepts[0];
       }
 #endif
       if (extensions.empty()) {
@@ -573,6 +576,7 @@ CefFileDialogManager::MaybeRunDelegate(
           params.title, params.default_file_name.value(), accept_filters,
           accept_extensions, accept_descriptions,
 #if BUILDFLAG(ARKWEB_FILE_UPLOAD)
+          accepts,
           start_in,
           params.is_exclude_accept_all_options,
           params.use_media_capture, 
