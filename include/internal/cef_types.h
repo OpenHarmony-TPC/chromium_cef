@@ -2422,6 +2422,9 @@ typedef enum {
 #if BUILDFLAG(IS_OHOS)
   QM_EDITFLAG_CAN_SELECT_ALL = 1 << 4,
 #endif  // BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(ARKWEB_MENU)
+  QM_EDITFLAG_CAN_AUTOFILL = 1 << 6,
+#endif  // BUILDFLAG(ARKWEB_MENU)
 } cef_quick_menu_edit_state_flags_t;
 
 ///
