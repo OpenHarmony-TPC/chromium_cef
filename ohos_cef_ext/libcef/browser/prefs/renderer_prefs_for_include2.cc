@@ -79,6 +79,9 @@ void SetCefPrefsSetStateExt(const CefBrowserSettings& cef,
   SET_STATE(cef.allow_mixed_content_upgrades, web.allow_mixed_content_upgrades);
   SET_STATE(cef.initialize_at_minimum_page_scale,
             web.initialize_at_minimum_page_scale);
+#if BUILDFLAG(ARKWEB_AI)
+  SET_STATE(cef.image_analyzer_enabled, web.image_analyzer_enabled);
+#endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   SET_STATE(cef.hide_vertical_scrollbars, web.hide_vertical_scrollbars);
   SET_STATE(cef.hide_horizontal_scrollbars, web.hide_horizontal_scrollbars);
