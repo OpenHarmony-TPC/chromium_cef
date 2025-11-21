@@ -56,7 +56,7 @@ class SSLPlatformUKeyOHOS : public net::ThreadedSSLPrivateKey::Delegate {
       return;
     }
     rootCertDataAdapter->CloseUKeyRemoteHandle(uri_);
-  };
+  }
  
   std::string GetProviderName() override { return "OHOS ukey cert manager"; }
  

@@ -303,7 +303,7 @@ base::Value::Dict BuildPageContent(
 base::Value::List BuildDistilledPageList(
     const dom_distiller::DistilledArticleProto* proto) {
   base::Value::List list;
-  for (size_t i = 0; i < proto->pages_size(); ++i) {
+  for (size_t i = 0; i < static_cast<size_t>(proto->pages_size()); ++i) {
     list.Append(BuildPageContent(proto->pages(i)));
   }
   return list;
