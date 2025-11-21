@@ -333,7 +333,14 @@ OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames(
         continue;
       }
 
-      int len = key.As<v8::String>()->Utf8Length(isolate);
+      int len = 0;
+      if (key->IsString()) {
+        len = key.As<v8::String>()->Utf8Length(isolate);
+      } else {
+        LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
+                      "key is not a string";
+        continue;
+      }
       if (len == 0) {
         LOG(DEBUG) << "OhGinJavascriptBridgeDispatcher::GetH5ObjectMethodNames "
                       "key len error";
