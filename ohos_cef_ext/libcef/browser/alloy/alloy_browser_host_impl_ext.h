@@ -298,6 +298,10 @@ public:
   void OnCameraCaptureStateChanged(int original_state, int new_state) override;
 #endif
 
+#if BUILDFLAG(ARKWEB_WEBRTC)
+  void OnMicrophoneCaptureStateChanged(int original_state, int new_state) override;
+#endif
+
 private:
   friend class AlloyBrowserHostImpl;
   friend class AlloyBrowserHostImplUtils;
