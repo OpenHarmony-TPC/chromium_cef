@@ -21,7 +21,6 @@
 #include <mutex>
 #include <memory>
 
-#include "include/cef_extension_window_handler.h"
 #include "base/memory/raw_ptr.h"
 
 class CefWindowsManager {
