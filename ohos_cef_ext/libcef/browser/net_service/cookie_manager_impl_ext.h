@@ -212,6 +212,7 @@ void UpdateHostContentSettingsMap();
 #if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
   base::Time end_time_;
   bool cmd_value_ = false;
+  bool is_set_qos_ = false;
 #endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   HostContentSettingsMap* host_content_settings_map_ = nullptr;
