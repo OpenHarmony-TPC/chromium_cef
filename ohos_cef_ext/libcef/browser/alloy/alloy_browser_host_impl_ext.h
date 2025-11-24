@@ -80,6 +80,9 @@ public:
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id,
     content::WebContentsObserver::MediaStoppedReason reason) override;
+#endif
+
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   void MediaPlayerGone(
     const content::WebContentsObserver::MediaPlayerInfo& video_type,
     const content::MediaPlayerId& id) override;
@@ -106,7 +109,20 @@ public:
   void OnShowVideoAssistant(const std::string& videoAssistantItems) override;
   void OnReportStatisticLog(const std::string& content) override;
 #endif  // BUILDFLAG(ARKWEB_VIDEO_ASSISTANT)
-
+#if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void OnShowConfirmInfoBar(const std::string&,
+                            const std::string& infoId,
+                            const std::string& message,
+                            int buttons,
+                            const std::string& buttonLabelOK,
+                            const std::string& buttonLabelCancel) override;
+  void OnHideConfirmInfoBar(const std::string&,
+                            const std::string& infoId,
+                            const std::string& message,
+                            int buttons,
+                            const std::string& buttonLabelOK,
+                            const std::string& buttonLabelCancel) override;
+#endif // ARKWEB_ARKWEB_EXTENSIONS
 #if BUILDFLAG(ARKWEB_NETWORK_BASE)
   // Shows the repost form confirmation dialog box.
   void ShowRepostFormWarningDialog(content::WebContents* source) override;
@@ -122,6 +138,8 @@ public:
 #endif
 
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
+  void ExtensionSetTabId(int tab_id) override;
+  int ExtensionGetTabId() override;
   bool WebExtensionCheck(
       const std::string functionName,
       content::BrowserContext*& browser_context,
@@ -136,9 +154,6 @@ public:
       std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
       std::unique_ptr<NWebExtensionTab> tab) override;
 
-  void ExtensionSetTabId(int tab_id) override;
-  int ExtensionGetTabId() override;
-
   void WebExtensionTabRemoved(int tab_id,
     bool isWindowClosing, int windowId) override;
 
@@ -146,13 +161,16 @@ public:
     int new_position, int new_window_id) override;
 
   void WebExtensionTabDetached(int tab_id,
-    const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
+      const std::unique_ptr<NWebExtensionTabDetachInfo> detachInfo) override;
 
   void WebExtensionTabHighlighted(NWebExtensionTabHighlightInfo& highlightInfo) override;
 
-  void WebExtensionTabMoved(int tab_id, const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override;
+  void WebExtensionTabMoved(int tab_id,
+      const std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) override;
 
   void WebExtensionTabReplaced(int32_t addedTabId, int32_t removedTabId) override;
+
+  content::DropData* GetDropData() override;
 
   static void WebExtensionActionClicked(
       std::string extensionId,
@@ -162,7 +180,7 @@ public:
     content::BrowserContext* browser_context,
     std::string extensionId,
     bool isPinned);
-
+ 
   static void WebExtensionActionPinnedStateChanged(
       std::string extensionId, bool isPinned);
 
@@ -288,18 +306,11 @@ public:
 #endif  // ARKWEB_PERFORMANCE_PERSISTENT_TASK
 
 #if BUILDFLAG(ARKWEB_NETWORK_LOAD)
-  std::string OnRewriteUrlForNavigation(const std::string& original_url,
-                                        const std::string& referrer,
-                                        int transition_type,
-                                        bool is_key_request) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_WEBRTC)
-  void OnCameraCaptureStateChanged(int original_state, int new_state) override;
-#endif
-
-#if BUILDFLAG(ARKWEB_WEBRTC)
-  void OnMicrophoneCaptureStateChanged(int original_state, int new_state) override;
+  std::string OnRewriteUrlForNavigation(
+      const std::string& original_url,
+      const std::string& referrer,
+      int transition_type,
+      bool is_key_request) override;
 #endif
 
 private:
@@ -358,8 +369,10 @@ private:
   int nweb_id_ = -1;
   int window_id_ = -1;
   base::ProcessId last_pid_ = -1;
+#if BUILDFLAG(ARKWEB_VIDEO_LTPO)
   void SetVisible(int32_t nweb_id, bool visible);
   static int32_t ltpo_strategy_;
+#endif
 #endif
 
 #if BUILDFLAG(ARKWEB_RENDERER_ANR_DUMP)
