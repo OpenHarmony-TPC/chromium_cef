@@ -300,7 +300,7 @@ void CefCookieManagerImplExt::FinishCookieTaskSync() {
 }
 
 void CefCookieManagerImplExt::StartSetQos() {
-  if (is_set_qos_ == false) {
+  if (is_set_qos_ == true) {
     return;
   }
   is_set_qos_ = true;
