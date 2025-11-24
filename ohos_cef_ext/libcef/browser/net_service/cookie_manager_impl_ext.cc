@@ -291,6 +291,7 @@ void CefCookieManagerImplExt::FinishCookieTaskSync() {
   base::TimeDelta duration_time = base::Time::Now() - end_time_;
   if (duration_time.InMilliseconds() >= sync_close_delay_time) {
     TRACE_EVENT0("cef", "CefCookieManagerImplExt::FinishCookieTaskSync");
+    is_set_qos_ = false;
     cookie_store_task_runner_->PostTask(FROM_HERE,
         base::BindOnce(base::IgnoreResult(&OH_QoS_ResetThreadQoS)));
     content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
@@ -299,6 +300,10 @@ void CefCookieManagerImplExt::FinishCookieTaskSync() {
 }
 
 void CefCookieManagerImplExt::StartSetQos() {
+  if (is_set_qos_ == false) {
+    return;
+  }
+  is_set_qos_ = true;
   cookie_store_task_runner_->PostTask(FROM_HERE,
       base::BindOnce(base::IgnoreResult(&CefCookieManagerImplExt::StartCookieTaskSync)));
   content::GetNetworkTaskRunner()->PostTask(FROM_HERE,
