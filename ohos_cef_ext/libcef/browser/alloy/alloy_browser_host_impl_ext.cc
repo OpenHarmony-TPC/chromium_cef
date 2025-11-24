@@ -118,9 +118,6 @@
 #include "cef/ohos_cef_ext/libcef/browser/alloy/custom_media_player_proxy.h"
 #endif  // ARKWEB_CUSTOM_VIDEO_PLAYER
 
-#if BUILDFLAG(ARKWEB_SAFEBROWSING)
-#include "cef/ohos_cef_ext/libcef/browser/ohos_safe_browsing/ohos_safe_browsing_tab_helper.h"
-#endif
 using content::KeyboardEventProcessingResult;
 
 
