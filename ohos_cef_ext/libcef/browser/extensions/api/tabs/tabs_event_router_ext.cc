@@ -33,6 +33,8 @@ using zoom::ZoomController;
 namespace extensions {
 
 namespace {
+
+
 constexpr char kGroupIdKey[] = "groupId";
 constexpr char kNewPositionKey[] = "newPosition";
 constexpr char kNewWindowIdKey[] = "newWindowId";
@@ -46,6 +48,7 @@ constexpr char kMutedInfoKey[] = "mutedInfo";
 constexpr char kSelectedKey[] = "selected";
 constexpr char kStatusKey[] = "status";
 constexpr char kTabIdKey[] = "tabId";
+
 
 constexpr char kWindowClosing[] = "isWindowClosing";
 
@@ -193,7 +196,7 @@ bool WillDispatchTabUpdatedEventWithTab(
 
   ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
       ExtensionTabUtil::GetScrubTabBehavior(extension, target_context, contents);
- 
+
   base::Value::Dict tab_value = GetTabValue(tab, scrub_tab_behavior);
   base::Value::Dict changed_properties;
   FillChangeInfo(changeInfo, changed_properties);
@@ -213,10 +216,10 @@ bool WillDispatchTabCreatedEvent(
     const base::Value::Dict* listener_filter,
     std::optional<base::Value::List>& event_args_out,
     mojom::EventFilteringInfoPtr& event_filtering_info_out) {
-  GURL gurl(tab.url.value());
+  GURL gurl(tab.url.value_or(""));
   ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
       ExtensionTabUtil::GetScrubTabBehaviorExt(extension, target_context, gurl, tab.id.value_or(-1));
- 
+
   base::Value::Dict tab_value = extensions::GetTabValue(tab, scrub_tab_behavior);
   event_args_out.emplace();
   event_args_out->Append(std::move(tab_value));
@@ -276,15 +279,16 @@ void TabsEventRouter::DispatchTabActivatedEvent(
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
 
-void TabsEventRouter::DispatchTabRemovedEvent(int tab_id,
-                                              bool isWindowClosing,
-                                              int windowId,
-                                              content::WebContents* contents) {
+void TabsEventRouter::DispatchTabRemovedEvent(
+    int tab_id,
+    bool isWindowClosing,
+    int windowId,
+    content::WebContents* contents) {
   DCHECK(contents);
   api::tabs::OnRemoved::RemoveInfo info;
   info.window_id = windowId;
   info.is_window_closing = isWindowClosing;
-
+ 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
   DispatchEvent(profile, events::TABS_ON_REMOVED,
                 api::tabs::OnRemoved::kEventName,
@@ -292,10 +296,11 @@ void TabsEventRouter::DispatchTabRemovedEvent(int tab_id,
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
 
-void TabsEventRouter::DispatchTabAttachedEvent(int tab_id,
-                                             content::WebContents* contents,
-                                             int32_t newPosition,
-                                             int32_t newWindowId) {
+void TabsEventRouter::DispatchTabAttachedEvent(
+    int tab_id,
+    content::WebContents* contents,
+    int32_t newPosition,
+    int32_t newWindowId) {
   DCHECK(contents);
   api::tabs::OnAttached::AttachInfo info;
   info.new_position = newPosition;
@@ -308,9 +313,10 @@ void TabsEventRouter::DispatchTabAttachedEvent(int tab_id,
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
 
-void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
-                                              content::BrowserContext* browserContext,
-                                              std::unique_ptr<NWebExtensionTab> tab) {
+void TabsEventRouter::DispatchTabCreatedEvent(
+    int tab_id,
+    content::BrowserContext* browserContext,
+    std::unique_ptr<NWebExtensionTab> tab) {
   DCHECK(browserContext);
   NWebExtensionTab extension_tab(*tab);
 
@@ -324,10 +330,11 @@ void TabsEventRouter::DispatchTabCreatedEvent(int tab_id,
   EventRouter::Get(profile)->BroadcastEvent(std::move(event));
 }
 
-void TabsEventRouter::DispatchTabDetachedEvent(content::WebContents* contents,
-                                               int tab_id,
-                                               int oldPosition,
-                                               int oldWindowId) {
+void TabsEventRouter::DispatchTabDetachedEvent(
+    content::WebContents* contents,
+    int tab_id,
+    int oldPosition,
+    int oldWindowId) {
   DCHECK(contents);
   base::Value::List args;
   args.Append(tab_id);
@@ -362,8 +369,7 @@ void TabsEventRouter::DispatchTabHighlightedEvent(
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
   DispatchEvent(profile, events::TABS_ON_HIGHLIGHTED,
-                api::tabs::OnHighlighted::kEventName,
-                std::move(args),
+                api::tabs::OnHighlighted::kEventName, std::move(args),
                 EventRouter::USER_GESTURE_UNKNOWN);
 }
 
@@ -382,10 +388,8 @@ void TabsEventRouter::DispatchTabMovedEvent(
   args.Append(std::move(object_args));
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
-  DispatchEvent(profile, events::TABS_ON_MOVED,
-                api::tabs::OnMoved::kEventName,
-                std::move(args),
-                EventRouter::USER_GESTURE_UNKNOWN);
+  DispatchEvent(profile, events::TABS_ON_MOVED, api::tabs::OnMoved::kEventName,
+                std::move(args), EventRouter::USER_GESTURE_UNKNOWN);
 }
 
 void TabsEventRouter::DispatchTabReplacedEvent(
@@ -398,10 +402,8 @@ void TabsEventRouter::DispatchTabReplacedEvent(
   args.Append(removedTabId);
 
   Profile* profile = Profile::FromBrowserContext(contents->GetBrowserContext());
-  DispatchEvent(profile, events::TABS_ON_REPLACED,
-                api::tabs::OnReplaced::kEventName,
-                std::move(args),
-                EventRouter::USER_GESTURE_UNKNOWN);
+  DispatchEvent(profile, events::TABS_ON_REPLACED, api::tabs::OnReplaced::kEventName,
+                std::move(args), EventRouter::USER_GESTURE_UNKNOWN);
 }
 
 void TabsEventRouter::RegisterTabZoomObserver(content::WebContents* contents) {
@@ -410,7 +412,7 @@ void TabsEventRouter::RegisterTabZoomObserver(content::WebContents* contents) {
     zoom_scoped_observations_.AddObservation(zoom_controller);
   }
 }
- 
+
 void TabsEventRouter::UnregisterTabZoomObserver(content::WebContents* contents) {
   if (auto* zoom_controller = ZoomController::FromWebContents(contents);
       zoom_scoped_observations_.IsObservingSource(zoom_controller)) {

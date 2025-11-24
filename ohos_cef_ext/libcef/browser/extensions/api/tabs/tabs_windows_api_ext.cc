@@ -32,12 +32,12 @@ void TabsWindowsAPI::TabUpdated(int tab_id,
     LOG(ERROR) << "TabUpdated tab is null";
     return;
   }
- 
+
   auto tab_helper = TabHelper::FromWebContents(contents);
   if (tab_helper) {
     tab_helper->active_tab_permission_granter()->SetTabId(tab_id);
   }
-
+ 
   int windowId = tab->windowId;
   if (auto* ewco = extensions::ExtensionWebContentsObserver::GetForWebContents(contents)) {
       contents->ForEachRenderFrameHost([ewco, tab_id, windowId](content::RenderFrameHost* frame_host) {
@@ -53,60 +53,50 @@ void TabsWindowsAPI::TabUpdated(int tab_id,
 }
 
 void TabsWindowsAPI::TabActivated(int tab_id,
-    int window_id, content::BrowserContext* browser_context) {
+  int window_id, content::BrowserContext* browser_context) {
   tabs_event_router()->DispatchTabActivatedEvent(tab_id, window_id, browser_context);
 }
 
-void TabsWindowsAPI::TabRemoved(int tab_id,
-                                bool isWindowClosing,
-                                int windowId,
-                                content::WebContents* contents) {
+void TabsWindowsAPI::TabRemoved(int tab_id, bool isWindowClosing,
+    int windowId, content::WebContents* contents) {
   tabs_event_router()->DispatchTabRemovedEvent(tab_id, isWindowClosing, windowId, contents);
 }
 
-void TabsWindowsAPI::TabAttached(int tab_id,
-                                content::WebContents* contents,
-                                int32_t newPosition,
-                                int32_t newWindowId) {
+void TabsWindowsAPI::TabAttached(int tab_id, content::WebContents* contents,
+    int32_t newPosition, int32_t newWindowId) {
   tabs_event_router()->DispatchTabAttachedEvent(tab_id, contents, newPosition, newWindowId);
 }
 
-void TabsWindowsAPI::TabCreated(int tab_id,
-                                content::BrowserContext* browserContext,
-                                std::unique_ptr<NWebExtensionTab> tab) {
+void TabsWindowsAPI::TabCreated(int tab_id, content::BrowserContext* browserContext, 
+    std::unique_ptr<NWebExtensionTab> tab) {
   tabs_event_router()->DispatchTabCreatedEvent(tab_id, browserContext, std::move(tab));
 }
 
-void TabsWindowsAPI::TabDetached(content::WebContents* contents,
-                                 int tab_id,
-                                 int oldPosition,
-                                 int oldWindowId) {
+void TabsWindowsAPI::TabDetached(content::WebContents* contents, int tab_id,
+    int oldPosition, int oldWindowId) {
   tabs_event_router()->DispatchTabDetachedEvent(contents, tab_id, oldPosition, oldWindowId);
 }
 
 void TabsWindowsAPI::TabHighlighted(content::WebContents* contents,
-                                    NWebExtensionTabHighlightInfo& highlightInfo) {
+    NWebExtensionTabHighlightInfo& highlightInfo) {
   tabs_event_router()->DispatchTabHighlightedEvent(contents, highlightInfo);
 }
 
-void TabsWindowsAPI::TabMoved(content::WebContents* contents,
-                              int tab_id,
-                              std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
+void TabsWindowsAPI::TabMoved(content::WebContents* contents, int tab_id,
+    std::unique_ptr<NWebExtensionTabMoveInfo> moveInfo) {
   tabs_event_router()->DispatchTabMovedEvent(contents, tab_id, std::move(moveInfo));
 }
 
 void TabsWindowsAPI::TabReplaced(content::WebContents* contents,
-                                 int32_t addedTabId,
-                                 int32_t removedTabId) {
+    int32_t addedTabId, int32_t removedTabId) {
   tabs_event_router()->DispatchTabReplacedEvent(contents, addedTabId, removedTabId);
 }
 
 void TabsWindowsAPI::RegisterTabZoomObserver(content::WebContents* web_contents) {
   tabs_event_router()->RegisterTabZoomObserver(web_contents);
 }
- 
+
 void TabsWindowsAPI::UnregisterTabZoomObserver(content::WebContents* web_contents) {
   tabs_event_router()->UnregisterTabZoomObserver(web_contents);
 }
-
 }  // namespace extensions

@@ -25,21 +25,16 @@
 #include "extensions/common/manifest_constants.h"
 #include "extensions/common/mojom/api_permission_id.mojom-shared.h"
 #include "extensions/common/permissions/permissions_data.h"
-
+#include "extensions/common/permissions/permission_set.h"
 #include "libcef/browser/browser_info_manager.h"
 #include "libcef/browser/extensions/extension_function_details.h"
 #include "libcef/browser/extensions/tab_extensions_util.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
-#include "third_party/blink/public/common/page/page_zoom.h"
-#include "ohos_nweb/src/capi/web_extension_window_items.h"
 #include "ohos_nweb/src/capi/web_extension_tab_items.h"
-#include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
+#include "ohos_nweb/src/capi/web_extension_window_items.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_tab_cef_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_utils.h"
 #include "ohos_nweb/src/cef_delegate/nweb_handler_delegate.h"
-#include "extensions/browser/extension_zoom_request_client.h"
-#include "base/types/optional_util.h"
-#include "base/task/bind_post_task.h"
 #include "third_party/blink/public/common/page/page_zoom.h"
 
 using content::NavigationController;
@@ -137,9 +132,7 @@ void GetQueryParams(
   queryInfo.audible = params->query_info.audible;
   queryInfo.autoDiscardable = params->query_info.auto_discardable;
   queryInfo.currentWindow = params->query_info.current_window;
-
   queryInfo.discarded = params->query_info.discarded;
-
   queryInfo.groupId = params->query_info.group_id;
   queryInfo.highlighted = params->query_info.highlighted;
   queryInfo.index = params->query_info.index;
@@ -216,7 +209,7 @@ int GetCurrentWebContents(ExtensionFunction* function) {
   // 3. v2 background, window_id < 0
   // 4. popup or sidepanel, window_id > 0
   int nweb_id = web_contents->GetNWebId();
-  int window_id = 
+  int window_id =
       extensions::CefExtensionWindowIdManager::GetWindowId(nweb_id);
   return GetAnyWebContents(window_id, function);
 }
@@ -268,9 +261,8 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
   EXTENSION_FUNCTION_VALIDATE(has_args());
   int window_id = extension_misc::kCurrentWindowId;
 
-  if (args().size() > 0 && args()[0].is_int()) {
+  if (args().size() > 0 && args()[0].is_int())
     window_id = args()[0].GetInt();
-  }
 
   std::optional<ImageDetails> image_details;
   if (args().size() > 1) {
@@ -290,7 +282,7 @@ ExtensionFunction::ResponseAction TabsCaptureVisibleTabFunction::Run() {
     LOG(INFO) << "TabsCaptureVisibleTabFunction cannot find WebContents by tab_id:" << current;
     return RespondNow(Error("No active web contents to capture"));
   }
-  
+
   std::string error;
   if (!extension()->permissions_data()->CanCaptureVisiblePage(
       contents->GetLastCommittedURL(),
@@ -321,6 +313,7 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
     LOG(ERROR) << "OnTabCreated is empty!!!!";
     return;
   }
+
   if (error) {
     function->Respond(function->Error(error.value()));
   } else {
@@ -341,12 +334,22 @@ void TabsCreateFunction::OnTabCreated(const base::WeakPtr<TabsCreateFunction>& f
   }
 }
 
+void OnCreateTabForExtension(const NWebExtensionTab& tab,
+                             std::optional<std::string>& error) {
+  if (error) {
+    LOG(ERROR) << "OnCreateTabForExtension create error, " << error.value();
+  }
+}
+
 void TabsCreateFunction::CreateTabForExtension(
     std::string& url,
     content::BrowserContext* context) {
   NWebTabCreateInfoV2 create_info;
   create_info.createInfo.url = url;
   create_info.contextType = OHOS::NWeb::GetExtensionContextType(context);
+
+  bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::CreateTab(
+      create_info, base::BindRepeating(&OnCreateTabForExtension));
 }
 
 ExtensionFunction::ResponseAction TabsCreateFunction::Run() {
@@ -407,7 +410,7 @@ ExtensionFunction::ResponseAction TabsDetectLanguageFunction::Run() {
 
   CefRefPtr<AlloyBrowserHostImpl> alloy_browser_host =
       AlloyBrowserHostImpl::GetBrowserForContents(web_contents);
-  
+
   std::string language = alloy_browser_host->GetCurrentLanguage();
   if (language.empty()) {
     return RespondNow(
@@ -428,7 +431,7 @@ ExtensionFunction::ResponseAction TabsDiscardFunction::Run() {
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::DiscardTab(
       tab_id, discard_info, base::BindRepeating(&TabsDiscardFunction::OnTabDiscarded,
                                   weak_ptr_factory_.GetWeakPtr()));
-  call_discard_tab_ = false;
+  call_discard_tab_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "TabsDiscardFunction did_respond";
@@ -497,7 +500,7 @@ ExtensionFunction::ResponseAction TabsDuplicateFunction::Run() {
     return RespondLater();
   } else {
     return RespondNow(Error("not support tabs.duplicate"));
-  } 
+  }
 }
 
 void TabsDuplicateFunction::OnTabDuplicated(
@@ -564,7 +567,7 @@ ExtensionFunction::ResponseAction TabsGetCurrentFunction::Run() {
         OHOS::NWeb::NWebExtensionTabCefDelegate::GetTab(caller_contents->ExtensionGetTabId());
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
         ExtensionTabUtil::GetScrubTabBehavior(extension(), source_context_type(), caller_contents);
- 
+
     return RespondNow(WithArguments(base::Value(GetTabValue(*tab, scrub_tab_behavior))));
   }
   return RespondNow(NoArguments());
@@ -627,6 +630,7 @@ ExtensionFunction::ResponseAction TabsGoBackFunction::Run() {
   if (!web_contents) {
     return RespondNow(Error(std::move(error)));
   }
+
   NavigationController& controller = web_contents->GetController();
   if (!controller.CanGoBack()) {
     return RespondNow(Error(tabs_constants::kNotFoundNextPageError));
@@ -689,11 +693,11 @@ ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
     options.tabIds.push_back(*params->options.tab_ids.as_integer);
   }
 
-  call_group_tab_ = true;
+  call_group_tab_ =true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::GroupTab(
       options, base::BindRepeating(&TabsGroupFunction::OnTabGrouped,
                                    weak_ptr_factory_.GetWeakPtr()));
-  call_group_tab_ = false;
+  call_group_tab_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "TabsGroupFunction did_respond";
@@ -709,10 +713,9 @@ ExtensionFunction::ResponseAction TabsGroupFunction::Run() {
   }
 }
 
-void TabsGroupFunction::OnTabGrouped(
-    const base::WeakPtr<TabsGroupFunction>& function,
-    int group_id,
-    std::optional<std::string>& error) {
+void TabsGroupFunction::OnTabGrouped(const base::WeakPtr<TabsGroupFunction>& function,
+                                     int group_id,
+                                     std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnTabGrouped is empty!!!!";
@@ -758,7 +761,7 @@ ExtensionFunction::ResponseAction TabsHighlightFunction::Run() {
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::HighlightTab(
       info, base::BindRepeating(&TabsHighlightFunction::OnTabHighlighted,
                                 weak_ptr_factory_.GetWeakPtr()));
-  call_highlight_tab_ = false;
+  call_highlight_tab_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "TabsHighlightFunction did_respond";
@@ -847,16 +850,14 @@ ExtensionFunction::ResponseAction TabsMoveFunction::Run() {
   }
 }
 
-void TabsMoveFunction::OnTabMoved(
-    const base::WeakPtr<TabsMoveFunction>& function,
-    const std::vector<NWebExtensionTab>& tabs,
-    std::optional<std::string>& error) {
+void TabsMoveFunction::OnTabMoved(const base::WeakPtr<TabsMoveFunction>& function,
+                                  const std::vector<NWebExtensionTab>& tabs,
+                                  std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnTabMoved is empty!!!!";
     return;
   }
-
   if (error) {
     function->Respond(function->Error(error.value()));
   } else if (!function->has_callback()) {
@@ -880,7 +881,6 @@ void TabsMoveFunction::OnTabMoved(
     base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
     function->Respond(function->WithArguments(std::move(tab_list)));
   }
-
   if (!function->call_move_tab_) {
     LOG(INFO) << "TabsMoveFunction Release";
     function->Release();
@@ -920,7 +920,7 @@ ExtensionFunction::ResponseAction TabsQueryFunction::Run() {
         ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
- 
+
   base::Value::List tab_list = GetTabValueList(tabs, scrub_tab_behaviors);
   return RespondNow(WithArguments(std::move(tab_list)));
 }
@@ -1172,9 +1172,8 @@ ExtensionFunction::ResponseAction TabsUngroupFunction::Run() {
   }
 }
 
-void TabsUngroupFunction::OnTabUngrouped(
-    const base::WeakPtr<TabsUngroupFunction>& function,
-    std::optional<std::string>& error) {
+void TabsUngroupFunction::OnTabUngrouped(const base::WeakPtr<TabsUngroupFunction>& function,
+                                         std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnTabUngrouped is empty!!!!";
@@ -1272,7 +1271,8 @@ bool TabsUpdateFunction::GetUpdateParams(
   }
 
   if (params->update_properties.auto_discardable.has_value()) {
-    update_properties.autoDiscardable = *params->update_properties.auto_discardable;
+    update_properties.autoDiscardable =
+        *params->update_properties.auto_discardable;
   }
 
   return true;
@@ -1308,11 +1308,11 @@ ExtensionFunction::ResponseAction TabsUpdateFunction::Run() {
   update_properties.contextType = OHOS::NWeb::GetExtensionContextType(browser_context());
   update_properties.includeIncognitoInfo = include_incognito_information();
 
-  call_update_tab_ = true;
+  call_update_tab_ =true;
   bool success = OHOS::NWeb::NWebExtensionTabCefDelegate::UpdateTab(
       web_contents_->ExtensionGetTabId(), update_properties, base::BindRepeating(&TabsUpdateFunction::OnTabUpdated,
           weak_ptr_factory_.GetWeakPtr()));
-  call_update_tab_ = false;
+  call_update_tab_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "TabsUpdateFunction did_respond";

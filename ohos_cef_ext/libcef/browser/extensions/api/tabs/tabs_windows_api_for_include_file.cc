@@ -14,42 +14,33 @@
  */
 
 void TabUpdated(int tab_id,
-                content::WebContents* contents,
-                std::unique_ptr<NWebExtensionTabChangeInfo> changeInfo,
-                std::unique_ptr<NWebExtensionTab> tab);
+    content::WebContents* contents,
+    std::unique_ptr<NWebExtensionTabChangeInfo> change_info,
+    std::unique_ptr<NWebExtensionTab> tab);
 
 void TabActivated(int tab_id, int window_id, content::BrowserContext* browser_context);
 
 void TabRemoved(int tab_id,
-                bool is_window_closing,
-                int window_id,
-                content::WebContents* contents);
+    bool is_window_closing,
+    int window_id,
+    content::WebContents* contents);
 
-void TabAttached(int tab_id,
-                content::WebContents* web_contents,
-                int32_t new_position,
-                int32_t new_window_id);
+void TabAttached(int tab_id, content::WebContents* web_contents,
+    int32_t new_position, int32_t new_window_id);
 
-void TabCreated(int tab_id,
-                content::BrowserContext* browserContext,
-                std::unique_ptr<NWebExtensionTab> tab);
+void TabCreated(int tab_id, content::BrowserContext* browserContext,
+    std::unique_ptr<NWebExtensionTab> tab);
 
-void TabDetached(content::WebContents* web_contents,
-                int tab_id,
-                int old_position,
-                int old_window_id);
+void TabDetached(content::WebContents* web_contents, int tab_id,
+    int old_position, int old_window_id);
 
-void TabHighlighted(content::WebContents* web_contents,
-                    NWebExtensionTabHighlightInfo& highlight_info);
+void TabHighlighted(content::WebContents* web_contents, NWebExtensionTabHighlightInfo& highlight_info);
 
-void TabMoved(content::WebContents* web_contents,
-              int tab_id,
-              std::unique_ptr<NWebExtensionTabMoveInfo> move_info);
+void TabMoved(content::WebContents* web_contents, int tab_id,
+    std::unique_ptr<NWebExtensionTabMoveInfo> move_info);
 
-void TabReplaced(content::WebContents* web_contents,
-                 int32_t added_tab_id,
-                 int32_t removed_tab_id);
+void TabReplaced(content::WebContents* web_contents, int32_t added_tab_id, int32_t removed_tab_id);
 
 void RegisterTabZoomObserver(content::WebContents* web_contents);
- 
+
 void UnregisterTabZoomObserver(content::WebContents* web_contents);

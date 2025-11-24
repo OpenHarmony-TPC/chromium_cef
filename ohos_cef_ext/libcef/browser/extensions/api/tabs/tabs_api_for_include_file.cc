@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,8 @@ class WindowsCreateFunction : public ExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("windows.create", WINDOWS_CREATE)
  private:
   static void OnCreateWindow(const base::WeakPtr<WindowsCreateFunction>& function,
-                             const std::optional<WebExtensionWindow>& window,
-                             const std::optional<std::string>& error);
+                              const std::optional<WebExtensionWindow>& window,
+                              const std::optional<std::string>& error);
 
   bool call_create_window_ = false;
   base::WeakPtrFactory<WindowsCreateFunction> weak_ptr_factory_{this};
@@ -32,8 +32,8 @@ class WindowsUpdateFunction : public ExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("windows.update", WINDOWS_UPDATE)
  private:
   static void OnUpdateWindow(const base::WeakPtr<WindowsUpdateFunction>& function,
-                             const std::optional<WebExtensionWindow>& window,
-                             const std::optional<std::string>& error);
+                              const std::optional<WebExtensionWindow>& window,
+                              const std::optional<std::string>& error);
 
   bool call_update_window_ = false;
   base::WeakPtrFactory<WindowsUpdateFunction> weak_ptr_factory_{this};
@@ -45,7 +45,7 @@ class WindowsRemoveFunction : public ExtensionFunction {
   DECLARE_EXTENSION_FUNCTION("windows.remove", WINDOWS_REMOVE)
  private:
   static void OnRemoveWindow(const base::WeakPtr<WindowsRemoveFunction>& function,
-                             const std::optional<std::string>& error);
+                               const std::optional<std::string>& error);
 
   bool call_remove_window_ = false;
   base::WeakPtrFactory<WindowsRemoveFunction> weak_ptr_factory_{this};
@@ -68,8 +68,8 @@ class TabsDuplicateFunction : public ExtensionFunction {
   ResponseAction Run() override;
   DECLARE_EXTENSION_FUNCTION("tabs.duplicate", TABS_DUPLICATE)
   static void OnTabDuplicated(const base::WeakPtr<TabsDuplicateFunction>& function,
-                             NWebExtensionTab& tab,
-                             std::optional<std::string>& error);
+                              NWebExtensionTab& tab,
+                              std::optional<std::string>& error);
   bool call_duplicate_tab_ = false;
   base::WeakPtrFactory<TabsDuplicateFunction> weak_ptr_factory_{this};
 };
@@ -128,8 +128,8 @@ class TabsMoveFunction : public ExtensionFunction {
                std::string* error);
   DECLARE_EXTENSION_FUNCTION("tabs.move", TABS_MOVE)
   static void OnTabMoved(const base::WeakPtr<TabsMoveFunction>& function,
-                      const std::vector<NWebExtensionTab>& tab,
-                      std::optional<std::string>& error);
+                         const std::vector<NWebExtensionTab>& tab,
+                         std::optional<std::string>& error);
   bool call_move_tab_ = false;
   base::WeakPtrFactory<TabsMoveFunction> weak_ptr_factory_{this};
 };
@@ -151,7 +151,7 @@ class TabsRemoveFunction : public ExtensionFunction {
       web_contents_destroyed_observers_;
   DECLARE_EXTENSION_FUNCTION("tabs.remove", TABS_REMOVE)
   static void OnTabRemoved(const base::WeakPtr<TabsRemoveFunction>& function,
-                        std::optional<std::string>& error);
+                           std::optional<std::string>& error);
   bool call_remove_tab_ = false;
   base::WeakPtrFactory<TabsRemoveFunction> weak_ptr_factory_{this};
 };
@@ -197,3 +197,4 @@ class TabsDiscardFunction : public ExtensionFunction {
   bool call_discard_tab_ = false;
   base::WeakPtrFactory<TabsDiscardFunction> weak_ptr_factory_{this};
 };
+

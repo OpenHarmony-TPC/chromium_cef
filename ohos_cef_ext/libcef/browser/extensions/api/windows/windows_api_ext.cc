@@ -22,10 +22,10 @@
 #include "chrome/browser/extensions/extension_tab_util.h"
 #include "chrome/browser/profiles/profile.h"
 #include "libcef/browser/extensions/window_extensions_util.h"
-#include "ohos_nweb/src/nweb_common.h"
-#include "ohos_nweb/src/cef_delegate/nweb_extension_utils.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_cef_delegate.h"
 #include "ohos_nweb/src/cef_delegate/nweb_extension_window_delegate_handler.h"
+#include "ohos_nweb/src/cef_delegate/nweb_extension_utils.h"
+#include "ohos_nweb/src/nweb_common.h"
 
 using content::WebContents;
 
@@ -67,22 +67,22 @@ WebExtensionWindowQueryOptions GetWindowQueryOptions(std::optional<api::windows:
     return options;
   }
   if (query_options->populate) {
-    options.populate = *(query_options->populate);
-  }
+      options.populate = *(query_options->populate);
+    }
   options.windowTypes = GetWindowTypeStrs(query_options->window_types);
   return options;
 }
 
 std::optional<std::string> GetCreateTypeStr(api::windows::CreateType type) {
   switch (type) {
-  case windows::CreateType::kNormal:
-    return "normal";
-  case windows::CreateType::kPopup:
-    return "popup";  
-  case windows::CreateType::kPanel:
-    return "panel";  
-  default:
-    return std::nullopt;
+    case windows::CreateType::kNormal:
+      return "normal";
+    case windows::CreateType::kPopup:
+      return "popup";
+    case windows::CreateType::kPanel:
+      return "panel";
+    default:
+      return std::nullopt;
   }
 }
 
@@ -277,7 +277,7 @@ std::optional<WebExtensionWindow> getWindow(int id, std::optional<api::windows::
     window_id = GetCurrentWindowId(webcontents, extension_misc::kCurrentWindowId);
   }
   WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(query_options);
-
+ 
   if (IsNativeApiEnable()) {
     if (NweExtensionWindowCefDelegate::GetInstance()->HasOnGetWindowV2CallBack()) {
       WebExtensionWindowQueryOptionsV2 windowQueryOptionsV2 =
@@ -294,12 +294,12 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
   std::optional<windows::Get::Params> params =
       windows::Get::Params::Create(args());
   EXTENSION_FUNCTION_VALIDATE(params);
-
+ 
   int window_id = params->window_id;
   std::optional<WebExtensionWindow> window = getWindow(window_id, params->query_options,
                                                        GetSenderWebContents(),
                                                        browser_context(),
-                                                       include_incognito_information());                                     
+                                                       include_incognito_information());
   if (!window) {
     return RespondNow(Error(ErrorUtils::FormatErrorMessage(extensions::ExtensionTabUtil::kWindowNotFoundError,
                                                            base::NumberToString(window_id))));
@@ -308,7 +308,7 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
   bool populate = false;
   if (params->query_options && params->query_options->populate) {
     populate = *(params->query_options->populate);
-  }
+  } 
   std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
   for (NWebExtensionTab tab : window->tabs) {
     GURL gurl(tab.url.value_or(""));
@@ -316,7 +316,7 @@ ExtensionFunction::ResponseAction WindowsGetFunction::Run() {
         ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
-
+ 
   return RespondNow(WithArguments(GetWindowValue(*window, scrub_tab_behaviors, populate)));
 }
 
@@ -351,11 +351,10 @@ ExtensionFunction::ResponseAction WindowsGetCurrentFunction::Run() {
 ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
   std::optional<windows::GetLastFocused::Params> params =
       windows::GetLastFocused::Params::Create(args());
-  EXTENSION_FUNCTION_VALIDATE(params);  
-
+  EXTENSION_FUNCTION_VALIDATE(params);
+ 
   WebExtensionWindowQueryOptions windowQueryOptions = GetWindowQueryOptions(params->query_options);
   std::optional<WebExtensionWindow> window;
-
   if (IsNativeApiEnable()) {
     if (NweExtensionWindowCefDelegate::GetInstance()->HasOnGetLastFocusedWindowV2CallBack()) {
       WebExtensionWindowQueryOptionsV2 windowQueryOptionsV2 =
@@ -380,7 +379,6 @@ ExtensionFunction::ResponseAction WindowsGetLastFocusedFunction::Run() {
     GURL gurl(tab.url.value_or(""));
     ExtensionTabUtil::ScrubTabBehavior scrub_tab_behavior =
         ExtensionTabUtil::GetScrubTabBehaviorExt(extension(), source_context_type(), gurl, tab.id.value_or(-1));
-
     scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
   }
  
@@ -426,18 +424,16 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
 }
 
 // static
-void WindowsCreateFunction::OnCreateWindow(
-    const base::WeakPtr<WindowsCreateFunction>& function,
-    const std::optional<WebExtensionWindow>& window,
-    const std::optional<std::string>& error) {
+void WindowsCreateFunction::OnCreateWindow(const base::WeakPtr<WindowsCreateFunction>& function,
+                                           const std::optional<WebExtensionWindow>& window,
+                                           const std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnCreateWindow is empty!!!!";
     return;
   }
-
   if (!window || error) {
-    std::string errorMessage = error ? *error : "create window fail";
+    std::string errorMessage = error? *error : "create widow fail";
     function->Respond(function->Error(errorMessage));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
@@ -448,7 +444,7 @@ void WindowsCreateFunction::OnCreateWindow(
               function->extension(), function->source_context_type(), gurl, tab.id.value_or(-1));
       scrub_tab_behaviors.emplace_back(scrub_tab_behavior);
     }
- 
+
     function->Respond(function->has_callback()
             ? function->WithArguments(GetWindowValue(*window, scrub_tab_behaviors))
             : function->NoArguments());
@@ -490,23 +486,16 @@ ExtensionFunction::ResponseAction WindowsCreateFunction::Run() {
   call_create_window_ = true;
   bool success;
   if (IsNativeApiEnable()) {
-    if (NweExtensionWindowCefDelegate::GetInstance()->HasOnCreateWindowV2CallBack()) {
-      WebExtensionWindowCreateDataV2 dataV2 = GetWindowCreateDataV2(
-        data, browser_context(), include_incognito_information(), extension()->id());
-      success = NweExtensionWindowCefDelegate::GetInstance()->OnCreateWindowV2(
-          dataV2, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
-                                    weak_ptr_factory_.GetWeakPtr()));        
-    } else {
-      success = NweExtensionWindowCefDelegate::GetInstance()->OnCreateWindow(
-          data, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
-                                    weak_ptr_factory_.GetWeakPtr()));
-    }
+    WebExtensionWindowCreateDataV2 data_V2 = GetWindowCreateDataV2(
+      data, browser_context(), include_incognito_information(), extension()->id());
+    success = NweExtensionWindowCefDelegate::GetInstance()->OnCreateWindowV2(
+      data, data_V2, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
+                                        weak_ptr_factory_.GetWeakPtr()));
   } else {
     success = NweExtensionWindowDelegateHandler::GetInstance()->OnCreateWindow(
-        data, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
-                                  weak_ptr_factory_.GetWeakPtr()));
+                data, base::BindRepeating(&WindowsCreateFunction::OnCreateWindow,
+                                                weak_ptr_factory_.GetWeakPtr()));
   }
-
   call_create_window_ = false;
 
   if (did_respond()) {
@@ -524,18 +513,16 @@ ExtensionFunction::ResponseAction WindowsCreateFunction::Run() {
 }
 
 // static
-void WindowsUpdateFunction::OnUpdateWindow(
-    const base::WeakPtr<WindowsUpdateFunction>& function,
-    const std::optional<WebExtensionWindow>& window,
-    const std::optional<std::string>& error) {
+void WindowsUpdateFunction::OnUpdateWindow(const base::WeakPtr<WindowsUpdateFunction>& function,
+                                           const std::optional<WebExtensionWindow>& window,
+                                           const std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnUpdateWindow is empty!!!!";
     return;
   }
-
   if (!window || error) {
-    std::string errorMessage = error ? *error : "update window fail";
+    std::string errorMessage = error? *error : "update widow fail";
     function->Respond(function->Error(errorMessage));
   } else {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
@@ -586,7 +573,7 @@ ExtensionFunction::ResponseAction WindowsUpdateFunction::Run() {
         window_id, info, base::BindRepeating(&WindowsUpdateFunction::OnUpdateWindow,
                                              weak_ptr_factory_.GetWeakPtr()));
   }
-  call_update_window_ = false;
+  call_update_window_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "WindowsUpdateFunction did_respond";
@@ -603,15 +590,13 @@ ExtensionFunction::ResponseAction WindowsUpdateFunction::Run() {
 }
 
 // static
-void WindowsRemoveFunction::OnRemoveWindow(
-    const base::WeakPtr<WindowsRemoveFunction>& function,
-    const std::optional<std::string>& error) {
+void WindowsRemoveFunction::OnRemoveWindow(const base::WeakPtr<WindowsRemoveFunction>& function,
+                                           const std::optional<std::string>& error) {
   DCHECK(function);
   if (!function) {
     LOG(ERROR) << "OnRemoveWindow is empty!!!!";
     return;
   }
-
   if (error) {
     function->Respond(function->Error(*error));
   } else {
@@ -634,7 +619,7 @@ ExtensionFunction::ResponseAction WindowsRemoveFunction::Run() {
     window_id = GetCurrentWindowId(GetSenderWebContents(), extension_misc::kCurrentWindowId);
   }
 
-  call_remove_window_ = true;
+  call_remove_window_ =true;
   bool success;
   if (IsNativeApiEnable()) {
     if (NweExtensionWindowCefDelegate::GetInstance()->HasOnRemoveWindowV2CallBack()) {
@@ -650,10 +635,10 @@ ExtensionFunction::ResponseAction WindowsRemoveFunction::Run() {
     }
   } else {
     success = NweExtensionWindowDelegateHandler::GetInstance()->OnRemoveWindow(
-        window_id, base::BindRepeating(&WindowsRemoveFunction::OnRemoveWindow,
-                                       weak_ptr_factory_.GetWeakPtr()));
+                window_id, base::BindRepeating(&WindowsRemoveFunction::OnRemoveWindow,
+                                                weak_ptr_factory_.GetWeakPtr()));
   }
-  call_remove_window_ = false;
+  call_remove_window_ =false;
 
   if (did_respond()) {
     LOG(INFO) << "WindowsRemoveFunction did_respond";
