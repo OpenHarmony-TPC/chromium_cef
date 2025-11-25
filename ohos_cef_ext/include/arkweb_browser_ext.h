@@ -386,6 +386,11 @@ class ArkWebBrowserExt : public virtual CefBrowser {
   /// Stop web fling.
   ///
   virtual void StopFling() {};
+
+  ///
+  /// Set Focus webId
+  ///
+  virtual void SetFocusWebId(int32_t nweb_id) {}
 };
 
 ///

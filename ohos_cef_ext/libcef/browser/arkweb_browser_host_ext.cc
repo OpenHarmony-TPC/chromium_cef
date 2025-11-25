@@ -4145,6 +4145,16 @@ void ArkWebBrowserHostExtImpl::ShowDevToolsWith(
 }
 #endif // BUILDFLAG(ARKWEB_DEVTOOLS)
 
+#if BUILDFLAG(ARKWEB_REPORT_LOSS_FRAME)
+void ArkWebBrowserHostExtImpl::SetFocusWebId(int32_t nweb_id) {
+  auto rwhv = GetWebContents()->GetRenderWidgetHostView();
+  if (rwhv && rwhv->GetRenderWidgetHost()) {
+    content::RenderWidgetHostImpl::From(
+      rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetFocusWebId(nweb_id);
+  }
+}
+#endif
+
 #if BUILDFLAG(ARKWEB_WEBRTC)
 void ArkWebBrowserHostExtImpl::ResumeMicrophone() {
   auto web_contents = GetWebContents();
