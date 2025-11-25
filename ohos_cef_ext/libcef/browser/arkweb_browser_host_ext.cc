@@ -669,6 +669,10 @@ void ArkWebBrowserHostExtImpl::UpdateBrowserSettings(
   settings_.viewport_meta_enabled = browser_settings.viewport_meta_enabled;
   settings_.user_gesture_required = browser_settings.user_gesture_required;
   settings_.pinch_smooth_mode = browser_settings.pinch_smooth_mode;
+#if BUILDFLAG(ARKWEB_AI)
+  settings_.image_analyzer_enabled =
+      browser_settings.image_analyzer_enabled;
+#endif
 #if BUILDFLAG(ARKWEB_INPUT_EVENTS)
   settings_.hide_vertical_scrollbars =
       browser_settings.hide_vertical_scrollbars;
@@ -4148,5 +4152,34 @@ void ArkWebBrowserHostExtImpl::SetFocusWebId(int32_t nweb_id) {
     content::RenderWidgetHostImpl::From(
       rwhv->GetRenderWidgetHost())->AsRenderWidgetHostImplExt()->SetFocusWebId(nweb_id);
   }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+void ArkWebBrowserHostExtImpl::ResumeMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->ResumeMicrophone(web_contents->GetNWebId());
+}
+
+void ArkWebBrowserHostExtImpl::PauseMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->PauseMicrophone(web_contents->GetNWebId());
+}
+
+void ArkWebBrowserHostExtImpl::StopMicrophone() {
+  auto web_contents = GetWebContents();
+  if (!web_contents) {
+    LOG(ERROR) << "GetWebContents null";
+    return;
+  }
+  web_contents->StopMicrophone(web_contents->GetNWebId());
 }
 #endif

@@ -1,0 +1,11 @@
+[
+    {
+        "Name": "cef",
+        "License": "BSD-3-Clause",
+        "License File": "LICENSE.txt",
+        "Version Number": "99.0.4844.84",
+        "Owner": "huamengzheng@huawei.com",
+        "Upstream URL": "https://github.com/chromiumembedded/cef/tree/71e95237436e8fed71819f8c2f7881842f754f63@99.0.4844.84",
+        "Description": "Cef是chromium项目的一个分支，抽离webkite和内核层，提供content层上的API接口，把复杂的底层接口进行封装，更加友好的给用户使用，多数用于客户端的开发，通过内置页面实现快速开发客户端界面的效果"
+    }
+]

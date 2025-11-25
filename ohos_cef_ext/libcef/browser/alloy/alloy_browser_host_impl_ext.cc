@@ -1978,3 +1978,26 @@ bool AlloyBrowserHostImplExt::IsURLBlockedInIncognito(
   return client_->AsArkWebClient()->OnRewriteUrlForNavigation(original_url, referrer, transition_type, is_key_request);
 }
 #endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+void AlloyBrowserHostImplExt::OnCameraCaptureStateChanged(int original_state, 
+                                                          int new_state) {
+  if (client_ && client_->AsArkWebClient() &&
+      client_->AsArkWebClient()->GetMediaHandler()) {
+    client_->AsArkWebClient()->GetMediaHandler()->OnCameraCaptureStateChanged(
+        original_state, new_state);
+  }
+}
+#endif
+
+#if BUILDFLAG(ARKWEB_WEBRTC)
+void AlloyBrowserHostImplExt::OnMicrophoneCaptureStateChanged(int original_state, 
+                                                              int new_state) {
+  if (client_ && client_->AsArkWebClient() &&
+      client_->AsArkWebClient()->GetMediaHandler()) {
+    client_->AsArkWebClient()
+        ->GetMediaHandler()
+        ->OnMicrophoneCaptureStateChanged(original_state, new_state);
+  }
+}
+#endif

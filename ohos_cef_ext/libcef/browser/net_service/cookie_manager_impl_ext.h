@@ -24,6 +24,11 @@
 #include "services/network/public/cpp/cors/origin_access_list.h"
 #endif
 
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+#include "base/memory/weak_ptr.h"
+#include "base/time/time.h"
+#endif
+
 BASE_FEATURE(kArkwebLoadCookiesOnAsyncThread,
              "ArkwebLoadCookiesOnAsyncThread",
              base::FEATURE_ENABLED_BY_DEFAULT);
@@ -120,6 +125,12 @@ void UpdateHostContentSettingsMap();
 #endif
 
  private:
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  static int StartCookieTaskSync();
+  void FinishCookieTaskSync();
+  void StartSetQos();
+  void FinishSetQos();
+#endif
   void RunCookieTaskSync(base::OnceCallback<void(base::OnceClosure)> task);
   void RunCookieTaskSync(
       base::OnceCallback<void(base::OnceCallback<void(bool)>)> task,
@@ -198,12 +209,20 @@ void UpdateHostContentSettingsMap();
   base::Thread cookie_store_task_thread_;
   base::Thread cookie_store_backend_thread_;
   mutable bool remote_network_cookie_manager_inited_{false};
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  base::Time end_time_;
+  bool cmd_value_ = false;
+  bool is_set_qos_ = false;
+#endif
 #if BUILDFLAG(ARKWEB_EXT_EXCEPTION_LIST)
   HostContentSettingsMap* host_content_settings_map_ = nullptr;
 #endif
 #if BUILDFLAG(ARKWEB_ARKWEB_EXTENSIONS)
   network::cors::OriginAccessList origin_access_list_;
   std::mutex origin_access_list_mutex_;
+#endif
+#if BUILDFLAG(ARKWEB_PERFORMANCE_SCHEDULING)
+  base::WeakPtrFactory<CefCookieManagerImplExt> weak_ptr_factory_{this};
 #endif
 };
 #endif  // COOKIE_MANAGER_IMPL_EXT_H_

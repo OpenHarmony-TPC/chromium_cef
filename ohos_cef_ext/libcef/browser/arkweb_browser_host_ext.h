@@ -280,6 +280,9 @@ class ArkWebBrowserHostExtImpl : public ArkWebBrowserHostExt,
   void StartCamera() override;
   void StopCamera() override;
   void CloseCamera() override;
+  void ResumeMicrophone() override;
+  void PauseMicrophone() override;
+  void StopMicrophone() override;
   void SetNWebId(int NWebID) override;
   void PrecompileJavaScript(const std::string& url,
                             const std::string& script,

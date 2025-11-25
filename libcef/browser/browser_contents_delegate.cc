@@ -225,9 +225,16 @@ void CefBrowserContentsDelegate::UpdateTargetURL(content::WebContents* source,
 bool CefBrowserContentsDelegate::DidAddMessageToConsole(
     content::WebContents* source,
     blink::mojom::ConsoleMessageLevel log_level,
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    blink::mojom::ConsoleMessageSource log_source,
+#endif
     const std::u16string& message,
     int32_t line_no,
     const std::u16string& source_id) {
+  blink::mojom::ConsoleMessageSource message_source = blink::mojom::ConsoleMessageSource::kOther;
+#if BUILDFLAG(ARKWEB_CONSOLE_LOGGING)
+    message_source = log_source;
+#endif
   if (auto c = client()) {
     if (auto handler = c->GetDisplayHandler()) {
       // Use LOGSEVERITY_DEBUG for unrecognized |level| values.
@@ -247,7 +254,7 @@ bool CefBrowserContentsDelegate::DidAddMessageToConsole(
           break;
       }
 
-      return handler->OnConsoleMessage(browser(), cef_level, message, source_id,
+      return handler->OnConsoleMessage(browser(), cef_level, static_cast<int>(message_source), message, source_id,
                                        line_no);
     }
   }

@@ -411,7 +411,7 @@ ExtensionFunction::ResponseAction WindowsGetAllFunction::Run() {
     populate = *(params->query_options->populate);
   }
   std::vector<std::vector<ExtensionTabUtil::ScrubTabBehavior>> scrub_tab_behaviors_combined;
-  for (int j = 0; j < windows.size(); j++) {
+  for (size_t j = 0; j < windows.size(); j++) {
     std::vector<ExtensionTabUtil::ScrubTabBehavior> scrub_tab_behaviors;
     for (NWebExtensionTab tab : windows[j].tabs) {
       GURL gurl(tab.url.value_or(""));

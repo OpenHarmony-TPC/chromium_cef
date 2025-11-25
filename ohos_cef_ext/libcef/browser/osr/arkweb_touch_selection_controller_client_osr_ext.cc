@@ -103,6 +103,8 @@ void ConvertTouchHandleState(const std::unique_ptr<ui::TouchHandle>& handle,
       orientation = CEF_HORIZONTAL_ALIGNMENT_UNDEFINED;
   }
   state.orientation = orientation;
+
+  state.is_dragging = handle->IsActive();
 }
 #endif  // BUILDFLAG(ARKWEB_MENU)
 }  // namespace
