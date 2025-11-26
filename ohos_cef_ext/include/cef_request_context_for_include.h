@@ -7,8 +7,8 @@
   /*--cef(optional_param=callback)--*/
 #if BUILDFLAG(ARKWEB_CERT_AUTHENTICATION)
   virtual void ClearClientAuthenticationCache(
-      CefRefPtr<CefCompletionCallback> callback) {};
+      CefRefPtr<CefCompletionCallback> callback) {}
 #endif  // ARKWEB_CERT_AUTHENTICATION
 
   virtual CefRefPtr<CefWebStorage> GetWebStorage(
-      CefRefPtr<CefCompletionCallback> callback) { return nullptr; };
+      CefRefPtr<CefCompletionCallback> callback) { return nullptr; }
