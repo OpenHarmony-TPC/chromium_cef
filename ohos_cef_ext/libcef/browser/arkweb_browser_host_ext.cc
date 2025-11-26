@@ -848,7 +848,6 @@ void ArkWebBrowserHostExtImpl::JavaScriptOnDocumentStart(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
     std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
@@ -887,7 +886,6 @@ void ArkWebBrowserHostExtImpl::JavaScriptOnDocumentEnd(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
     std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
@@ -916,7 +914,6 @@ void ArkWebBrowserHostExtImpl::JavaScriptOnHeadReady(
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
-    std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
     std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
