@@ -843,18 +843,23 @@ bool ArkWebBrowserHostExtImpl::Restore() {
 void ArkWebBrowserHostExtImpl::JavaScriptOnDocumentStart(
     const CefString& script,
     const std::vector<CefString>& script_rules,
+    const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
     bool is_transfer_finished) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
     std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
+    std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
       scriptRules.push_back(rule.ToString());
     }
+    for (const auto& cefRegexRule : script_regex_rules) {
+      scriptRegexRules.push_back(std::make_pair(cefRegexRule.first.ToString(), cefRegexRule.second.ToString()));
+    }
     if (!script.empty()) {
       js_injection::JsCommunicationHost::AddScriptResult result =
-          host->js_communication_host_utils_->AddDocumentStartPendingJavaScript(script, scriptRules);
+          host->js_communication_host_utils_->AddDocumentStartPendingJavaScript(script, scriptRules, scriptRegexRules);
     }
     if (is_transfer_finished) {
         host->js_communication_host_utils_->CommitPendingJavascriptsAtDocumentStart();
@@ -877,18 +882,23 @@ ArkWebBrowserHostExtImpl::GetJsCommunicationHost() {
 void ArkWebBrowserHostExtImpl::JavaScriptOnDocumentEnd(
     const CefString& script,
     const std::vector<CefString>& script_rules,
+    const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
     bool is_transfer_finished) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
     std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
+    std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
       scriptRules.push_back(rule.ToString());
     }
+    for (const auto& cefRegexRule : script_regex_rules) {
+      scriptRegexRules.push_back(std::make_pair(cefRegexRule.first.ToString(), cefRegexRule.second.ToString()));
+    }
     if (!script.empty()) {
       js_injection::JsCommunicationHost::AddScriptResult result =
-          host->js_communication_host_utils_->AddDocumentEndPendingJavaScript(script, scriptRules);
+          host->js_communication_host_utils_->AddDocumentEndPendingJavaScript(script, scriptRules, scriptRegexRules);
     }
     if (is_transfer_finished) {
         host->js_communication_host_utils_->CommitPendingJavascriptsAtDocumentEnd();
@@ -901,18 +911,23 @@ void ArkWebBrowserHostExtImpl::RemoveJavaScriptOnDocumentEnd() {}
 void ArkWebBrowserHostExtImpl::JavaScriptOnHeadReady(
     const CefString& script,
     const std::vector<CefString>& script_rules,
+    const std::vector<std::pair<CefString, CefString>>& script_regex_rules,
     bool is_transfer_finished) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   auto* host = GetJsCommunicationHost();
   if (host) {
     std::string stdScript = script.ToString();
     std::vector<std::string> scriptRules;
+    std::vector<std::pair<std::string, std::string>> scriptRegexRules;
     for (CefString rule : script_rules) {
       scriptRules.push_back(rule.ToString());
     }
+    for (const auto& cefRegexRule : script_regex_rules) {
+      scriptRegexRules.push_back(std::make_pair(cefRegexRule.first.ToString(), cefRegexRule.second.ToString()));
+    }
     if (!script.empty()) {
       js_injection::JsCommunicationHost::AddScriptResult result =
-          host->js_communication_host_utils_->AddHeadReadyPendingJavaScript(script, scriptRules);
+          host->js_communication_host_utils_->AddHeadReadyPendingJavaScript(script, scriptRules, scriptRegexRules);
     }
     if (is_transfer_finished) {
         host->js_communication_host_utils_->CommitPendingJavascriptsAtHeadReady();
